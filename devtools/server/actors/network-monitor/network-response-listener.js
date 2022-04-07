@@ -340,6 +340,7 @@ NetworkResponseListener.prototype = {
     }
     const info = await NetworkHelper.parseSecurityInfo(
       secinfo,
+      this.request.loadInfo.originAttributes,
       this.httpActivity,
       this._decodedCertificateCache
     );

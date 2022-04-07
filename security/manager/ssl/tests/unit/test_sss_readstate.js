@@ -16,102 +16,80 @@ function checkStateRead(aSubject, aTopic, aData) {
   equal(aData, SSS_STATE_FILE_NAME);
 
   ok(
-    !gSSService.isSecureURI(
-      Services.io.newURI("https://expired.example.com"),
-      0
-    )
+    !gSSService.isSecureURI(Services.io.newURI("https://expired.example.com"))
+  );
+  ok(
+    gSSService.isSecureURI(Services.io.newURI("https://notexpired.example.com"))
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://notexpired.example.com"),
-      0
-    )
-  );
-  ok(
-    gSSService.isSecureURI(
-      Services.io.newURI("https://includesubdomains.preloaded.test"),
-      0
+      Services.io.newURI("https://includesubdomains.preloaded.test")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
-      0
+      Services.io.newURI("https://sub.includesubdomains.preloaded.test")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://incsubdomain.example.com"),
-      0
+      Services.io.newURI("https://incsubdomain.example.com")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://sub.incsubdomain.example.com"),
-      0
+      Services.io.newURI("https://sub.incsubdomain.example.com")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://includesubdomains2.preloaded.test"),
-      0
+      Services.io.newURI("https://includesubdomains2.preloaded.test")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
-      0
+      Services.io.newURI("https://sub.includesubdomains2.preloaded.test")
     )
   );
 
   // Clearing the data should make everything go back to default.
   gSSService.clearAll();
   ok(
-    !gSSService.isSecureURI(
-      Services.io.newURI("https://expired.example.com"),
-      0
-    )
+    !gSSService.isSecureURI(Services.io.newURI("https://expired.example.com"))
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://notexpired.example.com"),
-      0
+      Services.io.newURI("https://notexpired.example.com")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://includesubdomains.preloaded.test"),
-      0
+      Services.io.newURI("https://includesubdomains.preloaded.test")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://sub.includesubdomains.preloaded.test"),
-      0
+      Services.io.newURI("https://sub.includesubdomains.preloaded.test")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://incsubdomain.example.com"),
-      0
+      Services.io.newURI("https://incsubdomain.example.com")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://sub.incsubdomain.example.com"),
-      0
+      Services.io.newURI("https://sub.incsubdomain.example.com")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://includesubdomains2.preloaded.test"),
-      0
+      Services.io.newURI("https://includesubdomains2.preloaded.test")
     )
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://sub.includesubdomains2.preloaded.test"),
-      0
+      Services.io.newURI("https://sub.includesubdomains2.preloaded.test")
     )
   );
   do_test_finished();

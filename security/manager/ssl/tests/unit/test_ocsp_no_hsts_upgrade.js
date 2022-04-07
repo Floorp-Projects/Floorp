@@ -54,11 +54,10 @@ function run_test() {
     uri,
     "max-age=10000",
     secInfo,
-    0,
     Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
   );
   ok(
-    SSService.isSecureURI(uri, 0),
+    SSService.isSecureURI(uri),
     "Domain for the OCSP AIA URI should be considered a HSTS host, otherwise" +
       " we wouldn't be testing what we think we're testing"
   );

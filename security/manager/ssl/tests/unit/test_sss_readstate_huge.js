@@ -17,45 +17,34 @@ function checkStateRead(aSubject, aTopic, aData) {
   equal(aData, SSS_STATE_FILE_NAME);
 
   ok(
-    gSSService.isSecureURI(
-      Services.io.newURI("https://example0.example.com"),
-      0
-    )
+    gSSService.isSecureURI(Services.io.newURI("https://example0.example.com"))
+  );
+  ok(
+    gSSService.isSecureURI(Services.io.newURI("https://example423.example.com"))
   );
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://example423.example.com"),
-      0
-    )
-  );
-  ok(
-    gSSService.isSecureURI(
-      Services.io.newURI("https://example1023.example.com"),
-      0
+      Services.io.newURI("https://example1023.example.com")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://example1024.example.com"),
-      0
+      Services.io.newURI("https://example1024.example.com")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://example1025.example.com"),
-      0
+      Services.io.newURI("https://example1025.example.com")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://example9000.example.com"),
-      0
+      Services.io.newURI("https://example9000.example.com")
     )
   );
   ok(
     !gSSService.isSecureURI(
-      Services.io.newURI("https://example99999.example.com"),
-      0
+      Services.io.newURI("https://example99999.example.com")
     )
   );
   do_test_finished();

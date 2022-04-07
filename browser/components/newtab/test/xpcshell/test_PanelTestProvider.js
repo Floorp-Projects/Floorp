@@ -4,7 +4,7 @@
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
-const { validate } = ChromeUtils.import(
+const { JsonSchema } = ChromeUtils.import(
   "resource://gre/modules/JsonSchema.jsm"
 );
 
@@ -35,7 +35,11 @@ add_setup(async function setup() {
 });
 
 function assertSchema(obj, schema, log) {
-  Assert.deepEqual(validate(obj, schema), { valid: true, errors: [] }, log);
+  Assert.deepEqual(
+    JsonSchema.validate(obj, schema),
+    { valid: true, errors: [] },
+    log
+  );
 }
 
 add_task(async function test_PanelTestProvider() {

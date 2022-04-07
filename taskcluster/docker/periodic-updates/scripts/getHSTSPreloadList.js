@@ -123,7 +123,6 @@ function processStsHeader(host, header, status, securityInfo) {
         uri,
         header,
         secInfo,
-        0,
         Ci.nsISiteSecurityService.SOURCE_PRELOAD_LIST,
         {},
         maxAge,

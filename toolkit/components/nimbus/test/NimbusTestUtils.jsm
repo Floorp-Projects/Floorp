@@ -20,9 +20,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileTestUtils: "resource://testing-common/FileTestUtils.jsm",
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm",
-  Ajv: "resource://testing-common/ajv-6.12.6.js",
   sinon: "resource://testing-common/Sinon.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
+  JsonSchema: "resource://gre/modules/JsonSchema.jsm",
 });
 
 const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
@@ -35,19 +35,17 @@ async function fetchSchema(url) {
   if (!schema) {
     throw new Error(`Failed to load ${url}`);
   }
-  return schema.definitions;
+  return schema;
 }
 
 const EXPORTED_SYMBOLS = ["ExperimentTestUtils", "ExperimentFakes"];
 
 const ExperimentTestUtils = {
-  _validator(schema, value, errorMsg) {
-    const ajv = new Ajv({ async: "co*", allErrors: true });
-    const validator = ajv.compile(schema);
-    validator(value);
-    if (validator.errors?.length) {
+  _validateSchema(schema, value, errorMsg) {
+    const result = JsonSchema.validate(value, schema, { shortCircuit: false });
+    if (result.errors.length) {
       throw new Error(
-        `${errorMsg}: ${JSON.stringify(validator.errors, undefined, 2)}`
+        `${errorMsg}: ${JSON.stringify(result.errors, undefined, 2)}`
       );
     }
     return value;
@@ -83,11 +81,9 @@ const ExperimentTestUtils = {
    * Checks if an experiment is valid acording to existing schema
    */
   async validateExperiment(experiment) {
-    const schema = (
-      await fetchSchema(
-        "resource://nimbus/schemas/NimbusExperiment.schema.json"
-      )
-    ).NimbusExperiment;
+    const schema = await fetchSchema(
+      "resource://nimbus/schemas/NimbusExperiment.schema.json"
+    );
 
     // Ensure that the `featureIds` field is properly set
     const { branches } = experiment;
@@ -101,18 +97,16 @@ const ExperimentTestUtils = {
       });
     });
 
-    return this._validator(
+    return this._validateSchema(
       schema,
       experiment,
       `Experiment ${experiment.slug} not valid`
     );
   },
   async validateEnrollment(enrollment) {
-    const schema = (
-      await fetchSchema(
-        "resource://nimbus/schemas/NimbusEnrollment.schema.json"
-      )
-    ).NimbusEnrollment;
+    const schema = await fetchSchema(
+      "resource://nimbus/schemas/NimbusEnrollment.schema.json"
+    );
 
     // We still have single feature experiment recipes for backwards
     // compatibility testing but we don't do schema validation
@@ -122,7 +116,7 @@ const ExperimentTestUtils = {
 
     return (
       this._validateFeatureValueEnum(enrollment) &&
-      this._validator(
+      this._validateSchema(
         schema,
         enrollment,
         `Enrollment ${enrollment.slug} is not valid`
@@ -130,13 +124,11 @@ const ExperimentTestUtils = {
     );
   },
   async validateRollouts(rollout) {
-    const schema = (
-      await fetchSchema(
-        "resource://nimbus/schemas/NimbusEnrollment.schema.json"
-      )
-    ).NimbusEnrollment;
+    const schema = await fetchSchema(
+      "resource://nimbus/schemas/NimbusEnrollment.schema.json"
+    );
 
-    return this._validator(
+    return this._validateSchema(
       schema,
       rollout,
       `Rollout configuration ${rollout.slug} is not valid`

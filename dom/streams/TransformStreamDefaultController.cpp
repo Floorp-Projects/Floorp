@@ -26,9 +26,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransformStreamDefaultController)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+TransformStream* TransformStreamDefaultController::Stream() { return mStream; }
+
 void TransformStreamDefaultController::SetStream(TransformStream& aStream) {
   MOZ_ASSERT(!mStream);
   mStream = &aStream;
+}
+
+TransformerAlgorithms* TransformStreamDefaultController::Algorithms() {
+  return mTransformerAlgorithms;
 }
 
 void TransformStreamDefaultController::SetAlgorithms(

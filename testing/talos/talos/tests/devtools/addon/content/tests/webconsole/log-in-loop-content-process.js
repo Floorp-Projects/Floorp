@@ -9,7 +9,6 @@
 "use strict";
 
 const {
-  garbageCollect,
   logTestResult,
   testSetup,
   testTeardown,
@@ -89,8 +88,6 @@ module.exports = async function() {
     messageManager.sendAsyncMessage("do-logs", test);
     const contentProcessConsoleAPIDuration = await onContentProcessLogsDone;
     logTestResult(label, contentProcessConsoleAPIDuration);
-
-    await garbageCollect();
   }
 
   commands.destroy();

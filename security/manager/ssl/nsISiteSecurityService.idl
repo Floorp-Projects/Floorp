@@ -83,13 +83,13 @@ interface nsISiteSecurityService : nsISupports
      * @param aSourceURI the URI of the resource with the HTTP header.
      * @param aHeader the HTTP response header specifying security data.
      * @param aSecInfo the TransportSecurityInfo of the current channel.
-     * @param aFlags  options for this request as defined in nsISocketProvider:
-     *                  NO_PERMANENT_STORAGE
      * @param aOriginAttributes the origin attributes that isolate this origin,
      *                          (note that this implementation does not isolate
      *                          by userContextId because of the risk of man-in-
      *                          the-middle attacks before trust-on-second-use
      *                          happens).
+     *                          If mPrivateBrowsingId > 0, information gathered
+     *                          from this header will not be saved persistently.
      * @param aSource the source of the header, whether it was from the preload
      *                list, an organic header, or unknown.
      * @param aMaxAge the parsed max-age directive of the header.
@@ -105,7 +105,6 @@ interface nsISiteSecurityService : nsISupports
     void processHeaderNative(in nsIURI aSourceURI,
                              in ACString aHeader,
                              in nsITransportSecurityInfo aSecInfo,
-                             in uint32_t aFlags,
                              in uint32_t aSource,
                              in const_OriginAttributesRef aOriginAttributes,
                              [optional] out unsigned long long aMaxAge,
@@ -117,7 +116,6 @@ interface nsISiteSecurityService : nsISupports
     void processHeader(in nsIURI aSourceURI,
                        in ACString aHeader,
                        in nsITransportSecurityInfo aSecInfo,
-                       in uint32_t aFlags,
                        in uint32_t aSource,
                        [optional] in jsval aOriginAttributes,
                        [optional] out unsigned long long aMaxAge,
@@ -132,8 +130,6 @@ interface nsISiteSecurityService : nsISupports
      * previously existing state.
      *
      * @param aURI    the URI of the target host
-     * @param aFlags  options for this request as defined in nsISocketProvider:
-     *                  NO_PERMANENT_STORAGE
      * @param aOriginAttributes the origin attributes that isolate this origin,
      *                          (note that this implementation does not isolate
      *                          by userContextId because of the risk of man-in-
@@ -141,9 +137,7 @@ interface nsISiteSecurityService : nsISupports
      *                          happens).
      */
     [implicit_jscontext, optional_argc, must_use]
-    void resetState(in nsIURI aURI,
-                    in uint32_t aFlags,
-                    [optional] in jsval aOriginAttributes);
+    void resetState(in nsIURI aURI, [optional] in jsval aOriginAttributes);
 
     /**
      * Checks whether or not the URI's hostname has HSTS set.
@@ -155,8 +149,6 @@ interface nsISiteSecurityService : nsISupports
      * such as path and port.
      *
      * @param aURI the URI to query for STS state.
-     * @param aFlags  options for this request as defined in nsISocketProvider:
-     *                  NO_PERMANENT_STORAGE
      * @param aOriginAttributes the origin attributes that isolate this origin,
      *                          (note that this implementation does not isolate
      *                          by userContextId because of the risk of man-in-
@@ -168,14 +160,14 @@ interface nsISiteSecurityService : nsISupports
      *                SOURCE_ORGANIC_REQUEST, or SOURCE_UNKNOWN.
      */
     [binaryname(IsSecureURI), noscript, must_use]
-    boolean isSecureURINative(in nsIURI aURI, in uint32_t aFlags,
+    boolean isSecureURINative(in nsIURI aURI,
                               in const_OriginAttributesRef aOriginAttributes,
                               [optional] out boolean aCached,
                               [optional] out uint32_t aSource);
 
     [binaryname(IsSecureURIScriptable), implicit_jscontext, optional_argc,
      must_use]
-    boolean isSecureURI(in nsIURI aURI, in uint32_t aFlags,
+    boolean isSecureURI(in nsIURI aURI,
                         [optional] in jsval aOriginAttributes,
                         [optional] out boolean aCached,
                         [optional] out uint32_t aSource);
