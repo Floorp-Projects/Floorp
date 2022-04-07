@@ -144,10 +144,8 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
       playout_delay_pending_(false),
       forced_playout_delay_(LoadVideoPlayoutDelayOverride(config.field_trials)),
       red_payload_type_(config.red_payload_type),
-      fec_generator_(config.fec_generator),
       fec_type_(config.fec_type),
       fec_overhead_bytes_(config.fec_overhead_bytes),
-      video_bitrate_(1000, RateStatistics::kBpsScale),
       packetization_overhead_bitrate_(1000, RateStatistics::kBpsScale),
       frame_encryptor_(config.frame_encryptor),
       require_frame_encryption_(config.require_frame_encryption),
@@ -179,27 +177,11 @@ RTPSenderVideo::~RTPSenderVideo() {
 void RTPSenderVideo::LogAndSendToNetwork(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets,
     size_t unpacketized_payload_size) {
-  int64_t now_ms = clock_->TimeInMilliseconds();
-#if BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
-  if (fec_generator_) {
-    uint32_t fec_rate_kbps = fec_generator_->CurrentFecRate().kbps();
-    for (const auto& packet : packets) {
-      if (packet->packet_type() ==
-          RtpPacketMediaType::kForwardErrorCorrection) {
-        const uint32_t ssrc = packet->Ssrc();
-        BWE_TEST_LOGGING_PLOT_WITH_SSRC(1, "VideoFecBitrate_kbps", now_ms,
-                                        fec_rate_kbps, ssrc);
-      }
-    }
-  }
-#endif
-
   {
     MutexLock lock(&stats_mutex_);
     size_t packetized_payload_size = 0;
     for (const auto& packet : packets) {
       if (*packet->packet_type() == RtpPacketMediaType::kVideo) {
-        video_bitrate_.Update(packet->size(), now_ms);
         packetized_payload_size += packet->payload_size();
       }
     }
@@ -449,9 +431,15 @@ bool RTPSenderVideo::SendVideo(
         video_header.generic->frame_id, video_header.generic->chain_diffs);
   }
 
+  const uint8_t temporal_id = GetTemporalId(video_header);
+  // No FEC protection for upper temporal layers, if used.
+  const bool use_fec = fec_type_.has_value() &&
+                       (temporal_id == 0 || temporal_id == kNoTemporalIdx);
+
   // Maximum size of packet including rtp headers.
   // Extra space left in case packet will be resent using fec or rtx.
-  int packet_capacity = rtp_sender_->MaxRtpPacketSize() - FecPacketOverhead() -
+  int packet_capacity = rtp_sender_->MaxRtpPacketSize() -
+                        (use_fec ? FecPacketOverhead() : 0) -
                         (rtp_sender_->RtxStatus() ? kRtxHeaderSize : 0);
 
   std::unique_ptr<RtpPacketToSend> single_packet =
@@ -512,8 +500,8 @@ bool RTPSenderVideo::SendVideo(
       first_packet->HasExtension<RtpGenericFrameDescriptorExtension00>() ||
       first_packet->HasExtension<RtpDependencyDescriptorExtension>();
 
-  // Minimization of the vp8 descriptor may erase temporal_id, so save it.
-  const uint8_t temporal_id = GetTemporalId(video_header);
+  // Minimization of the vp8 descriptor may erase temporal_id, so use
+  // |temporal_id| rather than reference |video_header| beyond this point.
   if (has_generic_descriptor) {
     MinimizeDescriptor(&video_header);
   }
@@ -606,18 +594,11 @@ bool RTPSenderVideo::SendVideo(
       packet->set_packetization_finish_time_ms(clock_->TimeInMilliseconds());
     }
 
-    // No FEC protection for upper temporal layers, if used.
-    if (fec_type_.has_value() &&
-        (temporal_id == 0 || temporal_id == kNoTemporalIdx)) {
-      if (fec_generator_) {
-        fec_generator_->AddPacketAndGenerateFec(*packet);
-      } else {
-        // Deferred FEC generation, just mark packet.
-        packet->set_fec_protect_packet(true);
-      }
-    }
+    packet->set_fec_protect_packet(use_fec);
 
     if (red_enabled()) {
+      // TODO(sprang): Consider packetizing directly into packets with the RED
+      // header already in place, to avoid this copy.
       std::unique_ptr<RtpPacketToSend> red_packet(new RtpPacketToSend(*packet));
       BuildRedPayload(*packet, red_packet.get());
       red_packet->SetPayloadType(*red_payload_type_);
@@ -641,19 +622,6 @@ bool RTPSenderVideo::SendVideo(
         RTC_LOG(LS_INFO)
             << "Sent last RTP packet of the first video frame (pre-pacer)";
       }
-    }
-  }
-
-  if (fec_generator_) {
-    // Fetch any FEC packets generated from the media frame and add them to
-    // the list of packets to send.
-    auto fec_packets = fec_generator_->GetFecPackets();
-    const bool generate_sequence_numbers = !fec_generator_->FecSsrc();
-    for (auto& fec_packet : fec_packets) {
-      if (generate_sequence_numbers) {
-        rtp_sender_->AssignSequenceNumber(fec_packet.get());
-      }
-      rtp_packets.emplace_back(std::move(fec_packet));
     }
   }
 
@@ -703,11 +671,6 @@ bool RTPSenderVideo::SendEncodedImage(
   return SendVideo(payload_type, codec_type, rtp_timestamp,
                    encoded_image.capture_time_ms_, encoded_image, video_header,
                    expected_retransmission_time_ms);
-}
-
-uint32_t RTPSenderVideo::VideoBitrateSent() const {
-  MutexLock lock(&stats_mutex_);
-  return video_bitrate_.Rate(clock_->TimeInMilliseconds()).value_or(0);
 }
 
 uint32_t RTPSenderVideo::PacketizationOverheadBps() const {

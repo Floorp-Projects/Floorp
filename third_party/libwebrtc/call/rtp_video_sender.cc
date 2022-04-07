@@ -197,7 +197,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
     FrameEncryptorInterface* frame_encryptor,
     const CryptoOptions& crypto_options,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-    bool use_deferred_fec,
     const WebRtcKeyValueConfig& trials) {
   RTC_DCHECK_GT(rtp_config.ssrcs.size(), 0);
 
@@ -245,9 +244,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
     std::unique_ptr<VideoFecGenerator> fec_generator =
         MaybeCreateFecGenerator(clock, rtp_config, suspended_ssrcs, i, trials);
     configuration.fec_generator = fec_generator.get();
-    if (!use_deferred_fec) {
-      video_config.fec_generator = fec_generator.get();
-    }
 
     configuration.rtx_send_ssrc =
         rtp_config.GetRtxSsrcAssociatedWithMediaSsrc(rtp_config.ssrcs[i]);
@@ -335,9 +331,6 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-SendSideBwe-WithOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
-      use_deferred_fec_(!absl::StartsWith(
-          field_trials_.Lookup("WebRTC-DeferredFecGeneration"),
-          "Disabled")),
       active_(false),
       module_process_thread_(nullptr),
       suspended_ssrcs_(std::move(suspended_ssrcs)),
@@ -356,7 +349,6 @@ RtpVideoSender::RtpVideoSender(
                                           frame_encryptor,
                                           crypto_options,
                                           std::move(frame_transformer),
-                                          use_deferred_fec_,
                                           field_trials_)),
       rtp_config_(rtp_config),
       codec_type_(GetVideoCodecType(rtp_config)),
@@ -844,7 +836,6 @@ int RtpVideoSender::ProtectionRequest(const FecProtectionParams* delta_params,
   *sent_nack_rate_bps = 0;
   *sent_fec_rate_bps = 0;
   for (const RtpStreamSender& stream : rtp_streams_) {
-    if (use_deferred_fec_) {
       stream.rtp_rtcp->SetFecProtectionParams(*delta_params, *key_params);
 
       auto send_bitrate = stream.rtp_rtcp->GetSendRates();
@@ -853,17 +844,6 @@ int RtpVideoSender::ProtectionRequest(const FecProtectionParams* delta_params,
           send_bitrate[RtpPacketMediaType::kForwardErrorCorrection].bps();
       *sent_nack_rate_bps +=
           send_bitrate[RtpPacketMediaType::kRetransmission].bps();
-    } else {
-      if (stream.fec_generator) {
-        stream.fec_generator->SetProtectionParameters(*delta_params,
-                                                      *key_params);
-        *sent_fec_rate_bps += stream.fec_generator->CurrentFecRate().bps();
-      }
-      *sent_video_rate_bps += stream.sender_video->VideoBitrateSent();
-      *sent_nack_rate_bps +=
-          stream.rtp_rtcp->GetSendRates()[RtpPacketMediaType::kRetransmission]
-              .bps<uint32_t>();
-    }
   }
   return 0;
 }

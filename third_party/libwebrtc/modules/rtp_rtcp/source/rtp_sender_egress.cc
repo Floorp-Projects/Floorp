@@ -101,11 +101,7 @@ RtpSenderEgress::RtpSenderEgress(const RtpRtcpInterface::Configuration& config,
       is_audio_(config.audio),
 #endif
       need_rtp_packet_infos_(config.need_rtp_packet_infos),
-      fec_generator_(!IsTrialSetTo(config.field_trials,
-                                   "WebRTC-DeferredFecGeneration",
-                                   "Disabled")
-                         ? config.fec_generator
-                         : nullptr),
+      fec_generator_(config.fec_generator),
       transport_feedback_observer_(config.transport_feedback_callback),
       send_side_delay_observer_(config.send_side_delay_observer),
       send_packet_observer_(config.send_packet_observer),
@@ -176,7 +172,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
   }
 
   if (fec_generator_ && packet->fec_protect_packet()) {
-    // Deferred fec generation is used, add packet to generator.
+    // This packet should be protected by FEC, add it to packet generator.
     RTC_DCHECK(fec_generator_);
     RTC_DCHECK(packet->packet_type() == RtpPacketMediaType::kVideo);
     absl::optional<std::pair<FecProtectionParams, FecProtectionParams>>
