@@ -62,11 +62,13 @@ class RtcpXrObserver : public test::EndToEndTest {
   RtcpXrObserver(bool enable_rrtr,
                  bool expect_target_bitrate,
                  bool enable_zero_target_bitrate,
+                 bool enable_target_bitrate,
                  VideoEncoderConfig::ContentType content_type)
       : EndToEndTest(test::CallTest::kDefaultTimeoutMs),
         enable_rrtr_(enable_rrtr),
         expect_target_bitrate_(expect_target_bitrate),
         enable_zero_target_bitrate_(enable_zero_target_bitrate),
+        enable_target_bitrate_(enable_target_bitrate),
         content_type_(content_type),
         sent_rtcp_sr_(0),
         sent_rtcp_rr_(0),
@@ -175,6 +177,12 @@ class RtcpXrObserver : public test::EndToEndTest {
       VideoSendStream::Config* send_config,
       std::vector<VideoReceiveStream::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override {
+    if (enable_target_bitrate_) {
+      send_config->encoder_settings.allocation_cb_type =
+          VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+              kVideoBitrateAllocation;
+    }
+
     if (enable_zero_target_bitrate_) {
       // Configure VP8 to be able to use simulcast.
       send_config->rtp.payload_name = "VP8";
@@ -202,6 +210,7 @@ class RtcpXrObserver : public test::EndToEndTest {
   const bool enable_rrtr_;
   const bool expect_target_bitrate_;
   const bool enable_zero_target_bitrate_;
+  const bool enable_target_bitrate_;
   const VideoEncoderConfig::ContentType content_type_;
   int sent_rtcp_sr_;
   int sent_rtcp_rr_ RTC_GUARDED_BY(&mutex_);
@@ -217,6 +226,7 @@ TEST_F(ExtendedReportsEndToEndTest,
        TestExtendedReportsWithRrtrWithoutTargetBitrate) {
   RtcpXrObserver test(/*enable_rrtr=*/true, /*expect_target_bitrate=*/false,
                       /*enable_zero_target_bitrate=*/false,
+                      /*enable_target_bitrate=*/false,
                       VideoEncoderConfig::ContentType::kRealtimeVideo);
   RunBaseTest(&test);
 }
@@ -225,6 +235,7 @@ TEST_F(ExtendedReportsEndToEndTest,
        TestExtendedReportsWithoutRrtrWithoutTargetBitrate) {
   RtcpXrObserver test(/*enable_rrtr=*/false, /*expect_target_bitrate=*/false,
                       /*enable_zero_target_bitrate=*/false,
+                      /*enable_target_bitrate=*/false,
                       VideoEncoderConfig::ContentType::kRealtimeVideo);
   RunBaseTest(&test);
 }
@@ -233,6 +244,7 @@ TEST_F(ExtendedReportsEndToEndTest,
        TestExtendedReportsWithRrtrWithTargetBitrate) {
   RtcpXrObserver test(/*enable_rrtr=*/true, /*expect_target_bitrate=*/true,
                       /*enable_zero_target_bitrate=*/false,
+                      /*enable_target_bitrate=*/false,
                       VideoEncoderConfig::ContentType::kScreen);
   RunBaseTest(&test);
 }
@@ -241,15 +253,16 @@ TEST_F(ExtendedReportsEndToEndTest,
        TestExtendedReportsWithoutRrtrWithTargetBitrate) {
   RtcpXrObserver test(/*enable_rrtr=*/false, /*expect_target_bitrate=*/true,
                       /*enable_zero_target_bitrate=*/false,
+                      /*enable_target_bitrate=*/false,
                       VideoEncoderConfig::ContentType::kScreen);
   RunBaseTest(&test);
 }
 
 TEST_F(ExtendedReportsEndToEndTest,
-       TestExtendedReportsWithoutRrtrWithTargetBitrateFromFieldTrial) {
-  test::ScopedFieldTrials field_trials("WebRTC-Target-Bitrate-Rtcp/Enabled/");
+       TestExtendedReportsWithoutRrtrWithTargetBitrateExplicitlySet) {
   RtcpXrObserver test(/*enable_rrtr=*/false, /*expect_target_bitrate=*/true,
                       /*enable_zero_target_bitrate=*/false,
+                      /*enable_target_bitrate=*/true,
                       VideoEncoderConfig::ContentType::kRealtimeVideo);
   RunBaseTest(&test);
 }
@@ -258,6 +271,7 @@ TEST_F(ExtendedReportsEndToEndTest,
        TestExtendedReportsCanSignalZeroTargetBitrate) {
   RtcpXrObserver test(/*enable_rrtr=*/false, /*expect_target_bitrate=*/true,
                       /*enable_zero_target_bitrate=*/true,
+                      /*enable_target_bitrate=*/false,
                       VideoEncoderConfig::ContentType::kScreen);
   RunBaseTest(&test);
 }
