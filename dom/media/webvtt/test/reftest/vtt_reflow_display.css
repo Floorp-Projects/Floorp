@@ -1,0 +1,33 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 100%;
+  width: 100vw;
+  height: 100vh;
+}
+.video-player {
+  display: flex;
+  max-height: calc(100% - 400px);
+  flex: 1 1 0;
+  flex-direction: column;
+  position: relative;
+  max-width: 100%;
+  height: 0;
+}
+.video-layer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 0;
+}
+video {
+  object-fit: contain;
+  display: flex;
+  flex: auto;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
+}

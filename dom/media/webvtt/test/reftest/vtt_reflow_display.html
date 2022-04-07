@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<link rel="stylesheet" href="vtt_reflow_display.css">
+<body>
+<div class="video-player">
+  <div class="video-layer">
+    <video id="v1" autoplay controls></video>
+  </div>
+</div>
+<script>
+/**
+ * In bug 1733232, setting some CSS properties (from bug 1733232 comment17)
+ * would cause video frame's reflow called very frequently, which crashed the
+ * video control and caused no cue showing. We compare this test with another
+ * white video without any cues, and they should NOT be equal.
+ */
+function testDisplayCueDuringFrequentReflow() {
+  let video = document.getElementById("v1");
+  video.src = "white.webm";
+  let cue = new VTTCue(0, 4, "hello testing");
+  cue.onenter = _ => {
+    cue.onenter = null;
+    video.pause();
+    document.documentElement.removeAttribute('class');
+  }
+  let track = video.addTextTrack("captions");
+  track.mode = "showing";
+  track.addCue(cue);
+};
+
+window.addEventListener("MozReftestInvalidate",
+                        testDisplayCueDuringFrequentReflow);
+</script>
+</body>
+</html>
