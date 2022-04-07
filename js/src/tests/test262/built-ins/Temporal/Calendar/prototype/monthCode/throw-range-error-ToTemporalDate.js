@@ -4,8 +4,7 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.monthCode
-description: >
-  Temporal.Calendar.prototype.monthCode throws RangeError on
+description: Temporal.Calendar.prototype.monthCode throws RangeError on
   ToTemporalDate when temporalDateLike is invalid string.
 info: |
   4. If Type(temporalDateLike) is not Object or temporalDateLike

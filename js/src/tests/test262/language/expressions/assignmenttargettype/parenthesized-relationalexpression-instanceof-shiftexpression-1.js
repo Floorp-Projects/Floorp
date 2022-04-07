@@ -21,4 +21,7 @@ info: |
 
 $DONOTEVALUATE();
 
-(1 instanceof 2) = 1;
+function _() {
+  (1 instanceof 2) = 1;
+}
+

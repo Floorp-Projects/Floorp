@@ -23,5 +23,5 @@ iterThrows[Symbol.iterator] = function() {
 Promise.race(iterThrows).then(function() {
   throw new Test262Error('Promise unexpectedly fulfilled: Promise.race(iterThrows) should throw TypeError');
 }, function(reason) {
-  assert.sameValue(reason, error, 'The value of reason is expected to equal the value of error');
+  assert.sameValue(reason, error);
 }).then($DONE, $DONE);

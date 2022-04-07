@@ -31,13 +31,19 @@ var body = {
   }
 };
 
+//CHECK#1
 try {
   var f = new Function(p, body);
   throw new Test262Error('#1: test failed');
 } catch (e) {
-  assert.sameValue(e, "body", 'The value of e is expected to be "body"');
+  if (e !== "body") {
+    throw new Test262Error('#1.1: i) Let Result(i) be the first argument; ii) Let P be ToString(Result(i))');
+  }
 }
 
-assert.sameValue(p, 1, 'The value of p is expected to be 1');
+//CHECK#2
+if (p !== 1) {
+  throw new Test262Error('#2: i) Let Result(i) be the first argument; ii) Let P be ToString(Result(i))');
+}
 
 reportCompare(0, 0);

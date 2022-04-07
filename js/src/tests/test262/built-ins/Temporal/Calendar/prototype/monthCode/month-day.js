@@ -4,8 +4,7 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.monthCode
-description: >
-  Temporal.Calendar.prototype.monthCode will take PlainMonthDay and return
+description: Temporal.Calendar.prototype.monthCode will take PlainMonthDay and return
   the value of the monthCode.
 info: |
   6. Return ! ISOMonthCode(temporalDateLike).

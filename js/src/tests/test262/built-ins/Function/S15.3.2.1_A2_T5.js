@@ -19,13 +19,21 @@ var p = {
   }
 };
 
+//CHECK#1
 try {
   var f = Function(p + "," + p, p, "return arg1+arg2+arg3;");
 } catch (e) {
   throw new Test262Error('#1: test failed');
 }
 
-assert(f instanceof Function, 'The result of evaluating (f instanceof Function) is expected to be true');
-assert.sameValue(f("", 1, 2), "12", 'f(, 1, 2) must return "12"');
+//CHECK#2
+if (!(f instanceof Function)) {
+  throw new Test262Error('#2: It is permissible but not necessary to have one argument for each formal parameter to be specified');
+}
+
+//CHECK#3
+if (f("", 1, 2) !== "12") {
+  throw new Test262Error('#3: It is permissible but not necessary to have one argument for each formal parameter to be specified');
+}
 
 reportCompare(0, 0);

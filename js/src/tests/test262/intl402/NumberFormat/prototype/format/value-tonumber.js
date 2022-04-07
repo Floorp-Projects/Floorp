@@ -19,9 +19,7 @@ const toNumberResults = [
   [true, 1],
   [false, 0],
   ['42', 42],
-  ['foo', NaN],
-  ['Infinity', Infinity],
-  ['-Infinity', -Infinity]
+  ['foo', NaN]
 ];
 
 const nf = new Intl.NumberFormat();

@@ -8,6 +8,7 @@ es5id: 15.4.2.2_A1.2_T1
 description: Checking use Object.prototype.toString
 ---*/
 
+//CHECK#1
 var x = new Array(0);
 assert.sameValue(Object.prototype.toString.call(x), "[object Array]", 'Object.prototype.toString.call(new Array(0)) must return "[object Array]"');
 

@@ -16,7 +16,7 @@ info: |
   1.1.5 GetArrayBufferMaxByteLengthOption ( options )
 
   1. If Type(options) is not Object, return empty.
-features: [BigInt, SharedArrayBuffer, Symbol, resizable-arraybuffer]
+features: [resizable-arraybuffer]
 ---*/
 
 assert.sameValue(new SharedArrayBuffer(0, null).growable, false, 'null');

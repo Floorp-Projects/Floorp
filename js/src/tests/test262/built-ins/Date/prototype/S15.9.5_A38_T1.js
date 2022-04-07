@@ -6,10 +6,9 @@ info: The Date.prototype has the property "setMonth"
 esid: sec-properties-of-the-date-prototype-object
 description: The Date.prototype has the property "setMonth"
 ---*/
-assert.sameValue(
-  Date.prototype.hasOwnProperty("setMonth"),
-  true,
-  'Date.prototype.hasOwnProperty("setMonth") must return true'
-);
+
+if (Date.prototype.hasOwnProperty("setMonth") !== true) {
+  throw new Test262Error('#1: The Date.prototype has the property "setMonth"');
+}
 
 reportCompare(0, 0);

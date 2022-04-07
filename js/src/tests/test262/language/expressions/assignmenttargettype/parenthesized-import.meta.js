@@ -21,4 +21,7 @@ info: |
 
 $DONOTEVALUATE();
 
-(import.meta) = 1;
+function _() {
+  (import.meta) = 1;
+}
+

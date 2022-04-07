@@ -14,6 +14,12 @@ description: >
 Error.prototype.toString = Object.prototype.toString;
 var __tostr = Error.prototype.toString();
 
-assert.sameValue(__tostr, "[object Object]", 'The value of __tostr is expected to be "[object Object]"');
+//////////////////////////////////////////////////////////////////////////////
+//CHECK#1
+if (__tostr !== "[object Object]") {
+  throw new Test262Error('#1: Error.prototype.toString=Object.prototype.toString; __tostr = Error.prototype.toString(); __tostr === "[object Object]". Actual: ' + __tostr);
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
 reportCompare(0, 0);

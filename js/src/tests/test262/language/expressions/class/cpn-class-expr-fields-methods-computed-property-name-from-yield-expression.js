@@ -66,7 +66,5 @@ assert.sameValue(
 );
 
 }
-var iter = g();
-while (iter.next().done === false) ;
 
 reportCompare(0, 0);

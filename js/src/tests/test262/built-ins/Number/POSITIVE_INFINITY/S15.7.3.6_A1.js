@@ -6,6 +6,14 @@ info: Number.POSITIVE_INFINITY is +Infinity
 es5id: 15.7.3.6_A1
 description: Checking sign and finiteness of Number.POSITIVE_INFINITY
 ---*/
-assert.sameValue(isFinite(Number.POSITIVE_INFINITY), false, 'isFinite(Number.POSITIVE_INFINITY) must return false');
+
+// CHECK#1
+if (isFinite(Number.POSITIVE_INFINITY) !== false) {
+  throw new Test262Error('#1: Number.POSITIVE_INFINITY === Not-a-Finite');
+} else {
+  if ((Number.POSITIVE_INFINITY > 0) !== true) {
+    throw new Test262Error('#1: Number.POSITIVE_INFINITY === +Infinity');
+  }
+}
 
 reportCompare(0, 0);

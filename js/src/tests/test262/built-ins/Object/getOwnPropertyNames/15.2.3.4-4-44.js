@@ -12,6 +12,9 @@ includes: [compareArray.js]
 var str = new String("abc");
 str[5] = "de";
 
-assert.compareArray(Object.getOwnPropertyNames(str), ["0", "1", "2", "5", "length"]);
+var expected = ["0", "1", "2", "5", "length"];
+var actual = Object.getOwnPropertyNames(str);
+
+assert(compareArray(actual, expected), 'compareArray(actual, expected) !== true');
 
 reportCompare(0, 0);

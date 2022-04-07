@@ -9,15 +9,15 @@ info: |
 es5id: 15.9.5.24_A3_T3
 description: Checking DontEnum attribute
 ---*/
-assert(
-  !Date.prototype.getMilliseconds.propertyIsEnumerable('length'),
-  'The value of !Date.prototype.getMilliseconds.propertyIsEnumerable(\'length\') is expected to be true'
-);
 
-for (var x in Date.prototype.getMilliseconds) {
-  assert.notSameValue(x, "length", 'The value of x is not "length"');
+if (Date.prototype.getMilliseconds.propertyIsEnumerable('length')) {
+  throw new Test262Error('#1: The Date.prototype.getMilliseconds.length property has the attribute DontEnum');
 }
 
-// TODO: Convert to verifyProperty() format.
+for (var x in Date.prototype.getMilliseconds) {
+  if (x === "length") {
+    throw new Test262Error('#2: The Date.prototype.getMilliseconds.length has the attribute DontEnum');
+  }
+}
 
 reportCompare(0, 0);

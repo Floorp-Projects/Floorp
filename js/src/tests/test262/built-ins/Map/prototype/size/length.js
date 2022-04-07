@@ -1,7 +1,7 @@
 // Copyright (C) 2015 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
-esid: sec-get-map.prototype.size
+es6id: 23.1.3.10
 description: >
   Map.prototype.size.length value and descriptor.
 info: |

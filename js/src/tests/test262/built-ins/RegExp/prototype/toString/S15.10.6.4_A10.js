@@ -9,22 +9,19 @@ description: >
     fails
 includes: [propertyHelper.js]
 ---*/
-assert.sameValue(
-  RegExp.prototype.toString.hasOwnProperty('length'),
-  true,
-  'RegExp.prototype.toString.hasOwnProperty(\'length\') must return true'
-);
+
+//CHECK#1
+if (RegExp.prototype.toString.hasOwnProperty('length') !== true) {
+	throw new Test262Error('#1: RegExp.prototype.toString.hasOwnProperty(\'length\') === true');
+}
 
 var __obj = RegExp.prototype.toString.length;
 
 verifyNotWritable(RegExp.prototype.toString, "length", null, function(){return "shifted";});
 
-assert.sameValue(
-  RegExp.prototype.toString.length,
-  __obj,
-  'The value of RegExp.prototype.toString.length is expected to equal the value of __obj'
-);
-
-// TODO: Convert to verifyProperty() format.
+//CHECK#2
+if (RegExp.prototype.toString.length !== __obj) {
+	throw new Test262Error('#2: __obj = RegExp.prototype.toString.length; RegExp.prototype.toString.length = function(){return "shifted";}; RegExp.prototype.toString.length === __obj. Actual: ' + (RegExp.prototype.toString.length));
+}
 
 reportCompare(0, 0);

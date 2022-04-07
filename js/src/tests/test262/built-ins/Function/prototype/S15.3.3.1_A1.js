@@ -14,14 +14,18 @@ verifyNotWritable(Function, "prototype", null, function() {
   return "shifted";
 });
 
-assert.sameValue(Function.prototype, obj, 'The value of Function.prototype is expected to equal the value of obj');
+//CHECK#1
+if (Function.prototype !== obj) {
+  throw new Test262Error('#1: the Function.prototype property has the attributes ReadOnly.');
+}
 
+//CHECK#2
 try {
-  assert.sameValue(Function.prototype(), undefined, 'Function.prototype() returns undefined');
+  if (Function.prototype() !== undefined) {
+    throw new Test262Error('#2: the Function.prototype property has the attributes ReadOnly');
+  }
 } catch (e) {
   throw new Test262Error('#2.1: the Function.prototype property has the attributes ReadOnly: ' + e);
 }
-
-// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

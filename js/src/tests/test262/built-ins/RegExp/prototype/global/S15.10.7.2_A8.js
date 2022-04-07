@@ -11,23 +11,24 @@ description: >
 
 var __re = RegExp.prototype;
 
-assert.sameValue(__re.hasOwnProperty('global'), true, '__re.hasOwnProperty(\'global\') must return true');
-
-assert.sameValue(
-  __re.propertyIsEnumerable('global'),
-  false,
-  '__re.propertyIsEnumerable(\'global\') must return false'
-);
-
-var count = 0
-for (var p in __re){
-  if (p==="global") {
-    count++
-  }   
+//CHECK#0
+if (__re.hasOwnProperty('global') !== true) {
+  throw new Test262Error('#0: __re = RegExp.prototype; __re.hasOwnProperty(\'global\') === true');
 }
 
-assert.sameValue(count, 0, 'The value of count is expected to be 0');
+ //CHECK#1
+if (__re.propertyIsEnumerable('global') !== false) {
+  throw new Test262Error('#1: __re = RegExp.prototype; __re.propertyIsEnumerable(\'global\') === false');
+}
 
-// TODO: Convert to verifyProperty() format.
+ //CHECK#2
+var count = 0
+for (var p in __re){
+  if (p==="global") count++   
+}
+
+if (count !== 0) {
+  throw new Test262Error('#2: count = 0; __re = RegExp.prototype; for (p in __re){ if (p==="global") count++; } count === 0. Actual: ' + (count));
+}
 
 reportCompare(0, 0);

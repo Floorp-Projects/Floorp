@@ -14,82 +14,123 @@ description: >
 var obj = {};
 obj.join = Array.prototype.join;
 
+//CHECK#1
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return 3
   }
 };
-assert.sameValue(obj.join(), ",,", 'obj.join() must return ",,"');
+if (obj.join() !== ",,") {
+  throw new Test262Error('#1: obj.length = {valueOf: function() {return 3}}  obj.join() === ",,". Actual: ' + (obj.join()));
+}
 
+//CHECK#2
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return 3
   },
-  toString() {
+  toString: function() {
     return 2
   }
 };
-assert.sameValue(obj.join(), ",,", 'obj.join() must return ",,"');
+if (obj.join() !== ",,") {
+  throw new Test262Error('#2: obj.length = {valueOf: function() {return 3}, toString: function() {return 2}}  obj.join() === ",,". Actual: ' + (obj.join()));
+}
 
+//CHECK#3
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return 3
   },
-  toString() {
+  toString: function() {
     return {}
   }
 };
-assert.sameValue(obj.join(), ",,", 'obj.join() must return ",,"');
+if (obj.join() !== ",,") {
+  throw new Test262Error('#3: obj.length = {valueOf: function() {return 3}, toString: function() {return {}}}  obj.join() === ",,". Actual: ' + (obj.join()));
+}
 
-obj.length = {
-  valueOf() {
-    return 3
-  },
-  toString() {
-    throw new Test262Error();
+//CHECK#4
+try {
+  obj.length = {
+    valueOf: function() {
+      return 3
+    },
+    toString: function() {
+      throw "error"
+    }
+  };
+  if (obj.join() !== ",,") {
+    throw new Test262Error('#4.1: obj.length = {valueOf: function() {return 3}, toString: function() {throw "error"}}; obj.join() === ",". Actual: ' + (obj.join()));
   }
-};
-assert.sameValue(obj.join(), ",,", 'obj.join() must return ",,"');
+}
+catch (e) {
+  if (e === "error") {
+    throw new Test262Error('#4.2: obj.length = {valueOf: function() {return 3}, toString: function() {throw "error"}}; obj.join() not throw "error"');
+  } else {
+    throw new Test262Error('#4.3: obj.length = {valueOf: function() {return 3}, toString: function() {throw "error"}}; obj.join() not throw Error. Actual: ' + (e));
+  }
+}
 
+//CHECK#5
 obj.length = {
-  toString() {
+  toString: function() {
     return 2
   }
 };
-assert.sameValue(obj.join(), ",", 'obj.join() must return ","');
+if (obj.join() !== ",") {
+  throw new Test262Error('#5: obj.length = {toString: function() {return 2}}  obj.join() === ",". Actual: ' + (obj.join()));
+}
 
+//CHECK#6
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return {}
   },
-  toString() {
+  toString: function() {
     return 2
   }
 }
-assert.sameValue(obj.join(), ",", 'obj.join() must return ","');
+if (obj.join() !== ",") {
+  throw new Test262Error('#6: obj.length = {valueOf: function() {return {}}, toString: function() {return 2}}  obj.join() === ",". Actual: ' + (obj.join()));
+}
 
-assert.throws(Test262Error, () => {
+//CHECK#7
+try {
   obj.length = {
-    valueOf() {
-      throw new Test262Error();
+    valueOf: function() {
+      throw "error"
     },
-    toString() {
+    toString: function() {
       return 2
     }
   };
   obj.join();
-});
+  throw new Test262Error('#7.1: obj.length = {valueOf: function() {throw "error"}, toString: function() {return 2}}; obj.join() throw "error". Actual: ' + (obj.join()));
+}
+catch (e) {
+  if (e !== "error") {
+    throw new Test262Error('#7.2: obj.length = {valueOf: function() {throw "error"}, toString: function() {return 2}}; obj.join() throw "error". Actual: ' + (e));
+  }
+}
 
-assert.throws(TypeError, () => {
+//CHECK#8
+try {
   obj.length = {
-    valueOf() {
+    valueOf: function() {
       return {}
     },
-    toString() {
+    toString: function() {
       return {}
     }
   };
   obj.join();
-});
+  throw new Test262Error('#8.1: obj.length = {valueOf: function() {return {}}, toString: function() {return {}}}  obj.join() throw TypeError. Actual: ' + (obj.join()));
+}
+catch (e) {
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#8,2: obj.length = {valueOf: function() {return {}}, toString: function() {return {}}}  obj.join() throw TypeError. Actual: ' + (e));
+  }
+}
 
 reportCompare(0, 0);

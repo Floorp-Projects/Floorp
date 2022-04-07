@@ -11,7 +11,12 @@ description: Promise.prototype.then is a function of two arguments
 
 var p = new Promise(function() {});
 
-assert(!!(p.then instanceof Function), 'The value of !!(p.then instanceof Function) is expected to be true');
-assert.sameValue(p.then.length, 2, 'The value of p.then.length is expected to be 2');
+if (!(p.then instanceof Function)) {
+  throw new Test262Error("Expected p.then to be a function");
+}
+
+if (p.then.length !== 2) {
+  throw new Test262Error("Expected p.then to be a function of two arguments");
+}
 
 reportCompare(0, 0);

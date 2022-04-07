@@ -11,10 +11,9 @@ description: >
 
 var __re = /[a-z]n/;
 
-assert.sameValue(
-  __re.test(function(){}()),
-  __re.exec(function(){}()) !== null,
-  '__re.test(function(){}()) must return __re.exec(function(){}()) !== null'
-);
+//CHECK#0
+if (__re.test(function(){}()) !== (__re.exec(function(){}()) !== null)) {
+	throw new Test262Error('#0: __re = /[a-z]n/; __re.test(function(){}()) === (__re.exec(function(){}()) !== null)');
+}
 
 reportCompare(0, 0);

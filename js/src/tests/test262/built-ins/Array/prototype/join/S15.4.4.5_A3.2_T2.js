@@ -7,14 +7,18 @@ esid: sec-array.prototype.join
 description: If Type(argument) is Object, evaluate ToPrimitive(argument, String)
 ---*/
 
+//CHECK#1
 var object = {
   valueOf: function() {
     return "+"
   }
 };
 var x = new Array(object);
-assert.sameValue(x.join(), "[object Object]", 'x.join() must return "[object Object]"');
+if (x.join() !== "[object Object]") {
+  throw new Test262Error('#1: var object = {valueOf: function() {return "+"}} var x = new Array(object); x.join() === "[object Object]". Actual: ' + (x.join()));
+}
 
+//CHECK#2
 var object = {
   valueOf: function() {
     return "+"
@@ -24,8 +28,11 @@ var object = {
   }
 };
 var x = new Array(object);
-assert.sameValue(x.join(), "*", 'x.join() must return "*"');
+if (x.join() !== "*") {
+  throw new Test262Error('#2: var object = {valueOf: function() {return "+"}, toString: function() {return "*"}} var x = new Array(object); x.join() === "*". Actual: ' + (x.join()));
+}
 
+//CHECK#3
 var object = {
   valueOf: function() {
     return "+"
@@ -35,8 +42,11 @@ var object = {
   }
 };
 var x = new Array(object);
-assert.sameValue(x.join(), "+", 'x.join() must return "+"');
+if (x.join() !== "+") {
+  throw new Test262Error('#3: var object = {valueOf: function() {return "+"}, toString: function() {return {}}} var x = new Array(object); x.join() === "+". Actual: ' + (x.join()));
+}
 
+//CHECK#4
 try {
   var object = {
     valueOf: function() {
@@ -47,20 +57,30 @@ try {
     }
   };
   var x = new Array(object);
-  assert.sameValue(x.join(), "*", 'x.join() must return "*"');
+  if (x.join() !== "*") {
+    throw new Test262Error('#4.1: var object = {valueOf: function() {throw "error"}, toString: function() {return "*"}} var x = new Array(object); x.join() === "*". Actual: ' + (x.join()));
+  }
 }
 catch (e) {
-  assert.notSameValue(e, "error", 'The value of e is not "error"');
+  if (e === "error") {
+    throw new Test262Error('#4.2: var object = {valueOf: function() {throw "error"}, toString: function() {return "*"}} var x = new Array(object); x.join() not throw "error"');
+  } else {
+    throw new Test262Error('#4.3: var object = {valueOf: function() {throw "error"}, toString: function() {return "*"}} var x = new Array(object); x.join() not throw Error. Actual: ' + (e));
+  }
 }
 
+//CHECK#5
 var object = {
   toString: function() {
     return "*"
   }
 };
 var x = new Array(object);
-assert.sameValue(x.join(), "*", 'x.join() must return "*"');
+if (x.join() !== "*") {
+  throw new Test262Error('#5: var object = {toString: function() {return "*"}} var x = new Array(object); x.join() === "*". Actual: ' + (x.join()));
+}
 
+//CHECK#6
 var object = {
   valueOf: function() {
     return {}
@@ -70,8 +90,11 @@ var object = {
   }
 }
 var x = new Array(object);
-assert.sameValue(x.join(), "*", 'x.join() must return "*"');
+if (x.join() !== "*") {
+  throw new Test262Error('#6: var object = {valueOf: function() {return {}}, toString: function() {return "*"}} var x = new Array(object); x.join() === "*". Actual: ' + (x.join()));
+}
 
+//CHECK#7
 try {
   var object = {
     valueOf: function() {
@@ -86,9 +109,12 @@ try {
   throw new Test262Error('#7.1: var object = {valueOf: function() {return "+"}, toString: function() {throw "error"}} var x = new Array(object); x.join() throw "error". Actual: ' + (x.join()));
 }
 catch (e) {
-  assert.sameValue(e, "error", 'The value of e is expected to be "error"');
+  if (e !== "error") {
+    throw new Test262Error('#7.2: var object = {valueOf: function() {return "+"}, toString: function() {throw "error"}} var x = new Array(object); x.join() throw "error". Actual: ' + (e));
+  }
 }
 
+//CHECK#8
 try {
   var object = {
     valueOf: function() {
@@ -103,11 +129,9 @@ try {
   throw new Test262Error('#8.1: var object = {valueOf: function() {return {}}, toString: function() {return {}}} var x = new Array(object); x.join() throw TypeError. Actual: ' + (x.join()));
 }
 catch (e) {
-  assert.sameValue(
-    e instanceof TypeError,
-    true,
-    'The result of evaluating (e instanceof TypeError) is expected to be true'
-  );
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#8.2: var object = {valueOf: function() {return {}}, toString: function() {return {}}} var x = new Array(object); x.join() throw TypeError. Actual: ' + (e));
+  }
 }
 
 reportCompare(0, 0);

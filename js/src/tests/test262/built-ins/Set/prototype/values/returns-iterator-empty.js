@@ -2,9 +2,9 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-set.prototype.values
-description: >
-    Returns an iterator that's already done if Set is empty.
+  description: >
+      Returns an iterator that's already done if Set is empty.
+  es6id: 23.2.3.10
 ---*/
 
 var set = new Set();

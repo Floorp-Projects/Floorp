@@ -9,6 +9,8 @@ description: Promise.all returns a Promise
 ---*/
 
 var p = Promise.all([]);
-assert(!!(p instanceof Promise), 'The value of !!(p instanceof Promise) is expected to be true');
+if (!(p instanceof Promise)) {
+  throw new Test262Error('Expected p to be a Promise');
+}
 
 reportCompare(0, 0);

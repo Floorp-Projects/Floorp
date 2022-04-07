@@ -11,11 +11,15 @@ description: >
     Compare Number('.12345e6') with +('12345')*1e1,  and
     Number('.12345e-3') !== Number('12345')*1e-8
 ---*/
-assert.sameValue(+('12345')*1e1, 0.12345e6);
 
-assert.sameValue(
-  Number(".12345e-3"),
-  0.00012345
-);
+// CHECK#1
+if (Number(".12345e6") !== +("12345") * 1e1) {
+  throw new Test262Error('#1: Number(".12345e6") === +("12345")*1e1');
+}
+
+// CHECK#2
+if (Number(".12345e-3") !== Number("12345") * 1e-8) {
+  throw new Test262Error('#2: Number(".12345e-3") === Number("12345")*1e-8');
+}
 
 reportCompare(0, 0);

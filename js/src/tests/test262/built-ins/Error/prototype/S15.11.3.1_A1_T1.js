@@ -13,11 +13,11 @@ var proto = Error.prototype;
 //CHECK#1
 verifyNotConfigurable(Error, "prototype");
 try {
-  assert.sameValue(delete Error.prototype, false);
-} catch (e) {
-  if (e instanceof Test262Error) {
-    throw e;
+  if ((delete Error.prototype) !== false) {
+    throw new Test262Error('#1: Error.prototype has the attribute DontDelete');
   }
+} catch (e) {
+  if (e instanceof Test262Error) throw e;
   assert(e instanceof TypeError);
 }
 //
@@ -30,7 +30,5 @@ if (Error.prototype !== proto) {
 }
 //
 //////////////////////////////////////////////////////////////////////////////
-
-// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

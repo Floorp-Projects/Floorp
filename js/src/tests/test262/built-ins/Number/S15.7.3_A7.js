@@ -8,9 +8,10 @@ info: |
 es5id: 15.7.3_A7
 description: Checking Function.prototype.isPrototypeOf(Number)
 ---*/
-assert(
-  Function.prototype.isPrototypeOf(Number),
-  'Function.prototype.isPrototypeOf(Number) must return true'
-);
+
+//CHECK#1
+if (!(Function.prototype.isPrototypeOf(Number))) {
+  throw new Test262Error('#1: the value of the internal [[Prototype]] property of the Number constructor is the Function prototype object.');
+}
 
 reportCompare(0, 0);

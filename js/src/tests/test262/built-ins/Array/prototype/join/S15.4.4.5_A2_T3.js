@@ -12,11 +12,13 @@ description: If ToUint32(length) is zero, return the empty string
 var obj = {};
 obj.join = Array.prototype.join;
 
+//CHECK#1
 obj.length = 4.5;
 if (obj.join() !== ",,,") {
   throw new Test262Error('#1: var obj = {}; obj.length = 4.5; obj.join = Array.prototype.join; obj.join() === ",,,". Actual: ' + (obj.join()));
 }
 
+//CHECK#2
 obj[0] = undefined;
 obj[1] = 1;
 obj[2] = null;
@@ -24,6 +26,7 @@ if (obj.join() !== ",1,,") {
   throw new Test262Error('#1: var obj = {}; obj.length = 4.5; obj[0] = undefined; obj[1] = 1; obj[2] = null; obj.join = Array.prototype.join; obj.join() === ",1,,". Actual: ' + (obj.join()));
 }
 
+//CHECK#3
 if (obj.length !== 4.5) {
   throw new Test262Error('#1: var obj = {}; obj.length = 4.5; obj[0] = undefined; obj[1] = 1; obj[2] = null; obj.join = Array.prototype.join; obj.join(); obj.length === 4.5. Actual: ' + (obj.length));
 }
@@ -31,12 +34,14 @@ if (obj.length !== 4.5) {
 var obj = {};
 obj.join = Array.prototype.join;
 
+//CHECK#4
 var x = new Number(4.5);
 obj.length = x;
 if (obj.join() !== ",,,") {
   throw new Test262Error('#4: var obj = {}; var x = new Number(4.5); obj.length = x; obj.join = Array.prototype.join; obj.join() === ",,,". Actual: ' + (obj.join()));
 }
 
+//CHECK#5
 obj[0] = undefined;
 obj[1] = 1;
 obj[2] = null;
@@ -44,6 +49,7 @@ if (obj.join() !== ",1,,") {
   throw new Test262Error('#5: var obj = {}; var x = new Number(4.5); obj.length = x; obj[0] = undefined; obj[1] = 1; obj[2] = null; obj.join = Array.prototype.join; obj.join() === ",1,,". Actual: ' + (obj.join()));
 }
 
+//CHECK#6
 if (obj.length !== x) {
   throw new Test262Error('#6: var obj = {}; var x = new Number(4.5); obj.length = x; obj[0] = undefined; obj[1] = 1; obj[2] = null; obj.join = Array.prototype.join; obj.join(); obj.length === x. Actual: ' + (obj.length));
 }

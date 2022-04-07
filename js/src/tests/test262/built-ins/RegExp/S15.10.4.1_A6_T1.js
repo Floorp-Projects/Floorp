@@ -10,6 +10,9 @@ description: Checking [[Class]] property of the newly constructed object
 var __re = new RegExp;
 __re.toString = Object.prototype.toString;
 
-assert.sameValue(__re.toString(), "[object "+"RegExp"+"]", '__re.toString() must return "[object "+"RegExp"+"]"');
+//CHECK#1
+if (__re.toString() !== "[object "+"RegExp"+"]") {
+	throw new Test262Error('#1: __re = new RegExp; __re.toString = Object.prototype.toString; __re.toString() === "[object "+"RegExp"+"]". Actual: ' + (__re.toString()));
+}
 
 reportCompare(0, 0);

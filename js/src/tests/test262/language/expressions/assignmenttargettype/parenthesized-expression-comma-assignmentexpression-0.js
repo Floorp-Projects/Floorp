@@ -21,4 +21,7 @@ info: |
 
 $DONOTEVALUATE();
 
-((x, y = z)) = 1;
+function _() {
+  ((x, y = z)) = 1;
+}
+

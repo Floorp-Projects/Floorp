@@ -12,7 +12,7 @@ info: |
   3. If IsSharedArrayBuffer(O) is false, throw a TypeError exception.
   4. Let newByteLength be ? ToIntegerOrInfinity(newLength).
   [...]
-features: [SharedArrayBuffer, resizable-arraybuffer]
+features: [resizable-arraybuffer]
 ---*/
 
 var log = [];

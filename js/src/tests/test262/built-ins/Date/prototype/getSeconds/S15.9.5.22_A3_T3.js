@@ -8,15 +8,15 @@ info: |
 esid: sec-date.prototype.getseconds
 description: Checking DontEnum attribute
 ---*/
-assert(
-  !Date.prototype.getSeconds.propertyIsEnumerable('length'),
-  'The value of !Date.prototype.getSeconds.propertyIsEnumerable(\'length\') is expected to be true'
-);
 
-for (var x in Date.prototype.getSeconds) {
-  assert.notSameValue(x, "length", 'The value of x is not "length"');
+if (Date.prototype.getSeconds.propertyIsEnumerable('length')) {
+  throw new Test262Error('#1: The Date.prototype.getSeconds.length property has the attribute DontEnum');
 }
 
-// TODO: Convert to verifyProperty() format.
+for (var x in Date.prototype.getSeconds) {
+  if (x === "length") {
+    throw new Test262Error('#2: The Date.prototype.getSeconds.length has the attribute DontEnum');
+  }
+}
 
 reportCompare(0, 0);

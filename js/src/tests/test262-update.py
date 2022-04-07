@@ -25,16 +25,13 @@ UNSUPPORTED_FEATURES = set(
         "Intl.DateTimeFormat-quarter",
         "Intl.Segmenter",
         "Intl.Locale-info",
-        "Intl.DurationFormat",
         "Atomics.waitAsync",
         "legacy-regexp",
         "json-modules",
         "resizable-arraybuffer",
         "Temporal",
-        "ShadowRealm",
+        "callable-boundary-realms",
         "array-find-from-last",
-        "array-grouping",
-        "regexp-v-flag",
     ]
 )
 FEATURE_CHECK_NEEDED = {
@@ -43,11 +40,7 @@ FEATURE_CHECK_NEEDED = {
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
 }
-RELEASE_OR_BETA = set(
-    [
-        "Intl.NumberFormat-v3",
-    ]
-)
+RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
 }
@@ -859,7 +852,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update the test262 test suite.")
     parser.add_argument(
         "--url",
-        default="https://github.com/tc39/test262.git",
+        default="git://github.com/tc39/test262.git",
         help="URL to git repository (default: %(default)s)",
     )
     parser.add_argument(

@@ -11,11 +11,22 @@ description: Calling Object function with NaN argument value
 
 var num = NaN;
 
-assert.sameValue(typeof num, 'number', 'The value of `typeof num` is expected to be "number"');
+// CHECK#1
+if (typeof num !== 'number') {
+  throw new Test262Error('#1: num = NaN should have number type');
+}
 
 var obj = Object(num);
 
-assert.sameValue(obj.constructor, Number, 'The value of obj.constructor is expected to equal the value of Number');
-assert.sameValue(typeof obj, "object", 'The value of `typeof obj` is expected to be "object"');
+//CHECK#2
+if (obj.constructor !== Number) {
+  throw new Test262Error('#2: Object(NaN) returns ToObject(NaN)');
+}
+
+//CHECK#3
+if (typeof obj !== "object") {
+  throw new Test262Error('#2: Object(NaN) returns ToObject(NaN)');
+}
+//
 
 reportCompare(0, 0);

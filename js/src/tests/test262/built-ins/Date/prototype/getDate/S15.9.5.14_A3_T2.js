@@ -8,17 +8,13 @@ info: |
 esid: sec-date.prototype.getdate
 description: Checking DontDelete attribute
 ---*/
-assert.sameValue(
-  delete Date.prototype.getDate.length,
-  true,
-  'The value of `delete Date.prototype.getDate.length` is expected to be true'
-);
 
-assert(
-  !Date.prototype.getDate.hasOwnProperty('length'),
-  'The value of !Date.prototype.getDate.hasOwnProperty(\'length\') is expected to be true'
-);
+if (delete Date.prototype.getDate.length !== true) {
+  throw new Test262Error('#1: The Date.prototype.getDate.length property does not have the attributes DontDelete');
+}
 
-// TODO: Convert to verifyProperty() format.
+if (Date.prototype.getDate.hasOwnProperty('length')) {
+  throw new Test262Error('#2: The Date.prototype.getDate.length property does not have the attributes DontDelete');
+}
 
 reportCompare(0, 0);

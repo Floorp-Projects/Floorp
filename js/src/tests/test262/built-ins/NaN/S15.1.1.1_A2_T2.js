@@ -10,8 +10,8 @@ flags: [noStrict]
 
 // CHECK#1
 NaN = true;
-assert.notSameValue(typeof(NaN), "boolean", 'The value of typeof(NaN) is not "boolean"');
-
-// TODO: Convert to verifyProperty() format.
+if (typeof(NaN) === "boolean") {
+  throw new Test262Error('#1: NaN = true; typeof(NaN) !== "boolean". Actual: ' + (typeof(NaN)));
+}
 
 reportCompare(0, 0);

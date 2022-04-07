@@ -9,9 +9,14 @@ description: >
     throw a TypeError exception
 ---*/
 
-assert.throws(TypeError, () => {
+//CHECK#1
+
+try {
   new isFinite();
-  throw new Test262Error();
-});
+} catch (e) {
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#1.2: new isFinite() throw TypeError. Actual: ' + (e));
+  }
+}
 
 reportCompare(0, 0);

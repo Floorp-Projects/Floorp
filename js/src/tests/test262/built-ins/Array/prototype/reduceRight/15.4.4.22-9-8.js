@@ -9,10 +9,9 @@ description: >
 ---*/
 
 var accessed = false;
-var callbackAccessed = false;
 
 function callbackfn() {
-  callbackAccessed = true;
+  accessed = true;
 }
 
 var obj = {
@@ -27,9 +26,8 @@ Object.defineProperty(obj, "5", {
   configurable: true
 });
 
-Array.prototype.reduceRight.call(obj, callbackfn, "initialValue");
+Array.prototype.reduceRight.call(obj, function() {}, "initialValue");
 
 assert.sameValue(accessed, false, 'accessed');
-assert.sameValue(callbackAccessed, false, 'callbackAccessed');
 
 reportCompare(0, 0);

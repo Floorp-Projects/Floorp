@@ -7,9 +7,15 @@ es5id: 15.11.4_A4
 description: Checking if creating "new Error.prototype" fails
 ---*/
 
-assert.throws(TypeError, () => {
-  new Error.prototype();
-  throw new Test262Error();
-});
+//////////////////////////////////////////////////////////////////////////////
+//CHECK#1
+try {
+  var __instance = new Error.prototype;
+  throw new Test262Error('#1: "var __instance = new Error.prototype" lead to throwing exception');
+} catch (e) {
+  if (e instanceof Test262Error) throw e;
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
 reportCompare(0, 0);

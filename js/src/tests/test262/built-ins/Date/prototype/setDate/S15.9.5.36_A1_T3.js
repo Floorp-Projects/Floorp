@@ -6,15 +6,15 @@ info: The Date.prototype property "setDate" has { DontEnum } attributes
 esid: sec-date.prototype.setdate
 description: Checking DontEnum attribute
 ---*/
-assert(
-  !Date.prototype.propertyIsEnumerable('setDate'),
-  'The value of !Date.prototype.propertyIsEnumerable(\'setDate\') is expected to be true'
-);
 
-for (var x in Date.prototype) {
-  assert.notSameValue(x, "setDate", 'The value of x is not "setDate"');
+if (Date.prototype.propertyIsEnumerable('setDate')) {
+  throw new Test262Error('#1: The Date.prototype.setDate property has the attribute DontEnum');
 }
 
-// TODO: Convert to verifyProperty() format.
+for (var x in Date.prototype) {
+  if (x === "setDate") {
+    throw new Test262Error('#2: The Date.prototype.setDate has the attribute DontEnum');
+  }
+}
 
 reportCompare(0, 0);

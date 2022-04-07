@@ -15,7 +15,7 @@ info: |
   5. Let hostHandled be ? HostGrowSharedArrayBuffer(O, newByteLength).
   6. If hostHandled is handled, return undefined.
   [...]
-features: [SharedArrayBuffer, resizable-arraybuffer]
+features: [resizable-arraybuffer]
 ---*/
 
 var sab = new SharedArrayBuffer(4, {maxByteLength: 5});

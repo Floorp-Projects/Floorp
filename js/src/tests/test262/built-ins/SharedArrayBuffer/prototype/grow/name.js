@@ -16,7 +16,7 @@ info: |
     Unless otherwise specified, the name property of a built-in Function
     object, if it exists, has the attributes { [[Writable]]: false,
     [[Enumerable]]: false, [[Configurable]]: true }.
-features: [SharedArrayBuffer, resizable-arraybuffer]
+features: [resizable-arraybuffer]
 includes: [propertyHelper.js]
 ---*/
 

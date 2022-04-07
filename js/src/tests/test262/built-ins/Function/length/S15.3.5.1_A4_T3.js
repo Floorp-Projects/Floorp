@@ -11,7 +11,10 @@ description: >
 
 var f = new Function("arg1,arg2,arg3", "arg1,arg2", "arg3", null);
 
-assert(f.hasOwnProperty('length'), 'f.hasOwnProperty(\'length\') must return true');
+//CHECK#1
+if (!(f.hasOwnProperty('length'))) {
+  throw new Test262Error('#1: the function has length property.');
+}
 
 for (var key in f) {
   if (key == "length") {
@@ -19,8 +22,9 @@ for (var key in f) {
   }
 }
 
-assert(!lengthenumed, 'The value of !lengthenumed is expected to be true');
-
-// TODO: Convert to verifyProperty() format.
+//CHECK#2
+if (lengthenumed) {
+  throw new Test262Error('#2: the length property has the attributes { DontEnum }');
+}
 
 reportCompare(0, 0);

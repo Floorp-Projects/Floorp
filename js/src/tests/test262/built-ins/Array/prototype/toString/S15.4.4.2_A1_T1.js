@@ -10,6 +10,7 @@ es5id: 15.4.4.2_A1_T1
 description: If Result(2) is zero, return the empty string
 ---*/
 
+//CHECK#1
 var x = new Array();
 if (x.toString() !== x.join()) {
   throw new Test262Error('#1.1: x = new Array(); x.toString() === x.join(). Actual: ' + (x.toString()));
@@ -19,6 +20,7 @@ if (x.toString() !== x.join()) {
   }
 }
 
+//CHECK#2
 x = [];
 x[0] = 1;
 x.length = 0;

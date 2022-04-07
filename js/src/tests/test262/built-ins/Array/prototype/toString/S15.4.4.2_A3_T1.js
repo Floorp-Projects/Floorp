@@ -8,6 +8,7 @@ es5id: 15.4.4.2_A3_T1
 description: "[[Prototype]] of Array instance is Array.prototype"
 ---*/
 
+//CHECK#1
 Array.prototype[1] = 1;
 var x = [0];
 x.length = 2;
