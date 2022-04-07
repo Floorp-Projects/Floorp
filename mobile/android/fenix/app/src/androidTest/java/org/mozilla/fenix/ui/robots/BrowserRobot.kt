@@ -334,13 +334,21 @@ class BrowserRobot {
         menuSaveImage.click()
     }
 
-    fun createBookmark(url: Uri) {
+    fun createBookmark(url: Uri, folder: String? = null) {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(url) {
             // needs to wait for the right url to load before saving a bookmark
             verifyUrl(url.toString())
         }.openThreeDotMenu {
-        }.bookmarkPage { }
+        }.bookmarkPage {
+            // continue only if a folder is defined
+        }.takeIf { !folder.isNullOrBlank() }?.let {
+            it.openThreeDotMenu {
+            }.editBookmarkPage {
+                setParentFolder(folder!!)
+                saveEditBookmark()
+            }
+        }
     }
 
     fun clickLinkMatchingText(expectedText: String) {

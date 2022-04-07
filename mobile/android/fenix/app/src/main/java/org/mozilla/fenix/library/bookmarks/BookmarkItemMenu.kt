@@ -13,6 +13,7 @@ import mozilla.components.concept.menu.candidate.TextStyle
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.bookmarkStorage
 
 class BookmarkItemMenu(
     private val context: Context,
@@ -25,57 +26,87 @@ class BookmarkItemMenu(
         Share,
         OpenInNewTab,
         OpenInPrivateTab,
+        OpenAllInTabs,
         Delete,
         ;
     }
 
     val menuController: MenuController by lazy { BrowserMenuController() }
 
+    /**
+     * Check if the menu item has to be displayed or not for the type of bookmark.
+     * If wanted, return the item.
+     * Else, return null.
+     */
+    private fun maybeCreateMenuItem(
+        itemType: BookmarkNodeType,
+        wantedType: BookmarkNodeType,
+        text: String,
+        action: Item,
+    ): TextMenuCandidate? {
+        return maybeCreateMenuItem(itemType, listOf(wantedType), text, action)
+    }
+
+    private fun maybeCreateMenuItem(
+        itemType: BookmarkNodeType,
+        wantedTypes: List<BookmarkNodeType>,
+        text: String,
+        action: Item,
+    ): TextMenuCandidate? {
+        return if (itemType in wantedTypes) {
+            TextMenuCandidate(
+                text = text,
+            ) {
+                onItemTapped.invoke(action)
+            }
+        } else {
+            null
+        }
+    }
+
     @VisibleForTesting
-    internal fun menuItems(itemType: BookmarkNodeType): List<TextMenuCandidate> {
+    internal suspend fun menuItems(itemType: BookmarkNodeType, itemId: String): List<TextMenuCandidate> {
+        // if have at least one child
+        val hasAtLeastOneChild = !context.bookmarkStorage.getTree(itemId)?.children.isNullOrEmpty()
+
         return listOfNotNull(
-            if (itemType != BookmarkNodeType.SEPARATOR) {
-                TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_edit_button),
-                ) {
-                    onItemTapped.invoke(Item.Edit)
-                }
-            } else {
-                null
-            },
-            if (itemType == BookmarkNodeType.ITEM) {
-                TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_copy_button),
-                ) {
-                    onItemTapped.invoke(Item.Copy)
-                }
-            } else {
-                null
-            },
-            if (itemType == BookmarkNodeType.ITEM) {
-                TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_share_button),
-                ) {
-                    onItemTapped.invoke(Item.Share)
-                }
-            } else {
-                null
-            },
-            if (itemType == BookmarkNodeType.ITEM) {
-                TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_open_in_new_tab_button),
-                ) {
-                    onItemTapped.invoke(Item.OpenInNewTab)
-                }
-            } else {
-                null
-            },
-            if (itemType == BookmarkNodeType.ITEM) {
-                TextMenuCandidate(
-                    text = context.getString(R.string.bookmark_menu_open_in_private_tab_button),
-                ) {
-                    onItemTapped.invoke(Item.OpenInPrivateTab)
-                }
+            maybeCreateMenuItem(
+                itemType,
+                listOf(BookmarkNodeType.ITEM, BookmarkNodeType.FOLDER),
+                context.getString(R.string.bookmark_menu_edit_button),
+                Item.Edit,
+            ),
+            maybeCreateMenuItem(
+                itemType,
+                BookmarkNodeType.ITEM,
+                context.getString(R.string.bookmark_menu_copy_button),
+                Item.Copy,
+            ),
+            maybeCreateMenuItem(
+                itemType,
+                BookmarkNodeType.ITEM,
+                context.getString(R.string.bookmark_menu_share_button),
+                Item.Share,
+            ),
+            maybeCreateMenuItem(
+                itemType,
+                BookmarkNodeType.ITEM,
+                context.getString(R.string.bookmark_menu_open_in_new_tab_button),
+                Item.OpenInNewTab,
+            ),
+            maybeCreateMenuItem(
+                itemType,
+                BookmarkNodeType.ITEM,
+                context.getString(R.string.bookmark_menu_open_in_private_tab_button),
+                Item.OpenInPrivateTab,
+            ),
+            if (hasAtLeastOneChild) {
+                maybeCreateMenuItem(
+                    itemType,
+                    BookmarkNodeType.FOLDER,
+                    context.getString(R.string.bookmark_menu_open_all_in_tabs_button),
+                    Item.OpenAllInTabs,
+                )
             } else {
                 null
             },
@@ -88,7 +119,7 @@ class BookmarkItemMenu(
         )
     }
 
-    fun updateMenu(itemType: BookmarkNodeType) {
-        menuController.submitList(menuItems(itemType))
+    suspend fun updateMenu(itemType: BookmarkNodeType, itemId: String) {
+        menuController.submitList(menuItems(itemType, itemId))
     }
 }

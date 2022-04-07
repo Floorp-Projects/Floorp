@@ -171,6 +171,15 @@ class BookmarkFragmentInteractorTest {
     }
 
     @Test
+    fun `open all bookmarks item in new tabs`() {
+        interactor.onOpenAllInTabs(tree)
+
+        verify {
+            bookmarkController.handleBookmarkFolderOpening(tree)
+        }
+    }
+
+    @Test
     fun `delete a bookmark item`() {
         interactor.onDelete(setOf(item))
 
