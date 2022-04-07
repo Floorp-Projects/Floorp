@@ -240,6 +240,38 @@ add_task(async function test_event_with_frames() {
   rootMessageHandler.destroy();
 });
 
+/**
+ * Test that protocol events are only emitted via message-handler-event and not
+ * using their original name.
+ */
+add_task(async function test_event_no_named_event() {
+  info("Navigate the initial tab to the test URL");
+  const tab = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://example.com/document-builder.sjs?html=tab"
+  );
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  const browsingContext = tab.linkedBrowser.browsingContext;
+
+  const rootMessageHandler = createRootMessageHandler("session-id-event");
+
+  const onTestEvent = rootMessageHandler.once("message-handler-event");
+
+  let resolvedNamedEvent = false;
+  const onNamedEvent = () => (resolvedNamedEvent = true);
+  rootMessageHandler.on("event.testEvent", onNamedEvent);
+
+  callTestEmitEvent(rootMessageHandler, browsingContext.id);
+
+  const testEvent = await onTestEvent;
+  is(testEvent.name, "event.testEvent", "Received the expected event");
+  is(resolvedNamedEvent, false, "The named event promise did not resolve");
+
+  rootMessageHandler.off("event.testEvent", onNamedEvent);
+  rootMessageHandler.destroy();
+  gBrowser.removeTab(tab);
+});
+
 function callTestEmitEvent(rootMessageHandler, browsingContextId) {
   rootMessageHandler.handleCommand({
     moduleName: "event",
