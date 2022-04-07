@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-  LoadListener: "chrome://remote/content/shared/listeners/LoadListener.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
 });
@@ -26,22 +25,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * MessageHandler network.
  */
 class WindowGlobalMessageHandler extends MessageHandler {
-  #loadListener;
-
   constructor() {
     super(...arguments);
 
     this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
-
-    // Setup the LoadListener as early as possible.
-    this.#loadListener = new LoadListener(this._context.window);
-    this.#loadListener.on("DOMContentLoaded", this.#onDOMContentLoaded);
-    this.#loadListener.startListening();
-  }
-
-  destroy() {
-    this.#loadListener.destroy();
-    super.destroy();
   }
 
   /**
@@ -80,6 +67,10 @@ class WindowGlobalMessageHandler extends MessageHandler {
     return this._innerWindowId;
   }
 
+  get window() {
+    return this._context.window;
+  }
+
   async applyInitialSessionDataItems(sessionDataItems) {
     if (!Array.isArray(sessionDataItems)) {
       return;
@@ -89,35 +80,39 @@ class WindowGlobalMessageHandler extends MessageHandler {
       type: WindowGlobalMessageHandler.type,
     };
 
-    for (const sessionDataItem of sessionDataItems) {
+    const sessionDataPromises = sessionDataItems.map(sessionDataItem => {
       const {
         moduleName,
         category,
         contextDescriptor,
         value,
       } = sessionDataItem;
-      if (this._isRelevantContext(contextDescriptor)) {
-        // Don't apply session data if the module is not present
-        // for the destination.
-        if (!this._moduleCache.hasModule(moduleName, destination)) {
-          continue;
-        }
-
-        await this.handleCommand({
-          moduleName,
-          commandName: "_applySessionData",
-          params: {
-            category,
-            // TODO: We might call _applySessionData several times for the same
-            // moduleName & category, but with different values. Instead we can
-            // use the fact that _applySessionData supports arrays of values,
-            // though it will make the implementation more complex.
-            added: [value],
-          },
-          destination,
-        });
+      if (!this._matchesContext(contextDescriptor)) {
+        return Promise.resolve();
       }
-    }
+
+      // Don't apply session data if the module is not present
+      // for the destination.
+      if (!this._moduleCache.hasModule(moduleName, destination)) {
+        return Promise.resolve();
+      }
+
+      return this.handleCommand({
+        moduleName,
+        commandName: "_applySessionData",
+        params: {
+          category,
+          // TODO: We might call _applySessionData several times for the same
+          // moduleName & category, but with different values. Instead we can
+          // use the fact that _applySessionData supports arrays of values,
+          // though it will make the implementation more complex.
+          added: [value],
+        },
+        destination,
+      });
+    });
+
+    await Promise.all(sessionDataPromises);
 
     // With the session data applied the handler is now ready to be used.
     this.emitEvent("window-global-handler-created", {
@@ -132,32 +127,11 @@ class WindowGlobalMessageHandler extends MessageHandler {
     );
   }
 
-  _isRelevantContext(contextDescriptor) {
-    // Once we allow to filter on browsing contexts, the contextDescriptor would
-    // for instance contain a browserId on top of a type. For instance:
-    //
-    //  {
-    //     type: ContextDescriptorType.BrowserElement
-    //     id: ${someBrowserId}
-    //   }
-    //
-    // To check if the current WindowGlobalMessageHandler matches this context
-    // descriptor, we would run the following additional check:
-    //
-    //   contextDescriptor.type === ContextDescriptorType.BrowserElement &&
-    //     contextDescriptor.id === this._context.browserId
-    //
-    // (reminder: here _context is the BrowsingContext passed as a constructor
-    //  argument to WindowGlobalMessageHandler).
-    return contextDescriptor.type === ContextDescriptorType.All;
+  _matchesContext(contextDescriptor) {
+    return (
+      contextDescriptor.type === ContextDescriptorType.All ||
+      (contextDescriptor.type === ContextDescriptorType.TopBrowsingContext &&
+        contextDescriptor.id === this._context.browserId)
+    );
   }
-
-  #onDOMContentLoaded = (eventName, data) => {
-    this.emitEvent("window-global-dom-content-loaded", {
-      contextId: this.contextId,
-      documentURI: data.target.documentURI,
-      innerWindowId: this.innerWindowId,
-      readyState: data.target.readyState,
-    });
-  };
 }
