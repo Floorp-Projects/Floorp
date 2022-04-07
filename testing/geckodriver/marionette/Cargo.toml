@@ -1,6 +1,10 @@
 [package]
 name = "marionette"
 version = "0.2.0"
+description = "Library implementing the client side of Gecko's Marionette remote automation protocol."
+keywords = ["mozilla", "firefox", "marionette", "webdriver"]
+repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver/marionette"
+license = "MPL-2.0"
 authors = ["Mozilla"]
 edition = "2018"
 
