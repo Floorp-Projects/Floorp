@@ -7183,15 +7183,18 @@ MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(GdkEventButton* aEvent) {
   nsCOMPtr<nsIDragSession> currentDragSession;
   dragService->GetCurrentSession(getter_AddRefs(currentDragSession));
 
-  if (currentDragSession != nullptr) {
-    buttonPressCountWithDrag++;
-    if (buttonPressCountWithDrag > 1) {
-      NS_WARNING(
-          "Quit unfinished Wayland Drag and Drop operation. Buggy Wayland "
-          "compositor?");
-      buttonPressCountWithDrag = 0;
-      dragService->EndDragSession(false, 0);
-    }
+  if (!currentDragSession) {
+    buttonPressCountWithDrag = 0;
+    return;
+  }
+
+  buttonPressCountWithDrag++;
+  if (buttonPressCountWithDrag > 1) {
+    NS_WARNING(
+        "Quit unfinished Wayland Drag and Drop operation. Buggy Wayland "
+        "compositor?");
+    buttonPressCountWithDrag = 0;
+    dragService->EndDragSession(false, 0);
   }
 }
 
