@@ -7,6 +7,9 @@
 #ifndef mozilla_ipc_AsyncBlockers_h
 #define mozilla_ipc_AsyncBlockers_h
 
+#include "mozilla/ThreadSafety.h"
+#include "nsTArray.h"
+
 // FIXME: when bug 1760855 is fixed, it should not be required anymore
 
 namespace mozilla::ipc {
@@ -29,7 +32,7 @@ class AsyncBlockers {
       // Too late.
       return;
     }
-    mBlockers.insert({aBlocker, true});
+    mBlockers.InsertElementSorted(aBlocker);
   }
   void Deregister(void* aBlocker) {
     MutexAutoLock lock(mLock);
@@ -37,10 +40,9 @@ class AsyncBlockers {
       // Too late.
       return;
     }
-    auto it = mBlockers.find(aBlocker);
-    MOZ_ASSERT(it != mBlockers.end());
 
-    mBlockers.erase(it);
+    MOZ_ASSERT(mBlockers.ContainsSorted(aBlocker));
+    MOZ_ALWAYS_TRUE(mBlockers.RemoveElementSorted(aBlocker));
     MaybeResolve();
   }
   RefPtr<GenericPromise> WaitUntilClear(uint32_t aTimeOutInMs = 0) {
@@ -76,20 +78,20 @@ class AsyncBlockers {
   }
 
  private:
-  void MaybeResolve() {
+  void MaybeResolve() REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
     if (mResolved) {
       return;
     }
-    if (!mBlockers.empty()) {
+    if (!mBlockers.IsEmpty()) {
       return;
     }
     mPromise->Resolve(true, __func__);
     mResolved = true;
   }
-  Mutex mLock MOZ_UNANNOTATED;  // protects mBlockers and mResolved.
-  std::map<void*, bool> mBlockers;
-  bool mResolved = false;
+  Mutex mLock;
+  nsTArray<void*> mBlockers GUARDED_BY(mLock);
+  bool mResolved GUARDED_BY(mLock) = false;
   const RefPtr<GenericPromise::Private> mPromise;
 };
 
