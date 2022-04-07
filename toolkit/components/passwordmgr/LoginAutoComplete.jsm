@@ -220,26 +220,23 @@ class LoginAutocompleteItem extends AutocompleteItem {
 class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
   constructor(generatedPassword, willAutoSaveGeneratedPassword) {
     super("generatedPassword");
-    XPCOMUtils.defineLazyGetter(this, "comment", () =>
-      JSON.stringify({
+    XPCOMUtils.defineLazyGetter(this, "comment", () => {
+      return JSON.stringify({
         generatedPassword,
         willAutoSaveGeneratedPassword,
-      })
-    );
+      });
+    });
     this.value = generatedPassword;
 
-    XPCOMUtils.defineLazyGetter(this, "label", () =>
-      getLocalizedString("useASecurelyGeneratedPassword")
-    );
+    XPCOMUtils.defineLazyGetter(this, "label", () => {
+      return getLocalizedString("useASecurelyGeneratedPassword");
+    });
   }
 }
 
 class ImportableLearnMoreAutocompleteItem extends AutocompleteItem {
   constructor() {
     super("importableLearnMore");
-    this.comment = JSON.stringify({
-      fillMessageName: "PasswordManager:OpenImportableLearnMore",
-    });
   }
 }
 
@@ -249,13 +246,7 @@ class ImportableLoginsAutocompleteItem extends AutocompleteItem {
   constructor(browserId, hostname, actor) {
     super("importableLogins");
     this.label = browserId;
-    this.comment = JSON.stringify({
-      hostname,
-      fillMessageName: "PasswordManager:HandleImportable",
-      fillMessageData: {
-        browserId,
-      },
-    });
+    this.comment = hostname;
     this.#actor = actor;
 
     // This is sent for every item (re)shown, but the parent will debounce to
@@ -283,12 +274,8 @@ class LoginsFooterAutocompleteItem extends AutocompleteItem {
       // can be passed to the parent process outside of nsIAutoCompleteResult APIs
       // so we won't need this hack.
       return JSON.stringify({
-        telemetryEventData,
+        ...telemetryEventData,
         formHostname,
-        fillMessageName: "PasswordManager:OpenPreferences",
-        fillMessageData: {
-          entryPoint: "autocomplete",
-        },
       });
     });
 
@@ -730,54 +717,77 @@ class LoginAutoComplete {
 }
 
 let gAutoCompleteListener = {
+  // Input element on which enter keydown event was fired.
+  keyDownEnterForInput: null,
+
   added: false,
-  fillRequestId: 0,
 
   init() {
     if (!this.added) {
-      Services.obs.addObserver(this, "autocomplete-will-enter-text");
+      AutoCompleteChild.addPopupStateListener(this);
       this.added = true;
     }
   },
 
-  async observe(subject, topic, data) {
-    switch (topic) {
-      case "autocomplete-will-enter-text": {
-        await this.sendFillRequestToLoginManagerParent(subject, data);
+  popupStateChanged(messageName, data, target) {
+    switch (messageName) {
+      case "FormAutoComplete:PopupOpened": {
+        let { chromeEventHandler } = target.docShell;
+        chromeEventHandler.addEventListener("keydown", this, true);
+        break;
+      }
+
+      case "FormAutoComplete:PopupClosed": {
+        this.onPopupClosed(data, target);
+        let { chromeEventHandler } = target.docShell;
+        chromeEventHandler.removeEventListener("keydown", this, true);
         break;
       }
     }
   },
 
-  async sendFillRequestToLoginManagerParent(input, comment) {
-    if (!comment) {
+  handleEvent(event) {
+    if (event.type != "keydown") {
       return;
     }
 
-    if (input != formFillController.controller.input) {
+    let focusedElement = formFillController.focusedInput;
+    if (
+      event.keyCode != event.DOM_VK_RETURN ||
+      focusedElement != event.target
+    ) {
+      this.keyDownEnterForInput = null;
+      return;
+    }
+    this.keyDownEnterForInput = focusedElement;
+  },
+
+  onPopupClosed({ selectedRowComment, selectedRowStyle }, window) {
+    let focusedElement = formFillController.focusedInput;
+    let eventTarget = this.keyDownEnterForInput;
+    this.keyDownEnterForInput = null;
+    if (!eventTarget || eventTarget !== focusedElement) {
       return;
     }
 
-    const { fillMessageName, fillMessageData } = JSON.parse(comment ?? "{}");
-    if (!fillMessageName) {
-      return;
+    let loginManager = window.windowGlobalChild.getActor("LoginManager");
+    switch (selectedRowStyle) {
+      case "importableLearnMore":
+        loginManager.sendAsyncMessage(
+          "PasswordManager:OpenImportableLearnMore",
+          {}
+        );
+        break;
+      case "importableLogins":
+        loginManager.sendAsyncMessage("PasswordManager:HandleImportable", {
+          browserId: selectedRowComment,
+        });
+        break;
+      case "loginsFooter":
+        loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
+          entryPoint: "autocomplete",
+        });
+        break;
     }
-
-    this.fillRequestId++;
-    const fillRequestId = this.fillRequestId;
-    const child = LoginManagerChild.forWindow(input.focusedInput.ownerGlobal);
-    const value = await child.sendQuery(fillMessageName, fillMessageData ?? {});
-
-    // skip fill if another fill operation started during await
-    if (fillRequestId != this.fillRequestId) {
-      return;
-    }
-
-    if (!value) {
-      return;
-    }
-
-    input.textValue = value;
-    input.selectTextRange(value.length, value.length);
   },
 };
