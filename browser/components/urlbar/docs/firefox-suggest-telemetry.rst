@@ -333,6 +333,52 @@ Changelog
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
 .. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
+contextservices.quicksuggest.impression_cap
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This event is recorded when an event related to an impression cap occurs. The
+event's objects are the following possible values:
+
+:hit:
+  Recorded when an impression cap is hit.
+:reset:
+  Recorded when a cap's counter is reset because its interval period has
+  elapsed.
+
+The event's ``extra`` object value contains the following properties:
+
+:count:
+  The number of impressions during the cap's interval period.
+:endDate:
+  The timestamp at which the cap's interval period will end (for "hit" events)
+  or did end (for "reset" events), in number of milliseconds since Unix epoch.
+  For lifetime caps, this value will be "Infinity".
+:eventDate:
+  The event's timestamp, in number of milliseconds since Unix epoch. For "reset"
+  events, this may be earlier than the timestamp on the event itself because the
+  implementation sometimes batches and records these events at a later date.
+  This ``eventDate`` value should be preferred over the timestamp on the event
+  itself.
+:impressionDate:
+  The timestamp of the most recent impression, in number of milliseconds since
+  Unix epoch.
+:intervalSeconds:
+  The number of seconds in the cap's interval period. For lifetime caps, this
+  value will be "Infinity".
+:maxCount:
+  The maximum number of impressions allowed in the cap's interval period.
+:startDate:
+  The timestamp at which the cap's interval period started, in number of seconds
+  since Unix epoch.
+:type:
+  The type of cap, one of: "sponsored", "nonsponsored"
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761058_]
+
+.. _1761058: https://bugzilla.mozilla.org/show_bug.cgi?id=1761058
+
 contextservices.quicksuggest.opt_in_dialog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
