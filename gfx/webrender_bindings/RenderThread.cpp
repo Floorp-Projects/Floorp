@@ -106,7 +106,9 @@ void RenderThread::Start(uint32_t aNamespace) {
              * to not miss getting native hang stacks. */
             2048);
         nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
-        static_cast<nsThread*>(thread.get())->SetUseHangMonitor(true);
+        nsThread* nsthread = static_cast<nsThread*>(thread.get());
+        nsthread->SetUseHangMonitor(true);
+        nsthread->SetPriority(nsISupportsPriority::PRIORITY_HIGH);
       }));
 
   if (NS_FAILED(rv)) {
