@@ -189,6 +189,7 @@ def vendor_rust(command_context, **kwargs):
     "Some extra files like docs and tests will automatically be excluded."
     "Installs the packages listed in third_party/python/requirements.in and "
     "their dependencies.",
+    virtualenv_name="vendor",
 )
 @CommandArgument(
     "--keep-extra-files",
@@ -196,17 +197,8 @@ def vendor_rust(command_context, **kwargs):
     default=False,
     help="Keep all files, including tests and documentation.",
 )
-def vendor_python(command_context, **kwargs):
+def vendor_python(command_context, keep_extra_files):
     from mozbuild.vendor.vendor_python import VendorPython
 
-    if sys.version_info[:2] != (3, 6):
-        print(
-            "You must use Python 3.6 to vendor Python packages. If you don't "
-            "have Python 3.6, you can request that your package be added by "
-            "creating a bug: \n"
-            "https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=Mach%20Core"  # noqa F401
-        )
-        return 1
-
     vendor_command = command_context._spawn(VendorPython)
-    vendor_command.vendor(**kwargs)
+    vendor_command.vendor(keep_extra_files)
