@@ -589,6 +589,7 @@ class FunctionBox : public SuspendableContext {
   void setNeedsHomeObject() {
     MOZ_ASSERT(flags_.allowSuperProperty());
     setFlag(ImmutableFlags::NeedsHomeObject);
+    flags_.setIsExtended();
   }
 
   bool isDerivedClassConstructor() const {

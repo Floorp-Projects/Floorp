@@ -3901,14 +3901,17 @@ void CodeGenerator::visitFunctionEnvironment(LFunctionEnvironment* lir) {
 }
 
 void CodeGenerator::visitHomeObject(LHomeObject* lir) {
-  Address homeObject(ToRegister(lir->function()),
-                     FunctionExtended::offsetOfMethodHomeObjectSlot());
+  Register func = ToRegister(lir->function());
+  Address homeObject(func, FunctionExtended::offsetOfMethodHomeObjectSlot());
+
+  masm.assertFunctionIsExtended(func);
 #ifdef DEBUG
   Label isObject;
   masm.branchTestObject(Assembler::Equal, homeObject, &isObject);
   masm.assumeUnreachable("[[HomeObject]] must be Object");
   masm.bind(&isObject);
 #endif
+
   masm.unboxObject(homeObject, ToRegister(lir->output()));
 }
 
@@ -15651,6 +15654,8 @@ void CodeGenerator::visitSuperFunction(LSuperFunction* lir) {
 void CodeGenerator::visitInitHomeObject(LInitHomeObject* lir) {
   Register func = ToRegister(lir->function());
   ValueOperand homeObject = ToValue(lir, LInitHomeObject::HomeObjectIndex);
+
+  masm.assertFunctionIsExtended(func);
 
   Address addr(func, FunctionExtended::offsetOfMethodHomeObjectSlot());
 
