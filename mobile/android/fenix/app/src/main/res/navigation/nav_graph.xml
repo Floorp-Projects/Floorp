@@ -211,7 +211,7 @@
         <argument
             android:name="search_access_point"
             android:defaultValue="NONE"
-            app:argType="org.mozilla.fenix.components.metrics.Event$PerformedSearch$SearchAccessPoint" />
+            app:argType="org.mozilla.fenix.components.metrics.MetricsUtils$Source" />
     </dialog>
 
     <fragment

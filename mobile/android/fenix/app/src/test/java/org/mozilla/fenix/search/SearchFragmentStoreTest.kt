@@ -28,7 +28,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.utils.Settings
 
 class SearchFragmentStoreTest {
@@ -70,7 +70,7 @@ class SearchFragmentStoreTest {
             showSyncedTabsSuggestions = false,
             tabId = null,
             pastedText = "pastedText",
-            searchAccessPoint = SearchAccessPoint.ACTION
+            searchAccessPoint = MetricsUtils.Source.ACTION
         )
 
         assertEquals(
@@ -80,7 +80,7 @@ class SearchFragmentStoreTest {
                 components,
                 tabId = null,
                 pastedText = "pastedText",
-                searchAccessPoint = SearchAccessPoint.ACTION
+                searchAccessPoint = MetricsUtils.Source.ACTION
             )
         )
         assertEquals(
@@ -90,7 +90,7 @@ class SearchFragmentStoreTest {
                 components,
                 tabId = "tabId",
                 pastedText = "pastedText",
-                searchAccessPoint = SearchAccessPoint.ACTION
+                searchAccessPoint = MetricsUtils.Source.ACTION
             )
         )
     }
@@ -128,14 +128,14 @@ class SearchFragmentStoreTest {
                 showSyncedTabsSuggestions = false,
                 tabId = "tabId",
                 pastedText = "",
-                searchAccessPoint = SearchAccessPoint.SHORTCUT
+                searchAccessPoint = MetricsUtils.Source.SHORTCUT
             ),
             createInitialSearchFragmentState(
                 activity,
                 components,
                 tabId = "tabId",
                 pastedText = "",
-                searchAccessPoint = SearchAccessPoint.SHORTCUT
+                searchAccessPoint = MetricsUtils.Source.SHORTCUT
             )
         )
     }
@@ -347,6 +347,6 @@ class SearchFragmentStoreTest {
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
         showSyncedTabsSuggestions = false,
-        searchAccessPoint = SearchAccessPoint.NONE
+        searchAccessPoint = MetricsUtils.Source.NONE
     )
 }

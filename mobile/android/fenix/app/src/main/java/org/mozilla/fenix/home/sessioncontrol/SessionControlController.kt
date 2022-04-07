@@ -13,6 +13,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.availableSearchEngines
 import mozilla.components.browser.state.state.searchEngines
@@ -48,7 +49,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.Message
@@ -417,17 +417,18 @@ class DefaultSessionControlController(
             SupportUtils.POCKET_TRENDING_URL -> Pocket.pocketTopSiteClicked.record(NoExtras())
         }
 
-        val availableEngines = getAvailableSearchEngines()
-        val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.TOPSITE
-        val event =
-            availableEngines.firstOrNull { engine ->
-                engine.resultUrls.firstOrNull { it.contains(topSite.url) } != null
-            }?.let { searchEngine ->
-                searchAccessPoint.let { sap ->
-                    MetricsUtils.createSearchEvent(searchEngine, store, sap)
-                }
-            }
-        event?.let { activity.metrics.track(it) }
+        val availableEngines: List<SearchEngine> = getAvailableSearchEngines()
+        val searchAccessPoint = MetricsUtils.Source.TOPSITE
+
+        availableEngines.firstOrNull { engine ->
+            engine.resultUrls.firstOrNull { it.contains(topSite.url) } != null
+        }?.let { searchEngine ->
+            MetricsUtils.recordSearchMetrics(
+                searchEngine,
+                searchEngine == store.state.search.selectedOrDefaultSearchEngine,
+                searchAccessPoint
+            )
+        }
 
         val tabId = addTabUseCase.invoke(
             url = appendSearchAttributionToUrlIfNeeded(topSite.url),
@@ -593,15 +594,12 @@ class DefaultSessionControlController(
         if (clipboardText.isUrl() || searchEngine == null) {
             Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
         } else {
-            val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.ACTION
-            val event = searchAccessPoint.let { sap ->
-                MetricsUtils.createSearchEvent(
-                    searchEngine,
-                    store,
-                    sap
-                )
-            }
-            event?.let { activity.metrics.track(it) }
+            val searchAccessPoint = MetricsUtils.Source.ACTION
+            MetricsUtils.recordSearchMetrics(
+                searchEngine,
+                searchEngine == store.state.search.selectedOrDefaultSearchEngine,
+                searchAccessPoint
+            )
         }
     }
 

@@ -8,8 +8,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import io.mockk.MockKAnnotations
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.spyk
@@ -78,7 +80,7 @@ class SearchDialogControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
-        every { MetricsUtils.createSearchEvent(searchEngine, browserStore, any()) } returns null
+        every { MetricsUtils.recordSearchMetrics(searchEngine, any(), any()) } just Runs
     }
 
     @After

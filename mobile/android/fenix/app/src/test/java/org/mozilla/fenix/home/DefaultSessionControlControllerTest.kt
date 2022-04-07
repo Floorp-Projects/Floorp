@@ -37,7 +37,6 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.telemetry.glean.private.NoExtras
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -63,7 +62,6 @@ import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EngineSource
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -583,13 +581,14 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleSelectGoogleDefaultTopSite_EventPerformedSearchTopSite() {
+        assertFalse(Events.performedSearch.testHasValue())
+
         val topSite = TopSite.Default(
             id = 1L,
             title = "Google",
             url = SupportUtils.GOOGLE_URL,
             createdAt = 0
         )
-        val engineSource = EngineSource.Default(googleSearchEngine, false)
         val controller = spyk(createController())
 
         every { controller.getAvailableSearchEngines() } returns listOf(googleSearchEngine)
@@ -601,15 +600,7 @@ class DefaultSessionControlControllerTest {
 
             controller.handleSelectTopSite(topSite, position = 0)
 
-            verify {
-                metrics.track(
-                    Event.PerformedSearch(
-                        Event.PerformedSearch.EventSource.TopSite(
-                            engineSource
-                        )
-                    )
-                )
-            }
+            assertTrue(Events.performedSearch.testHasValue())
 
             assertTrue(TopSites.openDefault.testHasValue())
             assertEquals(1, TopSites.openDefault.testGetValue().size)
@@ -625,13 +616,14 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleSelectDuckDuckGoTopSite_EventPerformedSearchTopSite() {
+        assertFalse(Events.performedSearch.testHasValue())
+
         val topSite = TopSite.Pinned(
             id = 1L,
             title = "DuckDuckGo",
             url = "https://duckduckgo.com",
             createdAt = 0
         )
-        val engineSource = EngineSource.Shortcut(duckDuckGoSearchEngine, false)
         val controller = spyk(createController())
 
         every { controller.getAvailableSearchEngines() } returns listOf(googleSearchEngine, duckDuckGoSearchEngine)
@@ -643,16 +635,7 @@ class DefaultSessionControlControllerTest {
 
             controller.handleSelectTopSite(topSite, position = 0)
 
-            verify {
-                metrics.track(
-                    Event.PerformedSearch(
-                        Event.PerformedSearch.EventSource.TopSite(
-                            engineSource
-                        )
-                    )
-                )
-            }
-            TopSites.openPinned.record(NoExtras())
+            assertTrue(Events.performedSearch.testHasValue())
         } finally {
             unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
         }
@@ -956,6 +939,7 @@ class DefaultSessionControlControllerTest {
     @Test
     fun handlePasteAndGo() {
         assertFalse(Events.enteredUrl.testHasValue())
+        assertFalse(Events.performedSearch.testHasValue())
 
         createController().handlePasteAndGo("text")
 
@@ -966,8 +950,9 @@ class DefaultSessionControlControllerTest {
                 from = BrowserDirection.FromHome,
                 engine = searchEngine
             )
-            metrics.track(any<Event.PerformedSearch>())
         }
+
+        assertTrue(Events.performedSearch.testHasValue())
 
         createController().handlePasteAndGo("https://mozilla.org")
         verify {

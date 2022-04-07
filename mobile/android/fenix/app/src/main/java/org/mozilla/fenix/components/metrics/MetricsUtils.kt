@@ -13,10 +13,9 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint
+import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Metrics
 import java.io.IOException
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
@@ -24,53 +23,37 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
 object MetricsUtils {
-    fun createSearchEvent(
+
+    /**
+     * Possible sources for a performed search.
+     */
+    enum class Source {
+        ACTION, SHORTCUT, SUGGESTION, TOPSITE, WIDGET, NONE
+    }
+
+    /**
+     * Records the appropriate metric for performed searches.
+     * @engine the engine used for searching.
+     * @isDefault whether te engine is the default engine or not.
+     * @searchAccessPoint the source of the search. Can be one of the values of [Source].
+     */
+    fun recordSearchMetrics(
         engine: SearchEngine,
-        store: BrowserStore,
-        searchAccessPoint: SearchAccessPoint
-    ): Event.PerformedSearch? {
-        val isShortcut = engine != store.state.search.selectedOrDefaultSearchEngine
-        val isCustom = engine.type == SearchEngine.Type.CUSTOM
+        isDefault: Boolean,
+        searchAccessPoint: Source
+    ) {
+        val identifier = if (engine.type == SearchEngine.Type.CUSTOM) "custom" else engine.id
+        val source = searchAccessPoint.name.lowercase()
 
-        val engineSource =
-            if (isShortcut) {
-                Event.PerformedSearch.EngineSource.Shortcut(engine, isCustom)
-            } else {
-                Event.PerformedSearch.EngineSource.Default(engine, isCustom)
-            }
+        Metrics.searchCount["$identifier.$source"].add()
 
-        return when (searchAccessPoint) {
-            SearchAccessPoint.SUGGESTION -> Event.PerformedSearch(
-                Event.PerformedSearch.EventSource.Suggestion(
-                    engineSource
-                )
-            )
-            SearchAccessPoint.ACTION -> Event.PerformedSearch(
-                Event.PerformedSearch.EventSource.Action(
-                    engineSource
-                )
-            )
-            SearchAccessPoint.WIDGET -> Event.PerformedSearch(
-                Event.PerformedSearch.EventSource.Widget(
-                    engineSource
-                )
-            )
-            SearchAccessPoint.SHORTCUT -> Event.PerformedSearch(
-                Event.PerformedSearch.EventSource.Shortcut(
-                    engineSource
-                )
-            )
-            SearchAccessPoint.TOPSITE -> Event.PerformedSearch(
-                Event.PerformedSearch.EventSource.TopSite(
-                    engineSource
-                )
-            )
-            SearchAccessPoint.NONE -> Event.PerformedSearch(
-                Event.PerformedSearch.EventSource.Other(
-                    engineSource
-                )
-            )
+        val performedSearchExtra = if (isDefault) {
+            "default.$source"
+        } else {
+            "shortcut.$source"
         }
+
+        Events.performedSearch.record(Events.PerformedSearchExtra(performedSearchExtra))
     }
 
     /**

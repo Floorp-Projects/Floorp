@@ -435,7 +435,6 @@
     <ID>UndocumentedPublicClass:Event.kt$Event.OpenedLink$Mode</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch$EngineSource</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch$EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch$SearchAccessPoint</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EngineSource$Default : EngineSource</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EngineSource$Shortcut : EngineSource</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$Action : EventSource</ID>
@@ -1076,7 +1075,6 @@
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun start()</ID>
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun stop()</ID>
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun track(event: Event)</ID>
-    <ID>UndocumentedPublicFunction:MetricsUtils.kt$MetricsUtils$fun createSearchEvent( engine: SearchEngine, store: BrowserStore, searchAccessPoint: SearchAccessPoint ): Event.PerformedSearch?</ID>
     <ID>UndocumentedPublicFunction:Mode.kt$CurrentMode$fun emitModeChanges()</ID>
     <ID>UndocumentedPublicFunction:Mode.kt$CurrentMode$fun getCurrentMode()</ID>
     <ID>UndocumentedPublicFunction:Mode.kt$Mode.Companion$fun fromBrowsingMode(browsingMode: BrowsingMode)</ID>
@@ -1178,7 +1176,6 @@
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchController$fun handleUrlTapped(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())</ID>
     <ID>UndocumentedPublicFunction:SearchDialogController.kt$SearchDialogController$@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) fun buildDialog(): AlertDialog.Builder</ID>
     <ID>UndocumentedPublicFunction:SearchDialogInteractor.kt$SearchDialogInteractor$fun onCameraPermissionsNeeded()</ID>
-    <ID>UndocumentedPublicFunction:SearchFragmentStore.kt$fun createInitialSearchFragmentState( activity: HomeActivity, components: Components, tabId: String?, pastedText: String?, searchAccessPoint: Event.PerformedSearch.SearchAccessPoint ): SearchFragmentState</ID>
     <ID>UndocumentedPublicFunction:SearchStringValidator.kt$SearchStringValidator$fun isSearchStringValid(client: Client, searchString: String): Result</ID>
     <ID>UndocumentedPublicFunction:SearchWidgetProvider.kt$SearchWidgetProvider.Companion$fun updateAllWidgets(context: Context)</ID>
     <ID>UndocumentedPublicFunction:SelectBookmarkFolderAdapter.kt$SelectBookmarkFolderAdapter$fun updateData(tree: BookmarkNode?, hideFolderGuid: String?)</ID>

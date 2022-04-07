@@ -108,6 +108,7 @@ events:
           * default.suggestion
           * shortcut.action
           * shortcut.suggestion
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/959
       - https://github.com/mozilla-mobile/fenix/issues/19923

@@ -24,7 +24,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
@@ -57,7 +57,7 @@ class ToolbarViewTest {
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
         showSyncedTabsSuggestions = false,
-        searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.NONE
+        searchAccessPoint = MetricsUtils.Source.NONE
     )
 
     @Before

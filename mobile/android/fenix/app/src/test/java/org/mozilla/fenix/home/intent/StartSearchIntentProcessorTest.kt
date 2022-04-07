@@ -21,8 +21,8 @@ import org.mozilla.fenix.GleanMetrics.SearchWidget
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -77,7 +77,7 @@ class StartSearchIntentProcessorTest {
                 null,
                 NavGraphDirections.actionGlobalSearchDialog(
                     sessionId = null,
-                    searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.WIDGET
+                    searchAccessPoint = MetricsUtils.Source.WIDGET
                 ),
                 options
             )

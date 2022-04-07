@@ -15,7 +15,7 @@ import mozilla.components.lib.state.Store
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricsUtils
 
 /**
  * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
@@ -80,16 +80,19 @@ data class SearchFragmentState(
     val showSyncedTabsSuggestions: Boolean,
     val tabId: String?,
     val pastedText: String? = null,
-    val searchAccessPoint: Event.PerformedSearch.SearchAccessPoint?,
+    val searchAccessPoint: MetricsUtils.Source,
     val clipboardHasUrl: Boolean = false
 ) : State
 
+/**
+ * Creates the initial state for the search fragment.
+ */
 fun createInitialSearchFragmentState(
     activity: HomeActivity,
     components: Components,
     tabId: String?,
     pastedText: String?,
-    searchAccessPoint: Event.PerformedSearch.SearchAccessPoint
+    searchAccessPoint: MetricsUtils.Source
 ): SearchFragmentState {
     val settings = components.settings
     val tab = tabId?.let { components.core.store.state.findTab(it) }

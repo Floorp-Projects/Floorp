@@ -8,11 +8,11 @@ import android.content.Intent
 import android.os.StrictMode
 import androidx.navigation.NavController
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.components
@@ -52,12 +52,11 @@ class SpeechProcessingIntentProcessor(
 
     private fun launchToBrowser(searchEngine: SearchEngine, text: String) {
         activity.components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
-            val searchEvent = MetricsUtils.createSearchEvent(
+            MetricsUtils.recordSearchMetrics(
                 searchEngine,
-                store,
-                Event.PerformedSearch.SearchAccessPoint.WIDGET
+                searchEngine == store.state.search.selectedOrDefaultSearchEngine,
+                MetricsUtils.Source.WIDGET
             )
-            searchEvent?.let { metrics.track(it) }
         }
 
         activity.openToBrowserAndLoad(

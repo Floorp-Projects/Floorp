@@ -4,10 +4,8 @@
 
 package org.mozilla.fenix.components.metrics
 
-import mozilla.components.browser.state.search.SearchEngine
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.ContextMenu
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import java.util.Locale
 
@@ -90,70 +88,6 @@ sealed class Event {
     object CreditCardManagementCardTapped : Event()
 
     // Interaction events with extras
-
-    data class PerformedSearch(val eventSource: EventSource) : Event() {
-        sealed class EngineSource {
-            abstract val engine: SearchEngine
-            abstract val isCustom: Boolean
-
-            data class Default(override val engine: SearchEngine, override val isCustom: Boolean) :
-                EngineSource()
-
-            data class Shortcut(override val engine: SearchEngine, override val isCustom: Boolean) :
-                EngineSource()
-
-            // https://github.com/mozilla-mobile/fenix/issues/1607
-            // Sanitize identifiers for custom search engines.
-            val identifier: String
-                get() = if (isCustom) "custom" else engine.id
-
-            val searchEngine: SearchEngine
-                get() = when (this) {
-                    is Default -> engine
-                    is Shortcut -> engine
-                }
-
-            val descriptor: String
-                get() = when (this) {
-                    is Default -> "default"
-                    is Shortcut -> "shortcut"
-                }
-        }
-
-        sealed class EventSource(open val engineSource: EngineSource) {
-            data class Suggestion(override val engineSource: EngineSource) :
-                EventSource(engineSource)
-
-            data class Action(override val engineSource: EngineSource) : EventSource(engineSource)
-            data class Widget(override val engineSource: EngineSource) : EventSource(engineSource)
-            data class Shortcut(override val engineSource: EngineSource) : EventSource(engineSource)
-            data class TopSite(override val engineSource: EngineSource) : EventSource(engineSource)
-            data class Other(override val engineSource: EngineSource) : EventSource(engineSource)
-
-            private val label: String
-                get() = when (this) {
-                    is Suggestion -> "suggestion"
-                    is Action -> "action"
-                    is Widget -> "widget"
-                    is Shortcut -> "shortcut"
-                    is TopSite -> "topsite"
-                    is Other -> "other"
-                }
-
-            val countLabel: String
-                get() = "${engineSource.identifier.lowercase(Locale.getDefault())}.$label"
-
-            val sourceLabel: String
-                get() = "${engineSource.descriptor}.$label"
-        }
-
-        enum class SearchAccessPoint {
-            SUGGESTION, ACTION, WIDGET, SHORTCUT, TOPSITE, NONE
-        }
-
-        override val extras: Map<Events.performedSearchKeys, String>?
-            get() = mapOf(Events.performedSearchKeys.source to eventSource.sourceLabel)
-    }
 
     data class SearchWithAds(val providerName: String) : Event() {
         val label: String
