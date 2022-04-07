@@ -38,6 +38,7 @@ add_task(async function run_test() {
   const result = await NetworkHelper.parseSecurityInfo(
     MockSecurityInfo,
     {},
+    {},
     new Map()
   );
 

@@ -413,26 +413,36 @@ static P* blendTextureLinearDispatch(S sampler, vec2 uv, int span,
                             swgl_LinearQuantizeScale)) -
         uv.x.x;
     if (uv_step.x > 0.0f && insideDist >= uv_step.x) {
-      int inside = int(end - buf);
+      int32_t inside = int(end - buf);
       if (filter == LINEAR_FILTER_DOWNSCALE) {
-        inside = clamp(int(insideDist * (0.5f / swgl_LinearQuantizeScale)) &
-                           ~(swgl_StepSize - 1),
-                       0, inside);
-        blendTextureLinearDownscale<BLEND>(sampler, uv, inside, min_uv, max_uv,
-                                           color, buf);
+        inside = min(int(insideDist * (0.5f / swgl_LinearQuantizeScale)) &
+                         ~(swgl_StepSize - 1),
+                     inside);
+        if (inside > 0) {
+          blendTextureLinearDownscale<BLEND>(sampler, uv, inside, min_uv,
+                                             max_uv, color, buf);
+          buf += inside;
+          uv.x += (inside / swgl_StepSize) * uv_step.x;
+        }
       } else if (filter == LINEAR_FILTER_UPSCALE) {
-        inside = clamp(int(insideDist / uv_step.x) * swgl_StepSize, 0, inside);
-        blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
-                                         max_uv, color, buf);
+        inside = min(int(insideDist / uv_step.x) * swgl_StepSize, inside);
+        if (inside > 0) {
+          blendTextureLinearUpscale<BLEND>(sampler, uv, inside, uv_step, min_uv,
+                                           max_uv, color, buf);
+          buf += inside;
+          uv.x += (inside / swgl_StepSize) * uv_step.x;
+        }
       } else {
-        inside = clamp(int(insideDist * (1.0f / swgl_LinearQuantizeScale)) &
-                           ~(swgl_StepSize - 1),
-                       0, inside);
-        blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
-                                      color, buf);
+        inside = min(int(insideDist * (1.0f / swgl_LinearQuantizeScale)) &
+                         ~(swgl_StepSize - 1),
+                     inside);
+        if (inside > 0) {
+          blendTextureLinearFast<BLEND>(sampler, uv, inside, min_uv, max_uv,
+                                        color, buf);
+          buf += inside;
+          uv.x += (inside / swgl_StepSize) * uv_step.x;
+        }
       }
-      buf += inside;
-      uv.x += (inside / swgl_StepSize) * uv_step.x;
     }
   }
   // If the fallback filter was requested, or if there are any samples left that

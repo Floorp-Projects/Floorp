@@ -7,7 +7,7 @@ function onDOMLoaded() {
     window.thePKT_PANEL = thePKT_PANEL;
     thePKT_PANEL.initStyleGuide();
   }
-  window.thePKT_PANEL.create();
+  window.thePKT_PANEL.overlay.create();
 
   setupDarkModeUI();
 }

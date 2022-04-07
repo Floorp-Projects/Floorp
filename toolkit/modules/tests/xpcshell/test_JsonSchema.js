@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const JsonSchema = ChromeUtils.import("resource://gre/modules/JsonSchema.jsm");
+const { JsonSchema } = ChromeUtils.import(
+  "resource://gre/modules/JsonSchema.jsm"
+);
 
 add_task(function test_basicSchema() {
   info("Testing validation of a basic schema");

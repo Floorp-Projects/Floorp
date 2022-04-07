@@ -83,17 +83,16 @@ struct ColorPalette {
   sRGBColor mAccentDarker;
 };
 
-static nscolor ThemedAccentColor(bool aBackground) {
+static nscolor ThemedAccentColor(bool aBackground, ColorScheme aScheme) {
   MOZ_ASSERT(StaticPrefs::widget_non_native_theme_use_theme_accent());
-  // TODO(emilio): In the future we should probably add dark-color-scheme
-  // support for non-native form controls.
   return ColorPalette::EnsureOpaque(LookAndFeel::Color(
       aBackground ? LookAndFeel::ColorID::MozAccentColor
                   : LookAndFeel::ColorID::MozAccentColorForeground,
-      LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No));
+      aScheme, LookAndFeel::UseStandins::No));
 }
 
-static ColorPalette sDefaultPalette = ColorPalette::Default();
+static ColorPalette sDefaultLightPalette = ColorPalette::Default();
+static ColorPalette sDefaultDarkPalette = ColorPalette::Default();
 
 ColorPalette::ColorPalette(nscolor aAccent, nscolor aForeground) {
   mAccent = sRGBColor::FromABGR(aAccent);
@@ -103,26 +102,29 @@ ColorPalette::ColorPalette(nscolor aAccent, nscolor aForeground) {
   mAccentDarker = sRGBColor::FromABGR(GetDarker(aAccent));
 }
 
-ThemeAccentColor::ThemeAccentColor(const ComputedStyle& aStyle) {
+ThemeAccentColor::ThemeAccentColor(const ComputedStyle& aStyle,
+                                   ColorScheme aScheme) {
   const auto& color = aStyle.StyleUI()->mAccentColor;
   if (color.IsColor()) {
     mAccentColor.emplace(
         ColorPalette::EnsureOpaque(color.AsColor().CalcColor(aStyle)));
   } else {
     MOZ_ASSERT(color.IsAuto());
+    mDefaultPalette = aScheme == ColorScheme::Light ? &sDefaultLightPalette
+                                                    : &sDefaultDarkPalette;
   }
 }
 
 sRGBColor ThemeAccentColor::Get() const {
   if (!mAccentColor) {
-    return sDefaultPalette.mAccent;
+    return mDefaultPalette->mAccent;
   }
   return sRGBColor::FromABGR(*mAccentColor);
 }
 
 sRGBColor ThemeAccentColor::GetForeground() const {
   if (!mAccentColor) {
-    return sDefaultPalette.mForeground;
+    return mDefaultPalette->mForeground;
   }
   return sRGBColor::FromABGR(
       ThemeColors::ComputeCustomAccentForeground(*mAccentColor));
@@ -130,21 +132,21 @@ sRGBColor ThemeAccentColor::GetForeground() const {
 
 sRGBColor ThemeAccentColor::GetLight() const {
   if (!mAccentColor) {
-    return sDefaultPalette.mAccentLight;
+    return mDefaultPalette->mAccentLight;
   }
   return sRGBColor::FromABGR(ColorPalette::GetLight(*mAccentColor));
 }
 
 sRGBColor ThemeAccentColor::GetDark() const {
   if (!mAccentColor) {
-    return sDefaultPalette.mAccentDark;
+    return mDefaultPalette->mAccentDark;
   }
   return sRGBColor::FromABGR(ColorPalette::GetDark(*mAccentColor));
 }
 
 sRGBColor ThemeAccentColor::GetDarker() const {
   if (!mAccentColor) {
-    return sDefaultPalette.mAccentDarker;
+    return mDefaultPalette->mAccentDarker;
   }
   return sRGBColor::FromABGR(ColorPalette::GetDarker(*mAccentColor));
 }
@@ -187,12 +189,17 @@ void ThemeColors::RecomputeAccentColors() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (!StaticPrefs::widget_non_native_theme_use_theme_accent()) {
-    sDefaultPalette = ColorPalette::Default();
+    sDefaultLightPalette = sDefaultDarkPalette = ColorPalette::Default();
     return;
   }
 
-  sDefaultPalette =
-      ColorPalette(ThemedAccentColor(true), ThemedAccentColor(false));
+  sDefaultLightPalette =
+      ColorPalette(ThemedAccentColor(true, ColorScheme::Light),
+                   ThemedAccentColor(false, ColorScheme::Light));
+
+  sDefaultDarkPalette =
+      ColorPalette(ThemedAccentColor(true, ColorScheme::Dark),
+                   ThemedAccentColor(false, ColorScheme::Dark));
 }
 
 /*static*/

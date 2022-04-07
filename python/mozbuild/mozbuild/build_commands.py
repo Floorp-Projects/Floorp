@@ -185,6 +185,7 @@ def build(
             keep_going=keep_going,
             mach_context=command_context._mach_context,
             append_env=append_env,
+            virtualenv_topobjdir=orig_topobjdir,
         )
         if status != 0:
             return status
@@ -208,7 +209,7 @@ def build(
             )
         pgo_env["JARLOG_FILE"] = mozpath.join(orig_topobjdir, "jarlog/en-US.log")
         pgo_cmd = [
-            instr.virtualenv_manager.python_path,
+            command_context.virtualenv_manager.python_path,
             mozpath.join(command_context.topsrcdir, "build/pgo/profileserver.py"),
         ]
         subprocess.check_call(pgo_cmd, cwd=instr.topobjdir, env=pgo_env)

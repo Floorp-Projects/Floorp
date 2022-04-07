@@ -111,7 +111,6 @@ function run_test() {
       uris[uriIndex],
       maxAge + includeSubdomains,
       secInfo,
-      0,
       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
     );
   }

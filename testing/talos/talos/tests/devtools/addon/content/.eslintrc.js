@@ -9,7 +9,6 @@ module.exports = {
     module: true,
     reportError: true,
     require: true,
-    rootURI: true,
   },
   rules: {
     "no-unused-vars": ["error", { args: "none", vars: "all" }],

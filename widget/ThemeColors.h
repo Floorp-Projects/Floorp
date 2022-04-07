@@ -18,15 +18,18 @@ static constexpr gfx::sRGBColor sDefaultAccent(
 static constexpr gfx::sRGBColor sDefaultAccentForeground(
     gfx::sRGBColor::OpaqueWhite());
 
+struct ColorPalette;
+
 class ThemeAccentColor {
  protected:
   using sRGBColor = mozilla::gfx::sRGBColor;
   using ComputedStyle = mozilla::ComputedStyle;
 
   Maybe<nscolor> mAccentColor;
+  const ColorPalette* mDefaultPalette = nullptr;
 
  public:
-  explicit ThemeAccentColor(const ComputedStyle& aStyle);
+  explicit ThemeAccentColor(const ComputedStyle&, ColorScheme);
   virtual ~ThemeAccentColor() = default;
 
   sRGBColor Get() const;
@@ -45,18 +48,17 @@ class ThemeColors {
   using StyleSystemColor = mozilla::StyleSystemColor;
   using AccentColor = ThemeAccentColor;
 
-  const AccentColor mAccentColor;
   const Document& mDoc;
   const bool mHighContrast;
-  const LookAndFeel::ColorScheme mColorScheme;
+  const ColorScheme mColorScheme;
+  const AccentColor mAccentColor;
 
  public:
   explicit ThemeColors(const nsIFrame* aFrame, StyleAppearance aAppearance)
-      : mAccentColor(*aFrame->Style()),
-        mDoc(*aFrame->PresContext()->Document()),
+      : mDoc(*aFrame->PresContext()->Document()),
         mHighContrast(ShouldBeHighContrast(*aFrame->PresContext())),
-        mColorScheme(ColorSchemeForWidget(aFrame, aAppearance, mHighContrast)) {
-  }
+        mColorScheme(ColorSchemeForWidget(aFrame, aAppearance, mHighContrast)),
+        mAccentColor(*aFrame->Style(), mColorScheme) {}
   virtual ~ThemeColors() = default;
 
   [[nodiscard]] static float ScaleLuminanceBy(float aLuminance, float aFactor) {
@@ -65,7 +67,7 @@ class ThemeColors {
 
   const AccentColor& Accent() const { return mAccentColor; }
   bool HighContrast() const { return mHighContrast; }
-  bool IsDark() const { return mColorScheme == LookAndFeel::ColorScheme::Dark; }
+  bool IsDark() const { return mColorScheme == ColorScheme::Dark; }
 
   nscolor SystemNs(StyleSystemColor aColor) const {
     return LookAndFeel::Color(aColor, mColorScheme,
