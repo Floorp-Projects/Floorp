@@ -267,28 +267,16 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   void testValueTruthyForType(JSValueType type, ScratchTagScope& tag,
                               const ValueOperand& value, Register scratch1,
-                              Register scratch2, FloatRegister fr,
+                              Register scratch2, FloatRegister floatTemp,
                               Label* ifTruthy, Label* ifFalsy,
                               OutOfLineTestObject* ool, bool skipTypeTest);
 
-  // This function behaves like testValueTruthy with the exception that it can
-  // choose to let control flow fall through when the object is truthy, as
-  // an optimization. Use testValueTruthy when it's required to branch to one
-  // of the two labels.
-  void testValueTruthyKernel(const ValueOperand& value,
-                             const LDefinition* scratch1,
-                             const LDefinition* scratch2, FloatRegister fr,
-                             TypeDataList observedTypes, Label* ifTruthy,
-                             Label* ifFalsy, OutOfLineTestObject* ool);
-
   // Test whether value is truthy or not and jump to the corresponding label.
-  // If the value can be an object that emulates |undefined|, |ool| must be
-  // non-null; otherwise it may be null (and the scratch definitions should
-  // be bogus), in which case an object encountered here will always be
-  // truthy.
-  void testValueTruthy(const ValueOperand& value, const LDefinition* scratch1,
-                       const LDefinition* scratch2, FloatRegister fr,
-                       TypeDataList observedTypes, Label* ifTruthy,
+  // The control flow falls through when the object is truthy, as an
+  // optimization.
+  void testValueTruthy(const ValueOperand& value, Register scratch1,
+                       Register scratch2, FloatRegister floatTemp,
+                       const TypeDataList& observedTypes, Label* ifTruthy,
                        Label* ifFalsy, OutOfLineTestObject* ool);
 
   // This function behaves like testObjectEmulatesUndefined with the exception
