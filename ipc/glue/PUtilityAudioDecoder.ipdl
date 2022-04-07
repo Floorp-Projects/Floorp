@@ -1,0 +1,29 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PRemoteDecoderManager;
+
+using mozilla::PDMFactory::MediaCodecsSupported from "PDMFactory.h";
+
+namespace mozilla {
+
+namespace ipc {
+
+// This protocol allows to run media audio decoding infrastructure on top
+// of the Utility process
+protocol PUtilityAudioDecoder
+{
+parent:
+  async NewContentRemoteDecoderManager(
+            Endpoint<PRemoteDecoderManagerParent> endpoint);
+
+child:
+  async UpdateMediaCodecsSupported(MediaCodecsSupported aSupported);
+
+};
+
+} // namespace ipc
+
+} // namespace mozilla
