@@ -10887,12 +10887,11 @@ void CodeGenerator::visitNotV(LNotV* lir) {
 
   ValueOperand input = ToValue(lir, LNotV::InputIndex);
   Register temp1 = ToRegister(lir->temp1());
-  Register temp2 = ToRegister(lir->temp2());
   FloatRegister floatTemp = ToFloatRegister(lir->temp0());
   Register output = ToRegister(lir->output());
   const TypeDataList& observedTypes = lir->mir()->observedTypes();
 
-  testValueTruthy(input, temp1, temp2, floatTemp, observedTypes, ifTruthy,
+  testValueTruthy(input, temp1, output, floatTemp, observedTypes, ifTruthy,
                   ifFalsy, ool);
 
   Label join;
