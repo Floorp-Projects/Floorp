@@ -2828,6 +2828,7 @@ impl CascadeData {
                 CssRule::Style(..) |
                 CssRule::Namespace(..) |
                 CssRule::FontFace(..) |
+                CssRule::Container(..) |
                 CssRule::CounterStyle(..) |
                 CssRule::Supports(..) |
                 CssRule::Keyframes(..) |
