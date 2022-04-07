@@ -13,6 +13,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "WindowsVersionInfo",
+  "resource://gre/modules/components-utils/WindowsVersionInfo.jsm"
+);
+
 let expectedResults;
 
 let osVersion = Services.sysinfo.get("version");
@@ -66,14 +72,17 @@ const SPOOFED_PLATFORM = {
   other: "Linux x86_64",
 };
 
-// If comparison with this value fails in the future,
-// it's time to evaluate if exposing a new Windows
-// version to the Web is appropriate. See
+// If comparison with the WindowsOscpu value fails in the future, it's time to
+// evaluate if exposing a new Windows version to the Web is appropriate. See
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1693295
-const WindowsOscpu =
-  cpuArch == "x86_64"
-    ? `Windows NT ${osVersion}; Win64; x64`
-    : `Windows NT ${osVersion}`;
+let WindowsOscpu = null;
+if (AppConstants.platform == "win") {
+  let isWin11 = WindowsVersionInfo.get().buildNumber >= 22000;
+  WindowsOscpu =
+    cpuArch == "x86_64" || (cpuArch == "aarch64" && isWin11)
+      ? `Windows NT ${osVersion}; Win64; x64`
+      : `Windows NT ${osVersion}`;
+}
 
 const DEFAULT_OSCPU = {
   linux: `Linux ${cpuArch}`,
