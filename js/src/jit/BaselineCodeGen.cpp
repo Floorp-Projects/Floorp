@@ -5417,6 +5417,8 @@ bool BaselineCodeGen<Handler>::emit_SuperBase() {
   // Load [[HomeObject]]
   Address homeObjAddr(scratch,
                       FunctionExtended::offsetOfMethodHomeObjectSlot());
+
+  masm.assertFunctionIsExtended(scratch);
 #ifdef DEBUG
   Label isObject;
   masm.branchTestObject(Assembler::Equal, homeObjAddr, &isObject);
@@ -6198,6 +6200,8 @@ bool BaselineCodeGen<Handler>::emit_InitHomeObject() {
   // Load function off stack
   Register func = R2.scratchReg();
   masm.unboxObject(frame.addressOfStackValue(-1), func);
+
+  masm.assertFunctionIsExtended(func);
 
   // Set HOMEOBJECT_SLOT
   Register temp = R1.scratchReg();
