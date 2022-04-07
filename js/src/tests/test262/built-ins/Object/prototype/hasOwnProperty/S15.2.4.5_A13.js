@@ -10,6 +10,6 @@ description: >
 
 assert.throws(TypeError, function() {
   Object.prototype.hasOwnProperty.call(null, 'foo');
-});
+}, 'Object.prototype.hasOwnProperty.call(null, "foo") throws a TypeError exception');
 
 reportCompare(0, 0);

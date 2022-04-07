@@ -52,6 +52,6 @@ info: |
 ---*/
 
 
-{}() => { return 42; };;
+{}() => { return 42; };
 
 reportCompare(0, 0);

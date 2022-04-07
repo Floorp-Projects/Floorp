@@ -10,23 +10,18 @@ es5id: 15.4.5.2_A1_T1
 description: Checking boundary points
 ---*/
 
-//CHECK#1
 var x = [];
 assert.sameValue(x.length, 0, 'The value of x.length is expected to be 0');
 
-//CHECK#2
 x[0] = 1;
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#3
 x[1] = 1;
 assert.sameValue(x.length, 2, 'The value of x.length is expected to be 2');
 
-//CHECK#4
 x[2147483648] = 1;
 assert.sameValue(x.length, 2147483649, 'The value of x.length is expected to be 2147483649');
 
-//CHECK#5
 x[4294967294] = 1;
 assert.sameValue(x.length, 4294967295, 'The value of x.length is expected to be 4294967295');
 

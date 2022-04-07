@@ -9,9 +9,10 @@ description: RegExp is /nd|ne/ and tested string is undefined
 
 var __re = /nd|ne/;
 
-//CHECK#0
-if (__re.test(undefined) !== (__re.exec(undefined) !== null)) {
-	throw new Test262Error('#0: __re = /nd|ne/; __re.test(undefined) === (__re.exec(undefined) !== null)');
-}
+assert.sameValue(
+  __re.test(undefined),
+  __re.exec(undefined) !== null,
+  '__re.test(undefined) must return __re.exec(undefined) !== null'
+);
 
 reportCompare(0, 0);

@@ -26,9 +26,4 @@ assert.sameValue(typeof displayNames.of('12345678-abcdefgh'), 'string', '2 segme
 assert.sameValue(typeof displayNames.of('123-abc-ABC'), 'string', '3 segments, minimum length, dash');
 assert.sameValue(typeof displayNames.of('12345678-abcdefgh-ABCDEFGH'), 'string', '3 segments, maximum length, dash');
 
-assert.sameValue(typeof displayNames.of('123_abc'), 'string', '2 segments, minimum length, underscore');
-assert.sameValue(typeof displayNames.of('12345678_abcdefgh'), 'string', '2 segments, maximum length, underscore');
-assert.sameValue(typeof displayNames.of('123_abc_ABC'), 'string', '3 segments, minimum length, underscore');
-assert.sameValue(typeof displayNames.of('12345678_abcdefgh_ABCDEFGH'), 'string', '3 segments, maximum length, underscore');
-
 reportCompare(0, 0);

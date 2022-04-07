@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.dayofyear
-description: Temporal.Calendar.prototype.dayOfYear will take PlainDate object and
+description: >
+  Temporal.Calendar.prototype.dayOfYear will take PlainDate object and
   return the day of year.
 info: |
   5. Return 𝔽(! ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).

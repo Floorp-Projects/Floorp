@@ -8,32 +8,26 @@ es5id: 15.4.5.1_A1.3_T1
 description: length is object or primitve
 ---*/
 
-//CHECK#1
 var x = [];
 x.length = true;
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#2
 x = [0];
 x.length = null;
 assert.sameValue(x.length, 0, 'The value of x.length is expected to be 0');
 
-//CHECK#3
 x = [0];
 x.length = new Boolean(false);
 assert.sameValue(x.length, 0, 'The value of x.length is expected to be 0');
 
-//CHECK#4
 x = [];
 x.length = new Number(1);
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#5
 x = [];
 x.length = "1";
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#6
 x = [];
 x.length = new String("1");
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');

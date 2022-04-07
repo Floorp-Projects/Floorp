@@ -1,5 +1,6 @@
 // |reftest| skip -- Intl.Locale-info is not supported
 // Copyright 2021 Igalia, S.L. All rights reserved.
+// Copyright 2021 Apple Inc. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
@@ -29,7 +30,7 @@ function isIntegerBetweenOneAndSeven(value) {
   return value === 1 || value === 2 || value === 3 || value === 4 || value === 5 || value === 6 || value === 7;
 }
 
-assert.compareArray(Reflect.ownKeys(result), ['firstDay', 'weekendStart', 'weekendEnd', 'minimalDays']);
+assert.compareArray(Reflect.ownKeys(result), ['firstDay', 'weekend', 'minimalDays']);
 
 verifyProperty(result, 'firstDay', {
   writable: true,
@@ -41,25 +42,19 @@ assert(
   '`firstDay` must be an integer between one and seven (inclusive)'
 );
 
-verifyProperty(result, 'weekendStart', {
+verifyProperty(result, 'weekend', {
   writable: true,
   enumerable: true,
   configurable: true
 });
 assert(
-  isIntegerBetweenOneAndSeven(new Intl.Locale('en').weekInfo.weekendStart),
-  '`weekendStart` must be an integer between one and seven (inclusive)'
+  new Intl.Locale('en').weekInfo.weekend.every(isIntegerBetweenOneAndSeven),
+  '`weekend` must include integers between one and seven (inclusive)'
 );
 
-verifyProperty(result, 'weekendEnd', {
-  writable: true,
-  enumerable: true,
-  configurable: true
-});
-assert(
-  isIntegerBetweenOneAndSeven(new Intl.Locale('en').weekInfo.weekendEnd),
-  '`weekendEnd` must be an integer between one and seven (inclusive)'
-);
+let original = new Intl.Locale('en').weekInfo.weekend;
+let sorted = original.slice().sort();
+assert.compareArray(original, sorted);
 
 verifyProperty(result, 'minimalDays', {
   writable: true,

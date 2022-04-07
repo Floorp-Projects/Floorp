@@ -11,8 +11,8 @@ info: |
       SuperCall OptionalChain
 features: [optional-chaining]
 negative:
-  type: SyntaxError
   phase: parse
+  type: SyntaxError
 ---*/
 
 $DONOTEVALUATE();

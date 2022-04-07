@@ -26,9 +26,11 @@ try
 }
 catch (e)
 {
-  if ((e instanceof TypeError) !== true) {
-    throw new Test262Error('#1.2: var __obj = {valueOf:function(){return new Object;},toNumber: function() {return new Object();}}; Number(__obj) throw TypeError. Actual: ' + (e));
-  }
+  assert.sameValue(
+    e instanceof TypeError,
+    true,
+    'The result of evaluating (e instanceof TypeError) is expected to be true'
+  );
 }
 
 reportCompare(0, 0);
