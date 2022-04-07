@@ -1084,6 +1084,51 @@ class LIsNullOrLikeUndefinedAndBranchT
   const LDefinition* temp() { return getTemp(0); }
 };
 
+class LIsNullAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0> {
+  MCompare* cmpMir_;
+
+ public:
+  LIR_HEADER(IsNullAndBranch)
+
+  LIsNullAndBranch(MCompare* cmpMir, MBasicBlock* ifTrue, MBasicBlock* ifFalse,
+                   const LBoxAllocation& value)
+      : LControlInstructionHelper(classOpcode), cmpMir_(cmpMir) {
+    setSuccessor(0, ifTrue);
+    setSuccessor(1, ifFalse);
+    setBoxOperand(Value, value);
+  }
+
+  static const size_t Value = 0;
+
+  MBasicBlock* ifTrue() const { return getSuccessor(0); }
+  MBasicBlock* ifFalse() const { return getSuccessor(1); }
+  MTest* mir() const { return mir_->toTest(); }
+  MCompare* cmpMir() const { return cmpMir_; }
+};
+
+class LIsUndefinedAndBranch
+    : public LControlInstructionHelper<2, BOX_PIECES, 0> {
+  MCompare* cmpMir_;
+
+ public:
+  LIR_HEADER(IsUndefinedAndBranch)
+
+  LIsUndefinedAndBranch(MCompare* cmpMir, MBasicBlock* ifTrue,
+                        MBasicBlock* ifFalse, const LBoxAllocation& value)
+      : LControlInstructionHelper(classOpcode), cmpMir_(cmpMir) {
+    setSuccessor(0, ifTrue);
+    setSuccessor(1, ifFalse);
+    setBoxOperand(Value, value);
+  }
+
+  static const size_t Value = 0;
+
+  MBasicBlock* ifTrue() const { return getSuccessor(0); }
+  MBasicBlock* ifFalse() const { return getSuccessor(1); }
+  MTest* mir() const { return mir_->toTest(); }
+  MCompare* cmpMir() const { return cmpMir_; }
+};
+
 // Bitwise not operation, takes a 32-bit integer as input and returning
 // a 32-bit integer result as an output.
 class LBitNotI : public LInstructionHelper<1, 1, 0> {

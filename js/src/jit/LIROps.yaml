@@ -686,10 +686,30 @@
     input: WordSized
   mir_op: Compare
 
+# Takes a value and tests whether it is null.
+- name: IsNull
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  mir_op: Compare
+
+# Takes a value and tests whether it is undefined.
+- name: IsUndefined
+  result_type: WordSized
+  operands:
+    value: BoxedValue
+  mir_op: Compare
+
 - name: IsNullOrLikeUndefinedAndBranchV
   gen_boilerplate: false
 
 - name: IsNullOrLikeUndefinedAndBranchT
+  gen_boilerplate: false
+
+- name: IsNullAndBranch
+  gen_boilerplate: false
+
+- name: IsUndefinedAndBranch
   gen_boilerplate: false
 
 - name: SameValueDouble

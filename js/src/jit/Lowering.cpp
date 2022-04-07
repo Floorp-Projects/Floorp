@@ -881,8 +881,22 @@ void LIRGenerator::visitTest(MTest* test) {
         return;
       }
 
-      auto* lir = new (alloc()) LIsNullOrLikeUndefinedAndBranchV(
-          comp, ifTrue, ifFalse, useBox(left), temp(), tempToUnbox());
+      if (IsLooseEqualityOp(comp->jsop())) {
+        auto* lir = new (alloc()) LIsNullOrLikeUndefinedAndBranchV(
+            comp, ifTrue, ifFalse, useBox(left), temp(), tempToUnbox());
+        add(lir, test);
+        return;
+      }
+
+      if (comp->compareType() == MCompare::Compare_Null) {
+        auto* lir =
+            new (alloc()) LIsNullAndBranch(comp, ifTrue, ifFalse, useBox(left));
+        add(lir, test);
+        return;
+      }
+
+      auto* lir = new (alloc())
+          LIsUndefinedAndBranch(comp, ifTrue, ifFalse, useBox(left));
       add(lir, test);
       return;
     }
@@ -1163,8 +1177,20 @@ void LIRGenerator::visitCompare(MCompare* comp) {
       return;
     }
 
-    auto* lir = new (alloc())
-        LIsNullOrLikeUndefinedV(useBox(left), temp(), tempToUnbox());
+    if (IsLooseEqualityOp(comp->jsop())) {
+      auto* lir = new (alloc())
+          LIsNullOrLikeUndefinedV(useBox(left), temp(), tempToUnbox());
+      define(lir, comp);
+      return;
+    }
+
+    if (comp->compareType() == MCompare::Compare_Null) {
+      auto* lir = new (alloc()) LIsNull(useBox(left));
+      define(lir, comp);
+      return;
+    }
+
+    auto* lir = new (alloc()) LIsUndefined(useBox(left));
     define(lir, comp);
     return;
   }
