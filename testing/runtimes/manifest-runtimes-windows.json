@@ -2106,7 +2106,6 @@
     "toolkit/components/captivedetect/test/unit/xpcshell.ini": 6.31,
     "toolkit/components/cascade_bloom_filter/test/xpcshell/xpcshell.ini": 0.44,
     "toolkit/components/cleardata/tests/unit/xpcshell.ini": 7.83,
-    "toolkit/components/cloudstorage/tests/unit/xpcshell.ini": 11.11,
     "toolkit/components/commandlines/test/unit/xpcshell.ini": 1.35,
     "toolkit/components/commandlines/test/unit_win/xpcshell.ini": 0.49,
     "toolkit/components/contentprefs/tests/unit_cps2/xpcshell.ini": 19.36,

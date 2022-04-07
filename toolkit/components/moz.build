@@ -27,7 +27,6 @@ DIRS += [
     "certviewer",
     "cleardata",
     "clearsitedata",
-    "cloudstorage",
     "commandlines",
     "contentprefs",
     "contextualidentity",

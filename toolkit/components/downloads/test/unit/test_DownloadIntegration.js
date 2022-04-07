@@ -135,10 +135,19 @@ add_task(async function test_getPreferredDownloadsDirectory() {
   }
   registerCleanupFunction(cleanupPrefs);
 
-  // Should return the system downloads directory.
-  Services.prefs.setIntPref(folderListPrefName, 1);
+  // For legacy cloudstorage users with folderListPrefName as 3,
+  // Should return the system downloads directory because the dir preference
+  // is not set.
+  Services.prefs.setIntPref(folderListPrefName, 3);
   let systemDir = await DownloadIntegration.getSystemDownloadsDirectory();
   let downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
+  Assert.notEqual(downloadDir, "");
+  Assert.equal(downloadDir, systemDir);
+
+  // Should return the system downloads directory.
+  Services.prefs.setIntPref(folderListPrefName, 1);
+  systemDir = await DownloadIntegration.getSystemDownloadsDirectory();
+  downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
   Assert.notEqual(downloadDir, "");
   Assert.equal(downloadDir, systemDir);
 
