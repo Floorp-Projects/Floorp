@@ -1465,10 +1465,8 @@ bool AppWindow::UpdateWindowStateFromMiscXULAttributes() {
   if (!stateString.IsEmpty()) {
     nsresult errorCode;
     int32_t zLevel = stateString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && zLevel >= int32_t(lowestZ) &&
-        zLevel <= int32_t(highestZ)) {
+    if (NS_SUCCEEDED(errorCode) && zLevel >= lowestZ && zLevel <= highestZ)
       SetZLevel(zLevel);
-    }
   }
 
   return gotState;
