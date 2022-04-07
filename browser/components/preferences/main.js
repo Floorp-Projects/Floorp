@@ -724,7 +724,6 @@ var gMainPane = {
     setEventListener("typeColumn", "click", gMainPane.sort);
     setEventListener("actionColumn", "click", gMainPane.sort);
     setEventListener("chooseFolder", "command", gMainPane.chooseFolder);
-    setEventListener("saveWhere", "command", gMainPane.handleSaveToCommand);
     Preferences.get("browser.download.folderList").on(
       "change",
       gMainPane.displayDownloadDirPref.bind(gMainPane)
@@ -2920,8 +2919,6 @@ var gMainPane = {
    *     1 - The system's downloads folder is the default download location.
    *     2 - The default download location is elsewhere as specified in
    *         browser.download.dir.
-   *     3 - The default download location is elsewhere as specified by
-   *         cloud storage API getDownloadFolder
    * browser.download.downloadDir
    *   deprecated.
    * browser.download.defaultFolder
@@ -2945,100 +2942,8 @@ var gMainPane = {
     chooseFolder.disabled =
       !useDownloadDirPreference.value || dirPreference.locked;
 
-    this.readCloudStorage().catch(Cu.reportError);
     // don't override the preference's value in UI
     return undefined;
-  },
-
-  /**
-   * Show/Hide the cloud storage radio button with provider name as label if
-   * cloud storage provider is in use.
-   * Select cloud storage radio button if browser.download.useDownloadDir is true
-   * and browser.download.folderList has value 3. Enables/disables the folder field
-   * and Browse button if cloud storage radio button is selected.
-   *
-   */
-  async readCloudStorage() {
-    // Get preferred provider in use display name
-    let providerDisplayName = await CloudStorage.getProviderIfInUse();
-    if (providerDisplayName) {
-      // Show cloud storage radio button with provider name in label
-      let saveToCloudRadio = document.getElementById("saveToCloud");
-      document.l10n.setAttributes(
-        saveToCloudRadio,
-        "save-files-to-cloud-storage",
-        {
-          "service-name": providerDisplayName,
-        }
-      );
-      saveToCloudRadio.hidden = false;
-
-      let useDownloadDirPref = Preferences.get(
-        "browser.download.useDownloadDir"
-      );
-      let folderListPref = Preferences.get("browser.download.folderList");
-
-      // Check if useDownloadDir is true and folderListPref is set to Cloud Storage value 3
-      // before selecting cloudStorageradio button. Disable folder field and Browse button if
-      // 'Save to Cloud Storage Provider' radio option is selected
-      if (useDownloadDirPref.value && folderListPref.value === 3) {
-        document.getElementById("saveWhere").selectedItem = saveToCloudRadio;
-        document.getElementById("downloadFolder").disabled = true;
-        document.getElementById("chooseFolder").disabled = true;
-      }
-    }
-  },
-
-  /**
-   * Handle clicks to 'Save To <custom path> or <system default downloads>' and
-   * 'Save to <cloud storage provider>' if cloud storage radio button is displayed in UI.
-   * Sets browser.download.folderList value and Enables/disables the folder field and Browse
-   * button based on option selected.
-   */
-  handleSaveToCommand(event) {
-    return this.handleSaveToCommandTask(event).catch(Cu.reportError);
-  },
-  async handleSaveToCommandTask(event) {
-    if (event.target.id !== "saveToCloud" && event.target.id !== "saveTo") {
-      return;
-    }
-    // Check if Save To Cloud Storage Provider radio option is displayed in UI
-    // before continuing.
-    let saveToCloudRadio = document.getElementById("saveToCloud");
-    if (!saveToCloudRadio.hidden) {
-      // When switching between SaveTo and SaveToCloud radio button
-      // with useDownloadDirPref value true, if selectedIndex is other than
-      // SaveTo radio button disable downloadFolder filefield and chooseFolder button
-      let saveWhere = document.getElementById("saveWhere");
-      let useDownloadDirPref = Preferences.get(
-        "browser.download.useDownloadDir"
-      );
-      if (useDownloadDirPref.value) {
-        let downloadFolder = document.getElementById("downloadFolder");
-        let chooseFolder = document.getElementById("chooseFolder");
-        downloadFolder.disabled =
-          saveWhere.selectedIndex || useDownloadDirPref.locked;
-        chooseFolder.disabled =
-          saveWhere.selectedIndex || useDownloadDirPref.locked;
-      }
-
-      // Set folderListPref value depending on radio option
-      // selected. folderListPref should be set to 3 if Save To Cloud Storage Provider
-      // option is selected. If user switch back to 'Save To' custom path or system
-      // default Downloads, check pref 'browser.download.dir' before setting respective
-      // folderListPref value. If currentDirPref is unspecified folderList should
-      // default to 1
-      let folderListPref = Preferences.get("browser.download.folderList");
-      let saveTo = document.getElementById("saveTo");
-      if (saveWhere.selectedItem == saveToCloudRadio) {
-        folderListPref.value = 3;
-      } else if (saveWhere.selectedItem == saveTo) {
-        let currentDirPref = Preferences.get("browser.download.dir");
-        folderListPref.value = currentDirPref.value
-          ? await this._folderToIndex(currentDirPref.value)
-          : 1;
-      }
-    }
   },
 
   /**
@@ -3120,11 +3025,9 @@ var gMainPane = {
     var iconUrlSpec;
 
     let folderIndex = folderListPref.value;
+    // For legacy users using cloudstorage pref with folderIndex as 3 (See bug 1751093),
+    // compute folderIndex using value in currentDirPref
     if (folderIndex == 3) {
-      // When user has selected cloud storage, use value in currentDirPref to
-      // compute index to display download folder label and icon to avoid
-      // displaying blank downloadFolder label and icon on load of preferences UI
-      // Set folderIndex to 1 if currentDirPref is unspecified
       folderIndex = currentDirPref.value
         ? await this._folderToIndex(currentDirPref.value)
         : 1;
