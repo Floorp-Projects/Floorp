@@ -495,16 +495,22 @@ def write_interface(iface, fd):
             record_name(methodNativeName(m))
 
     def write_const_decls(g):
+        fd.write("  enum {\n")
+        enums = []
         for c in g:
             printComments(fd, c.doccomments, "  ")
-            fd.write(
-                "  static constexpr %(type)s %(name)s = %(value)s;\n"
+            basetype = c.basetype
+            value = c.getValue()
+            enums.append(
+                "    %(name)s = %(value)s%(signed)s"
                 % {
-                    "type": c.realtype.nativeType("in"),
                     "name": c.name,
-                    "value": c.getValue(),
+                    "value": value,
+                    "signed": (not basetype.signed) and "U" or "",
                 }
             )
+        fd.write(",\n".join(enums))
+        fd.write("\n  };\n\n")
 
     def write_cenum_decl(b):
         fd.write("  enum %s : uint%d_t {\n" % (b.basename, b.width))

@@ -15,9 +15,9 @@ typedef long nsCookiePolicy;
 
 [builtinclass, scriptable, uuid(adf0db5e-211e-45a3-be14-4486ac430a58)]
 interface nsICookie : nsISupports {
-    const int32_t SAMESITE_NONE   = 0;
-    const int32_t SAMESITE_LAX    = 1;
-    const int32_t SAMESITE_STRICT = 2;
+    const uint32_t SAMESITE_NONE   = 0;
+    const uint32_t SAMESITE_LAX    = 1;
+    const uint32_t SAMESITE_STRICT = 2;
 
     /**
      * the name of the cookie
