@@ -8,6 +8,7 @@
 #  include "AndroidDecoderModule.h"
 #endif
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/DebugOnly.h"
 
 #include "base/basictypes.h"
@@ -3528,37 +3529,59 @@ ContentParent::GetState(nsIPropertyBag** aResult) {
 static StaticRefPtr<nsIAsyncShutdownClient> sXPCOMShutdownClient;
 static StaticRefPtr<nsIAsyncShutdownClient> sProfileBeforeChangeClient;
 
-static void InitClients() {
+static void InitShutdownClients() {
   if (!sXPCOMShutdownClient) {
     nsresult rv;
     nsCOMPtr<nsIAsyncShutdownService> svc = services::GetAsyncShutdownService();
+    if (!svc) {
+      return;
+    }
 
     nsCOMPtr<nsIAsyncShutdownClient> client;
-    rv = svc->GetXpcomWillShutdown(getter_AddRefs(client));
-    sXPCOMShutdownClient = client.forget();
-    ClearOnShutdown(&sXPCOMShutdownClient);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "XPCOMShutdown shutdown blocker");
-
-    rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
-    sProfileBeforeChangeClient = client.forget();
-    ClearOnShutdown(&sProfileBeforeChangeClient);
-    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv),
-                       "profileBeforeChange shutdown blocker");
+    // TODO: It seems as if getPhase from AsyncShutdown.jsm does not check if
+    // we are beyond our phase already. See bug 1762840.
+    if (!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+      rv = svc->GetXpcomWillShutdown(getter_AddRefs(client));
+      if (NS_SUCCEEDED(rv)) {
+        sXPCOMShutdownClient = client.forget();
+        ClearOnShutdown(&sXPCOMShutdownClient);
+      }
+    }
+    if (!AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+      rv = svc->GetProfileBeforeChange(getter_AddRefs(client));
+      if (NS_SUCCEEDED(rv)) {
+        sProfileBeforeChangeClient = client.forget();
+        ClearOnShutdown(&sProfileBeforeChangeClient);
+      }
+    }
   }
 }
 
 void ContentParent::AddShutdownBlockers() {
-  InitClients();
+  InitShutdownClients();
+  MOZ_ASSERT(sXPCOMShutdownClient);
+  MOZ_ASSERT(sProfileBeforeChangeClient);
 
-  sXPCOMShutdownClient->AddBlocker(
-      this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
-  sProfileBeforeChangeClient->AddBlocker(
-      this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
+  if (sXPCOMShutdownClient) {
+    sXPCOMShutdownClient->AddBlocker(
+        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
+  }
+  if (sProfileBeforeChangeClient) {
+    sProfileBeforeChangeClient->AddBlocker(
+        this, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
+  }
 }
 
 void ContentParent::RemoveShutdownBlockers() {
-  Unused << sXPCOMShutdownClient->RemoveBlocker(this);
-  Unused << sProfileBeforeChangeClient->RemoveBlocker(this);
+  MOZ_ASSERT(sXPCOMShutdownClient);
+  MOZ_ASSERT(sProfileBeforeChangeClient);
+
+  if (sXPCOMShutdownClient) {
+    Unused << sXPCOMShutdownClient->RemoveBlocker(this);
+  }
+  if (sProfileBeforeChangeClient) {
+    Unused << sProfileBeforeChangeClient->RemoveBlocker(this);
+  }
 }
 
 NS_IMETHODIMP
