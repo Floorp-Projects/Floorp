@@ -381,6 +381,9 @@ class QuotaManager final : public BackgroundThreadObject {
   static void SafeMaybeRecordQuotaClientShutdownStep(
       Client::Type aClientType, const nsACString& aStepDescription);
 
+  // Record a quota manager shutdown step, use only if shutdown is active.
+  void RecordQuotaManagerShutdownStep(const nsACString& aStepDescription);
+
   // Record a quota manager shutdown step, if shutting down.
   void MaybeRecordQuotaManagerShutdownStep(const nsACString& aStepDescription);
 
