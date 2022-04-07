@@ -147,6 +147,7 @@ static CMSampleTimingInfo TimingInfoFromSample(MediaRawData* aSample) {
 
 void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
   AssertOnTaskQueue();
+  PROCESS_DECODE_LOG(aSample);
 
   if (mIsFlushing) {
     MonitorAutoLock mon(mMonitor);

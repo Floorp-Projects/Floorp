@@ -141,6 +141,7 @@ RefPtr<MediaDataDecoder::DecodePromise> FFmpegDataDecoder<LIBAV_VER>::Decode(
 RefPtr<MediaDataDecoder::DecodePromise>
 FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  PROCESS_DECODE_LOG(aSample);
   bool gotFrame = false;
   DecodedData results;
   MediaResult rv = DoDecode(aSample, &gotFrame, results);

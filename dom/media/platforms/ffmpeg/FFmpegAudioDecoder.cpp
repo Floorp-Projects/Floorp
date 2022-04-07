@@ -186,6 +186,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
                                                     bool* aGotFrame,
                                                     DecodedData& aResults) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  PROCESS_DECODE_LOG(aSample);
   AVPacket packet;
   mLib->av_init_packet(&packet);
 

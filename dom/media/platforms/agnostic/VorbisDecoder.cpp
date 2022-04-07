@@ -139,6 +139,7 @@ nsresult VorbisDataDecoder::DecodeHeader(const unsigned char* aData,
 RefPtr<MediaDataDecoder::DecodePromise> VorbisDataDecoder::Decode(
     MediaRawData* aSample) {
   MOZ_ASSERT(mThread->IsOnCurrentThread());
+  PROCESS_DECODE_LOG(aSample);
 
   const unsigned char* aData = aSample->Data();
   size_t aLength = aSample->Size();

@@ -399,7 +399,11 @@ bool WMFDecoderModule::SupportsMimeType(
   if (!trackInfo) {
     return false;
   }
-  return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
+  bool supports = Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
+  MOZ_LOG(sPDMLog, LogLevel::Debug,
+          ("WMF decoder %s requested type '%s'",
+           supports ? "supports" : "rejects", aMimeType.BeginReading()));
+  return supports;
 }
 
 }  // namespace mozilla

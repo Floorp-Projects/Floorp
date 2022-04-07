@@ -180,6 +180,7 @@ nsresult OpusDataDecoder::DecodeHeader(const unsigned char* aData,
 RefPtr<MediaDataDecoder::DecodePromise> OpusDataDecoder::Decode(
     MediaRawData* aSample) {
   MOZ_ASSERT(mThread->IsOnCurrentThread());
+  PROCESS_DECODE_LOG(aSample);
   uint32_t channels = mOpusParser->mChannels;
 
   if (mPaddingDiscarded) {
