@@ -50,12 +50,6 @@ void CSSContainerRule::GetConditionText(nsACString& aConditionText) {
   Servo_ContainerRule_GetConditionText(mRawRule, &aConditionText);
 }
 
-void CSSContainerRule::SetConditionText(const nsACString& aConditionText, ErrorResult&) {
-  // FIXME: This shouldn't be here, CSSConditionRule.conditionText should be
-  // readonly as per:
-  // https://github.com/w3c/csswg-drafts/issues/6819#issuecomment-1016695585
-}
-
 /* virtual */
 void CSSContainerRule::GetCssText(nsACString& aCssText) const {
   Servo_ContainerRule_GetCssText(mRawRule, &aCssText);
