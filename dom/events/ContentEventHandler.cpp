@@ -430,6 +430,8 @@ nsresult ContentEventHandler::Init(WidgetQueryContentEvent* aEvent) {
   aEvent->EmplaceReply();
 
   aEvent->mReply->mContentsRoot = mRootContent.get();
+  aEvent->mReply->mIsEditableContent =
+      mRootContent && mRootContent->IsEditable();
 
   nsRect r;
   nsIFrame* frame = nsCaret::GetGeometry(mSelection, &r);
