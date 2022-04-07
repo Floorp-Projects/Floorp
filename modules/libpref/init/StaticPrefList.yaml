@@ -9037,9 +9037,14 @@
     mirror: always
 
 -   name: media.wmf.no-copy-nv12-textures
-    type: RelaxedAtomicBool
+    type: bool
+    value: true
+    mirror: once
+# Enable hardware decoded video no copy even when it is blocked.
+-   name: media.wmf.no-copy-nv12-textures-force-enabled
+    type: bool
     value: false
-    mirror: always
+    mirror: once
 
 -   name: media.wmf.force.allow-p010-format
     type: RelaxedAtomicBool
