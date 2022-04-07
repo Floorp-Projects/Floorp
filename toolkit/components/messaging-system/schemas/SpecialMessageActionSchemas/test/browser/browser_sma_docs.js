@@ -18,7 +18,9 @@ add_task(async function test_sma_docs() {
   let request = await fetch(TEST_URL);
   let docs = await request.text();
   let headings = getHeadingsFromDocs(docs);
-  const schemaTypes = (await fetchSMASchema).anyOf.map(
+  const schemaTypes = (
+    await fetchSMASchema
+  ).definitions.SpecialMessageActionSchemas.anyOf.map(
     s => s.properties.type.enum[0]
   );
   for (let schemaType of schemaTypes) {

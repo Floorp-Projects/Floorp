@@ -50,6 +50,9 @@ function DevToolsLoader({
   freshCompartment = false,
 } = {}) {
   const paths = {
+    // This resource:// URI is only registered when running DAMP tests.
+    // This is done by: testing/talos/talos/tests/devtools/addon/api.js
+    "damp-test": "resource://damp-test/content",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     devtools: "resource://devtools",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
@@ -64,19 +67,6 @@ function DevToolsLoader({
     "devtools/startup/locales": "chrome://devtools-startup/locale",
     "toolkit/locales": "chrome://global/locale",
   };
-
-  // DAMP tests use a dynamic path. If DEBUG_DEVTOOLS_DAMP_TEST_PATH was set as
-  // a custom preference, add a corresponding path mapping entry.
-  // DAMP runner and tests are under testing/talos/talos/tests/devtools
-  const dampTestPath = Services.prefs.getCharPref(
-    "devtools.damp.test-path",
-    ""
-  );
-  if (dampTestPath) {
-    // damp-test points to testing/talos/talos/tests/devtools/addon/content/
-    // (prefixed by the dynamically generated talos server)
-    paths["damp-test"] = dampTestPath;
-  }
 
   this.loader = new Loader({
     paths,

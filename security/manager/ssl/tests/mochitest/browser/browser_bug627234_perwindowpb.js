@@ -26,8 +26,8 @@ function test() {
     Ci.nsISiteSecurityService
   );
 
-  function privacyFlags(aIsPrivateMode) {
-    return aIsPrivateMode ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
+  function originAttributes(aIsPrivateMode) {
+    return aIsPrivateMode ? { privateBrowsingId: 1 } : {};
   }
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
@@ -41,11 +41,11 @@ function test() {
           uri,
           "max-age=1000",
           secInfo,
-          privacyFlags(aIsPrivateMode),
-          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+          Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST,
+          originAttributes(aIsPrivateMode)
         );
         ok(
-          gSSService.isSecureURI(uri, privacyFlags(aIsPrivateMode)),
+          gSSService.isSecureURI(uri, originAttributes(aIsPrivateMode)),
           "checking sts host"
         );
 
@@ -74,7 +74,7 @@ function test() {
       aWin.close();
     });
     uri = Services.io.newURI("http://localhost");
-    gSSService.resetState(uri, 0);
+    gSSService.resetState(uri);
   });
 
   // test first when on private mode

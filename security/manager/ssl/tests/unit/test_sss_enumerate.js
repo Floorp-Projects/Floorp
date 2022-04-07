@@ -74,7 +74,6 @@ function add_tests() {
           uri,
           header,
           secInfo,
-          0,
           Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
         );
       }

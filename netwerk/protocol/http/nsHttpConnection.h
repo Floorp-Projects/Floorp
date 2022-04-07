@@ -19,6 +19,7 @@
 #include "ARefBase.h"
 #include "TimingStruct.h"
 #include "HttpTrafficAnalyzer.h"
+#include "TlsHandshaker.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -58,7 +59,6 @@ class nsHttpConnection final : public HttpConnectionBase,
                                public nsIOutputStreamCallback,
                                public nsITransportEventSink,
                                public nsIInterfaceRequestor,
-                               public nsITlsHandshakeCallbackListener,
                                public NudgeTunnelCallback {
  private:
   virtual ~nsHttpConnection();
@@ -73,7 +73,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSITLSHANDSHAKECALLBACKLISTENER
   NS_DECL_NUDGETUNNELCALLBACK
 
   nsHttpConnection();
@@ -123,6 +122,7 @@ class nsHttpConnection final : public HttpConnectionBase,
   HttpVersion GetLastHttpResponseVersion() { return mLastHttpResponseVersion; }
 
   friend class HttpConnectionForceIO;
+  friend class TlsHandshaker;
 
   // When a persistent connection is in the connection manager idle
   // connection pool, the nsHttpConnection still reads errors and hangups
@@ -226,23 +226,12 @@ class nsHttpConnection final : public HttpConnectionBase,
     kTCPKeepaliveLongLivedConfig
   };
 
-  // called to cause the underlying socket to start speaking SSL
-  [[nodiscard]] nsresult InitSSLParams(bool connectingToProxy,
-                                       bool ProxyStartSSL);
-  [[nodiscard]] nsresult SetupNPNList(nsISSLSocketControl* ssl, uint32_t caps);
-
   [[nodiscard]] nsresult OnTransactionDone(nsresult reason);
   [[nodiscard]] nsresult OnSocketWritable();
   [[nodiscard]] nsresult OnSocketReadable();
 
   PRIntervalTime IdleTime();
   bool IsAlive();
-
-  // Makes certain the SSL handshake is complete and NPN negotiation
-  // has had a chance to happen
-  [[nodiscard]] bool EnsureNPNComplete();
-
-  void SetupSSL();
 
   // Start the Spdy transaction handler when NPN indicates spdy/*
   void StartSpdy(nsISSLSocketControl* ssl, SpdyVersion spdyVersion);
@@ -265,16 +254,18 @@ class nsHttpConnection final : public HttpConnectionBase,
   [[nodiscard]] nsresult DisableTCPKeepalives();
 
   bool CheckCanWrite0RTTData();
-  void Check0RttEnabled(nsISSLSocketControl* ssl);
-  void EarlyDataTelemetry(int16_t tlsVersion, bool earlyDataAccepted);
-  void FinishNPNSetup(bool handshakeSucceeded, bool hasSecurityInfo);
+  void PostProcessNPNSetup(bool handshakeSucceeded, bool hasSecurityInfo,
+                           bool earlyDataUsed);
   void Reset0RttForSpdy();
   void HandshakeDoneInternal();
+  uint32_t TransactionCaps() const { return mTransactionCaps; }
 
  private:
   // mTransaction only points to the HTTP Transaction callbacks if the
   // transaction is open, otherwise it is null.
   RefPtr<nsAHttpTransaction> mTransaction;
+
+  RefPtr<TlsHandshaker> mTlsHandshaker;
 
   nsCOMPtr<nsIAsyncInputStream> mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
@@ -330,10 +321,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   // on this persistent connection.
   uint32_t mRemainingConnectionUses{0xffffffff};
 
-  // SPDY related
-  bool mNPNComplete{false};
-  bool mSetupSSLCalled{false};
-
   // version level in use, 0 if unused
   SpdyVersion mUsingSpdyVersion{SpdyVersion::NONE};
 
@@ -364,34 +351,8 @@ class nsHttpConnection final : public HttpConnectionBase,
   bool mForceSendPending{false};
   nsCOMPtr<nsITimer> mForceSendTimer;
 
-  // Helper variable for 0RTT handshake;
-  // Possible 0RTT has been checked.
-  bool m0RTTChecked{false};
-  // 0RTT data state.
-  enum EarlyData {
-    NOT_AVAILABLE,
-    USED,
-    CANNOT_BE_USED,
-    DONE_NOT_AVAILABLE,
-    DONE_USED,
-    DONE_CANNOT_BE_USED,
-  };
-  EarlyData mEarlyDataState{EarlyData::NOT_AVAILABLE};
-  bool EarlyDataAvailable() const {
-    return mEarlyDataState == EarlyData::USED ||
-           mEarlyDataState == EarlyData::CANNOT_BE_USED;
-  }
-  bool EarlyDataWasAvailable() const {
-    return mEarlyDataState != EarlyData::NOT_AVAILABLE &&
-           mEarlyDataState != EarlyData::DONE_NOT_AVAILABLE;
-  }
-  bool EarlyDataUsed() const { return mEarlyDataState == EarlyData::USED; }
-  void EarlyDataDone();
-
   int64_t mContentBytesWritten0RTT{0};
-  nsCString mEarlyNegotiatedALPN;
   bool mDid0RTTSpdy{false};
-  bool mTlsHandshakeComplitionPending{false};
 
   nsresult mErrorBeforeConnect = NS_OK;
 
@@ -406,8 +367,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   int64_t mTotalBytesWritten = 0;  // does not include CONNECT tunnel
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
-
-  bool mClosed{false};
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)

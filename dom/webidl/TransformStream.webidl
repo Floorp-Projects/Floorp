@@ -16,6 +16,6 @@ interface TransformStream {
               optional QueuingStrategy writableStrategy = {},
               optional QueuingStrategy readableStrategy = {});
 
-  [GetterThrows /* skeleton only */] readonly attribute ReadableStream readable;
-  [GetterThrows /* skeleton only */] readonly attribute WritableStream writable;
+  readonly attribute ReadableStream readable;
+  readonly attribute WritableStream writable;
 };

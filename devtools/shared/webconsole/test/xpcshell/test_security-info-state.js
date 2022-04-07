@@ -39,7 +39,7 @@ add_task(async function run_test() {
  * Test that undefined security information is returns "insecure".
  */
 async function test_nullSecurityInfo() {
-  const result = await NetworkHelper.parseSecurityInfo(null, {}, new Map());
+  const result = await NetworkHelper.parseSecurityInfo(null, {}, {}, new Map());
   equal(
     result.state,
     "insecure",
@@ -58,6 +58,7 @@ async function test_insecureSecurityInfoWithNSSError() {
 
   const result = await NetworkHelper.parseSecurityInfo(
     MockSecurityInfo,
+    {},
     {},
     new Map()
   );
@@ -80,6 +81,7 @@ async function test_insecureSecurityInfoWithoutNSSError() {
   const result = await NetworkHelper.parseSecurityInfo(
     MockSecurityInfo,
     {},
+    {},
     new Map()
   );
   equal(
@@ -99,6 +101,7 @@ async function test_secureSecurityInfo() {
   const result = await NetworkHelper.parseSecurityInfo(
     MockSecurityInfo,
     {},
+    {},
     new Map()
   );
   equal(
@@ -116,6 +119,7 @@ async function test_brokenSecurityInfo() {
 
   const result = await NetworkHelper.parseSecurityInfo(
     MockSecurityInfo,
+    {},
     {},
     new Map()
   );

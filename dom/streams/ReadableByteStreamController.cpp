@@ -1883,7 +1883,7 @@ void SetUpReadableByteStreamController(
   aController->PendingPullIntos().clear();
 
   // Step 13. Set stream.[[controller]] to controller.
-  aStream->SetController(aController);
+  aStream->SetController(*aController);
 
   // Step 14. Let startResult be the result of performing startAlgorithm.
   JS::RootedValue startResult(aCx, JS::UndefinedValue());

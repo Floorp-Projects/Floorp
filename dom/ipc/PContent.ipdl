@@ -1076,8 +1076,7 @@ parent:
 
     async InitCrashReporter(NativeThreadId tid);
 
-    sync IsSecureURI(nsIURI aURI, uint32_t aFlags,
-                     OriginAttributes aOriginAttributes)
+    sync IsSecureURI(nsIURI aURI, OriginAttributes aOriginAttributes)
         returns (bool isSecureURI);
 
     async AccumulateMixedContentHSTS(nsIURI aURI, bool aActive,

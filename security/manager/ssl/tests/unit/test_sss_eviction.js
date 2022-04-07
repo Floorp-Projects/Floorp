@@ -53,8 +53,7 @@ function do_state_read(aSubject, aTopic, aData) {
 
   ok(
     gSSService.isSecureURI(
-      Services.io.newURI("https://frequentlyused.example.com"),
-      0
+      Services.io.newURI("https://frequentlyused.example.com")
     )
   );
   let secInfo = Cc[
@@ -66,7 +65,6 @@ function do_state_read(aSubject, aTopic, aData) {
       uri,
       "max-age=1000",
       secInfo,
-      0,
       Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
     );
   }
