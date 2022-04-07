@@ -3656,6 +3656,16 @@ void MacroAssembler::loadFunctionName(Register func, Register output,
   bind(&done);
 }
 
+void MacroAssembler::assertFunctionIsExtended(Register func) {
+#ifdef DEBUG
+  Label extended;
+  branchTestFunctionFlags(func, FunctionFlags::EXTENDED, Assembler::NonZero,
+                          &extended);
+  assumeUnreachable("Function is not extended");
+  bind(&extended);
+#endif
+}
+
 void MacroAssembler::branchTestType(Condition cond, Register tag,
                                     JSValueType type, Label* label) {
   switch (type) {
