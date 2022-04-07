@@ -224,9 +224,14 @@ class SubCommand(object):
         description=None,
         parser=None,
         metrics_path: Optional[str] = None,
+        virtualenv_name: Optional[str] = None,
     ):
         self._mach_command = _MachCommand(
-            name=command, subcommand=subcommand, description=description, parser=parser
+            name=command,
+            subcommand=subcommand,
+            description=description,
+            parser=parser,
+            virtualenv_name=virtualenv_name,
         )
         self._mach_command.decl_order = SubCommand.global_order
         SubCommand.global_order += 1
