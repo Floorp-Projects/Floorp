@@ -81,12 +81,13 @@ class BookmarkItemMenuTest {
             folderItems = menu.menuItems(BookmarkNodeType.FOLDER, "")
         }
         assertNotNull(folderItems)
-        assertEquals(3, folderItems!!.size)
+        assertEquals(4, folderItems!!.size)
 
-        val (edit, openAll, delete) = folderItems!!
+        val (edit, openAll, openAllPrivate, delete) = folderItems!!
 
         assertEquals("Edit", edit.text)
-        assertEquals("Open All Bookmarks", openAll.text)
+        assertEquals("Open all in new tabs", openAll.text)
+        assertEquals("Open all in private tabs", openAllPrivate.text)
         assertEquals("Delete", delete.text)
 
         edit.onClick()
@@ -95,35 +96,11 @@ class BookmarkItemMenuTest {
         openAll.onClick()
         assertEquals(Item.OpenAllInTabs, lastItemTapped)
 
+        openAllPrivate.onClick()
+        assertEquals(Item.OpenAllInPrivateTabs, lastItemTapped)
+
         delete.onClick()
         assertEquals(Item.Delete, lastItemTapped)
-    }
-
-    @Test
-    fun `delete item has special styling`() {
-        val deleteItem = menu.menuItems(BookmarkNodeType.SEPARATOR).last()
-        assertEquals("Delete", deleteItem.text)
-        assertEquals(
-            TextStyle(color = context.getColorFromAttr(R.attr.textWarning)),
-            deleteItem.textStyle,
-        )
-
-        deleteItem.onClick()
-
-        assertEquals(Item.Delete, lastItemTapped)
-    }
-
-    @Test
-    fun `edit item appears for folders`() {
-        val folderItems = menu.menuItems(BookmarkNodeType.FOLDER)
-        assertEquals(2, folderItems.size)
-        val (edit, delete) = folderItems
-
-        assertEquals("Edit", edit.text)
-        edit.onClick()
-
-        assertEquals(Item.Edit, lastItemTapped)
-        assertEquals("Delete", delete.text)
     }
 
     @Test

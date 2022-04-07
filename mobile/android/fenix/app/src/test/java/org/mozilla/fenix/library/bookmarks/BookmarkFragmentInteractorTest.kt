@@ -175,7 +175,16 @@ class BookmarkFragmentInteractorTest {
         interactor.onOpenAllInTabs(tree)
 
         verify {
-            bookmarkController.handleBookmarkFolderOpening(tree)
+            bookmarkController.handleBookmarkFolderOpening(tree, BrowsingMode.Normal)
+        }
+    }
+
+    @Test
+    fun `open all bookmarks item in new private tabs`() {
+        interactor.onOpenAllInPrivateTabs(tree)
+
+        verify {
+            bookmarkController.handleBookmarkFolderOpening(tree, BrowsingMode.Private)
         }
     }
 
