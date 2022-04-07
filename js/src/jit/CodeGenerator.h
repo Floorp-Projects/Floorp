@@ -266,16 +266,16 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitWasmCompareAndSelect(LWasmCompareAndSelect* ins);
 
   void testValueTruthyForType(JSValueType type, ScratchTagScope& tag,
-                              const ValueOperand& value, Register scratch1,
-                              Register scratch2, FloatRegister floatTemp,
+                              const ValueOperand& value, Register tempToUnbox,
+                              Register temp, FloatRegister floatTemp,
                               Label* ifTruthy, Label* ifFalsy,
                               OutOfLineTestObject* ool, bool skipTypeTest);
 
   // Test whether value is truthy or not and jump to the corresponding label.
   // The control flow falls through when the object is truthy, as an
   // optimization.
-  void testValueTruthy(const ValueOperand& value, Register scratch1,
-                       Register scratch2, FloatRegister floatTemp,
+  void testValueTruthy(const ValueOperand& value, Register tempToUnbox,
+                       Register temp, FloatRegister floatTemp,
                        const TypeDataList& observedTypes, Label* ifTruthy,
                        Label* ifFalsy, OutOfLineTestObject* ool);
 
