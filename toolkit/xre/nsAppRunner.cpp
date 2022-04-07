@@ -5922,6 +5922,18 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // run!
   rv = XRE_mainRun();
 
+#if defined(XP_WIN)
+  bool wantAudio = true;
+#  ifdef MOZ_BACKGROUNDTASKS
+  if (BackgroundTasks::IsBackgroundTaskMode()) {
+    wantAudio = false;
+  }
+#  endif
+  if (MOZ_LIKELY(wantAudio)) {
+    mozilla::widget::StopAudioSession();
+  }
+#endif
+
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
   mozilla::ShutdownEventTracing();
 #endif
@@ -5938,18 +5950,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 #endif /* MOZ_WIDGET_GTK */
 
   mScopedXPCOM = nullptr;
-
-#if defined(XP_WIN)
-  bool wantAudio = true;
-#  ifdef MOZ_BACKGROUNDTASKS
-  if (BackgroundTasks::IsBackgroundTaskMode()) {
-    wantAudio = false;
-  }
-#  endif
-  if (MOZ_LIKELY(wantAudio)) {
-    mozilla::widget::StopAudioSession();
-  }
-#endif
 
   // unlock the profile after ScopedXPCOMStartup object (xpcom)
   // has gone out of scope.  see bug #386739 for more details
