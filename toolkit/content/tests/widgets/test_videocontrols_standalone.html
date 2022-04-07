@@ -4,6 +4,7 @@
   <title>Video controls test</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
   <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -80,9 +81,46 @@ function runTestAudio(aAudio) {
     var boundingRect = aAudio.getBoundingClientRect();
     is(boundingRect.height, expectedHeight,
        "Height of audio element should be " + expectedHeight + ", which is equal to the controls bar.");
-    popup.close();
-    SimpleTest.finish();
+    ok(!aAudio.paused, "Should be playing");
+    testPauseByKeyboard(aAudio);
   }, "The media element should eventually be resized to match the height of the audio controls.");
+}
+
+function testPauseByKeyboard(aAudio) {
+  aAudio.addEventListener("pause", function() {
+    afterKeyPause(aAudio);
+  }, {once: true});
+  // Press spacebar, which means play/pause.
+  synthesizeKey(" ", {}, popup);
+}
+
+function afterKeyPause(aAudio) {
+  ok(true, "successfully caused audio to pause");
+  waitForCondition(function() {
+    return aAudio.paused;
+  },
+  function() {
+    // Click outside of the controls area. (Hopefully this has no effect.)
+    synthesizeMouseAtPoint(5, 5, { type: 'mousedown' }, popup);
+    synthesizeMouseAtPoint(5, 5, { type: 'mouseup' }, popup);
+    setTimeout(function() {
+      testPlayByKeyboard(aAudio);
+    }, 0);
+  });
+}
+
+function testPlayByKeyboard(aAudio) {
+  aAudio.addEventListener("play", function() {
+    ok(true, "successfully caused audio to play");
+    finishAudio();
+  }, {once: true});
+  // Press spacebar, which means play/pause.
+  synthesizeKey(" ", {}, popup);
+}
+
+function finishAudio() {
+  popup.close();
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
