@@ -74,12 +74,7 @@ impl<'a> RawtestHarness<'a> {
                 println!(
                     "REFTEST TEST-UNEXPECTED-FAIL | {t} \
                      | image comparison, max difference: {max_difference}, \
-                     number of differing pixels: {count_different}",
-                     // These lines can be removed once minimum rust version > 1.57
-                     t = t,
-                     max_difference = max_difference,
-                     count_different = count_different,
-                );
+                     number of differing pixels: {count_different}");
                 println!("REFTEST   IMAGE 1: {}", image1.create_data_uri());
                 println!("REFTEST   IMAGE 2: {}", image2.create_data_uri());
                 println!("REFTEST TEST-END | {}", t);
