@@ -608,6 +608,15 @@
     offset: RawInt32Field
     val: ValueField
 
+- name: LoadDynamicSlot
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    result: ValId
+    obj: ObjId
+    slot: RawInt32Field
+
 - name: GuardNoAllocationMetadataBuilder
   shared: true
   transpile: true
