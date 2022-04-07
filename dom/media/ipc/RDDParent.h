@@ -8,7 +8,7 @@
 #include "mozilla/PRDDParent.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/media/MediaUtils.h"
+#include "mozilla/ipc/AsyncBlockers.h"
 
 namespace mozilla {
 
@@ -22,7 +22,7 @@ class RDDParent final : public PRDDParent {
 
   static RDDParent* GetSingleton();
 
-  AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
+  ipc::AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
             mozilla::ipc::ScopedPort aPort);
@@ -67,7 +67,7 @@ class RDDParent final : public PRDDParent {
  private:
   const TimeStamp mLaunchTime;
   RefPtr<ChildProfilerController> mProfilerController;
-  AsyncBlockers mShutdownBlockers;
+  ipc::AsyncBlockers mShutdownBlockers;
 };
 
 }  // namespace mozilla

@@ -10,6 +10,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.ipc += [
+    "AsyncBlockers.h",
     "BackgroundChild.h",
     "BackgroundParent.h",
     "BackgroundStarterChild.h",
