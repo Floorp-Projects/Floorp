@@ -203,7 +203,7 @@ class BiplanarYuv8Buffer : public BiplanarYuvBuffer {
 
 // Represents Type::kNV12. NV12 is full resolution Y and half-resolution
 // interleved UV.
-class NV12BufferInterface : public BiplanarYuv8Buffer {
+class RTC_EXPORT NV12BufferInterface : public BiplanarYuv8Buffer {
  public:
   Type type() const override;
 
