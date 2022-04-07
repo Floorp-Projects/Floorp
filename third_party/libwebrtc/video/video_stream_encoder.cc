@@ -26,6 +26,7 @@
 #include "api/video/video_adaptation_reason.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_codec_constants.h"
+#include "api/video/video_layers_allocation.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/adaptation/resource_adaptation_processor.h"
 #include "call/adaptation/video_stream_adapter.h"
@@ -324,7 +325,6 @@ VideoStreamEncoder::VideoStreamEncoder(
       animation_start_time_(Timestamp::PlusInfinity()),
       cap_resolution_due_to_video_content_(false),
       expect_resize_state_(ExpectResizeState::kNoResize),
-      bitrate_observer_(nullptr),
       fec_controller_override_(nullptr),
       force_disable_frame_dropper_(false),
       input_framerate_(kFrameRateAvergingWindowSizeMs, 1000),
@@ -418,21 +418,10 @@ void VideoStreamEncoder::Stop() {
       resource_adaptation_processor_.reset();
     }
     rate_allocator_ = nullptr;
-    bitrate_observer_ = nullptr;
     ReleaseEncoder();
     shutdown_event.Set();
   });
   shutdown_event.Wait(rtc::Event::kForever);
-}
-
-void VideoStreamEncoder::SetBitrateAllocationObserver(
-    VideoBitrateAllocationObserver* bitrate_observer) {
-  RTC_DCHECK_RUN_ON(main_queue_);
-  encoder_queue_.PostTask([this, bitrate_observer] {
-    RTC_DCHECK_RUN_ON(&encoder_queue_);
-    RTC_DCHECK(!bitrate_observer_);
-    bitrate_observer_ = bitrate_observer;
-  });
 }
 
 void VideoStreamEncoder::SetFecControllerOverride(
@@ -1136,8 +1125,15 @@ void VideoStreamEncoder::SetEncoderRates(
         static_cast<uint32_t>(rate_settings.rate_control.framerate_fps + 0.5));
     stream_resource_manager_.SetEncoderRates(rate_settings.rate_control);
   }
-  if (bitrate_observer_) {
-    bitrate_observer_->OnBitrateAllocationUpdated(
+  if ((settings_.allocation_cb_type ==
+       VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+           kVideoBitrateAllocation) ||
+      (encoder_config_.content_type ==
+           VideoEncoderConfig::ContentType::kScreen &&
+       settings_.allocation_cb_type ==
+           VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               kVideoBitrateAllocationWhenScreenSharing)) {
+    sink_->OnBitrateAllocationUpdated(
         // Update allocation according to info from encoder. An encoder may
         // choose to not use all layers due to for example HW.
         UpdateAllocationFromEncoderInfo(

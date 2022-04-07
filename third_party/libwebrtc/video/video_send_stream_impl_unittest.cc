@@ -435,9 +435,10 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
         auto vss_impl = CreateVideoSendStreamImpl(
             kDefaultInitialBitrateBps, kDefaultBitratePriority,
             VideoEncoderConfig::ContentType::kScreen);
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
         vss_impl->Start();
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -449,7 +450,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
         // Encoder starts out paused, don't forward allocation.
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(0);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         // Unpause encoder, allocation should be passed through.
         const uint32_t kBitrateBps = 100000;
@@ -460,7 +461,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         // Pause encoder again, and block allocations.
         EXPECT_CALL(rtp_video_sender_, GetPayloadBitrateBps())
@@ -470,7 +471,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationWhenEnabled) {
             ->OnBitrateUpdated(CreateAllocation(0));
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(0);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         vss_impl->Stop();
       },
@@ -491,8 +492,9 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
             .WillOnce(Return(kBitrateBps));
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -504,7 +506,7 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
         // Initial value.
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         VideoBitrateAllocation updated_alloc = alloc;
         // Needs 10% increase in bitrate to trigger immediate forward.
@@ -514,14 +516,14 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
         // Too small increase, don't forward.
         updated_alloc.SetBitrate(0, 0, base_layer_min_update_bitrate_bps - 1);
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(_)).Times(0);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         // Large enough increase, do forward.
         updated_alloc.SetBitrate(0, 0, base_layer_min_update_bitrate_bps);
         EXPECT_CALL(rtp_video_sender_,
                     OnBitrateAllocationUpdated(updated_alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         // This is now a decrease compared to last forward allocation, forward
         // immediately.
@@ -529,7 +531,7 @@ TEST_F(VideoSendStreamImplTest, ThrottlesVideoBitrateAllocationWhenTooSimilar) {
         EXPECT_CALL(rtp_video_sender_,
                     OnBitrateAllocationUpdated(updated_alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         vss_impl->Stop();
       },
@@ -550,8 +552,9 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
             .WillOnce(Return(kBitrateBps));
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -563,7 +566,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
         // Initial value.
         EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(alloc);
+        sink->OnBitrateAllocationUpdated(alloc);
 
         // Move some bitrate from one layer to a new one, but keep sum the same.
         // Since layout has changed, immediately trigger forward.
@@ -574,7 +577,7 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationOnLayerChange) {
         EXPECT_CALL(rtp_video_sender_,
                     OnBitrateAllocationUpdated(updated_alloc))
             .Times(1);
-        observer->OnBitrateAllocationUpdated(updated_alloc);
+        sink->OnBitrateAllocationUpdated(updated_alloc);
 
         vss_impl->Stop();
       },
@@ -595,8 +598,9 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
             .WillRepeatedly(Return(kBitrateBps));
         static_cast<BitrateAllocatorObserver*>(vss_impl.get())
             ->OnBitrateUpdated(CreateAllocation(kBitrateBps));
-        VideoBitrateAllocationObserver* const observer =
-            static_cast<VideoBitrateAllocationObserver*>(vss_impl.get());
+        VideoStreamEncoderInterface::EncoderSink* const sink =
+            static_cast<VideoStreamEncoderInterface::EncoderSink*>(
+                vss_impl.get());
 
         // Populate a test instance of video bitrate allocation.
         VideoBitrateAllocation alloc;
@@ -618,14 +622,14 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
           // Initial value.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(1);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         {
           // Sending same allocation again, this one should be throttled.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(0);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         clock_.AdvanceTimeMicroseconds(kMaxVbaThrottleTimeMs * 1000);
@@ -634,14 +638,14 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
           // Sending similar allocation again after timeout, should forward.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(1);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         {
           // Sending similar allocation again without timeout, throttle.
           EXPECT_CALL(rtp_video_sender_, OnBitrateAllocationUpdated(alloc))
               .Times(0);
-          observer->OnBitrateAllocationUpdated(alloc);
+          sink->OnBitrateAllocationUpdated(alloc);
         }
 
         {
