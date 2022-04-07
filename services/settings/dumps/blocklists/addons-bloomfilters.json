@@ -3,6 +3,43 @@
     {
       "stash": {
         "blocked": [
+          "webpki@lacunasoftware.com:2.14.2",
+          "webpki@lacunasoftware.com:2.9.1",
+          "webpki@lacunasoftware.com:2.14.1",
+          "webpki@lacunasoftware.com:2.11.9",
+          "webpki@lacunasoftware.com:2.7.1",
+          "webpki@lacunasoftware.com:2.15.0",
+          "webpki@lacunasoftware.com:2.7.2",
+          "webpki@lacunasoftware.com:2.13.0",
+          "webpki@lacunasoftware.com:2.8.0",
+          "webpki@lacunasoftware.com:2.10.1",
+          "webpki@lacunasoftware.com:2.7.5",
+          "webpki@lacunasoftware.com:2.13.6",
+          "webpki@lacunasoftware.com:2.7.0",
+          "webpki@lacunasoftware.com:2.12.1",
+          "webpki@lacunasoftware.com:2.7.4",
+          "webpki@lacunasoftware.com:2.11.10",
+          "webpki@lacunasoftware.com:2.13.4",
+          "webpki@lacunasoftware.com:2.13.5",
+          "webpki@lacunasoftware.com:2.11.7",
+          "webpki@lacunasoftware.com:2.13.2",
+          "webpki@lacunasoftware.com:2.11.8",
+          "webpki@lacunasoftware.com:2.7.3",
+          "webpki@lacunasoftware.com:2.15.1",
+          "webpki@lacunasoftware.com:2.13.3",
+          "webpki@lacunasoftware.com:2.13.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1648744604332,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1649248507608,
+      "id": "d68f1e69-715e-417a-8c74-25a70d6299d9",
+      "last_modified": 1649248709738
+    },
+    {
+      "stash": {
+        "blocked": [
           "sp@FindingFormsPro:2.0.0",
           "sp@SpeedCheckerPlus:3.0.0",
           "sp@FindingFormsPro:1.0.7",

@@ -199,7 +199,7 @@ void GfxInfo::EnsureInitialized() {
   mAdapterDescription.AppendPrintf(
       ", Manufacturer: %s", NS_LossyConvertUTF16toASCII(mManufacturer).get());
 
-  mSDKVersion = java::sdk::VERSION::SDK_INT();
+  mSDKVersion = java::sdk::Build::VERSION::SDK_INT();
   // the HARDWARE field isn't available on Android SDK < 8, but we require 9+
   // anyway.
   MOZ_ASSERT(mSDKVersion >= 8);
@@ -208,7 +208,7 @@ void GfxInfo::EnsureInitialized() {
   mAdapterDescription.AppendPrintf(
       ", Hardware: %s", NS_LossyConvertUTF16toASCII(mHardware).get());
 
-  jni::String::LocalRef release = java::sdk::VERSION::RELEASE();
+  jni::String::LocalRef release = java::sdk::Build::VERSION::RELEASE();
   mOSVersion = release->ToCString();
 
   mOSVersionInteger = 0;

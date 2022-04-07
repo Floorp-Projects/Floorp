@@ -115,8 +115,9 @@ AndroidDataEncoder<ConfigType>::ProcessInit() {
   AssertOnTaskQueue();
   MOZ_ASSERT(!mJavaEncoder);
 
-  java::sdk::BufferInfo::LocalRef bufferInfo;
-  if (NS_FAILED(java::sdk::BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+  java::sdk::MediaCodec::BufferInfo::LocalRef bufferInfo;
+  if (NS_FAILED(java::sdk::MediaCodec::BufferInfo::New(&bufferInfo)) ||
+      !bufferInfo) {
     return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   mInputBufferInfo = bufferInfo;
@@ -291,7 +292,7 @@ void AndroidDataEncoder<ConfigType>::ProcessOutput(
 
   AutoRelease releaseSample(mJavaEncoder, aSample);
 
-  java::sdk::BufferInfo::LocalRef info = aSample->Info();
+  java::sdk::MediaCodec::BufferInfo::LocalRef info = aSample->Info();
   MOZ_ASSERT(info);
 
   int32_t flags;

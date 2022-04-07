@@ -118,8 +118,7 @@ class FrameTransport {
     }
 
     if (type === ContextDescriptorType.TopBrowsingContext) {
-      const { browserId } = TabManager.getBrowserById(id);
-      return this._getBrowsingContexts({ browserId });
+      return this._getBrowsingContexts({ browserId: id });
     }
 
     // TODO: Handle other types of context descriptors.

@@ -79,7 +79,7 @@ class AndroidDataEncoder final : public MediaDataEncoder {
   java::sdk::MediaFormat::GlobalRef mFormat;
   // Preallocated Java object used as a reusable storage for input buffer
   // information. Contents must be changed only on mTaskQueue.
-  java::sdk::BufferInfo::GlobalRef mInputBufferInfo;
+  java::sdk::MediaCodec::BufferInfo::GlobalRef mInputBufferInfo;
 
   MozPromiseHolder<EncodePromise> mDrainPromise;
 

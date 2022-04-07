@@ -136,12 +136,16 @@ class ProgressListener {
     return this.#webProgress.browsingContext.currentURI;
   }
 
-  get targetURI() {
-    return this.#targetURI;
-  }
-
   get isLoadingDocument() {
     return this.#webProgress.isLoadingDocument;
+  }
+
+  get isStarted() {
+    return this.#resolve !== null;
+  }
+
+  get targetURI() {
+    return this.#targetURI;
   }
 
   #checkLoadingState(request, options = {}) {

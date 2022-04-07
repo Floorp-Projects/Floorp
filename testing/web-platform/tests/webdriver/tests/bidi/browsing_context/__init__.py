@@ -11,7 +11,7 @@ def assert_browsing_context(
         assert isinstance(info["children"], list)
         assert len(info["children"]) == children
     else:
-        assert info["children"] == None
+        assert info["children"] is None
 
     assert "context" in info
     assert isinstance(info["context"], str)

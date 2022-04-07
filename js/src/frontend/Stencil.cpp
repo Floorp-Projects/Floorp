@@ -1309,13 +1309,10 @@ static bool CreateLazyScript(JSContext* cx,
   return true;
 }
 
-// Parser-generated functions with the same prototype will share the same shape
-// and group. By computing the correct values up front, we can save a lot of
-// time in the Object creation code. For simplicity, we focus only on plain
-// synchronous functions which are by far the most common.
-//
-// This bypasses the `NewObjectCache`, but callers are expected to retrieve a
-// valid group and shape from the appropriate de-duplication tables.
+// Parser-generated functions with the same prototype will share the same shape.
+// By computing the correct values up front, we can save a lot of time in the
+// Object creation code. For simplicity, we focus only on plain synchronous
+// functions which are by far the most common.
 //
 // NOTE: Keep this in sync with `js::NewFunctionWithProto`.
 static JSFunction* CreateFunctionFast(JSContext* cx,
