@@ -9,14 +9,9 @@ description: >
     throw a TypeError exception
 ---*/
 
-//CHECK#1
-
-try {
+assert.throws(TypeError, () => {
   new isNaN();
-} catch (e) {
-  if ((e instanceof TypeError) !== true) {
-    throw new Test262Error('#1.2: new isNaN() throw TypeError. Actual: ' + (e));
-  }
-}
+  throw new Test262Error();
+});
 
 reportCompare(0, 0);

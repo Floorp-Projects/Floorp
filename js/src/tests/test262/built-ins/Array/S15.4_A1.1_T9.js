@@ -9,7 +9,6 @@ es5id: 15.4_A1.1_T9
 description: If Type(value) is Object, evaluate ToPrimitive(value, String)
 ---*/
 
-//CHECK#1
 var x = [];
 var object = {
   valueOf: function() {
@@ -19,7 +18,6 @@ var object = {
 x[object] = 0;
 assert.sameValue(x["[object Object]"], 0, 'The value of x["[object Object]"] is expected to be 0');
 
-//CHECK#2
 x = [];
 var object = {
   valueOf: function() {
@@ -32,7 +30,6 @@ var object = {
 x[object] = 0;
 assert.sameValue(x[0], 0, 'The value of x[0] is expected to be 0');
 
-//CHECK#3
 x = [];
 var object = {
   valueOf: function() {
@@ -45,7 +42,6 @@ var object = {
 x[object] = 0;
 assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 
-//CHECK#4
 try {
   x = [];
   var object = {
@@ -63,7 +59,6 @@ catch (e) {
   assert.notSameValue(e, "error", 'The value of e is not "error"');
 }
 
-//CHECK#5
 x = [];
 var object = {
   toString: function() {
@@ -73,7 +68,6 @@ var object = {
 x[object] = 0;
 assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 
-//CHECK#6
 x = [];
 var object = {
   valueOf: function() {
@@ -86,7 +80,6 @@ var object = {
 x[object] = 0;
 assert.sameValue(x[1], 0, 'The value of x[1] is expected to be 0');
 
-//CHECK#7
 try {
   x = [];
   var object = {
@@ -104,7 +97,6 @@ catch (e) {
   assert.sameValue(e, "error", 'The value of e is expected to be "error"');
 }
 
-//CHECK#8
 try {
   x = [];
   var object = {

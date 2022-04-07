@@ -29,7 +29,7 @@ var a2 = new Sub(7);
 assert.sameValue(a2.length, 7);
 
 var a3 = new Sub();
-assert(compareArray(a3, []));
+assert.compareArray(a3, []);
 assert.sameValue(a3.length, 0);
 
 reportCompare(0, 0);

@@ -16,6 +16,6 @@ var obj = {toString: Function.prototype.toString};
 
 assert.throws(TypeError, function() {
   String(obj);
-});
+}, 'String(obj) throws a TypeError exception');
 
 reportCompare(0, 0);

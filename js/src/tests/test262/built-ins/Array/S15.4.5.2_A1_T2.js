@@ -10,12 +10,10 @@ es5id: 15.4.5.2_A1_T2
 description: P = "2^32 - 1" is not index array
 ---*/
 
-//CHECK#1
 var x = [];
 x[4294967295] = 1;
 assert.sameValue(x.length, 0, 'The value of x.length is expected to be 0');
 
-//CHECK#2
 var y = [];
 y[1] = 1;
 y[4294967295] = 1;

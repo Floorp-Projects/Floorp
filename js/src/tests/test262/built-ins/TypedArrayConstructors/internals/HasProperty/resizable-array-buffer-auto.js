@@ -51,6 +51,13 @@ testWithTypedArrayConstructors(function(TA) {
     expected = "false,false,false,false,false";
   } catch (_) {}
 
+  assert.sameValue(inspect(array), expected, "following shrink (on boundary)");
+
+  try {
+    ab.resize(0);
+    expected = "false,false,false,false,false";
+  } catch (_) {}
+
   assert.sameValue(inspect(array), expected, "following shrink (out of bounds)");
 });
 

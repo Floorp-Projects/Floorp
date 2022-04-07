@@ -12,9 +12,9 @@ var object = {
     yield 2;
   }
 };
-assert(
-  compareArray(Object.keys(object), ['a']),
-  "`compareArray(Object.keys(object), ['a'])` returns `true`"
+assert.compareArray(
+  Object.keys(object),
+  ['a']
 );
 
 reportCompare(0, 0);

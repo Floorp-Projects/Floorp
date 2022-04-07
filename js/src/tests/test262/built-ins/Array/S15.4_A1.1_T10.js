@@ -9,7 +9,6 @@ es5id: 15.4_A1.1_T10
 description: Array index is power of two
 ---*/
 
-//CHECK#
 var x = [];
 var k = 1;
 for (var i = 0; i < 32; i++) {

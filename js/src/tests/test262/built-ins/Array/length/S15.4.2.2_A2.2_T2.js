@@ -10,7 +10,6 @@ es5id: 15.4.2.2_A2.2_T2
 description: Use try statement. len = NaN, +/-Infinity
 ---*/
 
-//CHECK#1
 try {
   new Array(NaN);
   throw new Test262Error('#1.1: new Array(NaN) throw RangeError. Actual: ' + (new Array(NaN)));
@@ -22,7 +21,6 @@ try {
   );
 }
 
-//CHECK#2
 try {
   new Array(Number.POSITIVE_INFINITY);
   throw new Test262Error('#2.1: new Array(Number.POSITIVE_INFINITY) throw RangeError. Actual: ' + (new Array(Number.POSITIVE_INFINITY)));
@@ -34,7 +32,6 @@ try {
   );
 }
 
-//CHECK#3
 try {
   new Array(Number.NEGATIVE_INFINITY);
   throw new Test262Error('#3.1: new Array(Number.NEGATIVE_INFINITY) throw RangeError. Actual: ' + (new Array(Number.NEGATIVE_INFINITY)));

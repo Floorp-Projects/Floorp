@@ -5,9 +5,9 @@
 es5id: 15.3.4.5_A3
 description: Function.prototype.bind must exist
 ---*/
-
-if (!('bind' in Function.prototype)) {
-  throw new Test262Error('Function.prototype.bind is missing');
-}
+assert(
+  'bind' in Function.prototype,
+  'The result of evaluating (\'bind\' in Function.prototype) is expected to be true'
+);
 
 reportCompare(0, 0);
