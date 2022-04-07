@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetters(modules["windowglobal-in-root"], {
 });
 
 XPCOMUtils.defineLazyModuleGetters(modules.windowglobal, {
+  browsingContext:
+    "chrome://remote/content/webdriver-bidi/modules/windowglobal/browsingContext.jsm",
   log: "chrome://remote/content/webdriver-bidi/modules/windowglobal/log.jsm",
 });
 
