@@ -859,7 +859,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update the test262 test suite.")
     parser.add_argument(
         "--url",
-        default="git://github.com/tc39/test262.git",
+        default="https://github.com/tc39/test262.git",
         help="URL to git repository (default: %(default)s)",
     )
     parser.add_argument(
