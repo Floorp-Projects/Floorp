@@ -9,7 +9,11 @@ description: Checking RegExp.prototype.exec
 
 (/foo/).test('xfoox');
 var match = new RegExp('(.|\r|\n)*','').exec()[0];
-assert.notSameValue(match, 'xfoox', 'The value of match is not "xfoox"');
-assert.sameValue(match, 'undefined', 'The value of match is expected to be "undefined"');
+if (match === 'xfoox') {
+  throw new Test262Error('#1: regExp.exec() leaks match globally');
+}
+if (match !== 'undefined') {
+  throw new Test262Error('#2: regExp.exec() must coerce absent first arg to "undefined"');
+}
 
 reportCompare(0, 0);

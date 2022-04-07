@@ -11,23 +11,24 @@ description: >
 
 var __re = RegExp.prototype;
 
-assert.sameValue(__re.hasOwnProperty('multiline'), true, '__re.hasOwnProperty(\'multiline\') must return true');
-
-assert.sameValue(
-  __re.propertyIsEnumerable('multiline'),
-  false,
-  '__re.propertyIsEnumerable(\'multiline\') must return false'
-);
-
-var count = 0
-for (var p in __re){
-  if (p==="multiline") {
-    count++
-  }   
+//CHECK#0
+if (__re.hasOwnProperty('multiline') !== true) {
+  throw new Test262Error('#0: __re = RegExp.prototype; __re.hasOwnProperty(\'multiline\') === true');
 }
 
-assert.sameValue(count, 0, 'The value of count is expected to be 0');
+ //CHECK#1
+if (__re.propertyIsEnumerable('multiline') !== false) {
+  throw new Test262Error('#1: __re = RegExp.prototype; __re.propertyIsEnumerable(\'multiline\') === false');
+}
 
-// TODO: Convert to verifyProperty() format.
+ //CHECK#2
+var count = 0
+for (var p in __re){
+  if (p==="multiline") count++   
+}
+
+if (count !== 0) {
+  throw new Test262Error('#2: count = 0; __re = RegExp.prototype; for (p in __re){ if (p==="multiline") count++; } count === 0. Actual: ' + (count));
+}
 
 reportCompare(0, 0);

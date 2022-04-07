@@ -12,14 +12,12 @@ verifyNotConfigurable(Number, "MAX_VALUE");
 
 // CHECK#1
 try {
-  assert.sameValue(delete Number.MAX_VALUE, false);
-} catch (e) {
-  if (e instanceof Test262Error) {
-    throw e;
+  if (delete Number.MAX_VALUE !== false) {
+    throw new Test262Error('#1: delete Number.MAX_VALUE === false');
   }
+} catch (e) {
+  if (e instanceof Test262Error) throw e;
   assert(e instanceof TypeError);
 }
-
-// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

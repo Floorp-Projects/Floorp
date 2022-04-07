@@ -20,7 +20,7 @@ info: |
     object has the attributes { [[Writable]]: false, [[Enumerable]]: false,
     [[Configurable]]: true }.
 includes: [propertyHelper.js]
-features: [SharedArrayBuffer, resizable-arraybuffer]
+features: [resizable-arraybuffer]
 ---*/
 
 var desc = Object.getOwnPropertyDescriptor(SharedArrayBuffer.prototype, 'growable');

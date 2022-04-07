@@ -11,16 +11,13 @@ description: >
     exception
 ---*/
 
+//CHECK#1
 try {
-    throw new Test262Error('#1.1: RegExp(new RegExp("\\d"), "1")) throw SyntaxError. Actual: ' + (RegExp(new RegExp("\d"), "1")));
+	throw new Test262Error('#1.1: RegExp(new RegExp("\\d"), "1")) throw SyntaxError. Actual: ' + (RegExp(new RegExp("\d"), "1")));
 } catch (e) {
-  assert.sameValue(
-    e instanceof SyntaxError,
-    true,
-    'The result of evaluating (e instanceof SyntaxError) is expected to be true'
-  );
+	if ((e instanceof SyntaxError) !== true) {
+		throw new Test262Error('#1.2: RegExp(new RegExp("\\d"), "1")) throw SyntaxError. Actual: ' + (e));
+	}
 }
-
-// TODO: Convert to assert.throws() format.
 
 reportCompare(0, 0);

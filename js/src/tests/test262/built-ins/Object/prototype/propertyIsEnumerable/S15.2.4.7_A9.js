@@ -10,16 +10,16 @@ description: >
     Checking if deleting the
     Object.prototype.propertyIsEnumerable.length property fails
 ---*/
-assert(
-  !!Object.prototype.propertyIsEnumerable.hasOwnProperty('length'),
-  'The value of !!Object.prototype.propertyIsEnumerable.hasOwnProperty("length") is expected to be true'
-);
 
-assert(
-  !!delete Object.prototype.propertyIsEnumerable.length,
-  'The value of !!delete Object.prototype.propertyIsEnumerable.length is expected to be true'
-);
+//CHECK#0
+if (!(Object.prototype.propertyIsEnumerable.hasOwnProperty('length'))) {
+  throw new Test262Error('#0: the Object.prototype.propertyIsEnumerable has length property');
+}
 
-// TODO: Convert to verifyProperty() format.
+//CHECK#1
+if (!delete Object.prototype.propertyIsEnumerable.length) {
+  throw new Test262Error('#1: The Object.prototype.propertyIsEnumerable.length property does not have the attributes DontDelete');
+}
+//
 
 reportCompare(0, 0);

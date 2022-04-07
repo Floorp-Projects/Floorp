@@ -6,6 +6,10 @@ info: Result of boolean conversion from null value is false
 esid: sec-toboolean
 description: null convert to Boolean by explicit transformation
 ---*/
-assert.sameValue(Boolean(null), false, 'Boolean(null) must return false');
+
+// CHECK#1
+if (Boolean(null) !== false) {
+  throw new Test262Error('#1: Boolean(null) === false. Actual: ' + (Boolean(null)));
+}
 
 reportCompare(0, 0);

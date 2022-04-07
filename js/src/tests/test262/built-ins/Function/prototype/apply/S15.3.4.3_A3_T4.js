@@ -11,6 +11,9 @@ description: Argument at apply function is undefined
 
 Function("this.field=\"oil\"").apply(undefined);
 
-assert.sameValue(this["field"], "oil", 'The value of this["field"] is expected to be "oil"');
+//CHECK#1
+if (this["field"] !== "oil") {
+  throw new Test262Error('#1: If thisArg is null or undefined, the called function is passed the global object as the this value');
+}
 
 reportCompare(0, 0);

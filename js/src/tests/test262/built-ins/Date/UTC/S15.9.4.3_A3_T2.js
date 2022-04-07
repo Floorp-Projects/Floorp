@@ -10,13 +10,12 @@ es5id: 15.9.4.3_A3_T2
 description: Checking DontDelete attribute
 ---*/
 
-assert.sameValue(delete Date.UTC.length, true, 'The value of `delete Date.UTC.length` is expected to be true');
+if (delete Date.UTC.length !== true) {
+  throw new Test262Error('#1: The Date.UTC.length property does not have the attributes DontDelete');
+}
 
-assert(
-  !Date.UTC.hasOwnProperty('length'),
-  'The value of !Date.UTC.hasOwnProperty(\'length\') is expected to be true'
-);
-
-// TODO: Convert to verifyProperty() format.
+if (Date.UTC.hasOwnProperty('length')) {
+  throw new Test262Error('#2: The Date.UTC.length property does not have the attributes DontDelete');
+}
 
 reportCompare(0, 0);

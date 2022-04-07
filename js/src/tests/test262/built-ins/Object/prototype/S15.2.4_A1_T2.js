@@ -8,19 +8,22 @@ description: >
     Since the Object prototype object has not prototype, deleted
     toString method can not be found in prototype chain
 ---*/
-assert.notSameValue(Object.prototype.toString(), false, 'Object.prototype.toString() must return false');
+
+//CHECK#1
+if (Object.prototype.toString() == false) {
+  throw new Test262Error('#1: Object prototype object has not prototype');
+}
 
 delete Object.prototype.toString;
 
+// CHECK#2
 try {
   Object.prototype.toString();
   throw new Test262Error('#2: Object prototype object has not prototype');
 } catch (e) {
-  assert.sameValue(
-    e instanceof TypeError,
-    true,
-    'The result of evaluating (e instanceof TypeError) is expected to be true'
-  );
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#1.1: delete Object.prototype.toString; Object.prototype.toString() throw a TypeError. Actual: ' + (e));
+  }
 }
 //
 

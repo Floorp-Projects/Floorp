@@ -24,5 +24,7 @@ Object.defineProperty(iterThrows, Symbol.iterator, {
 Promise.race(iterThrows).then(function() {
   throw new Test262Error('Promise unexpectedly fulfilled: Promise.race(iterThrows) should throw');
 }, function(err) {
-  assert(!!(err instanceof Error), 'The value of !!(err instanceof Error) is expected to be true');
+  if (!(err instanceof Error)) {
+    throw new Test262Error('Expected Promise to be rejected with an error, got ' + err);
+  }
 }).then($DONE, $DONE);

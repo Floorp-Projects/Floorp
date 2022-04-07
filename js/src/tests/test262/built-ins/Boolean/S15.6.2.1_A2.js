@@ -12,22 +12,20 @@ description: Checking prototype property of the newly created object
 
 // CHECK#1
 var x1 = new Boolean(1);
+if (typeof x1.constructor.prototype !== "object") {
+  throw new Test262Error('#1: typeof x1.constructor.prototype === "object"');
+}
 
-assert.sameValue(
-  typeof x1.constructor.prototype,
-  "object",
-  'The value of `typeof x1.constructor.prototype` is expected to be "object"'
-);
-
+//CHECK#2
 var x2 = new Boolean(2);
-assert(Boolean.prototype.isPrototypeOf(x2), 'Boolean.prototype.isPrototypeOf(x2) must return true');
+if (!Boolean.prototype.isPrototypeOf(x2)) {
+  throw new Test262Error('#2: Boolean.prototype.isPrototypeOf(x2)');
+}
 
+//CHECK#3
 var x3 = new Boolean(3);
-
-assert.sameValue(
-  Boolean.prototype,
-  x3.constructor.prototype,
-  'The value of Boolean.prototype is expected to equal the value of x3.constructor.prototype'
-);
+if (Boolean.prototype !== x3.constructor.prototype) {
+  throw new Test262Error('#3: Boolean.prototype === x3.constructor.prototype');
+}
 
 reportCompare(0, 0);

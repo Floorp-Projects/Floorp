@@ -8,15 +8,15 @@ info: |
 esid: sec-date.prototype.tostring
 description: Checking DontEnum attribute
 ---*/
-assert(
-  !Date.prototype.toString.propertyIsEnumerable('length'),
-  'The value of !Date.prototype.toString.propertyIsEnumerable(\'length\') is expected to be true'
-);
 
-for (var x in Date.prototype.toString) {
-  assert.notSameValue(x, "length", 'The value of x is not "length"');
+if (Date.prototype.toString.propertyIsEnumerable('length')) {
+  throw new Test262Error('#1: The Date.prototype.toString.length property has the attribute DontEnum');
 }
 
-// TODO: Convert to verifyProperty() format.
+for (var x in Date.prototype.toString) {
+  if (x === "length") {
+    throw new Test262Error('#2: The Date.prototype.toString.length has the attribute DontEnum');
+  }
+}
 
 reportCompare(0, 0);

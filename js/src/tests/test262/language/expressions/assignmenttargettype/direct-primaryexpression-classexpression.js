@@ -14,4 +14,7 @@ info: |
 
 $DONOTEVALUATE();
 
-class {} = 1;
+function _() {
+  class {} = 1;
+}
+

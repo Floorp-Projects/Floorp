@@ -6,6 +6,9 @@ info: The Date constructor has the property "parse"
 esid: sec-date-constructor
 description: Checking existence of the property "parse"
 ---*/
-assert(Date.hasOwnProperty("parse"), 'Date.hasOwnProperty("parse") must return true');
+
+if (!Date.hasOwnProperty("parse")) {
+  throw new Test262Error('#1: The Date constructor has the property "parse"');
+}
 
 reportCompare(0, 0);

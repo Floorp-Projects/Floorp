@@ -11,13 +11,21 @@ description: >
 
 var f = Function("arg1,arg2,arg3", "arg4,arg5", null);
 
-assert(f.hasOwnProperty('length'), 'f.hasOwnProperty(\'length\') must return true');
+//CHECK#1
+if (!(f.hasOwnProperty('length'))) {
+  throw new Test262Error('#1: the function has length property.');
+}
 
 delete f.length;
 
-assert(!f.hasOwnProperty('length'), 'The value of !f.hasOwnProperty(\'length\') is expected to be true');
-assert.notSameValue(f.length, 5, 'The value of f.length is not 5');
+//CHECK#2
+if (f.hasOwnProperty('length')) {
+  throw new Test262Error('#2: the function.length property does not have the attributes DontDelete.');
+}
 
-// TODO: Convert to verifyProperty() format.
+//CHECK#3
+if (f.length === 5) {
+  throw new Test262Error('#3: the length property does not have the attributes { DontDelete }');
+}
 
 reportCompare(0, 0);

@@ -35,6 +35,9 @@ Object.defineProperty(obj, "d", {
   configurable: true
 });
 
-assert.compareArray(Object.getOwnPropertyNames(obj), ["a", "b", "c", "d"]);
+var actual = Object.getOwnPropertyNames(obj);
+var expected = ["a", "b", "c", "d"];
+
+assert(compareArray(actual, expected), 'compareArray(actual, expected) !== true');
 
 reportCompare(0, 0);

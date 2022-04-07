@@ -19,10 +19,14 @@ flags: [async]
 
 var p = Promise.reject(3);
 
-assert(!!(p instanceof Promise), 'The value of !!(p instanceof Promise) is expected to be true');
+if (!(p instanceof Promise)) {
+  throw new Test262Error("Expected Promise.reject to return a promise.");
+}
 
 p.then(function() {
   throw new Test262Error("Promise should not be fulfilled.");
-}, function(result) {
-  assert.sameValue(result, 3, 'The value of result is expected to be 3');
+}, function(arg) {
+  if (arg !== 3) {
+    throw new Test262Error("Expected promise to be rejected with supplied arg, got " + arg);
+  }
 }).then($DONE, $DONE);

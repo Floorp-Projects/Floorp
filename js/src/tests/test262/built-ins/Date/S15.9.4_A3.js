@@ -6,6 +6,9 @@ info: The Date constructor has the property "UTC"
 esid: sec-date-constructor
 description: Checking existence of the property "UTC"
 ---*/
-assert(Date.hasOwnProperty("UTC"), 'Date.hasOwnProperty("UTC") must return true');
+
+if (!Date.hasOwnProperty("UTC")) {
+  throw new Test262Error('#1: The Date constructor has the property "UTC"');
+}
 
 reportCompare(0, 0);

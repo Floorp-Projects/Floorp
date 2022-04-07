@@ -18,4 +18,7 @@ info: |
 
 $DONOTEVALUATE();
 
-yield * x = 1;
+function _() {
+  yield * x = 1;
+}
+

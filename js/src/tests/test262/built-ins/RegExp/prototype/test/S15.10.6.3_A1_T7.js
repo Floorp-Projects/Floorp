@@ -9,12 +9,13 @@ description: >
     "intostr";}}
 ---*/
 
+//CHECK#1
 try {
-    throw new Test262Error('#1.1: /[a-z]/.test({toString:function(){throw "intostr";}}) throw "intostr". Actual: ' + (/[a-z]/.test({toString:function(){throw "intostr";}})));
+	throw new Test262Error('#1.1: /[a-z]/.test({toString:function(){throw "intostr";}}) throw "intostr". Actual: ' + (/[a-z]/.test({toString:function(){throw "intostr";}})));
 } catch (e) {
-  assert.sameValue(e, "intostr", 'The value of e is expected to be "intostr"');
+	if (e !== "intostr") {
+		throw new Test262Error('#1.2: /[a-z]/.test({toString:function(){throw "intostr";}}) throw "intostr". Actual: ' + (e));
+	}
 }
-
-// TODO: Convert to assert.throws() format.
 
 reportCompare(0, 0);

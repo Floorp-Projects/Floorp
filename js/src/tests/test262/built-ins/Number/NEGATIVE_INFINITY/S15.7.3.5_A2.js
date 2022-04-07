@@ -10,12 +10,12 @@ includes: [propertyHelper.js]
 
 // CHECK#1
 verifyNotWritable(Number, "NEGATIVE_INFINITY", null, 1);
-
-assert(
-  !isFinite(Number.NEGATIVE_INFINITY),
-  'The value of !isFinite(Number.NEGATIVE_INFINITY) is expected to be true'
-);
-
-// TODO: Convert to verifyProperty() format.
+if (isFinite(Number.NEGATIVE_INFINITY)) {
+  throw new Test262Error('#1: Number.NEGATIVE_INFINITY = 1; Number.NEGATIVE_INFINITY === -Infinity');
+} else {
+  if (Number.NEGATIVE_INFINITY >= 0) {
+    throw new Test262Error('#1: Number.NEGATIVE_INFINITY = 1; Number.NEGATIVE_INFINITY === -Infinity');
+  }
+}
 
 reportCompare(0, 0);

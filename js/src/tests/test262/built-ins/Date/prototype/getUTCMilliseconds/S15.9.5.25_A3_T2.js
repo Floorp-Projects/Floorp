@@ -8,17 +8,13 @@ info: |
 esid: sec-date.prototype.getutcmilliseconds
 description: Checking DontDelete attribute
 ---*/
-assert.sameValue(
-  delete Date.prototype.getUTCMilliseconds.length,
-  true,
-  'The value of `delete Date.prototype.getUTCMilliseconds.length` is expected to be true'
-);
 
-assert(
-  !Date.prototype.getUTCMilliseconds.hasOwnProperty('length'),
-  'The value of !Date.prototype.getUTCMilliseconds.hasOwnProperty(\'length\') is expected to be true'
-);
+if (delete Date.prototype.getUTCMilliseconds.length !== true) {
+  throw new Test262Error('#1: The Date.prototype.getUTCMilliseconds.length property does not have the attributes DontDelete');
+}
 
-// TODO: Convert to verifyProperty() format.
+if (Date.prototype.getUTCMilliseconds.hasOwnProperty('length')) {
+  throw new Test262Error('#2: The Date.prototype.getUTCMilliseconds.length property does not have the attributes DontDelete');
+}
 
 reportCompare(0, 0);

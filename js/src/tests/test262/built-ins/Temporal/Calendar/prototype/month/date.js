@@ -4,8 +4,7 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.month
-description: >
-  Temporal.Calendar.prototype.month will take PlainDate and return
+description: Temporal.Calendar.prototype.month will take PlainDate and return
   the value of the month.
 info: |
   1. Let calendar be the this value.

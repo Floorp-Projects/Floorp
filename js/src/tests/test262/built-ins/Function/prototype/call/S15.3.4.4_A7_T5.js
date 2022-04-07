@@ -12,7 +12,9 @@ try {
   var obj = new FACTORY();
   throw new Test262Error('#1: Function.prototype.call can\'t be used as [[Construct]] caller');
 } catch (e) {
-  assert(e instanceof TypeError, 'The result of evaluating (e instanceof TypeError) is expected to be true');
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#1.1: Function.prototype.call can\'t be used as [[Construct]] caller');
+  }
 }
 
 reportCompare(0, 0);

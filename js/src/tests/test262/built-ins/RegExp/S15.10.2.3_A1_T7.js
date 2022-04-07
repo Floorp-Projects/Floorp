@@ -12,6 +12,9 @@ description: Execute /ab|cd|ef/.test("AEKFCD") and check results
 
 var __executed = /ab|cd|ef/.test("AEKFCD");
 
-assert(!__executed, 'The value of !__executed is expected to be true');
+//CHECK#1
+if (__executed) {
+	throw new Test262Error('#1: /ab|cd|ef/.test("AEKFCD") === false');
+}
 
 reportCompare(0, 0);

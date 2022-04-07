@@ -11,6 +11,9 @@ description: argArray is (null,[1,2,3])
 
 new Function("a1,a2", "a3", "this.shifted=a2;").apply(null, [1, 2, 3]);
 
-assert.sameValue(this["shifted"], 2, 'The value of this["shifted"] is expected to be 2');
+//CHECK#1
+if (this["shifted"] !== 2) {
+  throw new Test262Error('#1: If argArray is either an array or an arguments object, the function is passed the...');
+}
 
 reportCompare(0, 0);

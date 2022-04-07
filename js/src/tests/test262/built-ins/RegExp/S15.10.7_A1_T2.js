@@ -7,16 +7,13 @@ es5id: 15.10.7_A1_T2
 description: Checking if call of RegExp("a|b","g")() fails
 ---*/
 
+//CHECK#1
 try {
   throw new Test262Error('#1.1: RegExp("a|b","g")() throw TypeError. Actual: ' + (RegExp("a|b","g")()));
 } catch (e) {
-  assert.sameValue(
-    e instanceof TypeError,
-    true,
-    'The result of evaluating (e instanceof TypeError) is expected to be true'
-  );
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#1.2: RegExp("a|b","g")() throw TypeError. Actual: ' + (e));
+  }
 }
-
-// TODO: Convert to assert.throws() format.
 
 reportCompare(0, 0);

@@ -68,7 +68,6 @@ assert.notSameValue = function (actual, unexpected, message) {
 };
 
 assert.throws = function (expectedErrorConstructor, func, message) {
-  var expectedName, actualName;
   if (typeof func !== "function") {
     throw new Test262Error('assert.throws requires two arguments: the error constructor ' +
       'and a function to run');
@@ -87,13 +86,7 @@ assert.throws = function (expectedErrorConstructor, func, message) {
       message += 'Thrown value was not an object!';
       throw new Test262Error(message);
     } else if (thrown.constructor !== expectedErrorConstructor) {
-      expectedName = expectedErrorConstructor.name;
-      actualName = thrown.constructor.name;
-      if (expectedName === actualName) {
-        message += 'Expected a ' + expectedName + ' but got a different error constructor with the same name';
-      } else {
-        message += 'Expected a ' + expectedName + ' but got a ' + actualName;
-      }
+      message += 'Expected a ' + expectedErrorConstructor.name + ' but got a ' + thrown.constructor.name;
       throw new Test262Error(message);
     }
     return;
@@ -148,27 +141,19 @@ compareArray.isSameValue = function(a, b) {
   return a === b;
 };
 
-compareArray.format = function(arrayLike) {
-  return `[${[].map.call(arrayLike, String).join(', ')}]`;
+compareArray.format = function(array) {
+  return `[${array.map(String).join(', ')}]`;
 };
 
 assert.compareArray = function(actual, expected, message) {
   message  = message === undefined ? '' : message;
-
-  if (typeof message === 'symbol') {
-    message = message.toString();
-  }
-
   assert(actual != null, `First argument shouldn't be nullish. ${message}`);
   assert(expected != null, `Second argument shouldn't be nullish. ${message}`);
   var format = compareArray.format;
-  var result = compareArray(actual, expected);
-
-  // The following prevents actual and expected from being iterated and evaluated
-  // more than once unless absolutely necessary.
-  if (!result) {
-    assert(false, `Expected ${format(actual)} and ${format(expected)} to have the same contents. ${message}`);
-  }
+  assert(
+    compareArray(actual, expected),
+    `Expected ${format(actual)} and ${format(expected)} to have the same contents. ${message}`
+  );
 };
 
 // file: propertyHelper.js
@@ -180,13 +165,13 @@ description: |
     property descriptors.
 defines:
   - verifyProperty
-  - verifyEqualTo # deprecated
-  - verifyWritable # deprecated
-  - verifyNotWritable # deprecated
-  - verifyEnumerable # deprecated
-  - verifyNotEnumerable # deprecated
-  - verifyConfigurable # deprecated
-  - verifyNotConfigurable # deprecated
+  - verifyEqualTo
+  - verifyWritable
+  - verifyNotWritable
+  - verifyEnumerable
+  - verifyNotEnumerable
+  - verifyConfigurable
+  - verifyNotConfigurable
 ---*/
 
 // @ts-check
@@ -347,9 +332,6 @@ function isWritable(obj, name, verifyProp, value) {
   return writeSucceeded;
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyEqualTo(obj, name, value) {
   if (!isSameValue(obj[name], value)) {
     throw new Test262Error("Expected obj[" + String(name) + "] to equal " + value +
@@ -357,9 +339,6 @@ function verifyEqualTo(obj, name, value) {
   }
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyWritable(obj, name, verifyProp, value) {
   if (!verifyProp) {
     assert(Object.getOwnPropertyDescriptor(obj, name).writable,
@@ -370,9 +349,6 @@ function verifyWritable(obj, name, verifyProp, value) {
   }
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyNotWritable(obj, name, verifyProp, value) {
   if (!verifyProp) {
     assert(!Object.getOwnPropertyDescriptor(obj, name).writable,
@@ -383,9 +359,6 @@ function verifyNotWritable(obj, name, verifyProp, value) {
   }
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyEnumerable(obj, name) {
   assert(Object.getOwnPropertyDescriptor(obj, name).enumerable,
        "Expected obj[" + String(name) + "] to have enumerable:true.");
@@ -394,9 +367,6 @@ function verifyEnumerable(obj, name) {
   }
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyNotEnumerable(obj, name) {
   assert(!Object.getOwnPropertyDescriptor(obj, name).enumerable,
        "Expected obj[" + String(name) + "] to have enumerable:false.");
@@ -405,9 +375,6 @@ function verifyNotEnumerable(obj, name) {
   }
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyConfigurable(obj, name) {
   assert(Object.getOwnPropertyDescriptor(obj, name).configurable,
        "Expected obj[" + String(name) + "] to have configurable:true.");
@@ -416,9 +383,6 @@ function verifyConfigurable(obj, name) {
   }
 }
 
-/**
- * Deprecated; please use `verifyProperty` in new tests.
- */
 function verifyNotConfigurable(obj, name) {
   assert(!Object.getOwnPropertyDescriptor(obj, name).configurable,
        "Expected obj[" + String(name) + "] to have configurable:false.");

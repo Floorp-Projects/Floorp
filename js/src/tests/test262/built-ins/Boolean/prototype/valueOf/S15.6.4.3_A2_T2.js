@@ -10,16 +10,30 @@ esid: sec-boolean.prototype.valueof
 description: transferring to the Number objects
 ---*/
 
-assert.throws(TypeError, () => {
+//CHECK#1
+try {
   var s1 = new Number();
   s1.valueOf = Boolean.prototype.valueOf;
-  s1.valueOf();
-});
+  var v1 = s1.valueOf();
+  throw new Test262Error('#1: Boolean.prototype.valueOf on not a Boolean object should throw TypeError');
+}
+catch (e) {
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#1: Boolean.prototype.valueOf on not a Boolean object should throw TypeError, not ' + e);
+  }
+}
 
-assert.throws(TypeError, () => {
+//CHECK#1
+try {
   var s2 = new Number();
-  s2.myvalueOf = Boolean.prototype.valueOf;
-  s2.myvalueOf();
-});
+  s2.myValueOf = Boolean.prototype.valueOf;
+  var v2 = s2.myValueOf();
+  throw new Test262Error('#2: Boolean.prototype.valueOf on not a Boolean object should throw TypeError');
+}
+catch (e) {
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#2: Boolean.prototype.valueOf on not a Boolean object should throw TypeError, not ' + e);
+  }
+}
 
 reportCompare(0, 0);

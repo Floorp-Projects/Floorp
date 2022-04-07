@@ -21,4 +21,7 @@ info: |
 
 $DONOTEVALUATE();
 
-((true ? false : true)) = 1;
+function _() {
+  ((true ? false : true)) = 1;
+}
+

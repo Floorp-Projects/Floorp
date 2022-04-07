@@ -18,7 +18,7 @@ info: |
      [[ArrayBufferData]] internal slot.
   2. If buffer has an [[ArrayBufferMaxByteLength]] internal slot, return true.
   3. Return false.
-features: [SharedArrayBuffer, resizable-arraybuffer]
+features: [resizable-arraybuffer]
 ---*/
 
 var sab1 = new SharedArrayBuffer(1);

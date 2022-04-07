@@ -8,17 +8,13 @@ info: |
 esid: sec-date.prototype.gettimezoneoffset
 description: Checking DontDelete attribute
 ---*/
-assert.sameValue(
-  delete Date.prototype.getTimezoneOffset.length,
-  true,
-  'The value of `delete Date.prototype.getTimezoneOffset.length` is expected to be true'
-);
 
-assert(
-  !Date.prototype.getTimezoneOffset.hasOwnProperty('length'),
-  'The value of !Date.prototype.getTimezoneOffset.hasOwnProperty(\'length\') is expected to be true'
-);
+if (delete Date.prototype.getTimezoneOffset.length !== true) {
+  throw new Test262Error('#1: The Date.prototype.getTimezoneOffset.length property does not have the attributes DontDelete');
+}
 
-// TODO: Convert to verifyProperty() format.
+if (Date.prototype.getTimezoneOffset.hasOwnProperty('length')) {
+  throw new Test262Error('#2: The Date.prototype.getTimezoneOffset.length property does not have the attributes DontDelete');
+}
 
 reportCompare(0, 0);

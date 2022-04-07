@@ -8,15 +8,15 @@ info: |
 esid: sec-date.parse
 description: Checking DontEnum attribute
 ---*/
-assert(
-  !Date.parse.propertyIsEnumerable('length'),
-  'The value of !Date.parse.propertyIsEnumerable(\'length\') is expected to be true'
-);
 
-for (var x in Date.parse) {
-  assert.notSameValue(x, "length", 'The value of x is not "length"');
+if (Date.parse.propertyIsEnumerable('length')) {
+  throw new Test262Error('#1: The Date.parse.length property has the attribute DontEnum');
 }
 
-// TODO: Convert to verifyProperty() format.
+for (var x in Date.parse) {
+  if (x === "length") {
+    throw new Test262Error('#2: The Date.parse.length has the attribute DontEnum');
+  }
+}
 
 reportCompare(0, 0);

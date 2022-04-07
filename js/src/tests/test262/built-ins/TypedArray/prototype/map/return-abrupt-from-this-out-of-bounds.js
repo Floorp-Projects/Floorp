@@ -5,7 +5,7 @@
 esid: sec-%typedarray%.prototype.map
 description: Return abrupt when "this" value fails buffer boundary checks
 includes: [testTypedArray.js]
-features: [ArrayBuffer, TypedArray, arrow-function, resizable-arraybuffer]
+features: [TypedArray, resizable-arraybuffer]
 ---*/
 
 assert.sameValue(

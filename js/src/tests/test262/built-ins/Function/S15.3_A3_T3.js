@@ -12,24 +12,32 @@ description: First argument is this, and this don`t have needed variable
 var f = Function.call(this, "return planet;");
 var g = Function.call(this, "return color;");
 
-assert.sameValue(f(), undefined, 'f() returns undefined');
+//CHECK#1
+if (f() !== undefined) {
+  throw new Test262Error('#1: ');
+}
 
 var planet = "mars";
 
-assert.sameValue(f(), "mars", 'f() must return "mars"');
+//CHECK#2
+if (f() !== "mars") {
+  throw new Test262Error('#2: ');
+}
 
+//CHECK#3
 try {
   g();
   throw new Test262Error('#3: ');
 } catch (e) {
-  assert(
-    e instanceof ReferenceError,
-    'The result of evaluating (e instanceof ReferenceError) is expected to be true'
-  );
+  if (!(e instanceof ReferenceError))
+    throw new Test262Error('#3.1: ');
 }
 
 this.color = "red";
 
-assert.sameValue(g(), "red", 'g() must return "red"');
+//CHECK#4
+if (g() !== "red") {
+  throw new Test262Error('#4: ');
+}
 
 reportCompare(0, 0);

@@ -13,6 +13,9 @@ description: >
 
 Function.prototype.indicator = 1;
 
-assert.sameValue(RegExp.indicator, 1, 'The value of RegExp.indicator is expected to be 1');
+ //CHECK#1
+if (RegExp.indicator !== 1) {
+	throw new Test262Error('#1: Function.prototype.indicator = 1; RegExp.indicator === 1. Actual: ' + (RegExp.indicator));
+}
 
 reportCompare(0, 0);

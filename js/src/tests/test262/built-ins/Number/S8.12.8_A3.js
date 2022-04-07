@@ -21,12 +21,9 @@ try
       return new Object();
     }
   }
-
-  assert.sameValue(
-    Number(__obj),
-    1,
-    'Number("{toString: function() {return "1"}, valueOf: function() {return new Object();}}) must return 1'
-  );
+  if (Number(__obj) !== 1) {
+    throw new Test262Error('#1.1: var __obj = {toNumber: function() {return "1"}, valueOf: function() {return new Object();}}; Number(__obj) === 1. Actual: ' + (Number(__obj)));
+  }
 }
 catch (e)
 {

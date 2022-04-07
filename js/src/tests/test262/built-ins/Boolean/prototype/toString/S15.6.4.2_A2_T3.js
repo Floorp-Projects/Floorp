@@ -11,16 +11,30 @@ es5id: 15.6.4.2_A2_T3
 description: transferring to the Date objects
 ---*/
 
-assert.throws(TypeError, () => {
+//CHECK#1
+try {
   var s1 = new Date();
   s1.toString = Boolean.prototype.toString;
-  s1.toString();
-});
+  var v1 = s1.toString();
+  throw new Test262Error('#1: Boolean.prototype.toString on not a Boolean object should throw TypeError');
+}
+catch (e) {
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#1: Boolean.prototype.toString on not a Boolean object should throw TypeError, not ' + e);
+  }
+}
 
-assert.throws(TypeError, () => {
+//CHECK#1
+try {
   var s2 = new Date();
   s2.myToString = Boolean.prototype.toString;
-  s2.myToString();
-});
+  var v2 = s2.myToString();
+  throw new Test262Error('#2: Boolean.prototype.toString on not a Boolean object should throw TypeError');
+}
+catch (e) {
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#2: Boolean.prototype.toString on not a Boolean object should throw TypeError, not ' + e);
+  }
+}
 
 reportCompare(0, 0);

@@ -8,21 +8,22 @@ description: >
     Checking if enumerating the Function.prototype.call.length
     property fails
 ---*/
-assert(
-  Function.prototype.call.hasOwnProperty('length'),
-  'Function.prototype.call.hasOwnProperty(\'length\') must return true'
-);
 
-assert(
-  !Function.prototype.call.propertyIsEnumerable('length'),
-  'The value of !Function.prototype.call.propertyIsEnumerable(\'length\') is expected to be true'
-);
+//CHECK#0
+if (!(Function.prototype.call.hasOwnProperty('length'))) {
+  throw new Test262Error('#0: the Function.prototype.call has length property.');
+}
+
+
+// CHECK#1
+if (Function.prototype.call.propertyIsEnumerable('length')) {
+  throw new Test262Error('#1: the Function.prototype.call.length property has the attributes DontEnum');
+}
 
 // CHECK#2
 for (var p in Function.prototype.call) {
-  assert.notSameValue(p, "length", 'The value of p is not "length"');
+  if (p === "length")
+    throw new Test262Error('#2: the Function.prototype.call.length property has the attributes DontEnum');
 }
-
-// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

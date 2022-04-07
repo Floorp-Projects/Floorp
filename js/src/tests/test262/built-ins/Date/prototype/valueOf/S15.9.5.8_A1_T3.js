@@ -6,15 +6,15 @@ info: The Date.prototype property "valueOf" has { DontEnum } attributes
 esid: sec-date.prototype.valueof
 description: Checking DontEnum attribute
 ---*/
-assert(
-  !Date.prototype.propertyIsEnumerable('valueOf'),
-  'The value of !Date.prototype.propertyIsEnumerable(\'valueOf\') is expected to be true'
-);
 
-for (var x in Date.prototype) {
-  assert.notSameValue(x, "valueOf", 'The value of x is not "valueOf"');
+if (Date.prototype.propertyIsEnumerable('valueOf')) {
+  throw new Test262Error('#1: The Date.prototype.valueOf property has the attribute DontEnum');
 }
 
-// TODO: Convert to verifyProperty() format.
+for (var x in Date.prototype) {
+  if (x === "valueOf") {
+    throw new Test262Error('#2: The Date.prototype.valueOf has the attribute DontEnum');
+  }
+}
 
 reportCompare(0, 0);

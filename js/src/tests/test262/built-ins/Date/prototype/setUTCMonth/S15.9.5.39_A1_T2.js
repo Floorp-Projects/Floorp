@@ -6,17 +6,13 @@ info: The Date.prototype property "setUTCMonth" has { DontEnum } attributes
 esid: sec-date.prototype.setutcmonth
 description: Checking absence of DontDelete attribute
 ---*/
-assert.notSameValue(
-  delete Date.prototype.setUTCMonth,
-  false,
-  'The value of delete Date.prototype.setUTCMonth is not false'
-);
 
-assert(
-  !Date.prototype.hasOwnProperty('setUTCMonth'),
-  'The value of !Date.prototype.hasOwnProperty(\'setUTCMonth\') is expected to be true'
-);
+if (delete Date.prototype.setUTCMonth === false) {
+  throw new Test262Error('#1: The Date.prototype.setUTCMonth property has not the attributes DontDelete');
+}
 
-// TODO: Convert to verifyProperty() format.
+if (Date.prototype.hasOwnProperty('setUTCMonth')) {
+  throw new Test262Error('#2: The Date.prototype.setUTCMonth property has not the attributes DontDelete');
+}
 
 reportCompare(0, 0);

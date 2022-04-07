@@ -14,113 +14,137 @@ description: >
 var obj = {};
 obj.pop = Array.prototype.pop;
 
+//CHECK#1
 obj[0] = -1;
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return 1
   }
 };
 var pop = obj.pop();
-assert.sameValue(pop, -1, 'The value of pop is expected to be -1');
+if (pop !== -1) {
+  throw new Test262Error('#1: obj[0] = -1; obj.length = {valueOf: function() {return 1}}  obj.pop() === -1. Actual: ' + (pop));
+}
 
+//CHECK#2
 obj[0] = -1;
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return 1
   },
-  toString() {
+  toString: function() {
     return 0
   }
 };
 var pop = obj.pop();
-assert.sameValue(pop, -1, 'The value of pop is expected to be -1');
+if (pop !== -1) {
+  throw new Test262Error('#0: obj[0] = -1; obj.length = {valueOf: function() {return 1}, toString: function() {return 0}}  obj.pop() === -1. Actual: ' + (pop));
+}
 
+//CHECK#3
 obj[0] = -1;
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return 1
   },
-  toString() {
+  toString: function() {
     return {}
   }
 };
 var pop = obj.pop();
-assert.sameValue(pop, -1, 'The value of pop is expected to be -1');
+if (pop !== -1) {
+  throw new Test262Error('#3: obj[0] = -1; obj.length = {valueOf: function() {return 1}, toString: function() {return {}}}  obj.pop() === -1. Actual: ' + (pop));
+}
 
+//CHECK#4
 try {
   obj[0] = -1;
   obj.length = {
-    valueOf() {
+    valueOf: function() {
       return 1
     },
-    toString() {
+    toString: function() {
       throw "error"
     }
   };
   var pop = obj.pop();
-  assert.sameValue(pop, -1, 'The value of pop is expected to be -1');
+  if (pop !== -1) {
+    throw new Test262Error('#4.1: obj[0] = -1; obj.length = {valueOf: function() {return 1}, toString: function() {throw "error"}}; obj.pop() === ",". Actual: ' + (pop));
+  }
 }
 catch (e) {
-  assert.notSameValue(e, "error", 'The value of e is not "error"');
+  if (e === "error") {
+    throw new Test262Error('#4.2: obj[0] = -1; obj.length = {valueOf: function() {return 1}, toString: function() {throw "error"}}; obj.pop() not throw "error"');
+  } else {
+    throw new Test262Error('#4.3: obj[0] = -1; obj.length = {valueOf: function() {return 1}, toString: function() {throw "error"}}; obj.pop() not throw Error. Actual: ' + (e));
+  }
 }
 
+//CHECK#5
 obj[0] = -1;
 obj.length = {
-  toString() {
+  toString: function() {
     return 0
   }
 };
 var pop = obj.pop();
-assert.sameValue(pop, undefined, 'The value of pop is expected to equal undefined');
+if (pop !== undefined) {
+  throw new Test262Error('#5: obj[0] = -1; obj.length = {toString: function() {return 0}}  obj.pop() === undefined. Actual: ' + (pop));
+}
 
+//CHECK#6
 obj[0] = -1;
 obj.length = {
-  valueOf() {
+  valueOf: function() {
     return {}
   },
-  toString() {
+  toString: function() {
     return 0
   }
 }
 var pop = obj.pop();
-assert.sameValue(pop, undefined, 'The value of pop is expected to equal undefined');
+if (pop !== undefined) {
+  throw new Test262Error('#6: obj[0] = -1; obj.length = {valueOf: function() {return {}}, toString: function() {return 0}}  obj.pop() === undefined. Actual: ' + (pop));
+}
 
+//CHECK#7
 try {
   obj[0] = -1;
   obj.length = {
-    valueOf() {
+    valueOf: function() {
       throw "error"
     },
-    toString() {
+    toString: function() {
       return 0
     }
   };
   var pop = obj.pop();
-  throw new Test262Error('#7.1: obj[0] = -1; obj.length = {valueOf() {throw "error"}, toString() {return 0}}; obj.pop() throw "error". Actual: ' + (pop));
+  throw new Test262Error('#7.1: obj[0] = -1; obj.length = {valueOf: function() {throw "error"}, toString: function() {return 0}}; obj.pop() throw "error". Actual: ' + (pop));
 }
 catch (e) {
-  assert.sameValue(e, "error", 'The value of e is expected to be "error"');
+  if (e !== "error") {
+    throw new Test262Error('#7.2: obj[0] = -1; obj.length = {valueOf: function() {throw "error"}, toString: function() {return 0}}; obj.pop() throw "error". Actual: ' + (e));
+  }
 }
 
+//CHECK#8
 try {
   obj[0] = -1;
   obj.length = {
-    valueOf() {
+    valueOf: function() {
       return {}
     },
-    toString() {
+    toString: function() {
       return {}
     }
   };
   var pop = obj.pop();
-  throw new Test262Error('#8.1: obj[0] = -1; obj.length = {valueOf() {return {}}, toString() {return {}}}  obj.pop() throw TypeError. Actual: ' + (pop));
+  throw new Test262Error('#8.1: obj[0] = -1; obj.length = {valueOf: function() {return {}}, toString: function() {return {}}}  obj.pop() throw TypeError. Actual: ' + (pop));
 }
 catch (e) {
-  assert.sameValue(
-    e instanceof TypeError,
-    true,
-    'The result of evaluating (e instanceof TypeError) is expected to be true'
-  );
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#8.2: obj[0] = -1; obj.length = {valueOf: function() {return {}}, toString: function() {return {}}}  obj.pop() throw TypeError. Actual: ' + (e));
+  }
 }
 
 reportCompare(0, 0);
