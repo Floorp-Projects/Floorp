@@ -1409,7 +1409,7 @@ void CodeGenerator::testObjectEmulatesUndefined(Register objreg,
 
 void CodeGenerator::testValueTruthyForType(
     JSValueType type, ScratchTagScope& tag, const ValueOperand& value,
-    Register scratch1, Register scratch2, FloatRegister floatTemp,
+    Register tempToUnbox, Register temp, FloatRegister floatTemp,
     Label* ifTruthy, Label* ifFalsy, OutOfLineTestObject* ool,
     bool skipTypeTest) {
 #ifdef DEBUG
@@ -1446,8 +1446,8 @@ void CodeGenerator::testValueTruthyForType(
         masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
       }
       ScratchTagScopeRelease _(&tag);
-      Register objreg = masm.extractObject(value, scratch1);
-      testObjectEmulatesUndefined(objreg, ifFalsy, ifTruthy, scratch2, ool);
+      Register objreg = masm.extractObject(value, tempToUnbox);
+      testObjectEmulatesUndefined(objreg, ifFalsy, ifTruthy, temp, ool);
       masm.bind(&notObject);
       return;
     }
@@ -1499,7 +1499,7 @@ void CodeGenerator::testValueTruthyForType(
 }
 
 void CodeGenerator::testValueTruthy(const ValueOperand& value,
-                                    Register scratch1, Register scratch2,
+                                    Register tempToUnbox, Register temp,
                                     FloatRegister floatTemp,
                                     const TypeDataList& observedTypes,
                                     Label* ifTruthy, Label* ifFalsy,
@@ -1520,7 +1520,7 @@ void CodeGenerator::testValueTruthy(const ValueOperand& value,
     JSValueType type = observed.type();
     remaining -= type;
 
-    testValueTruthyForType(type, tag, value, scratch1, scratch2, floatTemp,
+    testValueTruthyForType(type, tag, value, tempToUnbox, temp, floatTemp,
                            ifTruthy, ifFalsy, ool, /*skipTypeTest*/ false);
   }
 
@@ -1533,7 +1533,7 @@ void CodeGenerator::testValueTruthy(const ValueOperand& value,
 
     // We don't need a type test for the last possible type.
     bool skipTypeTest = remaining.isEmpty();
-    testValueTruthyForType(type, tag, value, scratch1, scratch2, floatTemp,
+    testValueTruthyForType(type, tag, value, tempToUnbox, temp, floatTemp,
                            ifTruthy, ifFalsy, ool, skipTypeTest);
   }
   MOZ_ASSERT(remaining.isEmpty());
@@ -1576,13 +1576,13 @@ void CodeGenerator::visitTestVAndBranch(LTestVAndBranch* lir) {
   Label* falsy = getJumpLabelForBranch(lir->ifFalsy());
 
   ValueOperand input = ToValue(lir, LTestVAndBranch::Input);
-  Register temp1 = ToRegister(lir->temp1());
-  Register temp2 = ToRegister(lir->temp2());
+  Register tempToUnbox = ToTempUnboxRegister(lir->temp1());
+  Register temp = ToRegister(lir->temp2());
   FloatRegister floatTemp = ToFloatRegister(lir->tempFloat());
   const TypeDataList& observedTypes = lir->mir()->observedTypes();
 
-  testValueTruthy(input, temp1, temp2, floatTemp, observedTypes, truthy, falsy,
-                  ool);
+  testValueTruthy(input, tempToUnbox, temp, floatTemp, observedTypes, truthy,
+                  falsy, ool);
   masm.jump(truthy);
 }
 
@@ -10884,13 +10884,13 @@ void CodeGenerator::visitNotV(LNotV* lir) {
   Label* ifFalsy = ool->label2();
 
   ValueOperand input = ToValue(lir, LNotV::InputIndex);
-  Register temp1 = ToRegister(lir->temp1());
+  Register tempToUnbox = ToTempUnboxRegister(lir->temp1());
   FloatRegister floatTemp = ToFloatRegister(lir->temp0());
   Register output = ToRegister(lir->output());
   const TypeDataList& observedTypes = lir->mir()->observedTypes();
 
-  testValueTruthy(input, temp1, output, floatTemp, observedTypes, ifTruthy,
-                  ifFalsy, ool);
+  testValueTruthy(input, tempToUnbox, output, floatTemp, observedTypes,
+                  ifTruthy, ifFalsy, ool);
 
   Label join;
 
