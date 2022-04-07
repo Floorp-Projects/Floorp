@@ -93,3 +93,7 @@ body > section {
   overflow-y: hidden;
   overflow-x: auto;
 }
+
+login-intro {
+  overflow-y: scroll;
+}
