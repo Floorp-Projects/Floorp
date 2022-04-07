@@ -687,8 +687,7 @@ private fun studiesOption(): ViewInteraction {
 }
 
 private fun studiesDefaultOption(): ViewInteraction {
-    val studies = getStringResource(R.string.preference_state_on)
-    privacySettingsList.scrollTextIntoView(studies)
+    privacySettingsList.scrollToEnd(3)
     return onView(withText(R.string.preference_state_on))
 }
 
