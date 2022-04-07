@@ -531,10 +531,14 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mTextSelectedText;
       break;
     case ColorID::Selecteditem:
+      aColor = mSelectedItem;
+      break;
+    case ColorID::Selecteditemtext:
+      aColor = mSelectedItemText;
+      break;
     case ColorID::MozAccentColor:
       aColor = mAccentColor;
       break;
-    case ColorID::Selecteditemtext:
     case ColorID::MozAccentColorForeground:
       aColor = mAccentColorForeground;
       break;
@@ -1296,6 +1300,23 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
     }
   }
 
+  // Special case for Adwaita: In GTK3 we don't have more proper accent colors,
+  // so we use the selected background colors. Those colors, however, don't have
+  // much contrast in dark mode (see bug 1741293). We know, however, that GTK4
+  // uses the light accent color for the dark theme, see:
+  //
+  //   https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html#accent-colors
+  //
+  // So we manually do that.
+  if (mSystemTheme.mName.EqualsLiteral("Adwaita") ||
+      mSystemTheme.mName.EqualsLiteral("Adwaita-dark")) {
+    auto& dark = mSystemTheme.mIsDark ? mSystemTheme : mAltTheme;
+    auto& light = mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
+
+    dark.mAccentColor = light.mAccentColor;
+    dark.mAccentColorForeground = light.mAccentColorForeground;
+  }
+
   // Right now we're using the opposite color-scheme theme, make sure to record
   // it.
   mSystemThemeOverridden = true;
@@ -1564,6 +1585,55 @@ static nscolor GetBackgroundColor(
   return NS_TRANSPARENT;
 }
 
+static bool GetNamedColorPair(GtkStyleContext* aStyle, const char* aBgName,
+                              const char* aFgName, nscolor* aBg, nscolor* aFg) {
+  GdkRGBA bg, fg;
+  if (!gtk_style_context_lookup_color(aStyle, aBgName, &bg) ||
+      !gtk_style_context_lookup_color(aStyle, aFgName, &fg)) {
+    return false;
+  }
+
+  *aBg = GDK_RGBA_TO_NS_RGBA(bg);
+  *aFg = GDK_RGBA_TO_NS_RGBA(fg);
+
+  // If the colors are semi-transparent and the theme provides a
+  // background color, blend with them to get the "final" color, see
+  // bug 1717077.
+  if (NS_GET_A(*aBg) != 255 &&
+      (gtk_style_context_lookup_color(aStyle, "bg_color", &bg) ||
+       gtk_style_context_lookup_color(aStyle, "theme_bg_color", &bg))) {
+    *aBg = NS_ComposeColors(GDK_RGBA_TO_NS_RGBA(bg), *aBg);
+  }
+
+  // A semi-transparent foreground color would be kinda silly, but is done
+  // for symmetry.
+  if (NS_GET_A(*aFg) != 255 &&
+      (gtk_style_context_lookup_color(aStyle, "fg_color", &fg) ||
+       gtk_style_context_lookup_color(aStyle, "theme_fg_color", &fg))) {
+    *aFg = NS_ComposeColors(GDK_RGBA_TO_NS_RGBA(fg), *aFg);
+  }
+
+  return true;
+}
+
+static void EnsureColorPairIsOpaque(nscolor& aBg, nscolor& aFg) {
+  // Blend with white, ensuring the color is opaque, so that the UI doesn't have
+  // to care about alpha.
+  aBg = NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), aBg);
+  aFg = NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), aFg);
+}
+
+static void PreferDarkerBackground(nscolor& aBg, nscolor& aFg) {
+  // We use the darker one unless the foreground isn't really a color (is all
+  // white / black / gray) and the background is, in which case we stick to what
+  // we have.
+  if (RelativeLuminanceUtils::Compute(aBg) >
+          RelativeLuminanceUtils::Compute(aFg) &&
+      (AnyColorChannelIsDifferent(aFg) || !AnyColorChannelIsDifferent(aBg))) {
+    std::swap(aBg, aFg);
+  }
+}
+
 void nsLookAndFeel::PerThemeData::Init() {
   mName = GetGtkTheme();
 
@@ -1817,65 +1887,40 @@ void nsLookAndFeel::PerThemeData::Init() {
       GrabSelectionColors(style);
     }
 
-    // Default accent color is the selection background / foreground colors.
-    mAccentColor = mTextSelectedBackground;
-    mAccentColorForeground = mTextSelectedText;
-
-    // But prefer named colors, as those are more general purpose than the
-    // actual selection style, which might e.g. be too-transparent.
+    // Default selected item color is the selection background / foreground
+    // colors, but we prefer named colors, as those are more general purpose
+    // than the actual selection style, which might e.g. be too-transparent.
     //
     // NOTE(emilio): It's unclear which one of the theme_selected_* or the
     // selected_* pairs should we prefer, in all themes that define both that
     // I've found, they're always the same.
-    {
-      GdkRGBA bg, fg;
-      const bool found =
-          (gtk_style_context_lookup_color(style, "selected_bg_color", &bg) &&
-           gtk_style_context_lookup_color(style, "selected_fg_color", &fg)) ||
-          (gtk_style_context_lookup_color(style, "theme_selected_bg_color",
-                                          &bg) &&
-           gtk_style_context_lookup_color(style, "theme_selected_fg_color",
-                                          &fg));
-      if (found) {
-        mAccentColor = GDK_RGBA_TO_NS_RGBA(bg);
-        mAccentColorForeground = GDK_RGBA_TO_NS_RGBA(fg);
-
-        // If the accent colors are semi-transparent and the theme provides a
-        // background color, blend with them to get the "final" color, see
-        // bug 1717077.
-        if (NS_GET_A(mAccentColor) != 255 &&
-            (gtk_style_context_lookup_color(style, "bg_color", &bg) ||
-             gtk_style_context_lookup_color(style, "theme_bg_color", &bg))) {
-          mAccentColor =
-              NS_ComposeColors(GDK_RGBA_TO_NS_RGBA(bg), mAccentColor);
-        }
-
-        // A semi-transparent foreground color would be kinda silly, but is done
-        // for symmetry.
-        if (NS_GET_A(mAccentColorForeground) != 255 &&
-            (gtk_style_context_lookup_color(style, "fg_color", &fg) ||
-             gtk_style_context_lookup_color(style, "theme_fg_color", &fg))) {
-          mAccentColorForeground =
-              NS_ComposeColors(GDK_RGBA_TO_NS_RGBA(fg), mAccentColorForeground);
-        }
-      }
+    if (!GetNamedColorPair(style, "selected_bg_color", "selected_fg_color",
+                           &mSelectedItem, &mSelectedItemText) &&
+        !GetNamedColorPair(style, "theme_selected_bg_color",
+                           "theme_selected_fg_color", &mSelectedItem,
+                           &mSelectedItemText)) {
+      mSelectedItem = mTextSelectedBackground;
+      mSelectedItemText = mTextSelectedText;
     }
 
-    // Accent is the darker one, unless the foreground isn't really a color (is
-    // all white / black / gray) and the background is, in which case we stick
-    // to what we have.
-    if (RelativeLuminanceUtils::Compute(mAccentColor) >
-            RelativeLuminanceUtils::Compute(mAccentColorForeground) &&
-        (AnyColorChannelIsDifferent(mAccentColorForeground) ||
-         !AnyColorChannelIsDifferent(mAccentColor))) {
-      std::swap(mAccentColor, mAccentColorForeground);
+    PreferDarkerBackground(mSelectedItem, mSelectedItemText);
+    EnsureColorPairIsOpaque(mSelectedItem, mSelectedItemText);
+
+    // In a similar fashion, default accent color is the selected item/text
+    // pair, but we also prefer named colors, if available.
+    //
+    // accent_{bg,fg}_color is not _really_ a gtk3 thing (it's a gtk4 thing),
+    // but if gtk 3 themes want to specify these we let them, see:
+    //
+    //   https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html#accent-colors
+    if (!GetNamedColorPair(style, "accent_bg_color", "accent_fg_color",
+                           &mAccentColor, &mAccentColorForeground)) {
+      mAccentColor = mSelectedItem;
+      mAccentColorForeground = mSelectedItemText;
     }
 
-    // Blend with white, ensuring the color is opaque, so that the UI doesn't
-    // have to care about alpha.
-    mAccentColorForeground =
-        NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), mAccentColorForeground);
-    mAccentColor = NS_ComposeColors(NS_RGB(0xff, 0xff, 0xff), mAccentColor);
+    PreferDarkerBackground(mAccentColor, mAccentColorForeground);
+    EnsureColorPairIsOpaque(mAccentColor, mAccentColorForeground);
   }
 
   // Button text color
