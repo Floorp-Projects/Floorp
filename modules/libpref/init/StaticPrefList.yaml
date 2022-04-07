@@ -6329,7 +6329,7 @@
 # Whether we record SVG images as blobs or not.
 - name: image.svg.blob-image
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Whether we attempt to decode WebP images or not.
