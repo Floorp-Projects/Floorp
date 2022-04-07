@@ -51,6 +51,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1716622
       ok(ex.toString().includes("negative or greater than the allowed amount"),
          "Expected getImageData exception");
 
+      ex = null;
+      try {
+        new ImageData(23175, 23175);
+      } catch (e) {
+        ex = e;
+      }
+      ok(ex.toString().includes("negative or greater than the allowed amount"),
+         "Expected ImageData constructor exception");
+
       SimpleTest.finish();
     }
     go();
