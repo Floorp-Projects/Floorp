@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- :root {
+:root {
     --min-font-size: 14px;
     --max-font-size: 40px;
-    --texttracks-bottom: calc(0.066 * 100vh);
+    --font-scale: 0.06;
+    --texttracks-bottom: calc(var(--font-scale) * 100vh);
+
     /*
      * Move text tracks if they visually overlap with pip player controls
      * New text tracks position is determined by adding together:
@@ -25,9 +27,9 @@
     --player-bottom-controls-height: clamp(var(--player-controls-button-min-height), var(--player-controls-button-height), var(--player-controls-button-max-height));
     --distance-from-player-controls: 20px;
     --texttracks-bottom-overlapped: calc(var(--player-controls-button-outline-width) + var(--player-controls-bottom-distance) + var(--player-bottom-controls-height) + var(--distance-from-player-controls));
- }
+}
 
- #texttracks {
+#texttracks {
     background-color: black;
     opacity: 80%;
     position: absolute;
@@ -41,28 +43,28 @@
     padding: 8px;
     max-width: calc(0.66 * 100vw);
     bottom: var(--texttracks-bottom);
-    font-size: clamp(var(--min-font-size), calc(0.066 * 100vh), var(--max-font-size));
-    line-height: clamp(14.4px, calc(0.08 * 100vh), 57.6px);
+    font-size: clamp(var(--min-font-size), calc(var(--font-scale) * 100vh), var(--max-font-size));
+    line-height: clamp(14.4px, calc(var(--font-scale) * 1.2 * 100vh), 48px);
     white-space: pre-line;
     width: max-content;
     font-family: sans-serif;
     transition: bottom 0.3s;
     transition-delay: 0.1s;
- }
+}
 
- #texttracks[overlap-video-controls] {
-     bottom: var(--texttracks-bottom-overlapped)
- }
+#texttracks[overlap-video-controls] {
+    bottom: var(--texttracks-bottom-overlapped)
+}
 
- #texttracks:empty {
-     visibility: hidden;
- }
+#texttracks:empty {
+    visibility: hidden;
+}
 
- @media (prefers-reduced-motion) {
+@media (prefers-reduced-motion) {
     #texttracks {
         transition: none;
     }
- }
+}
 
 @media screen and (max-width: 319px) {
     #texttracks {
