@@ -11,6 +11,7 @@
 #include "EMEDecoderModule.h"
 #include "GLImages.h"
 #include "JavaCallbacksSupport.h"
+#include "MediaCodec.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
 #include "SimpleMap.h"
@@ -131,8 +132,9 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
 
   RefPtr<InitPromise> Init() override {
     mThread = GetCurrentSerialEventTarget();
-    java::sdk::BufferInfo::LocalRef bufferInfo;
-    if (NS_FAILED(java::sdk::BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+    java::sdk::MediaCodec::BufferInfo::LocalRef bufferInfo;
+    if (NS_FAILED(java::sdk::MediaCodec::BufferInfo::New(&bufferInfo)) ||
+        !bufferInfo) {
       return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
     mInputBufferInfo = bufferInfo;
@@ -281,7 +283,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       return;
     }
 
-    java::sdk::BufferInfo::LocalRef info = aSample->Info();
+    java::sdk::MediaCodec::BufferInfo::LocalRef info = aSample->Info();
     MOZ_ASSERT(info);
 
     int32_t flags;
@@ -373,8 +375,9 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
 
   RefPtr<InitPromise> Init() override {
     mThread = GetCurrentSerialEventTarget();
-    java::sdk::BufferInfo::LocalRef bufferInfo;
-    if (NS_FAILED(java::sdk::BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+    java::sdk::MediaCodec::BufferInfo::LocalRef bufferInfo;
+    if (NS_FAILED(java::sdk::MediaCodec::BufferInfo::New(&bufferInfo)) ||
+        !bufferInfo) {
       return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
     mInputBufferInfo = bufferInfo;
@@ -502,7 +505,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
 
     RenderOrReleaseOutput autoRelease(mJavaDecoder, aSample);
 
-    java::sdk::BufferInfo::LocalRef info = aSample->Info();
+    java::sdk::MediaCodec::BufferInfo::LocalRef info = aSample->Info();
     MOZ_ASSERT(info);
 
     int32_t flags = 0;
@@ -681,11 +684,12 @@ RefPtr<ShutdownPromise> RemoteDataDecoder::Shutdown() {
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-using CryptoInfoResult = Result<java::sdk::CryptoInfo::LocalRef, nsresult>;
+using CryptoInfoResult =
+    Result<java::sdk::MediaCodec::CryptoInfo::LocalRef, nsresult>;
 
 static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
   auto& cryptoObj = aSample->mCrypto;
-  java::sdk::CryptoInfo::LocalRef cryptoInfo;
+  java::sdk::MediaCodec::CryptoInfo::LocalRef cryptoInfo;
 
   if (!cryptoObj.IsEncrypted()) {
     return CryptoInfoResult(cryptoInfo);
@@ -696,7 +700,7 @@ static CryptoInfoResult GetCryptoInfoFromSample(const MediaRawData* aSample) {
     return CryptoInfoResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
   }
 
-  nsresult rv = java::sdk::CryptoInfo::New(&cryptoInfo);
+  nsresult rv = java::sdk::MediaCodec::CryptoInfo::New(&cryptoInfo);
   NS_ENSURE_SUCCESS(rv, CryptoInfoResult(rv));
 
   uint32_t numSubSamples = std::min<uint32_t>(
