@@ -5,7 +5,7 @@ use crate::vk::enums::*;
 use crate::vk::platform_types::*;
 use std::os::raw::*;
 impl KhrSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 25u32;
@@ -166,73 +166,6 @@ impl KhrSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySurfaceKHR.html>"]
-    pub unsafe fn destroy_surface_khr(
-        &self,
-        instance: Instance,
-        surface: SurfaceKHR,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_surface_khr)(instance, surface, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceSupportKHR.html>"]
-    pub unsafe fn get_physical_device_surface_support_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        surface: SurfaceKHR,
-        p_supported: *mut Bool32,
-    ) -> Result {
-        (self.get_physical_device_surface_support_khr)(
-            physical_device,
-            queue_family_index,
-            surface,
-            p_supported,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>"]
-    pub unsafe fn get_physical_device_surface_capabilities_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_surface_capabilities: *mut SurfaceCapabilitiesKHR,
-    ) -> Result {
-        (self.get_physical_device_surface_capabilities_khr)(
-            physical_device,
-            surface,
-            p_surface_capabilities,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceFormatsKHR.html>"]
-    pub unsafe fn get_physical_device_surface_formats_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_surface_format_count: *mut u32,
-        p_surface_formats: *mut SurfaceFormatKHR,
-    ) -> Result {
-        (self.get_physical_device_surface_formats_khr)(
-            physical_device,
-            surface,
-            p_surface_format_count,
-            p_surface_formats,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModesKHR.html>"]
-    pub unsafe fn get_physical_device_surface_present_modes_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_present_mode_count: *mut u32,
-        p_present_modes: *mut PresentModeKHR,
-    ) -> Result {
-        (self.get_physical_device_surface_present_modes_khr)(
-            physical_device,
-            surface,
-            p_present_mode_count,
-            p_present_modes,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_surface'"]
 impl ObjectType {
@@ -244,7 +177,7 @@ impl Result {
     pub const ERROR_NATIVE_WINDOW_IN_USE_KHR: Self = Self(-1_000_000_001);
 }
 impl KhrSwapchainFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_swapchain\0") }
     }
     pub const SPEC_VERSION: u32 = 70u32;
@@ -507,104 +440,6 @@ impl KhrSwapchainFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateSwapchainKHR.html>"]
-    pub unsafe fn create_swapchain_khr(
-        &self,
-        device: Device,
-        p_create_info: *const SwapchainCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_swapchain: *mut SwapchainKHR,
-    ) -> Result {
-        (self.create_swapchain_khr)(device, p_create_info, p_allocator, p_swapchain)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySwapchainKHR.html>"]
-    pub unsafe fn destroy_swapchain_khr(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_swapchain_khr)(device, swapchain, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainImagesKHR.html>"]
-    pub unsafe fn get_swapchain_images_khr(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_swapchain_image_count: *mut u32,
-        p_swapchain_images: *mut Image,
-    ) -> Result {
-        (self.get_swapchain_images_khr)(
-            device,
-            swapchain,
-            p_swapchain_image_count,
-            p_swapchain_images,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireNextImageKHR.html>"]
-    pub unsafe fn acquire_next_image_khr(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        timeout: u64,
-        semaphore: Semaphore,
-        fence: Fence,
-        p_image_index: *mut u32,
-    ) -> Result {
-        (self.acquire_next_image_khr)(device, swapchain, timeout, semaphore, fence, p_image_index)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueuePresentKHR.html>"]
-    pub unsafe fn queue_present_khr(
-        &self,
-        queue: Queue,
-        p_present_info: *const PresentInfoKHR,
-    ) -> Result {
-        (self.queue_present_khr)(queue, p_present_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupPresentCapabilitiesKHR.html>"]
-    pub unsafe fn get_device_group_present_capabilities_khr(
-        &self,
-        device: Device,
-        p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
-    ) -> Result {
-        (self.get_device_group_present_capabilities_khr)(
-            device,
-            p_device_group_present_capabilities,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupSurfacePresentModesKHR.html>"]
-    pub unsafe fn get_device_group_surface_present_modes_khr(
-        &self,
-        device: Device,
-        surface: SurfaceKHR,
-        p_modes: *mut DeviceGroupPresentModeFlagsKHR,
-    ) -> Result {
-        (self.get_device_group_surface_present_modes_khr)(device, surface, p_modes)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDevicePresentRectanglesKHR.html>"]
-    pub unsafe fn get_physical_device_present_rectangles_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_rect_count: *mut u32,
-        p_rects: *mut Rect2D,
-    ) -> Result {
-        (self.get_physical_device_present_rectangles_khr)(
-            physical_device,
-            surface,
-            p_rect_count,
-            p_rects,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireNextImage2KHR.html>"]
-    pub unsafe fn acquire_next_image2_khr(
-        &self,
-        device: Device,
-        p_acquire_info: *const AcquireNextImageInfoKHR,
-        p_image_index: *mut u32,
-    ) -> Result {
-        (self.acquire_next_image2_khr)(device, p_acquire_info, p_image_index)
-    }
 }
 #[doc = "Generated from 'VK_KHR_swapchain'"]
 impl ImageLayout {
@@ -638,7 +473,7 @@ impl SwapchainCreateFlagsKHR {
     pub const PROTECTED: Self = Self(0b10);
 }
 impl KhrDisplayFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_display\0") }
     }
     pub const SPEC_VERSION: u32 = 23u32;
@@ -864,98 +699,6 @@ impl KhrDisplayFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDisplayPropertiesKHR.html>"]
-    pub unsafe fn get_physical_device_display_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayPropertiesKHR,
-    ) -> Result {
-        (self.get_physical_device_display_properties_khr)(
-            physical_device,
-            p_property_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDisplayPlanePropertiesKHR.html>"]
-    pub unsafe fn get_physical_device_display_plane_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayPlanePropertiesKHR,
-    ) -> Result {
-        (self.get_physical_device_display_plane_properties_khr)(
-            physical_device,
-            p_property_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayPlaneSupportedDisplaysKHR.html>"]
-    pub unsafe fn get_display_plane_supported_displays_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        plane_index: u32,
-        p_display_count: *mut u32,
-        p_displays: *mut DisplayKHR,
-    ) -> Result {
-        (self.get_display_plane_supported_displays_khr)(
-            physical_device,
-            plane_index,
-            p_display_count,
-            p_displays,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayModePropertiesKHR.html>"]
-    pub unsafe fn get_display_mode_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayModePropertiesKHR,
-    ) -> Result {
-        (self.get_display_mode_properties_khr)(
-            physical_device,
-            display,
-            p_property_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDisplayModeKHR.html>"]
-    pub unsafe fn create_display_mode_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-        p_create_info: *const DisplayModeCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_mode: *mut DisplayModeKHR,
-    ) -> Result {
-        (self.create_display_mode_khr)(physical_device, display, p_create_info, p_allocator, p_mode)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayPlaneCapabilitiesKHR.html>"]
-    pub unsafe fn get_display_plane_capabilities_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        mode: DisplayModeKHR,
-        plane_index: u32,
-        p_capabilities: *mut DisplayPlaneCapabilitiesKHR,
-    ) -> Result {
-        (self.get_display_plane_capabilities_khr)(
-            physical_device,
-            mode,
-            plane_index,
-            p_capabilities,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDisplayPlaneSurfaceKHR.html>"]
-    pub unsafe fn create_display_plane_surface_khr(
-        &self,
-        instance: Instance,
-        p_create_info: *const DisplaySurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_display_plane_surface_khr)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_KHR_display'"]
 impl ObjectType {
@@ -968,7 +711,7 @@ impl StructureType {
     pub const DISPLAY_SURFACE_CREATE_INFO_KHR: Self = Self(1_000_002_001);
 }
 impl KhrDisplaySwapchainFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_display_swapchain\0") }
     }
     pub const SPEC_VERSION: u32 = 10u32;
@@ -1018,23 +761,6 @@ impl KhrDisplaySwapchainFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateSharedSwapchainsKHR.html>"]
-    pub unsafe fn create_shared_swapchains_khr(
-        &self,
-        device: Device,
-        swapchain_count: u32,
-        p_create_infos: *const SwapchainCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_swapchains: *mut SwapchainKHR,
-    ) -> Result {
-        (self.create_shared_swapchains_khr)(
-            device,
-            swapchain_count,
-            p_create_infos,
-            p_allocator,
-            p_swapchains,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_display_swapchain'"]
 impl Result {
@@ -1045,7 +771,7 @@ impl StructureType {
     pub const DISPLAY_PRESENT_INFO_KHR: Self = Self(1_000_003_000);
 }
 impl KhrXlibSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_xlib_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 6u32;
@@ -1123,38 +849,13 @@ impl KhrXlibSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateXlibSurfaceKHR.html>"]
-    pub unsafe fn create_xlib_surface_khr(
-        &self,
-        instance: Instance,
-        p_create_info: *const XlibSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_xlib_surface_khr)(instance, p_create_info, p_allocator, p_surface)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceXlibPresentationSupportKHR.html>"]
-    pub unsafe fn get_physical_device_xlib_presentation_support_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        dpy: *mut Display,
-        visual_id: VisualID,
-    ) -> Bool32 {
-        (self.get_physical_device_xlib_presentation_support_khr)(
-            physical_device,
-            queue_family_index,
-            dpy,
-            visual_id,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_xlib_surface'"]
 impl StructureType {
     pub const XLIB_SURFACE_CREATE_INFO_KHR: Self = Self(1_000_004_000);
 }
 impl KhrXcbSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_xcb_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 6u32;
@@ -1232,38 +933,13 @@ impl KhrXcbSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateXcbSurfaceKHR.html>"]
-    pub unsafe fn create_xcb_surface_khr(
-        &self,
-        instance: Instance,
-        p_create_info: *const XcbSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_xcb_surface_khr)(instance, p_create_info, p_allocator, p_surface)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceXcbPresentationSupportKHR.html>"]
-    pub unsafe fn get_physical_device_xcb_presentation_support_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        connection: *mut xcb_connection_t,
-        visual_id: xcb_visualid_t,
-    ) -> Bool32 {
-        (self.get_physical_device_xcb_presentation_support_khr)(
-            physical_device,
-            queue_family_index,
-            connection,
-            visual_id,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_xcb_surface'"]
 impl StructureType {
     pub const XCB_SURFACE_CREATE_INFO_KHR: Self = Self(1_000_005_000);
 }
 impl KhrWaylandSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_wayland_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 6u32;
@@ -1340,36 +1016,13 @@ impl KhrWaylandSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateWaylandSurfaceKHR.html>"]
-    pub unsafe fn create_wayland_surface_khr(
-        &self,
-        instance: Instance,
-        p_create_info: *const WaylandSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_wayland_surface_khr)(instance, p_create_info, p_allocator, p_surface)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceWaylandPresentationSupportKHR.html>"]
-    pub unsafe fn get_physical_device_wayland_presentation_support_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        display: *mut wl_display,
-    ) -> Bool32 {
-        (self.get_physical_device_wayland_presentation_support_khr)(
-            physical_device,
-            queue_family_index,
-            display,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_wayland_surface'"]
 impl StructureType {
     pub const WAYLAND_SURFACE_CREATE_INFO_KHR: Self = Self(1_000_006_000);
 }
 impl KhrMirSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_mir_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 4u32;
@@ -1387,7 +1040,7 @@ impl KhrMirSurfaceFn {
     }
 }
 impl KhrAndroidSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_android_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 6u32;
@@ -1434,23 +1087,13 @@ impl KhrAndroidSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateAndroidSurfaceKHR.html>"]
-    pub unsafe fn create_android_surface_khr(
-        &self,
-        instance: Instance,
-        p_create_info: *const AndroidSurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_android_surface_khr)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_KHR_android_surface'"]
 impl StructureType {
     pub const ANDROID_SURFACE_CREATE_INFO_KHR: Self = Self(1_000_008_000);
 }
 impl KhrWin32SurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_win32_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 6u32;
@@ -1522,34 +1165,13 @@ impl KhrWin32SurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateWin32SurfaceKHR.html>"]
-    pub unsafe fn create_win32_surface_khr(
-        &self,
-        instance: Instance,
-        p_create_info: *const Win32SurfaceCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_win32_surface_khr)(instance, p_create_info, p_allocator, p_surface)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceWin32PresentationSupportKHR.html>"]
-    pub unsafe fn get_physical_device_win32_presentation_support_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-    ) -> Bool32 {
-        (self.get_physical_device_win32_presentation_support_khr)(
-            physical_device,
-            queue_family_index,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_win32_surface'"]
 impl StructureType {
     pub const WIN32_SURFACE_CREATE_INFO_KHR: Self = Self(1_000_009_000);
 }
 impl AndroidNativeBufferFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ANDROID_native_buffer\0") }
     }
     pub const SPEC_VERSION: u32 = 8u32;
@@ -1694,63 +1316,6 @@ impl AndroidNativeBufferFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainGrallocUsageANDROID.html>"]
-    pub unsafe fn get_swapchain_gralloc_usage_android(
-        &self,
-        device: Device,
-        format: Format,
-        image_usage: ImageUsageFlags,
-        gralloc_usage: *mut c_int,
-    ) -> Result {
-        (self.get_swapchain_gralloc_usage_android)(device, format, image_usage, gralloc_usage)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireImageANDROID.html>"]
-    pub unsafe fn acquire_image_android(
-        &self,
-        device: Device,
-        image: Image,
-        native_fence_fd: c_int,
-        semaphore: Semaphore,
-        fence: Fence,
-    ) -> Result {
-        (self.acquire_image_android)(device, image, native_fence_fd, semaphore, fence)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueSignalReleaseImageANDROID.html>"]
-    pub unsafe fn queue_signal_release_image_android(
-        &self,
-        queue: Queue,
-        wait_semaphore_count: u32,
-        p_wait_semaphores: *const Semaphore,
-        image: Image,
-        p_native_fence_fd: *mut c_int,
-    ) -> Result {
-        (self.queue_signal_release_image_android)(
-            queue,
-            wait_semaphore_count,
-            p_wait_semaphores,
-            image,
-            p_native_fence_fd,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainGrallocUsage2ANDROID.html>"]
-    pub unsafe fn get_swapchain_gralloc_usage2_android(
-        &self,
-        device: Device,
-        format: Format,
-        image_usage: ImageUsageFlags,
-        swapchain_image_usage: SwapchainImageUsageFlagsANDROID,
-        gralloc_consumer_usage: *mut u64,
-        gralloc_producer_usage: *mut u64,
-    ) -> Result {
-        (self.get_swapchain_gralloc_usage2_android)(
-            device,
-            format,
-            image_usage,
-            swapchain_image_usage,
-            gralloc_consumer_usage,
-            gralloc_producer_usage,
-        )
-    }
 }
 #[doc = "Generated from 'VK_ANDROID_native_buffer'"]
 impl StructureType {
@@ -1759,7 +1324,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_ANDROID: Self = Self(1_000_010_002);
 }
 impl ExtDebugReportFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_debug_report\0") }
     }
     pub const SPEC_VERSION: u32 = 10u32;
@@ -1872,48 +1437,6 @@ impl ExtDebugReportFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDebugReportCallbackEXT.html>"]
-    pub unsafe fn create_debug_report_callback_ext(
-        &self,
-        instance: Instance,
-        p_create_info: *const DebugReportCallbackCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_callback: *mut DebugReportCallbackEXT,
-    ) -> Result {
-        (self.create_debug_report_callback_ext)(instance, p_create_info, p_allocator, p_callback)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDebugReportCallbackEXT.html>"]
-    pub unsafe fn destroy_debug_report_callback_ext(
-        &self,
-        instance: Instance,
-        callback: DebugReportCallbackEXT,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_debug_report_callback_ext)(instance, callback, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDebugReportMessageEXT.html>"]
-    pub unsafe fn debug_report_message_ext(
-        &self,
-        instance: Instance,
-        flags: DebugReportFlagsEXT,
-        object_type: DebugReportObjectTypeEXT,
-        object: u64,
-        location: usize,
-        message_code: i32,
-        p_layer_prefix: *const c_char,
-        p_message: *const c_char,
-    ) {
-        (self.debug_report_message_ext)(
-            instance,
-            flags,
-            object_type,
-            object,
-            location,
-            message_code,
-            p_layer_prefix,
-            p_message,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_debug_report'"]
 impl DebugReportObjectTypeEXT {
@@ -1933,7 +1456,7 @@ impl StructureType {
     pub const DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT: Self = Self(1_000_011_000);
 }
 impl NvGlslShaderFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_glsl_shader\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -1955,7 +1478,7 @@ impl Result {
     pub const ERROR_INVALID_SHADER_NV: Self = Self(-1_000_012_000);
 }
 impl ExtDepthRangeUnrestrictedFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_depth_range_unrestricted\0")
         }
@@ -1975,7 +1498,7 @@ impl ExtDepthRangeUnrestrictedFn {
     }
 }
 impl KhrSamplerMirrorClampToEdgeFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_sampler_mirror_clamp_to_edge\0",
@@ -2004,7 +1527,7 @@ impl SamplerAddressMode {
     pub const MIRROR_CLAMP_TO_EDGE_KHR: Self = Self::MIRROR_CLAMP_TO_EDGE;
 }
 impl ImgFilterCubicFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_IMG_filter_cubic\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -2031,7 +1554,7 @@ impl FormatFeatureFlags {
     pub const SAMPLED_IMAGE_FILTER_CUBIC_IMG: Self = Self(0b10_0000_0000_0000);
 }
 impl AmdExtension17Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_17\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -2049,7 +1572,7 @@ impl AmdExtension17Fn {
     }
 }
 impl AmdExtension18Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_18\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -2067,7 +1590,7 @@ impl AmdExtension18Fn {
     }
 }
 impl AmdRasterizationOrderFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_rasterization_order\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -2089,7 +1612,7 @@ impl StructureType {
     pub const PIPELINE_RASTERIZATION_STATE_RASTERIZATION_ORDER_AMD: Self = Self(1_000_018_000);
 }
 impl AmdExtension20Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_20\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -2107,7 +1630,7 @@ impl AmdExtension20Fn {
     }
 }
 impl AmdShaderTrinaryMinmaxFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_trinary_minmax\0")
         }
@@ -2127,7 +1650,7 @@ impl AmdShaderTrinaryMinmaxFn {
     }
 }
 impl AmdShaderExplicitVertexParameterFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_AMD_shader_explicit_vertex_parameter\0",
@@ -2149,7 +1672,7 @@ impl AmdShaderExplicitVertexParameterFn {
     }
 }
 impl ExtDebugMarkerFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_debug_marker\0") }
     }
     pub const SPEC_VERSION: u32 = 4u32;
@@ -2288,42 +1811,6 @@ impl ExtDebugMarkerFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDebugMarkerSetObjectTagEXT.html>"]
-    pub unsafe fn debug_marker_set_object_tag_ext(
-        &self,
-        device: Device,
-        p_tag_info: *const DebugMarkerObjectTagInfoEXT,
-    ) -> Result {
-        (self.debug_marker_set_object_tag_ext)(device, p_tag_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDebugMarkerSetObjectNameEXT.html>"]
-    pub unsafe fn debug_marker_set_object_name_ext(
-        &self,
-        device: Device,
-        p_name_info: *const DebugMarkerObjectNameInfoEXT,
-    ) -> Result {
-        (self.debug_marker_set_object_name_ext)(device, p_name_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDebugMarkerBeginEXT.html>"]
-    pub unsafe fn cmd_debug_marker_begin_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        p_marker_info: *const DebugMarkerMarkerInfoEXT,
-    ) {
-        (self.cmd_debug_marker_begin_ext)(command_buffer, p_marker_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDebugMarkerEndEXT.html>"]
-    pub unsafe fn cmd_debug_marker_end_ext(&self, command_buffer: CommandBuffer) {
-        (self.cmd_debug_marker_end_ext)(command_buffer)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDebugMarkerInsertEXT.html>"]
-    pub unsafe fn cmd_debug_marker_insert_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        p_marker_info: *const DebugMarkerMarkerInfoEXT,
-    ) {
-        (self.cmd_debug_marker_insert_ext)(command_buffer, p_marker_info)
-    }
 }
 #[doc = "Generated from 'VK_EXT_debug_marker'"]
 impl StructureType {
@@ -2332,10 +1819,10 @@ impl StructureType {
     pub const DEBUG_MARKER_MARKER_INFO_EXT: Self = Self(1_000_022_002);
 }
 impl KhrVideoQueueFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_video_queue\0") }
     }
-    pub const SPEC_VERSION: u32 = 2u32;
+    pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR = unsafe extern "system" fn(
@@ -2687,140 +2174,6 @@ impl KhrVideoQueueFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceVideoCapabilitiesKHR.html>"]
-    pub unsafe fn get_physical_device_video_capabilities_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_video_profile: *const VideoProfileKHR,
-        p_capabilities: *mut VideoCapabilitiesKHR,
-    ) -> Result {
-        (self.get_physical_device_video_capabilities_khr)(
-            physical_device,
-            p_video_profile,
-            p_capabilities,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceVideoFormatPropertiesKHR.html>"]
-    pub unsafe fn get_physical_device_video_format_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_video_format_info: *const PhysicalDeviceVideoFormatInfoKHR,
-        p_video_format_property_count: *mut u32,
-        p_video_format_properties: *mut VideoFormatPropertiesKHR,
-    ) -> Result {
-        (self.get_physical_device_video_format_properties_khr)(
-            physical_device,
-            p_video_format_info,
-            p_video_format_property_count,
-            p_video_format_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateVideoSessionKHR.html>"]
-    pub unsafe fn create_video_session_khr(
-        &self,
-        device: Device,
-        p_create_info: *const VideoSessionCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_video_session: *mut VideoSessionKHR,
-    ) -> Result {
-        (self.create_video_session_khr)(device, p_create_info, p_allocator, p_video_session)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyVideoSessionKHR.html>"]
-    pub unsafe fn destroy_video_session_khr(
-        &self,
-        device: Device,
-        video_session: VideoSessionKHR,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_video_session_khr)(device, video_session, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetVideoSessionMemoryRequirementsKHR.html>"]
-    pub unsafe fn get_video_session_memory_requirements_khr(
-        &self,
-        device: Device,
-        video_session: VideoSessionKHR,
-        p_video_session_memory_requirements_count: *mut u32,
-        p_video_session_memory_requirements: *mut VideoGetMemoryPropertiesKHR,
-    ) -> Result {
-        (self.get_video_session_memory_requirements_khr)(
-            device,
-            video_session,
-            p_video_session_memory_requirements_count,
-            p_video_session_memory_requirements,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindVideoSessionMemoryKHR.html>"]
-    pub unsafe fn bind_video_session_memory_khr(
-        &self,
-        device: Device,
-        video_session: VideoSessionKHR,
-        video_session_bind_memory_count: u32,
-        p_video_session_bind_memories: *const VideoBindMemoryKHR,
-    ) -> Result {
-        (self.bind_video_session_memory_khr)(
-            device,
-            video_session,
-            video_session_bind_memory_count,
-            p_video_session_bind_memories,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateVideoSessionParametersKHR.html>"]
-    pub unsafe fn create_video_session_parameters_khr(
-        &self,
-        device: Device,
-        p_create_info: *const VideoSessionParametersCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_video_session_parameters: *mut VideoSessionParametersKHR,
-    ) -> Result {
-        (self.create_video_session_parameters_khr)(
-            device,
-            p_create_info,
-            p_allocator,
-            p_video_session_parameters,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkUpdateVideoSessionParametersKHR.html>"]
-    pub unsafe fn update_video_session_parameters_khr(
-        &self,
-        device: Device,
-        video_session_parameters: VideoSessionParametersKHR,
-        p_update_info: *const VideoSessionParametersUpdateInfoKHR,
-    ) -> Result {
-        (self.update_video_session_parameters_khr)(device, video_session_parameters, p_update_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyVideoSessionParametersKHR.html>"]
-    pub unsafe fn destroy_video_session_parameters_khr(
-        &self,
-        device: Device,
-        video_session_parameters: VideoSessionParametersKHR,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_video_session_parameters_khr)(device, video_session_parameters, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginVideoCodingKHR.html>"]
-    pub unsafe fn cmd_begin_video_coding_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_begin_info: *const VideoBeginCodingInfoKHR,
-    ) {
-        (self.cmd_begin_video_coding_khr)(command_buffer, p_begin_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndVideoCodingKHR.html>"]
-    pub unsafe fn cmd_end_video_coding_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_end_coding_info: *const VideoEndCodingInfoKHR,
-    ) {
-        (self.cmd_end_video_coding_khr)(command_buffer, p_end_coding_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdControlVideoCodingKHR.html>"]
-    pub unsafe fn cmd_control_video_coding_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_coding_control_info: *const VideoCodingControlInfoKHR,
-    ) {
-        (self.cmd_control_video_coding_khr)(command_buffer, p_coding_control_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_video_queue'"]
 impl ObjectType {
@@ -2858,10 +2211,10 @@ impl StructureType {
     pub const QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_2_KHR: Self = Self(1_000_023_016);
 }
 impl KhrVideoDecodeQueueFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_video_decode_queue\0") }
     }
-    pub const SPEC_VERSION: u32 = 2u32;
+    pub const SPEC_VERSION: u32 = 3u32;
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdDecodeVideoKHR = unsafe extern "system" fn(
@@ -2898,19 +2251,11 @@ impl KhrVideoDecodeQueueFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDecodeVideoKHR.html>"]
-    pub unsafe fn cmd_decode_video_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_frame_info: *const VideoDecodeInfoKHR,
-    ) {
-        (self.cmd_decode_video_khr)(command_buffer, p_frame_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
-impl AccessFlags2KHR {
-    pub const VIDEO_DECODE_READ: Self = Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000);
-    pub const VIDEO_DECODE_WRITE: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+impl AccessFlags2 {
+    pub const VIDEO_DECODE_READ_KHR: Self = Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000);
+    pub const VIDEO_DECODE_WRITE_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl BufferUsageFlags {
@@ -2923,9 +2268,9 @@ impl FormatFeatureFlags {
     pub const VIDEO_DECODE_DPB_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
-impl FormatFeatureFlags2KHR {
-    pub const VIDEO_DECODE_OUTPUT: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
-    pub const VIDEO_DECODE_DPB: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
+impl FormatFeatureFlags2 {
+    pub const VIDEO_DECODE_OUTPUT_KHR: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
+    pub const VIDEO_DECODE_DPB_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl ImageLayout {
@@ -2940,8 +2285,8 @@ impl ImageUsageFlags {
     pub const VIDEO_DECODE_DPB_KHR: Self = Self(0b1_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
-impl PipelineStageFlags2KHR {
-    pub const VIDEO_DECODE: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
+impl PipelineStageFlags2 {
+    pub const VIDEO_DECODE_KHR: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl QueueFlags {
@@ -2950,9 +2295,10 @@ impl QueueFlags {
 #[doc = "Generated from 'VK_KHR_video_decode_queue'"]
 impl StructureType {
     pub const VIDEO_DECODE_INFO_KHR: Self = Self(1_000_024_000);
+    pub const VIDEO_DECODE_CAPABILITIES_KHR: Self = Self(1_000_024_001);
 }
 impl AmdGcnShaderFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_gcn_shader\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -2970,7 +2316,7 @@ impl AmdGcnShaderFn {
     }
 }
 impl NvDedicatedAllocationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_dedicated_allocation\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -2994,7 +2340,7 @@ impl StructureType {
     pub const DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV: Self = Self(1_000_026_002);
 }
 impl ExtExtension28Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_28\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -3012,7 +2358,7 @@ impl ExtExtension28Fn {
     }
 }
 impl ExtTransformFeedbackFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_transform_feedback\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -3224,101 +2570,6 @@ impl ExtTransformFeedbackFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindTransformFeedbackBuffersEXT.html>"]
-    pub unsafe fn cmd_bind_transform_feedback_buffers_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        first_binding: u32,
-        binding_count: u32,
-        p_buffers: *const Buffer,
-        p_offsets: *const DeviceSize,
-        p_sizes: *const DeviceSize,
-    ) {
-        (self.cmd_bind_transform_feedback_buffers_ext)(
-            command_buffer,
-            first_binding,
-            binding_count,
-            p_buffers,
-            p_offsets,
-            p_sizes,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginTransformFeedbackEXT.html>"]
-    pub unsafe fn cmd_begin_transform_feedback_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        first_counter_buffer: u32,
-        counter_buffer_count: u32,
-        p_counter_buffers: *const Buffer,
-        p_counter_buffer_offsets: *const DeviceSize,
-    ) {
-        (self.cmd_begin_transform_feedback_ext)(
-            command_buffer,
-            first_counter_buffer,
-            counter_buffer_count,
-            p_counter_buffers,
-            p_counter_buffer_offsets,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndTransformFeedbackEXT.html>"]
-    pub unsafe fn cmd_end_transform_feedback_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        first_counter_buffer: u32,
-        counter_buffer_count: u32,
-        p_counter_buffers: *const Buffer,
-        p_counter_buffer_offsets: *const DeviceSize,
-    ) {
-        (self.cmd_end_transform_feedback_ext)(
-            command_buffer,
-            first_counter_buffer,
-            counter_buffer_count,
-            p_counter_buffers,
-            p_counter_buffer_offsets,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginQueryIndexedEXT.html>"]
-    pub unsafe fn cmd_begin_query_indexed_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        query_pool: QueryPool,
-        query: u32,
-        flags: QueryControlFlags,
-        index: u32,
-    ) {
-        (self.cmd_begin_query_indexed_ext)(command_buffer, query_pool, query, flags, index)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndQueryIndexedEXT.html>"]
-    pub unsafe fn cmd_end_query_indexed_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        query_pool: QueryPool,
-        query: u32,
-        index: u32,
-    ) {
-        (self.cmd_end_query_indexed_ext)(command_buffer, query_pool, query, index)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndirectByteCountEXT.html>"]
-    pub unsafe fn cmd_draw_indirect_byte_count_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        instance_count: u32,
-        first_instance: u32,
-        counter_buffer: Buffer,
-        counter_buffer_offset: DeviceSize,
-        counter_offset: u32,
-        vertex_stride: u32,
-    ) {
-        (self.cmd_draw_indirect_byte_count_ext)(
-            command_buffer,
-            instance_count,
-            first_instance,
-            counter_buffer,
-            counter_buffer_offset,
-            counter_offset,
-            vertex_stride,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_transform_feedback'"]
 impl AccessFlags {
@@ -3347,7 +2598,7 @@ impl StructureType {
     pub const PIPELINE_RASTERIZATION_STATE_STREAM_CREATE_INFO_EXT: Self = Self(1_000_028_002);
 }
 impl NvxBinaryImportFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NVX_binary_import\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -3497,52 +2748,6 @@ impl NvxBinaryImportFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateCuModuleNVX.html>"]
-    pub unsafe fn create_cu_module_nvx(
-        &self,
-        device: Device,
-        p_create_info: *const CuModuleCreateInfoNVX,
-        p_allocator: *const AllocationCallbacks,
-        p_module: *mut CuModuleNVX,
-    ) -> Result {
-        (self.create_cu_module_nvx)(device, p_create_info, p_allocator, p_module)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateCuFunctionNVX.html>"]
-    pub unsafe fn create_cu_function_nvx(
-        &self,
-        device: Device,
-        p_create_info: *const CuFunctionCreateInfoNVX,
-        p_allocator: *const AllocationCallbacks,
-        p_function: *mut CuFunctionNVX,
-    ) -> Result {
-        (self.create_cu_function_nvx)(device, p_create_info, p_allocator, p_function)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyCuModuleNVX.html>"]
-    pub unsafe fn destroy_cu_module_nvx(
-        &self,
-        device: Device,
-        module: CuModuleNVX,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_cu_module_nvx)(device, module, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyCuFunctionNVX.html>"]
-    pub unsafe fn destroy_cu_function_nvx(
-        &self,
-        device: Device,
-        function: CuFunctionNVX,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_cu_function_nvx)(device, function, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCuLaunchKernelNVX.html>"]
-    pub unsafe fn cmd_cu_launch_kernel_nvx(
-        &self,
-        command_buffer: CommandBuffer,
-        p_launch_info: *const CuLaunchInfoNVX,
-    ) {
-        (self.cmd_cu_launch_kernel_nvx)(command_buffer, p_launch_info)
-    }
 }
 #[doc = "Generated from 'VK_NVX_binary_import'"]
 impl DebugReportObjectTypeEXT {
@@ -3561,7 +2766,7 @@ impl StructureType {
     pub const CU_LAUNCH_INFO_NVX: Self = Self(1_000_029_002);
 }
 impl NvxImageViewHandleFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NVX_image_view_handle\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -3629,23 +2834,6 @@ impl NvxImageViewHandleFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetImageViewHandleNVX.html>"]
-    pub unsafe fn get_image_view_handle_nvx(
-        &self,
-        device: Device,
-        p_info: *const ImageViewHandleInfoNVX,
-    ) -> u32 {
-        (self.get_image_view_handle_nvx)(device, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetImageViewAddressNVX.html>"]
-    pub unsafe fn get_image_view_address_nvx(
-        &self,
-        device: Device,
-        image_view: ImageView,
-        p_properties: *mut ImageViewAddressPropertiesNVX,
-    ) -> Result {
-        (self.get_image_view_address_nvx)(device, image_view, p_properties)
-    }
 }
 #[doc = "Generated from 'VK_NVX_image_view_handle'"]
 impl StructureType {
@@ -3653,7 +2841,7 @@ impl StructureType {
     pub const IMAGE_VIEW_ADDRESS_PROPERTIES_NVX: Self = Self(1_000_030_001);
 }
 impl AmdExtension32Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_32\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -3671,7 +2859,7 @@ impl AmdExtension32Fn {
     }
 }
 impl AmdExtension33Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_33\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -3689,7 +2877,7 @@ impl AmdExtension33Fn {
     }
 }
 impl AmdDrawIndirectCountFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_draw_indirect_count\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -3778,51 +2966,9 @@ impl AmdDrawIndirectCountFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndirectCountAMD.html>"]
-    pub unsafe fn cmd_draw_indirect_count_amd(
-        &self,
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_indirect_count_amd)(
-            command_buffer,
-            buffer,
-            offset,
-            count_buffer,
-            count_buffer_offset,
-            max_draw_count,
-            stride,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndexedIndirectCountAMD.html>"]
-    pub unsafe fn cmd_draw_indexed_indirect_count_amd(
-        &self,
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_indexed_indirect_count_amd)(
-            command_buffer,
-            buffer,
-            offset,
-            count_buffer,
-            count_buffer_offset,
-            max_draw_count,
-            stride,
-        )
-    }
 }
 impl AmdExtension35Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_35\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -3840,7 +2986,7 @@ impl AmdExtension35Fn {
     }
 }
 impl AmdNegativeViewportHeightFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_negative_viewport_height\0")
         }
@@ -3860,7 +3006,7 @@ impl AmdNegativeViewportHeightFn {
     }
 }
 impl AmdGpuShaderHalfFloatFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_gpu_shader_half_float\0")
         }
@@ -3880,7 +3026,7 @@ impl AmdGpuShaderHalfFloatFn {
     }
 }
 impl AmdShaderBallotFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_ballot\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -3898,10 +3044,10 @@ impl AmdShaderBallotFn {
     }
 }
 impl ExtVideoEncodeH264Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_video_encode_h264\0") }
     }
-    pub const SPEC_VERSION: u32 = 3u32;
+    pub const SPEC_VERSION: u32 = 6u32;
 }
 #[derive(Clone)]
 pub struct ExtVideoEncodeH264Fn {}
@@ -3918,26 +3064,26 @@ impl ExtVideoEncodeH264Fn {
 #[doc = "Generated from 'VK_EXT_video_encode_h264'"]
 impl StructureType {
     pub const VIDEO_ENCODE_H264_CAPABILITIES_EXT: Self = Self(1_000_038_000);
-    pub const VIDEO_ENCODE_H264_SESSION_CREATE_INFO_EXT: Self = Self(1_000_038_001);
-    pub const VIDEO_ENCODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_038_002);
-    pub const VIDEO_ENCODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_038_003);
-    pub const VIDEO_ENCODE_H264_VCL_FRAME_INFO_EXT: Self = Self(1_000_038_004);
-    pub const VIDEO_ENCODE_H264_DPB_SLOT_INFO_EXT: Self = Self(1_000_038_005);
-    pub const VIDEO_ENCODE_H264_NALU_SLICE_EXT: Self = Self(1_000_038_006);
-    pub const VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_EXT: Self = Self(1_000_038_007);
-    pub const VIDEO_ENCODE_H264_PROFILE_EXT: Self = Self(1_000_038_008);
-    pub const VIDEO_ENCODE_H264_RATE_CONTROL_INFO_EXT: Self = Self(1_000_038_009);
-    pub const VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_EXT: Self = Self(1_000_038_010);
+    pub const VIDEO_ENCODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_038_001);
+    pub const VIDEO_ENCODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_038_002);
+    pub const VIDEO_ENCODE_H264_VCL_FRAME_INFO_EXT: Self = Self(1_000_038_003);
+    pub const VIDEO_ENCODE_H264_DPB_SLOT_INFO_EXT: Self = Self(1_000_038_004);
+    pub const VIDEO_ENCODE_H264_NALU_SLICE_EXT: Self = Self(1_000_038_005);
+    pub const VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_EXT: Self = Self(1_000_038_006);
+    pub const VIDEO_ENCODE_H264_PROFILE_EXT: Self = Self(1_000_038_007);
+    pub const VIDEO_ENCODE_H264_RATE_CONTROL_INFO_EXT: Self = Self(1_000_038_008);
+    pub const VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_EXT: Self = Self(1_000_038_009);
+    pub const VIDEO_ENCODE_H264_REFERENCE_LISTS_EXT: Self = Self(1_000_038_010);
 }
 #[doc = "Generated from 'VK_EXT_video_encode_h264'"]
 impl VideoCodecOperationFlagsKHR {
     pub const ENCODE_H264_EXT: Self = Self(0b1_0000_0000_0000_0000);
 }
 impl ExtVideoEncodeH265Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_video_encode_h265\0") }
     }
-    pub const SPEC_VERSION: u32 = 3u32;
+    pub const SPEC_VERSION: u32 = 6u32;
 }
 #[derive(Clone)]
 pub struct ExtVideoEncodeH265Fn {}
@@ -3954,27 +3100,26 @@ impl ExtVideoEncodeH265Fn {
 #[doc = "Generated from 'VK_EXT_video_encode_h265'"]
 impl StructureType {
     pub const VIDEO_ENCODE_H265_CAPABILITIES_EXT: Self = Self(1_000_039_000);
-    pub const VIDEO_ENCODE_H265_SESSION_CREATE_INFO_EXT: Self = Self(1_000_039_001);
-    pub const VIDEO_ENCODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_039_002);
-    pub const VIDEO_ENCODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_039_003);
-    pub const VIDEO_ENCODE_H265_VCL_FRAME_INFO_EXT: Self = Self(1_000_039_004);
-    pub const VIDEO_ENCODE_H265_DPB_SLOT_INFO_EXT: Self = Self(1_000_039_005);
-    pub const VIDEO_ENCODE_H265_NALU_SLICE_EXT: Self = Self(1_000_039_006);
-    pub const VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_EXT: Self = Self(1_000_039_007);
-    pub const VIDEO_ENCODE_H265_PROFILE_EXT: Self = Self(1_000_039_008);
-    pub const VIDEO_ENCODE_H265_REFERENCE_LISTS_EXT: Self = Self(1_000_039_009);
-    pub const VIDEO_ENCODE_H265_RATE_CONTROL_INFO_EXT: Self = Self(1_000_039_010);
-    pub const VIDEO_ENCODE_H265_RATE_CONTROL_LAYER_INFO_EXT: Self = Self(1_000_039_011);
+    pub const VIDEO_ENCODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_039_001);
+    pub const VIDEO_ENCODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_039_002);
+    pub const VIDEO_ENCODE_H265_VCL_FRAME_INFO_EXT: Self = Self(1_000_039_003);
+    pub const VIDEO_ENCODE_H265_DPB_SLOT_INFO_EXT: Self = Self(1_000_039_004);
+    pub const VIDEO_ENCODE_H265_NALU_SLICE_SEGMENT_EXT: Self = Self(1_000_039_005);
+    pub const VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_EXT: Self = Self(1_000_039_006);
+    pub const VIDEO_ENCODE_H265_PROFILE_EXT: Self = Self(1_000_039_007);
+    pub const VIDEO_ENCODE_H265_REFERENCE_LISTS_EXT: Self = Self(1_000_039_008);
+    pub const VIDEO_ENCODE_H265_RATE_CONTROL_INFO_EXT: Self = Self(1_000_039_009);
+    pub const VIDEO_ENCODE_H265_RATE_CONTROL_LAYER_INFO_EXT: Self = Self(1_000_039_010);
 }
 #[doc = "Generated from 'VK_EXT_video_encode_h265'"]
 impl VideoCodecOperationFlagsKHR {
     pub const ENCODE_H265_EXT: Self = Self(0b10_0000_0000_0000_0000);
 }
 impl ExtVideoDecodeH264Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_video_decode_h264\0") }
     }
-    pub const SPEC_VERSION: u32 = 3u32;
+    pub const SPEC_VERSION: u32 = 4u32;
 }
 #[derive(Clone)]
 pub struct ExtVideoDecodeH264Fn {}
@@ -3991,20 +3136,19 @@ impl ExtVideoDecodeH264Fn {
 #[doc = "Generated from 'VK_EXT_video_decode_h264'"]
 impl StructureType {
     pub const VIDEO_DECODE_H264_CAPABILITIES_EXT: Self = Self(1_000_040_000);
-    pub const VIDEO_DECODE_H264_SESSION_CREATE_INFO_EXT: Self = Self(1_000_040_001);
-    pub const VIDEO_DECODE_H264_PICTURE_INFO_EXT: Self = Self(1_000_040_002);
-    pub const VIDEO_DECODE_H264_MVC_EXT: Self = Self(1_000_040_003);
-    pub const VIDEO_DECODE_H264_PROFILE_EXT: Self = Self(1_000_040_004);
-    pub const VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_040_005);
-    pub const VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_040_006);
-    pub const VIDEO_DECODE_H264_DPB_SLOT_INFO_EXT: Self = Self(1_000_040_007);
+    pub const VIDEO_DECODE_H264_PICTURE_INFO_EXT: Self = Self(1_000_040_001);
+    pub const VIDEO_DECODE_H264_MVC_EXT: Self = Self(1_000_040_002);
+    pub const VIDEO_DECODE_H264_PROFILE_EXT: Self = Self(1_000_040_003);
+    pub const VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_040_004);
+    pub const VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_040_005);
+    pub const VIDEO_DECODE_H264_DPB_SLOT_INFO_EXT: Self = Self(1_000_040_006);
 }
 #[doc = "Generated from 'VK_EXT_video_decode_h264'"]
 impl VideoCodecOperationFlagsKHR {
     pub const DECODE_H264_EXT: Self = Self(0b1);
 }
 impl AmdTextureGatherBiasLodFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_texture_gather_bias_lod\0")
         }
@@ -4028,7 +3172,7 @@ impl StructureType {
     pub const TEXTURE_LOD_GATHER_FORMAT_PROPERTIES_AMD: Self = Self(1_000_041_000);
 }
 impl AmdShaderInfoFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_info\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -4076,28 +3220,9 @@ impl AmdShaderInfoFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetShaderInfoAMD.html>"]
-    pub unsafe fn get_shader_info_amd(
-        &self,
-        device: Device,
-        pipeline: Pipeline,
-        shader_stage: ShaderStageFlags,
-        info_type: ShaderInfoTypeAMD,
-        p_info_size: *mut usize,
-        p_info: *mut c_void,
-    ) -> Result {
-        (self.get_shader_info_amd)(
-            device,
-            pipeline,
-            shader_stage,
-            info_type,
-            p_info_size,
-            p_info,
-        )
-    }
 }
 impl AmdExtension44Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_44\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -4115,22 +3240,22 @@ impl AmdExtension44Fn {
     }
 }
 impl KhrDynamicRenderingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_dynamic_rendering\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBeginRenderingKHR = unsafe extern "system" fn(
+pub type PFN_vkCmdBeginRendering = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_rendering_info: *const RenderingInfoKHR,
+    p_rendering_info: *const RenderingInfo,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdEndRenderingKHR = unsafe extern "system" fn(command_buffer: CommandBuffer);
+pub type PFN_vkCmdEndRendering = unsafe extern "system" fn(command_buffer: CommandBuffer);
 #[derive(Clone)]
 pub struct KhrDynamicRenderingFn {
-    pub cmd_begin_rendering_khr: PFN_vkCmdBeginRenderingKHR,
-    pub cmd_end_rendering_khr: PFN_vkCmdEndRenderingKHR,
+    pub cmd_begin_rendering_khr: PFN_vkCmdBeginRendering,
+    pub cmd_end_rendering_khr: PFN_vkCmdEndRendering,
 }
 unsafe impl Send for KhrDynamicRenderingFn {}
 unsafe impl Sync for KhrDynamicRenderingFn {}
@@ -4143,7 +3268,7 @@ impl KhrDynamicRenderingFn {
             cmd_begin_rendering_khr: unsafe {
                 unsafe extern "system" fn cmd_begin_rendering_khr(
                     _command_buffer: CommandBuffer,
-                    _p_rendering_info: *const RenderingInfoKHR,
+                    _p_rendering_info: *const RenderingInfo,
                 ) {
                     panic!(concat!(
                         "Unable to load ",
@@ -4177,22 +3302,10 @@ impl KhrDynamicRenderingFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginRenderingKHR.html>"]
-    pub unsafe fn cmd_begin_rendering_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_rendering_info: *const RenderingInfoKHR,
-    ) {
-        (self.cmd_begin_rendering_khr)(command_buffer, p_rendering_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndRenderingKHR.html>"]
-    pub unsafe fn cmd_end_rendering_khr(&self, command_buffer: CommandBuffer) {
-        (self.cmd_end_rendering_khr)(command_buffer)
-    }
 }
 #[doc = "Generated from 'VK_KHR_dynamic_rendering'"]
 impl AttachmentStoreOp {
-    pub const NONE_KHR: Self = Self(1_000_301_000);
+    pub const NONE_KHR: Self = Self::NONE;
 }
 #[doc = "Generated from 'VK_KHR_dynamic_rendering'"]
 impl PipelineCreateFlags {
@@ -4203,11 +3316,13 @@ impl PipelineCreateFlags {
 }
 #[doc = "Generated from 'VK_KHR_dynamic_rendering'"]
 impl StructureType {
-    pub const RENDERING_INFO_KHR: Self = Self(1_000_044_000);
-    pub const RENDERING_ATTACHMENT_INFO_KHR: Self = Self(1_000_044_001);
-    pub const PIPELINE_RENDERING_CREATE_INFO_KHR: Self = Self(1_000_044_002);
-    pub const PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR: Self = Self(1_000_044_003);
-    pub const COMMAND_BUFFER_INHERITANCE_RENDERING_INFO_KHR: Self = Self(1_000_044_004);
+    pub const RENDERING_INFO_KHR: Self = Self::RENDERING_INFO;
+    pub const RENDERING_ATTACHMENT_INFO_KHR: Self = Self::RENDERING_ATTACHMENT_INFO;
+    pub const PIPELINE_RENDERING_CREATE_INFO_KHR: Self = Self::PIPELINE_RENDERING_CREATE_INFO;
+    pub const PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR: Self =
+        Self::PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    pub const COMMAND_BUFFER_INHERITANCE_RENDERING_INFO_KHR: Self =
+        Self::COMMAND_BUFFER_INHERITANCE_RENDERING_INFO;
     pub const RENDERING_FRAGMENT_SHADING_RATE_ATTACHMENT_INFO_KHR: Self = Self(1_000_044_006);
     pub const RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_INFO_EXT: Self = Self(1_000_044_007);
     pub const ATTACHMENT_SAMPLE_COUNT_INFO_AMD: Self = Self(1_000_044_008);
@@ -4215,7 +3330,7 @@ impl StructureType {
     pub const MULTIVIEW_PER_VIEW_ATTRIBUTES_INFO_NVX: Self = Self(1_000_044_009);
 }
 impl AmdExtension46Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_46\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -4233,7 +3348,7 @@ impl AmdExtension46Fn {
     }
 }
 impl AmdShaderImageLoadStoreLodFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_image_load_store_lod\0")
         }
@@ -4253,7 +3368,7 @@ impl AmdShaderImageLoadStoreLodFn {
     }
 }
 impl NvxExtension48Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NVX_extension_48\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -4271,7 +3386,7 @@ impl NvxExtension48Fn {
     }
 }
 impl GoogleExtension49Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_49\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -4289,7 +3404,7 @@ impl GoogleExtension49Fn {
     }
 }
 impl GgpStreamDescriptorSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_stream_descriptor_surface\0")
         }
@@ -4339,23 +3454,13 @@ impl GgpStreamDescriptorSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateStreamDescriptorSurfaceGGP.html>"]
-    pub unsafe fn create_stream_descriptor_surface_ggp(
-        &self,
-        instance: Instance,
-        p_create_info: *const StreamDescriptorSurfaceCreateInfoGGP,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_stream_descriptor_surface_ggp)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_GGP_stream_descriptor_surface'"]
 impl StructureType {
     pub const STREAM_DESCRIPTOR_SURFACE_CREATE_INFO_GGP: Self = Self(1_000_049_000);
 }
 impl NvCornerSampledImageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_corner_sampled_image\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -4381,7 +3486,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_CORNER_SAMPLED_IMAGE_FEATURES_NV: Self = Self(1_000_050_000);
 }
 impl NvExtension52Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_52\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -4407,7 +3512,7 @@ impl ShaderModuleCreateFlags {
     pub const RESERVED_0_NV: Self = Self(0b1);
 }
 impl NvExtension53Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_53\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -4425,7 +3530,7 @@ impl NvExtension53Fn {
     }
 }
 impl KhrMultiviewFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_multiview\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -4455,7 +3560,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES;
 }
 impl ImgFormatPvrtcFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_IMG_format_pvrtc\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -4484,7 +3589,7 @@ impl Format {
     pub const PVRTC2_4BPP_SRGB_BLOCK_IMG: Self = Self(1_000_054_007);
 }
 impl NvExternalMemoryCapabilitiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_external_memory_capabilities\0")
         }
@@ -4544,32 +3649,9 @@ impl NvExternalMemoryCapabilitiesFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceExternalImageFormatPropertiesNV.html>"]
-    pub unsafe fn get_physical_device_external_image_format_properties_nv(
-        &self,
-        physical_device: PhysicalDevice,
-        format: Format,
-        ty: ImageType,
-        tiling: ImageTiling,
-        usage: ImageUsageFlags,
-        flags: ImageCreateFlags,
-        external_handle_type: ExternalMemoryHandleTypeFlagsNV,
-        p_external_image_format_properties: *mut ExternalImageFormatPropertiesNV,
-    ) -> Result {
-        (self.get_physical_device_external_image_format_properties_nv)(
-            physical_device,
-            format,
-            ty,
-            tiling,
-            usage,
-            flags,
-            external_handle_type,
-            p_external_image_format_properties,
-        )
-    }
 }
 impl NvExternalMemoryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_external_memory\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -4592,7 +3674,7 @@ impl StructureType {
     pub const EXPORT_MEMORY_ALLOCATE_INFO_NV: Self = Self(1_000_056_001);
 }
 impl NvExternalMemoryWin32Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_external_memory_win32\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -4639,16 +3721,6 @@ impl NvExternalMemoryWin32Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryWin32HandleNV.html>"]
-    pub unsafe fn get_memory_win32_handle_nv(
-        &self,
-        device: Device,
-        memory: DeviceMemory,
-        handle_type: ExternalMemoryHandleTypeFlagsNV,
-        p_handle: *mut HANDLE,
-    ) -> Result {
-        (self.get_memory_win32_handle_nv)(device, memory, handle_type, p_handle)
-    }
 }
 #[doc = "Generated from 'VK_NV_external_memory_win32'"]
 impl StructureType {
@@ -4656,7 +3728,7 @@ impl StructureType {
     pub const EXPORT_MEMORY_WIN32_HANDLE_INFO_NV: Self = Self(1_000_057_001);
 }
 impl NvWin32KeyedMutexFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_win32_keyed_mutex\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -4678,7 +3750,7 @@ impl StructureType {
     pub const WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_NV: Self = Self(1_000_058_000);
 }
 impl KhrGetPhysicalDeviceProperties2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_get_physical_device_properties2\0",
@@ -4895,84 +3967,6 @@ impl KhrGetPhysicalDeviceProperties2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceFeatures2KHR.html>"]
-    pub unsafe fn get_physical_device_features2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_features: *mut PhysicalDeviceFeatures2,
-    ) {
-        (self.get_physical_device_features2_khr)(physical_device, p_features)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_properties: *mut PhysicalDeviceProperties2,
-    ) {
-        (self.get_physical_device_properties2_khr)(physical_device, p_properties)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceFormatProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_format_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        format: Format,
-        p_format_properties: *mut FormatProperties2,
-    ) {
-        (self.get_physical_device_format_properties2_khr)(
-            physical_device,
-            format,
-            p_format_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceImageFormatProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_image_format_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_image_format_info: *const PhysicalDeviceImageFormatInfo2,
-        p_image_format_properties: *mut ImageFormatProperties2,
-    ) -> Result {
-        (self.get_physical_device_image_format_properties2_khr)(
-            physical_device,
-            p_image_format_info,
-            p_image_format_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceQueueFamilyProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_queue_family_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_queue_family_property_count: *mut u32,
-        p_queue_family_properties: *mut QueueFamilyProperties2,
-    ) {
-        (self.get_physical_device_queue_family_properties2_khr)(
-            physical_device,
-            p_queue_family_property_count,
-            p_queue_family_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceMemoryProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_memory_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_memory_properties: *mut PhysicalDeviceMemoryProperties2,
-    ) {
-        (self.get_physical_device_memory_properties2_khr)(physical_device, p_memory_properties)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSparseImageFormatProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_sparse_image_format_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_format_info: *const PhysicalDeviceSparseImageFormatInfo2,
-        p_property_count: *mut u32,
-        p_properties: *mut SparseImageFormatProperties2,
-    ) {
-        (self.get_physical_device_sparse_image_format_properties2_khr)(
-            physical_device,
-            p_format_info,
-            p_property_count,
-            p_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_get_physical_device_properties2'"]
 impl StructureType {
@@ -4990,7 +3984,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2;
 }
 impl KhrDeviceGroupFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_device_group\0") }
     }
     pub const SPEC_VERSION: u32 = 4u32;
@@ -5188,92 +4182,6 @@ impl KhrDeviceGroupFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupPeerMemoryFeaturesKHR.html>"]
-    pub unsafe fn get_device_group_peer_memory_features_khr(
-        &self,
-        device: Device,
-        heap_index: u32,
-        local_device_index: u32,
-        remote_device_index: u32,
-        p_peer_memory_features: *mut PeerMemoryFeatureFlags,
-    ) {
-        (self.get_device_group_peer_memory_features_khr)(
-            device,
-            heap_index,
-            local_device_index,
-            remote_device_index,
-            p_peer_memory_features,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDeviceMaskKHR.html>"]
-    pub unsafe fn cmd_set_device_mask_khr(&self, command_buffer: CommandBuffer, device_mask: u32) {
-        (self.cmd_set_device_mask_khr)(command_buffer, device_mask)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDispatchBaseKHR.html>"]
-    pub unsafe fn cmd_dispatch_base_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        base_group_x: u32,
-        base_group_y: u32,
-        base_group_z: u32,
-        group_count_x: u32,
-        group_count_y: u32,
-        group_count_z: u32,
-    ) {
-        (self.cmd_dispatch_base_khr)(
-            command_buffer,
-            base_group_x,
-            base_group_y,
-            base_group_z,
-            group_count_x,
-            group_count_y,
-            group_count_z,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupPresentCapabilitiesKHR.html>"]
-    pub unsafe fn get_device_group_present_capabilities_khr(
-        &self,
-        device: Device,
-        p_device_group_present_capabilities: *mut DeviceGroupPresentCapabilitiesKHR,
-    ) -> Result {
-        (self.get_device_group_present_capabilities_khr)(
-            device,
-            p_device_group_present_capabilities,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupSurfacePresentModesKHR.html>"]
-    pub unsafe fn get_device_group_surface_present_modes_khr(
-        &self,
-        device: Device,
-        surface: SurfaceKHR,
-        p_modes: *mut DeviceGroupPresentModeFlagsKHR,
-    ) -> Result {
-        (self.get_device_group_surface_present_modes_khr)(device, surface, p_modes)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDevicePresentRectanglesKHR.html>"]
-    pub unsafe fn get_physical_device_present_rectangles_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_rect_count: *mut u32,
-        p_rects: *mut Rect2D,
-    ) -> Result {
-        (self.get_physical_device_present_rectangles_khr)(
-            physical_device,
-            surface,
-            p_rect_count,
-            p_rects,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireNextImage2KHR.html>"]
-    pub unsafe fn acquire_next_image2_khr(
-        &self,
-        device: Device,
-        p_acquire_info: *const AcquireNextImageInfoKHR,
-        p_image_index: *mut u32,
-    ) -> Result {
-        (self.acquire_next_image2_khr)(device, p_acquire_info, p_image_index)
-    }
 }
 #[doc = "Generated from 'VK_KHR_device_group'"]
 impl DependencyFlags {
@@ -5313,7 +4221,7 @@ impl StructureType {
         Self::BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO;
 }
 impl ExtValidationFlagsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_validation_flags\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -5335,7 +4243,7 @@ impl StructureType {
     pub const VALIDATION_FLAGS_EXT: Self = Self(1_000_061_000);
 }
 impl NnViSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NN_vi_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -5379,23 +4287,13 @@ impl NnViSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateViSurfaceNN.html>"]
-    pub unsafe fn create_vi_surface_nn(
-        &self,
-        instance: Instance,
-        p_create_info: *const ViSurfaceCreateInfoNN,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_vi_surface_nn)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_NN_vi_surface'"]
 impl StructureType {
     pub const VI_SURFACE_CREATE_INFO_NN: Self = Self(1_000_062_000);
 }
 impl KhrShaderDrawParametersFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_draw_parameters\0")
         }
@@ -5415,7 +4313,7 @@ impl KhrShaderDrawParametersFn {
     }
 }
 impl ExtShaderSubgroupBallotFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_subgroup_ballot\0")
         }
@@ -5435,7 +4333,7 @@ impl ExtShaderSubgroupBallotFn {
     }
 }
 impl ExtShaderSubgroupVoteFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_subgroup_vote\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -5453,7 +4351,7 @@ impl ExtShaderSubgroupVoteFn {
     }
 }
 impl ExtTextureCompressionAstcHdrFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_EXT_texture_compression_astc_hdr\0",
@@ -5476,27 +4374,28 @@ impl ExtTextureCompressionAstcHdrFn {
 }
 #[doc = "Generated from 'VK_EXT_texture_compression_astc_hdr'"]
 impl Format {
-    pub const ASTC_4X4_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_000);
-    pub const ASTC_5X4_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_001);
-    pub const ASTC_5X5_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_002);
-    pub const ASTC_6X5_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_003);
-    pub const ASTC_6X6_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_004);
-    pub const ASTC_8X5_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_005);
-    pub const ASTC_8X6_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_006);
-    pub const ASTC_8X8_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_007);
-    pub const ASTC_10X5_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_008);
-    pub const ASTC_10X6_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_009);
-    pub const ASTC_10X8_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_010);
-    pub const ASTC_10X10_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_011);
-    pub const ASTC_12X10_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_012);
-    pub const ASTC_12X12_SFLOAT_BLOCK_EXT: Self = Self(1_000_066_013);
+    pub const ASTC_4X4_SFLOAT_BLOCK_EXT: Self = Self::ASTC_4X4_SFLOAT_BLOCK;
+    pub const ASTC_5X4_SFLOAT_BLOCK_EXT: Self = Self::ASTC_5X4_SFLOAT_BLOCK;
+    pub const ASTC_5X5_SFLOAT_BLOCK_EXT: Self = Self::ASTC_5X5_SFLOAT_BLOCK;
+    pub const ASTC_6X5_SFLOAT_BLOCK_EXT: Self = Self::ASTC_6X5_SFLOAT_BLOCK;
+    pub const ASTC_6X6_SFLOAT_BLOCK_EXT: Self = Self::ASTC_6X6_SFLOAT_BLOCK;
+    pub const ASTC_8X5_SFLOAT_BLOCK_EXT: Self = Self::ASTC_8X5_SFLOAT_BLOCK;
+    pub const ASTC_8X6_SFLOAT_BLOCK_EXT: Self = Self::ASTC_8X6_SFLOAT_BLOCK;
+    pub const ASTC_8X8_SFLOAT_BLOCK_EXT: Self = Self::ASTC_8X8_SFLOAT_BLOCK;
+    pub const ASTC_10X5_SFLOAT_BLOCK_EXT: Self = Self::ASTC_10X5_SFLOAT_BLOCK;
+    pub const ASTC_10X6_SFLOAT_BLOCK_EXT: Self = Self::ASTC_10X6_SFLOAT_BLOCK;
+    pub const ASTC_10X8_SFLOAT_BLOCK_EXT: Self = Self::ASTC_10X8_SFLOAT_BLOCK;
+    pub const ASTC_10X10_SFLOAT_BLOCK_EXT: Self = Self::ASTC_10X10_SFLOAT_BLOCK;
+    pub const ASTC_12X10_SFLOAT_BLOCK_EXT: Self = Self::ASTC_12X10_SFLOAT_BLOCK;
+    pub const ASTC_12X12_SFLOAT_BLOCK_EXT: Self = Self::ASTC_12X12_SFLOAT_BLOCK;
 }
 #[doc = "Generated from 'VK_EXT_texture_compression_astc_hdr'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES_EXT: Self = Self(1_000_066_000);
+    pub const PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES_EXT: Self =
+        Self::PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES;
 }
 impl ExtAstcDecodeModeFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_astc_decode_mode\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -5519,7 +4418,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT: Self = Self(1_000_067_001);
 }
 impl ImgExtension69Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_IMG_extension_69\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -5537,7 +4436,7 @@ impl ImgExtension69Fn {
     }
 }
 impl KhrMaintenance1Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_maintenance1\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -5582,15 +4481,6 @@ impl KhrMaintenance1Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkTrimCommandPoolKHR.html>"]
-    pub unsafe fn trim_command_pool_khr(
-        &self,
-        device: Device,
-        command_pool: CommandPool,
-        flags: CommandPoolTrimFlags,
-    ) {
-        (self.trim_command_pool_khr)(device, command_pool, flags)
-    }
 }
 #[doc = "Generated from 'VK_KHR_maintenance1'"]
 impl FormatFeatureFlags {
@@ -5606,7 +4496,7 @@ impl Result {
     pub const ERROR_OUT_OF_POOL_MEMORY_KHR: Self = Self::ERROR_OUT_OF_POOL_MEMORY;
 }
 impl KhrDeviceGroupCreationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_device_group_creation\0")
         }
@@ -5654,19 +4544,6 @@ impl KhrDeviceGroupCreationFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumeratePhysicalDeviceGroupsKHR.html>"]
-    pub unsafe fn enumerate_physical_device_groups_khr(
-        &self,
-        instance: Instance,
-        p_physical_device_group_count: *mut u32,
-        p_physical_device_group_properties: *mut PhysicalDeviceGroupProperties,
-    ) -> Result {
-        (self.enumerate_physical_device_groups_khr)(
-            instance,
-            p_physical_device_group_count,
-            p_physical_device_group_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_device_group_creation'"]
 impl MemoryHeapFlags {
@@ -5678,7 +4555,7 @@ impl StructureType {
     pub const DEVICE_GROUP_DEVICE_CREATE_INFO_KHR: Self = Self::DEVICE_GROUP_DEVICE_CREATE_INFO;
 }
 impl KhrExternalMemoryCapabilitiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_external_memory_capabilities\0",
@@ -5729,19 +4606,6 @@ impl KhrExternalMemoryCapabilitiesFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceExternalBufferPropertiesKHR.html>"]
-    pub unsafe fn get_physical_device_external_buffer_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_external_buffer_info: *const PhysicalDeviceExternalBufferInfo,
-        p_external_buffer_properties: *mut ExternalBufferProperties,
-    ) {
-        (self.get_physical_device_external_buffer_properties_khr)(
-            physical_device,
-            p_external_buffer_info,
-            p_external_buffer_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_memory_capabilities'"]
 impl ExternalMemoryFeatureFlags {
@@ -5770,7 +4634,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_ID_PROPERTIES_KHR: Self = Self::PHYSICAL_DEVICE_ID_PROPERTIES;
 }
 impl KhrExternalMemoryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_memory\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -5799,7 +4663,7 @@ impl StructureType {
     pub const EXPORT_MEMORY_ALLOCATE_INFO_KHR: Self = Self::EXPORT_MEMORY_ALLOCATE_INFO;
 }
 impl KhrExternalMemoryWin32Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_memory_win32\0")
         }
@@ -5876,30 +4740,6 @@ impl KhrExternalMemoryWin32Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryWin32HandleKHR.html>"]
-    pub unsafe fn get_memory_win32_handle_khr(
-        &self,
-        device: Device,
-        p_get_win32_handle_info: *const MemoryGetWin32HandleInfoKHR,
-        p_handle: *mut HANDLE,
-    ) -> Result {
-        (self.get_memory_win32_handle_khr)(device, p_get_win32_handle_info, p_handle)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryWin32HandlePropertiesKHR.html>"]
-    pub unsafe fn get_memory_win32_handle_properties_khr(
-        &self,
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        handle: HANDLE,
-        p_memory_win32_handle_properties: *mut MemoryWin32HandlePropertiesKHR,
-    ) -> Result {
-        (self.get_memory_win32_handle_properties_khr)(
-            device,
-            handle_type,
-            handle,
-            p_memory_win32_handle_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_memory_win32'"]
 impl StructureType {
@@ -5909,7 +4749,7 @@ impl StructureType {
     pub const MEMORY_GET_WIN32_HANDLE_INFO_KHR: Self = Self(1_000_073_003);
 }
 impl KhrExternalMemoryFdFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_memory_fd\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -5980,25 +4820,6 @@ impl KhrExternalMemoryFdFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryFdKHR.html>"]
-    pub unsafe fn get_memory_fd_khr(
-        &self,
-        device: Device,
-        p_get_fd_info: *const MemoryGetFdInfoKHR,
-        p_fd: *mut c_int,
-    ) -> Result {
-        (self.get_memory_fd_khr)(device, p_get_fd_info, p_fd)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryFdPropertiesKHR.html>"]
-    pub unsafe fn get_memory_fd_properties_khr(
-        &self,
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        fd: c_int,
-        p_memory_fd_properties: *mut MemoryFdPropertiesKHR,
-    ) -> Result {
-        (self.get_memory_fd_properties_khr)(device, handle_type, fd, p_memory_fd_properties)
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_memory_fd'"]
 impl StructureType {
@@ -6007,7 +4828,7 @@ impl StructureType {
     pub const MEMORY_GET_FD_INFO_KHR: Self = Self(1_000_074_002);
 }
 impl KhrWin32KeyedMutexFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_win32_keyed_mutex\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -6029,7 +4850,7 @@ impl StructureType {
     pub const WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_KHR: Self = Self(1_000_075_000);
 }
 impl KhrExternalSemaphoreCapabilitiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_external_semaphore_capabilities\0",
@@ -6080,19 +4901,6 @@ impl KhrExternalSemaphoreCapabilitiesFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceExternalSemaphorePropertiesKHR.html>"]
-    pub unsafe fn get_physical_device_external_semaphore_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_external_semaphore_info: *const PhysicalDeviceExternalSemaphoreInfo,
-        p_external_semaphore_properties: *mut ExternalSemaphoreProperties,
-    ) {
-        (self.get_physical_device_external_semaphore_properties_khr)(
-            physical_device,
-            p_external_semaphore_info,
-            p_external_semaphore_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_capabilities'"]
 impl ExternalSemaphoreFeatureFlags {
@@ -6114,7 +4922,7 @@ impl StructureType {
     pub const EXTERNAL_SEMAPHORE_PROPERTIES_KHR: Self = Self::EXTERNAL_SEMAPHORE_PROPERTIES;
 }
 impl KhrExternalSemaphoreFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_semaphore\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -6140,7 +4948,7 @@ impl StructureType {
     pub const EXPORT_SEMAPHORE_CREATE_INFO_KHR: Self = Self::EXPORT_SEMAPHORE_CREATE_INFO;
 }
 impl KhrExternalSemaphoreWin32Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_semaphore_win32\0")
         }
@@ -6214,23 +5022,6 @@ impl KhrExternalSemaphoreWin32Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportSemaphoreWin32HandleKHR.html>"]
-    pub unsafe fn import_semaphore_win32_handle_khr(
-        &self,
-        device: Device,
-        p_import_semaphore_win32_handle_info: *const ImportSemaphoreWin32HandleInfoKHR,
-    ) -> Result {
-        (self.import_semaphore_win32_handle_khr)(device, p_import_semaphore_win32_handle_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreWin32HandleKHR.html>"]
-    pub unsafe fn get_semaphore_win32_handle_khr(
-        &self,
-        device: Device,
-        p_get_win32_handle_info: *const SemaphoreGetWin32HandleInfoKHR,
-        p_handle: *mut HANDLE,
-    ) -> Result {
-        (self.get_semaphore_win32_handle_khr)(device, p_get_win32_handle_info, p_handle)
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_win32'"]
 impl StructureType {
@@ -6240,7 +5031,7 @@ impl StructureType {
     pub const SEMAPHORE_GET_WIN32_HANDLE_INFO_KHR: Self = Self(1_000_078_003);
 }
 impl KhrExternalSemaphoreFdFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_semaphore_fd\0")
         }
@@ -6309,23 +5100,6 @@ impl KhrExternalSemaphoreFdFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportSemaphoreFdKHR.html>"]
-    pub unsafe fn import_semaphore_fd_khr(
-        &self,
-        device: Device,
-        p_import_semaphore_fd_info: *const ImportSemaphoreFdInfoKHR,
-    ) -> Result {
-        (self.import_semaphore_fd_khr)(device, p_import_semaphore_fd_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreFdKHR.html>"]
-    pub unsafe fn get_semaphore_fd_khr(
-        &self,
-        device: Device,
-        p_get_fd_info: *const SemaphoreGetFdInfoKHR,
-        p_fd: *mut c_int,
-    ) -> Result {
-        (self.get_semaphore_fd_khr)(device, p_get_fd_info, p_fd)
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_semaphore_fd'"]
 impl StructureType {
@@ -6333,7 +5107,7 @@ impl StructureType {
     pub const SEMAPHORE_GET_FD_INFO_KHR: Self = Self(1_000_079_001);
 }
 impl KhrPushDescriptorFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_push_descriptor\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -6416,42 +5190,6 @@ impl KhrPushDescriptorFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPushDescriptorSetKHR.html>"]
-    pub unsafe fn cmd_push_descriptor_set_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        pipeline_bind_point: PipelineBindPoint,
-        layout: PipelineLayout,
-        set: u32,
-        descriptor_write_count: u32,
-        p_descriptor_writes: *const WriteDescriptorSet,
-    ) {
-        (self.cmd_push_descriptor_set_khr)(
-            command_buffer,
-            pipeline_bind_point,
-            layout,
-            set,
-            descriptor_write_count,
-            p_descriptor_writes,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPushDescriptorSetWithTemplateKHR.html>"]
-    pub unsafe fn cmd_push_descriptor_set_with_template_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        layout: PipelineLayout,
-        set: u32,
-        p_data: *const c_void,
-    ) {
-        (self.cmd_push_descriptor_set_with_template_khr)(
-            command_buffer,
-            descriptor_update_template,
-            layout,
-            set,
-            p_data,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_push_descriptor'"]
 impl DescriptorSetLayoutCreateFlags {
@@ -6468,7 +5206,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR: Self = Self(1_000_080_000);
 }
 impl ExtConditionalRenderingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_conditional_rendering\0")
         }
@@ -6537,18 +5275,6 @@ impl ExtConditionalRenderingFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginConditionalRenderingEXT.html>"]
-    pub unsafe fn cmd_begin_conditional_rendering_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        p_conditional_rendering_begin: *const ConditionalRenderingBeginInfoEXT,
-    ) {
-        (self.cmd_begin_conditional_rendering_ext)(command_buffer, p_conditional_rendering_begin)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndConditionalRenderingEXT.html>"]
-    pub unsafe fn cmd_end_conditional_rendering_ext(&self, command_buffer: CommandBuffer) {
-        (self.cmd_end_conditional_rendering_ext)(command_buffer)
-    }
 }
 #[doc = "Generated from 'VK_EXT_conditional_rendering'"]
 impl AccessFlags {
@@ -6572,7 +5298,7 @@ impl StructureType {
     pub const CONDITIONAL_RENDERING_BEGIN_INFO_EXT: Self = Self(1_000_081_002);
 }
 impl KhrShaderFloat16Int8Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_float16_int8\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -6597,7 +5323,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES;
 }
 impl Khr16bitStorageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_16bit_storage\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -6620,7 +5346,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES;
 }
 impl KhrIncrementalPresentFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_incremental_present\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -6642,7 +5368,7 @@ impl StructureType {
     pub const PRESENT_REGIONS_KHR: Self = Self(1_000_084_000);
 }
 impl KhrDescriptorUpdateTemplateFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_descriptor_update_template\0")
         }
@@ -6775,66 +5501,6 @@ impl KhrDescriptorUpdateTemplateFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDescriptorUpdateTemplateKHR.html>"]
-    pub unsafe fn create_descriptor_update_template_khr(
-        &self,
-        device: Device,
-        p_create_info: *const DescriptorUpdateTemplateCreateInfo,
-        p_allocator: *const AllocationCallbacks,
-        p_descriptor_update_template: *mut DescriptorUpdateTemplate,
-    ) -> Result {
-        (self.create_descriptor_update_template_khr)(
-            device,
-            p_create_info,
-            p_allocator,
-            p_descriptor_update_template,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDescriptorUpdateTemplateKHR.html>"]
-    pub unsafe fn destroy_descriptor_update_template_khr(
-        &self,
-        device: Device,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_descriptor_update_template_khr)(
-            device,
-            descriptor_update_template,
-            p_allocator,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkUpdateDescriptorSetWithTemplateKHR.html>"]
-    pub unsafe fn update_descriptor_set_with_template_khr(
-        &self,
-        device: Device,
-        descriptor_set: DescriptorSet,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        p_data: *const c_void,
-    ) {
-        (self.update_descriptor_set_with_template_khr)(
-            device,
-            descriptor_set,
-            descriptor_update_template,
-            p_data,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPushDescriptorSetWithTemplateKHR.html>"]
-    pub unsafe fn cmd_push_descriptor_set_with_template_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        descriptor_update_template: DescriptorUpdateTemplate,
-        layout: PipelineLayout,
-        set: u32,
-        p_data: *const c_void,
-    ) {
-        (self.cmd_push_descriptor_set_with_template_khr)(
-            command_buffer,
-            descriptor_update_template,
-            layout,
-            set,
-            p_data,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_descriptor_update_template'"]
 impl DebugReportObjectTypeEXT {
@@ -6854,7 +5520,7 @@ impl StructureType {
         Self::DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO;
 }
 impl NvxDeviceGeneratedCommandsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NVX_device_generated_commands\0")
         }
@@ -6874,7 +5540,7 @@ impl NvxDeviceGeneratedCommandsFn {
     }
 }
 impl NvClipSpaceWScalingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_clip_space_w_scaling\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -6922,21 +5588,6 @@ impl NvClipSpaceWScalingFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetViewportWScalingNV.html>"]
-    pub unsafe fn cmd_set_viewport_w_scaling_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        first_viewport: u32,
-        viewport_count: u32,
-        p_viewport_w_scalings: *const ViewportWScalingNV,
-    ) {
-        (self.cmd_set_viewport_w_scaling_nv)(
-            command_buffer,
-            first_viewport,
-            viewport_count,
-            p_viewport_w_scalings,
-        )
-    }
 }
 #[doc = "Generated from 'VK_NV_clip_space_w_scaling'"]
 impl DynamicState {
@@ -6947,7 +5598,7 @@ impl StructureType {
     pub const PIPELINE_VIEWPORT_W_SCALING_STATE_CREATE_INFO_NV: Self = Self(1_000_087_000);
 }
 impl ExtDirectModeDisplayFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_direct_mode_display\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -6985,17 +5636,9 @@ impl ExtDirectModeDisplayFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkReleaseDisplayEXT.html>"]
-    pub unsafe fn release_display_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-    ) -> Result {
-        (self.release_display_ext)(physical_device, display)
-    }
 }
 impl ExtAcquireXlibDisplayFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_acquire_xlib_display\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7070,28 +5713,9 @@ impl ExtAcquireXlibDisplayFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireXlibDisplayEXT.html>"]
-    pub unsafe fn acquire_xlib_display_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        dpy: *mut Display,
-        display: DisplayKHR,
-    ) -> Result {
-        (self.acquire_xlib_display_ext)(physical_device, dpy, display)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRandROutputDisplayEXT.html>"]
-    pub unsafe fn get_rand_r_output_display_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        dpy: *mut Display,
-        rr_output: RROutput,
-        p_display: *mut DisplayKHR,
-    ) -> Result {
-        (self.get_rand_r_output_display_ext)(physical_device, dpy, rr_output, p_display)
-    }
 }
 impl ExtDisplaySurfaceCounterFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_display_surface_counter\0")
         }
@@ -7140,26 +5764,13 @@ impl ExtDisplaySurfaceCounterFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilities2EXT.html>"]
-    pub unsafe fn get_physical_device_surface_capabilities2_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        surface: SurfaceKHR,
-        p_surface_capabilities: *mut SurfaceCapabilities2EXT,
-    ) -> Result {
-        (self.get_physical_device_surface_capabilities2_ext)(
-            physical_device,
-            surface,
-            p_surface_capabilities,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_display_surface_counter'"]
 impl StructureType {
     pub const SURFACE_CAPABILITIES_2_EXT: Self = Self(1_000_090_000);
 }
 impl ExtDisplayControlFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_display_control\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7293,52 +5904,6 @@ impl ExtDisplayControlFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDisplayPowerControlEXT.html>"]
-    pub unsafe fn display_power_control_ext(
-        &self,
-        device: Device,
-        display: DisplayKHR,
-        p_display_power_info: *const DisplayPowerInfoEXT,
-    ) -> Result {
-        (self.display_power_control_ext)(device, display, p_display_power_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkRegisterDeviceEventEXT.html>"]
-    pub unsafe fn register_device_event_ext(
-        &self,
-        device: Device,
-        p_device_event_info: *const DeviceEventInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_fence: *mut Fence,
-    ) -> Result {
-        (self.register_device_event_ext)(device, p_device_event_info, p_allocator, p_fence)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkRegisterDisplayEventEXT.html>"]
-    pub unsafe fn register_display_event_ext(
-        &self,
-        device: Device,
-        display: DisplayKHR,
-        p_display_event_info: *const DisplayEventInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_fence: *mut Fence,
-    ) -> Result {
-        (self.register_display_event_ext)(
-            device,
-            display,
-            p_display_event_info,
-            p_allocator,
-            p_fence,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainCounterEXT.html>"]
-    pub unsafe fn get_swapchain_counter_ext(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        counter: SurfaceCounterFlagsEXT,
-        p_counter_value: *mut u64,
-    ) -> Result {
-        (self.get_swapchain_counter_ext)(device, swapchain, counter, p_counter_value)
-    }
 }
 #[doc = "Generated from 'VK_EXT_display_control'"]
 impl StructureType {
@@ -7348,7 +5913,7 @@ impl StructureType {
     pub const SWAPCHAIN_COUNTER_CREATE_INFO_EXT: Self = Self(1_000_091_003);
 }
 impl GoogleDisplayTimingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_display_timing\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7424,37 +5989,13 @@ impl GoogleDisplayTimingFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRefreshCycleDurationGOOGLE.html>"]
-    pub unsafe fn get_refresh_cycle_duration_google(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_display_timing_properties: *mut RefreshCycleDurationGOOGLE,
-    ) -> Result {
-        (self.get_refresh_cycle_duration_google)(device, swapchain, p_display_timing_properties)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPastPresentationTimingGOOGLE.html>"]
-    pub unsafe fn get_past_presentation_timing_google(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        p_presentation_timing_count: *mut u32,
-        p_presentation_timings: *mut PastPresentationTimingGOOGLE,
-    ) -> Result {
-        (self.get_past_presentation_timing_google)(
-            device,
-            swapchain,
-            p_presentation_timing_count,
-            p_presentation_timings,
-        )
-    }
 }
 #[doc = "Generated from 'VK_GOOGLE_display_timing'"]
 impl StructureType {
     pub const PRESENT_TIMES_INFO_GOOGLE: Self = Self(1_000_092_000);
 }
 impl NvSampleMaskOverrideCoverageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_NV_sample_mask_override_coverage\0",
@@ -7476,7 +6017,7 @@ impl NvSampleMaskOverrideCoverageFn {
     }
 }
 impl NvGeometryShaderPassthroughFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_geometry_shader_passthrough\0")
         }
@@ -7496,7 +6037,7 @@ impl NvGeometryShaderPassthroughFn {
     }
 }
 impl NvViewportArray2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_viewport_array2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7514,7 +6055,7 @@ impl NvViewportArray2Fn {
     }
 }
 impl NvxMultiviewPerViewAttributesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_NVX_multiview_per_view_attributes\0",
@@ -7546,7 +6087,7 @@ impl SubpassDescriptionFlags {
     pub const PER_VIEW_POSITION_X_ONLY_NVX: Self = Self(0b10);
 }
 impl NvViewportSwizzleFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_viewport_swizzle\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7568,7 +6109,7 @@ impl StructureType {
     pub const PIPELINE_VIEWPORT_SWIZZLE_STATE_CREATE_INFO_NV: Self = Self(1_000_098_000);
 }
 impl ExtDiscardRectanglesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_discard_rectangles\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7616,21 +6157,6 @@ impl ExtDiscardRectanglesFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDiscardRectangleEXT.html>"]
-    pub unsafe fn cmd_set_discard_rectangle_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        first_discard_rectangle: u32,
-        discard_rectangle_count: u32,
-        p_discard_rectangles: *const Rect2D,
-    ) {
-        (self.cmd_set_discard_rectangle_ext)(
-            command_buffer,
-            first_discard_rectangle,
-            discard_rectangle_count,
-            p_discard_rectangles,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_discard_rectangles'"]
 impl DynamicState {
@@ -7642,7 +6168,7 @@ impl StructureType {
     pub const PIPELINE_DISCARD_RECTANGLE_STATE_CREATE_INFO_EXT: Self = Self(1_000_099_001);
 }
 impl NvExtension101Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_101\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -7660,7 +6186,7 @@ impl NvExtension101Fn {
     }
 }
 impl ExtConservativeRasterizationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_conservative_rasterization\0")
         }
@@ -7685,7 +6211,7 @@ impl StructureType {
     pub const PIPELINE_RASTERIZATION_CONSERVATIVE_STATE_CREATE_INFO_EXT: Self = Self(1_000_101_001);
 }
 impl ExtDepthClipEnableFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_depth_clip_enable\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -7708,7 +6234,7 @@ impl StructureType {
     pub const PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT: Self = Self(1_000_102_001);
 }
 impl NvExtension104Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_104\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -7726,7 +6252,7 @@ impl NvExtension104Fn {
     }
 }
 impl ExtSwapchainColorspaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_swapchain_colorspace\0") }
     }
     pub const SPEC_VERSION: u32 = 4u32;
@@ -7761,7 +6287,7 @@ impl ColorSpaceKHR {
     pub const EXTENDED_SRGB_NONLINEAR_EXT: Self = Self(1_000_104_014);
 }
 impl ExtHdrMetadataFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_hdr_metadata\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -7805,23 +6331,13 @@ impl ExtHdrMetadataFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetHdrMetadataEXT.html>"]
-    pub unsafe fn set_hdr_metadata_ext(
-        &self,
-        device: Device,
-        swapchain_count: u32,
-        p_swapchains: *const SwapchainKHR,
-        p_metadata: *const HdrMetadataEXT,
-    ) {
-        (self.set_hdr_metadata_ext)(device, swapchain_count, p_swapchains, p_metadata)
-    }
 }
 #[doc = "Generated from 'VK_EXT_hdr_metadata'"]
 impl StructureType {
     pub const HDR_METADATA_EXT: Self = Self(1_000_105_000);
 }
 impl ImgExtension107Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_IMG_extension_107\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -7839,7 +6355,7 @@ impl ImgExtension107Fn {
     }
 }
 impl ImgExtension108Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_IMG_extension_108\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -7857,7 +6373,7 @@ impl ImgExtension108Fn {
     }
 }
 impl KhrImagelessFramebufferFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_imageless_framebuffer\0")
         }
@@ -7890,7 +6406,7 @@ impl StructureType {
     pub const RENDER_PASS_ATTACHMENT_BEGIN_INFO_KHR: Self = Self::RENDER_PASS_ATTACHMENT_BEGIN_INFO;
 }
 impl KhrCreateRenderpass2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_create_renderpass2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8016,42 +6532,6 @@ impl KhrCreateRenderpass2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateRenderPass2KHR.html>"]
-    pub unsafe fn create_render_pass2_khr(
-        &self,
-        device: Device,
-        p_create_info: *const RenderPassCreateInfo2,
-        p_allocator: *const AllocationCallbacks,
-        p_render_pass: *mut RenderPass,
-    ) -> Result {
-        (self.create_render_pass2_khr)(device, p_create_info, p_allocator, p_render_pass)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginRenderPass2KHR.html>"]
-    pub unsafe fn cmd_begin_render_pass2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_render_pass_begin: *const RenderPassBeginInfo,
-        p_subpass_begin_info: *const SubpassBeginInfo,
-    ) {
-        (self.cmd_begin_render_pass2_khr)(command_buffer, p_render_pass_begin, p_subpass_begin_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdNextSubpass2KHR.html>"]
-    pub unsafe fn cmd_next_subpass2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_subpass_begin_info: *const SubpassBeginInfo,
-        p_subpass_end_info: *const SubpassEndInfo,
-    ) {
-        (self.cmd_next_subpass2_khr)(command_buffer, p_subpass_begin_info, p_subpass_end_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndRenderPass2KHR.html>"]
-    pub unsafe fn cmd_end_render_pass2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_subpass_end_info: *const SubpassEndInfo,
-    ) {
-        (self.cmd_end_render_pass2_khr)(command_buffer, p_subpass_end_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_create_renderpass2'"]
 impl StructureType {
@@ -8064,7 +6544,7 @@ impl StructureType {
     pub const SUBPASS_END_INFO_KHR: Self = Self::SUBPASS_END_INFO;
 }
 impl ImgExtension111Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_IMG_extension_111\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -8082,7 +6562,7 @@ impl ImgExtension111Fn {
     }
 }
 impl KhrSharedPresentableImageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shared_presentable_image\0")
         }
@@ -8125,14 +6605,6 @@ impl KhrSharedPresentableImageFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainStatusKHR.html>"]
-    pub unsafe fn get_swapchain_status_khr(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-    ) -> Result {
-        (self.get_swapchain_status_khr)(device, swapchain)
-    }
 }
 #[doc = "Generated from 'VK_KHR_shared_presentable_image'"]
 impl ImageLayout {
@@ -8148,7 +6620,7 @@ impl StructureType {
     pub const SHARED_PRESENT_SURFACE_CAPABILITIES_KHR: Self = Self(1_000_111_000);
 }
 impl KhrExternalFenceCapabilitiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_fence_capabilities\0")
         }
@@ -8197,19 +6669,6 @@ impl KhrExternalFenceCapabilitiesFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceExternalFencePropertiesKHR.html>"]
-    pub unsafe fn get_physical_device_external_fence_properties_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_external_fence_info: *const PhysicalDeviceExternalFenceInfo,
-        p_external_fence_properties: *mut ExternalFenceProperties,
-    ) {
-        (self.get_physical_device_external_fence_properties_khr)(
-            physical_device,
-            p_external_fence_info,
-            p_external_fence_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_fence_capabilities'"]
 impl ExternalFenceFeatureFlags {
@@ -8230,7 +6689,7 @@ impl StructureType {
     pub const EXTERNAL_FENCE_PROPERTIES_KHR: Self = Self::EXTERNAL_FENCE_PROPERTIES;
 }
 impl KhrExternalFenceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_fence\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8256,7 +6715,7 @@ impl StructureType {
     pub const EXPORT_FENCE_CREATE_INFO_KHR: Self = Self::EXPORT_FENCE_CREATE_INFO;
 }
 impl KhrExternalFenceWin32Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_fence_win32\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8327,23 +6786,6 @@ impl KhrExternalFenceWin32Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportFenceWin32HandleKHR.html>"]
-    pub unsafe fn import_fence_win32_handle_khr(
-        &self,
-        device: Device,
-        p_import_fence_win32_handle_info: *const ImportFenceWin32HandleInfoKHR,
-    ) -> Result {
-        (self.import_fence_win32_handle_khr)(device, p_import_fence_win32_handle_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetFenceWin32HandleKHR.html>"]
-    pub unsafe fn get_fence_win32_handle_khr(
-        &self,
-        device: Device,
-        p_get_win32_handle_info: *const FenceGetWin32HandleInfoKHR,
-        p_handle: *mut HANDLE,
-    ) -> Result {
-        (self.get_fence_win32_handle_khr)(device, p_get_win32_handle_info, p_handle)
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_fence_win32'"]
 impl StructureType {
@@ -8352,7 +6794,7 @@ impl StructureType {
     pub const FENCE_GET_WIN32_HANDLE_INFO_KHR: Self = Self(1_000_114_002);
 }
 impl KhrExternalFenceFdFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_external_fence_fd\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8415,23 +6857,6 @@ impl KhrExternalFenceFdFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportFenceFdKHR.html>"]
-    pub unsafe fn import_fence_fd_khr(
-        &self,
-        device: Device,
-        p_import_fence_fd_info: *const ImportFenceFdInfoKHR,
-    ) -> Result {
-        (self.import_fence_fd_khr)(device, p_import_fence_fd_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetFenceFdKHR.html>"]
-    pub unsafe fn get_fence_fd_khr(
-        &self,
-        device: Device,
-        p_get_fd_info: *const FenceGetFdInfoKHR,
-        p_fd: *mut c_int,
-    ) -> Result {
-        (self.get_fence_fd_khr)(device, p_get_fd_info, p_fd)
-    }
 }
 #[doc = "Generated from 'VK_KHR_external_fence_fd'"]
 impl StructureType {
@@ -8439,7 +6864,7 @@ impl StructureType {
     pub const FENCE_GET_FD_INFO_KHR: Self = Self(1_000_115_001);
 }
 impl KhrPerformanceQueryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_performance_query\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8565,48 +6990,6 @@ impl KhrPerformanceQueryFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR.html>"]
-    pub unsafe fn enumerate_physical_device_queue_family_performance_query_counters_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        p_counter_count: *mut u32,
-        p_counters: *mut PerformanceCounterKHR,
-        p_counter_descriptions: *mut PerformanceCounterDescriptionKHR,
-    ) -> Result {
-        (self.enumerate_physical_device_queue_family_performance_query_counters_khr)(
-            physical_device,
-            queue_family_index,
-            p_counter_count,
-            p_counters,
-            p_counter_descriptions,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR.html>"]
-    pub unsafe fn get_physical_device_queue_family_performance_query_passes_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_performance_query_create_info: *const QueryPoolPerformanceCreateInfoKHR,
-        p_num_passes: *mut u32,
-    ) {
-        (self.get_physical_device_queue_family_performance_query_passes_khr)(
-            physical_device,
-            p_performance_query_create_info,
-            p_num_passes,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireProfilingLockKHR.html>"]
-    pub unsafe fn acquire_profiling_lock_khr(
-        &self,
-        device: Device,
-        p_info: *const AcquireProfilingLockInfoKHR,
-    ) -> Result {
-        (self.acquire_profiling_lock_khr)(device, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkReleaseProfilingLockKHR.html>"]
-    pub unsafe fn release_profiling_lock_khr(&self, device: Device) {
-        (self.release_profiling_lock_khr)(device)
-    }
 }
 #[doc = "Generated from 'VK_KHR_performance_query'"]
 impl QueryType {
@@ -8623,7 +7006,7 @@ impl StructureType {
     pub const PERFORMANCE_COUNTER_DESCRIPTION_KHR: Self = Self(1_000_116_006);
 }
 impl KhrMaintenance2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_maintenance2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8673,7 +7056,7 @@ impl TessellationDomainOrigin {
     pub const LOWER_LEFT_KHR: Self = Self::LOWER_LEFT;
 }
 impl KhrExtension119Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_119\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -8691,7 +7074,7 @@ impl KhrExtension119Fn {
     }
 }
 impl KhrGetSurfaceCapabilities2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_get_surface_capabilities2\0")
         }
@@ -8770,34 +7153,6 @@ impl KhrGetSurfaceCapabilities2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilities2KHR.html>"]
-    pub unsafe fn get_physical_device_surface_capabilities2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_surface_capabilities: *mut SurfaceCapabilities2KHR,
-    ) -> Result {
-        (self.get_physical_device_surface_capabilities2_khr)(
-            physical_device,
-            p_surface_info,
-            p_surface_capabilities,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceFormats2KHR.html>"]
-    pub unsafe fn get_physical_device_surface_formats2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_surface_format_count: *mut u32,
-        p_surface_formats: *mut SurfaceFormat2KHR,
-    ) -> Result {
-        (self.get_physical_device_surface_formats2_khr)(
-            physical_device,
-            p_surface_info,
-            p_surface_format_count,
-            p_surface_formats,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_get_surface_capabilities2'"]
 impl StructureType {
@@ -8806,7 +7161,7 @@ impl StructureType {
     pub const SURFACE_FORMAT_2_KHR: Self = Self(1_000_119_002);
 }
 impl KhrVariablePointersFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_variable_pointers\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -8831,7 +7186,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES_KHR;
 }
 impl KhrGetDisplayProperties2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_get_display_properties2\0")
         }
@@ -8966,60 +7321,6 @@ impl KhrGetDisplayProperties2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDisplayProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_display_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayProperties2KHR,
-    ) -> Result {
-        (self.get_physical_device_display_properties2_khr)(
-            physical_device,
-            p_property_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDisplayPlaneProperties2KHR.html>"]
-    pub unsafe fn get_physical_device_display_plane_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayPlaneProperties2KHR,
-    ) -> Result {
-        (self.get_physical_device_display_plane_properties2_khr)(
-            physical_device,
-            p_property_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayModeProperties2KHR.html>"]
-    pub unsafe fn get_display_mode_properties2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-        p_property_count: *mut u32,
-        p_properties: *mut DisplayModeProperties2KHR,
-    ) -> Result {
-        (self.get_display_mode_properties2_khr)(
-            physical_device,
-            display,
-            p_property_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayPlaneCapabilities2KHR.html>"]
-    pub unsafe fn get_display_plane_capabilities2_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_display_plane_info: *const DisplayPlaneInfo2KHR,
-        p_capabilities: *mut DisplayPlaneCapabilities2KHR,
-    ) -> Result {
-        (self.get_display_plane_capabilities2_khr)(
-            physical_device,
-            p_display_plane_info,
-            p_capabilities,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_get_display_properties2'"]
 impl StructureType {
@@ -9030,7 +7331,7 @@ impl StructureType {
     pub const DISPLAY_PLANE_CAPABILITIES_2_KHR: Self = Self(1_000_121_004);
 }
 impl MvkIosSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_MVK_ios_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -9077,23 +7378,13 @@ impl MvkIosSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateIOSSurfaceMVK.html>"]
-    pub unsafe fn create_ios_surface_mvk(
-        &self,
-        instance: Instance,
-        p_create_info: *const IOSSurfaceCreateInfoMVK,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_ios_surface_mvk)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_MVK_ios_surface'"]
 impl StructureType {
     pub const IOS_SURFACE_CREATE_INFO_MVK: Self = Self(1_000_122_000);
 }
 impl MvkMacosSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_MVK_macos_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -9140,23 +7431,13 @@ impl MvkMacosSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateMacOSSurfaceMVK.html>"]
-    pub unsafe fn create_mac_os_surface_mvk(
-        &self,
-        instance: Instance,
-        p_create_info: *const MacOSSurfaceCreateInfoMVK,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_mac_os_surface_mvk)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_MVK_macos_surface'"]
 impl StructureType {
     pub const MACOS_SURFACE_CREATE_INFO_MVK: Self = Self(1_000_123_000);
 }
 impl MvkMoltenvkFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_MVK_moltenvk\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -9174,7 +7455,7 @@ impl MvkMoltenvkFn {
     }
 }
 impl ExtExternalMemoryDmaBufFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_external_memory_dma_buf\0")
         }
@@ -9198,7 +7479,7 @@ impl ExternalMemoryHandleTypeFlags {
     pub const DMA_BUF_EXT: Self = Self(0b10_0000_0000);
 }
 impl ExtQueueFamilyForeignFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_queue_family_foreign\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -9216,7 +7497,7 @@ impl ExtQueueFamilyForeignFn {
     }
 }
 impl KhrDedicatedAllocationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_dedicated_allocation\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -9239,7 +7520,7 @@ impl StructureType {
     pub const MEMORY_DEDICATED_ALLOCATE_INFO_KHR: Self = Self::MEMORY_DEDICATED_ALLOCATE_INFO;
 }
 impl ExtDebugUtilsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_debug_utils\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -9539,96 +7820,6 @@ impl ExtDebugUtilsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetDebugUtilsObjectNameEXT.html>"]
-    pub unsafe fn set_debug_utils_object_name_ext(
-        &self,
-        device: Device,
-        p_name_info: *const DebugUtilsObjectNameInfoEXT,
-    ) -> Result {
-        (self.set_debug_utils_object_name_ext)(device, p_name_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetDebugUtilsObjectTagEXT.html>"]
-    pub unsafe fn set_debug_utils_object_tag_ext(
-        &self,
-        device: Device,
-        p_tag_info: *const DebugUtilsObjectTagInfoEXT,
-    ) -> Result {
-        (self.set_debug_utils_object_tag_ext)(device, p_tag_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueBeginDebugUtilsLabelEXT.html>"]
-    pub unsafe fn queue_begin_debug_utils_label_ext(
-        &self,
-        queue: Queue,
-        p_label_info: *const DebugUtilsLabelEXT,
-    ) {
-        (self.queue_begin_debug_utils_label_ext)(queue, p_label_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueEndDebugUtilsLabelEXT.html>"]
-    pub unsafe fn queue_end_debug_utils_label_ext(&self, queue: Queue) {
-        (self.queue_end_debug_utils_label_ext)(queue)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueInsertDebugUtilsLabelEXT.html>"]
-    pub unsafe fn queue_insert_debug_utils_label_ext(
-        &self,
-        queue: Queue,
-        p_label_info: *const DebugUtilsLabelEXT,
-    ) {
-        (self.queue_insert_debug_utils_label_ext)(queue, p_label_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBeginDebugUtilsLabelEXT.html>"]
-    pub unsafe fn cmd_begin_debug_utils_label_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        p_label_info: *const DebugUtilsLabelEXT,
-    ) {
-        (self.cmd_begin_debug_utils_label_ext)(command_buffer, p_label_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEndDebugUtilsLabelEXT.html>"]
-    pub unsafe fn cmd_end_debug_utils_label_ext(&self, command_buffer: CommandBuffer) {
-        (self.cmd_end_debug_utils_label_ext)(command_buffer)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdInsertDebugUtilsLabelEXT.html>"]
-    pub unsafe fn cmd_insert_debug_utils_label_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        p_label_info: *const DebugUtilsLabelEXT,
-    ) {
-        (self.cmd_insert_debug_utils_label_ext)(command_buffer, p_label_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDebugUtilsMessengerEXT.html>"]
-    pub unsafe fn create_debug_utils_messenger_ext(
-        &self,
-        instance: Instance,
-        p_create_info: *const DebugUtilsMessengerCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_messenger: *mut DebugUtilsMessengerEXT,
-    ) -> Result {
-        (self.create_debug_utils_messenger_ext)(instance, p_create_info, p_allocator, p_messenger)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDebugUtilsMessengerEXT.html>"]
-    pub unsafe fn destroy_debug_utils_messenger_ext(
-        &self,
-        instance: Instance,
-        messenger: DebugUtilsMessengerEXT,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_debug_utils_messenger_ext)(instance, messenger, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSubmitDebugUtilsMessageEXT.html>"]
-    pub unsafe fn submit_debug_utils_message_ext(
-        &self,
-        instance: Instance,
-        message_severity: DebugUtilsMessageSeverityFlagsEXT,
-        message_types: DebugUtilsMessageTypeFlagsEXT,
-        p_callback_data: *const DebugUtilsMessengerCallbackDataEXT,
-    ) {
-        (self.submit_debug_utils_message_ext)(
-            instance,
-            message_severity,
-            message_types,
-            p_callback_data,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_debug_utils'"]
 impl ObjectType {
@@ -9643,14 +7834,14 @@ impl StructureType {
     pub const DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT: Self = Self(1_000_128_004);
 }
 impl AndroidExternalMemoryAndroidHardwareBufferFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_ANDROID_external_memory_android_hardware_buffer\0",
             )
         }
     }
-    pub const SPEC_VERSION: u32 = 4u32;
+    pub const SPEC_VERSION: u32 = 5u32;
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkGetAndroidHardwareBufferPropertiesANDROID = unsafe extern "system" fn(
@@ -9722,24 +7913,6 @@ impl AndroidExternalMemoryAndroidHardwareBufferFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetAndroidHardwareBufferPropertiesANDROID.html>"]
-    pub unsafe fn get_android_hardware_buffer_properties_android(
-        &self,
-        device: Device,
-        buffer: *const AHardwareBuffer,
-        p_properties: *mut AndroidHardwareBufferPropertiesANDROID,
-    ) -> Result {
-        (self.get_android_hardware_buffer_properties_android)(device, buffer, p_properties)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryAndroidHardwareBufferANDROID.html>"]
-    pub unsafe fn get_memory_android_hardware_buffer_android(
-        &self,
-        device: Device,
-        p_info: *const MemoryGetAndroidHardwareBufferInfoANDROID,
-        p_buffer: *mut *mut AHardwareBuffer,
-    ) -> Result {
-        (self.get_memory_android_hardware_buffer_android)(device, p_info, p_buffer)
-    }
 }
 #[doc = "Generated from 'VK_ANDROID_external_memory_android_hardware_buffer'"]
 impl ExternalMemoryHandleTypeFlags {
@@ -9756,7 +7929,7 @@ impl StructureType {
     pub const ANDROID_HARDWARE_BUFFER_FORMAT_PROPERTIES_2_ANDROID: Self = Self(1_000_129_006);
 }
 impl ExtSamplerFilterMinmaxFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_sampler_filter_minmax\0")
         }
@@ -9793,7 +7966,7 @@ impl StructureType {
         Self::SAMPLER_REDUCTION_MODE_CREATE_INFO;
 }
 impl KhrStorageBufferStorageClassFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_storage_buffer_storage_class\0",
@@ -9815,7 +7988,7 @@ impl KhrStorageBufferStorageClassFn {
     }
 }
 impl AmdGpuShaderInt16Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_gpu_shader_int16\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -9833,7 +8006,7 @@ impl AmdGpuShaderInt16Fn {
     }
 }
 impl AmdExtension134Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_134\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -9851,7 +8024,7 @@ impl AmdExtension134Fn {
     }
 }
 impl AmdExtension135Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_135\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -9869,7 +8042,7 @@ impl AmdExtension135Fn {
     }
 }
 impl AmdExtension136Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_136\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -9887,7 +8060,7 @@ impl AmdExtension136Fn {
     }
 }
 impl AmdMixedAttachmentSamplesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_mixed_attachment_samples\0")
         }
@@ -9907,7 +8080,7 @@ impl AmdMixedAttachmentSamplesFn {
     }
 }
 impl AmdShaderFragmentMaskFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_fragment_mask\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -9925,7 +8098,7 @@ impl AmdShaderFragmentMaskFn {
     }
 }
 impl ExtInlineUniformBlockFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_inline_uniform_block\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -9944,17 +8117,21 @@ impl ExtInlineUniformBlockFn {
 }
 #[doc = "Generated from 'VK_EXT_inline_uniform_block'"]
 impl DescriptorType {
-    pub const INLINE_UNIFORM_BLOCK_EXT: Self = Self(1_000_138_000);
+    pub const INLINE_UNIFORM_BLOCK_EXT: Self = Self::INLINE_UNIFORM_BLOCK;
 }
 #[doc = "Generated from 'VK_EXT_inline_uniform_block'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES_EXT: Self = Self(1_000_138_000);
-    pub const PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES_EXT: Self = Self(1_000_138_001);
-    pub const WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK_EXT: Self = Self(1_000_138_002);
-    pub const DESCRIPTOR_POOL_INLINE_UNIFORM_BLOCK_CREATE_INFO_EXT: Self = Self(1_000_138_003);
+    pub const PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES_EXT: Self =
+        Self::PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES;
+    pub const PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES_EXT: Self =
+        Self::PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES;
+    pub const WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK_EXT: Self =
+        Self::WRITE_DESCRIPTOR_SET_INLINE_UNIFORM_BLOCK;
+    pub const DESCRIPTOR_POOL_INLINE_UNIFORM_BLOCK_CREATE_INFO_EXT: Self =
+        Self::DESCRIPTOR_POOL_INLINE_UNIFORM_BLOCK_CREATE_INFO;
 }
 impl AmdExtension140Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_140\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -9972,7 +8149,7 @@ impl AmdExtension140Fn {
     }
 }
 impl ExtShaderStencilExportFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_stencil_export\0")
         }
@@ -9992,7 +8169,7 @@ impl ExtShaderStencilExportFn {
     }
 }
 impl AmdExtension142Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_142\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -10010,7 +8187,7 @@ impl AmdExtension142Fn {
     }
 }
 impl AmdExtension143Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_143\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -10028,7 +8205,7 @@ impl AmdExtension143Fn {
     }
 }
 impl ExtSampleLocationsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_sample_locations\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -10101,27 +8278,6 @@ impl ExtSampleLocationsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetSampleLocationsEXT.html>"]
-    pub unsafe fn cmd_set_sample_locations_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        p_sample_locations_info: *const SampleLocationsInfoEXT,
-    ) {
-        (self.cmd_set_sample_locations_ext)(command_buffer, p_sample_locations_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceMultisamplePropertiesEXT.html>"]
-    pub unsafe fn get_physical_device_multisample_properties_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        samples: SampleCountFlags,
-        p_multisample_properties: *mut MultisamplePropertiesEXT,
-    ) {
-        (self.get_physical_device_multisample_properties_ext)(
-            physical_device,
-            samples,
-            p_multisample_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_sample_locations'"]
 impl DynamicState {
@@ -10140,7 +8296,7 @@ impl StructureType {
     pub const MULTISAMPLE_PROPERTIES_EXT: Self = Self(1_000_143_004);
 }
 impl KhrRelaxedBlockLayoutFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_relaxed_block_layout\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -10158,7 +8314,7 @@ impl KhrRelaxedBlockLayoutFn {
     }
 }
 impl KhrGetMemoryRequirements2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_get_memory_requirements2\0")
         }
@@ -10264,39 +8420,6 @@ impl KhrGetMemoryRequirements2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetImageMemoryRequirements2KHR.html>"]
-    pub unsafe fn get_image_memory_requirements2_khr(
-        &self,
-        device: Device,
-        p_info: *const ImageMemoryRequirementsInfo2,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ) {
-        (self.get_image_memory_requirements2_khr)(device, p_info, p_memory_requirements)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferMemoryRequirements2KHR.html>"]
-    pub unsafe fn get_buffer_memory_requirements2_khr(
-        &self,
-        device: Device,
-        p_info: *const BufferMemoryRequirementsInfo2,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ) {
-        (self.get_buffer_memory_requirements2_khr)(device, p_info, p_memory_requirements)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetImageSparseMemoryRequirements2KHR.html>"]
-    pub unsafe fn get_image_sparse_memory_requirements2_khr(
-        &self,
-        device: Device,
-        p_info: *const ImageSparseMemoryRequirementsInfo2,
-        p_sparse_memory_requirement_count: *mut u32,
-        p_sparse_memory_requirements: *mut SparseImageMemoryRequirements2,
-    ) {
-        (self.get_image_sparse_memory_requirements2_khr)(
-            device,
-            p_info,
-            p_sparse_memory_requirement_count,
-            p_sparse_memory_requirements,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_get_memory_requirements2'"]
 impl StructureType {
@@ -10309,7 +8432,7 @@ impl StructureType {
         Self::SPARSE_IMAGE_MEMORY_REQUIREMENTS_2;
 }
 impl KhrImageFormatListFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_image_format_list\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -10331,7 +8454,7 @@ impl StructureType {
     pub const IMAGE_FORMAT_LIST_CREATE_INFO_KHR: Self = Self::IMAGE_FORMAT_LIST_CREATE_INFO;
 }
 impl ExtBlendOperationAdvancedFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_blend_operation_advanced\0")
         }
@@ -10410,7 +8533,7 @@ impl StructureType {
     pub const PIPELINE_COLOR_BLEND_ADVANCED_STATE_CREATE_INFO_EXT: Self = Self(1_000_148_002);
 }
 impl NvFragmentCoverageToColorFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_fragment_coverage_to_color\0")
         }
@@ -10434,7 +8557,7 @@ impl StructureType {
     pub const PIPELINE_COVERAGE_TO_COLOR_STATE_CREATE_INFO_NV: Self = Self(1_000_149_000);
 }
 impl KhrAccelerationStructureFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_acceleration_structure\0")
         }
@@ -10934,210 +9057,6 @@ impl KhrAccelerationStructureFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateAccelerationStructureKHR.html>"]
-    pub unsafe fn create_acceleration_structure_khr(
-        &self,
-        device: Device,
-        p_create_info: *const AccelerationStructureCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_acceleration_structure: *mut AccelerationStructureKHR,
-    ) -> Result {
-        (self.create_acceleration_structure_khr)(
-            device,
-            p_create_info,
-            p_allocator,
-            p_acceleration_structure,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyAccelerationStructureKHR.html>"]
-    pub unsafe fn destroy_acceleration_structure_khr(
-        &self,
-        device: Device,
-        acceleration_structure: AccelerationStructureKHR,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_acceleration_structure_khr)(device, acceleration_structure, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBuildAccelerationStructuresKHR.html>"]
-    pub unsafe fn cmd_build_acceleration_structures_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        info_count: u32,
-        p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
-        pp_build_range_infos: *const *const AccelerationStructureBuildRangeInfoKHR,
-    ) {
-        (self.cmd_build_acceleration_structures_khr)(
-            command_buffer,
-            info_count,
-            p_infos,
-            pp_build_range_infos,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBuildAccelerationStructuresIndirectKHR.html>"]
-    pub unsafe fn cmd_build_acceleration_structures_indirect_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        info_count: u32,
-        p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
-        p_indirect_device_addresses: *const DeviceAddress,
-        p_indirect_strides: *const u32,
-        pp_max_primitive_counts: *const *const u32,
-    ) {
-        (self.cmd_build_acceleration_structures_indirect_khr)(
-            command_buffer,
-            info_count,
-            p_infos,
-            p_indirect_device_addresses,
-            p_indirect_strides,
-            pp_max_primitive_counts,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBuildAccelerationStructuresKHR.html>"]
-    pub unsafe fn build_acceleration_structures_khr(
-        &self,
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        info_count: u32,
-        p_infos: *const AccelerationStructureBuildGeometryInfoKHR,
-        pp_build_range_infos: *const *const AccelerationStructureBuildRangeInfoKHR,
-    ) -> Result {
-        (self.build_acceleration_structures_khr)(
-            device,
-            deferred_operation,
-            info_count,
-            p_infos,
-            pp_build_range_infos,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCopyAccelerationStructureKHR.html>"]
-    pub unsafe fn copy_acceleration_structure_khr(
-        &self,
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        p_info: *const CopyAccelerationStructureInfoKHR,
-    ) -> Result {
-        (self.copy_acceleration_structure_khr)(device, deferred_operation, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCopyAccelerationStructureToMemoryKHR.html>"]
-    pub unsafe fn copy_acceleration_structure_to_memory_khr(
-        &self,
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
-    ) -> Result {
-        (self.copy_acceleration_structure_to_memory_khr)(device, deferred_operation, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCopyMemoryToAccelerationStructureKHR.html>"]
-    pub unsafe fn copy_memory_to_acceleration_structure_khr(
-        &self,
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
-    ) -> Result {
-        (self.copy_memory_to_acceleration_structure_khr)(device, deferred_operation, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWriteAccelerationStructuresPropertiesKHR.html>"]
-    pub unsafe fn write_acceleration_structures_properties_khr(
-        &self,
-        device: Device,
-        acceleration_structure_count: u32,
-        p_acceleration_structures: *const AccelerationStructureKHR,
-        query_type: QueryType,
-        data_size: usize,
-        p_data: *mut c_void,
-        stride: usize,
-    ) -> Result {
-        (self.write_acceleration_structures_properties_khr)(
-            device,
-            acceleration_structure_count,
-            p_acceleration_structures,
-            query_type,
-            data_size,
-            p_data,
-            stride,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyAccelerationStructureKHR.html>"]
-    pub unsafe fn cmd_copy_acceleration_structure_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_info: *const CopyAccelerationStructureInfoKHR,
-    ) {
-        (self.cmd_copy_acceleration_structure_khr)(command_buffer, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyAccelerationStructureToMemoryKHR.html>"]
-    pub unsafe fn cmd_copy_acceleration_structure_to_memory_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_info: *const CopyAccelerationStructureToMemoryInfoKHR,
-    ) {
-        (self.cmd_copy_acceleration_structure_to_memory_khr)(command_buffer, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyMemoryToAccelerationStructureKHR.html>"]
-    pub unsafe fn cmd_copy_memory_to_acceleration_structure_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_info: *const CopyMemoryToAccelerationStructureInfoKHR,
-    ) {
-        (self.cmd_copy_memory_to_acceleration_structure_khr)(command_buffer, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetAccelerationStructureDeviceAddressKHR.html>"]
-    pub unsafe fn get_acceleration_structure_device_address_khr(
-        &self,
-        device: Device,
-        p_info: *const AccelerationStructureDeviceAddressInfoKHR,
-    ) -> DeviceAddress {
-        (self.get_acceleration_structure_device_address_khr)(device, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteAccelerationStructuresPropertiesKHR.html>"]
-    pub unsafe fn cmd_write_acceleration_structures_properties_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        acceleration_structure_count: u32,
-        p_acceleration_structures: *const AccelerationStructureKHR,
-        query_type: QueryType,
-        query_pool: QueryPool,
-        first_query: u32,
-    ) {
-        (self.cmd_write_acceleration_structures_properties_khr)(
-            command_buffer,
-            acceleration_structure_count,
-            p_acceleration_structures,
-            query_type,
-            query_pool,
-            first_query,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceAccelerationStructureCompatibilityKHR.html>"]
-    pub unsafe fn get_device_acceleration_structure_compatibility_khr(
-        &self,
-        device: Device,
-        p_version_info: *const AccelerationStructureVersionInfoKHR,
-        p_compatibility: *mut AccelerationStructureCompatibilityKHR,
-    ) {
-        (self.get_device_acceleration_structure_compatibility_khr)(
-            device,
-            p_version_info,
-            p_compatibility,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetAccelerationStructureBuildSizesKHR.html>"]
-    pub unsafe fn get_acceleration_structure_build_sizes_khr(
-        &self,
-        device: Device,
-        build_type: AccelerationStructureBuildTypeKHR,
-        p_build_info: *const AccelerationStructureBuildGeometryInfoKHR,
-        p_max_primitive_counts: *const u32,
-        p_size_info: *mut AccelerationStructureBuildSizesInfoKHR,
-    ) {
-        (self.get_acceleration_structure_build_sizes_khr)(
-            device,
-            build_type,
-            p_build_info,
-            p_max_primitive_counts,
-            p_size_info,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_acceleration_structure'"]
 impl AccessFlags {
@@ -11164,8 +9083,8 @@ impl FormatFeatureFlags {
         Self(0b10_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_acceleration_structure'"]
-impl FormatFeatureFlags2KHR {
-    pub const ACCELERATION_STRUCTURE_VERTEX_BUFFER: Self =
+impl FormatFeatureFlags2 {
+    pub const ACCELERATION_STRUCTURE_VERTEX_BUFFER_KHR: Self =
         Self(0b10_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_acceleration_structure'"]
@@ -11204,7 +9123,7 @@ impl StructureType {
     pub const ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR: Self = Self(1_000_150_020);
 }
 impl KhrRayTracingPipelineFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_ray_tracing_pipeline\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -11448,125 +9367,6 @@ impl KhrRayTracingPipelineFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdTraceRaysKHR.html>"]
-    pub unsafe fn cmd_trace_rays_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_hit_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_callable_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        width: u32,
-        height: u32,
-        depth: u32,
-    ) {
-        (self.cmd_trace_rays_khr)(
-            command_buffer,
-            p_raygen_shader_binding_table,
-            p_miss_shader_binding_table,
-            p_hit_shader_binding_table,
-            p_callable_shader_binding_table,
-            width,
-            height,
-            depth,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateRayTracingPipelinesKHR.html>"]
-    pub unsafe fn create_ray_tracing_pipelines_khr(
-        &self,
-        device: Device,
-        deferred_operation: DeferredOperationKHR,
-        pipeline_cache: PipelineCache,
-        create_info_count: u32,
-        p_create_infos: *const RayTracingPipelineCreateInfoKHR,
-        p_allocator: *const AllocationCallbacks,
-        p_pipelines: *mut Pipeline,
-    ) -> Result {
-        (self.create_ray_tracing_pipelines_khr)(
-            device,
-            deferred_operation,
-            pipeline_cache,
-            create_info_count,
-            p_create_infos,
-            p_allocator,
-            p_pipelines,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingShaderGroupHandlesKHR.html>"]
-    pub unsafe fn get_ray_tracing_shader_group_handles_khr(
-        &self,
-        device: Device,
-        pipeline: Pipeline,
-        first_group: u32,
-        group_count: u32,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result {
-        (self.get_ray_tracing_shader_group_handles_khr)(
-            device,
-            pipeline,
-            first_group,
-            group_count,
-            data_size,
-            p_data,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingCaptureReplayShaderGroupHandlesKHR.html>"]
-    pub unsafe fn get_ray_tracing_capture_replay_shader_group_handles_khr(
-        &self,
-        device: Device,
-        pipeline: Pipeline,
-        first_group: u32,
-        group_count: u32,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result {
-        (self.get_ray_tracing_capture_replay_shader_group_handles_khr)(
-            device,
-            pipeline,
-            first_group,
-            group_count,
-            data_size,
-            p_data,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdTraceRaysIndirectKHR.html>"]
-    pub unsafe fn cmd_trace_rays_indirect_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_raygen_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_miss_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_hit_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        p_callable_shader_binding_table: *const StridedDeviceAddressRegionKHR,
-        indirect_device_address: DeviceAddress,
-    ) {
-        (self.cmd_trace_rays_indirect_khr)(
-            command_buffer,
-            p_raygen_shader_binding_table,
-            p_miss_shader_binding_table,
-            p_hit_shader_binding_table,
-            p_callable_shader_binding_table,
-            indirect_device_address,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingShaderGroupStackSizeKHR.html>"]
-    pub unsafe fn get_ray_tracing_shader_group_stack_size_khr(
-        &self,
-        device: Device,
-        pipeline: Pipeline,
-        group: u32,
-        group_shader: ShaderGroupShaderKHR,
-    ) -> DeviceSize {
-        (self.get_ray_tracing_shader_group_stack_size_khr)(device, pipeline, group, group_shader)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetRayTracingPipelineStackSizeKHR.html>"]
-    pub unsafe fn cmd_set_ray_tracing_pipeline_stack_size_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        pipeline_stack_size: u32,
-    ) {
-        (self.cmd_set_ray_tracing_pipeline_stack_size_khr)(command_buffer, pipeline_stack_size)
-    }
 }
 #[doc = "Generated from 'VK_KHR_ray_tracing_pipeline'"]
 impl BufferUsageFlags {
@@ -11613,7 +9413,7 @@ impl StructureType {
     pub const RAY_TRACING_PIPELINE_INTERFACE_CREATE_INFO_KHR: Self = Self(1_000_150_018);
 }
 impl KhrRayQueryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_ray_query\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -11635,7 +9435,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR: Self = Self(1_000_348_013);
 }
 impl NvExtension152Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_152\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -11653,7 +9453,7 @@ impl NvExtension152Fn {
     }
 }
 impl NvFramebufferMixedSamplesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_framebuffer_mixed_samples\0")
         }
@@ -11677,7 +9477,7 @@ impl StructureType {
     pub const PIPELINE_COVERAGE_MODULATION_STATE_CREATE_INFO_NV: Self = Self(1_000_152_000);
 }
 impl NvFillRectangleFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_fill_rectangle\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -11699,7 +9499,7 @@ impl PolygonMode {
     pub const FILL_RECTANGLE_NV: Self = Self(1_000_153_000);
 }
 impl NvShaderSmBuiltinsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_shader_sm_builtins\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -11722,7 +9522,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_SM_BUILTINS_PROPERTIES_NV: Self = Self(1_000_154_001);
 }
 impl ExtPostDepthCoverageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_post_depth_coverage\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -11740,7 +9540,7 @@ impl ExtPostDepthCoverageFn {
     }
 }
 impl KhrSamplerYcbcrConversionFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_sampler_ycbcr_conversion\0")
         }
@@ -11817,30 +9617,6 @@ impl KhrSamplerYcbcrConversionFn {
                 }
             },
         }
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateSamplerYcbcrConversionKHR.html>"]
-    pub unsafe fn create_sampler_ycbcr_conversion_khr(
-        &self,
-        device: Device,
-        p_create_info: *const SamplerYcbcrConversionCreateInfo,
-        p_allocator: *const AllocationCallbacks,
-        p_ycbcr_conversion: *mut SamplerYcbcrConversion,
-    ) -> Result {
-        (self.create_sampler_ycbcr_conversion_khr)(
-            device,
-            p_create_info,
-            p_allocator,
-            p_ycbcr_conversion,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySamplerYcbcrConversionKHR.html>"]
-    pub unsafe fn destroy_sampler_ycbcr_conversion_khr(
-        &self,
-        device: Device,
-        ycbcr_conversion: SamplerYcbcrConversion,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_sampler_ycbcr_conversion_khr)(device, ycbcr_conversion, p_allocator)
     }
 }
 #[doc = "Generated from 'VK_KHR_sampler_ycbcr_conversion'"]
@@ -11960,7 +9736,7 @@ impl StructureType {
         Self::SAMPLER_YCBCR_CONVERSION_IMAGE_FORMAT_PROPERTIES;
 }
 impl KhrBindMemory2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_bind_memory2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -12032,24 +9808,6 @@ impl KhrBindMemory2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindBufferMemory2KHR.html>"]
-    pub unsafe fn bind_buffer_memory2_khr(
-        &self,
-        device: Device,
-        bind_info_count: u32,
-        p_bind_infos: *const BindBufferMemoryInfo,
-    ) -> Result {
-        (self.bind_buffer_memory2_khr)(device, bind_info_count, p_bind_infos)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindImageMemory2KHR.html>"]
-    pub unsafe fn bind_image_memory2_khr(
-        &self,
-        device: Device,
-        bind_info_count: u32,
-        p_bind_infos: *const BindImageMemoryInfo,
-    ) -> Result {
-        (self.bind_image_memory2_khr)(device, bind_info_count, p_bind_infos)
-    }
 }
 #[doc = "Generated from 'VK_KHR_bind_memory2'"]
 impl ImageCreateFlags {
@@ -12061,7 +9819,7 @@ impl StructureType {
     pub const BIND_IMAGE_MEMORY_INFO_KHR: Self = Self::BIND_IMAGE_MEMORY_INFO;
 }
 impl ExtImageDrmFormatModifierFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_image_drm_format_modifier\0")
         }
@@ -12109,15 +9867,6 @@ impl ExtImageDrmFormatModifierFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetImageDrmFormatModifierPropertiesEXT.html>"]
-    pub unsafe fn get_image_drm_format_modifier_properties_ext(
-        &self,
-        device: Device,
-        image: Image,
-        p_properties: *mut ImageDrmFormatModifierPropertiesEXT,
-    ) -> Result {
-        (self.get_image_drm_format_modifier_properties_ext)(device, image, p_properties)
-    }
 }
 #[doc = "Generated from 'VK_EXT_image_drm_format_modifier'"]
 impl ImageAspectFlags {
@@ -12144,7 +9893,7 @@ impl StructureType {
     pub const DRM_FORMAT_MODIFIER_PROPERTIES_LIST_2_EXT: Self = Self(1_000_158_006);
 }
 impl ExtExtension160Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_160\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -12162,7 +9911,7 @@ impl ExtExtension160Fn {
     }
 }
 impl ExtValidationCacheFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_validation_cache\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -12298,45 +10047,6 @@ impl ExtValidationCacheFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateValidationCacheEXT.html>"]
-    pub unsafe fn create_validation_cache_ext(
-        &self,
-        device: Device,
-        p_create_info: *const ValidationCacheCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_validation_cache: *mut ValidationCacheEXT,
-    ) -> Result {
-        (self.create_validation_cache_ext)(device, p_create_info, p_allocator, p_validation_cache)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyValidationCacheEXT.html>"]
-    pub unsafe fn destroy_validation_cache_ext(
-        &self,
-        device: Device,
-        validation_cache: ValidationCacheEXT,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_validation_cache_ext)(device, validation_cache, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkMergeValidationCachesEXT.html>"]
-    pub unsafe fn merge_validation_caches_ext(
-        &self,
-        device: Device,
-        dst_cache: ValidationCacheEXT,
-        src_cache_count: u32,
-        p_src_caches: *const ValidationCacheEXT,
-    ) -> Result {
-        (self.merge_validation_caches_ext)(device, dst_cache, src_cache_count, p_src_caches)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetValidationCacheDataEXT.html>"]
-    pub unsafe fn get_validation_cache_data_ext(
-        &self,
-        device: Device,
-        validation_cache: ValidationCacheEXT,
-        p_data_size: *mut usize,
-        p_data: *mut c_void,
-    ) -> Result {
-        (self.get_validation_cache_data_ext)(device, validation_cache, p_data_size, p_data)
-    }
 }
 #[doc = "Generated from 'VK_EXT_validation_cache'"]
 impl ObjectType {
@@ -12348,7 +10058,7 @@ impl StructureType {
     pub const SHADER_MODULE_VALIDATION_CACHE_CREATE_INFO_EXT: Self = Self(1_000_160_001);
 }
 impl ExtDescriptorIndexingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_descriptor_indexing\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -12398,7 +10108,7 @@ impl StructureType {
         Self::DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT;
 }
 impl ExtShaderViewportIndexLayerFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_viewport_index_layer\0")
         }
@@ -12418,7 +10128,7 @@ impl ExtShaderViewportIndexLayerFn {
     }
 }
 impl KhrPortabilitySubsetFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_portability_subset\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -12441,7 +10151,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_PORTABILITY_SUBSET_PROPERTIES_KHR: Self = Self(1_000_163_001);
 }
 impl NvShadingRateImageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_shading_rate_image\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -12547,45 +10257,6 @@ impl NvShadingRateImageFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindShadingRateImageNV.html>"]
-    pub unsafe fn cmd_bind_shading_rate_image_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        image_view: ImageView,
-        image_layout: ImageLayout,
-    ) {
-        (self.cmd_bind_shading_rate_image_nv)(command_buffer, image_view, image_layout)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetViewportShadingRatePaletteNV.html>"]
-    pub unsafe fn cmd_set_viewport_shading_rate_palette_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        first_viewport: u32,
-        viewport_count: u32,
-        p_shading_rate_palettes: *const ShadingRatePaletteNV,
-    ) {
-        (self.cmd_set_viewport_shading_rate_palette_nv)(
-            command_buffer,
-            first_viewport,
-            viewport_count,
-            p_shading_rate_palettes,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetCoarseSampleOrderNV.html>"]
-    pub unsafe fn cmd_set_coarse_sample_order_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        sample_order_type: CoarseSampleOrderTypeNV,
-        custom_sample_order_count: u32,
-        p_custom_sample_orders: *const CoarseSampleOrderCustomNV,
-    ) {
-        (self.cmd_set_coarse_sample_order_nv)(
-            command_buffer,
-            sample_order_type,
-            custom_sample_order_count,
-            p_custom_sample_orders,
-        )
-    }
 }
 #[doc = "Generated from 'VK_NV_shading_rate_image'"]
 impl AccessFlags {
@@ -12617,7 +10288,7 @@ impl StructureType {
         Self(1_000_164_005);
 }
 impl NvRayTracingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_ray_tracing\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -13013,205 +10684,6 @@ impl NvRayTracingFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateAccelerationStructureNV.html>"]
-    pub unsafe fn create_acceleration_structure_nv(
-        &self,
-        device: Device,
-        p_create_info: *const AccelerationStructureCreateInfoNV,
-        p_allocator: *const AllocationCallbacks,
-        p_acceleration_structure: *mut AccelerationStructureNV,
-    ) -> Result {
-        (self.create_acceleration_structure_nv)(
-            device,
-            p_create_info,
-            p_allocator,
-            p_acceleration_structure,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyAccelerationStructureNV.html>"]
-    pub unsafe fn destroy_acceleration_structure_nv(
-        &self,
-        device: Device,
-        acceleration_structure: AccelerationStructureNV,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_acceleration_structure_nv)(device, acceleration_structure, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetAccelerationStructureMemoryRequirementsNV.html>"]
-    pub unsafe fn get_acceleration_structure_memory_requirements_nv(
-        &self,
-        device: Device,
-        p_info: *const AccelerationStructureMemoryRequirementsInfoNV,
-        p_memory_requirements: *mut MemoryRequirements2KHR,
-    ) {
-        (self.get_acceleration_structure_memory_requirements_nv)(
-            device,
-            p_info,
-            p_memory_requirements,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkBindAccelerationStructureMemoryNV.html>"]
-    pub unsafe fn bind_acceleration_structure_memory_nv(
-        &self,
-        device: Device,
-        bind_info_count: u32,
-        p_bind_infos: *const BindAccelerationStructureMemoryInfoNV,
-    ) -> Result {
-        (self.bind_acceleration_structure_memory_nv)(device, bind_info_count, p_bind_infos)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBuildAccelerationStructureNV.html>"]
-    pub unsafe fn cmd_build_acceleration_structure_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        p_info: *const AccelerationStructureInfoNV,
-        instance_data: Buffer,
-        instance_offset: DeviceSize,
-        update: Bool32,
-        dst: AccelerationStructureNV,
-        src: AccelerationStructureNV,
-        scratch: Buffer,
-        scratch_offset: DeviceSize,
-    ) {
-        (self.cmd_build_acceleration_structure_nv)(
-            command_buffer,
-            p_info,
-            instance_data,
-            instance_offset,
-            update,
-            dst,
-            src,
-            scratch,
-            scratch_offset,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyAccelerationStructureNV.html>"]
-    pub unsafe fn cmd_copy_acceleration_structure_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        dst: AccelerationStructureNV,
-        src: AccelerationStructureNV,
-        mode: CopyAccelerationStructureModeKHR,
-    ) {
-        (self.cmd_copy_acceleration_structure_nv)(command_buffer, dst, src, mode)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdTraceRaysNV.html>"]
-    pub unsafe fn cmd_trace_rays_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        raygen_shader_binding_table_buffer: Buffer,
-        raygen_shader_binding_offset: DeviceSize,
-        miss_shader_binding_table_buffer: Buffer,
-        miss_shader_binding_offset: DeviceSize,
-        miss_shader_binding_stride: DeviceSize,
-        hit_shader_binding_table_buffer: Buffer,
-        hit_shader_binding_offset: DeviceSize,
-        hit_shader_binding_stride: DeviceSize,
-        callable_shader_binding_table_buffer: Buffer,
-        callable_shader_binding_offset: DeviceSize,
-        callable_shader_binding_stride: DeviceSize,
-        width: u32,
-        height: u32,
-        depth: u32,
-    ) {
-        (self.cmd_trace_rays_nv)(
-            command_buffer,
-            raygen_shader_binding_table_buffer,
-            raygen_shader_binding_offset,
-            miss_shader_binding_table_buffer,
-            miss_shader_binding_offset,
-            miss_shader_binding_stride,
-            hit_shader_binding_table_buffer,
-            hit_shader_binding_offset,
-            hit_shader_binding_stride,
-            callable_shader_binding_table_buffer,
-            callable_shader_binding_offset,
-            callable_shader_binding_stride,
-            width,
-            height,
-            depth,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateRayTracingPipelinesNV.html>"]
-    pub unsafe fn create_ray_tracing_pipelines_nv(
-        &self,
-        device: Device,
-        pipeline_cache: PipelineCache,
-        create_info_count: u32,
-        p_create_infos: *const RayTracingPipelineCreateInfoNV,
-        p_allocator: *const AllocationCallbacks,
-        p_pipelines: *mut Pipeline,
-    ) -> Result {
-        (self.create_ray_tracing_pipelines_nv)(
-            device,
-            pipeline_cache,
-            create_info_count,
-            p_create_infos,
-            p_allocator,
-            p_pipelines,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingShaderGroupHandlesNV.html>"]
-    pub unsafe fn get_ray_tracing_shader_group_handles_nv(
-        &self,
-        device: Device,
-        pipeline: Pipeline,
-        first_group: u32,
-        group_count: u32,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result {
-        (self.get_ray_tracing_shader_group_handles_nv)(
-            device,
-            pipeline,
-            first_group,
-            group_count,
-            data_size,
-            p_data,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetAccelerationStructureHandleNV.html>"]
-    pub unsafe fn get_acceleration_structure_handle_nv(
-        &self,
-        device: Device,
-        acceleration_structure: AccelerationStructureNV,
-        data_size: usize,
-        p_data: *mut c_void,
-    ) -> Result {
-        (self.get_acceleration_structure_handle_nv)(
-            device,
-            acceleration_structure,
-            data_size,
-            p_data,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteAccelerationStructuresPropertiesNV.html>"]
-    pub unsafe fn cmd_write_acceleration_structures_properties_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        acceleration_structure_count: u32,
-        p_acceleration_structures: *const AccelerationStructureNV,
-        query_type: QueryType,
-        query_pool: QueryPool,
-        first_query: u32,
-    ) {
-        (self.cmd_write_acceleration_structures_properties_nv)(
-            command_buffer,
-            acceleration_structure_count,
-            p_acceleration_structures,
-            query_type,
-            query_pool,
-            first_query,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCompileDeferredNV.html>"]
-    pub unsafe fn compile_deferred_nv(
-        &self,
-        device: Device,
-        pipeline: Pipeline,
-        shader: u32,
-    ) -> Result {
-        (self.compile_deferred_nv)(device, pipeline, shader)
-    }
 }
 #[doc = "Generated from 'VK_NV_ray_tracing'"]
 impl AccelerationStructureTypeKHR {
@@ -13320,7 +10792,7 @@ impl StructureType {
     pub const ACCELERATION_STRUCTURE_INFO_NV: Self = Self(1_000_165_012);
 }
 impl NvRepresentativeFragmentTestFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_representative_fragment_test\0")
         }
@@ -13346,7 +10818,7 @@ impl StructureType {
         Self(1_000_166_001);
 }
 impl NvExtension168Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_168\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -13364,7 +10836,7 @@ impl NvExtension168Fn {
     }
 }
 impl KhrMaintenance3Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_maintenance3\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13410,15 +10882,6 @@ impl KhrMaintenance3Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDescriptorSetLayoutSupportKHR.html>"]
-    pub unsafe fn get_descriptor_set_layout_support_khr(
-        &self,
-        device: Device,
-        p_create_info: *const DescriptorSetLayoutCreateInfo,
-        p_support: *mut DescriptorSetLayoutSupport,
-    ) {
-        (self.get_descriptor_set_layout_support_khr)(device, p_create_info, p_support)
-    }
 }
 #[doc = "Generated from 'VK_KHR_maintenance3'"]
 impl StructureType {
@@ -13427,7 +10890,7 @@ impl StructureType {
     pub const DESCRIPTOR_SET_LAYOUT_SUPPORT_KHR: Self = Self::DESCRIPTOR_SET_LAYOUT_SUPPORT;
 }
 impl KhrDrawIndirectCountFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_draw_indirect_count\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13496,51 +10959,9 @@ impl KhrDrawIndirectCountFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndirectCountKHR.html>"]
-    pub unsafe fn cmd_draw_indirect_count_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_indirect_count_khr)(
-            command_buffer,
-            buffer,
-            offset,
-            count_buffer,
-            count_buffer_offset,
-            max_draw_count,
-            stride,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawIndexedIndirectCountKHR.html>"]
-    pub unsafe fn cmd_draw_indexed_indirect_count_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_indexed_indirect_count_khr)(
-            command_buffer,
-            buffer,
-            offset,
-            count_buffer,
-            count_buffer_offset,
-            max_draw_count,
-            stride,
-        )
-    }
 }
 impl ExtFilterCubicFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_filter_cubic\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -13571,7 +10992,7 @@ impl StructureType {
     pub const FILTER_CUBIC_IMAGE_VIEW_IMAGE_FORMAT_PROPERTIES_EXT: Self = Self(1_000_170_001);
 }
 impl QcomRenderPassShaderResolveFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_render_pass_shader_resolve\0")
         }
@@ -13596,7 +11017,7 @@ impl SubpassDescriptionFlags {
     pub const SHADER_RESOLVE_QCOM: Self = Self(0b1000);
 }
 impl QcomExtension173Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_173\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -13623,7 +11044,7 @@ impl ImageUsageFlags {
     pub const RESERVED_17_QCOM: Self = Self(0b10_0000_0000_0000_0000);
 }
 impl QcomExtension174Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_174\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -13641,7 +11062,7 @@ impl QcomExtension174Fn {
     }
 }
 impl ExtGlobalPriorityFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_global_priority\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -13660,14 +11081,15 @@ impl ExtGlobalPriorityFn {
 }
 #[doc = "Generated from 'VK_EXT_global_priority'"]
 impl Result {
-    pub const ERROR_NOT_PERMITTED_EXT: Self = Self(-1_000_174_001);
+    pub const ERROR_NOT_PERMITTED_EXT: Self = Self::ERROR_NOT_PERMITTED_KHR;
 }
 #[doc = "Generated from 'VK_EXT_global_priority'"]
 impl StructureType {
-    pub const DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_EXT: Self = Self(1_000_174_000);
+    pub const DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_EXT: Self =
+        Self::DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR;
 }
 impl KhrShaderSubgroupExtendedTypesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_shader_subgroup_extended_types\0",
@@ -13694,7 +11116,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES;
 }
 impl ExtExtension177Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_177\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -13712,7 +11134,7 @@ impl ExtExtension177Fn {
     }
 }
 impl Khr8bitStorageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_8bit_storage\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13735,7 +11157,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES;
 }
 impl ExtExternalMemoryHostFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_external_memory_host\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13783,21 +11205,6 @@ impl ExtExternalMemoryHostFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryHostPointerPropertiesEXT.html>"]
-    pub unsafe fn get_memory_host_pointer_properties_ext(
-        &self,
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        p_host_pointer: *const c_void,
-        p_memory_host_pointer_properties: *mut MemoryHostPointerPropertiesEXT,
-    ) -> Result {
-        (self.get_memory_host_pointer_properties_ext)(
-            device,
-            handle_type,
-            p_host_pointer,
-            p_memory_host_pointer_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_external_memory_host'"]
 impl ExternalMemoryHandleTypeFlags {
@@ -13811,7 +11218,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT: Self = Self(1_000_178_002);
 }
 impl AmdBufferMarkerFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_buffer_marker\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13860,26 +11267,9 @@ impl AmdBufferMarkerFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteBufferMarkerAMD.html>"]
-    pub unsafe fn cmd_write_buffer_marker_amd(
-        &self,
-        command_buffer: CommandBuffer,
-        pipeline_stage: PipelineStageFlags,
-        dst_buffer: Buffer,
-        dst_offset: DeviceSize,
-        marker: u32,
-    ) {
-        (self.cmd_write_buffer_marker_amd)(
-            command_buffer,
-            pipeline_stage,
-            dst_buffer,
-            dst_offset,
-            marker,
-        )
-    }
 }
 impl KhrShaderAtomicInt64Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_atomic_int64\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13902,7 +11292,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES;
 }
 impl KhrShaderClockFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_clock\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -13924,7 +11314,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR: Self = Self(1_000_181_000);
 }
 impl AmdExtension183Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_183\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -13942,7 +11332,7 @@ impl AmdExtension183Fn {
     }
 }
 impl AmdPipelineCompilerControlFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_pipeline_compiler_control\0")
         }
@@ -13966,7 +11356,7 @@ impl StructureType {
     pub const PIPELINE_COMPILER_CONTROL_CREATE_INFO_AMD: Self = Self(1_000_183_000);
 }
 impl ExtCalibratedTimestampsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_calibrated_timestamps\0")
         }
@@ -14047,43 +11437,13 @@ impl ExtCalibratedTimestampsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceCalibrateableTimeDomainsEXT.html>"]
-    pub unsafe fn get_physical_device_calibrateable_time_domains_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        p_time_domain_count: *mut u32,
-        p_time_domains: *mut TimeDomainEXT,
-    ) -> Result {
-        (self.get_physical_device_calibrateable_time_domains_ext)(
-            physical_device,
-            p_time_domain_count,
-            p_time_domains,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetCalibratedTimestampsEXT.html>"]
-    pub unsafe fn get_calibrated_timestamps_ext(
-        &self,
-        device: Device,
-        timestamp_count: u32,
-        p_timestamp_infos: *const CalibratedTimestampInfoEXT,
-        p_timestamps: *mut u64,
-        p_max_deviation: *mut u64,
-    ) -> Result {
-        (self.get_calibrated_timestamps_ext)(
-            device,
-            timestamp_count,
-            p_timestamp_infos,
-            p_timestamps,
-            p_max_deviation,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_calibrated_timestamps'"]
 impl StructureType {
     pub const CALIBRATED_TIMESTAMP_INFO_EXT: Self = Self(1_000_184_000);
 }
 impl AmdShaderCorePropertiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_core_properties\0")
         }
@@ -14107,7 +11467,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_AMD: Self = Self(1_000_185_000);
 }
 impl AmdExtension187Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_187\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -14125,10 +11485,10 @@ impl AmdExtension187Fn {
     }
 }
 impl ExtVideoDecodeH265Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_video_decode_h265\0") }
     }
-    pub const SPEC_VERSION: u32 = 1u32;
+    pub const SPEC_VERSION: u32 = 2u32;
 }
 #[derive(Clone)]
 pub struct ExtVideoDecodeH265Fn {}
@@ -14145,28 +11505,27 @@ impl ExtVideoDecodeH265Fn {
 #[doc = "Generated from 'VK_EXT_video_decode_h265'"]
 impl StructureType {
     pub const VIDEO_DECODE_H265_CAPABILITIES_EXT: Self = Self(1_000_187_000);
-    pub const VIDEO_DECODE_H265_SESSION_CREATE_INFO_EXT: Self = Self(1_000_187_001);
-    pub const VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_187_002);
-    pub const VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_187_003);
-    pub const VIDEO_DECODE_H265_PROFILE_EXT: Self = Self(1_000_187_004);
-    pub const VIDEO_DECODE_H265_PICTURE_INFO_EXT: Self = Self(1_000_187_005);
-    pub const VIDEO_DECODE_H265_DPB_SLOT_INFO_EXT: Self = Self(1_000_187_006);
+    pub const VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_EXT: Self = Self(1_000_187_001);
+    pub const VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: Self = Self(1_000_187_002);
+    pub const VIDEO_DECODE_H265_PROFILE_EXT: Self = Self(1_000_187_003);
+    pub const VIDEO_DECODE_H265_PICTURE_INFO_EXT: Self = Self(1_000_187_004);
+    pub const VIDEO_DECODE_H265_DPB_SLOT_INFO_EXT: Self = Self(1_000_187_005);
 }
 #[doc = "Generated from 'VK_EXT_video_decode_h265'"]
 impl VideoCodecOperationFlagsKHR {
     pub const DECODE_H265_EXT: Self = Self(0b10);
 }
-impl AmdExtension189Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
-        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_189\0") }
+impl KhrGlobalPriorityFn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_global_priority\0") }
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
 #[derive(Clone)]
-pub struct AmdExtension189Fn {}
-unsafe impl Send for AmdExtension189Fn {}
-unsafe impl Sync for AmdExtension189Fn {}
-impl AmdExtension189Fn {
+pub struct KhrGlobalPriorityFn {}
+unsafe impl Send for KhrGlobalPriorityFn {}
+unsafe impl Sync for KhrGlobalPriorityFn {}
+impl KhrGlobalPriorityFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
@@ -14174,8 +11533,18 @@ impl AmdExtension189Fn {
         Self {}
     }
 }
+#[doc = "Generated from 'VK_KHR_global_priority'"]
+impl Result {
+    pub const ERROR_NOT_PERMITTED_KHR: Self = Self(-1_000_174_001);
+}
+#[doc = "Generated from 'VK_KHR_global_priority'"]
+impl StructureType {
+    pub const DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_KHR: Self = Self(1_000_174_000);
+    pub const PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR: Self = Self(1_000_388_000);
+    pub const QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR: Self = Self(1_000_388_001);
+}
 impl AmdMemoryOverallocationBehaviorFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_AMD_memory_overallocation_behavior\0",
@@ -14201,7 +11570,7 @@ impl StructureType {
     pub const DEVICE_MEMORY_OVERALLOCATION_CREATE_INFO_AMD: Self = Self(1_000_189_000);
 }
 impl ExtVertexAttributeDivisorFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_vertex_attribute_divisor\0")
         }
@@ -14227,7 +11596,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT: Self = Self(1_000_190_002);
 }
 impl GgpFrameTokenFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_frame_token\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -14249,7 +11618,7 @@ impl StructureType {
     pub const PRESENT_FRAME_TOKEN_GGP: Self = Self(1_000_191_000);
 }
 impl ExtPipelineCreationFeedbackFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_pipeline_creation_feedback\0")
         }
@@ -14270,10 +11639,11 @@ impl ExtPipelineCreationFeedbackFn {
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_feedback'"]
 impl StructureType {
-    pub const PIPELINE_CREATION_FEEDBACK_CREATE_INFO_EXT: Self = Self(1_000_192_000);
+    pub const PIPELINE_CREATION_FEEDBACK_CREATE_INFO_EXT: Self =
+        Self::PIPELINE_CREATION_FEEDBACK_CREATE_INFO;
 }
 impl GoogleExtension194Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_194\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -14291,7 +11661,7 @@ impl GoogleExtension194Fn {
     }
 }
 impl GoogleExtension195Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_195\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -14309,7 +11679,7 @@ impl GoogleExtension195Fn {
     }
 }
 impl GoogleExtension196Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_196\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -14331,7 +11701,7 @@ impl PipelineCacheCreateFlags {
     pub const RESERVED_1_EXT: Self = Self(0b10);
 }
 impl KhrDriverPropertiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_driver_properties\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -14368,7 +11738,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_DRIVER_PROPERTIES_KHR: Self = Self::PHYSICAL_DEVICE_DRIVER_PROPERTIES;
 }
 impl KhrShaderFloatControlsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_float_controls\0")
         }
@@ -14399,7 +11769,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES;
 }
 impl NvShaderSubgroupPartitionedFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_shader_subgroup_partitioned\0")
         }
@@ -14423,7 +11793,7 @@ impl SubgroupFeatureFlags {
     pub const PARTITIONED_NV: Self = Self(0b1_0000_0000);
 }
 impl KhrDepthStencilResolveFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_depth_stencil_resolve\0")
         }
@@ -14458,7 +11828,7 @@ impl StructureType {
         Self::SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE;
 }
 impl KhrSwapchainMutableFormatFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_swapchain_mutable_format\0")
         }
@@ -14482,7 +11852,7 @@ impl SwapchainCreateFlagsKHR {
     pub const MUTABLE_FORMAT: Self = Self(0b100);
 }
 impl NvComputeShaderDerivativesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_compute_shader_derivatives\0")
         }
@@ -14506,7 +11876,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV: Self = Self(1_000_201_000);
 }
 impl NvMeshShaderFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_mesh_shader\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -14616,47 +11986,6 @@ impl NvMeshShaderFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksNV.html>"]
-    pub unsafe fn cmd_draw_mesh_tasks_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        task_count: u32,
-        first_task: u32,
-    ) {
-        (self.cmd_draw_mesh_tasks_nv)(command_buffer, task_count, first_task)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectNV.html>"]
-    pub unsafe fn cmd_draw_mesh_tasks_indirect_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        draw_count: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_mesh_tasks_indirect_nv)(command_buffer, buffer, offset, draw_count, stride)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMeshTasksIndirectCountNV.html>"]
-    pub unsafe fn cmd_draw_mesh_tasks_indirect_count_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        buffer: Buffer,
-        offset: DeviceSize,
-        count_buffer: Buffer,
-        count_buffer_offset: DeviceSize,
-        max_draw_count: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_mesh_tasks_indirect_count_nv)(
-            command_buffer,
-            buffer,
-            offset,
-            count_buffer,
-            count_buffer_offset,
-            max_draw_count,
-            stride,
-        )
-    }
 }
 #[doc = "Generated from 'VK_NV_mesh_shader'"]
 impl PipelineStageFlags {
@@ -14674,7 +12003,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_NV: Self = Self(1_000_202_001);
 }
 impl NvFragmentShaderBarycentricFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_fragment_shader_barycentric\0")
         }
@@ -14698,7 +12027,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_NV: Self = Self(1_000_203_000);
 }
 impl NvShaderImageFootprintFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_shader_image_footprint\0")
         }
@@ -14722,7 +12051,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_IMAGE_FOOTPRINT_FEATURES_NV: Self = Self(1_000_204_000);
 }
 impl NvScissorExclusiveFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_scissor_exclusive\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -14770,21 +12099,6 @@ impl NvScissorExclusiveFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetExclusiveScissorNV.html>"]
-    pub unsafe fn cmd_set_exclusive_scissor_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        first_exclusive_scissor: u32,
-        exclusive_scissor_count: u32,
-        p_exclusive_scissors: *const Rect2D,
-    ) {
-        (self.cmd_set_exclusive_scissor_nv)(
-            command_buffer,
-            first_exclusive_scissor,
-            exclusive_scissor_count,
-            p_exclusive_scissors,
-        )
-    }
 }
 #[doc = "Generated from 'VK_NV_scissor_exclusive'"]
 impl DynamicState {
@@ -14796,7 +12110,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV: Self = Self(1_000_205_002);
 }
 impl NvDeviceDiagnosticCheckpointsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_NV_device_diagnostic_checkpoints\0",
@@ -14869,23 +12183,6 @@ impl NvDeviceDiagnosticCheckpointsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetCheckpointNV.html>"]
-    pub unsafe fn cmd_set_checkpoint_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        p_checkpoint_marker: *const c_void,
-    ) {
-        (self.cmd_set_checkpoint_nv)(command_buffer, p_checkpoint_marker)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetQueueCheckpointDataNV.html>"]
-    pub unsafe fn get_queue_checkpoint_data_nv(
-        &self,
-        queue: Queue,
-        p_checkpoint_data_count: *mut u32,
-        p_checkpoint_data: *mut CheckpointDataNV,
-    ) {
-        (self.get_queue_checkpoint_data_nv)(queue, p_checkpoint_data_count, p_checkpoint_data)
-    }
 }
 #[doc = "Generated from 'VK_NV_device_diagnostic_checkpoints'"]
 impl StructureType {
@@ -14893,7 +12190,7 @@ impl StructureType {
     pub const QUEUE_FAMILY_CHECKPOINT_PROPERTIES_NV: Self = Self(1_000_206_001);
 }
 impl KhrTimelineSemaphoreFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_timeline_semaphore\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -14980,32 +12277,6 @@ impl KhrTimelineSemaphoreFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreCounterValueKHR.html>"]
-    pub unsafe fn get_semaphore_counter_value_khr(
-        &self,
-        device: Device,
-        semaphore: Semaphore,
-        p_value: *mut u64,
-    ) -> Result {
-        (self.get_semaphore_counter_value_khr)(device, semaphore, p_value)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitSemaphoresKHR.html>"]
-    pub unsafe fn wait_semaphores_khr(
-        &self,
-        device: Device,
-        p_wait_info: *const SemaphoreWaitInfo,
-        timeout: u64,
-    ) -> Result {
-        (self.wait_semaphores_khr)(device, p_wait_info, timeout)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSignalSemaphoreKHR.html>"]
-    pub unsafe fn signal_semaphore_khr(
-        &self,
-        device: Device,
-        p_signal_info: *const SemaphoreSignalInfo,
-    ) -> Result {
-        (self.signal_semaphore_khr)(device, p_signal_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_timeline_semaphore'"]
 impl SemaphoreType {
@@ -15028,7 +12299,7 @@ impl StructureType {
     pub const SEMAPHORE_SIGNAL_INFO_KHR: Self = Self::SEMAPHORE_SIGNAL_INFO;
 }
 impl KhrExtension209Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_209\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -15046,7 +12317,7 @@ impl KhrExtension209Fn {
     }
 }
 impl IntelShaderIntegerFunctions2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_INTEL_shader_integer_functions2\0")
         }
@@ -15070,7 +12341,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL: Self = Self(1_000_209_000);
 }
 impl IntelPerformanceQueryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_INTEL_performance_query\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -15318,76 +12589,6 @@ impl IntelPerformanceQueryFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkInitializePerformanceApiINTEL.html>"]
-    pub unsafe fn initialize_performance_api_intel(
-        &self,
-        device: Device,
-        p_initialize_info: *const InitializePerformanceApiInfoINTEL,
-    ) -> Result {
-        (self.initialize_performance_api_intel)(device, p_initialize_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkUninitializePerformanceApiINTEL.html>"]
-    pub unsafe fn uninitialize_performance_api_intel(&self, device: Device) {
-        (self.uninitialize_performance_api_intel)(device)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPerformanceMarkerINTEL.html>"]
-    pub unsafe fn cmd_set_performance_marker_intel(
-        &self,
-        command_buffer: CommandBuffer,
-        p_marker_info: *const PerformanceMarkerInfoINTEL,
-    ) -> Result {
-        (self.cmd_set_performance_marker_intel)(command_buffer, p_marker_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPerformanceStreamMarkerINTEL.html>"]
-    pub unsafe fn cmd_set_performance_stream_marker_intel(
-        &self,
-        command_buffer: CommandBuffer,
-        p_marker_info: *const PerformanceStreamMarkerInfoINTEL,
-    ) -> Result {
-        (self.cmd_set_performance_stream_marker_intel)(command_buffer, p_marker_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPerformanceOverrideINTEL.html>"]
-    pub unsafe fn cmd_set_performance_override_intel(
-        &self,
-        command_buffer: CommandBuffer,
-        p_override_info: *const PerformanceOverrideInfoINTEL,
-    ) -> Result {
-        (self.cmd_set_performance_override_intel)(command_buffer, p_override_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquirePerformanceConfigurationINTEL.html>"]
-    pub unsafe fn acquire_performance_configuration_intel(
-        &self,
-        device: Device,
-        p_acquire_info: *const PerformanceConfigurationAcquireInfoINTEL,
-        p_configuration: *mut PerformanceConfigurationINTEL,
-    ) -> Result {
-        (self.acquire_performance_configuration_intel)(device, p_acquire_info, p_configuration)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkReleasePerformanceConfigurationINTEL.html>"]
-    pub unsafe fn release_performance_configuration_intel(
-        &self,
-        device: Device,
-        configuration: PerformanceConfigurationINTEL,
-    ) -> Result {
-        (self.release_performance_configuration_intel)(device, configuration)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueSetPerformanceConfigurationINTEL.html>"]
-    pub unsafe fn queue_set_performance_configuration_intel(
-        &self,
-        queue: Queue,
-        configuration: PerformanceConfigurationINTEL,
-    ) -> Result {
-        (self.queue_set_performance_configuration_intel)(queue, configuration)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPerformanceParameterINTEL.html>"]
-    pub unsafe fn get_performance_parameter_intel(
-        &self,
-        device: Device,
-        parameter: PerformanceParameterTypeINTEL,
-        p_value: *mut PerformanceValueINTEL,
-    ) -> Result {
-        (self.get_performance_parameter_intel)(device, parameter, p_value)
-    }
 }
 #[doc = "Generated from 'VK_INTEL_performance_query'"]
 impl ObjectType {
@@ -15407,7 +12608,7 @@ impl StructureType {
     pub const PERFORMANCE_CONFIGURATION_ACQUIRE_INFO_INTEL: Self = Self(1_000_210_005);
 }
 impl KhrVulkanMemoryModelFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_vulkan_memory_model\0") }
     }
     pub const SPEC_VERSION: u32 = 3u32;
@@ -15430,7 +12631,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES;
 }
 impl ExtPciBusInfoFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_pci_bus_info\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -15452,7 +12653,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT: Self = Self(1_000_212_000);
 }
 impl AmdDisplayNativeHdrFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_display_native_hdr\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -15497,15 +12698,6 @@ impl AmdDisplayNativeHdrFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetLocalDimmingAMD.html>"]
-    pub unsafe fn set_local_dimming_amd(
-        &self,
-        device: Device,
-        swap_chain: SwapchainKHR,
-        local_dimming_enable: Bool32,
-    ) {
-        (self.set_local_dimming_amd)(device, swap_chain, local_dimming_enable)
-    }
 }
 #[doc = "Generated from 'VK_AMD_display_native_hdr'"]
 impl ColorSpaceKHR {
@@ -15517,7 +12709,7 @@ impl StructureType {
     pub const SWAPCHAIN_DISPLAY_NATIVE_HDR_CREATE_INFO_AMD: Self = Self(1_000_213_001);
 }
 impl FuchsiaImagepipeSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FUCHSIA_imagepipe_surface\0")
         }
@@ -15567,23 +12759,13 @@ impl FuchsiaImagepipeSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateImagePipeSurfaceFUCHSIA.html>"]
-    pub unsafe fn create_image_pipe_surface_fuchsia(
-        &self,
-        instance: Instance,
-        p_create_info: *const ImagePipeSurfaceCreateInfoFUCHSIA,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_image_pipe_surface_fuchsia)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_FUCHSIA_imagepipe_surface'"]
 impl StructureType {
     pub const IMAGEPIPE_SURFACE_CREATE_INFO_FUCHSIA: Self = Self(1_000_214_000);
 }
 impl KhrShaderTerminateInvocationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_terminate_invocation\0")
         }
@@ -15604,10 +12786,11 @@ impl KhrShaderTerminateInvocationFn {
 }
 #[doc = "Generated from 'VK_KHR_shader_terminate_invocation'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES_KHR: Self = Self(1_000_215_000);
+    pub const PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES_KHR: Self =
+        Self::PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES;
 }
 impl GoogleExtension217Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_217\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -15625,7 +12808,7 @@ impl GoogleExtension217Fn {
     }
 }
 impl ExtMetalSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_metal_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -15672,23 +12855,13 @@ impl ExtMetalSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateMetalSurfaceEXT.html>"]
-    pub unsafe fn create_metal_surface_ext(
-        &self,
-        instance: Instance,
-        p_create_info: *const MetalSurfaceCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_metal_surface_ext)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_EXT_metal_surface'"]
 impl StructureType {
     pub const METAL_SURFACE_CREATE_INFO_EXT: Self = Self(1_000_217_000);
 }
 impl ExtFragmentDensityMapFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_fragment_density_map\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -15714,7 +12887,7 @@ impl FormatFeatureFlags {
     pub const FRAGMENT_DENSITY_MAP_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_EXT_fragment_density_map'"]
-impl FormatFeatureFlags2KHR {
+impl FormatFeatureFlags2 {
     pub const FRAGMENT_DENSITY_MAP_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_EXT_fragment_density_map'"]
@@ -15749,7 +12922,7 @@ impl StructureType {
     pub const RENDER_PASS_FRAGMENT_DENSITY_MAP_CREATE_INFO_EXT: Self = Self(1_000_218_002);
 }
 impl ExtExtension220Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_220\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -15767,7 +12940,7 @@ impl ExtExtension220Fn {
     }
 }
 impl KhrExtension221Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_221\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -15789,7 +12962,7 @@ impl RenderPassCreateFlags {
     pub const RESERVED_0_KHR: Self = Self(0b1);
 }
 impl ExtScalarBlockLayoutFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_scalar_block_layout\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -15812,7 +12985,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
 }
 impl ExtExtension223Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_223\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -15830,7 +13003,7 @@ impl ExtExtension223Fn {
     }
 }
 impl GoogleHlslFunctionality1Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_hlsl_functionality1\0")
         }
@@ -15850,7 +13023,7 @@ impl GoogleHlslFunctionality1Fn {
     }
 }
 impl GoogleDecorateStringFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_decorate_string\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -15868,7 +13041,7 @@ impl GoogleDecorateStringFn {
     }
 }
 impl ExtSubgroupSizeControlFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_subgroup_size_control\0")
         }
@@ -15889,18 +13062,20 @@ impl ExtSubgroupSizeControlFn {
 }
 #[doc = "Generated from 'VK_EXT_subgroup_size_control'"]
 impl PipelineShaderStageCreateFlags {
-    pub const ALLOW_VARYING_SUBGROUP_SIZE_EXT: Self = Self(0b1);
-    pub const REQUIRE_FULL_SUBGROUPS_EXT: Self = Self(0b10);
+    pub const ALLOW_VARYING_SUBGROUP_SIZE_EXT: Self = Self::ALLOW_VARYING_SUBGROUP_SIZE;
+    pub const REQUIRE_FULL_SUBGROUPS_EXT: Self = Self::REQUIRE_FULL_SUBGROUPS;
 }
 #[doc = "Generated from 'VK_EXT_subgroup_size_control'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES_EXT: Self = Self(1_000_225_000);
+    pub const PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES_EXT: Self =
+        Self::PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES;
     pub const PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO_EXT: Self =
-        Self(1_000_225_001);
-    pub const PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES_EXT: Self = Self(1_000_225_002);
+        Self::PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO;
+    pub const PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES_EXT: Self =
+        Self::PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES;
 }
 impl KhrFragmentShadingRateFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_fragment_shading_rate\0")
         }
@@ -15977,28 +13152,6 @@ impl KhrFragmentShadingRateFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceFragmentShadingRatesKHR.html>"]
-    pub unsafe fn get_physical_device_fragment_shading_rates_khr(
-        &self,
-        physical_device: PhysicalDevice,
-        p_fragment_shading_rate_count: *mut u32,
-        p_fragment_shading_rates: *mut PhysicalDeviceFragmentShadingRateKHR,
-    ) -> Result {
-        (self.get_physical_device_fragment_shading_rates_khr)(
-            physical_device,
-            p_fragment_shading_rate_count,
-            p_fragment_shading_rates,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetFragmentShadingRateKHR.html>"]
-    pub unsafe fn cmd_set_fragment_shading_rate_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_fragment_size: *const Extent2D,
-        combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
-    ) {
-        (self.cmd_set_fragment_shading_rate_khr)(command_buffer, p_fragment_size, combiner_ops)
-    }
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
 impl AccessFlags {
@@ -16015,8 +13168,8 @@ impl FormatFeatureFlags {
         Self(0b100_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
-impl FormatFeatureFlags2KHR {
-    pub const FRAGMENT_SHADING_RATE_ATTACHMENT: Self =
+impl FormatFeatureFlags2 {
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_KHR: Self =
         Self(0b100_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_fragment_shading_rate'"]
@@ -16040,7 +13193,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_KHR: Self = Self(1_000_226_004);
 }
 impl AmdShaderCoreProperties2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_shader_core_properties2\0")
         }
@@ -16064,7 +13217,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_2_AMD: Self = Self(1_000_227_000);
 }
 impl AmdExtension229Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_229\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16082,7 +13235,7 @@ impl AmdExtension229Fn {
     }
 }
 impl AmdDeviceCoherentMemoryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_device_coherent_memory\0")
         }
@@ -16111,7 +13264,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD: Self = Self(1_000_229_000);
 }
 impl AmdExtension231Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_231\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16129,7 +13282,7 @@ impl AmdExtension231Fn {
     }
 }
 impl AmdExtension232Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_232\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16147,7 +13300,7 @@ impl AmdExtension232Fn {
     }
 }
 impl AmdExtension233Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_233\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16165,7 +13318,7 @@ impl AmdExtension233Fn {
     }
 }
 impl AmdExtension234Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_234\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16183,7 +13336,7 @@ impl AmdExtension234Fn {
     }
 }
 impl ExtShaderImageAtomicInt64Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_image_atomic_int64\0")
         }
@@ -16207,7 +13360,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT: Self = Self(1_000_234_000);
 }
 impl AmdExtension236Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_236\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16225,7 +13378,7 @@ impl AmdExtension236Fn {
     }
 }
 impl KhrSpirv14Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_spirv_1_4\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16243,7 +13396,7 @@ impl KhrSpirv14Fn {
     }
 }
 impl ExtMemoryBudgetFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_memory_budget\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16265,7 +13418,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT: Self = Self(1_000_237_000);
 }
 impl ExtMemoryPriorityFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_memory_priority\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16288,7 +13441,7 @@ impl StructureType {
     pub const MEMORY_PRIORITY_ALLOCATE_INFO_EXT: Self = Self(1_000_238_001);
 }
 impl KhrSurfaceProtectedCapabilitiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_surface_protected_capabilities\0",
@@ -16314,7 +13467,7 @@ impl StructureType {
     pub const SURFACE_PROTECTED_CAPABILITIES_KHR: Self = Self(1_000_239_000);
 }
 impl NvDedicatedAllocationImageAliasingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_NV_dedicated_allocation_image_aliasing\0",
@@ -16341,7 +13494,7 @@ impl StructureType {
         Self(1_000_240_000);
 }
 impl KhrSeparateDepthStencilLayoutsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_separate_depth_stencil_layouts\0",
@@ -16379,7 +13532,7 @@ impl StructureType {
         Self::ATTACHMENT_DESCRIPTION_STENCIL_LAYOUT;
 }
 impl IntelExtension243Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_INTEL_extension_243\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16397,7 +13550,7 @@ impl IntelExtension243Fn {
     }
 }
 impl MesaExtension244Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_MESA_extension_244\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -16415,7 +13568,7 @@ impl MesaExtension244Fn {
     }
 }
 impl ExtBufferDeviceAddressFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_buffer_device_address\0")
         }
@@ -16461,14 +13614,6 @@ impl ExtBufferDeviceAddressFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddressEXT.html>"]
-    pub unsafe fn get_buffer_device_address_ext(
-        &self,
-        device: Device,
-        p_info: *const BufferDeviceAddressInfo,
-    ) -> DeviceAddress {
-        (self.get_buffer_device_address_ext)(device, p_info)
-    }
 }
 #[doc = "Generated from 'VK_EXT_buffer_device_address'"]
 impl BufferCreateFlags {
@@ -16491,20 +13636,20 @@ impl StructureType {
     pub const BUFFER_DEVICE_ADDRESS_CREATE_INFO_EXT: Self = Self(1_000_244_002);
 }
 impl ExtToolingInfoFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_tooling_info\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPhysicalDeviceToolPropertiesEXT = unsafe extern "system" fn(
+pub type PFN_vkGetPhysicalDeviceToolProperties = unsafe extern "system" fn(
     physical_device: PhysicalDevice,
     p_tool_count: *mut u32,
-    p_tool_properties: *mut PhysicalDeviceToolPropertiesEXT,
+    p_tool_properties: *mut PhysicalDeviceToolProperties,
 ) -> Result;
 #[derive(Clone)]
 pub struct ExtToolingInfoFn {
-    pub get_physical_device_tool_properties_ext: PFN_vkGetPhysicalDeviceToolPropertiesEXT,
+    pub get_physical_device_tool_properties_ext: PFN_vkGetPhysicalDeviceToolProperties,
 }
 unsafe impl Send for ExtToolingInfoFn {}
 unsafe impl Sync for ExtToolingInfoFn {}
@@ -16518,7 +13663,7 @@ impl ExtToolingInfoFn {
                 unsafe extern "system" fn get_physical_device_tool_properties_ext(
                     _physical_device: PhysicalDevice,
                     _p_tool_count: *mut u32,
-                    _p_tool_properties: *mut PhysicalDeviceToolPropertiesEXT,
+                    _p_tool_properties: *mut PhysicalDeviceToolProperties,
                 ) -> Result {
                     panic!(concat!(
                         "Unable to load ",
@@ -16537,31 +13682,18 @@ impl ExtToolingInfoFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceToolPropertiesEXT.html>"]
-    pub unsafe fn get_physical_device_tool_properties_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        p_tool_count: *mut u32,
-        p_tool_properties: *mut PhysicalDeviceToolPropertiesEXT,
-    ) -> Result {
-        (self.get_physical_device_tool_properties_ext)(
-            physical_device,
-            p_tool_count,
-            p_tool_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_tooling_info'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_TOOL_PROPERTIES_EXT: Self = Self(1_000_245_000);
+    pub const PHYSICAL_DEVICE_TOOL_PROPERTIES_EXT: Self = Self::PHYSICAL_DEVICE_TOOL_PROPERTIES;
 }
 #[doc = "Generated from 'VK_EXT_tooling_info'"]
-impl ToolPurposeFlagsEXT {
-    pub const DEBUG_REPORTING: Self = Self(0b10_0000);
-    pub const DEBUG_MARKERS: Self = Self(0b100_0000);
+impl ToolPurposeFlags {
+    pub const DEBUG_REPORTING_EXT: Self = Self(0b10_0000);
+    pub const DEBUG_MARKERS_EXT: Self = Self(0b100_0000);
 }
 impl ExtSeparateStencilUsageFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_separate_stencil_usage\0")
         }
@@ -16585,7 +13717,7 @@ impl StructureType {
     pub const IMAGE_STENCIL_USAGE_CREATE_INFO_EXT: Self = Self::IMAGE_STENCIL_USAGE_CREATE_INFO;
 }
 impl ExtValidationFeaturesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_validation_features\0") }
     }
     pub const SPEC_VERSION: u32 = 5u32;
@@ -16607,7 +13739,7 @@ impl StructureType {
     pub const VALIDATION_FEATURES_EXT: Self = Self(1_000_247_000);
 }
 impl KhrPresentWaitFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_present_wait\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16651,23 +13783,13 @@ impl KhrPresentWaitFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkWaitForPresentKHR.html>"]
-    pub unsafe fn wait_for_present_khr(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-        present_id: u64,
-        timeout: u64,
-    ) -> Result {
-        (self.wait_for_present_khr)(device, swapchain, present_id, timeout)
-    }
 }
 #[doc = "Generated from 'VK_KHR_present_wait'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR: Self = Self(1_000_248_000);
 }
 impl NvCooperativeMatrixFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_cooperative_matrix\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16715,19 +13837,6 @@ impl NvCooperativeMatrixFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceCooperativeMatrixPropertiesNV.html>"]
-    pub unsafe fn get_physical_device_cooperative_matrix_properties_nv(
-        &self,
-        physical_device: PhysicalDevice,
-        p_property_count: *mut u32,
-        p_properties: *mut CooperativeMatrixPropertiesNV,
-    ) -> Result {
-        (self.get_physical_device_cooperative_matrix_properties_nv)(
-            physical_device,
-            p_property_count,
-            p_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_NV_cooperative_matrix'"]
 impl StructureType {
@@ -16736,7 +13845,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_COOPERATIVE_MATRIX_PROPERTIES_NV: Self = Self(1_000_249_002);
 }
 impl NvCoverageReductionModeFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_coverage_reduction_mode\0")
         }
@@ -16788,19 +13897,6 @@ impl NvCoverageReductionModeFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV.html>"]
-    pub unsafe fn get_physical_device_supported_framebuffer_mixed_samples_combinations_nv(
-        &self,
-        physical_device: PhysicalDevice,
-        p_combination_count: *mut u32,
-        p_combinations: *mut FramebufferMixedSamplesCombinationNV,
-    ) -> Result {
-        (self.get_physical_device_supported_framebuffer_mixed_samples_combinations_nv)(
-            physical_device,
-            p_combination_count,
-            p_combinations,
-        )
-    }
 }
 #[doc = "Generated from 'VK_NV_coverage_reduction_mode'"]
 impl StructureType {
@@ -16809,7 +13905,7 @@ impl StructureType {
     pub const FRAMEBUFFER_MIXED_SAMPLES_COMBINATION_NV: Self = Self(1_000_250_002);
 }
 impl ExtFragmentShaderInterlockFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_fragment_shader_interlock\0")
         }
@@ -16833,7 +13929,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT: Self = Self(1_000_251_000);
 }
 impl ExtYcbcrImageArraysFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_ycbcr_image_arrays\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16855,7 +13951,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_YCBCR_IMAGE_ARRAYS_FEATURES_EXT: Self = Self(1_000_252_000);
 }
 impl KhrUniformBufferStandardLayoutFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_uniform_buffer_standard_layout\0",
@@ -16882,7 +13978,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES;
 }
 impl ExtProvokingVertexFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_provoking_vertex\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -16907,7 +14003,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_PROVOKING_VERTEX_PROPERTIES_EXT: Self = Self(1_000_254_002);
 }
 impl ExtFullScreenExclusiveFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_full_screen_exclusive\0")
         }
@@ -17034,46 +14130,6 @@ impl ExtFullScreenExclusiveFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfacePresentModes2EXT.html>"]
-    pub unsafe fn get_physical_device_surface_present_modes2_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_present_mode_count: *mut u32,
-        p_present_modes: *mut PresentModeKHR,
-    ) -> Result {
-        (self.get_physical_device_surface_present_modes2_ext)(
-            physical_device,
-            p_surface_info,
-            p_present_mode_count,
-            p_present_modes,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireFullScreenExclusiveModeEXT.html>"]
-    pub unsafe fn acquire_full_screen_exclusive_mode_ext(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-    ) -> Result {
-        (self.acquire_full_screen_exclusive_mode_ext)(device, swapchain)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkReleaseFullScreenExclusiveModeEXT.html>"]
-    pub unsafe fn release_full_screen_exclusive_mode_ext(
-        &self,
-        device: Device,
-        swapchain: SwapchainKHR,
-    ) -> Result {
-        (self.release_full_screen_exclusive_mode_ext)(device, swapchain)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceGroupSurfacePresentModes2EXT.html>"]
-    pub unsafe fn get_device_group_surface_present_modes2_ext(
-        &self,
-        device: Device,
-        p_surface_info: *const PhysicalDeviceSurfaceInfo2KHR,
-        p_modes: *mut DeviceGroupPresentModeFlagsKHR,
-    ) -> Result {
-        (self.get_device_group_surface_present_modes2_ext)(device, p_surface_info, p_modes)
-    }
 }
 #[doc = "Generated from 'VK_EXT_full_screen_exclusive'"]
 impl Result {
@@ -17086,7 +14142,7 @@ impl StructureType {
     pub const SURFACE_FULL_SCREEN_EXCLUSIVE_WIN32_INFO_EXT: Self = Self(1_000_255_001);
 }
 impl ExtHeadlessSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_headless_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -17134,23 +14190,13 @@ impl ExtHeadlessSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateHeadlessSurfaceEXT.html>"]
-    pub unsafe fn create_headless_surface_ext(
-        &self,
-        instance: Instance,
-        p_create_info: *const HeadlessSurfaceCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_headless_surface_ext)(instance, p_create_info, p_allocator, p_surface)
-    }
 }
 #[doc = "Generated from 'VK_EXT_headless_surface'"]
 impl StructureType {
     pub const HEADLESS_SURFACE_CREATE_INFO_EXT: Self = Self(1_000_256_000);
 }
 impl KhrBufferDeviceAddressFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_buffer_device_address\0")
         }
@@ -17241,30 +14287,6 @@ impl KhrBufferDeviceAddressFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferDeviceAddressKHR.html>"]
-    pub unsafe fn get_buffer_device_address_khr(
-        &self,
-        device: Device,
-        p_info: *const BufferDeviceAddressInfo,
-    ) -> DeviceAddress {
-        (self.get_buffer_device_address_khr)(device, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferOpaqueCaptureAddressKHR.html>"]
-    pub unsafe fn get_buffer_opaque_capture_address_khr(
-        &self,
-        device: Device,
-        p_info: *const BufferDeviceAddressInfo,
-    ) -> u64 {
-        (self.get_buffer_opaque_capture_address_khr)(device, p_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceMemoryOpaqueCaptureAddressKHR.html>"]
-    pub unsafe fn get_device_memory_opaque_capture_address_khr(
-        &self,
-        device: Device,
-        p_info: *const DeviceMemoryOpaqueCaptureAddressInfo,
-    ) -> u64 {
-        (self.get_device_memory_opaque_capture_address_khr)(device, p_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_buffer_device_address'"]
 impl BufferCreateFlags {
@@ -17297,7 +14319,7 @@ impl StructureType {
         Self::DEVICE_MEMORY_OPAQUE_CAPTURE_ADDRESS_INFO;
 }
 impl ExtExtension259Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_259\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -17315,7 +14337,7 @@ impl ExtExtension259Fn {
     }
 }
 impl ExtLineRasterizationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_line_rasterization\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -17360,15 +14382,6 @@ impl ExtLineRasterizationFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetLineStippleEXT.html>"]
-    pub unsafe fn cmd_set_line_stipple_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        line_stipple_factor: u32,
-        line_stipple_pattern: u16,
-    ) {
-        (self.cmd_set_line_stipple_ext)(command_buffer, line_stipple_factor, line_stipple_pattern)
-    }
 }
 #[doc = "Generated from 'VK_EXT_line_rasterization'"]
 impl DynamicState {
@@ -17381,7 +14394,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES_EXT: Self = Self(1_000_259_002);
 }
 impl ExtShaderAtomicFloatFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_atomic_float\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -17403,7 +14416,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT: Self = Self(1_000_260_000);
 }
 impl ExtHostQueryResetFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_host_query_reset\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -17447,16 +14460,6 @@ impl ExtHostQueryResetFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkResetQueryPoolEXT.html>"]
-    pub unsafe fn reset_query_pool_ext(
-        &self,
-        device: Device,
-        query_pool: QueryPool,
-        first_query: u32,
-        query_count: u32,
-    ) {
-        (self.reset_query_pool_ext)(device, query_pool, first_query, query_count)
-    }
 }
 #[doc = "Generated from 'VK_EXT_host_query_reset'"]
 impl StructureType {
@@ -17464,7 +14467,7 @@ impl StructureType {
         Self::PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES;
 }
 impl GgpExtension263Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_extension_263\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -17482,7 +14485,7 @@ impl GgpExtension263Fn {
     }
 }
 impl BrcmExtension264Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_BRCM_extension_264\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -17500,7 +14503,7 @@ impl BrcmExtension264Fn {
     }
 }
 impl BrcmExtension265Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_BRCM_extension_265\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -17518,7 +14521,7 @@ impl BrcmExtension265Fn {
     }
 }
 impl ExtIndexTypeUint8Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_index_type_uint8\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -17544,7 +14547,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT: Self = Self(1_000_265_000);
 }
 impl ExtExtension267Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_267\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -17562,7 +14565,7 @@ impl ExtExtension267Fn {
     }
 }
 impl ExtExtendedDynamicStateFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extended_dynamic_state\0")
         }
@@ -17570,28 +14573,28 @@ impl ExtExtendedDynamicStateFn {
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetCullModeEXT =
+pub type PFN_vkCmdSetCullMode =
     unsafe extern "system" fn(command_buffer: CommandBuffer, cull_mode: CullModeFlags);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetFrontFaceEXT =
+pub type PFN_vkCmdSetFrontFace =
     unsafe extern "system" fn(command_buffer: CommandBuffer, front_face: FrontFace);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetPrimitiveTopologyEXT =
+pub type PFN_vkCmdSetPrimitiveTopology =
     unsafe extern "system" fn(command_buffer: CommandBuffer, primitive_topology: PrimitiveTopology);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetViewportWithCountEXT = unsafe extern "system" fn(
+pub type PFN_vkCmdSetViewportWithCount = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     viewport_count: u32,
     p_viewports: *const Viewport,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetScissorWithCountEXT = unsafe extern "system" fn(
+pub type PFN_vkCmdSetScissorWithCount = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     scissor_count: u32,
     p_scissors: *const Rect2D,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBindVertexBuffers2EXT = unsafe extern "system" fn(
+pub type PFN_vkCmdBindVertexBuffers2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     first_binding: u32,
     binding_count: u32,
@@ -17601,22 +14604,22 @@ pub type PFN_vkCmdBindVertexBuffers2EXT = unsafe extern "system" fn(
     p_strides: *const DeviceSize,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetDepthTestEnableEXT =
+pub type PFN_vkCmdSetDepthTestEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, depth_test_enable: Bool32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetDepthWriteEnableEXT =
+pub type PFN_vkCmdSetDepthWriteEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, depth_write_enable: Bool32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetDepthCompareOpEXT =
+pub type PFN_vkCmdSetDepthCompareOp =
     unsafe extern "system" fn(command_buffer: CommandBuffer, depth_compare_op: CompareOp);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetDepthBoundsTestEnableEXT =
+pub type PFN_vkCmdSetDepthBoundsTestEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, depth_bounds_test_enable: Bool32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetStencilTestEnableEXT =
+pub type PFN_vkCmdSetStencilTestEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, stencil_test_enable: Bool32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetStencilOpEXT = unsafe extern "system" fn(
+pub type PFN_vkCmdSetStencilOp = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     face_mask: StencilFaceFlags,
     fail_op: StencilOp,
@@ -17626,18 +14629,18 @@ pub type PFN_vkCmdSetStencilOpEXT = unsafe extern "system" fn(
 );
 #[derive(Clone)]
 pub struct ExtExtendedDynamicStateFn {
-    pub cmd_set_cull_mode_ext: PFN_vkCmdSetCullModeEXT,
-    pub cmd_set_front_face_ext: PFN_vkCmdSetFrontFaceEXT,
-    pub cmd_set_primitive_topology_ext: PFN_vkCmdSetPrimitiveTopologyEXT,
-    pub cmd_set_viewport_with_count_ext: PFN_vkCmdSetViewportWithCountEXT,
-    pub cmd_set_scissor_with_count_ext: PFN_vkCmdSetScissorWithCountEXT,
-    pub cmd_bind_vertex_buffers2_ext: PFN_vkCmdBindVertexBuffers2EXT,
-    pub cmd_set_depth_test_enable_ext: PFN_vkCmdSetDepthTestEnableEXT,
-    pub cmd_set_depth_write_enable_ext: PFN_vkCmdSetDepthWriteEnableEXT,
-    pub cmd_set_depth_compare_op_ext: PFN_vkCmdSetDepthCompareOpEXT,
-    pub cmd_set_depth_bounds_test_enable_ext: PFN_vkCmdSetDepthBoundsTestEnableEXT,
-    pub cmd_set_stencil_test_enable_ext: PFN_vkCmdSetStencilTestEnableEXT,
-    pub cmd_set_stencil_op_ext: PFN_vkCmdSetStencilOpEXT,
+    pub cmd_set_cull_mode_ext: PFN_vkCmdSetCullMode,
+    pub cmd_set_front_face_ext: PFN_vkCmdSetFrontFace,
+    pub cmd_set_primitive_topology_ext: PFN_vkCmdSetPrimitiveTopology,
+    pub cmd_set_viewport_with_count_ext: PFN_vkCmdSetViewportWithCount,
+    pub cmd_set_scissor_with_count_ext: PFN_vkCmdSetScissorWithCount,
+    pub cmd_bind_vertex_buffers2_ext: PFN_vkCmdBindVertexBuffers2,
+    pub cmd_set_depth_test_enable_ext: PFN_vkCmdSetDepthTestEnable,
+    pub cmd_set_depth_write_enable_ext: PFN_vkCmdSetDepthWriteEnable,
+    pub cmd_set_depth_compare_op_ext: PFN_vkCmdSetDepthCompareOp,
+    pub cmd_set_depth_bounds_test_enable_ext: PFN_vkCmdSetDepthBoundsTestEnable,
+    pub cmd_set_stencil_test_enable_ext: PFN_vkCmdSetStencilTestEnable,
+    pub cmd_set_stencil_op_ext: PFN_vkCmdSetStencilOp,
 }
 unsafe impl Send for ExtExtendedDynamicStateFn {}
 unsafe impl Sync for ExtExtendedDynamicStateFn {}
@@ -17896,150 +14899,29 @@ impl ExtExtendedDynamicStateFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetCullModeEXT.html>"]
-    pub unsafe fn cmd_set_cull_mode_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        cull_mode: CullModeFlags,
-    ) {
-        (self.cmd_set_cull_mode_ext)(command_buffer, cull_mode)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetFrontFaceEXT.html>"]
-    pub unsafe fn cmd_set_front_face_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        front_face: FrontFace,
-    ) {
-        (self.cmd_set_front_face_ext)(command_buffer, front_face)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPrimitiveTopologyEXT.html>"]
-    pub unsafe fn cmd_set_primitive_topology_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        primitive_topology: PrimitiveTopology,
-    ) {
-        (self.cmd_set_primitive_topology_ext)(command_buffer, primitive_topology)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetViewportWithCountEXT.html>"]
-    pub unsafe fn cmd_set_viewport_with_count_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        viewport_count: u32,
-        p_viewports: *const Viewport,
-    ) {
-        (self.cmd_set_viewport_with_count_ext)(command_buffer, viewport_count, p_viewports)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetScissorWithCountEXT.html>"]
-    pub unsafe fn cmd_set_scissor_with_count_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        scissor_count: u32,
-        p_scissors: *const Rect2D,
-    ) {
-        (self.cmd_set_scissor_with_count_ext)(command_buffer, scissor_count, p_scissors)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindVertexBuffers2EXT.html>"]
-    pub unsafe fn cmd_bind_vertex_buffers2_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        first_binding: u32,
-        binding_count: u32,
-        p_buffers: *const Buffer,
-        p_offsets: *const DeviceSize,
-        p_sizes: *const DeviceSize,
-        p_strides: *const DeviceSize,
-    ) {
-        (self.cmd_bind_vertex_buffers2_ext)(
-            command_buffer,
-            first_binding,
-            binding_count,
-            p_buffers,
-            p_offsets,
-            p_sizes,
-            p_strides,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDepthTestEnableEXT.html>"]
-    pub unsafe fn cmd_set_depth_test_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        depth_test_enable: Bool32,
-    ) {
-        (self.cmd_set_depth_test_enable_ext)(command_buffer, depth_test_enable)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDepthWriteEnableEXT.html>"]
-    pub unsafe fn cmd_set_depth_write_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        depth_write_enable: Bool32,
-    ) {
-        (self.cmd_set_depth_write_enable_ext)(command_buffer, depth_write_enable)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDepthCompareOpEXT.html>"]
-    pub unsafe fn cmd_set_depth_compare_op_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        depth_compare_op: CompareOp,
-    ) {
-        (self.cmd_set_depth_compare_op_ext)(command_buffer, depth_compare_op)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDepthBoundsTestEnableEXT.html>"]
-    pub unsafe fn cmd_set_depth_bounds_test_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        depth_bounds_test_enable: Bool32,
-    ) {
-        (self.cmd_set_depth_bounds_test_enable_ext)(command_buffer, depth_bounds_test_enable)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetStencilTestEnableEXT.html>"]
-    pub unsafe fn cmd_set_stencil_test_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        stencil_test_enable: Bool32,
-    ) {
-        (self.cmd_set_stencil_test_enable_ext)(command_buffer, stencil_test_enable)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetStencilOpEXT.html>"]
-    pub unsafe fn cmd_set_stencil_op_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        face_mask: StencilFaceFlags,
-        fail_op: StencilOp,
-        pass_op: StencilOp,
-        depth_fail_op: StencilOp,
-        compare_op: CompareOp,
-    ) {
-        (self.cmd_set_stencil_op_ext)(
-            command_buffer,
-            face_mask,
-            fail_op,
-            pass_op,
-            depth_fail_op,
-            compare_op,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_extended_dynamic_state'"]
 impl DynamicState {
-    pub const CULL_MODE_EXT: Self = Self(1_000_267_000);
-    pub const FRONT_FACE_EXT: Self = Self(1_000_267_001);
-    pub const PRIMITIVE_TOPOLOGY_EXT: Self = Self(1_000_267_002);
-    pub const VIEWPORT_WITH_COUNT_EXT: Self = Self(1_000_267_003);
-    pub const SCISSOR_WITH_COUNT_EXT: Self = Self(1_000_267_004);
-    pub const VERTEX_INPUT_BINDING_STRIDE_EXT: Self = Self(1_000_267_005);
-    pub const DEPTH_TEST_ENABLE_EXT: Self = Self(1_000_267_006);
-    pub const DEPTH_WRITE_ENABLE_EXT: Self = Self(1_000_267_007);
-    pub const DEPTH_COMPARE_OP_EXT: Self = Self(1_000_267_008);
-    pub const DEPTH_BOUNDS_TEST_ENABLE_EXT: Self = Self(1_000_267_009);
-    pub const STENCIL_TEST_ENABLE_EXT: Self = Self(1_000_267_010);
-    pub const STENCIL_OP_EXT: Self = Self(1_000_267_011);
+    pub const CULL_MODE_EXT: Self = Self::CULL_MODE;
+    pub const FRONT_FACE_EXT: Self = Self::FRONT_FACE;
+    pub const PRIMITIVE_TOPOLOGY_EXT: Self = Self::PRIMITIVE_TOPOLOGY;
+    pub const VIEWPORT_WITH_COUNT_EXT: Self = Self::VIEWPORT_WITH_COUNT;
+    pub const SCISSOR_WITH_COUNT_EXT: Self = Self::SCISSOR_WITH_COUNT;
+    pub const VERTEX_INPUT_BINDING_STRIDE_EXT: Self = Self::VERTEX_INPUT_BINDING_STRIDE;
+    pub const DEPTH_TEST_ENABLE_EXT: Self = Self::DEPTH_TEST_ENABLE;
+    pub const DEPTH_WRITE_ENABLE_EXT: Self = Self::DEPTH_WRITE_ENABLE;
+    pub const DEPTH_COMPARE_OP_EXT: Self = Self::DEPTH_COMPARE_OP;
+    pub const DEPTH_BOUNDS_TEST_ENABLE_EXT: Self = Self::DEPTH_BOUNDS_TEST_ENABLE;
+    pub const STENCIL_TEST_ENABLE_EXT: Self = Self::STENCIL_TEST_ENABLE;
+    pub const STENCIL_OP_EXT: Self = Self::STENCIL_OP;
 }
 #[doc = "Generated from 'VK_EXT_extended_dynamic_state'"]
 impl StructureType {
+    #[doc = "Not promoted to 1.3"]
     pub const PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT: Self = Self(1_000_267_000);
 }
 impl KhrDeferredHostOperationsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_deferred_host_operations\0")
         }
@@ -18187,48 +15069,6 @@ impl KhrDeferredHostOperationsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDeferredOperationKHR.html>"]
-    pub unsafe fn create_deferred_operation_khr(
-        &self,
-        device: Device,
-        p_allocator: *const AllocationCallbacks,
-        p_deferred_operation: *mut DeferredOperationKHR,
-    ) -> Result {
-        (self.create_deferred_operation_khr)(device, p_allocator, p_deferred_operation)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyDeferredOperationKHR.html>"]
-    pub unsafe fn destroy_deferred_operation_khr(
-        &self,
-        device: Device,
-        operation: DeferredOperationKHR,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_deferred_operation_khr)(device, operation, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeferredOperationMaxConcurrencyKHR.html>"]
-    pub unsafe fn get_deferred_operation_max_concurrency_khr(
-        &self,
-        device: Device,
-        operation: DeferredOperationKHR,
-    ) -> u32 {
-        (self.get_deferred_operation_max_concurrency_khr)(device, operation)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeferredOperationResultKHR.html>"]
-    pub unsafe fn get_deferred_operation_result_khr(
-        &self,
-        device: Device,
-        operation: DeferredOperationKHR,
-    ) -> Result {
-        (self.get_deferred_operation_result_khr)(device, operation)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDeferredOperationJoinKHR.html>"]
-    pub unsafe fn deferred_operation_join_khr(
-        &self,
-        device: Device,
-        operation: DeferredOperationKHR,
-    ) -> Result {
-        (self.deferred_operation_join_khr)(device, operation)
-    }
 }
 #[doc = "Generated from 'VK_KHR_deferred_host_operations'"]
 impl ObjectType {
@@ -18242,7 +15082,7 @@ impl Result {
     pub const OPERATION_NOT_DEFERRED_KHR: Self = Self(1_000_268_003);
 }
 impl KhrPipelineExecutablePropertiesFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_pipeline_executable_properties\0",
@@ -18356,51 +15196,6 @@ impl KhrPipelineExecutablePropertiesFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineExecutablePropertiesKHR.html>"]
-    pub unsafe fn get_pipeline_executable_properties_khr(
-        &self,
-        device: Device,
-        p_pipeline_info: *const PipelineInfoKHR,
-        p_executable_count: *mut u32,
-        p_properties: *mut PipelineExecutablePropertiesKHR,
-    ) -> Result {
-        (self.get_pipeline_executable_properties_khr)(
-            device,
-            p_pipeline_info,
-            p_executable_count,
-            p_properties,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineExecutableStatisticsKHR.html>"]
-    pub unsafe fn get_pipeline_executable_statistics_khr(
-        &self,
-        device: Device,
-        p_executable_info: *const PipelineExecutableInfoKHR,
-        p_statistic_count: *mut u32,
-        p_statistics: *mut PipelineExecutableStatisticKHR,
-    ) -> Result {
-        (self.get_pipeline_executable_statistics_khr)(
-            device,
-            p_executable_info,
-            p_statistic_count,
-            p_statistics,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPipelineExecutableInternalRepresentationsKHR.html>"]
-    pub unsafe fn get_pipeline_executable_internal_representations_khr(
-        &self,
-        device: Device,
-        p_executable_info: *const PipelineExecutableInfoKHR,
-        p_internal_representation_count: *mut u32,
-        p_internal_representations: *mut PipelineExecutableInternalRepresentationKHR,
-    ) -> Result {
-        (self.get_pipeline_executable_internal_representations_khr)(
-            device,
-            p_executable_info,
-            p_internal_representation_count,
-            p_internal_representations,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_pipeline_executable_properties'"]
 impl PipelineCreateFlags {
@@ -18418,7 +15213,7 @@ impl StructureType {
     pub const PIPELINE_EXECUTABLE_INTERNAL_REPRESENTATION_KHR: Self = Self(1_000_269_005);
 }
 impl IntelExtension271Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_INTEL_extension_271\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18435,8 +15230,12 @@ impl IntelExtension271Fn {
         Self {}
     }
 }
+#[doc = "Generated from 'VK_INTEL_extension_271'"]
+impl ImageUsageFlags {
+    pub const RESERVED_22_EXT: Self = Self(0b100_0000_0000_0000_0000_0000);
+}
 impl IntelExtension272Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_INTEL_extension_272\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18454,7 +15253,7 @@ impl IntelExtension272Fn {
     }
 }
 impl IntelExtension273Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_INTEL_extension_273\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18472,7 +15271,7 @@ impl IntelExtension273Fn {
     }
 }
 impl ExtShaderAtomicFloat2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_shader_atomic_float2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -18494,7 +15293,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT: Self = Self(1_000_273_000);
 }
 impl KhrExtension275Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_275\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18512,7 +15311,7 @@ impl KhrExtension275Fn {
     }
 }
 impl KhrExtension276Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_276\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18530,7 +15329,7 @@ impl KhrExtension276Fn {
     }
 }
 impl ExtShaderDemoteToHelperInvocationFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_EXT_shader_demote_to_helper_invocation\0",
@@ -18554,10 +15353,10 @@ impl ExtShaderDemoteToHelperInvocationFn {
 #[doc = "Generated from 'VK_EXT_shader_demote_to_helper_invocation'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES_EXT: Self =
-        Self(1_000_276_000);
+        Self::PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES;
 }
 impl NvDeviceGeneratedCommandsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_device_generated_commands\0")
         }
@@ -18748,75 +15547,6 @@ impl NvDeviceGeneratedCommandsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetGeneratedCommandsMemoryRequirementsNV.html>"]
-    pub unsafe fn get_generated_commands_memory_requirements_nv(
-        &self,
-        device: Device,
-        p_info: *const GeneratedCommandsMemoryRequirementsInfoNV,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ) {
-        (self.get_generated_commands_memory_requirements_nv)(device, p_info, p_memory_requirements)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPreprocessGeneratedCommandsNV.html>"]
-    pub unsafe fn cmd_preprocess_generated_commands_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        p_generated_commands_info: *const GeneratedCommandsInfoNV,
-    ) {
-        (self.cmd_preprocess_generated_commands_nv)(command_buffer, p_generated_commands_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdExecuteGeneratedCommandsNV.html>"]
-    pub unsafe fn cmd_execute_generated_commands_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        is_preprocessed: Bool32,
-        p_generated_commands_info: *const GeneratedCommandsInfoNV,
-    ) {
-        (self.cmd_execute_generated_commands_nv)(
-            command_buffer,
-            is_preprocessed,
-            p_generated_commands_info,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindPipelineShaderGroupNV.html>"]
-    pub unsafe fn cmd_bind_pipeline_shader_group_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        pipeline_bind_point: PipelineBindPoint,
-        pipeline: Pipeline,
-        group_index: u32,
-    ) {
-        (self.cmd_bind_pipeline_shader_group_nv)(
-            command_buffer,
-            pipeline_bind_point,
-            pipeline,
-            group_index,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateIndirectCommandsLayoutNV.html>"]
-    pub unsafe fn create_indirect_commands_layout_nv(
-        &self,
-        device: Device,
-        p_create_info: *const IndirectCommandsLayoutCreateInfoNV,
-        p_allocator: *const AllocationCallbacks,
-        p_indirect_commands_layout: *mut IndirectCommandsLayoutNV,
-    ) -> Result {
-        (self.create_indirect_commands_layout_nv)(
-            device,
-            p_create_info,
-            p_allocator,
-            p_indirect_commands_layout,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyIndirectCommandsLayoutNV.html>"]
-    pub unsafe fn destroy_indirect_commands_layout_nv(
-        &self,
-        device: Device,
-        indirect_commands_layout: IndirectCommandsLayoutNV,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_indirect_commands_layout_nv)(device, indirect_commands_layout, p_allocator)
-    }
 }
 #[doc = "Generated from 'VK_NV_device_generated_commands'"]
 impl AccessFlags {
@@ -18847,7 +15577,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV: Self = Self(1_000_277_007);
 }
 impl NvInheritedViewportScissorFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_inherited_viewport_scissor\0")
         }
@@ -18872,7 +15602,7 @@ impl StructureType {
     pub const COMMAND_BUFFER_INHERITANCE_VIEWPORT_SCISSOR_INFO_NV: Self = Self(1_000_278_001);
 }
 impl KhrExtension280Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_280\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18890,7 +15620,7 @@ impl KhrExtension280Fn {
     }
 }
 impl KhrShaderIntegerDotProductFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_integer_dot_product\0")
         }
@@ -18911,11 +15641,13 @@ impl KhrShaderIntegerDotProductFn {
 }
 #[doc = "Generated from 'VK_KHR_shader_integer_dot_product'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES_KHR: Self = Self(1_000_280_000);
-    pub const PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES_KHR: Self = Self(1_000_280_001);
+    pub const PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES_KHR: Self =
+        Self::PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES;
+    pub const PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES_KHR: Self =
+        Self::PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES;
 }
 impl ExtTexelBufferAlignmentFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_texel_buffer_alignment\0")
         }
@@ -18936,11 +15668,13 @@ impl ExtTexelBufferAlignmentFn {
 }
 #[doc = "Generated from 'VK_EXT_texel_buffer_alignment'"]
 impl StructureType {
+    #[doc = "Not promoted to 1.3"]
     pub const PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT: Self = Self(1_000_281_000);
-    pub const PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES_EXT: Self = Self(1_000_281_001);
+    pub const PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES_EXT: Self =
+        Self::PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES;
 }
 impl QcomRenderPassTransformFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_render_pass_transform\0")
         }
@@ -18970,7 +15704,7 @@ impl StructureType {
     pub const RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM: Self = Self(1_000_282_001);
 }
 impl ExtExtension284Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_284\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -18988,7 +15722,7 @@ impl ExtExtension284Fn {
     }
 }
 impl ExtDeviceMemoryReportFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_device_memory_report\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -19012,7 +15746,7 @@ impl StructureType {
     pub const DEVICE_MEMORY_REPORT_CALLBACK_DATA_EXT: Self = Self(1_000_284_002);
 }
 impl ExtAcquireDrmDisplayFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_acquire_drm_display\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -19083,28 +15817,9 @@ impl ExtAcquireDrmDisplayFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireDrmDisplayEXT.html>"]
-    pub unsafe fn acquire_drm_display_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        drm_fd: i32,
-        display: DisplayKHR,
-    ) -> Result {
-        (self.acquire_drm_display_ext)(physical_device, drm_fd, display)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDrmDisplayEXT.html>"]
-    pub unsafe fn get_drm_display_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        drm_fd: i32,
-        connector_id: u32,
-        display: *mut DisplayKHR,
-    ) -> Result {
-        (self.get_drm_display_ext)(physical_device, drm_fd, connector_id, display)
-    }
 }
 impl ExtRobustness2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_robustness2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -19127,7 +15842,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT: Self = Self(1_000_286_001);
 }
 impl ExtCustomBorderColorFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_custom_border_color\0") }
     }
     pub const SPEC_VERSION: u32 = 12u32;
@@ -19156,7 +15871,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT: Self = Self(1_000_287_002);
 }
 impl ExtExtension289Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_289\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19207,7 +15922,7 @@ impl Format {
     pub const ASTC_6X6X6_SFLOAT_BLOCK_EXT: Self = Self(1_000_288_029);
 }
 impl GoogleUserTypeFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_user_type\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -19225,7 +15940,7 @@ impl GoogleUserTypeFn {
     }
 }
 impl KhrPipelineLibraryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_pipeline_library\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -19251,7 +15966,7 @@ impl StructureType {
     pub const PIPELINE_LIBRARY_CREATE_INFO_KHR: Self = Self(1_000_290_000);
 }
 impl NvExtension292Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_292\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19269,7 +15984,7 @@ impl NvExtension292Fn {
     }
 }
 impl NvExtension293Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_293\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19287,7 +16002,7 @@ impl NvExtension293Fn {
     }
 }
 impl KhrShaderNonSemanticInfoFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_shader_non_semantic_info\0")
         }
@@ -19307,7 +16022,7 @@ impl KhrShaderNonSemanticInfoFn {
     }
 }
 impl KhrPresentIdFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_present_id\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -19330,46 +16045,46 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR: Self = Self(1_000_294_001);
 }
 impl ExtPrivateDataFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_private_data\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCreatePrivateDataSlotEXT = unsafe extern "system" fn(
+pub type PFN_vkCreatePrivateDataSlot = unsafe extern "system" fn(
     device: Device,
-    p_create_info: *const PrivateDataSlotCreateInfoEXT,
+    p_create_info: *const PrivateDataSlotCreateInfo,
     p_allocator: *const AllocationCallbacks,
-    p_private_data_slot: *mut PrivateDataSlotEXT,
+    p_private_data_slot: *mut PrivateDataSlot,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkDestroyPrivateDataSlotEXT = unsafe extern "system" fn(
+pub type PFN_vkDestroyPrivateDataSlot = unsafe extern "system" fn(
     device: Device,
-    private_data_slot: PrivateDataSlotEXT,
+    private_data_slot: PrivateDataSlot,
     p_allocator: *const AllocationCallbacks,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkSetPrivateDataEXT = unsafe extern "system" fn(
+pub type PFN_vkSetPrivateData = unsafe extern "system" fn(
     device: Device,
     object_type: ObjectType,
     object_handle: u64,
-    private_data_slot: PrivateDataSlotEXT,
+    private_data_slot: PrivateDataSlot,
     data: u64,
 ) -> Result;
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetPrivateDataEXT = unsafe extern "system" fn(
+pub type PFN_vkGetPrivateData = unsafe extern "system" fn(
     device: Device,
     object_type: ObjectType,
     object_handle: u64,
-    private_data_slot: PrivateDataSlotEXT,
+    private_data_slot: PrivateDataSlot,
     p_data: *mut u64,
 );
 #[derive(Clone)]
 pub struct ExtPrivateDataFn {
-    pub create_private_data_slot_ext: PFN_vkCreatePrivateDataSlotEXT,
-    pub destroy_private_data_slot_ext: PFN_vkDestroyPrivateDataSlotEXT,
-    pub set_private_data_ext: PFN_vkSetPrivateDataEXT,
-    pub get_private_data_ext: PFN_vkGetPrivateDataEXT,
+    pub create_private_data_slot_ext: PFN_vkCreatePrivateDataSlot,
+    pub destroy_private_data_slot_ext: PFN_vkDestroyPrivateDataSlot,
+    pub set_private_data_ext: PFN_vkSetPrivateData,
+    pub get_private_data_ext: PFN_vkGetPrivateData,
 }
 unsafe impl Send for ExtPrivateDataFn {}
 unsafe impl Sync for ExtPrivateDataFn {}
@@ -19382,9 +16097,9 @@ impl ExtPrivateDataFn {
             create_private_data_slot_ext: unsafe {
                 unsafe extern "system" fn create_private_data_slot_ext(
                     _device: Device,
-                    _p_create_info: *const PrivateDataSlotCreateInfoEXT,
+                    _p_create_info: *const PrivateDataSlotCreateInfo,
                     _p_allocator: *const AllocationCallbacks,
-                    _p_private_data_slot: *mut PrivateDataSlotEXT,
+                    _p_private_data_slot: *mut PrivateDataSlot,
                 ) -> Result {
                     panic!(concat!(
                         "Unable to load ",
@@ -19404,7 +16119,7 @@ impl ExtPrivateDataFn {
             destroy_private_data_slot_ext: unsafe {
                 unsafe extern "system" fn destroy_private_data_slot_ext(
                     _device: Device,
-                    _private_data_slot: PrivateDataSlotEXT,
+                    _private_data_slot: PrivateDataSlot,
                     _p_allocator: *const AllocationCallbacks,
                 ) {
                     panic!(concat!(
@@ -19427,7 +16142,7 @@ impl ExtPrivateDataFn {
                     _device: Device,
                     _object_type: ObjectType,
                     _object_handle: u64,
-                    _private_data_slot: PrivateDataSlotEXT,
+                    _private_data_slot: PrivateDataSlot,
                     _data: u64,
                 ) -> Result {
                     panic!(concat!("Unable to load ", stringify!(set_private_data_ext)))
@@ -19446,7 +16161,7 @@ impl ExtPrivateDataFn {
                     _device: Device,
                     _object_type: ObjectType,
                     _object_handle: u64,
-                    _private_data_slot: PrivateDataSlotEXT,
+                    _private_data_slot: PrivateDataSlot,
                     _p_data: *mut u64,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(get_private_data_ext)))
@@ -19462,66 +16177,20 @@ impl ExtPrivateDataFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreatePrivateDataSlotEXT.html>"]
-    pub unsafe fn create_private_data_slot_ext(
-        &self,
-        device: Device,
-        p_create_info: *const PrivateDataSlotCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_private_data_slot: *mut PrivateDataSlotEXT,
-    ) -> Result {
-        (self.create_private_data_slot_ext)(device, p_create_info, p_allocator, p_private_data_slot)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyPrivateDataSlotEXT.html>"]
-    pub unsafe fn destroy_private_data_slot_ext(
-        &self,
-        device: Device,
-        private_data_slot: PrivateDataSlotEXT,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_private_data_slot_ext)(device, private_data_slot, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetPrivateDataEXT.html>"]
-    pub unsafe fn set_private_data_ext(
-        &self,
-        device: Device,
-        object_type: ObjectType,
-        object_handle: u64,
-        private_data_slot: PrivateDataSlotEXT,
-        data: u64,
-    ) -> Result {
-        (self.set_private_data_ext)(device, object_type, object_handle, private_data_slot, data)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPrivateDataEXT.html>"]
-    pub unsafe fn get_private_data_ext(
-        &self,
-        device: Device,
-        object_type: ObjectType,
-        object_handle: u64,
-        private_data_slot: PrivateDataSlotEXT,
-        p_data: *mut u64,
-    ) {
-        (self.get_private_data_ext)(
-            device,
-            object_type,
-            object_handle,
-            private_data_slot,
-            p_data,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_private_data'"]
 impl ObjectType {
-    pub const PRIVATE_DATA_SLOT_EXT: Self = Self(1_000_295_000);
+    pub const PRIVATE_DATA_SLOT_EXT: Self = Self::PRIVATE_DATA_SLOT;
 }
 #[doc = "Generated from 'VK_EXT_private_data'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES_EXT: Self = Self(1_000_295_000);
-    pub const DEVICE_PRIVATE_DATA_CREATE_INFO_EXT: Self = Self(1_000_295_001);
-    pub const PRIVATE_DATA_SLOT_CREATE_INFO_EXT: Self = Self(1_000_295_002);
+    pub const PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES_EXT: Self =
+        Self::PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES;
+    pub const DEVICE_PRIVATE_DATA_CREATE_INFO_EXT: Self = Self::DEVICE_PRIVATE_DATA_CREATE_INFO;
+    pub const PRIVATE_DATA_SLOT_CREATE_INFO_EXT: Self = Self::PRIVATE_DATA_SLOT_CREATE_INFO;
 }
 impl KhrExtension297Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_297\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19543,7 +16212,7 @@ impl PipelineShaderStageCreateFlags {
     pub const RESERVED_3_KHR: Self = Self(0b1000);
 }
 impl ExtPipelineCreationCacheControlFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_EXT_pipeline_creation_cache_control\0",
@@ -19566,25 +16235,25 @@ impl ExtPipelineCreationCacheControlFn {
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_cache_control'"]
 impl PipelineCacheCreateFlags {
-    pub const EXTERNALLY_SYNCHRONIZED_EXT: Self = Self(0b1);
+    pub const EXTERNALLY_SYNCHRONIZED_EXT: Self = Self::EXTERNALLY_SYNCHRONIZED;
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_cache_control'"]
 impl PipelineCreateFlags {
-    pub const FAIL_ON_PIPELINE_COMPILE_REQUIRED_EXT: Self = Self(0b1_0000_0000);
-    pub const EARLY_RETURN_ON_FAILURE_EXT: Self = Self(0b10_0000_0000);
+    pub const FAIL_ON_PIPELINE_COMPILE_REQUIRED_EXT: Self = Self::FAIL_ON_PIPELINE_COMPILE_REQUIRED;
+    pub const EARLY_RETURN_ON_FAILURE_EXT: Self = Self::EARLY_RETURN_ON_FAILURE;
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_cache_control'"]
 impl Result {
-    pub const PIPELINE_COMPILE_REQUIRED_EXT: Self = Self(1_000_297_000);
-    pub const ERROR_PIPELINE_COMPILE_REQUIRED_EXT: Self = Self::PIPELINE_COMPILE_REQUIRED_EXT;
+    pub const PIPELINE_COMPILE_REQUIRED_EXT: Self = Self::PIPELINE_COMPILE_REQUIRED;
+    pub const ERROR_PIPELINE_COMPILE_REQUIRED_EXT: Self = Self::PIPELINE_COMPILE_REQUIRED;
 }
 #[doc = "Generated from 'VK_EXT_pipeline_creation_cache_control'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT: Self =
-        Self(1_000_297_000);
+        Self::PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES;
 }
 impl KhrExtension299Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_299\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19611,10 +16280,10 @@ impl PipelineCacheCreateFlags {
     pub const RESERVED_2_KHR: Self = Self(0b100);
 }
 impl KhrVideoEncodeQueueFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_video_encode_queue\0") }
     }
-    pub const SPEC_VERSION: u32 = 3u32;
+    pub const SPEC_VERSION: u32 = 4u32;
 }
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdEncodeVideoKHR = unsafe extern "system" fn(
@@ -19651,19 +16320,12 @@ impl KhrVideoEncodeQueueFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdEncodeVideoKHR.html>"]
-    pub unsafe fn cmd_encode_video_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_encode_info: *const VideoEncodeInfoKHR,
-    ) {
-        (self.cmd_encode_video_khr)(command_buffer, p_encode_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_video_encode_queue'"]
-impl AccessFlags2KHR {
-    pub const VIDEO_ENCODE_READ: Self = Self(0b10_0000_0000_0000_0000_0000_0000_0000_0000_0000);
-    pub const VIDEO_ENCODE_WRITE: Self = Self(0b100_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+impl AccessFlags2 {
+    pub const VIDEO_ENCODE_READ_KHR: Self = Self(0b10_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+    pub const VIDEO_ENCODE_WRITE_KHR: Self =
+        Self(0b100_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_encode_queue'"]
 impl BufferUsageFlags {
@@ -19676,9 +16338,9 @@ impl FormatFeatureFlags {
     pub const VIDEO_ENCODE_DPB_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_encode_queue'"]
-impl FormatFeatureFlags2KHR {
-    pub const VIDEO_ENCODE_INPUT: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
-    pub const VIDEO_ENCODE_DPB: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
+impl FormatFeatureFlags2 {
+    pub const VIDEO_ENCODE_INPUT_KHR: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
+    pub const VIDEO_ENCODE_DPB_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_encode_queue'"]
 impl ImageLayout {
@@ -19693,8 +16355,8 @@ impl ImageUsageFlags {
     pub const VIDEO_ENCODE_DPB_KHR: Self = Self(0b1000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_encode_queue'"]
-impl PipelineStageFlags2KHR {
-    pub const VIDEO_ENCODE: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
+impl PipelineStageFlags2 {
+    pub const VIDEO_ENCODE_KHR: Self = Self(0b1000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_video_encode_queue'"]
 impl QueryType {
@@ -19709,9 +16371,10 @@ impl StructureType {
     pub const VIDEO_ENCODE_INFO_KHR: Self = Self(1_000_299_000);
     pub const VIDEO_ENCODE_RATE_CONTROL_INFO_KHR: Self = Self(1_000_299_001);
     pub const VIDEO_ENCODE_RATE_CONTROL_LAYER_INFO_KHR: Self = Self(1_000_299_002);
+    pub const VIDEO_ENCODE_CAPABILITIES_KHR: Self = Self(1_000_299_003);
 }
 impl NvDeviceDiagnosticsConfigFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_device_diagnostics_config\0")
         }
@@ -19736,7 +16399,7 @@ impl StructureType {
     pub const DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV: Self = Self(1_000_300_001);
 }
 impl QcomRenderPassStoreOpsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_render_pass_store_ops\0")
         }
@@ -19757,10 +16420,10 @@ impl QcomRenderPassStoreOpsFn {
 }
 #[doc = "Generated from 'VK_QCOM_render_pass_store_ops'"]
 impl AttachmentStoreOp {
-    pub const NONE_QCOM: Self = Self::NONE_KHR;
+    pub const NONE_QCOM: Self = Self::NONE;
 }
 impl QcomExtension303Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_303\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19778,7 +16441,7 @@ impl QcomExtension303Fn {
     }
 }
 impl QcomExtension304Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_304\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19796,7 +16459,7 @@ impl QcomExtension304Fn {
     }
 }
 impl QcomExtension305Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_305\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19814,7 +16477,7 @@ impl QcomExtension305Fn {
     }
 }
 impl QcomExtension306Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_306\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19832,7 +16495,7 @@ impl QcomExtension306Fn {
     }
 }
 impl QcomExtension307Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_307\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19850,7 +16513,7 @@ impl QcomExtension307Fn {
     }
 }
 impl NvExtension308Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_308\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19868,7 +16531,7 @@ impl NvExtension308Fn {
     }
 }
 impl KhrExtension309Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_309\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19886,7 +16549,7 @@ impl KhrExtension309Fn {
     }
 }
 impl QcomExtension310Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_310\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19908,7 +16571,7 @@ impl StructureType {
     pub const RESERVED_QCOM: Self = Self(1_000_309_000);
 }
 impl NvExtension311Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_311\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19926,7 +16589,7 @@ impl NvExtension311Fn {
     }
 }
 impl ExtExtension312Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_312\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19944,7 +16607,7 @@ impl ExtExtension312Fn {
     }
 }
 impl ExtExtension313Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_313\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19962,7 +16625,7 @@ impl ExtExtension313Fn {
     }
 }
 impl AmdExtension314Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_314\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -19980,53 +16643,53 @@ impl AmdExtension314Fn {
     }
 }
 impl KhrSynchronization2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_synchronization2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetEvent2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdSetEvent2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     event: Event,
-    p_dependency_info: *const DependencyInfoKHR,
+    p_dependency_info: *const DependencyInfo,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdResetEvent2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdResetEvent2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     event: Event,
-    stage_mask: PipelineStageFlags2KHR,
+    stage_mask: PipelineStageFlags2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdWaitEvents2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdWaitEvents2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
     event_count: u32,
     p_events: *const Event,
-    p_dependency_infos: *const DependencyInfoKHR,
+    p_dependency_infos: *const DependencyInfo,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdPipelineBarrier2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdPipelineBarrier2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_dependency_info: *const DependencyInfoKHR,
+    p_dependency_info: *const DependencyInfo,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdWriteTimestamp2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdWriteTimestamp2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    stage: PipelineStageFlags2KHR,
+    stage: PipelineStageFlags2,
     query_pool: QueryPool,
     query: u32,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkQueueSubmit2KHR = unsafe extern "system" fn(
+pub type PFN_vkQueueSubmit2 = unsafe extern "system" fn(
     queue: Queue,
     submit_count: u32,
-    p_submits: *const SubmitInfo2KHR,
+    p_submits: *const SubmitInfo2,
     fence: Fence,
 ) -> Result;
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdWriteBufferMarker2AMD = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    stage: PipelineStageFlags2KHR,
+    stage: PipelineStageFlags2,
     dst_buffer: Buffer,
     dst_offset: DeviceSize,
     marker: u32,
@@ -20039,12 +16702,12 @@ pub type PFN_vkGetQueueCheckpointData2NV = unsafe extern "system" fn(
 );
 #[derive(Clone)]
 pub struct KhrSynchronization2Fn {
-    pub cmd_set_event2_khr: PFN_vkCmdSetEvent2KHR,
-    pub cmd_reset_event2_khr: PFN_vkCmdResetEvent2KHR,
-    pub cmd_wait_events2_khr: PFN_vkCmdWaitEvents2KHR,
-    pub cmd_pipeline_barrier2_khr: PFN_vkCmdPipelineBarrier2KHR,
-    pub cmd_write_timestamp2_khr: PFN_vkCmdWriteTimestamp2KHR,
-    pub queue_submit2_khr: PFN_vkQueueSubmit2KHR,
+    pub cmd_set_event2_khr: PFN_vkCmdSetEvent2,
+    pub cmd_reset_event2_khr: PFN_vkCmdResetEvent2,
+    pub cmd_wait_events2_khr: PFN_vkCmdWaitEvents2,
+    pub cmd_pipeline_barrier2_khr: PFN_vkCmdPipelineBarrier2,
+    pub cmd_write_timestamp2_khr: PFN_vkCmdWriteTimestamp2,
+    pub queue_submit2_khr: PFN_vkQueueSubmit2,
     pub cmd_write_buffer_marker2_amd: PFN_vkCmdWriteBufferMarker2AMD,
     pub get_queue_checkpoint_data2_nv: PFN_vkGetQueueCheckpointData2NV,
 }
@@ -20060,7 +16723,7 @@ impl KhrSynchronization2Fn {
                 unsafe extern "system" fn cmd_set_event2_khr(
                     _command_buffer: CommandBuffer,
                     _event: Event,
-                    _p_dependency_info: *const DependencyInfoKHR,
+                    _p_dependency_info: *const DependencyInfo,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(cmd_set_event2_khr)))
                 }
@@ -20076,7 +16739,7 @@ impl KhrSynchronization2Fn {
                 unsafe extern "system" fn cmd_reset_event2_khr(
                     _command_buffer: CommandBuffer,
                     _event: Event,
-                    _stage_mask: PipelineStageFlags2KHR,
+                    _stage_mask: PipelineStageFlags2,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(cmd_reset_event2_khr)))
                 }
@@ -20094,7 +16757,7 @@ impl KhrSynchronization2Fn {
                     _command_buffer: CommandBuffer,
                     _event_count: u32,
                     _p_events: *const Event,
-                    _p_dependency_infos: *const DependencyInfoKHR,
+                    _p_dependency_infos: *const DependencyInfo,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(cmd_wait_events2_khr)))
                 }
@@ -20110,7 +16773,7 @@ impl KhrSynchronization2Fn {
             cmd_pipeline_barrier2_khr: unsafe {
                 unsafe extern "system" fn cmd_pipeline_barrier2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_dependency_info: *const DependencyInfoKHR,
+                    _p_dependency_info: *const DependencyInfo,
                 ) {
                     panic!(concat!(
                         "Unable to load ",
@@ -20129,7 +16792,7 @@ impl KhrSynchronization2Fn {
             cmd_write_timestamp2_khr: unsafe {
                 unsafe extern "system" fn cmd_write_timestamp2_khr(
                     _command_buffer: CommandBuffer,
-                    _stage: PipelineStageFlags2KHR,
+                    _stage: PipelineStageFlags2,
                     _query_pool: QueryPool,
                     _query: u32,
                 ) {
@@ -20151,7 +16814,7 @@ impl KhrSynchronization2Fn {
                 unsafe extern "system" fn queue_submit2_khr(
                     _queue: Queue,
                     _submit_count: u32,
-                    _p_submits: *const SubmitInfo2KHR,
+                    _p_submits: *const SubmitInfo2,
                     _fence: Fence,
                 ) -> Result {
                     panic!(concat!("Unable to load ", stringify!(queue_submit2_khr)))
@@ -20167,7 +16830,7 @@ impl KhrSynchronization2Fn {
             cmd_write_buffer_marker2_amd: unsafe {
                 unsafe extern "system" fn cmd_write_buffer_marker2_amd(
                     _command_buffer: CommandBuffer,
-                    _stage: PipelineStageFlags2KHR,
+                    _stage: PipelineStageFlags2,
                     _dst_buffer: Buffer,
                     _dst_offset: DeviceSize,
                     _marker: u32,
@@ -20210,89 +16873,13 @@ impl KhrSynchronization2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetEvent2KHR.html>"]
-    pub unsafe fn cmd_set_event2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        event: Event,
-        p_dependency_info: *const DependencyInfoKHR,
-    ) {
-        (self.cmd_set_event2_khr)(command_buffer, event, p_dependency_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdResetEvent2KHR.html>"]
-    pub unsafe fn cmd_reset_event2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        event: Event,
-        stage_mask: PipelineStageFlags2KHR,
-    ) {
-        (self.cmd_reset_event2_khr)(command_buffer, event, stage_mask)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWaitEvents2KHR.html>"]
-    pub unsafe fn cmd_wait_events2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        event_count: u32,
-        p_events: *const Event,
-        p_dependency_infos: *const DependencyInfoKHR,
-    ) {
-        (self.cmd_wait_events2_khr)(command_buffer, event_count, p_events, p_dependency_infos)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdPipelineBarrier2KHR.html>"]
-    pub unsafe fn cmd_pipeline_barrier2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_dependency_info: *const DependencyInfoKHR,
-    ) {
-        (self.cmd_pipeline_barrier2_khr)(command_buffer, p_dependency_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteTimestamp2KHR.html>"]
-    pub unsafe fn cmd_write_timestamp2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        stage: PipelineStageFlags2KHR,
-        query_pool: QueryPool,
-        query: u32,
-    ) {
-        (self.cmd_write_timestamp2_khr)(command_buffer, stage, query_pool, query)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueueSubmit2KHR.html>"]
-    pub unsafe fn queue_submit2_khr(
-        &self,
-        queue: Queue,
-        submit_count: u32,
-        p_submits: *const SubmitInfo2KHR,
-        fence: Fence,
-    ) -> Result {
-        (self.queue_submit2_khr)(queue, submit_count, p_submits, fence)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteBufferMarker2AMD.html>"]
-    pub unsafe fn cmd_write_buffer_marker2_amd(
-        &self,
-        command_buffer: CommandBuffer,
-        stage: PipelineStageFlags2KHR,
-        dst_buffer: Buffer,
-        dst_offset: DeviceSize,
-        marker: u32,
-    ) {
-        (self.cmd_write_buffer_marker2_amd)(command_buffer, stage, dst_buffer, dst_offset, marker)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetQueueCheckpointData2NV.html>"]
-    pub unsafe fn get_queue_checkpoint_data2_nv(
-        &self,
-        queue: Queue,
-        p_checkpoint_data_count: *mut u32,
-        p_checkpoint_data: *mut CheckpointData2NV,
-    ) {
-        (self.get_queue_checkpoint_data2_nv)(queue, p_checkpoint_data_count, p_checkpoint_data)
-    }
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
 impl AccessFlags {
-    pub const NONE_KHR: Self = Self(0);
+    pub const NONE_KHR: Self = Self::NONE;
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
-impl AccessFlags2KHR {
+impl AccessFlags2 {
     pub const TRANSFORM_FEEDBACK_WRITE_EXT: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
     pub const TRANSFORM_FEEDBACK_COUNTER_READ_EXT: Self = Self(0b100_0000_0000_0000_0000_0000_0000);
     pub const TRANSFORM_FEEDBACK_COUNTER_WRITE_EXT: Self =
@@ -20301,59 +16888,61 @@ impl AccessFlags2KHR {
     pub const CONDITIONAL_RENDERING_READ_EXT: Self = Self(0b1_0000_0000_0000_0000_0000);
     pub const COMMAND_PREPROCESS_READ_NV: Self = Self(0b10_0000_0000_0000_0000);
     pub const COMMAND_PREPROCESS_WRITE_NV: Self = Self(0b100_0000_0000_0000_0000);
-    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_READ: Self = Self(0b1000_0000_0000_0000_0000_0000);
-    pub const SHADING_RATE_IMAGE_READ_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_READ;
-    pub const ACCELERATION_STRUCTURE_READ: Self = Self(0b10_0000_0000_0000_0000_0000);
-    pub const ACCELERATION_STRUCTURE_WRITE: Self = Self(0b100_0000_0000_0000_0000_0000);
-    pub const ACCELERATION_STRUCTURE_READ_NV: Self = Self::ACCELERATION_STRUCTURE_READ;
-    pub const ACCELERATION_STRUCTURE_WRITE_NV: Self = Self::ACCELERATION_STRUCTURE_WRITE;
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_READ_KHR: Self =
+        Self(0b1000_0000_0000_0000_0000_0000);
+    pub const SHADING_RATE_IMAGE_READ_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_READ_KHR;
+    pub const ACCELERATION_STRUCTURE_READ_KHR: Self = Self(0b10_0000_0000_0000_0000_0000);
+    pub const ACCELERATION_STRUCTURE_WRITE_KHR: Self = Self(0b100_0000_0000_0000_0000_0000);
+    pub const ACCELERATION_STRUCTURE_READ_NV: Self = Self::ACCELERATION_STRUCTURE_READ_KHR;
+    pub const ACCELERATION_STRUCTURE_WRITE_NV: Self = Self::ACCELERATION_STRUCTURE_WRITE_KHR;
     pub const FRAGMENT_DENSITY_MAP_READ_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
     pub const COLOR_ATTACHMENT_READ_NONCOHERENT_EXT: Self = Self(0b1000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
 impl EventCreateFlags {
-    pub const DEVICE_ONLY_KHR: Self = Self(0b1);
+    pub const DEVICE_ONLY_KHR: Self = Self::DEVICE_ONLY;
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
 impl ImageLayout {
-    pub const READ_ONLY_OPTIMAL_KHR: Self = Self(1_000_314_000);
-    pub const ATTACHMENT_OPTIMAL_KHR: Self = Self(1_000_314_001);
+    pub const READ_ONLY_OPTIMAL_KHR: Self = Self::READ_ONLY_OPTIMAL;
+    pub const ATTACHMENT_OPTIMAL_KHR: Self = Self::ATTACHMENT_OPTIMAL;
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
 impl PipelineStageFlags {
-    pub const NONE_KHR: Self = Self(0);
+    pub const NONE_KHR: Self = Self::NONE;
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
-impl PipelineStageFlags2KHR {
+impl PipelineStageFlags2 {
     pub const TRANSFORM_FEEDBACK_EXT: Self = Self(0b1_0000_0000_0000_0000_0000_0000);
     #[doc = "A pipeline stage for conditional rendering predicate fetch"]
     pub const CONDITIONAL_RENDERING_EXT: Self = Self(0b100_0000_0000_0000_0000);
     pub const COMMAND_PREPROCESS_NV: Self = Self(0b10_0000_0000_0000_0000);
-    pub const FRAGMENT_SHADING_RATE_ATTACHMENT: Self = Self(0b100_0000_0000_0000_0000_0000);
-    pub const SHADING_RATE_IMAGE_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT;
-    pub const ACCELERATION_STRUCTURE_BUILD: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
-    pub const RAY_TRACING_SHADER: Self = Self(0b10_0000_0000_0000_0000_0000);
-    pub const RAY_TRACING_SHADER_NV: Self = Self::RAY_TRACING_SHADER;
-    pub const ACCELERATION_STRUCTURE_BUILD_NV: Self = Self::ACCELERATION_STRUCTURE_BUILD;
+    pub const FRAGMENT_SHADING_RATE_ATTACHMENT_KHR: Self = Self(0b100_0000_0000_0000_0000_0000);
+    pub const SHADING_RATE_IMAGE_NV: Self = Self::FRAGMENT_SHADING_RATE_ATTACHMENT_KHR;
+    pub const ACCELERATION_STRUCTURE_BUILD_KHR: Self = Self(0b10_0000_0000_0000_0000_0000_0000);
+    pub const RAY_TRACING_SHADER_KHR: Self = Self(0b10_0000_0000_0000_0000_0000);
+    pub const RAY_TRACING_SHADER_NV: Self = Self::RAY_TRACING_SHADER_KHR;
+    pub const ACCELERATION_STRUCTURE_BUILD_NV: Self = Self::ACCELERATION_STRUCTURE_BUILD_KHR;
     pub const FRAGMENT_DENSITY_PROCESS_EXT: Self = Self(0b1000_0000_0000_0000_0000_0000);
     pub const TASK_SHADER_NV: Self = Self(0b1000_0000_0000_0000_0000);
     pub const MESH_SHADER_NV: Self = Self(0b1_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_synchronization2'"]
 impl StructureType {
-    pub const MEMORY_BARRIER_2_KHR: Self = Self(1_000_314_000);
-    pub const BUFFER_MEMORY_BARRIER_2_KHR: Self = Self(1_000_314_001);
-    pub const IMAGE_MEMORY_BARRIER_2_KHR: Self = Self(1_000_314_002);
-    pub const DEPENDENCY_INFO_KHR: Self = Self(1_000_314_003);
-    pub const SUBMIT_INFO_2_KHR: Self = Self(1_000_314_004);
-    pub const SEMAPHORE_SUBMIT_INFO_KHR: Self = Self(1_000_314_005);
-    pub const COMMAND_BUFFER_SUBMIT_INFO_KHR: Self = Self(1_000_314_006);
-    pub const PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR: Self = Self(1_000_314_007);
+    pub const MEMORY_BARRIER_2_KHR: Self = Self::MEMORY_BARRIER_2;
+    pub const BUFFER_MEMORY_BARRIER_2_KHR: Self = Self::BUFFER_MEMORY_BARRIER_2;
+    pub const IMAGE_MEMORY_BARRIER_2_KHR: Self = Self::IMAGE_MEMORY_BARRIER_2;
+    pub const DEPENDENCY_INFO_KHR: Self = Self::DEPENDENCY_INFO;
+    pub const SUBMIT_INFO_2_KHR: Self = Self::SUBMIT_INFO_2;
+    pub const SEMAPHORE_SUBMIT_INFO_KHR: Self = Self::SEMAPHORE_SUBMIT_INFO;
+    pub const COMMAND_BUFFER_SUBMIT_INFO_KHR: Self = Self::COMMAND_BUFFER_SUBMIT_INFO;
+    pub const PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR: Self =
+        Self::PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES;
     pub const QUEUE_FAMILY_CHECKPOINT_PROPERTIES_2_NV: Self = Self(1_000_314_008);
     pub const CHECKPOINT_DATA_2_NV: Self = Self(1_000_314_009);
 }
 impl AmdExtension316Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_316\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20371,7 +16960,7 @@ impl AmdExtension316Fn {
     }
 }
 impl AmdExtension317Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_317\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20389,7 +16978,7 @@ impl AmdExtension317Fn {
     }
 }
 #[doc = "Generated from 'VK_AMD_extension_317'"]
-impl AccessFlags2KHR {
+impl AccessFlags2 {
     pub const RESERVED_41_AMD: Self = Self(0b10_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_AMD_extension_317'"]
@@ -20410,11 +16999,15 @@ impl ImageCreateFlags {
     pub const RESERVED_16_AMD: Self = Self(0b1_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_AMD_extension_317'"]
+impl ImageViewCreateFlags {
+    pub const RESERVED_2_AMD: Self = Self(0b100);
+}
+#[doc = "Generated from 'VK_AMD_extension_317'"]
 impl SamplerCreateFlags {
     pub const RESERVED_3_AMD: Self = Self(0b1000);
 }
 impl AmdExtension318Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_318\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20432,7 +17025,7 @@ impl AmdExtension318Fn {
     }
 }
 impl AmdExtension319Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_319\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20458,7 +17051,7 @@ impl PipelineLayoutCreateFlags {
     pub const RESERVED_0_AMD: Self = Self(0b1);
 }
 impl AmdExtension320Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_320\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20476,7 +17069,7 @@ impl AmdExtension320Fn {
     }
 }
 impl AmdExtension321Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_321\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20503,7 +17096,7 @@ impl PipelineLayoutCreateFlags {
     pub const RESERVED_1_AMD: Self = Self(0b10);
 }
 impl AmdExtension322Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_322\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20521,7 +17114,7 @@ impl AmdExtension322Fn {
     }
 }
 impl AmdExtension323Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_AMD_extension_323\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20539,7 +17132,7 @@ impl AmdExtension323Fn {
     }
 }
 impl KhrShaderSubgroupUniformControlFlowFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_shader_subgroup_uniform_control_flow\0",
@@ -20566,7 +17159,7 @@ impl StructureType {
         Self(1_000_323_000);
 }
 impl KhrExtension325Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_325\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20584,7 +17177,7 @@ impl KhrExtension325Fn {
     }
 }
 impl KhrZeroInitializeWorkgroupMemoryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_zero_initialize_workgroup_memory\0",
@@ -20608,10 +17201,10 @@ impl KhrZeroInitializeWorkgroupMemoryFn {
 #[doc = "Generated from 'VK_KHR_zero_initialize_workgroup_memory'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES_KHR: Self =
-        Self(1_000_325_000);
+        Self::PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES;
 }
 impl NvFragmentShadingRateEnumsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_fragment_shading_rate_enums\0")
         }
@@ -20659,15 +17252,6 @@ impl NvFragmentShadingRateEnumsFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetFragmentShadingRateEnumNV.html>"]
-    pub unsafe fn cmd_set_fragment_shading_rate_enum_nv(
-        &self,
-        command_buffer: CommandBuffer,
-        shading_rate: FragmentShadingRateNV,
-        combiner_ops: *const [FragmentShadingRateCombinerOpKHR; 2],
-    ) {
-        (self.cmd_set_fragment_shading_rate_enum_nv)(command_buffer, shading_rate, combiner_ops)
-    }
 }
 #[doc = "Generated from 'VK_NV_fragment_shading_rate_enums'"]
 impl StructureType {
@@ -20676,7 +17260,7 @@ impl StructureType {
     pub const PIPELINE_FRAGMENT_SHADING_RATE_ENUM_STATE_CREATE_INFO_NV: Self = Self(1_000_326_002);
 }
 impl NvRayTracingMotionBlurFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_ray_tracing_motion_blur\0")
         }
@@ -20714,7 +17298,7 @@ impl StructureType {
     pub const ACCELERATION_STRUCTURE_MOTION_INFO_NV: Self = Self(1_000_327_002);
 }
 impl NvExtension329Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_329\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20732,7 +17316,7 @@ impl NvExtension329Fn {
     }
 }
 impl NvExtension330Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_330\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20750,7 +17334,7 @@ impl NvExtension330Fn {
     }
 }
 impl ExtYcbcr2plane444FormatsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_ycbcr_2plane_444_formats\0")
         }
@@ -20771,17 +17355,19 @@ impl ExtYcbcr2plane444FormatsFn {
 }
 #[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
 impl Format {
-    pub const G8_B8R8_2PLANE_444_UNORM_EXT: Self = Self(1_000_330_000);
-    pub const G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16_EXT: Self = Self(1_000_330_001);
-    pub const G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16_EXT: Self = Self(1_000_330_002);
-    pub const G16_B16R16_2PLANE_444_UNORM_EXT: Self = Self(1_000_330_003);
+    pub const G8_B8R8_2PLANE_444_UNORM_EXT: Self = Self::G8_B8R8_2PLANE_444_UNORM;
+    pub const G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16_EXT: Self =
+        Self::G10X6_B10X6R10X6_2PLANE_444_UNORM_3PACK16;
+    pub const G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16_EXT: Self =
+        Self::G12X4_B12X4R12X4_2PLANE_444_UNORM_3PACK16;
+    pub const G16_B16R16_2PLANE_444_UNORM_EXT: Self = Self::G16_B16R16_2PLANE_444_UNORM;
 }
 #[doc = "Generated from 'VK_EXT_ycbcr_2plane_444_formats'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT: Self = Self(1_000_330_000);
 }
 impl NvExtension332Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_332\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20799,7 +17385,7 @@ impl NvExtension332Fn {
     }
 }
 impl ExtFragmentDensityMap2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_fragment_density_map2\0")
         }
@@ -20828,7 +17414,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_PROPERTIES_EXT: Self = Self(1_000_332_001);
 }
 impl QcomRotatedCopyCommandsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_rotated_copy_commands\0")
         }
@@ -20852,7 +17438,7 @@ impl StructureType {
     pub const COPY_COMMAND_TRANSFORM_INFO_QCOM: Self = Self(1_000_333_000);
 }
 impl KhrExtension335Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_335\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -20870,7 +17456,7 @@ impl KhrExtension335Fn {
     }
 }
 impl ExtImageRobustnessFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_image_robustness\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -20889,10 +17475,11 @@ impl ExtImageRobustnessFn {
 }
 #[doc = "Generated from 'VK_EXT_image_robustness'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES_EXT: Self = Self(1_000_335_000);
+    pub const PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES_EXT: Self =
+        Self::PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES;
 }
 impl KhrWorkgroupMemoryExplicitLayoutFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_KHR_workgroup_memory_explicit_layout\0",
@@ -20919,49 +17506,49 @@ impl StructureType {
         Self(1_000_336_000);
 }
 impl KhrCopyCommands2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_copy_commands2\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyBuffer2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdCopyBuffer2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_copy_buffer_info: *const CopyBufferInfo2KHR,
+    p_copy_buffer_info: *const CopyBufferInfo2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyImage2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdCopyImage2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_copy_image_info: *const CopyImageInfo2KHR,
+    p_copy_image_info: *const CopyImageInfo2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyBufferToImage2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdCopyBufferToImage2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2KHR,
+    p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdCopyImageToBuffer2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdCopyImageToBuffer2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2KHR,
+    p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdBlitImage2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdBlitImage2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_blit_image_info: *const BlitImageInfo2KHR,
+    p_blit_image_info: *const BlitImageInfo2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdResolveImage2KHR = unsafe extern "system" fn(
+pub type PFN_vkCmdResolveImage2 = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
-    p_resolve_image_info: *const ResolveImageInfo2KHR,
+    p_resolve_image_info: *const ResolveImageInfo2,
 );
 #[derive(Clone)]
 pub struct KhrCopyCommands2Fn {
-    pub cmd_copy_buffer2_khr: PFN_vkCmdCopyBuffer2KHR,
-    pub cmd_copy_image2_khr: PFN_vkCmdCopyImage2KHR,
-    pub cmd_copy_buffer_to_image2_khr: PFN_vkCmdCopyBufferToImage2KHR,
-    pub cmd_copy_image_to_buffer2_khr: PFN_vkCmdCopyImageToBuffer2KHR,
-    pub cmd_blit_image2_khr: PFN_vkCmdBlitImage2KHR,
-    pub cmd_resolve_image2_khr: PFN_vkCmdResolveImage2KHR,
+    pub cmd_copy_buffer2_khr: PFN_vkCmdCopyBuffer2,
+    pub cmd_copy_image2_khr: PFN_vkCmdCopyImage2,
+    pub cmd_copy_buffer_to_image2_khr: PFN_vkCmdCopyBufferToImage2,
+    pub cmd_copy_image_to_buffer2_khr: PFN_vkCmdCopyImageToBuffer2,
+    pub cmd_blit_image2_khr: PFN_vkCmdBlitImage2,
+    pub cmd_resolve_image2_khr: PFN_vkCmdResolveImage2,
 }
 unsafe impl Send for KhrCopyCommands2Fn {}
 unsafe impl Sync for KhrCopyCommands2Fn {}
@@ -20974,7 +17561,7 @@ impl KhrCopyCommands2Fn {
             cmd_copy_buffer2_khr: unsafe {
                 unsafe extern "system" fn cmd_copy_buffer2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_copy_buffer_info: *const CopyBufferInfo2KHR,
+                    _p_copy_buffer_info: *const CopyBufferInfo2,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(cmd_copy_buffer2_khr)))
                 }
@@ -20990,7 +17577,7 @@ impl KhrCopyCommands2Fn {
             cmd_copy_image2_khr: unsafe {
                 unsafe extern "system" fn cmd_copy_image2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_copy_image_info: *const CopyImageInfo2KHR,
+                    _p_copy_image_info: *const CopyImageInfo2,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(cmd_copy_image2_khr)))
                 }
@@ -21006,7 +17593,7 @@ impl KhrCopyCommands2Fn {
             cmd_copy_buffer_to_image2_khr: unsafe {
                 unsafe extern "system" fn cmd_copy_buffer_to_image2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2KHR,
+                    _p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2,
                 ) {
                     panic!(concat!(
                         "Unable to load ",
@@ -21026,7 +17613,7 @@ impl KhrCopyCommands2Fn {
             cmd_copy_image_to_buffer2_khr: unsafe {
                 unsafe extern "system" fn cmd_copy_image_to_buffer2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2KHR,
+                    _p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2,
                 ) {
                     panic!(concat!(
                         "Unable to load ",
@@ -21046,7 +17633,7 @@ impl KhrCopyCommands2Fn {
             cmd_blit_image2_khr: unsafe {
                 unsafe extern "system" fn cmd_blit_image2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_blit_image_info: *const BlitImageInfo2KHR,
+                    _p_blit_image_info: *const BlitImageInfo2,
                 ) {
                     panic!(concat!("Unable to load ", stringify!(cmd_blit_image2_khr)))
                 }
@@ -21062,7 +17649,7 @@ impl KhrCopyCommands2Fn {
             cmd_resolve_image2_khr: unsafe {
                 unsafe extern "system" fn cmd_resolve_image2_khr(
                     _command_buffer: CommandBuffer,
-                    _p_resolve_image_info: *const ResolveImageInfo2KHR,
+                    _p_resolve_image_info: *const ResolveImageInfo2,
                 ) {
                     panic!(concat!(
                         "Unable to load ",
@@ -21080,71 +17667,23 @@ impl KhrCopyCommands2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyBuffer2KHR.html>"]
-    pub unsafe fn cmd_copy_buffer2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_copy_buffer_info: *const CopyBufferInfo2KHR,
-    ) {
-        (self.cmd_copy_buffer2_khr)(command_buffer, p_copy_buffer_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyImage2KHR.html>"]
-    pub unsafe fn cmd_copy_image2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_copy_image_info: *const CopyImageInfo2KHR,
-    ) {
-        (self.cmd_copy_image2_khr)(command_buffer, p_copy_image_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyBufferToImage2KHR.html>"]
-    pub unsafe fn cmd_copy_buffer_to_image2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_copy_buffer_to_image_info: *const CopyBufferToImageInfo2KHR,
-    ) {
-        (self.cmd_copy_buffer_to_image2_khr)(command_buffer, p_copy_buffer_to_image_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyImageToBuffer2KHR.html>"]
-    pub unsafe fn cmd_copy_image_to_buffer2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_copy_image_to_buffer_info: *const CopyImageToBufferInfo2KHR,
-    ) {
-        (self.cmd_copy_image_to_buffer2_khr)(command_buffer, p_copy_image_to_buffer_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBlitImage2KHR.html>"]
-    pub unsafe fn cmd_blit_image2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_blit_image_info: *const BlitImageInfo2KHR,
-    ) {
-        (self.cmd_blit_image2_khr)(command_buffer, p_blit_image_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdResolveImage2KHR.html>"]
-    pub unsafe fn cmd_resolve_image2_khr(
-        &self,
-        command_buffer: CommandBuffer,
-        p_resolve_image_info: *const ResolveImageInfo2KHR,
-    ) {
-        (self.cmd_resolve_image2_khr)(command_buffer, p_resolve_image_info)
-    }
 }
 #[doc = "Generated from 'VK_KHR_copy_commands2'"]
 impl StructureType {
-    pub const COPY_BUFFER_INFO_2_KHR: Self = Self(1_000_337_000);
-    pub const COPY_IMAGE_INFO_2_KHR: Self = Self(1_000_337_001);
-    pub const COPY_BUFFER_TO_IMAGE_INFO_2_KHR: Self = Self(1_000_337_002);
-    pub const COPY_IMAGE_TO_BUFFER_INFO_2_KHR: Self = Self(1_000_337_003);
-    pub const BLIT_IMAGE_INFO_2_KHR: Self = Self(1_000_337_004);
-    pub const RESOLVE_IMAGE_INFO_2_KHR: Self = Self(1_000_337_005);
-    pub const BUFFER_COPY_2_KHR: Self = Self(1_000_337_006);
-    pub const IMAGE_COPY_2_KHR: Self = Self(1_000_337_007);
-    pub const IMAGE_BLIT_2_KHR: Self = Self(1_000_337_008);
-    pub const BUFFER_IMAGE_COPY_2_KHR: Self = Self(1_000_337_009);
-    pub const IMAGE_RESOLVE_2_KHR: Self = Self(1_000_337_010);
+    pub const COPY_BUFFER_INFO_2_KHR: Self = Self::COPY_BUFFER_INFO_2;
+    pub const COPY_IMAGE_INFO_2_KHR: Self = Self::COPY_IMAGE_INFO_2;
+    pub const COPY_BUFFER_TO_IMAGE_INFO_2_KHR: Self = Self::COPY_BUFFER_TO_IMAGE_INFO_2;
+    pub const COPY_IMAGE_TO_BUFFER_INFO_2_KHR: Self = Self::COPY_IMAGE_TO_BUFFER_INFO_2;
+    pub const BLIT_IMAGE_INFO_2_KHR: Self = Self::BLIT_IMAGE_INFO_2;
+    pub const RESOLVE_IMAGE_INFO_2_KHR: Self = Self::RESOLVE_IMAGE_INFO_2;
+    pub const BUFFER_COPY_2_KHR: Self = Self::BUFFER_COPY_2;
+    pub const IMAGE_COPY_2_KHR: Self = Self::IMAGE_COPY_2;
+    pub const IMAGE_BLIT_2_KHR: Self = Self::IMAGE_BLIT_2;
+    pub const BUFFER_IMAGE_COPY_2_KHR: Self = Self::BUFFER_IMAGE_COPY_2;
+    pub const IMAGE_RESOLVE_2_KHR: Self = Self::IMAGE_RESOLVE_2;
 }
 impl ArmExtension339Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_339\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21162,7 +17701,7 @@ impl ArmExtension339Fn {
     }
 }
 impl ExtExtension340Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_340\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21184,7 +17723,7 @@ impl ImageUsageFlags {
     pub const RESERVED_19_EXT: Self = Self(0b1000_0000_0000_0000_0000);
 }
 impl Ext4444FormatsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_4444_formats\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21203,15 +17742,15 @@ impl Ext4444FormatsFn {
 }
 #[doc = "Generated from 'VK_EXT_4444_formats'"]
 impl Format {
-    pub const A4R4G4B4_UNORM_PACK16_EXT: Self = Self(1_000_340_000);
-    pub const A4B4G4R4_UNORM_PACK16_EXT: Self = Self(1_000_340_001);
+    pub const A4R4G4B4_UNORM_PACK16_EXT: Self = Self::A4R4G4B4_UNORM_PACK16;
+    pub const A4B4G4R4_UNORM_PACK16_EXT: Self = Self::A4B4G4R4_UNORM_PACK16;
 }
 #[doc = "Generated from 'VK_EXT_4444_formats'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT: Self = Self(1_000_340_000);
 }
 impl ExtExtension342Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_342\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21229,7 +17768,7 @@ impl ExtExtension342Fn {
     }
 }
 impl ArmRasterizationOrderAttachmentAccessFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_ARM_rasterization_order_attachment_access\0",
@@ -21271,7 +17810,7 @@ impl SubpassDescriptionFlags {
     pub const RASTERIZATION_ORDER_ATTACHMENT_STENCIL_ACCESS_ARM: Self = Self(0b100_0000);
 }
 impl ArmExtension344Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_344\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21289,7 +17828,7 @@ impl ArmExtension344Fn {
     }
 }
 impl ExtRgba10x6FormatsFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_rgba10x6_formats\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21311,7 +17850,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT: Self = Self(1_000_344_000);
 }
 impl NvAcquireWinrtDisplayFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_acquire_winrt_display\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21376,26 +17915,9 @@ impl NvAcquireWinrtDisplayFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireWinrtDisplayNV.html>"]
-    pub unsafe fn acquire_winrt_display_nv(
-        &self,
-        physical_device: PhysicalDevice,
-        display: DisplayKHR,
-    ) -> Result {
-        (self.acquire_winrt_display_nv)(physical_device, display)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetWinrtDisplayNV.html>"]
-    pub unsafe fn get_winrt_display_nv(
-        &self,
-        physical_device: PhysicalDevice,
-        device_relative_id: u32,
-        p_display: *mut DisplayKHR,
-    ) -> Result {
-        (self.get_winrt_display_nv)(physical_device, device_relative_id, p_display)
-    }
 }
 impl ExtDirectfbSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_directfb_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21473,36 +17995,13 @@ impl ExtDirectfbSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDirectFBSurfaceEXT.html>"]
-    pub unsafe fn create_direct_fb_surface_ext(
-        &self,
-        instance: Instance,
-        p_create_info: *const DirectFBSurfaceCreateInfoEXT,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_direct_fb_surface_ext)(instance, p_create_info, p_allocator, p_surface)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDirectFBPresentationSupportEXT.html>"]
-    pub unsafe fn get_physical_device_direct_fb_presentation_support_ext(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        dfb: *mut IDirectFB,
-    ) -> Bool32 {
-        (self.get_physical_device_direct_fb_presentation_support_ext)(
-            physical_device,
-            queue_family_index,
-            dfb,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_directfb_surface'"]
 impl StructureType {
     pub const DIRECTFB_SURFACE_CREATE_INFO_EXT: Self = Self(1_000_346_000);
 }
 impl KhrExtension350Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_350\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21520,7 +18019,7 @@ impl KhrExtension350Fn {
     }
 }
 impl NvExtension351Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_351\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21538,7 +18037,7 @@ impl NvExtension351Fn {
     }
 }
 impl ValveMutableDescriptorTypeFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_VALVE_mutable_descriptor_type\0")
         }
@@ -21575,7 +18074,7 @@ impl StructureType {
     pub const MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE: Self = Self(1_000_351_002);
 }
 impl ExtVertexInputDynamicStateFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_vertex_input_dynamic_state\0")
         }
@@ -21626,23 +18125,6 @@ impl ExtVertexInputDynamicStateFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetVertexInputEXT.html>"]
-    pub unsafe fn cmd_set_vertex_input_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        vertex_binding_description_count: u32,
-        p_vertex_binding_descriptions: *const VertexInputBindingDescription2EXT,
-        vertex_attribute_description_count: u32,
-        p_vertex_attribute_descriptions: *const VertexInputAttributeDescription2EXT,
-    ) {
-        (self.cmd_set_vertex_input_ext)(
-            command_buffer,
-            vertex_binding_description_count,
-            p_vertex_binding_descriptions,
-            vertex_attribute_description_count,
-            p_vertex_attribute_descriptions,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_vertex_input_dynamic_state'"]
 impl DynamicState {
@@ -21655,7 +18137,7 @@ impl StructureType {
     pub const VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT: Self = Self(1_000_352_002);
 }
 impl ExtPhysicalDeviceDrmFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_physical_device_drm\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21677,7 +18159,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_DRM_PROPERTIES_EXT: Self = Self(1_000_353_000);
 }
 impl ExtExtension355Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_355\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21695,7 +18177,7 @@ impl ExtExtension355Fn {
     }
 }
 impl ExtDepthClipControlFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_depth_clip_control\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21718,7 +18200,7 @@ impl StructureType {
     pub const PIPELINE_VIEWPORT_DEPTH_CLIP_CONTROL_CREATE_INFO_EXT: Self = Self(1_000_355_001);
 }
 impl ExtPrimitiveTopologyListRestartFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_EXT_primitive_topology_list_restart\0",
@@ -21745,7 +18227,7 @@ impl StructureType {
         Self(1_000_356_000);
 }
 impl KhrExtension358Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_358\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21763,7 +18245,7 @@ impl KhrExtension358Fn {
     }
 }
 impl ExtExtension359Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_359\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21781,7 +18263,7 @@ impl ExtExtension359Fn {
     }
 }
 impl ExtExtension360Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_360\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21799,7 +18281,7 @@ impl ExtExtension360Fn {
     }
 }
 impl KhrFormatFeatureFlags2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_format_feature_flags2\0")
         }
@@ -21820,10 +18302,10 @@ impl KhrFormatFeatureFlags2Fn {
 }
 #[doc = "Generated from 'VK_KHR_format_feature_flags2'"]
 impl StructureType {
-    pub const FORMAT_PROPERTIES_3_KHR: Self = Self(1_000_360_000);
+    pub const FORMAT_PROPERTIES_3_KHR: Self = Self::FORMAT_PROPERTIES_3;
 }
 impl ExtExtension362Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_362\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21841,7 +18323,7 @@ impl ExtExtension362Fn {
     }
 }
 impl ExtExtension363Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_363\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21859,7 +18341,7 @@ impl ExtExtension363Fn {
     }
 }
 impl FuchsiaExtension364Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FUCHSIA_extension_364\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -21877,7 +18359,7 @@ impl FuchsiaExtension364Fn {
     }
 }
 impl FuchsiaExternalMemoryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FUCHSIA_external_memory\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -21953,30 +18435,6 @@ impl FuchsiaExternalMemoryFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryZirconHandleFUCHSIA.html>"]
-    pub unsafe fn get_memory_zircon_handle_fuchsia(
-        &self,
-        device: Device,
-        p_get_zircon_handle_info: *const MemoryGetZirconHandleInfoFUCHSIA,
-        p_zircon_handle: *mut zx_handle_t,
-    ) -> Result {
-        (self.get_memory_zircon_handle_fuchsia)(device, p_get_zircon_handle_info, p_zircon_handle)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryZirconHandlePropertiesFUCHSIA.html>"]
-    pub unsafe fn get_memory_zircon_handle_properties_fuchsia(
-        &self,
-        device: Device,
-        handle_type: ExternalMemoryHandleTypeFlags,
-        zircon_handle: zx_handle_t,
-        p_memory_zircon_handle_properties: *mut MemoryZirconHandlePropertiesFUCHSIA,
-    ) -> Result {
-        (self.get_memory_zircon_handle_properties_fuchsia)(
-            device,
-            handle_type,
-            zircon_handle,
-            p_memory_zircon_handle_properties,
-        )
-    }
 }
 #[doc = "Generated from 'VK_FUCHSIA_external_memory'"]
 impl ExternalMemoryHandleTypeFlags {
@@ -21989,7 +18447,7 @@ impl StructureType {
     pub const MEMORY_GET_ZIRCON_HANDLE_INFO_FUCHSIA: Self = Self(1_000_364_002);
 }
 impl FuchsiaExternalSemaphoreFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FUCHSIA_external_semaphore\0")
         }
@@ -22063,27 +18521,6 @@ impl FuchsiaExternalSemaphoreFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportSemaphoreZirconHandleFUCHSIA.html>"]
-    pub unsafe fn import_semaphore_zircon_handle_fuchsia(
-        &self,
-        device: Device,
-        p_import_semaphore_zircon_handle_info: *const ImportSemaphoreZirconHandleInfoFUCHSIA,
-    ) -> Result {
-        (self.import_semaphore_zircon_handle_fuchsia)(device, p_import_semaphore_zircon_handle_info)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSemaphoreZirconHandleFUCHSIA.html>"]
-    pub unsafe fn get_semaphore_zircon_handle_fuchsia(
-        &self,
-        device: Device,
-        p_get_zircon_handle_info: *const SemaphoreGetZirconHandleInfoFUCHSIA,
-        p_zircon_handle: *mut zx_handle_t,
-    ) -> Result {
-        (self.get_semaphore_zircon_handle_fuchsia)(
-            device,
-            p_get_zircon_handle_info,
-            p_zircon_handle,
-        )
-    }
 }
 #[doc = "Generated from 'VK_FUCHSIA_external_semaphore'"]
 impl ExternalSemaphoreHandleTypeFlags {
@@ -22095,7 +18532,7 @@ impl StructureType {
     pub const SEMAPHORE_GET_ZIRCON_HANDLE_INFO_FUCHSIA: Self = Self(1_000_365_001);
 }
 impl FuchsiaBufferCollectionFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FUCHSIA_buffer_collection\0")
         }
@@ -22259,60 +18696,6 @@ impl FuchsiaBufferCollectionFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateBufferCollectionFUCHSIA.html>"]
-    pub unsafe fn create_buffer_collection_fuchsia(
-        &self,
-        device: Device,
-        p_create_info: *const BufferCollectionCreateInfoFUCHSIA,
-        p_allocator: *const AllocationCallbacks,
-        p_collection: *mut BufferCollectionFUCHSIA,
-    ) -> Result {
-        (self.create_buffer_collection_fuchsia)(device, p_create_info, p_allocator, p_collection)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetBufferCollectionImageConstraintsFUCHSIA.html>"]
-    pub unsafe fn set_buffer_collection_image_constraints_fuchsia(
-        &self,
-        device: Device,
-        collection: BufferCollectionFUCHSIA,
-        p_image_constraints_info: *const ImageConstraintsInfoFUCHSIA,
-    ) -> Result {
-        (self.set_buffer_collection_image_constraints_fuchsia)(
-            device,
-            collection,
-            p_image_constraints_info,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetBufferCollectionBufferConstraintsFUCHSIA.html>"]
-    pub unsafe fn set_buffer_collection_buffer_constraints_fuchsia(
-        &self,
-        device: Device,
-        collection: BufferCollectionFUCHSIA,
-        p_buffer_constraints_info: *const BufferConstraintsInfoFUCHSIA,
-    ) -> Result {
-        (self.set_buffer_collection_buffer_constraints_fuchsia)(
-            device,
-            collection,
-            p_buffer_constraints_info,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroyBufferCollectionFUCHSIA.html>"]
-    pub unsafe fn destroy_buffer_collection_fuchsia(
-        &self,
-        device: Device,
-        collection: BufferCollectionFUCHSIA,
-        p_allocator: *const AllocationCallbacks,
-    ) {
-        (self.destroy_buffer_collection_fuchsia)(device, collection, p_allocator)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetBufferCollectionPropertiesFUCHSIA.html>"]
-    pub unsafe fn get_buffer_collection_properties_fuchsia(
-        &self,
-        device: Device,
-        collection: BufferCollectionFUCHSIA,
-        p_properties: *mut BufferCollectionPropertiesFUCHSIA,
-    ) -> Result {
-        (self.get_buffer_collection_properties_fuchsia)(device, collection, p_properties)
-    }
 }
 #[doc = "Generated from 'VK_FUCHSIA_buffer_collection'"]
 impl DebugReportObjectTypeEXT {
@@ -22337,7 +18720,7 @@ impl StructureType {
     pub const BUFFER_COLLECTION_CONSTRAINTS_INFO_FUCHSIA: Self = Self(1_000_366_009);
 }
 impl FuchsiaExtension368Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FUCHSIA_extension_368\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22355,7 +18738,7 @@ impl FuchsiaExtension368Fn {
     }
 }
 impl QcomExtension369Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_369\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22377,7 +18760,7 @@ impl DescriptorBindingFlags {
     pub const RESERVED_4_QCOM: Self = Self(0b1_0000);
 }
 impl HuaweiSubpassShadingFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_HUAWEI_subpass_shading\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
@@ -22445,30 +18828,13 @@ impl HuaweiSubpassShadingFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI.html>"]
-    pub unsafe fn get_device_subpass_shading_max_workgroup_size_huawei(
-        &self,
-        device: Device,
-        renderpass: RenderPass,
-        p_max_workgroup_size: *mut Extent2D,
-    ) -> Result {
-        (self.get_device_subpass_shading_max_workgroup_size_huawei)(
-            device,
-            renderpass,
-            p_max_workgroup_size,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSubpassShadingHUAWEI.html>"]
-    pub unsafe fn cmd_subpass_shading_huawei(&self, command_buffer: CommandBuffer) {
-        (self.cmd_subpass_shading_huawei)(command_buffer)
-    }
 }
 #[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
 impl PipelineBindPoint {
     pub const SUBPASS_SHADING_HUAWEI: Self = Self(1_000_369_003);
 }
 #[doc = "Generated from 'VK_HUAWEI_subpass_shading'"]
-impl PipelineStageFlags2KHR {
+impl PipelineStageFlags2 {
     pub const SUBPASS_SHADING_HUAWEI: Self =
         Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
@@ -22483,7 +18849,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_SUBPASS_SHADING_PROPERTIES_HUAWEI: Self = Self(1_000_369_002);
 }
 impl HuaweiInvocationMaskFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_HUAWEI_invocation_mask\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -22529,18 +18895,9 @@ impl HuaweiInvocationMaskFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdBindInvocationMaskHUAWEI.html>"]
-    pub unsafe fn cmd_bind_invocation_mask_huawei(
-        &self,
-        command_buffer: CommandBuffer,
-        image_view: ImageView,
-        image_layout: ImageLayout,
-    ) {
-        (self.cmd_bind_invocation_mask_huawei)(command_buffer, image_view, image_layout)
-    }
 }
 #[doc = "Generated from 'VK_HUAWEI_invocation_mask'"]
-impl AccessFlags2KHR {
+impl AccessFlags2 {
     pub const INVOCATION_MASK_READ_HUAWEI: Self =
         Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
@@ -22549,7 +18906,7 @@ impl ImageUsageFlags {
     pub const INVOCATION_MASK_HUAWEI: Self = Self(0b100_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_HUAWEI_invocation_mask'"]
-impl PipelineStageFlags2KHR {
+impl PipelineStageFlags2 {
     pub const INVOCATION_MASK_HUAWEI: Self =
         Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
@@ -22558,7 +18915,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI: Self = Self(1_000_370_000);
 }
 impl NvExternalMemoryRdmaFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_external_memory_rdma\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -22604,15 +18961,6 @@ impl NvExternalMemoryRdmaFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetMemoryRemoteAddressNV.html>"]
-    pub unsafe fn get_memory_remote_address_nv(
-        &self,
-        device: Device,
-        p_memory_get_remote_address_info: *const MemoryGetRemoteAddressInfoNV,
-        p_address: *mut RemoteAddressNV,
-    ) -> Result {
-        (self.get_memory_remote_address_nv)(device, p_memory_get_remote_address_info, p_address)
-    }
 }
 #[doc = "Generated from 'VK_NV_external_memory_rdma'"]
 impl ExternalMemoryHandleTypeFlags {
@@ -22628,7 +18976,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV: Self = Self(1_000_371_001);
 }
 impl NvExtension373Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_373\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22646,7 +18994,7 @@ impl NvExtension373Fn {
     }
 }
 impl NvExtension374Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_374\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22674,7 +19022,7 @@ impl ExternalSemaphoreHandleTypeFlags {
     pub const RESERVED_6_NV: Self = Self(0b100_0000);
 }
 impl NvExtension375Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_375\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22696,7 +19044,7 @@ impl ExternalMemoryHandleTypeFlags {
     pub const RESERVED_13_NV: Self = Self(0b10_0000_0000_0000);
 }
 impl ExtExtension376Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_376\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22714,7 +19062,7 @@ impl ExtExtension376Fn {
     }
 }
 impl ExtExtension377Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_377\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -22731,8 +19079,12 @@ impl ExtExtension377Fn {
         Self {}
     }
 }
+#[doc = "Generated from 'VK_EXT_extension_377'"]
+impl ImageCreateFlags {
+    pub const RESERVED_18_EXT: Self = Self(0b100_0000_0000_0000_0000);
+}
 impl ExtExtendedDynamicState2Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extended_dynamic_state2\0")
         }
@@ -22743,24 +19095,24 @@ impl ExtExtendedDynamicState2Fn {
 pub type PFN_vkCmdSetPatchControlPointsEXT =
     unsafe extern "system" fn(command_buffer: CommandBuffer, patch_control_points: u32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetRasterizerDiscardEnableEXT =
+pub type PFN_vkCmdSetRasterizerDiscardEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, rasterizer_discard_enable: Bool32);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetDepthBiasEnableEXT =
+pub type PFN_vkCmdSetDepthBiasEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, depth_bias_enable: Bool32);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetLogicOpEXT =
     unsafe extern "system" fn(command_buffer: CommandBuffer, logic_op: LogicOp);
 #[allow(non_camel_case_types)]
-pub type PFN_vkCmdSetPrimitiveRestartEnableEXT =
+pub type PFN_vkCmdSetPrimitiveRestartEnable =
     unsafe extern "system" fn(command_buffer: CommandBuffer, primitive_restart_enable: Bool32);
 #[derive(Clone)]
 pub struct ExtExtendedDynamicState2Fn {
     pub cmd_set_patch_control_points_ext: PFN_vkCmdSetPatchControlPointsEXT,
-    pub cmd_set_rasterizer_discard_enable_ext: PFN_vkCmdSetRasterizerDiscardEnableEXT,
-    pub cmd_set_depth_bias_enable_ext: PFN_vkCmdSetDepthBiasEnableEXT,
+    pub cmd_set_rasterizer_discard_enable_ext: PFN_vkCmdSetRasterizerDiscardEnable,
+    pub cmd_set_depth_bias_enable_ext: PFN_vkCmdSetDepthBiasEnable,
     pub cmd_set_logic_op_ext: PFN_vkCmdSetLogicOpEXT,
-    pub cmd_set_primitive_restart_enable_ext: PFN_vkCmdSetPrimitiveRestartEnableEXT,
+    pub cmd_set_primitive_restart_enable_ext: PFN_vkCmdSetPrimitiveRestartEnable,
 }
 unsafe impl Send for ExtExtendedDynamicState2Fn {}
 unsafe impl Sync for ExtExtendedDynamicState2Fn {}
@@ -22868,57 +19220,24 @@ impl ExtExtendedDynamicState2Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPatchControlPointsEXT.html>"]
-    pub unsafe fn cmd_set_patch_control_points_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        patch_control_points: u32,
-    ) {
-        (self.cmd_set_patch_control_points_ext)(command_buffer, patch_control_points)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetRasterizerDiscardEnableEXT.html>"]
-    pub unsafe fn cmd_set_rasterizer_discard_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        rasterizer_discard_enable: Bool32,
-    ) {
-        (self.cmd_set_rasterizer_discard_enable_ext)(command_buffer, rasterizer_discard_enable)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetDepthBiasEnableEXT.html>"]
-    pub unsafe fn cmd_set_depth_bias_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        depth_bias_enable: Bool32,
-    ) {
-        (self.cmd_set_depth_bias_enable_ext)(command_buffer, depth_bias_enable)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetLogicOpEXT.html>"]
-    pub unsafe fn cmd_set_logic_op_ext(&self, command_buffer: CommandBuffer, logic_op: LogicOp) {
-        (self.cmd_set_logic_op_ext)(command_buffer, logic_op)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetPrimitiveRestartEnableEXT.html>"]
-    pub unsafe fn cmd_set_primitive_restart_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        primitive_restart_enable: Bool32,
-    ) {
-        (self.cmd_set_primitive_restart_enable_ext)(command_buffer, primitive_restart_enable)
-    }
 }
 #[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
 impl DynamicState {
+    #[doc = "Not promoted to 1.3"]
     pub const PATCH_CONTROL_POINTS_EXT: Self = Self(1_000_377_000);
-    pub const RASTERIZER_DISCARD_ENABLE_EXT: Self = Self(1_000_377_001);
-    pub const DEPTH_BIAS_ENABLE_EXT: Self = Self(1_000_377_002);
+    pub const RASTERIZER_DISCARD_ENABLE_EXT: Self = Self::RASTERIZER_DISCARD_ENABLE;
+    pub const DEPTH_BIAS_ENABLE_EXT: Self = Self::DEPTH_BIAS_ENABLE;
+    #[doc = "Not promoted to 1.3"]
     pub const LOGIC_OP_EXT: Self = Self(1_000_377_003);
-    pub const PRIMITIVE_RESTART_ENABLE_EXT: Self = Self(1_000_377_004);
+    pub const PRIMITIVE_RESTART_ENABLE_EXT: Self = Self::PRIMITIVE_RESTART_ENABLE;
 }
 #[doc = "Generated from 'VK_EXT_extended_dynamic_state2'"]
 impl StructureType {
+    #[doc = "Not promoted to 1.3"]
     pub const PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT: Self = Self(1_000_377_000);
 }
 impl QnxScreenSurfaceFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QNX_screen_surface\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -22994,36 +19313,13 @@ impl QnxScreenSurfaceFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateScreenSurfaceQNX.html>"]
-    pub unsafe fn create_screen_surface_qnx(
-        &self,
-        instance: Instance,
-        p_create_info: *const ScreenSurfaceCreateInfoQNX,
-        p_allocator: *const AllocationCallbacks,
-        p_surface: *mut SurfaceKHR,
-    ) -> Result {
-        (self.create_screen_surface_qnx)(instance, p_create_info, p_allocator, p_surface)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceScreenPresentationSupportQNX.html>"]
-    pub unsafe fn get_physical_device_screen_presentation_support_qnx(
-        &self,
-        physical_device: PhysicalDevice,
-        queue_family_index: u32,
-        window: *mut _screen_window,
-    ) -> Bool32 {
-        (self.get_physical_device_screen_presentation_support_qnx)(
-            physical_device,
-            queue_family_index,
-            window,
-        )
-    }
 }
 #[doc = "Generated from 'VK_QNX_screen_surface'"]
 impl StructureType {
     pub const SCREEN_SURFACE_CREATE_INFO_QNX: Self = Self(1_000_378_000);
 }
 impl KhrExtension380Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_380\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23041,7 +19337,7 @@ impl KhrExtension380Fn {
     }
 }
 impl KhrExtension381Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_381\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23059,7 +19355,7 @@ impl KhrExtension381Fn {
     }
 }
 impl ExtColorWriteEnableFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_color_write_enable\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -23105,19 +19401,6 @@ impl ExtColorWriteEnableFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetColorWriteEnableEXT.html>"]
-    pub unsafe fn cmd_set_color_write_enable_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        attachment_count: u32,
-        p_color_write_enables: *const Bool32,
-    ) {
-        (self.cmd_set_color_write_enable_ext)(
-            command_buffer,
-            attachment_count,
-            p_color_write_enables,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_color_write_enable'"]
 impl DynamicState {
@@ -23129,7 +19412,7 @@ impl StructureType {
     pub const PIPELINE_COLOR_WRITE_CREATE_INFO_EXT: Self = Self(1_000_381_001);
 }
 impl ExtExtension383Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_383\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23147,7 +19430,7 @@ impl ExtExtension383Fn {
     }
 }
 impl ExtExtension384Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_384\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23165,7 +19448,7 @@ impl ExtExtension384Fn {
     }
 }
 impl MesaExtension385Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_MESA_extension_385\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23183,7 +19466,7 @@ impl MesaExtension385Fn {
     }
 }
 impl GoogleExtension386Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_386\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23201,7 +19484,7 @@ impl GoogleExtension386Fn {
     }
 }
 impl KhrExtension387Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_387\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23219,15 +19502,15 @@ impl KhrExtension387Fn {
     }
 }
 #[doc = "Generated from 'VK_KHR_extension_387'"]
-impl AccessFlags2KHR {
-    pub const RESERVED_387: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+impl AccessFlags2 {
+    pub const RESERVED_387_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
 }
 #[doc = "Generated from 'VK_KHR_extension_387'"]
-impl PipelineStageFlags2KHR {
-    pub const RESERVED_387: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
+impl PipelineStageFlags2 {
+    pub const RESERVED_387_KHR: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000);
 }
 impl ExtExtension388Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_388\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23245,7 +19528,7 @@ impl ExtExtension388Fn {
     }
 }
 impl ExtGlobalPriorityQueryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_global_priority_query\0")
         }
@@ -23266,11 +19549,13 @@ impl ExtGlobalPriorityQueryFn {
 }
 #[doc = "Generated from 'VK_EXT_global_priority_query'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_EXT: Self = Self(1_000_388_000);
-    pub const QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_EXT: Self = Self(1_000_388_001);
+    pub const PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_EXT: Self =
+        Self::PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR;
+    pub const QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_EXT: Self =
+        Self::QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR;
 }
 impl ExtExtension390Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_390\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23288,7 +19573,7 @@ impl ExtExtension390Fn {
     }
 }
 impl ExtExtension391Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_391\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23306,7 +19591,7 @@ impl ExtExtension391Fn {
     }
 }
 impl ExtImageViewMinLodFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_image_view_min_lod\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -23329,7 +19614,7 @@ impl StructureType {
     pub const IMAGE_VIEW_MIN_LOD_CREATE_INFO_EXT: Self = Self(1_000_391_001);
 }
 impl ExtMultiDrawFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_multi_draw\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -23411,46 +19696,6 @@ impl ExtMultiDrawFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMultiEXT.html>"]
-    pub unsafe fn cmd_draw_multi_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        draw_count: u32,
-        p_vertex_info: *const MultiDrawInfoEXT,
-        instance_count: u32,
-        first_instance: u32,
-        stride: u32,
-    ) {
-        (self.cmd_draw_multi_ext)(
-            command_buffer,
-            draw_count,
-            p_vertex_info,
-            instance_count,
-            first_instance,
-            stride,
-        )
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdDrawMultiIndexedEXT.html>"]
-    pub unsafe fn cmd_draw_multi_indexed_ext(
-        &self,
-        command_buffer: CommandBuffer,
-        draw_count: u32,
-        p_index_info: *const MultiDrawIndexedInfoEXT,
-        instance_count: u32,
-        first_instance: u32,
-        stride: u32,
-        p_vertex_offset: *const i32,
-    ) {
-        (self.cmd_draw_multi_indexed_ext)(
-            command_buffer,
-            draw_count,
-            p_index_info,
-            instance_count,
-            first_instance,
-            stride,
-            p_vertex_offset,
-        )
-    }
 }
 #[doc = "Generated from 'VK_EXT_multi_draw'"]
 impl StructureType {
@@ -23458,7 +19703,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT: Self = Self(1_000_392_001);
 }
 impl ExtExtension394Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_394\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23479,17 +19724,19 @@ impl ExtExtension394Fn {
 impl ImageCreateFlags {
     pub const RESERVED_394_EXT: Self = Self(0b10_0000_0000_0000_0000);
 }
-impl KhrExtension395Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
-        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_395\0") }
+impl KhrPortabilityEnumerationFn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe {
+            ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_portability_enumeration\0")
+        }
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
 #[derive(Clone)]
-pub struct KhrExtension395Fn {}
-unsafe impl Send for KhrExtension395Fn {}
-unsafe impl Sync for KhrExtension395Fn {}
-impl KhrExtension395Fn {
+pub struct KhrPortabilityEnumerationFn {}
+unsafe impl Send for KhrPortabilityEnumerationFn {}
+unsafe impl Sync for KhrPortabilityEnumerationFn {}
+impl KhrPortabilityEnumerationFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
@@ -23497,8 +19744,12 @@ impl KhrExtension395Fn {
         Self {}
     }
 }
+#[doc = "Generated from 'VK_KHR_portability_enumeration'"]
+impl InstanceCreateFlags {
+    pub const ENUMERATE_PORTABILITY_KHR: Self = Self(0b1);
+}
 impl KhrExtension396Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_396\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23516,7 +19767,7 @@ impl KhrExtension396Fn {
     }
 }
 impl NvExtension397Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_397\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23534,7 +19785,7 @@ impl NvExtension397Fn {
     }
 }
 impl NvExtension398Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_398\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23552,7 +19803,7 @@ impl NvExtension398Fn {
     }
 }
 impl JuiceExtension399Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_JUICE_extension_399\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23570,7 +19821,7 @@ impl JuiceExtension399Fn {
     }
 }
 impl JuiceExtension400Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_JUICE_extension_400\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23588,7 +19839,7 @@ impl JuiceExtension400Fn {
     }
 }
 impl ExtLoadStoreOpNoneFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_load_store_op_none\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -23611,10 +19862,10 @@ impl AttachmentLoadOp {
 }
 #[doc = "Generated from 'VK_EXT_load_store_op_none'"]
 impl AttachmentStoreOp {
-    pub const NONE_EXT: Self = Self::NONE_KHR;
+    pub const NONE_EXT: Self = Self::NONE;
 }
 impl FbExtension402Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FB_extension_402\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23632,7 +19883,7 @@ impl FbExtension402Fn {
     }
 }
 impl FbExtension403Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FB_extension_403\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23650,7 +19901,7 @@ impl FbExtension403Fn {
     }
 }
 impl FbExtension404Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_FB_extension_404\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23668,7 +19919,7 @@ impl FbExtension404Fn {
     }
 }
 impl HuaweiExtension405Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_HUAWEI_extension_405\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23686,7 +19937,7 @@ impl HuaweiExtension405Fn {
     }
 }
 impl HuaweiExtension406Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_HUAWEI_extension_406\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23704,7 +19955,7 @@ impl HuaweiExtension406Fn {
     }
 }
 impl GgpExtension407Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_extension_407\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23722,7 +19973,7 @@ impl GgpExtension407Fn {
     }
 }
 impl GgpExtension408Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_extension_408\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23740,7 +19991,7 @@ impl GgpExtension408Fn {
     }
 }
 impl GgpExtension409Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_extension_409\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23758,7 +20009,7 @@ impl GgpExtension409Fn {
     }
 }
 impl GgpExtension410Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_extension_410\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23776,7 +20027,7 @@ impl GgpExtension410Fn {
     }
 }
 impl GgpExtension411Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GGP_extension_411\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -23794,7 +20045,7 @@ impl GgpExtension411Fn {
     }
 }
 impl ExtBorderColorSwizzleFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_border_color_swizzle\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -23817,7 +20068,7 @@ impl StructureType {
     pub const SAMPLER_BORDER_COLOR_COMPONENT_MAPPING_CREATE_INFO_EXT: Self = Self(1_000_411_001);
 }
 impl ExtPageableDeviceLocalMemoryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_EXT_pageable_device_local_memory\0",
@@ -23864,51 +20115,42 @@ impl ExtPageableDeviceLocalMemoryFn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkSetDeviceMemoryPriorityEXT.html>"]
-    pub unsafe fn set_device_memory_priority_ext(
-        &self,
-        device: Device,
-        memory: DeviceMemory,
-        priority: f32,
-    ) {
-        (self.set_device_memory_priority_ext)(device, memory, priority)
-    }
 }
 #[doc = "Generated from 'VK_EXT_pageable_device_local_memory'"]
 impl StructureType {
     pub const PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT: Self = Self(1_000_412_000);
 }
 impl KhrMaintenance4Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_maintenance4\0") }
     }
     pub const SPEC_VERSION: u32 = 2u32;
 }
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceBufferMemoryRequirementsKHR = unsafe extern "system" fn(
+pub type PFN_vkGetDeviceBufferMemoryRequirements = unsafe extern "system" fn(
     device: Device,
-    p_info: *const DeviceBufferMemoryRequirementsKHR,
+    p_info: *const DeviceBufferMemoryRequirements,
     p_memory_requirements: *mut MemoryRequirements2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceImageMemoryRequirementsKHR = unsafe extern "system" fn(
+pub type PFN_vkGetDeviceImageMemoryRequirements = unsafe extern "system" fn(
     device: Device,
-    p_info: *const DeviceImageMemoryRequirementsKHR,
+    p_info: *const DeviceImageMemoryRequirements,
     p_memory_requirements: *mut MemoryRequirements2,
 );
 #[allow(non_camel_case_types)]
-pub type PFN_vkGetDeviceImageSparseMemoryRequirementsKHR = unsafe extern "system" fn(
+pub type PFN_vkGetDeviceImageSparseMemoryRequirements = unsafe extern "system" fn(
     device: Device,
-    p_info: *const DeviceImageMemoryRequirementsKHR,
+    p_info: *const DeviceImageMemoryRequirements,
     p_sparse_memory_requirement_count: *mut u32,
     p_sparse_memory_requirements: *mut SparseImageMemoryRequirements2,
 );
 #[derive(Clone)]
 pub struct KhrMaintenance4Fn {
-    pub get_device_buffer_memory_requirements_khr: PFN_vkGetDeviceBufferMemoryRequirementsKHR,
-    pub get_device_image_memory_requirements_khr: PFN_vkGetDeviceImageMemoryRequirementsKHR,
+    pub get_device_buffer_memory_requirements_khr: PFN_vkGetDeviceBufferMemoryRequirements,
+    pub get_device_image_memory_requirements_khr: PFN_vkGetDeviceImageMemoryRequirements,
     pub get_device_image_sparse_memory_requirements_khr:
-        PFN_vkGetDeviceImageSparseMemoryRequirementsKHR,
+        PFN_vkGetDeviceImageSparseMemoryRequirements,
 }
 unsafe impl Send for KhrMaintenance4Fn {}
 unsafe impl Sync for KhrMaintenance4Fn {}
@@ -23921,7 +20163,7 @@ impl KhrMaintenance4Fn {
             get_device_buffer_memory_requirements_khr: unsafe {
                 unsafe extern "system" fn get_device_buffer_memory_requirements_khr(
                     _device: Device,
-                    _p_info: *const DeviceBufferMemoryRequirementsKHR,
+                    _p_info: *const DeviceBufferMemoryRequirements,
                     _p_memory_requirements: *mut MemoryRequirements2,
                 ) {
                     panic!(concat!(
@@ -23942,7 +20184,7 @@ impl KhrMaintenance4Fn {
             get_device_image_memory_requirements_khr: unsafe {
                 unsafe extern "system" fn get_device_image_memory_requirements_khr(
                     _device: Device,
-                    _p_info: *const DeviceImageMemoryRequirementsKHR,
+                    _p_info: *const DeviceImageMemoryRequirements,
                     _p_memory_requirements: *mut MemoryRequirements2,
                 ) {
                     panic!(concat!(
@@ -23963,7 +20205,7 @@ impl KhrMaintenance4Fn {
             get_device_image_sparse_memory_requirements_khr: unsafe {
                 unsafe extern "system" fn get_device_image_sparse_memory_requirements_khr(
                     _device: Device,
-                    _p_info: *const DeviceImageMemoryRequirementsKHR,
+                    _p_info: *const DeviceImageMemoryRequirements,
                     _p_sparse_memory_requirement_count: *mut u32,
                     _p_sparse_memory_requirements: *mut SparseImageMemoryRequirements2,
                 ) {
@@ -23984,53 +20226,22 @@ impl KhrMaintenance4Fn {
             },
         }
     }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceBufferMemoryRequirementsKHR.html>"]
-    pub unsafe fn get_device_buffer_memory_requirements_khr(
-        &self,
-        device: Device,
-        p_info: *const DeviceBufferMemoryRequirementsKHR,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ) {
-        (self.get_device_buffer_memory_requirements_khr)(device, p_info, p_memory_requirements)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceImageMemoryRequirementsKHR.html>"]
-    pub unsafe fn get_device_image_memory_requirements_khr(
-        &self,
-        device: Device,
-        p_info: *const DeviceImageMemoryRequirementsKHR,
-        p_memory_requirements: *mut MemoryRequirements2,
-    ) {
-        (self.get_device_image_memory_requirements_khr)(device, p_info, p_memory_requirements)
-    }
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDeviceImageSparseMemoryRequirementsKHR.html>"]
-    pub unsafe fn get_device_image_sparse_memory_requirements_khr(
-        &self,
-        device: Device,
-        p_info: *const DeviceImageMemoryRequirementsKHR,
-        p_sparse_memory_requirement_count: *mut u32,
-        p_sparse_memory_requirements: *mut SparseImageMemoryRequirements2,
-    ) {
-        (self.get_device_image_sparse_memory_requirements_khr)(
-            device,
-            p_info,
-            p_sparse_memory_requirement_count,
-            p_sparse_memory_requirements,
-        )
-    }
 }
 #[doc = "Generated from 'VK_KHR_maintenance4'"]
 impl ImageAspectFlags {
-    pub const NONE_KHR: Self = Self(0);
+    pub const NONE_KHR: Self = Self::NONE;
 }
 #[doc = "Generated from 'VK_KHR_maintenance4'"]
 impl StructureType {
-    pub const PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR: Self = Self(1_000_413_000);
-    pub const PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR: Self = Self(1_000_413_001);
-    pub const DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR: Self = Self(1_000_413_002);
-    pub const DEVICE_IMAGE_MEMORY_REQUIREMENTS_KHR: Self = Self(1_000_413_003);
+    pub const PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES_KHR: Self =
+        Self::PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES;
+    pub const PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES_KHR: Self =
+        Self::PHYSICAL_DEVICE_MAINTENANCE_4_PROPERTIES;
+    pub const DEVICE_BUFFER_MEMORY_REQUIREMENTS_KHR: Self = Self::DEVICE_BUFFER_MEMORY_REQUIREMENTS;
+    pub const DEVICE_IMAGE_MEMORY_REQUIREMENTS_KHR: Self = Self::DEVICE_IMAGE_MEMORY_REQUIREMENTS;
 }
 impl HuaweiExtension415Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_HUAWEI_extension_415\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24048,7 +20259,7 @@ impl HuaweiExtension415Fn {
     }
 }
 impl ArmExtension416Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_416\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24066,7 +20277,7 @@ impl ArmExtension416Fn {
     }
 }
 impl KhrExtension417Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_417\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24084,7 +20295,7 @@ impl KhrExtension417Fn {
     }
 }
 impl ArmExtension418Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_418\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24102,7 +20313,7 @@ impl ArmExtension418Fn {
     }
 }
 impl ExtExtension419Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_419\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24120,7 +20331,7 @@ impl ExtExtension419Fn {
     }
 }
 impl ExtExtension420Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_420\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24137,26 +20348,96 @@ impl ExtExtension420Fn {
         Self {}
     }
 }
-impl KhrExtension421Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
-        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_421\0") }
+impl ValveDescriptorSetHostMappingFn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe {
+            ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                b"VK_VALVE_descriptor_set_host_mapping\0",
+            )
+        }
     }
-    pub const SPEC_VERSION: u32 = 0u32;
+    pub const SPEC_VERSION: u32 = 1u32;
 }
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetDescriptorSetLayoutHostMappingInfoVALVE = unsafe extern "system" fn(
+    device: Device,
+    p_binding_reference: *const DescriptorSetBindingReferenceVALVE,
+    p_host_mapping: *mut DescriptorSetLayoutHostMappingInfoVALVE,
+);
+#[allow(non_camel_case_types)]
+pub type PFN_vkGetDescriptorSetHostMappingVALVE = unsafe extern "system" fn(
+    device: Device,
+    descriptor_set: DescriptorSet,
+    pp_data: *mut *mut c_void,
+);
 #[derive(Clone)]
-pub struct KhrExtension421Fn {}
-unsafe impl Send for KhrExtension421Fn {}
-unsafe impl Sync for KhrExtension421Fn {}
-impl KhrExtension421Fn {
+pub struct ValveDescriptorSetHostMappingFn {
+    pub get_descriptor_set_layout_host_mapping_info_valve:
+        PFN_vkGetDescriptorSetLayoutHostMappingInfoVALVE,
+    pub get_descriptor_set_host_mapping_valve: PFN_vkGetDescriptorSetHostMappingVALVE,
+}
+unsafe impl Send for ValveDescriptorSetHostMappingFn {}
+unsafe impl Sync for ValveDescriptorSetHostMappingFn {}
+impl ValveDescriptorSetHostMappingFn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,
     {
-        Self {}
+        Self {
+            get_descriptor_set_layout_host_mapping_info_valve: unsafe {
+                unsafe extern "system" fn get_descriptor_set_layout_host_mapping_info_valve(
+                    _device: Device,
+                    _p_binding_reference: *const DescriptorSetBindingReferenceVALVE,
+                    _p_host_mapping: *mut DescriptorSetLayoutHostMappingInfoVALVE,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_descriptor_set_layout_host_mapping_info_valve)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetDescriptorSetLayoutHostMappingInfoVALVE\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_descriptor_set_layout_host_mapping_info_valve
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+            get_descriptor_set_host_mapping_valve: unsafe {
+                unsafe extern "system" fn get_descriptor_set_host_mapping_valve(
+                    _device: Device,
+                    _descriptor_set: DescriptorSet,
+                    _pp_data: *mut *mut c_void,
+                ) {
+                    panic!(concat!(
+                        "Unable to load ",
+                        stringify!(get_descriptor_set_host_mapping_valve)
+                    ))
+                }
+                let cname = ::std::ffi::CStr::from_bytes_with_nul_unchecked(
+                    b"vkGetDescriptorSetHostMappingVALVE\0",
+                );
+                let val = _f(cname);
+                if val.is_null() {
+                    get_descriptor_set_host_mapping_valve
+                } else {
+                    ::std::mem::transmute(val)
+                }
+            },
+        }
     }
 }
+#[doc = "Generated from 'VK_VALVE_descriptor_set_host_mapping'"]
+impl StructureType {
+    pub const PHYSICAL_DEVICE_DESCRIPTOR_SET_HOST_MAPPING_FEATURES_VALVE: Self =
+        Self(1_000_420_000);
+    pub const DESCRIPTOR_SET_BINDING_REFERENCE_VALVE: Self = Self(1_000_420_001);
+    pub const DESCRIPTOR_SET_LAYOUT_HOST_MAPPING_INFO_VALVE: Self = Self(1_000_420_002);
+}
 impl ExtExtension422Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_422\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24174,7 +20455,7 @@ impl ExtExtension422Fn {
     }
 }
 impl ExtDisableCubeMapWrapFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_disable_cube_map_wrap\0")
         }
@@ -24198,7 +20479,7 @@ impl SamplerCreateFlags {
     pub const RESERVED_2_EXT: Self = Self(0b100);
 }
 impl ArmExtension424Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_424\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24216,7 +20497,7 @@ impl ArmExtension424Fn {
     }
 }
 impl ArmExtension425Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_425\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24234,7 +20515,7 @@ impl ArmExtension425Fn {
     }
 }
 impl QcomFragmentDensityMapOffsetFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(
                 b"VK_QCOM_fragment_density_map_offset\0",
@@ -24267,7 +20548,7 @@ impl StructureType {
     pub const SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM: Self = Self(1_000_425_002);
 }
 impl NvExtension427Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_427\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24285,7 +20566,7 @@ impl NvExtension427Fn {
     }
 }
 impl NvExtension428Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_428\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24303,7 +20584,7 @@ impl NvExtension428Fn {
     }
 }
 impl NvExtension429Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_429\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24321,7 +20602,7 @@ impl NvExtension429Fn {
     }
 }
 impl NvExtension430Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_430\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24339,7 +20620,7 @@ impl NvExtension430Fn {
     }
 }
 impl NvLinearColorAttachmentFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe {
             ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_linear_color_attachment\0")
         }
@@ -24359,7 +20640,7 @@ impl NvLinearColorAttachmentFn {
     }
 }
 #[doc = "Generated from 'VK_NV_linear_color_attachment'"]
-impl FormatFeatureFlags2KHR {
+impl FormatFeatureFlags2 {
     #[doc = "Format support linear image as render target, it cannot be mixed with non linear attachment"]
     pub const LINEAR_COLOR_ATTACHMENT_NV: Self =
         Self(0b100_0000_0000_0000_0000_0000_0000_0000_0000_0000);
@@ -24369,7 +20650,7 @@ impl StructureType {
     pub const PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV: Self = Self(1_000_430_000);
 }
 impl NvExtension432Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_432\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24387,7 +20668,7 @@ impl NvExtension432Fn {
     }
 }
 impl NvExtension433Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_433\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24405,7 +20686,7 @@ impl NvExtension433Fn {
     }
 }
 impl GoogleSurfacelessQueryFn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_surfaceless_query\0") }
     }
     pub const SPEC_VERSION: u32 = 1u32;
@@ -24423,7 +20704,7 @@ impl GoogleSurfacelessQueryFn {
     }
 }
 impl KhrExtension435Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_KHR_extension_435\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24441,7 +20722,7 @@ impl KhrExtension435Fn {
     }
 }
 impl NvExtension436Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_436\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24459,7 +20740,7 @@ impl NvExtension436Fn {
     }
 }
 impl ExtExtension437Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_437\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24477,7 +20758,7 @@ impl ExtExtension437Fn {
     }
 }
 impl ExtExtension438Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_438\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24495,7 +20776,7 @@ impl ExtExtension438Fn {
     }
 }
 impl SecExtension439Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_SEC_extension_439\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24513,7 +20794,7 @@ impl SecExtension439Fn {
     }
 }
 impl QcomExtension440Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_440\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24539,7 +20820,7 @@ impl QueueFlags {
     pub const RESERVED_7_QCOM: Self = Self(0b1000_0000);
 }
 impl QcomExtension441Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_QCOM_extension_441\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24557,7 +20838,7 @@ impl QcomExtension441Fn {
     }
 }
 #[doc = "Generated from 'VK_QCOM_extension_441'"]
-impl FormatFeatureFlags2KHR {
+impl FormatFeatureFlags2 {
     pub const RESERVED_34_QCOM: Self = Self(0b100_0000_0000_0000_0000_0000_0000_0000_0000);
     pub const RESERVED_35_QCOM: Self = Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000);
     pub const RESERVED_36_QCOM: Self = Self(0b1_0000_0000_0000_0000_0000_0000_0000_0000_0000);
@@ -24573,7 +20854,7 @@ impl SamplerCreateFlags {
     pub const IMAGE_PROCESSING_QCOM: Self = Self(0b1_0000);
 }
 impl CoreaviExtension442Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_COREAVI_extension_442\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24591,7 +20872,7 @@ impl CoreaviExtension442Fn {
     }
 }
 impl CoreaviExtension443Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_COREAVI_extension_443\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24609,7 +20890,7 @@ impl CoreaviExtension443Fn {
     }
 }
 impl CoreaviExtension444Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_COREAVI_extension_444\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24631,7 +20912,7 @@ impl CommandPoolResetFlags {
     pub const RESERVED_1_COREAVI: Self = Self(0b10);
 }
 impl CoreaviExtension445Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_COREAVI_extension_445\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24649,7 +20930,7 @@ impl CoreaviExtension445Fn {
     }
 }
 impl CoreaviExtension446Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_COREAVI_extension_446\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24667,7 +20948,7 @@ impl CoreaviExtension446Fn {
     }
 }
 impl CoreaviExtension447Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_COREAVI_extension_447\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24685,7 +20966,7 @@ impl CoreaviExtension447Fn {
     }
 }
 impl SecExtension448Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_SEC_extension_448\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24703,7 +20984,7 @@ impl SecExtension448Fn {
     }
 }
 impl SecExtension449Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_SEC_extension_449\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24721,7 +21002,7 @@ impl SecExtension449Fn {
     }
 }
 impl SecExtension450Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_SEC_extension_450\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24739,7 +21020,7 @@ impl SecExtension450Fn {
     }
 }
 impl SecExtension451Fn {
-    pub fn name() -> &'static ::std::ffi::CStr {
+    pub const fn name() -> &'static ::std::ffi::CStr {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_SEC_extension_451\0") }
     }
     pub const SPEC_VERSION: u32 = 0u32;
@@ -24749,6 +21030,226 @@ pub struct SecExtension451Fn {}
 unsafe impl Send for SecExtension451Fn {}
 unsafe impl Sync for SecExtension451Fn {}
 impl SecExtension451Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl NvExtension452Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_452\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension452Fn {}
+unsafe impl Send for NvExtension452Fn {}
+unsafe impl Sync for NvExtension452Fn {}
+impl NvExtension452Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ArmExtension453Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_453\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ArmExtension453Fn {}
+unsafe impl Send for ArmExtension453Fn {}
+unsafe impl Sync for ArmExtension453Fn {}
+impl ArmExtension453Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl GoogleExtension454Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_454\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GoogleExtension454Fn {}
+unsafe impl Send for GoogleExtension454Fn {}
+unsafe impl Sync for GoogleExtension454Fn {}
+impl GoogleExtension454Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl GoogleExtension455Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_GOOGLE_extension_455\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct GoogleExtension455Fn {}
+unsafe impl Send for GoogleExtension455Fn {}
+unsafe impl Sync for GoogleExtension455Fn {}
+impl GoogleExtension455Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl NvExtension456Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_NV_extension_456\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct NvExtension456Fn {}
+unsafe impl Send for NvExtension456Fn {}
+unsafe impl Sync for NvExtension456Fn {}
+impl NvExtension456Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ExtExtension457Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_457\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension457Fn {}
+unsafe impl Send for ExtExtension457Fn {}
+unsafe impl Sync for ExtExtension457Fn {}
+impl ExtExtension457Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ExtExtension458Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_458\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension458Fn {}
+unsafe impl Send for ExtExtension458Fn {}
+unsafe impl Sync for ExtExtension458Fn {}
+impl ExtExtension458Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ArmExtension459Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_ARM_extension_459\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ArmExtension459Fn {}
+unsafe impl Send for ArmExtension459Fn {}
+unsafe impl Sync for ArmExtension459Fn {}
+impl ArmExtension459Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ExtExtension460Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_460\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension460Fn {}
+unsafe impl Send for ExtExtension460Fn {}
+unsafe impl Sync for ExtExtension460Fn {}
+impl ExtExtension460Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ExtExtension461Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_461\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension461Fn {}
+unsafe impl Send for ExtExtension461Fn {}
+unsafe impl Sync for ExtExtension461Fn {}
+impl ExtExtension461Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+#[doc = "Generated from 'VK_EXT_extension_461'"]
+impl FormatFeatureFlags2 {
+    pub const RESERVED_39_EXT: Self = Self(0b1000_0000_0000_0000_0000_0000_0000_0000_0000_0000);
+}
+impl ExtExtension462Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_462\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension462Fn {}
+unsafe impl Send for ExtExtension462Fn {}
+unsafe impl Sync for ExtExtension462Fn {}
+impl ExtExtension462Fn {
+    pub fn load<F>(mut _f: F) -> Self
+    where
+        F: FnMut(&::std::ffi::CStr) -> *const c_void,
+    {
+        Self {}
+    }
+}
+impl ExtExtension463Fn {
+    pub const fn name() -> &'static ::std::ffi::CStr {
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(b"VK_EXT_extension_463\0") }
+    }
+    pub const SPEC_VERSION: u32 = 0u32;
+}
+#[derive(Clone)]
+pub struct ExtExtension463Fn {}
+unsafe impl Send for ExtExtension463Fn {}
+unsafe impl Sync for ExtExtension463Fn {}
+impl ExtExtension463Fn {
     pub fn load<F>(mut _f: F) -> Self
     where
         F: FnMut(&::std::ffi::CStr) -> *const c_void,

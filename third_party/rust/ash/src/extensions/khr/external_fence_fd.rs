@@ -19,22 +19,18 @@ impl ExternalFenceFd {
         Self { handle, fp }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkImportFenceFdKHR.html>"]
+    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkImportFenceFdKHR.html>
     pub unsafe fn import_fence_fd(&self, import_info: &vk::ImportFenceFdInfoKHR) -> VkResult<()> {
-        self.fp
-            .import_fence_fd_khr(self.handle, import_info)
-            .result()
+        (self.fp.import_fence_fd_khr)(self.handle, import_info).result()
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetFenceFdKHR.html>"]
+    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetFenceFdKHR.html>
     pub unsafe fn get_fence_fd(&self, get_info: &vk::FenceGetFdInfoKHR) -> VkResult<i32> {
         let mut fd = -1;
-        self.fp
-            .get_fence_fd_khr(self.handle, get_info, &mut fd)
-            .result_with_success(fd)
+        (self.fp.get_fence_fd_khr)(self.handle, get_info, &mut fd).result_with_success(fd)
     }
 
-    pub fn name() -> &'static CStr {
+    pub const fn name() -> &'static CStr {
         vk::KhrExternalFenceFdFn::name()
     }
 

@@ -1,22 +1,25 @@
-//! OpenGL shading language backend
-//!
-//! The main structure is [`Writer`](Writer), it maintains internal state that is used
-//! to output a [`Module`](crate::Module) into glsl
-//!
-//! # Supported versions
-//! ### Core
-//! - 330
-//! - 400
-//! - 410
-//! - 420
-//! - 430
-//! - 450
-//! - 460
-//!
-//! ### ES
-//! - 300
-//! - 310
-//!
+/*!
+Backend for [GLSL][glsl] (OpenGL Shading Language).
+
+The main structure is [`Writer`], it maintains internal state that is used
+to output a [`Module`](crate::Module) into glsl
+
+# Supported versions
+### Core
+- 330
+- 400
+- 410
+- 420
+- 430
+- 450
+- 460
+
+### ES
+- 300
+- 310
+
+[glsl]: https://www.khronos.org/registry/OpenGL/index_gl.php
+*/
 
 // GLSL is mostly a superset of C but it also removes some parts of it this is a list of relevant
 // aspects for this backend.
@@ -33,7 +36,7 @@
 // `#extension name: behaviour`
 // Extensions provide increased features in a plugin fashion but they aren't required to be
 // supported hence why they are called extensions, that's why `behaviour` is used it specifies
-// wether the extension is strictly required or if it should only be enabled if needed. In our case
+// whether the extension is strictly required or if it should only be enabled if needed. In our case
 // when we use extensions we set behaviour to `require` always.
 //
 // The only thing that glsl removes that makes a difference are pointers.
@@ -61,11 +64,12 @@ mod features;
 /// Contains a constant with a slice of all the reserved keywords RESERVED_KEYWORDS
 mod keywords;
 
-/// List of supported core glsl versions
+/// List of supported `core` GLSL versions.
 pub const SUPPORTED_CORE_VERSIONS: &[u16] = &[330, 400, 410, 420, 430, 440, 450];
-/// List of supported es glsl versions
+/// List of supported `es` GLSL versions.
 pub const SUPPORTED_ES_VERSIONS: &[u16] = &[300, 310, 320];
 
+/// Mapping between resources and bindings.
 pub type BindingMap = std::collections::BTreeMap<crate::ResourceBinding, u8>;
 
 impl crate::AtomicFunction {
@@ -83,20 +87,21 @@ impl crate::AtomicFunction {
     }
 }
 
-impl crate::StorageClass {
+impl crate::AddressSpace {
     fn is_buffer(&self) -> bool {
         match *self {
-            crate::StorageClass::Uniform | crate::StorageClass::Storage { .. } => true,
+            crate::AddressSpace::Uniform | crate::AddressSpace::Storage { .. } => true,
             _ => false,
         }
     }
 
-    /// Whether a variable with this storage class can be initialized
+    /// Whether a variable with this address space can be initialized
     fn initializable(&self) -> bool {
         match *self {
-            crate::StorageClass::WorkGroup
-            | crate::StorageClass::Uniform
-            | crate::StorageClass::Storage { .. } => false,
+            crate::AddressSpace::WorkGroup
+            | crate::AddressSpace::Uniform
+            | crate::AddressSpace::PushConstant
+            | crate::AddressSpace::Storage { .. } => false,
             _ => true,
         }
     }
@@ -124,19 +129,31 @@ impl<'a> GlobalTypeKind<'a> {
                 } => Self::Unsized(members),
                 _ => Self::WrappedStruct,
             },
+            // Naga IR permits globals to be dynamically sized arrays. Render
+            // these in GLSL as buffers.
+            crate::TypeInner::Array {
+                size: crate::ArraySize::Dynamic,
+                ..
+            } => Self::WrappedStruct,
+            // Naga IR permits globals to be constant sized arrays. Render
+            // these in GLSL as uniforms.
+            crate::TypeInner::Array {
+                size: crate::ArraySize::Constant(..),
+                ..
+            } => Self::WrappedStruct,
             _ => Self::Other,
         }
     }
 }
 
-/// glsl version
+/// A GLSL version.
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub enum Version {
-    /// `core` glsl
+    /// `core` GLSL.
     Desktop(u16),
-    /// `es` glsl
+    /// `es` GLSL.
     Embedded(u16),
 }
 
@@ -205,10 +222,11 @@ impl fmt::Display for Version {
 }
 
 bitflags::bitflags! {
+    /// Configuration flags for the [`Writer`].
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
     pub struct WriterFlags: u32 {
-        /// Flip output Y and extend Z from (0,1) to (-1,1).
+        /// Flip output Y and extend Z from (0, 1) to (-1, 1).
         const ADJUST_COORDINATE_SPACE = 0x1;
         /// Supports GL_EXT_texture_shadow_lod on the host, which provides
         /// additional functions on shadows and arrays of shadows.
@@ -216,14 +234,14 @@ bitflags::bitflags! {
     }
 }
 
-/// Structure that contains the configuration used in the [`Writer`](Writer)
+/// Configuration used in the [`Writer`].
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct Options {
-    /// The glsl version to be used
+    /// The GLSL version to be used.
     pub version: Version,
-    /// Configuration flags for the writer.
+    /// Configuration flags for the [`Writer`].
     pub writer_flags: WriterFlags,
     /// Map of resources association to binding locations.
     pub binding_map: BindingMap,
@@ -239,40 +257,41 @@ impl Default for Options {
     }
 }
 
-// A subset of options that are meant to be changed per pipeline.
+/// A subset of options meant to be changed per pipeline.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct PipelineOptions {
-    /// The stage of the entry point
+    /// The stage of the entry point.
     pub shader_stage: ShaderStage,
-    /// The name of the entry point
+    /// The name of the entry point.
     ///
-    /// If no entry point that matches is found a error will be thrown while creating a new instance
-    /// of [`Writer`](struct.Writer.html)
+    /// If no entry point that matches is found while creating a [`Writer`], a error will be thrown.
     pub entry_point: String,
 }
 
-/// Structure that contains a reflection info
+/// Reflection info for texture mappings and uniforms.
 pub struct ReflectionInfo {
+    /// Mapping between texture names and variables/samplers.
     pub texture_mapping: crate::FastHashMap<String, TextureMapping>,
+    /// Mapping between uniform variables and names.
     pub uniforms: crate::FastHashMap<Handle<crate::GlobalVariable>, String>,
 }
 
-/// Structure that connects a texture to a sampler or not
+/// Mapping between a texture and its sampler, if it exists.
 ///
-/// glsl pre vulkan has no concept of separate textures and samplers instead everything is a
-/// `gsamplerN` where `g` is the scalar type and `N` is the dimension, but naga uses separate textures
-/// and samplers in the IR so the backend produces a [`HashMap`](crate::FastHashMap) with the texture name
-/// as a key and a [`TextureMapping`](TextureMapping) as a value this way the user knows where to bind.
+/// GLSL pre-Vulkan has no concept of separate textures and samplers. Instead, everything is a
+/// `gsamplerN` where `g` is the scalar type and `N` is the dimension. But naga uses separate textures
+/// and samplers in the IR, so the backend produces a [`FastHashMap`](crate::FastHashMap) with the texture name
+/// as a key and a [`TextureMapping`] as a value. This way, the user knows where to bind.
 ///
-/// [`Storage`](crate::ImageClass::Storage) images produce `gimageN` and don't have an associated sampler
-/// so the [`sampler`](Self::sampler) field will be [`None`](std::option::Option::None)
+/// [`Storage`](crate::ImageClass::Storage) images produce `gimageN` and don't have an associated sampler,
+/// so the [`sampler`](Self::sampler) field will be [`None`].
 #[derive(Debug, Clone)]
 pub struct TextureMapping {
-    /// Handle to the image global variable
+    /// Handle to the image global variable.
     pub texture: Handle<crate::GlobalVariable>,
-    /// Handle to the associated sampler global variable if it exists
+    /// Handle to the associated sampler global variable, if it exists.
     pub sampler: Option<Handle<crate::GlobalVariable>>,
 }
 
@@ -337,88 +356,90 @@ impl ShaderStage {
 /// Shorthand result used internally by the backend
 type BackendResult<T = ()> = Result<T, Error>;
 
-/// A glsl compilation error.
+/// A GLSL compilation error.
 #[derive(Debug, Error)]
 pub enum Error {
-    /// A error occurred while writing to the output
+    /// A error occurred while writing to the output.
     #[error("Format error")]
     FmtError(#[from] FmtError),
-    /// The specified [`Version`](Version) doesn't have all required [`Features`](super)
+    /// The specified [`Version`] doesn't have all required [`Features`].
     ///
-    /// Contains the missing [`Features`](Features)
+    /// Contains the missing [`Features`].
     #[error("The selected version doesn't support {0:?}")]
     MissingFeatures(Features),
-    /// [`StorageClass::PushConstant`](crate::StorageClass::PushConstant) was used and isn't
-    /// supported in the glsl backend
-    #[error("Push constants aren't supported")]
-    PushConstantNotSupported,
-    /// The specified [`Version`](Version) isn't supported
+    /// [`AddressSpace::PushConstant`](crate::AddressSpace::PushConstant) was used more than
+    /// once in the entry point, which isn't supported.
+    #[error("Multiple push constants aren't supported")]
+    MultiplePushConstants,
+    /// The specified [`Version`] isn't supported.
     #[error("The specified version isn't supported")]
     VersionNotSupported,
-    /// The entry point couldn't be found
+    /// The entry point couldn't be found.
     #[error("The requested entry point couldn't be found")]
     EntryPointNotFound,
-    /// A call was made to an unsupported external
+    /// A call was made to an unsupported external.
     #[error("A call was made to an unsupported external: {0}")]
     UnsupportedExternal(String),
-    /// A scalar with an unsupported width was requested
+    /// A scalar with an unsupported width was requested.
     #[error("A scalar with an unsupported width was requested: {0:?} {1:?}")]
     UnsupportedScalar(crate::ScalarKind, crate::Bytes),
-    /// A image was used with multiple samplers, this isn't supported
+    /// A image was used with multiple samplers, which isn't supported.
     #[error("A image was used with multiple samplers")]
     ImageMultipleSamplers,
     #[error("{0}")]
     Custom(String),
 }
 
-/// Binary operation with a different logic on the GLSL side
+/// Binary operation with a different logic on the GLSL side.
 enum BinaryOperation {
     /// Vector comparison should use the function like `greaterThan()`, etc.
     VectorCompare,
-    /// GLSL `%` is SPIR-V `OpUMod/OpSMod` and `mod()` is `OpFMod`, but [`BinaryOperator::Modulo`](crate::BinaryOperator::Modulo) is `OpFRem`
+    /// GLSL `%` is SPIR-V `OpUMod/OpSMod` and `mod()` is `OpFMod`, but [`BinaryOperator::Modulo`](crate::BinaryOperator::Modulo) is `OpFRem`.
     Modulo,
-    /// Any plain operation. No additional logic required
+    /// Any plain operation. No additional logic required.
     Other,
 }
 
-/// Main structure of the glsl backend responsible for all code generation
+/// Writer responsible for all code generation.
 pub struct Writer<'a, W> {
     // Inputs
-    /// The module being written
+    /// The module being written.
     module: &'a crate::Module,
     /// The module analysis.
     info: &'a valid::ModuleInfo,
-    /// The output writer
+    /// The output writer.
     out: W,
-    /// User defined configuration to be used
+    /// User defined configuration to be used.
     options: &'a Options,
 
     // Internal State
-    /// Features manager used to store all the needed features and write them
+    /// Features manager used to store all the needed features and write them.
     features: FeaturesManager,
     namer: proc::Namer,
     /// A map with all the names needed for writing the module
-    /// (generated by a [`Namer`](crate::proc::Namer))
+    /// (generated by a [`Namer`](crate::proc::Namer)).
     names: crate::FastHashMap<NameKey, String>,
-    /// A map with the names of global variables needed for reflections
+    /// A map with the names of global variables needed for reflections.
     reflection_names_globals: crate::FastHashMap<Handle<crate::GlobalVariable>, String>,
-    /// The selected entry point
+    /// The selected entry point.
     entry_point: &'a crate::EntryPoint,
-    /// The index of the selected entry point
+    /// The index of the selected entry point.
     entry_point_idx: proc::EntryPointIndex,
-    /// Used to generate a unique number for blocks
+    /// A generator for unique block numbers.
     block_id: IdGenerator,
-    /// Set of expressions that have associated temporary variables
+    /// Set of expressions that have associated temporary variables.
     named_expressions: crate::NamedExpressions,
+    /// Set of expressions that need to be baked to avoid unnecessary repetition in output
+    need_bake_expressions: back::NeedBakeExpressions,
 }
 
 impl<'a, W: Write> Writer<'a, W> {
-    /// Creates a new [`Writer`](Writer) instance
+    /// Creates a new [`Writer`] instance.
     ///
     /// # Errors
-    /// - If the version specified isn't supported (or invalid)
-    /// - If the entry point couldn't be found on the module
-    /// - If the version specified doesn't support some used features
+    /// - If the version specified is invalid or supported.
+    /// - If the entry point couldn't be found in the module.
+    /// - If the version specified doesn't support some used features.
     pub fn new(
         out: W,
         module: &'a crate::Module,
@@ -460,7 +481,8 @@ impl<'a, W: Write> Writer<'a, W> {
             entry_point_idx: ep_idx as u16,
 
             block_id: IdGenerator::default(),
-            named_expressions: crate::NamedExpressions::default(),
+            named_expressions: Default::default(),
+            need_bake_expressions: Default::default(),
         };
 
         // Find all features required to print this module
@@ -562,7 +584,7 @@ impl<'a, W: Write> Writer<'a, W> {
                     GlobalTypeKind::Other => {
                         let used_by_global =
                             self.module.global_variables.iter().any(|(vh, var)| {
-                                !ep_info[vh].is_empty() && var.class.is_buffer() && var.ty == handle
+                                !ep_info[vh].is_empty() && var.space.is_buffer() && var.ty == handle
                             });
                         // If not used by a global, it's safe to just spew it here
                         !used_by_global
@@ -751,7 +773,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 size: None,
                 kind,
                 width,
-                class: _,
+                space: _,
             } => write!(self.out, "{}", glsl_scalar(kind, width)?.full)?,
             // Vectors are just `gvecN` where `g` is the scalar prefix and `N` is the vector size
             TypeInner::Vector { size, kind, width }
@@ -759,7 +781,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 size: Some(size),
                 kind,
                 width,
-                class: _,
+                space: _,
             } => write!(
                 self.out,
                 "{}vec{}",
@@ -890,22 +912,22 @@ impl<'a, W: Write> Writer<'a, W> {
             if let Some(ref br) = global.binding {
                 match self.options.binding_map.get(br) {
                     Some(binding) => {
-                        let layout = match global.class {
-                            crate::StorageClass::Storage { .. } => {
+                        let layout = match global.space {
+                            crate::AddressSpace::Storage { .. } => {
                                 if self.options.version.supports_std430_layout() {
                                     "std430, "
                                 } else {
                                     "std140, "
                                 }
                             }
-                            crate::StorageClass::Uniform => "std140, ",
+                            crate::AddressSpace::Uniform => "std140, ",
                             _ => "",
                         };
                         write!(self.out, "layout({}binding = {}) ", layout, binding)?
                     }
                     None => {
                         log::debug!("unassigned binding for {:?}", global.name);
-                        if let crate::StorageClass::Storage { .. } = global.class {
+                        if let crate::AddressSpace::Storage { .. } = global.space {
                             if self.options.version.supports_std430_layout() {
                                 write!(self.out, "layout(std430) ")?
                             }
@@ -915,13 +937,13 @@ impl<'a, W: Write> Writer<'a, W> {
             }
         }
 
-        if let crate::StorageClass::Storage { access } = global.class {
+        if let crate::AddressSpace::Storage { access } = global.space {
             self.write_storage_access(access)?;
         }
 
         // Write the storage class
         // Trailing space is important
-        if let Some(storage_class) = glsl_storage_class(global.class) {
+        if let Some(storage_class) = glsl_storage_class(global.space) {
             write!(self.out, "{} ", storage_class)?;
         }
 
@@ -930,7 +952,7 @@ impl<'a, W: Write> Writer<'a, W> {
         // generated number so it's unique and `members` are the same as in a struct
 
         // Write the block name, it's just the struct name appended with `_block_ID`
-        let needs_wrapper = if global.class.is_buffer() {
+        let needs_wrapper = if global.space.is_buffer() {
             let ty_name = &self.names[&NameKey::Type(global.ty)];
             let block_name = format!(
                 "{}_block_{}{:?}",
@@ -962,6 +984,11 @@ impl<'a, W: Write> Writer<'a, W> {
             false
         };
 
+        if let crate::AddressSpace::PushConstant = global.space {
+            let global_name = self.get_global_name(handle, global);
+            self.reflection_names_globals.insert(handle, global_name);
+        }
+
         // Finally write the global name and end the global with a `;` and a newline
         // Leading space is important
         write!(self.out, " ")?;
@@ -971,7 +998,7 @@ impl<'a, W: Write> Writer<'a, W> {
             self.write_array_size(size)?;
         }
 
-        if global.class.initializable() && is_value_init_supported(self.module, global.ty) {
+        if global.space.initializable() && is_value_init_supported(self.module, global.ty) {
             write!(self.out, " = ")?;
             if let Some(init) = global.init {
                 self.write_constant(init)?;
@@ -986,6 +1013,45 @@ impl<'a, W: Write> Writer<'a, W> {
 
         writeln!(self.out, ";")?;
         Ok(())
+    }
+
+    /// Helper method used to find which expressions of a given function require baking
+    ///
+    /// # Notes
+    /// Clears `need_bake_expressions` set before adding to it
+    fn update_expressions_to_bake(&mut self, func: &crate::Function, info: &valid::FunctionInfo) {
+        use crate::Expression;
+        self.need_bake_expressions.clear();
+        for expr in func.expressions.iter() {
+            let expr_info = &info[expr.0];
+            let min_ref_count = func.expressions[expr.0].bake_ref_count();
+            if min_ref_count <= expr_info.ref_count {
+                self.need_bake_expressions.insert(expr.0);
+            }
+            // if the expression is a Dot product with integer arguments,
+            // then the args needs baking as well
+            if let (
+                fun_handle,
+                &Expression::Math {
+                    fun: crate::MathFunction::Dot,
+                    arg,
+                    arg1,
+                    ..
+                },
+            ) = expr
+            {
+                let inner = info[fun_handle].ty.inner_with(&self.module.types);
+                if let TypeInner::Scalar { kind, .. } = *inner {
+                    match kind {
+                        crate::ScalarKind::Sint | crate::ScalarKind::Uint => {
+                            self.need_bake_expressions.insert(arg);
+                            self.need_bake_expressions.insert(arg1.unwrap());
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
     }
 
     /// Helper method used to get a name for a global
@@ -1139,6 +1205,7 @@ impl<'a, W: Write> Writer<'a, W> {
         };
 
         self.named_expressions.clear();
+        self.update_expressions_to_bake(func, info);
 
         // Write the function header
         //
@@ -1178,12 +1245,13 @@ impl<'a, W: Write> Writer<'a, W> {
         };
         let arguments: Vec<_> = arguments
             .iter()
-            .filter(|arg| match self.module.types[arg.ty].inner {
+            .enumerate()
+            .filter(|&(_, arg)| match self.module.types[arg.ty].inner {
                 TypeInner::Sampler { .. } => false,
                 _ => true,
             })
             .collect();
-        self.write_slice(&arguments, |this, i, arg| {
+        self.write_slice(&arguments, |this, _, &(i, arg)| {
             // Write the argument type
             match this.module.types[arg.ty].inner {
                 // We treat images separately because they might require
@@ -1221,7 +1289,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
             // Write the argument name
             // The leading space is important
-            write!(this.out, " {}", &this.names[&ctx.argument_key(i)])?;
+            write!(this.out, " {}", &this.names[&ctx.argument_key(i as u32)])?;
 
             Ok(())
         })?;
@@ -1388,6 +1456,33 @@ impl<'a, W: Write> Writer<'a, W> {
         Ok(())
     }
 
+    /// Helper method used to output a dot product as an arithmetic expression
+    ///
+    fn write_dot_product(
+        &mut self,
+        arg: Handle<crate::Expression>,
+        arg1: Handle<crate::Expression>,
+        size: usize,
+    ) -> BackendResult {
+        write!(self.out, "(")?;
+
+        let arg0_name = &self.named_expressions[&arg];
+        let arg1_name = &self.named_expressions[&arg1];
+
+        // This will print an extra '+' at the beginning but that is fine in glsl
+        for index in 0..size {
+            let component = back::COMPONENTS[index];
+            write!(
+                self.out,
+                " + {}.{} * {}.{}",
+                arg0_name, component, arg1_name, component
+            )?;
+        }
+
+        write!(self.out, ")")?;
+        Ok(())
+    }
+
     /// Helper method used to write structs
     ///
     /// # Notes
@@ -1465,7 +1560,7 @@ impl<'a, W: Write> Writer<'a, W> {
             Statement::Emit(ref range) => {
                 for handle in range.clone() {
                     let info = &ctx.info[handle];
-                    let ptr_class = info.ty.inner_with(&self.module.types).pointer_class();
+                    let ptr_class = info.ty.inner_with(&self.module.types).pointer_space();
                     let expr_name = if ptr_class.is_some() {
                         // GLSL can't save a pointer-valued expression in a variable,
                         // but we shouldn't ever need to: they should never be named expressions,
@@ -1477,13 +1572,10 @@ impl<'a, W: Write> Writer<'a, W> {
                         // Otherwise, we could accidentally write variable name instead of full expression.
                         // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
                         Some(self.namer.call(name))
+                    } else if self.need_bake_expressions.contains(&handle) {
+                        Some(format!("{}{}", back::BAKE_PREFIX, handle.index()))
                     } else {
-                        let min_ref_count = ctx.expressions[handle].bake_ref_count();
-                        if min_ref_count <= info.ref_count {
-                            Some(format!("{}{}", super::BAKE_PREFIX, handle.index()))
-                        } else {
-                            None
-                        }
+                        None
                     };
 
                     if let Some(name) = expr_name {
@@ -1755,13 +1847,18 @@ impl<'a, W: Write> Writer<'a, W> {
             // keyword which ceases all further processing in a fragment shader, it's called OpKill
             // in spir-v that's why it's called `Statement::Kill`
             Statement::Kill => writeln!(self.out, "{}discard;", level)?,
-            // Issue an execution or a memory barrier.
+            // Issue a memory barrier. Please note that to ensure visibility,
+            // OpenGL always requires a call to the `barrier()` function after a `memoryBarrier*()`
             Statement::Barrier(flags) => {
-                if flags.is_empty() {
-                    writeln!(self.out, "{}barrier();", level)?;
-                } else {
-                    writeln!(self.out, "{}groupMemoryBarrier();", level)?;
+                if flags.contains(crate::Barrier::STORAGE) {
+                    writeln!(self.out, "{}memoryBarrierBuffer();", level)?;
                 }
+
+                if flags.contains(crate::Barrier::WORK_GROUP) {
+                    writeln!(self.out, "{}memoryBarrierShared();", level)?;
+                }
+
+                writeln!(self.out, "{}barrier();", level)?;
             }
             // Stores in glsl are just variable assignments written as `pointer = value;`
             Statement::Store { pointer, value } => {
@@ -1801,7 +1898,7 @@ impl<'a, W: Write> Writer<'a, W> {
             } => {
                 write!(self.out, "{}", level)?;
                 if let Some(expr) = result {
-                    let name = format!("{}{}", super::BAKE_PREFIX, expr.index());
+                    let name = format!("{}{}", back::BAKE_PREFIX, expr.index());
                     let result = self.module.functions[function].result.as_ref().unwrap();
                     self.write_type(result.ty)?;
                     write!(self.out, " {} = ", name)?;
@@ -1829,7 +1926,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 result,
             } => {
                 write!(self.out, "{}", level)?;
-                let res_name = format!("{}{}", super::BAKE_PREFIX, result.index());
+                let res_name = format!("{}{}", back::BAKE_PREFIX, result.index());
                 let res_ty = ctx.info[result].ty.inner_with(&self.module.types);
                 self.write_value_type(res_ty)?;
                 write!(self.out, " {} = ", res_name)?;
@@ -1893,7 +1990,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 let base_ty_res = &ctx.info[base].ty;
                 let mut resolved = base_ty_res.inner_with(&self.module.types);
                 let base_ty_handle = match *resolved {
-                    TypeInner::Pointer { base, class: _ } => {
+                    TypeInner::Pointer { base, space: _ } => {
                         resolved = &self.module.types[base].inner;
                         Some(base)
                     }
@@ -1976,7 +2073,7 @@ impl<'a, W: Write> Writer<'a, W> {
             Expression::Load { pointer } => self.write_expr(pointer, ctx)?,
             // `ImageSample` is a bit complicated compared to the rest of the IR.
             //
-            // First there are three variations depending wether the sample level is explicitly set,
+            // First there are three variations depending whether the sample level is explicitly set,
             // if it's automatic or it it's bias:
             // `texture(image, coordinate)` - Automatic sample level
             // `texture(image, coordinate, bias)` - Bias sample level
@@ -2101,7 +2198,11 @@ impl<'a, W: Write> Writer<'a, W> {
                     // Zero needs level set to 0
                     crate::SampleLevel::Zero => {
                         if workaround_lod_array_shadow_as_grad {
-                            write!(self.out, ", vec2(0,0), vec2(0,0)")?;
+                            let vec_dim = match dim {
+                                crate::ImageDimension::Cube => 3,
+                                _ => 2,
+                            };
+                            write!(self.out, ", vec{}(0.0), vec{}(0.0)", vec_dim, vec_dim)?;
                         } else if gather.is_none() {
                             write!(self.out, ", 0.0")?;
                         }
@@ -2116,15 +2217,25 @@ impl<'a, W: Write> Writer<'a, W> {
                             self.write_expr(expr, ctx)?;
                         }
                     }
-                    crate::SampleLevel::Bias(expr) => {
-                        write!(self.out, ", ")?;
-                        self.write_expr(expr, ctx)?;
+                    crate::SampleLevel::Bias(_) => {
+                        // This needs to be done after the offset writing
                     }
                     crate::SampleLevel::Gradient { x, y } => {
-                        write!(self.out, ", ")?;
-                        self.write_expr(x, ctx)?;
-                        write!(self.out, ", ")?;
-                        self.write_expr(y, ctx)?;
+                        // If we are using sampler2D to replace sampler1D, we also
+                        // need to make sure to use vec2 gradients
+                        if tex_1d_hack {
+                            write!(self.out, ", vec2(")?;
+                            self.write_expr(x, ctx)?;
+                            write!(self.out, ", 0.0)")?;
+                            write!(self.out, ", vec2(")?;
+                            self.write_expr(y, ctx)?;
+                            write!(self.out, ", 0.0)")?;
+                        } else {
+                            write!(self.out, ", ")?;
+                            self.write_expr(x, ctx)?;
+                            write!(self.out, ", ")?;
+                            self.write_expr(y, ctx)?;
+                        }
                     }
                 }
 
@@ -2137,6 +2248,12 @@ impl<'a, W: Write> Writer<'a, W> {
                     if tex_1d_hack {
                         write!(self.out, ", 0)")?;
                     }
+                }
+
+                // Bias is always the last argument
+                if let crate::SampleLevel::Bias(expr) = level {
+                    write!(self.out, ", ")?;
+                    self.write_expr(expr, ctx)?;
                 }
 
                 if let (Some(component), None) = (gather, depth_ref) {
@@ -2158,7 +2275,8 @@ impl<'a, W: Write> Writer<'a, W> {
                 image,
                 coordinate,
                 array_index,
-                index,
+                sample,
+                level,
             } => {
                 // This will only panic if the module is invalid
                 let (dim, class) = match *ctx.info[image].ty.inner_with(&self.module.types) {
@@ -2184,9 +2302,9 @@ impl<'a, W: Write> Writer<'a, W> {
                 write!(self.out, ", ")?;
                 self.write_texture_coordinates(coordinate, array_index, dim, ctx)?;
 
-                if let Some(index_expr) = index {
+                if let Some(sample_or_level) = sample.or(level) {
                     write!(self.out, ", ")?;
-                    self.write_expr(index_expr, ctx)?;
+                    self.write_expr(sample_or_level, ctx)?;
                 }
                 write!(self.out, ")")?;
             }
@@ -2215,14 +2333,16 @@ impl<'a, W: Write> Writer<'a, W> {
                 match query {
                     crate::ImageQuery::Size { level } => {
                         match class {
-                            ImageClass::Sampled { .. } | ImageClass::Depth { .. } => {
+                            ImageClass::Sampled { multi, .. } | ImageClass::Depth { multi } => {
                                 write!(self.out, "textureSize(")?;
                                 self.write_expr(image, ctx)?;
-                                write!(self.out, ", ")?;
                                 if let Some(expr) = level {
+                                    write!(self.out, ", ")?;
                                     self.write_expr(expr, ctx)?;
-                                } else {
-                                    write!(self.out, "0")?;
+                                } else if !multi {
+                                    // All textureSize calls requires an lod argument
+                                    // except for multisampled samplers
+                                    write!(self.out, ", 0")?;
                                 }
                             }
                             ImageClass::Storage { .. } => {
@@ -2247,8 +2367,14 @@ impl<'a, W: Write> Writer<'a, W> {
                         };
                         write!(self.out, "{}(", fun_name)?;
                         self.write_expr(image, ctx)?;
+                        // All textureSize calls requires an lod argument
+                        // except for multisampled samplers
+                        if class.is_multisampled() {
+                            write!(self.out, ", 0")?;
+                        }
+                        write!(self.out, ")")?;
                         if components != 1 || self.options.version.is_es() {
-                            write!(self.out, ", 0).{}", back::COMPONENTS[components])?;
+                            write!(self.out, ".{}", back::COMPONENTS[components])?;
                         }
                     }
                     crate::ImageQuery::NumSamples => {
@@ -2393,7 +2519,7 @@ impl<'a, W: Write> Writer<'a, W> {
                         write!(self.out, "(")?;
 
                         self.write_expr(left, ctx)?;
-                        write!(self.out, " {} ", super::binary_operation_str(op))?;
+                        write!(self.out, " {} ", back::binary_operation_str(op))?;
                         self.write_expr(right, ctx)?;
 
                         write!(self.out, ")")?;
@@ -2520,7 +2646,18 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Log2 => "log2",
                     Mf::Pow => "pow",
                     // geometry
-                    Mf::Dot => "dot",
+                    Mf::Dot => match *ctx.info[arg].ty.inner_with(&self.module.types) {
+                        crate::TypeInner::Vector {
+                            kind: crate::ScalarKind::Float,
+                            ..
+                        } => "dot",
+                        crate::TypeInner::Vector { size, .. } => {
+                            return self.write_dot_product(arg, arg1.unwrap(), size as usize)
+                        }
+                        _ => unreachable!(
+                            "Correct TypeInner for dot product should be already validated"
+                        ),
+                    },
                     Mf::Outer => "outerProduct",
                     Mf::Cross => "cross",
                     Mf::Distance => "distance",
@@ -2651,7 +2788,7 @@ impl<'a, W: Write> Writer<'a, W> {
                         let source_kind = inner.scalar_kind().unwrap();
                         let conv_op = match (source_kind, target_kind) {
                             (Sk::Float, Sk::Sint) => "floatBitsToInt",
-                            (Sk::Float, Sk::Uint) => "floatBitsToUInt",
+                            (Sk::Float, Sk::Uint) => "floatBitsToUint",
                             (Sk::Sint, Sk::Float) => "intBitsToFloat",
                             (Sk::Uint, Sk::Float) => "uintBitsToFloat",
                             // There is no way to bitcast between Uint/Sint in glsl. Use constructor conversion
@@ -2705,22 +2842,27 @@ impl<'a, W: Write> Writer<'a, W> {
     ) -> Result<(), Error> {
         use crate::ImageDimension as IDim;
 
+        let tex_1d_hack = dim == IDim::D1 && self.options.version.is_es();
         match array_index {
             Some(layer_expr) => {
-                let tex_coord_type = match dim {
-                    IDim::D1 => "ivec2",
-                    IDim::D2 => "ivec3",
-                    IDim::D3 => "ivec4",
-                    IDim::Cube => "ivec4",
+                let tex_coord_size = match dim {
+                    IDim::D1 => 2,
+                    IDim::D2 => 3,
+                    IDim::D3 => 4,
+                    IDim::Cube => 4,
                 };
-                write!(self.out, "{}(", tex_coord_type)?;
+                write!(self.out, "ivec{}(", tex_coord_size + tex_1d_hack as u8)?;
                 self.write_expr(coordinate, ctx)?;
                 write!(self.out, ", ")?;
+                // If we are replacing sampler1D with sampler2D we also need
+                // to add another zero to the coordinates vector for the y component
+                if tex_1d_hack {
+                    write!(self.out, "0, ")?;
+                }
                 self.write_expr(layer_expr, ctx)?;
                 write!(self.out, ")")?;
             }
             None => {
-                let tex_1d_hack = dim == IDim::D1 && self.options.version.is_es();
                 if tex_1d_hack {
                     write!(self.out, "ivec2(")?;
                 }
@@ -2852,10 +2994,6 @@ impl<'a, W: Write> Writer<'a, W> {
     }
 
     /// Helper method used to produce the reflection info that's returned to the user
-    ///
-    /// It takes an iterator of [`Function`](crate::Function) references instead of
-    /// [`Handle`](crate::arena::Handle) because [`EntryPoint`](crate::EntryPoint) isn't in any
-    /// [`Arena`](crate::arena::Arena) and we need to traverse it
     fn collect_reflection_info(&self) -> Result<ReflectionInfo, Error> {
         use std::collections::hash_map::Entry;
         let info = self.info.get_entry_point(self.entry_point_idx as usize);
@@ -2886,8 +3024,8 @@ impl<'a, W: Write> Writer<'a, W> {
                 continue;
             }
             match self.module.types[var.ty].inner {
-                crate::TypeInner::Struct { .. } => match var.class {
-                    crate::StorageClass::Uniform | crate::StorageClass::Storage { .. } => {
+                crate::TypeInner::Struct { .. } => match var.space {
+                    crate::AddressSpace::Uniform | crate::AddressSpace::Storage { .. } => {
                         let name = self.reflection_names_globals[&handle].clone();
                         uniforms.insert(handle, name);
                     }
@@ -3010,18 +3148,18 @@ fn glsl_built_in(built_in: crate::BuiltIn, output: bool) -> &'static str {
     }
 }
 
-/// Helper function that returns the string corresponding to the storage class
-fn glsl_storage_class(class: crate::StorageClass) -> Option<&'static str> {
-    use crate::StorageClass as Sc;
+/// Helper function that returns the string corresponding to the address space
+fn glsl_storage_class(space: crate::AddressSpace) -> Option<&'static str> {
+    use crate::AddressSpace as As;
 
-    match class {
-        Sc::Function => None,
-        Sc::Private => None,
-        Sc::Storage { .. } => Some("buffer"),
-        Sc::Uniform => Some("uniform"),
-        Sc::Handle => Some("uniform"),
-        Sc::WorkGroup => Some("shared"),
-        Sc::PushConstant => None,
+    match space {
+        As::Function => None,
+        As::Private => None,
+        As::Storage { .. } => Some("buffer"),
+        As::Uniform => Some("uniform"),
+        As::Handle => Some("uniform"),
+        As::WorkGroup => Some("shared"),
+        As::PushConstant => Some("uniform"),
     }
 }
 

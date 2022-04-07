@@ -1,4 +1,5 @@
 #![deny(clippy::use_self)]
+#![warn(trivial_casts, trivial_numeric_casts)]
 #![allow(
     clippy::too_many_arguments,
     clippy::missing_safety_doc,
@@ -7,7 +8,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 //! # Vulkan API
 //!
-//! <https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/index.html>
+//! <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/html/index.html>
 //!
 //! ## Examples
 //!
@@ -59,8 +60,7 @@ pub trait RawPtr<T> {
 impl<'r, T> RawPtr<T> for Option<&'r T> {
     fn as_raw_ptr(&self) -> *const T {
         match *self {
-            Some(inner) => inner as *const T,
-
+            Some(inner) => inner,
             _ => ::std::ptr::null(),
         }
     }
@@ -74,16 +74,15 @@ mod tests {
         let mut variable_pointers = vk::PhysicalDeviceVariablePointerFeatures::builder();
         let mut corner = vk::PhysicalDeviceCornerSampledImageFeaturesNV::builder();
         let chain = vec![
-            &variable_pointers as *const _ as usize,
-            &corner as *const _ as usize,
+            <*mut _>::cast(&mut variable_pointers),
+            <*mut _>::cast(&mut corner),
         ];
         let mut device_create_info = vk::DeviceCreateInfo::builder()
             .push_next(&mut corner)
             .push_next(&mut variable_pointers);
-        let chain2: Vec<usize> = unsafe {
+        let chain2: Vec<*mut vk::BaseOutStructure> = unsafe {
             vk::ptr_chain_iter(&mut device_create_info)
                 .skip(1)
-                .map(|ptr| ptr as usize)
                 .collect()
         };
         assert_eq!(chain, chain2);

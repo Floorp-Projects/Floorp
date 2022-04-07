@@ -1,6 +1,7 @@
-use mtl::{MTLFeatureSet, MTLGPUFamily, MTLLanguageVersion};
+use mtl::{MTLFeatureSet, MTLGPUFamily, MTLLanguageVersion, MTLReadWriteTextureTier};
 use objc::{class, msg_send, sel, sel_impl};
 use parking_lot::Mutex;
+use wgt::{AstcBlock, AstcChannel};
 
 use std::{sync::Arc, thread};
 
@@ -75,37 +76,48 @@ impl crate::Adapter<super::Api> for super::Adapter {
         } else {
             Tfc::empty()
         };
+        let is_not_apple1x = super::PrivateCapabilities::supports_any(
+            self.shared.device.lock().as_ref(),
+            &[
+                MTLFeatureSet::iOS_GPUFamily2_v1,
+                MTLFeatureSet::macOS_GPUFamily1_v1,
+                MTLFeatureSet::tvOS_GPUFamily1_v1,
+            ],
+        );
+
+        // Metal defined pixel format capabilities
+        let all_caps = Tfc::SAMPLED_LINEAR
+            | Tfc::STORAGE
+            | Tfc::COLOR_ATTACHMENT
+            | Tfc::COLOR_ATTACHMENT_BLEND
+            | Tfc::MULTISAMPLE
+            | Tfc::MULTISAMPLE_RESOLVE;
 
         let extra = match format {
-            Tf::R8Unorm => {
-                read_write_tier2_if
-                    | Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
+            Tf::R8Unorm | Tf::R16Float | Tf::Rgba8Unorm | Tf::Rgba16Float => {
+                read_write_tier2_if | all_caps
             }
-            Tf::R8Snorm => {
-                Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
+            Tf::R8Snorm | Tf::Rg8Snorm | Tf::Rgba8Snorm => {
+                let mut flags = all_caps;
+                flags.set(Tfc::MULTISAMPLE_RESOLVE, is_not_apple1x);
+                flags
             }
-            Tf::R8Uint | Tf::R8Sint | Tf::R16Uint | Tf::R16Sint => {
+            Tf::R8Uint
+            | Tf::R8Sint
+            | Tf::R16Uint
+            | Tf::R16Sint
+            | Tf::Rgba8Uint
+            | Tf::Rgba8Sint
+            | Tf::Rgba16Uint
+            | Tf::Rgba16Sint => {
                 read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
             }
-            Tf::R16Float => {
-                read_write_tier2_if
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
-            }
-            Tf::R16Unorm | Tf::R16Snorm => {
+            Tf::R16Unorm
+            | Tf::R16Snorm
+            | Tf::Rg16Unorm
+            | Tf::Rg16Snorm
+            | Tf::Rgba16Unorm
+            | Tf::Rgba16Snorm => {
                 Tfc::SAMPLED_LINEAR
                     | Tfc::STORAGE
                     | Tfc::COLOR_ATTACHMENT
@@ -113,177 +125,89 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     | Tfc::MULTISAMPLE
                     | msaa_resolve_desktop_if
             }
-            Tf::Rg8Unorm | Tf::Rg8Snorm => {
-                Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
-            }
-            Tf::Rg8Uint | Tf::Rg8Sint => Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE,
+            Tf::Rg8Unorm | Tf::Rg16Float | Tf::Bgra8Unorm => all_caps,
+            Tf::Rg8Uint | Tf::Rg8Sint => Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE,
             Tf::R32Uint | Tf::R32Sint => {
-                let storage = if pc.format_r32_all {
-                    read_write_tier1_if | Tfc::STORAGE
-                } else {
-                    Tfc::empty()
-                };
-                Tfc::COLOR_ATTACHMENT | storage | msaa_desktop_if
+                read_write_tier1_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | msaa_desktop_if
             }
             Tf::R32Float => {
-                let flags = Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if;
-                let extra = if pc.format_r32float_all {
-                    read_write_tier1_if | Tfc::STORAGE | Tfc::SAMPLED_LINEAR
-                } else if pc.format_r32float_no_filter {
-                    Tfc::SAMPLED_LINEAR
+                let flags = if pc.format_r32float_all {
+                    all_caps
                 } else {
-                    Tfc::empty()
+                    Tfc::STORAGE
+                        | Tfc::COLOR_ATTACHMENT
+                        | Tfc::COLOR_ATTACHMENT_BLEND
+                        | Tfc::MULTISAMPLE
                 };
-                flags | extra
+                read_write_tier1_if | flags
             }
-            Tf::Rg16Uint | Tf::Rg16Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
-            }
-            Tf::Rg16Unorm | Tf::Rg16Snorm => {
-                Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if
-            }
-            Tf::Rg16Float => {
-                read_write_tier2_if
-                    | Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
-            }
-            Tf::Rgba8Unorm => {
-                read_write_tier2_if
-                    | Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
-            }
+            Tf::Rg16Uint | Tf::Rg16Sint => Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE,
             Tf::Rgba8UnormSrgb | Tf::Bgra8UnormSrgb => {
-                let mut flags = Tfc::SAMPLED_LINEAR
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE;
+                let mut flags = all_caps;
                 flags.set(Tfc::STORAGE, pc.format_rgba8_srgb_all);
                 flags
             }
-            Tf::Rgba8Snorm | Tf::Bgra8Unorm => {
-                Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
-            }
-            Tf::Rgba8Uint | Tf::Rgba8Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
-            }
             Tf::Rgb10a2Unorm => {
-                let mut flags = Tfc::SAMPLED_LINEAR
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE;
+                let mut flags = all_caps;
                 flags.set(Tfc::STORAGE, pc.format_rgb10a2_unorm_all);
                 flags
             }
             Tf::Rg11b10Float => {
-                let mut flags = Tfc::SAMPLED_LINEAR
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE;
+                let mut flags = all_caps;
                 flags.set(Tfc::STORAGE, pc.format_rg11b10_all);
                 flags
             }
             Tf::Rg32Uint | Tf::Rg32Sint => Tfc::COLOR_ATTACHMENT | Tfc::STORAGE | msaa_apple7x_if,
             Tf::Rg32Float => {
-                let mut flags =
-                    Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND | msaa_apple7x_if;
                 if pc.format_rg32float_all {
-                    flags |= Tfc::STORAGE | Tfc::SAMPLED_LINEAR;
-                } else if pc.format_rg32float_color_blend {
-                    flags |= Tfc::SAMPLED_LINEAR;
+                    all_caps
+                } else {
+                    Tfc::STORAGE
+                        | Tfc::COLOR_ATTACHMENT
+                        | Tfc::COLOR_ATTACHMENT_BLEND
+                        | msaa_apple7x_if
                 }
-                flags
-            }
-            Tf::Rgba16Uint | Tf::Rgba16Sint => {
-                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE
-            }
-            Tf::Rgba16Unorm | Tf::Rgba16Snorm => {
-                Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_desktop_if
-            }
-            Tf::Rgba16Float => {
-                read_write_tier2_if
-                    | Tfc::SAMPLED_LINEAR
-                    | Tfc::STORAGE
-                    | Tfc::COLOR_ATTACHMENT
-                    | Tfc::COLOR_ATTACHMENT_BLEND
-                    | Tfc::MULTISAMPLE
-                    | Tfc::MULTISAMPLE_RESOLVE
             }
             Tf::Rgba32Uint | Tf::Rgba32Sint => {
-                let storage = if pc.format_rgba32int_color_write {
-                    read_write_tier2_if | Tfc::STORAGE
-                } else {
-                    Tfc::empty()
-                };
-                storage | Tfc::COLOR_ATTACHMENT | msaa_desktop_if
+                read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT | msaa_desktop_if
             }
             Tf::Rgba32Float => {
-                let extra = if pc.format_rgba32float_all {
-                    read_write_tier2_if
-                        | Tfc::SAMPLED_LINEAR
-                        | Tfc::STORAGE
-                        | Tfc::COLOR_ATTACHMENT_BLEND
-                } else if pc.format_rgba32float_color_write {
-                    read_write_tier2_if | Tfc::STORAGE
-                } else {
-                    Tfc::empty()
+                let mut flags = read_write_tier2_if | Tfc::STORAGE | Tfc::COLOR_ATTACHMENT;
+                if pc.format_rgba32float_all {
+                    flags |= all_caps
+                } else if pc.msaa_apple7 {
+                    flags |= Tfc::MULTISAMPLE
                 };
-                extra | Tfc::COLOR_ATTACHMENT | msaa_apple7x_if | msaa_resolve_desktop_if
+                flags
             }
             Tf::Depth32Float => {
-                let linear = if pc.format_depth32float_filter {
-                    Tfc::SAMPLED_LINEAR
+                let mut flats =
+                    Tfc::DEPTH_STENCIL_ATTACHMENT | Tfc::MULTISAMPLE | msaa_resolve_apple3x_if;
+                if pc.format_depth32float_filter {
+                    flats |= Tfc::SAMPLED_LINEAR
+                }
+                flats
+            }
+            Tf::Depth24Plus => Tfc::empty(),
+            Tf::Depth24PlusStencil8 => {
+                if pc.msaa_desktop {
+                    Tfc::DEPTH_STENCIL_ATTACHMENT | Tfc::SAMPLED_LINEAR | Tfc::MULTISAMPLE
                 } else {
                     Tfc::empty()
-                };
-                linear | Tfc::DEPTH_STENCIL_ATTACHMENT | Tfc::MULTISAMPLE | msaa_resolve_apple3x_if
-            }
-            Tf::Depth24Plus | Tf::Depth24PlusStencil8 => {
-                Tfc::DEPTH_STENCIL_ATTACHMENT
-                    | Tfc::SAMPLED_LINEAR
-                    | Tfc::MULTISAMPLE
-                    | msaa_resolve_apple3x_if
+                }
             }
             Tf::Rgb9e5Ufloat => {
-                let msaa = if msaa_desktop_if.is_empty() {
-                    Tfc::MULTISAMPLE | Tfc::MULTISAMPLE_RESOLVE
+                if pc.msaa_apple3 {
+                    all_caps
+                } else if pc.msaa_desktop {
+                    Tfc::SAMPLED_LINEAR
                 } else {
-                    Tfc::empty()
-                };
-                Tfc::SAMPLED_LINEAR | msaa
+                    Tfc::STORAGE
+                        | Tfc::COLOR_ATTACHMENT
+                        | Tfc::COLOR_ATTACHMENT_BLEND
+                        | Tfc::MULTISAMPLE
+                        | Tfc::MULTISAMPLE_RESOLVE
+                }
             }
             Tf::Bc1RgbaUnorm
             | Tf::Bc1RgbaUnormSrgb
@@ -321,35 +245,11 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     Tfc::empty()
                 }
             }
-            Tf::Astc4x4RgbaUnorm
-            | Tf::Astc4x4RgbaUnormSrgb
-            | Tf::Astc5x4RgbaUnorm
-            | Tf::Astc5x4RgbaUnormSrgb
-            | Tf::Astc5x5RgbaUnorm
-            | Tf::Astc5x5RgbaUnormSrgb
-            | Tf::Astc6x5RgbaUnorm
-            | Tf::Astc6x5RgbaUnormSrgb
-            | Tf::Astc6x6RgbaUnorm
-            | Tf::Astc6x6RgbaUnormSrgb
-            | Tf::Astc8x5RgbaUnorm
-            | Tf::Astc8x5RgbaUnormSrgb
-            | Tf::Astc8x6RgbaUnorm
-            | Tf::Astc8x6RgbaUnormSrgb
-            | Tf::Astc10x5RgbaUnorm
-            | Tf::Astc10x5RgbaUnormSrgb
-            | Tf::Astc10x6RgbaUnorm
-            | Tf::Astc10x6RgbaUnormSrgb
-            | Tf::Astc8x8RgbaUnorm
-            | Tf::Astc8x8RgbaUnormSrgb
-            | Tf::Astc10x8RgbaUnorm
-            | Tf::Astc10x8RgbaUnormSrgb
-            | Tf::Astc10x10RgbaUnorm
-            | Tf::Astc10x10RgbaUnormSrgb
-            | Tf::Astc12x10RgbaUnorm
-            | Tf::Astc12x10RgbaUnormSrgb
-            | Tf::Astc12x12RgbaUnorm
-            | Tf::Astc12x12RgbaUnormSrgb => {
-                if pc.format_astc {
+            Tf::Astc {
+                block: _,
+                channel: _,
+            } => {
+                if pc.format_astc || pc.format_astc_hdr {
                     Tfc::SAMPLED_LINEAR
                 } else {
                     Tfc::empty()
@@ -403,172 +303,106 @@ impl crate::Adapter<super::Api> for super::Adapter {
                 height: 4,
                 depth_or_array_layers: 1,
             }..=wgt::Extent3d {
-                width: 4096,
-                height: 4096,
+                width: pc.max_texture_size as u32,
+                height: pc.max_texture_size as u32,
                 depth_or_array_layers: 1,
             },
-            usage: crate::TextureUses::COLOR_TARGET, //TODO: expose more
+            usage: crate::TextureUses::COLOR_TARGET | crate::TextureUses::COPY_DST, //TODO: expose more
         })
     }
 }
 
 const RESOURCE_HEAP_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily1_v3,
-    MTLFeatureSet::iOS_GPUFamily2_v3,
-    MTLFeatureSet::iOS_GPUFamily3_v2,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v2,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v3,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const ARGUMENT_BUFFER_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily1_v4,
-    MTLFeatureSet::iOS_GPUFamily2_v4,
-    MTLFeatureSet::iOS_GPUFamily3_v3,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v3,
     MTLFeatureSet::macOS_GPUFamily1_v3,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const MUTABLE_COMPARISON_SAMPLER_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
-const SAMPLER_CLAMP_TO_BORDER_SUPPORT: &[MTLFeatureSet] = &[
-    MTLFeatureSet::macOS_GPUFamily1_v2,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
-];
+const SAMPLER_CLAMP_TO_BORDER_SUPPORT: &[MTLFeatureSet] = &[MTLFeatureSet::macOS_GPUFamily1_v2];
 
 const ASTC_PIXEL_FORMAT_FEATURES: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily2_v1,
-    MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v1,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
 ];
 
 const ANY8_UNORM_SRGB_ALL: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily2_v3,
-    MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v2,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
 ];
 
 const ANY8_SNORM_RESOLVE: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily2_v1,
-    MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v1,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const RGBA8_SRGB: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily2_v3,
-    MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v2,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
 ];
 
 const RGB10A2UNORM_ALL: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const RGB10A2UINT_COLOR_WRITE: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const RG11B10FLOAT_ALL: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const RGB9E5FLOAT_ALL: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily2_v1,
 ];
 
 const BGR10A2_ALL: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily1_v4,
-    MTLFeatureSet::iOS_GPUFamily2_v4,
-    MTLFeatureSet::iOS_GPUFamily3_v3,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v3,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
-    MTLFeatureSet::macOS_GPUFamily1_v3,
     MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const BASE_INSTANCE_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const BASE_VERTEX_INSTANCE_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily3_v1,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const TEXTURE_CUBE_ARRAY_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v2,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const DUAL_SOURCE_BLEND_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily1_v4,
-    MTLFeatureSet::iOS_GPUFamily2_v4,
-    MTLFeatureSet::iOS_GPUFamily3_v3,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v3,
-    MTLFeatureSet::tvOS_GPUFamily2_v1,
     MTLFeatureSet::macOS_GPUFamily1_v2,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const LAYERED_RENDERING_SUPPORT: &[MTLFeatureSet] = &[
@@ -579,28 +413,19 @@ const LAYERED_RENDERING_SUPPORT: &[MTLFeatureSet] = &[
 
 const FUNCTION_SPECIALIZATION_SUPPORT: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily1_v3,
-    MTLFeatureSet::iOS_GPUFamily2_v3,
-    MTLFeatureSet::iOS_GPUFamily3_v2,
-    MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v2,
     MTLFeatureSet::macOS_GPUFamily1_v2,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
 const DEPTH_CLIP_MODE: &[MTLFeatureSet] = &[
     MTLFeatureSet::iOS_GPUFamily4_v1,
-    MTLFeatureSet::iOS_GPUFamily5_v1,
     MTLFeatureSet::tvOS_GPUFamily1_v3,
     MTLFeatureSet::macOS_GPUFamily1_v1,
-    MTLFeatureSet::macOS_GPUFamily2_v1,
 ];
 
-impl super::PrivateCapabilities {
-    fn version_at_least(major: u32, minor: u32, needed_major: u32, needed_minor: u32) -> bool {
-        major > needed_major || (major == needed_major && minor >= needed_minor)
-    }
+const OS_NOT_SUPPORT: (usize, usize) = (10000, 0);
 
+impl super::PrivateCapabilities {
     fn supports_any(raw: &mtl::DeviceRef, features_sets: &[MTLFeatureSet]) -> bool {
         features_sets
             .iter()
@@ -616,22 +441,30 @@ impl super::PrivateCapabilities {
             major: usize,
             minor: usize,
             patch: usize,
+            is_mac: bool,
         }
 
-        let version: NSOperatingSystemVersion = unsafe {
+        impl NSOperatingSystemVersion {
+            fn at_least(&self, mac_version: (usize, usize), ios_version: (usize, usize)) -> bool {
+                if self.is_mac {
+                    self.major > mac_version.0
+                        || (self.major == mac_version.0 && self.minor >= mac_version.1)
+                } else {
+                    self.major > ios_version.0
+                        || (self.major == ios_version.0 && self.minor >= ios_version.1)
+                }
+            }
+        }
+
+        let mut version: NSOperatingSystemVersion = unsafe {
             let process_info: *mut objc::runtime::Object =
                 msg_send![class!(NSProcessInfo), processInfo];
             msg_send![process_info, operatingSystemVersion]
         };
 
-        let major = version.major as u32;
-        let minor = version.minor as u32;
         let os_is_mac = device.supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v1);
-        let family_check = if os_is_mac {
-            Self::version_at_least(major, minor, 10, 15)
-        } else {
-            Self::version_at_least(major, minor, 13, 0)
-        };
+        version.is_mac = os_is_mac;
+        let family_check = version.at_least((10, 15), (13, 0));
 
         let mut sample_count_mask: u8 = 1 | 4; // 1 and 4 samples are supported on all devices
         if device.supports_texture_sample_count(2) {
@@ -641,50 +474,46 @@ impl super::PrivateCapabilities {
             sample_count_mask |= 8;
         }
 
+        let rw_texture_tier = if version.at_least((10, 13), (11, 0)) {
+            device.read_write_texture_support()
+        } else if version.at_least((10, 12), OS_NOT_SUPPORT) {
+            if Self::supports_any(device, &[MTLFeatureSet::macOS_ReadWriteTextureTier2]) {
+                MTLReadWriteTextureTier::Tier2
+            } else {
+                MTLReadWriteTextureTier::Tier1
+            }
+        } else {
+            MTLReadWriteTextureTier::TierNone
+        };
+
         Self {
             family_check,
-            msl_version: if os_is_mac {
-                if Self::version_at_least(major, minor, 10, 15) {
-                    MTLLanguageVersion::V2_2
-                } else if Self::version_at_least(major, minor, 10, 14) {
-                    MTLLanguageVersion::V2_1
-                } else if Self::version_at_least(major, minor, 10, 13) {
-                    MTLLanguageVersion::V2_0
-                } else if Self::version_at_least(major, minor, 10, 12) {
-                    MTLLanguageVersion::V1_2
-                } else if Self::version_at_least(major, minor, 10, 11) {
-                    MTLLanguageVersion::V1_1
-                } else {
-                    MTLLanguageVersion::V1_0
-                }
-            } else if Self::version_at_least(major, minor, 13, 0) {
+            msl_version: if version.at_least((12, 0), (15, 0)) {
+                MTLLanguageVersion::V2_4
+            } else if version.at_least((11, 0), (14, 0)) {
+                MTLLanguageVersion::V2_3
+            } else if version.at_least((10, 15), (13, 0)) {
                 MTLLanguageVersion::V2_2
-            } else if Self::version_at_least(major, minor, 12, 0) {
+            } else if version.at_least((10, 14), (12, 0)) {
                 MTLLanguageVersion::V2_1
-            } else if Self::version_at_least(major, minor, 11, 0) {
+            } else if version.at_least((10, 13), (11, 0)) {
                 MTLLanguageVersion::V2_0
-            } else if Self::version_at_least(major, minor, 10, 0) {
+            } else if version.at_least((10, 12), (10, 0)) {
                 MTLLanguageVersion::V1_2
-            } else if Self::version_at_least(major, minor, 9, 0) {
+            } else if version.at_least((10, 11), (9, 0)) {
                 MTLLanguageVersion::V1_1
             } else {
                 MTLLanguageVersion::V1_0
             },
             // macOS 10.11 doesn't support read-write resources
-            fragment_rw_storage: !os_is_mac || Self::version_at_least(major, minor, 10, 12),
-            read_write_texture_tier: if os_is_mac {
-                if Self::version_at_least(major, minor, 10, 13) {
-                    device.read_write_texture_support()
-                } else {
-                    mtl::MTLReadWriteTextureTier::TierNone
-                }
-            } else if Self::version_at_least(major, minor, 11, 0) {
-                device.read_write_texture_support()
-            } else {
-                mtl::MTLReadWriteTextureTier::TierNone
-            },
+            fragment_rw_storage: version.at_least((10, 12), (8, 0)),
+            read_write_texture_tier: rw_texture_tier,
             msaa_desktop: os_is_mac,
-            msaa_apple3: family_check && device.supports_family(MTLGPUFamily::Apple3),
+            msaa_apple3: if family_check {
+                device.supports_family(MTLGPUFamily::Apple3)
+            } else {
+                device.supports_feature_set(MTLFeatureSet::iOS_GPUFamily3_v4)
+            },
             msaa_apple7: family_check && device.supports_family(MTLGPUFamily::Apple7),
             resource_heaps: Self::supports_any(device, RESOURCE_HEAP_SUPPORT),
             argument_buffers: Self::supports_any(device, ARGUMENT_BUFFER_SUPPORT),
@@ -696,8 +525,7 @@ impl super::PrivateCapabilities {
             sampler_clamp_to_border: Self::supports_any(device, SAMPLER_CLAMP_TO_BORDER_SUPPORT),
             sampler_lod_average: {
                 // TODO: Clarify minimum macOS version with Apple (43707452)
-                let need_version = if os_is_mac { (10, 13) } else { (9, 0) };
-                Self::version_at_least(major, minor, need_version.0, need_version.1)
+                version.at_least((10, 13), (9, 0))
             },
             base_instance: Self::supports_any(device, BASE_INSTANCE_SUPPORT),
             base_vertex_instance_drawing: Self::supports_any(device, BASE_VERTEX_INSTANCE_SUPPORT),
@@ -714,41 +542,27 @@ impl super::PrivateCapabilities {
             format_min_srgb_channels: if os_is_mac { 4 } else { 1 },
             format_b5: !os_is_mac,
             format_bc: os_is_mac,
-            format_eac_etc: !os_is_mac,
-            format_astc: Self::supports_any(device, ASTC_PIXEL_FORMAT_FEATURES),
+            format_eac_etc: !os_is_mac
+                // M1 in macOS supports EAC/ETC2
+                || (family_check && device.supports_family(MTLGPUFamily::Apple7)),
+            // A8(Apple2) and later always support ASTC pixel formats
+            format_astc: (family_check && device.supports_family(MTLGPUFamily::Apple2))
+                || Self::supports_any(device, ASTC_PIXEL_FORMAT_FEATURES),
+            // A13(Apple6) M1(Apple7) and later always support HDR ASTC pixel formats
+            format_astc_hdr: family_check && device.supports_family(MTLGPUFamily::Apple6),
             format_any8_unorm_srgb_all: Self::supports_any(device, ANY8_UNORM_SRGB_ALL),
             format_any8_unorm_srgb_no_write: !Self::supports_any(device, ANY8_UNORM_SRGB_ALL)
                 && !os_is_mac,
             format_any8_snorm_all: Self::supports_any(device, ANY8_SNORM_RESOLVE),
             format_r16_norm_all: os_is_mac,
-            format_r32_all: !Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_r32_no_write: Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_r32float_no_write_no_filter: Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ) && !os_is_mac,
-            format_r32float_no_filter: !Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ) && !os_is_mac,
+            // No devices support r32's all capabilities
+            format_r32_all: false,
+            // All devices support r32's write capability
+            format_r32_no_write: false,
+            // iOS support r32float's write capability, macOS support r32float's all capabilities
+            format_r32float_no_write_no_filter: false,
+            // Only iOS doesn't support r32float's filter  capability
+            format_r32float_no_filter: !os_is_mac,
             format_r32float_all: os_is_mac,
             format_rgba8_srgb_all: Self::supports_any(device, RGBA8_SRGB),
             format_rgba8_srgb_no_write: !Self::supports_any(device, RGBA8_SRGB),
@@ -761,81 +575,59 @@ impl super::PrivateCapabilities {
             format_rgb9e5_all: Self::supports_any(device, RGB9E5FLOAT_ALL),
             format_rgb9e5_no_write: !Self::supports_any(device, RGB9E5FLOAT_ALL) && !os_is_mac,
             format_rgb9e5_filter_only: os_is_mac,
-            format_rg32_color: Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_rg32_color_write: !Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
+            format_rg32_color: true,
+            format_rg32_color_write: true,
+            // Only macOS support rg32float's all capabilities
             format_rg32float_all: os_is_mac,
-            format_rg32float_color_blend: Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_rg32float_no_filter: !os_is_mac
-                && !Self::supports_any(
-                    device,
-                    &[
-                        MTLFeatureSet::iOS_GPUFamily1_v1,
-                        MTLFeatureSet::iOS_GPUFamily2_v1,
-                    ],
-                ),
-            format_rgba32int_color: Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_rgba32int_color_write: !Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_rgba32float_color: Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ),
-            format_rgba32float_color_write: !Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v1,
-                    MTLFeatureSet::iOS_GPUFamily2_v1,
-                ],
-            ) && !os_is_mac,
+            // All devices support rg32float's color + blend capabilities
+            format_rg32float_color_blend: true,
+            // Only iOS doesn't support rg32float's filter
+            format_rg32float_no_filter: !os_is_mac,
+            format_rgba32int_color: true,
+            // All devices support rgba32uint and rgba32sint's color + write capabilities
+            format_rgba32int_color_write: true,
+            format_rgba32float_color: true,
+            // All devices support rgba32float's color + write capabilities
+            format_rgba32float_color_write: true,
+            // Only macOS support rgba32float's all capabilities
             format_rgba32float_all: os_is_mac,
-            format_depth16unorm: device.supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v2),
-            format_depth32float_filter: device
-                .supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v1),
-            format_depth32float_none: !device
-                .supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v1),
+            format_depth16unorm: Self::supports_any(
+                device,
+                &[
+                    MTLFeatureSet::iOS_GPUFamily3_v3,
+                    MTLFeatureSet::macOS_GPUFamily1_v2,
+                ],
+            ),
+            format_depth32float_filter: os_is_mac,
+            format_depth32float_none: !os_is_mac,
             format_bgr10a2_all: Self::supports_any(device, BGR10A2_ALL),
-            format_bgr10a2_no_write: !device
-                .supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v3),
+            format_bgr10a2_no_write: !Self::supports_any(device, BGR10A2_ALL),
             max_buffers_per_stage: 31,
-            max_textures_per_stage: if os_is_mac { 128 } else { 31 },
-            max_samplers_per_stage: 16,
-            buffer_alignment: if os_is_mac { 256 } else { 64 },
-            max_buffer_size: if device.supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v2) {
-                1 << 30 // 1GB on macOS 1.2 and up
+            max_textures_per_stage: if os_is_mac {
+                128 // On macOS, minimun value is 128
+            } else if device.supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1) {
+                96
             } else {
-                1 << 28 // 256MB otherwise
+                31
+            },
+            max_samplers_per_stage: if (family_check
+                && device.supports_family(MTLGPUFamily::Apple6))
+                || (os_is_mac && rw_texture_tier == MTLReadWriteTextureTier::Tier2)
+            {
+                1024
+            } else {
+                16
+            },
+            buffer_alignment: if os_is_mac { 256 } else { 64 },
+            max_buffer_size: if version.at_least((10, 14), (12, 0)) {
+                // maxBufferLength available on macOS 10.14+ and iOS 12.0+
+                let buffer_size: mtl::NSInteger =
+                    unsafe { msg_send![device.as_ref(), maxBufferLength] };
+                buffer_size as _
+            } else if os_is_mac {
+                1 << 30 // 1GB on macOS 10.11 and up
+            } else {
+                1 << 28 // 256MB on iOS 8.0+
             },
             max_texture_size: if Self::supports_any(
                 device,
@@ -846,45 +638,33 @@ impl super::PrivateCapabilities {
                 ],
             ) {
                 16384
-            } else if Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily1_v2,
-                    MTLFeatureSet::iOS_GPUFamily2_v2,
-                    MTLFeatureSet::tvOS_GPUFamily1_v1,
-                ],
-            ) {
-                8192
             } else {
-                4096
+                8192
             },
             max_texture_3d_size: 2048,
             max_texture_layers: 2048,
-            max_fragment_input_components: if os_is_mac { 128 } else { 60 },
+            max_fragment_input_components: if os_is_mac
+                || device.supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1)
+            {
+                124
+            } else {
+                60
+            },
             max_color_render_targets: if Self::supports_any(
                 device,
                 &[
                     MTLFeatureSet::iOS_GPUFamily2_v1,
-                    MTLFeatureSet::iOS_GPUFamily3_v1,
-                    MTLFeatureSet::iOS_GPUFamily4_v1,
-                    MTLFeatureSet::iOS_GPUFamily5_v1,
                     MTLFeatureSet::tvOS_GPUFamily1_v1,
-                    MTLFeatureSet::tvOS_GPUFamily2_v1,
                     MTLFeatureSet::macOS_GPUFamily1_v1,
-                    MTLFeatureSet::macOS_GPUFamily2_v1,
                 ],
             ) {
                 8
             } else {
                 4
             },
-            max_varying_components: if Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::macOS_GPUFamily1_v1,
-                    MTLFeatureSet::macOS_GPUFamily2_v1,
-                ],
-            ) {
+            max_varying_components: if device
+                .supports_feature_set(MTLFeatureSet::macOS_GPUFamily1_v1)
+            {
                 128
             } else {
                 60
@@ -893,29 +673,22 @@ impl super::PrivateCapabilities {
                 device,
                 &[
                     MTLFeatureSet::iOS_GPUFamily4_v2,
-                    MTLFeatureSet::iOS_GPUFamily5_v1,
                     MTLFeatureSet::macOS_GPUFamily1_v1,
-                    MTLFeatureSet::macOS_GPUFamily2_v1,
                 ],
             ) {
                 1024
             } else {
                 512
             },
-            max_total_threadgroup_memory: if Self::supports_any(
-                device,
-                &[
-                    MTLFeatureSet::iOS_GPUFamily4_v2,
-                    MTLFeatureSet::iOS_GPUFamily5_v1,
-                ],
-            ) {
+            max_total_threadgroup_memory: if device
+                .supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v2)
+            {
                 64 << 10
             } else if Self::supports_any(
                 device,
                 &[
                     MTLFeatureSet::iOS_GPUFamily4_v1,
                     MTLFeatureSet::macOS_GPUFamily1_v2,
-                    MTLFeatureSet::macOS_GPUFamily2_v1,
                 ],
             ) {
                 32 << 10
@@ -927,58 +700,47 @@ impl super::PrivateCapabilities {
                 device,
                 &[
                     MTLFeatureSet::macOS_GPUFamily1_v2,
-                    MTLFeatureSet::macOS_GPUFamily2_v1,
                     MTLFeatureSet::iOS_GPUFamily1_v3,
-                    MTLFeatureSet::iOS_GPUFamily2_v3,
-                    MTLFeatureSet::iOS_GPUFamily3_v2,
-                    MTLFeatureSet::iOS_GPUFamily4_v1,
-                    MTLFeatureSet::iOS_GPUFamily5_v1,
                     MTLFeatureSet::tvOS_GPUFamily1_v2,
-                    MTLFeatureSet::tvOS_GPUFamily2_v1,
                 ],
             ),
             supports_binary_archives: family_check
                 && (device.supports_family(MTLGPUFamily::Apple3)
                     || device.supports_family(MTLGPUFamily::Mac1)),
-            supports_capture_manager: if os_is_mac {
-                Self::version_at_least(major, minor, 10, 13)
-            } else {
-                Self::version_at_least(major, minor, 11, 0)
-            },
-            can_set_maximum_drawables_count: os_is_mac
-                || Self::version_at_least(major, minor, 11, 2),
-            can_set_display_sync: os_is_mac && Self::version_at_least(major, minor, 10, 13),
-            can_set_next_drawable_timeout: if os_is_mac {
-                Self::version_at_least(major, minor, 10, 13)
-            } else {
-                Self::version_at_least(major, minor, 11, 0)
-            },
+            supports_capture_manager: version.at_least((10, 13), (11, 0)),
+            can_set_maximum_drawables_count: version.at_least((10, 14), (11, 2)),
+            can_set_display_sync: version.at_least((10, 13), OS_NOT_SUPPORT),
+            can_set_next_drawable_timeout: version.at_least((10, 13), (11, 0)),
             supports_arrays_of_textures: Self::supports_any(
                 device,
                 &[
                     MTLFeatureSet::iOS_GPUFamily3_v2,
-                    MTLFeatureSet::iOS_GPUFamily4_v1,
-                    MTLFeatureSet::iOS_GPUFamily5_v1,
                     MTLFeatureSet::tvOS_GPUFamily2_v1,
                     MTLFeatureSet::macOS_GPUFamily1_v3,
-                    MTLFeatureSet::macOS_GPUFamily2_v1,
                 ],
             ),
             supports_arrays_of_textures_write: family_check
                 && (device.supports_family(MTLGPUFamily::Apple6)
                     || device.supports_family(MTLGPUFamily::Mac1)
-                    || device.supports_family(MTLGPUFamily::Mac2)
-                    || device.supports_family(MTLGPUFamily::MacCatalyst1)
-                    || device.supports_family(MTLGPUFamily::MacCatalyst2)),
-            supports_mutability: if os_is_mac {
-                Self::version_at_least(major, minor, 10, 13)
-            } else {
-                Self::version_at_least(major, minor, 11, 0)
-            },
+                    || device.supports_family(MTLGPUFamily::MacCatalyst1)),
+            supports_mutability: version.at_least((10, 13), (11, 0)),
             //Depth clipping is supported on all macOS GPU families and iOS family 4 and later
-            supports_depth_clip_control: device
-                .supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1)
-                || os_is_mac,
+            supports_depth_clip_control: os_is_mac
+                || device.supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1),
+            supports_preserve_invariance: version.at_least((11, 0), (13, 0)),
+            has_unified_memory: if version.at_least((10, 15), (13, 0)) {
+                Some(device.has_unified_memory())
+            } else {
+                None
+            },
+        }
+    }
+
+    pub fn device_type(&self) -> wgt::DeviceType {
+        if self.has_unified_memory.unwrap_or(self.low_power) {
+            wgt::DeviceType::IntegratedGpu
+        } else {
+            wgt::DeviceType::DiscreteGpu
         }
     }
 
@@ -986,7 +748,6 @@ impl super::PrivateCapabilities {
         use wgt::Features as F;
 
         let mut features = F::empty()
-            | F::TEXTURE_COMPRESSION_BC
             | F::INDIRECT_FIRST_INSTANCE
             | F::MAPPABLE_PRIMARY_BUFFERS
             | F::VERTEX_WRITABLE_STORAGE
@@ -995,6 +756,11 @@ impl super::PrivateCapabilities {
             | F::POLYGON_MODE_LINE
             | F::CLEAR_TEXTURE
             | F::TEXTURE_FORMAT_16BIT_NORM;
+
+        features.set(F::TEXTURE_COMPRESSION_ASTC_LDR, self.format_astc);
+        features.set(F::TEXTURE_COMPRESSION_ASTC_HDR, self.format_astc_hdr);
+        features.set(F::TEXTURE_COMPRESSION_BC, self.format_bc);
+        features.set(F::TEXTURE_COMPRESSION_ETC2, self.format_eac_etc);
 
         features.set(F::DEPTH_CLIP_CONTROL, self.supports_depth_clip_control);
 
@@ -1013,10 +779,12 @@ impl super::PrivateCapabilities {
         {
             features.insert(F::STORAGE_RESOURCE_BINDING_ARRAY);
         }
+
         features.set(
             F::ADDRESS_MODE_CLAMP_TO_BORDER,
             self.sampler_clamp_to_border,
         );
+        features.set(F::ADDRESS_MODE_CLAMP_TO_ZERO, true);
 
         features
     }
@@ -1085,7 +853,6 @@ impl super::PrivateCapabilities {
     pub fn map_format(&self, format: wgt::TextureFormat) -> mtl::MTLPixelFormat {
         use mtl::MTLPixelFormat::*;
         use wgt::TextureFormat as Tf;
-
         match format {
             Tf::R8Unorm => R8Unorm,
             Tf::R8Snorm => R8Snorm,
@@ -1168,34 +935,56 @@ impl super::PrivateCapabilities {
             Tf::EacR11Snorm => EAC_R11Snorm,
             Tf::EacRg11Unorm => EAC_RG11Unorm,
             Tf::EacRg11Snorm => EAC_RG11Snorm,
-            Tf::Astc4x4RgbaUnorm => ASTC_4x4_LDR,
-            Tf::Astc4x4RgbaUnormSrgb => ASTC_4x4_sRGB,
-            Tf::Astc5x4RgbaUnorm => ASTC_5x4_LDR,
-            Tf::Astc5x4RgbaUnormSrgb => ASTC_5x4_sRGB,
-            Tf::Astc5x5RgbaUnorm => ASTC_5x5_LDR,
-            Tf::Astc5x5RgbaUnormSrgb => ASTC_5x5_sRGB,
-            Tf::Astc6x5RgbaUnorm => ASTC_6x5_LDR,
-            Tf::Astc6x5RgbaUnormSrgb => ASTC_6x5_sRGB,
-            Tf::Astc6x6RgbaUnorm => ASTC_6x6_LDR,
-            Tf::Astc6x6RgbaUnormSrgb => ASTC_6x6_sRGB,
-            Tf::Astc8x5RgbaUnorm => ASTC_8x5_LDR,
-            Tf::Astc8x5RgbaUnormSrgb => ASTC_8x5_sRGB,
-            Tf::Astc8x6RgbaUnorm => ASTC_8x6_LDR,
-            Tf::Astc8x6RgbaUnormSrgb => ASTC_8x6_sRGB,
-            Tf::Astc10x5RgbaUnorm => ASTC_8x8_LDR,
-            Tf::Astc10x5RgbaUnormSrgb => ASTC_8x8_sRGB,
-            Tf::Astc10x6RgbaUnorm => ASTC_10x5_LDR,
-            Tf::Astc10x6RgbaUnormSrgb => ASTC_10x5_sRGB,
-            Tf::Astc8x8RgbaUnorm => ASTC_10x6_LDR,
-            Tf::Astc8x8RgbaUnormSrgb => ASTC_10x6_sRGB,
-            Tf::Astc10x8RgbaUnorm => ASTC_10x8_LDR,
-            Tf::Astc10x8RgbaUnormSrgb => ASTC_10x8_sRGB,
-            Tf::Astc10x10RgbaUnorm => ASTC_10x10_LDR,
-            Tf::Astc10x10RgbaUnormSrgb => ASTC_10x10_sRGB,
-            Tf::Astc12x10RgbaUnorm => ASTC_12x10_LDR,
-            Tf::Astc12x10RgbaUnormSrgb => ASTC_12x10_sRGB,
-            Tf::Astc12x12RgbaUnorm => ASTC_12x12_LDR,
-            Tf::Astc12x12RgbaUnormSrgb => ASTC_12x12_sRGB,
+            Tf::Astc { block, channel } => match channel {
+                AstcChannel::Unorm => match block {
+                    AstcBlock::B4x4 => ASTC_4x4_LDR,
+                    AstcBlock::B5x4 => ASTC_5x4_LDR,
+                    AstcBlock::B5x5 => ASTC_5x5_LDR,
+                    AstcBlock::B6x5 => ASTC_6x5_LDR,
+                    AstcBlock::B6x6 => ASTC_6x6_LDR,
+                    AstcBlock::B8x5 => ASTC_8x5_LDR,
+                    AstcBlock::B8x6 => ASTC_8x6_LDR,
+                    AstcBlock::B8x8 => ASTC_8x8_LDR,
+                    AstcBlock::B10x5 => ASTC_10x5_LDR,
+                    AstcBlock::B10x6 => ASTC_10x6_LDR,
+                    AstcBlock::B10x8 => ASTC_10x8_LDR,
+                    AstcBlock::B10x10 => ASTC_10x10_LDR,
+                    AstcBlock::B12x10 => ASTC_12x10_LDR,
+                    AstcBlock::B12x12 => ASTC_12x12_LDR,
+                },
+                AstcChannel::UnormSrgb => match block {
+                    AstcBlock::B4x4 => ASTC_4x4_sRGB,
+                    AstcBlock::B5x4 => ASTC_5x4_sRGB,
+                    AstcBlock::B5x5 => ASTC_5x5_sRGB,
+                    AstcBlock::B6x5 => ASTC_6x5_sRGB,
+                    AstcBlock::B6x6 => ASTC_6x6_sRGB,
+                    AstcBlock::B8x5 => ASTC_8x5_sRGB,
+                    AstcBlock::B8x6 => ASTC_8x6_sRGB,
+                    AstcBlock::B8x8 => ASTC_8x8_sRGB,
+                    AstcBlock::B10x5 => ASTC_10x5_sRGB,
+                    AstcBlock::B10x6 => ASTC_10x6_sRGB,
+                    AstcBlock::B10x8 => ASTC_10x8_sRGB,
+                    AstcBlock::B10x10 => ASTC_10x10_sRGB,
+                    AstcBlock::B12x10 => ASTC_12x10_sRGB,
+                    AstcBlock::B12x12 => ASTC_12x12_sRGB,
+                },
+                AstcChannel::Hdr => match block {
+                    AstcBlock::B4x4 => ASTC_4x4_HDR,
+                    AstcBlock::B5x4 => ASTC_5x4_HDR,
+                    AstcBlock::B5x5 => ASTC_5x5_HDR,
+                    AstcBlock::B6x5 => ASTC_6x5_HDR,
+                    AstcBlock::B6x6 => ASTC_6x6_HDR,
+                    AstcBlock::B8x5 => ASTC_8x5_HDR,
+                    AstcBlock::B8x6 => ASTC_8x6_HDR,
+                    AstcBlock::B8x8 => ASTC_8x8_HDR,
+                    AstcBlock::B10x5 => ASTC_10x5_HDR,
+                    AstcBlock::B10x6 => ASTC_10x6_HDR,
+                    AstcBlock::B10x8 => ASTC_10x8_HDR,
+                    AstcBlock::B10x10 => ASTC_10x10_HDR,
+                    AstcBlock::B12x10 => ASTC_12x10_HDR,
+                    AstcBlock::B12x12 => ASTC_12x12_HDR,
+                },
+            },
         }
     }
 }

@@ -71,9 +71,18 @@ bitflags! {
 }
 
 bitflags! {
+    /// Options that describe how a graphics or compute function uses an argument buffer’s resource.
+    ///
+    /// Enabling certain options for certain resources determines whether the Metal driver should
+    /// convert the resource to another format (for example, whether to decompress a color render target).
     pub struct MTLResourceUsage: NSUInteger {
+        /// An option that enables reading from the resource.
         const Read   = 1 << 0;
+        /// An option that enables writing to the resource.
         const Write  = 1 << 1;
+        /// An option that enables sampling from the resource.
+        ///
+        /// Specify this option only if the resource is a texture.
         const Sample = 1 << 2;
     }
 }

@@ -44,14 +44,16 @@ unsafe extern "system" fn debug_utils_messenger_callback(
         CStr::from_ptr(cd.p_message).to_string_lossy()
     };
 
-    log::log!(
-        level,
-        "{:?} [{} (0x{:x})]\n\t{}",
-        message_type,
-        message_id_name,
-        cd.message_id_number,
-        message,
-    );
+    let _ = std::panic::catch_unwind(|| {
+        log::log!(
+            level,
+            "{:?} [{} (0x{:x})]\n\t{}",
+            message_type,
+            message_id_name,
+            cd.message_id_number,
+            message,
+        );
+    });
 
     if cd.queue_label_count != 0 {
         let labels = slice::from_raw_parts(cd.p_queue_labels, cd.queue_label_count as usize);
@@ -64,7 +66,10 @@ unsafe extern "system" fn debug_utils_messenger_callback(
                     .map(|lbl| CStr::from_ptr(lbl).to_string_lossy())
             })
             .collect::<Vec<_>>();
-        log::log!(level, "\tqueues: {}", names.join(", "));
+
+        let _ = std::panic::catch_unwind(|| {
+            log::log!(level, "\tqueues: {}", names.join(", "));
+        });
     }
 
     if cd.cmd_buf_label_count != 0 {
@@ -78,7 +83,10 @@ unsafe extern "system" fn debug_utils_messenger_callback(
                     .map(|lbl| CStr::from_ptr(lbl).to_string_lossy())
             })
             .collect::<Vec<_>>();
-        log::log!(level, "\tcommand buffers: {}", names.join(", "));
+
+        let _ = std::panic::catch_unwind(|| {
+            log::log!(level, "\tcommand buffers: {}", names.join(", "));
+        });
     }
 
     if cd.object_count != 0 {
@@ -99,7 +107,14 @@ unsafe extern "system" fn debug_utils_messenger_callback(
                 )
             })
             .collect::<Vec<_>>();
-        log::log!(level, "\tobjects: {}", names.join(", "));
+        let _ = std::panic::catch_unwind(|| {
+            log::log!(level, "\tobjects: {}", names.join(", "));
+        });
+    }
+
+    if cfg!(debug_assertions) && level == log::Level::Error {
+        // Set canary and continue
+        crate::VALIDATION_CANARY.set();
     }
 
     vk::FALSE
@@ -123,7 +138,7 @@ impl super::Instance {
         flags: crate::InstanceFlags,
     ) -> Result<Vec<&'static CStr>, crate::InstanceError> {
         let instance_extensions = entry
-            .enumerate_instance_extension_properties()
+            .enumerate_instance_extension_properties(None)
             .map_err(|e| {
                 log::info!("enumerate_instance_extension_properties: {:?}", e);
                 crate::InstanceError
@@ -158,6 +173,9 @@ impl super::Instance {
         }
 
         extensions.push(vk::KhrGetPhysicalDeviceProperties2Fn::name());
+
+        // Provid wide color gamut
+        extensions.push(vk::ExtSwapchainColorspaceFn::name());
 
         // Only keep available extensions.
         extensions.retain(|&ext| {
@@ -365,7 +383,7 @@ impl super::Instance {
     }
 
     #[cfg(any(target_os = "macos", target_os = "ios"))]
-    fn create_surface_from_ns_view(&self, view: *mut c_void) -> super::Surface {
+    fn create_surface_from_view(&self, view: *mut c_void) -> super::Surface {
         use core_graphics_types::{base::CGFloat, geometry::CGRect};
         use objc::{
             class, msg_send,
@@ -378,27 +396,33 @@ impl super::Instance {
             let existing: *mut Object = msg_send![view, layer];
             let class = class!(CAMetalLayer);
 
-            let use_current = if existing.is_null() {
-                false
-            } else {
-                let result: BOOL = msg_send![existing, isKindOfClass: class];
-                result == YES
-            };
-
-            if use_current {
+            let use_current: BOOL = msg_send![existing, isKindOfClass: class];
+            if use_current == YES {
                 existing
             } else {
-                let layer: *mut Object = msg_send![class, new];
-                let () = msg_send![view, setLayer: layer];
-                let bounds: CGRect = msg_send![view, bounds];
-                let () = msg_send![layer, setBounds: bounds];
+                let new_layer: *mut Object = msg_send![class, new];
+                let frame: CGRect = msg_send![existing, bounds];
+                let () = msg_send![new_layer, setFrame: frame];
 
-                let window: *mut Object = msg_send![view, window];
-                if !window.is_null() {
-                    let scale_factor: CGFloat = msg_send![window, backingScaleFactor];
-                    let () = msg_send![layer, setContentsScale: scale_factor];
-                }
-                layer
+                let scale_factor: CGFloat = if cfg!(target_os = "ios") {
+                    let () = msg_send![existing, addSublayer: new_layer];
+                    // On iOS, `create_surface_from_view` may be called before the application initialization is complete,
+                    // `msg_send![view, window]` and `msg_send![window, screen]` will get null.
+                    let screen: *mut Object = msg_send![class!(UIScreen), mainScreen];
+                    msg_send![screen, nativeScale]
+                } else {
+                    let () = msg_send![view, setLayer: new_layer];
+                    let () = msg_send![view, setWantsLayer: YES];
+                    let window: *mut Object = msg_send![view, window];
+                    if !window.is_null() {
+                        msg_send![window, backingScaleFactor]
+                    } else {
+                        1.0
+                    }
+                };
+                let () = msg_send![new_layer, setContentsScale: scale_factor];
+
+                new_layer
             }
         };
 
@@ -583,13 +607,13 @@ impl crate::Instance<super::Api> for super::Instance {
             RawWindowHandle::AppKit(handle)
                 if self.extensions.contains(&ext::MetalSurface::name()) =>
             {
-                Ok(self.create_surface_from_ns_view(handle.ns_view))
+                Ok(self.create_surface_from_view(handle.ns_view))
             }
             #[cfg(target_os = "ios")]
             RawWindowHandle::UiKit(handle)
                 if self.extensions.contains(&ext::MetalSurface::name()) =>
             {
-                Ok(self.create_surface_from_ns_view(handle.ui_view))
+                Ok(self.create_surface_from_view(handle.ui_view))
             }
             _ => Err(crate::InstanceError),
         }
