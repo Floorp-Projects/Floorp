@@ -31,7 +31,6 @@ class CSSContainerRule final : public css::ConditionRule {
   // WebIDL interface
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
-  void SetConditionText(const nsACString& aConditionText, ErrorResult&) final;
 
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
