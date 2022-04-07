@@ -17,6 +17,6 @@ var locales = {
   length: 2
 };
 
-assert(compareArray(Intl.getCanonicalLocales(locales), [ "en-US", "pt-BR" ]));
+assert.compareArray(Intl.getCanonicalLocales(locales), [ "en-US", "pt-BR" ]);
 
 reportCompare(0, 0);

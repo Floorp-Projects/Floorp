@@ -9,12 +9,10 @@ es5id: 15.4.5.1_A2.3_T1
 description: length = 100, P in [100, 199]
 ---*/
 
-//CHECK#1
 var x = Array(100);
 x[100] = 1;
 assert.sameValue(x.length, 101, 'The value of x.length is expected to be 101');
 
-//CHECK#2
 x[199] = 1;
 assert.sameValue(x.length, 200, 'The value of x.length is expected to be 200');
 

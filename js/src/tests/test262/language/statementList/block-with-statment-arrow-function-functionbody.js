@@ -53,6 +53,6 @@ info: |
 
 
 // length is a label!
-{length: 3000}() => { return 42; };;
+{length: 3000}() => { return 42; };
 
 reportCompare(0, 0);

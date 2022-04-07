@@ -10,6 +10,6 @@ description: >
 
 assert.throws(TypeError, function() {
   Object.prototype.propertyIsEnumerable.call(null, 'foo');
-});
+}, 'Object.prototype.propertyIsEnumerable.call(null, "foo") throws a TypeError exception');
 
 reportCompare(0, 0);

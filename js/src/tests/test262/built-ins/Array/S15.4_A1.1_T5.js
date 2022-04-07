@@ -9,13 +9,11 @@ es5id: 15.4_A1.1_T5
 description: Checking for null and undefined
 ---*/
 
-//CHECK#1
 var x = [];
 x[null] = 0;
 assert.sameValue(x[0], undefined, 'The value of x[0] is expected to equal undefined');
 assert.sameValue(x["null"], 0, 'The value of x["null"] is expected to be 0');
 
-//CHECK#3
 var y = [];
 y[undefined] = 0;
 assert.sameValue(y[0], undefined, 'The value of y[0] is expected to equal undefined');

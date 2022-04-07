@@ -15,15 +15,13 @@ includes: [compareArray.js]
 features: [Reflect]
 ---*/
 
-assert(
-  compareArray(Reflect.ownKeys([]), ['length']),
+assert.compareArray(
+  Reflect.ownKeys([]),
+  ['length'],
   'return non enumerable `length` from empty array'
 );
 
-assert(
-  compareArray(Reflect.ownKeys([, , 2]), ['2', 'length']),
-  'return array keys'
-);
+assert.compareArray(Reflect.ownKeys([, , 2]), ['2', 'length'], 'return array keys');
 
 var o = {};
 Object.defineProperty(o, 'p1', {
@@ -35,6 +33,6 @@ Object.defineProperty(o, 'p2', {
   enumerable: false
 });
 
-assert(compareArray(Reflect.ownKeys(o), ['p1', 'p2']));
+assert.compareArray(Reflect.ownKeys(o), ['p1', 'p2']);
 
 reportCompare(0, 0);

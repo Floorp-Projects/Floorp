@@ -4,7 +4,8 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.day
-description: Temporal.Calendar.prototype.day will take PlainMonthDay and return
+description: >
+  Temporal.Calendar.prototype.day will take PlainMonthDay and return
   the value of the day.
 info: |
   4. If Type(temporalDateLike) is not Object or temporalDateLike does not have

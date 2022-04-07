@@ -40,6 +40,6 @@ info: |
 
 
 // length is a label!
-{length: 3000}/1/;;
+{length: 3000}/1/;
 
 reportCompare(0, 0);
