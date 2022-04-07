@@ -61,8 +61,8 @@ if (is_ios || is_mac) {
     ]
     if (!build_with_mozilla) {
     include_dirs += [
-      # This is here for backward compatiblity reasons.
-      "objc/Framework/Headers",  # TODO(bugs.webrtc.org/9627): Remove this.
+      # Contains framework headers
+      "$target_gen_dir/WebRTC.framework",
     ]
     }
     cflags = [
@@ -955,7 +955,6 @@ if (is_ios || is_mac) {
         ":base_objc",
         ":file_logger_objc",
         ":helpers_objc",
-        ":legacy_header_paths",
         ":mediaconstraints_objc",
         ":mediasource_objc",
         ":native_api",
@@ -999,90 +998,6 @@ if (is_ios || is_mac) {
       if (is_ios) {
         deps += [ ":native_api_audio_device_module" ]
       }
-    }
-
-    # TODO(bugs.webrtc.org/9627): Remove this target.
-    rtc_source_set("legacy_header_paths") {
-      sources = [
-        "objc/Framework/Classes/Common/NSString+StdString.h",
-        "objc/Framework/Classes/Common/scoped_cftyperef.h",
-        "objc/Framework/Classes/PeerConnection/RTCConfiguration+Native.h",
-        "objc/Framework/Classes/PeerConnection/RTCPeerConnectionFactory+Native.h",
-        "objc/Framework/Classes/Video/RTCDefaultShader.h",
-        "objc/Framework/Classes/Video/RTCNV12TextureCache.h",
-        "objc/Framework/Classes/VideoToolbox/nalu_rewriter.h",
-        "objc/Framework/Headers/WebRTC/RTCAudioSession.h",
-        "objc/Framework/Headers/WebRTC/RTCAudioSessionConfiguration.h",
-        "objc/Framework/Headers/WebRTC/RTCAudioSource.h",
-        "objc/Framework/Headers/WebRTC/RTCAudioTrack.h",
-        "objc/Framework/Headers/WebRTC/RTCCVPixelBuffer.h",
-        "objc/Framework/Headers/WebRTC/RTCCallbackLogger.h",
-        "objc/Framework/Headers/WebRTC/RTCCameraPreviewView.h",
-        "objc/Framework/Headers/WebRTC/RTCCameraVideoCapturer.h",
-        "objc/Framework/Headers/WebRTC/RTCCertificate.h",
-        "objc/Framework/Headers/WebRTC/RTCConfiguration.h",
-        "objc/Framework/Headers/WebRTC/RTCDataChannel.h",
-        "objc/Framework/Headers/WebRTC/RTCDataChannelConfiguration.h",
-        "objc/Framework/Headers/WebRTC/RTCDefaultVideoDecoderFactory.h",
-        "objc/Framework/Headers/WebRTC/RTCDefaultVideoEncoderFactory.h",
-        "objc/Framework/Headers/WebRTC/RTCDispatcher.h",
-        "objc/Framework/Headers/WebRTC/RTCDtmfSender.h",
-        "objc/Framework/Headers/WebRTC/RTCEAGLVideoView.h",
-        "objc/Framework/Headers/WebRTC/RTCFieldTrials.h",
-        "objc/Framework/Headers/WebRTC/RTCFileLogger.h",
-        "objc/Framework/Headers/WebRTC/RTCFileVideoCapturer.h",
-        "objc/Framework/Headers/WebRTC/RTCH264ProfileLevelId.h",
-        "objc/Framework/Headers/WebRTC/RTCIceCandidate.h",
-        "objc/Framework/Headers/WebRTC/RTCIceServer.h",
-        "objc/Framework/Headers/WebRTC/RTCLegacyStatsReport.h",
-        "objc/Framework/Headers/WebRTC/RTCLogging.h",
-        "objc/Framework/Headers/WebRTC/RTCMTLNSVideoView.h",
-        "objc/Framework/Headers/WebRTC/RTCMTLVideoView.h",
-        "objc/Framework/Headers/WebRTC/RTCMacros.h",
-        "objc/Framework/Headers/WebRTC/RTCMediaConstraints.h",
-        "objc/Framework/Headers/WebRTC/RTCMediaSource.h",
-        "objc/Framework/Headers/WebRTC/RTCMediaStream.h",
-        "objc/Framework/Headers/WebRTC/RTCMediaStreamTrack.h",
-        "objc/Framework/Headers/WebRTC/RTCMetrics.h",
-        "objc/Framework/Headers/WebRTC/RTCMetricsSampleInfo.h",
-        "objc/Framework/Headers/WebRTC/RTCNSGLVideoView.h",
-        "objc/Framework/Headers/WebRTC/RTCPeerConnection.h",
-        "objc/Framework/Headers/WebRTC/RTCPeerConnectionFactory.h",
-        "objc/Framework/Headers/WebRTC/RTCPeerConnectionFactoryOptions.h",
-        "objc/Framework/Headers/WebRTC/RTCRtcpParameters.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpCodecParameters.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpEncodingParameters.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpHeaderExtension.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpParameters.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpReceiver.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpSender.h",
-        "objc/Framework/Headers/WebRTC/RTCRtpTransceiver.h",
-        "objc/Framework/Headers/WebRTC/RTCSSLAdapter.h",
-        "objc/Framework/Headers/WebRTC/RTCSessionDescription.h",
-        "objc/Framework/Headers/WebRTC/RTCTracing.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoCapturer.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoCodec.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoCodecFactory.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoCodecH264.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoCodecInfo.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoDecoderVP8.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoDecoderVP9.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoEncoderVP8.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoEncoderVP9.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoFrame.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoFrameBuffer.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoRenderer.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoSource.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoTrack.h",
-        "objc/Framework/Headers/WebRTC/RTCVideoViewShading.h",
-        "objc/Framework/Headers/WebRTC/UIDevice+RTCDevice.h",
-        "objc/Framework/Native/api/audio_device_module.h",
-        "objc/Framework/Native/api/video_decoder_factory.h",
-        "objc/Framework/Native/api/video_encoder_factory.h",
-        "objc/Framework/Native/api/video_frame_buffer.h",
-        "objc/Framework/Native/src/objc_video_decoder_factory.h",
-        "objc/Framework/Native/src/objc_video_encoder_factory.h",
-      ]
     }
 
     if (rtc_include_tests) {

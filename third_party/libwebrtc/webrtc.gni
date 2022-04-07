@@ -909,17 +909,39 @@ if (is_ios) {
   # projects. See "mac_framework_bundle_with_umbrella_header".
   template("ios_framework_bundle_with_umbrella_header") {
     forward_variables_from(invoker, [ "output_name" ])
+    this_target_name = target_name
     umbrella_header_path =
-        "$target_gen_dir/$output_name.framework/Headers/$output_name.h"
+        "$target_gen_dir/$output_name.framework/WebRTC/$output_name.h"
+
+    action_foreach("create_bracket_include_headers_$target_name") {
+      script = "//tools_webrtc/apple/copy_framework_header.py"
+      sources = invoker.sources
+      output_name = invoker.output_name
+      outputs = [
+        "$target_gen_dir/$output_name.framework/WebRTC/{{source_file_part}}",
+      ]
+      args = [
+        "--input",
+        "{{source}}",
+        "--output",
+        rebase_path(target_gen_dir, root_build_dir) +
+            "/$output_name.framework/WebRTC/{{source_file_part}}",
+      ]
+    }
 
     ios_framework_bundle(target_name) {
-      forward_variables_from(invoker, "*", [])
-
-      deps += [ ":copy_umbrella_header_$target_name" ]
+      forward_variables_from(invoker, "*", [ "public_headers" ])
+      public_headers = get_target_outputs(
+              ":create_bracket_include_headers_$this_target_name")
+      deps += [
+        ":copy_umbrella_header_$target_name",
+        ":create_bracket_include_headers_$target_name",
+      ]
     }
 
     action("umbrella_header_$target_name") {
-      forward_variables_from(invoker, [ "public_headers" ])
+      public_headers = get_target_outputs(
+              ":create_bracket_include_headers_$this_target_name")
 
       script = "//tools_webrtc/ios/generate_umbrella_header.py"
 
@@ -929,6 +951,7 @@ if (is_ios) {
                rebase_path(umbrella_header_path, root_build_dir),
                "--sources",
              ] + public_headers
+      deps = [ ":create_bracket_include_headers_$this_target_name" ]
     }
 
     copy("copy_umbrella_header_$target_name") {
@@ -975,15 +998,34 @@ if (is_mac) {
         ":copy_framework_headers_$this_target_name",
         ":copy_modulemap_$this_target_name",
         ":copy_umbrella_header_$this_target_name",
+        ":create_bracket_include_headers_$this_target_name",
         ":modulemap_$this_target_name",
         ":umbrella_header_$this_target_name",
       ]
     }
 
+    action_foreach("create_bracket_include_headers_$this_target_name") {
+      script = "//tools_webrtc/apple/copy_framework_header.py"
+      sources = invoker.sources
+      output_name = invoker.output_name
+      outputs = [
+        "$target_gen_dir/$output_name.framework/WebRTC/{{source_file_part}}",
+      ]
+      args = [
+        "--input",
+        "{{source}}",
+        "--output",
+        rebase_path(target_gen_dir, root_build_dir) +
+            "/$output_name.framework/WebRTC/{{source_file_part}}",
+      ]
+    }
+
     bundle_data("copy_framework_headers_$this_target_name") {
-      forward_variables_from(invoker, [ "sources" ])
+      sources = get_target_outputs(
+              ":create_bracket_include_headers_$this_target_name")
 
       outputs = [ "{{bundle_contents_dir}}/Headers/{{source_file_part}}" ]
+      deps = [ ":create_bracket_include_headers_$this_target_name" ]
     }
 
     action("modulemap_$this_target_name") {
@@ -1004,7 +1046,8 @@ if (is_mac) {
     }
 
     action("umbrella_header_$this_target_name") {
-      forward_variables_from(invoker, [ "sources" ])
+      sources = get_target_outputs(
+              ":create_bracket_include_headers_$this_target_name")
 
       script = "//tools_webrtc/ios/generate_umbrella_header.py"
 
@@ -1014,6 +1057,7 @@ if (is_mac) {
                rebase_path(umbrella_header_path, root_build_dir),
                "--sources",
              ] + sources
+      deps = [ ":create_bracket_include_headers_$this_target_name" ]
     }
 
     bundle_data("copy_umbrella_header_$this_target_name") {
