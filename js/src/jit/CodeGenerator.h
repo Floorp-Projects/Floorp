@@ -216,7 +216,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitRest(LInstruction* lir, Register array, Register numActuals,
                 Register temp0, Register temp1, unsigned numFormals,
                 Register resultreg);
-  void emitInstanceOf(LInstruction* ins, const LAllocation* prototypeObject);
+  void emitInstanceOf(LInstruction* ins, Register protoReg);
 
   void loadJSScriptForBlock(MBasicBlock* block, Register reg);
   void loadOutermostJSScript(Register reg);
