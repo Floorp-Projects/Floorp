@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.res.Resources
+import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import kotlinx.coroutines.CoroutineScope
@@ -75,9 +76,9 @@ class DefaultBookmarkController(
     private val store: BookmarkFragmentStore,
     private val sharedViewModel: BookmarksSharedViewModel,
     private val tabsUseCases: TabsUseCases?,
-    private val loadBookmarkNode: suspend (String) -> BookmarkNode?,
+    private val loadBookmarkNode: suspend (String, Boolean) -> BookmarkNode?,
     private val showSnackbar: (String) -> Unit,
-    private val onOpenAllInTabsEmpty: () -> Unit,
+    private val alertHeavyOpen: (Int, () -> Unit) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit,
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit,
     private val showTabTray: () -> Unit,
@@ -85,6 +86,10 @@ class DefaultBookmarkController(
 ) : BookmarkController {
 
     private val resources: Resources = activity.resources
+
+    @Suppress("MagicNumber")
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val maxOpenBeforeWarn = 15
 
     override fun handleBookmarkChanged(item: BookmarkNode) {
         sharedViewModel.selectedFolder = item
@@ -108,7 +113,7 @@ class DefaultBookmarkController(
     override fun handleBookmarkExpand(folder: BookmarkNode) {
         handleAllBookmarksDeselected()
         scope.launch {
-            val node = loadBookmarkNode.invoke(folder.guid) ?: return@launch
+            val node = loadBookmarkNode.invoke(folder.guid, false) ?: return@launch
             sharedViewModel.selectedFolder = node
             store.dispatch(BookmarkFragmentAction.Change(node))
         }
@@ -161,32 +166,56 @@ class DefaultBookmarkController(
         showTabTray()
     }
 
-    private suspend fun recursiveBookmarkFolderOpening(folder: BookmarkNode, firstLaunch: Boolean = false) {
-        val node = loadBookmarkNode.invoke(folder.guid) ?: return
-        if (!node.children.isNullOrEmpty()) {
-            if (firstLaunch) invokePendingDeletion.invoke()
+    private fun extractURLsFromTree(node: BookmarkNode): MutableList<String> {
+        val urls = mutableListOf<String>()
 
-            node.children!!.iterator().forEach {
-                when (it.type) {
-                    BookmarkNodeType.FOLDER -> recursiveBookmarkFolderOpening(it, mode = mode)
-                    BookmarkNodeType.ITEM -> {
-                        it.url?.let { url -> tabsUseCases?.addTab?.invoke(url, private = (mode == BrowsingMode.Private)) }
+        when (node.type) {
+            BookmarkNodeType.FOLDER -> {
+                // if not leaf (empty) folder
+                if (!node.children.isNullOrEmpty()) {
+                    node.children!!.iterator().forEach {
+                        urls.addAll(extractURLsFromTree(it))
                     }
-                    BookmarkNodeType.SEPARATOR -> {}
-                }
-            }.also {
-                if (firstLaunch) {
-                    activity.browsingModeManager.mode = BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
-                    showTabTray()
                 }
             }
-        } else if (firstLaunch) onOpenAllInTabsEmpty.invoke()
+            BookmarkNodeType.ITEM -> {
+                node.url?.let { urls.add(it) }
+            }
+            BookmarkNodeType.SEPARATOR -> {}
+        }
+
+        return urls
     }
 
     override fun handleBookmarkFolderOpening(folder: BookmarkNode, mode: BrowsingMode) {
         // potentially heavy function with a lot of bookmarks to open => use a coroutine
         scope.launch {
-            recursiveBookmarkFolderOpening(folder, true, mode)
+            // if more than maxOpenBeforeWarn (15) elements
+            val tree = loadBookmarkNode.invoke(folder.guid, true) ?: return@launch
+            val urls = extractURLsFromTree(tree)
+
+            val openAll = { load: Boolean ->
+                for (url in urls) {
+                    tabsUseCases?.addTab?.invoke(
+                        url,
+                        private = (mode == BrowsingMode.Private),
+                        startLoading = load,
+                    )
+                }
+                activity.browsingModeManager.mode =
+                    BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
+                showTabTray()
+            }
+
+            // warn user if more than maxOpenBeforeWarn (15)
+            if (urls.size >= maxOpenBeforeWarn) {
+                alertHeavyOpen(urls.size) {
+                    // do not load bookmarks when more than maxOpenBeforeWarn (15)
+                    openAll(false)
+                }
+            } else {
+                openAll(true)
+            }
         }
     }
 
