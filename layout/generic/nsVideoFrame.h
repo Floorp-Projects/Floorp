@@ -12,20 +12,15 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsIReflowCallback.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
-
-namespace mozilla {
-namespace layers {
-class Layer;
-class LayerManager;
-}  // namespace layers
-}  // namespace mozilla
 
 class nsPresContext;
 class nsDisplayItem;
 
 class nsVideoFrame final : public nsContainerFrame,
+                           public nsIReflowCallback,
                            public nsIAnonymousContentCreator {
  public:
   template <typename T>
@@ -33,13 +28,13 @@ class nsVideoFrame final : public nsContainerFrame,
   using Nothing = mozilla::Nothing;
   using Visibility = mozilla::Visibility;
 
-  typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::LayerManager LayerManager;
-
   explicit nsVideoFrame(ComputedStyle*, nsPresContext*);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsVideoFrame)
+
+  void ReflowCallbackCanceled() final { mReflowCallbackPosted = false; }
+  bool ReflowFinished() final;
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
@@ -125,6 +120,13 @@ class nsVideoFrame final : public nsContainerFrame,
 
   // Anonymous child which is the text track caption display div.
   nsCOMPtr<nsIContent> mCaptionDiv;
+
+  // Some sizes tracked for notification purposes.
+  // TODO: Maybe the calling code could be rewritten to use ResizeObserver for
+  // this nowadays.
+  nsSize mControlsTrackedSize{-1, -1};
+  nsSize mCaptionTrackedSize{-1, -1};
+  bool mReflowCallbackPosted = false;
 };
 
 #endif /* nsVideoFrame_h___ */
