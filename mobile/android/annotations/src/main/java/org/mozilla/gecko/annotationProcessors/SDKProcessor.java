@@ -71,6 +71,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
@@ -103,11 +104,14 @@ public class SDKProcessor {
     private final HashMap<String, String> mAnnotations = new HashMap<>();
     // Default set of annotation values to use.
     private final String mDefaultAnnotation;
+    // List of nested classes to forward declare.
+    private final ArrayList<Class<?>> mNestedClasses;
 
     public ClassInfo(final String text) {
       final String[] mapping = text.split("=", 2);
       name = mapping[0].trim();
       mDefaultAnnotation = mapping.length > 1 ? mapping[1].trim() : null;
+      mNestedClasses = new ArrayList<>();
     }
 
     public void addAnnotation(final String text) throws ParseException {
@@ -266,7 +270,9 @@ public class SDKProcessor {
       }
 
       try {
-        final ClassInfo[] classes = getClassList(configFile);
+        ClassInfo[] classes = getClassList(configFile);
+        classes = addNestedClassForwardDeclarations(classes, loader);
+
         for (final ClassInfo cls : classes) {
           System.out.println("Looking up: " + cls.name);
           generateClass(Class.forName(cls.name, true, loader), cls, implementationFile, headerFile);
@@ -401,13 +407,33 @@ public class SDKProcessor {
     }
   }
 
+  private static String getGeneratedName(Class<?> clazz) {
+    ArrayList<String> classes = new ArrayList<>();
+    do {
+      classes.add(clazz.getSimpleName());
+      clazz = clazz.getDeclaringClass();
+    } while (clazz != null);
+    Collections.reverse(classes);
+    return String.join("::", classes);
+  }
+
   private static void generateClass(
       Class<?> clazz, ClassInfo clsInfo, StringBuilder implementationFile, StringBuilder headerFile)
       throws ParseException {
-    String generatedName = clazz.getSimpleName();
+    String generatedName = getGeneratedName(clazz);
 
     CodeGenerator generator =
         new CodeGenerator(new ClassWithOptions(clazz, generatedName, /* ifdef */ ""));
+
+    // Forward declaration for nested classes
+    ClassWithOptions[] nestedClasses =
+        clsInfo.mNestedClasses.stream()
+            .map(
+                nestedClass ->
+                    new ClassWithOptions(nestedClass, getGeneratedName(nestedClass), null))
+            .sorted((a, b) -> a.generatedName.compareTo(b.generatedName))
+            .toArray(ClassWithOptions[]::new);
+    generator.generateClasses(nestedClasses);
 
     generateMembers(generator, clsInfo, sortAndFilterMembers(clazz, clazz.getConstructors()));
     generateMembers(generator, clsInfo, sortAndFilterMembers(clazz, clazz.getMethods()));
@@ -466,6 +492,46 @@ public class SDKProcessor {
         reader.close();
       }
     }
+  }
+
+  /**
+   * For each nested class we wish to generate bindings for, this ensures that the generated binding
+   * for its outer class (recursively, until we reach a top-level class) will contain a forward
+   * declaration of the nested class.
+   */
+  private static ClassInfo[] addNestedClassForwardDeclarations(
+      final ClassInfo[] classes, final ClassLoader loader) throws ClassNotFoundException {
+    final HashMap<String, ClassInfo> classMap = new HashMap<>();
+    for (final ClassInfo cls : classes) {
+      classMap.put(cls.name, cls);
+    }
+
+    for (final ClassInfo classInfo : classes) {
+      Class<?> innerClass = Class.forName(classInfo.name, true, loader);
+      while (innerClass.getDeclaringClass() != null) {
+        Class<?> outerClass = innerClass.getDeclaringClass();
+        ClassInfo outerClassInfo = classMap.get(outerClass.getName());
+        if (outerClassInfo == null) {
+          // If there isn't already a ClassInfo object for the outer class then we must insert one.
+          // This ensures that we actually generate a declaration for the outer class, in which we
+          // can forward-declare the inner class. "skip:true" ensures we do not generate bindings
+          // for the outer class' member's, as we simply want to forward declare the inner class.
+          outerClassInfo = new ClassInfo(String.format("%s = skip:true", outerClass.getName()));
+          classMap.put(outerClass.getName(), outerClassInfo);
+        }
+        // Add the inner class to the outer class' mNestedClasses, ensuring the outer class'
+        // generated code will forward-declare the inner class.
+        outerClassInfo.mNestedClasses.add(innerClass);
+
+        innerClass = outerClass;
+      }
+    }
+
+    // Sort to ensure we generate the classes in a deterministic order, and that outer classes are
+    // declared before nested classes.
+    return classMap.values().stream()
+        .sorted((a, b) -> a.name.compareTo(b.name))
+        .toArray(ClassInfo[]::new);
   }
 
   private static void writeOutputFiles(
