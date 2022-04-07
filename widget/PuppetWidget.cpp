@@ -752,7 +752,8 @@ nsresult PuppetWidget::NotifyIMEOfFocusChange(
   bool gotFocus = aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS;
   if (gotFocus) {
     // When IME gets focus, we should initialize all information of the
-    // content.
+    // content, however, it may fail to get it because the editor may have
+    // already been blurred.
     if (NS_WARN_IF(!mContentCache.CacheAll(this, &aIMENotification))) {
       return NS_ERROR_FAILURE;
     }
