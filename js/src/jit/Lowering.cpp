@@ -1178,8 +1178,8 @@ void LIRGenerator::visitCompare(MCompare* comp) {
     }
 
     if (IsLooseEqualityOp(comp->jsop())) {
-      auto* lir = new (alloc())
-          LIsNullOrLikeUndefinedV(useBox(left), temp(), tempToUnbox());
+      auto* lir =
+          new (alloc()) LIsNullOrLikeUndefinedV(useBox(left), tempToUnbox());
       define(lir, comp);
       return;
     }
