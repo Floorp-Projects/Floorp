@@ -28,7 +28,12 @@ add_task(async function test_event() {
 
   const rootMessageHandler = createRootMessageHandler("session-id-event");
 
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
+  // Internal events are emitted both as generic message-handler-event events as
+  // well as under their own name. We expect to receive the event for both.
+  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const onNamedEvent = rootMessageHandler.once(
+    "internal-event-from-window-global"
+  );
   // MessageHandlerRegistry should forward all the message-handler-events.
   const onRegistryEvent = RootMessageHandlerRegistry.once(
     "message-handler-registry-event"
@@ -36,7 +41,7 @@ add_task(async function test_event() {
 
   callTestEmitEvent(rootMessageHandler, browsingContext.id);
 
-  const messageHandlerEvent = await onTestEvent;
+  const messageHandlerEvent = await onHandlerEvent;
   is(
     messageHandlerEvent.name,
     "internal-event-from-window-global",
@@ -50,6 +55,13 @@ add_task(async function test_event() {
   ok(
     !messageHandlerEvent.isProtocolEvent,
     "Received expected flag for internal event"
+  );
+
+  const namedEvent = await onNamedEvent;
+  is(
+    namedEvent.text,
+    `internal event from ${browsingContext.id}`,
+    "Received the expected payload"
   );
 
   const registryEvent = await onRegistryEvent;
@@ -70,7 +82,11 @@ add_task(async function test_event() {
 add_task(async function test_root_event() {
   const rootMessageHandler = createRootMessageHandler("session-id-root_event");
 
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
+  // Internal events are emitted both as generic message-handler-event events as
+  // well as under their own name. We expect to receive the event for both.
+  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const onNamedEvent = rootMessageHandler.once("internal-event-from-root");
+
   rootMessageHandler.handleCommand({
     moduleName: "event",
     commandName: "testEmitInternalRootEvent",
@@ -79,7 +95,7 @@ add_task(async function test_root_event() {
     },
   });
 
-  const { name, data, isProtocolEvent } = await onTestEvent;
+  const { name, data, isProtocolEvent } = await onHandlerEvent;
   is(
     name,
     "internal-event-from-root",
@@ -87,6 +103,13 @@ add_task(async function test_root_event() {
   );
   is(data.text, "internal event from root", "Received the expected payload");
   ok(!isProtocolEvent, "Received expected flag for internal event");
+
+  const namedEvent = await onNamedEvent;
+  is(
+    namedEvent.text,
+    "internal event from root",
+    "Received the expected payload"
+  );
 
   rootMessageHandler.destroy();
 });
@@ -107,7 +130,12 @@ add_task(async function test_windowglobal_in_root_event() {
     "session-id-windowglobal_in_root_event"
   );
 
-  const onTestEvent = rootMessageHandler.once("message-handler-event");
+  // Internal events are emitted both as generic message-handler-event events as
+  // well as under their own name. We expect to receive the event for both.
+  const onHandlerEvent = rootMessageHandler.once("message-handler-event");
+  const onNamedEvent = rootMessageHandler.once(
+    "internal-event-from-window-global-in-root"
+  );
   rootMessageHandler.handleCommand({
     moduleName: "event",
     commandName: "testEmitInternalWindowGlobalInRootEvent",
@@ -117,7 +145,7 @@ add_task(async function test_windowglobal_in_root_event() {
     },
   });
 
-  const { name, data, isProtocolEvent } = await onTestEvent;
+  const { name, data, isProtocolEvent } = await onHandlerEvent;
   is(
     name,
     "internal-event-from-window-global-in-root",
@@ -129,6 +157,13 @@ add_task(async function test_windowglobal_in_root_event() {
     "Received the expected payload"
   );
   ok(!isProtocolEvent, "Received expected flag for internal event");
+
+  const namedEvent = await onNamedEvent;
+  is(
+    namedEvent.text,
+    `internal windowglobal-in-root event for ${browsingContext.id}`,
+    "Received the expected payload"
+  );
 
   rootMessageHandler.destroy();
   gBrowser.removeTab(tab);
@@ -221,7 +256,7 @@ add_task(async function test_event_with_frames() {
     "session-id-event_with_frames"
   );
 
-  let rootEvents = [];
+  const rootEvents = [];
   const onRootEvent = function(evtName, wrappedEvt) {
     if (wrappedEvt.name === "internal-event-from-window-global") {
       rootEvents.push(wrappedEvt.data.text);
@@ -229,11 +264,17 @@ add_task(async function test_event_with_frames() {
   };
   rootMessageHandler.on("message-handler-event", onRootEvent);
 
+  const namedEvents = [];
+  const onNamedEvent = (name, event) => namedEvents.push(event.text);
+  rootMessageHandler.on("internal-event-from-window-global", onNamedEvent);
+
   for (const context of contexts) {
     callTestEmitEvent(rootMessageHandler, context.id);
-    info("Wait for root event to be received");
+    info("Wait for root event to be received in both event arrays");
     await TestUtils.waitForCondition(() =>
-      rootEvents.includes(`internal event from ${context.id}`)
+      [namedEvents, rootEvents].every(events =>
+        events.includes(`internal event from ${context.id}`)
+      )
     );
   }
 
@@ -242,6 +283,7 @@ add_task(async function test_event_with_frames() {
   is(rootEvents.length, 4, "Only received 4 events");
 
   rootMessageHandler.off("message-handler-event", onRootEvent);
+  rootMessageHandler.off("internal-event-from-window-global", onNamedEvent);
   rootMessageHandler.destroy();
 });
 

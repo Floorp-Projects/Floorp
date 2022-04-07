@@ -4,40 +4,22 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["NavigationStrategy", "RootMessageHandler"];
+const EXPORTED_SYMBOLS = ["RootMessageHandler"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ContextDescriptorType:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   FrameTransport:
     "chrome://remote/content/shared/messagehandler/transports/FrameTransport.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
-  ProgressListener: "chrome://remote/content/shared/Navigate.jsm",
   SessionData:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
-
-/**
- * Enum of strategies to use with RootMessageHandler::waitForNavigation.
- *
- * @readonly
- * @enum {string}
- **/
-const NavigationStrategy = {
-  // Wait until the navigation starts.
-  WaitForStart: "WaitForStart",
-  // Wait until the new document reaches the interactive state.
-  WaitForInteractive: "WaitForInteractive",
-  // Wait until the new document is loaded.
-  WaitForComplete: "WaitForComplete",
-};
 
 /**
  * A RootMessageHandler is the root node of a MessageHandler network. It lives
@@ -137,57 +119,6 @@ class RootMessageHandler extends MessageHandler {
     return this._updateSessionData(sessionData, { mode: "remove" });
   }
 
-  /**
-   * Returns a promise which will resolve when a navigation occurs on the
-   * provided WebProgress instance. Depending on the provided navigation
-   * strategy, the promise will either resolve when the navigation starts, when
-   * the new document is interactive or when the new document is loaded.
-   *
-   * @param {WebProgress} webProgress
-   *     The web progress to monitor for navigation.
-   * @param {NavigationStrategy} navigationStrategy
-   *     Describes when navigation is considered as finished.
-   */
-  async waitForNavigation(
-    webProgress,
-    navigationStrategy = NavigationStrategy.WaitForComplete
-  ) {
-    const resolveWhenStarted =
-      navigationStrategy === NavigationStrategy.WaitForStart;
-    const listener = new ProgressListener(webProgress, {
-      resolveWhenStarted,
-      // In case the webprogress is already navigating, always wait for an
-      // explicit start flag.
-      waitForExplicitStart: true,
-    });
-    const navigated = listener.start();
-
-    // Monitor DOMContentLoaded for the Eager strategy, to resolve as soon as
-    // the document becomes interactive.
-    if (navigationStrategy === NavigationStrategy.WaitForInteractive) {
-      const onEvent = (evtName, wrappedEvt) => {
-        if (wrappedEvt.name !== "window-global-dom-content-loaded") {
-          // Ignore events which are not load events.
-          return;
-        }
-
-        if (webProgress.browsingContext.id !== wrappedEvt.data.contextId) {
-          // Ignore load events for unrelated browsing contexts.
-          return;
-        }
-
-        if (wrappedEvt.data.readyState === "interactive") {
-          listener.stop();
-        }
-      };
-
-      this.on("message-handler-event", onEvent);
-      navigated.finally(() => this.off("message-handler-event", onEvent));
-    }
-
-    return navigated;
-  }
-
   _updateSessionData(sessionData, options = {}) {
     const { mode } = options;
 
@@ -215,9 +146,7 @@ class RootMessageHandler extends MessageHandler {
 
     const destination = {
       type: WindowGlobalMessageHandler.type,
-      contextDescriptor: {
-        type: ContextDescriptorType.All,
-      },
+      contextDescriptor,
     };
 
     // Don't apply session data if the module is not present

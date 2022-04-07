@@ -90,14 +90,20 @@ var pktUI = (function() {
   const initialPanelSize = {
     signup: {
       control: { height: 450, width: 300 },
+      refresh: { height: 315, width: 328 },
     },
     saved: {
       control: { height: 132, width: 350 },
+      refresh: { height: 110, width: 350 },
     },
     home: {
       control: { height: 477, width: 328 },
-      // This is for non English sizes, this is not for an AB experiment.
-      no_topics: { height: 247, width: 328 },
+      refresh: { height: 251, width: 328 },
+    },
+    // This is for non English sizes, this is not for an AB experiment.
+    home_no_topics: {
+      control: { height: 247, width: 328 },
+      refresh: { height: 86, width: 328 },
     },
   };
 
@@ -157,12 +163,11 @@ var pktUI = (function() {
    */
   function showSignUp() {
     getFirefoxAccountSignedInUser(function(userdata) {
-      let sizes = initialPanelSize.signup.control;
       showPanel(
         "about:pocket-signup?" +
           "emailButton=" +
           NimbusFeatures.saveToPocket.getVariable("emailButton"),
-        sizes
+        `signup`
       );
     });
   }
@@ -189,14 +194,12 @@ var pktUI = (function() {
    */
   function saveAndShowConfirmation() {
     getFirefoxAccountSignedInUser(function(userdata) {
-      const variant = "control";
-      const sizes = initialPanelSize.saved[variant];
       showPanel(
         "about:pocket-saved?premiumStatus=" +
           (pktApi.isPremiumUser() ? "1" : "0") +
           "&fxasignedin=" +
           (typeof userdata == "object" && userdata !== null ? "1" : "0"),
-        sizes
+        `saved`
       );
     });
   }
@@ -205,24 +208,31 @@ var pktUI = (function() {
    * Show the Pocket home panel state
    */
   function showPocketHome() {
-    const locale = getUILocale();
-    let homeVersion = "no_topics";
-    // We have different height for non English because of topics.
-    // In order to have a clean panel load, we optimize the starting height.
-    if (locale.startsWith("en-")) {
-      homeVersion = "control";
-    }
-    const sizes = initialPanelSize.home[homeVersion];
     const hideRecentSaves = NimbusFeatures.saveToPocket.getVariable(
       "hideRecentSaves"
     );
-    showPanel(`about:pocket-home?hiderecentsaves=${hideRecentSaves}`, sizes);
+    const locale = getUILocale();
+    let panel = `home_no_topics`;
+    if (locale.startsWith("en-")) {
+      panel = `home`;
+    }
+    showPanel(`about:pocket-home?hiderecentsaves=${hideRecentSaves}`, panel);
   }
 
   /**
    * Open a generic panel
    */
-  function showPanel(urlString, options) {
+  function showPanel(urlString, panel) {
+    const locale = getUILocale();
+    let variant = `control`;
+    const layoutRefresh = NimbusFeatures.saveToPocket.getVariable(
+      "layoutRefresh"
+    );
+    if (layoutRefresh) {
+      variant = `refresh`;
+    }
+
+    const options = initialPanelSize[panel][variant];
     resizePanel({
       width: options.width,
       height: options.height,
@@ -250,11 +260,8 @@ var pktUI = (function() {
       url.searchParams.append("utmCampaign", utmCampaign);
       url.searchParams.append("utmContent", utmContent);
     }
-    url.searchParams.append(
-      "layoutRefresh",
-      NimbusFeatures.saveToPocket.getVariable("layoutRefresh")
-    );
-    url.searchParams.append("locale", getUILocale());
+    url.searchParams.append("layoutRefresh", layoutRefresh);
+    url.searchParams.append("locale", locale);
 
     // We don't have to hide and show the panel again if it's already shown
     // as if the user tries to click again on the toolbar button the overlay

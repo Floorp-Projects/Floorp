@@ -148,12 +148,6 @@ using ObjLiteralIndex = TypedIndex<ObjLiteralStencil>;
 class CompilationGCThingType {};
 using CompilationGCThingIndex = TypedIndex<CompilationGCThingType>;
 
-FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
-                                   GeneratorKind generatorKind,
-                                   FunctionAsyncKind asyncKind,
-                                   bool isSelfHosting = false,
-                                   bool forceExtended = false);
-
 // A syntax-checked regular expression string.
 class RegExpStencil {
   friend class StencilXDR;

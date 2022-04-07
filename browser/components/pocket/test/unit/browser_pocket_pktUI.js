@@ -93,11 +93,11 @@ test_runner(async function test_pktUI_showPanel({ sandbox }) {
   };
   pktUI.setToolbarPanelFrame(testFrame);
 
-  pktUI.showPanel("about:pocket-saved", { width: 10, height: 10 });
+  pktUI.showPanel("about:pocket-saved", `saved`);
 
   Assert.deepEqual(testFrame.setAttribute.args[0], [
     "src",
     `about:pocket-saved?utmSource=firefox_pocket_save_button&layoutRefresh=true&locale=${SpecialPowers.Services.locale.appLocaleAsBCP47}`,
   ]);
-  Assert.deepEqual(testFrame.style, { width: "10px", height: "10px" });
+  Assert.deepEqual(testFrame.style, { width: "350px", height: "110px" });
 });
