@@ -359,6 +359,10 @@ static gboolean moz_container_wayland_map_event(GtkWidget* widget,
   LOGWAYLAND("%s [%p]\n", __FUNCTION__,
              (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
 
+  // We need to mark MozContainer as mapped to make sure
+  // moz_container_wayland_unmap() is called on hide/withdraw.
+  gtk_widget_set_mapped(widget, TRUE);
+
   // Don't create wl_subsurface in map_event when it's already created or
   // if we create it for the first time.
   if (wl_container->ready_to_draw || wl_container->before_first_size_alloc) {
