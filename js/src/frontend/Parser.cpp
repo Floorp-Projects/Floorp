@@ -82,8 +82,8 @@ using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
 using ParserBindingNameVector = Vector<ParserBindingName, 6>;
 
-template <class T, class U>
-static inline void PropagateTransitiveParseFlags(const T* inner, U* outer) {
+static inline void PropagateTransitiveParseFlags(const FunctionBox* inner,
+                                                 SharedContext* outer) {
   if (inner->bindingsAccessedDynamically()) {
     outer->setBindingsAccessedDynamically();
   }
@@ -2344,8 +2344,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Function is not syntactically part of another script.
   MOZ_ASSERT(funbox->index() == CompilationStencil::TopLevelIndex);
 
-  funbox->initStandalone(this->compilationState_.scopeContext, flags,
-                         syntaxKind);
+  funbox->initStandalone(this->compilationState_.scopeContext, syntaxKind);
 
   SourceParseContext funpc(this, funbox, newDirectives);
   if (!funpc.init()) {
@@ -3203,7 +3202,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     if (!funbox) {
       return false;
     }
-    funbox->initWithEnclosingParseContext(pc_, flags, kind);
+    funbox->initWithEnclosingParseContext(pc_, kind);
 
     SyntaxParseHandler::Node syntaxNode =
         syntaxParser->innerFunctionForFunctionBox(
@@ -3337,7 +3336,7 @@ GeneralParser<ParseHandler, Unit>::innerFunction(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(outerpc, flags, kind);
+  funbox->initWithEnclosingParseContext(outerpc, kind);
 
   FunctionNodeType innerFunc = innerFunctionForFunctionBox(
       funNode, outerpc, funbox, inHandling, yieldHandling, kind, newDirectives);
@@ -3400,9 +3399,8 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   }
   const ScriptStencilExtra& funExtra =
       this->getCompilationState().previousParseCache.funExtra();
-  funbox->initFromLazyFunction(funExtra,
-                               this->getCompilationState().scopeContext,
-                               input.functionFlags(), syntaxKind);
+  funbox->initFromLazyFunction(
+      funExtra, this->getCompilationState().scopeContext, syntaxKind);
   if (funbox->useMemberInitializers()) {
     funbox->setMemberInitializers(funExtra.memberInitializers());
   }
@@ -8247,7 +8245,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(pc_, flags, functionSyntaxKind);
+  funbox->initWithEnclosingParseContext(pc_, functionSyntaxKind);
   setFunctionEndFromCurrentToken(funbox);
 
   // Mark this function as being synthesized by the parser. This means special
@@ -8433,7 +8431,7 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(pc_, flags, syntaxKind);
+  funbox->initWithEnclosingParseContext(pc_, syntaxKind);
 
   // Push a SourceParseContext on to the stack.
   ParseContext* outerpc = pc_;
@@ -8539,7 +8537,7 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(pc_, flags, syntaxKind);
+  funbox->initWithEnclosingParseContext(pc_, syntaxKind);
   MOZ_ASSERT(funbox->isSyntheticFunction());
   MOZ_ASSERT(!funbox->allowSuperCall());
   MOZ_ASSERT(!funbox->allowArguments());
@@ -8653,7 +8651,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   if (!funbox) {
     return null();
   }
-  funbox->initWithEnclosingParseContext(pc_, flags, syntaxKind);
+  funbox->initWithEnclosingParseContext(pc_, syntaxKind);
   MOZ_ASSERT(funbox->isSyntheticFunction());
 
   // We can't use setFunctionStartAtCurrentToken because that uses pos().begin,
