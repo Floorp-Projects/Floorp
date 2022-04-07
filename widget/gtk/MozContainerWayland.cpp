@@ -247,9 +247,11 @@ static void moz_container_wayland_frame_callback_handler(
     g_clear_pointer(&wl_container->frame_callback_handler, wl_callback_destroy);
     // It's possible that container is already unmapped so quit in such case.
     if (!wl_container->surface) {
-      LOGWAYLAND("  container in unmapped, quit.");
-      MOZ_DIAGNOSTIC_ASSERT(wl_container->initial_draw_cbs.empty(),
-                            "MozContainer should be unmapped.");
+      LOGWAYLAND("  container is unmapped, quit.");
+      if (!wl_container->initial_draw_cbs.empty()) {
+        NS_WARNING("Unmapping MozContainer with active draw callback!");
+        wl_container->initial_draw_cbs.clear();
+      }
       return;
     }
     if (wl_container->ready_to_draw) {
