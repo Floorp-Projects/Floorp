@@ -590,12 +590,41 @@
     }
   }
 
-  class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocompleteRichlistitem {}
+  class MozAutocompleteRichlistitemLoginsFooter extends MozElements.MozAutocompleteRichlistitem {
+    constructor() {
+      super();
+
+      function handleEvent(event) {
+        if (event.button != 0) {
+          return;
+        }
+
+        const { LoginHelper } = ChromeUtils.import(
+          "resource://gre/modules/LoginHelper.jsm"
+        );
+
+        LoginHelper.openPasswordManager(this.ownerGlobal, {
+          entryPoint: "autocomplete",
+        });
+      }
+
+      this.addEventListener("click", handleEvent);
+    }
+  }
 
   class MozAutocompleteImportableLearnMoreRichlistitem extends MozElements.MozAutocompleteRichlistitem {
     constructor() {
       super();
       MozXULElement.insertFTLIfNeeded("toolkit/main-window/autocomplete.ftl");
+
+      this.addEventListener("click", event => {
+        window.openTrustedLinkIn(
+          Services.urlFormatter.formatURLPref("app.support.baseURL") +
+            "password-import",
+          "tab",
+          { relatedToCurrent: true }
+        );
+      });
     }
 
     static get markup() {
@@ -748,6 +777,22 @@
     constructor() {
       super();
       MozXULElement.insertFTLIfNeeded("toolkit/main-window/autocomplete.ftl");
+
+      this.addEventListener("click", event => {
+        if (event.button != 0) {
+          return;
+        }
+
+        // Let the login manager parent handle this importable browser click.
+        gBrowser.selectedBrowser.browsingContext.currentWindowGlobal
+          .getActor("LoginManager")
+          .receiveMessage({
+            name: "PasswordManager:HandleImportable",
+            data: {
+              browserId: this.getAttribute("ac-value"),
+            },
+          });
+      });
     }
 
     static get markup() {
@@ -769,10 +814,7 @@
         this.querySelector(".labels-wrapper"),
         `autocomplete-import-logins-${this.getAttribute("ac-value")}`,
         {
-          host: JSON.parse(this.getAttribute("ac-label")).hostname.replace(
-            /^www\./,
-            ""
-          ),
+          host: this.getAttribute("ac-label").replace(/^www\./, ""),
         }
       );
       super._adjustAcItem();
