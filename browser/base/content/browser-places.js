@@ -2053,62 +2053,6 @@ var BookmarkingUI = {
     aEvent.target.removeEventListener("ViewHiding", this);
   },
 
-  toggleMenuButtonInToolbar(triggerNode) {
-    let placement = CustomizableUI.getPlacementOfWidget(
-      this.BOOKMARK_BUTTON_ID
-    );
-    const area = CustomizableUI.AREA_NAVBAR;
-    if (!placement) {
-      // Button is in the palette, so we can move it to the navbar.
-      let pos;
-      let widgetIDs = CustomizableUI.getWidgetIdsInArea(
-        CustomizableUI.AREA_NAVBAR
-      );
-      // If there's a spring inside the navbar, find it and use that as the
-      // placement marker.
-      let lastSpringID = null;
-      for (let i = widgetIDs.length - 1; i >= 0; --i) {
-        let id = widgetIDs[i];
-        if (CustomizableUI.isSpecialWidget(id) && /spring/.test(id)) {
-          lastSpringID = id;
-          break;
-        }
-      }
-      if (lastSpringID) {
-        pos = CustomizableUI.getPlacementOfWidget(lastSpringID).position + 1;
-      } else {
-        // Next alternative is to use the searchbar as the placement marker.
-        const searchWidgetID = "search-container";
-        if (widgetIDs.includes(searchWidgetID)) {
-          pos =
-            CustomizableUI.getPlacementOfWidget(searchWidgetID).position + 1;
-        } else {
-          // Last alternative is to use the navbar as the placement marker.
-          pos =
-            CustomizableUI.getPlacementOfWidget("urlbar-container").position +
-            1;
-        }
-      }
-
-      CustomizableUI.addWidgetToArea(this.BOOKMARK_BUTTON_ID, area, pos);
-      BrowserUsageTelemetry.recordWidgetChange(
-        this.BOOKMARK_BUTTON_ID,
-        area,
-        "bookmark-tools"
-      );
-    } else {
-      // Move it back to the palette.
-      CustomizableUI.removeWidgetFromArea(this.BOOKMARK_BUTTON_ID);
-      BrowserUsageTelemetry.recordWidgetChange(
-        this.BOOKMARK_BUTTON_ID,
-        null,
-        "bookmark-tools"
-      );
-    }
-    triggerNode.setAttribute("checked", !placement);
-    updateToggleControlLabel(triggerNode);
-  },
-
   handlePlacesEvents(aEvents) {
     let isStarUpdateNeeded = false;
     let affectsOtherBookmarksFolder = false;
