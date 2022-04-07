@@ -1307,10 +1307,10 @@
     "PASS"
   ],
   "Page removing and adding event handlers should correctly fire event handlers as they are added and then removed (page.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Page removing and adding event handlers should correctly added and removed request events (page.spec.ts)": [
-    "FAIL"
+    "PASS"
   ],
   "Page Page.Events.error should throw when page crashes (page.spec.ts)": [
     "TIMEOUT"
