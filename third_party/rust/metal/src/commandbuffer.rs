@@ -144,4 +144,15 @@ impl CommandBufferRef {
             ]
         }
     }
+
+    pub fn push_debug_group(&self, name: &str) {
+        unsafe {
+            let nslabel = crate::nsstring_from_str(name);
+            msg_send![self, pushDebugGroup: nslabel]
+        }
+    }
+
+    pub fn pop_debug_group(&self) {
+        unsafe { msg_send![self, popDebugGroup] }
+    }
 }

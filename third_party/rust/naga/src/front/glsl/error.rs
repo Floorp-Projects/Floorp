@@ -17,22 +17,22 @@ fn join_with_comma(list: &[ExpectedToken]) -> String {
     string
 }
 
-/// One of the expected tokens returned in [`InvalidToken`](ErrorKind::InvalidToken)
+/// One of the expected tokens returned in [`InvalidToken`](ErrorKind::InvalidToken).
 #[derive(Debug, PartialEq)]
 pub enum ExpectedToken {
-    /// A specific token was expected
+    /// A specific token was expected.
     Token(TokenValue),
-    /// A type was expected
+    /// A type was expected.
     TypeName,
-    /// An identifier was expected
+    /// An identifier was expected.
     Identifier,
-    /// An integer literal was expected
+    /// An integer literal was expected.
     IntLiteral,
-    /// A float literal was expected
+    /// A float literal was expected.
     FloatLiteral,
-    /// A boolean literal was expected
+    /// A boolean literal was expected.
     BoolLiteral,
-    /// The end of file was expected
+    /// The end of file was expected.
     Eof,
 }
 impl From<TokenValue> for ExpectedToken {
@@ -54,7 +54,7 @@ impl std::fmt::Display for ExpectedToken {
     }
 }
 
-/// Information about the cause of an error
+/// Information about the cause of an error.
 #[derive(Debug, Error)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum ErrorKind {
@@ -104,6 +104,11 @@ pub enum ErrorKind {
     /// An error was returned by the preprocessor.
     #[error("{0:?}")]
     PreprocessorError(PreprocessorError),
+    /// The parser entered an illegal state and exited
+    ///
+    /// This obviously is a bug and as such should be reported in the github issue tracker
+    #[error("Internal error: {0}")]
+    InternalError(&'static str),
 }
 
 impl From<ConstantSolvingError> for ErrorKind {
@@ -112,7 +117,7 @@ impl From<ConstantSolvingError> for ErrorKind {
     }
 }
 
-/// Error returned during shader parsing
+/// Error returned during shader parsing.
 #[derive(Debug, Error)]
 #[error("{kind}")]
 #[cfg_attr(test, derive(PartialEq))]

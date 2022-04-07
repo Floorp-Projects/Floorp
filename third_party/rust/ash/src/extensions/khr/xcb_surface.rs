@@ -20,24 +20,23 @@ impl XcbSurface {
         Self { handle, fp }
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateXcbSurfaceKHR.html>"]
+    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateXcbSurfaceKHR.html>
     pub unsafe fn create_xcb_surface(
         &self,
         create_info: &vk::XcbSurfaceCreateInfoKHR,
         allocation_callbacks: Option<&vk::AllocationCallbacks>,
     ) -> VkResult<vk::SurfaceKHR> {
         let mut surface = mem::zeroed();
-        self.fp
-            .create_xcb_surface_khr(
-                self.handle,
-                create_info,
-                allocation_callbacks.as_raw_ptr(),
-                &mut surface,
-            )
-            .result_with_success(surface)
+        (self.fp.create_xcb_surface_khr)(
+            self.handle,
+            create_info,
+            allocation_callbacks.as_raw_ptr(),
+            &mut surface,
+        )
+        .result_with_success(surface)
     }
 
-    #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceXcbPresentationSupportKHR.html>"]
+    /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetPhysicalDeviceXcbPresentationSupportKHR.html>
     pub unsafe fn get_physical_device_xcb_presentation_support(
         &self,
         physical_device: vk::PhysicalDevice,
@@ -45,7 +44,7 @@ impl XcbSurface {
         connection: &mut vk::xcb_connection_t,
         visual_id: vk::xcb_visualid_t,
     ) -> bool {
-        let b = self.fp.get_physical_device_xcb_presentation_support_khr(
+        let b = (self.fp.get_physical_device_xcb_presentation_support_khr)(
             physical_device,
             queue_family_index,
             connection,
@@ -55,7 +54,7 @@ impl XcbSurface {
         b > 0
     }
 
-    pub fn name() -> &'static CStr {
+    pub const fn name() -> &'static CStr {
         vk::KhrXcbSurfaceFn::name()
     }
 

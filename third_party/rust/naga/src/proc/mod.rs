@@ -1,4 +1,6 @@
-//! Module processing functionality.
+/*!
+[`Module`](super::Module) processing functionality.
+*/
 
 pub mod index;
 mod layouter;
@@ -8,19 +10,11 @@ mod typifier;
 
 use std::cmp::PartialEq;
 
-pub use index::{BoundsCheckPolicies, BoundsCheckPolicy, IndexableLength};
-pub use layouter::{Alignment, InvalidBaseType, Layouter, TypeLayout};
+pub use index::{BoundsCheckPolicies, BoundsCheckPolicy, IndexableLength, IndexableLengthError};
+pub use layouter::{Alignment, LayoutError, LayoutErrorInner, Layouter, TypeLayout};
 pub use namer::{EntryPointIndex, NameKey, Namer};
 pub use terminator::ensure_block_returns;
 pub use typifier::{ResolveContext, ResolveError, TypeResolution};
-
-#[derive(Clone, Debug, thiserror::Error, PartialEq)]
-pub enum ProcError {
-    #[error("type is not indexable, and has no length (validation error)")]
-    TypeNotIndexable,
-    #[error("array length is wrong kind of constant (validation error)")]
-    InvalidArraySizeConstant(crate::Handle<crate::Constant>),
-}
 
 impl From<super::StorageFormat> for super::ScalarKind {
     fn from(format: super::StorageFormat) -> Self {
@@ -86,22 +80,25 @@ impl super::TypeInner {
         }
     }
 
-    pub fn pointer_class(&self) -> Option<crate::StorageClass> {
+    pub fn pointer_space(&self) -> Option<crate::AddressSpace> {
         match *self {
-            Self::Pointer { class, .. } => Some(class),
-            Self::ValuePointer { class, .. } => Some(class),
+            Self::Pointer { space, .. } => Some(space),
+            Self::ValuePointer { space, .. } => Some(space),
             _ => None,
         }
     }
 
-    pub fn span(&self, constants: &super::Arena<super::Constant>) -> u32 {
-        match *self {
+    pub fn try_size(
+        &self,
+        constants: &super::Arena<super::Constant>,
+    ) -> Result<u32, crate::arena::BadHandle> {
+        Ok(match *self {
             Self::Scalar { kind: _, width } | Self::Atomic { kind: _, width } => width as u32,
             Self::Vector {
                 size,
                 kind: _,
                 width,
-            } => (size as u8 * width) as u32,
+            } => size as u32 * width as u32,
             // matrices are treated as arrays of aligned columns
             Self::Matrix {
                 columns,
@@ -119,8 +116,8 @@ impl super::TypeInner {
             } => {
                 let count = match size {
                     super::ArraySize::Constant(handle) => {
-                        // Bad array lengths will be caught during validation.
-                        constants[handle].to_array_length().unwrap_or(1)
+                        let constant = constants.try_get(handle)?;
+                        constant.to_array_length().unwrap_or(1)
                     }
                     // A dynamically-sized array has to have at least one element
                     super::ArraySize::Dynamic => 1,
@@ -129,7 +126,13 @@ impl super::TypeInner {
             }
             Self::Struct { span, .. } => span,
             Self::Image { .. } | Self::Sampler { .. } => 0,
-        }
+        })
+    }
+
+    /// Get the size of this type. Panics if the `constants` doesn't contain
+    /// a referenced handle. This may not happen in a properly validated IR module.
+    pub fn size(&self, constants: &super::Arena<super::Constant>) -> u32 {
+        self.try_size(constants).unwrap()
     }
 
     /// Return the canoncal form of `self`, or `None` if it's already in
@@ -146,18 +149,18 @@ impl super::TypeInner {
     ) -> Option<crate::TypeInner> {
         use crate::TypeInner as Ti;
         match *self {
-            Ti::Pointer { base, class } => match types[base].inner {
+            Ti::Pointer { base, space } => match types[base].inner {
                 Ti::Scalar { kind, width } => Some(Ti::ValuePointer {
                     size: None,
                     kind,
                     width,
-                    class,
+                    space,
                 }),
                 Ti::Vector { size, kind, width } => Some(Ti::ValuePointer {
                     size: Some(size),
                     kind,
                     width,
-                    class,
+                    space,
                 }),
                 _ => None,
             },
@@ -184,17 +187,17 @@ impl super::TypeInner {
     }
 }
 
-impl super::StorageClass {
+impl super::AddressSpace {
     pub fn access(self) -> crate::StorageAccess {
         use crate::StorageAccess as Sa;
         match self {
-            crate::StorageClass::Function
-            | crate::StorageClass::Private
-            | crate::StorageClass::WorkGroup => Sa::LOAD | Sa::STORE,
-            crate::StorageClass::Uniform => Sa::LOAD,
-            crate::StorageClass::Storage { access } => access,
-            crate::StorageClass::Handle => Sa::LOAD,
-            crate::StorageClass::PushConstant => Sa::LOAD,
+            crate::AddressSpace::Function
+            | crate::AddressSpace::Private
+            | crate::AddressSpace::WorkGroup => Sa::LOAD | Sa::STORE,
+            crate::AddressSpace::Uniform => Sa::LOAD,
+            crate::AddressSpace::Storage { access } => access,
+            crate::AddressSpace::Handle => Sa::LOAD,
+            crate::AddressSpace::PushConstant => Sa::LOAD,
         }
     }
 }
@@ -438,6 +441,22 @@ impl super::SwizzleComponent {
     }
 }
 
+impl super::ImageClass {
+    pub fn is_multisampled(self) -> bool {
+        match self {
+            crate::ImageClass::Sampled { multi, .. } | crate::ImageClass::Depth { multi } => multi,
+            crate::ImageClass::Storage { .. } => false,
+        }
+    }
+
+    pub fn is_mipmapped(self) -> bool {
+        match self {
+            crate::ImageClass::Sampled { multi, .. } | crate::ImageClass::Depth { multi } => !multi,
+            crate::ImageClass::Storage { .. } => false,
+        }
+    }
+}
+
 #[test]
 fn test_matrix_size() {
     let constants = crate::Arena::new();
@@ -447,7 +466,7 @@ fn test_matrix_size() {
             rows: crate::VectorSize::Tri,
             width: 4
         }
-        .span(&constants),
-        48
+        .size(&constants),
+        48,
     );
 }

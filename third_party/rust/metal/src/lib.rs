@@ -391,6 +391,10 @@ impl MetalLayerRef {
         unsafe { msg_send![self, nextDrawable] }
     }
 
+    pub fn contents_scale(&self) -> CGFloat {
+        unsafe { msg_send![self, contentsScale] }
+    }
+
     pub fn set_contents_scale(&self, scale: CGFloat) {
         unsafe { msg_send![self, setContentsScale: scale] }
     }

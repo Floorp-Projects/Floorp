@@ -74,10 +74,12 @@ impl super::Surface {
         }
     }
 
-    #[cfg(target_os = "ios")]
     #[allow(clippy::transmute_ptr_to_ref)]
-    pub unsafe fn from_uiview(uiview: *mut c_void) -> Self {
-        let view = uiview as *mut Object;
+    pub unsafe fn from_view(
+        view: *mut c_void,
+        delegate: Option<&HalManagedMetalLayerDelegate>,
+    ) -> Self {
+        let view = view as *mut Object;
         if view.is_null() {
             panic!("window does not have a valid contentView");
         }
@@ -85,76 +87,40 @@ impl super::Surface {
         let main_layer: *mut Object = msg_send![view, layer];
         let class = class!(CAMetalLayer);
         let is_valid_layer: BOOL = msg_send![main_layer, isKindOfClass: class];
+
         let render_layer = if is_valid_layer == YES {
             mem::transmute::<_, &mtl::MetalLayerRef>(main_layer).to_owned()
         } else {
-            // If the main layer is not a CAMetalLayer, we create a CAMetalLayer sublayer and use it instead.
-            // Unlike on macOS, we cannot replace the main view as UIView does not allow it (when NSView does).
+            // If the main layer is not a CAMetalLayer, we create a CAMetalLayer and use it.
             let new_layer: mtl::MetalLayer = msg_send![class, new];
-            let bounds: CGRect = msg_send![main_layer, bounds];
-            let () = msg_send![new_layer.as_ref(), setFrame: bounds];
-            let () = msg_send![main_layer, addSublayer: new_layer.as_ref()];
+            let frame: CGRect = msg_send![main_layer, bounds];
+            let () = msg_send![new_layer.as_ref(), setFrame: frame];
+            #[cfg(target_os = "ios")]
+            {
+                // Unlike NSView, UIView does not allow to replace main layer.
+                let () = msg_send![main_layer, addSublayer: new_layer.as_ref()];
+                // On iOS, "from_view" may be called before the application initialization is complete,
+                // `msg_send![view, window]` and `msg_send![window, screen]` will get null.
+                let screen: *mut Object = msg_send![class!(UIScreen), mainScreen];
+                let scale_factor: CGFloat = msg_send![screen, nativeScale];
+                let () = msg_send![view, setContentScaleFactor: scale_factor];
+            };
+            #[cfg(target_os = "macos")]
+            {
+                let () = msg_send![view, setLayer: new_layer.as_ref()];
+                let () = msg_send![view, setWantsLayer: YES];
+                let () = msg_send![new_layer.as_ref(), setContentsGravity: kCAGravityTopLeft];
+                let window: *mut Object = msg_send![view, window];
+                if !window.is_null() {
+                    let scale_factor: CGFloat = msg_send![window, backingScaleFactor];
+                    let () = msg_send![new_layer, setContentsScale: scale_factor];
+                }
+            };
+            if let Some(delegate) = delegate {
+                let () = msg_send![new_layer, setDelegate: delegate.0];
+            }
             new_layer
         };
-
-        let window: *mut Object = msg_send![view, window];
-        if !window.is_null() {
-            let screen: *mut Object = msg_send![window, screen];
-            assert!(!screen.is_null(), "window is not attached to a screen");
-
-            let scale_factor: CGFloat = msg_send![screen, nativeScale];
-            let () = msg_send![view, setContentScaleFactor: scale_factor];
-        }
-
-        let _: *mut c_void = msg_send![view, retain];
-        Self::new(NonNull::new(view), render_layer)
-    }
-
-    #[cfg(target_os = "macos")]
-    #[allow(clippy::transmute_ptr_to_ref)]
-    pub unsafe fn from_nsview(
-        nsview: *mut c_void,
-        delegate: &HalManagedMetalLayerDelegate,
-    ) -> Self {
-        let view = nsview as *mut Object;
-        if view.is_null() {
-            panic!("window does not have a valid contentView");
-        }
-
-        let class = class!(CAMetalLayer);
-        // Deprecated! Clients should use `create_surface_from_layer` instead.
-        let is_actually_layer: BOOL = msg_send![view, isKindOfClass: class];
-        if is_actually_layer == YES {
-            return Self::from_layer(mem::transmute(view));
-        }
-
-        let existing: *mut Object = msg_send![view, layer];
-        let use_current = if existing.is_null() {
-            false
-        } else {
-            let result: BOOL = msg_send![existing, isKindOfClass: class];
-            result == YES
-        };
-
-        let render_layer: mtl::MetalLayer = if use_current {
-            mem::transmute::<_, &mtl::MetalLayerRef>(existing).to_owned()
-        } else {
-            let layer: mtl::MetalLayer = msg_send![class, new];
-            let () = msg_send![view, setLayer: layer.as_ref()];
-            let () = msg_send![view, setWantsLayer: YES];
-            let bounds: CGRect = msg_send![view, bounds];
-            let () = msg_send![layer.as_ref(), setBounds: bounds];
-
-            let window: *mut Object = msg_send![view, window];
-            if !window.is_null() {
-                let scale_factor: CGFloat = msg_send![window, backingScaleFactor];
-                let () = msg_send![layer, setContentsScale: scale_factor];
-            }
-            let () = msg_send![layer, setDelegate: delegate.0];
-            layer
-        };
-
-        let () = msg_send![render_layer, setContentsGravity: kCAGravityTopLeft];
 
         let _: *mut c_void = msg_send![view, retain];
         Self::new(NonNull::new(view), render_layer)
@@ -168,30 +134,12 @@ impl super::Surface {
     }
 
     pub(super) fn dimensions(&self) -> wgt::Extent3d {
-        let (size, scale): (CGSize, CGFloat) = match self.view {
-            Some(view) if !cfg!(target_os = "macos") => unsafe {
-                let bounds: CGRect = msg_send![view.as_ptr(), bounds];
-                let window: Option<NonNull<Object>> = msg_send![view.as_ptr(), window];
-                let screen = window.and_then(|window| -> Option<NonNull<Object>> {
-                    msg_send![window.as_ptr(), screen]
-                });
-                match screen {
-                    Some(screen) => {
-                        let screen_space: *mut Object = msg_send![screen.as_ptr(), coordinateSpace];
-                        let rect: CGRect = msg_send![view.as_ptr(), convertRect:bounds toCoordinateSpace:screen_space];
-                        let scale_factor: CGFloat = msg_send![screen.as_ptr(), nativeScale];
-                        (rect.size, scale_factor)
-                    }
-                    None => (bounds.size, 1.0),
-                }
-            },
-            _ => unsafe {
-                let render_layer_borrow = self.render_layer.lock();
-                let render_layer = render_layer_borrow.as_ref();
-                let bounds: CGRect = msg_send![render_layer, bounds];
-                let contents_scale: CGFloat = msg_send![render_layer, contentsScale];
-                (bounds.size, contents_scale)
-            },
+        let (size, scale): (CGSize, CGFloat) = unsafe {
+            let render_layer_borrow = self.render_layer.lock();
+            let render_layer = render_layer_borrow.as_ref();
+            let bounds: CGRect = msg_send![render_layer, bounds];
+            let contents_scale: CGFloat = msg_send![render_layer, contentsScale];
+            (bounds.size, contents_scale)
         };
 
         wgt::Extent3d {
@@ -242,10 +190,15 @@ impl crate::Surface<super::Api> for super::Surface {
         render_layer.set_pixel_format(self.raw_swapchain_format);
         render_layer.set_framebuffer_only(framebuffer_only);
         render_layer.set_presents_with_transaction(self.present_with_transaction);
+        // opt-in to Metal EDR
+        // EDR potentially more power used in display and more bandwidth, memory footprint.
+        let wants_edr = self.raw_swapchain_format == mtl::MTLPixelFormat::RGBA16Float;
+        if wants_edr != render_layer.wants_extended_dynamic_range_content() {
+            render_layer.set_wants_extended_dynamic_range_content(wants_edr);
+        }
 
         // this gets ignored on iOS for certain OS/device combinations (iphone5s iOS 10.3)
-        let () = msg_send![*render_layer, setMaximumDrawableCount: config.swap_chain_size as u64];
-
+        render_layer.set_maximum_drawable_count(config.swap_chain_size as _);
         render_layer.set_drawable_size(drawable_size);
         if caps.can_set_next_drawable_timeout {
             let () = msg_send![*render_layer, setAllowsNextDrawableTimeout:false];
