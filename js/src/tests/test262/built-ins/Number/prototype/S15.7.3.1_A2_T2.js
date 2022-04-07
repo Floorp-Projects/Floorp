@@ -8,18 +8,16 @@ description: >
     Checking type of Number.prototype property - test based on
     overwriting of Number.prototype.toString
 ---*/
-assert.sameValue(
-  typeof Number.prototype,
-  "object",
-  'The value of `typeof Number.prototype` is expected to be "object"'
-);
+
+//CHECK#1
+if (typeof Number.prototype !== "object") {
+  throw new Test262Error('#1: typeof Number.prototype === "object"');
+}
 
 Number.prototype.toString = Object.prototype.toString;
 
-assert.sameValue(
-  Number.prototype.toString(),
-  "[object Number]",
-  'Number.prototype.toString() must return "[object Number]"'
-);
+if (Number.prototype.toString() !== "[object Number]") {
+  throw new Test262Error('#3: The [[Class]] property of the Number prototype object is set to "Number"');
+}
 
 reportCompare(0, 0);

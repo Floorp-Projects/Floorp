@@ -13,16 +13,13 @@ var __instance = false;
 
 Object.prototype.test = RegExp.prototype.test;
 
+//CHECK#1
 try {
   throw new Test262Error('#1.1: __instance = false; Object.prototype.test = RegExp.prototype.test; __instance.test("message to investigate"). Actual: ' + (__instance.test("message to investigate")));
 } catch (e) {
-  assert.sameValue(
-    e instanceof TypeError,
-    true,
-    'The result of evaluating (e instanceof TypeError) is expected to be true'
-  );
+  if ((e instanceof TypeError) !== true) {
+    throw new Test262Error('#1.2: __instance = false; Object.prototype.test = RegExp.prototype.test; __instance.test("message to investigate"). Actual: ' + (e));
+  }
 }
-
-// TODO: Convert to assert.throws() format.
 
 reportCompare(0, 0);

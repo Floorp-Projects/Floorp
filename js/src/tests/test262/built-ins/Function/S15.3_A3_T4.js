@@ -11,10 +11,16 @@ description: First argument is this, and this have needed variable
 
 var f = Function.call(this, "return planet;");
 
-assert.sameValue(f(), undefined, 'f() returns undefined');
+//CHECK#1
+if (f() !== undefined) {
+  throw new Test262Error('#1: ');
+}
 
 var planet = "mars";
 
-assert.sameValue(f(), "mars", 'f() must return "mars"');
+//CHECK#2
+if (f() !== "mars") {
+  throw new Test262Error('#2: ');
+}
 
 reportCompare(0, 0);

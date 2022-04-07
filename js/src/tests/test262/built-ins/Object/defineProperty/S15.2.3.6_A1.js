@@ -31,7 +31,9 @@ if (typeof document !== 'undefined' &&
   }
   if (!refused) {
     var desc = Object.getOwnPropertyDescriptor(f, 'foo');
-    assert.sameValue(desc.get, getter, 'The value of desc.get is expected to equal the value of getter');
+    if (desc.get !== getter) {
+      throw new Test262Error('Getter on HTMLFormElement disappears');
+    }
   }
 }
 

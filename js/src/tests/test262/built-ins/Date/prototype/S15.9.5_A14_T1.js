@@ -6,10 +6,9 @@ info: The Date.prototype has the property "getDate"
 esid: sec-properties-of-the-date-prototype-object
 description: The Date.prototype has the property "getDate"
 ---*/
-assert.sameValue(
-  Date.prototype.hasOwnProperty("getDate"),
-  true,
-  'Date.prototype.hasOwnProperty("getDate") must return true'
-);
+
+if (Date.prototype.hasOwnProperty("getDate") !== true) {
+  throw new Test262Error('#1: The Date.prototype has the property "getDate"');
+}
 
 reportCompare(0, 0);

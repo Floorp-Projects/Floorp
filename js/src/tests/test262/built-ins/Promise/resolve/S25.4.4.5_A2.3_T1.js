@@ -14,14 +14,18 @@ var rejectP1,
     rejectP1 = reject;
   }),
   p2 = Promise.resolve(p1),
-  arg = {};
+  obj = {};
 
-assert.sameValue(p1, p2, 'The value of p1 is expected to equal the value of p2');
+if (p1 !== p2) {
+  throw new Test262Error("Expected p1 === Promise.resolve(p1) because they have same constructor");
+}
 
 p2.then(function() {
   throw new Test262Error("Expected p2 to be rejected, not fulfilled.");
-}, function(result) {
-  assert.sameValue(result, arg, 'The value of result is expected to equal the value of arg');
+}, function(arg) {
+  if (arg !== obj) {
+    throw new Test262Error("Expected promise to be rejected with reason obj, actually " + arg);
+  }
 }).then($DONE, $DONE);
 
-rejectP1(arg);
+rejectP1(obj);

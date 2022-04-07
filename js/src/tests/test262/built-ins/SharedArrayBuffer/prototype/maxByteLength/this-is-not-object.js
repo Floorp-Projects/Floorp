@@ -10,7 +10,7 @@ info: |
   1. Let O be the this value.
   2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   [...]
-features: [SharedArrayBuffer, Symbol, resizable-arraybuffer]
+features: [Symbol, resizable-arraybuffer]
 ---*/
 
 var getter = Object.getOwnPropertyDescriptor(

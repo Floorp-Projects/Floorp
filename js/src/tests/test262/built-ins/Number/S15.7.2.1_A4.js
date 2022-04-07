@@ -13,6 +13,9 @@ delete Number.prototype.toString;
 
 var obj = new Number();
 
-assert.sameValue(obj.toString(), "[object Number]", 'obj.toString() must return "[object Number]"');
+//CHECK#1
+if (obj.toString() !== "[object Number]") {
+  throw new Test262Error('#1: The [[Class]] property of the newly constructed object is set to "Number"');
+}
 
 reportCompare(0, 0);

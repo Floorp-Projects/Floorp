@@ -16,11 +16,18 @@ function FACTORY() {
   (function() {
     this.feat = "kamon beyba"
   }).apply(null);
-}
+};
 
 var obj = new FACTORY;
 
-assert.sameValue(this["feat"], "kamon beyba", 'The value of this["feat"] is expected to be "kamon beyba"');
-assert.sameValue(typeof obj.feat, "undefined", 'The value of `typeof obj.feat` is expected to be "undefined"');
+//CHECK#1
+if (this["feat"] !== "kamon beyba") {
+  throw new Test262Error('#1: If thisArg is null or undefined, the called function is passed the global object as the this value');
+}
+
+//CHECK#2
+if (typeof obj.feat !== "undefined") {
+  throw new Test262Error('#1: If thisArg is null or undefined, the called function is passed the global object as the this value');
+}
 
 reportCompare(0, 0);

@@ -11,6 +11,9 @@ description: Execute /o+/.test("abcdefg") and check results
 
 var __executed = /o+/.test("abcdefg");
 
-assert(!__executed, 'The value of !__executed is expected to be true');
+//CHECK#1
+if (__executed) {
+	throw new Test262Error('#1: /o+/.test("abcdefg") === false');
+}
 
 reportCompare(0, 0);

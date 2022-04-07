@@ -12,13 +12,8 @@ includes: [propertyHelper.js]
 
 var x = Date.prototype.getUTCMonth.length;
 verifyNotWritable(Date.prototype.getUTCMonth, "length", null, 1);
-
-assert.sameValue(
-  Date.prototype.getUTCMonth.length,
-  x,
-  'The value of Date.prototype.getUTCMonth.length is expected to equal the value of x'
-);
-
-// TODO: Convert to verifyProperty() format.
+if (Date.prototype.getUTCMonth.length !== x) {
+  throw new Test262Error('#1: The Date.prototype.getUTCMonth.length has the attribute ReadOnly');
+}
 
 reportCompare(0, 0);

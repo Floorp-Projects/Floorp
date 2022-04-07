@@ -1,7 +1,7 @@
 // Copyright (C) 2015 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
-esid: sec-properties-of-the-set-prototype-object
+es6id: 23.2.3
 description: >
     The Set prototype object is the intrinsic object %SetPrototype%.
     The value of the [[Prototype]] internal slot of the Set prototype

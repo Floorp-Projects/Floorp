@@ -6,10 +6,9 @@ info: The Date.prototype has the property "setDate"
 esid: sec-properties-of-the-date-prototype-object
 description: The Date.prototype has the property "setDate"
 ---*/
-assert.sameValue(
-  Date.prototype.hasOwnProperty("setDate"),
-  true,
-  'Date.prototype.hasOwnProperty("setDate") must return true'
-);
+
+if (Date.prototype.hasOwnProperty("setDate") !== true) {
+  throw new Test262Error('#1: The Date.prototype has the property "setDate"');
+}
 
 reportCompare(0, 0);

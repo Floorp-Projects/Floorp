@@ -8,18 +8,28 @@ description: Complex tests
 includes: [decimalToHexString.js]
 ---*/
 
+//CHECK
+var errorCount = 0;
+var count = 0;
 for (var indexI = 0; indexI <= 65535; indexI++) {
   if (indexI !== 0x25) {
+    var hex = decimalToHexString(indexI);
     try {
       var str = String.fromCharCode(indexI);
-      var differs = decodeURIComponent(str) !== str;
+      if (decodeURIComponent(str) !== str) {
+        throw new Test262Error('#' + hex + ' ');
+        errorCount++;
+      }
     } catch (e) {
-      throw new Test262Error('#' + decimalToHexString(indexI) + ' throws');
+      throw new Test262Error('#' + hex + ' ');
+      errorCount++;
     }
-    if (differs) {
-      throw new Test262Error('#' + decimalToHexString(indexI) + ' differs');
-    }
+    count++;
   }
+}
+
+if (errorCount > 0) {
+  throw new Test262Error('Total error: ' + errorCount + ' bad Unicode character in ' + count);
 }
 
 reportCompare(0, 0);

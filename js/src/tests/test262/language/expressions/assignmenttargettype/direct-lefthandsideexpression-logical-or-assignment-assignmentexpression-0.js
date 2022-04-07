@@ -18,4 +18,7 @@ info: |
 
 $DONOTEVALUATE();
 
-(x ||= y) = 1;
+function _() {
+  (x ||= y) = 1;
+}
+

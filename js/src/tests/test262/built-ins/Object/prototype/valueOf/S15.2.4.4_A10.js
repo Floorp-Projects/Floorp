@@ -9,10 +9,11 @@ description: >
     fails
 includes: [propertyHelper.js]
 ---*/
-assert(
-  !!Object.prototype.valueOf.hasOwnProperty('length'),
-  'The value of !!Object.prototype.valueOf.hasOwnProperty("length") is expected to be true'
-);
+
+//CHECK#1
+if (!(Object.prototype.valueOf.hasOwnProperty('length'))) {
+  throw new Test262Error('#1: the Object.prototype.valueOf has length property.');
+}
 
 var obj = Object.prototype.valueOf.length;
 
@@ -20,12 +21,9 @@ verifyNotWritable(Object.prototype.valueOf, "length", null, function() {
   return "shifted";
 });
 
-assert.sameValue(
-  Object.prototype.valueOf.length,
-  obj,
-  'The value of Object.prototype.valueOf.length is expected to equal the value of obj'
-);
-
-// TODO: Convert to verifyProperty() format.
+//CHECK#2
+if (Object.prototype.valueOf.length !== obj) {
+  throw new Test262Error('#2: the Object.prototype.valueOf length property has the attributes ReadOnly.');
+}
 
 reportCompare(0, 0);

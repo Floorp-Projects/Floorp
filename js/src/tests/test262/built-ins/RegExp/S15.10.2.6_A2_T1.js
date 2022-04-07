@@ -11,6 +11,9 @@ description: Execute /^m/.test("pairs\nmakes\tdouble") and check results
 
 var __executed = /^m/.test("pairs\nmakes\tdouble");
 
-assert(!__executed, 'The value of !__executed is expected to be true');
+//CHECK#1
+if (__executed) {
+	throw new Test262Error('#1: /^m/.test("pairs\\nmakes\\tdouble") === false');
+}
 
 reportCompare(0, 0);

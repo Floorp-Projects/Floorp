@@ -15,16 +15,46 @@ var constr = Error.prototype.constructor;
 
 var err = new constr;
 
-assert.notSameValue(err, undefined, 'The value of err is expected to not equal ``undefined``');
-assert.sameValue(err.constructor, Error, 'The value of err.constructor is expected to equal the value of Error');
-assert(Error.prototype.isPrototypeOf(err), 'Error.prototype.isPrototypeOf(err) must return true');
+//////////////////////////////////////////////////////////////////////////////
+// CHECK#0
+if (err === undefined) {
+  throw new Test262Error('#0: constr = Error.prototype.constructor; err = new constr; err === undefined');
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// CHECK#1
+if (err.constructor !== Error) {
+  throw new Test262Error('#1: constr = Error.prototype.constructor; err = new constr; err.constructor === Error. Actual: ' + err.constructor);
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// CHECK#2
+if (!(Error.prototype.isPrototypeOf(err))) {
+  throw new Test262Error('#2: constr = Error.prototype.constructor; err = new constr; Error.prototype.isPrototypeOf(err) return true. Actual: ' + Error.prototype.isPrototypeOf(err));
+}
 //
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 // CHECK#3
 Error.prototype.toString = Object.prototype.toString;
-assert.sameValue(err.toString(), '[object Error]', 'err.toString() must return "[object Error]"');
-assert.sameValue(err.valueOf().toString(), '[object Error]', 'err.valueOf().toString() must return "[object Error]"');
+var to_string_result = '[object ' + 'Error' + ']';
+if (err.toString() !== to_string_result) {
+  throw new Test262Error('#3: constr = Error.prototype.constructor; err = new constr; Error.prototype.toString=Object.prototype.toString; err.toString() === \'[object Error]\'. Actual: ' + err.toString());
+}
+//
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+// CHECK#4
+if (err.valueOf().toString() !== to_string_result) {
+  throw new Test262Error('#4: constr = Error.prototype.constructor; err = new constr; Error.prototype.toString=Object.prototype.toString; err.valueOf().toString() === \'[object Error]\'. Actual: ' + err.valueOf().toString());
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
 reportCompare(0, 0);

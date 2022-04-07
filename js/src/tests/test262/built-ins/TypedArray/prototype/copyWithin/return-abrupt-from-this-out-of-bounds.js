@@ -30,14 +30,14 @@ testWithTypedArrayConstructors(TA => {
   } catch (_) {}
 
   // no error following grow:
-  array.copyWithin(0, 0);
+  array.copyWithin(new TA(), 0);
 
   try {
     ab.resize(BPE * 3);
   } catch (_) {}
 
   // no error following shrink (within bounds):
-  array.copyWithin(0, 0);
+  array.copyWithin(new TA(), 0);
 
   var expectedError;
   try {
@@ -54,7 +54,7 @@ testWithTypedArrayConstructors(TA => {
   }
 
   assert.throws(expectedError, () => {
-    array.copyWithin(0, 0);
+    array.copyWithin(new TA(), 0);
     throw new Test262Error('copyWithin completed successfully');
   });
 });

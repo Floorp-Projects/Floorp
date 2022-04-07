@@ -8,24 +8,20 @@ info: |
 es5id: 15.10.6.3_A9
 description: Checking if deleting RegExp.prototype.test.length property fails
 ---*/
-assert.sameValue(
-  RegExp.prototype.exec.hasOwnProperty('length'),
-  true,
-  'RegExp.prototype.exec.hasOwnProperty(\'length\') must return true'
-);
 
-assert.sameValue(
-  delete RegExp.prototype.exec.length,
-  true,
-  'The value of `delete RegExp.prototype.exec.length` is expected to be true'
-);
+//CHECK#0
+if ((RegExp.prototype.exec.hasOwnProperty('length') !== true)) {
+  throw new Test262Error('#0: RegExp.prototype.exec.hasOwnProperty(\'length\') === true');
+}
 
-assert.sameValue(
-  RegExp.prototype.exec.hasOwnProperty('length'),
-  false,
-  'RegExp.prototype.exec.hasOwnProperty(\'length\') must return false'
-);
+//CHECK#1
+if (delete RegExp.prototype.exec.length !== true) {
+  throw new Test262Error('#1: delete RegExp.prototype.exec.length === true');
+}
 
-// TODO: Convert to verifyProperty() format.
+//CHECK#2
+if (RegExp.prototype.exec.hasOwnProperty('length') !== false) {
+  throw new Test262Error('#2: delete RegExp.prototype.exec.length; RegExp.prototype.exec.hasOwnProperty(\'length\') === false');
+}
 
 reportCompare(0, 0);

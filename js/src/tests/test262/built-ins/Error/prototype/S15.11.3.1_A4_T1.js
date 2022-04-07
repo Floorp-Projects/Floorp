@@ -6,6 +6,13 @@ info: The Error has property prototype
 es5id: 15.11.3.1_A4_T1
 description: Checking Error.hasOwnProperty('prototype')
 ---*/
-assert(Error.hasOwnProperty('prototype'), 'Error.hasOwnProperty(\'prototype\') must return true');
+
+//////////////////////////////////////////////////////////////////////////////
+//CHECK#1
+if (!(Error.hasOwnProperty('prototype'))) {
+  throw new Test262Error('#1: Error.hasOwnProperty(\'prototype\') return true. Actual: ' + Error.hasOwnProperty('prototype'));
+}
+//
+//////////////////////////////////////////////////////////////////////////////
 
 reportCompare(0, 0);

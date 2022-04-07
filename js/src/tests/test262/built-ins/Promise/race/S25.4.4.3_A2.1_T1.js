@@ -10,6 +10,8 @@ description: Promise.race returns a new promise
 
 var p = Promise.race([]);
 
-assert(!!(p instanceof Promise), 'The value of !!(p instanceof Promise) is expected to be true');
+if (!(p instanceof Promise)) {
+  throw new Test262Error("Expected Promise.race([]) to return a promise.");
+}
 
 reportCompare(0, 0);

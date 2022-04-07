@@ -13,5 +13,7 @@ flags: [async]
 var arg = [];
 
 Promise.all(arg).then(function(result) {
-  assert.sameValue(result.length, 0, 'The value of result.length is expected to be 0');
+  if (result.length !== 0) {
+    throw new Test262Error("expected an empty array from Promise.all([]), got " + result);
+  }
 }).then($DONE, $DONE);

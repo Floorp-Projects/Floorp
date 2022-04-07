@@ -10,6 +10,7 @@ es5id: 15.7.4.2_A4_T03
 description: transferring to the Date objects
 ---*/
 
+//CHECK#1
 try {
   var s1 = new Date();
   s1.toString = Number.prototype.toString;
@@ -17,9 +18,12 @@ try {
   throw new Test262Error('#1: Number.prototype.toString on not a Number object should throw TypeError');
 }
 catch (e) {
-  assert(e instanceof TypeError, 'The result of evaluating (e instanceof TypeError) is expected to be true');
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#1: Number.prototype.toString on not a Number object should throw TypeError, not ' + e);
+  }
 }
 
+//CHECK#2
 try {
   var s2 = new Date();
   s2.myToString = Number.prototype.toString;
@@ -27,7 +31,9 @@ try {
   throw new Test262Error('#2: Number.prototype.toString on not a Number object should throw TypeError');
 }
 catch (e) {
-  assert(e instanceof TypeError, 'The result of evaluating (e instanceof TypeError) is expected to be true');
+  if (!(e instanceof TypeError)) {
+    throw new Test262Error('#2: Number.prototype.toString on not a Number object should throw TypeError, not ' + e);
+  }
 }
 
 reportCompare(0, 0);

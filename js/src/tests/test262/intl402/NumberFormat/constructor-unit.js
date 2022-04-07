@@ -4,7 +4,6 @@
 /*---
 esid: sec-initializenumberformat
 description: Checks handling of the unit style.
-includes: [testIntl.js]
 features: [Intl.NumberFormat-unified]
 ---*/
 
@@ -52,7 +51,51 @@ function check(unit) {
   assert.sameValue(options.unit, unit);
 }
 
-const units = allSimpleSanctionedUnits();
+const units = [
+  "acre",
+  "bit",
+  "byte",
+  "celsius",
+  "centimeter",
+  "day",
+  "degree",
+  "fahrenheit",
+  "fluid-ounce",
+  "foot",
+  "gallon",
+  "gigabit",
+  "gigabyte",
+  "gram",
+  "hectare",
+  "hour",
+  "inch",
+  "kilobit",
+  "kilobyte",
+  "kilogram",
+  "kilometer",
+  "liter",
+  "megabit",
+  "megabyte",
+  "meter",
+  "mile",
+  "mile-scandinavian",
+  "millimeter",
+  "milliliter",
+  "millisecond",
+  "minute",
+  "month",
+  "ounce",
+  "percent",
+  "petabyte",
+  "pound",
+  "second",
+  "stone",
+  "terabit",
+  "terabyte",
+  "week",
+  "yard",
+  "year",
+];
 
 for (const simpleUnit of units) {
   check(simpleUnit);

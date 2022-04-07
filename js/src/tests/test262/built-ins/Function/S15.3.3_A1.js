@@ -6,6 +6,9 @@ info: The Function constructor has the property "prototype"
 es5id: 15.3.3_A1
 description: Checking existence of the property "prototype"
 ---*/
-assert(Function.hasOwnProperty("prototype"), 'Function.hasOwnProperty("prototype") must return true');
+
+if (!Function.hasOwnProperty("prototype")) {
+  throw new Test262Error('#1: The Function constructor has the property "prototype"');
+}
 
 reportCompare(0, 0);

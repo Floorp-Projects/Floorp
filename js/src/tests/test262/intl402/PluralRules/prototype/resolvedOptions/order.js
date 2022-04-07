@@ -4,6 +4,7 @@
 /*---
 esid: sec-intl.numberformat.prototype.resolvedoptions
 description: Verifies the property order for the object returned by resolvedOptions().
+includes: [compareArray.js]
 features: [Intl.NumberFormat-unified]
 ---*/
 
@@ -21,14 +22,6 @@ const expected = [
   "pluralCategories",
 ];
 
-const actual = Object.getOwnPropertyNames(options);
-
-// Ensure all expected items are in actual and also allow other properties
-// implemented in new proposals.
-assert(actual.indexOf("locale") > -1, "\"locale\" is present");
-for (var i = 1; i < expected.length; i++) {
-  // Ensure the order as expected but allow additional new property in between
-  assert(actual.indexOf(expected[i-1]) < actual.indexOf(expected[i]), `"${expected[i-1]}" precedes "${expected[i]}"`);
-}
+assert.compareArray(Object.getOwnPropertyNames(options), expected);
 
 reportCompare(0, 0);

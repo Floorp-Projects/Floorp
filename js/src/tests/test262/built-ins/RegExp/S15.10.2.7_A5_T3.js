@@ -13,6 +13,9 @@ description: >
 
 var __executed = /java(script)?/.test("state: both Java and JavaScript used in web development");
 
-assert(!__executed, 'The value of !__executed is expected to be true');
+//CHECK#1
+if (__executed) {
+	throw new Test262Error('#1: /java(script)?/.test("state: both Java and JavaScript used in web development") === false');
+}
 
 reportCompare(0, 0);

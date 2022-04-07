@@ -7,12 +7,12 @@ esid: sec-date.prototype.tostring
 description: Checking absence of DontDelete attribute
 ---*/
 
-assert.notSameValue(delete Date.prototype.toString, false, 'The value of delete Date.prototype.toString is not false');
-assert(
-  !Date.prototype.hasOwnProperty('toString'),
-  'The value of !Date.prototype.hasOwnProperty(\'toString\') is expected to be true'
-);
+if (delete Date.prototype.toString === false) {
+  throw new Test262Error('#1: The Date.prototype.toString property has not the attributes DontDelete');
+}
 
-// TODO: Convert to verifyProperty() format.
+if (Date.prototype.hasOwnProperty('toString')) {
+  throw new Test262Error('#2: The Date.prototype.toString property has not the attributes DontDelete');
+}
 
 reportCompare(0, 0);

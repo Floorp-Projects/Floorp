@@ -12,25 +12,28 @@ includes: [propertyHelper.js]
 
 var f = Function(void 0, "");
 
-assert(f.hasOwnProperty('prototype'));
+//CHECK#1
+if (!(f.hasOwnProperty('prototype'))) {
+  throw new Test262Error('#1: the function has length property.');
+}
 
 var fproto = f.prototype;
 
 verifyNotConfigurable(f, "prototype");
 
+//CHECK#2
 try {
-  assert.sameValue(delete f.prototype, false);
-} catch (e) {
-  if (e instanceof Test262Error) {
-    throw e;
+  if ((delete f.prototype) !== false) {
+    throw new Test262Error('#2: the prototype property has the attributes { DontDelete }');
   }
+} catch (e) {
+  if (e instanceof Test262Error) throw e;
   assert(e instanceof TypeError);
 }
 
+//CHECK#3
 if (f.prototype !== fproto) {
   throw new Test262Error('#3: the prototype property has the attributes { DontDelete }');
 }
-
-// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

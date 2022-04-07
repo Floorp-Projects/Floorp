@@ -9,8 +9,8 @@ description: >
     Identifier in a PropertySetParameterList of a PropertyAssignment
     that is contained in strict code
 negative:
-  phase: parse
   type: SyntaxError
+  phase: parse
 flags: [onlyStrict]
 ---*/
 

@@ -10,6 +10,9 @@ includes: [compareArray.js]
 ---*/
 
 var arr = [0, 1, 2];
-assert.compareArray(Object.getOwnPropertyNames(arr), ["0", "1", "2", "length"]);
+var expected = ["0", "1", "2", "length"];
+var actual = Object.getOwnPropertyNames(arr);
+
+assert(compareArray(actual, expected), 'compareArray(actual, expected) !== true');
 
 reportCompare(0, 0);

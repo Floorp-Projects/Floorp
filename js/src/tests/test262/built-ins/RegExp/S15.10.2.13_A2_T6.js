@@ -12,6 +12,9 @@ description: Execute /a[^b]c/.test("abc") and check results
 
 var __executed = /a[^b]c/.test("abc");
 
-assert(!__executed, 'The value of !__executed is expected to be true');
+//CHECK#1
+if (__executed) {
+	throw new Test262Error('#1: /a[^b]c/.test("abc") === false');
+}
 
 reportCompare(0, 0);

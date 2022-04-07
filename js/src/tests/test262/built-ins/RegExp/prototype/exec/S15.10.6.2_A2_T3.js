@@ -11,19 +11,16 @@ description: The tested object is function object
 
 __instance.exec = RegExp.prototype.exec;
 
+//CHECK#1
 try {
   __instance.exec("message to investigate");
-    throw new Test262Error('#1.1: __instance.exec = RegExp.prototype.exec; __instance.exec("message to investigate"); function __instance(){}');
+	throw new Test262Error('#1.1: __instance.exec = RegExp.prototype.exec; __instance.exec("message to investigate"); function __instance(){}');
 } catch (e) {
-  assert.sameValue(
-    e instanceof TypeError,
-    true,
-    'The result of evaluating (e instanceof TypeError) is expected to be true'
-  );
+	if ((e instanceof TypeError) !== true) {
+		throw new Test262Error('#1.2: __instance.exec = RegExp.prototype.exec; __instance.exec("message to investigate"); function __instance(){}. Actual: ' + (e));
+	}
 }
 
 function __instance(){};
-
-// TODO: Convert to assert.throws() format.
 
 reportCompare(0, 0);

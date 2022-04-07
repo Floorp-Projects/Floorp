@@ -12,10 +12,9 @@ description: >
 var __string = {toString:function(){return Math.PI;}};
 var __re = /\.14/;
 
-assert.sameValue(
-  __re.test(__string),
-  __re.exec(__string) !== null,
-  '__re.test({toString:function(){return Math.PI;}}) must return __re.exec(__string) !== null'
-);
+//CHECK#0
+if (__re.test(__string) !== (__re.exec(__string) !== null)) {
+	throw new Test262Error('#0: var __string = {toString:function(){return Math.PI;}}; __re = /\\.14/; __re.test(__string) === (__re.exec(__string) !== null)');
+}
 
 reportCompare(0, 0);

@@ -6,7 +6,15 @@ info: Function constructor has length property whose value is 1
 es5id: 15.3.3_A3
 description: Checking Function.length property
 ---*/
-assert(Function.hasOwnProperty("length"), 'Function.hasOwnProperty("length") must return true');
-assert.sameValue(Function.length, 1, 'The value of Function.length is expected to be 1');
+
+//CHECK#1
+if (!Function.hasOwnProperty("length")) {
+  throw new Test262Error('#1: Function constructor has length property');
+}
+
+//CHECK#2
+if (Function.length !== 1) {
+  throw new Test262Error('#2: Function constructor length property value is 1');
+}
 
 reportCompare(0, 0);

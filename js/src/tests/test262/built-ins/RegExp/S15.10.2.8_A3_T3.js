@@ -16,6 +16,9 @@ description: >
 
 var __executed = /([Jj]ava([Ss]cript)?)\sis\s(fun\w*)/.test("Developing with JavaScript is dangerous, do not try it without assistance");
 
-assert(!__executed, 'The value of !__executed is expected to be true');
+//CHECK#1
+if (__executed) {
+	throw new Test262Error('#1: /([Jj]ava([Ss]cript)?)\\sis\\s(fun\\w*)/.test("Developing with JavaScript is dangerous, do not try it without assistance") === false');
+}
 
 reportCompare(0, 0);

@@ -15,5 +15,7 @@ var nonIterable = 3;
 Promise.race(nonIterable).then(function() {
   throw new Test262Error('Promise unexpectedly fulfilled: Promise.race(nonIterable) should throw TypeError');
 }, function(err) {
-  assert(!!(err instanceof TypeError), 'The value of !!(err instanceof TypeError) is expected to be true');
+  if (!(err instanceof TypeError)) {
+    throw new Test262Error('Expected TypeError, got ' + err);
+  }
 }).then($DONE, $DONE);

@@ -10,21 +10,20 @@ description: >
     Checking if deleting the Function.prototype.call.length property
     fails
 ---*/
-assert(
-  Function.prototype.call.hasOwnProperty('length'),
-  'Function.prototype.call.hasOwnProperty(\'length\') must return true'
-);
 
-assert(
-  delete Function.prototype.call.length,
-  'The value of delete Function.prototype.call.length is expected to be true'
-);
+//CHECK#0
+if (!(Function.prototype.call.hasOwnProperty('length'))) {
+  throw new Test262Error('#0: the Function.prototype.call has length property');
+}
 
-assert(
-  !Function.prototype.call.hasOwnProperty('length'),
-  'The value of !Function.prototype.call.hasOwnProperty(\'length\') is expected to be true'
-);
+//CHECK#1
+if (!delete Function.prototype.call.length) {
+  throw new Test262Error('#1: The Function.prototype.call.length property does not have the attributes DontDelete');
+}
 
-// TODO: Convert to verifyProperty() format.
+//CHECK#2
+if (Function.prototype.call.hasOwnProperty('length')) {
+  throw new Test262Error('#2: The Function.prototype.call.length property does not have the attributes DontDelete');
+}
 
 reportCompare(0, 0);

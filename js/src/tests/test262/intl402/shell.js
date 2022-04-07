@@ -21,12 +21,7 @@ defines:
   - getInvalidLocaleArguments
   - testOption
   - testForUnwantedRegExpChanges
-  - allCalendars
-  - allCollations
-  - allNumberingSystems
   - isValidNumberingSystem
-  - numberingSystemDigits
-  - allSimpleSanctionedUnits
   - testNumberFormat
   - getDateTimeComponents
   - getDateTimeComponentValues
@@ -2036,71 +2031,17 @@ function testForUnwantedRegExpChanges(testFunc) {
 
 
 /**
- * Returns an array of all known calendars.
+ * Tests whether name is a valid BCP 47 numbering system name
+ * and not excluded from use in the ECMAScript Internationalization API.
+ * @param {string} name the name to be tested.
+ * @return {boolean} whether name is a valid BCP 47 numbering system name and
+ *   allowed for use in the ECMAScript Internationalization API.
  */
-function allCalendars() {
-  // source: CLDR file common/bcp47/number.xml; version CLDR 39.
-  // https://github.com/unicode-org/cldr/blob/master/common/bcp47/calendar.xml
-  return [
-    "buddhist",
-    "chinese",
-    "coptic",
-    "dangi",
-    "ethioaa",
-    "ethiopic",
-    "gregory",
-    "hebrew",
-    "indian",
-    "islamic",
-    "islamic-umalqura",
-    "islamic-tbla",
-    "islamic-civil",
-    "islamic-rgsa",
-    "iso8601",
-    "japanese",
-    "persian",
-    "roc",
-  ];
-}
 
+function isValidNumberingSystem(name) {
 
-/**
- * Returns an array of all known collations.
- */
-function allCollations() {
-  // source: CLDR file common/bcp47/collation.xml; version CLDR 39.
-  // https://github.com/unicode-org/cldr/blob/master/common/bcp47/collation.xml
-  return [
-    "big5han",
-    "compat",
-    "dict",
-    "direct",
-    "ducet",
-    "emoji",
-    "eor",
-    "gb2312",
-    "phonebk",
-    "phonetic",
-    "pinyin",
-    "reformed",
-    "search",
-    "searchjl",
-    "standard",
-    "stroke",
-    "trad",
-    "unihan",
-    "zhuyin",
-  ];
-}
-
-
-/**
- * Returns an array of all known numbering systems.
- */
-function allNumberingSystems() {
-  // source: CLDR file common/bcp47/number.xml; version CLDR 39.
-  // https://github.com/unicode-org/cldr/blob/master/common/bcp47/number.xml
-  return [
+  // source: CLDR file common/bcp47/number.xml; version CLDR 36.1.
+  var numberingSystems = [
     "adlm",
     "ahom",
     "arab",
@@ -2189,20 +2130,6 @@ function allNumberingSystems() {
     "wara",
     "wcho",
   ];
-}
-
-
-/**
- * Tests whether name is a valid BCP 47 numbering system name
- * and not excluded from use in the ECMAScript Internationalization API.
- * @param {string} name the name to be tested.
- * @return {boolean} whether name is a valid BCP 47 numbering system name and
- *   allowed for use in the ECMAScript Internationalization API.
- */
-
-function isValidNumberingSystem(name) {
-
-  var numberingSystems = allNumberingSystems();
 
   var excluded = [
     "finance",
@@ -2288,59 +2215,6 @@ var numberingSystemDigits = {
   wara: "𑣠𑣡𑣢𑣣𑣤𑣥𑣦𑣧𑣨𑣩",
   wcho: "𞋰𞋱𞋲𞋳𞋴𞋵𞋶𞋷𞋸𞋹",
 };
-
-
-/**
- * Returns an array of all simple, sanctioned unit identifiers.
- */
-function allSimpleSanctionedUnits() {
-  // https://tc39.es/ecma402/#table-sanctioned-simple-unit-identifiers
-  return [
-    "acre",
-    "bit",
-    "byte",
-    "celsius",
-    "centimeter",
-    "day",
-    "degree",
-    "fahrenheit",
-    "fluid-ounce",
-    "foot",
-    "gallon",
-    "gigabit",
-    "gigabyte",
-    "gram",
-    "hectare",
-    "hour",
-    "inch",
-    "kilobit",
-    "kilobyte",
-    "kilogram",
-    "kilometer",
-    "liter",
-    "megabit",
-    "megabyte",
-    "meter",
-    "mile",
-    "mile-scandinavian",
-    "milliliter",
-    "millimeter",
-    "millisecond",
-    "minute",
-    "month",
-    "ounce",
-    "percent",
-    "petabyte",
-    "pound",
-    "second",
-    "stone",
-    "terabit",
-    "terabyte",
-    "week",
-    "yard",
-    "year",
-  ];
-}
 
 
 /**

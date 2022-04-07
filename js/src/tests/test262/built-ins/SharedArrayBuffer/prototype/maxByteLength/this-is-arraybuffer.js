@@ -11,7 +11,7 @@ info: |
   2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   3. If IsSharedArrayBuffer(O) is false, throw a TypeError exception.
   [...]
-features: [ArrayBuffer, SharedArrayBuffer, resizable-arraybuffer]
+features: [ArrayBuffer, resizable-arraybuffer]
 ---*/
 
 var maxByteLength = Object.getOwnPropertyDescriptor(

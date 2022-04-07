@@ -9,12 +9,13 @@ description: >
     "error"
 ---*/
 
+//CHECK#1
 try {
-    throw new Test262Error('#1.1: new RegExp({toString:function(){throw "intostr";}}, "error") throw "intostr". Actual: ' + (new RegExp({toString:function(){throw "intostr";}}, "error")));
+	throw new Test262Error('#1.1: new RegExp({toString:function(){throw "intostr";}}, "error") throw "intostr". Actual: ' + (new RegExp({toString:function(){throw "intostr";}}, "error")));
 } catch (e) {
-  assert.sameValue(e, "intostr", 'The value of e is expected to be "intostr"');
+	if (e !== "intostr" ) {
+		throw new Test262Error('#1.2: new RegExp({toString:function(){throw "intostr";}}, "error") throw "intostr". Actual: ' + (e));
+	}
 }
-
-// TODO: Convert to assert.throws() format.
 
 reportCompare(0, 0);

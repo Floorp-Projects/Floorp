@@ -10,13 +10,19 @@ includes: [propertyHelper.js]
 
 var __re = RegExp.prototype;
 
-assert.sameValue(__re.hasOwnProperty('global'), true, '__re.hasOwnProperty(\'global\') must return true');
+//CHECK#1
+if (__re.hasOwnProperty('global') !== true) {
+  throw new Test262Error('#1: __re = RegExp.prototype; __re.hasOwnProperty(\'global\') === true');
+}
 
 var __sample = /^|^/;
 var __obj = __sample.global;
 
 verifyNotWritable(__sample, "global", "global", "shifted");
 
-assert.sameValue(__sample.global, __obj, 'The value of __sample.global is expected to equal the value of __obj');
+//CHECK#2
+if (__sample.global !== __obj) {
+  throw new Test262Error('#2: __sample = /^|^/; __obj = __sample.global; __sample.global = "shifted"; __sample.global === __obj. Actual: ' + (__sample.global));
+}
 
 reportCompare(0, 0);

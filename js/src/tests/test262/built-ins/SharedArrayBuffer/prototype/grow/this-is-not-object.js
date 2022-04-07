@@ -10,7 +10,7 @@ info: |
   1. Let O be the this value.
   2. Perform ? RequireInternalSlot(O, [[ArrayBufferMaxByteLength]]).
   [...]
-features: [BigInt, SharedArrayBuffer, Symbol, resizable-arraybuffer]
+features: [resizable-arraybuffer, Symbol, BigInt]
 ---*/
 
 assert.sameValue(typeof SharedArrayBuffer.prototype.grow, "function");

@@ -14,14 +14,14 @@ es5id: 15.3.2.1_A1_T13
 description: Value of the function constructor argument is "{}"
 ---*/
 
+//CHECK#1
 try {
   var f = new Function({});
   throw new Test262Error('#1: test failed with error ' + e);
 } catch (e) {
-  assert(
-    e instanceof SyntaxError,
-    'The result of evaluating (e instanceof SyntaxError) is expected to be true'
-  );
+  if (!(e instanceof SyntaxError)) {
+    throw new Test262Error('#1.1: If body is not parsable as FunctionBody then throw a SyntaxError exception');
+  }
 }
 
 reportCompare(0, 0);

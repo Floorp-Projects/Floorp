@@ -6,15 +6,22 @@ info: The valueOf method returns its "this" value
 es5id: 15.2.4.4_A1_T6
 description: "\"this\" value is \"undefined\""
 ---*/
-assert.sameValue(
-  typeof Object.prototype.valueOf,
-  "function",
-  'The value of `typeof Object.prototype.valueOf` is expected to be "function"'
-);
+
+//CHECK#1
+if (typeof Object.prototype.valueOf !== "function") {
+  throw new Test262Error('#1: valueOf method defined');
+}
 
 var obj = new Object(undefined);
 
-assert.sameValue(typeof obj.valueOf, "function", 'The value of `typeof obj.valueOf` is expected to be "function"');
-assert.sameValue(obj.valueOf(), obj, 'obj.valueOf() returns obj');
+//CHECK#2
+if (typeof obj.valueOf !== "function") {
+  throw new Test262Error('#2: valueOf method accessed');
+}
+
+//CHECK#3
+if (obj.valueOf() !== obj) {
+  throw new Test262Error('#3: The valueOf method returns its this value');
+}
 
 reportCompare(0, 0);

@@ -2,7 +2,6 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-set.prototype-@@iterator
 description: Initial state of the Symbol.iterator property
 info: |
     The initial value of the @@iterator property is the same function object as
@@ -12,6 +11,7 @@ info: |
     should be writable and configurable, but not enumerable.
 includes: [propertyHelper.js]
 features: [Symbol.iterator]
+es6id: 23.2.3.11
 ---*/
 
 assert.sameValue(Set.prototype[Symbol.iterator], Set.prototype.values);

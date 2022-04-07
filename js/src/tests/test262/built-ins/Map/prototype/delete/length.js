@@ -1,7 +1,7 @@
 // Copyright (C) 2015 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
-esid: sec-map.prototype.delete
+es6id: 23.1.3.3
 description: >
   Map.prototype.delete.length value and descriptor.
 info: |

@@ -18,4 +18,7 @@ info: |
 
 $DONOTEVALUATE();
 
-true in false = 1;
+function _() {
+  true in false = 1;
+}
+

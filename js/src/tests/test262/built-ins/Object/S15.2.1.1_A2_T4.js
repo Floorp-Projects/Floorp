@@ -13,11 +13,16 @@ var obj = {
   flag: true
 };
 
-assert.sameValue(typeof(obj), 'object', 'The value of `typeof(obj)` is expected to be "object"');
+//CHECK#1
+if (typeof(obj) !== 'object') {
+  throw new Test262Error('#1: obj = {flag:true} should be an Object');
+}
 
 var n_obj = Object(obj);
 
-assert.sameValue(n_obj, obj, 'The value of n_obj is expected to equal the value of obj');
-assert(!!n_obj['flag'], 'The value of !!n_obj["flag"] is expected to be true');
+//CHECK#2
+if ((n_obj !== obj) || (!(n_obj['flag']))) {
+  throw new Test262Error('#2: Object({flag:true}) returns ToObject({flag:true})');
+}
 
 reportCompare(0, 0);

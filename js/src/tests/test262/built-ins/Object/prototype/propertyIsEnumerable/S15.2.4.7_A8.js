@@ -10,21 +10,23 @@ description: >
     Checking if enumerating the
     Object.prototype.propertyIsEnumerable.length property fails
 ---*/
-assert(
-  !!Object.prototype.propertyIsEnumerable.hasOwnProperty('length'),
-  'The value of !!Object.prototype.propertyIsEnumerable.hasOwnProperty("length") is expected to be true'
-);
 
-assert(
-  !Object.prototype.propertyIsEnumerable.propertyIsEnumerable('length'),
-  'The value of !Object.prototype.propertyIsEnumerable.propertyIsEnumerable("length") is expected to be true'
-);
+//CHECK#0
+if (!(Object.prototype.propertyIsEnumerable.hasOwnProperty('length'))) {
+  throw new Test262Error('#0: the Object.prototype.propertyIsEnumerable has length property');
+}
 
+
+// CHECK#1
+if (Object.prototype.propertyIsEnumerable.propertyIsEnumerable('length')) {
+  throw new Test262Error('#1: the Object.prototype.propertyIsEnumerable.length property has the attributes DontEnum');
+}
+
+// CHECK#2
 for (var p in Object.prototype.propertyIsEnumerable) {
-  assert.notSameValue(p, "length", 'The value of p is not "length"');
+  if (p === "length")
+    throw new Test262Error('#2: the Object.prototype.propertyIsEnumerable.length property has the attributes DontEnum');
 }
 //
-
-// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);
