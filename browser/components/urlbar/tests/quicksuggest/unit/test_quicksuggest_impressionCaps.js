@@ -110,12 +110,71 @@ add_task(async function oneInterval() {
     },
     callback: async () => {
       await doTimedSearches("sponsored", {
-        0: [[EXPECTED_SPONSORED_RESULT], []],
-        1: [[]],
-        2: [[]],
-        3: [[EXPECTED_SPONSORED_RESULT], []],
-        4: [[]],
-        5: [[]],
+        0: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "0",
+                  intervalSeconds: "3",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "3000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        1: {
+          results: [[]],
+        },
+        2: {
+          results: [[]],
+        },
+        3: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "3000",
+                  intervalSeconds: "3",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "3000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "3000",
+                  intervalSeconds: "3",
+                  maxCount: "1",
+                  startDate: "3000",
+                  endDate: "6000",
+                  impressionDate: "3000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        4: {
+          results: [[]],
+        },
+        5: {
+          results: [[]],
+        },
       });
     },
   });
@@ -137,27 +196,748 @@ add_task(async function multipleIntervals() {
     },
     callback: async () => {
       await doTimedSearches("sponsored", {
-        0: [[EXPECTED_SPONSORED_RESULT], []],
-        1: [[EXPECTED_SPONSORED_RESULT], []],
-        2: [[EXPECTED_SPONSORED_RESULT], []],
-        3: [[]],
-        4: [[]],
-        5: [[EXPECTED_SPONSORED_RESULT], []],
-        6: [[EXPECTED_SPONSORED_RESULT], []],
-        7: [[]],
-        8: [[]],
-        9: [[]],
-        10: [[EXPECTED_SPONSORED_RESULT], []],
-        11: [[EXPECTED_SPONSORED_RESULT], []],
-        12: [[EXPECTED_SPONSORED_RESULT], []],
-        13: [[]],
-        14: [[]],
-        15: [[EXPECTED_SPONSORED_RESULT], []],
-        16: [[EXPECTED_SPONSORED_RESULT], []],
-        17: [[]],
-        18: [[]],
-        19: [[]],
-        20: [[EXPECTED_SPONSORED_RESULT], []],
+        // 0s: 1 new impression; 1 impression total
+        0: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "0",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 1s: 1 new impression; 2 impressions total
+        1: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 2s: 1 new impression; 3 impressions total
+        2: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 5, max_count: 3
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 3s: no new impressions; 3 impressions total
+        3: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "3000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 4s: no new impressions; 3 impressions total
+        4: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "4000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "3000",
+                  endDate: "4000",
+                  impressionDate: "2000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 5s: 1 new impression; 4 impressions total
+        5: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "4000",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 5, max_count: 3
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "5000",
+                  endDate: "6000",
+                  impressionDate: "5000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 6s: 1 new impression; 5 impressions total
+        6: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "6000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "5000",
+                  endDate: "6000",
+                  impressionDate: "5000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "6000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "6000",
+                  endDate: "7000",
+                  impressionDate: "6000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 10, max_count: 5
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "6000",
+                  intervalSeconds: "10",
+                  maxCount: "5",
+                  startDate: "0",
+                  endDate: "10000",
+                  impressionDate: "6000",
+                  count: "5",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 7s: no new impressions; 5 impressions total
+        7: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "7000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "6000",
+                  endDate: "7000",
+                  impressionDate: "6000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 8s: no new impressions; 5 impressions total
+        8: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "8000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "7000",
+                  endDate: "8000",
+                  impressionDate: "6000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 9s: no new impressions; 5 impressions total
+        9: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "9000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "8000",
+                  endDate: "9000",
+                  impressionDate: "6000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 10s: 1 new impression; 6 impressions total
+        10: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "10000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "9000",
+                  endDate: "10000",
+                  impressionDate: "6000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 5, max_count: 3
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "10000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "5000",
+                  endDate: "10000",
+                  impressionDate: "6000",
+                  count: "2",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 10, max_count: 5
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "10000",
+                  intervalSeconds: "10",
+                  maxCount: "5",
+                  startDate: "0",
+                  endDate: "10000",
+                  impressionDate: "6000",
+                  count: "5",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "10000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "10000",
+                  endDate: "11000",
+                  impressionDate: "10000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 11s: 1 new impression; 7 impressions total
+        11: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "11000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "10000",
+                  endDate: "11000",
+                  impressionDate: "10000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "11000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "11000",
+                  endDate: "12000",
+                  impressionDate: "11000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 12s: 1 new impression; 8 impressions total
+        12: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "12000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "11000",
+                  endDate: "12000",
+                  impressionDate: "11000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "12000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "12000",
+                  endDate: "13000",
+                  impressionDate: "12000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 5, max_count: 3
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "12000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "10000",
+                  endDate: "15000",
+                  impressionDate: "12000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 13s: no new impressions; 8 impressions total
+        13: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "13000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "12000",
+                  endDate: "13000",
+                  impressionDate: "12000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 14s: no new impressions; 8 impressions total
+        14: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "14000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "13000",
+                  endDate: "14000",
+                  impressionDate: "12000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 15s: 1 new impression; 9 impressions total
+        15: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "15000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "14000",
+                  endDate: "15000",
+                  impressionDate: "12000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 5, max_count: 3
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "15000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "10000",
+                  endDate: "15000",
+                  impressionDate: "12000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "15000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "15000",
+                  endDate: "16000",
+                  impressionDate: "15000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 16s: 1 new impression; 10 impressions total
+        16: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "16000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "15000",
+                  endDate: "16000",
+                  impressionDate: "15000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "16000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "16000",
+                  endDate: "17000",
+                  impressionDate: "16000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 10, max_count: 5
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "16000",
+                  intervalSeconds: "10",
+                  maxCount: "5",
+                  startDate: "10000",
+                  endDate: "20000",
+                  impressionDate: "16000",
+                  count: "5",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 17s: no new impressions; 10 impressions total
+        17: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "17000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "16000",
+                  endDate: "17000",
+                  impressionDate: "16000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 18s: no new impressions; 10 impressions total
+        18: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "18000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "17000",
+                  endDate: "18000",
+                  impressionDate: "16000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 19s: no new impressions; 10 impressions total
+        19: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "19000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "18000",
+                  endDate: "19000",
+                  impressionDate: "16000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 20s: 1 new impression; 11 impressions total
+        20: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "20000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "19000",
+                  endDate: "20000",
+                  impressionDate: "16000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 5, max_count: 3
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "20000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "15000",
+                  endDate: "20000",
+                  impressionDate: "16000",
+                  count: "2",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 10, max_count: 5
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "20000",
+                  intervalSeconds: "10",
+                  maxCount: "5",
+                  startDate: "10000",
+                  endDate: "20000",
+                  impressionDate: "16000",
+                  count: "5",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "20000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "20000",
+                  endDate: "21000",
+                  impressionDate: "20000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
       });
     },
   });
@@ -174,17 +954,35 @@ add_task(async function lifetime() {
       },
     },
     callback: async () => {
-      for (let i = 0; i < 3; i++) {
-        await checkSearch({
-          name: i,
-          searchString: "sponsored",
-          expectedResults: [EXPECTED_SPONSORED_RESULT],
-        });
-      }
-      await checkSearch({
-        name: "additional",
-        searchString: "sponsored",
-        expectedResults: [],
+      await doTimedSearches("sponsored", {
+        0: {
+          results: [
+            [EXPECTED_SPONSORED_RESULT],
+            [EXPECTED_SPONSORED_RESULT],
+            [EXPECTED_SPONSORED_RESULT],
+            [],
+          ],
+          telemetry: {
+            events: [
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "0",
+                  intervalSeconds: "Infinity",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "Infinity",
+                  impressionDate: "0",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        1: {
+          results: [[]],
+        },
       });
     },
   });
@@ -203,11 +1001,135 @@ add_task(async function intervalAndLifetime() {
     },
     callback: async () => {
       await doTimedSearches("sponsored", {
-        0: [[EXPECTED_SPONSORED_RESULT], []],
-        1: [[EXPECTED_SPONSORED_RESULT], []],
-        2: [[EXPECTED_SPONSORED_RESULT], []],
-        3: [[]],
-        4: [[]],
+        // 0s: 1 new impression; 1 impression total
+        0: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "0",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 1s: 1 new impression; 2 impressions total
+        1: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 2s: 1 new impression; 3 impressions total
+        2: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: Infinity, max_count: 3
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "Infinity",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "Infinity",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        3: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "3000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
       });
     },
   });
@@ -229,14 +1151,266 @@ add_task(async function multipleIntervalsAndLifetime() {
     },
     callback: async () => {
       await doTimedSearches("sponsored", {
-        0: [[EXPECTED_SPONSORED_RESULT], []],
-        1: [[EXPECTED_SPONSORED_RESULT], []],
-        2: [[EXPECTED_SPONSORED_RESULT], []],
-        3: [[]],
-        4: [[]],
-        5: [[EXPECTED_SPONSORED_RESULT], []],
-        6: [[]],
-        7: [[]],
+        // 0s: 1 new impression; 1 impression total
+        0: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "0",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 1s: 1 new impression; 2 impressions total
+        1: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 2s: 1 new impression; 3 impressions total
+        2: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 5, max_count: 3
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 3s: no new impressions; 3 impressions total
+        3: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "3000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 4s: no new impressions; 3 impressions total
+        4: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "4000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "3000",
+                  endDate: "4000",
+                  impressionDate: "2000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 5s: 1 new impression; 4 impressions total
+        5: {
+          results: [[EXPECTED_SPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "4000",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+              // reset: interval_s: 5, max_count: 3
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "5000",
+                  endDate: "6000",
+                  impressionDate: "5000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+              // hit: interval_s: Infinity, max_count: 4
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "Infinity",
+                  maxCount: "4",
+                  startDate: "0",
+                  endDate: "Infinity",
+                  impressionDate: "5000",
+                  count: "4",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 6s: no new impressions; 4 impressions total
+        6: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "6000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "5000",
+                  endDate: "6000",
+                  impressionDate: "5000",
+                  count: "1",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 7s: no new impressions; 4 impressions total
+        7: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "7000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "6000",
+                  endDate: "7000",
+                  impressionDate: "5000",
+                  count: "0",
+                  type: "sponsored",
+                },
+              },
+            ],
+          },
+        },
       });
     },
   });
@@ -260,14 +1434,266 @@ add_task(async function nonsponsored() {
     },
     callback: async () => {
       await doTimedSearches("nonsponsored", {
-        0: [[EXPECTED_NONSPONSORED_RESULT], []],
-        1: [[EXPECTED_NONSPONSORED_RESULT], []],
-        2: [[EXPECTED_NONSPONSORED_RESULT], []],
-        3: [[]],
-        4: [[]],
-        5: [[EXPECTED_NONSPONSORED_RESULT], []],
-        6: [[]],
-        7: [[]],
+        // 0s: 1 new impression; 1 impression total
+        0: {
+          results: [[EXPECTED_NONSPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "0",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 1s: 1 new impression; 2 impressions total
+        1: {
+          results: [[EXPECTED_NONSPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "0",
+                  endDate: "1000",
+                  impressionDate: "0",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "1000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 2s: 1 new impression; 3 impressions total
+        2: {
+          results: [[EXPECTED_NONSPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "1000",
+                  endDate: "2000",
+                  impressionDate: "1000",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+              // hit: interval_s: 5, max_count: 3
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "2000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 3s: no new impressions; 3 impressions total
+        3: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "3000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "2000",
+                  endDate: "3000",
+                  impressionDate: "2000",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 4s: no new impressions; 3 impressions total
+        4: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "4000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "3000",
+                  endDate: "4000",
+                  impressionDate: "2000",
+                  count: "0",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 5s: 1 new impression; 4 impressions total
+        5: {
+          results: [[EXPECTED_NONSPONSORED_RESULT], []],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "4000",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "0",
+                  type: "nonsponsored",
+                },
+              },
+              // reset: interval_s: 5, max_count: 3
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "5",
+                  maxCount: "3",
+                  startDate: "0",
+                  endDate: "5000",
+                  impressionDate: "2000",
+                  count: "3",
+                  type: "nonsponsored",
+                },
+              },
+              // hit: interval_s: 1, max_count: 1
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "5000",
+                  endDate: "6000",
+                  impressionDate: "5000",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+              // hit: interval_s: Infinity, max_count: 4
+              {
+                object: "hit",
+                extra: {
+                  eventDate: "5000",
+                  intervalSeconds: "Infinity",
+                  maxCount: "4",
+                  startDate: "0",
+                  endDate: "Infinity",
+                  impressionDate: "5000",
+                  count: "4",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 6s: no new impressions; 4 impressions total
+        6: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "6000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "5000",
+                  endDate: "6000",
+                  impressionDate: "5000",
+                  count: "1",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
+        // 7s: no new impressions; 4 impressions total
+        7: {
+          results: [[]],
+          telemetry: {
+            events: [
+              // reset: interval_s: 1, max_count: 1
+              {
+                object: "reset",
+                extra: {
+                  eventDate: "7000",
+                  intervalSeconds: "1",
+                  maxCount: "1",
+                  startDate: "6000",
+                  endDate: "7000",
+                  impressionDate: "5000",
+                  count: "0",
+                  type: "nonsponsored",
+                },
+              },
+            ],
+          },
+        },
       });
     },
   });
@@ -289,6 +1715,7 @@ add_task(async function sponsoredAndNonsponsored() {
       },
     },
     callback: async () => {
+      // 1st searches
       await checkSearch({
         name: "sponsored 1",
         searchString: "sponsored",
@@ -299,7 +1726,9 @@ add_task(async function sponsoredAndNonsponsored() {
         searchString: "nonsponsored",
         expectedResults: [EXPECTED_NONSPONSORED_RESULT],
       });
+      await checkTelemetryEvents([]);
 
+      // 2nd searches
       await checkSearch({
         name: "sponsored 2",
         searchString: "sponsored",
@@ -310,7 +1739,23 @@ add_task(async function sponsoredAndNonsponsored() {
         searchString: "nonsponsored",
         expectedResults: [EXPECTED_NONSPONSORED_RESULT],
       });
+      await checkTelemetryEvents([
+        {
+          object: "hit",
+          extra: {
+            eventDate: "0",
+            intervalSeconds: "Infinity",
+            maxCount: "2",
+            startDate: "0",
+            endDate: "Infinity",
+            impressionDate: "0",
+            count: "2",
+            type: "sponsored",
+          },
+        },
+      ]);
 
+      // 3rd searches
       await checkSearch({
         name: "sponsored 3",
         searchString: "sponsored",
@@ -321,7 +1766,23 @@ add_task(async function sponsoredAndNonsponsored() {
         searchString: "nonsponsored",
         expectedResults: [EXPECTED_NONSPONSORED_RESULT],
       });
+      await checkTelemetryEvents([
+        {
+          object: "hit",
+          extra: {
+            eventDate: "0",
+            intervalSeconds: "Infinity",
+            maxCount: "3",
+            startDate: "0",
+            endDate: "Infinity",
+            impressionDate: "0",
+            count: "3",
+            type: "nonsponsored",
+          },
+        },
+      ]);
 
+      // 4th searches
       await checkSearch({
         name: "sponsored 4",
         searchString: "sponsored",
@@ -332,6 +1793,7 @@ add_task(async function sponsoredAndNonsponsored() {
         searchString: "nonsponsored",
         expectedResults: [],
       });
+      await checkTelemetryEvents([]);
     },
   });
 });
@@ -353,6 +1815,7 @@ add_task(async function emptyConfig() {
           expectedResults: [EXPECTED_NONSPONSORED_RESULT],
         });
       }
+      await checkTelemetryEvents([]);
     },
   });
 });
@@ -384,6 +1847,22 @@ add_task(async function sponsoredCapsDisabled() {
           expectedResults: [EXPECTED_NONSPONSORED_RESULT],
         });
       }
+      await checkTelemetryEvents([
+        {
+          object: "hit",
+          extra: {
+            eventDate: "0",
+            intervalSeconds: "Infinity",
+            maxCount: "3",
+            startDate: "0",
+            endDate: "Infinity",
+            impressionDate: "0",
+            count: "3",
+            type: "nonsponsored",
+          },
+        },
+      ]);
+
       await checkSearch({
         name: "sponsored additional",
         searchString: "sponsored",
@@ -394,6 +1873,7 @@ add_task(async function sponsoredCapsDisabled() {
         searchString: "nonsponsored",
         expectedResults: [],
       });
+      await checkTelemetryEvents([]);
     },
   });
   UrlbarPrefs.set("quicksuggest.impressionCaps.sponsoredEnabled", true);
@@ -426,6 +1906,22 @@ add_task(async function nonsponsoredCapsDisabled() {
           expectedResults: [EXPECTED_NONSPONSORED_RESULT],
         });
       }
+      await checkTelemetryEvents([
+        {
+          object: "hit",
+          extra: {
+            eventDate: "0",
+            intervalSeconds: "Infinity",
+            maxCount: "3",
+            startDate: "0",
+            endDate: "Infinity",
+            impressionDate: "0",
+            count: "3",
+            type: "sponsored",
+          },
+        },
+      ]);
+
       await checkSearch({
         name: "sponsored additional",
         searchString: "sponsored",
@@ -436,6 +1932,7 @@ add_task(async function nonsponsoredCapsDisabled() {
         searchString: "nonsponsored",
         expectedResults: [EXPECTED_NONSPONSORED_RESULT],
       });
+      await checkTelemetryEvents([]);
     },
   });
   UrlbarPrefs.set("quicksuggest.impressionCaps.nonSponsoredEnabled", true);
@@ -467,6 +1964,21 @@ add_task(async function configChange_sameIntervalLowerCap_1() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "3",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -481,6 +1993,7 @@ add_task(async function configChange_sameIntervalLowerCap_1() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([]);
         },
         3: async () => {
           await checkSearch({
@@ -493,6 +2006,34 @@ add_task(async function configChange_sameIntervalLowerCap_1() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "3000",
+                intervalSeconds: "3",
+                maxCount: "1",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "3000",
+                intervalSeconds: "3",
+                maxCount: "1",
+                startDate: "3000",
+                endDate: "6000",
+                impressionDate: "3000",
+                count: "1",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -520,6 +2061,7 @@ add_task(async function configChange_sameIntervalLowerCap_2() {
               expectedResults: [EXPECTED_SPONSORED_RESULT],
             });
           }
+          await checkTelemetryEvents([]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -546,6 +2088,34 @@ add_task(async function configChange_sameIntervalLowerCap_2() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "3000",
+                intervalSeconds: "3",
+                maxCount: "1",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "0",
+                count: "2",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "3000",
+                intervalSeconds: "3",
+                maxCount: "1",
+                startDate: "3000",
+                endDate: "6000",
+                impressionDate: "3000",
+                count: "1",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -577,6 +2147,21 @@ add_task(async function configChange_sameIntervalHigherCap() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "3",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -598,6 +2183,21 @@ add_task(async function configChange_sameIntervalHigherCap() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "1000",
+                intervalSeconds: "3",
+                maxCount: "5",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "1000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
         3: async () => {
           for (let i = 0; i < 5; i++) {
@@ -612,6 +2212,34 @@ add_task(async function configChange_sameIntervalHigherCap() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "3000",
+                intervalSeconds: "3",
+                maxCount: "5",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "1000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "3000",
+                intervalSeconds: "3",
+                maxCount: "5",
+                startDate: "3000",
+                endDate: "6000",
+                impressionDate: "3000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -640,6 +2268,21 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
               expectedResults: [EXPECTED_SPONSORED_RESULT],
             });
           }
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "3",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -657,6 +2300,7 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([]);
         },
         4: async () => {
           await checkSearch({
@@ -664,6 +2308,7 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([]);
         },
         5: async () => {
           for (let i = 0; i < 2; i++) {
@@ -678,6 +2323,34 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "5000",
+                intervalSeconds: "5",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "5000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "5000",
+                intervalSeconds: "10",
+                maxCount: "5",
+                startDate: "0",
+                endDate: "10000",
+                impressionDate: "5000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -709,6 +2382,21 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
               expectedResults: [EXPECTED_SPONSORED_RESULT],
             });
           }
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "2",
+                maxCount: "2",
+                startDate: "0",
+                endDate: "2000",
+                impressionDate: "0",
+                count: "2",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
         2: async () => {
           for (let i = 0; i < 2; i++) {
@@ -718,6 +2406,47 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
               expectedResults: [EXPECTED_SPONSORED_RESULT],
             });
           }
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "2000",
+                intervalSeconds: "2",
+                maxCount: "2",
+                startDate: "0",
+                endDate: "2000",
+                impressionDate: "0",
+                count: "2",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "2000",
+                intervalSeconds: "2",
+                maxCount: "2",
+                startDate: "2000",
+                endDate: "4000",
+                impressionDate: "2000",
+                count: "2",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "2000",
+                intervalSeconds: "4",
+                maxCount: "4",
+                startDate: "0",
+                endDate: "4000",
+                impressionDate: "2000",
+                count: "4",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -737,6 +2466,21 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "4000",
+                intervalSeconds: "6",
+                maxCount: "5",
+                startDate: "0",
+                endDate: "6000",
+                impressionDate: "4000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
         5: async () => {
           await checkSearch({
@@ -744,6 +2488,7 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([]);
         },
         6: async () => {
           for (let i = 0; i < 5; i++) {
@@ -758,6 +2503,34 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "6000",
+                intervalSeconds: "6",
+                maxCount: "5",
+                startDate: "0",
+                endDate: "6000",
+                impressionDate: "4000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+            {
+              object: "hit",
+              extra: {
+                eventDate: "6000",
+                intervalSeconds: "6",
+                maxCount: "5",
+                startDate: "6000",
+                endDate: "12000",
+                impressionDate: "6000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -786,6 +2559,21 @@ add_task(async function configChange_1IntervalTo1NewIntervalLower() {
               expectedResults: [EXPECTED_SPONSORED_RESULT],
             });
           }
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "5",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "5000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -807,6 +2595,21 @@ add_task(async function configChange_1IntervalTo1NewIntervalLower() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "1000",
+                intervalSeconds: "3",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "1000",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -835,11 +2638,25 @@ add_task(async function configChange_1IntervalToLifetime() {
               expectedResults: [EXPECTED_SPONSORED_RESULT],
             });
           }
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "3",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "3000",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
                 lifetime: 3,
-                custom: [{ interval_s: 1, max_count: 1 }],
               },
             },
           });
@@ -850,6 +2667,7 @@ add_task(async function configChange_1IntervalToLifetime() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([]);
         },
       });
     },
@@ -881,6 +2699,21 @@ add_task(async function configChange_lifetimeCapHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "Infinity",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "Infinity",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -902,6 +2735,21 @@ add_task(async function configChange_lifetimeCapHigher() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "1000",
+                intervalSeconds: "Infinity",
+                maxCount: "5",
+                startDate: "0",
+                endDate: "Infinity",
+                impressionDate: "1000",
+                count: "5",
+                type: "sponsored",
+              },
+            },
+          ]);
         },
       });
     },
@@ -933,6 +2781,21 @@ add_task(async function configChange_lifetimeCapLower() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([
+            {
+              object: "hit",
+              extra: {
+                eventDate: "0",
+                intervalSeconds: "Infinity",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "Infinity",
+                impressionDate: "0",
+                count: "3",
+                type: "sponsored",
+              },
+            },
+          ]);
           QuickSuggestTestUtils.setConfig({
             impression_caps: {
               sponsored: {
@@ -947,6 +2810,7 @@ add_task(async function configChange_lifetimeCapLower() {
             searchString: "sponsored",
             expectedResults: [],
           });
+          await checkTelemetryEvents([]);
         },
       });
     },
@@ -982,9 +2846,27 @@ add_task(async function prefSync() {
         JSON.parse(json),
         {
           sponsored: [
-            { intervalSeconds: 3, count: 2, maxCount: 2, startDateMs: 0 },
-            { intervalSeconds: 5, count: 2, maxCount: 4, startDateMs: 0 },
-            { intervalSeconds: null, count: 2, maxCount: 5, startDateMs: 0 },
+            {
+              intervalSeconds: 3,
+              count: 2,
+              maxCount: 2,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
+            {
+              intervalSeconds: 5,
+              count: 2,
+              maxCount: 4,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
+            {
+              intervalSeconds: null,
+              count: 2,
+              maxCount: 5,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
           ],
         },
         "JSON is correct"
@@ -996,13 +2878,26 @@ add_task(async function prefSync() {
         UrlbarProviderQuickSuggest._impressionStats,
         {
           sponsored: [
-            { intervalSeconds: 3, count: 2, maxCount: 2, startDateMs: 0 },
-            { intervalSeconds: 5, count: 2, maxCount: 4, startDateMs: 0 },
+            {
+              intervalSeconds: 3,
+              count: 2,
+              maxCount: 2,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
+            {
+              intervalSeconds: 5,
+              count: 2,
+              maxCount: 4,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
             {
               intervalSeconds: Infinity,
               count: 2,
               maxCount: 5,
               startDateMs: 0,
+              impressionDateMs: 0,
             },
           ],
         },
@@ -1026,8 +2921,20 @@ add_task(async function prefDirectlyChanged() {
     callback: async () => {
       let expectedStats = {
         sponsored: [
-          { intervalSeconds: 3, count: 0, maxCount: 3, startDateMs: 0 },
-          { intervalSeconds: Infinity, count: 0, maxCount: 5, startDateMs: 0 },
+          {
+            intervalSeconds: 3,
+            count: 0,
+            maxCount: 3,
+            startDateMs: 0,
+            impressionDateMs: 0,
+          },
+          {
+            intervalSeconds: Infinity,
+            count: 0,
+            maxCount: 5,
+            startDateMs: 0,
+            impressionDateMs: 0,
+          },
         ],
       };
 
@@ -1059,13 +2966,26 @@ add_task(async function prefDirectlyChanged() {
         "quicksuggest.impressionCaps.stats",
         JSON.stringify({
           sponsored: [
-            { intervalSeconds: 3, count: 0, maxCount: 3, startDateMs: 0 },
-            { intervalSeconds: "bogus", count: 0, startDateMs: 0 },
+            {
+              intervalSeconds: 3,
+              count: 0,
+              maxCount: 3,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
+            {
+              intervalSeconds: "bogus",
+              count: 0,
+              maxCount: 99,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
             {
               intervalSeconds: Infinity,
               count: 0,
               maxCount: 5,
               startDateMs: 0,
+              impressionDateMs: 0,
             },
           ],
         })
@@ -1080,12 +3000,19 @@ add_task(async function prefDirectlyChanged() {
         "quicksuggest.impressionCaps.stats",
         JSON.stringify({
           sponsored: [
-            { intervalSeconds: 3, count: 0, maxCount: 123, startDateMs: 0 },
+            {
+              intervalSeconds: 3,
+              count: 0,
+              maxCount: 123,
+              startDateMs: 0,
+              impressionDateMs: 0,
+            },
             {
               intervalSeconds: Infinity,
               count: 0,
               maxCount: 456,
               startDateMs: 0,
+              impressionDateMs: 0,
             },
           ],
         })
@@ -1098,12 +3025,19 @@ add_task(async function prefDirectlyChanged() {
 
       let stats = {
         sponsored: [
-          { intervalSeconds: 3, count: 1, maxCount: 3, startDateMs: 99 },
+          {
+            intervalSeconds: 3,
+            count: 1,
+            maxCount: 3,
+            startDateMs: 99,
+            impressionDateMs: 99,
+          },
           {
             intervalSeconds: Infinity,
             count: 7,
             maxCount: 5,
             startDateMs: 1337,
+            impressionDateMs: 1337,
           },
         ],
       };
@@ -1120,6 +3054,90 @@ add_task(async function prefDirectlyChanged() {
   });
 });
 
+// Tests multiple interval periods where the cap is not hit. Telemetry should be
+// recorded for these periods.
+add_task(async function intervalsElapsedButCapNotHit() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 1, max_count: 3 }],
+        },
+      },
+    },
+    callback: async () => {
+      await doTimedCallbacks({
+        // 1s
+        1: async () => {
+          await checkSearch({
+            name: "1s",
+            searchString: "sponsored",
+            expectedResults: [EXPECTED_SPONSORED_RESULT],
+          });
+        },
+        // 10s
+        10: async () => {
+          // Impression counter resets are only triggered by `startQuery()` in
+          // the provider, so we need to do a search to trigger the events.
+          await checkSearch({
+            name: "reset trigger",
+            searchString: "this shouldn't match any suggestion",
+            expectedResults: [],
+          });
+
+          let expectedEvents = [
+            // 1s: reset with count = 0
+            {
+              object: "reset",
+              extra: {
+                eventDate: "1000",
+                intervalSeconds: "1",
+                maxCount: "3",
+                startDate: "0",
+                endDate: "1000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+              },
+            },
+            // 2s: reset with count = 1
+            {
+              object: "reset",
+              extra: {
+                eventDate: "2000",
+                intervalSeconds: "1",
+                maxCount: "3",
+                startDate: "1000",
+                endDate: "2000",
+                impressionDate: "1000",
+                count: "1",
+                type: "sponsored",
+              },
+            },
+          ];
+          // 3s to 10s: reset with count = 0
+          for (let i = 3; i <= 10; i++) {
+            expectedEvents.push({
+              object: "reset",
+              extra: {
+                eventDate: String(1000 * i),
+                intervalSeconds: "1",
+                maxCount: "3",
+                startDate: String(1000 * (i - 1)),
+                endDate: String(1000 * i),
+                impressionDate: "1000",
+                count: "0",
+                type: "sponsored",
+              },
+            });
+          }
+          await checkTelemetryEvents(expectedEvents);
+        },
+      });
+    },
+  });
+});
+
 /**
  * Main test helper. Sets up state, calls your callback, and resets state.
  *
@@ -1128,6 +3146,8 @@ add_task(async function prefDirectlyChanged() {
  * @param {function} callback
  */
 async function doTest({ config, callback }) {
+  Services.telemetry.clearEvents();
+
   // Make `Date.now()` return 0 to start with. It's necessary to do this before
   // calling `withConfig()` because when a new config is set, the provider
   // validates its impression stats, whose `startDateMs` values depend on
@@ -1139,45 +3159,71 @@ async function doTest({ config, callback }) {
 }
 
 /**
- * Does a series of timed searches and checks their results. This function
- * relies on `doTimedCallbacks()`, so it may be helpful to look at it too.
+ * Does a series of timed searches and checks their results and telemetry. This
+ * function relies on `doTimedCallbacks()`, so it may be helpful to look at it
+ * too.
  *
  * @param {string} searchString
- * @param {object} expectedResultsListsBySecond
- *   An object that maps from seconds to an array of expected results arrays.
- *   For a given entry `S -> L` in this object, searches are performed S seconds
- *   after this function is called, one search per item in L. The item in L at
- *   index i is itself an array of expected results for the i'th search.
+ * @param {object} expectedBySecond
+
+ *   An object that maps from seconds to objects that describe the searches to
+ *   perform, their expected results, and the expected telemetry. For a given
+ *   entry `S -> E` in this object, searches are performed S seconds after this
+ *   function is called. `E` is an object that looks like this:
+ *
+ *     { results, telemetry }
+ *
+ *     {array} results
+ *       An array of arrays. A search is performed for each sub-array in
+ *       `results`, and the contents of the sub-array are the expected results
+ *       for that search.
+ *     {object} telemetry
+ *       An object like this: { events }
+ *       {array} events
+ *         An array of expected telemetry events after all searches are done.
+ *         Telemetry events are cleared after checking these. If not present,
+ *         then it will be asserted that no events were recorded.
  *
  *   Example:
  *
  *     {
- *       0: [[R1], []],
- *       1: [[]],
+ *       0: {
+ *         results: [[R1], []],
+ *         telemetry: {
+ *           events: [
+ *             someExpectedEvent,
+ *           ],
+ *         },
+ *       }
+ *       1: {
+ *         results: [[]],
+ *       },
  *     }
  *
  *     0 seconds after `doTimedSearches()` is called, two searches are
  *     performed. The first one is expected to return a single result R1, and
- *     the second search is expected to return no results.
+ *     the second search is expected to return no results. After the searches
+ *     are done, one telemetry event is expected to be recorded.
  *
  *     1 second after `doTimedSearches()` is called, one search is performed.
- *     It's expected to return no results.
+ *     It's expected to return no results, and no telemetry is expected to be
+ *     recorded.
  */
-async function doTimedSearches(searchString, expectedResultsListsBySecond) {
+async function doTimedSearches(searchString, expectedBySecond) {
   await doTimedCallbacks(
-    Object.entries(expectedResultsListsBySecond).reduce(
-      (memo, [second, expectedResultsList]) => {
+    Object.entries(expectedBySecond).reduce(
+      (memo, [second, { results, telemetry }]) => {
         memo[second] = async () => {
-          for (let i = 0; i < expectedResultsList.length; i++) {
-            let expectedResults = expectedResultsList[i];
+          for (let i = 0; i < results.length; i++) {
+            let expectedResults = results[i];
             await checkSearch({
               searchString,
               expectedResults,
-              name: `${second}s search ${i + 1} of ${
-                expectedResultsList.length
-              }`,
+              name: `${second}s search ${i + 1} of ${results.length}`,
             });
           }
+          let { events } = telemetry || {};
+          await checkTelemetryEvents(events || []);
         };
         return memo;
       },
@@ -1254,17 +3300,17 @@ async function doTimedCallbacks(callbacksBySecond) {
  * @param {array} expectedResults
  */
 async function checkSearch({ name, searchString, expectedResults }) {
-  info(`Doing search "${name}" with search string "${searchString}"`);
+  info(`Preparing search "${name}" with search string "${searchString}"`);
   let context = createContext(searchString, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
-  info(`Checking results for search "${name}"`);
+  info(`Doing search: ${name}`);
   await check_results({
     context,
     matches: expectedResults,
   });
-  info(`Done checking results for search "${name}"`);
+  info(`Finished search: ${name}`);
 
   // Impression stats are updated only on engagement, so force one now.
   // `selIndex` doesn't really matter but since we're not trying to simulate a
@@ -1276,4 +3322,15 @@ async function checkSearch({ name, searchString, expectedResults }) {
   UrlbarProviderQuickSuggest.onEngagement(isPrivate, "engagement", context, {
     selIndex: -1,
   });
+}
+
+async function checkTelemetryEvents(expectedEvents) {
+  TelemetryTestUtils.assertEvents(
+    expectedEvents.map(event => ({
+      ...event,
+      category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+      method: "impression_cap",
+    }))
+  );
+  Services.telemetry.clearEvents();
 }
