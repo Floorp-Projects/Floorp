@@ -117,8 +117,8 @@ bool AgnosticDecoderModule::Supports(
       (WaveDataDecoder::IsWave(mimeType) && IsAvailable(DecoderType::Wave)) ||
       (OpusDataDecoder::IsOpus(mimeType) && IsAvailable(DecoderType::Opus));
   MOZ_LOG(sPDMLog, LogLevel::Debug,
-          ("Agnostic decoder %s requested type",
-           supports ? "supports" : "rejects"));
+          ("Agnostic decoder %s requested type '%s'",
+           supports ? "supports" : "rejects", mimeType.BeginReading()));
   return supports;
 }
 

@@ -73,16 +73,26 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     // the check for alpha to PDMFactory but not itself remove the need for a
     // check.
     if (VPXDecoder::IsVPX(mimeType) && trackInfo.GetAsVideoInfo()->HasAlpha()) {
+      MOZ_LOG(sPDMLog, LogLevel::Debug,
+              ("FFmpeg decoder rejects requested type '%s'",
+               mimeType.BeginReading()));
       return false;
     }
 
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(mimeType);
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(mimeType);
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
+      MOZ_LOG(sPDMLog, LogLevel::Debug,
+              ("FFmpeg decoder rejects requested type '%s'",
+               mimeType.BeginReading()));
       return false;
     }
     AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
-    return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
+    bool supports = !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
+            ("FFmpeg decoder %s requested type '%s'",
+             supports ? "supports" : "rejects", mimeType.BeginReading()));
+    return supports;
   }
 
  protected:
