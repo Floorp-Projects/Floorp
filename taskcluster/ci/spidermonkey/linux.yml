@@ -482,3 +482,23 @@ sm-gdb-linux64/debug:
             - linux64-minidump-stackwalk
             - linux64-llvm-symbolizer
             - sysroot-x86_64-linux-gnu
+
+sm-rt-linux64/debug:
+    description: "SpiderMonkey Records&Tuples"
+    index:
+        job-name: sm-rt-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(rt)
+    run:
+        spidermonkey-variant: rtdebug
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - sysroot-x86_64-linux-gnu
