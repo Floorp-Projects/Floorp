@@ -10,6 +10,8 @@
 
 #if defined(OS_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
+#  include "WMF.h"
+#  include "WMFDecoderModule.h"
 #endif
 
 namespace mozilla::ipc {
@@ -22,26 +24,32 @@ UtilityProcessImpl::UtilityProcessImpl(ProcessId aParentPid)
 UtilityProcessImpl::~UtilityProcessImpl() { mUtility = nullptr; }
 
 bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
-#if defined(MOZ_SANDBOX) && defined(OS_WIN)
-  // We delay load winmm.dll so that its dependencies don't interfere with COM
-  // initialization when win32k is locked down. We need to load it before we
-  // lower the sandbox in processes where the policy will prevent loading.
-  ::LoadLibraryW(L"winmm.dll");
-  mozilla::SandboxTarget::Instance()->StartSandbox();
-#endif
-
-  Maybe<const char*> parentBuildID =
-      geckoargs::sParentBuildID.Get(aArgc, aArgv);
-  if (parentBuildID.isNothing()) {
-    return false;
-  }
-
   Maybe<uint64_t> sandboxingKind = geckoargs::sSandboxingKind.Get(aArgc, aArgv);
   if (sandboxingKind.isNothing()) {
     return false;
   }
 
   if (*sandboxingKind >= SandboxingKind::COUNT) {
+    return false;
+  }
+
+#if defined(MOZ_SANDBOX) && defined(OS_WIN)
+  // We delay load winmm.dll so that its dependencies don't interfere with COM
+  // initialization when win32k is locked down. We need to load it before we
+  // lower the sandbox in processes where the policy will prevent loading.
+  ::LoadLibraryW(L"winmm.dll");
+
+  if (*sandboxingKind == SandboxingKind::UTILITY_AUDIO_DECODING) {
+    UtilityAudioDecoderParent::PreloadForSandbox();
+  }
+
+  // Go for it
+  mozilla::SandboxTarget::Instance()->StartSandbox();
+#endif
+
+  Maybe<const char*> parentBuildID =
+      geckoargs::sParentBuildID.Get(aArgc, aArgv);
+  if (parentBuildID.isNothing()) {
     return false;
   }
 
