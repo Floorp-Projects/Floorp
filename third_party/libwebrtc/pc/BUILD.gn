@@ -307,6 +307,11 @@ rtc_library("peer_connection_message_handler") {
   ]
 }
 
+# Temporary empty target to permit fixing blockers that prevent landing
+# https://webrtc-review.googlesource.com/c/src/+/186843
+rtc_source_set("rtp_parameters_conversion") {
+}
+
 rtc_library("rtp_receiver") {
   sources = [
     "rtp_receiver.cc",
