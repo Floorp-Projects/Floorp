@@ -27,14 +27,18 @@ template <class units, class F>
 struct RectTyped;
 
 template <class units>
-struct IntMarginTyped : public BaseMargin<int32_t, IntMarginTyped<units> >,
-                        public units {
+struct MOZ_EMPTY_BASES IntMarginTyped
+    : public BaseMargin<int32_t, IntMarginTyped<units> >,
+      public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
   typedef BaseMargin<int32_t, IntMarginTyped<units> > Super;
 
-  IntMarginTyped() : Super() {}
+  IntMarginTyped() : Super() {
+    static_assert(sizeof(IntMarginTyped) == sizeof(int32_t) * 4,
+                  "Would be unfortunate otherwise!");
+  }
   IntMarginTyped(int32_t aTop, int32_t aRight, int32_t aBottom, int32_t aLeft)
       : Super(aTop, aRight, aBottom, aLeft) {}
 
@@ -92,7 +96,7 @@ IntMarginTyped<units> RoundedToInt(const MarginTyped<units>& aMargin) {
 }
 
 template <class units>
-struct IntRectTyped
+struct MOZ_EMPTY_BASES IntRectTyped
     : public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>,
                       IntSizeTyped<units>, IntMarginTyped<units> >,
       public units {
@@ -105,7 +109,10 @@ struct IntRectTyped
   typedef IntRectTyped<units> Self;
   typedef IntParam<int32_t> ToInt;
 
-  IntRectTyped() : Super() {}
+  IntRectTyped() : Super() {
+    static_assert(sizeof(IntRectTyped) == sizeof(int32_t) * 4,
+                  "Would be unfortunate otherwise!");
+  }
   IntRectTyped(const IntPointTyped<units>& aPos,
                const IntSizeTyped<units>& aSize)
       : Super(aPos, aSize) {}
@@ -242,9 +249,10 @@ struct IntRectTyped
 typedef IntRectTyped<UnknownUnits> IntRect;
 
 template <class units, class F = Float>
-struct RectTyped : public BaseRect<F, RectTyped<units, F>, PointTyped<units, F>,
-                                   SizeTyped<units, F>, MarginTyped<units, F> >,
-                   public units {
+struct MOZ_EMPTY_BASES RectTyped
+    : public BaseRect<F, RectTyped<units, F>, PointTyped<units, F>,
+                      SizeTyped<units, F>, MarginTyped<units, F> >,
+      public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
@@ -252,7 +260,10 @@ struct RectTyped : public BaseRect<F, RectTyped<units, F>, PointTyped<units, F>,
                    SizeTyped<units, F>, MarginTyped<units, F> >
       Super;
 
-  RectTyped() : Super() {}
+  RectTyped() : Super() {
+    static_assert(sizeof(RectTyped) == sizeof(F) * 4,
+                  "Would be unfortunate otherwise!");
+  }
   RectTyped(const PointTyped<units, F>& aPos, const SizeTyped<units, F>& aSize)
       : Super(aPos, aSize) {}
   RectTyped(F _x, F _y, F _width, F _height) : Super(_x, _y, _width, _height) {}

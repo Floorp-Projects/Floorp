@@ -631,16 +631,26 @@ class gfxUserFontEntry : public gfxFontEntry {
            mFontDataLoadingState < LOADING_SLOWLY;
   }
 
-  // for userfonts, cmap is used to store the unicode range data
+  // For userfonts, cmap is used to store the unicode range data,
+  // and is inert once set, so locking is not required here.
   // no cmap ==> all codepoints permitted
   bool CharacterInUnicodeRange(uint32_t ch) const {
-    if (mCharacterMap) {
-      return mCharacterMap->test(ch);
+    if (const auto* map = GetUnicodeRangeMap()) {
+      return map->test(ch);
     }
     return true;
   }
 
-  gfxCharacterMap* GetUnicodeRangeMap() const { return mCharacterMap.get(); }
+  gfxCharacterMap* GetUnicodeRangeMap() const { return GetCharacterMap(); }
+  void SetUnicodeRangeMap(gfxCharacterMap* aCharMap) {
+    auto* oldCmap = GetUnicodeRangeMap();
+    if (oldCmap != aCharMap) {
+      if (mCharacterMap.compareExchange(oldCmap, aCharMap)) {
+        NS_IF_RELEASE(oldCmap);
+        NS_IF_ADDREF(aCharMap);
+      }
+    }
+  }
 
   mozilla::StyleFontDisplay GetFontDisplay() const { return mFontDisplay; }
 

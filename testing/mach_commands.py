@@ -935,6 +935,138 @@ def test_report_diff(command_context, before, after, output_file, verbose):
     ti.report_diff(before, after, output_file)
 
 
+@SubCommand(
+    "test-info",
+    "failure-report",
+    description="Display failure line groupings and frequencies for "
+    "single tracking intermittent bugs.",
+)
+@CommandArgument(
+    "--start",
+    default=(date.today() - timedelta(30)).strftime("%Y-%m-%d"),
+    help="Start date (YYYY-MM-DD)",
+)
+@CommandArgument(
+    "--end", default=date.today().strftime("%Y-%m-%d"), help="End date (YYYY-MM-DD)"
+)
+@CommandArgument(
+    "--bugid",
+    default=None,
+    help="bugid for treeherder intermittent failures data query.",
+)
+def test_info_failures(
+    command_context,
+    start,
+    end,
+    bugid,
+):
+    import requests
+
+    # bugid comes in as a string, we need an int:
+    try:
+        bugid = int(bugid)
+    except ValueError:
+        bugid = None
+    if not bugid:
+        print("Please enter a valid bugid (i.e. '1760132')")
+        return
+
+    # get bug info
+    url = "https://bugzilla.mozilla.org/rest/bug?include_fields=summary&id=%s" % bugid
+    r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
+    if r.status_code != 200:
+        print("%s error retrieving url: %s" % (r.status_code, url))
+
+    data = r.json()
+    if not data:
+        print("unable to get bugzilla information for %s" % bugid)
+        return
+
+    summary = data["bugs"][0]["summary"]
+    parts = summary.split("|")
+    if not summary.endswith("single tracking bug") or len(parts) != 2:
+        print("this query only works with single tracking bugs")
+        return
+
+    testname = parts[0].strip().split(" ")[-1]
+
+    # now query treeherder to get details about annotations
+    url = "https://treeherder.mozilla.org/api/failuresbybug/"
+    url += "?startday=%s&endday=%s&tree=trunk&bug=%s" % (start, end, bugid)
+    r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
+    r.raise_for_status()
+
+    data = r.json()
+    if len(data) == 0:
+        print("no failures were found for given bugid, please ensure bug is")
+        print("accessible via: https://treeherder.mozilla.org/intermittent-failures")
+        return
+
+    jobs = {}
+    lines = {}
+    for failure in data:
+        # config = platform/buildtype
+        # testsuite (<suite>[-variant][-fis][-e10s|1proc][-<chunk>])
+        # lines - group by patterns that contain test name
+        config = "%s/%s" % (failure["platform"], failure["build_type"])
+
+        if "-e10s" in failure["test_suite"]:
+            parts = failure["test_suite"].split("-e10s")
+            sv = parts[0].split("-")
+            suite = sv[0]
+            variant = ""
+            if len(sv) > 1:
+                variant = "-%s" % "-".join(sv[1:])
+        elif "-1proc" in failure["test_suite"]:
+            parts = failure["test_suite"].split("-1proc")
+            sv = parts[0].split("-")
+            suite = sv[0]
+            variant = ""
+            if len(sv) > 1:
+                variant = "-%s" % "-".join(sv[1:])
+        else:
+            print("unable to parse test suite: %s" % failure["test_suite"])
+            print("no `-e10s` or `-1proc` found")
+
+        job = "%s-%s%s" % (config, suite, variant)
+        if job not in jobs.keys():
+            jobs[job] = 0
+        jobs[job] += 1
+
+        # lines - sum(hash) of all lines where we match testname
+        hvalue = 0
+        for line in failure["lines"]:
+            if len(line.split(testname)) <= 1:
+                continue
+            # strip off timestamp and mozharness status
+            parts = line.split("TEST-UNEXPECTED")
+            l = "TEST-UNEXPECTED%s" % parts[-1]
+
+            # only keep 25 characters of the failure, often longer is random numbers
+            parts = l.split(testname)
+            l = "%s%s%s" % (parts[0], testname, parts[1][:25])
+
+            hvalue += hash(l)
+
+        if not hvalue:
+            continue
+
+        if hvalue not in lines.keys():
+            lines[hvalue] = {"lines": failure["lines"], "config": []}
+        lines[hvalue]["config"].append(job)
+
+    for h in lines.keys():
+        print("%s errors with:" % (len(lines[h]["config"])))
+        for l in lines[h]["lines"]:
+            print(l)
+        print("")
+
+        for job in jobs:
+            count = len([x for x in lines[h]["config"] if x == job])
+            if count > 0:
+                print("  %s: %s" % (job, count))
+
+
 @Command(
     "rusttests",
     category="testing",
