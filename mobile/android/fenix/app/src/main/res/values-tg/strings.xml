@@ -1533,7 +1533,7 @@
 
     <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Кортҳои насия</string>
+    <string name="preferences_credit_cards">Кортҳои кредитӣ</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Нигоҳ доштан ва ба таври худкор пур кардани кортҳо</string>
     <!-- Preference summary for saving and autofilling credit card data -->
@@ -1543,7 +1543,7 @@
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Ҳамоҳанг кардани кортҳо</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Илова кардани корти насия</string>
+    <string name="preferences_credit_cards_add_credit_card">Илова кардани корти кредитӣ</string>
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Идора кардани кортҳои нигоҳдошташуда</string>
@@ -1567,7 +1567,7 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Нест кардани корт</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Шумо мутмаин ҳастед, ки мехоҳед ин корти қарзиро нест намоед?</string>
+    <string name="credit_cards_delete_dialog_confirmation">Шумо мутмаин ҳастед, ки мехоҳед ин корти кредитиро нест намоед?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Нест кардан</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
