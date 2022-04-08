@@ -3151,6 +3151,47 @@ contextservices.quicksuggest:
       - fx-search@mozilla.com
       - adw@mozilla.com
     expiry_version: never
+  impression_cap:
+    description: >
+      This is recorded when an event related to an impression cap occurs. "hit"
+      is recorded when an impression cap is hit. "reset" is recorded when a
+      cap's counter is reset because its interval period has elapsed.
+    objects: ["hit", "reset"]
+    extra_keys:
+      type: >
+        The type of cap, one of: "sponsored", "nonsponsored"
+      intervalSeconds: >
+        The number of seconds in the cap's interval period. For lifetime caps,
+        this value will be "Infinity".
+      maxCount: >
+        The maximum number of impressions allowed in the cap's interval period.
+      startDate: >
+        The timestamp at which the cap's interval period started, in number of
+        seconds since Unix epoch.
+      endDate: >
+        The timestamp at which the cap's interval period will end (for "hit"
+        events) or did end (for "reset" events), in number of milliseconds since
+        Unix epoch.  For lifetime caps, this value will be "Infinity".
+      count: >
+        The number of impressions in the cap's interval period.
+      impressionDate: >
+        The timestamp of the cap's most recent impression, in number of
+        milliseconds since Unix epoch.
+      eventDate: >
+        The event's timestamp, in number of milliseconds since Unix epoch. For
+        "reset" events, this may be earlier than the timestamp on the event
+        itself because the implementation sometimes batches and records these
+        events at a later date.  This ``eventDate`` value should be preferred
+        over the timestamp on the event itself.
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    bug_numbers: [1761058]
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
+    expiry_version: never
 
 close_tab_warning:
   shown:

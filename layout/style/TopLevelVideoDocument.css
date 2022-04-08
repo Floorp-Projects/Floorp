@@ -8,20 +8,17 @@
   are top level (e.g. not iframes).
 */
 
-html, body {
+html {
+  /* Fill the viewport height, so that our '-moz-user-focus' styling will
+     disregard clicks in the whole background area (so the video element
+     doesn't inadvertently lose focus from a stray click on the background). */
   height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
   -moz-user-focus: ignore;
 }
 
 video {
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   margin: auto;
   max-width: 100%;
   max-height: 100%;

@@ -20,15 +20,37 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "SNAPSHOT_ADDED_TIMER_DELAY",
-  "browser.places.snapshot.monitorDelayAdded",
+  "browser.places.snapshots.monitorDelayAdded",
   5000
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "SNAPSHOT_REMOVED_TIMER_DELAY",
-  "browser.places.snapshot.monitorDelayRemoved",
+  "browser.places.snapshots.monitorDelayRemoved",
   1000
 );
+
+// Expiration days for automatic and user managed snapshots.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SNAPSHOT_EXPIRE_DAYS",
+  "browser.places.snapshots.expiration.days",
+  210
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SNAPSHOT_USERMANAGED_EXPIRE_DAYS",
+  "browser.places.snapshots.expiration.userManaged.days",
+  420
+);
+// We expire on the next idle after a snapshot was added or removed, and
+// idle-daily, but we don't want to expire too often or rarely.
+// Thus we define both a mininum and maximum time in the session among which
+// we'll expire chunks of snapshots.
+const EXPIRE_EVERY_MIN_MS = 60 * 60000; // 1 Hour.
+const EXPIRE_EVERY_MAX_MS = 120 * 60000; // 2 Hours.
+// The number of snapshots to expire at once.
+const EXPIRE_CHUNK_SIZE = 10;
 
 /**
  * Monitors changes in snapshots (additions, deletions, etc) and triggers
@@ -80,6 +102,15 @@ const SnapshotMonitor = new (class SnapshotMonitor {
    * @type {object[]}
    */
   testGroupBuilders = null;
+
+  /**
+   * The time of the last snapshots expiration.
+   */
+  #lastExpirationTime = 0;
+  /**
+   * How many snapshots to expire per chunk.
+   */
+  #expirationChunkSize = EXPIRE_CHUNK_SIZE;
 
   /**
    * Internal getter to get the builders used.
@@ -170,6 +201,81 @@ const SnapshotMonitor = new (class SnapshotMonitor {
   }
 
   /**
+   * Triggers expiration of a chunk of snapshots.
+   * We differentiate snapshots depending on whether they are user managed:
+   *  1. manually created by the user
+   *  2. part of a group
+   *     TODO: evaluate whether we want to consider user managed only snapshots
+   *           that are part of a user curated group, rather than any group.
+   * User managed snapshots will expire if their last interaction is older than
+   * browser.snapshots.expiration.userManaged.days, while others will expire
+   * after browser.snapshots.expiration.days.
+   * Snapshots that have a tombstone (removed_at is set) should not be expired.
+   *
+   * @param {boolean} onIdle
+   *   Whether this is running on idle. When it's false expiration is
+   *   rescheduled for the next idle.
+   */
+  async #expireSnapshotsChunk(onIdle = false) {
+    let now = Date.now();
+    if (now - this.#lastExpirationTime < EXPIRE_EVERY_MIN_MS) {
+      return;
+    }
+    let instance = (this._expireInstance = {});
+    let skip = false;
+    if (!onIdle) {
+      // Wait for the next idle.
+      skip = await new Promise(resolve =>
+        ChromeUtils.idleDispatch(deadLine => {
+          // Skip if we couldn't find an idle, unless we're over max waiting time.
+          resolve(
+            deadLine.didTimeout &&
+              now - this.#lastExpirationTime < EXPIRE_EVERY_MAX_MS
+          );
+        })
+      );
+    }
+    if (skip || instance != this._expireInstance) {
+      return;
+    }
+
+    this.#lastExpirationTime = now;
+    let urls = (
+      await Snapshots.query({
+        includeUserPersisted: false,
+        includeTombstones: false,
+        group: null,
+        lastInteractionBefore: now - SNAPSHOT_EXPIRE_DAYS * 86400000,
+        limit: this.#expirationChunkSize,
+      })
+    ).map(s => s.url);
+    if (instance != this._expireInstance) {
+      return;
+    }
+
+    if (urls.length < this.#expirationChunkSize) {
+      // If we couldn't find enough automatic snapshots, check if there's any
+      // user managed ones we can expire.
+      urls.push(
+        ...(
+          await Snapshots.query({
+            includeUserPersisted: true,
+            includeTombstones: false,
+            lastInteractionBefore:
+              now - SNAPSHOT_USERMANAGED_EXPIRE_DAYS * 86400000,
+            limit: this.#expirationChunkSize - urls.length,
+          })
+        ).map(s => s.url)
+      );
+    }
+    if (instance != this._expireInstance) {
+      return;
+    }
+
+    await Snapshots.delete([...new Set(urls)], true);
+  }
+
+  /**
    * Sets a timer ensuring that if the new timeout would occur sooner than the
    * current target time, the timer is changed to the sooner time.
    *
@@ -188,10 +294,10 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     }
 
     this.#currentTargetTime = targetTime;
-    this.#timer = setTimeout(
-      () => this.#triggerBuilders().catch(console.error),
-      timeout
-    );
+    this.#timer = setTimeout(() => {
+      this.#expireSnapshotsChunk().catch(console.error);
+      this.#triggerBuilders().catch(console.error);
+    }, timeout);
   }
 
   /**
@@ -203,12 +309,24 @@ const SnapshotMonitor = new (class SnapshotMonitor {
    * @param {nsISupports} data
    */
   async observe(subject, topic, data) {
-    if (topic == "places-snapshots-added") {
-      this.#onSnapshotAdded(JSON.parse(data));
-    } else if (topic == "places-snapshots-deleted") {
-      this.#onSnapshotRemoved(JSON.parse(data));
-    } else if (topic == "idle-daily") {
-      await this.#triggerBuilders(true);
+    switch (topic) {
+      case "places-snapshots-added":
+        this.#onSnapshotAdded(JSON.parse(data));
+        break;
+      case "places-snapshots-deleted":
+        this.#onSnapshotRemoved(JSON.parse(data));
+        break;
+      case "idle-daily":
+        await this.#expireSnapshotsChunk(true);
+        await this.#triggerBuilders(true);
+        break;
+      case "test-expiration":
+        this.#lastExpirationTime =
+          subject.lastExpirationTime || this.#lastExpirationTime;
+        this.#expirationChunkSize =
+          subject.expirationChunkSize || this.#expirationChunkSize;
+        await this.#expireSnapshotsChunk(subject.onIdle);
+        break;
     }
   }
 

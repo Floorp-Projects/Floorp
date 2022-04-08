@@ -74,6 +74,14 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.enabled
       description: Gate for the Firefox Suggest feature as a whole. If false, the Firefox Suggest preferences UI and Suggest suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn suggestions on or off.
+    quickSuggestImpressionCapsSponsoredEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.impressionCaps.sponsoredEnabled
+      description: Whether sponsored suggestions are subject to impression frequency caps. If false, sponsored suggestions can be shown an unlimited number of times over any given period. If true, sponsored suggestion impressions will be subject to the caps in the remote settings configuration.
+    quickSuggestImpressionCapsNonSponsoredEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.impressionCaps.nonSponsoredEnabled
+      description: Whether non-sponsored suggestions are subject to impression frequency caps. If false, non-sponsored suggestions can be shown an unlimited number of times over any given period. If true, non-sponsored suggestion impressions will be subject to the caps in the remote settings configuration.
     quickSuggestNonSponsoredEnabled:
       type: boolean
       description: Whether non-sponsored suggestions should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) non-sponsored suggestions, if the user has already toggled that preference.

@@ -2093,7 +2093,10 @@
       // and make it ready to use. We only do this if the tab is selected
       // because otherwise, callers might end up unintentionally binding the
       // browser for lazy background tabs.
-      if (aTab.selected) {
+      if (!aTab.linkedPanel) {
+        if (!aTab.selected) {
+          return null;
+        }
         gBrowser._insertBrowser(aTab);
       }
       return document.getElementById(aTab.linkedPanel);

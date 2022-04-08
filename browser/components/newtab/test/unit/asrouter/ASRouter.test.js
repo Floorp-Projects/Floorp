@@ -2868,4 +2868,46 @@ describe("ASRouter", () => {
       assert.notCalled(spy);
     });
   });
+  describe("#resetMessageState", () => {
+    it("should reset all message impressions", async () => {
+      await Router.setState({
+        messages: [{ id: "1" }, { id: "2" }],
+      });
+      await Router.setState({
+        messageImpressions: { "1": [0, 1, 2], "2": [0, 1, 2] },
+      }); // Add impressions for test messages
+      let impressions = Object.values(Router.state.messageImpressions);
+      assert.equal(impressions.filter(i => i.length).length, 2); // Both messages have impressions
+
+      Router.resetMessageState();
+      impressions = Object.values(Router.state.messageImpressions);
+
+      assert.isEmpty(impressions.filter(i => i.length)); // Both messages now have zero impressions
+      assert.calledWithExactly(Router._storage.set, "messageImpressions", {
+        "1": [],
+        "2": [],
+      });
+    });
+  });
+  describe("#resetGroupsState", () => {
+    it("should reset all group impressions", async () => {
+      await Router.setState({
+        groups: [{ id: "1" }, { id: "2" }],
+      });
+      await Router.setState({
+        groupImpressions: { "1": [0, 1, 2], "2": [0, 1, 2] },
+      }); // Add impressions for test groups
+      let impressions = Object.values(Router.state.groupImpressions);
+      assert.equal(impressions.filter(i => i.length).length, 2); // Both groups have impressions
+
+      Router.resetGroupsState();
+      impressions = Object.values(Router.state.groupImpressions);
+
+      assert.isEmpty(impressions.filter(i => i.length)); // Both groups now have zero impressions
+      assert.calledWithExactly(Router._storage.set, "groupImpressions", {
+        "1": [],
+        "2": [],
+      });
+    });
+  });
 });

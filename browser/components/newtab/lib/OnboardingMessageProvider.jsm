@@ -60,7 +60,7 @@ const ONBOARDING_MESSAGES = () => [
           content: {
             logo: {
               imageURL:
-                "chrome://activity-stream/content/data/content/assets/heart.gif",
+                "chrome://activity-stream/content/data/content/assets/heart.webp",
               height: "73px",
             },
             has_noodles: true,
