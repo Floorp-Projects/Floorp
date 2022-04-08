@@ -25,7 +25,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -760,7 +759,7 @@ class HistoryMetadataMiddlewareTest {
                     SearchEngine(
                         id = "google",
                         name = "Google",
-                        icon = mock(),
+                        icon = mockk(),
                         type = SearchEngine.Type.BUNDLED,
                         resultUrls = listOf("https://google.com?q={searchTerms}")
                     )

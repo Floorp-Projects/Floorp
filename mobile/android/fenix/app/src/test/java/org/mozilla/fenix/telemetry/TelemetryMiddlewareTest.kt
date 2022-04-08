@@ -19,7 +19,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.base.android.Clock
 import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -287,7 +286,7 @@ class TelemetryMiddlewareTest {
         store.dispatch(
             EngineAction.LinkEngineSessionAction(
                 tabId = "foreground",
-                engineSession = mock()
+                engineSession = mockk(relaxed = true)
             )
         ).joinBlocking()
 
@@ -324,7 +323,7 @@ class TelemetryMiddlewareTest {
         store.dispatch(
             EngineAction.LinkEngineSessionAction(
                 tabId = "background_pocket",
-                engineSession = mock()
+                engineSession = mockk(relaxed = true)
             )
         ).joinBlocking()
 
