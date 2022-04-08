@@ -70,7 +70,7 @@ template <class units, class>
 struct SizeTyped;
 
 template <class units>
-struct IntPointTyped
+struct MOZ_EMPTY_BASES IntPointTyped
     : public BasePoint<int32_t, IntPointTyped<units>, IntCoordTyped<units> >,
       public units {
   static_assert(IsPixel<units>::value,
@@ -80,7 +80,10 @@ struct IntPointTyped
   typedef IntCoordTyped<units> Coord;
   typedef BasePoint<int32_t, IntPointTyped<units>, IntCoordTyped<units> > Super;
 
-  constexpr IntPointTyped() : Super() {}
+  constexpr IntPointTyped() : Super() {
+    static_assert(sizeof(IntPointTyped) == sizeof(int32_t) * 2,
+                  "Would be unfortunate otherwise!");
+  }
   constexpr IntPointTyped(ToInt aX, ToInt aY)
       : Super(Coord(aX.value), Coord(aY.value)) {}
 
@@ -121,7 +124,7 @@ struct IntPointTyped
 typedef IntPointTyped<UnknownUnits> IntPoint;
 
 template <class units, class F = Float>
-struct PointTyped
+struct MOZ_EMPTY_BASES PointTyped
     : public BasePoint<F, PointTyped<units, F>, CoordTyped<units, F> >,
       public units {
   static_assert(IsPixel<units>::value,
@@ -130,7 +133,10 @@ struct PointTyped
   typedef CoordTyped<units, F> Coord;
   typedef BasePoint<F, PointTyped<units, F>, CoordTyped<units, F> > Super;
 
-  constexpr PointTyped() : Super() {}
+  constexpr PointTyped() : Super() {
+    static_assert(sizeof(PointTyped) == sizeof(F) * 2,
+                  "Would be unfortunate otherwise!");
+  }
   constexpr PointTyped(F aX, F aY) : Super(Coord(aX), Coord(aY)) {}
   // The mixed-type constructors (Float, Coord) and (Coord, Float) are needed to
   // avoid ambiguities because Coord is implicitly convertible to Float.
@@ -177,7 +183,10 @@ struct Point3DTyped : public BasePoint3D<F, Point3DTyped<units, F> > {
 
   typedef BasePoint3D<F, Point3DTyped<units, F> > Super;
 
-  Point3DTyped() : Super() {}
+  Point3DTyped() : Super() {
+    static_assert(sizeof(Point3DTyped) == sizeof(F) * 3,
+                  "Would be unfortunate otherwise!");
+  }
   Point3DTyped(F aX, F aY, F aZ) : Super(aX, aY, aZ) {}
 
   // XXX When all of the code is ported, the following functions to convert to
@@ -226,7 +235,10 @@ struct Point4DTyped : public BasePoint4D<F, Point4DTyped<units, F> > {
 
   typedef BasePoint4D<F, Point4DTyped<units, F> > Super;
 
-  Point4DTyped() : Super() {}
+  Point4DTyped() : Super() {
+    static_assert(sizeof(Point4DTyped) == sizeof(F) * 4,
+                  "Would be unfortunate otherwise!");
+  }
   Point4DTyped(F aX, F aY, F aZ, F aW) : Super(aX, aY, aZ, aW) {}
 
   explicit Point4DTyped(const Point3DTyped<units, F>& aPoint)
@@ -257,15 +269,19 @@ typedef Point4DTyped<UnknownUnits> Point4D;
 typedef Point4DTyped<UnknownUnits, double> PointDouble4D;
 
 template <class units>
-struct IntSizeTyped : public BaseSize<int32_t, IntSizeTyped<units> >,
-                      public units {
+struct MOZ_EMPTY_BASES IntSizeTyped
+    : public BaseSize<int32_t, IntSizeTyped<units> >,
+      public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
   typedef IntParam<int32_t> ToInt;
   typedef BaseSize<int32_t, IntSizeTyped<units> > Super;
 
-  constexpr IntSizeTyped() : Super() {}
+  constexpr IntSizeTyped() : Super() {
+    static_assert(sizeof(IntSizeTyped) == sizeof(int32_t) * 2,
+                  "Would be unfortunate otherwise!");
+  }
   constexpr IntSizeTyped(ToInt aWidth, ToInt aHeight)
       : Super(aWidth.value, aHeight.value) {}
 
@@ -307,13 +323,17 @@ typedef IntSizeTyped<UnknownUnits> IntSize;
 typedef Maybe<IntSize> MaybeIntSize;
 
 template <class units, class F = Float>
-struct SizeTyped : public BaseSize<F, SizeTyped<units, F> >, public units {
+struct MOZ_EMPTY_BASES SizeTyped : public BaseSize<F, SizeTyped<units, F> >,
+                                   public units {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
   typedef BaseSize<F, SizeTyped<units, F> > Super;
 
-  constexpr SizeTyped() : Super() {}
+  constexpr SizeTyped() : Super() {
+    static_assert(sizeof(SizeTyped) == sizeof(F) * 2,
+                  "Would be unfortunate otherwise!");
+  }
   constexpr SizeTyped(F aWidth, F aHeight) : Super(aWidth, aHeight) {}
   explicit SizeTyped(const IntSizeTyped<units>& size)
       : Super(F(size.width), F(size.height)) {}

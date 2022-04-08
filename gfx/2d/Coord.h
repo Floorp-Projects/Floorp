@@ -86,7 +86,7 @@ struct CoordOperatorsHelper<true, coord, primitive> {
 };
 
 template <class units, class Rep>
-struct IntCoordTyped
+struct MOZ_EMPTY_BASES IntCoordTyped
     : public BaseCoord<Rep, IntCoordTyped<units, Rep>>,
       public units,
       public CoordOperatorsHelper<true, IntCoordTyped<units, Rep>, float>,
@@ -96,30 +96,46 @@ struct IntCoordTyped
 
   using Super = BaseCoord<Rep, IntCoordTyped<units, Rep>>;
 
-  constexpr IntCoordTyped() : Super() {}
-  constexpr MOZ_IMPLICIT IntCoordTyped(Rep aValue) : Super(aValue) {}
+  constexpr IntCoordTyped() : Super() {
+    static_assert(sizeof(IntCoordTyped) == sizeof(Rep),
+                  "Would be unfortunate otherwise!");
+  }
+  constexpr MOZ_IMPLICIT IntCoordTyped(Rep aValue) : Super(aValue) {
+    static_assert(sizeof(IntCoordTyped) == sizeof(Rep),
+                  "Would be unfortunate otherwise!");
+  }
 };
 
 template <class units, class F>
-struct CoordTyped : public BaseCoord<F, CoordTyped<units, F>>,
-                    public units,
-                    public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
-                                                CoordTyped<units, F>, int32_t>,
-                    public CoordOperatorsHelper<!std::is_same_v<F, uint32_t>,
-                                                CoordTyped<units, F>, uint32_t>,
-                    public CoordOperatorsHelper<!std::is_same_v<F, double>,
-                                                CoordTyped<units, F>, double>,
-                    public CoordOperatorsHelper<!std::is_same_v<F, float>,
-                                                CoordTyped<units, F>, float> {
+struct MOZ_EMPTY_BASES CoordTyped
+    : public BaseCoord<F, CoordTyped<units, F>>,
+      public units,
+      public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
+                                  CoordTyped<units, F>, int32_t>,
+      public CoordOperatorsHelper<!std::is_same_v<F, uint32_t>,
+                                  CoordTyped<units, F>, uint32_t>,
+      public CoordOperatorsHelper<!std::is_same_v<F, double>,
+                                  CoordTyped<units, F>, double>,
+      public CoordOperatorsHelper<!std::is_same_v<F, float>,
+                                  CoordTyped<units, F>, float> {
   static_assert(IsPixel<units>::value,
                 "'units' must be a coordinate system tag");
 
   using Super = BaseCoord<F, CoordTyped<units, F>>;
 
-  constexpr CoordTyped() : Super() {}
-  constexpr MOZ_IMPLICIT CoordTyped(F aValue) : Super(aValue) {}
+  constexpr CoordTyped() : Super() {
+    static_assert(sizeof(CoordTyped) == sizeof(F),
+                  "Would be unfortunate otherwise!");
+  }
+  constexpr MOZ_IMPLICIT CoordTyped(F aValue) : Super(aValue) {
+    static_assert(sizeof(CoordTyped) == sizeof(F),
+                  "Would be unfortunate otherwise!");
+  }
   explicit constexpr CoordTyped(const IntCoordTyped<units>& aCoord)
-      : Super(F(aCoord.value)) {}
+      : Super(F(aCoord.value)) {
+    static_assert(sizeof(CoordTyped) == sizeof(F),
+                  "Would be unfortunate otherwise!");
+  }
 
   void Round() { this->value = floor(this->value + 0.5); }
   void Truncate() { this->value = int32_t(this->value); }
