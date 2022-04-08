@@ -84,14 +84,6 @@ void CSSMediaRule::GetConditionText(nsACString& aConditionText) {
   Media()->GetMediaText(aConditionText);
 }
 
-void CSSMediaRule::SetConditionText(const nsACString& aConditionText,
-                                    ErrorResult& aRv) {
-  if (IsReadOnly()) {
-    return;
-  }
-  Media()->SetMediaText(aConditionText);
-}
-
 /* virtual */
 void CSSMediaRule::GetCssText(nsACString& aCssText) const {
   Servo_MediaRule_GetCssText(mRawRule, &aCssText);
