@@ -104,7 +104,8 @@ void Rule::AssertParentRuleType() {
                type == StyleCssRuleType::Document ||
                type == StyleCssRuleType::Supports ||
                type == StyleCssRuleType::Keyframes ||
-               type == StyleCssRuleType::LayerBlock);
+               type == StyleCssRuleType::LayerBlock ||
+               type == StyleCssRuleType::Container);
   }
 }
 #endif
