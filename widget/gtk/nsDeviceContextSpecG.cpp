@@ -110,10 +110,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget() {
     return stream;
   }();
 
-  if (!stream) {
-    return nullptr;
-  }
-
   return PrintTargetPDF::CreateOrNull(stream, IntSize::Ceil(width, height));
 }
 

@@ -17,6 +17,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerMarkerTypes.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
@@ -2526,14 +2527,23 @@ void MediaDecoderStateMachine::DecodingState::MaybeStartBuffering() {
   }
 
   // Note we could have a wait promise pending when playing non-MSE EME.
-  if ((mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData()) ||
-      (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData())) {
+  if (mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData()) {
+    PROFILER_MARKER_TEXT("MDSM::StartBuffering", MEDIA_PLAYBACK, {},
+                         "OutOfDecodedAudio");
+    SetState<BufferingState>();
+    return;
+  }
+  if (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData()) {
+    PROFILER_MARKER_TEXT("MDSM::StartBuffering", MEDIA_PLAYBACK, {},
+                         "OutOfDecodedVideo");
     SetState<BufferingState>();
     return;
   }
 
   if (Reader()->UseBufferingHeuristics() && mMaster->HasLowDecodedData() &&
       mMaster->HasLowBufferedData() && !mMaster->mCanPlayThrough) {
+    PROFILER_MARKER_TEXT("MDSM::StartBuffering", MEDIA_PLAYBACK, {},
+                         "BufferingHeuristics");
     SetState<BufferingState>();
   }
 }

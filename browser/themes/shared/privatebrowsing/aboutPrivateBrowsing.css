@@ -349,13 +349,13 @@ p {
   top: -90px;
 }
 
-.promo-dismiss:hover {
-  background-color: var(--in-content-button-background) !important;
-}
-
 @media not (prefers-contrast) {
   .promo-dismiss {
     opacity: 0.5;
+  }
+
+  .promo-dismiss:hover {
+    background-color: var(--in-content-button-background) !important;
   }
 }
 
@@ -383,6 +383,7 @@ p {
   border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
+  border: 1px solid var(--in-content-primary-button-background);
 }
 
 .promo-cta .button:hover {

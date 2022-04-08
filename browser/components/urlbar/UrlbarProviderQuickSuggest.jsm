@@ -65,6 +65,21 @@ const TELEMETRY_SCALARS = {
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
+// This object maps impression stats object keys to their corresponding keys in
+// the `extra` object of impression cap telemetry events. The main reason this
+// is necessary is because the keys of the `extra` object are limited to 15
+// characters in length, which some stats object keys exceed. It also forces us
+// to be deliberate about keys we add to the `extra` object, since the `extra`
+// object is limited to 10 keys.
+let TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS = {
+  // stats object key -> `extra` telemetry event object key
+  intervalSeconds: "intervalSeconds",
+  startDateMs: "startDate",
+  count: "count",
+  maxCount: "maxCount",
+  impressionDateMs: "impressionDate",
+};
+
 // Identifies the source of the QuickSuggest suggestion.
 const QUICK_SUGGEST_SOURCE = {
   REMOTE_SETTINGS: "remote-settings",
@@ -78,9 +93,14 @@ const QUICK_SUGGEST_SOURCE = {
 class ProviderQuickSuggest extends UrlbarProvider {
   constructor(...args) {
     super(...args);
-    this._updateExperimentState();
+
+    UrlbarQuickSuggest.init();
+    UrlbarQuickSuggest.on("config-set", () => this._validateImpressionStats());
+
+    this._updateFeatureState();
+    NimbusFeatures.urlbar.onUpdate(() => this._updateFeatureState());
+
     UrlbarPrefs.addObserver(this);
-    NimbusFeatures.urlbar.onUpdate(() => this._updateExperimentState());
   }
 
   /**
@@ -193,6 +213,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
     ) {
       promises.push(this._fetchMerinoSuggestions(queryContext, searchString));
     }
+
+    // While we're waiting on suggestions, opportunistically reset elapsed
+    // impression counters and record "reset" telemetry as appropriate. If we
+    // didn't need to record telemetry for periods with no impressions, then we
+    // could simply reset elapsed counters on each impression instead of doing
+    // it here. But since we do need to record telemetry for periods with no
+    // impressions, we need to reset counters more often. Doing it here means no
+    // telemetry will be recorded as long as the user doesn't do any searches,
+    // but the alternative is to use one or more long-lived timers.
+    this._resetElapsedImpressionCounters();
 
     // Wait for both sources to finish before adding a suggestion.
     let allSuggestions = await Promise.all(promises);
@@ -421,7 +451,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
     this._addedResultInLastQuery = false;
 
-    // Per spec, we update telemetry only when the user picks a result, i.e.,
+    // Per spec, we count impressions only when the user picks a result, i.e.,
     // when `state` is "engagement".
     if (state != "engagement") {
       return;
@@ -443,6 +473,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
       result = queryContext.results[resultIndex];
     }
+
+    // Update impression stats.
+    this._updateImpressionStats(result.payload.isSponsored);
 
     // Record telemetry.  We want to record the 1-based index of the result, so
     // add 1 to the 0-based resultIndex.
@@ -546,10 +579,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
   onPrefChanged(pref) {
     switch (pref) {
       case "quickSuggest.blockedDigests":
-        this.logger.debug(
-          "browser.urlbar.quickSuggest.blockedDigests changed, loading digests"
-        );
+        this.logger.info("browser.urlbar.quickSuggest.blockedDigests changed");
         this._loadBlockedDigests();
+        break;
+      case "quicksuggest.impressionCaps.stats":
+        if (!this._updatingImpressionStats) {
+          this.logger.info(
+            "browser.urlbar.quicksuggest.impressionCaps.stats changed"
+          );
+          this._loadImpressionStats();
+        }
         break;
       case "quicksuggest.dataCollection.enabled":
         if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
@@ -841,18 +880,51 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * provider itself should be active.
    *
    * @param {object} suggestion
-   *   A suggestion object fetched from UrlbarQuickSuggest.
    * @returns {boolean}
    *   Whether the suggestion can be added.
    */
   async _canAddSuggestion(suggestion) {
-    return (
-      ((suggestion.is_sponsored &&
-        UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-        (!suggestion.is_sponsored &&
-          UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))) &&
-      !(await this.isSuggestionBlocked(suggestion.url))
-    );
+    this.logger.info("Checking if suggestion can be added");
+    this.logger.debug(JSON.stringify({ suggestion }));
+
+    // Return false if suggestions are disabled.
+    if (
+      (suggestion.is_sponsored &&
+        !UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
+      (!suggestion.is_sponsored &&
+        !UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
+    ) {
+      this.logger.info("Suggestions disabled, not adding suggestion");
+      return false;
+    }
+
+    // Return false if an impression cap has been hit.
+    if (
+      (suggestion.is_sponsored &&
+        UrlbarPrefs.get("quickSuggestImpressionCapsSponsoredEnabled")) ||
+      (!suggestion.is_sponsored &&
+        UrlbarPrefs.get("quickSuggestImpressionCapsNonSponsoredEnabled"))
+    ) {
+      let type = suggestion.is_sponsored ? "sponsored" : "nonsponsored";
+      let stats = this._impressionStats?.[type];
+      if (stats) {
+        let hitStats = stats.filter(s => s.maxCount <= s.count);
+        if (hitStats.length) {
+          this.logger.info("Impression cap(s) hit, not adding suggestion");
+          this.logger.debug(JSON.stringify({ type, hitStats }));
+          return false;
+        }
+      }
+    }
+
+    // Return false if the suggestion is blocked.
+    if (await this.isSuggestionBlocked(suggestion.url)) {
+      this.logger.info("Suggestion blocked, not adding suggestion");
+      return false;
+    }
+
+    this.logger.info("Suggestion can be added");
+    return true;
   }
 
   /**
@@ -898,6 +970,322 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
+   * Increments the user's impression stats counters for the given type of
+   * suggestion. This should be called only when a suggestion impression is
+   * recorded.
+   *
+   * @param {boolean} isSponsored
+   *   Whether the impression was recorded for a sponsored suggestion.
+   */
+  _updateImpressionStats(isSponsored) {
+    this.logger.info("Starting impression stats update");
+    this.logger.debug(
+      JSON.stringify({
+        isSponsored,
+        currentStats: this._impressionStats,
+        impression_caps: UrlbarQuickSuggest.config.impression_caps,
+      })
+    );
+
+    // Don't bother recording anything if caps are disabled.
+    if (
+      (isSponsored &&
+        !UrlbarPrefs.get("quickSuggestImpressionCapsSponsoredEnabled")) ||
+      (!isSponsored &&
+        !UrlbarPrefs.get("quickSuggestImpressionCapsNonSponsoredEnabled"))
+    ) {
+      this.logger.info("Impression caps disabled, skipping update");
+      return;
+    }
+
+    // Get the user's impression stats. Since stats are synced from caps, if the
+    // stats don't exist then the caps don't exist, and don't bother recording
+    // anything in that case.
+    let type = isSponsored ? "sponsored" : "nonsponsored";
+    let stats = this._impressionStats?.[type];
+    if (!stats) {
+      this.logger.info("Impression caps undefined, skipping update");
+      return;
+    }
+
+    // Increment counters.
+    for (let stat of stats) {
+      stat.count++;
+      stat.impressionDateMs = Date.now();
+
+      // Record a telemetry event for each newly hit cap.
+      if (stat.count == stat.maxCount) {
+        this.logger.info(`'${type}' impression cap hit`);
+        this.logger.debug(JSON.stringify({ type, hitStat: stat }));
+        this._recordImpressionCapEvent({
+          stat,
+          eventType: "hit",
+          suggestionType: type,
+        });
+      }
+    }
+
+    // Save the stats.
+    this._updatingImpressionStats = true;
+    try {
+      UrlbarPrefs.set(
+        "quicksuggest.impressionCaps.stats",
+        JSON.stringify(this._impressionStats)
+      );
+    } finally {
+      this._updatingImpressionStats = false;
+    }
+
+    this.logger.info("Finished impression stats update");
+    this.logger.debug(JSON.stringify({ newStats: this._impressionStats }));
+  }
+
+  /**
+   * Loads and validates impression stats.
+   */
+  _loadImpressionStats() {
+    let json = UrlbarPrefs.get("quicksuggest.impressionCaps.stats");
+    if (!json) {
+      this._impressionStats = null;
+    } else {
+      try {
+        this._impressionStats = JSON.parse(
+          json,
+          // Infinity, which is the `intervalSeconds` for the lifetime cap, is
+          // stringified as `null` in the JSON, so convert it back to Infinity.
+          (key, value) =>
+            key == "intervalSeconds" && value === null ? Infinity : value
+        );
+      } catch (error) {}
+    }
+    this._validateImpressionStats();
+  }
+
+  /**
+   * Validates impression stats, which includes two things:
+   *
+   * - Type checks stats and discards any that are invalid. We do this because
+   *   stats are stored in prefs where anyone can modify them.
+   * - Syncs stats with impression caps so that there is one stats object
+   *   corresponding to each impression cap. See the `_impressionStats` comment
+   *   for more info.
+   */
+  _validateImpressionStats() {
+    let { impression_caps } = UrlbarQuickSuggest.config;
+
+    this.logger.info("Validating impression stats");
+    this.logger.debug(
+      JSON.stringify({
+        impression_caps,
+        currentStats: this._impressionStats,
+      })
+    );
+
+    if (!this._impressionStats || typeof this._impressionStats != "object") {
+      this._impressionStats = {};
+    }
+
+    for (let [type, cap] of Object.entries(impression_caps || {})) {
+      // Build a map from interval seconds to max counts in the caps.
+      let maxCapCounts = (cap.custom || []).reduce(
+        (map, { interval_s, max_count }) => {
+          map.set(interval_s, max_count);
+          return map;
+        },
+        new Map()
+      );
+      if (typeof cap.lifetime == "number") {
+        maxCapCounts.set(Infinity, cap.lifetime);
+      }
+
+      let stats = this._impressionStats[type];
+      if (!Array.isArray(stats)) {
+        stats = [];
+        this._impressionStats[type] = stats;
+      }
+
+      // Validate existing stats:
+      //
+      // * Discard stats with invalid properties.
+      // * Collect and remove stats with intervals that aren't in the caps. This
+      //   should only happen when caps are changed or removed.
+      // * For stats with intervals that are in the caps:
+      //   * Keep track of the max `stat.count` across all stats so we can
+      //     update the lifetime stat below.
+      //   * Set `stat.maxCount` to the max count in the corresponding cap.
+      let orphanStats = [];
+      let maxCountInStats = 0;
+      for (let i = 0; i < stats.length; ) {
+        let stat = stats[i];
+        if (
+          typeof stat.intervalSeconds != "number" ||
+          typeof stat.startDateMs != "number" ||
+          typeof stat.count != "number" ||
+          typeof stat.maxCount != "number" ||
+          typeof stat.impressionDateMs != "number"
+        ) {
+          stats.splice(i, 1);
+        } else {
+          maxCountInStats = Math.max(maxCountInStats, stat.count);
+          let maxCount = maxCapCounts.get(stat.intervalSeconds);
+          if (maxCount === undefined) {
+            stats.splice(i, 1);
+            orphanStats.push(stat);
+          } else {
+            stat.maxCount = maxCount;
+            i++;
+          }
+        }
+      }
+
+      // Create stats for caps that don't already have corresponding stats.
+      for (let [intervalSeconds, maxCount] of maxCapCounts.entries()) {
+        if (!stats.some(s => s.intervalSeconds == intervalSeconds)) {
+          stats.push({
+            maxCount,
+            intervalSeconds,
+            startDateMs: Date.now(),
+            count: 0,
+            impressionDateMs: 0,
+          });
+        }
+      }
+
+      // Merge orphaned stats into other ones if possible. For each orphan, if
+      // its interval is no bigger than an existing stat's interval, then the
+      // orphan's count can contribute to the existing stat's count, so merge
+      // the two.
+      for (let orphan of orphanStats) {
+        for (let stat of stats) {
+          if (orphan.intervalSeconds <= stat.intervalSeconds) {
+            stat.count = Math.max(stat.count, orphan.count);
+            stat.startDateMs = Math.min(stat.startDateMs, orphan.startDateMs);
+            stat.impressionDateMs = Math.max(
+              stat.impressionDateMs,
+              orphan.impressionDateMs
+            );
+          }
+        }
+      }
+
+      // If the lifetime stat exists, make its count the max count found above.
+      // This is only necessary when the lifetime cap wasn't present before, but
+      // it doesn't hurt to always do it.
+      let lifetimeStat = stats.find(s => s.intervalSeconds == Infinity);
+      if (lifetimeStat) {
+        lifetimeStat.count = maxCountInStats;
+      }
+
+      // Sort the stats by interval ascending. This isn't necessary except that
+      // it guarantees an ordering for tests.
+      stats.sort((a, b) => a.intervalSeconds - b.intervalSeconds);
+    }
+
+    this.logger.debug(JSON.stringify({ newStats: this._impressionStats }));
+  }
+
+  /**
+   * Resets the counters of impression stats whose intervals have elapased.
+   */
+  _resetElapsedImpressionCounters() {
+    this.logger.info("Checking for elapsed impression cap intervals");
+    this.logger.debug(
+      JSON.stringify({
+        currentStats: this._impressionStats,
+        impression_caps: UrlbarQuickSuggest.config.impression_caps,
+      })
+    );
+
+    let now = Date.now();
+    for (let [type, stats] of Object.entries(this._impressionStats)) {
+      for (let stat of stats) {
+        let elapsedMs = now - stat.startDateMs;
+        let intervalMs = 1000 * stat.intervalSeconds;
+        let elapsedIntervalCount = Math.floor(elapsedMs / intervalMs);
+        if (elapsedIntervalCount) {
+          this.logger.info(
+            `Resetting impression counter for interval ${stat.intervalSeconds}s`
+          );
+          this.logger.debug(
+            JSON.stringify({ type, stat, elapsedMs, elapsedIntervalCount })
+          );
+
+          // Record a telemetry event for each elapsed interval period.
+          let startDateMs = stat.startDateMs;
+          for (let i = 0; i < elapsedIntervalCount; i++) {
+            let endDateMs = startDateMs + intervalMs;
+            this._recordImpressionCapEvent({
+              eventType: "reset",
+              suggestionType: type,
+              eventDateMs: endDateMs,
+              stat: {
+                ...stat,
+                startDateMs,
+                // There were `stat.count` impressions in the first elapsed
+                // period and zero in all subsequent periods because if that
+                // were not the case then we would have recorded telemetry for
+                // the subsequent impression(s).
+                count: i == 0 ? stat.count : 0,
+              },
+            });
+            startDateMs += intervalMs;
+          }
+
+          // Reset the stat.
+          let remainderMs = elapsedMs - elapsedIntervalCount * intervalMs;
+          stat.startDateMs = now - remainderMs;
+          stat.count = 0;
+        }
+      }
+    }
+
+    this.logger.debug(JSON.stringify({ newStats: this._impressionStats }));
+  }
+
+  /**
+   * Records an impression cap telemetry event.
+   *
+   * @param {string} eventType
+   *   One of: "hit", "reset"
+   * @param {string} suggestionType
+   *   One of: "sponsored", "nonsponsored"
+   * @param {object} stat
+   *   The stats object whose max count was hit or whose counter was reset.
+   * @param {number} eventDateMs
+   *   The `eventDate` that should be recorded in the event's `extra` object.
+   *   We include this in `extra` even though events are timestamped because
+   *   "reset" events are batched during periods where the user doesn't perform
+   *   any searches and therefore impression counters are not reset.
+   */
+  _recordImpressionCapEvent({
+    eventType,
+    suggestionType,
+    stat,
+    eventDateMs = Date.now(),
+  }) {
+    // All `extra` object values must be strings.
+    let extra = {
+      type: suggestionType,
+      eventDate: String(eventDateMs),
+      endDate: String(stat.startDateMs + 1000 * stat.intervalSeconds),
+    };
+    for (let [statKey, value] of Object.entries(stat)) {
+      let extraKey = TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS[statKey];
+      if (!extraKey) {
+        throw new Error("Unrecognized stats object key: " + statKey);
+      }
+      extra[extraKey] = String(value);
+    }
+    Services.telemetry.recordEvent(
+      TELEMETRY_EVENT_CATEGORY,
+      "impression_cap",
+      eventType,
+      "",
+      extra
+    );
+  }
+
+  /**
    * Loads blocked suggestion digests from the pref into `_blockedDigests`.
    */
   async _loadBlockedDigests() {
@@ -940,26 +1328,85 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
   /**
    * Updates state based on the `browser.urlbar.quicksuggest.enabled` pref.
-   * Enable/disable event telemetry and ensure QuickSuggest module is loaded
-   * when enabled.
    */
-  _updateExperimentState() {
+  _updateFeatureState() {
+    let enabled = UrlbarPrefs.get("quickSuggestEnabled");
+    if (enabled == this._quickSuggestEnabled) {
+      // This method is a Nimbus `onUpdate()` callback, which means it's called
+      // each time any pref is changed that is a fallback for a Nimbus variable.
+      // We have many such prefs. The point of this method is to set up and tear
+      // down state when quick suggest's enabled status changes, so ignore
+      // updates that do not modify `quickSuggestEnabled`.
+      return;
+    }
+
+    this._quickSuggestEnabled = enabled;
+    this.logger.info("Updating feature state, feature enabled: " + enabled);
+
     Services.telemetry.setEventRecordingEnabled(
       TELEMETRY_EVENT_CATEGORY,
-      UrlbarPrefs.get("quickSuggestEnabled")
+      enabled
     );
-
-    // QuickSuggest is only loaded by the UrlBar on it's first query, however
-    // there is work it can preload when idle instead of starting it on user
-    // input. Referencing it here will trigger its import and init.
-    if (UrlbarPrefs.get("quickSuggestEnabled")) {
-      UrlbarQuickSuggest; // eslint-disable-line no-unused-expressions
+    if (enabled) {
+      this._loadImpressionStats();
       this._loadBlockedDigests();
     }
   }
 
+  // The most recently cached value of `UrlbarPrefs.get("quickSuggestEnabled")`.
+  // The purpose of this property is only to detect changes in the feature's
+  // enabled status. To determine the current status, call
+  // `UrlbarPrefs.get("quickSuggestEnabled")` directly instead.
+  _quickSuggestEnabled = false;
+
   // Whether we added a result during the most recent query.
   _addedResultInLastQuery = false;
+
+  // An object that keeps track of impression stats per sponsored and
+  // non-sponsored suggestion types. It looks like this:
+  //
+  //   { sponsored: statsArray, nonsponsored: statsArray }
+  //
+  // The `statsArray` values are arrays of stats objects, one per impression
+  // cap, which look like this:
+  //
+  //   { intervalSeconds, startDateMs, count, maxCount, impressionDateMs }
+  //
+  //   {number} intervalSeconds
+  //     The number of seconds in the corresponding cap's time interval.
+  //   {number} startDateMs
+  //     The timestamp at which the current interval period started and the
+  //     object's `count` was reset to zero. This is a value returned from
+  //     `Date.now()`.  When the current date/time advances past `startDateMs +
+  //     1000 * intervalSeconds`, a new interval period will start and `count`
+  //     will be reset to zero.
+  //   {number} count
+  //     The number of impressions during the current interval period.
+  //   {number} maxCount
+  //     The maximum number of impressions allowed during an interval period.
+  //     This value is the same as the `max_count` value in the corresponding
+  //     cap. It's stored in the stats object for convenience.
+  //   {number} impressionDateMs
+  //     The timestamp of the most recent impression, i.e., when `count` was
+  //     last incremented.
+  //
+  // There are two types of impression caps: interval and lifetime. Interval
+  // caps are periodically reset, and lifetime caps are never reset. For stats
+  // objects corresponding to interval caps, `intervalSeconds` will be the
+  // `interval_s` value of the cap. For stats objects corresponding to lifetime
+  // caps, `intervalSeconds` will be `Infinity`.
+  //
+  // `_impressionStats` is kept in sync with impression caps, and there is a
+  // one-to-one relationship between stats objects and caps. A stats object's
+  // corresponding cap is the one with the same suggestion type (sponsored or
+  // non-sponsored) and interval. See `_validateImpressionStats()` for more.
+  //
+  // Impression caps are stored in the remote settings config. See
+  // `UrlbarQuickSuggest.confg.impression_caps`.
+  _impressionStats = null;
+
+  // Whether impression stats are currently being updated.
+  _updatingImpressionStats = false;
 
   // Set of digests of the original URLs of blocked suggestions. A suggestion's
   // "original URL" is its URL straight from the source with an unreplaced

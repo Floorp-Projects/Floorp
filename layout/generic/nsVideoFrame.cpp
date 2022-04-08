@@ -162,6 +162,9 @@ nsIContent* nsVideoFrame::GetVideoControls() const {
 
 void nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                PostDestroyData& aPostDestroyData) {
+  if (mReflowCallbackPosted) {
+    PresShell()->CancelReflowCallback(this);
+  }
   aPostDestroyData.AddAnonymousContent(mCaptionDiv.forget());
   aPostDestroyData.AddAnonymousContent(mPosterImage.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
@@ -169,18 +172,47 @@ void nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 class DispatchResizeEvent : public Runnable {
  public:
-  explicit DispatchResizeEvent(nsIContent* aContent, const nsString& aName)
-      : mozilla::Runnable("DispatchResizeEvent"),
-        mContent(aContent),
-        mName(aName) {}
+  explicit DispatchResizeEvent(nsIContent* aContent,
+                               const nsLiteralString& aName)
+      : Runnable("DispatchResizeEvent"), mContent(aContent), mName(aName) {}
   NS_IMETHOD Run() override {
     nsContentUtils::DispatchTrustedEvent(mContent->OwnerDoc(), mContent, mName,
                                          CanBubble::eNo, Cancelable::eNo);
     return NS_OK;
   }
   nsCOMPtr<nsIContent> mContent;
-  nsString mName;
+  const nsLiteralString mName;
 };
+
+bool nsVideoFrame::ReflowFinished() {
+  auto GetSize = [&](nsIContent* aContent) -> Maybe<nsSize> {
+    if (!aContent) {
+      return Nothing();
+    }
+    nsIFrame* f = aContent->GetPrimaryFrame();
+    if (!f) {
+      return Nothing();
+    }
+    return Some(f->GetSize());
+  };
+
+  if (auto size = GetSize(mCaptionDiv)) {
+    if (*size != mCaptionTrackedSize) {
+      mCaptionTrackedSize = *size;
+      nsContentUtils::AddScriptRunner(
+          new DispatchResizeEvent(mCaptionDiv, u"resizecaption"_ns));
+    }
+  }
+  nsIContent* controls = GetVideoControls();
+  if (auto size = GetSize(controls)) {
+    if (*size != mControlsTrackedSize) {
+      mControlsTrackedSize = *size;
+      nsContentUtils::AddScriptRunner(
+          new DispatchResizeEvent(controls, u"resizevideocontrols"_ns));
+    }
+  }
+  return false;
+}
 
 void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
@@ -286,12 +318,11 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                         ReflowChildFlags::Default);
 
       if (child->GetSize() != oldChildSize) {
-        const nsString name = child->GetContent() == videoControlsDiv
-                                  ? u"resizevideocontrols"_ns
-                                  : u"resizecaption"_ns;
-        RefPtr<Runnable> event =
-            new DispatchResizeEvent(child->GetContent(), name);
-        nsContentUtils::AddScriptRunner(event);
+        MOZ_ASSERT(child->IsPrimaryFrame(),
+                   "We only look at the primary frame in ReflowFinished");
+        if (!mReflowCallbackPosted) {
+          PresShell()->PostReflowCallback(this);
+        }
       }
     } else {
       NS_ERROR("Unexpected extra child frame in nsVideoFrame; skipping");
