@@ -910,4 +910,17 @@
 #  define MOZ_XPCOM_ABI
 #endif
 
+/**
+ * MSVC / clang-cl don't optimize empty bases correctly unless we explicitly
+ * tell it to, see:
+ *
+ * https://stackoverflow.com/questions/12701469/why-is-the-empty-base-class-optimization-ebo-is-not-working-in-msvc
+ * https://devblogs.microsoft.com/cppblog/optimizing-the-layout-of-empty-base-classes-in-vs2015-update-2-3/
+ */
+#if defined(_MSC_VER)
+#  define MOZ_EMPTY_BASES __declspec(empty_bases)
+#else
+#  define MOZ_EMPTY_BASES
+#endif
+
 #endif /* mozilla_Attributes_h */
