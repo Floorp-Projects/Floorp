@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
@@ -155,18 +155,17 @@ internal fun restoreSelectedCategories(
     selectedPocketCategoriesDataStore: DataStore<SelectedPocketStoriesCategories>
 ) {
     coroutineScope.launch {
-        selectedPocketCategoriesDataStore.data.collect { persistedSelectedCategories ->
-            store.dispatch(
-                AppAction.PocketStoriesCategoriesSelectionsChange(
-                    currentCategories,
-                    persistedSelectedCategories.valuesList.map {
+        store.dispatch(
+            AppAction.PocketStoriesCategoriesSelectionsChange(
+                currentCategories,
+                selectedPocketCategoriesDataStore.data.first()
+                    .valuesList.map {
                         PocketRecommendedStoriesSelectedCategory(
                             name = it.name,
                             selectionTimestamp = it.selectionTimestamp
                         )
                     }
-                )
             )
-        }
+        )
     }
 }
