@@ -147,10 +147,7 @@ add_task(async function test_all_patterns() {
           value: "",
           label: "View Saved Logins",
           style: "loginsFooter",
-          comment: {
-            formHostname: "mochi.test",
-            telemetryEventData: { searchStartTimeMS: 0 },
-          },
+          comment: { formHostname: "mochi.test", searchStartTimeMS: 0 },
         },
       ],
     },
@@ -171,10 +168,7 @@ add_task(async function test_all_patterns() {
           value: "",
           label: "View Saved Logins",
           style: "loginsFooter",
-          comment: {
-            formHostname: "mochi.test",
-            telemetryEventData: { searchStartTimeMS: 1 },
-          },
+          comment: { formHostname: "mochi.test", searchStartTimeMS: 1 },
         },
       ],
     },
@@ -1296,7 +1290,7 @@ add_task(async function test_all_patterns() {
       if (typeof item.comment == "object") {
         let parsedComment = JSON.parse(actualComment);
         for (let [key, val] of Object.entries(item.comment)) {
-          Assert.deepEqual(
+          equal(
             parsedComment[key],
             val,
             `${testIndex}: Comment.${key} ${index}`
