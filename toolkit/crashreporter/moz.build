@@ -33,8 +33,6 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             "mozwer-rust",
         ]
 
-        TEST_DIRS += ["breakpad-client/windows/unittests/"]
-
         if CONFIG["MOZ_CRASHREPORTER_INJECTOR"]:
             DIRS += ["breakpad-windows-standalone"]
 
