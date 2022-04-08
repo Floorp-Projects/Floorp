@@ -628,7 +628,20 @@ hb_ensure_native_direction (hb_buffer_t *buffer)
       (HB_DIRECTION_IS_VERTICAL   (direction) &&
        direction != HB_DIRECTION_TTB))
   {
-    _hb_ot_layout_reverse_graphemes (buffer);
+
+    if (buffer->cluster_level == HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS)
+      foreach_grapheme (buffer, start, end)
+      {
+	buffer->merge_clusters (start, end);
+	buffer->reverse_range (start, end);
+      }
+    else
+      foreach_grapheme (buffer, start, end)
+	/* form_clusters() merged clusters already, we don't merge. */
+	buffer->reverse_range (start, end);
+
+    buffer->reverse ();
+
     buffer->props.direction = HB_DIRECTION_REVERSE (buffer->props.direction);
   }
 }
