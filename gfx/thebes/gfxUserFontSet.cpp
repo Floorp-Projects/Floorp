@@ -63,7 +63,7 @@ gfxUserFontEntry::gfxUserFontEntry(
   mFeatureSettings.AppendElements(aFeatureSettings);
   mVariationSettings.AppendElements(aVariationSettings);
   mLanguageOverride = aLanguageOverride;
-  mCharacterMap = aUnicodeRanges;
+  SetUnicodeRangeMap(aUnicodeRanges);
   mRangeFlags = aRangeFlags;
   mAscentOverride = aAscentOverride;
   mDescentOverride = aDescentOverride;
@@ -90,7 +90,7 @@ void gfxUserFontEntry::UpdateAttributes(
   mFeatureSettings = aFeatureSettings.Clone();
   mVariationSettings = aVariationSettings.Clone();
   mLanguageOverride = aLanguageOverride;
-  mCharacterMap = aUnicodeRanges;
+  SetUnicodeRangeMap(aUnicodeRanges);
   mRangeFlags = aRangeFlags;
   mAscentOverride = aAscentOverride;
   mDescentOverride = aDescentOverride;
@@ -124,7 +124,7 @@ bool gfxUserFontEntry::Matches(
          mLineGapOverride == aLineGapOverride && mSizeAdjust == aSizeAdjust &&
          ((!aUnicodeRanges && !mCharacterMap) ||
           (aUnicodeRanges && mCharacterMap &&
-           mCharacterMap->Equals(aUnicodeRanges)));
+           GetCharacterMap()->Equals(aUnicodeRanges)));
 }
 
 gfxFont* gfxUserFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {

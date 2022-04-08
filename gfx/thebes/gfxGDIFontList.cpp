@@ -143,16 +143,20 @@ nsresult GDIFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   if (mFontType != GFX_FONT_TYPE_PS_OPENTYPE &&
       mFontType != GFX_FONT_TYPE_TT_OPENTYPE &&
       mFontType != GFX_FONT_TYPE_TRUETYPE) {
-    mCharacterMap = new gfxCharacterMap();
-    mCharacterMap->mBuildOnTheFly = true;
+    RefPtr<gfxCharacterMap> cmap = new gfxCharacterMap();
+    cmap->mBuildOnTheFly = true;
+    if (mCharacterMap.compareExchange(nullptr, cmap.get())) {
+      Unused << cmap.forget();
+    }
     return NS_ERROR_FAILURE;
   }
 
   RefPtr<gfxCharacterMap> charmap;
   nsresult rv;
 
+  uint32_t uvsOffset = 0;
   if (aFontInfoData &&
-      (charmap = GetCMAPFromFontInfo(aFontInfoData, mUVSOffset))) {
+      (charmap = GetCMAPFromFontInfo(aFontInfoData, uvsOffset))) {
     rv = NS_OK;
   } else {
     uint32_t kCMAP = TRUETYPE_TAG('c', 'm', 'a', 'p');
@@ -162,20 +166,23 @@ nsresult GDIFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
 
     if (NS_SUCCEEDED(rv)) {
       rv = gfxFontUtils::ReadCMAP(cmap.Elements(), cmap.Length(), *charmap,
-                                  mUVSOffset);
+                                  uvsOffset);
     }
   }
 
-  mHasCmapTable = NS_SUCCEEDED(rv);
-  if (mHasCmapTable) {
+  if (NS_SUCCEEDED(rv)) {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-    mCharacterMap = pfl->FindCharMap(charmap);
+    charmap = pfl->FindCharMap(charmap);
+    mHasCmapTable = true;
   } else {
     // if error occurred, initialize to null cmap
-    mCharacterMap = new gfxCharacterMap();
+    charmap = new gfxCharacterMap();
     // For fonts where we failed to read the character map,
     // we can take a slow path to look up glyphs character by character
-    mCharacterMap->mBuildOnTheFly = true;
+    charmap->mBuildOnTheFly = true;
+  }
+  if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
+    Unused << charmap.forget();
   }
 
   LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d hash: %8.8x%s\n",
@@ -268,7 +275,7 @@ bool GDIFontEntry::TestCharacterMap(uint32_t aCh) {
     NS_ASSERTION(mCharacterMap, "failed to initialize a character map");
   }
 
-  if (mCharacterMap->mBuildOnTheFly) {
+  if (GetCharacterMap()->mBuildOnTheFly) {
     if (aCh > 0xFFFF) return false;
 
     // previous code was using the group style
@@ -316,12 +323,12 @@ bool GDIFontEntry::TestCharacterMap(uint32_t aCh) {
     ReleaseDC(nullptr, dc);
 
     if (hasGlyph) {
-      mCharacterMap->set(aCh);
+      GetCharacterMap()->set(aCh);
       return true;
     }
   } else {
     // font had a cmap so simply check that
-    return mCharacterMap->test(aCh);
+    return GetCharacterMap()->test(aCh);
   }
 
   return false;

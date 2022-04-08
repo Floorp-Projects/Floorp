@@ -23,8 +23,8 @@ import {
   enableBreakpoint,
   disableBreakpoint,
 } from "./modify";
-import remapLocations from "./remapLocations";
 
+import { isOriginalId } from "devtools-source-map";
 // this will need to be changed so that addCLientBreakpoint is removed
 
 export * from "./breakpointPositions";
@@ -163,13 +163,34 @@ export function removeBreakpointsInSource(cx, source) {
   };
 }
 
-export function remapBreakpoints(cx, sourceId) {
+/**
+ * Update the original location information of breakpoints.
+
+/*
+ * Update breakpoints for a source that just got pretty printed.
+ * This method maps the breakpoints currently set only against the
+ * non-pretty-printed (generated) source to the related pretty-printed
+ * (original) source by querying the SourceMap service.
+ *
+ * @param {Objeect} cx
+ * @param {String} sourceId - the generated source id
+ */
+export function updateBreakpointsForNewPrettyPrintedSource(cx, sourceId) {
   return async ({ dispatch, getState, sourceMaps }) => {
+    if (isOriginalId(sourceId)) {
+      console.error("Can't update breakpoints on original sources");
+      return;
+    }
     const breakpoints = getBreakpointsForSource(getState(), sourceId);
-    const newBreakpoints = await remapLocations(
-      breakpoints,
-      sourceId,
-      sourceMaps
+    // Remap the breakpoints with the original location information from
+    // the pretty-printed source.
+    const newBreakpoints = await Promise.all(
+      breakpoints.map(async breakpoint => {
+        const location = await sourceMaps.getOriginalLocation(
+          breakpoint.generatedLocation
+        );
+        return { ...breakpoint, location };
+      })
     );
 
     // Normally old breakpoints will be clobbered if we re-add them, but when

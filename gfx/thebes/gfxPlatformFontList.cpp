@@ -532,6 +532,7 @@ bool gfxPlatformFontList::InitFontList() {
       if (!entry) {
         continue;
       }
+      AutoWriteLock lock(entry->mLock);
       entry->mShmemCharacterMap = nullptr;
       entry->mShmemFace = nullptr;
       entry->mFamilyName.Truncate();

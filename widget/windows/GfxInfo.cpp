@@ -2048,6 +2048,7 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     }
 
     if (mHasDriverVersionMismatch) {
+      aFailureId = "FEATURE_FAILURE_MISMATCHED_VERSION";
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_MISMATCHED_VERSION;
       return NS_OK;
     }

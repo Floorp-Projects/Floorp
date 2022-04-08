@@ -133,23 +133,14 @@ static uint32_t GetGTKPixelDepth() {
   return gdk_visual_get_depth(visual);
 }
 
-static bool IsGNOMECompositor() {
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  return currentDesktop && strstr(currentDesktop, "GNOME") != nullptr;
-}
-
 static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
                                               gint aMonitorNum) {
   gint gdkScaleFactor = ScreenHelperGTK::GetGTKMonitorScaleFactor(aMonitorNum);
 
   // gdk_screen_get_monitor_geometry / workarea returns application pixels
   // (desktop pixels), so we need to convert it to device pixels with
-  // gdkScaleFactor on X11.
-  // GNOME/Wayland reports scales differently (Bug 1732682).
-  gint geometryScaleFactor = 1;
-  if (GdkIsX11Display() || (GdkIsWaylandDisplay() && !IsGNOMECompositor())) {
-    geometryScaleFactor = gdkScaleFactor;
-  }
+  // gdkScaleFactor.
+  gint geometryScaleFactor = gdkScaleFactor;
 
   LayoutDeviceIntRect rect;
 
@@ -432,6 +423,11 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
     return nullptr;
   }
   return mScreenList[monitor];
+}
+
+static bool IsGNOMECompositor() {
+  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  return currentDesktop && strstr(currentDesktop, "GNOME") != nullptr;
 }
 #endif
 
