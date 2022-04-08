@@ -25,13 +25,16 @@ UNSUPPORTED_FEATURES = set(
         "Intl.DateTimeFormat-quarter",
         "Intl.Segmenter",
         "Intl.Locale-info",
+        "Intl.DurationFormat",
         "Atomics.waitAsync",
         "legacy-regexp",
         "json-modules",
         "resizable-arraybuffer",
         "Temporal",
-        "callable-boundary-realms",
+        "ShadowRealm",
         "array-find-from-last",
+        "array-grouping",
+        "regexp-v-flag",
     ]
 )
 FEATURE_CHECK_NEEDED = {
@@ -40,7 +43,11 @@ FEATURE_CHECK_NEEDED = {
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
 }
-RELEASE_OR_BETA = set([])
+RELEASE_OR_BETA = set(
+    [
+        "Intl.NumberFormat-v3",
+    ]
+)
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
 }
