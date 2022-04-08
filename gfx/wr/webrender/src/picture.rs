@@ -4454,6 +4454,7 @@ impl PicturePrimitive {
                 let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
                 let mut debug_info = SliceDebugInfo::new();
                 let mut surface_render_tasks = FastHashMap::default();
+                let mut surface_dirty_rects = Vec::new();
                 let mut surface_local_dirty_rect = PictureRect::zero();
                 let device_pixel_scale = frame_state
                     .surfaces[surface_index.0]
@@ -4777,6 +4778,7 @@ impl PicturePrimitive {
                                     tile_key,
                                     render_task_id,
                                 );
+                                surface_dirty_rects.push(tile.local_dirty_rect);
                             }
 
                             if frame_context.fb_config.testing {
@@ -4863,7 +4865,10 @@ impl PicturePrimitive {
                         );
                 }
 
-                let descriptor = SurfaceDescriptor::new_tiled(surface_render_tasks);
+                let descriptor = SurfaceDescriptor::new_tiled(
+                    surface_render_tasks,
+                    surface_dirty_rects,
+                );
 
                 frame_state.surface_builder.push_surface(
                     surface_index,
@@ -4992,6 +4997,7 @@ impl PicturePrimitive {
                         surface_descriptor = SurfaceDescriptor::new_chained(
                             picture_task_id,
                             blur_render_task_id,
+                            surface_rects.clipped_local,
                         );
                     }
                     PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
@@ -5056,6 +5062,7 @@ impl PicturePrimitive {
                         surface_descriptor = SurfaceDescriptor::new_chained(
                             picture_task_id,
                             blur_render_task_id,
+                            surface_rects.clipped_local,
                         );
                     }
                     PictureCompositeMode::MixBlend(mode) if BlendMode::from_mix_blend_mode(
@@ -5163,7 +5170,10 @@ impl PicturePrimitive {
 
                         primary_render_task_id = render_task_id;
 
-                        surface_descriptor = SurfaceDescriptor::new_simple(render_task_id);
+                        surface_descriptor = SurfaceDescriptor::new_simple(
+                            render_task_id,
+                            surface_rects.clipped_local,
+                        );
                     }
                     PictureCompositeMode::Filter(..) => {
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
@@ -5188,7 +5198,10 @@ impl PicturePrimitive {
 
                         primary_render_task_id = render_task_id;
 
-                        surface_descriptor = SurfaceDescriptor::new_simple(render_task_id);
+                        surface_descriptor = SurfaceDescriptor::new_simple(
+                            render_task_id,
+                            surface_rects.clipped_local,
+                        );
                     }
                     PictureCompositeMode::ComponentTransferFilter(..) => {
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
@@ -5213,7 +5226,10 @@ impl PicturePrimitive {
 
                         primary_render_task_id = render_task_id;
 
-                        surface_descriptor = SurfaceDescriptor::new_simple(render_task_id);
+                        surface_descriptor = SurfaceDescriptor::new_simple(
+                            render_task_id,
+                            surface_rects.clipped_local,
+                        );
                     }
                     PictureCompositeMode::MixBlend(..) |
                     PictureCompositeMode::Blit(_) => {
@@ -5239,7 +5255,10 @@ impl PicturePrimitive {
 
                         primary_render_task_id = render_task_id;
 
-                        surface_descriptor = SurfaceDescriptor::new_simple(render_task_id);
+                        surface_descriptor = SurfaceDescriptor::new_simple(
+                            render_task_id,
+                            surface_rects.clipped_local,
+                        );
                     }
                     PictureCompositeMode::SvgFilter(ref primitives, ref filter_datas) => {
                         let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
@@ -5277,6 +5296,7 @@ impl PicturePrimitive {
                         surface_descriptor = SurfaceDescriptor::new_chained(
                             picture_task_id,
                             filter_task_id,
+                            surface_rects.clipped_local,
                         );
                     }
                 }
