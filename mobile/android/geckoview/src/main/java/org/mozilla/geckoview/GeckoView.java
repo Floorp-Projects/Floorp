@@ -323,6 +323,10 @@ public class GeckoView extends FrameLayout {
     }
 
     addView(mSurfaceWrapper.getView());
+
+    if (mSession != null) {
+      mSession.getMagnifier().setView(mSurfaceWrapper.getView());
+    }
   }
 
   /**
@@ -428,6 +432,10 @@ public class GeckoView extends FrameLayout {
       mSession.setAutofillDelegate(null);
     }
 
+    if (mSession.getMagnifier().getView() == mSurfaceWrapper.getView()) {
+      session.getMagnifier().setView(null);
+    }
+
     if (isFocused()) {
       mSession.setFocused(false);
     }
@@ -523,6 +531,10 @@ public class GeckoView extends FrameLayout {
 
     if (mAutofillEnabled) {
       session.setAutofillDelegate(mAutofillDelegate);
+    }
+
+    if (session.getMagnifier().getView() == null) {
+      session.getMagnifier().setView(mSurfaceWrapper.getView());
     }
 
     if (isFocused()) {
