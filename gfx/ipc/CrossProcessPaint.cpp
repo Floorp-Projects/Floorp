@@ -362,13 +362,18 @@ void CrossProcessPaint::LostFragment(dom::WindowGlobalParent* aWGP) {
 
 void CrossProcessPaint::QueueDependencies(
     const nsTHashSet<uint64_t>& aDependencies) {
+  dom::ContentProcessManager* cpm = dom::ContentProcessManager::GetSingleton();
+  if (!cpm) {
+    CPP_LOG(
+        "Skipping QueueDependencies with no"
+        " current ContentProcessManager.\n");
+    return;
+  }
   for (const auto& key : aDependencies) {
     auto dependency = dom::TabId(key);
 
     // Get the current BrowserParent of the remote browser that was marked
     // as a dependency
-    dom::ContentProcessManager* cpm =
-        dom::ContentProcessManager::GetSingleton();
     dom::ContentParentId cpId = cpm->GetTabProcessId(dependency);
     RefPtr<dom::BrowserParent> browser =
         cpm->GetBrowserParentByProcessAndTabId(cpId, dependency);

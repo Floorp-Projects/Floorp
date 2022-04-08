@@ -674,7 +674,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
 void BrowserParent::ActorDestroy(ActorDestroyReason why) {
   Manager()->NotifyTabDestroyed(mTabId, mMarkedDestroying);
 
-  ContentProcessManager::GetSingleton()->UnregisterRemoteFrame(mTabId);
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  if (cpm) {
+    cpm->UnregisterRemoteFrame(mTabId);
+  }
 
   if (mRemoteLayerTreeOwner.IsInitialized()) {
     auto layersId = mRemoteLayerTreeOwner.GetLayersId();
