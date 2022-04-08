@@ -40,6 +40,7 @@ def test_up_to_date_vendor():
                 os.path.join(topsrcdir, os.path.join("third_party", "python")),
                 os.path.join(work_dir, os.path.join("third_party", "python")),
                 "--exclude=__pycache__",
+                "--strip-trailing-cr",
             ]
         )
 

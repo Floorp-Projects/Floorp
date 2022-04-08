@@ -93,11 +93,6 @@ Next, add that package and any new transitive dependencies (you'll see them adde
       * When considering manually vendoring a package, discuss the situation with
         the ``#build`` team to ensure that other, more maintainable options are exhausted.
 
-    * ``mach vendor python`` **MUST** be run on Linux with Python 3.6.
-      This restriction will be lifted when
-      `bug 1659593 <https://bugzilla.mozilla.org/show_bug.cgi?id=1659593>`_
-      is resolved.
-
 .. note::
 
     We require that it is possible to build Firefox using only a checkout of the source,

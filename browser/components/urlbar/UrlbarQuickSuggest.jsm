@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
@@ -66,8 +67,8 @@ const SUGGESTION_SCORE = 0.2;
  * Fetches the suggestions data from RemoteSettings and builds the structures
  * to provide suggestions for UrlbarProviderQuickSuggest.
  */
-class Suggestions {
-  constructor() {
+class QuickSuggest extends EventEmitter {
+  init() {
     UrlbarPrefs.addObserver(this);
     NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
 
@@ -102,10 +103,25 @@ class Suggestions {
   /**
    * @returns {object}
    *   Global quick suggest configuration from remote settings:
+   *
    *   {
    *     best_match: {
    *       min_search_string_length,
    *       blocked_suggestion_ids,
+   *     },
+   *     impression_caps: {
+   *       nonsponsored: {
+   *         lifetime,
+   *         custom: [
+   *           { interval_s, max_count },
+   *         ],
+   *       },
+   *       sponsored: {
+   *         lifetime,
+   *         custom: [
+   *           { interval_s, max_count },
+   *         ],
+   *       },
    *     },
    *   }
    */
@@ -349,7 +365,7 @@ class Suggestions {
   // or initialization is ongoing; see `readyPromise`.
   _settingsTaskQueue = new TaskQueue();
 
-  // Configuration data synced from remote settings.
+  // Configuration data synced from remote settings. See the `config` getter.
   _config = {};
 
   // Maps from keywords to their corresponding results. Keywords are unique in
@@ -409,7 +425,7 @@ class Suggestions {
       ]);
 
       log.debug("Got configuration:", configArray);
-      this._config = configArray?.[0]?.configuration || {};
+      this._setConfig(configArray?.[0]?.configuration || {});
 
       this._resultsByKeyword.clear();
 
@@ -421,6 +437,16 @@ class Suggestions {
         this._addResults(results);
       }
     });
+  }
+
+  /**
+   * Sets the quick suggest config and emits a "config-set" event.
+   *
+   * @param {object} config
+   */
+  _setConfig(config) {
+    this._config = config || {};
+    this.emit("config-set");
   }
 
   /**
@@ -460,4 +486,4 @@ class Suggestions {
   }
 }
 
-let UrlbarQuickSuggest = new Suggestions();
+let UrlbarQuickSuggest = new QuickSuggest();

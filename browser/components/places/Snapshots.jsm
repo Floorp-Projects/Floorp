@@ -396,33 +396,58 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
-   * Deletes a snapshot, creating a tombstone. Note, the caller is expected
-   * to take account of the userPersisted value for a Snapshot when appropriate.
+   * Deletes one or more snapshots.
+   * By default this creates a tombstone rather than removing the entry, so that
+   * heuristics can take into account user removed snapshots.
+   * Note, the caller is expected to take account of the userPersisted value
+   * for a Snapshot when appropriate.
    *
-   * @param {string} url
-   *   The url of the snapshot to delete.
+   * @param {string|Array<string>} urls
+   *   The url of the snapshot to delete, or an Array of urls.
+   * @param {boolean} removeFromStore
+   *   Whether the snapshot should actually be removed rather than tombston-ed.
    */
-  async delete(url) {
-    url = this.stripFragments(url);
-    await PlacesUtils.withConnectionWrapper("Snapshots: delete", async db => {
-      let placeId = (
-        await db.executeCached(
+  async delete(urls, removeFromStore = false) {
+    if (!Array.isArray(urls)) {
+      urls = [urls];
+    }
+    urls = urls.map(this.stripFragments);
+
+    let placeIdsSQLFragment = `
+    SELECT id FROM moz_places
+    WHERE url_hash IN (${PlacesUtils.sqlBindPlaceholders(
+      urls,
+      "hash(",
+      ")"
+    )}) AND url IN (${PlacesUtils.sqlBindPlaceholders(urls)})`;
+    let queryArgs = removeFromStore
+      ? [
+          `DELETE FROM moz_places_metadata_snapshots
+         WHERE place_id IN (${placeIdsSQLFragment})
+         RETURNING place_id`,
+          [...urls, ...urls],
+        ]
+      : [
           `UPDATE moz_places_metadata_snapshots
-           SET removed_at = :removedAt
-           WHERE place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)
-           RETURNING place_id`,
-          { removedAt: Date.now(), url }
-        )
-      )[0].getResultByName("place_id");
+         SET removed_at = ?
+         WHERE place_id IN (${placeIdsSQLFragment})
+         RETURNING place_id`,
+          [Date.now(), ...urls, ...urls],
+        ];
+
+    await PlacesUtils.withConnectionWrapper("Snapshots: delete", async db => {
+      let placeIds = (await db.executeCached(...queryArgs)).map(r =>
+        r.getResultByName("place_id")
+      );
       // Remove orphan page data.
       await db.executeCached(
         `DELETE FROM moz_places_metadata_snapshots_extra
-         WHERE place_id = :placeId`,
-        { placeId }
+         WHERE place_id IN (${PlacesUtils.sqlBindPlaceholders(placeIds)})`,
+        placeIds
       );
     });
 
-    this.#notify("places-snapshots-deleted", [url]);
+    this.#notify("places-snapshots-deleted", urls);
   }
 
   /**
@@ -479,10 +504,15 @@ const Snapshots = new (class Snapshots {
    * @param {number} [options.type]
    *   Restrict the snapshots to those with a particular type of page data available.
    * @param {number} [options.group]
-   *   Restrict the snapshots to those within a particular group.
+   *   Restrict the snapshots to those within a particular group. Pass null
+   *   to get all the snapshots that are not part of a group.
    * @param {boolean} [options.includeHiddenInGroup]
    *   Only applies when querying a particular group. Pass true to include
    *   snapshots that are hidden in the group.
+   * @param {boolean} [options.includeUserPersisted]
+   *   Whether to include user persisted snapshots.
+   * @param {number} [options.lastInteractionBefore]
+   *   Restrict to snaphots whose last interaction was before the given time.
    * @param {boolean} [options.sortDescending]
    *   Whether or not to sortDescending. Defaults to true.
    * @param {string} [options.sortBy]
@@ -497,6 +527,8 @@ const Snapshots = new (class Snapshots {
     type = undefined,
     group = undefined,
     includeHiddenInGroup = false,
+    includeUserPersisted = true,
+    lastInteractionBefore = undefined,
     sortDescending = true,
     sortBy = "last_interaction_at",
   } = {}) {
@@ -511,12 +543,26 @@ const Snapshots = new (class Snapshots {
       clauses.push("removed_at IS NULL");
     }
 
+    if (!includeUserPersisted) {
+      clauses.push("user_persisted = :user_persisted");
+      bindings.user_persisted = this.USER_PERSISTED.NO;
+    }
+    if (lastInteractionBefore) {
+      clauses.push("last_interaction_at < :last_interaction_before");
+      bindings.last_interaction_before = lastInteractionBefore;
+    }
+
     if (type) {
       clauses.push("type = :type");
       bindings.type = type;
     }
 
-    if (group) {
+    if (group === null) {
+      clauses.push("group_id IS NULL");
+      joins.push(
+        "LEFT JOIN moz_places_metadata_groups_to_snapshots g USING(place_id)"
+      );
+    } else if (group) {
       clauses.push("group_id = :group");
       if (!includeHiddenInGroup) {
         clauses.push("g.hidden = 0");

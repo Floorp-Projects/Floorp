@@ -228,6 +228,20 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // sponsored and recommended results related to the user's search string.
   ["quicksuggest.enabled", false],
 
+  // Whether non-sponsored quick suggest results are subject to impression
+  // frequency caps. This pref is a fallback for the Nimbus variable
+  // `quickSuggestImpressionCapsNonSponsoredEnabled`.
+  ["quicksuggest.impressionCaps.nonSponsoredEnabled", false],
+
+  // Whether sponsored quick suggest results are subject to impression frequency
+  // caps. This pref is a fallback for the Nimbus variable
+  // `quickSuggestImpressionCapsSponsoredEnabled`.
+  ["quicksuggest.impressionCaps.sponsoredEnabled", false],
+
+  // JSON'ed object of quick suggest impression stats. Used for implementing
+  // impression frequency caps for quick suggest suggestions.
+  ["quicksuggest.impressionCaps.stats", ""],
+
   // Whether to show QuickSuggest related logs.
   ["quicksuggest.log", false],
 

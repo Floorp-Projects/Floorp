@@ -586,11 +586,6 @@ nsresult nsAppShell::Init() {
 
 NS_IMETHODIMP
 nsAppShell::Run(void) {
-  // Content processes initialize audio later through PContent using audio
-  // tray id information pulled from the browser process AudioSession. This
-  // way the two share a single volume control.
-  // Note StopAudioSession() is called from nsAppRunner.cpp after xpcom is torn
-  // down to insure the browser shuts down after child processes.
   if (XRE_IsParentProcess()) {
     bool wantAudio = true;
 #ifdef MOZ_BACKGROUNDTASKS

@@ -40,17 +40,20 @@ pub enum SurfaceDescriptorKind {
 // Describes how a surface is rendered
 pub struct SurfaceDescriptor {
     kind: SurfaceDescriptorKind,
+    dirty_rects: Vec<PictureRect>,
 }
 
 impl SurfaceDescriptor {
     // Create a picture cache tiled surface
     pub fn new_tiled(
         tiles: FastHashMap<TileKey, RenderTaskId>,
+        dirty_rects: Vec<PictureRect>,
     ) -> Self {
         SurfaceDescriptor {
             kind: SurfaceDescriptorKind::Tiled {
                 tiles,
             },
+            dirty_rects,
         }
     }
 
@@ -58,23 +61,27 @@ impl SurfaceDescriptor {
     pub fn new_chained(
         render_task_id: RenderTaskId,
         root_task_id: RenderTaskId,
+        dirty_rect: PictureRect,
     ) -> Self {
         SurfaceDescriptor {
             kind: SurfaceDescriptorKind::Chained {
                 render_task_id,
                 root_task_id,
             },
+            dirty_rects: vec![dirty_rect],
         }
     }
 
     // Create a simple surface (e.g. opacity)
     pub fn new_simple(
         render_task_id: RenderTaskId,
+        dirty_rect: PictureRect,
     ) -> Self {
         SurfaceDescriptor {
             kind: SurfaceDescriptorKind::Simple {
                 render_task_id,
             },
+            dirty_rects: vec![dirty_rect],
         }
     }
 }
@@ -183,7 +190,7 @@ pub struct SurfaceBuilder {
     // Stack of surfaces that are parents to the current targets
     builder_stack: Vec<CommandBufferBuilder>,
     // Dirty rect stack used to reject adding primitives
-    dirty_rect_stack: Vec<PictureRect>,
+    dirty_rect_stack: Vec<Vec<PictureRect>>,
 }
 
 impl SurfaceBuilder {
@@ -207,7 +214,7 @@ impl SurfaceBuilder {
         // Init the surface
         surfaces[surface_index.0].clipping_rect = clipping_rect;
 
-        self.dirty_rect_stack.push(clipping_rect);
+        self.dirty_rect_stack.push(descriptor.dirty_rects);
 
         let builder = match descriptor.kind {
             SurfaceDescriptorKind::Tiled { tiles } => {
@@ -273,7 +280,10 @@ impl SurfaceBuilder {
                 self.dirty_rect_stack
                     .last()
                     .unwrap()
-                    .intersects(&vis.clip_chain.pic_coverage_rect)
+                    .iter()
+                    .any(|dirty_rect| {
+                        dirty_rect.intersects(&vis.clip_chain.pic_coverage_rect)
+                    })
             }
             VisibilityState::PassThrough => {
                 true

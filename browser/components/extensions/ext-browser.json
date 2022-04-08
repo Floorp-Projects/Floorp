@@ -118,6 +118,8 @@
     "url": "chrome://browser/content/parent/ext-menus.js",
     "schema": "chrome://browser/content/schemas/menus.json",
     "scopes": ["addon_parent"],
+    "events": ["startup"],
+    "permissions": ["menus", "contextMenus"],
     "paths": [
       ["contextMenus"],
       ["menus"],

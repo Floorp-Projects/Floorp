@@ -7,12 +7,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarProviderQuickSuggest:
-    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
-});
-
 const TELEMETRY_REMOTE_SETTINGS_LATENCY =
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 

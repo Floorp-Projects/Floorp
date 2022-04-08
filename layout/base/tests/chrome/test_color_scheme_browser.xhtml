@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      windowtype="Toolkit:PictureInPicture"
-      chromemargin="0,0,0,0">
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <head>
     <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
     <script src="chrome://mochikit/content/chrome-harness.js"></script>
@@ -92,7 +90,7 @@
         for (let dark of [true, false]) {
           await SpecialPowers.pushPrefEnv({
             set: [
-              ["browser.theme.toolbar-theme", 2],
+              ["layout.css.prefers-color-scheme.content-override", 2],
               ["ui.systemUsesDarkTheme", dark ? 1 : 0],
             ]
           });
