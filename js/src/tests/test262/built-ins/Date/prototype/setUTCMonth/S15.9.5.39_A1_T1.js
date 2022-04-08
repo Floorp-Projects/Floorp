@@ -8,12 +8,18 @@ description: Checking absence of ReadOnly attribute
 ---*/
 
 var x = Date.prototype.setUTCMonth;
-if (x === 1)
+if (x === 1) {
   Date.prototype.setUTCMonth = 2;
-else
+} else {
   Date.prototype.setUTCMonth = 1;
-if (Date.prototype.setUTCMonth === x) {
-  throw new Test262Error('#1: The Date.prototype.setUTCMonth has not the attribute ReadOnly');
 }
+
+assert.notSameValue(
+  Date.prototype.setUTCMonth,
+  x,
+  'The value of Date.prototype.setUTCMonth is expected to not equal the value of `x`'
+);
+
+// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

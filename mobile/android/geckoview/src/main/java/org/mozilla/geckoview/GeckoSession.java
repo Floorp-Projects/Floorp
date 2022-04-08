@@ -13,6 +13,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.net.Uri;
@@ -33,6 +34,7 @@ import android.view.ViewStructure;
 import android.view.inputmethod.CursorAnchorInfo;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
+import android.widget.Magnifier;
 import androidx.annotation.AnyThread;
 import androidx.annotation.IntDef;
 import androidx.annotation.LongDef;
@@ -132,6 +134,95 @@ public class GeckoSession {
   private final SessionTextInput mTextInput = new SessionTextInput(this, mNativeQueue);
   private SessionAccessibility mAccessibility;
   private SessionFinder mFinder;
+
+  /** {@code SessionMagnifier} handles magnifying glass. */
+  /* package */ interface SessionMagnifier {
+    /**
+     * Get the current {@link android.view.View} for magnifying glass.
+     *
+     * @return Current View for magnifying glass or null if not set.
+     */
+    @UiThread
+    default @Nullable View getView() {
+      return null;
+    }
+
+    /**
+     * Set the current {@link android.view.View} for magnifying glass.
+     *
+     * @param view View for magnifying glass or null to clear current View.
+     */
+    @UiThread
+    default void setView(final @NonNull View view) {}
+
+    /**
+     * Show magnifying glass.
+     *
+     * @param sourceCenter The source center of view that magnifying glass is attached
+     */
+    @UiThread
+    default void show(final @NonNull PointF sourceCenter) {}
+
+    /** Dismiss magnifying glass. */
+    @UiThread
+    default void dismiss() {}
+  }
+
+  @TargetApi(Build.VERSION_CODES.P)
+  private static class SessionMagnifierP implements GeckoSession.SessionMagnifier {
+    private @Nullable View mView;
+    private @Nullable Magnifier mMagnifier;
+
+    @Override
+    @UiThread
+    public @Nullable View getView() {
+      ThreadUtils.assertOnUiThread();
+
+      return mView;
+    }
+
+    @Override
+    @UiThread
+    public void setView(final @NonNull View view) {
+      ThreadUtils.assertOnUiThread();
+
+      if (mMagnifier != null) {
+        mMagnifier.dismiss();
+        mMagnifier = null;
+      }
+      mView = view;
+    }
+
+    @Override
+    @UiThread
+    public void show(final @NonNull PointF sourceCenter) {
+      ThreadUtils.assertOnUiThread();
+
+      if (mView == null) {
+        return;
+      }
+      if (mMagnifier == null) {
+        mMagnifier = new Magnifier(mView);
+      }
+
+      mMagnifier.show(sourceCenter.x, sourceCenter.y);
+    }
+
+    @Override
+    @UiThread
+    public void dismiss() {
+      ThreadUtils.assertOnUiThread();
+
+      if (mMagnifier == null) {
+        return;
+      }
+
+      mMagnifier.dismiss();
+      mMagnifier = null;
+    }
+  }
+
+  private SessionMagnifier mMagnifier;
 
   private String mId;
   /* package */ String getId() {
@@ -795,7 +886,10 @@ public class GeckoSession {
           "GeckoViewSelectionAction",
           this,
           new String[] {
-            "GeckoView:HideSelectionAction", "GeckoView:ShowSelectionAction",
+            "GeckoView:HideSelectionAction",
+            "GeckoView:ShowSelectionAction",
+            "GeckoView:HideMagnifier",
+            "GeckoView:ShowMagnifier",
           }) {
         @Override
         public void handleMessage(
@@ -827,6 +921,21 @@ public class GeckoSession {
             }
 
             delegate.onHideAction(GeckoSession.this, reason);
+          } else if ("GeckoView:ShowMagnifier".equals(event)) {
+            final GeckoBundle ptBundle = message.getBundle("clientPoint");
+            if (ptBundle == null) {
+              throw new IllegalArgumentException("Invalid argument");
+            }
+
+            final Matrix matrix = new Matrix();
+            GeckoSession.this.getClientToSurfaceMatrix(matrix);
+            final float[] origin =
+                new float[] {(float) ptBundle.getDouble("x"), (float) ptBundle.getDouble("y")};
+            matrix.mapPoints(origin);
+
+            GeckoSession.this.getMagnifier().show(new PointF(origin[0], origin[1]));
+          } else if ("GeckoView:HideMagnifier".equals(event)) {
+            GeckoSession.this.getMagnifier().dismiss();
           }
         }
       };
@@ -1450,6 +1559,26 @@ public class GeckoSession {
       }
     }
     return mAccessibility;
+  }
+
+  /**
+   * Get the SessionMagnifier instance for this session.
+   *
+   * @return SessionMagnifier instance.
+   */
+  @UiThread
+  /* package */ @NonNull
+  SessionMagnifier getMagnifier() {
+    ThreadUtils.assertOnUiThread();
+    if (mMagnifier == null) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        mMagnifier = new SessionMagnifierP();
+      } else {
+        mMagnifier = new SessionMagnifier() {};
+      }
+    }
+
+    return mMagnifier;
   }
 
   @Retention(RetentionPolicy.SOURCE)

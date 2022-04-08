@@ -9,10 +9,6 @@ info: |
 es5id: 9.3.1_A10
 description: Compare Number('.12345') with +('12345')*1e-5
 ---*/
-
-// CHECK#1
-if (Number(".12345") !== +("12345") * 1e-5) {
-  throw new Test262Error('#1: Number(".12345") === +("12345")*1e-5');
-}
+assert.sameValue(+('12345')*1e-5, 0.12345);
 
 reportCompare(0, 0);

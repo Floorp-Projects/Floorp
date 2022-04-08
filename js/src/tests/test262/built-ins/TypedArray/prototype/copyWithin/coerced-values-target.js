@@ -89,6 +89,14 @@ testWithTypedArrayConstructors(function(TA) {
     ),
     '1.5 float value coerced to integer 1'
   );
+
+  assert(
+    compareArray(
+      new TA([0, 1, 2, 3]).copyWithin({}, 1),
+      [1, 2, 3, 3]
+    ),
+    'object value coerced to integer 0'
+  );
 });
 
 reportCompare(0, 0);

@@ -14,9 +14,6 @@ description: >
 
 var __executed = /Java(?!Script)([A-Z]\w*)/.test("using of Java language");
 
-//CHECK#1
-if (__executed) {
-	throw new Test262Error('#1: /Java(?!Script)([A-Z]\\w*)/.test("using of Java language") === false');
-}
+assert(!__executed, 'The value of !__executed is expected to be true');
 
 reportCompare(0, 0);

@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.daysinyear
-description: Temporal.Calendar.prototype.daysInYear will take PlainDate and return
+description: >
+  Temporal.Calendar.prototype.daysInYear will take PlainDate and return
   the number of days in a year.
 info: |
   5. Return 𝔽(! ISODaysInYear(temporalDateLike.[[ISOYear]])).

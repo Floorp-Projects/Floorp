@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<p id="display">
+  <div id="editable" contenteditable style="width: 400px; font-size: 4em;">foobarbaz</div>
+</p>
+<script>
+const SimpleTest = parent.SimpleTest;
+const is = parent.is;
+const info = parent.info;
+const isnot = parent.isnot;
+const ok = parent.ok;
+
+window.addEventListener("load", runTest);
+
+async function runTest() {
+  let target = document.getElementById("editable");
+  target.focus();
+  let targetRect = target.getBoundingClientRect();
+  let selection = window.getSelection();
+
+  // Select word then show accessible caret
+  synthesizeTouchAtCenter(target, { type: "touchstart" });
+  synthesizeMouseAtCenter(target, { type: "mouselongtap" });
+  synthesizeTouchAtCenter(target, { type: "touchend" });
+  ok(!selection.getRangeAt(0).collapsed, "Select word");
+
+  let rangeRect = selection.getRangeAt(0).getBoundingClientRect();
+  let presscaret = 0;
+  let dragcaret = 0;
+  let releasecaret = 0;
+
+  const dragStart = {
+    x: Math.round(rangeRect.left),
+    y: Math.round(rangeRect.bottom + 12)
+  };
+  const dragEnd = {
+    x: Math.round(rangeRect.left + 60),
+    y: Math.round(rangeRect.bottom + 12)
+  };
+  let handler;
+
+  let promise = new Promise(resolve => {
+    handler = function(e) {
+      info("mozcaretstatechanged is fired with " + e.reason);
+      switch (e.reason) {
+        case "presscaret":
+          is(dragStart.x, e.clientX, "dragcaret event has clientX data.");
+          is(dragStart.y, e.clientY, "dragcaret event has clientY data.");
+          presscaret++;
+          break;
+        case "dragcaret":
+          is(dragEnd.x, e.clientX, "dragcaret event has clientX data.");
+          is(dragEnd.y, e.clientY, "dragcaret event has clientY data.");
+          dragcaret++;
+          break;
+        case "releasecaret":
+          releasecaret++;
+          resolve();
+          break;
+      }
+    };
+  });
+
+  SpecialPowers.addChromeEventListener("mozcaretstatechanged", handler, true);
+
+  // Drag accessible caret
+  synthesizeTouchAtPoint(dragStart.x, dragStart.y, { type: "touchstart" });
+  synthesizeTouchAtPoint(dragEnd.x, dragEnd.y, { type: "touchmove" });
+  synthesizeTouchAtPoint(dragEnd.x, dragEnd.y, { type: "touchend" });
+
+  await promise;
+
+  SpecialPowers.removeChromeEventListener("mozcaretstatechanged", handler, true);
+
+  is(presscaret, 1, "presscaret is fired correctly");
+  is(dragcaret, 1, "presscaret is fired correctly");
+  is(releasecaret, 1, "releasecaret is fired correctly");
+
+  let newRangeRect = selection.getRangeAt(0).getBoundingClientRect();
+  isnot(rangeRect.left, newRangeRect.left,
+        "Selected range is changed by dragging accessible caret");
+
+  SimpleTest.finish();
+}
+</script>
+</body>
+</html>

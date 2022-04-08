@@ -31,5 +31,9 @@ assert.throws(TypeError, () => {
   new Function.prototype.toString();
 }, '`new Function.prototype.toString()` throws TypeError');
 
+var toString = Function.prototype.toString;
+assert.throws(TypeError, () => {
+  new toString;
+}, '`new toString` throws TypeError');
 
 reportCompare(0, 0);

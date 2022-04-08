@@ -36,6 +36,6 @@ info: |
 ---*/
 
 
-function fn() {}/1/;;
+function fn() {}/1/;
 
 reportCompare(0, 0);

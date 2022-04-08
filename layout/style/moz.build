@@ -121,6 +121,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     "CSS.h",
+    "CSSContainerRule.h",
     "CSSCounterStyleRule.h",
     "CSSFontFaceRule.h",
     "CSSFontFeatureValuesRule.h",
@@ -166,6 +167,7 @@ UNIFIED_SOURCES += [
     "ComputedStyle.cpp",
     "CounterStyleManager.cpp",
     "CSS.cpp",
+    "CSSContainerRule.cpp",
     "CSSCounterStyleRule.cpp",
     "CSSFontFaceRule.cpp",
     "CSSFontFeatureValuesRule.cpp",

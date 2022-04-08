@@ -8,7 +8,6 @@ es5id: 15.4.5.1_A1.3_T2
 description: Uint32 use ToNumber and ToPrimitve
 ---*/
 
-//CHECK#1
 var x = [];
 x.length = {
   valueOf: function() {
@@ -17,7 +16,6 @@ x.length = {
 };
 assert.sameValue(x.length, 2, 'The value of x.length is expected to be 2');
 
-//CHECK#2
 x = [];
 x.length = {
   valueOf: function() {
@@ -29,7 +27,6 @@ x.length = {
 };
 assert.sameValue(x.length, 2, 'The value of x.length is expected to be 2');
 
-//CHECK#3
 x = [];
 x.length = {
   valueOf: function() {
@@ -41,7 +38,6 @@ x.length = {
 };
 assert.sameValue(x.length, 2, 'The value of x.length is expected to be 2');
 
-//CHECK#4
 try {
   x = [];
   x.length = {
@@ -58,7 +54,6 @@ catch (e) {
   assert.notSameValue(e, "error", 'The value of e is not "error"');
 }
 
-//CHECK#5
 x = [];
 x.length = {
   toString: function() {
@@ -67,7 +62,6 @@ x.length = {
 };
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#6
 x = [];
 x.length = {
   valueOf: function() {
@@ -79,7 +73,6 @@ x.length = {
 }
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#7
 try {
   x = [];
   x.length = {
@@ -97,7 +90,6 @@ catch (e) {
   assert.sameValue(e, "error", 'The value of e is expected to be "error"');
 }
 
-//CHECK#8
 try {
   x = [];
   x.length = {

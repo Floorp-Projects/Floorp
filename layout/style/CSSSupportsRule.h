@@ -31,8 +31,6 @@ class CSSSupportsRule : public css::ConditionRule {
   StyleCssRuleType Type() const final;
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
-  void SetConditionText(const nsACString& aConditionText,
-                        ErrorResult& aRv) final;
 
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
   JSObject* WrapObject(JSContext* aCx,

@@ -16,6 +16,6 @@ includes: [compareArray.js]
 
 let lf = new Intl.ListFormat();
 
-assert(compareArray([], lf.formatToParts(undefined)));
+assert.compareArray([], lf.formatToParts(undefined));
 
 reportCompare(0, 0);

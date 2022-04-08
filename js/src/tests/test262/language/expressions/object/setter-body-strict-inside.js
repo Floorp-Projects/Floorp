@@ -8,8 +8,8 @@ description: >
     reserved word is made in  a strict FunctionBody of a
     PropertyAssignment
 negative:
-  type: SyntaxError
   phase: parse
+  type: SyntaxError
 flags: [noStrict]
 ---*/
 

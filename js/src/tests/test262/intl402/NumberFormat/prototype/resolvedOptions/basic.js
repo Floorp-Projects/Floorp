@@ -1,4 +1,6 @@
+// |reftest| skip-if(release_or_beta) -- Intl.NumberFormat-v3 is not released yet
 // Copyright 2012 Mozilla Corporation. All rights reserved.
+// Copyright 2022 Apple Inc. All rights reserved.
 // This code is governed by the license found in the LICENSE file.
 
 /*---
@@ -9,6 +11,7 @@ description: >
     properties.
 author: Norbert Lindenberg
 includes: [testIntl.js, propertyHelper.js]
+features: [Intl.NumberFormat-v3]
 ---*/
 
 var actual = new Intl.NumberFormat().resolvedOptions();
@@ -25,7 +28,7 @@ assert.sameValue(actual.style, "decimal");
 assert.sameValue(actual.minimumIntegerDigits, 1);
 assert.sameValue(actual.minimumFractionDigits, 0);
 assert.sameValue(actual.maximumFractionDigits, 3);
-assert.sameValue(actual.useGrouping, true);
+assert.sameValue(actual.useGrouping, "auto");
 
 var dataPropertyDesc = { writable: true, enumerable: true, configurable: true };
 verifyProperty(actual, "locale", dataPropertyDesc);
