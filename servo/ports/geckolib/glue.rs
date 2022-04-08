@@ -91,7 +91,7 @@ use style::gecko_bindings::structs::{
     RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule,
     RawServoNamespaceRule, RawServoPageRule, RawServoScrollTimelineRule,
     RawServoSharedMemoryBuilder, RawServoStyleSet, RawServoStyleSheetContents,
-    RawServoSupportsRule, ServoCssRules,
+    RawServoSupportsRule, RawServoContainerRule, ServoCssRules,
 };
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
 use style::gecko_bindings::sugar::ownership::{
@@ -127,7 +127,7 @@ use style::stylesheets::{
     DocumentRule, FontFaceRule, FontFeatureValuesRule, ImportRule, KeyframesRule, LayerBlockRule,
     LayerStatementRule, MediaRule, NamespaceRule, Origin, OriginSet, PageRule, SanitizationData,
     SanitizationKind, ScrollTimelineRule, StyleRule, StylesheetContents,
-    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData, ContainerRule,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -2334,6 +2334,14 @@ impl_group_rule_funcs! { (Supports, SupportsRule, RawServoSupportsRule),
     changed: Servo_StyleSet_SupportsRuleChanged,
 }
 
+impl_group_rule_funcs! { (Container, ContainerRule, RawServoContainerRule),
+    get_rules: Servo_ContainerRule_GetRules,
+    getter: Servo_CssRules_GetContainerRuleAt,
+    debug: Servo_ContainerRule_Debug,
+    to_css: Servo_ContainerRule_GetCssText,
+    changed: Servo_StyleSet_ContainerRuleChanged,
+}
+
 impl_group_rule_funcs! { (LayerBlock, LayerBlockRule, RawServoLayerBlockRule),
     get_rules: Servo_LayerBlockRule_GetRules,
     getter: Servo_CssRules_GetLayerBlockRuleAt,
@@ -2947,6 +2955,16 @@ pub extern "C" fn Servo_SupportsRule_GetConditionText(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &SupportsRule| {
+        rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ContainerRule_GetConditionText(
+    rule: &RawServoContainerRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &ContainerRule| {
         rule.condition.to_css(&mut CssWriter::new(result)).unwrap();
     })
 }
