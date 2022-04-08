@@ -1312,10 +1312,19 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
           VideoFrameBuffer::Type::kNative &&
       !info.supports_native_handle) {
     // This module only supports software encoding.
-    rtc::scoped_refptr<I420BufferInterface> converted_buffer(
-        out_frame.video_frame_buffer()->ToI420());
-
-    if (!converted_buffer) {
+    rtc::scoped_refptr<VideoFrameBuffer> buffer =
+        out_frame.video_frame_buffer()->GetMappedFrameBuffer(
+            info.preferred_pixel_formats);
+    bool buffer_was_converted = false;
+    if (!buffer) {
+      buffer = out_frame.video_frame_buffer()->ToI420();
+      // TODO(https://crbug.com/webrtc/12021): Once GetI420 is pure virtual,
+      // this just true as an I420 buffer would return from
+      // GetMappedFrameBuffer.
+      buffer_was_converted =
+          (out_frame.video_frame_buffer()->GetI420() == nullptr);
+    }
+    if (!buffer) {
       RTC_LOG(LS_ERROR) << "Frame conversion failed, dropping frame.";
       return;
     }
@@ -1329,8 +1338,7 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
       update_rect =
           VideoFrame::UpdateRect{0, 0, out_frame.width(), out_frame.height()};
     }
-
-    out_frame.set_video_frame_buffer(converted_buffer);
+    out_frame.set_video_frame_buffer(buffer);
     out_frame.set_update_rect(update_rect);
   }
 

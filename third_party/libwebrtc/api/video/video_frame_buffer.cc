@@ -55,8 +55,33 @@ const NV12BufferInterface* VideoFrameBuffer::GetNV12() const {
   return static_cast<const NV12BufferInterface*>(this);
 }
 
+rtc::scoped_refptr<VideoFrameBuffer> VideoFrameBuffer::GetMappedFrameBuffer(
+    rtc::ArrayView<Type> types) {
+  RTC_CHECK(type() == Type::kNative);
+  return nullptr;
+}
+
 VideoFrameBuffer::Type I420BufferInterface::type() const {
   return Type::kI420;
+}
+
+const char* VideoFrameBufferTypeToString(VideoFrameBuffer::Type type) {
+  switch (type) {
+    case VideoFrameBuffer::Type::kNative:
+      return "kNative";
+    case VideoFrameBuffer::Type::kI420:
+      return "kI420";
+    case VideoFrameBuffer::Type::kI420A:
+      return "kI420A";
+    case VideoFrameBuffer::Type::kI444:
+      return "kI444";
+    case VideoFrameBuffer::Type::kI010:
+      return "kI010";
+    case VideoFrameBuffer::Type::kNV12:
+      return "kNV12";
+    default:
+      RTC_NOTREACHED();
+  }
 }
 
 int I420BufferInterface::ChromaWidth() const {

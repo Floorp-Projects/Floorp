@@ -603,6 +603,7 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
   info.has_trusted_rate_controller = true;
   info.is_hardware_accelerated = false;
   info.scaling_settings = VideoEncoder::ScalingSettings(kMinQindex, kMaxQindex);
+  info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420};
   return info;
 }
 
