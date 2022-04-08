@@ -25,7 +25,7 @@ class LockObserver(
         val tabCount = browserStore.state.privateTabs.size.toLong()
         TabCount.appBackgrounded.accumulateSamples(longArrayOf(tabCount))
 
-        if (tabCount == 0L) {
+        if (tabCount == 0L && appStore.state.topSites.isNullOrEmpty()) {
             return
         }
 
