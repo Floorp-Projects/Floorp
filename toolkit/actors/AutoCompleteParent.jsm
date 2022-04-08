@@ -318,7 +318,7 @@ class AutoCompleteParent extends JSWindowActorParent {
     // information for telemetry purposes. After bug 1555209, this information
     // can be passed to the parent process outside of nsIAutoCompleteResult APIs
     // so we won't need this hack.
-    let rawExtraData = JSON.parse(lastResult.comment);
+    let rawExtraData = JSON.parse(lastResult.comment).telemetryEventData;
     if (!rawExtraData.searchStartTimeMS) {
       throw new Error("Invalid autocomplete search start time");
     }
@@ -331,8 +331,6 @@ class AutoCompleteParent extends JSWindowActorParent {
     let duration =
       Services.telemetry.msSystemNow() - rawExtraData.searchStartTimeMS;
     delete rawExtraData.searchStartTimeMS;
-
-    delete rawExtraData.formHostname;
 
     // Add counts by result style to rawExtraData.
     results.reduce((accumulated, r) => {
