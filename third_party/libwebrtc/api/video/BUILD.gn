@@ -42,8 +42,6 @@ rtc_library("video_rtp_headers") {
 rtc_library("video_frame") {
   visibility = [ "*" ]
   sources = [
-    "i420_buffer.cc",
-    "i420_buffer.h",
     "video_codec_type.h",
     "video_frame.cc",
     "video_frame.h",
@@ -61,13 +59,7 @@ rtc_library("video_frame") {
     "..:scoped_refptr",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
-    "../../rtc_base/memory:aligned_malloc",
     "../../rtc_base/system:rtc_export",
-    #"//third_party/libyuv",
-  ]
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -78,11 +70,46 @@ if (is_android) {
   }
 }
 
-# Deprecated empty target. Use "video_frame" instead.
-rtc_source_set("video_frame_i420") {
+rtc_source_set("recordable_encoded_frame") {
   visibility = [ "*" ]
-  sources = []
-  deps = [ ":video_frame" ]
+  sources = [ "recordable_encoded_frame.h" ]
+
+  deps = [
+    ":encoded_image",
+    ":video_frame",
+    ":video_rtp_headers",
+    "..:array_view",
+    "..:scoped_refptr",
+    "../../rtc_base:refcount",
+    "../units:timestamp",
+  ]
+}
+
+rtc_source_set("video_frame_type") {
+  visibility = [ "*" ]
+  sources = [ "video_frame_type.h" ]
+}
+
+rtc_library("video_frame_i420") {
+  visibility = [ "*" ]
+  sources = [
+    "i420_buffer.cc",
+    "i420_buffer.h",
+  ]
+  deps = [
+    ":video_frame",
+    ":video_rtp_headers",
+    "..:scoped_refptr",
+    "../../rtc_base",
+    "../../rtc_base:checks",
+    "../../rtc_base/memory:aligned_malloc",
+    "../../rtc_base/system:rtc_export",
+    #"//third_party/libyuv",
+  ]
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
+  ]
 }
 
 rtc_library("video_frame_i010") {
@@ -93,6 +120,7 @@ rtc_library("video_frame_i010") {
   ]
   deps = [
     ":video_frame",
+    ":video_frame_i420",
     ":video_rtp_headers",
     "..:scoped_refptr",
     "../../rtc_base",
@@ -114,6 +142,7 @@ rtc_library("video_frame_nv12") {
   ]
   deps = [
     ":video_frame",
+    ":video_frame_i420",
     "..:scoped_refptr",
     "../../rtc_base",
     "../../rtc_base:checks",
@@ -125,26 +154,6 @@ rtc_library("video_frame_nv12") {
     "/media/libyuv",
     "/media/libyuv/libyuv/include",
   ]
-}
-
-rtc_source_set("recordable_encoded_frame") {
-  visibility = [ "*" ]
-  sources = [ "recordable_encoded_frame.h" ]
-
-  deps = [
-    ":encoded_image",
-    ":video_frame",
-    ":video_rtp_headers",
-    "..:array_view",
-    "..:scoped_refptr",
-    "../../rtc_base:refcount",
-    "../units:timestamp",
-  ]
-}
-
-rtc_source_set("video_frame_type") {
-  visibility = [ "*" ]
-  sources = [ "video_frame_type.h" ]
 }
 
 rtc_library("encoded_image") {

@@ -53,6 +53,7 @@ if (false) {
       "../api/video:encoded_image",
       "../api/video:video_frame",
       "../api/video:video_frame_i010",
+      "../api/video:video_frame_i420",
       "../api/video:video_frame_nv12",
       "../api/video:video_rtp_headers",
       "../api/video_codecs:video_codecs_api",
@@ -86,6 +87,7 @@ if (false) {
     deps = [
       "../api:scoped_refptr",
       "../api/video:video_frame",
+      "../api/video:video_frame_i420",
     ]
   }
 
@@ -112,6 +114,8 @@ if (false) {
       "../api:scoped_refptr",
       "../api/task_queue",
       "../api/video:video_frame",
+      "../api/video:video_frame_i010",
+      "../api/video:video_frame_i420",
       "../api/video:video_rtp_headers",
       "../api/video_codecs:video_codecs_api",
       "../common_video",
@@ -360,6 +364,7 @@ if (false) {
       "../api:scoped_refptr",
       "../api/video:encoded_image",
       "../api/video:video_frame",
+      "../api/video:video_frame_i420",
       "../api/video_codecs:video_codecs_api",
       "../common_video",
       "../media:rtc_media_base",
@@ -515,6 +520,7 @@ if (false) {
         "../api/test/video:function_video_factory",
         "../api/video:encoded_image",
         "../api/video:video_frame",
+        "../api/video:video_frame_i420",
         "../api/video_codecs:video_codecs_api",
         "../call:video_stream_api",
         "../common_video",
@@ -760,6 +766,7 @@ if (false) {
       "../api/video:encoded_image",
       "../api/video:video_bitrate_allocation",
       "../api/video:video_frame",
+      "../api/video:video_frame_i420",
       "../api/video:video_rtp_headers",
       "../api/video_codecs:video_codecs_api",
       "../api/video_codecs:vp8_temporal_layers_factory",
