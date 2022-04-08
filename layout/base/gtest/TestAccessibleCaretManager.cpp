@@ -105,8 +105,8 @@ class AccessibleCaretManagerTester : public ::testing::Test {
     Terminated MaybeFlushLayout() override { return Terminated::No; }
 
     MOCK_CONST_METHOD0(GetCaretMode, CaretMode());
-    MOCK_METHOD1(DispatchCaretStateChangedEvent,
-                 void(CaretChangedReason aReason));
+    MOCK_METHOD2(DispatchCaretStateChangedEvent,
+                 void(CaretChangedReason aReason, const nsPoint* aPoint));
     MOCK_CONST_METHOD1(HasNonEmptyTextContent, bool(nsINode* aNode));
 
   };  // class MockAccessibleCaretManager
@@ -148,7 +148,7 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
       .WillRepeatedly(Return(CaretMode::Selection));
 
   EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                            CaretChangedReason::Updateposition))
+                            CaretChangedReason::Updateposition, nullptr))
       .Times(3);
 
   mManager.UpdateCarets();
@@ -176,33 +176,33 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("update"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Visibilitychange))
+                              CaretChangedReason::Visibilitychange, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("mouse down"));
 
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
     EXPECT_CALL(check, Call("reflow"));
 
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
     EXPECT_CALL(check, Call("blur"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("mouse up"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("reflow2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
   }
 
@@ -256,33 +256,33 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("update"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Visibilitychange))
+                              CaretChangedReason::Visibilitychange, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("mouse down"));
 
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
     EXPECT_CALL(check, Call("reflow"));
 
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
     EXPECT_CALL(check, Call("blur"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("mouse up"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("reflow2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
   }
 
@@ -330,18 +330,18 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("update"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Visibilitychange))
+                              CaretChangedReason::Visibilitychange, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("keyboard"));
 
     // No CaretStateChanged events should be dispatched since the caret has
     // being hidden in cursor mode.
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
   }
 
   // Simulate typing the end of the input.
@@ -378,15 +378,15 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         .WillOnce(Return(PositionChangedResult::Invisible));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("updatecarets"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart1"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("reflow1"));
 
     // After scroll ended, first caret is visible and second caret is out of
@@ -395,20 +395,20 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         .WillOnce(Return(PositionChangedResult::Invisible));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend1"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("reflow2"));
 
     // After the scroll ended, both carets are visible.
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend2"));
   }
 
@@ -466,18 +466,18 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         .WillOnce(Return(PositionChangedResult::Invisible));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("updatecarets"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart1"));
 
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
     EXPECT_CALL(check, Call("scrollPositionChanged1"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("reflow1"));
 
     // After scroll ended, first caret is visible and second caret is out of
@@ -486,23 +486,23 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
         .WillOnce(Return(PositionChangedResult::Invisible));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend1"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart2"));
 
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_, nullptr)).Times(0);
     EXPECT_CALL(check, Call("scrollPositionChanged2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("reflow2"));
 
     // After the scroll ended, both carets are visible.
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend2"));
   }
 
@@ -564,12 +564,12 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("updatecarets"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll))
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("scrollstart1"));
 
@@ -577,12 +577,12 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
         .WillRepeatedly(Return(PositionChangedResult::Invisible));
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("scrollend1"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll))
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("scrollstart2"));
 
@@ -590,7 +590,7 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
         .WillRepeatedly(Return(PositionChangedResult::Position));
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("scrollend2"));
   }
@@ -628,12 +628,12 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition))
+                              CaretChangedReason::Updateposition, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("updatecarets"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Visibilitychange))
+                              CaretChangedReason::Visibilitychange, nullptr))
         .Times(1);
     EXPECT_CALL(check, Call("hidecarets"));
 
@@ -689,33 +689,33 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("updatecarets"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart1"));
 
     EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
         .WillOnce(Return(PositionChangedResult::Invisible));
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend1"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend2"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("scrollstart3"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("scrollend3"));
   }
 
@@ -770,37 +770,37 @@ MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
     InSequence dummy;
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("singletap updatecarets"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("longtap updatecarets"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("longtap scrollstart1"));
 
     EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
         .WillOnce(Return(PositionChangedResult::Invisible));
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("longtap scrollend1"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("longtap scrollstart2"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("longtap scrollend2"));
 
-    EXPECT_CALL(mManager,
-                DispatchCaretStateChangedEvent(CaretChangedReason::Scroll));
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                              CaretChangedReason::Scroll, nullptr));
     EXPECT_CALL(check, Call("longtap scrollstart3"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                              CaretChangedReason::Updateposition));
+                              CaretChangedReason::Updateposition, nullptr));
     EXPECT_CALL(check, Call("longtap scrollend3"));
   }
 

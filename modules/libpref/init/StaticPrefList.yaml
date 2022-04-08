@@ -7221,6 +7221,13 @@
   value: false
   mirror: always
 
+# To support magnify glass, whether we dispatch additional chrome event such as
+# dragcaret.
+- name: layout.accessiblecaret.magnifier.enabled
+  type: bool
+  value: @IS_ANDROID@
+  mirror: always
+
 # One of several prefs affecting the maximum area to pre-render when animating
 # a large element on the compositor.
 # This pref enables transform (and transform like properties) animations on a
