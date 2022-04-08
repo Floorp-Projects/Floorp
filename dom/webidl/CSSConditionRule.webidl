@@ -10,6 +10,5 @@
 // https://drafts.csswg.org/css-conditional/#the-cssconditionrule-interface
 [Exposed=Window]
 interface CSSConditionRule : CSSGroupingRule {
-  [SetterThrows]
-  attribute UTF8String conditionText;
+  readonly attribute UTF8String conditionText;
 };
