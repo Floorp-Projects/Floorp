@@ -34,8 +34,6 @@ class CSSMediaRule final : public css::ConditionRule {
   // WebIDL interface
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
-  void SetConditionText(const nsACString& aConditionText,
-                        ErrorResult& aRv) final;
   dom::MediaList* Media();
 
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
