@@ -982,7 +982,7 @@ class gfxFontUtils {
                                        bool aIsSymbolFont);
 
   static nsresult ReadCMAPTableFormat14(const uint8_t* aBuf, uint32_t aLength,
-                                        mozilla::UniquePtr<uint8_t[]>& aTable);
+                                        const uint8_t*& aTable);
 
   static uint32_t FindPreferredSubtable(const uint8_t* aBuf,
                                         uint32_t aBufLength,

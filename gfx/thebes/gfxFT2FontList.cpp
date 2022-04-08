@@ -362,13 +362,15 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
 
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  uint32_t uvsOffset = 0;
   if (hb_blob_t* cmapBlob = GetFontTable(TTAG_cmap)) {
     unsigned int length;
     const char* data = hb_blob_get_data(cmapBlob, &length);
     rv = gfxFontUtils::ReadCMAP((const uint8_t*)data, length, *charmap,
-                                mUVSOffset);
+                                uvsOffset);
     hb_blob_destroy(cmapBlob);
   }
+  mUVSOffset.exchange(uvsOffset);
 
   if (NS_SUCCEEDED(rv) && !mIsDataUserFont && !HasGraphiteTables()) {
     // For downloadable fonts, trust the author and don't
@@ -404,24 +406,28 @@ nsresult FT2FontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   }
 #endif
 
-  mHasCmapTable = NS_SUCCEEDED(rv);
-
-  if (mHasCmapTable) {
+  bool setCharMap = true;
+  if (NS_SUCCEEDED(rv)) {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
     fontlist::FontList* sharedFontList = pfl->SharedFontList();
     if (!IsUserFont() && mShmemFace) {
       mShmemFace->SetCharacterMap(sharedFontList, charmap);  // async
-      if (!TrySetShmemCharacterMap()) {
-        // Temporarily retain charmap, until the shared version is
-        // ready for use.
-        mCharacterMap = charmap;
+      if (TrySetShmemCharacterMap()) {
+        setCharMap = false;
       }
     } else {
-      mCharacterMap = pfl->FindCharMap(charmap);
+      charmap = pfl->FindCharMap(charmap);
     }
+    mHasCmapTable = true;
   } else {
     // if error occurred, initialize to null cmap
-    mCharacterMap = new gfxCharacterMap();
+    charmap = new gfxCharacterMap();
+    mHasCmapTable = false;
+  }
+  if (setCharMap) {
+    if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
+      Unused << charmap.forget();
+    }
   }
 
   return rv;

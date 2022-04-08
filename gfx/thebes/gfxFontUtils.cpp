@@ -308,7 +308,7 @@ nsresult gfxFontUtils::ReadCMAPTableFormat4(const uint8_t* aBuf,
 
 nsresult gfxFontUtils::ReadCMAPTableFormat14(const uint8_t* aBuf,
                                              uint32_t aLength,
-                                             UniquePtr<uint8_t[]>& aTable) {
+                                             const uint8_t*& aTable) {
   enum {
     OffsetFormat = 0,
     OffsetTableLength = 2,
@@ -397,8 +397,10 @@ nsresult gfxFontUtils::ReadCMAPTableFormat14(const uint8_t* aBuf,
     }
   }
 
-  aTable = MakeUnique<uint8_t[]>(tablelen);
-  memcpy(aTable.get(), aBuf, tablelen);
+  uint8_t* table = new uint8_t[tablelen];
+  memcpy(table, aBuf, tablelen);
+
+  aTable = static_cast<const uint8_t*>(table);
 
   return NS_OK;
 }
