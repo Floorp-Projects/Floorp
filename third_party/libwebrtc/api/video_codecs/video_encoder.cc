@@ -175,7 +175,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
     if (i > 0)
       oss << ", ";
+#if defined(WEBRTC_MOZILLA_BUILD)
+    // This could assert, as opposed to throw using the form in the
+    // else, but since we're in a for loop that uses .size() we can
+    // be fairly sure that this is safe without doing a further
+    // check to make sure 'i' is in-range.
+    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
+#else
     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
+#endif
   }
   oss << "]";
   oss << "}";
