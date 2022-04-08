@@ -304,8 +304,11 @@ class AccessibleCaretManager {
 
   // This function will flush layout, so caller must ensure the PresShell is
   // still valid after calling this method.
+  // @param aPoint The event point when the user is pressing or dragging a
+  //               caret, which is relative to the root frame.
   MOZ_CAN_RUN_SCRIPT
-  virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason);
+  virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason,
+                                              const nsPoint* aPoint = nullptr);
 
   // ---------------------------------------------------------------------------
   // Member variables

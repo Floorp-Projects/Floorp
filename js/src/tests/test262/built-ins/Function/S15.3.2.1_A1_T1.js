@@ -20,14 +20,11 @@ var body = {
   }
 }
 
-//CHECK#1
 try {
   var f = new Function(body);
   throw new Test262Error('#1: When the Function constructor is called with one argument then body be that argument the following step are taken: call ToString(body)');
 } catch (e) {
-  if (e !== 7) {
-    throw new Test262Error('#1.1: When the Function constructor is called with one argument then body be that argument the following step are taken: call ToString(body)');
-  }
+  assert.sameValue(e, 7, 'The value of e is expected to be 7');
 }
 
 reportCompare(0, 0);

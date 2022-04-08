@@ -11,6 +11,6 @@ description: Checking if calling Object prototype as a function fails
 
 assert.throws(TypeError, function() {
   Object.prototype();
-});
+}, 'Object.prototype() throws a TypeError exception');
 
 reportCompare(0, 0);

@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.datefromfields
-description: Temporal.Calendar.prototype.dateFromFields should throw RangeError for
+description: >
+  Temporal.Calendar.prototype.dateFromFields should throw RangeError for
   input not in valid range.
 info: |
   1. Let calendar be the this value.

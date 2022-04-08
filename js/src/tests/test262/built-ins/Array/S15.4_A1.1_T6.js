@@ -9,13 +9,11 @@ es5id: 15.4_A1.1_T6
 description: Checking for Boolean object
 ---*/
 
-//CHECK#1
 var x = [];
 x[new Boolean(true)] = 1;
 assert.sameValue(x[1], undefined, 'The value of x[1] is expected to equal undefined');
 assert.sameValue(x["true"], 1, 'The value of x["true"] is expected to be 1');
 
-//CHECK#3
 x[new Boolean(false)] = 0;
 assert.sameValue(x[0], undefined, 'The value of x[0] is expected to equal undefined');
 assert.sameValue(x["false"], 0, 'The value of x["false"] is expected to be 0');

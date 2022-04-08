@@ -8,12 +8,18 @@ description: Checking absence of ReadOnly attribute
 ---*/
 
 var x = Date.prototype.getMonth;
-if (x === 1)
+if (x === 1) {
   Date.prototype.getMonth = 2;
-else
+} else {
   Date.prototype.getMonth = 1;
-if (Date.prototype.getMonth === x) {
-  throw new Test262Error('#1: The Date.prototype.getMonth has not the attribute ReadOnly');
 }
+
+assert.notSameValue(
+  Date.prototype.getMonth,
+  x,
+  'The value of Date.prototype.getMonth is expected to not equal the value of `x`'
+);
+
+// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

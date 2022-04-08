@@ -31,6 +31,6 @@ info: |
 ---*/
 
 
-class C {}let a, b = 42, c;b;;
+class C {}let a, b = 42, c;b;
 
 reportCompare(0, 0);

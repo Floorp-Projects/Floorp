@@ -47,6 +47,6 @@ info: |
 ---*/
 
 
-class C {}() => 42;;
+class C {}() => 42;
 
 reportCompare(0, 0);

@@ -8,11 +8,10 @@ description: >
     Checking if obtaining the prototype property of
     Object.prototype.propertyIsEnumerable fails
 ---*/
-
-//CHECK#1
-if (Object.prototype.propertyIsEnumerable.prototype !== undefined) {
-  throw new Test262Error('#1: Object.prototype.propertyIsEnumerable has not prototype property' + Object.prototype.propertyIsEnumerable.prototype);
-}
-//
+assert.sameValue(
+  Object.prototype.propertyIsEnumerable.prototype,
+  undefined,
+  'The value of Object.prototype.propertyIsEnumerable.prototype is expected to equal undefined'
+);
 
 reportCompare(0, 0);

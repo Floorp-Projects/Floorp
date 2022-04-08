@@ -95,8 +95,6 @@ class ConditionRule : public GroupRule {
 
  public:
   virtual void GetConditionText(nsACString& aConditionText) = 0;
-  virtual void SetConditionText(const nsACString& aConditionText,
-                                ErrorResult& aRv) = 0;
 };
 
 }  // namespace css

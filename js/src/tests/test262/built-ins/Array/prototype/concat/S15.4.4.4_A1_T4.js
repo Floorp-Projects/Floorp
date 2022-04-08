@@ -14,7 +14,6 @@ description: Checking this algorithm, items are [], [,]
 var x = [, 1];
 var arr = x.concat([], [, ]);
 
-//CHECK#0
 arr.getClass = Object.prototype.toString;
 assert.sameValue(arr.getClass(), "[object Array]", 'arr.getClass() must return "[object Array]"');
 assert.sameValue(arr[0], undefined, 'The value of arr[0] is expected to equal undefined');
