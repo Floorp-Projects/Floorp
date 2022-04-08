@@ -5529,7 +5529,7 @@
 # Domains included in the allowlist.
 - name: gfx.offscreencanvas.domain-allowlist
   type: String
-  value: "*.zoom.us"
+  value: "*.zoom.us,zoom.us"
   mirror: never
 
 - name: gfx.omta.background-color
