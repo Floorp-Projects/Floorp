@@ -63,39 +63,10 @@ void gfxCharacterMap::NotifyReleased() {
   delete this;
 }
 
-gfxFontEntry::gfxFontEntry()
-    : mFixedPitch(false),
-      mIsBadUnderlineFont(false),
-      mIsUserFontContainer(false),
-      mIsDataUserFont(false),
-      mIsLocalUserFont(false),
-      mStandardFace(false),
-      mIgnoreGDEF(false),
-      mIgnoreGSUB(false),
-      mSVGInitialized(false),
-      mHasSpaceFeaturesInitialized(false),
-      mHasSpaceFeatures(false),
-      mHasSpaceFeaturesKerning(false),
-      mHasSpaceFeaturesNonKerning(false),
-      mSkipDefaultFeatureSpaceCheck(false),
-      mGraphiteSpaceContextualsInitialized(false),
-      mHasGraphiteSpaceContextuals(false),
-      mSpaceGlyphIsInvisible(false),
-      mSpaceGlyphIsInvisibleInitialized(false),
-      mHasGraphiteTables(false),
-      mCheckedForGraphiteTables(false),
-      mHasCmapTable(false),
-      mGrFaceInitialized(false),
-      mCheckedForColorGlyph(false),
-      mCheckedForVariationAxes(false),
-      mHasColorBitmapTable(false),
-      mCheckedForColorBitmapTables(false) {
-  memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
-  memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
-}
-
 gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
     : mName(aName),
+      mLock("gfxFontEntry lock"),
+      mFeatureInfoLock("gfxFontEntry featureInfo mutex"),
       mFixedPitch(false),
       mIsBadUnderlineFont(false),
       mIsUserFontContainer(false),
@@ -104,12 +75,12 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
       mStandardFace(aIsStandardFace),
       mIgnoreGDEF(false),
       mIgnoreGSUB(false),
+      mSkipDefaultFeatureSpaceCheck(false),
       mSVGInitialized(false),
       mHasSpaceFeaturesInitialized(false),
       mHasSpaceFeatures(false),
       mHasSpaceFeaturesKerning(false),
       mHasSpaceFeaturesNonKerning(false),
-      mSkipDefaultFeatureSpaceCheck(false),
       mGraphiteSpaceContextualsInitialized(false),
       mHasGraphiteSpaceContextuals(false),
       mSpaceGlyphIsInvisible(false),
@@ -122,6 +93,7 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
       mCheckedForVariationAxes(false),
       mHasColorBitmapTable(false),
       mCheckedForColorBitmapTables(false) {
+  mTrakTable.exchange(kTrakTableUninitialized);
   memset(&mDefaultSubSpaceFeatures, 0, sizeof(mDefaultSubSpaceFeatures));
   memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
@@ -129,12 +101,14 @@ gfxFontEntry::gfxFontEntry(const nsACString& aName, bool aIsStandardFace)
 gfxFontEntry::~gfxFontEntry() {
   // Should not be dropped by stylo
   MOZ_ASSERT(NS_IsMainThread());
-  hb_blob_destroy(mCOLR);
-  hb_blob_destroy(mCPAL);
+
+  hb_blob_destroy(mCOLR.exchange(nullptr));
+  hb_blob_destroy(mCPAL.exchange(nullptr));
+
   if (TrakTableInitialized()) {
     // Only if it was initialized, so that we don't try to call hb_blob_destroy
     // on the kTrakTableUninitialized flag value!
-    hb_blob_destroy(mTrakTable);
+    hb_blob_destroy(mTrakTable.exchange(nullptr));
   }
 
   // For downloaded fonts, we need to tell the user font cache that this
@@ -150,6 +124,13 @@ gfxFontEntry::~gfxFontEntry() {
     }
   }
 
+  delete mFontTableCache.exchange(nullptr);
+  delete mSVGGlyphs.exchange(nullptr);
+  delete[] mUVSData.exchange(nullptr);
+
+  gfxCharacterMap* cmap = mCharacterMap.exchange(nullptr);
+  NS_IF_RELEASE(cmap);
+
   // By the time the entry is destroyed, all font instances that were
   // using it should already have been deleted, and so the HB and/or Gr
   // face objects should have been released.
@@ -157,6 +138,8 @@ gfxFontEntry::~gfxFontEntry() {
   MOZ_ASSERT(!mGrFaceInitialized);
 }
 
+// Only used during initialization, before any other thread has a chance to see
+// the entry, so locking not required.
 void gfxFontEntry::InitializeFrom(fontlist::Face* aFace,
                                   const fontlist::Family* aFamily) {
   mStyleRange = aFace->mStyle;
@@ -173,9 +156,10 @@ void gfxFontEntry::InitializeFrom(fontlist::Face* aFace,
 bool gfxFontEntry::TrySetShmemCharacterMap() {
   MOZ_ASSERT(mShmemFace);
   auto list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
-  mShmemCharacterMap =
+  const auto* shmemCmap =
       static_cast<const SharedBitSet*>(mShmemFace->mCharacterMap.ToPtr(list));
-  return mShmemCharacterMap != nullptr;
+  mShmemCharacterMap.exchange(shmemCmap);
+  return shmemCmap != nullptr;
 }
 
 bool gfxFontEntry::TestCharacterMap(uint32_t aCh) {
@@ -184,11 +168,11 @@ bool gfxFontEntry::TestCharacterMap(uint32_t aCh) {
     MOZ_ASSERT(mCharacterMap || mShmemCharacterMap,
                "failed to initialize character map");
   }
-  return mShmemCharacterMap ? mShmemCharacterMap->test(aCh)
-                            : mCharacterMap->test(aCh);
+  return mShmemCharacterMap ? GetShmemCharacterMap()->test(aCh)
+                            : GetCharacterMap()->test(aCh);
 }
 
-nsresult gfxFontEntry::InitializeUVSMap() {
+void gfxFontEntry::EnsureUVSMapInitialized() {
   // mUVSOffset will not be initialized
   // until cmap is initialized.
   if (!mCharacterMap && !mShmemCharacterMap) {
@@ -198,39 +182,36 @@ nsresult gfxFontEntry::InitializeUVSMap() {
   }
 
   if (!mUVSOffset) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   if (!mUVSData) {
+    nsresult rv = NS_ERROR_NOT_AVAILABLE;
     const uint32_t kCmapTag = TRUETYPE_TAG('c', 'm', 'a', 'p');
     AutoTable cmapTable(this, kCmapTag);
-    if (!cmapTable) {
-      mUVSOffset = 0;  // don't bother to read the table again
-      return NS_ERROR_FAILURE;
+    if (cmapTable) {
+      const uint8_t* uvsData = nullptr;
+      unsigned int cmapLen;
+      const char* cmapData = hb_blob_get_data(cmapTable, &cmapLen);
+      rv = gfxFontUtils::ReadCMAPTableFormat14(
+          (const uint8_t*)cmapData + mUVSOffset, cmapLen - mUVSOffset, uvsData);
+      if (NS_SUCCEEDED(rv)) {
+        if (!mUVSData.compareExchange(nullptr, uvsData)) {
+          delete uvsData;
+        }
+      }
     }
-
-    UniquePtr<uint8_t[]> uvsData;
-    unsigned int cmapLen;
-    const char* cmapData = hb_blob_get_data(cmapTable, &cmapLen);
-    nsresult rv = gfxFontUtils::ReadCMAPTableFormat14(
-        (const uint8_t*)cmapData + mUVSOffset, cmapLen - mUVSOffset, uvsData);
-
     if (NS_FAILED(rv)) {
-      mUVSOffset = 0;  // don't bother to read the table again
-      return rv;
+      mUVSOffset = 0;  // don't try to read the table again
     }
-
-    mUVSData = std::move(uvsData);
   }
-
-  return NS_OK;
 }
 
 uint16_t gfxFontEntry::GetUVSGlyph(uint32_t aCh, uint32_t aVS) {
-  InitializeUVSMap();
+  EnsureUVSMapInitialized();
 
-  if (mUVSData) {
-    return gfxFontUtils::MapUVSToGlyphFormat14(mUVSData.get(), aCh, aVS);
+  if (const auto* uvsData = GetUVSData()) {
+    return gfxFontUtils::MapUVSToGlyphFormat14(uvsData, aCh, aVS);
   }
 
   return 0;
@@ -254,8 +235,11 @@ bool gfxFontEntry::SupportsScriptInGSUB(const hb_tag_t* aScriptTags,
 }
 
 nsresult gfxFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
-  NS_ASSERTION(false, "using default no-op implementation of ReadCMAP");
-  mCharacterMap = new gfxCharacterMap();
+  MOZ_ASSERT(false, "using default no-op implementation of ReadCMAP");
+  RefPtr<gfxCharacterMap> cmap = new gfxCharacterMap();
+  if (mCharacterMap.compareExchange(nullptr, cmap.get())) {
+    Unused << cmap.forget();  // mCharacterMap now owns the reference
+  }
   return NS_OK;
 }
 
@@ -273,7 +257,6 @@ nsCString gfxFontEntry::RealFaceName() {
 
 gfxFont* gfxFontEntry::FindOrMakeFont(const gfxFontStyle* aStyle,
                                       gfxCharacterMap* aUnicodeRangeMap) {
-  // the font entry name is the psname, not the family name
   gfxFont* font =
       gfxFontCache::GetCache()->Lookup(this, aStyle, aUnicodeRangeMap);
 
@@ -317,7 +300,7 @@ uint16_t gfxFontEntry::UnitsPerEm() {
 bool gfxFontEntry::HasSVGGlyph(uint32_t aGlyphId) {
   NS_ASSERTION(mSVGInitialized,
                "SVG data has not yet been loaded. TryGetSVGData() first.");
-  return mSVGGlyphs->HasSVGGlyph(aGlyphId);
+  return GetSVGGlyphs()->HasSVGGlyph(aGlyphId);
 }
 
 bool gfxFontEntry::GetSVGGlyphExtents(DrawTarget* aDrawTarget,
@@ -329,14 +312,14 @@ bool gfxFontEntry::GetSVGGlyphExtents(DrawTarget* aDrawTarget,
              "font has invalid unitsPerEm");
 
   gfxMatrix svgToApp(aSize / mUnitsPerEm, 0, 0, aSize / mUnitsPerEm, 0, 0);
-  return mSVGGlyphs->GetGlyphExtents(aGlyphId, svgToApp, aResult);
+  return GetSVGGlyphs()->GetGlyphExtents(aGlyphId, svgToApp, aResult);
 }
 
 void gfxFontEntry::RenderSVGGlyph(gfxContext* aContext, uint32_t aGlyphId,
                                   SVGContextPaint* aContextPaint) {
   NS_ASSERTION(mSVGInitialized,
                "SVG data has not yet been loaded. TryGetSVGData() first.");
-  mSVGGlyphs->RenderGlyph(aContext, aGlyphId, aContextPaint);
+  GetSVGGlyphs()->RenderGlyph(aContext, aGlyphId, aContextPaint);
 }
 
 bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
@@ -345,10 +328,9 @@ bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
   }
 
   if (!mSVGInitialized) {
-    mSVGInitialized = true;
-
     // If UnitsPerEm is not known/valid, we can't use SVG glyphs
     if (UnitsPerEm() == kInvalidUPEM) {
+      mSVGInitialized = true;
       return false;
     }
 
@@ -356,26 +338,36 @@ bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
     // blob to the gfxSVGGlyphs, once we've confirmed the table exists
     hb_blob_t* svgTable = GetFontTable(TRUETYPE_TAG('S', 'V', 'G', ' '));
     if (!svgTable) {
+      mSVGInitialized = true;
       return false;
     }
 
     // gfxSVGGlyphs will hb_blob_destroy() the table when it is finished
     // with it.
-    mSVGGlyphs = MakeUnique<gfxSVGGlyphs>(svgTable, this);
+    auto* svgGlyphs = new gfxSVGGlyphs(svgTable, this);
+    if (!mSVGGlyphs.compareExchange(nullptr, svgGlyphs)) {
+      delete svgGlyphs;
+    }
+    mSVGInitialized = true;
   }
 
-  if (mSVGGlyphs && !mFontsUsingSVGGlyphs.Contains(aFont)) {
-    mFontsUsingSVGGlyphs.AppendElement(aFont);
+  if (GetSVGGlyphs()) {
+    AutoWriteLock lock(mLock);
+    if (!mFontsUsingSVGGlyphs.Contains(aFont)) {
+      mFontsUsingSVGGlyphs.AppendElement(aFont);
+    }
   }
 
-  return !!mSVGGlyphs;
+  return !!GetSVGGlyphs();
 }
 
 void gfxFontEntry::NotifyFontDestroyed(gfxFont* aFont) {
+  AutoWriteLock lock(mLock);
   mFontsUsingSVGGlyphs.RemoveElement(aFont);
 }
 
 void gfxFontEntry::NotifyGlyphsChanged() {
+  AutoReadLock lock(mLock);
   for (uint32_t i = 0, count = mFontsUsingSVGGlyphs.Length(); i < count; ++i) {
     const gfxFont* font = mFontsUsingSVGGlyphs[i];
     font->NotifyGlyphsChanged();
@@ -384,33 +376,26 @@ void gfxFontEntry::NotifyGlyphsChanged() {
 
 bool gfxFontEntry::TryGetColorGlyphs() {
   if (mCheckedForColorGlyph) {
-    return (mCOLR && mCPAL);
+    return mCOLR && mCPAL;
+  }
+
+  auto* colr = GetFontTable(TRUETYPE_TAG('C', 'O', 'L', 'R'));
+  auto* cpal = colr ? GetFontTable(TRUETYPE_TAG('C', 'P', 'A', 'L')) : nullptr;
+
+  if (colr && cpal && gfxFontUtils::ValidateColorGlyphs(colr, cpal)) {
+    if (!mCOLR.compareExchange(nullptr, colr)) {
+      hb_blob_destroy(colr);
+    }
+    if (!mCPAL.compareExchange(nullptr, cpal)) {
+      hb_blob_destroy(cpal);
+    }
+  } else {
+    hb_blob_destroy(colr);
+    hb_blob_destroy(cpal);
   }
 
   mCheckedForColorGlyph = true;
-
-  mCOLR = GetFontTable(TRUETYPE_TAG('C', 'O', 'L', 'R'));
-  if (!mCOLR) {
-    return false;
-  }
-
-  mCPAL = GetFontTable(TRUETYPE_TAG('C', 'P', 'A', 'L'));
-  if (!mCPAL) {
-    hb_blob_destroy(mCOLR);
-    mCOLR = nullptr;
-    return false;
-  }
-
-  // validation COLR and CPAL table
-  if (gfxFontUtils::ValidateColorGlyphs(mCOLR, mCPAL)) {
-    return true;
-  }
-
-  hb_blob_destroy(mCOLR);
-  hb_blob_destroy(mCPAL);
-  mCOLR = nullptr;
-  mCPAL = nullptr;
-  return false;
+  return mCOLR && mCPAL;
 }
 
 /**
@@ -522,13 +507,26 @@ hb_blob_t* gfxFontEntry::FontTableHashEntry::GetBlob() const {
 }
 
 bool gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t** aBlob) {
-  if (!mFontTableCache) {
-    // we do this here rather than on fontEntry construction
-    // because not all shapers will access the table cache at all
-    mFontTableCache = MakeUnique<nsTHashtable<FontTableHashEntry>>(8);
+  // Accessing the mFontTableCache pointer is atomic, so we don't need to take
+  // a write lock even if we're initializing it here...
+  PUSH_IGNORE_THREAD_SAFETY
+  if (MOZ_UNLIKELY(!mFontTableCache)) {
+    // We do this here rather than on fontEntry construction
+    // because not all shapers will access the table cache at all.
+    //
+    // We're not holding a write lock, so make sure to atomically update
+    // the cache pointer.
+    auto* newCache = new FontTableCache(8);
+    if (MOZ_UNLIKELY(!mFontTableCache.compareExchange(nullptr, newCache))) {
+      delete newCache;
+    }
   }
+  FontTableCache* cache = GetFontTableCache();
+  POP_THREAD_SAFETY
 
-  FontTableHashEntry* entry = mFontTableCache->GetEntry(aTag);
+  // ...but we do need a lock to read the actual hashtable contents.
+  AutoReadLock lock(mLock);
+  FontTableHashEntry* entry = cache->GetEntry(aTag);
   if (!entry) {
     return false;
   }
@@ -539,13 +537,18 @@ bool gfxFontEntry::GetExistingFontTable(uint32_t aTag, hb_blob_t** aBlob) {
 
 hb_blob_t* gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
                                                   nsTArray<uint8_t>* aBuffer) {
+  PUSH_IGNORE_THREAD_SAFETY
   if (MOZ_UNLIKELY(!mFontTableCache)) {
-    // we do this here rather than on fontEntry construction
-    // because not all shapers will access the table cache at all
-    mFontTableCache = MakeUnique<nsTHashtable<FontTableHashEntry>>(8);
+    auto* newCache = new FontTableCache(8);
+    if (MOZ_UNLIKELY(!mFontTableCache.compareExchange(nullptr, newCache))) {
+      delete newCache;
+    }
   }
+  FontTableCache* cache = GetFontTableCache();
+  POP_THREAD_SAFETY
 
-  FontTableHashEntry* entry = mFontTableCache->PutEntry(aTag);
+  AutoWriteLock lock(mLock);
+  FontTableHashEntry* entry = cache->PutEntry(aTag);
   if (MOZ_UNLIKELY(!entry)) {  // OOM
     return nullptr;
   }
@@ -556,8 +559,7 @@ hb_blob_t* gfxFontEntry::ShareFontTableAndGetBlob(uint32_t aTag,
     return nullptr;
   }
 
-  return entry->ShareTableAndGetBlob(std::move(*aBuffer),
-                                     mFontTableCache.get());
+  return entry->ShareTableAndGetBlob(std::move(*aBuffer), cache);
 }
 
 already_AddRefed<gfxCharacterMap> gfxFontEntry::GetCMAPFromFontInfo(
@@ -609,13 +611,16 @@ void gfxFontEntry::HBFaceDeletedCallback(void* aUserData) {
   fe->ForgetHBFace();
 }
 
-void gfxFontEntry::ForgetHBFace() { mHBFace = nullptr; }
+void gfxFontEntry::ForgetHBFace() { mHBFace.exchange(nullptr); }
 
 hb_face_t* gfxFontEntry::GetHBFace() {
   if (!mHBFace) {
-    mHBFace =
+    hb_face_t* face =
         hb_face_create_for_tables(HBGetTable, this, HBFaceDeletedCallback);
-    return mHBFace;
+    if (mHBFace.compareExchange(nullptr, face)) {
+      return face;
+    }
+    hb_face_destroy(face);
   }
   return hb_face_reference(mHBFace);
 }
@@ -694,12 +699,14 @@ void gfxFontEntry::GrReleaseTable(
 }
 
 rlbox_sandbox_gr* gfxFontEntry::GetGrSandbox() {
+  AutoReadLock lock(mLock);
   MOZ_ASSERT(mSandboxData != nullptr);
   return &mSandboxData->sandbox;
 }
 
 sandbox_callback_gr<float (*)(const void*, uint16_t)>*
 gfxFontEntry::GetGrSandboxAdvanceCallbackHandle() {
+  AutoReadLock lock(mLock);
   MOZ_ASSERT(mSandboxData != nullptr);
   return &mSandboxData->grGetGlyphAdvanceCallback;
 }
@@ -718,8 +725,6 @@ tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
     if (!p_faceOps) {
       MOZ_CRASH("Graphite sandbox memory allocation failed");
     }
-    auto cleanup = MakeScopeExit(
-        [&] { mSandboxData->sandbox.free_in_sandbox(p_faceOps); });
     p_faceOps->size = sizeof(*p_faceOps);
     p_faceOps->get_table = mSandboxData->grGetTableCallback;
     p_faceOps->release_table = mSandboxData->grReleaseTableCallback;
@@ -736,6 +741,7 @@ tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
     tl_grGetFontTableCallbackData = nullptr;
     mGrFace = face.to_opaque();
     mGrFaceInitialized = true;
+    mSandboxData->sandbox.free_in_sandbox(p_faceOps);
   }
   ++mGrFaceRefCnt;
   return mGrFace;
@@ -824,6 +830,7 @@ static_assert(int(intl::Script::NUM_SCRIPT_CODES) <= FEATURE_SCRIPT_MASK,
 
 bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
                                            uint32_t aFeatureTag) {
+  MutexAutoLock lock(mFeatureInfoLock);
   if (!mSupportedFeatures) {
     mSupportedFeatures = MakeUnique<nsTHashMap<nsUint32HashKey, bool>>();
   }
@@ -886,6 +893,7 @@ bool gfxFontEntry::SupportsOpenTypeFeature(Script aScript,
 
 const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,
                                                        uint32_t aFeatureTag) {
+  MutexAutoLock lock(mFeatureInfoLock);
   if (!mFeatureInputs) {
     mFeatureInputs = MakeUnique<nsTHashMap<nsUint32HashKey, hb_set_t*>>();
   }
@@ -942,6 +950,8 @@ const hb_set_t* gfxFontEntry::InputsForOpenTypeFeature(Script aScript,
 }
 
 bool gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag) {
+  MutexAutoLock lock(mFeatureInfoLock);
+
   if (!mSupportedFeatures) {
     mSupportedFeatures = MakeUnique<nsTHashMap<nsUint32HashKey, bool>>();
   }
@@ -1049,8 +1059,9 @@ bool gfxFontEntry::GetColorLayersInfo(
     uint32_t aGlyphId, const mozilla::gfx::DeviceColor& aDefaultColor,
     nsTArray<uint16_t>& aLayerGlyphs,
     nsTArray<mozilla::gfx::DeviceColor>& aLayerColors) {
-  return gfxFontUtils::GetColorGlyphLayers(
-      mCOLR, mCPAL, aGlyphId, aDefaultColor, aLayerGlyphs, aLayerColors);
+  return gfxFontUtils::GetColorGlyphLayers(GetCOLR(), GetCPAL(), aGlyphId,
+                                           aDefaultColor, aLayerGlyphs,
+                                           aLayerColors);
 }
 
 typedef struct {
@@ -1079,15 +1090,22 @@ typedef struct {
 
 bool gfxFontEntry::HasTrackingTable() {
   if (!TrakTableInitialized()) {
-    mTrakTable = GetFontTable(TRUETYPE_TAG('t', 'r', 'a', 'k'));
-    if (mTrakTable) {
-      if (!ParseTrakTable()) {
-        hb_blob_destroy(mTrakTable);
-        mTrakTable = nullptr;
+    hb_blob_t* trak = GetFontTable(TRUETYPE_TAG('t', 'r', 'a', 'k'));
+    if (trak) {
+      // mTrakTable itself is atomic, but we also want to set the auxiliary
+      // pointers mTrakValues and mTrakSizeTable, so we take a lock here to
+      // avoid racing with another thread also initializing the same values.
+      AutoWriteLock lock(mLock);
+      if (!mTrakTable.compareExchange(kTrakTableUninitialized, trak)) {
+        hb_blob_destroy(trak);
+      } else if (!ParseTrakTable()) {
+        hb_blob_destroy(mTrakTable.exchange(nullptr));
       }
+    } else {
+      mTrakTable.exchange(nullptr);
     }
   }
-  return mTrakTable != nullptr;
+  return GetTrakTable() != nullptr;
 }
 
 bool gfxFontEntry::ParseTrakTable() {
@@ -1095,7 +1113,7 @@ bool gfxFontEntry::ParseTrakTable() {
   // if 'trak' table is invalid, or doesn't contain a 'normal' track,
   // return false to tell the caller not to try using it.
   unsigned int len;
-  const char* data = hb_blob_get_data(mTrakTable, &len);
+  const char* data = hb_blob_get_data(GetTrakTable(), &len);
   if (len < sizeof(TrakHeader)) {
     return false;
   }
@@ -1150,6 +1168,8 @@ bool gfxFontEntry::ParseTrakTable() {
 }
 
 float gfxFontEntry::TrackingForCSSPx(float aSize) const {
+  // No locking because this does read-only access of fields that are inert
+  // once initialized.
   MOZ_ASSERT(TrakTableInitialized() && mTrakTable && mTrakValues &&
              mTrakSizeTable);
 
@@ -1182,6 +1202,8 @@ float gfxFontEntry::TrackingForCSSPx(float aSize) const {
 }
 
 void gfxFontEntry::SetupVariationRanges() {
+  // No locking because this is done during initialization before any other
+  // thread has access to the entry.
   if (!gfxPlatform::GetPlatform()->HasVariationFontSupport() ||
       !StaticPrefs::layout_css_font_variations_enabled() || !HasVariations() ||
       IsUserFont()) {
@@ -1415,17 +1437,21 @@ void gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   aSizes->mFontListSize += mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
   // cmaps are shared so only non-shared cmaps are included here
-  if (mCharacterMap && mCharacterMap->mBuildOnTheFly) {
-    aSizes->mCharMapsSize += mCharacterMap->SizeOfIncludingThis(aMallocSizeOf);
+  if (mCharacterMap && GetCharacterMap()->mBuildOnTheFly) {
+    aSizes->mCharMapsSize +=
+        GetCharacterMap()->SizeOfIncludingThis(aMallocSizeOf);
   }
-  if (mFontTableCache) {
-    aSizes->mFontTableCacheSize +=
-        mFontTableCache->SizeOfIncludingThis(aMallocSizeOf);
+  {
+    AutoReadLock lock(mLock);
+    if (mFontTableCache) {
+      aSizes->mFontTableCacheSize +=
+          GetFontTableCache()->SizeOfIncludingThis(aMallocSizeOf);
+    }
   }
 
   // If the font has UVS data, we count that as part of the character map.
   if (mUVSData) {
-    aSizes->mCharMapsSize += aMallocSizeOf(mUVSData.get());
+    aSizes->mCharMapsSize += aMallocSizeOf(GetUVSData());
   }
 
   // The following, if present, are essentially cached forms of font table
@@ -1436,21 +1462,25 @@ void gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   }
   if (mSVGGlyphs) {
     aSizes->mFontTableCacheSize +=
-        mSVGGlyphs->SizeOfIncludingThis(aMallocSizeOf);
+        GetSVGGlyphs()->SizeOfIncludingThis(aMallocSizeOf);
   }
-  if (mSupportedFeatures) {
-    aSizes->mFontTableCacheSize +=
-        mSupportedFeatures->ShallowSizeOfIncludingThis(aMallocSizeOf);
-  }
-  if (mFeatureInputs) {
-    aSizes->mFontTableCacheSize +=
-        mFeatureInputs->ShallowSizeOfIncludingThis(aMallocSizeOf);
-    // XXX Can't this simply be
-    // aSizes->mFontTableCacheSize += 8192 * mFeatureInputs->Count();
-    for (auto iter = mFeatureInputs->ConstIter(); !iter.Done(); iter.Next()) {
-      // There's no API to get the real size of an hb_set, so we'll use
-      // an approximation based on knowledge of the implementation.
-      aSizes->mFontTableCacheSize += 8192;  // vector of 64K bits
+
+  {
+    MutexAutoLock lock(mFeatureInfoLock);
+    if (mSupportedFeatures) {
+      aSizes->mFontTableCacheSize +=
+          mSupportedFeatures->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    }
+    if (mFeatureInputs) {
+      aSizes->mFontTableCacheSize +=
+          mFeatureInputs->ShallowSizeOfIncludingThis(aMallocSizeOf);
+      // XXX Can't this simply be
+      // aSizes->mFontTableCacheSize += 8192 * mFeatureInputs->Count();
+      for (auto iter = mFeatureInputs->ConstIter(); !iter.Done(); iter.Next()) {
+        // There's no API to get the real size of an hb_set, so we'll use
+        // an approximation based on knowledge of the implementation.
+        aSizes->mFontTableCacheSize += 8192;  // vector of 64K bits
+      }
     }
   }
   // We don't include the size of mCOLR/mCPAL here, because (depending on the
@@ -2136,7 +2166,7 @@ void gfxFontFamily::ReadAllCMAPs(FontInfoData* aFontInfoData) {
       continue;
     }
     fe->ReadCMAP(aFontInfoData);
-    mFamilyCharacterMap.Union(*(fe->mCharacterMap));
+    mFamilyCharacterMap.Union(*(fe->GetCharacterMap()));
   }
   mFamilyCharacterMap.Compact();
   mFamilyCharacterMapInitialized = true;

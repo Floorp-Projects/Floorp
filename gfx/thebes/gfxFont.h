@@ -2120,7 +2120,7 @@ class gfxFont {
   static nsTHashSet<uint32_t>* sDefaultFeatures;
 
   RefPtr<gfxFontEntry> mFontEntry;
-  mozilla::RWLock mLock;
+  mutable mozilla::RWLock mLock;
 
   struct CacheHashKey {
     union {
