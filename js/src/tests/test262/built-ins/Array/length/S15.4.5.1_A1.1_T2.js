@@ -8,7 +8,6 @@ es5id: 15.4.5.1_A1.1_T2
 description: length in [NaN, Infinity, -Infinity, undefined]
 ---*/
 
-//CHECK#1
 try {
   var x = [];
   x.length = NaN;
@@ -21,7 +20,6 @@ try {
   );
 }
 
-//CHECK#2
 try {
   x = [];
   x.length = Number.POSITIVE_INFINITY;
@@ -34,7 +32,6 @@ try {
   );
 }
 
-//CHECK#3
 try {
   x = [];
   x.length = Number.NEGATIVE_INFINITY;
@@ -47,7 +44,6 @@ try {
   );
 }
 
-//CHECK#4
 try {
   x = [];
   x.length = undefined;

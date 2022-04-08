@@ -16,7 +16,6 @@ var y = new Array(0, 1);
 var z = new Array(2, 3, 4);
 var arr = x.concat(y, z);
 
-//CHECK#0
 arr.getClass = Object.prototype.toString;
 assert.sameValue(arr.getClass(), "[object Array]", 'arr.getClass() must return "[object Array]"');
 assert.sameValue(arr[0], 0, 'The value of arr[0] is expected to be 0');

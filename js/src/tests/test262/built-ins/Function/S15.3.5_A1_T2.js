@@ -9,8 +9,10 @@ description: For testing use variable f = Function()
 
 var f = Function();
 
-if (Object.prototype.toString.call(f) !== "[object Function]") {
-  throw new Test262Error('#1: The value of the [[Class]] property is "Function"');
-}
+assert.sameValue(
+  Object.prototype.toString.call(f),
+  "[object Function]",
+  'Object.prototype.toString.call(Function()) must return "[object Function]"'
+);
 
 reportCompare(0, 0);

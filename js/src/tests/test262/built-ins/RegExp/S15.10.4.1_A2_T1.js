@@ -11,7 +11,6 @@ description: >
     pattern is "/\u0042/i", does not fail
 ---*/
 
-//CHECK#1
 var regExpObj = new RegExp(/\u0042/i, "i");
 assert(regExpObj.ignoreCase);
 

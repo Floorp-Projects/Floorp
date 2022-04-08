@@ -14,9 +14,7 @@ exponents[1] = 111;
 exponents[2] = 111111;
 
 for (var i = 0; i < exponents.length; i++) {
-  if ((base ** exponents[i]) !== -0) {
-    throw new Test262Error("(" + base + " **  " + exponents[i] + ") !== -0");
-  }
+  assert.sameValue(base ** exponents[i], -0, base + " **  " + exponents[i]);
 }
 
 reportCompare(0, 0);

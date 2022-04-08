@@ -51,6 +51,6 @@ info: |
 ---*/
 
 
-function fn() {}() => 1, 42;;
+function fn() {}() => 1, 42;
 
 reportCompare(0, 0);

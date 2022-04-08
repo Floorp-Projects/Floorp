@@ -9,12 +9,13 @@ description: Checking absence of ReadOnly attribute
 ---*/
 
 var x = Date.UTC;
-if (x === 1)
+if (x === 1) {
   Date.UTC = 2;
-else
+} else {
   Date.UTC = 1;
-if (Date.UTC === x) {
-  throw new Test262Error('#1: The Date.UTC has not the attribute ReadOnly');
 }
+assert.notSameValue(Date.UTC, x, 'The value of Date.UTC is expected to not equal the value of `x`');
+
+// TODO: Convert to verifyProperty() format.
 
 reportCompare(0, 0);

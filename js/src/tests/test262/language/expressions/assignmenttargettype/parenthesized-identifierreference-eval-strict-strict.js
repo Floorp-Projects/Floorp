@@ -18,7 +18,4 @@ info: |
 
 $DONOTEVALUATE();
 
-function _() {
-  (eval) = 1;
-}
-
+(eval) = 1;

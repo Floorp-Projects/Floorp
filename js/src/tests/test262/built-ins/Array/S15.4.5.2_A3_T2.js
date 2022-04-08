@@ -11,7 +11,6 @@ description: >
     is an array index
 ---*/
 
-//CHECK#1
 var x = [];
 x[1] = 1;
 x[3] = 3;
@@ -21,15 +20,12 @@ assert.sameValue(x.length, 4, 'The value of x.length is expected to be 4');
 assert.sameValue(x[5], undefined, 'The value of x[5] is expected to equal undefined');
 assert.sameValue(x[3], 3, 'The value of x[3] is expected to be 3');
 
-//CHECK#4
 x.length = new Number(6);
 assert.sameValue(x[5], undefined, 'The value of x[5] is expected to equal undefined');
 
-//CHECK#5
 x.length = 0;
 assert.sameValue(x[0], undefined, 'The value of x[0] is expected to equal undefined');
 
-//CHECK#6
 x.length = 1;
 assert.sameValue(x[1], undefined, 'The value of x[1] is expected to equal undefined');
 

@@ -54,6 +54,15 @@ testWithTypedArrayConstructors(function(TA) {
   } catch (_) {}
 
   assert.sameValue(
+    Reflect.ownKeys(array).join(","), expected, "following shrink (on boundary)"
+  );
+
+  try {
+    ab.resize(0);
+    expected = "";
+  } catch (_) {}
+
+  assert.sameValue(
     Reflect.ownKeys(array).join(","), expected, "following shrink (out of bounds)"
   );
 });

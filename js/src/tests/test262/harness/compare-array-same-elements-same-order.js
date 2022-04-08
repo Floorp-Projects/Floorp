@@ -11,8 +11,6 @@ var obj = {};
 var first = [0, 1, '', 's', undefined, null, obj];
 var second = [0, 1, '', 's', undefined, null, obj];
 
-if (compareArray(first, second) !== true) {
-  throw new Error('Arrays containing the same elements in the same order are equivalent.');
-}
+assert.compareArray(first, second, 'Arrays containing the same elements in the same order are equivalent.');
 
 reportCompare(0, 0);

@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.daysInMonth
-description: Temporal.Calendar.prototype.daysInMonth throws RangeError on
+description: >
+  Temporal.Calendar.prototype.daysInMonth throws RangeError on
   ToTemporalDate when temporalDateLike is invalid string.
 info: |
   4. If Type(temporalDateLike) is not Object or temporalDateLike does not have
