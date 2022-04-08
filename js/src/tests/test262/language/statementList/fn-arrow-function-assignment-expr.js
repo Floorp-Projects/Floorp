@@ -49,6 +49,6 @@ info: |
 ---*/
 
 
-function fn() {}() => 42;;
+function fn() {}() => 42;
 
 reportCompare(0, 0);

@@ -8,10 +8,10 @@ info: |
 es5id: 15.10.5_A2_T1
 description: Checking Function.prototype.isPrototypeOf(RegExp)
 ---*/
-
-//CHECK#1
-if (Function.prototype.isPrototypeOf(RegExp) !== true) {
-	throw new Test262Error('#1: Function.prototype.isPrototypeOf(RegExp) === true');
-}
+assert.sameValue(
+  Function.prototype.isPrototypeOf(RegExp),
+  true,
+  'Function.prototype.isPrototypeOf(RegExp) must return true'
+);
 
 reportCompare(0, 0);

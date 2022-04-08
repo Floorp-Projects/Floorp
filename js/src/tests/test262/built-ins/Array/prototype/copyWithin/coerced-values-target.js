@@ -55,4 +55,9 @@ assert.compareArray(
   '[0, 1, 2, 3].copyWithin(1.5, 0) must return [0, 0, 1, 2]'
 );
 
+assert.compareArray(
+  [0, 1, 2, 3].copyWithin({}, 1), [1, 2, 3, 3],
+  '[0, 1, 2, 3].copyWithin({}, 1) must return [1, 2, 3, 3]'
+);
+
 reportCompare(0, 0);

@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.daysinweeks
-description: Temporal.Calendar.prototype.daysInWeek will take valid ISO8601 string
+description: >
+  Temporal.Calendar.prototype.daysInWeek will take valid ISO8601 string
   and return 7.
 info: |
   4. Perform ? ToTemporalDate(temporalDateLike).

@@ -39,6 +39,6 @@ info: |
 ---*/
 
 
-{}/1/g;;
+{}/1/g;
 
 reportCompare(0, 0);

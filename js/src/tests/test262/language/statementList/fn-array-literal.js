@@ -38,6 +38,6 @@ info: |
 ---*/
 
 
-function fn() {}[];;
+function fn() {}[];
 
 reportCompare(0, 0);

@@ -19,7 +19,7 @@ info: |
     1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%SharedArrayBufferPrototype%",
        «[[ArrayBufferData]], [[ArrayBufferByteLength]]» ).
     ...
-features: [SharedArrayBuffer, Reflect.construct]
+features: [Reflect, Reflect.construct, SharedArrayBuffer]
 ---*/
 
 var arrayBuffer = Reflect.construct(SharedArrayBuffer, [8], Object);

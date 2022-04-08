@@ -4,7 +4,8 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.month
-description: Temporal.Calendar.prototype.month throws TypeError if temporalDateLike
+description: >
+  Temporal.Calendar.prototype.month throws TypeError if temporalDateLike
   is a PlainMonthDay object.
   ToTemporalDate when temporalDateLike is invalid string.
 info: |

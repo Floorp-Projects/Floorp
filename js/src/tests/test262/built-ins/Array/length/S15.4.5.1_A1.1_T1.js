@@ -8,7 +8,6 @@ es5id: 15.4.5.1_A1.1_T1
 description: length in [4294967296, -1, 1.5]
 ---*/
 
-//CHECK#1
 try {
   var x = [];
   x.length = 4294967296;
@@ -21,7 +20,6 @@ try {
   );
 }
 
-//CHECK#2
 try {
   x = [];
   x.length = -1;
@@ -34,7 +32,6 @@ try {
   );
 }
 
-//CHECK#3
 try {
   x = [];
   x.length = 1.5;

@@ -33,6 +33,6 @@ info: |
 ---*/
 
 
-class C {}{};
+class C {}{}
 
 reportCompare(0, 0);

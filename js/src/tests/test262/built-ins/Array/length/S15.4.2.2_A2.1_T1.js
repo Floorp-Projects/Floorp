@@ -10,15 +10,12 @@ es5id: 15.4.2.2_A2.1_T1
 description: Array constructor is given one argument
 ---*/
 
-//CHECK#1
 var x = new Array(0);
 assert.sameValue(x.length, 0, 'The value of x.length is expected to be 0');
 
-//CHECK#2
 var x = new Array(1);
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#3
 var x = new Array(4294967295);
 assert.sameValue(x.length, 4294967295, 'The value of x.length is expected to be 4294967295');
 

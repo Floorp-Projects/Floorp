@@ -9,12 +9,10 @@ es5id: 15.4.5.2_A3_T3
 description: "[[Put]] (length, 4294967296)"
 ---*/
 
-//CHECK#1
 var x = [];
 x.length = 4294967295;
 assert.sameValue(x.length, 4294967295, 'The value of x.length is expected to be 4294967295');
 
-//CHECK#2
 try {
   x = [];
   x.length = 4294967296;

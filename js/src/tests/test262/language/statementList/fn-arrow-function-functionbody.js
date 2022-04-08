@@ -49,6 +49,6 @@ info: |
 ---*/
 
 
-function fn() {}() => { return 42; };;
+function fn() {}() => { return 42; };
 
 reportCompare(0, 0);
