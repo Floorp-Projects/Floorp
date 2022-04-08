@@ -359,12 +359,6 @@ _hb_grapheme_group_func (const hb_glyph_info_t& a HB_UNUSED,
 #define foreach_grapheme(buffer, start, end) \
 	foreach_group (buffer, start, end, _hb_grapheme_group_func)
 
-static inline void
-_hb_ot_layout_reverse_graphemes (hb_buffer_t *buffer)
-{
-  buffer->reverse_groups (_hb_grapheme_group_func,
-			  buffer->cluster_level == HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS);
-}
 
 static inline bool
 _hb_glyph_info_is_unicode_format (const hb_glyph_info_t *info)
