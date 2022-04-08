@@ -1709,6 +1709,10 @@ VideoEncoder::EncoderInfo VP9EncoderImpl::GetEncoderInfo() const {
                                          (sl_fps_fraction / decimator)));
       }
     }
+    if (profile_ == VP9Profile::kProfile0) {
+      info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420,
+                                      VideoFrameBuffer::Type::kNV12};
+    }
   }
   return info;
 }

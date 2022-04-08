@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include "api/array_view.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/rtc_export.h"
@@ -74,6 +75,8 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   // WebrtcVideoFrameAdapter in Chrome - it's I420 buffer backed by a shared
   // memory buffer. Therefore it must have type kNative. Yet, ToI420()
   // doesn't affect binary data at all. Another example is any I420A buffer.
+  // TODO(https://crbug.com/webrtc/12021): Make this method non-virtual and
+  // behave as the other GetXXX methods below.
   virtual const I420BufferInterface* GetI420() const;
 
   // A format specific scale function. Default implementation works by
@@ -101,9 +104,20 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   const I010BufferInterface* GetI010() const;
   const NV12BufferInterface* GetNV12() const;
 
+  // From a kNative frame, returns a VideoFrameBuffer with a pixel format in
+  // the list of types that is in the main memory with a pixel perfect
+  // conversion for encoding with a software encoder. Returns nullptr if the
+  // frame type is not supported, mapping is not possible, or if the kNative
+  // frame has not implemented this method. Only callable if type() is kNative.
+  virtual rtc::scoped_refptr<VideoFrameBuffer> GetMappedFrameBuffer(
+      rtc::ArrayView<Type> types);
+
  protected:
   ~VideoFrameBuffer() override {}
 };
+
+// Update when VideoFrameBuffer::Type is updated.
+const char* VideoFrameBufferTypeToString(VideoFrameBuffer::Type type);
 
 // This interface represents planar formats.
 class PlanarYuvBuffer : public VideoFrameBuffer {

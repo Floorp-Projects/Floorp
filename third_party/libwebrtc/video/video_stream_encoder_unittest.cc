@@ -145,6 +145,13 @@ class FakeNV12NativeBuffer : public webrtc::VideoFrameBuffer {
   rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override {
     return nv12_buffer_->ToI420();
   }
+  rtc::scoped_refptr<VideoFrameBuffer> GetMappedFrameBuffer(
+      rtc::ArrayView<VideoFrameBuffer::Type> types) override {
+    if (absl::c_find(types, Type::kNV12) != types.end()) {
+      return nv12_buffer_;
+    }
+    return nullptr;
+  }
   const NV12BufferInterface* GetNV12() const { return nv12_buffer_; }
 
  private:
@@ -856,6 +863,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
       info.requested_resolution_alignment = requested_resolution_alignment_;
       info.apply_alignment_to_all_simulcast_layers =
           apply_alignment_to_all_simulcast_layers_;
+      info.preferred_pixel_formats = preferred_pixel_formats_;
       return info;
     }
 
@@ -984,6 +992,13 @@ class VideoStreamEncoderTest : public ::testing::Test {
     VideoCodec video_codec() const {
       MutexLock lock(&local_mutex_);
       return video_codec_;
+    }
+
+    void SetPreferredPixelFormats(
+        absl::InlinedVector<VideoFrameBuffer::Type, kMaxPreferredPixelFormats>
+            pixel_formats) {
+      MutexLock lock(&local_mutex_);
+      preferred_pixel_formats_ = std::move(pixel_formats);
     }
 
    private:
@@ -1133,6 +1148,8 @@ class VideoStreamEncoderTest : public ::testing::Test {
     VideoCodec video_codec_ RTC_GUARDED_BY(local_mutex_);
     absl::optional<VideoFrameBuffer::Type> last_input_pixel_format_
         RTC_GUARDED_BY(local_mutex_);
+    absl::InlinedVector<VideoFrameBuffer::Type, kMaxPreferredPixelFormats>
+        preferred_pixel_formats_ RTC_GUARDED_BY(local_mutex_);
   };
 
   class TestSink : public VideoStreamEncoder::EncoderSink {
@@ -1544,8 +1561,59 @@ TEST_F(VideoStreamEncoderTest, NonI420FramesShouldNotBeConvertedToI420) {
   video_stream_encoder_->Stop();
 }
 
-// TODO(webrtc:11977): When a native frame backed by an NV12 image is possible,
-// the frame should be encoded in NV12.
+TEST_F(VideoStreamEncoderTest,
+       NativeFrameIsConvertedToI420IfNoFrameTypePreference) {
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  fake_encoder_.SetPreferredPixelFormats({});
+
+  rtc::Event frame_destroyed_event;
+  video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
+      1, &frame_destroyed_event, codec_width_, codec_height_));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(VideoFrameBuffer::Type::kI420,
+            fake_encoder_.GetLastInputPixelFormat());
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, NativeFrameMappedToPreferredPixelFormat) {
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  fake_encoder_.SetPreferredPixelFormats({VideoFrameBuffer::Type::kNV12});
+
+  rtc::Event frame_destroyed_event;
+  video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
+      1, &frame_destroyed_event, codec_width_, codec_height_));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(VideoFrameBuffer::Type::kNV12,
+            fake_encoder_.GetLastInputPixelFormat());
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, NativeFrameConvertedToI420IfMappingNotFeasible) {
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  // Fake NV12 native frame does not allow mapping to I444.
+  fake_encoder_.SetPreferredPixelFormats({VideoFrameBuffer::Type::kI444});
+
+  rtc::Event frame_destroyed_event;
+  video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
+      1, &frame_destroyed_event, codec_width_, codec_height_));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(VideoFrameBuffer::Type::kI420,
+            fake_encoder_.GetLastInputPixelFormat());
+  video_stream_encoder_->Stop();
+}
+
 TEST_F(VideoStreamEncoderTest, NativeFrameBackedByNV12FrameIsEncodedFromI420) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),

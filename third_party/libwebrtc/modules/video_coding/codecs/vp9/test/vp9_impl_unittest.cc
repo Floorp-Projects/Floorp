@@ -1337,6 +1337,12 @@ TEST_F(TestVp9Impl, ScalabilityStructureIsAvailableInFlexibleMode) {
   EXPECT_TRUE(codec_specific_info.codecSpecific.VP9.ss_data_available);
 }
 
+TEST_F(TestVp9Impl, Profile0PreferredPixelFormats) {
+  EXPECT_THAT(encoder_->GetEncoderInfo().preferred_pixel_formats,
+              testing::UnorderedElementsAre(VideoFrameBuffer::Type::kNV12,
+                                            VideoFrameBuffer::Type::kI420));
+}
+
 TEST_F(TestVp9Impl, EncoderInfoFpsAllocation) {
   const uint8_t kNumSpatialLayers = 3;
   const uint8_t kNumTemporalLayers = 3;

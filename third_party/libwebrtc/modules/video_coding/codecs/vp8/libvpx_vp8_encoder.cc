@@ -1244,6 +1244,8 @@ VideoEncoder::EncoderInfo LibvpxVp8Encoder::GetEncoderInfo() const {
     info.scaling_settings.min_pixels_per_frame =
         rate_control_settings_.LibvpxVp8MinPixels().value();
   }
+  info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420,
+                                  VideoFrameBuffer::Type::kNV12};
 
   if (inited_) {
     // |encoder_idx| is libvpx index where 0 is highest resolution.
