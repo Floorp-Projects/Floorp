@@ -2794,7 +2794,7 @@ bool gfxFont::AgeCachedWords() {
 }
 
 void gfxFont::NotifyGlyphsChanged() const {
-  AutoReadLock lock(const_cast<gfxFont*>(this)->mLock);
+  AutoReadLock lock(mLock);
   uint32_t i, count = mGlyphExtentsArray.Length();
   for (i = 0; i < count; ++i) {
     // Flush cached extents array
@@ -2978,7 +2978,9 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
                         RoundingFlags aRounding, gfxShapedText* aShapedText) {
   // XXX Currently, we do all vertical shaping through harfbuzz.
   // Vertical graphite support may be wanted as a future enhancement.
-  if (FontCanSupportGraphite() && !aVertical) {
+  // XXX Graphite shaping currently only supported on the main thread!
+  // Worker-thread shaping (offscreen canvas) will always go via harfbuzz.
+  if (FontCanSupportGraphite() && !aVertical && NS_IsMainThread()) {
     if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
       gfxGraphiteShaper* shaper = mGraphiteShaper;
       if (!shaper) {
@@ -4102,7 +4104,7 @@ gfxFloat gfxFont::SynthesizeSpaceWidth(uint32_t aCh) {
 
 void gfxFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                      FontCacheSizes* aSizes) const {
-  AutoReadLock lock(const_cast<gfxFont*>(this)->mLock);
+  AutoReadLock lock(mLock);
   for (uint32_t i = 0; i < mGlyphExtentsArray.Length(); ++i) {
     aSizes->mFontInstances +=
         mGlyphExtentsArray[i]->SizeOfIncludingThis(aMallocSizeOf);

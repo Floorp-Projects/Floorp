@@ -419,8 +419,9 @@ nsresult gfxFontconfigFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
   RefPtr<gfxCharacterMap> charmap;
   nsresult rv;
 
+  uint32_t uvsOffset = 0;
   if (aFontInfoData &&
-      (charmap = GetCMAPFromFontInfo(aFontInfoData, mUVSOffset))) {
+      (charmap = GetCMAPFromFontInfo(aFontInfoData, uvsOffset))) {
     rv = NS_OK;
   } else {
     uint32_t kCMAP = TRUETYPE_TAG('c', 'm', 'a', 'p');
@@ -431,29 +432,35 @@ nsresult gfxFontconfigFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
       uint32_t cmapLen;
       const uint8_t* cmapData = reinterpret_cast<const uint8_t*>(
           hb_blob_get_data(cmapTable, &cmapLen));
-      rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen, *charmap, mUVSOffset);
+      rv = gfxFontUtils::ReadCMAP(cmapData, cmapLen, *charmap, uvsOffset);
     } else {
       rv = NS_ERROR_NOT_AVAILABLE;
     }
   }
+  mUVSOffset.exchange(uvsOffset);
 
-  mHasCmapTable = NS_SUCCEEDED(rv);
-  if (mHasCmapTable) {
+  bool setCharMap = true;
+  if (NS_SUCCEEDED(rv)) {
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
     fontlist::FontList* sharedFontList = pfl->SharedFontList();
     if (!IsUserFont() && mShmemFace) {
       mShmemFace->SetCharacterMap(sharedFontList, charmap);  // async
-      if (!TrySetShmemCharacterMap()) {
-        // Temporarily retain charmap, until the shared version is
-        // ready for use.
-        mCharacterMap = charmap;
+      if (TrySetShmemCharacterMap()) {
+        setCharMap = false;
       }
     } else {
-      mCharacterMap = pfl->FindCharMap(charmap);
+      charmap = pfl->FindCharMap(charmap);
     }
+    mHasCmapTable = true;
   } else {
     // if error occurred, initialize to null cmap
-    mCharacterMap = new gfxCharacterMap();
+    charmap = new gfxCharacterMap();
+    mHasCmapTable = false;
+  }
+  if (setCharMap) {
+    if (mCharacterMap.compareExchange(nullptr, charmap.get())) {
+      Unused << charmap.forget();
+    }
   }
 
   LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %zu hash: %8.8x%s\n",
