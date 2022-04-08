@@ -73,10 +73,8 @@ WebrtcTCPSocket::~WebrtcTCPSocket() {
 void WebrtcTCPSocket::SetTabId(dom::TabId aTabId) {
   MOZ_ASSERT(NS_IsMainThread());
   dom::ContentProcessManager* cpm = dom::ContentProcessManager::GetSingleton();
-  if (cpm) {
-    dom::ContentParentId cpId = cpm->GetTabProcessId(aTabId);
-    mAuthProvider = cpm->GetBrowserParentByProcessAndTabId(cpId, aTabId);
-  }
+  dom::ContentParentId cpId = cpm->GetTabProcessId(aTabId);
+  mAuthProvider = cpm->GetBrowserParentByProcessAndTabId(cpId, aTabId);
 }
 
 nsresult WebrtcTCPSocket::Write(nsTArray<uint8_t>&& aWriteData) {
