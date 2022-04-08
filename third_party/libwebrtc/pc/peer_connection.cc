@@ -3009,8 +3009,21 @@ void PeerConnection::ReportSdpFormatReceived(
   } else if (num_audio_tracks > 0 || num_video_tracks > 0) {
     format = kSdpFormatReceivedSimple;
   }
-  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpFormatReceived", format,
-                            kSdpFormatReceivedMax);
+  switch (remote_offer.GetType()) {
+    case SdpType::kOffer:
+      // Historically only offers were counted.
+      RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpFormatReceived",
+                                format, kSdpFormatReceivedMax);
+      break;
+    case SdpType::kAnswer:
+      RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpFormatReceivedAnswer",
+                                format, kSdpFormatReceivedMax);
+      break;
+    default:
+      RTC_LOG(LS_ERROR) << "Can not report SdpFormatReceived for "
+                        << SdpTypeToString(remote_offer.GetType());
+      break;
+  }
 }
 
 void PeerConnection::ReportIceCandidateCollected(
