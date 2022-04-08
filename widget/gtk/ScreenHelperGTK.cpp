@@ -144,12 +144,8 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
 
   // gdk_screen_get_monitor_geometry / workarea returns application pixels
   // (desktop pixels), so we need to convert it to device pixels with
-  // gdkScaleFactor on X11.
-  // GNOME/Wayland reports scales differently (Bug 1732682).
-  gint geometryScaleFactor = 1;
-  if (GdkIsX11Display() || (GdkIsWaylandDisplay() && !IsGNOMECompositor())) {
-    geometryScaleFactor = gdkScaleFactor;
-  }
+  // gdkScaleFactor.
+  gint geometryScaleFactor = gdkScaleFactor;
 
   LayoutDeviceIntRect rect;
 
