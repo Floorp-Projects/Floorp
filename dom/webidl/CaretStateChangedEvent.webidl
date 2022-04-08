@@ -11,7 +11,8 @@ enum CaretChangedReason {
   "taponcaret",
   "presscaret",
   "releasecaret",
-  "scroll"
+  "scroll",
+  "dragcaret"
 };
 
 dictionary CaretStateChangedEventInit : EventInit {
@@ -23,6 +24,8 @@ dictionary CaretStateChangedEventInit : EventInit {
   boolean selectionVisible = false;
   boolean selectionEditable = false;
   DOMString selectedTextContent = "";
+  long clientX = 0;
+  long clientY = 0;
 };
 
 [ChromeOnly,
@@ -40,4 +43,8 @@ interface CaretStateChangedEvent : Event {
   readonly attribute boolean selectionVisible;
   readonly attribute boolean selectionEditable;
   readonly attribute DOMString selectedTextContent;
+  [Pref="layout.accessiblecaret.magnifier.enabled"]
+  readonly attribute long clientX;
+  [Pref="layout.accessiblecaret.magnifier.enabled"]
+  readonly attribute long clientY;
 };
