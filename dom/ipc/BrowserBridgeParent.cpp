@@ -83,6 +83,9 @@ nsresult BrowserBridgeParent::InitWithProcess(
   }
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  if (!cpm) {
+    return NS_ERROR_UNEXPECTED;
+  }
   cpm->RegisterRemoteFrame(browserParent);
 
   RefPtr<WindowGlobalParent> windowParent =
