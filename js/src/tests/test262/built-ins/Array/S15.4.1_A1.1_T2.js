@@ -10,12 +10,10 @@ es5id: 15.4.1_A1.1_T2
 description: Array.prototype.toString = Object.prototype.toString
 ---*/
 
-//CHECK#1
 Array.prototype.toString = Object.prototype.toString;
 var x = Array();
 assert.sameValue(x.toString(), "[object Array]", 'x.toString() must return "[object Array]"');
 
-//CHECK#2
 Array.prototype.toString = Object.prototype.toString;
 var x = Array(0, 1, 2);
 assert.sameValue(x.toString(), "[object Array]", 'x.toString() must return "[object Array]"');

@@ -10,6 +10,6 @@ description: >
 
 assert.throws(TypeError, function() {
   Object.prototype.toLocaleString.call(null);
-});
+}, 'Object.prototype.toLocaleString.call(null) throws a TypeError exception');
 
 reportCompare(0, 0);

@@ -16,7 +16,6 @@ var y = new Object();
 var z = new Array(1, 2);
 var arr = x.concat(y, z, -1, true, "NaN");
 
-//CHECK#0
 arr.getClass = Object.prototype.toString;
 assert.sameValue(arr.getClass(), "[object Array]", 'arr.getClass() must return "[object Array]"');
 assert.sameValue(arr[0], x, 'The value of arr[0] is expected to equal the value of x');

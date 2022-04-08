@@ -15,12 +15,12 @@ includes: [compareArray.js]
 features: [Reflect]
 ---*/
 
-assert(compareArray(Reflect.ownKeys({}), []));
+assert.compareArray(Reflect.ownKeys({}), []);
 
 var o = {
   d: 42
 };
 delete o.d;
-assert(compareArray(Reflect.ownKeys(o), []));
+assert.compareArray(Reflect.ownKeys(o), []);
 
 reportCompare(0, 0);

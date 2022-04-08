@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.dayofweek
-description: Temporal.Calendar.prototype.dayOfWeek will take Temporal.PlainDate objects
+description: >
+  Temporal.Calendar.prototype.dayOfWeek will take Temporal.PlainDate objects
   and return the day of week.
 info: |
   5. Return 𝔽(! ToISODayOfWeek(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).

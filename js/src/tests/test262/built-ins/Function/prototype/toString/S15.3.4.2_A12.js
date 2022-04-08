@@ -10,6 +10,6 @@ description: >
 
 assert.throws(TypeError, function() {
   Function.prototype.toString.call(undefined);
-});
+}, 'Function.prototype.toString.call(undefined) throws a TypeError exception');
 
 reportCompare(0, 0);

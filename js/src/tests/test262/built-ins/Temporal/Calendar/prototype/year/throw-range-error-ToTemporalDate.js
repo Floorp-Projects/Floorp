@@ -4,7 +4,8 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.year
-description: Temporal.Calendar.prototype.year throws RangeError on
+description: >
+  Temporal.Calendar.prototype.year throws RangeError on
   ToTemporalDate when temporalDateLike is invalid string.
 info: |
   4. If Type(temporalDateLike) is not Object or temporalDateLike

@@ -8,11 +8,10 @@ description: >
     Checking if obtaining the prototype property of
     Object.prototype.toLocaleString fails
 ---*/
-
-//CHECK#1
-if (Object.prototype.toLocaleString.prototype !== undefined) {
-  throw new Test262Error('#1: Object.prototype.toLocaleString has not prototype property' + Object.prototype.toLocaleString.prototype);
-}
-//
+assert.sameValue(
+  Object.prototype.toLocaleString.prototype,
+  undefined,
+  'The value of Object.prototype.toLocaleString.prototype is expected to equal undefined'
+);
 
 reportCompare(0, 0);

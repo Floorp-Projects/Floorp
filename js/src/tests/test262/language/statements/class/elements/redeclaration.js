@@ -52,6 +52,6 @@ verifyProperty(c, "y", {
   configurable: true
 });
 
-assert(compareArray(x, ["a", "b", "c", "d"]));
+assert.compareArray(x, ["a", "b", "c", "d"]);
 
 reportCompare(0, 0);

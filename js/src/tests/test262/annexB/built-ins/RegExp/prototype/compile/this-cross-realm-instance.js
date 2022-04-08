@@ -21,7 +21,7 @@ assert.throws(
 );
 
 assert.throws(
-  TypeError,
+  other.TypeError,
   function () {
     other.RegExp.prototype.compile.call(regexp);
   },

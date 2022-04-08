@@ -9,17 +9,14 @@ es5id: 15.4_A1.1_T8
 description: Checking for Number object
 ---*/
 
-//CHECK#1
 var x = [];
 x[new String("0")] = 0;
 assert.sameValue(x[0], 0, 'The value of x[0] is expected to be 0');
 
-//CHECK#2
 var y = [];
 y[new String("1")] = 1;
 assert.sameValue(y[1], 1, 'The value of y[1] is expected to be 1');
 
-//CHECK#3
 var z = [];
 z[new String("1.1")] = 1;
 assert.sameValue(z["1.1"], 1, 'The value of z["1.1"] is expected to be 1');
