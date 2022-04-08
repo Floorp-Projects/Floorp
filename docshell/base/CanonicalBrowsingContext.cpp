@@ -184,9 +184,6 @@ ContentParent* CanonicalBrowsingContext::GetContentParent() const {
   }
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  if (!cpm) {
-    return nullptr;
-  }
   return cpm->GetContentProcessById(ContentParentId(mProcessId));
 }
 
