@@ -4,7 +4,8 @@
 
 /*---
 esid: sec-temporal.calendar.prototype.monthCode
-description: Temporal.Calendar.prototype.monthCode will take ISO8601 string and return
+description: >
+  Temporal.Calendar.prototype.monthCode will take ISO8601 string and return
   the value of the monthCode.
 info: |
   5. If Type(temporalDateLike) is not Object or temporalDateLike does not have

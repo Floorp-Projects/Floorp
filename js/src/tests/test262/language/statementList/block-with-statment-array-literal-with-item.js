@@ -42,6 +42,6 @@ info: |
 
 
 // length is a label!
-{length: 3000}[42];;
+{length: 3000}[42];
 
 reportCompare(0, 0);

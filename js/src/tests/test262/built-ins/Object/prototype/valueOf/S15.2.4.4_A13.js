@@ -11,6 +11,6 @@ description: Checking Object.prototype.valueOf invoked by the 'call' property.
 
 assert.throws(TypeError, function() {
   Object.prototype.valueOf.call(null);
-});
+}, 'Object.prototype.valueOf.call(null) throws a TypeError exception');
 
 reportCompare(0, 0);

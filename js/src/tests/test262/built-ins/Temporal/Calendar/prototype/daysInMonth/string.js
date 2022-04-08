@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.daysinmonth
-description: Temporal.Calendar.prototype.daysInMonth will take ISO8601 string
+description: >
+  Temporal.Calendar.prototype.daysInMonth will take ISO8601 string
   and return the number of days in that month.
 info: |
   4. If Type(temporalDateLike) is not Object or temporalDateLike does not have

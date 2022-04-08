@@ -35,6 +35,6 @@ info: |
 ---*/
 
 
-class C {}/1/;;
+class C {}/1/;
 
 reportCompare(0, 0);

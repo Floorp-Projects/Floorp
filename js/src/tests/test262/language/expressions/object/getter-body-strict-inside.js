@@ -8,8 +8,8 @@ description: >
     reserved word or a future reserved word is made inside a strict
     mode FunctionBody of a PropertyAssignment
 negative:
-  type: SyntaxError
   phase: parse
+  type: SyntaxError
 flags: [noStrict]
 ---*/
 

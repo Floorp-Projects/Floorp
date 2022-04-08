@@ -35,6 +35,6 @@ info: |
 ---*/
 
 
-{}let a, b = 42, c;b;;
+{}let a, b = 42, c;b;
 
 reportCompare(0, 0);

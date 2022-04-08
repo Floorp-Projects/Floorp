@@ -11,12 +11,10 @@ description: >
     is an array index
 ---*/
 
-//CHECK#1
 var x = [];
 x.length = 1;
 assert.sameValue(x.length, 1, 'The value of x.length is expected to be 1');
 
-//CHECK#2
 x[5] = 1;
 x.length = 10;
 assert.sameValue(x.length, 10, 'The value of x.length is expected to be 10');

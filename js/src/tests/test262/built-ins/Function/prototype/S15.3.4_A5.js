@@ -11,6 +11,6 @@ description: Checking if creating "new Function.prototype object" fails
 
 assert.throws(TypeError, function() {
   new Function.prototype;
-});
+}, '`new Function.prototype` throws a TypeError exception');
 
 reportCompare(0, 0);

@@ -3,7 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-temporal.calendar.prototype.dayofyear
-description: Temporal.Calendar.prototype.dayOfYear will take ISO8601 string and
+description: >
+  Temporal.Calendar.prototype.dayOfYear will take ISO8601 string and
   return the day of year.
 info: |
   4. Let temporalDate be ? ToTemporalDate(temporalDateLike).

@@ -11,8 +11,9 @@ description: catch is a method on a Promise
 
 var p = Promise.resolve(3);
 
-if (!(p.catch instanceof Function)) {
-  throw new Test262Error("Expected p.catch to be a function");
-}
+assert(
+  !!(p.catch instanceof Function),
+  'The value of !!(p.catch instanceof Function) is expected to be true'
+);
 
 reportCompare(0, 0);
