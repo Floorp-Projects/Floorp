@@ -4,39 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_CSSMediaRule_h
-#define mozilla_dom_CSSMediaRule_h
+#ifndef mozilla_dom_CSSContainerRule_h
+#define mozilla_dom_CSSContainerRule_h
 
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/ServoBindingTypes.h"
 
 namespace mozilla::dom {
 
-class CSSMediaRule final : public css::ConditionRule {
+class CSSContainerRule final : public css::ConditionRule {
  public:
-  CSSMediaRule(RefPtr<RawServoMediaRule> aRawRule, StyleSheet* aSheet,
-               css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
+  CSSContainerRule(RefPtr<RawServoContainerRule> aRawRule, StyleSheet* aSheet,
+                   css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CSSMediaRule, css::ConditionRule)
-
-  void DropSheetReference() override;
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
 
-  RawServoMediaRule* Raw() const { return mRawRule; }
-  void SetRawAfterClone(RefPtr<RawServoMediaRule>);
+  RawServoContainerRule* Raw() const { return mRawRule; }
+  void SetRawAfterClone(RefPtr<RawServoContainerRule>);
 
   // WebIDL interface
   StyleCssRuleType Type() const override;
   // WebIDL interface
   void GetCssText(nsACString& aCssText) const final;
   void GetConditionText(nsACString& aConditionText) final;
-  void SetConditionText(const nsACString& aConditionText,
-                        ErrorResult& aRv) final;
-  dom::MediaList* Media();
+  void SetConditionText(const nsACString& aConditionText, ErrorResult&) final;
 
   size_t SizeOfIncludingThis(MallocSizeOf) const override;
 
@@ -44,12 +39,11 @@ class CSSMediaRule final : public css::ConditionRule {
                        JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  virtual ~CSSMediaRule();
+  virtual ~CSSContainerRule();
 
-  RefPtr<RawServoMediaRule> mRawRule;
-  RefPtr<dom::MediaList> mMediaList;
+  RefPtr<RawServoContainerRule> mRawRule;
 };
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_CSSMediaRule_h
+#endif  // mozilla_dom_CSSContainerRule_h
