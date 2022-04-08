@@ -133,11 +133,6 @@ static uint32_t GetGTKPixelDepth() {
   return gdk_visual_get_depth(visual);
 }
 
-static bool IsGNOMECompositor() {
-  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
-  return currentDesktop && strstr(currentDesktop, "GNOME") != nullptr;
-}
-
 static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
                                               gint aMonitorNum) {
   gint gdkScaleFactor = ScreenHelperGTK::GetGTKMonitorScaleFactor(aMonitorNum);
@@ -428,6 +423,11 @@ RefPtr<nsIScreen> ScreenGetterWayland::GetScreenForWindow(nsWindow* aWindow) {
     return nullptr;
   }
   return mScreenList[monitor];
+}
+
+static bool IsGNOMECompositor() {
+  const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+  return currentDesktop && strstr(currentDesktop, "GNOME") != nullptr;
 }
 #endif
 
