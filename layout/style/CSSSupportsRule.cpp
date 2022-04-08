@@ -48,6 +48,15 @@ void CSSSupportsRule::GetConditionText(nsACString& aConditionText) {
   Servo_SupportsRule_GetConditionText(mRawRule, &aConditionText);
 }
 
+void CSSSupportsRule::SetConditionText(const nsACString& aConditionText,
+                                       ErrorResult& aRv) {
+  if (IsReadOnly()) {
+    return;
+  }
+
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 /* virtual */
 void CSSSupportsRule::GetCssText(nsACString& aCssText) const {
   Servo_SupportsRule_GetCssText(mRawRule, &aCssText);
