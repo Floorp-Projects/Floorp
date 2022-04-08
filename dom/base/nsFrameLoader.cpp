@@ -2728,6 +2728,9 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
     RefPtr<ContentParent> contentParent;
     if (mChildID != 0) {
       ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+      if (!cpm) {
+        return false;
+      }
       contentParent = cpm->GetContentProcessById(ContentParentId(mChildID));
     }
     mRemoteBrowser =
