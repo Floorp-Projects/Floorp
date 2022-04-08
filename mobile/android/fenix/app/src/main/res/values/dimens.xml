@@ -76,7 +76,6 @@
 
     <!-- Home Fragment -->
     <dimen name="home_fragment_top_toolbar_header_margin">60dp</dimen>
-    <dimen name="home_item_elevation">5dp</dimen>
     <dimen name="home_item_horizontal_margin">16dp</dimen>
 
     <!-- Browser Fragment -->

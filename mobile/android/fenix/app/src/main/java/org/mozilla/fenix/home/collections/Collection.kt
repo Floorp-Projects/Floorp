@@ -83,7 +83,7 @@ fun Collection(
             .height(48.dp),
         shape = if (isExpanded) expandedCollectionShape else collapsedCollectionShape,
         backgroundColor = FirefoxTheme.colors.layer2,
-        elevation = 5.dp, // This needs to match the elevation of TabInCollection for matching shadows.
+        elevation = 5.dp,
     ) {
         Row(
             modifier = Modifier

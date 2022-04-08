@@ -17,7 +17,6 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.getDrawableWithTint
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessioncontrol.SwipeToDeleteCallback
 
 /**
  * A callback for consumers to know when a [RecyclerView.ViewHolder] is about to be touched.
@@ -95,7 +94,7 @@ class TouchCallback(
         val iconLeft: Int
         val iconRight: Int
         val margin =
-            SwipeToDeleteCallback.MARGIN.dpToPx(recyclerView.resources.displayMetrics)
+            MARGIN.dpToPx(recyclerView.resources.displayMetrics)
         val iconWidth = icon.intrinsicWidth
         val iconHeight = icon.intrinsicHeight
         val cellHeight = itemView.bottom - itemView.top
@@ -108,7 +107,7 @@ class TouchCallback(
                 iconRight = itemView.left + margin + iconWidth
                 background.setBounds(
                     itemView.left, itemView.top,
-                    (itemView.left + dX).toInt() + SwipeToDeleteCallback.BACKGROUND_CORNER_OFFSET,
+                    (itemView.left + dX).toInt() + BACKGROUND_CORNER_OFFSET,
                     itemView.bottom
                 )
                 icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
@@ -118,7 +117,7 @@ class TouchCallback(
                 iconLeft = itemView.right - margin - iconWidth
                 iconRight = itemView.right - margin
                 background.setBounds(
-                    (itemView.right + dX).toInt() - SwipeToDeleteCallback.BACKGROUND_CORNER_OFFSET,
+                    (itemView.right + dX).toInt() - BACKGROUND_CORNER_OFFSET,
                     itemView.top, itemView.right, itemView.bottom
                 )
                 icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
@@ -138,5 +137,10 @@ class TouchCallback(
     ) {
         background.draw(c)
         icon.draw(c)
+    }
+
+    companion object {
+        const val BACKGROUND_CORNER_OFFSET = 40
+        const val MARGIN = 32
     }
 }
