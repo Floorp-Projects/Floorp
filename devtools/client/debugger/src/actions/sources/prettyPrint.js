@@ -6,7 +6,7 @@ import { generatedToOriginalId } from "devtools-source-map";
 
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
-import { remapBreakpoints } from "../breakpoints";
+import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints";
 
 import { setSymbols } from "./symbols";
 import { prettyPrint } from "../../workers/pretty-print";
@@ -144,7 +144,7 @@ export function togglePrettyPrint(cx, sourceId) {
 
     await dispatch(setSymbols({ cx, source: newPrettySource }));
 
-    await dispatch(remapBreakpoints(cx, sourceId));
+    await dispatch(updateBreakpointsForNewPrettyPrintedSource(cx, sourceId));
 
     return newPrettySource;
   };
