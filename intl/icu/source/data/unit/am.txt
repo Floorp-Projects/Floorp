@@ -21,6 +21,12 @@ am{
                 other{"{0} ጂ-ኃይል"}
             }
             meter-per-square-second{
+                case{
+                    accusative{
+                        one{"{0} ሜ/ሰ²"}
+                        other{"{0} ሜ/ሰ²"}
+                    }
+                }
                 dnam{"ሜ/ሰ²"}
                 one{"{0} ሜ/ሰ²"}
                 other{"{0} ሜ/ሰ²"}
@@ -106,6 +112,12 @@ am{
                 other{"{0} ሄክታር"}
             }
             square-centimeter{
+                case{
+                    accusative{
+                        one{"{0} ሴሜ²"}
+                        other{"{0} ሴሜ²"}
+                    }
+                }
                 dnam{"ሴሜ²"}
                 one{"{0} ሴሜ²"}
                 other{"{0} ሴሜ²"}
@@ -123,12 +135,24 @@ am{
                 per{"{0}/ኢንች²"}
             }
             square-kilometer{
+                case{
+                    accusative{
+                        one{"{0} ካሬ ኪሎሜትር"}
+                        other{"{0} ካሬ ኪሎሜትር"}
+                    }
+                }
                 dnam{"ካሬ ኪሎሜትር"}
                 one{"{0} ካሬ ኪሎሜትር"}
                 other{"{0} ካሬ ኪሎሜትር"}
                 per{"{0}/ኪሜ²"}
             }
             square-meter{
+                case{
+                    accusative{
+                        one{"{0} ካሬ ሜትር"}
+                        other{"{0} ካሬ ሜትር"}
+                    }
+                }
                 dnam{"ካሬ ሜትር"}
                 one{"{0} ካሬ ሜትር"}
                 other{"{0} ካሬ ሜትር"}
@@ -196,6 +220,12 @@ am{
         }
         concentr{
             item{
+                case{
+                    accusative{
+                        one{"{0} ንጥል"}
+                        other{"{0} ንጥሎች"}
+                    }
+                }
                 dnam{"ንጥሎች"}
                 one{"{0} ንጥል"}
                 other{"{0} ንጥሎች"}
@@ -217,6 +247,12 @@ am{
                 other{"{0} mg/dL"}
             }
             millimole-per-liter{
+                case{
+                    accusative{
+                        one{"{0} mmol/L"}
+                        other{"{0} mmol/L"}
+                    }
+                }
                 dnam{"mmol/L"}
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
@@ -267,11 +303,23 @@ am{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    accusative{
+                        one{"{0} ሊትር በ100 ኪሎሜትሮች"}
+                        other{"{0} ሊትሮች በ100 ኪሎሜትሮች"}
+                    }
+                }
                 dnam{"ሊትሮች በ100 ኪሎሜትሮች"}
                 one{"{0} ሊትር በ100 ኪሎሜትሮች"}
                 other{"{0} ሊትሮች በ100 ኪሎሜትሮች"}
             }
             liter-per-kilometer{
+                case{
+                    accusative{
+                        one{"{0} ሊ/ኪሜ"}
+                        other{"{0} ሊ/ኪሜ"}
+                    }
+                }
                 dnam{"ሊ/ኪሜ"}
                 one{"{0} ሊ/ኪሜ"}
                 other{"{0} ሊ/ኪሜ"}
@@ -318,46 +366,100 @@ am{
                 other{"{0} ባይት"}
             }
             gigabit{
+                case{
+                    accusative{
+                        one{"{0} ጊጋባይት"}
+                        other{"{0} ጊጋባይት"}
+                    }
+                }
                 dnam{"ጊጋባይት"}
                 one{"{0} ጊጋባይት"}
                 other{"{0} ጊጋባይት"}
             }
             gigabyte{
+                case{
+                    accusative{
+                        one{"{0} ጊባ"}
+                        other{"{0} ጊባ"}
+                    }
+                }
                 dnam{"ጊባ"}
                 one{"{0} ጊባ"}
                 other{"{0} ጊባ"}
             }
             kilobit{
+                case{
+                    accusative{
+                        one{"{0} ኪሎባይት"}
+                        other{"{0} ኪሎባይት"}
+                    }
+                }
                 dnam{"ኪሎባይት"}
                 one{"{0} ኪሎባይት"}
                 other{"{0} ኪሎባይት"}
             }
             kilobyte{
+                case{
+                    accusative{
+                        one{"{0} ኪባ"}
+                        other{"{0} ኪባ"}
+                    }
+                }
                 dnam{"ኪባ"}
                 one{"{0} ኪባ"}
                 other{"{0} ኪባ"}
             }
             megabit{
+                case{
+                    accusative{
+                        one{"{0} ሜባ"}
+                        other{"{0} ሜባ"}
+                    }
+                }
                 dnam{"ሜባ"}
                 one{"{0} ሜባ"}
                 other{"{0} ሜባ"}
             }
             megabyte{
+                case{
+                    accusative{
+                        one{"{0} ሜጋባይት"}
+                        other{"{0} ሜጋባይት"}
+                    }
+                }
                 dnam{"ሜጋባይት"}
                 one{"{0} ሜጋባይት"}
                 other{"{0} ሜጋባይት"}
             }
             petabyte{
+                case{
+                    accusative{
+                        one{"{0} ፔታ ባይት"}
+                        other{"{0} ፔታ ባይቶች"}
+                    }
+                }
                 dnam{"ፔታ ባይት"}
                 one{"{0} ፔታ ባይት"}
                 other{"{0} ፔታ ባይቶች"}
             }
             terabit{
+                case{
+                    accusative{
+                        one{"{0} ቴባ"}
+                        other{"{0} ቴባ"}
+                    }
+                }
                 dnam{"ቴራባይትስ"}
                 one{"{0} ቴባ"}
                 other{"{0} ቴባ"}
             }
             terabyte{
+                case{
+                    accusative{
+                        one{"{0} ቴራባይት"}
+                        other{"{0} ቴራባይት"}
+                    }
+                }
                 dnam{"ቴራባይት"}
                 one{"{0} ቴራባይት"}
                 other{"{0} ቴራባይት"}
@@ -390,13 +492,13 @@ am{
             decade{
                 case{
                     accusative{
-                        one{"{0} አስር አመታት"}
-                        other{"{0} አስር አመታት"}
+                        one{"{0} ዓሠርተ-ዓመት"}
+                        other{"{0} ዓሠርተ-ዓመታት"}
                     }
                 }
-                dnam{"አስር አመታት"}
-                one{"{0} አስር አመታት"}
-                other{"{0} አስር አመታት"}
+                dnam{"ዓሠርተ-ዓመት"}
+                one{"{0} ዓሠርተ-ዓመት"}
+                other{"{0} ዓሠርተ-ዓመታት"}
             }
             hour{
                 case{
@@ -411,11 +513,23 @@ am{
                 per{"{0}/ሰ"}
             }
             microsecond{
+                case{
+                    accusative{
+                        one{"{0} ማይክሮሰከንድ"}
+                        other{"{0} ማይክሮሰከንድ"}
+                    }
+                }
                 dnam{"ማይክሮሰከንድ"}
                 one{"{0} ማይክሮሰከንድ"}
                 other{"{0} ማይክሮሰከንድ"}
             }
             millisecond{
+                case{
+                    accusative{
+                        one{"{0} ሚሊሰከንድ"}
+                        other{"{0} ሚሊሰከንድ"}
+                    }
+                }
                 dnam{"ሚሊሰከንድ"}
                 one{"{0} ሚሊሰከንድ"}
                 other{"{0} ሚሊሰከንድ"}
@@ -445,6 +559,12 @@ am{
                 per{"{0}/ወ"}
             }
             nanosecond{
+                case{
+                    accusative{
+                        one{"{0} ናኖሰከንድ"}
+                        other{"{0} ናኖሰከንድ"}
+                    }
+                }
                 dnam{"ናኖሰከንድ"}
                 one{"{0} ናኖሰከንድ"}
                 other{"{0} ናኖሰከንድ"}
@@ -499,6 +619,12 @@ am{
                 other{"{0} A"}
             }
             milliampere{
+                case{
+                    accusative{
+                        one{"{0} mA"}
+                        other{"{0} mA"}
+                    }
+                }
                 dnam{"mA"}
                 one{"{0} mA"}
                 other{"{0} mA"}
@@ -565,11 +691,23 @@ am{
                 other{"{0} kcal"}
             }
             kilojoule{
+                case{
+                    accusative{
+                        one{"{0} kJ"}
+                        other{"{0} kJ"}
+                    }
+                }
                 dnam{"kJ"}
                 one{"{0} kJ"}
                 other{"{0} kJ"}
             }
             kilowatt-hour{
+                case{
+                    accusative{
+                        one{"{0} kWh"}
+                        other{"{0} kWh"}
+                    }
+                }
                 dnam{"kWh"}
                 one{"{0} kWh"}
                 other{"{0} kWh"}
@@ -577,6 +715,12 @@ am{
         }
         force{
             kilowatt-hour-per-100-kilometer{
+                case{
+                    accusative{
+                        one{"{0} ኪሎዋት-ሰዓት በየ 100 ኪሎሜትሮች"}
+                        other{"{0} ኪሎዋት-ሰዓታት በየ 100 ኪሎሜትሮች"}
+                    }
+                }
                 dnam{"ኪሎዋት-ሰዓት በየ 100 ኪሎሜትሮች"}
                 one{"{0} ኪሎዋት-ሰዓት በየ 100 ኪሎሜትሮች"}
                 other{"{0} ኪሎዋት-ሰዓታት በየ 100 ኪሎሜትሮች"}
@@ -595,6 +739,12 @@ am{
         }
         frequency{
             gigahertz{
+                case{
+                    accusative{
+                        one{"{0} GHz"}
+                        other{"{0} GHz"}
+                    }
+                }
                 dnam{"GHz"}
                 one{"{0} GHz"}
                 other{"{0} GHz"}
@@ -611,11 +761,23 @@ am{
                 other{"{0} Hz"}
             }
             kilohertz{
+                case{
+                    accusative{
+                        one{"{0} kHz"}
+                        other{"{0} kHz"}
+                    }
+                }
                 dnam{"kHz"}
                 one{"{0} kHz"}
                 other{"{0} kHz"}
             }
             megahertz{
+                case{
+                    accusative{
+                        one{"{0} MHz"}
+                        other{"{0} MHz"}
+                    }
+                }
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
@@ -649,6 +811,12 @@ am{
                 other{"{0} em"}
             }
             megapixel{
+                case{
+                    accusative{
+                        one{"{0} ሜጋ ፒክስል"}
+                        other{"{0} ሜጋ ፒክስል"}
+                    }
+                }
                 dnam{"ሜጋ ፒክስል"}
                 one{"{0} ሜጋ ፒክስል"}
                 other{"{0} ሜጋ ፒክስል"}
@@ -665,6 +833,12 @@ am{
                 other{"{0} ፒክስል"}
             }
             pixel-per-centimeter{
+                case{
+                    accusative{
+                        one{"{0} ፒበሴሜ"}
+                        other{"{0} ፒበሴሜ"}
+                    }
+                }
                 dnam{"ፒበሴሜ"}
                 one{"{0} ፒበሴሜ"}
                 other{"{0} ፒበሴሜ"}
@@ -682,12 +856,24 @@ am{
                 other{"{0} au"}
             }
             centimeter{
+                case{
+                    accusative{
+                        one{"{0} ሴንቲሜትር"}
+                        other{"{0} ሴንቲሜትር"}
+                    }
+                }
                 dnam{"ሴንቲሜትር"}
                 one{"{0} ሴንቲሜትር"}
                 other{"{0} ሴንቲሜትር"}
                 per{"{0}/ሴሜ"}
             }
             decimeter{
+                case{
+                    accusative{
+                        one{"{0} ዴሲ ሜትር"}
+                        other{"{0} ዴሲ ሜትር"}
+                    }
+                }
                 dnam{"ዴሲ ሜትር"}
                 one{"{0} ዴሲ ሜትር"}
                 other{"{0} ዴሲ ሜትር"}
@@ -715,6 +901,12 @@ am{
                 per{"{0}/ኢንች"}
             }
             kilometer{
+                case{
+                    accusative{
+                        one{"{0} ኪሎሜትር"}
+                        other{"{0} ኪሎሜትር"}
+                    }
+                }
                 dnam{"ኪሎሜትር"}
                 one{"{0} ኪሎሜትር"}
                 other{"{0} ኪሎሜትር"}
@@ -738,6 +930,12 @@ am{
                 per{"{0}/ሜ"}
             }
             micrometer{
+                case{
+                    accusative{
+                        one{"{0} ማይክሮ ሜትር"}
+                        other{"{0} ማይክሮ ሜትር"}
+                    }
+                }
                 dnam{"ማይክሮ ሜትር"}
                 one{"{0} ማይክሮ ሜትር"}
                 other{"{0} ማይክሮ ሜትር"}
@@ -759,11 +957,23 @@ am{
                 other{"{0} ስማይል"}
             }
             millimeter{
+                case{
+                    accusative{
+                        one{"{0} ሚሊሜትር"}
+                        other{"{0} ሚሊሜትር"}
+                    }
+                }
                 dnam{"ሚሊሜትር"}
                 one{"{0} ሚሊሜትር"}
                 other{"{0} ሚሊሜትር"}
             }
             nanometer{
+                case{
+                    accusative{
+                        one{"{0} ናኖ ሜትር"}
+                        other{"{0} ናኖ ሜትር"}
+                    }
+                }
                 dnam{"ናኖ ሜትር"}
                 one{"{0} ናኖ ሜትር"}
                 other{"{0} ናኖ ሜትር"}
@@ -779,6 +989,12 @@ am{
                 other{"{0} pc"}
             }
             picometer{
+                case{
+                    accusative{
+                        one{"{0} ፒኮሜትር"}
+                        other{"{0} ፒኮሜትር"}
+                    }
+                }
                 dnam{"ፒኮሜትር"}
                 one{"{0} ፒኮሜትር"}
                 other{"{0} ፒኮሜትር"}
@@ -897,11 +1113,23 @@ am{
                 other{"{0} ሜትሪክ ቶኖች"}
             }
             microgram{
+                case{
+                    accusative{
+                        one{"{0} ማይክሮ ግራም"}
+                        other{"{0} ማይክሮ ግራም"}
+                    }
+                }
                 dnam{"μg"}
                 one{"{0} μg"}
                 other{"{0} μg"}
             }
             milligram{
+                case{
+                    accusative{
+                        one{"{0} mg"}
+                        other{"{0} mg"}
+                    }
+                }
                 dnam{"mg"}
                 one{"{0} mg"}
                 other{"{0} mg"}
@@ -941,6 +1169,12 @@ am{
         }
         power{
             gigawatt{
+                case{
+                    accusative{
+                        one{"{0} GW"}
+                        other{"{0} GW"}
+                    }
+                }
                 dnam{"GW"}
                 one{"{0} GW"}
                 other{"{0} GW"}
@@ -951,16 +1185,34 @@ am{
                 other{"{0} የፈረስ ጉልበት"}
             }
             kilowatt{
+                case{
+                    accusative{
+                        one{"{0} ኪሎዋት"}
+                        other{"{0} ኪሎዋት"}
+                    }
+                }
                 dnam{"ኪሎዋት"}
                 one{"{0} ኪሎዋት"}
                 other{"{0} ኪሎዋት"}
             }
             megawatt{
+                case{
+                    accusative{
+                        one{"{0} MW"}
+                        other{"{0} MW"}
+                    }
+                }
                 dnam{"MW"}
                 one{"{0} MW"}
                 other{"{0} MW"}
             }
             milliwatt{
+                case{
+                    accusative{
+                        one{"{0} mW"}
+                        other{"{0} mW"}
+                    }
+                }
                 dnam{"mW"}
                 one{"{0} mW"}
                 other{"{0} mW"}
@@ -1001,6 +1253,12 @@ am{
                 other{"{0} አሞሌዎች"}
             }
             hectopascal{
+                case{
+                    accusative{
+                        one{"{0} ሄክቶፓስካል"}
+                        other{"{0} ሄክቶፓስካል"}
+                    }
+                }
                 dnam{"ሄክቶፓስካል"}
                 one{"{0} ሄክቶፓስካል"}
                 other{"{0} ሄክቶፓስካል"}
@@ -1011,16 +1269,34 @@ am{
                 other{"{0} ኢንች ሜርኩሪ"}
             }
             kilopascal{
+                case{
+                    accusative{
+                        one{"{0} ኪሎፓስካል"}
+                        other{"{0} ኪሎፓስካል"}
+                    }
+                }
                 dnam{"ኪሎፓስካል"}
                 one{"{0} ኪሎፓስካል"}
                 other{"{0} ኪሎፓስካል"}
             }
             megapascal{
+                case{
+                    accusative{
+                        one{"{0} ሜጋፓስካል"}
+                        other{"{0} ሜጋፓስካሎች"}
+                    }
+                }
                 dnam{"ሜጋፓስካል"}
                 one{"{0} ሜጋፓስካል"}
                 other{"{0} ሜጋፓስካሎች"}
             }
             millibar{
+                case{
+                    accusative{
+                        one{"{0} ሚሊባር"}
+                        other{"{0} ሚሊባር"}
+                    }
+                }
                 dnam{"ሚሊባር"}
                 one{"{0} ሚሊባር"}
                 other{"{0} ሚሊባር"}
@@ -1049,6 +1325,12 @@ am{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    accusative{
+                        one{"{0} ኪሎሜትር በሰዓት"}
+                        other{"{0} ኪሎሜትር በሰዓት"}
+                    }
+                }
                 dnam{"ኪሎሜትር በሰዓት"}
                 one{"{0} ኪሎሜትር በሰዓት"}
                 other{"{0} ኪሎሜትር በሰዓት"}
@@ -1059,6 +1341,12 @@ am{
                 other{"{0} kn"}
             }
             meter-per-second{
+                case{
+                    accusative{
+                        one{"{0} ሜትር በሰከንድ"}
+                        other{"{0} ሜትር በሰከንድ"}
+                    }
+                }
                 dnam{"ሜትር በሰከንድ"}
                 one{"{0} ሜትር በሰከንድ"}
                 other{"{0} ሜትር በሰከንድ"}
@@ -1111,6 +1399,12 @@ am{
         }
         torque{
             newton-meter{
+                case{
+                    accusative{
+                        one{"{0} ኒ.ሜ"}
+                        other{"{0} ኒ.ሜ"}
+                    }
+                }
                 dnam{"ኒ.ሜ"}
                 one{"{0} ኒ.ሜ"}
                 other{"{0} ኒ.ሜ"}
@@ -1133,11 +1427,23 @@ am{
                 other{"{0} ዳውላ"}
             }
             centiliter{
+                case{
+                    accusative{
+                        one{"{0} ሴንቲ ሊትር"}
+                        other{"{0} ሴንቲ ሊትር"}
+                    }
+                }
                 dnam{"ሴንቲ ሊትር"}
                 one{"{0} ሴንቲ ሊትር"}
                 other{"{0} ሴንቲ ሊትር"}
             }
             cubic-centimeter{
+                case{
+                    accusative{
+                        one{"{0} ሴሜ³"}
+                        other{"{0} ሴሜ³"}
+                    }
+                }
                 dnam{"ሴሜ³"}
                 one{"{0} ሴሜ³"}
                 other{"{0} ሴሜ³"}
@@ -1154,11 +1460,23 @@ am{
                 other{"{0} ኢንች³"}
             }
             cubic-kilometer{
+                case{
+                    accusative{
+                        one{"{0} ኩቢክ ኪሎሜትር"}
+                        other{"{0} ኩቢክ ኪሎሜትር"}
+                    }
+                }
                 dnam{"ኩቢክ ኪሎሜትር"}
                 one{"{0} ኩቢክ ኪሎሜትር"}
                 other{"{0} ኩቢክ ኪሎሜትር"}
             }
             cubic-meter{
+                case{
+                    accusative{
+                        one{"{0} ሜ³"}
+                        other{"{0} ሜ³"}
+                    }
+                }
                 dnam{"ሜ³"}
                 one{"{0} ሜ³"}
                 other{"{0} ሜ³"}
@@ -1191,6 +1509,12 @@ am{
                 other{"{0} mc"}
             }
             deciliter{
+                case{
+                    accusative{
+                        one{"{0} ዴሲ ሊትር"}
+                        other{"{0} ዴሲ ሊትር"}
+                    }
+                }
                 dnam{"ዴሲ ሊትር"}
                 one{"{0} ዴሲ ሊትር"}
                 other{"{0} ዴሲ ሊትር"}
@@ -1238,6 +1562,12 @@ am{
                 per{"{0}/gal Imp."}
             }
             hectoliter{
+                case{
+                    accusative{
+                        one{"{0} ሄሊ"}
+                        other{"{0} ሄሊ"}
+                    }
+                }
                 dnam{"hL"}
                 one{"{0} hL"}
                 other{"{0} hL"}
@@ -1260,11 +1590,23 @@ am{
                 per{"{0}/ሊትር"}
             }
             megaliter{
+                case{
+                    accusative{
+                        one{"{0} ሜሊ"}
+                        other{"{0} ሜሊ"}
+                    }
+                }
                 dnam{"ML"}
                 one{"{0} ML"}
                 other{"{0} ML"}
             }
             milliliter{
+                case{
+                    accusative{
+                        one{"{0} ሚሊ ሊትር"}
+                        other{"{0} ሚሊ ሊትር"}
+                    }
+                }
                 dnam{"ሚሊ ሊትር"}
                 one{"{0} ሚሊ ሊትር"}
                 other{"{0} ሚሊ ሊትር"}
@@ -1433,10 +1775,6 @@ am{
                 dnam{"ቀናት"}
                 one{"{0} ቀ"}
                 other{"{0} ቀ"}
-            }
-            decade{
-                one{"{0} አስርተ አመታት"}
-                other{"{0} አስርተ አመታት"}
             }
             hour{
                 dnam{"ሰዓቶች"}
@@ -1958,9 +2296,9 @@ am{
                 per{"{0}/ቀ"}
             }
             decade{
-                dnam{"አስር አመታት"}
-                one{"{0} አስር አመታት"}
-                other{"{0} አስር አመታት"}
+                dnam{"ዓሠርተ-ዓመት"}
+                one{"{0} ዓሠ.ዓ"}
+                other{"{0} ዓሠ.ዓ"}
             }
             hour{
                 dnam{"ሰዓቶች"}

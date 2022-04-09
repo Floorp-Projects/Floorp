@@ -5,11 +5,11 @@ gl{
     collations{
         search{
             Sequence{"[import es-u-co-search]"}
-            Version{"40"}
+            Version{"41"}
         }
         standard{
             Sequence{"[import es]"}
-            Version{"40"}
+            Version{"41"}
         }
     }
 }

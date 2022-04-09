@@ -497,7 +497,7 @@ tr{
                     y{"G MMM y – MMM y"}
                 }
                 GyMMMEd{
-                    G{"d MMM y E – d MMM y E"}
+                    G{"G d MMM y E – G d MMM y E"}
                     M{"G d MMM E – d MMM E y"}
                     d{"G d MMM E – d MMM E y"}
                     y{"G d MMM y E – d MMM y E"}
