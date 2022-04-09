@@ -279,15 +279,17 @@ sk{
         }
         minimalPairs{
             case{
-                accusative{"{0}=akuzatív"}
-                genitive{"{0}=genitív"}
-                instrumental{"{0}=inštrumentál"}
-                nominative{"{0}=nominatív"}
+                accusative{"Namerali sme {0}"}
+                dative{"Vďaka {0} naviac to bol rekord"}
+                genitive{"Bez {0} sa obídeme."}
+                instrumental{"Uspokojíme sa s {0}."}
+                locative{"Po {0} sa zastavil."}
+                nominative{"Chýba ešte {0}"}
             }
             gender{
-                feminine{"{0}=ženský rod"}
-                inanimate{"{0}=mužský rod, neživotné"}
-                neuter{"{0}=stredný rod"}
+                feminine{"Jedna {0} stála 5 eur."}
+                inanimate{"Jeden {0} stál 5 eur."}
+                neuter{"Jedno {0} stálo 5 eur."}
             }
             ordinal{
                 other{"Na {0}. križovatke odbočte doprava."}

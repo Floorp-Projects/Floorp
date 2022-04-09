@@ -1606,8 +1606,8 @@ eu{
             }
             decade{
                 dnam{"hamarkada"}
-                one{"{0} hamarkada"}
-                other{"{0} hamarkada"}
+                one{"{0} hamark."}
+                other{"{0} hamark."}
             }
             hour{
                 dnam{"ordu"}

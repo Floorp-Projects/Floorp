@@ -171,7 +171,14 @@ hi{
                 per{"{0} प्रति वर्ग किलोमीटर"}
             }
             square-meter{
+                case{
+                    oblique{
+                        one{"{0} वर्ग मीटर"}
+                        other{"{0} वर्ग मीटर"}
+                    }
+                }
                 dnam{"वर्ग मीटर"}
+                gender{"masculine"}
                 one{"{0} वर्ग मीटर"}
                 other{"{0} वर्ग मीटर"}
                 per{"{0}/वर्ग मीटर"}
@@ -272,7 +279,14 @@ hi{
         }
         concentr{
             item{
+                case{
+                    oblique{
+                        one{"{0} आइटम"}
+                        other{"{0} items"}
+                    }
+                }
                 dnam{"items"}
+                gender{"masculine"}
                 one{"{0} item"}
                 other{"{0} items"}
             }
@@ -294,7 +308,14 @@ hi{
                 other{"{0} मिलिग्राम प्रति डेसीलीटर"}
             }
             millimole-per-liter{
+                case{
+                    oblique{
+                        one{"{0} मिलीमोल प्रति लीटर"}
+                        other{"{0} मिलीमोल प्रति लीटर"}
+                    }
+                }
                 dnam{"मिलीमोल प्रति लीटर"}
+                gender{"masculine"}
                 one{"{0} मिलीमोल प्रति लीटर"}
                 other{"{0} मिलीमोल प्रति लीटर"}
             }
@@ -373,7 +394,14 @@ hi{
                 other{"{0} लीटर प्रति 100 किलोमीटर"}
             }
             liter-per-kilometer{
+                case{
+                    oblique{
+                        one{"{0} लीटर प्रति किलोमीटर"}
+                        other{"{0} लीटर प्रति किलोमीटर"}
+                    }
+                }
                 dnam{"लीटर प्रति किलोमीटर"}
+                gender{"masculine"}
                 one{"{0} लीटर प्रति किलोमीटर"}
                 other{"{0} लीटर प्रति किलोमीटर"}
             }
@@ -435,47 +463,110 @@ hi{
                 other{"{0} बाइट"}
             }
             gigabit{
+                case{
+                    oblique{
+                        one{"{0} गीगाबिट"}
+                        other{"{0} गीगाबिट"}
+                    }
+                }
                 dnam{"गीगाबिट"}
+                gender{"masculine"}
                 one{"{0} गीगाबिट"}
                 other{"{0} गीगाबिट"}
             }
             gigabyte{
+                case{
+                    oblique{
+                        one{"{0} गीगाबाइट"}
+                        other{"{0} गीगाबाइट"}
+                    }
+                }
                 dnam{"गीगाबाइट"}
+                gender{"masculine"}
                 one{"{0} गीगाबाइट"}
                 other{"{0} गीगाबाइट"}
             }
             kilobit{
+                case{
+                    oblique{
+                        one{"{0} किलोबिट"}
+                        other{"{0} किलोबिट"}
+                    }
+                }
                 dnam{"किलोबिट"}
+                gender{"masculine"}
                 one{"{0} किलोबिट"}
                 other{"{0} किलोबिट"}
             }
             kilobyte{
+                case{
+                    oblique{
+                        one{"{0} किलोबाइट"}
+                        other{"{0} किलोबाइट"}
+                    }
+                }
                 dnam{"किलोबाइट"}
+                gender{"masculine"}
                 one{"{0} किलोबाइट"}
                 other{"{0} किलोबाइट"}
             }
             megabit{
+                case{
+                    oblique{
+                        one{"{0} मेगाबिट"}
+                        other{"{0} मेगाबिट"}
+                    }
+                }
                 dnam{"मेगाबिट"}
+                gender{"masculine"}
                 one{"{0} मेगाबिट"}
                 other{"{0} मेगाबिट"}
             }
             megabyte{
+                case{
+                    oblique{
+                        one{"{0} मेगाबाइट"}
+                        other{"{0} मेगाबाइट"}
+                    }
+                }
                 dnam{"मेगाबाइट"}
+                gender{"masculine"}
                 one{"{0} मेगाबाइट"}
                 other{"{0} मेगाबाइट"}
             }
             petabyte{
+                case{
+                    oblique{
+                        one{"{0} पेटाबाइट"}
+                        other{"{0} पेटाबाइट"}
+                    }
+                }
                 dnam{"पेटाबाइट"}
+                gender{"masculine"}
                 one{"{0} पेटाबाइट"}
                 other{"{0} पेटाबाइट"}
             }
             terabit{
+                case{
+                    oblique{
+                        one{"{0} टेराबिट"}
+                        other{"{0} टेराबिट"}
+                    }
+                }
                 dnam{"टेराबिट"}
+                gender{"masculine"}
                 one{"{0} टेराबिट"}
                 other{"{0} टेराबिट"}
             }
             terabyte{
+                case{
+                    oblique{
+                        one{"{0} टेराबाइट"}
+                        other{"{0} टेराबाइट"}
+                    }
+                }
                 dnam{"टेराबाइट"}
+                gender{"masculine"}
                 one{"{0} टेराबाइट"}
                 other{"{0} टेराबाइट"}
             }
@@ -496,7 +587,7 @@ hi{
             day{
                 case{
                     oblique{
-                        one{"{0} दिनों"}
+                        one{"{0} दिन"}
                         other{"{0} दिनों"}
                     }
                 }
@@ -532,12 +623,26 @@ hi{
                 per{"{0} प्रति घंटा"}
             }
             microsecond{
+                case{
+                    oblique{
+                        one{"{0} माइक्रोसेकंड"}
+                        other{"{0} माइक्रोसेकंड"}
+                    }
+                }
                 dnam{"माइक्रोसेकंड"}
+                gender{"masculine"}
                 one{"{0} माइक्रोसेकंड"}
                 other{"{0} माइक्रोसेकंड"}
             }
             millisecond{
+                case{
+                    oblique{
+                        one{"{0} मिलीसेकंड"}
+                        other{"{0} मिलीसेकंड"}
+                    }
+                }
                 dnam{"मिलीसेकंड"}
+                gender{"masculine"}
                 one{"{0} मिलीसेकंड"}
                 other{"{0} मिलीसेकंड"}
             }
@@ -557,18 +662,25 @@ hi{
             month{
                 case{
                     oblique{
-                        one{"{0} महीना"}
-                        other{"{0} महीना"}
+                        one{"{0} महीने"}
+                        other{"{0} महीनों"}
                     }
                 }
                 dnam{"महीना"}
                 gender{"masculine"}
                 one{"{0} महीना"}
-                other{"{0} महीना"}
+                other{"{0} महीने"}
                 per{"{0} प्रति महीना"}
             }
             nanosecond{
+                case{
+                    oblique{
+                        one{"{0} नैनो सेकंड"}
+                        other{"{0} नैनो सेकंड"}
+                    }
+                }
                 dnam{"नैनो सेकंड"}
+                gender{"masculine"}
                 one{"{0} नैनो सेकंड"}
                 other{"{0} नैनो सेकंड"}
             }
@@ -626,7 +738,14 @@ hi{
                 other{"{0} एम्पीयर"}
             }
             milliampere{
+                case{
+                    oblique{
+                        one{"{0} मिली एम्‍पीयर"}
+                        other{"{0} मिली एम्‍पीयर"}
+                    }
+                }
                 dnam{"मिली एम्‍पीयर"}
+                gender{"masculine"}
                 one{"{0} मिली एम्‍पीयर"}
                 other{"{0} मिली एम्‍पीयर"}
             }
@@ -715,12 +834,26 @@ hi{
                 other{"{0} किलो कैलोरी"}
             }
             kilojoule{
+                case{
+                    oblique{
+                        one{"{0} किलो जूल"}
+                        other{"{0} किलो जूल"}
+                    }
+                }
                 dnam{"किलो जूल"}
+                gender{"masculine"}
                 one{"{0} किलो जूल"}
                 other{"{0} किलो जूल"}
             }
             kilowatt-hour{
+                case{
+                    oblique{
+                        one{"{0} किलोवॉट घंटा"}
+                        other{"{0} किलोवॉट घंटे"}
+                    }
+                }
                 dnam{"किलोवॉट घंटे"}
+                gender{"masculine"}
                 one{"{0} किलोवॉट घंटा"}
                 other{"{0} किलोवॉट घंटे"}
             }
@@ -731,6 +864,9 @@ hi{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                gender{"masculine"}
+            }
             newton{
                 case{
                     oblique{
@@ -751,7 +887,14 @@ hi{
         }
         frequency{
             gigahertz{
+                case{
+                    oblique{
+                        one{"{0} गीगाहर्ट्ज़"}
+                        other{"{0} गीगाहर्ट्ज़"}
+                    }
+                }
                 dnam{"गीगाहर्ट्ज़"}
+                gender{"masculine"}
                 one{"{0} गीगाहर्ट्ज़"}
                 other{"{0} गीगाहर्ट्ज़"}
             }
@@ -768,12 +911,26 @@ hi{
                 other{"{0} हर्ट्ज़"}
             }
             kilohertz{
+                case{
+                    oblique{
+                        one{"{0} किलोहर्ट्ज़"}
+                        other{"{0} किलोहर्ट्ज़"}
+                    }
+                }
                 dnam{"किलोहर्ट्ज़"}
+                gender{"masculine"}
                 one{"{0} किलोहर्ट्ज़"}
                 other{"{0} किलोहर्ट्ज़"}
             }
             megahertz{
+                case{
+                    oblique{
+                        one{"{0} मेगाहर्ट्ज़"}
+                        other{"{0} मेगाहर्ट्ज़"}
+                    }
+                }
                 dnam{"मेगाहर्ट्ज़"}
+                gender{"masculine"}
                 one{"{0} मेगाहर्ट्ज़"}
                 other{"{0} मेगाहर्ट्ज़"}
             }
@@ -797,7 +954,14 @@ hi{
                 gender{"masculine"}
             }
             megapixel{
+                case{
+                    oblique{
+                        one{"{0} मेगापिक्सेल"}
+                        other{"{0} मेगापिक्सेल"}
+                    }
+                }
                 dnam{"मेगापिक्सेल"}
+                gender{"masculine"}
                 one{"{0} मेगापिक्सेल"}
                 other{"{0} मेगापिक्सेल"}
             }
@@ -814,7 +978,14 @@ hi{
                 other{"{0} पिक्सेल"}
             }
             pixel-per-centimeter{
+                case{
+                    oblique{
+                        one{"{0} पिक्सेल प्रति सेंटीमीटर"}
+                        other{"{0} पिक्सेल प्रति सेंटीमीटर"}
+                    }
+                }
                 dnam{"पिक्सेल प्रति सेंटीमीटर"}
+                gender{"masculine"}
                 one{"{0} पिक्सेल प्रति सेंटीमीटर"}
                 other{"{0} पिक्सेल प्रति सेंटीमीटर"}
             }
@@ -844,7 +1015,14 @@ hi{
                 per{"{0}/सेंटीमीटर"}
             }
             decimeter{
+                case{
+                    oblique{
+                        one{"{0} डेसीमीटर"}
+                        other{"{0} डेसीमीटर"}
+                    }
+                }
                 dnam{"डेसीमीटर"}
+                gender{"masculine"}
                 one{"{0} डेसीमीटर"}
                 other{"{0} डेसीमीटर"}
             }
@@ -921,7 +1099,14 @@ hi{
                 per{"{0}/मीटर"}
             }
             micrometer{
+                case{
+                    oblique{
+                        one{"{0} माइक्रोमीटर"}
+                        other{"{0} माइक्रोमीटर"}
+                    }
+                }
                 dnam{"माइक्रोमीटर"}
+                gender{"masculine"}
                 one{"{0} माइक्रोमीटर"}
                 other{"{0} माइक्रोमीटर"}
             }
@@ -962,7 +1147,14 @@ hi{
                 other{"{0} मिलीमीटर"}
             }
             nanometer{
+                case{
+                    oblique{
+                        one{"{0} नैनोमीटर"}
+                        other{"{0} नैनोमीटर"}
+                    }
+                }
                 dnam{"नैनोमीटर"}
+                gender{"masculine"}
                 one{"{0} नैनोमीटर"}
                 other{"{0} नैनोमीटर"}
             }
@@ -1163,7 +1355,14 @@ hi{
                 other{"{0} मीट्रिक टन"}
             }
             microgram{
+                case{
+                    oblique{
+                        one{"{0} माइक्रोग्राम"}
+                        other{"{0} माइक्रोग्राम"}
+                    }
+                }
                 dnam{"माइक्रोग्राम"}
+                gender{"masculine"}
                 one{"{0} माइक्रोग्राम"}
                 other{"{0} माइक्रोग्राम"}
             }
@@ -1235,7 +1434,14 @@ hi{
         }
         power{
             gigawatt{
+                case{
+                    oblique{
+                        one{"{0} गिगावॉट"}
+                        other{"{0} गिगावॉट"}
+                    }
+                }
                 dnam{"गिगावॉट"}
+                gender{"masculine"}
                 one{"{0} गिगावॉट"}
                 other{"{0} गिगावॉट"}
             }
@@ -1245,17 +1451,38 @@ hi{
                 other{"{0} अश्वशक्ति"}
             }
             kilowatt{
+                case{
+                    oblique{
+                        one{"{0} किलोवॉट"}
+                        other{"{0} किलोवॉट"}
+                    }
+                }
                 dnam{"किलोवॉट"}
+                gender{"masculine"}
                 one{"{0} किलोवॉट"}
                 other{"{0} किलोवॉट"}
             }
             megawatt{
+                case{
+                    oblique{
+                        one{"{0} मेगावॉट"}
+                        other{"{0} मेगावॉट"}
+                    }
+                }
                 dnam{"मेगावॉट"}
+                gender{"masculine"}
                 one{"{0} मेगावॉट"}
                 other{"{0} मेगावॉट"}
             }
             milliwatt{
+                case{
+                    oblique{
+                        one{"{0} मिलीवॉट"}
+                        other{"{0} मिलीवॉट"}
+                    }
+                }
                 dnam{"मिलीवॉट"}
+                gender{"masculine"}
                 one{"{0} मिलीवॉट"}
                 other{"{0} मिलीवॉट"}
             }
@@ -1298,9 +1525,16 @@ hi{
                 other{"{0} बार"}
             }
             hectopascal{
-                dnam{"हैक्टोपास्कल"}
-                one{"{0} हैक्टोपास्कल"}
-                other{"{0} हैक्टोपास्कल"}
+                case{
+                    oblique{
+                        one{"{0} हेक्टोपास्कल"}
+                        other{"{0} हेक्टोपास्कल"}
+                    }
+                }
+                dnam{"हेक्टोपास्कल"}
+                gender{"masculine"}
+                one{"{0} हेक्टोपास्कल"}
+                other{"{0} हेक्टोपास्कल"}
             }
             inch-ofhg{
                 dnam{"मर्करी इंच"}
@@ -1320,12 +1554,26 @@ hi{
                 other{"{0} किलोपास्कल"}
             }
             megapascal{
+                case{
+                    oblique{
+                        one{"{0} मेगापास्कल"}
+                        other{"{0} मेगापास्कल"}
+                    }
+                }
                 dnam{"मेगापास्कल"}
+                gender{"masculine"}
                 one{"{0} मेगापास्कल"}
                 other{"{0} मेगापास्कल"}
             }
             millibar{
+                case{
+                    oblique{
+                        one{"{0} मिलीबार"}
+                        other{"{0} मिलीबार"}
+                    }
+                }
                 dnam{"मिलीबार"}
+                gender{"masculine"}
                 one{"{0} मिलीबार"}
                 other{"{0} मिलीबार"}
             }
@@ -1447,7 +1695,14 @@ hi{
         }
         torque{
             newton-meter{
+                case{
+                    oblique{
+                        one{"{0} न्यूटन-मीटर"}
+                        other{"{0} न्यूटन-मीटर"}
+                    }
+                }
                 dnam{"न्यूटन-मीटर"}
+                gender{"masculine"}
                 one{"{0} न्यूटन-मीटर"}
                 other{"{0} न्यूटन-मीटर"}
             }
@@ -1489,7 +1744,7 @@ hi{
                 case{
                     oblique{
                         one{"{0} घन सेंटीमीटर"}
-                        other{"{0} घन. सेंटी."}
+                        other{"{0} घन सेंटीमीटर"}
                     }
                 }
                 dnam{"घन सेंटीमीटर"}
@@ -1516,12 +1771,26 @@ hi{
                 other{"{0} घन इंच"}
             }
             cubic-kilometer{
+                case{
+                    oblique{
+                        one{"{0} घन किलोमीटर"}
+                        other{"{0} घन किलोमीटर"}
+                    }
+                }
                 dnam{"घन किलोमीटर"}
+                gender{"masculine"}
                 one{"{0} घन किलोमीटर"}
                 other{"{0} घन किलोमीटर"}
             }
             cubic-meter{
+                case{
+                    oblique{
+                        one{"{0} घन मीटर"}
+                        other{"{0} घन मीटर"}
+                    }
+                }
                 dnam{"घन मीटर"}
+                gender{"masculine"}
                 one{"{0} घन मीटर"}
                 other{"{0} घन मीटर"}
                 per{"{0}/घन मीटर"}
@@ -1678,9 +1947,16 @@ hi{
                 per{"{0}/इम्पीरियल गैलन"}
             }
             hectoliter{
-                dnam{"हैक्टोलीटर"}
-                one{"{0} हैक्टोलीटर"}
-                other{"{0} हैक्टोलीटर"}
+                case{
+                    oblique{
+                        one{"{0} हेक्टोलीटर"}
+                        other{"{0} हेक्टोलीटर"}
+                    }
+                }
+                dnam{"हेक्टोलीटर"}
+                gender{"masculine"}
+                one{"{0} हेक्टोलीटर"}
+                other{"{0} हेक्टोलीटर"}
             }
             jigger{
                 case{
@@ -1708,7 +1984,14 @@ hi{
                 per{"{0}/लीटर"}
             }
             megaliter{
+                case{
+                    oblique{
+                        one{"{0} मेगालीटर"}
+                        other{"{0} मेगालीटर"}
+                    }
+                }
                 dnam{"मेगालीटर"}
+                gender{"masculine"}
                 one{"{0} मेगालीटर"}
                 other{"{0} मेगालीटर"}
             }

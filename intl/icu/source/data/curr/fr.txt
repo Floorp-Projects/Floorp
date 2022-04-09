@@ -1225,7 +1225,6 @@ fr{
         ZMW{"Kw"}
     }
     Currencies%variant{
-        GEL{"₾"}
         TRY{"LT"}
     }
     CurrencyPlurals{

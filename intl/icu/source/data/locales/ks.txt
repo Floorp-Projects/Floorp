@@ -2,37 +2,49 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ks{
-    AuxExemplarCharacters{"[\u200E\u200F \u064E \u064F \u0650 \u0654 \u0655 \u065F \u0656 \u0657]"}
+    AuxExemplarCharacters{"[\u200E\u200F \u064E \u064F \u0650 \u0654 \u0655 \u065F \u0656 \u0657 ئ]"}
     ExemplarCharacters{
         "[ء آ أ ٲ ؤ ا ب پ ت ث ٹ ج چ ح خ د ذ ڈ ر ز ڑ ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن ں"
         " ھ ہ و ۄ ۆ ی ۍ ؠ ے]"
     }
-    ExemplarCharactersNumbers{"[\u200E \\- ‑ , . % ‰ + 0۰ 1۱ 2۲ 3۳ 4۴ 5۵ 6۶ 7۷ 8۸ 9۹]"}
+    ExemplarCharactersNumbers{"[\u200E \\- ‑ , ٫ ٬ . % ‰ + 0۰ 1۱ 2۲ 3۳ 4۴ 5۵ 6۶ 7۷ 8۸ 9۹]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
     NumberElements{
         arabext{
+            patterns{
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
+            }
             symbols{
+                decimal{"٫"}
+                group{"٬"}
                 timeSeparator{":"}
             }
         }
         default{"arabext"}
         latn{
             patterns{
-                currencyFormat{"¤ #,##,##0.00"}
-                decimalFormat{"#,##,##0.###"}
-                percentFormat{"#,##,##0%"}
+                currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
                 decimal{"."}
                 exponential{"E"}
-                group{","}
+                group{"،"}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"‎-"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"‎+"}
+                plusSign{"+"}
             }
         }
         native{"arabext"}
@@ -44,15 +56,15 @@ ks{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, MMMM d, Gy",
-                "MMMM d, Gy",
-                "MMM d, Gy",
-                "M/d/Gy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "EEEE, MMMM d, y G",
+                "MMMM d, y G",
+                "MMM d, y G",
+                "M/d/y GGGGG",
+                "{1}, {0}",
+                "{0} پٮ۪ٹھۍ {1}",
+                "{0} پٮ۪ٹھۍ {1}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
                 "ahmmsszzzz",
@@ -104,11 +116,11 @@ ks{
                 "MMMM d, y",
                 "MMM d, y",
                 "M/d/yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{0} پٮ۪ٹھۍ {1}",
+                "{0} پٮ۪ٹھۍ {1}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
                 "ahmmsszzzz",
@@ -121,10 +133,12 @@ ks{
                 "yyMd",
             }
             availableFormats{
-                Gy{"Gy"}
-                GyMMM{"MMM Gy"}
-                GyMMMEd{"EEE, MMM d, Gy"}
-                GyMMMd{"MMM d, Gy"}
+                Ed{"d E"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, MMM d, y G"}
+                GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -133,17 +147,19 @@ ks{
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
                 MMMMd{"MMMM d"}
-                MMMd{"d-MMM"}
+                MMMd{"MMM d"}
                 Md{"M/d"}
                 d{"d"}
                 hm{"h:mm a"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
-                yMEd{"EEE, M/d/y"}
+                yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
-                yMMMEd{"EEE, MMM d, y"}
+                yMMMEd{"E, MMM d, y"}
                 yMMMM{"MMMM y"}
+                yMMMd{"MMM d, y"}
+                yMd{"M/d/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
             }
@@ -185,6 +201,10 @@ ks{
                     "بی سی",
                     "اے ڈی",
                 }
+                abbreviated%variant{
+                    "بی سی ای",
+                    "سی ای",
+                }
                 wide{
                     "قبٕل مسیٖح",
                     "عیٖسوی سنہٕ",
@@ -192,12 +212,26 @@ ks{
             }
             monthNames{
                 format{
+                    abbreviated{
+                        "جنؤری",
+                        "فرؤری",
+                        "مارٕچ",
+                        "اپریل",
+                        "مئی",
+                        "جوٗن",
+                        "جوٗلایی",
+                        "اگست",
+                        "ستمبر",
+                        "اکتوٗبر",
+                        "نومبر",
+                        "دسمبر",
+                    }
                     wide{
                         "جنؤری",
                         "فرؤری",
                         "مارٕچ",
                         "اپریل",
-                        "میٔ",
+                        "مئی",
                         "جوٗن",
                         "جوٗلایی",
                         "اگست",
@@ -208,6 +242,20 @@ ks{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "جنؤری",
+                        "فرؤری",
+                        "مارٕچ",
+                        "اپریل",
+                        "مئی",
+                        "جوٗن",
+                        "جوٗلایی",
+                        "اگست",
+                        "ستمبر",
+                        "اکتوٗبر",
+                        "نومبر",
+                        "دسمبر",
+                    }
                     narrow{
                         "ج",
                         "ف",
@@ -222,21 +270,43 @@ ks{
                         "ا",
                         "ن",
                     }
+                    wide{
+                        "جنؤری",
+                        "فرؤری",
+                        "مارٕچ",
+                        "اپریل",
+                        "مئی",
+                        "جوٗن",
+                        "جوٗلایی",
+                        "اگست",
+                        "ستمبر",
+                        "اکتوٗبر",
+                        "نومبر",
+                        "دسمبر",
+                    }
                 }
             }
             quarters{
                 format{
                     abbreviated{
-                        "ژۄباگ",
-                        "دۆیِم ژۄباگ",
-                        "تریِم ژۄباگ",
-                        "ژوٗرِم ژۄباگ",
+                        "کیو 1",
+                        "کیو 2",
+                        "کیو 3",
+                        "کیو 4",
                     }
                     wide{
                         "گۄڑنیُک ژۄباگ",
                         "دۆیِم ژۄباگ",
                         "تریِم ژۄباگ",
                         "ژوٗرِم ژۄباگ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "کیو 1",
+                        "کیو 2",
+                        "کیو 3",
+                        "کیو 4",
                     }
                 }
             }
@@ -272,7 +342,7 @@ ks{
             }
         }
         dayperiod{
-            dn{"صبح/رات"}
+            dn{"صُبح/راتھ"}
         }
         era{
             dn{"دور"}
@@ -286,8 +356,23 @@ ks{
         month{
             dn{"رؠتھ"}
         }
+        quarter{
+            dn{"کوارٹر"}
+        }
+        quarter-narrow{
+            dn{"کوارٹر"}
+        }
+        quarter-short{
+            dn{"کوارٹر"}
+        }
         second{
-            dn{"سؠکَنڑ"}
+            dn{"سؠکَنڈ"}
+        }
+        second-narrow{
+            dn{"سؠکَنڈ"}
+        }
+        second-short{
+            dn{"سؠکَنڈ"}
         }
         week{
             dn{"ہفتہٕ"}
@@ -299,14 +384,22 @@ ks{
             dn{"ؤری"}
         }
         zone{
-            dn{"زون"}
+            dn{"وَکھ زون"}
         }
     }
     layout{
         characters{"right-to-left"}
     }
+    listPattern{
+        standard{
+            2{"{0} تٕہ {1}"}
+            end{"{0}، تٕہ {1}"}
+            middle{"{0}، {1}"}
+            start{"{0}، {1}"}
+        }
+    }
     measurementSystemNames{
-        US{"یوٗ ایس"}
+        US{"US"}
         metric{"میٖٹرِک"}
     }
 }
