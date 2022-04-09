@@ -5,7 +5,7 @@ en_PH{
     Currencies{
         PHP{
             "₱",
-            "Philippine Piso",
+            "Philippine Peso",
         }
     }
 }

@@ -846,6 +846,9 @@ ks{
         "Australia:Sydney"{
             ec{"سِڑنی"}
         }
+        "Etc:UTC"{
+            ls{"کوآرڈنیٹڈ یونیورسل وَکھ"}
+        }
         "Etc:Unknown"{
             ec{"غٲر زان"}
         }
@@ -1739,5 +1742,8 @@ ks{
         }
         gmtFormat{"GMT{0}"}
         hourFormat{"+HH:mm;-HH:mm"}
+        regionFormat{"{0} وَکھ"}
+        regionFormatDaylight{"{0} ڈے لائٹ وَکھ"}
+        regionFormatStandard{"{0} معیٲری وَکھ"}
     }
 }

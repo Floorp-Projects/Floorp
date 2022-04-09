@@ -15,6 +15,10 @@ fi{
                         one{"{0} G-voimasta"}
                         other{"{0} G-voimasta"}
                     }
+                    genitive{
+                        one{"{0} G-voiman"}
+                        other{"{0} G-voiman"}
+                    }
                     illative{
                         one{"{0} G-voimaan"}
                         other{"{0} G-voimaan"}
@@ -29,6 +33,24 @@ fi{
                 other{"{0} G-voimaa"}
             }
             meter-per-square-second{
+                case{
+                    elative{
+                        one{"{0} metristä per sekunti toiseen"}
+                        other{"{0} metristä per sekunti toiseen"}
+                    }
+                    genitive{
+                        one{"{0} metrin per sekunti toiseen"}
+                        other{"{0} metrin per sekunti toiseen"}
+                    }
+                    illative{
+                        one{"{0} metriin per sekunti toiseen"}
+                        other{"{0} metriin per sekunti toiseen"}
+                    }
+                    partitive{
+                        one{"{0} metriä per sekunti toiseen"}
+                        other{"{0} metriä per sekunti toiseen"}
+                    }
+                }
                 dnam{"metrit per sekunti toiseen"}
                 one{"{0} metri per sekunti toiseen"}
                 other{"{0} metriä per sekunti toiseen"}
@@ -40,6 +62,10 @@ fi{
                     elative{
                         one{"{0} kulmaminuutista"}
                         other{"{0} kulmaminuutista"}
+                    }
+                    genitive{
+                        one{"{0} kulmaninuutin"}
+                        other{"{0} kulmaminuutin"}
                     }
                     illative{
                         one{"{0} kulmaminuuttiin"}
@@ -60,6 +86,10 @@ fi{
                         one{"{0} kulmasekunnista"}
                         other{"{0} kulmasekunnista"}
                     }
+                    genitive{
+                        one{"{0} kulmasekunnin"}
+                        other{"{0} kulmasekunnin"}
+                    }
                     illative{
                         one{"{0} kulmasekuntiin"}
                         other{"{0} kulmasekuntiin"}
@@ -78,6 +108,10 @@ fi{
                     elative{
                         one{"{0} asteesta"}
                         other{"{0} asteesta"}
+                    }
+                    genitive{
+                        one{"{0} asteen"}
+                        other{"{0} asteen"}
                     }
                     illative{
                         one{"{0} asteeseen"}
@@ -98,6 +132,10 @@ fi{
                         one{"{0} radiaanista"}
                         other{"{0} radiaanista"}
                     }
+                    genitive{
+                        one{"{0} radiaanin"}
+                        other{"{0} radiaanin"}
+                    }
                     illative{
                         one{"{0} radiaaniin"}
                         other{"{0} radiaaniin"}
@@ -116,6 +154,10 @@ fi{
                     elative{
                         one{"{0} kierroksesta"}
                         other{"{0} kierroksesta"}
+                    }
+                    genitive{
+                        one{"{0} kierroksen"}
+                        other{"{0} kierroksen"}
                     }
                     illative{
                         one{"{0} kierrokseen"}
@@ -148,6 +190,10 @@ fi{
                         one{"{0} hehtaarista"}
                         other{"{0} hehtaarista"}
                     }
+                    genitive{
+                        one{"{0} hehtaarin"}
+                        other{"{0} hehtaarin"}
+                    }
                     illative{
                         one{"{0} hehtaariin"}
                         other{"{0} hehtaariin"}
@@ -162,6 +208,24 @@ fi{
                 other{"{0} hehtaaria"}
             }
             square-centimeter{
+                case{
+                    elative{
+                        one{"{0} neliösenttimetristä"}
+                        other{"{0} neliösenttimetristä"}
+                    }
+                    genitive{
+                        one{"{0} neliösenttimetrin"}
+                        other{"{0} neliösenttimetrin"}
+                    }
+                    illative{
+                        one{"{0} neliösenttimetriin"}
+                        other{"{0} neliösenttimetriin"}
+                    }
+                    partitive{
+                        one{"{0} neliösenttimetriä"}
+                        other{"{0} neliösenttimetriä"}
+                    }
+                }
                 dnam{"neliösenttimetrit"}
                 one{"{0} neliösenttimetri"}
                 other{"{0} neliösenttimetriä"}
@@ -179,12 +243,48 @@ fi{
                 per{"{0} / neliötuuma"}
             }
             square-kilometer{
+                case{
+                    elative{
+                        one{"{0} neliökilometristä"}
+                        other{"{0} neliökilometristä"}
+                    }
+                    genitive{
+                        one{"{0} neliökilometrin"}
+                        other{"{0} neliökilometrin"}
+                    }
+                    illative{
+                        one{"{0} neliökilometriin"}
+                        other{"{0} neliökilometriin"}
+                    }
+                    partitive{
+                        one{"{0} neliökilometriä"}
+                        other{"{0} neliökilometriä"}
+                    }
+                }
                 dnam{"neliökilometrit"}
                 one{"{0} neliökilometri"}
                 other{"{0} neliökilometriä"}
                 per{"{0} / neliökilometri"}
             }
             square-meter{
+                case{
+                    elative{
+                        one{"{0} neliömetristä"}
+                        other{"{0} neliömetristä"}
+                    }
+                    genitive{
+                        one{"{0} neliömetrin"}
+                        other{"{0} neliömetrin"}
+                    }
+                    illative{
+                        one{"{0} neliömetriin"}
+                        other{"{0} neliömetriin"}
+                    }
+                    partitive{
+                        one{"{0} neliömetriä"}
+                        other{"{0} neliömetriä"}
+                    }
+                }
                 dnam{"neliömetrit"}
                 one{"{0} neliömetri"}
                 other{"{0} neliömetriä"}
@@ -259,6 +359,24 @@ fi{
         }
         concentr{
             item{
+                case{
+                    elative{
+                        one{"{0} kohteesta"}
+                        other{"{0} kohteesta"}
+                    }
+                    genitive{
+                        one{"{0} kohteen"}
+                        other{"{0} kohteen"}
+                    }
+                    illative{
+                        one{"{0} kohteeseen"}
+                        other{"{0} kohteeseen"}
+                    }
+                    partitive{
+                        one{"{0} kohdetta"}
+                        other{"{0} kohdetta"}
+                    }
+                }
                 dnam{"kohteet"}
                 one{"{0} kohde"}
                 other{"{0} kohdetta"}
@@ -268,6 +386,10 @@ fi{
                     elative{
                         one{"{0} karaatista"}
                         other{"{0} karaatista"}
+                    }
+                    genitive{
+                        one{"{0} karaatin"}
+                        other{"{0} karaatin"}
                     }
                     illative{
                         one{"{0} karaattiin"}
@@ -288,6 +410,24 @@ fi{
                 other{"{0} milligrammaa desilitrassa"}
             }
             millimole-per-liter{
+                case{
+                    elative{
+                        one{"{0} millimoolista litrassa"}
+                        other{"{0} millimoolista litrassa"}
+                    }
+                    genitive{
+                        one{"{0} millimoolin litrassa"}
+                        other{"{0} millimoolin litrassa"}
+                    }
+                    illative{
+                        one{"{0} millimooliin litrassa"}
+                        other{"{0} millimooliin litrassa"}
+                    }
+                    partitive{
+                        one{"{0} millimoolia litrassa"}
+                        other{"{0} millimoolia litrassa"}
+                    }
+                }
                 dnam{"millimoolit litrassa"}
                 one{"{0} millimooli litrassa"}
                 other{"{0} millimoolia litrassa"}
@@ -297,6 +437,10 @@ fi{
                     elative{
                         one{"{0} moolista"}
                         other{"{0} moolista"}
+                    }
+                    genitive{
+                        one{"{0} moolin"}
+                        other{"{0} moolin"}
                     }
                     illative{
                         one{"{0} mooliin"}
@@ -317,6 +461,10 @@ fi{
                         one{"{0} prosentista"}
                         other{"{0} prosentista"}
                     }
+                    genitive{
+                        one{"{0} prosentin"}
+                        other{"{0} prosentin"}
+                    }
                     illative{
                         one{"{0} prosenttiin"}
                         other{"{0} prosenttiin"}
@@ -335,6 +483,10 @@ fi{
                     elative{
                         one{"{0} promillesta"}
                         other{"{0} promillesta"}
+                    }
+                    genitive{
+                        one{"{0} promillen"}
+                        other{"{0} promillen"}
                     }
                     illative{
                         one{"{0} promilleen"}
@@ -355,6 +507,10 @@ fi{
                         one{"{0} miljoonasosasta"}
                         other{"{0} miljoonasosasta"}
                     }
+                    genitive{
+                        one{"{0} miljoonasosan"}
+                        other{"{0} miljoonasosan"}
+                    }
                     illative{
                         one{"{0} miljoonasosaan"}
                         other{"{0} miljoonasosaan"}
@@ -374,6 +530,10 @@ fi{
                         one{"{0} peruspisteestä"}
                         other{"{0} peruspisteestä"}
                     }
+                    genitive{
+                        one{"{0} peruspisteen"}
+                        other{"{0} peruspisteen"}
+                    }
                     illative{
                         one{"{0} peruspisteeseen"}
                         other{"{0} peruspisteeseen"}
@@ -390,11 +550,47 @@ fi{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    elative{
+                        one{"{0} litrasta / 100 km"}
+                        other{"{0} litrasta / 100 km"}
+                    }
+                    genitive{
+                        one{"{0} litran / 100 km"}
+                        other{"{0} litran / 100 km"}
+                    }
+                    illative{
+                        one{"{0} litraan / 100 km"}
+                        other{"{0} litraan / 100 km"}
+                    }
+                    partitive{
+                        one{"{0} litraa / 100 km"}
+                        other{"{0} litraa / 100 km"}
+                    }
+                }
                 dnam{"litrat / 100 kilometriä"}
                 one{"{0} litra / 100 km"}
                 other{"{0} litraa / 100 km"}
             }
             liter-per-kilometer{
+                case{
+                    elative{
+                        one{"{0} litrasta / kilometri"}
+                        other{"{0} litrasta / kilometri"}
+                    }
+                    genitive{
+                        one{"{0} litran / kilometri"}
+                        other{"{0} litran / kilometri"}
+                    }
+                    illative{
+                        one{"{0} litraan / kilometri"}
+                        other{"{0} litraan / kilometri"}
+                    }
+                    partitive{
+                        one{"{0} litraa / kilometri"}
+                        other{"{0} litraa / kilometri"}
+                    }
+                }
                 dnam{"litrat / kilometri"}
                 one{"{0} litra / kilometri"}
                 other{"{0} litraa / kilometri"}
@@ -424,6 +620,10 @@ fi{
                         one{"{0} bitistä"}
                         other{"{0} bitistä"}
                     }
+                    genitive{
+                        one{"{0} bitin"}
+                        other{"{0} bitin"}
+                    }
                     illative{
                         one{"{0} bittiin"}
                         other{"{0} bittiin"}
@@ -443,6 +643,10 @@ fi{
                         one{"{0} tavusta"}
                         other{"{0} tavusta"}
                     }
+                    genitive{
+                        one{"{0} tavun"}
+                        other{"{0} tavun"}
+                    }
                     illative{
                         one{"{0} tavuun"}
                         other{"{0} tavuun"}
@@ -457,46 +661,208 @@ fi{
                 other{"{0} tavua"}
             }
             gigabit{
+                case{
+                    elative{
+                        one{"{0} gigabitistä"}
+                        other{"{0} gigabitistä"}
+                    }
+                    genitive{
+                        one{"{0} gigabitin"}
+                        other{"{0} gigabitin"}
+                    }
+                    illative{
+                        one{"{0} gigabittiin"}
+                        other{"{0} gigabittiin"}
+                    }
+                    partitive{
+                        one{"{0} gigabittiä"}
+                        other{"{0} gigabittiä"}
+                    }
+                }
                 dnam{"gigabitit"}
                 one{"{0} gigabitti"}
                 other{"{0} gigabittiä"}
             }
             gigabyte{
+                case{
+                    elative{
+                        one{"{0} gigatavusta"}
+                        other{"{0} gigatavusta"}
+                    }
+                    genitive{
+                        one{"{0} gigatavun"}
+                        other{"{0} gigatavun"}
+                    }
+                    illative{
+                        one{"{0} gigatavuun"}
+                        other{"{0} gigatavuun"}
+                    }
+                    partitive{
+                        one{"{0} gigatavua"}
+                        other{"{0} gigatavua"}
+                    }
+                }
                 dnam{"gigatavut"}
                 one{"{0} gigatavu"}
                 other{"{0} gigatavua"}
             }
             kilobit{
+                case{
+                    elative{
+                        one{"{0} kilobitistä"}
+                        other{"{0} kilobitistä"}
+                    }
+                    genitive{
+                        one{"{0} kilobitin"}
+                        other{"{0} kilobitin"}
+                    }
+                    illative{
+                        one{"{0} kilobittiin"}
+                        other{"{0} kilobittiin"}
+                    }
+                    partitive{
+                        one{"{0} kilobittiä"}
+                        other{"{0} kilobittiä"}
+                    }
+                }
                 dnam{"kilobitit"}
                 one{"{0} kilobitti"}
                 other{"{0} kilobittiä"}
             }
             kilobyte{
+                case{
+                    elative{
+                        one{"{0} kilotavusta"}
+                        other{"{0} kilotavusta"}
+                    }
+                    genitive{
+                        one{"{0} kilotavun"}
+                        other{"{0} kilotavun"}
+                    }
+                    illative{
+                        one{"{0} kilotavuun"}
+                        other{"{0} kilotavuun"}
+                    }
+                    partitive{
+                        one{"{0} kilotavua"}
+                        other{"{0} kilotavua"}
+                    }
+                }
                 dnam{"kilotavut"}
                 one{"{0} kilotavu"}
                 other{"{0} kilotavua"}
             }
             megabit{
+                case{
+                    elative{
+                        one{"{0} megabitistä"}
+                        other{"{0} megabitistä"}
+                    }
+                    genitive{
+                        one{"{0} megabitin"}
+                        other{"{0} megabitin"}
+                    }
+                    illative{
+                        one{"{0} megabittiin"}
+                        other{"{0} megabittiin"}
+                    }
+                    partitive{
+                        one{"{0} megabittiä"}
+                        other{"{0} megabittiä"}
+                    }
+                }
                 dnam{"megabitit"}
                 one{"{0} megabitti"}
                 other{"{0} megabittiä"}
             }
             megabyte{
+                case{
+                    elative{
+                        one{"{0} megatavusta"}
+                        other{"{0} megatavusta"}
+                    }
+                    genitive{
+                        one{"{0} megatavun"}
+                        other{"{0} megatavun"}
+                    }
+                    illative{
+                        one{"{0} megatavuun"}
+                        other{"{0} megatavuun"}
+                    }
+                    partitive{
+                        one{"{0} megatavua"}
+                        other{"{0} megatavua"}
+                    }
+                }
                 dnam{"megatavut"}
                 one{"{0} megatavu"}
                 other{"{0} megatavua"}
             }
             petabyte{
+                case{
+                    elative{
+                        one{"{0} petatavusta"}
+                        other{"{0} petatavusta"}
+                    }
+                    genitive{
+                        one{"{0} petatavun"}
+                        other{"{0} petatavun"}
+                    }
+                    illative{
+                        one{"{0} petatavuun"}
+                        other{"{0} petatavuun"}
+                    }
+                    partitive{
+                        one{"{0} petatavua"}
+                        other{"{0} petatavua"}
+                    }
+                }
                 dnam{"petatavut"}
                 one{"{0} petatavu"}
                 other{"{0} petatavua"}
             }
             terabit{
+                case{
+                    elative{
+                        one{"{0} terabitistä"}
+                        other{"{0} terabitistä"}
+                    }
+                    genitive{
+                        one{"{0} terabitin"}
+                        other{"{0} terabitin"}
+                    }
+                    illative{
+                        one{"{0} terabittiin"}
+                        other{"{0} terabittiin"}
+                    }
+                    partitive{
+                        one{"{0} terabittiä"}
+                        other{"{0} terabittiä"}
+                    }
+                }
                 dnam{"terabitit"}
                 one{"{0} terabitti"}
                 other{"{0} terabittiä"}
             }
             terabyte{
+                case{
+                    elative{
+                        one{"{0} teratavusta"}
+                        other{"{0} teratavusta"}
+                    }
+                    genitive{
+                        one{"{0} teratavun"}
+                        other{"{0} teratavun"}
+                    }
+                    illative{
+                        one{"{0} teratavuun"}
+                        other{"{0} teratavuun"}
+                    }
+                    partitive{
+                        one{"{0} teratavua"}
+                        other{"{0} teratavua"}
+                    }
+                }
                 dnam{"teratavut"}
                 one{"{0} teratavu"}
                 other{"{0} teratavua"}
@@ -508,6 +874,10 @@ fi{
                     elative{
                         one{"{0} vuosisadasta"}
                         other{"{0} vuosisadasta"}
+                    }
+                    genitive{
+                        one{"{0} vuosisadan"}
+                        other{"{0} vuosisadan"}
                     }
                     illative{
                         one{"{0} vuosisataan"}
@@ -527,6 +897,10 @@ fi{
                     elative{
                         one{"{0} päivästä"}
                         other{"{0} päivästä"}
+                    }
+                    genitive{
+                        one{"{0} päivän"}
+                        other{"{0} päivän"}
                     }
                     illative{
                         one{"{0} päivään"}
@@ -548,6 +922,10 @@ fi{
                         one{"{0} vuosikymmenestä"}
                         other{"{0} vuosikymmenestä"}
                     }
+                    genitive{
+                        one{"{0} vuosikymmenen"}
+                        other{"{0} vuosikymmenen"}
+                    }
                     illative{
                         one{"{0} vuosikymmeneen"}
                         other{"{0} vuosikymmeneen"}
@@ -567,6 +945,10 @@ fi{
                         one{"{0} tunnista"}
                         other{"{0} tunnista"}
                     }
+                    genitive{
+                        one{"{0} tunnin"}
+                        other{"{0} tunnin"}
+                    }
                     illative{
                         one{"{0} tuntiin"}
                         other{"{0} tuntiin"}
@@ -582,11 +964,47 @@ fi{
                 per{"{0} / tunti"}
             }
             microsecond{
+                case{
+                    elative{
+                        one{"{0} mikrosekunnista"}
+                        other{"{0} mikrosekunnista"}
+                    }
+                    genitive{
+                        one{"{0} mikrosekunnin"}
+                        other{"{0} mikrosekunnin"}
+                    }
+                    illative{
+                        one{"{0} mikrosekuntiin"}
+                        other{"{0} mikrosekuntiin"}
+                    }
+                    partitive{
+                        one{"{0} mikrosekuntia"}
+                        other{"{0} mikrosekuntia"}
+                    }
+                }
                 dnam{"mikrosekunnit"}
                 one{"{0} mikrosekunti"}
                 other{"{0} mikrosekuntia"}
             }
             millisecond{
+                case{
+                    elative{
+                        one{"{0} millisekunnista"}
+                        other{"{0} millisekunnista"}
+                    }
+                    genitive{
+                        one{"{0} millisekunnin"}
+                        other{"{0} millisekunnin"}
+                    }
+                    illative{
+                        one{"{0} millisekuntiin"}
+                        other{"{0} millisekuntiin"}
+                    }
+                    partitive{
+                        one{"{0} millisekuntia"}
+                        other{"{0} millisekuntia"}
+                    }
+                }
                 dnam{"millisekunnit"}
                 one{"{0} millisekunti"}
                 other{"{0} millisekuntia"}
@@ -596,6 +1014,10 @@ fi{
                     elative{
                         one{"{0} minuutista"}
                         other{"{0} minuutista"}
+                    }
+                    genitive{
+                        one{"{0} minuutin"}
+                        other{"{0} minuutin"}
                     }
                     illative{
                         one{"{0} minuuttiin"}
@@ -617,6 +1039,10 @@ fi{
                         one{"{0} kuukaudesta"}
                         other{"{0} kuukaudesta"}
                     }
+                    genitive{
+                        one{"{0} kuukauden"}
+                        other{"{0} kuukauden"}
+                    }
                     illative{
                         one{"{0} kuukauteen"}
                         other{"{0} kuukauteen"}
@@ -632,6 +1058,24 @@ fi{
                 per{"{0} / kuukausi"}
             }
             nanosecond{
+                case{
+                    elative{
+                        one{"{0} nanosekunnista"}
+                        other{"{0} nanosekunnista"}
+                    }
+                    genitive{
+                        one{"{0} nanosekunnin"}
+                        other{"{0} nanosekunnin"}
+                    }
+                    illative{
+                        one{"{0} nanosekuntiin"}
+                        other{"{0} nanosekuntiin"}
+                    }
+                    partitive{
+                        one{"{0} nanosekuntia"}
+                        other{"{0} nanosekuntia"}
+                    }
+                }
                 dnam{"nanosekunnit"}
                 one{"{0} nanosekunti"}
                 other{"{0} nanosekuntia"}
@@ -641,6 +1085,10 @@ fi{
                     elative{
                         one{"{0} sekunnista"}
                         other{"{0} sekunnista"}
+                    }
+                    genitive{
+                        one{"{0} sekunnin"}
+                        other{"{0} sekunnin"}
                     }
                     illative{
                         one{"{0} sekuntiin"}
@@ -662,6 +1110,10 @@ fi{
                         one{"{0} viikosta"}
                         other{"{0} viikosta"}
                     }
+                    genitive{
+                        one{"{0} viikon"}
+                        other{"{0} viikon"}
+                    }
                     illative{
                         one{"{0} viikkoon"}
                         other{"{0} viikkoon"}
@@ -681,6 +1133,10 @@ fi{
                     elative{
                         one{"{0} vuodesta"}
                         other{"{0} vuodesta"}
+                    }
+                    genitive{
+                        one{"{0} vuoden"}
+                        other{"{0} vuoden"}
                     }
                     illative{
                         one{"{0} vuoteen"}
@@ -704,6 +1160,10 @@ fi{
                         one{"{0} ampeerista"}
                         other{"{0} ampeerista"}
                     }
+                    genitive{
+                        one{"{0} ampeerin"}
+                        other{"{0} ampeerin"}
+                    }
                     illative{
                         one{"{0} ampeeriin"}
                         other{"{0} ampeeriin"}
@@ -718,6 +1178,24 @@ fi{
                 other{"{0} ampeeria"}
             }
             milliampere{
+                case{
+                    elative{
+                        one{"{0} milliampeerista"}
+                        other{"{0} milliampeerista"}
+                    }
+                    genitive{
+                        one{"{0} milliampeerin"}
+                        other{"{0} milliampeerin"}
+                    }
+                    illative{
+                        one{"{0} milliampeeriin"}
+                        other{"{0} milliampeeriin"}
+                    }
+                    partitive{
+                        one{"{0} milliampeeria"}
+                        other{"{0} milliampeeria"}
+                    }
+                }
                 dnam{"milliampeerit"}
                 one{"{0} milliampeeri"}
                 other{"{0} milliampeeria"}
@@ -727,6 +1205,10 @@ fi{
                     elative{
                         one{"{0} ohmista"}
                         other{"{0} ohmista"}
+                    }
+                    genitive{
+                        one{"{0} ohmin"}
+                        other{"{0} ohmin"}
                     }
                     illative{
                         one{"{0} ohmiin"}
@@ -746,6 +1228,10 @@ fi{
                     elative{
                         one{"{0} voltista"}
                         other{"{0} voltista"}
+                    }
+                    genitive{
+                        one{"{0} voltin"}
+                        other{"{0} voltin"}
                     }
                     illative{
                         one{"{0} volttiin"}
@@ -772,6 +1258,10 @@ fi{
                     elative{
                         one{"{0} kalorista"}
                         other{"{0} kalorista"}
+                    }
+                    genitive{
+                        one{"{0} kalorin"}
+                        other{"{0} kalorin"}
                     }
                     illative{
                         one{"{0} kaloriin"}
@@ -802,6 +1292,10 @@ fi{
                         one{"{0} joulesta"}
                         other{"{0} joulesta"}
                     }
+                    genitive{
+                        one{"{0} joulen"}
+                        other{"{0} joulen"}
+                    }
                     illative{
                         one{"{0} jouleen"}
                         other{"{0} jouleen"}
@@ -821,11 +1315,47 @@ fi{
                 other{"{0} kilokaloria"}
             }
             kilojoule{
+                case{
+                    elative{
+                        one{"{0} kilojoulesta"}
+                        other{"{0} kilojoulesta"}
+                    }
+                    genitive{
+                        one{"{0} kilojoulen"}
+                        other{"{0} kilojoulen"}
+                    }
+                    illative{
+                        one{"{0} kilojouleen"}
+                        other{"{0} kilojouleen"}
+                    }
+                    partitive{
+                        one{"{0} kilojoulea"}
+                        other{"{0} kilojoulea"}
+                    }
+                }
                 dnam{"kilojoulet"}
                 one{"{0} kilojoule"}
                 other{"{0} kilojoulea"}
             }
             kilowatt-hour{
+                case{
+                    elative{
+                        one{"{0} kilowattitunnista"}
+                        other{"{0} kilowattitunnista"}
+                    }
+                    genitive{
+                        one{"{0} kilowattitunnin"}
+                        other{"{0} kilowattitunnin"}
+                    }
+                    illative{
+                        one{"{0} kilowattituntiin"}
+                        other{"{0} kilowattituntiin"}
+                    }
+                    partitive{
+                        one{"{0} kilowattituntia"}
+                        other{"{0} kilowattituntia"}
+                    }
+                }
                 dnam{"kilowattitunnit"}
                 one{"{0} kilowattitunti"}
                 other{"{0} kilowattituntia"}
@@ -833,7 +1363,25 @@ fi{
         }
         force{
             kilowatt-hour-per-100-kilometer{
-                dnam{"kilowattitunnit 100 kilometrillä"}
+                case{
+                    elative{
+                        one{"{0} kilowattitunnista / 100 km"}
+                        other{"{0} kilowattitunnista / 100 km"}
+                    }
+                    genitive{
+                        one{"{0} kilowattitunnin / 100 km"}
+                        other{"{0} kilowattitunnin / 100 km"}
+                    }
+                    illative{
+                        one{"{0} kilowattituntiin / 100 km"}
+                        other{"{0} kilowattituntiin / 100 km"}
+                    }
+                    partitive{
+                        one{"{0} kilowattituntia / 100 km"}
+                        other{"{0} kilowattituntia / 100 km"}
+                    }
+                }
+                dnam{"kilowattitunnit / 100 kilometriä"}
                 one{"{0} kilowattitunti 100 kilometrillä"}
                 other{"{0} kilowattituntia 100 kilometrillä"}
             }
@@ -842,6 +1390,10 @@ fi{
                     elative{
                         one{"{0} newtonista"}
                         other{"{0} newtonista"}
+                    }
+                    genitive{
+                        one{"{0} newtonin"}
+                        other{"{0} newtonin"}
                     }
                     illative{
                         one{"{0} newtoniin"}
@@ -864,6 +1416,24 @@ fi{
         }
         frequency{
             gigahertz{
+                case{
+                    elative{
+                        one{"{0} gigahertsistä"}
+                        other{"{0} gigahertsistä"}
+                    }
+                    genitive{
+                        one{"{0} gigahertsin"}
+                        other{"{0} gigahertsin"}
+                    }
+                    illative{
+                        one{"{0} gigahertsiin"}
+                        other{"{0} gigahertsiin"}
+                    }
+                    partitive{
+                        one{"{0} gigahertsiä"}
+                        other{"{0} gigahertsiä"}
+                    }
+                }
                 dnam{"gigahertsit"}
                 one{"{0} gigahertsi"}
                 other{"{0} gigahertsiä"}
@@ -873,6 +1443,10 @@ fi{
                     elative{
                         one{"{0} hertsistä"}
                         other{"{0} hertsistä"}
+                    }
+                    genitive{
+                        one{"{0} hertsin"}
+                        other{"{0} hertsin"}
                     }
                     illative{
                         one{"{0} hertsiin"}
@@ -888,11 +1462,47 @@ fi{
                 other{"{0} hertsiä"}
             }
             kilohertz{
+                case{
+                    elative{
+                        one{"{0} kilohertsistä"}
+                        other{"{0} kilohertsistä"}
+                    }
+                    genitive{
+                        one{"{0} kilohertsin"}
+                        other{"{0} kilohertsin"}
+                    }
+                    illative{
+                        one{"{0} kilohertsiin"}
+                        other{"{0} kilohertsiin"}
+                    }
+                    partitive{
+                        one{"{0} kilohertsiä"}
+                        other{"{0} kilohertsiä"}
+                    }
+                }
                 dnam{"kilohertsit"}
                 one{"{0} kilohertsi"}
                 other{"{0} kilohertsiä"}
             }
             megahertz{
+                case{
+                    elative{
+                        one{"{0} megahertsistä"}
+                        other{"{0} megahertsistä"}
+                    }
+                    genitive{
+                        one{"{0} megahertsin"}
+                        other{"{0} megahertsin"}
+                    }
+                    illative{
+                        one{"{0} megahertsiin"}
+                        other{"{0} megahertsiin"}
+                    }
+                    partitive{
+                        one{"{0} megahertsiä"}
+                        other{"{0} megahertsiä"}
+                    }
+                }
                 dnam{"megahertsit"}
                 one{"{0} megahertsi"}
                 other{"{0} megahertsiä"}
@@ -904,11 +1514,20 @@ fi{
                 one{"{0} piste"}
                 other{"{0} pistettä"}
             }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
             em{
                 case{
                     elative{
                         one{"{0} em-välistä"}
                         other{"{0} em-välistä"}
+                    }
+                    genitive{
+                        one{"{0} em-välin"}
+                        other{"{0} em-välin"}
                     }
                     illative{
                         one{"{0} em-väliin"}
@@ -920,14 +1539,41 @@ fi{
                     }
                 }
                 dnam{"em-väli"}
-                one{"{0} em"}
+                one{"{0} em-väli"}
                 other{"{0} em-väliä"}
+            }
+            megapixel{
+                case{
+                    elative{
+                        one{"{0} megapikselistä"}
+                        other{"{0} megapikselistä"}
+                    }
+                    genitive{
+                        one{"{0} megapikselin"}
+                        other{"{0} megapikselin"}
+                    }
+                    illative{
+                        one{"{0} megapikseliin"}
+                        other{"{0} megapikseliin"}
+                    }
+                    partitive{
+                        one{"{0} megapikseliä"}
+                        other{"{0} megapikseliä"}
+                    }
+                }
+                dnam{"megapikselit"}
+                one{"{0} megapikseliä"}
+                other{"{0} megapikseliä"}
             }
             pixel{
                 case{
                     elative{
                         one{"{0} pikselistä"}
                         other{"{0} pikselistä"}
+                    }
+                    genitive{
+                        one{"{0} pikselin"}
+                        other{"{0} pikselin"}
                     }
                     illative{
                         one{"{0} pikseliin"}
@@ -942,6 +1588,29 @@ fi{
                 one{"{0} pikseli"}
                 other{"{0} pikseliä"}
             }
+            pixel-per-centimeter{
+                case{
+                    elative{
+                        one{"{0} pikselistä / senttimetri"}
+                        other{"{0} pikselistä / senttimetri"}
+                    }
+                    genitive{
+                        one{"{0} pikselin / senttimetri"}
+                        other{"{0} pikselin / senttimetri"}
+                    }
+                    illative{
+                        one{"{0} pikseliin / senttimetri"}
+                        other{"{0} pikseliin / senttimetri"}
+                    }
+                    partitive{
+                        one{"{0} pikseliä / senttimetri"}
+                        other{"{0} pikseliä / senttimetri"}
+                    }
+                }
+                dnam{"pikselit/senttimetri"}
+                one{"{0} pikseli / senttimetri"}
+                other{"{0} pikseliä / senttimetri"}
+            }
         }
         length{
             astronomical-unit{
@@ -950,12 +1619,48 @@ fi{
                 other{"{0} astronomista yksikköä"}
             }
             centimeter{
+                case{
+                    elative{
+                        one{"{0} senttimetristä"}
+                        other{"{0} senttimetristä"}
+                    }
+                    genitive{
+                        one{"{0} senttimetrin"}
+                        other{"{0} senttimetrin"}
+                    }
+                    illative{
+                        one{"{0} senttimetriin"}
+                        other{"{0} senttimetriin"}
+                    }
+                    partitive{
+                        one{"{0} senttimetriä"}
+                        other{"{0} senttimetriä"}
+                    }
+                }
                 dnam{"senttimetrit"}
                 one{"{0} senttimetri"}
                 other{"{0} senttimetriä"}
                 per{"{0} / senttimetri"}
             }
             decimeter{
+                case{
+                    elative{
+                        one{"{0} desimetristä"}
+                        other{"{0} desimetristä"}
+                    }
+                    genitive{
+                        one{"{0} desimetrin"}
+                        other{"{0} desimetrin"}
+                    }
+                    illative{
+                        one{"{0} desimetriin"}
+                        other{"{0} desimetriin"}
+                    }
+                    partitive{
+                        one{"{0} desimetriä"}
+                        other{"{0} desimetriä"}
+                    }
+                }
                 dnam{"desimetrit"}
                 one{"{0} desimetri"}
                 other{"{0} desimetriä"}
@@ -988,6 +1693,24 @@ fi{
                 per{"{0} / tuuma"}
             }
             kilometer{
+                case{
+                    elative{
+                        one{"{0} kilometristä"}
+                        other{"{0} kilometristä"}
+                    }
+                    genitive{
+                        one{"{0} kilometrin"}
+                        other{"{0} kilometrin"}
+                    }
+                    illative{
+                        one{"{0} kilometriin"}
+                        other{"{0} kilometriin"}
+                    }
+                    partitive{
+                        one{"{0} kilometriä"}
+                        other{"{0} kilometriä"}
+                    }
+                }
                 dnam{"kilometrit"}
                 one{"{0} kilometri"}
                 other{"{0} kilometriä"}
@@ -1004,6 +1727,10 @@ fi{
                         one{"{0} metristä"}
                         other{"{0} metristä"}
                     }
+                    genitive{
+                        one{"{0} metrin"}
+                        other{"{0} metrin"}
+                    }
                     illative{
                         one{"{0} metriin"}
                         other{"{0} metriin"}
@@ -1019,6 +1746,24 @@ fi{
                 per{"{0} / metri"}
             }
             micrometer{
+                case{
+                    elative{
+                        one{"{0} mikrometristä"}
+                        other{"{0} mikrometristä"}
+                    }
+                    genitive{
+                        one{"{0} mikrometrin"}
+                        other{"{0} mikrometrin"}
+                    }
+                    illative{
+                        one{"{0} mikrometriin"}
+                        other{"{0} mikrometriin"}
+                    }
+                    partitive{
+                        one{"{0} mikrometriä"}
+                        other{"{0} mikrometriä"}
+                    }
+                }
                 dnam{"mikrometrit"}
                 one{"{0} mikrometri"}
                 other{"{0} mikrometriä"}
@@ -1034,6 +1779,10 @@ fi{
                         one{"{0} peninkulmasta"}
                         other{"{0} peninkulmasta"}
                     }
+                    genitive{
+                        one{"{0} peninkulman"}
+                        other{"{0} peninkulman"}
+                    }
                     illative{
                         one{"{0} peninkulmaan"}
                         other{"{0} peninkulmaan"}
@@ -1048,11 +1797,47 @@ fi{
                 other{"{0} peninkulmaa"}
             }
             millimeter{
+                case{
+                    elative{
+                        one{"{0} millimetristä"}
+                        other{"{0} millimetristä"}
+                    }
+                    genitive{
+                        one{"{0} millimetrin"}
+                        other{"{0} millimetrin"}
+                    }
+                    illative{
+                        one{"{0} millimetriin"}
+                        other{"{0} millimetriin"}
+                    }
+                    partitive{
+                        one{"{0} millimetrin"}
+                        other{"{0} millimetriä"}
+                    }
+                }
                 dnam{"millimetrit"}
                 one{"{0} millimetri"}
                 other{"{0} millimetriä"}
             }
             nanometer{
+                case{
+                    elative{
+                        one{"{0} nanometristä"}
+                        other{"{0} nanometristä"}
+                    }
+                    genitive{
+                        one{"{0} nanometrin"}
+                        other{"{0} nanometrin"}
+                    }
+                    illative{
+                        one{"{0} nanometriin"}
+                        other{"{0} nanometriin"}
+                    }
+                    partitive{
+                        one{"{0} nanometriä"}
+                        other{"{0} nanometriä"}
+                    }
+                }
                 dnam{"nanometrit"}
                 one{"{0} nanometri"}
                 other{"{0} nanometriä"}
@@ -1068,6 +1853,24 @@ fi{
                 other{"{0} parsekia"}
             }
             picometer{
+                case{
+                    elative{
+                        one{"{0} pikometristä"}
+                        other{"{0} pikometristä"}
+                    }
+                    genitive{
+                        one{"{0} pikometrin"}
+                        other{"{0} pikometrin"}
+                    }
+                    illative{
+                        one{"{0} pikometriin"}
+                        other{"{0} pikometriin"}
+                    }
+                    partitive{
+                        one{"{0} pikometriä"}
+                        other{"{0} pikometriä"}
+                    }
+                }
                 dnam{"pikometrit"}
                 one{"{0} pikometri"}
                 other{"{0} pikometriä"}
@@ -1095,6 +1898,10 @@ fi{
                         one{"{0} kandelasta"}
                         other{"{0} kandelasta"}
                     }
+                    genitive{
+                        one{"{0} kandelan"}
+                        other{"{0} kandelan"}
+                    }
                     illative{
                         one{"{0} kandelaan"}
                         other{"{0} kandelaan"}
@@ -1114,6 +1921,10 @@ fi{
                         one{"{0} luumenista"}
                         other{"{0} luumenista"}
                     }
+                    genitive{
+                        one{"{0} luumenin"}
+                        other{"{0} luumenin"}
+                    }
                     illative{
                         one{"{0} luumeniin"}
                         other{"{0} luumeniin"}
@@ -1132,6 +1943,10 @@ fi{
                     elative{
                         one{"{0} luksista"}
                         other{"{0} luksista"}
+                    }
+                    genitive{
+                        one{"{0} luksin"}
+                        other{"{0} luksin"}
                     }
                     illative{
                         one{"{0} luksiin"}
@@ -1158,6 +1973,10 @@ fi{
                     elative{
                         one{"{0} karaatista"}
                         other{"{0} karaatista"}
+                    }
+                    genitive{
+                        one{"{0} karaatin"}
+                        other{"{0} karaatin"}
                     }
                     illative{
                         one{"{0} karaattiin"}
@@ -1193,6 +2012,10 @@ fi{
                         one{"{0} grammasta"}
                         other{"{0} grammasta"}
                     }
+                    genitive{
+                        one{"{0} gramman"}
+                        other{"{0} gramman"}
+                    }
                     illative{
                         one{"{0} grammaan"}
                         other{"{0} grammaan"}
@@ -1212,6 +2035,10 @@ fi{
                     elative{
                         one{"{0} kilogrammasta"}
                         other{"{0} kilogrammasta"}
+                    }
+                    genitive{
+                        one{"{0} kilogramman"}
+                        other{"{0} kilogramman"}
                     }
                     illative{
                         one{"{0} kilogrammaan"}
@@ -1233,6 +2060,10 @@ fi{
                         one{"{0} tonnista"}
                         other{"{0} tonnista"}
                     }
+                    genitive{
+                        one{"{0} tonnin"}
+                        other{"{0} tonnin"}
+                    }
                     illative{
                         one{"{0} tonniin"}
                         other{"{0} tonniin"}
@@ -1247,11 +2078,47 @@ fi{
                 other{"{0} tonnia"}
             }
             microgram{
+                case{
+                    elative{
+                        one{"{0} mikrogrammasta"}
+                        other{"{0} mikrogrammasta"}
+                    }
+                    genitive{
+                        one{"{0} mikrogramman"}
+                        other{"{0} mikrogramman"}
+                    }
+                    illative{
+                        one{"{0} mikrogrammaan"}
+                        other{"{0} mikrogrammaan"}
+                    }
+                    partitive{
+                        one{"{0} mikrogrammaa"}
+                        other{"{0} mikrogrammaa"}
+                    }
+                }
                 dnam{"mikrogrammat"}
                 one{"{0} mikrogramma"}
                 other{"{0} mikrogrammaa"}
             }
             milligram{
+                case{
+                    elative{
+                        one{"{0} milligrammasta"}
+                        other{"{0} milligrammasta"}
+                    }
+                    genitive{
+                        one{"{0} milligramman"}
+                        other{"{0} milligramman"}
+                    }
+                    illative{
+                        one{"{0} milligrammaan"}
+                        other{"{0} milligrammaan"}
+                    }
+                    partitive{
+                        one{"{0} milligrammaa"}
+                        other{"{0} milligrammaa"}
+                    }
+                }
                 dnam{"milligrammat"}
                 one{"{0} milligramma"}
                 other{"{0} milligrammaa"}
@@ -1291,6 +2158,24 @@ fi{
         }
         power{
             gigawatt{
+                case{
+                    elative{
+                        one{"{0} gigawatista"}
+                        other{"{0} gigawatista"}
+                    }
+                    genitive{
+                        one{"{0} gigawatin"}
+                        other{"{0} gigawatin"}
+                    }
+                    illative{
+                        one{"{0} gigawattiin"}
+                        other{"{0} gigawattiin"}
+                    }
+                    partitive{
+                        one{"{0} gigawattia"}
+                        other{"{0} gigawattia"}
+                    }
+                }
                 dnam{"gigawatit"}
                 one{"{0} gigawatti"}
                 other{"{0} gigawattia"}
@@ -1301,16 +2186,70 @@ fi{
                 other{"{0} hevosvoimaa"}
             }
             kilowatt{
+                case{
+                    elative{
+                        one{"{0} kilowatista"}
+                        other{"{0} kilowatista"}
+                    }
+                    genitive{
+                        one{"{0} kilowatin"}
+                        other{"{0} kilowatin"}
+                    }
+                    illative{
+                        one{"{0} kilowattiin"}
+                        other{"{0} kilowattiin"}
+                    }
+                    partitive{
+                        one{"{0} kilowattia"}
+                        other{"{0} kilowattia"}
+                    }
+                }
                 dnam{"kilowatit"}
                 one{"{0} kilowatti"}
                 other{"{0} kilowattia"}
             }
             megawatt{
+                case{
+                    elative{
+                        one{"{0} megawatista"}
+                        other{"{0} megawatista"}
+                    }
+                    genitive{
+                        one{"{0} megawatin"}
+                        other{"{0} megawatin"}
+                    }
+                    illative{
+                        one{"{0} megawattiin"}
+                        other{"{0} megawattiin"}
+                    }
+                    partitive{
+                        one{"{0} megawattia"}
+                        other{"{0} megawattia"}
+                    }
+                }
                 dnam{"megawatit"}
                 one{"{0} megawatti"}
                 other{"{0} megawattia"}
             }
             milliwatt{
+                case{
+                    elative{
+                        one{"{0} milliwatista"}
+                        other{"{0} milliwatista"}
+                    }
+                    genitive{
+                        one{"{0} milliwatin"}
+                        other{"{0} milliwatin"}
+                    }
+                    illative{
+                        one{"{0} milliwattiin"}
+                        other{"{0} milliwattiin"}
+                    }
+                    partitive{
+                        one{"{0} milliwattia"}
+                        other{"{0} milliwattia"}
+                    }
+                }
                 dnam{"milliwatit"}
                 one{"{0} milliwatti"}
                 other{"{0} milliwattia"}
@@ -1320,6 +2259,10 @@ fi{
                     elative{
                         one{"{0} watista"}
                         other{"{0} watista"}
+                    }
+                    genitive{
+                        one{"{0} watin"}
+                        other{"{0} watin"}
                     }
                     illative{
                         one{"{0} wattiin"}
@@ -1342,6 +2285,10 @@ fi{
                         one{"{0} normaali-ilmakehästä"}
                         other{"{0} normaali-ilmakehästä"}
                     }
+                    genitive{
+                        one{"{0} normaali-ilmakehän"}
+                        other{"{0} normaali-ilmakehän"}
+                    }
                     illative{
                         one{"{0} normaali-ilmakehään"}
                         other{"{0} normaali-ilmakehään"}
@@ -1361,6 +2308,10 @@ fi{
                         one{"{0} baarista"}
                         other{"{0} baarista"}
                     }
+                    genitive{
+                        one{"{0} baarin"}
+                        other{"{0} baarin"}
+                    }
                     illative{
                         one{"{0} baariin"}
                         other{"{0} baariin"}
@@ -1375,6 +2326,24 @@ fi{
                 other{"{0} baaria"}
             }
             hectopascal{
+                case{
+                    elative{
+                        one{"{0} hehtopascalista"}
+                        other{"{0} hehtopascalista"}
+                    }
+                    genitive{
+                        one{"{0} hehtopascalin"}
+                        other{"{0} hehtopascalin"}
+                    }
+                    illative{
+                        one{"{0} hehtopascaliin"}
+                        other{"{0} hehtopascaliin"}
+                    }
+                    partitive{
+                        one{"{0} hehtopascalia"}
+                        other{"{0} hehtopascalia"}
+                    }
+                }
                 dnam{"hehtopascalit"}
                 one{"{0} hehtopascal"}
                 other{"{0} hehtopascalia"}
@@ -1385,16 +2354,70 @@ fi{
                 other{"{0} elohopeatuumaa"}
             }
             kilopascal{
+                case{
+                    elative{
+                        one{"{0} kilopascalista"}
+                        other{"{0} kilopascalista"}
+                    }
+                    genitive{
+                        one{"{0} kilopascalin"}
+                        other{"{0} kilopascalin"}
+                    }
+                    illative{
+                        one{"{0} kilopascaliin"}
+                        other{"{0} kilopascaliin"}
+                    }
+                    partitive{
+                        one{"{0} kilopascalia"}
+                        other{"{0} kilopascalia"}
+                    }
+                }
                 dnam{"kilopascalit"}
                 one{"{0} kilopascal"}
                 other{"{0} kilopascalia"}
             }
             megapascal{
+                case{
+                    elative{
+                        one{"{0} megapascalista"}
+                        other{"{0} megapascalista"}
+                    }
+                    genitive{
+                        one{"{0} megapascalin"}
+                        other{"{0} megapascalin"}
+                    }
+                    illative{
+                        one{"{0} megapascaliin"}
+                        other{"{0} megapascaliin"}
+                    }
+                    partitive{
+                        one{"{0} megapascalia"}
+                        other{"{0} megapascalia"}
+                    }
+                }
                 dnam{"megapascalit"}
                 one{"{0} megapascal"}
                 other{"{0} megapascalia"}
             }
             millibar{
+                case{
+                    elative{
+                        one{"{0} millibaarista"}
+                        other{"{0} millibaarista"}
+                    }
+                    genitive{
+                        one{"{0} millibaarin"}
+                        other{"{0} millibaarin"}
+                    }
+                    illative{
+                        one{"{0} millibaariin"}
+                        other{"{0} millibaariin"}
+                    }
+                    partitive{
+                        one{"{0} millibaaria"}
+                        other{"{0} millibaaria"}
+                    }
+                }
                 dnam{"millibaarit"}
                 one{"{0} millibaari"}
                 other{"{0} millibaaria"}
@@ -1409,6 +2432,10 @@ fi{
                     elative{
                         one{"{0} pascalista"}
                         other{"{0} pascalista"}
+                    }
+                    genitive{
+                        one{"{0} pascalin"}
+                        other{"{0} pascalin"}
                     }
                     illative{
                         one{"{0} pascaliin"}
@@ -1431,6 +2458,24 @@ fi{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    elative{
+                        one{"{0} kilometristä tunnissa"}
+                        other{"{0} kilometristä tunnissa"}
+                    }
+                    genitive{
+                        one{"{0} kilometrin tunnissa"}
+                        other{"{0} kilometrin tunnissa"}
+                    }
+                    illative{
+                        one{"{0} kilometriin tunnissa"}
+                        other{"{0} kilometriin tunnissa"}
+                    }
+                    partitive{
+                        one{"{0} kilometriä tunnissa"}
+                        other{"{0} kilometriä tunnissa"}
+                    }
+                }
                 dnam{"kilometrit tunnissa"}
                 one{"{0} kilometri tunnissa"}
                 other{"{0} kilometriä tunnissa"}
@@ -1441,6 +2486,24 @@ fi{
                 other{"{0} solmua"}
             }
             meter-per-second{
+                case{
+                    elative{
+                        one{"{0} metristä sekunnissa"}
+                        other{"{0} metristä sekunnissa"}
+                    }
+                    genitive{
+                        one{"{0} metrin sekunnissa"}
+                        other{"{0} metrin sekunnissa"}
+                    }
+                    illative{
+                        one{"{0} metriin sekunnissa"}
+                        other{"{0} metriin sekunnissa"}
+                    }
+                    partitive{
+                        one{"{0} metriä sekunnissa"}
+                        other{"{0} metriä sekunnissa"}
+                    }
+                }
                 dnam{"metrit sekunnissa"}
                 one{"{0} metri sekunnissa"}
                 other{"{0} metriä sekunnissa"}
@@ -1457,6 +2520,10 @@ fi{
                     elative{
                         one{"{0} celsiusasteesta"}
                         other{"{0} celsiusasteesta"}
+                    }
+                    genitive{
+                        one{"{0} celsiusasteen"}
+                        other{"{0} celsiusasteen"}
                     }
                     illative{
                         one{"{0} celsiusasteeseen"}
@@ -1482,6 +2549,10 @@ fi{
                         one{"{0} asteesta"}
                         other{"{0} asteesta"}
                     }
+                    genitive{
+                        one{"{0} asteen"}
+                        other{"{0} asteen"}
+                    }
                     illative{
                         one{"{0} asteeseen"}
                         other{"{0} asteeseen"}
@@ -1501,6 +2572,10 @@ fi{
                         one{"{0} kelvinistä"}
                         other{"{0} kelvinistä"}
                     }
+                    genitive{
+                        one{"{0} kelvinin"}
+                        other{"{0} kelvinin"}
+                    }
                     illative{
                         one{"{0} kelviniin"}
                         other{"{0} kelviniin"}
@@ -1517,6 +2592,24 @@ fi{
         }
         torque{
             newton-meter{
+                case{
+                    elative{
+                        one{"{0} newtonmetristä"}
+                        other{"{0} newtonmetristä"}
+                    }
+                    genitive{
+                        one{"{0} newtonmetrin"}
+                        other{"{0} newtonmetrin"}
+                    }
+                    illative{
+                        one{"{0} newtonmetriin"}
+                        other{"{0} newtonmetriin"}
+                    }
+                    partitive{
+                        one{"{0} newtonmetriä"}
+                        other{"{0} newtonmetriä"}
+                    }
+                }
                 dnam{"newtonmetrit"}
                 one{"{0} newtonmetri"}
                 other{"{0} newtonmetriä"}
@@ -1544,11 +2637,47 @@ fi{
                 other{"{0} bushelia"}
             }
             centiliter{
+                case{
+                    elative{
+                        one{"{0} senttilitrasta"}
+                        other{"{0} senttilitrasta"}
+                    }
+                    genitive{
+                        one{"{0} senttilitran"}
+                        other{"{0} senttilitran"}
+                    }
+                    illative{
+                        one{"{0} senttilitraan"}
+                        other{"{0} senttilitraan"}
+                    }
+                    partitive{
+                        one{"{0} senttilitraa"}
+                        other{"{0} senttilitraa"}
+                    }
+                }
                 dnam{"senttilitrat"}
                 one{"{0} senttilitra"}
                 other{"{0} senttilitraa"}
             }
             cubic-centimeter{
+                case{
+                    elative{
+                        one{"{0} kuutiosenttimetristä"}
+                        other{"{0} kuutiosenttimetristä"}
+                    }
+                    genitive{
+                        one{"{0} kuutiosenttimetrin"}
+                        other{"{0} kuutiosenttimetrin"}
+                    }
+                    illative{
+                        one{"{0} kuutiosenttimetriin"}
+                        other{"{0} kuutiosenttimetriin"}
+                    }
+                    partitive{
+                        one{"{0} kuutiosenttimetriä"}
+                        other{"{0} kuutiosenttimetriä"}
+                    }
+                }
                 dnam{"kuutiosenttimetrit"}
                 one{"{0} kuutiosenttimetri"}
                 other{"{0} kuutiosenttimetriä"}
@@ -1565,11 +2694,47 @@ fi{
                 other{"{0} kuutiotuumaa"}
             }
             cubic-kilometer{
+                case{
+                    elative{
+                        one{"{0} kuutiokilometristä"}
+                        other{"{0} kuutiokilometristä"}
+                    }
+                    genitive{
+                        one{"{0} kuutiokilometrin"}
+                        other{"{0} kuutiokilometrin"}
+                    }
+                    illative{
+                        one{"{0} kuutiokilometriin"}
+                        other{"{0} kuutiokilometriin"}
+                    }
+                    partitive{
+                        one{"{0} kuutiokilometriä"}
+                        other{"{0} kuutiokilometriä"}
+                    }
+                }
                 dnam{"kuutiokilometrit"}
                 one{"{0} kuutiokilometri"}
                 other{"{0} kuutiokilometriä"}
             }
             cubic-meter{
+                case{
+                    elative{
+                        one{"{0} kuutiometristä"}
+                        other{"{0} kuutiometristä"}
+                    }
+                    genitive{
+                        one{"{0} kuutiometrin"}
+                        other{"{0} kuutiometrin"}
+                    }
+                    illative{
+                        one{"{0} kuutiometriin"}
+                        other{"{0} kuutiometriin"}
+                    }
+                    partitive{
+                        one{"{0} kuutiometriä"}
+                        other{"{0} kuutiometriä"}
+                    }
+                }
                 dnam{"kuutiometrit"}
                 one{"{0} kuutiometri"}
                 other{"{0} kuutiometriä"}
@@ -1596,6 +2761,10 @@ fi{
                         one{"{0} teekupista"}
                         other{"{0} teekupista"}
                     }
+                    genitive{
+                        one{"{0} teekupin"}
+                        other{"{0} teekupin"}
+                    }
                     illative{
                         one{"{0} teekuppiin"}
                         other{"{0} teekuppiin"}
@@ -1610,6 +2779,24 @@ fi{
                 other{"{0} teekuppia"}
             }
             deciliter{
+                case{
+                    elative{
+                        one{"{0} desilitrasta"}
+                        other{"{0} desilitrasta"}
+                    }
+                    genitive{
+                        one{"{0} desilitran"}
+                        other{"{0} desilitran"}
+                    }
+                    illative{
+                        one{"{0} desilitraan"}
+                        other{"{0} desilitraan"}
+                    }
+                    partitive{
+                        one{"{0} desilitraa"}
+                        other{"{0} desilitraa"}
+                    }
+                }
                 dnam{"desilitrat"}
                 one{"{0} desilitra"}
                 other{"{0} desilitraa"}
@@ -1657,6 +2844,24 @@ fi{
                 per{"{0} / br. gallona"}
             }
             hectoliter{
+                case{
+                    elative{
+                        one{"{0} hehtolitrasta"}
+                        other{"{0} hehtolitrasta"}
+                    }
+                    genitive{
+                        one{"{0} hehtolitran"}
+                        other{"{0} hehtolitran"}
+                    }
+                    illative{
+                        one{"{0} hehtolitraan"}
+                        other{"{0} hehtolitraan"}
+                    }
+                    partitive{
+                        one{"{0} hehtolitraa"}
+                        other{"{0} hehtolitraa"}
+                    }
+                }
                 dnam{"hehtolitrat"}
                 one{"{0} hehtolitra"}
                 other{"{0} hehtolitraa"}
@@ -1671,6 +2876,10 @@ fi{
                     elative{
                         one{"{0} litrasta"}
                         other{"{0} litrasta"}
+                    }
+                    genitive{
+                        one{"{0} litran"}
+                        other{"{0} litran"}
                     }
                     illative{
                         one{"{0} litraan"}
@@ -1687,11 +2896,47 @@ fi{
                 per{"{0} / litra"}
             }
             megaliter{
+                case{
+                    elative{
+                        one{"{0} megalitrasta"}
+                        other{"{0} megalitrasta"}
+                    }
+                    genitive{
+                        one{"{0} megalitran"}
+                        other{"{0} megalitran"}
+                    }
+                    illative{
+                        one{"{0} megalitraan"}
+                        other{"{0} megalitraan"}
+                    }
+                    partitive{
+                        one{"{0} megalitraa"}
+                        other{"{0} megalitraa"}
+                    }
+                }
                 dnam{"megalitrat"}
                 one{"{0} megalitra"}
                 other{"{0} megalitraa"}
             }
             milliliter{
+                case{
+                    elative{
+                        one{"{0} millilitrasta"}
+                        other{"{0} millilitrasta"}
+                    }
+                    genitive{
+                        one{"{0} millilitran"}
+                        other{"{0} millilitran"}
+                    }
+                    illative{
+                        one{"{0} millilitraan"}
+                        other{"{0} millilitraan"}
+                    }
+                    partitive{
+                        one{"{0} millilitraa"}
+                        other{"{0} millilitraa"}
+                    }
+                }
                 dnam{"millilitrat"}
                 one{"{0} millilitra"}
                 other{"{0} millilitraa"}
@@ -1711,6 +2956,10 @@ fi{
                     elative{
                         one{"{0} tuopista"}
                         other{"{0} tuopista"}
+                    }
+                    genitive{
+                        one{"{0} tuopin"}
+                        other{"{0} tuopin"}
                     }
                     illative{
                         one{"{0} tuoppiin"}

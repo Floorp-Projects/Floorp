@@ -1335,8 +1335,8 @@ fo{
             }
             permillion{
                 dnam{"partar/millión"}
-                one{"{0} partur/mill."}
-                other{"{0} partar/mill."}
+                one{"{0} pt./mill."}
+                other{"{0} pt./mill."}
             }
             permyriad{
                 dnam{"promyriad"}

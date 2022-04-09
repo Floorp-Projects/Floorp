@@ -51,14 +51,31 @@ PKGMODE=static
 ICD=$(ICUDATA)^\
 DATA_PATH=$(ICUP)\data^\
 
+NATIVE_ARM=
+!IF "$(PROCESSOR_ARCHITECTURE)" == "ARM64" || "$(PROCESSOR_ARCHITEW6432)" == "ARM64"
+NATIVE_ARM=ARM64
+!ELSE IF "$(PROCESSOR_ARCHITECTURE)" == "ARM" || "$(PROCESSOR_ARCHITEW6432)" == "ARM"
+NATIVE_ARM=ARM
+!ENDIF
+
 # Use the x64 tools for building ARM and ARM64.
 # Note: This is similar to the TOOLS CFG PATH in source\data\makedata.mak
+!IF "$(NATIVE_ARM)" == ""
 !IF "$(CFG)" == "x64\Release" || "$(CFG)" == "x64\Debug" || "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug" || "$(CFG)" == "ARM64\Release"  || "$(CFG)" == "ARM64\Debug"
 ICUTOOLS=$(ICUP)\bin64
 PATH = $(ICUP)\bin64;$(PATH)
 !ELSE
 ICUTOOLS=$(ICUP)\bin
 PATH = $(ICUP)\bin;$(PATH)
+!ENDIF
+!ELSE
+!IF "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug"
+ICUTOOLS=$(ICUP)\binARM
+PATH = $(ICUP)\binARM;$(PATH)
+!ELSE
+ICUTOOLS=$(ICUP)\binARM64
+PATH = $(ICUP)\binARM64;$(PATH)
+!ENDIF
 !ENDIF
 
 # If building ARM/ARM, then we need to pass the arch as an argument.

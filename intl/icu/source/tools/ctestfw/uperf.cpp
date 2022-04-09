@@ -390,7 +390,7 @@ UBool UPerfTest::runTestLoop( char* testname, char* par )
                         loops = failsafe;
                         failsafe *= 10;
                     } else {
-                        //System.out.println("# " + meth.getName() + " x " + loops + " = " + t);                            
+                        //System.out.println("# " + meth.getName() + " x " + loops + " = " + t);
                         loops = (int)((double)n / t * loops + 0.5);
                         if (loops == 0) {
                             fprintf(stderr,"Unable to converge on desired duration");
@@ -412,15 +412,13 @@ UBool UPerfTest::runTestLoop( char* testname, char* par )
             long events = -1;
 
             for(int32_t ps =0; ps < passes; ps++){
-                fprintf(stdout,"= %s begin " ,name);
                 if(verbose==TRUE){
+                    fprintf(stdout,"= %s begin " ,name);
                     if(iterations > 0) {
                         fprintf(stdout, "%i\n", (int)loops);
                     } else {
                         fprintf(stdout, "%i\n", (int)n);
                     }
-                } else {
-                    fprintf(stdout, "\n");
                 }
                 t = testFunction->time(loops, &status);
                 if(U_FAILURE(status)){
@@ -438,12 +436,6 @@ UBool UPerfTest::runTestLoop( char* testname, char* par )
                         fprintf(stdout, "= %s end: %f loops: %i operations: %li \n", name, t, (int)loops, ops);
                     }else{
                         fprintf(stdout, "= %s end: %f loops: %i operations: %li events: %li\n", name, t, (int)loops, ops, events);
-                    }
-                }else{
-                    if(events == -1){
-                        fprintf(stdout,"= %s end %f %i %li\n", name, t, (int)loops, ops);
-                    }else{
-                        fprintf(stdout,"= %s end %f %i %li %li\n", name, t, (int)loops, ops, events);
                     }
                 }
             }
@@ -464,6 +456,12 @@ UBool UPerfTest::runTestLoop( char* testname, char* par )
                     fprintf(stdout, "_= %s min: %.4g loops: %i min/op: %.4g ns min/event: %.4g ns\n",
                             name, min_t, (int)loops, (min_t*1E9)/(loops*ops), (min_t*1E9)/(loops*events));
                 }
+            }
+            else if(U_SUCCESS(status)) {
+                // Print results in ndjson format for GHA Benchmark to process.
+                fprintf(stdout,
+                        "{\"biggerIsBetter\":false,\"name\":\"%s\",\"unit\":\"ns/iter\",\"value\":%.4f}\n",
+                        name, (min_t*1E9)/(loops*ops));
             }
             delete testFunction;
         }

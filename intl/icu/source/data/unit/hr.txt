@@ -34,8 +34,26 @@ hr{
                 other{"{0} G"}
             }
             meter-per-square-second{
+                case{
+                    accusative{
+                        few{"{0} metra u sekundi na kvadrat"}
+                        one{"{0} metar u sekundi na kvadrat"}
+                        other{"{0} metara u sekundi na kvadrat"}
+                    }
+                    genitive{
+                        few{"{0} metra u sekundi na kvadrat"}
+                        one{"{0} metra u sekundi na kvadrat"}
+                        other{"{0} metara u sekundi na kvadrat"}
+                    }
+                    instrumental{
+                        few{"{0} metra u sekundi na kvadrat"}
+                        one{"{0} metrom u sekundi na kvadrat"}
+                        other{"{0} metara u sekundi na kvadrat"}
+                    }
+                }
                 dnam{"metri u sekundi na kvadrat"}
                 few{"{0} metra u sekundi na kvadrat"}
+                gender{"inanimate"}
                 one{"{0} metar u sekundi na kvadrat"}
                 other{"{0} metara u sekundi na kvadrat"}
             }
@@ -200,8 +218,26 @@ hr{
                 other{"{0} hektara"}
             }
             square-centimeter{
+                case{
+                    accusative{
+                        few{"{0} kvadratna centimetra"}
+                        one{"{0} kvadratni centimetar"}
+                        other{"{0} kvadratnih centimetara"}
+                    }
+                    genitive{
+                        few{"{0} kvadratna centimetra"}
+                        one{"{0} kvadratnog centimetra"}
+                        other{"{0} kvadratnih centimetara"}
+                    }
+                    instrumental{
+                        few{"{0} kvadratna centimetra"}
+                        one{"{0} kvadratnim centimetrom"}
+                        other{"{0} kvadratnih centimetara"}
+                    }
+                }
                 dnam{"kvadratni centimetri"}
                 few{"{0} kvadratna centimetra"}
+                gender{"inanimate"}
                 one{"{0} kvadratni centimetar"}
                 other{"{0} kvadratnih centimetara"}
                 per{"{0}/cm²"}
@@ -220,15 +256,51 @@ hr{
                 per{"{0}/in²"}
             }
             square-kilometer{
+                case{
+                    accusative{
+                        few{"{0} kvadratna kilometra"}
+                        one{"{0} kvadratni kilometar"}
+                        other{"{0} kvadratnih kilometara"}
+                    }
+                    genitive{
+                        few{"{0} kvadratna kilometra"}
+                        one{"{0} kvadratnog kilometra"}
+                        other{"{0} kvadratnih kilometara"}
+                    }
+                    instrumental{
+                        few{"{0} kvadratna kilometra"}
+                        one{"{0} kvadratnim kilometrom"}
+                        other{"{0} kvadratnih kilometara"}
+                    }
+                }
                 dnam{"kvadratni kilometri"}
                 few{"{0} kvadratna kilometra"}
+                gender{"inanimate"}
                 one{"{0} kvadratni kilometar"}
                 other{"{0} kvadratnih kilometara"}
                 per{"{0} po kvadratnom kilometru"}
             }
             square-meter{
+                case{
+                    accusative{
+                        few{"{0} kvadratna metra"}
+                        one{"{0} kvadratni metar"}
+                        other{"{0} kvadratnih metara"}
+                    }
+                    genitive{
+                        few{"{0} kvadratna metra"}
+                        one{"{0} kvadratnog metra"}
+                        other{"{0} kvadratnih metara"}
+                    }
+                    instrumental{
+                        few{"{0} kvadratna metra"}
+                        one{"{0} kvadratnim metrom"}
+                        other{"{0} kvadratnih metara"}
+                    }
+                }
                 dnam{"kvadratni metri"}
                 few{"{0} kvadratna metra"}
+                gender{"inanimate"}
                 one{"{0} kvadratni metar"}
                 other{"{0} kvadratnih metara"}
                 per{"{0}/m²"}
@@ -404,8 +476,26 @@ hr{
         }
         concentr{
             item{
+                case{
+                    accusative{
+                        few{"{0} stavke"}
+                        one{"{0} stavku"}
+                        other{"{0} stavki"}
+                    }
+                    genitive{
+                        few{"{0} stavke"}
+                        one{"{0} stavke"}
+                        other{"{0} stavki"}
+                    }
+                    instrumental{
+                        few{"{0} stavke"}
+                        one{"{0} stavkom"}
+                        other{"{0} stavki"}
+                    }
+                }
                 dnam{"stavke"}
                 few{"{0} stavke"}
+                gender{"feminine"}
                 one{"{0} stavka"}
                 other{"{0} stavki"}
             }
@@ -440,8 +530,26 @@ hr{
                 other{"{0} miligrama po decilitru"}
             }
             millimole-per-liter{
+                case{
+                    accusative{
+                        few{"{0} milimola po litri"}
+                        one{"{0} milimol po litri"}
+                        other{"{0} milimola po litri"}
+                    }
+                    genitive{
+                        few{"{0} milimola po litri"}
+                        one{"{0} milimola po litri"}
+                        other{"{0} milimola po litri"}
+                    }
+                    instrumental{
+                        few{"{0} milimola po litri"}
+                        one{"{0} milimolom po litri"}
+                        other{"{0} milimola po litri"}
+                    }
+                }
                 dnam{"milimoli po litri"}
                 few{"{0} milimola po litri"}
+                gender{"inanimate"}
                 one{"{0} milimol po litri"}
                 other{"{0} milimola po litri"}
             }
@@ -568,14 +676,50 @@ hr{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    accusative{
+                        few{"{0} litre na 100 kilometara"}
+                        one{"{0} litra na 100 kilometara"}
+                        other{"{0} litara na 100 kilometara"}
+                    }
+                    genitive{
+                        few{"{0} litre na 100 kilometara"}
+                        one{"{0} litre na 100 kilometara"}
+                        other{"{0} litara na 100 kilometara"}
+                    }
+                    instrumental{
+                        few{"{0} litre na 100 kilometara"}
+                        one{"{0} litrom na 100 kilometara"}
+                        other{"{0} litara na 100 kilometara"}
+                    }
+                }
                 dnam{"litre na 100 kilometara"}
                 few{"{0} litre na 100 kilometara"}
+                gender{"feminine"}
                 one{"{0} litra na 100 kilometara"}
                 other{"{0} litara na 100 kilometara"}
             }
             liter-per-kilometer{
+                case{
+                    accusative{
+                        few{"{0} litre po kilometru"}
+                        one{"{0} litru po kilometru"}
+                        other{"{0} litara po kilometru"}
+                    }
+                    genitive{
+                        few{"{0} litre po kilometru"}
+                        one{"{0} litre po kilometru"}
+                        other{"{0} litara po kilometru"}
+                    }
+                    instrumental{
+                        few{"{0} litre po kilometru"}
+                        one{"{0} litrom po kilometru"}
+                        other{"{0} litara po kilometru"}
+                    }
+                }
                 dnam{"litre po kilometru"}
                 few{"{0} litre po kilometru"}
+                gender{"feminine"}
                 one{"{0} litra po kilometru"}
                 other{"{0} litara po kilometru"}
             }
@@ -649,56 +793,218 @@ hr{
                 other{"{0} bajtova"}
             }
             gigabit{
+                case{
+                    accusative{
+                        few{"{0} gigabita"}
+                        one{"{0} gigabit"}
+                        other{"{0} gigabita"}
+                    }
+                    genitive{
+                        few{"{0} gigabita"}
+                        one{"{0} gigabita"}
+                        other{"{0} gigabita"}
+                    }
+                    instrumental{
+                        few{"{0} gigabita"}
+                        one{"{0} gigabitom"}
+                        other{"{0} gigabita"}
+                    }
+                }
                 dnam{"gigabiti"}
                 few{"{0} gigabita"}
+                gender{"inanimate"}
                 one{"{0} gigabit"}
                 other{"{0} gigabita"}
             }
             gigabyte{
+                case{
+                    accusative{
+                        few{"{0} gigabajta"}
+                        one{"{0} gigabajt"}
+                        other{"{0} gigabajta"}
+                    }
+                    genitive{
+                        few{"{0} gigabajta"}
+                        one{"{0} gigabajta"}
+                        other{"{0} gigabajta"}
+                    }
+                    instrumental{
+                        few{"{0} gigabajta"}
+                        one{"{0} gigabajtom"}
+                        other{"{0} gigabajta"}
+                    }
+                }
                 dnam{"gigabajti"}
                 few{"{0} gigabajta"}
+                gender{"inanimate"}
                 one{"{0} gigabajt"}
                 other{"{0} gigabajta"}
             }
             kilobit{
+                case{
+                    accusative{
+                        few{"{0} kilobita"}
+                        one{"{0} kilobit"}
+                        other{"{0} kilobita"}
+                    }
+                    genitive{
+                        few{"{0} kilobita"}
+                        one{"{0} kilobita"}
+                        other{"{0} kilobita"}
+                    }
+                    instrumental{
+                        few{"{0} kilobita"}
+                        one{"{0} kilobitom"}
+                        other{"{0} kilobita"}
+                    }
+                }
                 dnam{"kilobiti"}
                 few{"{0} kilobita"}
+                gender{"inanimate"}
                 one{"{0} kilobit"}
                 other{"{0} kilobita"}
             }
             kilobyte{
+                case{
+                    accusative{
+                        few{"{0} kilobajta"}
+                        one{"{0} kilobajt"}
+                        other{"{0} kilobajta"}
+                    }
+                    genitive{
+                        few{"{0} kilobajta"}
+                        one{"{0} kilobajta"}
+                        other{"{0} kilobajta"}
+                    }
+                    instrumental{
+                        few{"{0} kilobajta"}
+                        one{"{0} kilobajtom"}
+                        other{"{0} kilobajta"}
+                    }
+                }
                 dnam{"kilobajti"}
                 few{"{0} kilobajta"}
+                gender{"inanimate"}
                 one{"{0} kilobajt"}
                 other{"{0} kilobajta"}
             }
             megabit{
+                case{
+                    accusative{
+                        few{"{0} megabita"}
+                        one{"{0} megabit"}
+                        other{"{0} megabita"}
+                    }
+                    genitive{
+                        few{"{0} megabita"}
+                        one{"{0} megabita"}
+                        other{"{0} megabita"}
+                    }
+                    instrumental{
+                        few{"{0} megabita"}
+                        one{"{0} megabitom"}
+                        other{"{0} megabita"}
+                    }
+                }
                 dnam{"megabiti"}
                 few{"{0} megabita"}
+                gender{"inanimate"}
                 one{"{0} megabit"}
                 other{"{0} megabita"}
             }
             megabyte{
+                case{
+                    accusative{
+                        few{"{0} megabajta"}
+                        one{"{0} megabajt"}
+                        other{"{0} megabajta"}
+                    }
+                    genitive{
+                        few{"{0} megabajta"}
+                        one{"{0} megabajta"}
+                        other{"{0} megabajta"}
+                    }
+                    instrumental{
+                        few{"{0} megabajta"}
+                        one{"{0} megabajtom"}
+                        other{"{0} megabajta"}
+                    }
+                }
                 dnam{"megabajti"}
                 few{"{0} megabajta"}
+                gender{"inanimate"}
                 one{"{0} megabajt"}
                 other{"{0} megabajta"}
             }
             petabyte{
+                case{
+                    accusative{
+                        few{"{0} petabajta"}
+                        one{"{0} petabajt"}
+                        other{"{0} petabajta"}
+                    }
+                    genitive{
+                        few{"{0} petabajta"}
+                        one{"{0} petabajta"}
+                        other{"{0} petabajta"}
+                    }
+                    instrumental{
+                        few{"{0} petabajta"}
+                        one{"{0} petabajtom"}
+                        other{"{0} petabajta"}
+                    }
+                }
                 dnam{"petabajti"}
                 few{"{0} petabajta"}
+                gender{"inanimate"}
                 one{"{0} petabajt"}
                 other{"{0} petabajta"}
             }
             terabit{
+                case{
+                    accusative{
+                        few{"{0} terabita"}
+                        one{"{0} terabit"}
+                        other{"{0} terabita"}
+                    }
+                    genitive{
+                        few{"{0} terabita"}
+                        one{"{0} terabita"}
+                        other{"{0} terabita"}
+                    }
+                    instrumental{
+                        few{"{0} terabita"}
+                        one{"{0} terabitom"}
+                        other{"{0} terabita"}
+                    }
+                }
                 dnam{"terabiti"}
                 few{"{0} terabita"}
+                gender{"inanimate"}
                 one{"{0} terabit"}
                 other{"{0} terabita"}
             }
             terabyte{
+                case{
+                    accusative{
+                        few{"{0} terabajta"}
+                        one{"{0} terabajt"}
+                        other{"{0} terabajta"}
+                    }
+                    genitive{
+                        few{"{0} terabajta"}
+                        one{"{0} terabajta"}
+                        other{"{0} terabajta"}
+                    }
+                    instrumental{
+                        few{"{0} terabajta"}
+                        one{"{0} terabajtom"}
+                        other{"{0} terabajta"}
+                    }
+                }
                 dnam{"terabajti"}
                 few{"{0} terabajta"}
+                gender{"inanimate"}
                 one{"{0} terabajt"}
                 other{"{0} terabajta"}
             }
@@ -826,14 +1132,50 @@ hr{
                 per{"{0}/h"}
             }
             microsecond{
+                case{
+                    accusative{
+                        few{"{0} mikrosekunde"}
+                        one{"{0} mikrosekunda"}
+                        other{"{0} mikrosekundi"}
+                    }
+                    genitive{
+                        few{"{0} mikrosekunde"}
+                        one{"{0} mikrosekunde"}
+                        other{"{0} mikrosekundi"}
+                    }
+                    instrumental{
+                        few{"{0} mikrosekunde"}
+                        one{"{0} mikrosekundom"}
+                        other{"{0} mikrosekundi"}
+                    }
+                }
                 dnam{"mikrosekunde"}
                 few{"{0} mikrosekunde"}
+                gender{"feminine"}
                 one{"{0} mikrosekunda"}
                 other{"{0} mikrosekundi"}
             }
             millisecond{
+                case{
+                    accusative{
+                        few{"{0} milisekunde"}
+                        one{"{0} milisekundu"}
+                        other{"{0} milisekundi"}
+                    }
+                    genitive{
+                        few{"{0} milisekunde"}
+                        one{"{0} milisekunde"}
+                        other{"{0} milisekundi"}
+                    }
+                    instrumental{
+                        few{"{0} milisekunde"}
+                        one{"{0} milisekundom"}
+                        other{"{0} milisekundi"}
+                    }
+                }
                 dnam{"milisekunde"}
                 few{"{0} milisekunde"}
+                gender{"feminine"}
                 one{"{0} milisekunda"}
                 other{"{0} milisekundi"}
             }
@@ -888,8 +1230,26 @@ hr{
                 per{"{0} mjesečno"}
             }
             nanosecond{
+                case{
+                    accusative{
+                        few{"{0} nanosekunde"}
+                        one{"{0} nanosekundu"}
+                        other{"{0} nanosekundi"}
+                    }
+                    genitive{
+                        few{"{0} nanosekunde"}
+                        one{"{0} nanosekunde"}
+                        other{"{0} nanosekundi"}
+                    }
+                    instrumental{
+                        few{"{0} nanosekunde"}
+                        one{"{0} nanosekundom"}
+                        other{"{0} nanosekundi"}
+                    }
+                }
                 dnam{"nanosekunde"}
                 few{"{0} nanosekunde"}
+                gender{"feminine"}
                 one{"{0} nanosekunda"}
                 other{"{0} nanosekundi"}
             }
@@ -995,8 +1355,26 @@ hr{
                 other{"{0} ampera"}
             }
             milliampere{
+                case{
+                    accusative{
+                        few{"{0} miliampera"}
+                        one{"{0} miliamper"}
+                        other{"{0} miliampera"}
+                    }
+                    genitive{
+                        few{"{0} miliampera"}
+                        one{"{0} miliampera"}
+                        other{"{0} miliampera"}
+                    }
+                    instrumental{
+                        few{"{0} miliampera"}
+                        one{"{0} miliamperom"}
+                        other{"{0} miliampera"}
+                    }
+                }
                 dnam{"miliamperi"}
                 few{"{0} miliampera"}
+                gender{"inanimate"}
                 one{"{0} miliamper"}
                 other{"{0} miliampera"}
             }
@@ -1123,14 +1501,50 @@ hr{
                 other{"{0} kilokalorija"}
             }
             kilojoule{
+                case{
+                    accusative{
+                        few{"{0} kilodžula"}
+                        one{"{0} kilodžul"}
+                        other{"{0} kilodžula"}
+                    }
+                    genitive{
+                        few{"{0} kilodžula"}
+                        one{"{0} kilodžula"}
+                        other{"{0} kilodžula"}
+                    }
+                    instrumental{
+                        few{"{0} kilodžula"}
+                        one{"{0} kilodžulom"}
+                        other{"{0} kilodžula"}
+                    }
+                }
                 dnam{"kilodžuli"}
                 few{"{0} kilodžula"}
+                gender{"inanimate"}
                 one{"{0} kilodžul"}
                 other{"{0} kilodžula"}
             }
             kilowatt-hour{
+                case{
+                    accusative{
+                        few{"{0} kilovatsata"}
+                        one{"{0} kilovatsat"}
+                        other{"{0} kilovatsati"}
+                    }
+                    genitive{
+                        few{"{0} kilovatsata"}
+                        one{"{0} kilovatsata"}
+                        other{"{0} kilovatsati"}
+                    }
+                    instrumental{
+                        few{"{0} kilovatsata"}
+                        one{"{0} kilovatsatom"}
+                        other{"{0} kilovatsati"}
+                    }
+                }
                 dnam{"kilovatsati"}
                 few{"{0} kilovatsata"}
+                gender{"inanimate"}
                 one{"{0} kilovatsat"}
                 other{"{0} kilovatsati"}
             }
@@ -1143,8 +1557,26 @@ hr{
         }
         force{
             kilowatt-hour-per-100-kilometer{
+                case{
+                    accusative{
+                        few{"{0} kilovatsata na 100 kilometara"}
+                        one{"{0} kilovatsat na 100 kilometara"}
+                        other{"{0} kilovatsati na 100 kilometara"}
+                    }
+                    genitive{
+                        few{"{0} kilovatsata na 100 kilometara"}
+                        one{"{0} kilovatsata na 100 kilometara"}
+                        other{"{0} kilovatsati na 100 kilometara"}
+                    }
+                    instrumental{
+                        few{"{0} kilovatsata na 100 kilometara"}
+                        one{"{0} kilovatsatom na 100 kilometara"}
+                        other{"{0} kilovatsati na 100 kilometara"}
+                    }
+                }
                 dnam{"kilovatsat na 100 kilometara"}
                 few{"{0} kilovatsata na 100 kilometara"}
+                gender{"inanimate"}
                 one{"{0} kilovatsat na 100 kilometara"}
                 other{"{0} kilovatsati na 100 kilometara"}
             }
@@ -1181,8 +1613,26 @@ hr{
         }
         frequency{
             gigahertz{
+                case{
+                    accusative{
+                        few{"{0} gigaherca"}
+                        one{"{0} gigaherc"}
+                        other{"{0} gigaherca"}
+                    }
+                    genitive{
+                        few{"{0} gigaherca"}
+                        one{"{0} gigaherca"}
+                        other{"{0} gigaherca"}
+                    }
+                    instrumental{
+                        few{"{0} gigaherca"}
+                        one{"{0} gigahercom"}
+                        other{"{0} gigaherca"}
+                    }
+                }
                 dnam{"gigaherci"}
                 few{"{0} gigaherca"}
+                gender{"inanimate"}
                 one{"{0} gigaherc"}
                 other{"{0} gigaherca"}
             }
@@ -1211,14 +1661,50 @@ hr{
                 other{"{0} herca"}
             }
             kilohertz{
+                case{
+                    accusative{
+                        few{"{0} kiloherca"}
+                        one{"{0} kiloherc"}
+                        other{"{0} kiloherca"}
+                    }
+                    genitive{
+                        few{"{0} kiloherca"}
+                        one{"{0} kiloherca"}
+                        other{"{0} kiloherca"}
+                    }
+                    instrumental{
+                        few{"{0} kiloherca"}
+                        one{"{0} kilohercom"}
+                        other{"{0} kiloherca"}
+                    }
+                }
                 dnam{"kiloherci"}
                 few{"{0} kiloherca"}
+                gender{"inanimate"}
                 one{"{0} kiloherc"}
                 other{"{0} kiloherca"}
             }
             megahertz{
+                case{
+                    accusative{
+                        few{"{0} megaherca"}
+                        one{"{0} megaherc"}
+                        other{"{0} megaherca"}
+                    }
+                    genitive{
+                        few{"{0} megaherca"}
+                        one{"{0} megaherca"}
+                        other{"{0} megaherca"}
+                    }
+                    instrumental{
+                        few{"{0} megaherca"}
+                        one{"{0} megahercom"}
+                        other{"{0} megaherca"}
+                    }
+                }
                 dnam{"megaherci"}
                 few{"{0} megaherca"}
+                gender{"inanimate"}
                 one{"{0} megaherc"}
                 other{"{0} megaherca"}
             }
@@ -1267,8 +1753,26 @@ hr{
                 other{"{0} tipografskih ema"}
             }
             megapixel{
+                case{
+                    accusative{
+                        few{"{0} megapiksela"}
+                        one{"{0} megapiksel"}
+                        other{"{0} megapiksela"}
+                    }
+                    genitive{
+                        few{"{0} megapiksela"}
+                        one{"{0} megapiksela"}
+                        other{"{0} megapiksela"}
+                    }
+                    instrumental{
+                        few{"{0} megapiksela"}
+                        one{"{0} megapikselom"}
+                        other{"{0} megapiksela"}
+                    }
+                }
                 dnam{"megapikseli"}
                 few{"{0} megapiksela"}
+                gender{"inanimate"}
                 one{"{0} megapiksel"}
                 other{"{0} megapiksela"}
             }
@@ -1297,8 +1801,26 @@ hr{
                 other{"{0} piksela"}
             }
             pixel-per-centimeter{
+                case{
+                    accusative{
+                        few{"{0} piksela po centimetru"}
+                        one{"{0} piksel po centimetru"}
+                        other{"{0} piksela po centimetru"}
+                    }
+                    genitive{
+                        few{"{0} piksela po centimetru"}
+                        one{"{0} piksela po centimetru"}
+                        other{"{0} piksela po centimetru"}
+                    }
+                    instrumental{
+                        few{"{0} piksela po centimetru"}
+                        one{"{0} pikselom po centimetru"}
+                        other{"{0} piksela po centimetru"}
+                    }
+                }
                 dnam{"pikseli po centimetru"}
                 few{"{0} piksela po centimetru"}
+                gender{"inanimate"}
                 one{"{0} piksel po centimetru"}
                 other{"{0} piksela po centimetru"}
             }
@@ -1317,15 +1839,51 @@ hr{
                 other{"{0} astronomskih jedinica"}
             }
             centimeter{
+                case{
+                    accusative{
+                        few{"{0} centimetra"}
+                        one{"{0} centimetar"}
+                        other{"{0} centimetara"}
+                    }
+                    genitive{
+                        few{"{0} centimetra"}
+                        one{"{0} centimetra"}
+                        other{"{0} centimetara"}
+                    }
+                    instrumental{
+                        few{"{0} centimetra"}
+                        one{"{0} centimetrom"}
+                        other{"{0} centimetara"}
+                    }
+                }
                 dnam{"centimetri"}
                 few{"{0} centimetra"}
+                gender{"inanimate"}
                 one{"{0} centimetar"}
                 other{"{0} centimetara"}
                 per{"{0}/cm"}
             }
             decimeter{
+                case{
+                    accusative{
+                        few{"{0} decimetra"}
+                        one{"{0} decimetar"}
+                        other{"{0} decimetara"}
+                    }
+                    genitive{
+                        few{"{0} decimetra"}
+                        one{"{0} decimetra"}
+                        other{"{0} decimetara"}
+                    }
+                    instrumental{
+                        few{"{0} decimetra"}
+                        one{"{0} decimetrom"}
+                        other{"{0} decimetara"}
+                    }
+                }
                 dnam{"decimetri"}
                 few{"{0} decimetra"}
+                gender{"inanimate"}
                 one{"{0} decimetar"}
                 other{"{0} decimetara"}
             }
@@ -1362,8 +1920,26 @@ hr{
                 per{"{0}/in"}
             }
             kilometer{
+                case{
+                    accusative{
+                        few{"{0} kilometra"}
+                        one{"{0} kilometar"}
+                        other{"{0} kilometara"}
+                    }
+                    genitive{
+                        few{"{0} kilometra"}
+                        one{"{0} kilometra"}
+                        other{"{0} kilometara"}
+                    }
+                    instrumental{
+                        few{"{0} kilometra"}
+                        one{"{0} kilometrom"}
+                        other{"{0} kilometara"}
+                    }
+                }
                 dnam{"kilometri"}
                 few{"{0} kilometra"}
+                gender{"inanimate"}
                 one{"{0} kilometar"}
                 other{"{0} kilometara"}
                 per{"{0}/km"}
@@ -1400,8 +1976,26 @@ hr{
                 per{"{0}/m"}
             }
             micrometer{
+                case{
+                    accusative{
+                        few{"{0} mikrometra"}
+                        one{"{0} mikrometar"}
+                        other{"{0} mikrometara"}
+                    }
+                    genitive{
+                        few{"{0} mikrometra"}
+                        one{"{0} mikrometra"}
+                        other{"{0} mikrometara"}
+                    }
+                    instrumental{
+                        few{"{0} mikrometra"}
+                        one{"{0} mikrometrom"}
+                        other{"{0} mikrometara"}
+                    }
+                }
                 dnam{"mikrometri"}
                 few{"{0} mikrometra"}
+                gender{"inanimate"}
                 one{"{0} mikrometar"}
                 other{"{0} mikrometara"}
             }
@@ -1436,14 +2030,50 @@ hr{
                 other{"{0} skandinavskih milja"}
             }
             millimeter{
+                case{
+                    accusative{
+                        few{"{0} milimetra"}
+                        one{"{0} milimetar"}
+                        other{"{0} milimetara"}
+                    }
+                    genitive{
+                        few{"{0} milimetra"}
+                        one{"{0} milimetra"}
+                        other{"{0} milimetara"}
+                    }
+                    instrumental{
+                        few{"{0} milimetra"}
+                        one{"{0} milimetrom"}
+                        other{"{0} milimetara"}
+                    }
+                }
                 dnam{"milimetri"}
                 few{"{0} milimetra"}
+                gender{"inanimate"}
                 one{"{0} milimetar"}
                 other{"{0} milimetara"}
             }
             nanometer{
+                case{
+                    accusative{
+                        few{"{0} nanometra"}
+                        one{"{0} nanometar"}
+                        other{"{0} nanometara"}
+                    }
+                    genitive{
+                        few{"{0} nanometra"}
+                        one{"{0} nanometra"}
+                        other{"{0} nanometara"}
+                    }
+                    instrumental{
+                        few{"{0} nanometra"}
+                        one{"{0} nanometrom"}
+                        other{"{0} nanometara"}
+                    }
+                }
                 dnam{"nanometri"}
                 few{"{0} nanometra"}
+                gender{"inanimate"}
                 one{"{0} nanometar"}
                 other{"{0} nanometara"}
             }
@@ -1460,8 +2090,26 @@ hr{
                 other{"{0} parseka"}
             }
             picometer{
+                case{
+                    accusative{
+                        few{"{0} pikometra"}
+                        one{"{0} pikometar"}
+                        other{"{0} pikometara"}
+                    }
+                    genitive{
+                        few{"{0} pikometra"}
+                        one{"{0} pikometra"}
+                        other{"{0} pikometara"}
+                    }
+                    instrumental{
+                        few{"{0} pikometra"}
+                        one{"{0} pikometrom"}
+                        other{"{0} pikometara"}
+                    }
+                }
                 dnam{"pikometri"}
                 few{"{0} pikometra"}
+                gender{"inanimate"}
                 one{"{0} pikometar"}
                 other{"{0} pikometara"}
             }
@@ -1602,7 +2250,7 @@ hr{
                 other{"{0} Zemljinih masa"}
             }
             grain{
-                dnam{"grain"}
+                dnam{"grainovi"}
                 few{"{0} graina"}
                 one{"{0} grain"}
                 other{"{0} graina"}
@@ -1682,14 +2330,50 @@ hr{
                 other{"{0} tona"}
             }
             microgram{
+                case{
+                    accusative{
+                        few{"{0} mikrograma"}
+                        one{"{0} mikrogram"}
+                        other{"{0} mikrograma"}
+                    }
+                    genitive{
+                        few{"{0} mikrograma"}
+                        one{"{0} mikrograma"}
+                        other{"{0} mikrograma"}
+                    }
+                    instrumental{
+                        few{"{0} mikrograma"}
+                        one{"{0} mikrogramom"}
+                        other{"{0} mikrograma"}
+                    }
+                }
                 dnam{"mikrogrami"}
                 few{"{0} mikrograma"}
+                gender{"inanimate"}
                 one{"{0} mikrogram"}
                 other{"{0} mikrograma"}
             }
             milligram{
+                case{
+                    accusative{
+                        few{"{0} miligrama"}
+                        one{"{0} miligram"}
+                        other{"{0} miligrama"}
+                    }
+                    genitive{
+                        few{"{0} miligrama"}
+                        one{"{0} miligrama"}
+                        other{"{0} miligrama"}
+                    }
+                    instrumental{
+                        few{"{0} miligrama"}
+                        one{"{0} miligramom"}
+                        other{"{0} miligrama"}
+                    }
+                }
                 dnam{"miligrami"}
                 few{"{0} miligrama"}
+                gender{"inanimate"}
                 one{"{0} miligram"}
                 other{"{0} miligrama"}
             }
@@ -1734,8 +2418,26 @@ hr{
         }
         power{
             gigawatt{
+                case{
+                    accusative{
+                        few{"{0} gigavata"}
+                        one{"{0} gigavat"}
+                        other{"{0} gigavata"}
+                    }
+                    genitive{
+                        few{"{0} gigavata"}
+                        one{"{0} gigavata"}
+                        other{"{0} gigavata"}
+                    }
+                    instrumental{
+                        few{"{0} gigavata"}
+                        one{"{0} gigavatom"}
+                        other{"{0} gigavata"}
+                    }
+                }
                 dnam{"gigavati"}
                 few{"{0} gigavata"}
+                gender{"inanimate"}
                 one{"{0} gigavat"}
                 other{"{0} gigavata"}
             }
@@ -1746,20 +2448,74 @@ hr{
                 other{"{0} konjskih snaga"}
             }
             kilowatt{
+                case{
+                    accusative{
+                        few{"{0} kilovata"}
+                        one{"{0} kilovat"}
+                        other{"{0} kilovata"}
+                    }
+                    genitive{
+                        few{"{0} kilovata"}
+                        one{"{0} kilovata"}
+                        other{"{0} kilovata"}
+                    }
+                    instrumental{
+                        few{"{0} kilovata"}
+                        one{"{0} kilovatom"}
+                        other{"{0} kilovata"}
+                    }
+                }
                 dnam{"kilovati"}
                 few{"{0} kilovata"}
+                gender{"inanimate"}
                 one{"{0} kilovat"}
                 other{"{0} kilovata"}
             }
             megawatt{
+                case{
+                    accusative{
+                        few{"{0} megavata"}
+                        one{"{0} megavat"}
+                        other{"{0} megavata"}
+                    }
+                    genitive{
+                        few{"{0} megavata"}
+                        one{"{0} megavata"}
+                        other{"{0} megavata"}
+                    }
+                    instrumental{
+                        few{"{0} megavata"}
+                        one{"{0} megavatom"}
+                        other{"{0} megavata"}
+                    }
+                }
                 dnam{"megavati"}
                 few{"{0} megavata"}
+                gender{"inanimate"}
                 one{"{0} megavat"}
                 other{"{0} megavata"}
             }
             milliwatt{
+                case{
+                    accusative{
+                        few{"{0} milivata"}
+                        one{"{0} milivat"}
+                        other{"{0} milivata"}
+                    }
+                    genitive{
+                        few{"{0} milivata"}
+                        one{"{0} milivata"}
+                        other{"{0} milivata"}
+                    }
+                    instrumental{
+                        few{"{0} milivata"}
+                        one{"{0} milivatom"}
+                        other{"{0} milivata"}
+                    }
+                }
                 dnam{"milivati"}
                 few{"{0} milivata"}
+                gender{"inanimate"}
                 one{"{0} milivat"}
                 other{"{0} milivata"}
             }
@@ -1838,8 +2594,26 @@ hr{
                 other{"{0} bara"}
             }
             hectopascal{
+                case{
+                    accusative{
+                        few{"{0} hektopaskala"}
+                        one{"{0} hektopaskal"}
+                        other{"{0} hektopaskala"}
+                    }
+                    genitive{
+                        few{"{0} hektopaskala"}
+                        one{"{0} hektopaskala"}
+                        other{"{0} hektopaskala"}
+                    }
+                    instrumental{
+                        few{"{0} hektopaskala"}
+                        one{"{0} hektopaskalom"}
+                        other{"{0} hektopaskala"}
+                    }
+                }
                 dnam{"hektopaskali"}
                 few{"{0} hektopaskala"}
+                gender{"inanimate"}
                 one{"{0} hektopaskal"}
                 other{"{0} hektopaskala"}
             }
@@ -1850,20 +2624,74 @@ hr{
                 other{"{0} inča žive"}
             }
             kilopascal{
+                case{
+                    accusative{
+                        few{"{0} kilopaskala"}
+                        one{"{0} kilopaskal"}
+                        other{"{0} kilopaskala"}
+                    }
+                    genitive{
+                        few{"{0} kilopaskala"}
+                        one{"{0} kilopaskala"}
+                        other{"{0} kilopaskala"}
+                    }
+                    instrumental{
+                        few{"{0} kilopaskala"}
+                        one{"{0} kilopaskalom"}
+                        other{"{0} kilopaskala"}
+                    }
+                }
                 dnam{"kilopaskali"}
                 few{"{0} kilopaskala"}
+                gender{"inanimate"}
                 one{"{0} kilopaskal"}
                 other{"{0} kilopaskala"}
             }
             megapascal{
+                case{
+                    accusative{
+                        few{"{0} megapaskala"}
+                        one{"{0} megapaskal"}
+                        other{"{0} megapaskala"}
+                    }
+                    genitive{
+                        few{"{0} megapaskala"}
+                        one{"{0} megapaskala"}
+                        other{"{0} megapaskala"}
+                    }
+                    instrumental{
+                        few{"{0} megapaskala"}
+                        one{"{0} megapaskalom"}
+                        other{"{0} megapaskala"}
+                    }
+                }
                 dnam{"megapaskali"}
                 few{"{0} megapaskala"}
+                gender{"inanimate"}
                 one{"{0} megapaskal"}
                 other{"{0} megapaskala"}
             }
             millibar{
+                case{
+                    accusative{
+                        few{"{0} milibara"}
+                        one{"{0} milibar"}
+                        other{"{0} milibara"}
+                    }
+                    genitive{
+                        few{"{0} milibara"}
+                        one{"{0} milibara"}
+                        other{"{0} milibara"}
+                    }
+                    instrumental{
+                        few{"{0} milibara"}
+                        one{"{0} milibarom"}
+                        other{"{0} milibara"}
+                    }
+                }
                 dnam{"milibari"}
                 few{"{0} milibara"}
+                gender{"inanimate"}
                 one{"{0} milibar"}
                 other{"{0} milibara"}
             }
@@ -1906,8 +2734,26 @@ hr{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    accusative{
+                        few{"{0} kilometra na sat"}
+                        one{"{0} kilometar na sat"}
+                        other{"{0} kilometara na sat"}
+                    }
+                    genitive{
+                        few{"{0} kilometra na sat"}
+                        one{"{0} kilometra na sat"}
+                        other{"{0} kilometara na sat"}
+                    }
+                    instrumental{
+                        few{"{0} kilometra na sat"}
+                        one{"{0} kilometrom na sat"}
+                        other{"{0} kilometara na sat"}
+                    }
+                }
                 dnam{"kilometri na sat"}
                 few{"{0} kilometra na sat"}
+                gender{"inanimate"}
                 one{"{0} kilometar na sat"}
                 other{"{0} kilometara na sat"}
             }
@@ -1918,8 +2764,26 @@ hr{
                 other{"{0} čvorova"}
             }
             meter-per-second{
+                case{
+                    accusative{
+                        few{"{0} metra u sekundi"}
+                        one{"{0} metar u sekundi"}
+                        other{"{0} metara u sekundi"}
+                    }
+                    genitive{
+                        few{"{0} metra u sekundi"}
+                        one{"{0} metra u sekundi"}
+                        other{"{0} metara u sekundi"}
+                    }
+                    instrumental{
+                        few{"{0} metra u sekundi"}
+                        one{"{0} metara u sekundi"}
+                        other{"{0} metara u sekundi"}
+                    }
+                }
                 dnam{"metri u sekundi"}
                 few{"{0} metra u sekundi"}
+                gender{"inanimate"}
                 one{"{0} metar u sekundi"}
                 other{"{0} metara u sekundi"}
             }
@@ -2012,8 +2876,26 @@ hr{
         }
         torque{
             newton-meter{
+                case{
+                    accusative{
+                        few{"{0} njutnmetra"}
+                        one{"{0} njutnmetar"}
+                        other{"{0} njutnmetara"}
+                    }
+                    genitive{
+                        few{"{0} njutnmetra"}
+                        one{"{0} njutnmetra"}
+                        other{"{0} njutnmetara"}
+                    }
+                    instrumental{
+                        few{"{0} njutnmetra"}
+                        one{"{0} njutnmetrom"}
+                        other{"{0} njutnmetara"}
+                    }
+                }
                 dnam{"njutnmetri"}
                 few{"{0} njutnmetra"}
+                gender{"inanimate"}
                 one{"{0} njutnmetar"}
                 other{"{0} njutnmetara"}
             }
@@ -2044,14 +2926,50 @@ hr{
                 other{"{0} bušela"}
             }
             centiliter{
+                case{
+                    accusative{
+                        few{"{0} centilitra"}
+                        one{"{0} centilitar"}
+                        other{"{0} centilitara"}
+                    }
+                    genitive{
+                        few{"{0} centilitra"}
+                        one{"{0} centilitra"}
+                        other{"{0} centilitara"}
+                    }
+                    instrumental{
+                        few{"{0} centilitra"}
+                        one{"{0} centilitrom"}
+                        other{"{0} centilitara"}
+                    }
+                }
                 dnam{"centilitri"}
                 few{"{0} centilitra"}
+                gender{"inanimate"}
                 one{"{0} centilitar"}
                 other{"{0} centilitara"}
             }
             cubic-centimeter{
+                case{
+                    accusative{
+                        few{"{0} kubna centimetra"}
+                        one{"{0} kubni centimetar"}
+                        other{"{0} kubnih centimetara"}
+                    }
+                    genitive{
+                        few{"{0} kubna centimetra"}
+                        one{"{0} kubnog centimetra"}
+                        other{"{0} kubnih centimetara"}
+                    }
+                    instrumental{
+                        few{"{0} kubna centimetra"}
+                        one{"{0} kubnim centimetrom"}
+                        other{"{0} kubnih centimetara"}
+                    }
+                }
                 dnam{"kubni centimetri"}
                 few{"{0} kubna centimetra"}
+                gender{"inanimate"}
                 one{"{0} kubni centimetar"}
                 other{"{0} kubnih centimetara"}
                 per{"{0}/cm³"}
@@ -2069,14 +2987,50 @@ hr{
                 other{"{0} kubnih inča"}
             }
             cubic-kilometer{
+                case{
+                    accusative{
+                        few{"{0} kubna kilometra"}
+                        one{"{0} kubni kilometar"}
+                        other{"{0} kubnih kilometara"}
+                    }
+                    genitive{
+                        few{"{0} kubna kilometra"}
+                        one{"{0} kubnog kilometra"}
+                        other{"{0} kubnih kilometara"}
+                    }
+                    instrumental{
+                        few{"{0} kubna kilometra"}
+                        one{"{0} kubnim kilometrom"}
+                        other{"{0} kubnih kilometara"}
+                    }
+                }
                 dnam{"kubni kilometri"}
                 few{"{0} kubna kilometra"}
+                gender{"inanimate"}
                 one{"{0} kubni kilometar"}
                 other{"{0} kubnih kilometara"}
             }
             cubic-meter{
+                case{
+                    accusative{
+                        few{"{0} kubna metra"}
+                        one{"{0} kubni metar"}
+                        other{"{0} kubnih metara"}
+                    }
+                    genitive{
+                        few{"{0} kubna metra"}
+                        one{"{0} kubnog metra"}
+                        other{"{0} kubnih metara"}
+                    }
+                    instrumental{
+                        few{"{0} kubna metra"}
+                        one{"{0} kubnim metrom"}
+                        other{"{0} kubnih metara"}
+                    }
+                }
                 dnam{"kubni metri"}
                 few{"{0} kubna metra"}
+                gender{"inanimate"}
                 one{"{0} kubni metar"}
                 other{"{0} kubnih metara"}
                 per{"{0}/m³"}
@@ -2124,8 +3078,26 @@ hr{
                 other{"{0} metričkih šalica"}
             }
             deciliter{
+                case{
+                    accusative{
+                        few{"{0} decilitra"}
+                        one{"{0} decilitar"}
+                        other{"{0} decilitara"}
+                    }
+                    genitive{
+                        few{"{0} decilitra"}
+                        one{"{0} decilitra"}
+                        other{"{0} decilitara"}
+                    }
+                    instrumental{
+                        few{"{0} decilitra"}
+                        one{"{0} decilitrom"}
+                        other{"{0} decilitara"}
+                    }
+                }
                 dnam{"decilitri"}
                 few{"{0} decilitra"}
+                gender{"inanimate"}
                 one{"{0} decilitar"}
                 other{"{0} decilitara"}
             }
@@ -2180,8 +3152,26 @@ hr{
                 per{"{0} po imp. galonu"}
             }
             hectoliter{
+                case{
+                    accusative{
+                        few{"{0} hektolitra"}
+                        one{"{0} hektolitar"}
+                        other{"{0} hektolitara"}
+                    }
+                    genitive{
+                        few{"{0} hektolitra"}
+                        one{"{0} hektolitra"}
+                        other{"{0} hektolitara"}
+                    }
+                    instrumental{
+                        few{"{0} hektolitra"}
+                        one{"{0} hektolitrom"}
+                        other{"{0} hektolitara"}
+                    }
+                }
                 dnam{"hektolitri"}
                 few{"{0} hektolitra"}
+                gender{"inanimate"}
                 one{"{0} hektolitar"}
                 other{"{0} hektolitara"}
             }
@@ -2216,14 +3206,50 @@ hr{
                 per{"{0}/l"}
             }
             megaliter{
+                case{
+                    accusative{
+                        few{"{0} megalitra"}
+                        one{"{0} megalitar"}
+                        other{"{0} megalitara"}
+                    }
+                    genitive{
+                        few{"{0} megalitra"}
+                        one{"{0} megalitra"}
+                        other{"{0} megalitara"}
+                    }
+                    instrumental{
+                        few{"{0} megalitra"}
+                        one{"{0} megalitrom"}
+                        other{"{0} megalitara"}
+                    }
+                }
                 dnam{"megalitri"}
                 few{"{0} megalitra"}
+                gender{"inanimate"}
                 one{"{0} megalitar"}
                 other{"{0} megalitara"}
             }
             milliliter{
+                case{
+                    accusative{
+                        few{"{0} mililitra"}
+                        one{"{0} mililitar"}
+                        other{"{0} mililitara"}
+                    }
+                    genitive{
+                        few{"{0} mililitra"}
+                        one{"{0} mililitra"}
+                        other{"{0} mililitara"}
+                    }
+                    instrumental{
+                        few{"{0} mililitra"}
+                        one{"{0} mililitrom"}
+                        other{"{0} mililitara"}
+                    }
+                }
                 dnam{"mililitri"}
                 few{"{0} mililitra"}
+                gender{"inanimate"}
                 one{"{0} mililitar"}
                 other{"{0} mililitara"}
             }

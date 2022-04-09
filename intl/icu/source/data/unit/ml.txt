@@ -325,23 +325,11 @@ ml{
                 one{
                     _{
                         _{"വർഗ്ഗം {0}"}
-                        accusative{"വർഗ്ഗം {0}"}
-                        dative{"വർഗ്ഗം {0}"}
-                        genitive{"വർഗ്ഗം {0}"}
-                        instrumental{"വർഗ്ഗം {0}"}
-                        locative{"വർഗ്ഗം {0}"}
-                        sociative{"വർഗ്ഗം {0}"}
                     }
                 }
                 other{
                     _{
                         _{"വർഗ്ഗം {0}"}
-                        accusative{"വർഗ്ഗം {0}"}
-                        dative{"വർഗ്ഗം {0}"}
-                        genitive{"വർഗ്ഗം {0}"}
-                        instrumental{"വർഗ്ഗം {0}"}
-                        locative{"വർഗ്ഗം {0}"}
-                        sociative{"വർഗ്ഗം {0}"}
                     }
                 }
             }
@@ -349,23 +337,11 @@ ml{
                 one{
                     _{
                         _{"ക്യുബിക് {0}"}
-                        accusative{"ക്യുബിക് {0}"}
-                        dative{"ക്യുബിക് {0}"}
-                        genitive{"ക്യുബിക് {0}"}
-                        instrumental{"ക്യുബിക് {0}"}
-                        locative{"ക്യുബിക് {0}"}
-                        sociative{"ക്യുബിക് {0}"}
                     }
                 }
                 other{
                     _{
                         _{"ക്യുബിക് {0}"}
-                        accusative{"ക്യുബിക് {0}"}
-                        dative{"ക്യുബിക് {0}"}
-                        genitive{"ക്യുബിക് {0}"}
-                        instrumental{"ക്യുബിക് {0}"}
-                        locative{"ക്യുബിക് {0}"}
-                        sociative{"ക്യുബിക് {0}"}
                     }
                 }
             }
@@ -733,10 +709,6 @@ ml{
                         one{"{0} നൂറ്റാണ്ടിന്റെ"}
                         other{"{0} നൂറ്റാണ്ടിന്റെ"}
                     }
-                    instrumental{
-                        one{"{0} നൂറ്റാണ്ട്"}
-                        other{"{0} നൂറ്റാണ്ടുകൾ"}
-                    }
                     locative{
                         one{"{0} നൂറ്റാണ്ടിൽ"}
                         other{"{0} നൂറ്റാണ്ടുകൾ"}
@@ -752,32 +724,6 @@ ml{
                 other{"{0} നൂറ്റാണ്ടുകൾ"}
             }
             day{
-                case{
-                    accusative{
-                        one{"{0} ദിവസം"}
-                        other{"{0} ദിവസം"}
-                    }
-                    dative{
-                        one{"{0} ദിവസം"}
-                        other{"{0} ദിവസം"}
-                    }
-                    genitive{
-                        one{"{0} ദിവസം"}
-                        other{"{0} ദിവസം"}
-                    }
-                    instrumental{
-                        one{"{0} ദിവസം"}
-                        other{"{0} ദിവസം"}
-                    }
-                    locative{
-                        one{"{0} ദിവസം"}
-                        other{"{0} ദിവസം"}
-                    }
-                    sociative{
-                        one{"{0} ദിവസം"}
-                        other{"{0} ദിവസം"}
-                    }
-                }
                 dnam{"ദിവസം"}
                 gender{"neuter"}
                 one{"{0} ദിവസം"}
@@ -817,32 +763,6 @@ ml{
                 other{"{0} ദശാബ്‌ദം"}
             }
             hour{
-                case{
-                    accusative{
-                        one{"{0} മണിക്കൂർ"}
-                        other{"{0} മണിക്കൂർ"}
-                    }
-                    dative{
-                        one{"{0} മണിക്കൂർ"}
-                        other{"{0} മണിക്കൂർ"}
-                    }
-                    genitive{
-                        one{"{0} മണിക്കൂർ"}
-                        other{"{0} മണിക്കൂർ"}
-                    }
-                    instrumental{
-                        one{"{0} മണിക്കൂർ"}
-                        other{"{0} മണിക്കൂർ"}
-                    }
-                    locative{
-                        one{"{0} മണിക്കൂർ"}
-                        other{"{0} മണിക്കൂർ"}
-                    }
-                    sociative{
-                        one{"{0} മണിക്കൂർ"}
-                        other{"{0} മണിക്കൂർ"}
-                    }
-                }
                 dnam{"മണിക്കൂർ"}
                 gender{"neuter"}
                 one{"{0} മണിക്കൂർ"}
@@ -860,32 +780,6 @@ ml{
                 other{"{0} മില്ലിസെക്കൻഡ്"}
             }
             minute{
-                case{
-                    accusative{
-                        one{"{0} മിനിറ്റ്"}
-                        other{"{0} മിനിറ്റ്"}
-                    }
-                    dative{
-                        one{"{0} മിനിറ്റ്"}
-                        other{"{0} മിനിറ്റ്"}
-                    }
-                    genitive{
-                        one{"{0} മിനിറ്റ്"}
-                        other{"{0} മിനിറ്റ്"}
-                    }
-                    instrumental{
-                        one{"{0} മിനിറ്റ്"}
-                        other{"{0} മിനിറ്റ്"}
-                    }
-                    locative{
-                        one{"{0} മിനിറ്റ്"}
-                        other{"{0} മിനിറ്റ്"}
-                    }
-                    sociative{
-                        one{"{0} മിനിറ്റ്"}
-                        other{"{0} മിനിറ്റ്"}
-                    }
-                }
                 dnam{"മിനിറ്റ്"}
                 gender{"neuter"}
                 one{"{0} മിനിറ്റ്"}
@@ -893,32 +787,6 @@ ml{
                 per{"{0} / മിനിറ്റ്"}
             }
             month{
-                case{
-                    accusative{
-                        one{"{0} മാസം"}
-                        other{"{0} മാസം"}
-                    }
-                    dative{
-                        one{"{0} മാസം"}
-                        other{"{0} മാസം"}
-                    }
-                    genitive{
-                        one{"{0} മാസം"}
-                        other{"{0} മാസം"}
-                    }
-                    instrumental{
-                        one{"{0} മാസം"}
-                        other{"{0} മാസം"}
-                    }
-                    locative{
-                        one{"{0} മാസം"}
-                        other{"{0} മാസം"}
-                    }
-                    sociative{
-                        one{"{0} മാസം"}
-                        other{"{0} മാസം"}
-                    }
-                }
                 dnam{"മാസം"}
                 gender{"neuter"}
                 one{"{0} മാസം"}
@@ -931,32 +799,6 @@ ml{
                 other{"{0} നാനോസെക്കൻഡ്"}
             }
             second{
-                case{
-                    accusative{
-                        one{"{0} സെക്കൻഡ്"}
-                        other{"{0} സെക്കൻഡ്"}
-                    }
-                    dative{
-                        one{"{0} സെക്കൻഡ്"}
-                        other{"{0} സെക്കൻഡ്"}
-                    }
-                    genitive{
-                        one{"{0} സെക്കൻഡ്"}
-                        other{"{0} സെക്കൻഡ്"}
-                    }
-                    instrumental{
-                        one{"{0} സെക്കൻഡ്"}
-                        other{"{0} സെക്കൻഡ്"}
-                    }
-                    locative{
-                        one{"{0} സെക്കൻഡ്"}
-                        other{"{0} സെക്കൻഡ്"}
-                    }
-                    sociative{
-                        one{"{0} സെക്കൻഡ്"}
-                        other{"{0} സെക്കൻഡ്"}
-                    }
-                }
                 dnam{"സെക്കൻഡ്"}
                 gender{"neuter"}
                 one{"{0} സെക്കൻഡ്"}
@@ -964,32 +806,6 @@ ml{
                 per{"{0} / സെക്കൻഡ്"}
             }
             week{
-                case{
-                    accusative{
-                        one{"{0} ആഴ്ച"}
-                        other{"{0} ആഴ്ച"}
-                    }
-                    dative{
-                        one{"{0} ആഴ്ച"}
-                        other{"{0} ആഴ്ച"}
-                    }
-                    genitive{
-                        one{"{0} ആഴ്ച"}
-                        other{"{0} ആഴ്ച"}
-                    }
-                    instrumental{
-                        one{"{0} ആഴ്ച"}
-                        other{"{0} ആഴ്ച"}
-                    }
-                    locative{
-                        one{"{0} ആഴ്ച"}
-                        other{"{0} ആഴ്ച"}
-                    }
-                    sociative{
-                        one{"{0} ആഴ്ച"}
-                        other{"{0} ആഴ്ച"}
-                    }
-                }
                 dnam{"ആഴ്ച"}
                 gender{"neuter"}
                 one{"{0} ആഴ്ച"}
@@ -1008,18 +824,6 @@ ml{
                     }
                     genitive{
                         one{"{0} വർഷത്തിന്റെ"}
-                        other{"{0} വർഷം"}
-                    }
-                    instrumental{
-                        one{"{0} വർഷം"}
-                        other{"{0} വർഷം"}
-                    }
-                    locative{
-                        one{"{0} വർഷം"}
-                        other{"{0} വർഷം"}
-                    }
-                    sociative{
-                        one{"{0} വർഷം"}
                         other{"{0} വർഷം"}
                     }
                 }
@@ -1384,32 +1188,6 @@ ml{
                 other{"{0} പ്രകാശവർഷം"}
             }
             meter{
-                case{
-                    accusative{
-                        one{"{0} മീറ്റർ"}
-                        other{"{0} മീറ്റർ"}
-                    }
-                    dative{
-                        one{"{0} മീറ്റർ"}
-                        other{"{0} മീറ്റർ"}
-                    }
-                    genitive{
-                        one{"{0} മീറ്റർ"}
-                        other{"{0} മീറ്റർ"}
-                    }
-                    instrumental{
-                        one{"{0} മീറ്റർ"}
-                        other{"{0} മീറ്റർ"}
-                    }
-                    locative{
-                        one{"{0} മീറ്റർ"}
-                        other{"{0} മീറ്റർ"}
-                    }
-                    sociative{
-                        one{"{0} മീറ്റർ"}
-                        other{"{0} മീറ്റർ"}
-                    }
-                }
                 dnam{"മീറ്റർ"}
                 gender{"neuter"}
                 one{"{0} മീറ്റർ"}
@@ -1427,32 +1205,6 @@ ml{
                 other{"{0} മൈൽ"}
             }
             mile-scandinavian{
-                case{
-                    accusative{
-                        one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                        other{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                    }
-                    dative{
-                        one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                        other{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                    }
-                    genitive{
-                        one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                        other{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                    }
-                    instrumental{
-                        one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                        other{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                    }
-                    locative{
-                        one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                        other{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                    }
-                    sociative{
-                        one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                        other{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
-                    }
-                }
                 dnam{"സ്കാൻഡിനേവിയൻ മൈൽ"}
                 gender{"neuter"}
                 one{"{0} സ്കാൻഡിനേവിയൻ മൈൽ"}
@@ -1523,8 +1275,6 @@ ml{
                     }
                 }
                 gender{"neuter"}
-                one{"{0} cd"}
-                other{"{0} cd"}
             }
             lumen{
                 case{
@@ -1554,8 +1304,6 @@ ml{
                     }
                 }
                 gender{"neuter"}
-                one{"{0} lm"}
-                other{"{0} lm"}
             }
             lux{
                 case{
@@ -2170,32 +1918,6 @@ ml{
                 other{"{0} കപ്പ്"}
             }
             cup-metric{
-                case{
-                    accusative{
-                        one{"{0} മെട്രിക് കപ്പ്"}
-                        other{"{0} മെട്രിക് കപ്പ്"}
-                    }
-                    dative{
-                        one{"{0} മെട്രിക് കപ്പ്"}
-                        other{"{0} മെട്രിക് കപ്പ്"}
-                    }
-                    genitive{
-                        one{"{0} മെട്രിക് കപ്പ്"}
-                        other{"{0} മെട്രിക് കപ്പ്"}
-                    }
-                    instrumental{
-                        one{"{0} മെട്രിക് കപ്പ്"}
-                        other{"{0} മെട്രിക് കപ്പ്"}
-                    }
-                    locative{
-                        one{"{0} മെട്രിക് കപ്പ്"}
-                        other{"{0} മെട്രിക് കപ്പ്"}
-                    }
-                    sociative{
-                        one{"{0} മെട്രിക് കപ്പ്"}
-                        other{"{0} മെട്രിക് കപ്പ്"}
-                    }
-                }
                 dnam{"മെട്രിക് കപ്പ്"}
                 gender{"neuter"}
                 one{"{0} മെട്രിക് കപ്പ്"}
@@ -2239,32 +1961,6 @@ ml{
                 other{"{0} ജിഗർ"}
             }
             liter{
-                case{
-                    accusative{
-                        one{"{0} ലിറ്റർ"}
-                        other{"{0} ലിറ്റർ"}
-                    }
-                    dative{
-                        one{"{0} ലിറ്റർ"}
-                        other{"{0} ലിറ്റർ"}
-                    }
-                    genitive{
-                        one{"{0} ലിറ്റർ"}
-                        other{"{0} ലിറ്റർ"}
-                    }
-                    instrumental{
-                        one{"{0} ലിറ്റർ"}
-                        other{"{0} ലിറ്റർ"}
-                    }
-                    locative{
-                        one{"{0} ലിറ്റർ"}
-                        other{"{0} ലിറ്റർ"}
-                    }
-                    sociative{
-                        one{"{0} ലിറ്റർ"}
-                        other{"{0} ലിറ്റർ"}
-                    }
-                }
                 dnam{"ലിറ്റർ"}
                 gender{"neuter"}
                 one{"{0} ലിറ്റർ"}
@@ -2292,32 +1988,6 @@ ml{
                 other{"{0} പൈന്റ്"}
             }
             pint-metric{
-                case{
-                    accusative{
-                        one{"{0} മെട്രിക് പൈന്റ്"}
-                        other{"{0} മെട്രിക് പൈന്റ്"}
-                    }
-                    dative{
-                        one{"{0} മെട്രിക് പൈന്റ്"}
-                        other{"{0} മെട്രിക് പൈന്റ്"}
-                    }
-                    genitive{
-                        one{"{0} മെട്രിക് പൈന്റ്"}
-                        other{"{0} മെട്രിക് പൈന്റ്"}
-                    }
-                    instrumental{
-                        one{"{0} മെട്രിക് പൈന്റ്"}
-                        other{"{0} മെട്രിക് പൈന്റ്"}
-                    }
-                    locative{
-                        one{"{0} മെട്രിക് പൈന്റ്"}
-                        other{"{0} മെട്രിക് പൈന്റ്"}
-                    }
-                    sociative{
-                        one{"{0} മെട്രിക് പൈന്റ്"}
-                        other{"{0} മെട്രിക് പൈന്റ്"}
-                    }
-                }
                 dnam{"മെട്രിക് പൈന്റ്"}
                 gender{"neuter"}
                 one{"{0} മെട്രിക് പൈന്റ്"}

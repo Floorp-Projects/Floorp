@@ -751,7 +751,12 @@ no{
             }
         }
         minimalPairs{
+            case{
+                genitive{"På {0} avstand"}
+                nominative{"Intervall på {0}"}
+            }
             gender{
+                feminine{"Det tar ei hel {0} å …"}
                 masculine{"Min {0} den har tre kanter"}
                 neuter{"Mitt {0} det har tre kanter"}
             }
