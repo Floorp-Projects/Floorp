@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 
 {
-    "cldrVersion": "40",
+    "cldrVersion": "41",
     "aliases": {
         "ars": "ar_SA",
         "az_AZ": "az_Latn_AZ",
@@ -112,6 +112,7 @@
         "en_MS": "en_001",
         "en_MT": "en_001",
         "en_MU": "en_001",
+        "en_MV": "en_001",
         "en_MW": "en_001",
         "en_MY": "en_001",
         "en_NA": "en_001",
@@ -174,6 +175,8 @@
         "es_UY": "es_419",
         "es_VE": "es_419",
         "ff_Adlm": "root",
+        "hi_Latn": "en_IN",
+        "ks_Deva": "root",
         "nb": "no",
         "nn": "no",
         "pa_Arab": "root",

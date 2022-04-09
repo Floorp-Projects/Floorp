@@ -35,6 +35,7 @@ ig{
         ce{"Chechen"}
         ceb{"Cebụanọ"}
         chr{"Cheroke"}
+        ckb{"Kurdish ọsote"}
         co{"Kọsịan"}
         cs{"Cheekị"}
         cu{"Church slavic"}
@@ -240,7 +241,6 @@ ig{
         zxx{"Ndị ọzọ abụghị asụsụ"}
     }
     Languages%menu{
-        ckb{"Kurdish ọsote"}
         yue{"Chinese,Cantonese"}
     }
     Languages%short{

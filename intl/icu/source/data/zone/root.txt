@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"40"}
+    Version{"41"}
     zoneStrings{
         "Africa:Asmera"{
             ec{"Asmara"}
@@ -99,6 +99,9 @@ root{
         }
         "Etc:Unknown"{
             ec{"Unknown"}
+        }
+        "Europe:Kiev"{
+            ec{"Kyiv"}
         }
         "Pacific:Ponape"{
             ec{"Pohnpei"}
