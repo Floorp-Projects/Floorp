@@ -7313,7 +7313,7 @@ void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
     using Fn =
         ArgumentsObject* (*)(JSContext * cx, jit::JitFrameLayout * frame,
                              JSObject * scopeChain, ArgumentsObject * obj);
-    masm.setupUnalignedABICall(cxTemp);
+    masm.setupAlignedABICall();
     masm.loadJSContext(cxTemp);
     masm.passABIArg(cxTemp);
     masm.passABIArg(temp0);
@@ -12520,11 +12520,11 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   const Register temp0 = ToRegister(ins->temp0());
   const Register temp1 = ToRegister(ins->temp1());
 
-  masm.push(obj);
-  masm.pushValue(value);
+  masm.Push(obj);
+  masm.Push(value);
 
   using Fn = bool (*)(JSContext * cx, NativeObject * obj, uint32_t newCount);
-  masm.setupUnalignedABICall(temp0);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(obj);
@@ -12533,8 +12533,8 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   masm.callWithABI<Fn, NativeObject::growSlotsPure>();
   masm.storeCallBoolResult(temp0);
 
-  masm.popValue(value);
-  masm.pop(obj);
+  masm.Pop(value);
+  masm.Pop(obj);
 
   Label bail;
   masm.branchIfFalseBool(temp0, &bail);
@@ -12939,7 +12939,7 @@ void CodeGenerator::emitTypeOfObject(Register obj, Register output,
 
   saveVolatile(output);
   using Fn = JSType (*)(JSObject*);
-  masm.setupUnalignedABICall(output);
+  masm.setupAlignedABICall();
   masm.passABIArg(obj);
   masm.callWithABI<Fn, js::TypeOfObject>();
   masm.storeCallInt32Result(output);
@@ -13014,7 +13014,7 @@ void CodeGenerator::emitTypeOfIsObjectOOL(MTypeOfIs* mir, Register obj,
                                           Register output) {
   saveVolatile(output);
   using Fn = JSType (*)(JSObject*);
-  masm.setupUnalignedABICall(output);
+  masm.setupAlignedABICall();
   masm.passABIArg(obj);
   masm.callWithABI<Fn, js::TypeOfObject>();
   masm.storeCallInt32Result(output);
@@ -14432,7 +14432,7 @@ void CodeGenerator::visitOutOfLineIsCallable(OutOfLineIsCallable* ool) {
 
   saveVolatile(output);
   using Fn = bool (*)(JSObject * obj);
-  masm.setupUnalignedABICall(output);
+  masm.setupAlignedABICall();
   masm.passABIArg(object);
   masm.callWithABI<Fn, ObjectIsCallable>();
   masm.storeCallBoolResult(output);
@@ -14471,7 +14471,7 @@ void CodeGenerator::visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool) {
 
   saveVolatile(output);
   using Fn = bool (*)(JSObject * obj);
-  masm.setupUnalignedABICall(output);
+  masm.setupAlignedABICall();
   masm.passABIArg(object);
   masm.callWithABI<Fn, ObjectIsConstructor>();
   masm.storeCallBoolResult(output);
@@ -14675,7 +14675,7 @@ void CodeGenerator::visitObjectClassToString(LObjectClassToString* lir) {
   Register temp = ToRegister(lir->temp0());
 
   using Fn = JSString* (*)(JSContext*, JSObject*);
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp);
   masm.passABIArg(temp);
   masm.passABIArg(obj);
@@ -15094,11 +15094,10 @@ void CodeGenerator::visitGlobalDeclInstantiation(
 
 void CodeGenerator::visitDebugger(LDebugger* ins) {
   Register cx = ToRegister(ins->temp0());
-  Register temp = ToRegister(ins->temp1());
 
   masm.loadJSContext(cx);
   using Fn = bool (*)(JSContext * cx);
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
   masm.passABIArg(cx);
   masm.callWithABI<Fn, GlobalHasLiveOnDebuggerStatement>();
 
@@ -15712,7 +15711,7 @@ void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {
 
   using Fn = bool (*)(JSContext * cx, JSObject * obj, jsid id,
                       GetterSetter * getterSetter);
-  masm.setupUnalignedABICall(temp0);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(object);
@@ -15837,7 +15836,7 @@ void CodeGenerator::visitCallObjectHasSparseElement(
   masm.moveStackPtrTo(temp1);
 
   using Fn = bool (*)(JSContext*, NativeObject*, int32_t, Value*);
-  masm.setupUnalignedABICall(temp0);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(object);
