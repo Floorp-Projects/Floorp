@@ -1213,6 +1213,7 @@ cy{
         ZMW{"ZMW"}
     }
     Currencies%variant{
+        GEL{"₾"}
         TRY{"TL"}
     }
     CurrencyPlurals{

@@ -60,7 +60,6 @@ nn{
         }
         minimalPairs{
             gender{
-                feminine{"Det tek ei heil {0} å …"}
                 masculine{"Min {0} han har tre kantar"}
                 neuter{"Mitt {0} det har tre kantar"}
             }

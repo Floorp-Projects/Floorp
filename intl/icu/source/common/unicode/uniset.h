@@ -1229,6 +1229,7 @@ public:
      */
     UnicodeSet& retain(UChar32 c);
 
+#ifndef U_HIDE_DRAFT_API
     /**
      * Retains only the specified string from this set if it is present.
      * Upon return this set will be empty if it did not contain s, or
@@ -1237,9 +1238,10 @@ public:
      *
      * @param s the source string
      * @return this object, for chaining
-     * @stable ICU 69
+     * @draft ICU 69
      */
     UnicodeSet& retain(const UnicodeString &s);
+#endif  // U_HIDE_DRAFT_API
 
     /**
      * Removes the specified range from this set if it is present.

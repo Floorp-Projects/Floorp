@@ -55,6 +55,9 @@ to{
         SBD{"S$"}
         TOP{"T$"}
     }
+    Currencies%variant{
+        GEL{"₾"}
+    }
     CurrencyPlurals{
         AUD{
             other{"Tola fakaʻaositelēlia"}
