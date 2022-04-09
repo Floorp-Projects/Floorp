@@ -1304,7 +1304,7 @@ void CodeGenerator::emitOOLTestObject(Register objreg,
                                       Register scratch) {
   saveVolatile(scratch);
   using Fn = bool (*)(JSObject * obj);
-  masm.setupUnalignedABICall(scratch);
+  masm.setupAlignedABICall();
   masm.passABIArg(objreg);
   masm.callWithABI<Fn, js::EmulatesUndefined>();
   masm.storeCallBoolResult(scratch);
@@ -3218,7 +3218,7 @@ void CodeGenerator::visitOutOfLineRegExpPrototypeOptimizable(
   saveVolatile(output);
 
   using Fn = bool (*)(JSContext * cx, JSObject * proto);
-  masm.setupUnalignedABICall(output);
+  masm.setupAlignedABICall();
   masm.loadJSContext(output);
   masm.passABIArg(output);
   masm.passABIArg(object);
@@ -3270,7 +3270,7 @@ void CodeGenerator::visitOutOfLineRegExpInstanceOptimizable(
   saveVolatile(output);
 
   using Fn = bool (*)(JSContext * cx, JSObject * obj, JSObject * proto);
-  masm.setupUnalignedABICall(output);
+  masm.setupAlignedABICall();
   masm.loadJSContext(output);
   masm.passABIArg(output);
   masm.passABIArg(object);
@@ -4350,7 +4350,7 @@ void CodeGenerator::visitGuardStringToIndex(LGuardStringToIndex* lir) {
     masm.PushRegsInMask(volatileRegs);
 
     using Fn = int32_t (*)(JSString * str);
-    masm.setupUnalignedABICall(output);
+    masm.setupAlignedABICall();
     masm.passABIArg(str);
     masm.callWithABI<Fn, GetIndexFromString>();
     masm.storeCallInt32Result(output);
@@ -4402,7 +4402,7 @@ void CodeGenerator::visitGuardStringToDouble(LGuardStringToDouble* lir) {
     masm.PushRegsInMask(volatileRegs);
 
     using Fn = bool (*)(JSContext * cx, JSString * str, double* result);
-    masm.setupUnalignedABICall(temp1);
+    masm.setupAlignedABICall();
     masm.loadJSContext(temp1);
     masm.passABIArg(temp1);
     masm.passABIArg(str);
