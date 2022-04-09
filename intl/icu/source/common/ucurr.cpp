@@ -254,7 +254,7 @@ currSymbolsEquiv_cleanup(void)
 }
 
 /**
- * Deleter for IsoCodeEntry
+ * Deleter for OlsonToMetaMappingEntry
  */
 static void U_CALLCONV
 deleteIsoCodeEntry(void *obj) {

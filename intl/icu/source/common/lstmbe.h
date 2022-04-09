@@ -62,7 +62,6 @@ protected:
                                              int32_t rangeStart,
                                              int32_t rangeEnd,
                                              UVector32 &foundBreaks,
-                                             UBool isPhraseBreaking,
                                              UErrorCode& status) const override;
 private:
     const LSTMData* fData;

@@ -107,7 +107,6 @@ ku{
         GU{"Guam"}
         GW{"Gîne-Bissau"}
         GY{"Guyana"}
-        HK{"Hong Kong"}
         HN{"Hondûras"}
         HR{"Kroatya"}
         HT{"Haîtî"}
@@ -157,7 +156,6 @@ ku{
         ML{"Malî"}
         MM{"Myanmar (Birmanya)"}
         MN{"Mongolya"}
-        MO{"Makao"}
         MP{"Giravên Bakurê Marianan"}
         MQ{"Martinique"}
         MR{"Morîtanya"}
@@ -255,6 +253,8 @@ ku{
     }
     Countries%short{
         GB{"KY"}
+        HK{"Hong Kong"}
+        MO{"Makao"}
         PS{"Filistîn"}
         US{"DYA"}
     }

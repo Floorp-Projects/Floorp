@@ -15,7 +15,6 @@
 #include "unicode/utext.h"
 
 #include "brkeng.h"
-#include "hash.h"
 #include "uvectr32.h"
 
 U_NAMESPACE_BEGIN
@@ -81,7 +80,6 @@ class DictionaryBreakEngine : public LanguageBreakEngine {
                               int32_t startPos,
                               int32_t endPos,
                               UVector32 &foundBreaks,
-                              UBool isPhraseBreaking,
                               UErrorCode& status ) const override;
 
  protected:
@@ -107,7 +105,6 @@ class DictionaryBreakEngine : public LanguageBreakEngine {
                                            int32_t rangeStart,
                                            int32_t rangeEnd,
                                            UVector32 &foundBreaks,
-                                           UBool isPhraseBreaking,
                                            UErrorCode& status) const = 0;
 
 };
@@ -130,6 +127,7 @@ class ThaiBreakEngine : public DictionaryBreakEngine {
      * @internal
      */
 
+  UnicodeSet                fThaiWordSet;
   UnicodeSet                fEndWordSet;
   UnicodeSet                fBeginWordSet;
   UnicodeSet                fSuffixSet;
@@ -166,7 +164,6 @@ class ThaiBreakEngine : public DictionaryBreakEngine {
                                            int32_t rangeStart,
                                            int32_t rangeEnd,
                                            UVector32 &foundBreaks,
-                                           UBool isPhraseBreaking,
                                            UErrorCode& status) const override;
 
 };
@@ -189,6 +186,7 @@ class LaoBreakEngine : public DictionaryBreakEngine {
      * @internal
      */
 
+  UnicodeSet                fLaoWordSet;
   UnicodeSet                fEndWordSet;
   UnicodeSet                fBeginWordSet;
   UnicodeSet                fMarkSet;
@@ -224,7 +222,6 @@ class LaoBreakEngine : public DictionaryBreakEngine {
                                            int32_t rangeStart,
                                            int32_t rangeEnd,
                                            UVector32 &foundBreaks,
-                                           UBool isPhraseBreaking,
                                            UErrorCode& status) const override;
 
 };
@@ -247,6 +244,7 @@ class BurmeseBreakEngine : public DictionaryBreakEngine {
      * @internal
      */
 
+  UnicodeSet                fBurmeseWordSet;
   UnicodeSet                fEndWordSet;
   UnicodeSet                fBeginWordSet;
   UnicodeSet                fMarkSet;
@@ -282,7 +280,6 @@ class BurmeseBreakEngine : public DictionaryBreakEngine {
                                            int32_t rangeStart,
                                            int32_t rangeEnd,
                                            UVector32 &foundBreaks,
-                                           UBool isPhraseBreaking,
                                            UErrorCode& status) const override;
 
 };
@@ -305,6 +302,7 @@ class KhmerBreakEngine : public DictionaryBreakEngine {
      * @internal
      */
 
+  UnicodeSet                fKhmerWordSet;
   UnicodeSet                fEndWordSet;
   UnicodeSet                fBeginWordSet;
   UnicodeSet                fMarkSet;
@@ -340,7 +338,6 @@ class KhmerBreakEngine : public DictionaryBreakEngine {
                                            int32_t rangeStart,
                                            int32_t rangeEnd,
                                            UVector32 &foundBreaks,
-                                           UBool isPhraseBreaking,
                                            UErrorCode& status) const override;
 
 };
@@ -369,21 +366,12 @@ class CjkBreakEngine : public DictionaryBreakEngine {
      * @internal
      */
   UnicodeSet                fHangulWordSet;
-  UnicodeSet                fDigitOrOpenPunctuationOrAlphabetSet;
-  UnicodeSet                fClosePunctuationSet;
+  UnicodeSet                fHanWordSet;
+  UnicodeSet                fKatakanaWordSet;
+  UnicodeSet                fHiraganaWordSet;
 
   DictionaryMatcher        *fDictionary;
   const Normalizer2        *nfkcNorm2;
-
- private:
-  // Load Japanese extensions.
-  void loadJapaneseExtensions(UErrorCode& error);
-  // Load Japanese Hiragana.
-  void loadHiragana(UErrorCode& error);
-  // Initialize fSkipSet by loading Japanese Hiragana and extensions.
-  void initJapanesePhraseParameter(UErrorCode& error);
-
-  Hashtable fSkipSet;
 
  public:
 
@@ -416,7 +404,6 @@ class CjkBreakEngine : public DictionaryBreakEngine {
           int32_t rangeStart,
           int32_t rangeEnd,
           UVector32 &foundBreaks,
-          UBool isPhraseBreaking,
           UErrorCode& status) const override;
 
 };
