@@ -219,7 +219,7 @@ th{
                 GyMMMEEEEd{"EEEEที่ d MMM G y"}
                 GyMMMEd{"E d MMM G y"}
                 GyMMMd{"d MMM G y"}
-                GyMd{"d/M/y"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1559,7 +1559,7 @@ th{
                     G{"E d MMM G y – E d MMM G y"}
                     M{"E d MMM – E d MMM G y"}
                     d{"E d MMM – E d MMM G y"}
-                    y{"E d MMM y – E d MMM y"}
+                    y{"E d MMM G y – E d MMM y"}
                 }
                 GyMMMd{
                     G{"d MMM G y – d MMM G y"}

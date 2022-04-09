@@ -410,8 +410,10 @@ cs{
         minimalPairs{
             case{
                 accusative{"Naměřili jsme {0}."}
+                dative{"Díky {0} navíc to mohl stihnout."}
                 genitive{"Bez {0} se obejdeme."}
                 instrumental{"Spokojíme se s {0}."}
+                locative{"Po {0} se zastavil."}
                 nominative{"Chybí ještě {0}."}
             }
             gender{

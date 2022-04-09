@@ -5,7 +5,7 @@ bg{
     collations{
         standard{
             Sequence{"[reorder Cyrl]"}
-            Version{"40"}
+            Version{"41"}
         }
     }
 }

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mr{
-    AuxExemplarCharacters{"[\u200C\u200D]"}
+    AuxExemplarCharacters{"[\u200C\u200D \u0944]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -14,7 +14,7 @@ mr{
     ExemplarCharacters{
         "[\u093C ॐ \u0902 \u0901 ः अ आ इ ई उ ऊ ऋ ऌ ऍ ए ऐ ऑ ओ औ क ख ग घ ङ च छ ज झ ञ ट "
         "ठ ड ढ ण त थ द ध न प फ ब भ म य र ऱ ल व श ष स ह ळ ऽ ा ि ी \u0941 \u0942 "
-        "\u0943 \u0944 \u0945 \u0947 \u0948 ॉ ो ौ \u094D]"
+        "\u0943 \u0945 \u0947 \u0948 ॉ ो ौ \u094D]"
     }
     ExemplarCharactersIndex{
         "[\u200D ॐ \u0902 ः अ आ इ ई उ ऊ ऋ ऌ ए ऐ ऑ ओ औ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त"
@@ -231,19 +231,18 @@ mr{
         }
         minimalPairs{
             case{
-                ablative{"{0} दिवसापासून त्याचे प्रयत्न चालू होते"}
-                accusative{"दर {0} दिवसाला येऊन तो विचारणा करत होता"}
-                dative{"{0} दिवसांसाठी तो गावाला गेला आहे"}
-                ergative{"{0} दिवसाने काय फरक पडणार?"}
-                genitive{"{0} दिवसांचा कार्यक्रम होता"}
-                locative{"{0} व्या दिवशी तो हजर झाला"}
-                nominative{"{0} दिवस खूप मजेत गेले"}
-                oblique{"{0} दिवस"}
+                ablative{"{0} त्याचे प्रयत्न चालू होते"}
+                accusative{"दर {0} येऊन तो विचारणा करत होता"}
+                dative{"{0} तो गावाला गेला आह"}
+                ergative{"{0} काय फरक पडणार?"}
+                genitive{"{0} कार्यक्रम होता"}
+                locative{"{0} काम पूर्ण होईल"}
+                nominative{"{0} मजेत गेले"}
             }
             gender{
-                feminine{"कॅलरी {0} ने वाढली"}
-                masculine{"तो {0} तास खूप महत्वाचा होता"}
-                neuter{"ते {0} वर्ष खूप महत्वाचे होते"}
+                feminine{"ती {0} खूप महत्वाची होती"}
+                masculine{"तो {0} खूप महत्वाचा होता"}
+                neuter{"ते {0} खूप महत्वाचे होते"}
             }
             ordinal{
                 few{"{0}थे उजवे वळण घ्या."}

@@ -27,10 +27,6 @@ en_001{
             "LVR",
             "Latvian Rouble",
         }
-        PHP{
-            "₱",
-            "Philippine Peso",
-        }
         RUB{
             "RUB",
             "Russian Rouble",
@@ -88,10 +84,6 @@ en_001{
         }
         MVR{
             other{"Maldivian rufiyaa"}
-        }
-        PHP{
-            one{"Philippine peso"}
-            other{"Philippine pesos"}
         }
         RUB{
             one{"Russian rouble"}

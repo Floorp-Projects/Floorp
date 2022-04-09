@@ -5,7 +5,7 @@ fa_AF{
     collations{
         standard{
             Sequence{"[import ps]"}
-            Version{"40"}
+            Version{"41"}
         }
     }
 }
