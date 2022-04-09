@@ -9,7 +9,6 @@
 #include "cmemory.h"
 #include "double-conversion-string-to-double.h"
 #include "measunit_impl.h"
-#include "putilimp.h"
 #include "uassert.h"
 #include "unicode/errorcode.h"
 #include "unicode/localpointer.h"
@@ -589,7 +588,10 @@ double UnitsConverter::convert(double inputValue) const {
 
     if (conversionRate_.reciprocal) {
         if (result == 0) {
-            return uprv_getInfinity();
+            // TODO: demonstrate the resulting behaviour in tests... and figure
+            // out desired behaviour. (Theoretical result should be infinity,
+            // not 0.)
+            return 0.0;
         }
         result = 1.0 / result;
     }
@@ -601,7 +603,10 @@ double UnitsConverter::convertInverse(double inputValue) const {
     double result = inputValue;
     if (conversionRate_.reciprocal) {
         if (result == 0) {
-            return uprv_getInfinity();
+            // TODO: demonstrate the resulting behaviour in tests... and figure
+            // out desired behaviour. (Theoretical result should be infinity,
+            // not 0.)
+            return 0.0;
         }
         result = 1.0 / result;
     }

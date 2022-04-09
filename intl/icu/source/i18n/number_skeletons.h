@@ -286,7 +286,7 @@ bool parseTrailingZeroOption(const StringSegment& segment, MacroProps& macros, U
 void parseIncrementOption(const StringSegment& segment, MacroProps& macros, UErrorCode& status);
 
 void
-generateIncrementOption(uint32_t increment, digits_t incrementMagnitude, int32_t minFrac, UnicodeString& sb, UErrorCode& status);
+generateIncrementOption(double increment, int32_t minFrac, UnicodeString& sb, UErrorCode& status);
 
 void parseIntegerWidthOption(const StringSegment& segment, MacroProps& macros, UErrorCode& status);
 

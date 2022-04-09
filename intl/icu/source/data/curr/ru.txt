@@ -1217,6 +1217,7 @@ ru{
         ZMW{"ZK"}
     }
     Currencies%variant{
+        GEL{"₾"}
         TRY{"TL"}
         UAH{"грн."}
     }
