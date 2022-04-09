@@ -1507,6 +1507,8 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
   // the MacroAssembler::call methods generate a sync before the call.
   // Removing it does not cause any failures for all of jit-tests.
   syncStackPtr();
+
+  assertStackAlignment(ABIStackAlignment);
 }
 
 void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
