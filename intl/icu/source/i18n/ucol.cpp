@@ -96,16 +96,10 @@ ucol_safeClone(const UCollator *coll, void * /*stackBuffer*/, int32_t * pBufferS
     if (newColl == NULL) {
         *status = U_MEMORY_ALLOCATION_ERROR;
         return nullptr;
-    } else if (pBufferSize != NULL) {
+    } else {
         *status = U_SAFECLONE_ALLOCATED_WARNING;
     }
     return newColl->toUCollator();
-}
-
-U_CAPI UCollator* U_EXPORT2
-ucol_clone(const UCollator *coll, UErrorCode *status)
-{
-    return ucol_safeClone(coll, nullptr, nullptr, status);
 }
 
 U_CAPI void U_EXPORT2

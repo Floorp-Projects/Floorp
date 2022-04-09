@@ -1223,9 +1223,6 @@ el{
         "Pacific:Johnston"{
             ec{"Τζόνστον"}
         }
-        "Pacific:Kanton"{
-            ec{"Καντών"}
-        }
         "Pacific:Kiritimati"{
             ec{"Κιριτιμάτι"}
         }

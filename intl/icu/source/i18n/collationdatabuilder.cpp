@@ -522,11 +522,12 @@ CollationDataBuilder::addConditionalCE32(const UnicodeString &context, uint32_t 
         errorCode = U_BUFFER_OVERFLOW_ERROR;
         return -1;
     }
-    LocalPointer<ConditionalCE32> cond(new ConditionalCE32(context, ce32), errorCode);
-    conditionalCE32s.adoptElement(cond.orphan(), errorCode);
-    if(U_FAILURE(errorCode)) {
+    ConditionalCE32 *cond = new ConditionalCE32(context, ce32);
+    if(cond == NULL) {
+        errorCode = U_MEMORY_ALLOCATION_ERROR;
         return -1;
     }
+    conditionalCE32s.addElementX(cond, errorCode);
     return index;
 }
 
