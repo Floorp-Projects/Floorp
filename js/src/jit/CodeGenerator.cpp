@@ -5209,7 +5209,7 @@ void CodeGenerator::visitCallDOMNative(LCallDOMNative* call) {
   markSafepointAt(safepointOffset, call);
 
   // Construct and execute call.
-  masm.setupUnalignedABICall(argJSContext);
+  masm.setupAlignedABICall();
   masm.loadJSContext(argJSContext);
   masm.passABIArg(argJSContext);
   masm.passABIArg(argObj);
@@ -14173,7 +14173,7 @@ void CodeGenerator::visitGetDOMProperty(LGetDOMProperty* ins) {
 
   markSafepointAt(safepointOffset, ins);
 
-  masm.setupUnalignedABICall(JSContextReg);
+  masm.setupAlignedABICall();
   masm.loadJSContext(JSContextReg);
   masm.passABIArg(JSContextReg);
   masm.passABIArg(ObjectReg);
@@ -14293,7 +14293,7 @@ void CodeGenerator::visitSetDOMProperty(LSetDOMProperty* ins) {
 
   markSafepointAt(safepointOffset, ins);
 
-  masm.setupUnalignedABICall(JSContextReg);
+  masm.setupAlignedABICall();
   masm.loadJSContext(JSContextReg);
   masm.passABIArg(JSContextReg);
   masm.passABIArg(ObjectReg);
