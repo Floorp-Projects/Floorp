@@ -6694,12 +6694,11 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
 }
 
 void CodeGenerator::visitAtan2D(LAtan2D* lir) {
-  Register temp = ToRegister(lir->temp());
   FloatRegister y = ToFloatRegister(lir->y());
   FloatRegister x = ToFloatRegister(lir->x());
 
   using Fn = double (*)(double x, double y);
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
   masm.passABIArg(y, MoveOp::DOUBLE);
   masm.passABIArg(x, MoveOp::DOUBLE);
   masm.callWithABI<Fn, ecmaAtan2>(MoveOp::DOUBLE);
@@ -6708,9 +6707,8 @@ void CodeGenerator::visitAtan2D(LAtan2D* lir) {
 }
 
 void CodeGenerator::visitHypot(LHypot* lir) {
-  Register temp = ToRegister(lir->temp());
   uint32_t numArgs = lir->numArgs();
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
 
   for (uint32_t i = 0; i < numArgs; ++i) {
     masm.passABIArg(ToFloatRegister(lir->getOperand(i)), MoveOp::DOUBLE);
@@ -8368,12 +8366,9 @@ void CodeGenerator::visitPowII(LPowII* ins) {
 void CodeGenerator::visitPowI(LPowI* ins) {
   FloatRegister value = ToFloatRegister(ins->value());
   Register power = ToRegister(ins->power());
-  Register temp = ToRegister(ins->temp0());
-
-  MOZ_ASSERT(power != temp);
 
   using Fn = double (*)(double x, int32_t y);
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
   masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power);
 
@@ -8384,10 +8379,9 @@ void CodeGenerator::visitPowI(LPowI* ins) {
 void CodeGenerator::visitPowD(LPowD* ins) {
   FloatRegister value = ToFloatRegister(ins->value());
   FloatRegister power = ToFloatRegister(ins->power());
-  Register temp = ToRegister(ins->temp0());
 
   using Fn = double (*)(double x, double y);
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
   masm.passABIArg(value, MoveOp::DOUBLE);
   masm.passABIArg(power, MoveOp::DOUBLE);
   masm.callWithABI<Fn, ecmaPow>(MoveOp::DOUBLE);
@@ -8463,14 +8457,13 @@ void CodeGenerator::visitSignDI(LSignDI* ins) {
 }
 
 void CodeGenerator::visitMathFunctionD(LMathFunctionD* ins) {
-  Register temp = ToRegister(ins->temp());
   FloatRegister input = ToFloatRegister(ins->input());
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 
   UnaryMathFunction fun = ins->mir()->function();
   UnaryMathFunctionType funPtr = GetUnaryMathFunctionPtr(fun);
 
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
 
   masm.passABIArg(input, MoveOp::DOUBLE);
   masm.callWithABI(DynamicFunction<UnaryMathFunctionType>(funPtr),
@@ -8478,11 +8471,10 @@ void CodeGenerator::visitMathFunctionD(LMathFunctionD* ins) {
 }
 
 void CodeGenerator::visitMathFunctionF(LMathFunctionF* ins) {
-  Register temp = ToRegister(ins->temp());
   FloatRegister input = ToFloatRegister(ins->input());
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnFloat32Reg);
 
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
   masm.passABIArg(input, MoveOp::FLOAT32);
 
   using Fn = float (*)(float x);
@@ -8517,10 +8509,9 @@ void CodeGenerator::visitModD(LModD* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
 
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
-  MOZ_ASSERT(!ins->temp()->isBogusTemp());
 
   using Fn = double (*)(double a, double b);
-  masm.setupUnalignedABICall(ToRegister(ins->temp()));
+  masm.setupAlignedABICall();
   masm.passABIArg(lhs, MoveOp::DOUBLE);
   masm.passABIArg(rhs, MoveOp::DOUBLE);
   masm.callWithABI<Fn, NumberMod>(MoveOp::DOUBLE);
@@ -9821,10 +9812,9 @@ void CodeGenerator::visitCompareBigIntDouble(LCompareBigIntDouble* lir) {
   JSOp op = lir->mir()->jsop();
   Register left = ToRegister(lir->left());
   FloatRegister right = ToFloatRegister(lir->right());
-  Register temp = ToRegister(lir->temp0());
   Register output = ToRegister(lir->output());
 
-  masm.setupUnalignedABICall(temp);
+  masm.setupAlignedABICall();
 
   // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
   // - |left <= right| is implemented as |right >= left|.
