@@ -17,7 +17,6 @@ ur{
             }
             meter-per-square-second{
                 dnam{"میٹر فی مربع سیکنڈ"}
-                gender{"masculine"}
                 one{"{0} میٹر فی مربع سیکنڈ"}
                 other{"{0} میٹر فی مربع سیکنڈ"}
             }
@@ -50,7 +49,7 @@ ur{
             revolution{
                 dnam{"گردش"}
                 gender{"feminine"}
-                one{"{0} گردش"}
+                one{"{0} rev"}
                 other{"{0} گردش"}
             }
         }
@@ -73,7 +72,6 @@ ur{
             }
             square-centimeter{
                 dnam{"مربع سینٹی میٹر"}
-                gender{"masculine"}
                 one{"{0} مربع سینٹی میٹر"}
                 other{"{0} مربع سینٹی میٹر"}
                 per{"{0} فی مربع سینٹی میٹر"}
@@ -91,14 +89,12 @@ ur{
             }
             square-kilometer{
                 dnam{"مربع کلو میٹر"}
-                gender{"masculine"}
                 one{"{0} مربع کلو میٹر"}
                 other{"{0} مربع کلو میٹر"}
                 per{"{0} فی مربع کلو میٹر"}
             }
             square-meter{
                 dnam{"مربع میٹر"}
-                gender{"masculine"}
                 one{"{0} مربع میٹر"}
                 other{"{0} مربع میٹر"}
                 per{"{0} فی مربع میٹر"}
@@ -185,7 +181,6 @@ ur{
         concentr{
             item{
                 dnam{"آئٹمز"}
-                gender{"masculine"}
                 one{"{0} آئٹم"}
                 other{"{0} آئٹمز"}
             }
@@ -202,7 +197,6 @@ ur{
             }
             millimole-per-liter{
                 dnam{"ملی مولس فی لیٹر"}
-                gender{"masculine"}
                 one{"{0} ملی مول فی لیٹر"}
                 other{"{0} ملی مول فی لیٹر"}
             }
@@ -240,13 +234,11 @@ ur{
         consumption{
             liter-per-100-kilometer{
                 dnam{"لیٹر فی 100 کلو میٹر"}
-                gender{"masculine"}
                 one{"{0} لیٹر فی 100 کلو میٹر"}
                 other{"{0} لیٹر فی 100 کلو میٹر"}
             }
             liter-per-kilometer{
                 dnam{"لیٹر فی کلومیٹر"}
-                gender{"masculine"}
                 one{"{0} لیٹر فی کلومیٹر"}
                 other{"{0} لیٹر فی کلومیٹر"}
             }
@@ -283,55 +275,46 @@ ur{
             }
             gigabit{
                 dnam{"گیگابٹس"}
-                gender{"feminine"}
                 one{"{0} گیگابٹ"}
                 other{"{0} گیگابٹس"}
             }
             gigabyte{
                 dnam{"گیگابائٹس"}
-                gender{"feminine"}
                 one{"{0} گیگابائٹ"}
                 other{"{0} گیگابائٹ"}
             }
             kilobit{
                 dnam{"کلوبٹس"}
-                gender{"feminine"}
                 one{"{0} کلوبٹ"}
                 other{"{0} کلوبٹس"}
             }
             kilobyte{
                 dnam{"کلوبائٹس"}
-                gender{"feminine"}
                 one{"{0} کلوبائٹ"}
                 other{"{0} کلوبائٹس"}
             }
             megabit{
                 dnam{"میگابٹس"}
-                gender{"feminine"}
                 one{"{0} میگابٹ"}
                 other{"{0} میگابٹس"}
             }
             megabyte{
                 dnam{"ميگابائٹس"}
-                gender{"feminine"}
                 one{"{0} میگابائٹ"}
                 other{"{0} ميگابائٹس"}
             }
             petabyte{
                 dnam{"پیٹا بائٹس"}
-                gender{"feminine"}
                 one{"{0} پیٹا بائٹ"}
                 other{"{0} پیٹا بائٹس"}
             }
             terabit{
                 dnam{"ٹیرابٹس"}
-                gender{"feminine"}
                 one{"{0} ٹیرابٹ"}
                 other{"{0} ٹیرابٹس"}
             }
             terabyte{
                 dnam{"ٹیرابائٹس"}
-                gender{"feminine"}
                 one{"{0} ٹیرابائٹ"}
                 other{"{0} ٹیرابائٹ"}
             }
@@ -368,15 +351,13 @@ ur{
             }
             microsecond{
                 dnam{"مائیکرو سیکنڈز"}
-                gender{"masculine"}
                 one{"{0} مائیکرو سیکنڈ"}
                 other{"{0} مائیکرو سیکنڈز"}
             }
             millisecond{
                 dnam{"ملی سیکنڈز"}
-                gender{"masculine"}
                 one{"{0} ملی سیکنڈ"}
-                other{"{0} ملی سیکنڈ"}
+                other{"{0} میل سیکنڈ"}
             }
             minute{
                 dnam{"منٹ"}
@@ -390,11 +371,10 @@ ur{
                 gender{"masculine"}
                 one{"{0} مہینہ"}
                 other{"{0} مہینے"}
-                per{"{0} فی ماہ"}
+                per{"{0}/m"}
             }
             nanosecond{
                 dnam{"نینو سیکنڈز"}
-                gender{"masculine"}
                 one{"{0} نینو سیکنڈ"}
                 other{"{0} نینو سیکنڈ"}
             }
@@ -429,7 +409,6 @@ ur{
             }
             milliampere{
                 dnam{"ملی ایمپیئر"}
-                gender{"masculine"}
                 one{"{0} ملی ایمپیئر"}
                 other{"{0} ملی ایمپیئر"}
             }
@@ -481,13 +460,11 @@ ur{
             }
             kilojoule{
                 dnam{"کلو جول"}
-                gender{"masculine"}
                 one{"{0} کلو جول"}
                 other{"{0} کلو جول"}
             }
             kilowatt-hour{
                 dnam{"کلو واٹ آور"}
-                gender{"masculine"}
                 one{"{0} کلو واٹ آور"}
                 other{"{0} کلو واٹ آور"}
             }
@@ -500,7 +477,6 @@ ur{
         force{
             kilowatt-hour-per-100-kilometer{
                 dnam{"کلو واٹ گھنٹے فی 100 کلومیٹر"}
-                gender{"masculine"}
                 one{"{0} کلو واٹ گھنٹہ فی 100 کلومیٹر"}
                 other{"{0} کلو واٹ گھنٹے فی 100 کلومیٹر"}
             }
@@ -519,7 +495,6 @@ ur{
         frequency{
             gigahertz{
                 dnam{"گیگاہرٹز"}
-                gender{"masculine"}
                 one{"{0} گیگاہرٹز"}
                 other{"{0} گیگاہرٹز"}
             }
@@ -531,13 +506,11 @@ ur{
             }
             kilohertz{
                 dnam{"کلوہرٹز"}
-                gender{"masculine"}
                 one{"{0} کلوہرٹز"}
                 other{"{0} کلوہرٹز"}
             }
             megahertz{
                 dnam{"میگاہرٹز"}
-                gender{"masculine"}
                 one{"{0} میگاہرٹز"}
                 other{"{0} میگاہرٹز"}
             }
@@ -564,7 +537,6 @@ ur{
             }
             megapixel{
                 dnam{"میگا پکسلز"}
-                gender{"masculine"}
                 one{"{0} میگا پکسل"}
                 other{"{0} میگا پکسلز"}
             }
@@ -576,7 +548,6 @@ ur{
             }
             pixel-per-centimeter{
                 dnam{"پکسلز فی سینٹی میٹر"}
-                gender{"masculine"}
                 one{"{0} پکسل فی سینٹی میٹر"}
                 other{"{0} پکسلز فی سینٹی میٹر"}
             }
@@ -594,14 +565,12 @@ ur{
             }
             centimeter{
                 dnam{"سینٹی میٹر"}
-                gender{"masculine"}
                 one{"{0} سینٹی میٹر"}
                 other{"{0} سینٹی میٹر"}
                 per{"{0} فی سینٹی میٹر"}
             }
             decimeter{
                 dnam{"ڈیسی میٹر"}
-                gender{"masculine"}
                 one{"{0} ڈیسی میٹر"}
                 other{"{0} ڈیسی میٹر"}
             }
@@ -634,7 +603,6 @@ ur{
             }
             kilometer{
                 dnam{"کلو میٹر"}
-                gender{"masculine"}
                 one{"{0} کلو میٹر"}
                 other{"{0} کلو میٹر"}
                 per{"{0} فی کلومیٹر"}
@@ -653,7 +621,6 @@ ur{
             }
             micrometer{
                 dnam{"مائیکرو میٹر"}
-                gender{"masculine"}
                 one{"{0} مائیکرو میٹر"}
                 other{"{0} مائیکرو میٹر"}
             }
@@ -670,13 +637,11 @@ ur{
             }
             millimeter{
                 dnam{"ملی میٹر"}
-                gender{"masculine"}
-                one{"{0} ملی میٹر"}
+                one{"{0} ملیمیٹر"}
                 other{"{0} ملیمیٹر"}
             }
             nanometer{
                 dnam{"نینو میٹر"}
-                gender{"masculine"}
                 one{"{0} نینو میٹر"}
                 other{"{0} نینو میٹر"}
             }
@@ -692,7 +657,6 @@ ur{
             }
             picometer{
                 dnam{"پیکو میٹر"}
-                gender{"masculine"}
                 one{"{0} پیکو میٹر"}
                 other{"{0} پیکو میٹر"}
             }
@@ -781,13 +745,11 @@ ur{
             }
             microgram{
                 dnam{"مائکرو گرام"}
-                gender{"masculine"}
                 one{"{0} مائکرو گرام"}
                 other{"{0} مائکرو گرام"}
             }
             milligram{
                 dnam{"ملی گرام"}
-                gender{"masculine"}
                 one{"{0} ملی گرام"}
                 other{"{0} ملی گرام"}
             }
@@ -827,7 +789,6 @@ ur{
         power{
             gigawatt{
                 dnam{"گیگا واٹ"}
-                gender{"masculine"}
                 one{"{0} گیگا واٹ"}
                 other{"{0} گیگا واٹ"}
             }
@@ -838,19 +799,16 @@ ur{
             }
             kilowatt{
                 dnam{"کلو واٹ"}
-                gender{"masculine"}
                 one{"{0} کلو واٹ"}
                 other{"{0} کلو واٹ"}
             }
             megawatt{
                 dnam{"میگا واٹ"}
-                gender{"masculine"}
                 one{"{0} میگا واٹ"}
                 other{"{0} میگا واٹ"}
             }
             milliwatt{
                 dnam{"ملی واٹ"}
-                gender{"masculine"}
                 one{"{0} ملی واٹ"}
                 other{"{0} ملی واٹ"}
             }
@@ -876,7 +834,6 @@ ur{
             }
             hectopascal{
                 dnam{"ہیکٹو پاسکل"}
-                gender{"masculine"}
                 one{"{0} ہیکٹو پاسکل"}
                 other{"{0} ہیکٹو پاسکل"}
             }
@@ -887,19 +844,16 @@ ur{
             }
             kilopascal{
                 dnam{"کلو پاسکلز"}
-                gender{"masculine"}
                 one{"{0} کلو پاسکل"}
                 other{"{0} کلو پاسکلز"}
             }
             megapascal{
                 dnam{"میگا پاسکلز"}
-                gender{"masculine"}
                 one{"{0} میگا پاسکل"}
                 other{"{0} میگا پاسکلز"}
             }
             millibar{
                 dnam{"ملی بار"}
-                gender{"masculine"}
                 one{"{0} ملی بار"}
                 other{"{0} ملی بار"}
             }
@@ -923,7 +877,6 @@ ur{
         speed{
             kilometer-per-hour{
                 dnam{"کلومیٹر فی گھنٹہ"}
-                gender{"masculine"}
                 one{"{0} کلومیٹر فی گھنٹہ"}
                 other{"{0} کلومیٹر فی گھنٹہ"}
             }
@@ -934,7 +887,6 @@ ur{
             }
             meter-per-second{
                 dnam{"میٹر فی سیکنڈ"}
-                gender{"masculine"}
                 one{"{0} میٹر فی سیکنڈ"}
                 other{"{0} میٹر فی سیکنڈ"}
             }
@@ -972,7 +924,6 @@ ur{
         torque{
             newton-meter{
                 dnam{"نیوٹن میٹر"}
-                gender{"masculine"}
                 one{"{0} نیوٹن میٹر"}
                 other{"{0} نیوٹن میٹر"}
             }
@@ -1000,20 +951,18 @@ ur{
             }
             centiliter{
                 dnam{"سینٹی لیٹر"}
-                gender{"masculine"}
                 one{"{0} سینٹی لیٹر"}
                 other{"{0} سینٹی لیٹر"}
             }
             cubic-centimeter{
                 dnam{"کیوبک سینٹی میٹر"}
-                gender{"masculine"}
                 one{"{0} کیوبک سینٹی میٹر"}
                 other{"{0} کیوبک سینٹی میٹر"}
                 per{"{0} فی کیوبک سینٹی میٹر"}
             }
             cubic-foot{
                 dnam{"کیوبک فیٹ"}
-                one{"{0} کیوبک فٹ"}
+                one{"{0} کیوبک فیٹ"}
                 other{"{0} کیوبک فٹ"}
             }
             cubic-inch{
@@ -1023,13 +972,11 @@ ur{
             }
             cubic-kilometer{
                 dnam{"کیوبک کلو میٹر"}
-                gender{"masculine"}
                 one{"{0} کیوبک کلو میٹر"}
                 other{"{0} کیوبک کلو میٹر"}
             }
             cubic-meter{
                 dnam{"کیوبک میٹر"}
-                gender{"masculine"}
                 one{"{0} کیوبک میٹر"}
                 other{"{0} کیوبک میٹر"}
                 per{"{0} فی کیوبک میٹر"}
@@ -1057,7 +1004,6 @@ ur{
             }
             deciliter{
                 dnam{"ڈیسی لیٹر"}
-                gender{"masculine"}
                 one{"{0} ڈیسی لیٹر"}
                 other{"{0} ڈیسی لیٹر"}
             }
@@ -1105,7 +1051,6 @@ ur{
             }
             hectoliter{
                 dnam{"ہیکٹو لیٹر"}
-                gender{"masculine"}
                 one{"{0} ہیکٹو لیٹر"}
                 other{"{0} ہیکٹو لیٹر"}
             }
@@ -1123,13 +1068,11 @@ ur{
             }
             megaliter{
                 dnam{"میگا لیٹر"}
-                gender{"masculine"}
                 one{"{0} میگا لیٹر"}
                 other{"{0} میگا لیٹر"}
             }
             milliliter{
                 dnam{"ملی لیٹر"}
-                gender{"masculine"}
                 one{"{0} ملی لیٹر"}
                 other{"{0} ملی لیٹر"}
             }

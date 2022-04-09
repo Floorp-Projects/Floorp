@@ -1,0 +1,56 @@
+# Add a new UNumberFormatFields constant for the approximately sign.
+#
+# https://unicode-org.atlassian.net/browse/ICU-21765
+
+
+diff --git a/intl/icu/source/i18n/number_affixutils.cpp b/intl/icu/source/i18n/number_affixutils.cpp
+--- a/intl/icu/source/i18n/number_affixutils.cpp
++++ b/intl/icu/source/i18n/number_affixutils.cpp
+@@ -131,17 +131,17 @@ UnicodeString AffixUtils::escape(const U
+ Field AffixUtils::getFieldForType(AffixPatternType type) {
+     switch (type) {
+         case TYPE_MINUS_SIGN:
+             return {UFIELD_CATEGORY_NUMBER, UNUM_SIGN_FIELD};
+         case TYPE_PLUS_SIGN:
+             return {UFIELD_CATEGORY_NUMBER, UNUM_SIGN_FIELD};
+         case TYPE_APPROXIMATELY_SIGN:
+             // TODO: Introduce a new field for the approximately sign?
+-            return {UFIELD_CATEGORY_NUMBER, UNUM_SIGN_FIELD};
++            return {UFIELD_CATEGORY_NUMBER, UNUM_APPROXIMATELY_SIGN_FIELD};
+         case TYPE_PERCENT:
+             return {UFIELD_CATEGORY_NUMBER, UNUM_PERCENT_FIELD};
+         case TYPE_PERMILLE:
+             return {UFIELD_CATEGORY_NUMBER, UNUM_PERMILL_FIELD};
+         case TYPE_CURRENCY_SINGLE:
+             return {UFIELD_CATEGORY_NUMBER, UNUM_CURRENCY_FIELD};
+         case TYPE_CURRENCY_DOUBLE:
+             return {UFIELD_CATEGORY_NUMBER, UNUM_CURRENCY_FIELD};
+diff --git a/intl/icu/source/i18n/unicode/unum.h b/intl/icu/source/i18n/unicode/unum.h
+--- a/intl/icu/source/i18n/unicode/unum.h
++++ b/intl/icu/source/i18n/unicode/unum.h
+@@ -397,22 +397,24 @@ typedef enum UNumberFormatFields {
+     UNUM_PERMILL_FIELD,
+     /** @stable ICU 49 */
+     UNUM_SIGN_FIELD,
+     /** @stable ICU 64 */
+     UNUM_MEASURE_UNIT_FIELD,
+     /** @stable ICU 64 */
+     UNUM_COMPACT_FIELD,
+ 
++    UNUM_APPROXIMATELY_SIGN_FIELD,
++
+ #ifndef U_HIDE_DEPRECATED_API
+     /**
+      * One more than the highest normal UNumberFormatFields value.
+      * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
+      */
+-    UNUM_FIELD_COUNT = UNUM_SIGN_FIELD + 3
++    UNUM_FIELD_COUNT = UNUM_SIGN_FIELD + 4
+ #endif  /* U_HIDE_DEPRECATED_API */
+ } UNumberFormatFields;
+ 
+ 
+ /**
+  * Selectors with special numeric values to use locale default minimum grouping
+  * digits for the DecimalFormat/UNumberFormat setMinimumGroupingDigits method.
+  * Do not use these constants with the [U]NumberFormatter API.

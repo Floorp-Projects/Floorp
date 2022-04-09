@@ -750,7 +750,7 @@ UnicodeString PatternStringUtils::propertiesToPatternString(const DecimalFormatP
     int32_t groupingLength = grouping1 + grouping2 + 1;
 
     // Figure out the digits we need to put in the pattern.
-    double increment = properties.roundingIncrement;
+    double roundingInterval = properties.roundingIncrement;
     UnicodeString digitsString;
     int32_t digitsStringScale = 0;
     if (maxSig != uprv_min(dosMax, -1)) {
@@ -761,14 +761,14 @@ UnicodeString PatternStringUtils::propertiesToPatternString(const DecimalFormatP
         while (digitsString.length() < maxSig) {
             digitsString.append(u'#');
         }
-    } else if (increment != 0.0 && !ignoreRoundingIncrement(increment,maxFrac)) {
-        // Rounding Increment.
+    } else if (roundingInterval != 0.0 && !ignoreRoundingIncrement(roundingInterval,maxFrac)) {
+        // Rounding Interval.
+        digitsStringScale = -roundingutils::doubleFractionLength(roundingInterval, nullptr);
+        // TODO: Check for DoS here?
         DecimalQuantity incrementQuantity;
-        incrementQuantity.setToDouble(increment);
-        incrementQuantity.roundToInfinity();
-        digitsStringScale = incrementQuantity.getLowerDisplayMagnitude();
+        incrementQuantity.setToDouble(roundingInterval);
         incrementQuantity.adjustMagnitude(-digitsStringScale);
-        incrementQuantity.setMinInteger(minInt - digitsStringScale);
+        incrementQuantity.roundToMagnitude(0, kDefaultMode, status);
         UnicodeString str = incrementQuantity.toPlainString();
         if (str.charAt(0) == u'-') {
             // TODO: Unsupported operation exception or fail silently?

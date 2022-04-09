@@ -36,24 +36,27 @@ void number::impl::parseIncrementOption(const StringSegment &segment,
     // Utilize DecimalQuantity/decNumber to parse this for us.
     DecimalQuantity dq;
     UErrorCode localStatus = U_ZERO_ERROR;
-    dq.setToDecNumber({buffer.data(), buffer.length()}, localStatus);
-    if (U_FAILURE(localStatus) || dq.isNaN() || dq.isInfinite()) {
+    DecNum decnum;
+    decnum.setTo({buffer.data(), buffer.length()}, localStatus);
+    dq.setToDecNum(decnum, localStatus);
+    if (U_FAILURE(localStatus) || decnum.isSpecial()) {
         // throw new SkeletonSyntaxException("Invalid rounding increment", segment, e);
         status = U_NUMBER_SKELETON_SYNTAX_ERROR;
         return;
     }
-    // Now we break apart the number into a mantissa and exponent (magnitude).
-    int32_t magnitude = dq.adjustToZeroScale();
-    // setToDecNumber drops trailing zeros, so we search for the '.' manually.
-    for (int32_t i=0; i<buffer.length(); i++) {
-        if (buffer[i] == '.') {
-            int32_t newMagnitude = i - buffer.length() + 1;
-            dq.adjustMagnitude(magnitude - newMagnitude);
-            magnitude = newMagnitude;
-            break;
-        }
+    double increment = dq.toDouble();
+
+    // We also need to figure out how many digits. Do a brute force string operation.
+    int decimalOffset = 0;
+    while (decimalOffset < segment.length() && segment.charAt(decimalOffset) != '.') {
+        decimalOffset++;
     }
-    outPrecision = Precision::incrementExact(dq.toLong(), magnitude);
+    if (decimalOffset == segment.length()) {
+        outPrecision = Precision::increment(increment);
+    } else {
+        int32_t fractionLength = segment.length() - decimalOffset - 1;
+        outPrecision = Precision::increment(increment).withMinFraction(fractionLength);
+    }
 }
 
 namespace {
@@ -89,6 +92,34 @@ int32_t getDisplayMagnitudeSignificant(const DecimalQuantity &value, int minSig)
 
 
 MultiplierProducer::~MultiplierProducer() = default;
+
+
+digits_t roundingutils::doubleFractionLength(double input, int8_t* singleDigit) {
+    char buffer[DoubleToStringConverter::kBase10MaximalLength + 1];
+    bool sign; // unused; always positive
+    int32_t length;
+    int32_t point;
+    DoubleToStringConverter::DoubleToAscii(
+            input,
+            DoubleToStringConverter::DtoaMode::SHORTEST,
+            0,
+            buffer,
+            sizeof(buffer),
+            &sign,
+            &length,
+            &point
+    );
+
+    if (singleDigit == nullptr) {
+        // no-op
+    } else if (length == 1) {
+        *singleDigit = buffer[0] - '0';
+    } else {
+        *singleDigit = -1;
+    }
+
+    return static_cast<digits_t>(length - point);
+}
 
 
 Precision Precision::unlimited() {
@@ -173,19 +204,7 @@ Precision Precision::trailingZeroDisplay(UNumberTrailingZeroDisplay trailingZero
 
 IncrementPrecision Precision::increment(double roundingIncrement) {
     if (roundingIncrement > 0.0) {
-        DecimalQuantity dq;
-        dq.setToDouble(roundingIncrement);
-        dq.roundToInfinity();
-        int32_t magnitude = dq.adjustToZeroScale();
-        return constructIncrement(dq.toLong(), magnitude);
-    } else {
-        return {U_NUMBER_ARG_OUTOFBOUNDS_ERROR};
-    }
-}
-
-IncrementPrecision Precision::incrementExact(uint64_t mantissa, int16_t magnitude) {
-    if (mantissa > 0.0) {
-        return constructIncrement(mantissa, magnitude);
+        return constructIncrement(roundingIncrement, 0);
     } else {
         return {U_NUMBER_ARG_OUTOFBOUNDS_ERROR};
     }
@@ -207,8 +226,7 @@ Precision FractionPrecision::withSignificantDigits(
             *this,
             minSignificantDigits,
             maxSignificantDigits,
-            priority,
-            false);
+            priority);
     } else {
         return {U_NUMBER_ARG_OUTOFBOUNDS_ERROR};
     }
@@ -221,8 +239,7 @@ Precision FractionPrecision::withMinDigits(int32_t minSignificantDigits) const {
             *this,
             1,
             minSignificantDigits,
-            UNUM_ROUNDING_PRIORITY_RELAXED,
-            true);
+            UNUM_ROUNDING_PRIORITY_RELAXED);
     } else {
         return {U_NUMBER_ARG_OUTOFBOUNDS_ERROR};
     }
@@ -234,8 +251,7 @@ Precision FractionPrecision::withMaxDigits(int32_t maxSignificantDigits) const {
         return constructFractionSignificant(*this,
             1,
             maxSignificantDigits,
-            UNUM_ROUNDING_PRIORITY_STRICT,
-            true);
+            UNUM_ROUNDING_PRIORITY_STRICT);
     } else {
         return {U_NUMBER_ARG_OUTOFBOUNDS_ERROR};
     }
@@ -250,8 +266,8 @@ Precision Precision::withCurrency(const CurrencyUnit &currency, UErrorCode &stat
     int32_t minMaxFrac = ucurr_getDefaultFractionDigitsForUsage(
             isoCode, fUnion.currencyUsage, &status);
     Precision retval = (increment != 0.0)
-        ? Precision::increment(increment)
-        : static_cast<Precision>(Precision::fixedFraction(minMaxFrac));
+        ? static_cast<Precision>(constructIncrement(increment, minMaxFrac))
+        : static_cast<Precision>(constructFraction(minMaxFrac, minMaxFrac));
     retval.fTrailingZeroDisplay = fTrailingZeroDisplay;
     return retval;
 }
@@ -269,9 +285,7 @@ Precision CurrencyPrecision::withCurrency(const CurrencyUnit &currency) const {
 Precision IncrementPrecision::withMinFraction(int32_t minFrac) const {
     if (fType == RND_ERROR) { return *this; } // no-op in error state
     if (minFrac >= 0 && minFrac <= kMaxIntFracSig) {
-        IncrementPrecision copy = *this;
-        copy.fUnion.increment.fMinFrac = minFrac;
-        return copy;
+        return constructIncrement(fUnion.increment.fIncrement, minFrac);
     } else {
         return {U_NUMBER_ARG_OUTOFBOUNDS_ERROR};
     }
@@ -304,34 +318,35 @@ Precision::constructFractionSignificant(
         const FractionPrecision &base,
         int32_t minSig,
         int32_t maxSig,
-        UNumberRoundingPriority priority,
-        bool retain) {
+        UNumberRoundingPriority priority) {
     FractionSignificantSettings settings = base.fUnion.fracSig;
     settings.fMinSig = static_cast<digits_t>(minSig);
     settings.fMaxSig = static_cast<digits_t>(maxSig);
     settings.fPriority = priority;
-    settings.fRetain = retain;
     PrecisionUnion union_;
     union_.fracSig = settings;
     return {RND_FRACTION_SIGNIFICANT, union_};
 }
 
-IncrementPrecision Precision::constructIncrement(uint64_t increment, digits_t magnitude) {
+IncrementPrecision Precision::constructIncrement(double increment, int32_t minFrac) {
     IncrementSettings settings;
     // Note: For number formatting, fIncrement is used for RND_INCREMENT but not
     // RND_INCREMENT_ONE or RND_INCREMENT_FIVE. However, fIncrement is used in all
     // three when constructing a skeleton.
     settings.fIncrement = increment;
-    settings.fIncrementMagnitude = magnitude;
-    settings.fMinFrac = magnitude > 0 ? 0 : -magnitude;
+    settings.fMinFrac = static_cast<digits_t>(minFrac);
+    // One of the few pre-computed quantities:
+    // Note: it is possible for minFrac to be more than maxFrac... (misleading)
+    int8_t singleDigit;
+    settings.fMaxFrac = roundingutils::doubleFractionLength(increment, &singleDigit);
     PrecisionUnion union_;
     union_.increment = settings;
-    if (increment == 1) {
+    if (singleDigit == 1) {
         // NOTE: In C++, we must return the correct value type with the correct union.
         // It would be invalid to return a RND_FRACTION here because the methods on the
         // IncrementPrecision type assume that the union is backed by increment data.
         return {RND_INCREMENT_ONE, union_};
-    } else if (increment == 5) {
+    } else if (singleDigit == 5) {
         return {RND_INCREMENT_FIVE, union_};
     } else {
         return {RND_INCREMENT, union_};
@@ -442,23 +457,6 @@ void RoundingImpl::apply(impl::DecimalQuantity &value, UErrorCode& status) const
             break;
 
         case Precision::RND_FRACTION_SIGNIFICANT: {
-            // From ECMA-402:
-            /*
-            Let sResult be ToRawPrecision(...).
-            Let fResult be ToRawFixed(...).
-            If intlObj.[[RoundingType]] is morePrecision, then
-                If sResult.[[RoundingMagnitude]] ≤ fResult.[[RoundingMagnitude]], then
-                    Let result be sResult.
-                Else,
-                    Let result be fResult.
-            Else,
-                Assert: intlObj.[[RoundingType]] is lessPrecision.
-                If sResult.[[RoundingMagnitude]] ≤ fResult.[[RoundingMagnitude]], then
-                    Let result be fResult.
-                Else,
-                    Let result be sResult.
-            */
-
             int32_t roundingMag1 = getRoundingMagnitudeFraction(fPrecision.fUnion.fracSig.fMaxFrac);
             int32_t roundingMag2 = getRoundingMagnitudeSignificant(value, fPrecision.fUnion.fracSig.fMaxSig);
             int32_t roundingMag;
@@ -467,35 +465,11 @@ void RoundingImpl::apply(impl::DecimalQuantity &value, UErrorCode& status) const
             } else {
                 roundingMag = uprv_max(roundingMag1, roundingMag2);
             }
-            if (!value.isZeroish()) {
-                int32_t upperMag = value.getMagnitude();
-                value.roundToMagnitude(roundingMag, fRoundingMode, status);
-                if (!value.isZeroish() && value.getMagnitude() != upperMag && roundingMag1 == roundingMag2) {
-                    // roundingMag2 needs to be the magnitude after rounding
-                    roundingMag2 += 1;
-                }
-            }
+            value.roundToMagnitude(roundingMag, fRoundingMode, status);
 
             int32_t displayMag1 = getDisplayMagnitudeFraction(fPrecision.fUnion.fracSig.fMinFrac);
             int32_t displayMag2 = getDisplayMagnitudeSignificant(value, fPrecision.fUnion.fracSig.fMinSig);
-            int32_t displayMag;
-            if (fPrecision.fUnion.fracSig.fRetain) {
-                // withMinDigits + withMaxDigits
-                displayMag = uprv_min(displayMag1, displayMag2);
-            } else if (fPrecision.fUnion.fracSig.fPriority == UNUM_ROUNDING_PRIORITY_RELAXED) {
-                if (roundingMag2 <= roundingMag1) {
-                    displayMag = displayMag2;
-                } else {
-                    displayMag = displayMag1;
-                }
-            } else {
-                U_ASSERT(fPrecision.fUnion.fracSig.fPriority == UNUM_ROUNDING_PRIORITY_STRICT);
-                if (roundingMag2 <= roundingMag1) {
-                    displayMag = displayMag1;
-                } else {
-                    displayMag = displayMag2;
-                }
-            }
+            int32_t displayMag = uprv_min(displayMag1, displayMag2);
             resolvedMinFraction = uprv_max(0, -displayMag);
 
             break;
@@ -504,7 +478,6 @@ void RoundingImpl::apply(impl::DecimalQuantity &value, UErrorCode& status) const
         case Precision::RND_INCREMENT:
             value.roundToIncrement(
                     fPrecision.fUnion.increment.fIncrement,
-                    fPrecision.fUnion.increment.fIncrementMagnitude,
                     fRoundingMode,
                     status);
             resolvedMinFraction = fPrecision.fUnion.increment.fMinFrac;
@@ -512,7 +485,7 @@ void RoundingImpl::apply(impl::DecimalQuantity &value, UErrorCode& status) const
 
         case Precision::RND_INCREMENT_ONE:
             value.roundToMagnitude(
-                    fPrecision.fUnion.increment.fIncrementMagnitude,
+                    -fPrecision.fUnion.increment.fMaxFrac,
                     fRoundingMode,
                     status);
             resolvedMinFraction = fPrecision.fUnion.increment.fMinFrac;
@@ -520,7 +493,7 @@ void RoundingImpl::apply(impl::DecimalQuantity &value, UErrorCode& status) const
 
         case Precision::RND_INCREMENT_FIVE:
             value.roundToNickel(
-                    fPrecision.fUnion.increment.fIncrementMagnitude,
+                    -fPrecision.fUnion.increment.fMaxFrac,
                     fRoundingMode,
                     status);
             resolvedMinFraction = fPrecision.fUnion.increment.fMinFrac;
