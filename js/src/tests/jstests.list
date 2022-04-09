@@ -618,6 +618,7 @@ skip script test262/built-ins/TypedArray/prototype/sort/sort-tonumber.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1763607
 skip script test262/intl402/NumberFormat/constructor-roundingIncrement-invalid.js
 skip script test262/intl402/NumberFormat/prototype/format/format-rounding-priority-less-precision.js
+skip script test262/intl402/NumberFormat/prototype/format/format-rounding-priority-more-precision.js
 skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-500.js
 skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-50.js
 skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-5.js
@@ -633,6 +634,9 @@ skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increm
 skip script test262/intl402/NumberFormat/prototype/format/format-rounding-increment-1000.js
 skip script test262/intl402/PluralRules/prototype/selectRange/nan-arguments-throws.js
 skip script test262/intl402/PluralRules/prototype/selectRange/undefined-arguments-throws.js
+
+# Currency code "SLE" not returned by ucurr_openISOCurrencies
+skip script test262/intl402/Intl/supportedValuesOf/currencies-accepted-by-DisplayNames.js
 
 
 ###########################################################
