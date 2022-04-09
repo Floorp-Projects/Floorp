@@ -161,22 +161,10 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
 
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-  auto commit = [RefPtr{mWidget}, this, aInvalidRegion]() {
-    MutexAutoLock lock(mMutex);
-    // Commit to mWindowSurface only when we have a valid one.
-    if (mWindowSurface && mWindowSurfaceValid) {
-      mWindowSurface->Commit(aInvalidRegion);
-    }
-  };
-
-  // If we're drawing directly to wl_surface owned by Gtk we need to use it
-  // in main thread to sync with Gtk access to it.
-  if (moz_container_wayland_is_commiting_to_parent(
-          mWidget->GetMozContainer())) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "WindowSurfaceProvider::EndRemoteDrawingInRegion", commit));
-  } else {
-    commit();
+  MutexAutoLock lock(mMutex);
+  // Commit to mWindowSurface only when we have a valid one.
+  if (mWindowSurface && mWindowSurfaceValid) {
+    mWindowSurface->Commit(aInvalidRegion);
   }
 }
 
