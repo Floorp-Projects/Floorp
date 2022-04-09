@@ -1076,9 +1076,6 @@ pl{
         RON{"lej"}
         TWD{"NT$"}
     }
-    Currencies%variant{
-        GEL{"₾"}
-    }
     CurrencyPlurals{
         ADP{
             few{"pesety andorskie"}

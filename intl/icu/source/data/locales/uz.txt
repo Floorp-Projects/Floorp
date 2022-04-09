@@ -232,8 +232,8 @@ uz{
                 other{"{0}-chorrahadan o‘ngga buriling"}
             }
             plural{
-                one{"Savatingizda {0}X bor. Uni sotib olasizmi?"}
-                other{"Savatingizda {0}X bor. Ularni sotib olasizmi?"}
+                one{"Bu jildda {0} ta fayl bor. Uni oʻchirib tashlaysizmi?"}
+                other{"Bu jildda {0} ta fayl bor. Ularni oʻchirib tashlaysizmi?"}
             }
         }
         minimumGroupingDigits{"1"}

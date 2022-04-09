@@ -318,6 +318,7 @@ EXPORTS.unicode += [
    '/intl/icu/source/i18n/unicode/ulocdata.h',
    '/intl/icu/source/i18n/unicode/umsg.h',
    '/intl/icu/source/i18n/unicode/unirepl.h',
+   '/intl/icu/source/i18n/unicode/unounclass.h',
    '/intl/icu/source/i18n/unicode/unum.h',
    '/intl/icu/source/i18n/unicode/unumberformatter.h',
    '/intl/icu/source/i18n/unicode/unumberrangeformatter.h',
