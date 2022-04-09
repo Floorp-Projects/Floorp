@@ -209,6 +209,7 @@ fi{
         minimalPairs{
             case{
                 elative{"{0} päivästä"}
+                genitive{"tarjous voimassa {0} ajan"}
                 illative{"{0} päivään"}
                 nominative{"{0} päivä"}
                 partitive{"{0} päivää"}

@@ -240,6 +240,10 @@ sv{
             }
         }
         minimalPairs{
+            case{
+                genitive{"På {0} avstånd"}
+                nominative{"Jag tror att {0} är tillräckligt."}
+            }
             gender{
                 common{"En {0} är"}
                 neuter{"Ett {0} är"}

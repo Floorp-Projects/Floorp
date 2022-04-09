@@ -41,7 +41,9 @@ wo{
         BZ{"Belis"}
         CA{"Kanadaa"}
         CC{"Duni Koko (Kilin)"}
+        CD{"Kongo (R K D)"}
         CF{"Repiblik Sàntar Afrik"}
+        CG{"Réewum Kongo"}
         CH{"Siwis"}
         CI{"Kodiwaar"}
         CK{"Duni Kuuk"}
@@ -93,6 +95,7 @@ wo{
         GU{"Guwam"}
         GW{"Gine-Bisaawóo"}
         GY{"Giyaan"}
+        HK{"Ooŋ Koŋ"}
         HM{"Duni Hërd ak Duni MakDonald"}
         HN{"Onduraas"}
         HR{"Korowasi"}
@@ -144,6 +147,7 @@ wo{
         ML{"Mali"}
         MM{"Miyanmaar"}
         MN{"Mongoli"}
+        MO{"Makaawo"}
         MP{"Duni Mariyaan Noor"}
         MQ{"Martinik"}
         MR{"Mooritani"}
@@ -246,13 +250,5 @@ wo{
         ZM{"Sàmbi"}
         ZW{"Simbabwe"}
         ZZ{"Gox buñ xamul"}
-    }
-    Countries%short{
-        HK{"Ooŋ Koŋ"}
-        MO{"Makaawo"}
-    }
-    Countries%variant{
-        CD{"Kongo (R K D)"}
-        CG{"Réewum Kongo"}
     }
 }

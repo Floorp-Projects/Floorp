@@ -1,0 +1,543 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
+hi_Latn{
+    %%Parent{"en_IN"}
+    AuxExemplarCharacters{
+        "[ā ḍ ĕ ē ḥ ī ḷ {l\u0325} ṁ {m\u0310} ñ ṅ ṇ ŏ ō ṛ {r\u0325} {r\u0325\u0304} ś"
+        " ṣ ṭ ū]"
+    }
+    NumberElements{
+        default{"latn"}
+        latn{
+            patterns{
+                accountingFormat{"¤#,##,##0.00"}
+                scientificFormat{"[#E0]"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 hazaar"}
+                        other{"0 hazaar"}
+                    }
+                    10000{
+                        one{"00 hazaar"}
+                        other{"00 hazaar"}
+                    }
+                    100000{
+                        one{"0 laakh"}
+                        other{"0 laakh"}
+                    }
+                    1000000{
+                        one{"00 laakh"}
+                        other{"00 laakh"}
+                    }
+                    10000000{
+                        one{"0 karod"}
+                        other{"0 karod"}
+                    }
+                    100000000{
+                        one{"00 karod"}
+                        other{"00 karod"}
+                    }
+                    1000000000{
+                        one{"0 arab"}
+                        other{"0 arab"}
+                    }
+                    10000000000{
+                        one{"00 arab"}
+                        other{"00 arab"}
+                    }
+                    100000000000{
+                        one{"0 kharab"}
+                        other{"0 kharab"}
+                    }
+                    1000000000000{
+                        one{"00 kharab"}
+                        other{"00 kharab"}
+                    }
+                    10000000000000{
+                        one{"000 kharab"}
+                        other{"000 kharab"}
+                    }
+                    100000000000000{
+                        one{"0000 kharab"}
+                        other{"0000 kharab"}
+                    }
+                }
+            }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤0 hazaar"}
+                        other{"¤0 hazaar"}
+                    }
+                    10000{
+                        one{"¤00 hazaar"}
+                        other{"¤00 hazaar"}
+                    }
+                    100000{
+                        one{"¤0 laakh"}
+                        other{"¤0 laakh"}
+                    }
+                    1000000{
+                        one{"¤00 laakh"}
+                        other{"¤00 laakh"}
+                    }
+                    10000000{
+                        one{"¤0 ka'.'"}
+                        other{"¤0 ka'.'"}
+                    }
+                    100000000{
+                        one{"¤00 ka'.'"}
+                        other{"¤00 ka'.'"}
+                    }
+                    1000000000{
+                        one{"¤0 a'.'"}
+                        other{"¤0 a'.'"}
+                    }
+                    10000000000{
+                        one{"¤00 a'.'"}
+                        other{"¤00 a'.'"}
+                    }
+                    100000000000{
+                        one{"¤0 kha'.'"}
+                        other{"¤0 kha'.'"}
+                    }
+                    1000000000000{
+                        one{"¤00 kha'.'"}
+                        other{"¤00 kha'.'"}
+                    }
+                    10000000000000{
+                        one{"¤000 kha'.'"}
+                        other{"¤000 kha'.'"}
+                    }
+                    100000000000000{
+                        one{"¤0000 kha'.'"}
+                        other{"¤0000 kha'.'"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        one{"0 hazaar"}
+                        other{"0 hazaar"}
+                    }
+                    10000{
+                        one{"00 hazaar"}
+                        other{"00 hazaar"}
+                    }
+                    100000{
+                        one{"0 laakh"}
+                        other{"0 laakh"}
+                    }
+                    1000000{
+                        one{"00 laakh"}
+                        other{"00 laakh"}
+                    }
+                    10000000{
+                        one{"0 ka'.'"}
+                        other{"0 ka'.'"}
+                    }
+                    100000000{
+                        one{"00 ka'.'"}
+                        other{"00 ka'.'"}
+                    }
+                    1000000000{
+                        one{"0 a'.'"}
+                        other{"0 a'.'"}
+                    }
+                    10000000000{
+                        one{"00 a'.'"}
+                        other{"00 a'.'"}
+                    }
+                    100000000000{
+                        one{"0 kha'.'"}
+                        other{"0 kha'.'"}
+                    }
+                    1000000000000{
+                        one{"00 kha'.'"}
+                        other{"00 kha'.'"}
+                    }
+                    10000000000000{
+                        one{"000 kha'.'"}
+                        other{"000 kha'.'"}
+                    }
+                    100000000000000{
+                        one{"0000 kha'.'"}
+                        other{"0000 kha'.'"}
+                    }
+                }
+            }
+        }
+        minimumGroupingDigits{"1"}
+    }
+    calendar{
+        chinese{
+            availableFormats{
+                GyMMM{"MMM r(U)"}
+                GyMMMEd{"E, d MMM r(U)"}
+                yMd{"dd/MM/r"}
+                yyyyMMM{"MMM r(U)"}
+                yyyyMMMEd{"E, d MMM r(U)"}
+            }
+        }
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM, y G",
+                "d MMMM, y G",
+                "d MMM, y G",
+                "d/M/y GGGGG",
+                "{1}, {0}",
+                "{1} 'at' {0}",
+                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Bhms{"h:mm.ss B"}
+                yyyyMd{"d/M/y GGGGG"}
+            }
+            intervalFormats{
+                MEd{
+                    M{"E, d/M – E, d/M"}
+                    d{"E, d/M – E, d/M"}
+                }
+                yM{
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                yMEd{
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
+                    d{"E, d/M/y – E, d/M/y GGGGG"}
+                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                }
+                yMMMEd{
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                yMd{
+                    M{"d/M/y – d/M/y GGGGG"}
+                    d{"d/M/y – d/M/y GGGGG"}
+                    y{"d/M/y – d/M/y GGGGG"}
+                }
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM, y",
+                "d MMMM y",
+                "dd-MMM-y",
+                "dd/MM/y",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMdd",
+                "yMMdd",
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "ravi",
+                        "som",
+                        "mangal",
+                        "budh",
+                        "guru",
+                        "shukra",
+                        "shani",
+                    }
+                    wide{
+                        "ravivaar",
+                        "somvaar",
+                        "mangalvaar",
+                        "budhvaar",
+                        "guruvaar",
+                        "shukravaar",
+                        "shanivaar",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "ra",
+                        "so",
+                        "ma",
+                        "bu",
+                        "gu",
+                        "su",
+                        "sa",
+                    }
+                }
+            }
+            dayPeriod{
+                format{
+                    wide{
+                        afternoon1{"dopahar"}
+                        evening1{"shaam"}
+                        midnight{"aadhi raat"}
+                        morning1{"subah"}
+                        night1{"raat"}
+                    }
+                }
+                stand-alone{
+                    wide{
+                        afternoon1{"dopahar"}
+                        am{"AM"}
+                        evening1{"shaam"}
+                        midnight{"aadhi raat"}
+                        morning1{"subah"}
+                        night1{"raat"}
+                        pm{"PM"}
+                    }
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    }
+                }
+            }
+        }
+        indian{
+            eras{
+                abbreviated{
+                    "Saka",
+                }
+            }
+        }
+        islamic{
+            eras{
+                abbreviated{
+                    "Hijri",
+                }
+                wide{
+                    "Hijri",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Muh",
+                        "Saf",
+                        "Rabi 1",
+                        "Rabi 2",
+                        "Jum 1",
+                        "Jum 2",
+                        "Rajab",
+                        "Shab",
+                        "Ram",
+                        "Shaw",
+                        "Zu Q",
+                        "Zu H",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabi al-Awwal",
+                        "Rabi as-Saani",
+                        "Jumaada al-Awwal",
+                        "Jumaada as-Saani",
+                        "Rajab",
+                        "Shaabaan",
+                        "Ramzaan",
+                        "Shawwaal",
+                        "Zu’l-Qaada",
+                        "Zu’l-Hijja",
+                    }
+                }
+            }
+        }
+    }
+    fields{
+        day{
+            dn{"din"}
+            relative{
+                "-1"{"kal"}
+                "-2"{"parson"}
+                "0"{"aaj"}
+                "1"{"aane wala kal"}
+                "2"{"aane wala parson"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} din mein"}
+                    other{"{0} din mein"}
+                }
+                past{
+                    one{"{0} din pehle"}
+                    other{"{0} din pehle"}
+                }
+            }
+        }
+        hour{
+            dn{"ghanta"}
+            relative{
+                "0"{"yeh ghanta"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ghante mein"}
+                    other{"{0} ghante mein"}
+                }
+                past{
+                    one{"{0} ghante pehle"}
+                    other{"{0} ghante pehle"}
+                }
+            }
+        }
+        minute{
+            relative{
+                "0"{"yeh minute"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} minute mein"}
+                    other{"{0} minute mein"}
+                }
+                past{
+                    one{"{0} minute pehle"}
+                    other{"{0} minute pehle"}
+                }
+            }
+        }
+        month{
+            dn{"mahina"}
+            relative{
+                "-1"{"pichhla mahina"}
+                "0"{"is mahine"}
+                "1"{"agla mahina"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} mahine mein"}
+                    other{"{0} mahine mein"}
+                }
+                past{
+                    one{"{0} mahine pehle"}
+                    other{"{0} mahine pehle"}
+                }
+            }
+        }
+        second{
+            relative{
+                "0"{"abhi"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} second mein"}
+                    other{"{0} second mein"}
+                }
+                past{
+                    one{"{0} second pehle"}
+                    other{"{0} second pehle"}
+                }
+            }
+        }
+        week{
+            dn{"hafta"}
+            relative{
+                "-1"{"pichhla hafta"}
+                "0"{"is hafte"}
+                "1"{"agla hafta"}
+            }
+            relativePeriod{"{0} ke hafta"}
+            relativeTime{
+                future{
+                    one{"{0} hafte mein"}
+                    other{"{0} hafte mein"}
+                }
+                past{
+                    one{"{0} hafte pehle"}
+                    other{"{0} hafte pehle"}
+                }
+            }
+        }
+        year{
+            dn{"saal"}
+            relative{
+                "-1"{"pichhla saal"}
+                "0"{"is saal"}
+                "1"{"agla saal"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} saal mein"}
+                    other{"{0} saal mein"}
+                }
+                past{
+                    one{"{0} saal pehle"}
+                    other{"{0} saal pehle"}
+                }
+            }
+        }
+    }
+    listPattern{
+        or{
+            2{"{0} ya {1}"}
+            end{"{0} ya {1}"}
+        }
+        standard{
+            2{"{0} aur {1}"}
+            end{"{0}, aur {1}"}
+        }
+        standard-narrow{
+            2{"{0} aur {1}"}
+            end{"{0} aur {1}"}
+        }
+        standard-short{
+            2{"{0} aur {1}"}
+            end{"{0} aur {1}"}
+        }
+        unit{
+            2{"{0} aur {1}"}
+            end{"{0}, aur {1}"}
+        }
+        unit-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"U.K."}
+        US{"U.S."}
+    }
+}

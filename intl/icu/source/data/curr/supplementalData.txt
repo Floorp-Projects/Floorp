@@ -3761,6 +3761,14 @@ supplementalData:table(nofallback){
         SL{
             {
                 from:intvector{
+                    383,
+                    -496241664,
+                }
+                id{"SLE"}
+                tender{"false"}
+            }
+            {
+                from:intvector{
                     -40,
                     1072291840,
                 }
@@ -4410,6 +4418,10 @@ supplementalData:table(nofallback){
                     282,
                     -605344769,
                 }
+            }
+            {
+                id{"VED"}
+                tender{"false"}
             }
         }
         VG{
@@ -5107,6 +5119,12 @@ supplementalData:table(nofallback){
             2,
             0,
             0,
+            0,
+        }
+        SLE:intvector{
+            2,
+            0,
+            2,
             0,
         }
         SLL:intvector{

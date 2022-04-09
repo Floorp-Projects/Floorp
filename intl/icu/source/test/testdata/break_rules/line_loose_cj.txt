@@ -20,7 +20,8 @@
 #         line-break=loose (BCP47 -u-lb-loose) as defined for Chinese & Japanese.
 #         It sets characters of class CJ to behave like ID.
 #         In addition, it allows breaks:
-#         * before hyphens 2010 & 2013 (both BA) and 301C, 30A0 (both NS)
+#         * between ID and hyphens 2010 & 2013 (both BA)
+#         * before 301C, 30A0 (both NS)
 #         * before iteration marks 3005, 303B, 309D, 309E, 30FD, 30FE (all NS)
 #         * between characters of LineBreak class IN such as 2026
 #         * before some centered punct 203C, 2047, 2048, 2049, 30FB, FF1A, FF1B,
@@ -200,8 +201,9 @@ LB20.09:     ^(HY | HH) CM* AL;
 
 LB21a:       HL CM* (HY | BA | BAX) CM* [^CM CB]?;
 
-LB21.1:      . CM* [BA HY NS];
-LB21.2:      BB CM* [^CM CB];
+LB21.1:      [^ID] CM* [BA BAX HY NS];
+LB21.2:      ID CM* [BA HY NS];
+LB21.3:      BB CM* [^CM CB];
 
 LB21b:       SY CM* HL;
 
@@ -236,9 +238,9 @@ LB30.1:      (AL | CM | HL | NU) CM* OP30;
 LB30.2:      CP30 CM* (AL | HL | NU);
 
 # LB30a  keep pairs of RI together.
-LB30a.1:     RI CM* RI         ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS IN CM];
-LB30a.2:     RI CM* RI CM* CMS ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS IN CM];
-LB30a.3:     RI CM* RI CM* [BK CR LF NL SP ZW WJ GL CL CP EX IS SY QU BA HY NS IN ZWJ]?;
+LB30a.1:     RI CM* RI         ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA BAX HY NS IN CM];
+LB30a.2:     RI CM* RI CM* CMS ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA BAX HY NS IN CM];
+LB30a.3:     RI CM* RI CM* [BK CR LF NL SP ZW WJ GL CL CP EX IS SY QU BA BAX HY NS IN ZWJ]?;
 
 # LB30b Do not break between Emoji Base (or potential emoji) and Emoji Modifier
 LB30b.1:       EB CM* EM;

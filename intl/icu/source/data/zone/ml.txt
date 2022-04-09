@@ -1223,6 +1223,9 @@ ml{
         "Pacific:Johnston"{
             ec{"ജോൺസ്റ്റൺ"}
         }
+        "Pacific:Kanton"{
+            ec{"കാൻട്ടൻ"}
+        }
         "Pacific:Kiritimati"{
             ec{"കിരിറ്റിമാറ്റി"}
         }

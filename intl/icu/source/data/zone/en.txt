@@ -34,8 +34,7 @@ en{
             ld{"Irish Standard Time"}
         }
         "Europe:Kiev"{
-            ec{"Kiev"}
-            ec%formal{"Kyiv"}
+            ec{"Kyiv"}
         }
         "Europe:London"{
             ld{"British Summer Time"}
