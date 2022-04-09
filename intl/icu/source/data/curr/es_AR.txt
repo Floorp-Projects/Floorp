@@ -13,7 +13,4 @@ es_AR{
             "dólar estadounidense",
         }
     }
-    Currencies%variant{
-        GEL{"GEL"}
-    }
 }

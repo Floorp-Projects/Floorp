@@ -6,9 +6,9 @@
 
  See comments on https://unicode-org.atlassian.net/browse/ICU-10750 - this file is needed to emit break iterator rules properly.
 -->
-<!DOCTYPE ldml SYSTEM "../../dtd/cldr-40/common/dtd/ldml.dtd"
+<!DOCTYPE ldml SYSTEM "../../dtd/cldr/common/dtd/ldml.dtd"
 [
-   <!ENTITY % icu SYSTEM "../../dtd/cldr-40/common/dtd/ldmlICU.dtd">
+   <!ENTITY % icu SYSTEM "../../dtd/cldr/common/dtd/ldmlICU.dtd">
    %icu;
 ]
 >

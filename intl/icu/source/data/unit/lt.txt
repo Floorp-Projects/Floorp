@@ -50,8 +50,41 @@ lt{
                 other{"{0} laisvojo kritimo pagreičių"}
             }
             meter-per-square-second{
+                case{
+                    accusative{
+                        few{"{0} metrus per kvadratinę sekundę"}
+                        many{"{0} metro per kvadratinę sekundę"}
+                        one{"{0} metrą per kvadratinę sekundę"}
+                        other{"{0} metrų per kvadratinę sekundę"}
+                    }
+                    dative{
+                        few{"{0} metrams per kvadratinę sekundę"}
+                        many{"{0} metro per kvadratinę sekundę"}
+                        one{"{0} metrui per kvadratinę sekundę"}
+                        other{"{0} metrų per kvadratinę sekundę"}
+                    }
+                    genitive{
+                        few{"{0} metrų per kvadratinę sekundę"}
+                        many{"{0} metro per kvadratinę sekundę"}
+                        one{"{0} metro per kvadratinę sekundę"}
+                        other{"{0} metrų per kvadratinę sekundę"}
+                    }
+                    instrumental{
+                        few{"{0} metrais per kvadratinę sekundę"}
+                        many{"{0} metro per kvadratinę sekundę"}
+                        one{"{0} metru per kvadratinę sekundę"}
+                        other{"{0} metrų per kvadratinę sekundę"}
+                    }
+                    locative{
+                        few{"{0} metruose per kvadratinę sekundę"}
+                        many{"{0} metro per kvadratinę sekundę"}
+                        one{"{0} metre per kvadratinę sekundę"}
+                        other{"{0} metrų per kvadratinę sekundę"}
+                    }
+                }
                 dnam{"metrai per kvadratinę sekundę"}
                 few{"{0} m/s²"}
+                gender{"masculine"}
                 many{"{0} m/s²"}
                 one{"{0} metras per kvadratinę sekundę"}
                 other{"{0} metrų per kvadratinę sekundę"}
@@ -315,8 +348,41 @@ lt{
                 other{"{0} hektarų"}
             }
             square-centimeter{
+                case{
+                    accusative{
+                        few{"{0} kvadratinius centimetrus"}
+                        many{"{0} kvadratinio centimetro"}
+                        one{"{0} kvadratinį centimetrą"}
+                        other{"{0} kvadratinių centimetrų"}
+                    }
+                    dative{
+                        few{"{0} kvadratiniams centimetrams"}
+                        many{"{0} kvadratinio centimetro"}
+                        one{"{0} kvadratiniam centimetrui"}
+                        other{"{0} kvadratinių centimetrų"}
+                    }
+                    genitive{
+                        few{"{0} kvadratinių centimetrų"}
+                        many{"{0} kvadratinio centimetro"}
+                        one{"{0} kvadratinio centimetro"}
+                        other{"{0} kvadratinių centimetrų"}
+                    }
+                    instrumental{
+                        few{"{0} kvadratiniais centimetrais"}
+                        many{"{0} kvadratinio centimetro"}
+                        one{"{0} kvadratiniam centimetrui"}
+                        other{"{0} kvadratinių centimetrų"}
+                    }
+                    locative{
+                        few{"{0} kvadratiniuose centimetruose"}
+                        many{"{0} kvadratinio centimetro"}
+                        one{"{0} kvadratiniame centimetre"}
+                        other{"{0} kvadratinių centimetrų"}
+                    }
+                }
                 dnam{"kvadratiniai centimetrai"}
                 few{"{0} kvadratiniai centimetrai"}
+                gender{"masculine"}
                 many{"{0} kvadratinio centimetro"}
                 one{"{0} kvadratinis centimetras"}
                 other{"{0} kvadratinių centimetrų"}
@@ -338,16 +404,82 @@ lt{
                 per{"{0}/in²"}
             }
             square-kilometer{
+                case{
+                    accusative{
+                        few{"{0} kvadratinius kilometrus"}
+                        many{"{0} kvadratinio kilometro"}
+                        one{"{0} kvadratinį kilometrą"}
+                        other{"{0} kvadratinių kilometrų"}
+                    }
+                    dative{
+                        few{"{0} kvadratiniams kilometrams"}
+                        many{"{0} kvadratinio kilometro"}
+                        one{"{0} kvadratiniam kilometrui"}
+                        other{"{0} kvadratinių kilometrų"}
+                    }
+                    genitive{
+                        few{"{0} kvadratinių kilometrų"}
+                        many{"{0} kvadratinio kilometro"}
+                        one{"{0} kvadratinio kilometro"}
+                        other{"{0} kvadratinių kilometrų"}
+                    }
+                    instrumental{
+                        few{"{0} kvadratiniais kilometrais"}
+                        many{"{0} kvadratinio kilometro"}
+                        one{"{0} kvadratiniu kilometru"}
+                        other{"{0} kvadratinių kilometrų"}
+                    }
+                    locative{
+                        few{"{0} kvadratiniuose kilometruose"}
+                        many{"{0} kvadratinio kilometro"}
+                        one{"{0} kvadratinį kilometrą"}
+                        other{"{0} kvadratinių kilometrų"}
+                    }
+                }
                 dnam{"kvadratiniai kilometrai"}
                 few{"{0} kvadratiniai kilometrai"}
+                gender{"masculine"}
                 many{"{0} kvadratinio kilometro"}
                 one{"{0} kvadratinis kilometras"}
                 other{"{0} kvadratinių kilometrų"}
                 per{"{0} kv. km"}
             }
             square-meter{
+                case{
+                    accusative{
+                        few{"{0} kvadratinius metrus"}
+                        many{"{0} kvadratinio metro"}
+                        one{"{0} kvadratinį metrą"}
+                        other{"{0} kvadratinių metrų"}
+                    }
+                    dative{
+                        few{"{0} kvadratiniams metrams"}
+                        many{"{0} kvadratinio metro"}
+                        one{"{0} kvadratiniam metrui"}
+                        other{"{0} kvadratinių metrų"}
+                    }
+                    genitive{
+                        few{"{0} kvadratinių metrų"}
+                        many{"{0} kvadratinio metro"}
+                        one{"{0} kvadratinio metro"}
+                        other{"{0} kvadratinių metrų"}
+                    }
+                    instrumental{
+                        few{"{0} kvadratiniais metrais"}
+                        many{"{0} kvadratinio metro"}
+                        one{"{0} kvadratiniu metru"}
+                        other{"{0} kvadratinių metrų"}
+                    }
+                    locative{
+                        few{"{0} kvadratiniuose metruose"}
+                        many{"{0} kvadratinio metro"}
+                        one{"{0} kvadratiniame metre"}
+                        other{"{0} kvadratinių metrų"}
+                    }
+                }
                 dnam{"kvadratiniai metrai"}
                 few{"{0} kvadratiniai metrai"}
+                gender{"masculine"}
                 many{"{0} kvadratinio metro"}
                 one{"{0} kvadratinis metras"}
                 other{"{0} kvadratinių metrų"}
@@ -550,8 +682,41 @@ lt{
         }
         concentr{
             item{
+                case{
+                    accusative{
+                        few{"{0} elementus"}
+                        many{"{0} elemento"}
+                        one{"{0} elementą"}
+                        other{"{0} elementų"}
+                    }
+                    dative{
+                        few{"{0} elementams"}
+                        many{"{0} elemento"}
+                        one{"{0} elementui"}
+                        other{"{0} elementų"}
+                    }
+                    genitive{
+                        few{"{0} elementų"}
+                        many{"{0} elemento"}
+                        one{"{0} elemento"}
+                        other{"{0} elementų"}
+                    }
+                    instrumental{
+                        few{"{0} elementais"}
+                        many{"{0} elemento"}
+                        one{"{0} elementu"}
+                        other{"{0} elementų"}
+                    }
+                    locative{
+                        few{"{0} elementuose"}
+                        many{"{0} elemento"}
+                        one{"{0} elemente"}
+                        other{"{0} elementų"}
+                    }
+                }
                 dnam{"elementas"}
                 few{"{0} elementai"}
+                gender{"masculine"}
                 many{"{0} elemento"}
                 one{"{0} elementas"}
                 other{"{0} elementų"}
@@ -604,8 +769,41 @@ lt{
                 other{"{0} miligramų decilitre"}
             }
             millimole-per-liter{
+                case{
+                    accusative{
+                        few{"{0} milimolius litre"}
+                        many{"{0} milimolio litre"}
+                        one{"{0} milimolį litre"}
+                        other{"{0} milimolių litre"}
+                    }
+                    dative{
+                        few{"{0} milimoliams litre"}
+                        many{"{0} milimolio litre"}
+                        one{"{0} milimoliui litre"}
+                        other{"{0} milimolių litre"}
+                    }
+                    genitive{
+                        few{"{0} milimolio litre"}
+                        many{"{0} milimolio litre"}
+                        one{"{0} milimolio litre"}
+                        other{"{0} milimolių litre"}
+                    }
+                    instrumental{
+                        few{"{0} milimoliais litre"}
+                        many{"{0} milimolio litre"}
+                        one{"{0} milimoliu litre"}
+                        other{"{0} milimolių litre"}
+                    }
+                    locative{
+                        few{"{0} milimoliuose litre"}
+                        many{"{0} milimolio litre"}
+                        one{"{0} milimolyje litre"}
+                        other{"{0} milimolių litre"}
+                    }
+                }
                 dnam{"milimoliai litre"}
                 few{"{0} milimoliai litre"}
+                gender{"masculine"}
                 many{"{0} milimoliai litre"}
                 one{"{0} milimolis litre"}
                 other{"{0} milimolių litre"}
@@ -776,15 +974,81 @@ lt{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    accusative{
+                        few{"{0} litrus 100 kilometrų"}
+                        many{"{0} litro 100 kilometrų"}
+                        one{"{0} litrą 100 kilometrų"}
+                        other{"{0} litrų 100 kilometrų"}
+                    }
+                    dative{
+                        few{"{0} litrams 100 kilometrų"}
+                        many{"{0} litro 100 kilometrų"}
+                        one{"{0} litrui 100 kilometrų"}
+                        other{"{0} litrų 100 kilometrų"}
+                    }
+                    genitive{
+                        few{"{0} litrų 100 kilometrų"}
+                        many{"{0} litro 100 kilometrų"}
+                        one{"{0} litro 100 kilometrų"}
+                        other{"{0} litrų 100 kilometrų"}
+                    }
+                    instrumental{
+                        few{"{0} litrais 100 kilometrų"}
+                        many{"{0} litro 100 kilometrų"}
+                        one{"{0} litru 100 kilometrų"}
+                        other{"{0} litrų 100 kilometrų"}
+                    }
+                    locative{
+                        few{"{0} litruose 100 kilometrų"}
+                        many{"{0} litro 100 kilometrų"}
+                        one{"{0} litre 100 kilometrų"}
+                        other{"{0} litrų 100 kilometrų"}
+                    }
+                }
                 dnam{"litrai 100 kilometrų"}
                 few{"{0} litrai 100 kilometrų"}
+                gender{"masculine"}
                 many{"{0} litro 100 kilometrų"}
                 one{"{0} litras 100 kilometrų"}
                 other{"{0} litrų 100 kilometrų"}
             }
             liter-per-kilometer{
+                case{
+                    accusative{
+                        few{"{0} litrus kilometrui"}
+                        many{"{0} litro kilometrui"}
+                        one{"{0} litrą kilometrui"}
+                        other{"{0} litrų kilometrui"}
+                    }
+                    dative{
+                        few{"{0} litrams kilometrui"}
+                        many{"{0} litro kilometrui"}
+                        one{"{0} litrui kilometrui"}
+                        other{"{0} litrų kilometrui"}
+                    }
+                    genitive{
+                        few{"{0} litrų kilometrui"}
+                        many{"{0} litro kilometrui"}
+                        one{"{0} litro kilometrui"}
+                        other{"{0} litrų kilometrui"}
+                    }
+                    instrumental{
+                        few{"{0} litrais kilometrui"}
+                        many{"{0} litro kilometrui"}
+                        one{"{0} litru kilometrui"}
+                        other{"{0} litrų kilometrui"}
+                    }
+                    locative{
+                        few{"{0} litruose kilometrui"}
+                        many{"{0} litro kilometrui"}
+                        one{"{0} litre kilometrui"}
+                        other{"{0} litrų kilometrui"}
+                    }
+                }
                 dnam{"litrai kilometrui"}
                 few{"{0} litrai kilometrui"}
+                gender{"masculine"}
                 many{"{0} litro kilometrui"}
                 one{"{0} litras kilometrui"}
                 other{"{0} litrų kilometrui"}
@@ -893,64 +1157,361 @@ lt{
                 other{"{0} baitų"}
             }
             gigabit{
+                case{
+                    accusative{
+                        few{"{0} gigabitus"}
+                        many{"{0} gigabito"}
+                        one{"{0} gigabitą"}
+                        other{"{0} gigabitų"}
+                    }
+                    dative{
+                        few{"{0} gigabitams"}
+                        many{"{0} gigabito"}
+                        one{"{0} gigabitui"}
+                        other{"{0} gigabitų"}
+                    }
+                    genitive{
+                        few{"{0} gigabitų"}
+                        many{"{0} gigabito"}
+                        one{"{0} gigabito"}
+                        other{"{0} gigabitų"}
+                    }
+                    instrumental{
+                        few{"{0} gigabitais"}
+                        many{"{0} gigabito"}
+                        one{"{0} gigabitu"}
+                        other{"{0} gigabitų"}
+                    }
+                    locative{
+                        few{"{0} gigabituose"}
+                        many{"{0} gigabito"}
+                        one{"{0} gigabite"}
+                        other{"{0} gigabitų"}
+                    }
+                }
                 dnam{"gigabitai"}
                 few{"{0} gigabitai"}
+                gender{"masculine"}
                 many{"{0} gigabito"}
                 one{"{0} gigabitas"}
                 other{"{0} gigabitų"}
             }
             gigabyte{
+                case{
+                    accusative{
+                        few{"{0} gigabaitus"}
+                        many{"{0} gigabaito"}
+                        one{"{0} gigabaitą"}
+                        other{"{0} gigabaitų"}
+                    }
+                    dative{
+                        few{"{0} gigabaitams"}
+                        many{"{0} gigabaito"}
+                        one{"{0} gigabaitui"}
+                        other{"{0} gigabaitų"}
+                    }
+                    genitive{
+                        few{"{0} gigabaitų"}
+                        many{"{0} gigabaito"}
+                        one{"{0} gigabaito"}
+                        other{"{0} gigabaitų"}
+                    }
+                    instrumental{
+                        few{"{0} gigabaitais"}
+                        many{"{0} gigabaito"}
+                        one{"{0} gigabaitu"}
+                        other{"{0} gigabaitų"}
+                    }
+                    locative{
+                        few{"{0} gigabaituose"}
+                        many{"{0} gigabaito"}
+                        one{"{0} gigabaite"}
+                        other{"{0} gigabaitų"}
+                    }
+                }
                 dnam{"gigabaitai"}
                 few{"{0} gigabaitai"}
+                gender{"masculine"}
                 many{"{0} gigabaito"}
                 one{"{0} gigabaitas"}
                 other{"{0} gigabaitų"}
             }
             kilobit{
+                case{
+                    accusative{
+                        few{"{0} kilobitus"}
+                        many{"{0} kilobito"}
+                        one{"{0} kilobitą"}
+                        other{"{0} kilobitų"}
+                    }
+                    dative{
+                        few{"{0} kilobitams"}
+                        many{"{0} kilobito"}
+                        one{"{0} kilobitui"}
+                        other{"{0} kilobitų"}
+                    }
+                    genitive{
+                        few{"{0} kilobitų"}
+                        many{"{0} kilobito"}
+                        one{"{0} kilobito"}
+                        other{"{0} kilobitų"}
+                    }
+                    instrumental{
+                        few{"{0} kilobitais"}
+                        many{"{0} kilobito"}
+                        one{"{0} kilobitu"}
+                        other{"{0} kilobitų"}
+                    }
+                    locative{
+                        few{"{0} kilobituose"}
+                        many{"{0} kilobito"}
+                        one{"{0} kilobite"}
+                        other{"{0} kilobitų"}
+                    }
+                }
                 dnam{"kilobitai"}
                 few{"{0} kilobitai"}
+                gender{"masculine"}
                 many{"{0} kilobito"}
                 one{"{0} kilobitas"}
                 other{"{0} kilobitų"}
             }
             kilobyte{
+                case{
+                    accusative{
+                        few{"{0} kilobaitus"}
+                        many{"{0} kilobaito"}
+                        one{"{0} kilobaitą"}
+                        other{"{0} kilobaitų"}
+                    }
+                    dative{
+                        few{"{0} kilobaitams"}
+                        many{"{0} kilobaito"}
+                        one{"{0} kilobaitui"}
+                        other{"{0} kilobaitų"}
+                    }
+                    genitive{
+                        few{"{0} kilobaitų"}
+                        many{"{0} kilobaito"}
+                        one{"{0} kilobaito"}
+                        other{"{0} kilobaitų"}
+                    }
+                    instrumental{
+                        few{"{0} kilobaitais"}
+                        many{"{0} kilobaito"}
+                        one{"{0} kilobaitu"}
+                        other{"{0} kilobaitų"}
+                    }
+                    locative{
+                        few{"{0} kilobaituose"}
+                        many{"{0} kilobaito"}
+                        one{"{0} kilobaite"}
+                        other{"{0} kilobaitų"}
+                    }
+                }
                 dnam{"kilobaitai"}
                 few{"{0} kilobaitai"}
+                gender{"masculine"}
                 many{"{0} kilobaito"}
                 one{"{0} kilobaitas"}
                 other{"{0} kilobaitų"}
             }
             megabit{
+                case{
+                    accusative{
+                        few{"{0} megabitus"}
+                        many{"{0} megabito"}
+                        one{"{0} megabitą"}
+                        other{"{0} megabitų"}
+                    }
+                    dative{
+                        few{"{0} megabitams"}
+                        many{"{0} megabito"}
+                        one{"{0} megabitui"}
+                        other{"{0} megabitų"}
+                    }
+                    genitive{
+                        few{"{0} megabitų"}
+                        many{"{0} megabito"}
+                        one{"{0} megabito"}
+                        other{"{0} megabitų"}
+                    }
+                    instrumental{
+                        few{"{0} megabitais"}
+                        many{"{0} megabito"}
+                        one{"{0} megabitu"}
+                        other{"{0} megabitų"}
+                    }
+                    locative{
+                        few{"{0} megabituose"}
+                        many{"{0} megabito"}
+                        one{"{0} megabite"}
+                        other{"{0} megabitų"}
+                    }
+                }
                 dnam{"megabitai"}
                 few{"{0} megabitai"}
+                gender{"masculine"}
                 many{"{0} megabito"}
                 one{"{0} megabitas"}
                 other{"{0} megabitų"}
             }
             megabyte{
+                case{
+                    accusative{
+                        few{"{0} megabaitus"}
+                        many{"{0} megabaito"}
+                        one{"{0} megabaitą"}
+                        other{"{0} megabaitų"}
+                    }
+                    dative{
+                        few{"{0} megabaitams"}
+                        many{"{0} megabaito"}
+                        one{"{0} megabaitui"}
+                        other{"{0} megabaitų"}
+                    }
+                    genitive{
+                        few{"{0} megabaitų"}
+                        many{"{0} megabaito"}
+                        one{"{0} megabaito"}
+                        other{"{0} megabaitų"}
+                    }
+                    instrumental{
+                        few{"{0} megabaitais"}
+                        many{"{0} megabaito"}
+                        one{"{0} megabaitu"}
+                        other{"{0} megabaitų"}
+                    }
+                    locative{
+                        few{"{0} megabaituose"}
+                        many{"{0} megabaito"}
+                        one{"{0} megabaite"}
+                        other{"{0} megabaitų"}
+                    }
+                }
                 dnam{"megabaitai"}
                 few{"{0} megabaitai"}
+                gender{"masculine"}
                 many{"{0} megabaito"}
                 one{"{0} megabaitas"}
                 other{"{0} megabaitų"}
             }
             petabyte{
+                case{
+                    accusative{
+                        few{"{0} pentabaitus"}
+                        many{"{0} pentabaito"}
+                        one{"{0} pentabaitą"}
+                        other{"{0} pentabaitų"}
+                    }
+                    dative{
+                        few{"{0} pentabaitams"}
+                        many{"{0} pentabaito"}
+                        one{"{0} pentabaitui"}
+                        other{"{0} pentabaitų"}
+                    }
+                    genitive{
+                        few{"{0} pentabaitų"}
+                        many{"{0} pentabaito"}
+                        one{"{0} pentabaito"}
+                        other{"{0} pentabaitų"}
+                    }
+                    instrumental{
+                        few{"{0} pentabaitais"}
+                        many{"{0} pentabaito"}
+                        one{"{0} pentabaitu"}
+                        other{"{0} pentabaitų"}
+                    }
+                    locative{
+                        few{"{0} pentabaituose"}
+                        many{"{0} pentabaito"}
+                        one{"{0} pentabaite"}
+                        other{"{0} pentabaitų"}
+                    }
+                }
                 dnam{"pentabaitai"}
                 few{"{0} PB"}
+                gender{"masculine"}
                 many{"{0} PB"}
                 one{"{0} pentabaitas"}
                 other{"{0} pentabaitų"}
             }
             terabit{
+                case{
+                    accusative{
+                        few{"{0} terabitus"}
+                        many{"{0} terabito"}
+                        one{"{0} terabitą"}
+                        other{"{0} terabitų"}
+                    }
+                    dative{
+                        few{"{0} terabitams"}
+                        many{"{0} terabito"}
+                        one{"{0} terabitui"}
+                        other{"{0} terabitų"}
+                    }
+                    genitive{
+                        few{"{0} terabitų"}
+                        many{"{0} terabito"}
+                        one{"{0} terabito"}
+                        other{"{0} terabitų"}
+                    }
+                    instrumental{
+                        few{"{0} terabitais"}
+                        many{"{0} terabito"}
+                        one{"{0} terabitu"}
+                        other{"{0} terabitų"}
+                    }
+                    locative{
+                        few{"{0} terabituose"}
+                        many{"{0} terabito"}
+                        one{"{0} terabite"}
+                        other{"{0} terabitų"}
+                    }
+                }
                 dnam{"terabitai"}
                 few{"{0} terabitai"}
+                gender{"masculine"}
                 many{"{0} terabito"}
                 one{"{0} terabitas"}
                 other{"{0} terabitų"}
             }
             terabyte{
+                case{
+                    accusative{
+                        few{"{0} terabaitus"}
+                        many{"{0} terabaito"}
+                        one{"{0} terabaitą"}
+                        other{"{0} terabaitų"}
+                    }
+                    dative{
+                        few{"{0} terabaitams"}
+                        many{"{0} terabaito"}
+                        one{"{0} terabaitui"}
+                        other{"{0} terabaitų"}
+                    }
+                    genitive{
+                        few{"{0} terabaitų"}
+                        many{"{0} terabaito"}
+                        one{"{0} terabaito"}
+                        other{"{0} terabaitų"}
+                    }
+                    instrumental{
+                        few{"{0} terabaitais"}
+                        many{"{0} terabaito"}
+                        one{"{0} terabaitu"}
+                        other{"{0} terabaitų"}
+                    }
+                    locative{
+                        few{"{0} terabaituose"}
+                        many{"{0} terabaito"}
+                        one{"{0} terabaite"}
+                        other{"{0} terabaitų"}
+                    }
+                }
                 dnam{"terabaitai"}
                 few{"{0} terabaitai"}
+                gender{"masculine"}
                 many{"{0} terabaito"}
                 one{"{0} terabaitas"}
                 other{"{0} terabaitų"}
@@ -1120,15 +1681,81 @@ lt{
                 per{"{0}/h"}
             }
             microsecond{
+                case{
+                    accusative{
+                        few{"{0} mikrosekundes"}
+                        many{"{0} mikrosekundės"}
+                        one{"{0} mikrosekundę"}
+                        other{"{0} mikrosekundžių"}
+                    }
+                    dative{
+                        few{"{0} mikrosekundėms"}
+                        many{"{0} mikrosekundės"}
+                        one{"{0} mikrosekundei"}
+                        other{"{0} mikrosekundžių"}
+                    }
+                    genitive{
+                        few{"{0} mikrosekundžių"}
+                        many{"{0} mikrosekundės"}
+                        one{"{0} mikrosekundės"}
+                        other{"{0} mikrosekundžių"}
+                    }
+                    instrumental{
+                        few{"{0} mikrosekundėmis"}
+                        many{"{0} mikrosekundės"}
+                        one{"{0} mikrosekunde"}
+                        other{"{0} mikrosekundžių"}
+                    }
+                    locative{
+                        few{"{0} mikrosekundėse"}
+                        many{"{0} mikrosekundės"}
+                        one{"{0} mikrosekundėje"}
+                        other{"{0} mikrosekundžių"}
+                    }
+                }
                 dnam{"mikrosekundės"}
                 few{"{0} mikrosekundės"}
+                gender{"feminine"}
                 many{"{0} mikrosekundės"}
                 one{"{0} mikrosekundė"}
                 other{"{0} mikrosekundžių"}
             }
             millisecond{
+                case{
+                    accusative{
+                        few{"{0} milisekundes"}
+                        many{"{0} milisekundės"}
+                        one{"{0} milisekundę"}
+                        other{"{0} milisekundžių"}
+                    }
+                    dative{
+                        few{"{0} milisekundėms"}
+                        many{"{0} milisekundės"}
+                        one{"{0} milisekundei"}
+                        other{"{0} milisekundžių"}
+                    }
+                    genitive{
+                        few{"{0} milisekundžių"}
+                        many{"{0} milisekundės"}
+                        one{"{0} milisekundės"}
+                        other{"{0} milisekundžių"}
+                    }
+                    instrumental{
+                        few{"{0} milisekundėmis"}
+                        many{"{0} milisekundės"}
+                        one{"{0} milisekunde"}
+                        other{"{0} milisekundžių"}
+                    }
+                    locative{
+                        few{"{0} milisekundėse"}
+                        many{"{0} milisekundės"}
+                        one{"{0} milisekundėje"}
+                        other{"{0} milisekundžių"}
+                    }
+                }
                 dnam{"milisekundės"}
                 few{"{0} milisekundės"}
+                gender{"feminine"}
                 many{"{0} milisekundės"}
                 one{"{0} milisekundė"}
                 other{"{0} milisekundžių"}
@@ -1216,8 +1843,41 @@ lt{
                 per{"{0} per mėnesį"}
             }
             nanosecond{
+                case{
+                    accusative{
+                        few{"{0} nanosekundes"}
+                        many{"{0} nanosekundės"}
+                        one{"{0} nanosekundę"}
+                        other{"{0} nanosekundžių"}
+                    }
+                    dative{
+                        few{"{0} nanosekundėms"}
+                        many{"{0} nanosekundės"}
+                        one{"{0} nanosekundei"}
+                        other{"{0} nanosekundžių"}
+                    }
+                    genitive{
+                        few{"{0} nanosekundžių"}
+                        many{"{0} nanosekundės"}
+                        one{"{0} nanosekundės"}
+                        other{"{0} nanosekundžių"}
+                    }
+                    instrumental{
+                        few{"{0} nanosekundėmis"}
+                        many{"{0} nanosekundės"}
+                        one{"{0} nanosekunde"}
+                        other{"{0} nanosekundžių"}
+                    }
+                    locative{
+                        few{"{0} nanosekundėse"}
+                        many{"{0} nanosekundės"}
+                        one{"{0} nanosekundėje"}
+                        other{"{0} nanosekundžių"}
+                    }
+                }
                 dnam{"nanosekundės"}
                 few{"{0} nanosekundės"}
+                gender{"feminine"}
                 many{"{0} nanosekundės"}
                 one{"{0} nanosekundė"}
                 other{"{0} nanosekundžių"}
@@ -1388,8 +2048,41 @@ lt{
                 other{"{0} amperų"}
             }
             milliampere{
+                case{
+                    accusative{
+                        few{"{0} miliamperus"}
+                        many{"{0} miliampero"}
+                        one{"{0} miliamperą"}
+                        other{"{0} miliamperų"}
+                    }
+                    dative{
+                        few{"{0} miliamperams"}
+                        many{"{0} miliampero"}
+                        one{"{0} miliamperui"}
+                        other{"{0} miliamperų"}
+                    }
+                    genitive{
+                        few{"{0} miliamperų"}
+                        many{"{0} miliampero"}
+                        one{"{0} miliampero"}
+                        other{"{0} miliamperų"}
+                    }
+                    instrumental{
+                        few{"{0} miliamperais"}
+                        many{"{0} miliampero"}
+                        one{"{0} miliamperu"}
+                        other{"{0} miliamperų"}
+                    }
+                    locative{
+                        few{"{0} miliamperuose"}
+                        many{"{0} miliampero"}
+                        one{"{0} miliampere"}
+                        other{"{0} miliamperų"}
+                    }
+                }
                 dnam{"miliamperai"}
                 few{"{0} miliamperai"}
+                gender{"masculine"}
                 many{"{0} miliampero"}
                 one{"{0} miliamperas"}
                 other{"{0} miliamperų"}
@@ -1581,15 +2274,81 @@ lt{
                 other{"{0} kilokalorijų"}
             }
             kilojoule{
+                case{
+                    accusative{
+                        few{"{0} kilodžaulius"}
+                        many{"{0} kilodžaulio"}
+                        one{"{0} kilodžaulį"}
+                        other{"{0} kilodžaulių"}
+                    }
+                    dative{
+                        few{"{0} kilodžauliams"}
+                        many{"{0} kilodžaulio"}
+                        one{"{0} kilodžauliui"}
+                        other{"{0} kilodžaulių"}
+                    }
+                    genitive{
+                        few{"{0} kilodžaulių"}
+                        many{"{0} kilodžaulio"}
+                        one{"{0} kilodžaulio"}
+                        other{"{0} kilodžaulių"}
+                    }
+                    instrumental{
+                        few{"{0} kilodžauliais"}
+                        many{"{0} kilodžaulio"}
+                        one{"{0} kilodžauliu"}
+                        other{"{0} kilodžaulių"}
+                    }
+                    locative{
+                        few{"{0} kilodžauliuose"}
+                        many{"{0} kilodžaulio"}
+                        one{"{0} kilodžaulyje"}
+                        other{"{0} kilodžaulių"}
+                    }
+                }
                 dnam{"kilodžauliai"}
                 few{"{0} kilodžauliai"}
+                gender{"masculine"}
                 many{"{0} kilodžaulio"}
                 one{"{0} kilodžaulis"}
                 other{"{0} kilodžaulių"}
             }
             kilowatt-hour{
+                case{
+                    accusative{
+                        few{"{0} kilovatvalandes"}
+                        many{"{0} kilovatvalandės"}
+                        one{"{0} kilovatvalandę"}
+                        other{"{0} kilovatvalandžių"}
+                    }
+                    dative{
+                        few{"{0} kilovatvalandėms"}
+                        many{"{0} kilovatvalandės"}
+                        one{"{0} kilovatvalandei"}
+                        other{"{0} kilovatvalandžių"}
+                    }
+                    genitive{
+                        few{"{0} kilovatvalandžių"}
+                        many{"{0} kilovatvalandės"}
+                        one{"{0} kilovatvalandės"}
+                        other{"{0} kilovatvalandžių"}
+                    }
+                    instrumental{
+                        few{"{0} kilovatvalandėmis"}
+                        many{"{0} kilovatvalandės"}
+                        one{"{0} kilovatvalande"}
+                        other{"{0} kilovatvalandžių"}
+                    }
+                    locative{
+                        few{"{0} kilovatvalandėse"}
+                        many{"{0} kilovatvalandės"}
+                        one{"{0} kilovatvalandėje"}
+                        other{"{0} kilovatvalandžių"}
+                    }
+                }
                 dnam{"kilovatvalandės"}
                 few{"{0} kilovatvalandės"}
+                gender{"feminine"}
                 many{"{0} kilovatvalandės"}
                 one{"{0} kilovatvalandė"}
                 other{"{0} kilovatvalandžių"}
@@ -1604,8 +2363,41 @@ lt{
         }
         force{
             kilowatt-hour-per-100-kilometer{
+                case{
+                    accusative{
+                        few{"{0} kilovatvalandes šimtui kilometrų"}
+                        many{"{0} kilovatvalandės šimtui kilometrų"}
+                        one{"{0} kilovatvalandę šimtui kilometrų"}
+                        other{"{0} kilovatvalandžių šimtui kilometrų"}
+                    }
+                    dative{
+                        few{"{0} kilovatvalandėms šimtui kilometrų"}
+                        many{"{0} kilovatvalandės šimtui kilometrų"}
+                        one{"{0} kilovatvalandei šimtui kilometrų"}
+                        other{"{0} kilovatvalandžių šimtui kilometrų"}
+                    }
+                    genitive{
+                        few{"{0} kilovatvalandžių šimtui kilometrų"}
+                        many{"{0} kilovatvalandės šimtui kilometrų"}
+                        one{"{0} kilovatvalandės šimtui kilometrų"}
+                        other{"{0} kilovatvalandžių šimtui kilometrų"}
+                    }
+                    instrumental{
+                        few{"{0} kilovatvalandėmis šimtui kilometrų"}
+                        many{"{0} kilovatvalandės šimtui kilometrų"}
+                        one{"{0} kilovatvalande šimtui kilometrų"}
+                        other{"{0} kilovatvalandžių šimtui kilometrų"}
+                    }
+                    locative{
+                        few{"{0} kilovatvalandėse šimtui kilometrų"}
+                        many{"{0} kilovatvalandės šimtui kilometrų"}
+                        one{"{0} kilovatvalandėje šimtui kilometrų"}
+                        other{"{0} kilovatvalandžių šimtui kilometrų"}
+                    }
+                }
                 dnam{"kilovatvalandės šimtui kilometrų"}
                 few{"{0} kilovatvalandės šimtui kilometrų"}
+                gender{"feminine"}
                 many{"{0} kilovatvalandės šimtui kilometrų"}
                 one{"{0} kilovatvalandė šimtui kilometrų"}
                 other{"{0} kilovatvalandžių šimtui kilometrų"}
@@ -1660,8 +2452,41 @@ lt{
         }
         frequency{
             gigahertz{
+                case{
+                    accusative{
+                        few{"{0} gigahercus"}
+                        many{"{0} gigaherco"}
+                        one{"{0} gigahercą"}
+                        other{"{0} gigahercų"}
+                    }
+                    dative{
+                        few{"{0} gigahercams"}
+                        many{"{0} gigaherco"}
+                        one{"{0} gigahercui"}
+                        other{"{0} gigahercų"}
+                    }
+                    genitive{
+                        few{"{0} gigahercų"}
+                        many{"{0} gigaherco"}
+                        one{"{0} gigaherco"}
+                        other{"{0} gigahercų"}
+                    }
+                    instrumental{
+                        few{"{0} gigahercais"}
+                        many{"{0} gigaherco"}
+                        one{"{0} gigahercu"}
+                        other{"{0} gigahercų"}
+                    }
+                    locative{
+                        few{"{0} gigahercuose"}
+                        many{"{0} gigaherco"}
+                        one{"{0} gigaherce"}
+                        other{"{0} gigahercų"}
+                    }
+                }
                 dnam{"gigahercai"}
                 few{"{0} gigahercai"}
+                gender{"masculine"}
                 many{"{0} gigaherco"}
                 one{"{0} gigahercas"}
                 other{"{0} gigahercų"}
@@ -1707,15 +2532,81 @@ lt{
                 other{"{0} hercų"}
             }
             kilohertz{
+                case{
+                    accusative{
+                        few{"{0} kilohercus"}
+                        many{"{0} kiloherco"}
+                        one{"{0} kilohercą"}
+                        other{"{0} kilohercų"}
+                    }
+                    dative{
+                        few{"{0} kilohercams"}
+                        many{"{0} kiloherco"}
+                        one{"{0} kilohercui"}
+                        other{"{0} kilohercų"}
+                    }
+                    genitive{
+                        few{"{0} kilohercų"}
+                        many{"{0} kiloherco"}
+                        one{"{0} kiloherco"}
+                        other{"{0} kilohercų"}
+                    }
+                    instrumental{
+                        few{"{0} kilohercais"}
+                        many{"{0} kiloherco"}
+                        one{"{0} kilohercu"}
+                        other{"{0} kilohercų"}
+                    }
+                    locative{
+                        few{"{0} kilohercuose"}
+                        many{"{0} kiloherco"}
+                        one{"{0} kiloherce"}
+                        other{"{0} kilohercų"}
+                    }
+                }
                 dnam{"kilohercai"}
                 few{"{0} kilohercai"}
+                gender{"masculine"}
                 many{"{0} kiloherco"}
                 one{"{0} kilohercas"}
                 other{"{0} kilohercų"}
             }
             megahertz{
+                case{
+                    accusative{
+                        few{"{0} megahercus"}
+                        many{"{0} megaherco"}
+                        one{"{0} megahercą"}
+                        other{"{0} megahercų"}
+                    }
+                    dative{
+                        few{"{0} megahercams"}
+                        many{"{0} megaherco"}
+                        one{"{0} megahercui"}
+                        other{"{0} megahercų"}
+                    }
+                    genitive{
+                        few{"{0} megahercų"}
+                        many{"{0} megaherco"}
+                        one{"{0} megaherco"}
+                        other{"{0} megahercų"}
+                    }
+                    instrumental{
+                        few{"{0} megahercais"}
+                        many{"{0} megaherco"}
+                        one{"{0} megahercu"}
+                        other{"{0} megahercų"}
+                    }
+                    locative{
+                        few{"{0} megahercuose"}
+                        many{"{0} megaherco"}
+                        one{"{0} megaherce"}
+                        other{"{0} megahercų"}
+                    }
+                }
                 dnam{"megahercai"}
                 few{"{0} megahercai"}
+                gender{"masculine"}
                 many{"{0} megaherco"}
                 one{"{0} megahercas"}
                 other{"{0} megahercų"}
@@ -1784,8 +2675,41 @@ lt{
                 other{"{0} tipografinių emų"}
             }
             megapixel{
+                case{
+                    accusative{
+                        few{"{0} megapikselius"}
+                        many{"{0} megapikselio"}
+                        one{"{0} megapikselį"}
+                        other{"{0} megapikselių"}
+                    }
+                    dative{
+                        few{"{0} megapikseliams"}
+                        many{"{0} megapikselio"}
+                        one{"{0} megapikseliui"}
+                        other{"{0} megapikselių"}
+                    }
+                    genitive{
+                        few{"{0} megapikselių"}
+                        many{"{0} megapikselio"}
+                        one{"{0} megapikselio"}
+                        other{"{0} megapikselių"}
+                    }
+                    instrumental{
+                        few{"{0} megapikseliais"}
+                        many{"{0} megapikselio"}
+                        one{"{0} megapikseliu"}
+                        other{"{0} megapikselių"}
+                    }
+                    locative{
+                        few{"{0} megapikseliuose"}
+                        many{"{0} megapikselio"}
+                        one{"{0} megapikselyje"}
+                        other{"{0} megapikselių"}
+                    }
+                }
                 dnam{"megapikseliai"}
                 few{"{0} megapikseliai"}
+                gender{"masculine"}
                 many{"{0} megapikselio"}
                 one{"{0} megapikselis"}
                 other{"{0} megapikselių"}
@@ -1831,8 +2755,41 @@ lt{
                 other{"{0} pikselių"}
             }
             pixel-per-centimeter{
+                case{
+                    accusative{
+                        few{"{0} pikselius centimetre"}
+                        many{"{0} pikselio centimetre"}
+                        one{"{0} pikselį centimetre"}
+                        other{"{0} pikselių centimetre"}
+                    }
+                    dative{
+                        few{"{0} pikseliams centimetre"}
+                        many{"{0} pikselio centimetre"}
+                        one{"{0} pikseliui centimetre"}
+                        other{"{0} pikselių centimetre"}
+                    }
+                    genitive{
+                        few{"{0} pikselių centimetre"}
+                        many{"{0} pikselio centimetre"}
+                        one{"{0} pikselio centimetre"}
+                        other{"{0} pikselių centimetre"}
+                    }
+                    instrumental{
+                        few{"{0} pikseliais centimetre"}
+                        many{"{0} pikselio centimetre"}
+                        one{"{0} pikseliu centimetre"}
+                        other{"{0} pikselių centimetre"}
+                    }
+                    locative{
+                        few{"{0} pikseliuose centimetre"}
+                        many{"{0} pikselio centimetre"}
+                        one{"{0} pikselyje centimetre"}
+                        other{"{0} pikselių centimetre"}
+                    }
+                }
                 dnam{"pikseliai centimetre"}
                 few{"{0} pikseliai centimetre"}
+                gender{"masculine"}
                 many{"{0} pikselio centimetre"}
                 one{"{0} pikselis centimetre"}
                 other{"{0} pikselių centimetre"}
@@ -1854,16 +2811,82 @@ lt{
                 other{"{0} astronominių vienetų"}
             }
             centimeter{
+                case{
+                    accusative{
+                        few{"{0} centimetrus"}
+                        many{"{0} centimetro"}
+                        one{"{0} centimetrą"}
+                        other{"{0} centimetrų"}
+                    }
+                    dative{
+                        few{"{0} centimetrams"}
+                        many{"{0} centimetro"}
+                        one{"{0} centimetrui"}
+                        other{"{0} centimetrų"}
+                    }
+                    genitive{
+                        few{"{0} centimetrų"}
+                        many{"{0} centimetro"}
+                        one{"{0} centimetro"}
+                        other{"{0} centimetrų"}
+                    }
+                    instrumental{
+                        few{"{0} centimetruose"}
+                        many{"{0} centimetro"}
+                        one{"{0} centimetru"}
+                        other{"{0} centimetrų"}
+                    }
+                    locative{
+                        few{"{0} centimetrai"}
+                        many{"{0} centimetro"}
+                        one{"{0} centimetre"}
+                        other{"{0} centimetrų"}
+                    }
+                }
                 dnam{"centimetrai"}
                 few{"{0} centimetrai"}
+                gender{"masculine"}
                 many{"{0} centimetro"}
                 one{"{0} centimetras"}
                 other{"{0} centimetrų"}
                 per{"{0}/cm"}
             }
             decimeter{
+                case{
+                    accusative{
+                        few{"{0} decimetrus"}
+                        many{"{0} decimetro"}
+                        one{"{0} decimetrą"}
+                        other{"{0} decimetrų"}
+                    }
+                    dative{
+                        few{"{0} decimetrams"}
+                        many{"{0} decimetro"}
+                        one{"{0} decimetrui"}
+                        other{"{0} decimetrų"}
+                    }
+                    genitive{
+                        few{"{0} decimetrų"}
+                        many{"{0} decimetro"}
+                        one{"{0} decimetro"}
+                        other{"{0} decimetrų"}
+                    }
+                    instrumental{
+                        few{"{0} decimetrais"}
+                        many{"{0} decimetro"}
+                        one{"{0} decimetru"}
+                        other{"{0} decimetrų"}
+                    }
+                    locative{
+                        few{"{0} decimetruose"}
+                        many{"{0} decimetro"}
+                        one{"{0} decimetre"}
+                        other{"{0} decimetrų"}
+                    }
+                }
                 dnam{"decimetrai"}
                 few{"{0} decimetrai"}
+                gender{"masculine"}
                 many{"{0} decimetro"}
                 one{"{0} decimetras"}
                 other{"{0} decimetrų"}
@@ -1906,8 +2929,41 @@ lt{
                 per{"{0}/in"}
             }
             kilometer{
+                case{
+                    accusative{
+                        few{"{0} kilometrus"}
+                        many{"{0} kilometro"}
+                        one{"{0} kilometrą"}
+                        other{"{0} kilometrų"}
+                    }
+                    dative{
+                        few{"{0} kilometrams"}
+                        many{"{0} kilometro"}
+                        one{"{0} kilometrui"}
+                        other{"{0} kilometrų"}
+                    }
+                    genitive{
+                        few{"{0} kilometrų"}
+                        many{"{0} kilometro"}
+                        one{"{0} kilometro"}
+                        other{"{0} kilometrų"}
+                    }
+                    instrumental{
+                        few{"{0} kilometrais"}
+                        many{"{0} kilometro"}
+                        one{"{0} kilometru"}
+                        other{"{0} kilometrų"}
+                    }
+                    locative{
+                        few{"{0} kilometruose"}
+                        many{"{0} kilometro"}
+                        one{"{0} kilometre"}
+                        other{"{0} kilometrų"}
+                    }
+                }
                 dnam{"kilometrai"}
                 few{"{0} kilometrai"}
+                gender{"masculine"}
                 many{"{0} kilometro"}
                 one{"{0} kilometras"}
                 other{"{0} kilometrų"}
@@ -1962,8 +3018,41 @@ lt{
                 per{"{0}/m"}
             }
             micrometer{
+                case{
+                    accusative{
+                        few{"{0} mikrometrus"}
+                        many{"{0} mikrometro"}
+                        one{"{0} mikrometrą"}
+                        other{"{0} mikrometrų"}
+                    }
+                    dative{
+                        few{"{0} mikrometrams"}
+                        many{"{0} mikrometro"}
+                        one{"{0} mikrometrui"}
+                        other{"{0} mikrometrų"}
+                    }
+                    genitive{
+                        few{"{0} mikrometrų"}
+                        many{"{0} mikrometro"}
+                        one{"{0} mikrometro"}
+                        other{"{0} mikrometrų"}
+                    }
+                    instrumental{
+                        few{"{0} mikrometrais"}
+                        many{"{0} mikrometro"}
+                        one{"{0} mikrometru"}
+                        other{"{0} mikrometrų"}
+                    }
+                    locative{
+                        few{"{0} mikrometruose"}
+                        many{"{0} mikrometro"}
+                        one{"{0} mikrometre"}
+                        other{"{0} mikrometrų"}
+                    }
+                }
                 dnam{"mikrometrai"}
                 few{"{0} mikrometrai"}
+                gender{"masculine"}
                 many{"{0} mikrometro"}
                 one{"{0} mikrometras"}
                 other{"{0} mikrometrų"}
@@ -2016,15 +3105,81 @@ lt{
                 other{"{0} ilgųjų mylių"}
             }
             millimeter{
+                case{
+                    accusative{
+                        few{"{0} milimetrus"}
+                        many{"{0} milimetro"}
+                        one{"{0} milimetrą"}
+                        other{"{0} milimetrų"}
+                    }
+                    dative{
+                        few{"{0} milimetrams"}
+                        many{"{0} milimetro"}
+                        one{"{0} milimetrui"}
+                        other{"{0} milimetrų"}
+                    }
+                    genitive{
+                        few{"{0} milimetrų"}
+                        many{"{0} milimetro"}
+                        one{"{0} milimetro"}
+                        other{"{0} milimetrų"}
+                    }
+                    instrumental{
+                        few{"{0} milimetrais"}
+                        many{"{0} milimetro"}
+                        one{"{0} milimetru"}
+                        other{"{0} milimetrų"}
+                    }
+                    locative{
+                        few{"{0} milimetruose"}
+                        many{"{0} milimetro"}
+                        one{"{0} milimetre"}
+                        other{"{0} milimetrų"}
+                    }
+                }
                 dnam{"milimetrai"}
                 few{"{0} milimetrai"}
+                gender{"masculine"}
                 many{"{0} milimetro"}
                 one{"{0} milimetras"}
                 other{"{0} milimetrų"}
             }
             nanometer{
+                case{
+                    accusative{
+                        few{"{0} nanometrus"}
+                        many{"{0} nanometro"}
+                        one{"{0} nanometrą"}
+                        other{"{0} nanometrų"}
+                    }
+                    dative{
+                        few{"{0} nanometrams"}
+                        many{"{0} nanometro"}
+                        one{"{0} nanometrui"}
+                        other{"{0} nanometrų"}
+                    }
+                    genitive{
+                        few{"{0} nanometrų"}
+                        many{"{0} nanometro"}
+                        one{"{0} nanometro"}
+                        other{"{0} nanometrų"}
+                    }
+                    instrumental{
+                        few{"{0} nanometrais"}
+                        many{"{0} nanometro"}
+                        one{"{0} nanometru"}
+                        other{"{0} nanometrų"}
+                    }
+                    locative{
+                        few{"{0} nanometruose"}
+                        many{"{0} nanometro"}
+                        one{"{0} nanometre"}
+                        other{"{0} nanometrų"}
+                    }
+                }
                 dnam{"nanometrai"}
                 few{"{0} nanometrai"}
+                gender{"masculine"}
                 many{"{0} nanometro"}
                 one{"{0} nanometras"}
                 other{"{0} nanometrų"}
@@ -2044,8 +3199,41 @@ lt{
                 other{"{0} parsekų"}
             }
             picometer{
+                case{
+                    accusative{
+                        few{"{0} pikometrus"}
+                        many{"{0} pikometro"}
+                        one{"{0} pikometrą"}
+                        other{"{0} pikometrų"}
+                    }
+                    dative{
+                        few{"{0} pikometrams"}
+                        many{"{0} pikometro"}
+                        one{"{0} pikometrui"}
+                        other{"{0} pikometrų"}
+                    }
+                    genitive{
+                        few{"{0} pikometrų"}
+                        many{"{0} pikometro"}
+                        one{"{0} pikometro"}
+                        other{"{0} pikometrų"}
+                    }
+                    instrumental{
+                        few{"{0} pikometrais"}
+                        many{"{0} pikometro"}
+                        one{"{0} pikometru"}
+                        other{"{0} pikometrų"}
+                    }
+                    locative{
+                        few{"{0} pikometruose"}
+                        many{"{0} pikometro"}
+                        one{"{0} pikometre"}
+                        other{"{0} pikometrų"}
+                    }
+                }
                 dnam{"pikometrai"}
                 few{"{0} pikometrai"}
+                gender{"masculine"}
                 many{"{0} pikometro"}
                 one{"{0} pikometras"}
                 other{"{0} pikometrų"}
@@ -2374,15 +3562,81 @@ lt{
                 other{"{0} metrinių tonų"}
             }
             microgram{
+                case{
+                    accusative{
+                        few{"{0} mikrogramus"}
+                        many{"{0} mikrogramo"}
+                        one{"{0} mikrogramą"}
+                        other{"{0} mikrogramų"}
+                    }
+                    dative{
+                        few{"{0} mikrogramams"}
+                        many{"{0} mikrogramo"}
+                        one{"{0} mikrogramui"}
+                        other{"{0} mikrogramų"}
+                    }
+                    genitive{
+                        few{"{0} mikrogramų"}
+                        many{"{0} mikrogramo"}
+                        one{"{0} mikrogramo"}
+                        other{"{0} mikrogramų"}
+                    }
+                    instrumental{
+                        few{"{0} mikrogramais"}
+                        many{"{0} mikrogramo"}
+                        one{"{0} mikrogramu"}
+                        other{"{0} mikrogramų"}
+                    }
+                    locative{
+                        few{"{0} mikrogramuose"}
+                        many{"{0} mikrogramo"}
+                        one{"{0} mikrograme"}
+                        other{"{0} mikrogramų"}
+                    }
+                }
                 dnam{"mikrogramai"}
                 few{"{0} mikrogramai"}
+                gender{"masculine"}
                 many{"{0} mikrogramo"}
                 one{"{0} mikrogramas"}
                 other{"{0} mikrogramų"}
             }
             milligram{
+                case{
+                    accusative{
+                        few{"{0} miligramus"}
+                        many{"{0} miligramo"}
+                        one{"{0} miligramą"}
+                        other{"{0} miligramų"}
+                    }
+                    dative{
+                        few{"{0} miligramams"}
+                        many{"{0} miligramo"}
+                        one{"{0} miligramui"}
+                        other{"{0} miligramų"}
+                    }
+                    genitive{
+                        few{"{0} miligramų"}
+                        many{"{0} miligramo"}
+                        one{"{0} miligramo"}
+                        other{"{0} miligramų"}
+                    }
+                    instrumental{
+                        few{"{0} miligramais"}
+                        many{"{0} miligramo"}
+                        one{"{0} miligramu"}
+                        other{"{0} miligramų"}
+                    }
+                    locative{
+                        few{"{0} miligramuose"}
+                        many{"{0} miligramo"}
+                        one{"{0} miligrame"}
+                        other{"{0} miligramų"}
+                    }
+                }
                 dnam{"miligramai"}
                 few{"{0} miligramai"}
+                gender{"masculine"}
                 many{"{0} miligramo"}
                 one{"{0} miligramas"}
                 other{"{0} miligramų"}
@@ -2430,8 +3684,41 @@ lt{
         }
         power{
             gigawatt{
+                case{
+                    accusative{
+                        few{"{0} gigavatus"}
+                        many{"{0} gigavato"}
+                        one{"{0} gigavatą"}
+                        other{"{0} gigavatų"}
+                    }
+                    dative{
+                        few{"{0} gigavatams"}
+                        many{"{0} gigavato"}
+                        one{"{0} gigavatui"}
+                        other{"{0} gigavatų"}
+                    }
+                    genitive{
+                        few{"{0} gigavatų"}
+                        many{"{0} gigavato"}
+                        one{"{0} gigavato"}
+                        other{"{0} gigavatų"}
+                    }
+                    instrumental{
+                        few{"{0} gigavatais"}
+                        many{"{0} gigavato"}
+                        one{"{0} gigavatu"}
+                        other{"{0} gigavatų"}
+                    }
+                    locative{
+                        few{"{0} gigavatuose"}
+                        many{"{0} gigavato"}
+                        one{"{0} gigavate"}
+                        other{"{0} gigavatų"}
+                    }
+                }
                 dnam{"gigavatai"}
                 few{"{0} gigavatai"}
+                gender{"masculine"}
                 many{"{0} gigavato"}
                 one{"{0} gigavatas"}
                 other{"{0} gigavatų"}
@@ -2444,22 +3731,121 @@ lt{
                 other{"{0} arklio galių"}
             }
             kilowatt{
+                case{
+                    accusative{
+                        few{"{0} kilovatus"}
+                        many{"{0} kilovato"}
+                        one{"{0} kilovatą"}
+                        other{"{0} kilovatų"}
+                    }
+                    dative{
+                        few{"{0} kilovatams"}
+                        many{"{0} kilovato"}
+                        one{"{0} kilovatui"}
+                        other{"{0} kilovatų"}
+                    }
+                    genitive{
+                        few{"{0} kilovatų"}
+                        many{"{0} kilovato"}
+                        one{"{0} kilovato"}
+                        other{"{0} kilovatų"}
+                    }
+                    instrumental{
+                        few{"{0} kilovatais"}
+                        many{"{0} kilovato"}
+                        one{"{0} kilovatu"}
+                        other{"{0} kilovatų"}
+                    }
+                    locative{
+                        few{"{0} kilovatuose"}
+                        many{"{0} kilovato"}
+                        one{"{0} kilovate"}
+                        other{"{0} kilovatų"}
+                    }
+                }
                 dnam{"kilovatai"}
                 few{"{0} kilovatai"}
+                gender{"masculine"}
                 many{"{0} kilovato"}
                 one{"{0} kilovatas"}
                 other{"{0} kilovatų"}
             }
             megawatt{
+                case{
+                    accusative{
+                        few{"{0} megavatus"}
+                        many{"{0} megavato"}
+                        one{"{0} megavatą"}
+                        other{"{0} megavatų"}
+                    }
+                    dative{
+                        few{"{0} megavatams"}
+                        many{"{0} megavato"}
+                        one{"{0} megavatui"}
+                        other{"{0} megavatų"}
+                    }
+                    genitive{
+                        few{"{0} megavatų"}
+                        many{"{0} megavato"}
+                        one{"{0} megavatų"}
+                        other{"{0} megavatų"}
+                    }
+                    instrumental{
+                        few{"{0} megavatais"}
+                        many{"{0} megavato"}
+                        one{"{0} megavatais"}
+                        other{"{0} megavatų"}
+                    }
+                    locative{
+                        few{"{0} megavatuose"}
+                        many{"{0} megavato"}
+                        one{"{0} megavatuose"}
+                        other{"{0} megavatų"}
+                    }
+                }
                 dnam{"megavatai"}
                 few{"{0} megavatai"}
+                gender{"masculine"}
                 many{"{0} megavato"}
                 one{"{0} megavatas"}
                 other{"{0} megavatų"}
             }
             milliwatt{
+                case{
+                    accusative{
+                        few{"{0} milivatus"}
+                        many{"{0} milivato"}
+                        one{"{0} milivatą"}
+                        other{"{0} milivatų"}
+                    }
+                    dative{
+                        few{"{0} milivatams"}
+                        many{"{0} milivato"}
+                        one{"{0} milivatui"}
+                        other{"{0} milivatų"}
+                    }
+                    genitive{
+                        few{"{0} milivatų"}
+                        many{"{0} milivato"}
+                        one{"{0} milivato"}
+                        other{"{0} milivatų"}
+                    }
+                    instrumental{
+                        few{"{0} milivatais"}
+                        many{"{0} milivato"}
+                        one{"{0} milivatu"}
+                        other{"{0} milivatų"}
+                    }
+                    locative{
+                        few{"{0} milivatuose"}
+                        many{"{0} milivato"}
+                        one{"{0} milivate"}
+                        other{"{0} milivatų"}
+                    }
+                }
                 dnam{"milivatai"}
                 few{"{0} milivatai"}
+                gender{"masculine"}
                 many{"{0} milivato"}
                 one{"{0} milivatas"}
                 other{"{0} milivatų"}
@@ -2587,8 +3973,41 @@ lt{
                 other{"{0} barų"}
             }
             hectopascal{
+                case{
+                    accusative{
+                        few{"{0} hektopaskalius"}
+                        many{"{0} hektopaskalio"}
+                        one{"{0} hektopaskalį"}
+                        other{"{0} hektopaskalių"}
+                    }
+                    dative{
+                        few{"{0} hektopaskaliams"}
+                        many{"{0} hektopaskalio"}
+                        one{"{0} hektopaskaliui"}
+                        other{"{0} hektopaskalių"}
+                    }
+                    genitive{
+                        few{"{0} hektopaskalių"}
+                        many{"{0} hektopaskalio"}
+                        one{"{0} hektopaskalio"}
+                        other{"{0} hektopaskalių"}
+                    }
+                    instrumental{
+                        few{"{0} hektopaskaliais"}
+                        many{"{0} hektopaskalio"}
+                        one{"{0} hektopaskaliu"}
+                        other{"{0} hektopaskalių"}
+                    }
+                    locative{
+                        few{"{0} hektopaskaliuose"}
+                        many{"{0} hektopaskalio"}
+                        one{"{0} hektopaskalyje"}
+                        other{"{0} hektopaskalių"}
+                    }
+                }
                 dnam{"hektopaskaliai"}
                 few{"{0} hektopaskaliai"}
+                gender{"masculine"}
                 many{"{0} hektopaskalio"}
                 one{"{0} hektopaskalis"}
                 other{"{0} hektopaskalių"}
@@ -2601,22 +4020,121 @@ lt{
                 other{"{0} gyvsidabrio stulpelio colių"}
             }
             kilopascal{
+                case{
+                    accusative{
+                        few{"{0} kilopaskalius"}
+                        many{"{0} kilopaskalio"}
+                        one{"{0} kilopaskalį"}
+                        other{"{0} kilopaskalių"}
+                    }
+                    dative{
+                        few{"{0} kilopaskaliams"}
+                        many{"{0} kilopaskalio"}
+                        one{"{0} kilopaskaliui"}
+                        other{"{0} kilopaskalių"}
+                    }
+                    genitive{
+                        few{"{0} kilopaskalių"}
+                        many{"{0} kilopaskalio"}
+                        one{"{0} kilopaskalio"}
+                        other{"{0} kilopaskalių"}
+                    }
+                    instrumental{
+                        few{"{0} kilopaskaliais"}
+                        many{"{0} kilopaskalio"}
+                        one{"{0} kilopaskaliu"}
+                        other{"{0} kilopaskalių"}
+                    }
+                    locative{
+                        few{"{0} kilopaskaliuose"}
+                        many{"{0} kilopaskalio"}
+                        one{"{0} kilopaskaliuose"}
+                        other{"{0} kilopaskalių"}
+                    }
+                }
                 dnam{"kilopaskaliai"}
                 few{"{0} kilopaskaliai"}
+                gender{"masculine"}
                 many{"{0} kilopaskalio"}
                 one{"{0} kilopaskalis"}
                 other{"{0} kilopaskalių"}
             }
             megapascal{
+                case{
+                    accusative{
+                        few{"{0} megapaskalius"}
+                        many{"{0} megapaskalio"}
+                        one{"{0} megapaskalį"}
+                        other{"{0} megapaskalių"}
+                    }
+                    dative{
+                        few{"{0} megapaskaliams"}
+                        many{"{0} megapaskalio"}
+                        one{"{0} megapaskaliui"}
+                        other{"{0} megapaskalių"}
+                    }
+                    genitive{
+                        few{"{0} megapaskalių"}
+                        many{"{0} megapaskalio"}
+                        one{"{0} megapaskalio"}
+                        other{"{0} megapaskalių"}
+                    }
+                    instrumental{
+                        few{"{0} megapaskaliais"}
+                        many{"{0} megapaskalio"}
+                        one{"{0} megapaskaliu"}
+                        other{"{0} megapaskalių"}
+                    }
+                    locative{
+                        few{"{0} megapaskaliuose"}
+                        many{"{0} megapaskalio"}
+                        one{"{0} megapaskalyje"}
+                        other{"{0} megapaskalių"}
+                    }
+                }
                 dnam{"megapaskaliai"}
                 few{"{0} megapaskaliai"}
+                gender{"masculine"}
                 many{"{0} megapaskalio"}
                 one{"{0} megapaskalis"}
                 other{"{0} megapaskalių"}
             }
             millibar{
+                case{
+                    accusative{
+                        few{"{0} milibarus"}
+                        many{"{0} milibaro"}
+                        one{"{0} milibarą"}
+                        other{"{0} milibarų"}
+                    }
+                    dative{
+                        few{"{0} milibarams"}
+                        many{"{0} milibaro"}
+                        one{"{0} milibarui"}
+                        other{"{0} milibarų"}
+                    }
+                    genitive{
+                        few{"{0} milibarų"}
+                        many{"{0} milibaro"}
+                        one{"{0} milibaro"}
+                        other{"{0} milibarų"}
+                    }
+                    instrumental{
+                        few{"{0} milibarais"}
+                        many{"{0} milibaro"}
+                        one{"{0} milibarais"}
+                        other{"{0} milibarų"}
+                    }
+                    locative{
+                        few{"{0} milibaruose"}
+                        many{"{0} milibaro"}
+                        one{"{0} milibaruose"}
+                        other{"{0} milibarų"}
+                    }
+                }
                 dnam{"milibarai"}
                 few{"{0} milibarai"}
+                gender{"masculine"}
                 many{"{0} milibaro"}
                 one{"{0} milibaras"}
                 other{"{0} milibarų"}
@@ -2678,8 +4196,41 @@ lt{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    accusative{
+                        few{"{0} kilometrus per valandą"}
+                        many{"{0} kilometro per valandą"}
+                        one{"{0} kilometrą per valandą"}
+                        other{"{0} kilometrų per valandą"}
+                    }
+                    dative{
+                        few{"{0} kilometrams per valandą"}
+                        many{"{0} kilometro per valandą"}
+                        one{"{0} kilometrui per valandą"}
+                        other{"{0} kilometrų per valandą"}
+                    }
+                    genitive{
+                        few{"{0} kilometrų per valandą"}
+                        many{"{0} kilometro per valandą"}
+                        one{"{0} kilometro per valandą"}
+                        other{"{0} kilometrų per valandą"}
+                    }
+                    instrumental{
+                        few{"{0} kilometrais per valandą"}
+                        many{"{0} kilometro per valandą"}
+                        one{"{0} kilometru per valandą"}
+                        other{"{0} kilometrų per valandą"}
+                    }
+                    locative{
+                        few{"{0} kilometruose per valandą"}
+                        many{"{0} kilometro per valandą"}
+                        one{"{0} kilometre per valandą"}
+                        other{"{0} kilometrų per valandą"}
+                    }
+                }
                 dnam{"kilometrai per valandą"}
                 few{"{0} kilometrai per valandą"}
+                gender{"masculine"}
                 many{"{0} kilometro per valandą"}
                 one{"{0} kilometras per valandą"}
                 other{"{0} kilometrų per valandą"}
@@ -2692,8 +4243,41 @@ lt{
                 other{"{0} mazgų"}
             }
             meter-per-second{
+                case{
+                    accusative{
+                        few{"{0} metrus per sekundę"}
+                        many{"{0} metro per sekundę"}
+                        one{"{0} metrą per sekundę"}
+                        other{"{0} metrų per sekundę"}
+                    }
+                    dative{
+                        few{"{0} metrams per sekundę"}
+                        many{"{0} metro per sekundę"}
+                        one{"{0} metrui per sekundę"}
+                        other{"{0} metrų per sekundę"}
+                    }
+                    genitive{
+                        few{"{0} metrų per sekundę"}
+                        many{"{0} metro per sekundę"}
+                        one{"{0} metro per sekundę"}
+                        other{"{0} metrų per sekundę"}
+                    }
+                    instrumental{
+                        few{"{0} metrais per sekundę"}
+                        many{"{0} metro per sekundę"}
+                        one{"{0} metru per sekundę"}
+                        other{"{0} metrų per sekundę"}
+                    }
+                    locative{
+                        few{"{0} metruose per sekundę"}
+                        many{"{0} metro per sekundę"}
+                        one{"{0} metre per sekundę"}
+                        other{"{0} metrų per sekundę"}
+                    }
+                }
                 dnam{"metrai per sekundę"}
                 few{"{0} metrai per sekundę"}
+                gender{"masculine"}
                 many{"{0} metro per sekundę"}
                 one{"{0} metras per sekundę"}
                 other{"{0} metrų per sekundę"}
@@ -2837,8 +4421,41 @@ lt{
         }
         torque{
             newton-meter{
+                case{
+                    accusative{
+                        few{"{0} niutonmetrus"}
+                        many{"{0} niutonmetro"}
+                        one{"{0} niutonmetrą"}
+                        other{"{0} niutonmetrų"}
+                    }
+                    dative{
+                        few{"{0} niutonmetrams"}
+                        many{"{0} niutonmetro"}
+                        one{"{0} niutonmetrui"}
+                        other{"{0} niutonmetrų"}
+                    }
+                    genitive{
+                        few{"{0} niutonmetrų"}
+                        many{"{0} niutonmetro"}
+                        one{"{0} niutonmetro"}
+                        other{"{0} niutonmetrų"}
+                    }
+                    instrumental{
+                        few{"{0} niutonmetrais"}
+                        many{"{0} niutonmetro"}
+                        one{"{0} niutonmetru"}
+                        other{"{0} niutonmetrų"}
+                    }
+                    locative{
+                        few{"{0} niutonmetruose"}
+                        many{"{0} niutonmetro"}
+                        one{"{0} niutonmetre"}
+                        other{"{0} niutonmetrų"}
+                    }
+                }
                 dnam{"niutonmetrai"}
                 few{"{0} niutonmetrai"}
+                gender{"masculine"}
                 many{"{0} niutonmetro"}
                 one{"{0} niutonmetras"}
                 other{"{0} niutonmetrų"}
@@ -2870,15 +4487,81 @@ lt{
                 other{"{0} bušelių"}
             }
             centiliter{
+                case{
+                    accusative{
+                        few{"{0} centilitrus"}
+                        many{"{0} centilitro"}
+                        one{"{0} centilitrą"}
+                        other{"{0} centilitrų"}
+                    }
+                    dative{
+                        few{"{0} centilitrams"}
+                        many{"{0} centilitro"}
+                        one{"{0} centilitrui"}
+                        other{"{0} centilitrų"}
+                    }
+                    genitive{
+                        few{"{0} centilitrų"}
+                        many{"{0} centilitro"}
+                        one{"{0} centilitro"}
+                        other{"{0} centilitrų"}
+                    }
+                    instrumental{
+                        few{"{0} centilitrais"}
+                        many{"{0} centilitro"}
+                        one{"{0} centilitru"}
+                        other{"{0} centilitrų"}
+                    }
+                    locative{
+                        few{"{0} centilitruose"}
+                        many{"{0} centilitro"}
+                        one{"{0} centilitre"}
+                        other{"{0} centilitrų"}
+                    }
+                }
                 dnam{"centilitrai"}
                 few{"{0} centilitrai"}
+                gender{"masculine"}
                 many{"{0} centilitro"}
                 one{"{0} centilitras"}
                 other{"{0} centilitrų"}
             }
             cubic-centimeter{
+                case{
+                    accusative{
+                        few{"{0} kubinius centimetrus"}
+                        many{"{0} kubinio centimetro"}
+                        one{"{0} kubinį centimetrą"}
+                        other{"{0} kubinių centimetrų"}
+                    }
+                    dative{
+                        few{"{0} kubiniams centimetrams"}
+                        many{"{0} kubinio centimetro"}
+                        one{"{0} kubiniam centimetrui"}
+                        other{"{0} kubinių centimetrų"}
+                    }
+                    genitive{
+                        few{"{0} kubinių centimetrų"}
+                        many{"{0} kubinio centimetro"}
+                        one{"{0} kubinio centimetro"}
+                        other{"{0} kubinių centimetrų"}
+                    }
+                    instrumental{
+                        few{"{0} kubiniais centimetrais"}
+                        many{"{0} kubinio centimetro"}
+                        one{"{0} kubiniu centimetru"}
+                        other{"{0} kubinių centimetrų"}
+                    }
+                    locative{
+                        few{"{0} kubiniuose centimetruose"}
+                        many{"{0} kubinio centimetro"}
+                        one{"{0} kubiniame centimetre"}
+                        other{"{0} kubinių centimetrų"}
+                    }
+                }
                 dnam{"kubiniai centimetrai"}
                 few{"{0} kubiniai centimetrai"}
+                gender{"masculine"}
                 many{"{0} kubinio centimetro"}
                 one{"{0} kubinis centimetras"}
                 other{"{0} kubinių centimetrų"}
@@ -2899,15 +4582,81 @@ lt{
                 other{"{0} kubinių colių"}
             }
             cubic-kilometer{
+                case{
+                    accusative{
+                        few{"{0} kubinius kilometrus"}
+                        many{"{0} kubinio kilometro"}
+                        one{"{0} kubinį kilometrą"}
+                        other{"{0} kubinių kilometrų"}
+                    }
+                    dative{
+                        few{"{0} kubiniams kilometrams"}
+                        many{"{0} kubinio kilometro"}
+                        one{"{0} kubiniam kilometrui"}
+                        other{"{0} kubinių kilometrų"}
+                    }
+                    genitive{
+                        few{"{0} kubinių kilometrų"}
+                        many{"{0} kubinio kilometro"}
+                        one{"{0} kubinio kilometro"}
+                        other{"{0} kubinių kilometrų"}
+                    }
+                    instrumental{
+                        few{"{0} kubiniais kilometrais"}
+                        many{"{0} kubinio kilometro"}
+                        one{"{0} kubiniu kilometru"}
+                        other{"{0} kubinių kilometrų"}
+                    }
+                    locative{
+                        few{"{0} kubiniuose kilometruose"}
+                        many{"{0} kubinio kilometro"}
+                        one{"{0} kubiniame kilometre"}
+                        other{"{0} kubinių kilometrų"}
+                    }
+                }
                 dnam{"kubiniai kilometrai"}
                 few{"{0} kubiniai kilimetrai"}
+                gender{"masculine"}
                 many{"{0} kubinio kilometro"}
                 one{"{0} kubinis kilometras"}
                 other{"{0} kubinių kilometrų"}
             }
             cubic-meter{
+                case{
+                    accusative{
+                        few{"{0} kubinius metrus"}
+                        many{"{0} kubinio metro"}
+                        one{"{0} kubinį metrą"}
+                        other{"{0} kubinių metrų"}
+                    }
+                    dative{
+                        few{"{0} kubiniams metrams"}
+                        many{"{0} kubinio metro"}
+                        one{"{0} kubiniam metrui"}
+                        other{"{0} kubinių metrų"}
+                    }
+                    genitive{
+                        few{"{0} kubinių metrų"}
+                        many{"{0} kubinio metro"}
+                        one{"{0} kubinio metro"}
+                        other{"{0} kubinių metrų"}
+                    }
+                    instrumental{
+                        few{"{0} kubiniais metrais"}
+                        many{"{0} kubinio metro"}
+                        one{"{0} kubiniu metru"}
+                        other{"{0} kubinių metrų"}
+                    }
+                    locative{
+                        few{"{0} kubiniuose metruose"}
+                        many{"{0} kubinio metro"}
+                        one{"{0} kubiniame metre"}
+                        other{"{0} kubinių metrų"}
+                    }
+                }
                 dnam{"kubiniai metrai"}
                 few{"{0} kubiniai metrai"}
+                gender{"masculine"}
                 many{"{0} kubinio metro"}
                 one{"{0} kubinis metras"}
                 other{"{0} kubinių metrų"}
@@ -2975,8 +4724,41 @@ lt{
                 other{"{0} matavimo puodelių"}
             }
             deciliter{
+                case{
+                    accusative{
+                        few{"{0} decilitrus"}
+                        many{"{0} decilitro"}
+                        one{"{0} decilitrą"}
+                        other{"{0} decilitrų"}
+                    }
+                    dative{
+                        few{"{0} decilitrams"}
+                        many{"{0} decilitro"}
+                        one{"{0} decilitrui"}
+                        other{"{0} decilitrų"}
+                    }
+                    genitive{
+                        few{"{0} decilitrų"}
+                        many{"{0} decilitro"}
+                        one{"{0} decilitro"}
+                        other{"{0} decilitrų"}
+                    }
+                    instrumental{
+                        few{"{0} decilitrais"}
+                        many{"{0} decilitro"}
+                        one{"{0} decilitru"}
+                        other{"{0} decilitrų"}
+                    }
+                    locative{
+                        few{"{0} decilitruose"}
+                        many{"{0} decilitro"}
+                        one{"{0} decilitre"}
+                        other{"{0} decilitrų"}
+                    }
+                }
                 dnam{"decilitrai"}
                 few{"{0} decilitrai"}
+                gender{"masculine"}
                 many{"{0} decilitro"}
                 one{"{0} decilitras"}
                 other{"{0} decilitrų"}
@@ -3040,8 +4822,41 @@ lt{
                 per{"{0} imperiniame galone"}
             }
             hectoliter{
+                case{
+                    accusative{
+                        few{"{0} hektolitrus"}
+                        many{"{0} hektolitro"}
+                        one{"{0} hektolitrą"}
+                        other{"{0} hektolitrų"}
+                    }
+                    dative{
+                        few{"{0} hektolitrams"}
+                        many{"{0} hektolitro"}
+                        one{"{0} hektolitrui"}
+                        other{"{0} hektolitrų"}
+                    }
+                    genitive{
+                        few{"{0} hektolitrų"}
+                        many{"{0} hektolitro"}
+                        one{"{0} hektolitro"}
+                        other{"{0} hektolitrų"}
+                    }
+                    instrumental{
+                        few{"{0} hektolitrais"}
+                        many{"{0} hektolitro"}
+                        one{"{0} hektolitru"}
+                        other{"{0} hektolitrų"}
+                    }
+                    locative{
+                        few{"{0} hektolitruose"}
+                        many{"{0} hektolitro"}
+                        one{"{0} hektolitre"}
+                        other{"{0} hektolitrų"}
+                    }
+                }
                 dnam{"hektolitrai"}
                 few{"{0} hektolitrai"}
+                gender{"masculine"}
                 many{"{0} hektolitro"}
                 one{"{0} hektolitras"}
                 other{"{0} hektolitrų"}
@@ -3095,15 +4910,81 @@ lt{
                 per{"{0}/l"}
             }
             megaliter{
+                case{
+                    accusative{
+                        few{"{0} megalitrus"}
+                        many{"{0} megalitro"}
+                        one{"{0} megalitrą"}
+                        other{"{0} megalitrų"}
+                    }
+                    dative{
+                        few{"{0} megalitrams"}
+                        many{"{0} megalitro"}
+                        one{"{0} megalitrui"}
+                        other{"{0} megalitrų"}
+                    }
+                    genitive{
+                        few{"{0} megalitrų"}
+                        many{"{0} megalitro"}
+                        one{"{0} megalitro"}
+                        other{"{0} megalitrų"}
+                    }
+                    instrumental{
+                        few{"{0} megalitrais"}
+                        many{"{0} megalitro"}
+                        one{"{0} megalitru"}
+                        other{"{0} megalitrų"}
+                    }
+                    locative{
+                        few{"{0} megalitruose"}
+                        many{"{0} megalitro"}
+                        one{"{0} megalitre"}
+                        other{"{0} megalitrų"}
+                    }
+                }
                 dnam{"megalitrai"}
                 few{"{0} megalitrai"}
+                gender{"masculine"}
                 many{"{0} megalitro"}
                 one{"{0} megalitras"}
                 other{"{0} megalitrų"}
             }
             milliliter{
+                case{
+                    accusative{
+                        few{"{0} mililitrus"}
+                        many{"{0} mililitro"}
+                        one{"{0} mililitrą"}
+                        other{"{0} mililitrų"}
+                    }
+                    dative{
+                        few{"{0} mililitrams"}
+                        many{"{0} mililitro"}
+                        one{"{0} mililitrui"}
+                        other{"{0} mililitrų"}
+                    }
+                    genitive{
+                        few{"{0} mililitrų"}
+                        many{"{0} mililitro"}
+                        one{"{0} mililitro"}
+                        other{"{0} mililitrų"}
+                    }
+                    instrumental{
+                        few{"{0} mililitrais"}
+                        many{"{0} mililitro"}
+                        one{"{0} mililitru"}
+                        other{"{0} mililitrų"}
+                    }
+                    locative{
+                        few{"{0} mililitruose"}
+                        many{"{0} mililitro"}
+                        one{"{0} mililitre"}
+                        other{"{0} mililitrų"}
+                    }
+                }
                 dnam{"mililitrai"}
                 few{"{0} mililitrai"}
+                gender{"masculine"}
                 many{"{0} mililitro"}
                 one{"{0} mililitras"}
                 other{"{0} mililitrų"}

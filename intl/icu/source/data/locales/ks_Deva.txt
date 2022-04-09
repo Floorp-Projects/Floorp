@@ -1,0 +1,339 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
+ks_Deva{
+    %%Parent{"root"}
+    AuxExemplarCharacters{"[\u200C\u200D]"}
+    ExemplarCharacters{
+        "[\u093C \u0902 \u0901 अ आ इ ई उ ऊ ए ऑ ओ क ख ग च {च\u093C} छ {छ\u093C} ज ट ठ "
+        "ड त थ द न प फ ब म य र ल व श स ह ा ि ी \u0941 \u0942 \u0943 \u0944 \u0945 "
+        "\u0947 \u0948 ॉ ो ौ \u094D]"
+    }
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
+    MoreInformation{"?"}
+    calendar{
+        generic{
+            DateTimePatterns{
+                "a h:mm:ss zzzz",
+                "a h:mm:ss z",
+                "a h:mm:ss",
+                "a h:mm",
+                "G y MMMM d, EEEE",
+                "G y MMMM d",
+                "G y MMM d",
+                "GGGGG y-MM-dd",
+                "{1} {0}",
+                "{0} पेठ {1}",
+                "{0} पेठ {1}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "a h:mm:ss zzzz",
+                "a h:mm:ss z",
+                "a h:mm:ss",
+                "a h:mm",
+                "EEEE, d MMMM y",
+                "d MMMM y",
+                "d MMM y",
+                "d/M/yy",
+                "{1}, {0}",
+                "{0} पेठ {1}",
+                "{0} पेठ {1}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            dayNames{
+                format{
+                    narrow{
+                        "अ",
+                        "च",
+                        "ब",
+                        "ब",
+                        "ब",
+                        "ज",
+                        "ब",
+                    }
+                    wide{
+                        "आथवार",
+                        "चंदिरवार",
+                        "बुवार",
+                        "बोदवार",
+                        "ब्रेसवार",
+                        "जुम्मा",
+                        "बटवार",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "अ",
+                        "च",
+                        "ब",
+                        "ब",
+                        "ब",
+                        "ज",
+                        "ब",
+                    }
+                    wide{
+                        "आथवार",
+                        "चंदिरवार",
+                        "बुवार",
+                        "बोदवार",
+                        "ब्रेसवार",
+                        "जुम्मा",
+                        "बटवार",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "BC",
+                    "AD",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "जनवरी",
+                        "फ़रवरी",
+                        "मार्च",
+                        "अप्रैल",
+                        "मे",
+                        "जून",
+                        "जुलाई",
+                        "अगस्त",
+                        "सतुंबर",
+                        "अकतुम्बर",
+                        "नवूमबर",
+                        "दसूमबर",
+                    }
+                    narrow{
+                        "ज",
+                        "फ़",
+                        "म",
+                        "अ",
+                        "म",
+                        "ज",
+                        "ज",
+                        "अ",
+                        "स",
+                        "ओ",
+                        "न",
+                        "द",
+                    }
+                    wide{
+                        "जनवरी",
+                        "फ़रवरी",
+                        "मार्च",
+                        "अप्रैल",
+                        "मे",
+                        "जून",
+                        "जुलाई",
+                        "अगस्त",
+                        "सतुंबर",
+                        "अकतुम्बर",
+                        "नवूमबर",
+                        "दसूमबर",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "ज",
+                        "फ़",
+                        "म",
+                        "अ",
+                        "म",
+                        "ज",
+                        "ज",
+                        "अ",
+                        "स",
+                        "ओ",
+                        "न",
+                        "द",
+                    }
+                    wide{
+                        "जनवरी",
+                        "फ़रवरी",
+                        "मार्च",
+                        "अप्रैल",
+                        "मे",
+                        "जून",
+                        "जुलाई",
+                        "अगस्त",
+                        "सतुंबर",
+                        "अकतुम्बर",
+                        "नवूमबर",
+                        "दसूमबर",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                    wide{
+                        "1st सह माह",
+                        "2nd सह माह",
+                        "3rd सह माह",
+                        "4th सह माह",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                    wide{
+                        "1st सह माह",
+                        "2nd सह माह",
+                        "3rd सह माह",
+                        "4th सह माह",
+                    }
+                }
+            }
+        }
+    }
+    fields{
+        day{
+            dn{"दोह"}
+            relative{
+                "-1"{"राथ"}
+                "0"{"अज़"}
+                "1"{"पगाह"}
+            }
+        }
+        day-narrow{
+            dn{"दोह"}
+            relative{
+                "-1"{"राथ"}
+                "0"{"अज़"}
+                "1"{"पगाह"}
+            }
+        }
+        day-short{
+            dn{"दोह"}
+            relative{
+                "-1"{"राथ"}
+                "0"{"अज़"}
+                "1"{"पगाह"}
+            }
+        }
+        dayperiod{
+            dn{"AM/PM"}
+        }
+        era{
+            dn{"दोर"}
+        }
+        hour{
+            dn{"गनटि"}
+        }
+        hour-narrow{
+            dn{"गनटि"}
+        }
+        hour-short{
+            dn{"गनटि"}
+        }
+        minute{
+            dn{"मिनट"}
+        }
+        minute-narrow{
+            dn{"मिनट"}
+        }
+        minute-short{
+            dn{"मिनट"}
+        }
+        month{
+            dn{"माह"}
+        }
+        month-narrow{
+            dn{"माह"}
+        }
+        month-short{
+            dn{"माह"}
+        }
+        quarter{
+            dn{"चूरिम"}
+        }
+        quarter-narrow{
+            dn{"चूरिम"}
+        }
+        quarter-short{
+            dn{"चूरिम"}
+        }
+        second{
+            dn{"सेकंड"}
+        }
+        second-narrow{
+            dn{"सेकंड"}
+        }
+        second-short{
+            dn{"सेकंड"}
+        }
+        week{
+            dn{"हफ़ति"}
+        }
+        week-narrow{
+            dn{"हफ़ति"}
+        }
+        week-short{
+            dn{"हफ़ति"}
+        }
+        weekday{
+            dn{"हफ़तूक दोह"}
+        }
+        year{
+            dn{"वरीह"}
+        }
+        year-narrow{
+            dn{"वरीह"}
+        }
+        year-short{
+            dn{"वरीह"}
+        }
+        zone{
+            dn{"वख ज़ून"}
+        }
+    }
+    listPattern{
+        standard{
+            2{"{0} ति {1}"}
+            end{"{0}, ति {1}"}
+        }
+    }
+    measurementSystemNames{
+        metric{"मेट्रिक"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶︓﹕：]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄]",
+                "[£₤￡]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+    }
+}

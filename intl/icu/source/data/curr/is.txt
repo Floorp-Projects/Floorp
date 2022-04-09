@@ -968,9 +968,6 @@ is{
         UYU{"$"}
         VND{"₫"}
     }
-    Currencies%variant{
-        GEL{"₾"}
-    }
     CurrencyPlurals{
         AED{
             one{"arabískt dírham"}

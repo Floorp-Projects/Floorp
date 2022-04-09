@@ -55,7 +55,6 @@ fr_CA{
             square-mile{
                 one{"{0} mille carré"}
                 other{"{0} milles carrés"}
-                per{"{0} par mille carré"}
             }
             square-yard{
                 dnam{"verges carrées"}
@@ -64,10 +63,6 @@ fr_CA{
             }
         }
         concentr{
-            item{
-                one{"{0} item"}
-                other{"{0} items"}
-            }
             permille{
                 one{"{0} pour mille"}
                 other{"{0} pour mille"}
@@ -225,6 +220,7 @@ fr_CA{
                 other{"{0} kilojoules"}
             }
             kilowatt-hour{
+                dnam{"kilowattheures"}
                 one{"{0} kilowattheure"}
                 other{"{0} kilowattheures"}
             }
@@ -250,6 +246,11 @@ fr_CA{
             megahertz{
                 one{"{0} mégahertz"}
                 other{"{0} mégahertz"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"point"}
             }
         }
         length{
@@ -322,9 +323,6 @@ fr_CA{
             }
         }
         light{
-            candela{
-                dnam{"candela"}
-            }
             lux{
                 one{"{0} lux"}
                 other{"{0} lux"}
@@ -345,7 +343,6 @@ fr_CA{
             kilogram{
                 one{"{0} kilogramme"}
                 other{"{0} kilogrammes"}
-                per{"{0} par kilogramme"}
             }
             metric-ton{
                 one{"{0} tonne"}
@@ -481,6 +478,12 @@ fr_CA{
                 one{"{0} verge cube"}
                 other{"{0} verges cubes"}
             }
+            dessert-spoon{
+                dnam{"cuillère à dessert"}
+            }
+            drop{
+                dnam{"goutte"}
+            }
             gallon-imperial{
                 dnam{"gallon impérial"}
             }
@@ -500,6 +503,9 @@ fr_CA{
             megaliter{
                 one{"{0} mégalitre"}
                 other{"{0} mégalitres"}
+            }
+            pinch{
+                dnam{"pincée"}
             }
             pint{
                 dnam{"chopine"}

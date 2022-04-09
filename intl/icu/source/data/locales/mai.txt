@@ -94,7 +94,7 @@ mai{
                 GyMMM{"MMM G y"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"d MMM y G"}
-                GyMd{"dd-MM-y"}
+                GyMd{"dd-MM-y G"}
                 MEd{"E, d/M"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}

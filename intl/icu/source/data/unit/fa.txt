@@ -1148,10 +1148,6 @@ fa{
                 one{"{0}٪"}
                 other{"{0}٪"}
             }
-            permillion{
-                one{"{0} بخش در میلیون"}
-                other{"{0} بخش در میلیون"}
-            }
         }
         consumption{
             liter-per-100-kilometer{
@@ -1833,8 +1829,6 @@ fa{
             }
             permillion{
                 dnam{"بخش/میلیون"}
-                one{"{0} بخش در میلیون"}
-                other{"{0} بخش در میلیون"}
             }
             permyriad{
                 dnam{"ده‌هزارم"}

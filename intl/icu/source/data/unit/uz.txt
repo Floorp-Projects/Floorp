@@ -186,9 +186,9 @@ uz{
                 other{"{0} promille"}
             }
             permillion{
-                dnam{"qism/million"}
-                one{"{0} qism/million"}
-                other{"{0} qism/million"}
+                dnam{"milliondan ulush"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
             }
             permyriad{
                 dnam{"promiriada"}
@@ -1132,6 +1132,11 @@ uz{
                 one{"{0}%"}
                 other{"{0}%"}
             }
+            permillion{
+                dnam{"ppm"}
+                one{"{0}ppm"}
+                other{"{0}ppm"}
+            }
         }
         consumption{
             liter-per-100-kilometer{
@@ -1543,9 +1548,9 @@ uz{
                 other{"{0}‰"}
             }
             permillion{
-                dnam{"qism/million"}
-                one{"{0} qism/million"}
-                other{"{0} qism/million"}
+                dnam{"milliondan ulush"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
             }
             permyriad{
                 dnam{"promiriada"}

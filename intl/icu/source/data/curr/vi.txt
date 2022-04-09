@@ -1207,9 +1207,6 @@ vi{
         USD{"$"}
         XCD{"$"}
     }
-    Currencies%variant{
-        GEL{"₾"}
-    }
     CurrencyPlurals{
         AED{
             other{"Dirham UAE"}

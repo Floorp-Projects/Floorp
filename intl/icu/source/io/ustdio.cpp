@@ -628,7 +628,7 @@ ufile_getch32(UFILE *f, UChar32 *c32)
 
     /* Fill the buffer if it is empty */
     str = &f->str;
-    if (f && str->fPos + 1 >= str->fLimit) {
+    if (str->fPos + 1 >= str->fLimit) {
         ufile_fill_uchar_buffer(f);
     }
 
