@@ -1574,20 +1574,26 @@ struct CalendarDataSink : public ResourceSink {
                                                        errorCode);
                     if (U_FAILURE(errorCode)) { return; }
                 }
-                LocalPointer<UnicodeString> aliasRelativePathCopy(aliasRelativePath.clone(), errorCode);
-                resourcesToVisitNext->adoptElement(aliasRelativePathCopy.orphan(), errorCode);
+                LocalPointer<UnicodeString> aliasRelativePathCopy(new UnicodeString(aliasRelativePath), errorCode);
+                resourcesToVisitNext->addElementX(aliasRelativePathCopy.getAlias(), errorCode);
                 if (U_FAILURE(errorCode)) { return; }
+                // Only release ownership after resourcesToVisitNext takes it (no error happened):
+                aliasRelativePathCopy.orphan();
                 continue;
 
             } else if (aliasType == SAME_CALENDAR) {
                 // Register same-calendar alias
                 if (arrays.get(aliasRelativePath) == NULL && maps.get(aliasRelativePath) == NULL) {
-                    LocalPointer<UnicodeString> aliasRelativePathCopy(aliasRelativePath.clone(), errorCode);
-                    aliasPathPairs.adoptElement(aliasRelativePathCopy.orphan(), errorCode);
+                    LocalPointer<UnicodeString> aliasRelativePathCopy(new UnicodeString(aliasRelativePath), errorCode);
+                    aliasPathPairs.addElementX(aliasRelativePathCopy.getAlias(), errorCode);
                     if (U_FAILURE(errorCode)) { return; }
-                    LocalPointer<UnicodeString> keyUStringCopy(keyUString.clone(), errorCode);
-                    aliasPathPairs.adoptElement(keyUStringCopy.orphan(), errorCode);
+                    // Only release ownership after aliasPathPairs takes it (no error happened):
+                    aliasRelativePathCopy.orphan();
+                    LocalPointer<UnicodeString> keyUStringCopy(new UnicodeString(keyUString), errorCode);
+                    aliasPathPairs.addElementX(keyUStringCopy.getAlias(), errorCode);
                     if (U_FAILURE(errorCode)) { return; }
+                    // Only release ownership after aliasPathPairs takes it (no error happened):
+                    keyUStringCopy.orphan();
                 }
                 continue;
             }
@@ -1754,12 +1760,16 @@ struct CalendarDataSink : public ResourceSink {
             if (U_FAILURE(errorCode)) { return; }
             if (aliasType == SAME_CALENDAR) {
                 // Store the alias path and the current path on aliasPathPairs
-                LocalPointer<UnicodeString> aliasRelativePathCopy(aliasRelativePath.clone(), errorCode);
-                aliasPathPairs.adoptElement(aliasRelativePathCopy.orphan(), errorCode);
+                LocalPointer<UnicodeString> aliasRelativePathCopy(new UnicodeString(aliasRelativePath), errorCode);
+                aliasPathPairs.addElementX(aliasRelativePathCopy.getAlias(), errorCode);
                 if (U_FAILURE(errorCode)) { return; }
-                LocalPointer<UnicodeString> pathCopy(path.clone(), errorCode);
-                aliasPathPairs.adoptElement(pathCopy.orphan(), errorCode);
+                // Only release ownership after aliasPathPairs takes it (no error happened):
+                aliasRelativePathCopy.orphan();
+                LocalPointer<UnicodeString> pathCopy(new UnicodeString(path), errorCode);
+                aliasPathPairs.addElementX(pathCopy.getAlias(), errorCode);
                 if (U_FAILURE(errorCode)) { return; }
+                // Only release ownership after aliasPathPairs takes it (no error happened):
+                pathCopy.orphan();
 
                 // Drop the latest key on the path and continue
                 path.retainBetween(0, pathLength);

@@ -168,9 +168,12 @@ void LocaleMatcher::Builder::clearSupportedLocales() {
 bool LocaleMatcher::Builder::ensureSupportedLocaleVector() {
     if (U_FAILURE(errorCode_)) { return false; }
     if (supportedLocales_ != nullptr) { return true; }
-    LocalPointer<UVector> lpSupportedLocales(new UVector(uprv_deleteUObject, nullptr, errorCode_), errorCode_);
+    supportedLocales_ = new UVector(uprv_deleteUObject, nullptr, errorCode_);
     if (U_FAILURE(errorCode_)) { return false; }
-    supportedLocales_ = lpSupportedLocales.orphan();
+    if (supportedLocales_ == nullptr) {
+        errorCode_ = U_MEMORY_ALLOCATION_ERROR;
+        return false;
+    }
     return true;
 }
 
@@ -184,8 +187,9 @@ LocaleMatcher::Builder &LocaleMatcher::Builder::setSupportedLocalesFromListStrin
     for (int32_t i = 0; i < length; ++i) {
         Locale *locale = list.orphanLocaleAt(i);
         if (locale == nullptr) { continue; }
-        supportedLocales_->adoptElement(locale, errorCode_);
+        supportedLocales_->addElementX(locale, errorCode_);
         if (U_FAILURE(errorCode_)) {
+            delete locale;
             break;
         }
     }
@@ -193,21 +197,35 @@ LocaleMatcher::Builder &LocaleMatcher::Builder::setSupportedLocalesFromListStrin
 }
 
 LocaleMatcher::Builder &LocaleMatcher::Builder::setSupportedLocales(Locale::Iterator &locales) {
-    if (ensureSupportedLocaleVector()) {
-        clearSupportedLocales();
-        while (locales.hasNext() && U_SUCCESS(errorCode_)) {
-            const Locale &locale = locales.next();
-            LocalPointer<Locale> clone (locale.clone(), errorCode_);
-            supportedLocales_->adoptElement(clone.orphan(), errorCode_);
+    if (U_FAILURE(errorCode_)) { return *this; }
+    clearSupportedLocales();
+    if (!ensureSupportedLocaleVector()) { return *this; }
+    while (locales.hasNext()) {
+        const Locale &locale = locales.next();
+        Locale *clone = locale.clone();
+        if (clone == nullptr) {
+            errorCode_ = U_MEMORY_ALLOCATION_ERROR;
+            break;
+        }
+        supportedLocales_->addElementX(clone, errorCode_);
+        if (U_FAILURE(errorCode_)) {
+            delete clone;
+            break;
         }
     }
     return *this;
 }
 
 LocaleMatcher::Builder &LocaleMatcher::Builder::addSupportedLocale(const Locale &locale) {
-    if (ensureSupportedLocaleVector()) {
-        LocalPointer<Locale> clone(locale.clone(), errorCode_);
-        supportedLocales_->adoptElement(clone.orphan(), errorCode_);
+    if (!ensureSupportedLocaleVector()) { return *this; }
+    Locale *clone = locale.clone();
+    if (clone == nullptr) {
+        errorCode_ = U_MEMORY_ALLOCATION_ERROR;
+        return *this;
+    }
+    supportedLocales_->addElementX(clone, errorCode_);
+    if (U_FAILURE(errorCode_)) {
+        delete clone;
     }
     return *this;
 }

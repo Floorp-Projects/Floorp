@@ -234,6 +234,7 @@ yo{
         concentr{
             permille{
                 dnam{"ìdákan nínú ẹgbẹ̀rún"}
+                other{"{0} àmì ìdákan"}
             }
         }
         digital{

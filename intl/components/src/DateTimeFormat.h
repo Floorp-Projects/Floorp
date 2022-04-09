@@ -419,7 +419,8 @@ class DateTimeFormat final {
    * plan to remove it.
    */
   template <typename B>
-  ICUResult GetOriginalSkeleton(B& aBuffer) {
+  ICUResult GetOriginalSkeleton(B& aBuffer,
+                                Maybe<HourCycle> aHourCycle = Nothing()) {
     static_assert(std::is_same_v<typename B::CharType, char16_t>);
     if (mOriginalSkeleton.length() == 0) {
       // Generate a skeleton from the resolved pattern, there was no originally
@@ -434,6 +435,10 @@ class DateTimeFormat final {
 
     if (!FillBuffer(mOriginalSkeleton, aBuffer)) {
       return Err(ICUError::OutOfMemory);
+    }
+    if (aHourCycle) {
+      DateTimeFormat::ReplaceHourSymbol(Span(aBuffer.data(), aBuffer.length()),
+                                        *aHourCycle);
     }
     return Ok();
   }
