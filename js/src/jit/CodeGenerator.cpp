@@ -4138,12 +4138,12 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   Label bail;
   masm.branchIfNonNativeObj(obj, temp0, &bail);
 
-  masm.pushValue(UndefinedValue());
+  masm.Push(UndefinedValue());
   masm.moveStackPtrTo(temp2);
 
   using Fn =
       bool (*)(JSContext * cx, JSObject * obj, PropertyName * name, Value * vp);
-  masm.setupUnalignedABICall(temp0);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
   masm.passABIArg(obj);
@@ -4154,7 +4154,7 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.callWithABI<Fn, GetNativeDataPropertyPure>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
-  masm.popValue(output);
+  masm.Pop(output);
 
   masm.branchIfFalseBool(ReturnReg, &bail);
 
@@ -4173,12 +4173,12 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.branchIfNonNativeObj(obj, temp0, &bail);
 
   // idVal will be in vp[0], result will be stored in vp[1].
-  masm.subFromStackPtr(Imm32(sizeof(Value)));
-  masm.pushValue(idVal);
+  masm.reserveStack(sizeof(Value));
+  masm.Push(idVal);
   masm.moveStackPtrTo(temp0);
 
   using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
-  masm.setupUnalignedABICall(temp1);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
@@ -4187,15 +4187,17 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
 
   MOZ_ASSERT(!idVal.aliases(temp0));
   masm.mov(ReturnReg, temp0);
-  masm.popValue(idVal);
+  masm.Pop(idVal);
 
+  uint32_t framePushed = masm.framePushed();
   Label ok;
   masm.branchIfTrueBool(temp0, &ok);
-  masm.addToStackPtr(Imm32(sizeof(Value)));  // Discard result Value.
+  masm.freeStack(sizeof(Value));  // Discard result Value.
   masm.jump(&bail);
 
   masm.bind(&ok);
-  masm.popValue(output);
+  masm.setFramePushed(framePushed);
+  masm.Pop(output);
 
   bailoutFrom(&bail, lir->snapshot());
 }
@@ -4207,12 +4209,12 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   Register temp1 = ToRegister(lir->temp1());
   Register temp2 = ToRegister(lir->temp2());
 
-  masm.pushValue(rhs);
+  masm.Push(rhs);
   masm.moveStackPtrTo(temp0);
 
   using Fn = bool (*)(JSContext * cx, JSObject * obj, PropertyName * name,
                       Value * val);
-  masm.setupUnalignedABICall(temp1);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
@@ -4223,7 +4225,7 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
 
   MOZ_ASSERT(!rhs.aliases(temp0));
   masm.mov(ReturnReg, temp0);
-  masm.popValue(rhs);
+  masm.Pop(rhs);
 
   Label bail;
   masm.branchIfFalseBool(temp0, &bail);
@@ -4238,12 +4240,12 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   Register output = ToRegister(lir->output());
 
   // idVal will be in vp[0], result will be stored in vp[1].
-  masm.subFromStackPtr(Imm32(sizeof(Value)));
-  masm.pushValue(idVal);
+  masm.reserveStack(sizeof(Value));
+  masm.Push(idVal);
   masm.moveStackPtrTo(temp0);
 
   using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
-  masm.setupUnalignedABICall(temp1);
+  masm.setupAlignedABICall();
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
@@ -4256,16 +4258,18 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
 
   MOZ_ASSERT(!idVal.aliases(temp0));
   masm.mov(ReturnReg, temp0);
-  masm.popValue(idVal);
+  masm.Pop(idVal);
 
+  uint32_t framePushed = masm.framePushed();
   Label bail, ok;
   masm.branchIfTrueBool(temp0, &ok);
-  masm.addToStackPtr(Imm32(sizeof(Value)));  // Discard result Value.
+  masm.freeStack(sizeof(Value));  // Discard result Value.
   masm.jump(&bail);
 
   masm.bind(&ok);
+  masm.setFramePushed(framePushed);
   masm.unboxBoolean(Address(masm.getStackPointer(), 0), output);
-  masm.addToStackPtr(Imm32(sizeof(Value)));
+  masm.freeStack(sizeof(Value));
 
   bailoutFrom(&bail, lir->snapshot());
 }
@@ -5039,7 +5043,7 @@ void CodeGenerator::visitCallNative(LCallNative* call) {
   }
 
   // Construct and execute call.
-  masm.setupUnalignedABICall(tempReg);
+  masm.setupAlignedABICall();
   masm.passABIArg(argContextReg);
   masm.passABIArg(argUintNReg);
   masm.passABIArg(argVpReg);
