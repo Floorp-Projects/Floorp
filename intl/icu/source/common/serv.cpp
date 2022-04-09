@@ -625,7 +625,10 @@ ICUService::getVisibleIDs(UVector& result, const UnicodeString* matchID, UErrorC
                     }
                 }
 
-                LocalPointer<UnicodeString> idClone(id->clone(), status);
+                LocalPointer<UnicodeString> idClone(new UnicodeString(*id), status);
+                if (U_SUCCESS(status) && idClone->isBogus()) {
+                    status = U_MEMORY_ALLOCATION_ERROR;
+                }
                 result.adoptElement(idClone.orphan(), status);
             }
             delete fallbackKey;

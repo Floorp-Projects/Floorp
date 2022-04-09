@@ -1344,9 +1344,8 @@ bool blueprint_helpers::parseFracSigOption(const StringSegment& segment, MacroPr
         // @, @@, @@@
         maxSig = minSig;
     }
-    auto& oldPrecision = static_cast<const FractionPrecision&>(macros.precision);
+    UNumberRoundingPriority priority;
     if (offset < segment.length()) {
-        UNumberRoundingPriority priority;
         if (maxSig == -1) {
             // The wildcard character is not allowed with the priority annotation
             status = U_NUMBER_SKELETON_SYNTAX_ERROR;
@@ -1368,19 +1367,22 @@ bool blueprint_helpers::parseFracSigOption(const StringSegment& segment, MacroPr
             status = U_NUMBER_SKELETON_SYNTAX_ERROR;
             return false;
         }
-        macros.precision = oldPrecision.withSignificantDigits(minSig, maxSig, priority);
     } else if (maxSig == -1) {
         // withMinDigits
-        macros.precision = oldPrecision.withMinDigits(minSig);
+        maxSig = minSig;
+        minSig = 1;
+        priority = UNUM_ROUNDING_PRIORITY_RELAXED;
     } else if (minSig == 1) {
         // withMaxDigits
-        macros.precision = oldPrecision.withMaxDigits(maxSig);
+        priority = UNUM_ROUNDING_PRIORITY_STRICT;
     } else {
         // Digits options with both min and max sig require the priority option
         status = U_NUMBER_SKELETON_SYNTAX_ERROR;
         return false;
     }
 
+    auto& oldPrecision = static_cast<const FractionPrecision&>(macros.precision);
+    macros.precision = oldPrecision.withSignificantDigits(minSig, maxSig, priority);
     return true;
 }
 
@@ -1397,16 +1399,12 @@ void blueprint_helpers::parseIncrementOption(const StringSegment &segment, Macro
     number::impl::parseIncrementOption(segment, macros.precision, status);
 }
 
-void blueprint_helpers::generateIncrementOption(
-        uint32_t increment,
-        digits_t incrementMagnitude,
-        int32_t minFrac,
-        UnicodeString& sb,
-        UErrorCode&) {
+void blueprint_helpers::generateIncrementOption(double increment, int32_t minFrac, UnicodeString& sb,
+                                                UErrorCode&) {
     // Utilize DecimalQuantity/double_conversion to format this for us.
     DecimalQuantity dq;
-    dq.setToLong(increment);
-    dq.adjustMagnitude(incrementMagnitude);
+    dq.setToDouble(increment);
+    dq.roundToInfinity();
     dq.setMinFraction(minFrac);
     sb.append(dq.toPlainString());
 }
@@ -1619,21 +1617,11 @@ bool GeneratorHelpers::precision(const MacroProps& macros, UnicodeString& sb, UE
         const Precision::FractionSignificantSettings& impl = macros.precision.fUnion.fracSig;
         blueprint_helpers::generateFractionStem(impl.fMinFrac, impl.fMaxFrac, sb, status);
         sb.append(u'/');
-        if (impl.fRetain) {
-            if (impl.fPriority == UNUM_ROUNDING_PRIORITY_RELAXED) {
-                // withMinDigits
-                blueprint_helpers::generateDigitsStem(impl.fMaxSig, -1, sb, status);
-            } else {
-                // withMaxDigits
-                blueprint_helpers::generateDigitsStem(1, impl.fMaxSig, sb, status);
-            }
+        blueprint_helpers::generateDigitsStem(impl.fMinSig, impl.fMaxSig, sb, status);
+        if (impl.fPriority == UNUM_ROUNDING_PRIORITY_RELAXED) {
+            sb.append(u'r');
         } else {
-            blueprint_helpers::generateDigitsStem(impl.fMinSig, impl.fMaxSig, sb, status);
-            if (impl.fPriority == UNUM_ROUNDING_PRIORITY_RELAXED) {
-                sb.append(u'r');
-            } else {
-                sb.append(u's');
-            }
+            sb.append(u's');
         }
     } else if (macros.precision.fType == Precision::RND_INCREMENT
             || macros.precision.fType == Precision::RND_INCREMENT_ONE
@@ -1642,7 +1630,6 @@ bool GeneratorHelpers::precision(const MacroProps& macros, UnicodeString& sb, UE
         sb.append(u"precision-increment/", -1);
         blueprint_helpers::generateIncrementOption(
                 impl.fIncrement,
-                impl.fIncrementMagnitude,
                 impl.fMinFrac,
                 sb,
                 status);
