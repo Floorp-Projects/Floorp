@@ -391,7 +391,6 @@ keyTypeData:table(nofallback){
             shp{""}
             sit{""}
             skk{""}
-            sle{""}
             sll{""}
             sos{""}
             srd{""}
@@ -429,7 +428,6 @@ keyTypeData:table(nofallback){
             uyw{""}
             uzs{""}
             veb{""}
-            ved{""}
             vef{""}
             ves{""}
             vnd{""}
@@ -484,7 +482,6 @@ keyTypeData:table(nofallback){
             halfwidth{"hwidth"}
             hex{""}
             lower{""}
-            morse{""}
             name{"charname"}
             nfc{""}
             nfd{""}
@@ -576,27 +573,19 @@ keyTypeData:table(nofallback){
             breakall{""}
             keepall{""}
             normal{""}
-            phrase{""}
         }
         m0{
-            aethiopi{""}
             alaloc{""}
-            beta-metsehaf{"betamets"}
             bgn{""}
             buckwalt{""}
             c{"c11"}
             css{""}
             din{""}
-            es3842{""}
             ewts{""}
             gost{""}
-            gurage{""}
-            gutgarts{""}
             iast{""}
-            ies-jes{"iesjes"}
             iso{""}
             java{""}
-            lambdin{""}
             mcst{""}
             mns{""}
             names{"prprname"}
@@ -604,11 +593,8 @@ keyTypeData:table(nofallback){
             perl{""}
             plain{""}
             satts{""}
-            sera{""}
-            tekie-alibekit{"tekieali"}
             ungegn{""}
             unicode{""}
-            xaleget{""}
             xml{""}
             xml10{""}
         }
@@ -715,7 +701,6 @@ keyTypeData:table(nofallback){
             accents{""}
             ascii{""}
             hex{""}
-            morse{""}
             numericPinyin{"npinyin"}
             publishing{"publish"}
             zawgyi{""}

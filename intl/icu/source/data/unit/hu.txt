@@ -12,20 +12,20 @@ hu{
             g-force{
                 case{
                     accusative{
-                        one{"{0} g gyorsulást"}
-                        other{"{0} g gyorsulást"}
+                        one{"{0} g gyorsulás"}
+                        other{"{0} g gyorsulás"}
                     }
                     instrumental{
-                        one{"{0} g gyorsulással"}
-                        other{"{0} g gyorsulással"}
+                        one{"{0} g gyorsulás"}
+                        other{"{0} g gyorsulás"}
                     }
                     terminative{
-                        one{"{0} g gyorsulásig"}
-                        other{"{0} g gyorsulásig"}
+                        one{"{0} g gyorsulás"}
+                        other{"{0} g gyorsulás"}
                     }
                     translative{
-                        one{"{0} g gyorsulássá"}
-                        other{"{0} g gyorsulássá"}
+                        one{"{0} g gyorsulás"}
+                        other{"{0} g gyorsulás"}
                     }
                 }
                 dnam{"g gyorsulás"}
@@ -33,24 +33,6 @@ hu{
                 other{"{0} g gyorsulás"}
             }
             meter-per-square-second{
-                case{
-                    accusative{
-                        one{"{0} méter per másodpercnégyzetet"}
-                        other{"{0} méter per másodpercnégyzetet"}
-                    }
-                    instrumental{
-                        one{"{0} méter per másodpercnégyzettel"}
-                        other{"{0} méter per másodpercnégyzettel"}
-                    }
-                    terminative{
-                        one{"{0} méter per másodpercnégyzetig"}
-                        other{"{0} méter per másodpercnégyzetig"}
-                    }
-                    translative{
-                        one{"{0} méter per másodpercnégyzetté"}
-                        other{"{0} méter per másodpercnégyzetté"}
-                    }
-                }
                 dnam{"méter per másodpercnégyzet"}
                 one{"{0} méter per másodpercnégyzet"}
                 other{"{0} méter per másodpercnégyzet"}
@@ -60,20 +42,20 @@ hu{
             arc-minute{
                 case{
                     accusative{
-                        one{"{0} ívpercet"}
-                        other{"{0} ívpercet"}
+                        one{"{0} ívperc"}
+                        other{"{0} ívperc"}
                     }
                     instrumental{
-                        one{"{0} ívperccel"}
-                        other{"{0} ívperccel"}
+                        one{"{0} ívperc"}
+                        other{"{0} ívperc"}
                     }
                     terminative{
-                        one{"{0} ívpercig"}
-                        other{"{0} ívpercig"}
+                        one{"{0} ívperc"}
+                        other{"{0} ívperc"}
                     }
                     translative{
-                        one{"{0} ívperccé"}
-                        other{"{0} ívperccé"}
+                        one{"{0} ívperc"}
+                        other{"{0} ívperc"}
                     }
                 }
                 dnam{"ívperc"}
@@ -83,20 +65,20 @@ hu{
             arc-second{
                 case{
                     accusative{
-                        one{"{0} ívmásodpercet"}
-                        other{"{0} ívmásodpercet"}
+                        one{"{0} ívmásodperc"}
+                        other{"{0} ívmásodperc"}
                     }
                     instrumental{
-                        one{"{0} ívmásodperccel"}
-                        other{"{0} ívmásodperccel"}
+                        one{"{0} ívmásodperc"}
+                        other{"{0} ívmásodperc"}
                     }
                     terminative{
-                        one{"{0} ívmásodpercig"}
-                        other{"{0} ívmásodpercig"}
+                        one{"{0} ívmásodperc"}
+                        other{"{0} ívmásodperc"}
                     }
                     translative{
-                        one{"{0} ívmásodperccé"}
-                        other{"{0} ívmásodperccé"}
+                        one{"{0} ívmásodperc"}
+                        other{"{0} ívmásodperc"}
                     }
                 }
                 dnam{"ívmásodperc"}
@@ -133,7 +115,7 @@ hu{
                         other{"{0} radiánt"}
                     }
                     instrumental{
-                        one{"{0} radiánnal"}
+                        one{"{0} radián"}
                         other{"{0} radiánnal"}
                     }
                     terminative{
@@ -182,20 +164,20 @@ hu{
             hectare{
                 case{
                     accusative{
-                        one{"{0} hektárt"}
-                        other{"{0} hektárt"}
+                        one{"{0} hektár"}
+                        other{"{0} hektár"}
                     }
                     instrumental{
-                        one{"{0} hektárral"}
-                        other{"{0} hektárral"}
+                        one{"{0} hektár"}
+                        other{"{0} hektár"}
                     }
                     terminative{
-                        one{"{0} hektárig"}
-                        other{"{0} hektárig"}
+                        one{"{0} hektár"}
+                        other{"{0} hektár"}
                     }
                     translative{
-                        one{"{0} hektárrá"}
-                        other{"{0} hektárrá"}
+                        one{"{0} hektár"}
+                        other{"{0} hektár"}
                     }
                 }
                 dnam{"hektár"}
@@ -203,24 +185,6 @@ hu{
                 other{"{0} hektár"}
             }
             square-centimeter{
-                case{
-                    accusative{
-                        one{"{0} négyzetcentimétert"}
-                        other{"{0} négyzetcentimétert"}
-                    }
-                    instrumental{
-                        one{"{0} négyzetcentiméterrel"}
-                        other{"{0} négyzetcentiméterrel"}
-                    }
-                    terminative{
-                        one{"{0} négyzetcentiméterig"}
-                        other{"{0} négyzetcentiméterig"}
-                    }
-                    translative{
-                        one{"{0} négyzetcentiméterré"}
-                        other{"{0} négyzetcentiméterré"}
-                    }
-                }
                 dnam{"négyzetcentiméter"}
                 one{"{0} négyzetcentiméter"}
                 other{"{0} négyzetcentiméter"}
@@ -238,48 +202,12 @@ hu{
                 per{"{0}/négyzethüvelyk"}
             }
             square-kilometer{
-                case{
-                    accusative{
-                        one{"{0} négyzetkilométert"}
-                        other{"{0} négyzetkilométert"}
-                    }
-                    instrumental{
-                        one{"{0} négyzetkilométerrel"}
-                        other{"{0} négyzetkilométerrel"}
-                    }
-                    terminative{
-                        one{"{0} négyzetkilométerig"}
-                        other{"{0} négyzetkilométerig"}
-                    }
-                    translative{
-                        one{"{0} négyzetkilométerré"}
-                        other{"{0} négyzetkilométerré"}
-                    }
-                }
                 dnam{"négyzetkilométer"}
                 one{"{0} négyzetkilométer"}
                 other{"{0} négyzetkilométer"}
                 per{"{0}/km²"}
             }
             square-meter{
-                case{
-                    accusative{
-                        one{"{0} négyzetmétert"}
-                        other{"{0} négyzetmétert"}
-                    }
-                    instrumental{
-                        one{"{0} négyzetméterrel"}
-                        other{"{0} négyzetméterrel"}
-                    }
-                    terminative{
-                        one{"{0} négyzetméterig"}
-                        other{"{0} négyzetméterig"}
-                    }
-                    translative{
-                        one{"{0} négyzetméterré"}
-                        other{"{0} négyzetméterré"}
-                    }
-                }
                 dnam{"négyzetméter"}
                 one{"{0} négyzetméter"}
                 other{"{0} négyzetméter"}
@@ -353,45 +281,23 @@ hu{
             }
         }
         concentr{
-            item{
-                case{
-                    accusative{
-                        one{"{0} itemet"}
-                        other{"{0} itemet"}
-                    }
-                    instrumental{
-                        one{"{0} itemmel"}
-                        other{"{0} itemmel"}
-                    }
-                    terminative{
-                        one{"{0} itemig"}
-                        other{"{0} itemig"}
-                    }
-                    translative{
-                        one{"{0} itemmé"}
-                        other{"{0} itemmé"}
-                    }
-                }
-                one{"{0} item"}
-                other{"{0} item"}
-            }
             karat{
                 case{
                     accusative{
-                        one{"{0} karátot"}
-                        other{"{0} karátot"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                     instrumental{
-                        one{"{0} karáttal"}
-                        other{"{0} karáttal"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                     terminative{
-                        one{"{0} karátig"}
-                        other{"{0} karátig"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                     translative{
-                        one{"{0} karáttá"}
-                        other{"{0} karáttá"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                 }
                 dnam{"karát"}
@@ -404,24 +310,6 @@ hu{
                 other{"{0} milligramm/deciliter"}
             }
             millimole-per-liter{
-                case{
-                    accusative{
-                        one{"{0} millimól/litert"}
-                        other{"{0} millimól/litert"}
-                    }
-                    instrumental{
-                        one{"{0} millimól/literrel"}
-                        other{"{0} millimól/literrel"}
-                    }
-                    terminative{
-                        one{"{0} millimól/literig"}
-                        other{"{0} millimól/literig"}
-                    }
-                    translative{
-                        one{"{0} millimól/literré"}
-                        other{"{0} millimól/literré"}
-                    }
-                }
                 dnam{"millimól/liter"}
                 one{"{0} millimól/liter"}
                 other{"{0} millimól/liter"}
@@ -429,20 +317,20 @@ hu{
             mole{
                 case{
                     accusative{
-                        one{"{0} mólt"}
-                        other{"{0} mólt"}
+                        one{"{0} mól"}
+                        other{"{0} mól"}
                     }
                     instrumental{
-                        one{"{0} móllal"}
-                        other{"{0} móllal"}
+                        one{"{0} mól"}
+                        other{"{0} mól"}
                     }
                     terminative{
-                        one{"{0} mólig"}
-                        other{"{0} mólig"}
+                        one{"{0} mól"}
+                        other{"{0} mól"}
                     }
                     translative{
-                        one{"{0} móllá"}
-                        other{"{0} móllá"}
+                        one{"{0} mól"}
+                        other{"{0} mól"}
                     }
                 }
                 dnam{"mól"}
@@ -452,20 +340,20 @@ hu{
             percent{
                 case{
                     accusative{
-                        one{"{0} százalékot"}
-                        other{"{0} százalékot"}
+                        one{"{0} százalék"}
+                        other{"{0} százalék"}
                     }
                     instrumental{
-                        one{"{0} százalékkal"}
-                        other{"{0} százalékkal"}
+                        one{"{0} százalék"}
+                        other{"{0} százalék"}
                     }
                     terminative{
-                        one{"{0} százalékig"}
-                        other{"{0} százalékig"}
+                        one{"{0} százalék"}
+                        other{"{0} százalék"}
                     }
                     translative{
-                        one{"{0} százalékká"}
-                        other{"{0} százalékká"}
+                        one{"{0} százalék"}
+                        other{"{0} százalék"}
                     }
                 }
                 dnam{"százalék"}
@@ -475,20 +363,20 @@ hu{
             permille{
                 case{
                     accusative{
-                        one{"{0} ezreléket"}
-                        other{"{0} ezreléket"}
+                        one{"{0} ezrelék"}
+                        other{"{0} ezrelék"}
                     }
                     instrumental{
-                        one{"{0} ezrelékkel"}
-                        other{"{0} ezrelékkel"}
+                        one{"{0} ezrelék"}
+                        other{"{0} ezrelék"}
                     }
                     terminative{
-                        one{"{0} ezrelékig"}
-                        other{"{0} ezrelékig"}
+                        one{"{0} ezrelék"}
+                        other{"{0} ezrelék"}
                     }
                     translative{
-                        one{"{0} ezrelékké"}
-                        other{"{0} ezrelékké"}
+                        one{"{0} ezrelék"}
+                        other{"{0} ezrelék"}
                     }
                 }
                 dnam{"ezrelék"}
@@ -498,20 +386,20 @@ hu{
             permillion{
                 case{
                     accusative{
-                        one{"{0} részecske/milliót"}
-                        other{"{0} részecske/milliót"}
+                        one{"{0} részecske/millió"}
+                        other{"{0} részecske/millió"}
                     }
                     instrumental{
-                        one{"{0} részecske/millióval"}
-                        other{"{0} részecske/millióval"}
+                        one{"{0} részecske/millió"}
+                        other{"{0} részecske/millió"}
                     }
                     terminative{
-                        one{"{0} részecske/millióig"}
-                        other{"{0} részecske/millióig"}
+                        one{"{0} részecske/millió"}
+                        other{"{0} részecske/millió"}
                     }
                     translative{
-                        one{"{0} részecske/millióvá"}
-                        other{"{0} részecske/millióvá"}
+                        one{"{0} részecske/millió"}
+                        other{"{0} részecske/millió"}
                     }
                 }
                 dnam{"részecske/millió"}
@@ -521,20 +409,20 @@ hu{
             permyriad{
                 case{
                     accusative{
-                        one{"{0} tízezreléket"}
-                        other{"{0} tízezreléket"}
+                        one{"{0} tízezrelék"}
+                        other{"{0} tízezrelék"}
                     }
                     instrumental{
-                        one{"{0} tízezrelékkel"}
-                        other{"{0} tízezrelékkel"}
+                        one{"{0} tízezrelék"}
+                        other{"{0} tízezrelék"}
                     }
                     terminative{
-                        one{"{0} tízezrelékig"}
-                        other{"{0} tízezrelékig"}
+                        one{"{0} tízezrelék"}
+                        other{"{0} tízezrelék"}
                     }
                     translative{
-                        one{"{0} tízezrelékké"}
-                        other{"{0} tízezrelékké"}
+                        one{"{0} tízezrelék"}
+                        other{"{0} tízezrelék"}
                     }
                 }
                 dnam{"tízezrelék"}
@@ -544,47 +432,11 @@ hu{
         }
         consumption{
             liter-per-100-kilometer{
-                case{
-                    accusative{
-                        one{"{0} liter/100 km-t"}
-                        other{"{0} liter/100 km-t"}
-                    }
-                    instrumental{
-                        one{"{0} liter/100 km-rel"}
-                        other{"{0} liter/100 km-rel"}
-                    }
-                    terminative{
-                        one{"{0} liter/100 km-ig"}
-                        other{"{0} liter/100 km-ig"}
-                    }
-                    translative{
-                        one{"{0} liter/100 km-ré"}
-                        other{"{0} liter/100 km-ré"}
-                    }
-                }
                 dnam{"liter/100 km"}
                 one{"{0} liter/100 km"}
                 other{"{0} liter/100 km"}
             }
             liter-per-kilometer{
-                case{
-                    accusative{
-                        one{"{0} liter per kilométert"}
-                        other{"{0} liter per kilométert"}
-                    }
-                    instrumental{
-                        one{"{0} liter per kilométerrel"}
-                        other{"{0} liter per kilométerrel"}
-                    }
-                    terminative{
-                        one{"{0} liter per kilométerig"}
-                        other{"{0} liter per kilométerig"}
-                    }
-                    translative{
-                        one{"{0} liter per kilométerré"}
-                        other{"{0} liter per kilométerré"}
-                    }
-                }
                 dnam{"liter per kilométer"}
                 one{"{0} liter per kilométer"}
                 other{"{0} liter per kilométer"}
@@ -611,20 +463,20 @@ hu{
             bit{
                 case{
                     accusative{
-                        one{"{0} bitet"}
-                        other{"{0} bitet"}
+                        one{"{0} bit"}
+                        other{"{0} bit"}
                     }
                     instrumental{
-                        one{"{0} bittel"}
-                        other{"{0} bittel"}
+                        one{"{0} bit"}
+                        other{"{0} bit"}
                     }
                     terminative{
-                        one{"{0} bitig"}
-                        other{"{0} bitig"}
+                        one{"{0} bit"}
+                        other{"{0} bit"}
                     }
                     translative{
-                        one{"{0} bitté"}
-                        other{"{0} bitté"}
+                        one{"{0} bit"}
+                        other{"{0} bit"}
                     }
                 }
                 dnam{"bit"}
@@ -634,20 +486,20 @@ hu{
             byte{
                 case{
                     accusative{
-                        one{"{0} bájtot"}
-                        other{"{0} bájtot"}
+                        one{"{0} bájt"}
+                        other{"{0} bájt"}
                     }
                     instrumental{
-                        one{"{0} bájttal"}
-                        other{"{0} bájttal"}
+                        one{"{0} bájt"}
+                        other{"{0} bájt"}
                     }
                     terminative{
-                        one{"{0} bájtig"}
-                        other{"{0} bájtig"}
+                        one{"{0} bájt"}
+                        other{"{0} bájt"}
                     }
                     translative{
-                        one{"{0} bájttá"}
-                        other{"{0} bájttá"}
+                        one{"{0} bájt"}
+                        other{"{0} bájt"}
                     }
                 }
                 dnam{"bájt"}
@@ -655,208 +507,46 @@ hu{
                 other{"{0} bájt"}
             }
             gigabit{
-                case{
-                    accusative{
-                        one{"{0} gigabitet"}
-                        other{"{0} gigabitet"}
-                    }
-                    instrumental{
-                        one{"{0} gigabittel"}
-                        other{"{0} gigabittel"}
-                    }
-                    terminative{
-                        one{"{0} gigabitig"}
-                        other{"{0} gigabitig"}
-                    }
-                    translative{
-                        one{"{0} gigabitté"}
-                        other{"{0} gigabitté"}
-                    }
-                }
                 dnam{"gigabit"}
                 one{"{0} gigabit"}
                 other{"{0} gigabit"}
             }
             gigabyte{
-                case{
-                    accusative{
-                        one{"{0} gigabájtot"}
-                        other{"{0} gigabájtot"}
-                    }
-                    instrumental{
-                        one{"{0} gigabájttal"}
-                        other{"{0} gigabájttal"}
-                    }
-                    terminative{
-                        one{"{0} gigabájtig"}
-                        other{"{0} gigabájtig"}
-                    }
-                    translative{
-                        one{"{0} gigabájttá"}
-                        other{"{0} gigabájttá"}
-                    }
-                }
                 dnam{"gigabájt"}
                 one{"{0} gigabájt"}
                 other{"{0} gigabájt"}
             }
             kilobit{
-                case{
-                    accusative{
-                        one{"{0} kilobitet"}
-                        other{"{0} kilobitet"}
-                    }
-                    instrumental{
-                        one{"{0} kilobittel"}
-                        other{"{0} kilobittel"}
-                    }
-                    terminative{
-                        one{"{0} kilobitig"}
-                        other{"{0} kilobitig"}
-                    }
-                    translative{
-                        one{"{0} kilobitté"}
-                        other{"{0} kilobitté"}
-                    }
-                }
                 dnam{"kilobit"}
                 one{"{0} kilobit"}
                 other{"{0} kilobit"}
             }
             kilobyte{
-                case{
-                    accusative{
-                        one{"{0} kilobájtot"}
-                        other{"{0} kilobájtot"}
-                    }
-                    instrumental{
-                        one{"{0} kilobájttal"}
-                        other{"{0} kilobájttal"}
-                    }
-                    terminative{
-                        one{"{0} kilobájtig"}
-                        other{"{0} kilobájtig"}
-                    }
-                    translative{
-                        one{"{0} kilobájttá"}
-                        other{"{0} kilobájttá"}
-                    }
-                }
                 dnam{"kilobájt"}
                 one{"{0} kilobájt"}
                 other{"{0} kilobájt"}
             }
             megabit{
-                case{
-                    accusative{
-                        one{"{0} megabitet"}
-                        other{"{0} megabitet"}
-                    }
-                    instrumental{
-                        one{"{0} megabittel"}
-                        other{"{0} megabittel"}
-                    }
-                    terminative{
-                        one{"{0} megabitig"}
-                        other{"{0} megabitig"}
-                    }
-                    translative{
-                        one{"{0} megabitté"}
-                        other{"{0} megabitté"}
-                    }
-                }
                 dnam{"megabit"}
                 one{"{0} megabit"}
                 other{"{0} megabit"}
             }
             megabyte{
-                case{
-                    accusative{
-                        one{"{0} megabájtot"}
-                        other{"{0} megabájtot"}
-                    }
-                    instrumental{
-                        one{"{0} megabájttal"}
-                        other{"{0} megabájttal"}
-                    }
-                    terminative{
-                        one{"{0} megabájtig"}
-                        other{"{0} megabájtig"}
-                    }
-                    translative{
-                        one{"{0} megabájttá"}
-                        other{"{0} megabájttá"}
-                    }
-                }
                 dnam{"megabájt"}
                 one{"{0} megabájt"}
                 other{"{0} megabájt"}
             }
             petabyte{
-                case{
-                    accusative{
-                        one{"{0} petabájtot"}
-                        other{"{0} petabájtot"}
-                    }
-                    instrumental{
-                        one{"{0} petabájttal"}
-                        other{"{0} petabájttal"}
-                    }
-                    terminative{
-                        one{"{0} petabájtig"}
-                        other{"{0} petabájtig"}
-                    }
-                    translative{
-                        one{"{0} petabájttá"}
-                        other{"{0} petabájttá"}
-                    }
-                }
                 dnam{"petabájt"}
                 one{"{0} petabájt"}
                 other{"{0} petabájt"}
             }
             terabit{
-                case{
-                    accusative{
-                        one{"{0} terabitet"}
-                        other{"{0} terabitet"}
-                    }
-                    instrumental{
-                        one{"{0} terabittel"}
-                        other{"{0} terabittel"}
-                    }
-                    terminative{
-                        one{"{0} terabitig"}
-                        other{"{0} terabitig"}
-                    }
-                    translative{
-                        one{"{0} terabitté"}
-                        other{"{0} terabitté"}
-                    }
-                }
                 dnam{"terabit"}
                 one{"{0} terabit"}
                 other{"{0} terabit"}
             }
             terabyte{
-                case{
-                    accusative{
-                        one{"{0} terabájtot"}
-                        other{"{0} terabájtot"}
-                    }
-                    instrumental{
-                        one{"{0} terabájttal"}
-                        other{"{0} terabájttal"}
-                    }
-                    terminative{
-                        one{"{0} terabájtig"}
-                        other{"{0} terabájtig"}
-                    }
-                    translative{
-                        one{"{0} terabájttá"}
-                        other{"{0} terabájttá"}
-                    }
-                }
                 dnam{"terabájt"}
                 one{"{0} terabájt"}
                 other{"{0} terabájt"}
@@ -866,20 +556,20 @@ hu{
             century{
                 case{
                     accusative{
-                        one{"{0} évszázadot"}
-                        other{"{0} évszázadot"}
+                        one{"{0} évszázad"}
+                        other{"{0} évszázad"}
                     }
                     instrumental{
-                        one{"{0} évszázaddal"}
-                        other{"{0} évszázaddal"}
+                        one{"{0} évszázad"}
+                        other{"{0} évszázad"}
                     }
                     terminative{
-                        one{"{0} évszázadig"}
-                        other{"{0} évszázadig"}
+                        one{"{0} évszázad"}
+                        other{"{0} évszázad"}
                     }
                     translative{
-                        one{"{0} évszázaddá"}
-                        other{"{0} évszázaddá"}
+                        one{"{0} évszázad"}
+                        other{"{0} évszázad"}
                     }
                 }
                 dnam{"évszázad"}
@@ -889,20 +579,20 @@ hu{
             day{
                 case{
                     accusative{
-                        one{"{0} napot"}
-                        other{"{0} napot"}
+                        one{"{0} nap"}
+                        other{"{0} nap"}
                     }
                     instrumental{
-                        one{"{0} nappal"}
-                        other{"{0} nappal"}
+                        one{"{0} nap"}
+                        other{"{0} nap"}
                     }
                     terminative{
-                        one{"{0} napig"}
-                        other{"{0} napig"}
+                        one{"{0} nap"}
+                        other{"{0} nap"}
                     }
                     translative{
-                        one{"{0} nappá"}
-                        other{"{0} nappá"}
+                        one{"{0} nap"}
+                        other{"{0} nap"}
                     }
                 }
                 dnam{"nap"}
@@ -910,45 +600,23 @@ hu{
                 other{"{0} nap"}
                 per{"{0}/nap"}
             }
-            day-person{
-                case{
-                    accusative{
-                        one{"{0} napot"}
-                        other{"{0} napot"}
-                    }
-                    instrumental{
-                        one{"{0} nappal"}
-                        other{"{0} nappal"}
-                    }
-                    terminative{
-                        one{"{0} napig"}
-                        other{"{0} napig"}
-                    }
-                    translative{
-                        one{"{0} nappá"}
-                        other{"{0} nappá"}
-                    }
-                }
-                one{"{0} nap"}
-                other{"{0} nap"}
-            }
             decade{
                 case{
                     accusative{
-                        one{"{0} évtizedet"}
-                        other{"{0} évtizedet"}
+                        one{"{0} évtized"}
+                        other{"{0} évtized"}
                     }
                     instrumental{
-                        one{"{0} évtizeddel"}
-                        other{"{0} évtizeddel"}
+                        one{"{0} évtized"}
+                        other{"{0} évtized"}
                     }
                     terminative{
-                        one{"{0} évtizedig"}
-                        other{"{0} évtizedig"}
+                        one{"{0} évtized"}
+                        other{"{0} évtized"}
                     }
                     translative{
-                        one{"{0} évtizeddé"}
-                        other{"{0} évtizeddé"}
+                        one{"{0} évtized"}
+                        other{"{0} évtized"}
                     }
                 }
                 dnam{"évtized"}
@@ -958,20 +626,20 @@ hu{
             hour{
                 case{
                     accusative{
-                        one{"{0} órát"}
-                        other{"{0} órát"}
+                        one{"{0} óra"}
+                        other{"{0} óra"}
                     }
                     instrumental{
-                        one{"{0} órával"}
-                        other{"{0} órával"}
+                        one{"{0} óra"}
+                        other{"{0} óra"}
                     }
                     terminative{
-                        one{"{0} óráig"}
-                        other{"{0} óráig"}
+                        one{"{0} óra"}
+                        other{"{0} óra"}
                     }
                     translative{
-                        one{"{0} órává"}
-                        other{"{0} órává"}
+                        one{"{0} óra"}
+                        other{"{0} óra"}
                     }
                 }
                 dnam{"óra"}
@@ -980,47 +648,11 @@ hu{
                 per{"{0}/óra"}
             }
             microsecond{
-                case{
-                    accusative{
-                        one{"{0} mikroszekundumot"}
-                        other{"{0} mikroszekundumot"}
-                    }
-                    instrumental{
-                        one{"{0} mikroszekundummal"}
-                        other{"{0} mikroszekundummal"}
-                    }
-                    terminative{
-                        one{"{0} mikroszekundumig"}
-                        other{"{0} mikroszekundumig"}
-                    }
-                    translative{
-                        one{"{0} mikroszekundummá"}
-                        other{"{0} mikroszekundummá"}
-                    }
-                }
                 dnam{"mikroszekundum"}
                 one{"{0} mikroszekundum"}
                 other{"{0} mikroszekundum"}
             }
             millisecond{
-                case{
-                    accusative{
-                        one{"{0} ezredmásodpercet"}
-                        other{"{0} ezredmásodpercig"}
-                    }
-                    instrumental{
-                        one{"{0} ezredmásodperccel"}
-                        other{"{0} ezredmásodperccel"}
-                    }
-                    terminative{
-                        one{"{0} ezredmásodpercig"}
-                        other{"{0} ezredmásodpercig"}
-                    }
-                    translative{
-                        one{"{0} ezredmásodperccé"}
-                        other{"{0} ezredmásodperccé"}
-                    }
-                }
                 dnam{"ezredmásodperc"}
                 one{"{0} ezredmásodperc"}
                 other{"{0} ezredmásodperc"}
@@ -1028,20 +660,20 @@ hu{
             minute{
                 case{
                     accusative{
-                        one{"{0} percet"}
-                        other{"{0} percet"}
+                        one{"{0} perc"}
+                        other{"{0} perc"}
                     }
                     instrumental{
-                        one{"{0} perccel"}
-                        other{"{0} perccel"}
+                        one{"{0} perc"}
+                        other{"{0} perc"}
                     }
                     terminative{
-                        one{"{0} percig"}
-                        other{"{0} percig"}
+                        one{"{0} perc"}
+                        other{"{0} perc"}
                     }
                     translative{
-                        one{"{0} perccé"}
-                        other{"{0} perccé"}
+                        one{"{0} perc"}
+                        other{"{0} perc"}
                     }
                 }
                 dnam{"perc"}
@@ -1052,20 +684,20 @@ hu{
             month{
                 case{
                     accusative{
-                        one{"{0} hónapot"}
-                        other{"{0} hónapot"}
+                        one{"{0} hónap"}
+                        other{"{0} hónap"}
                     }
                     instrumental{
-                        one{"{0} hónappal"}
-                        other{"{0} hónappal"}
+                        one{"{0} hónap"}
+                        other{"{0} hónap"}
                     }
                     terminative{
-                        one{"{0} hónapig"}
-                        other{"{0} hónapig"}
+                        one{"{0} hónap"}
+                        other{"{0} hónap"}
                     }
                     translative{
-                        one{"{0} hónappá"}
-                        other{"{0} hónappá"}
+                        one{"{0} hónap"}
+                        other{"{0} hónap"}
                     }
                 }
                 dnam{"hónap"}
@@ -1074,24 +706,6 @@ hu{
                 per{"{0}/hónap"}
             }
             nanosecond{
-                case{
-                    accusative{
-                        one{"{0} nanoszekundumot"}
-                        other{"{0} nanoszekundumot"}
-                    }
-                    instrumental{
-                        one{"{0} nanoszekundummal"}
-                        other{"{0} nanoszekundummal"}
-                    }
-                    terminative{
-                        one{"{0} nanoszekundumig"}
-                        other{"{0} nanoszekundumig"}
-                    }
-                    translative{
-                        one{"{0} nanoszekundummá"}
-                        other{"{0} nanoszekundummá"}
-                    }
-                }
                 dnam{"nanoszekundum"}
                 one{"{0} nanoszekundum"}
                 other{"{0} nanoszekundum"}
@@ -1099,20 +713,20 @@ hu{
             second{
                 case{
                     accusative{
-                        one{"{0} másodpercet"}
-                        other{"{0} másodpercet"}
+                        one{"{0} másodperc"}
+                        other{"{0} másodperc"}
                     }
                     instrumental{
-                        one{"{0} másodperccel"}
-                        other{"{0} másodperccel"}
+                        one{"{0} másodperc"}
+                        other{"{0} másodperc"}
                     }
                     terminative{
-                        one{"{0} másodpercig"}
-                        other{"{0} másodpercig"}
+                        one{"{0} másodperc"}
+                        other{"{0} másodperc"}
                     }
                     translative{
-                        one{"{0} másodperccé"}
-                        other{"{0} másodperccé"}
+                        one{"{0} másodperc"}
+                        other{"{0} másodperc"}
                     }
                 }
                 dnam{"másodperc"}
@@ -1123,20 +737,20 @@ hu{
             week{
                 case{
                     accusative{
-                        one{"{0} hetet"}
-                        other{"{0} hetet"}
+                        one{"{0} hét"}
+                        other{"{0} hét"}
                     }
                     instrumental{
-                        one{"{0} héttel"}
-                        other{"{0} héttel"}
+                        one{"{0} hét"}
+                        other{"{0} hét"}
                     }
                     terminative{
-                        one{"{0} hétig"}
-                        other{"{0} hétig"}
+                        one{"{0} hét"}
+                        other{"{0} hét"}
                     }
                     translative{
-                        one{"{0} hétté"}
-                        other{"{0} hétté"}
+                        one{"{0} hét"}
+                        other{"{0} hét"}
                     }
                 }
                 dnam{"hét"}
@@ -1147,20 +761,20 @@ hu{
             year{
                 case{
                     accusative{
-                        one{"{0} évet"}
-                        other{"{0} évet"}
+                        one{"{0} év"}
+                        other{"{0} év"}
                     }
                     instrumental{
-                        one{"{0} évvel"}
-                        other{"{0} évvel"}
+                        one{"{0} év"}
+                        other{"{0} év"}
                     }
                     terminative{
-                        one{"{0} évig"}
-                        other{"{0} évig"}
+                        one{"{0} év"}
+                        other{"{0} év"}
                     }
                     translative{
-                        one{"{0} évvé"}
-                        other{"{0} évvé"}
+                        one{"{0} év"}
+                        other{"{0} év"}
                     }
                 }
                 dnam{"év"}
@@ -1173,20 +787,20 @@ hu{
             ampere{
                 case{
                     accusative{
-                        one{"{0} ampert"}
-                        other{"{0} ampert"}
+                        one{"{0} amper"}
+                        other{"{0} amper"}
                     }
                     instrumental{
-                        one{"{0} amperrel"}
-                        other{"{0} amperrel"}
+                        one{"{0} amper"}
+                        other{"{0} amper"}
                     }
                     terminative{
-                        one{"{0} amperig"}
-                        other{"{0} amperig"}
+                        one{"{0} amper"}
+                        other{"{0} amper"}
                     }
                     translative{
-                        one{"{0} amperré"}
-                        other{"{0} amperré"}
+                        one{"{0} amper"}
+                        other{"{0} amper"}
                     }
                 }
                 dnam{"amper"}
@@ -1194,24 +808,6 @@ hu{
                 other{"{0} amper"}
             }
             milliampere{
-                case{
-                    accusative{
-                        one{"{0} milliampert"}
-                        other{"{0} milliampert"}
-                    }
-                    instrumental{
-                        one{"{0} milliamperrel"}
-                        other{"{0} milliamperrel"}
-                    }
-                    terminative{
-                        one{"{0} milliamperig"}
-                        other{"{0} milliamperig"}
-                    }
-                    translative{
-                        one{"{0} milliamperré"}
-                        other{"{0} milliamperré"}
-                    }
-                }
                 dnam{"milliamper"}
                 one{"{0} milliamper"}
                 other{"{0} milliamper"}
@@ -1219,20 +815,20 @@ hu{
             ohm{
                 case{
                     accusative{
-                        one{"{0} ohmot"}
-                        other{"{0} ohmot"}
+                        one{"{0} ohm"}
+                        other{"{0} ohm"}
                     }
                     instrumental{
-                        one{"{0} ohmmal"}
-                        other{"{0} ohmmal"}
+                        one{"{0} ohm"}
+                        other{"{0} ohm"}
                     }
                     terminative{
-                        one{"{0} ohmig"}
-                        other{"{0} ohmig"}
+                        one{"{0} ohm"}
+                        other{"{0} ohm"}
                     }
                     translative{
-                        one{"{0} ohmmá"}
-                        other{"{0} ohmmá"}
+                        one{"{0} ohm"}
+                        other{"{0} ohm"}
                     }
                 }
                 dnam{"ohm"}
@@ -1242,20 +838,20 @@ hu{
             volt{
                 case{
                     accusative{
-                        one{"{0} voltot"}
-                        other{"{0} voltot"}
+                        one{"{0} volt"}
+                        other{"{0} volt"}
                     }
                     instrumental{
-                        one{"{0} volttal"}
-                        other{"{0} volttal"}
+                        one{"{0} volt"}
+                        other{"{0} volt"}
                     }
                     terminative{
-                        one{"{0} voltig"}
-                        other{"{0} voltig"}
+                        one{"{0} volt"}
+                        other{"{0} volt"}
                     }
                     translative{
-                        one{"{0} volttá"}
-                        other{"{0} volttá"}
+                        one{"{0} volt"}
+                        other{"{0} volt"}
                     }
                 }
                 dnam{"volt"}
@@ -1272,20 +868,20 @@ hu{
             calorie{
                 case{
                     accusative{
-                        one{"{0} kalóriát"}
-                        other{"{0} kalóriát"}
+                        one{"{0} kalória"}
+                        other{"{0} kalória"}
                     }
                     instrumental{
-                        one{"{0} kalóriával"}
-                        other{"{0} kalóriával"}
+                        one{"{0} kalória"}
+                        other{"{0} kalória"}
                     }
                     terminative{
-                        one{"{0} kalóriáig"}
-                        other{"{0} kalóriáig"}
+                        one{"{0} kalória"}
+                        other{"{0} kalória"}
                     }
                     translative{
-                        one{"{0} kalóriává"}
-                        other{"{0} kalóriává"}
+                        one{"{0} kalória"}
+                        other{"{0} kalória"}
                     }
                 }
                 dnam{"kalória"}
@@ -1305,20 +901,20 @@ hu{
             joule{
                 case{
                     accusative{
-                        one{"{0} joule-t"}
-                        other{"{0} joule-t"}
+                        one{"{0} joule"}
+                        other{"{0} joule"}
                     }
                     instrumental{
-                        one{"{0} joule-lal"}
-                        other{"{0} joule-lal"}
+                        one{"{0} joule"}
+                        other{"{0} joule"}
                     }
                     terminative{
-                        one{"{0} joule-ig"}
-                        other{"{0} joule-ig"}
+                        one{"{0} joule"}
+                        other{"{0} joule"}
                     }
                     translative{
-                        one{"{0} joule-lá"}
-                        other{"{0} joule-lá"}
+                        one{"{0} joule"}
+                        other{"{0} joule"}
                     }
                 }
                 dnam{"joule"}
@@ -1331,47 +927,11 @@ hu{
                 other{"{0} kilokalória"}
             }
             kilojoule{
-                case{
-                    accusative{
-                        one{"{0} kilojoule-t"}
-                        other{"{0} kilojoule-t"}
-                    }
-                    instrumental{
-                        one{"{0} kilojoule-lal"}
-                        other{"{0} kilojoule-lal"}
-                    }
-                    terminative{
-                        one{"{0} kilojoule-ig"}
-                        other{"{0} kilojoule-ig"}
-                    }
-                    translative{
-                        one{"{0} kilojoule-lá"}
-                        other{"{0} kilojoule-lá"}
-                    }
-                }
                 dnam{"kilojoule"}
                 one{"{0} kilojoule"}
                 other{"{0} kilojoule"}
             }
             kilowatt-hour{
-                case{
-                    accusative{
-                        one{"{0} kilowattórát"}
-                        other{"{0} kilowattórát"}
-                    }
-                    instrumental{
-                        one{"{0} kilowattórával"}
-                        other{"{0} kilowattórával"}
-                    }
-                    terminative{
-                        one{"{0} kilowattóráig"}
-                        other{"{0} kilowattóráig"}
-                    }
-                    translative{
-                        one{"{0} kilowattórává"}
-                        other{"{0} kilowattórává"}
-                    }
-                }
                 dnam{"kilowattóra"}
                 one{"{0} kilowattóra"}
                 other{"{0} kilowattóra"}
@@ -1384,24 +944,6 @@ hu{
         }
         force{
             kilowatt-hour-per-100-kilometer{
-                case{
-                    accusative{
-                        one{"{0} kWh/100 km-t"}
-                        other{"{0} kWh/100 km-t"}
-                    }
-                    instrumental{
-                        one{"{0} kWh/100 km-rel"}
-                        other{"{0} kWh/100 km-rel"}
-                    }
-                    terminative{
-                        one{"{0} kWh/100 km-ig"}
-                        other{"{0} kWh/100 km-ig"}
-                    }
-                    translative{
-                        one{"{0} kWh/100 km-ré"}
-                        other{"{0} kWh/100 km-ré"}
-                    }
-                }
                 dnam{"kWh/100 km"}
                 one{"{0} kWh/100 km"}
                 other{"{0} kWh/100 km"}
@@ -1409,20 +951,20 @@ hu{
             newton{
                 case{
                     accusative{
-                        one{"{0} newtont"}
-                        other{"{0} newtont"}
+                        one{"{0} newton"}
+                        other{"{0} newton"}
                     }
                     instrumental{
-                        one{"{0} newtonnal"}
-                        other{"{0} newtonnal"}
+                        one{"{0} newton"}
+                        other{"{0} newton"}
                     }
                     terminative{
-                        one{"{0} newtonig"}
-                        other{"{0} newtonig"}
+                        one{"{0} newton"}
+                        other{"{0} newton"}
                     }
                     translative{
-                        one{"{0} newtonná"}
-                        other{"{0} newtonná"}
+                        one{"{0} newton"}
+                        other{"{0} newton"}
                     }
                 }
                 dnam{"newton"}
@@ -1437,24 +979,6 @@ hu{
         }
         frequency{
             gigahertz{
-                case{
-                    accusative{
-                        one{"{0} gigahertzet"}
-                        other{"{0} gigahertzet"}
-                    }
-                    instrumental{
-                        one{"{0} gigahertzcel"}
-                        other{"{0} gigahertzcel"}
-                    }
-                    terminative{
-                        one{"{0} gigahertzig"}
-                        other{"{0} gigahertzig"}
-                    }
-                    translative{
-                        one{"{0} gigahertzcé"}
-                        other{"{0} gigahertzcé"}
-                    }
-                }
                 dnam{"gigahertz"}
                 one{"{0} gigahertz"}
                 other{"{0} gigahertz"}
@@ -1462,20 +986,20 @@ hu{
             hertz{
                 case{
                     accusative{
-                        one{"{0} hertzet"}
-                        other{"{0} hertzet"}
+                        one{"{0} hertz"}
+                        other{"{0} hertz"}
                     }
                     instrumental{
-                        one{"{0} hertzcel"}
-                        other{"{0} hertzcel"}
+                        one{"{0} hertz"}
+                        other{"{0} hertz"}
                     }
                     terminative{
-                        one{"{0} hertzig"}
-                        other{"{0} hertzig"}
+                        one{"{0} hertz"}
+                        other{"{0} hertz"}
                     }
                     translative{
-                        one{"{0} hertzcé"}
-                        other{"{0} hertzcé"}
+                        one{"{0} hertz"}
+                        other{"{0} hertz"}
                     }
                 }
                 dnam{"hertz"}
@@ -1483,47 +1007,11 @@ hu{
                 other{"{0} hertz"}
             }
             kilohertz{
-                case{
-                    accusative{
-                        one{"{0} kilohertzet"}
-                        other{"{0} kilohertzet"}
-                    }
-                    instrumental{
-                        one{"{0} kilohertzcel"}
-                        other{"{0} kilohertzcel"}
-                    }
-                    terminative{
-                        one{"{0} kilohertzig"}
-                        other{"{0} kilohertzig"}
-                    }
-                    translative{
-                        one{"{0} kilohertzcé"}
-                        other{"{0} kilohertzcé"}
-                    }
-                }
                 dnam{"kilohertz"}
                 one{"{0} kilohertz"}
                 other{"{0} kilohertz"}
             }
             megahertz{
-                case{
-                    accusative{
-                        one{"{0} megahertzet"}
-                        other{"{0} megahertzet"}
-                    }
-                    instrumental{
-                        one{"{0} megahertzcel"}
-                        other{"{0} megahertzcel"}
-                    }
-                    terminative{
-                        one{"{0} megahertzig"}
-                        other{"{0} megahertzig"}
-                    }
-                    translative{
-                        one{"{0} megahertzcé"}
-                        other{"{0} megahertzcé"}
-                    }
-                }
                 dnam{"megahertz"}
                 one{"{0} megahertz"}
                 other{"{0} megahertz"}
@@ -1548,20 +1036,20 @@ hu{
             em{
                 case{
                     accusative{
-                        one{"{0} kvirtet"}
-                        other{"{0} kvirtet"}
+                        one{"{0} kvirt"}
+                        other{"{0} kvirt"}
                     }
                     instrumental{
-                        one{"{0} kvirttel"}
-                        other{"{0} kvirttel"}
+                        one{"{0} kvirt"}
+                        other{"{0} kvirt"}
                     }
                     terminative{
-                        one{"{0} kvirtig"}
-                        other{"{0} kvirtig"}
+                        one{"{0} kvirt"}
+                        other{"{0} kvirt"}
                     }
                     translative{
-                        one{"{0} kvirtté"}
-                        other{"{0} kvirtté"}
+                        one{"{0} kvirt"}
+                        other{"{0} kvirt"}
                     }
                 }
                 dnam{"nyomdai em"}
@@ -1569,24 +1057,6 @@ hu{
                 other{"{0} kvirt"}
             }
             megapixel{
-                case{
-                    accusative{
-                        one{"{0} millió képpontot"}
-                        other{"{0} millió képpontot"}
-                    }
-                    instrumental{
-                        one{"{0} millió képponttal"}
-                        other{"{0} millió képponttal"}
-                    }
-                    terminative{
-                        one{"{0} millió képpontig"}
-                        other{"{0} millió képpontig"}
-                    }
-                    translative{
-                        one{"{0} millió képponttá"}
-                        other{"{0} millió képponttá"}
-                    }
-                }
                 dnam{"millió képpont"}
                 one{"{0} millió képpont"}
                 other{"{0} millió képpont"}
@@ -1594,20 +1064,20 @@ hu{
             pixel{
                 case{
                     accusative{
-                        one{"{0} képpontot"}
-                        other{"{0} képpontot"}
+                        one{"{0} képpont"}
+                        other{"{0} képpont"}
                     }
                     instrumental{
-                        one{"{0} képponttal"}
-                        other{"{0} képponttal"}
+                        one{"{0} képpont"}
+                        other{"{0} képpont"}
                     }
                     terminative{
-                        one{"{0} képpontig"}
-                        other{"{0} képpontig"}
+                        one{"{0} képpont"}
+                        other{"{0} képpont"}
                     }
                     translative{
-                        one{"{0} képponttá"}
-                        other{"{0} képponttá"}
+                        one{"{0} képpont"}
+                        other{"{0} képpont"}
                     }
                 }
                 dnam{"képpont"}
@@ -1615,24 +1085,6 @@ hu{
                 other{"{0} képpont"}
             }
             pixel-per-centimeter{
-                case{
-                    accusative{
-                        one{"{0} képpont per centimétert"}
-                        other{"{0} képpont per centimétert"}
-                    }
-                    instrumental{
-                        one{"{0} képpont per centiméterrel"}
-                        other{"{0} képpont per centiméterrel"}
-                    }
-                    terminative{
-                        one{"{0} képpont per centiméterig"}
-                        other{"{0} képpont per centiméterig"}
-                    }
-                    translative{
-                        one{"{0} képpont per centiméterré"}
-                        other{"{0} képpont per centiméterré"}
-                    }
-                }
                 dnam{"képpont per centiméter"}
                 one{"{0} képpont per centiméter"}
                 other{"{0} képpont per centiméter"}
@@ -1650,48 +1102,12 @@ hu{
                 other{"{0} csillagászati egység"}
             }
             centimeter{
-                case{
-                    accusative{
-                        one{"{0} centimétert"}
-                        other{"{0} centimétert"}
-                    }
-                    instrumental{
-                        one{"{0} centiméterrel"}
-                        other{"{0} centiméterrel"}
-                    }
-                    terminative{
-                        one{"{0} centiméterig"}
-                        other{"{0} centiméterig"}
-                    }
-                    translative{
-                        one{"{0} centiméterré"}
-                        other{"{0} centiméterré"}
-                    }
-                }
                 dnam{"centiméter"}
                 one{"{0} centiméter"}
                 other{"{0} centiméter"}
                 per{"{0}/centimeter"}
             }
             decimeter{
-                case{
-                    accusative{
-                        one{"{0} decimétert"}
-                        other{"{0} decimétert"}
-                    }
-                    instrumental{
-                        one{"{0} deciméterrel"}
-                        other{"{0} deciméterrel"}
-                    }
-                    terminative{
-                        one{"{0} deciméterig"}
-                        other{"{0} deciméterig"}
-                    }
-                    translative{
-                        one{"{0} deciméterré"}
-                        other{"{0} deciméterré"}
-                    }
-                }
                 dnam{"deciméter"}
                 one{"{0} deciméter"}
                 other{"{0} deciméter"}
@@ -1724,24 +1140,6 @@ hu{
                 per{"{0}/hüvelyk"}
             }
             kilometer{
-                case{
-                    accusative{
-                        one{"{0} kilométert"}
-                        other{"{0} kilométert"}
-                    }
-                    instrumental{
-                        one{"{0} kilométerrel"}
-                        other{"{0} kilométerrel"}
-                    }
-                    terminative{
-                        one{"{0} kilométerig"}
-                        other{"{0} kilométerig"}
-                    }
-                    translative{
-                        one{"{0} kilométerré"}
-                        other{"{0} kilométerré"}
-                    }
-                }
                 dnam{"kilométer"}
                 one{"{0} kilométer"}
                 other{"{0} kilométer"}
@@ -1755,20 +1153,20 @@ hu{
             meter{
                 case{
                     accusative{
-                        one{"{0} métert"}
-                        other{"{0} métert"}
+                        one{"{0} méter"}
+                        other{"{0} méter"}
                     }
                     instrumental{
-                        one{"{0} méterrel"}
-                        other{"{0} méterrel"}
+                        one{"{0} méter"}
+                        other{"{0} méter"}
                     }
                     terminative{
-                        one{"{0} méterig"}
-                        other{"{0} méterig"}
+                        one{"{0} méter"}
+                        other{"{0} méter"}
                     }
                     translative{
-                        one{"{0} méterré"}
-                        other{"{0} méterré"}
+                        one{"{0} méter"}
+                        other{"{0} méter"}
                     }
                 }
                 dnam{"méter"}
@@ -1777,24 +1175,6 @@ hu{
                 per{"{0}/méter"}
             }
             micrometer{
-                case{
-                    accusative{
-                        one{"{0} mikrométert"}
-                        other{"{0} mikrométert"}
-                    }
-                    instrumental{
-                        one{"{0} mikrométerrel"}
-                        other{"{0} mikrométerrel"}
-                    }
-                    terminative{
-                        one{"{0} mikrométerig"}
-                        other{"{0} mikrométerig"}
-                    }
-                    translative{
-                        one{"{0} mikrométerré"}
-                        other{"{0} mikrométerré"}
-                    }
-                }
                 dnam{"mikrométer"}
                 one{"{0} mikrométer"}
                 other{"{0} mikrométer"}
@@ -1807,20 +1187,20 @@ hu{
             mile-scandinavian{
                 case{
                     accusative{
-                        one{"{0} svéd mérföldet"}
-                        other{"{0} svéd mérföldet"}
+                        one{"{0} svéd mérföld"}
+                        other{"{0} svéd mérföld"}
                     }
                     instrumental{
-                        one{"{0} svéd mérfölddel"}
-                        other{"{0} svéd mérfölddel"}
+                        one{"{0} svéd mérföld"}
+                        other{"{0} svéd mérföld"}
                     }
                     terminative{
-                        one{"{0} svéd mérföldig"}
-                        other{"{0} svéd mérföldig"}
+                        one{"{0} svéd mérföld"}
+                        other{"{0} svéd mérföld"}
                     }
                     translative{
-                        one{"{0} svéd mérfölddé"}
-                        other{"{0} svéd mérfölddé"}
+                        one{"{0} svéd mérföld"}
+                        other{"{0} svéd mérföld"}
                     }
                 }
                 dnam{"svéd mérföld"}
@@ -1828,47 +1208,11 @@ hu{
                 other{"{0} svéd mérföld"}
             }
             millimeter{
-                case{
-                    accusative{
-                        one{"{0} millimétert"}
-                        other{"{0} millimétert"}
-                    }
-                    instrumental{
-                        one{"{0} milliméterrel"}
-                        other{"{0} milliméterrel"}
-                    }
-                    terminative{
-                        one{"{0} milliméterig"}
-                        other{"{0} milliméterig"}
-                    }
-                    translative{
-                        one{"{0} milliméterré"}
-                        other{"{0} milliméterré"}
-                    }
-                }
                 dnam{"milliméter"}
                 one{"{0} milliméter"}
                 other{"{0} milliméter"}
             }
             nanometer{
-                case{
-                    accusative{
-                        one{"{0} nanométert"}
-                        other{"{0} nanométert"}
-                    }
-                    instrumental{
-                        one{"{0} nanométerrel"}
-                        other{"{0} nanométerrel"}
-                    }
-                    terminative{
-                        one{"{0} nanométerig"}
-                        other{"{0} nanométerig"}
-                    }
-                    translative{
-                        one{"{0} nanométerré"}
-                        other{"{0} nanométerré"}
-                    }
-                }
                 dnam{"nanométer"}
                 one{"{0} nanométer"}
                 other{"{0} nanométer"}
@@ -1884,24 +1228,6 @@ hu{
                 other{"{0} parszek"}
             }
             picometer{
-                case{
-                    accusative{
-                        one{"{0} pikométert"}
-                        other{"{0} pikométert"}
-                    }
-                    instrumental{
-                        one{"{0} pikométerrel"}
-                        other{"{0} pikométerrel"}
-                    }
-                    terminative{
-                        one{"{0} pikométerig"}
-                        other{"{0} pikométerig"}
-                    }
-                    translative{
-                        one{"{0} pikométerré"}
-                        other{"{0} pikométerré"}
-                    }
-                }
                 dnam{"pikométer"}
                 one{"{0} pikométer"}
                 other{"{0} pikométer"}
@@ -1926,20 +1252,20 @@ hu{
             candela{
                 case{
                     accusative{
-                        one{"{0} kandelát"}
-                        other{"{0} kandelát"}
+                        one{"{0} kandela"}
+                        other{"{0} kandela"}
                     }
                     instrumental{
-                        one{"{0} kandelával"}
-                        other{"{0} kandelával"}
+                        one{"{0} kandela"}
+                        other{"{0} kandela"}
                     }
                     terminative{
-                        one{"{0} kandeláig"}
-                        other{"{0} kandeláig"}
+                        one{"{0} kandela"}
+                        other{"{0} kandela"}
                     }
                     translative{
-                        one{"{0} kandelává"}
-                        other{"{0} kandelává"}
+                        one{"{0} kandela"}
+                        other{"{0} kandela"}
                     }
                 }
                 dnam{"kandela"}
@@ -1972,20 +1298,20 @@ hu{
             lux{
                 case{
                     accusative{
-                        one{"{0} luxot"}
-                        other{"{0} luxot"}
+                        one{"{0} lux"}
+                        other{"{0} lux"}
                     }
                     instrumental{
-                        one{"{0} luxszal"}
-                        other{"{0} luxszal"}
+                        one{"{0} lux"}
+                        other{"{0} lux"}
                     }
                     terminative{
-                        one{"{0} luxig"}
-                        other{"{0} luxig"}
+                        one{"{0} lux"}
+                        other{"{0} lux"}
                     }
                     translative{
-                        one{"{0} luxszá"}
-                        other{"{0} luxszá"}
+                        one{"{0} lux"}
+                        other{"{0} lux"}
                     }
                 }
                 dnam{"lux"}
@@ -2002,20 +1328,20 @@ hu{
             carat{
                 case{
                     accusative{
-                        one{"{0} karátot"}
-                        other{"{0} karátot"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                     instrumental{
-                        one{"{0} karáttal"}
-                        other{"{0} karáttal"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                     terminative{
-                        one{"{0} karátig"}
-                        other{"{0} karátig"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                     translative{
-                        one{"{0} karáttá"}
-                        other{"{0} karáttá"}
+                        one{"{0} karát"}
+                        other{"{0} karát"}
                     }
                 }
                 dnam{"karát"}
@@ -2040,20 +1366,20 @@ hu{
             gram{
                 case{
                     accusative{
-                        one{"{0} grammot"}
-                        other{"{0} grammot"}
+                        one{"{0} gramm"}
+                        other{"{0} gramm"}
                     }
                     instrumental{
-                        one{"{0} grammal"}
-                        other{"{0} grammal"}
+                        one{"{0} gramm"}
+                        other{"{0} gramm"}
                     }
                     terminative{
-                        one{"{0} grammig"}
-                        other{"{0} grammig"}
+                        one{"{0} gramm"}
+                        other{"{0} gramm"}
                     }
                     translative{
-                        one{"{0} grammá"}
-                        other{"{0} grammá"}
+                        one{"{0} gramm"}
+                        other{"{0} gramm"}
                     }
                 }
                 dnam{"gramm"}
@@ -2064,20 +1390,20 @@ hu{
             kilogram{
                 case{
                     accusative{
-                        one{"{0} kilogrammot"}
-                        other{"{0} kilogrammot"}
+                        one{"{0} kilogramm"}
+                        other{"{0} kilogramm"}
                     }
                     instrumental{
-                        one{"{0} kilogrammal"}
-                        other{"{0} kilogrammal"}
+                        one{"{0} kilogramm"}
+                        other{"{0} kilogramm"}
                     }
                     terminative{
-                        one{"{0} kilogrammig"}
-                        other{"{0} kilogrammig"}
+                        one{"{0} kilogramm"}
+                        other{"{0} kilogramm"}
                     }
                     translative{
-                        one{"{0} kilogrammá"}
-                        other{"{0} kilogrammá"}
+                        one{"{0} kilogramm"}
+                        other{"{0} kilogramm"}
                     }
                 }
                 dnam{"kilogramm"}
@@ -2088,20 +1414,20 @@ hu{
             metric-ton{
                 case{
                     accusative{
-                        one{"{0} metrikus tonnát"}
-                        other{"{0} metrikus tonnát"}
+                        one{"{0} metrikus tonna"}
+                        other{"{0} metrikus tonna"}
                     }
                     instrumental{
-                        one{"{0} metrikus tonnával"}
-                        other{"{0} metrikus tonnával"}
+                        one{"{0} metrikus tonna"}
+                        other{"{0} metrikus tonna"}
                     }
                     terminative{
-                        one{"{0} metrikus tonnáig"}
-                        other{"{0} metrikus tonnáig"}
+                        one{"{0} metrikus tonna"}
+                        other{"{0} metrikus tonna"}
                     }
                     translative{
-                        one{"{0} metrikus tonnává"}
-                        other{"{0} metrikus tonnává"}
+                        one{"{0} metrikus tonna"}
+                        other{"{0} metrikus tonna"}
                     }
                 }
                 dnam{"metrikus tonna"}
@@ -2109,47 +1435,11 @@ hu{
                 other{"{0} metrikus tonna"}
             }
             microgram{
-                case{
-                    accusative{
-                        one{"{0} mikrogrammot"}
-                        other{"{0} mikrogrammot"}
-                    }
-                    instrumental{
-                        one{"{0} mikrogrammal"}
-                        other{"{0} mikrogrammal"}
-                    }
-                    terminative{
-                        one{"{0} mikrogrammig"}
-                        other{"{0} mikrogrammig"}
-                    }
-                    translative{
-                        one{"{0} mikrogrammá"}
-                        other{"{0} mikrogrammá"}
-                    }
-                }
                 dnam{"mikrogramm"}
                 one{"{0} mikrogramm"}
                 other{"{0} mikrogramm"}
             }
             milligram{
-                case{
-                    accusative{
-                        one{"{0} milligrammot"}
-                        other{"{0} milligrammot"}
-                    }
-                    instrumental{
-                        one{"{0} milligrammal"}
-                        other{"{0} milligrammal"}
-                    }
-                    terminative{
-                        one{"{0} milligrammig"}
-                        other{"{0} milligrammig"}
-                    }
-                    translative{
-                        one{"{0} milligrammá"}
-                        other{"{0} milligrammá"}
-                    }
-                }
                 dnam{"milligramm"}
                 one{"{0} milligramm"}
                 other{"{0} milligramm"}
@@ -2189,24 +1479,6 @@ hu{
         }
         power{
             gigawatt{
-                case{
-                    accusative{
-                        one{"{0} gigawattot"}
-                        other{"{0} gigawattot"}
-                    }
-                    instrumental{
-                        one{"{0} gigawattal"}
-                        other{"{0} gigawattal"}
-                    }
-                    terminative{
-                        one{"{0} gigawattig"}
-                        other{"{0} gigawattig"}
-                    }
-                    translative{
-                        one{"{0} gigawattá"}
-                        other{"{0} gigawattá"}
-                    }
-                }
                 dnam{"gigawatt"}
                 one{"{0} gigawatt"}
                 other{"{0} gigawatt"}
@@ -2217,70 +1489,16 @@ hu{
                 other{"{0} lóerő"}
             }
             kilowatt{
-                case{
-                    accusative{
-                        one{"{0} kilowattot"}
-                        other{"{0} kilowattot"}
-                    }
-                    instrumental{
-                        one{"{0} kilowattal"}
-                        other{"{0} kilowattal"}
-                    }
-                    terminative{
-                        one{"{0} kilowattig"}
-                        other{"{0} kilowattig"}
-                    }
-                    translative{
-                        one{"{0} kilowattá"}
-                        other{"{0} kilowattá"}
-                    }
-                }
                 dnam{"kilowatt"}
                 one{"{0} kilowatt"}
                 other{"{0} kilowatt"}
             }
             megawatt{
-                case{
-                    accusative{
-                        one{"{0} megawattot"}
-                        other{"{0} megawattot"}
-                    }
-                    instrumental{
-                        one{"{0} megawattal"}
-                        other{"{0} megawattal"}
-                    }
-                    terminative{
-                        one{"{0} megawattig"}
-                        other{"{0} megawattig"}
-                    }
-                    translative{
-                        one{"{0} megawattá"}
-                        other{"{0} megawattá"}
-                    }
-                }
                 dnam{"megawatt"}
                 one{"{0} megawatt"}
                 other{"{0} megawatt"}
             }
             milliwatt{
-                case{
-                    accusative{
-                        one{"{0} milliwattot"}
-                        other{"{0} milliwattot"}
-                    }
-                    instrumental{
-                        one{"{0} milliwattal"}
-                        other{"{0} milliwattal"}
-                    }
-                    terminative{
-                        one{"{0} milliwattig"}
-                        other{"{0} milliwattig"}
-                    }
-                    translative{
-                        one{"{0} milliwattá"}
-                        other{"{0} milliwattá"}
-                    }
-                }
                 dnam{"milliwatt"}
                 one{"{0} milliwatt"}
                 other{"{0} milliwatt"}
@@ -2288,20 +1506,20 @@ hu{
             watt{
                 case{
                     accusative{
-                        one{"{0} wattot"}
-                        other{"{0} wattot"}
+                        one{"{0} watt"}
+                        other{"{0} watt"}
                     }
                     instrumental{
-                        one{"{0} wattal"}
-                        other{"{0} wattal"}
+                        one{"{0} watt"}
+                        other{"{0} watt"}
                     }
                     terminative{
-                        one{"{0} wattig"}
-                        other{"{0} wattig"}
+                        one{"{0} watt"}
+                        other{"{0} watt"}
                     }
                     translative{
-                        one{"{0} wattá"}
-                        other{"{0} wattá"}
+                        one{"{0} watt"}
+                        other{"{0} watt"}
                     }
                 }
                 dnam{"watt"}
@@ -2313,67 +1531,27 @@ hu{
             atmosphere{
                 case{
                     accusative{
-                        one{"{0} atmoszférát"}
-                        other{"{0} atmoszférát"}
+                        one{"{0} atmoszféra"}
+                        other{"{0} atmoszféra"}
                     }
                     instrumental{
-                        one{"{0} atmoszférával"}
-                        other{"{0} atmoszférával"}
+                        one{"{0} atmoszféra"}
+                        other{"{0} atmoszféra"}
                     }
                     terminative{
-                        one{"{0} atmoszféráig"}
-                        other{"{0} atmoszféráig"}
+                        one{"{0} atmoszféra"}
+                        other{"{0} atmoszféra"}
                     }
                     translative{
-                        one{"{0} atmoszférává"}
-                        other{"{0} atmoszférává"}
+                        one{"{0} atmoszféra"}
+                        other{"{0} atmoszféra"}
                     }
                 }
                 dnam{"atmoszféra"}
                 one{"{0} atmoszféra"}
                 other{"{0} atmoszféra"}
             }
-            bar{
-                case{
-                    accusative{
-                        one{"{0} bart"}
-                        other{"{0} bart"}
-                    }
-                    instrumental{
-                        one{"{0} barral"}
-                        other{"{0} barral"}
-                    }
-                    terminative{
-                        one{"{0} barig"}
-                        other{"{0} barig"}
-                    }
-                    translative{
-                        one{"{0} barrá"}
-                        other{"{0} barrá"}
-                    }
-                }
-                one{"{0} bar"}
-                other{"{0} bar"}
-            }
             hectopascal{
-                case{
-                    accusative{
-                        one{"{0} hektopascalt"}
-                        other{"{0} hektopascalt"}
-                    }
-                    instrumental{
-                        one{"{0} hektopascallal"}
-                        other{"{0} hektopascallal"}
-                    }
-                    terminative{
-                        one{"{0} hektopascalig"}
-                        other{"{0} hektopascalig"}
-                    }
-                    translative{
-                        one{"{0} hektopascallá"}
-                        other{"{0} hektopascallá"}
-                    }
-                }
                 dnam{"hektopascal"}
                 one{"{0} hektopascal"}
                 other{"{0} hektopascal"}
@@ -2384,70 +1562,16 @@ hu{
                 other{"{0} higanyhüvelyk"}
             }
             kilopascal{
-                case{
-                    accusative{
-                        one{"{0} kilopascalt"}
-                        other{"{0} kilopascalt"}
-                    }
-                    instrumental{
-                        one{"{0} kilopascallal"}
-                        other{"{0} kilopascallal"}
-                    }
-                    terminative{
-                        one{"{0} kilopascalig"}
-                        other{"{0} kilopascalig"}
-                    }
-                    translative{
-                        one{"{0} kilopascallá"}
-                        other{"{0} kilopascallá"}
-                    }
-                }
                 dnam{"kilopascal"}
                 one{"{0} kilopascal"}
                 other{"{0} kilopascal"}
             }
             megapascal{
-                case{
-                    accusative{
-                        one{"{0} megapascalt"}
-                        other{"{0} megapascalt"}
-                    }
-                    instrumental{
-                        one{"{0} megapascallal"}
-                        other{"{0} megapascallal"}
-                    }
-                    terminative{
-                        one{"{0} megapascalig"}
-                        other{"{0} megapascalig"}
-                    }
-                    translative{
-                        one{"{0} megapascallá"}
-                        other{"{0} megapascallá"}
-                    }
-                }
                 dnam{"megapascal"}
                 one{"{0} megapascal"}
                 other{"{0} megapascal"}
             }
             millibar{
-                case{
-                    accusative{
-                        one{"{0} millibart"}
-                        other{"{0} millibart"}
-                    }
-                    instrumental{
-                        one{"{0} millibarral"}
-                        other{"{0} millibarral"}
-                    }
-                    terminative{
-                        one{"{0} millibarig"}
-                        other{"{0} millibarig"}
-                    }
-                    translative{
-                        one{"{0} millibarrá"}
-                        other{"{0} millibarrá"}
-                    }
-                }
                 dnam{"millibar"}
                 one{"{0} millibar"}
                 other{"{0} millibar"}
@@ -2460,20 +1584,20 @@ hu{
             pascal{
                 case{
                     accusative{
-                        one{"{0} pascalt"}
-                        other{"{0} pascalt"}
+                        one{"{0} pascal"}
+                        other{"{0} pascal"}
                     }
                     instrumental{
-                        one{"{0} pascallal"}
-                        other{"{0} pascallal"}
+                        one{"{0} pascal"}
+                        other{"{0} pascal"}
                     }
                     terminative{
-                        one{"{0} pascalig"}
-                        other{"{0} pascalig"}
+                        one{"{0} pascal"}
+                        other{"{0} pascal"}
                     }
                     translative{
-                        one{"{0} pascallá"}
-                        other{"{0} pascallá"}
+                        one{"{0} pascal"}
+                        other{"{0} pascal"}
                     }
                 }
                 dnam{"pascal"}
@@ -2488,24 +1612,6 @@ hu{
         }
         speed{
             kilometer-per-hour{
-                case{
-                    accusative{
-                        one{"{0} kilométer per órát"}
-                        other{"{0} kilométer per órát"}
-                    }
-                    instrumental{
-                        one{"{0} kilométer per órával"}
-                        other{"{0} kilométer per órával"}
-                    }
-                    terminative{
-                        one{"{0} kilométer per óráig"}
-                        other{"{0} kilométer per óráig"}
-                    }
-                    translative{
-                        one{"{0} kilométer per órává"}
-                        other{"{0} kilométer per órává"}
-                    }
-                }
                 dnam{"kilométer per óra"}
                 one{"{0} kilométer per óra"}
                 other{"{0} kilométer per óra"}
@@ -2516,24 +1622,6 @@ hu{
                 other{"{0} csomó"}
             }
             meter-per-second{
-                case{
-                    accusative{
-                        one{"{0} méter per másodpercet"}
-                        other{"{0} méter per másodpercet"}
-                    }
-                    instrumental{
-                        one{"{0} méter per másodperccel"}
-                        other{"{0} méter per másodperccel"}
-                    }
-                    terminative{
-                        one{"{0} méter per másodpercig"}
-                        other{"{0} méter per másodpercig"}
-                    }
-                    translative{
-                        one{"{0} méter per másodperccé"}
-                        other{"{0} méter per másodperccé"}
-                    }
-                }
                 dnam{"méter per másodperc"}
                 one{"{0} méter per másodperc"}
                 other{"{0} méter per másodperc"}
@@ -2548,20 +1636,20 @@ hu{
             celsius{
                 case{
                     accusative{
-                        one{"{0} Celsius-fokot"}
-                        other{"{0} Celsius-fokot"}
+                        one{"{0} Celsius-fok"}
+                        other{"{0} Celsius-fok"}
                     }
                     instrumental{
-                        one{"{0} Celsius-fokkal"}
-                        other{"{0} Celsius-fokkal"}
+                        one{"{0} Celsius-fok"}
+                        other{"{0} Celsius-fok"}
                     }
                     terminative{
-                        one{"{0} Celsius-fokig"}
-                        other{"{0} Celsius-fokig"}
+                        one{"{0} Celsius-fok"}
+                        other{"{0} Celsius-fok"}
                     }
                     translative{
-                        one{"{0} Celsius-fokká"}
-                        other{"{0} Celsius-fokká"}
+                        one{"{0} Celsius-fok"}
+                        other{"{0} Celsius-fok"}
                     }
                 }
                 dnam{"Celsius-fok"}
@@ -2576,43 +1664,43 @@ hu{
             generic{
                 case{
                     accusative{
-                        one{"{0} fokot"}
-                        other{"{0} fokot"}
+                        one{"{0}°"}
+                        other{"{0}°"}
                     }
                     instrumental{
-                        one{"{0} fokkal"}
-                        other{"{0} fokkal"}
+                        one{"{0}°"}
+                        other{"{0}°"}
                     }
                     terminative{
-                        one{"{0} fokig"}
-                        other{"{0} fokig"}
+                        one{"{0}°"}
+                        other{"{0}°"}
                     }
                     translative{
-                        one{"{0} fokká"}
-                        other{"{0} fokká"}
+                        one{"{0}°"}
+                        other{"{0}°"}
                     }
                 }
                 dnam{"°"}
-                one{"{0} fok"}
-                other{"{0} fok"}
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
                 case{
                     accusative{
-                        one{"{0} kelvint"}
-                        other{"{0} kelvint"}
+                        one{"{0} kelvin"}
+                        other{"{0} kelvin"}
                     }
                     instrumental{
-                        one{"{0} kelvinnel"}
-                        other{"{0} kelvinnel"}
+                        one{"{0} kelvin"}
+                        other{"{0} kelvin"}
                     }
                     terminative{
-                        one{"{0} kelvinig"}
-                        other{"{0} kelvinig"}
+                        one{"{0} kelvin"}
+                        other{"{0} kelvin"}
                     }
                     translative{
-                        one{"{0} kelvinné"}
-                        other{"{0} kelvinné"}
+                        one{"{0} kelvin"}
+                        other{"{0} kelvin"}
                     }
                 }
                 dnam{"kelvin"}
@@ -2622,24 +1710,6 @@ hu{
         }
         torque{
             newton-meter{
-                case{
-                    accusative{
-                        one{"{0} newtonmétert"}
-                        other{"{0} newtonmétert"}
-                    }
-                    instrumental{
-                        one{"{0} newtonméterrel"}
-                        other{"{0} newtonméterrel"}
-                    }
-                    terminative{
-                        one{"{0} newtonméterig"}
-                        other{"{0} newtonméterig"}
-                    }
-                    translative{
-                        one{"{0} newtonméterré"}
-                        other{"{0} newtonméterré"}
-                    }
-                }
                 dnam{"newtonméter"}
                 one{"{0} newtonméter"}
                 other{"{0} newtonméter"}
@@ -2667,47 +1737,11 @@ hu{
                 other{"{0} véka"}
             }
             centiliter{
-                case{
-                    accusative{
-                        one{"{0} centilitert"}
-                        other{"{0} centilitert"}
-                    }
-                    instrumental{
-                        one{"{0} centiliterrel"}
-                        other{"{0} centiliterrel"}
-                    }
-                    terminative{
-                        one{"{0} centiliterig"}
-                        other{"{0} centiliterig"}
-                    }
-                    translative{
-                        one{"{0} centiliterré"}
-                        other{"{0} centiliterré"}
-                    }
-                }
                 dnam{"centiliter"}
                 one{"{0} centiliter"}
                 other{"{0} centiliter"}
             }
             cubic-centimeter{
-                case{
-                    accusative{
-                        one{"{0} köbcentimétert"}
-                        other{"{0} köbcentimétert"}
-                    }
-                    instrumental{
-                        one{"{0} köbcentiméterrel"}
-                        other{"{0} köbcentiméterrel"}
-                    }
-                    terminative{
-                        one{"{0} köbcentiméterig"}
-                        other{"{0} köbcentiméterig"}
-                    }
-                    translative{
-                        one{"{0} köbcentiméterré"}
-                        other{"{0} köbcentiméterré"}
-                    }
-                }
                 dnam{"köbcentiméter"}
                 one{"{0} köbcentiméter"}
                 other{"{0} köbcentiméter"}
@@ -2724,47 +1758,11 @@ hu{
                 other{"{0} köbhüvelyk"}
             }
             cubic-kilometer{
-                case{
-                    accusative{
-                        one{"{0} köbkilométert"}
-                        other{"{0} köbkilométert"}
-                    }
-                    instrumental{
-                        one{"{0} köbkilométerrel"}
-                        other{"{0} köbkilométerrel"}
-                    }
-                    terminative{
-                        one{"{0} köbkilométerig"}
-                        other{"{0} köbkilométerig"}
-                    }
-                    translative{
-                        one{"{0} köbkilométerré"}
-                        other{"{0} köbkilométerré"}
-                    }
-                }
                 dnam{"köbkilométer"}
                 one{"{0} köbkilométer"}
                 other{"{0} köbkilométer"}
             }
             cubic-meter{
-                case{
-                    accusative{
-                        one{"{0} köbmétert"}
-                        other{"{0} köbmétert"}
-                    }
-                    instrumental{
-                        one{"{0} köbméterrel"}
-                        other{"{0} köbméterrel"}
-                    }
-                    terminative{
-                        one{"{0} köbméterig"}
-                        other{"{0} köbméterig"}
-                    }
-                    translative{
-                        one{"{0} köbméterré"}
-                        other{"{0} köbméterré"}
-                    }
-                }
                 dnam{"köbméter"}
                 one{"{0} köbméter"}
                 other{"{0} köbméter"}
@@ -2788,20 +1786,20 @@ hu{
             cup-metric{
                 case{
                     accusative{
-                        one{"{0} bögrét"}
-                        other{"{0} bögrét"}
+                        one{"{0} bögre"}
+                        other{"{0} bögre"}
                     }
                     instrumental{
-                        one{"{0} bögrével"}
-                        other{"{0} bögrével"}
+                        one{"{0} bögre"}
+                        other{"{0} bögre"}
                     }
                     terminative{
-                        one{"{0} bögréig"}
-                        other{"{0} bögréig"}
+                        one{"{0} bögre"}
+                        other{"{0} bögre"}
                     }
                     translative{
-                        one{"{0} bögrévé"}
-                        other{"{0} bögrévé"}
+                        one{"{0} bögre"}
+                        other{"{0} bögre"}
                     }
                 }
                 dnam{"bögre"}
@@ -2809,24 +1807,6 @@ hu{
                 other{"{0} bögre"}
             }
             deciliter{
-                case{
-                    accusative{
-                        one{"{0} decilitert"}
-                        other{"{0} decilitert"}
-                    }
-                    instrumental{
-                        one{"{0} deciliterrel"}
-                        other{"{0} deciliterrel"}
-                    }
-                    terminative{
-                        one{"{0} deciliterig"}
-                        other{"{0} deciliterig"}
-                    }
-                    translative{
-                        one{"{0} deciliterré"}
-                        other{"{0} deciliterré"}
-                    }
-                }
                 dnam{"deciliter"}
                 one{"{0} deciliter"}
                 other{"{0} deciliter"}
@@ -2874,24 +1854,6 @@ hu{
                 per{"{0}/birodalmi gallon"}
             }
             hectoliter{
-                case{
-                    accusative{
-                        one{"{0} hektolitert"}
-                        other{"{0} hektolitert"}
-                    }
-                    instrumental{
-                        one{"{0} hektoliterrel"}
-                        other{"{0} hektoliterrel"}
-                    }
-                    terminative{
-                        one{"{0} hektoliterig"}
-                        other{"{0} hektoliterig"}
-                    }
-                    translative{
-                        one{"{0} hektoliterré"}
-                        other{"{0} hektoliterré"}
-                    }
-                }
                 dnam{"hektoliter"}
                 one{"{0} hektoliter"}
                 other{"{0} hektoliter"}
@@ -2904,20 +1866,20 @@ hu{
             liter{
                 case{
                     accusative{
-                        one{"{0} litert"}
-                        other{"{0} litert"}
+                        one{"{0} liter"}
+                        other{"{0} liter"}
                     }
                     instrumental{
-                        one{"{0} literrel"}
-                        other{"{0} literrel"}
+                        one{"{0} liter"}
+                        other{"{0} liter"}
                     }
                     terminative{
-                        one{"{0} literig"}
-                        other{"{0} literig"}
+                        one{"{0} liter"}
+                        other{"{0} liter"}
                     }
                     translative{
-                        one{"{0} literré"}
-                        other{"{0} literré"}
+                        one{"{0} liter"}
+                        other{"{0} liter"}
                     }
                 }
                 dnam{"liter"}
@@ -2926,47 +1888,11 @@ hu{
                 per{"{0}/liter"}
             }
             megaliter{
-                case{
-                    accusative{
-                        one{"{0} megalitert"}
-                        other{"{0} megalitert"}
-                    }
-                    instrumental{
-                        one{"{0} megaliterrel"}
-                        other{"{0} megaliterrel"}
-                    }
-                    terminative{
-                        one{"{0} megaliterig"}
-                        other{"{0} megaliterig"}
-                    }
-                    translative{
-                        one{"{0} megaliterré"}
-                        other{"{0} megaliterré"}
-                    }
-                }
                 dnam{"megaliter"}
                 one{"{0} megaliter"}
                 other{"{0} megaliter"}
             }
             milliliter{
-                case{
-                    accusative{
-                        one{"{0} millilitert"}
-                        other{"{0} millilitert"}
-                    }
-                    instrumental{
-                        one{"{0} milliliterrel"}
-                        other{"{0} milliliterrel"}
-                    }
-                    terminative{
-                        one{"{0} milliliterig"}
-                        other{"{0} milliliterig"}
-                    }
-                    translative{
-                        one{"{0} milliliterré"}
-                        other{"{0} milliliterré"}
-                    }
-                }
                 dnam{"milliliter"}
                 one{"{0} milliliter"}
                 other{"{0} milliliter"}
@@ -2984,20 +1910,20 @@ hu{
             pint-metric{
                 case{
                     accusative{
-                        one{"{0} metrikus pintet"}
-                        other{"{0} metrikus pintet"}
+                        one{"{0} metrikus pint"}
+                        other{"{0} metrikus pint"}
                     }
                     instrumental{
-                        one{"{0} metrikus pinttel"}
-                        other{"{0} metrikus pinttel"}
+                        one{"{0} metrikus pint"}
+                        other{"{0} metrikus pint"}
                     }
                     terminative{
-                        one{"{0} metrikus pintig"}
-                        other{"{0} metrikus pintig"}
+                        one{"{0} metrikus pint"}
+                        other{"{0} metrikus pint"}
                     }
                     translative{
-                        one{"{0} metrikus pintté"}
-                        other{"{0} metrikus pintté"}
+                        one{"{0} metrikus pint"}
+                        other{"{0} metrikus pint"}
                     }
                 }
                 dnam{"metrikus pint"}
