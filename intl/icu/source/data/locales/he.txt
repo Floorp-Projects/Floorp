@@ -289,17 +289,17 @@ he{
         }
         minimalPairs{
             gender{
-                feminine{"{0} נקבה"}
-                masculine{"{0} זכר"}
+                feminine{"ה{0} הראשונה היא הקובעת"}
+                masculine{"ה{0} הראשון הוא הקובע"}
             }
             ordinal{
                 other{"פנה ימינה בפנייה ה-{0}"}
             }
             plural{
                 many{"{0} שנה"}
-                one{"שנה"}
-                other{"{0} שנים"}
-                two{"שנתיים"}
+                one{"השנה האחרונה הייתה קשה"}
+                other{"{0} השנים האחרונות היו קשות"}
+                two{"השנתיים האחרונות היו קשות"}
             }
         }
         minimumGroupingDigits{"1"}

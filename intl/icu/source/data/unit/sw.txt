@@ -1398,8 +1398,6 @@ sw{
             }
             revolution{
                 dnam{"mzunguko"}
-                one{"mzunguko {0}"}
-                other{"mizunguko {0}"}
             }
         }
         area{

@@ -1,0 +1,129 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
+hi_Latn{
+    %%Parent{"en_IN"}
+    Keys{
+        colAlternate{"Symbol sorting ignore karein"}
+        colCaseFirst{"Uppercase/Lowercase ke order mein rakhna"}
+        colCaseLevel{"Case Sensitive Sorting"}
+        colNormalization{"Normalized Sorting"}
+        colStrength{"Sorting ki Strength"}
+        hc{"Hours ki Cycle (12 vs 24)"}
+        lb{"Line break ki style"}
+        ms{"Measurement kaa system"}
+    }
+    Languages{
+        af{"Afreeki"}
+        ar_001{"Modern Standard Arabic"}
+        as{"Aasaami"}
+        bn{"Bangla"}
+        bo{"Tibbati"}
+        ckb{"Kurdish, Sorani"}
+        crh{"Crimean Turkish"}
+        de_AT{"Austrian German"}
+        de_CH{"Swiss High German"}
+        en_AU{"Australian English"}
+        en_CA{"Canadian English"}
+        en_GB{"British English"}
+        en_US{"American English"}
+        es_419{"Latin American Spanish"}
+        es_ES{"European Spanish"}
+        es_MX{"Mexican Spanish"}
+        fa{"Faarsi"}
+        fa_AF{"Dari"}
+        fr_CA{"Canadian French"}
+        fr_CH{"Swiss French"}
+        ht{"Haitian"}
+        mus{"Muscogee"}
+        nan{"Min Nan"}
+        nds_NL{"Low Saxon"}
+        nl_BE{"Flemish"}
+        pt_BR{"Brazilian Portuguese"}
+        pt_PT{"European Portuguese"}
+        ro_MD{"Moldavian"}
+        sw_CD{"Congo Swahili"}
+        ug{"Uighur"}
+        wal{"walamo"}
+        zh_Hans{"Simplified Chinese"}
+        zh_Hant{"Traditional Chinese"}
+    }
+    Languages%long{
+        zh_Hans{"Simplified Mandarin Chinese"}
+        zh_Hant{"Traditional Mandarin Chinese"}
+    }
+    Languages%short{
+        en_GB{"UK English"}
+        en_US{"US English"}
+    }
+    Scripts{
+        Bali{"Baali"}
+        Beng{"Bangla"}
+        Inds{"Sindhu"}
+        Orya{"Odia"}
+        Talu{"Naya Tai Lue"}
+    }
+    Types{
+        calendar{
+            islamic-civil{"Islamic Civil Calendar (tabular, civil epoch)"}
+        }
+        colAlternate{
+            non-ignorable{"Symbols ko sort karein"}
+            shifted{"Symbols ko ignore karte hue sort karein"}
+        }
+        colBackwards{
+            no{"Accents ko normally sort karein"}
+            yes{"Accents ko reverse mein sort karein"}
+        }
+        colCaseFirst{
+            lower{"Pahle lowercase walon ko sort karein"}
+            no{"Normal case order mein sort karein"}
+            upper{"Pahle uppercase walon ko sort karein"}
+        }
+        colCaseLevel{
+            no{"Case insensitive sorting karein"}
+            yes{"Case sensitive sorting karein"}
+        }
+        colNormalization{
+            no{"Bina normalization ke sort karein"}
+            yes{"Sort Unicode Normalized"}
+        }
+        colNumeric{
+            no{"Digits ko alag-alag sort karein"}
+            yes{"Digits ko numerically sort karein"}
+        }
+        colStrength{
+            identical{"Sabhi ko sort karein"}
+            primary{"Sirf Base Letters ko sort karein"}
+            quaternary{"Accents/Case/Width/Kana ko sort karein"}
+            secondary{"Accents ko sort karein"}
+            tertiary{"Accents/Case/Width ko sort karein"}
+        }
+        collation{
+            compat{"Compatibility ke liye, picchla sort order"}
+            dictionary{"Dictionary kaa sort order"}
+            reformed{"Reform kiya gaya Sort Order"}
+            searchjl{"Hangul initial consonant se search karein"}
+        }
+        d0{
+            fwidth{"Poori width"}
+            hwidth{"Aadhi width"}
+            npinyin{"Numeric tones ke saath pinyin karna"}
+        }
+        hc{
+            h11{"12 Hour System (0–11)"}
+            h12{"12 Hour System (1–12)"}
+            h23{"24 Hour System (0–23)"}
+            h24{"24 Hour System (1–24)"}
+        }
+        numbers{
+            beng{"Bangla Digits"}
+            orya{"Odia Digits"}
+        }
+    }
+    codePatterns{
+        language{"Bhasha: {0}"}
+        script{"Lipi: {0}"}
+        territory{"Kshetra: {0}"}
+    }
+}

@@ -186,7 +186,7 @@
       <ProgramDataBaseFileName>.\x86\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin70.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin71.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -203,7 +203,7 @@
       <ProgramDataBaseFileName>.\x86\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin32uwp\icuin70d.dll</OutputFile>
+      <OutputFile>..\..\bin32uwp\icuin71d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib32uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib32uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib32uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -220,7 +220,7 @@
       <ProgramDataBaseFileName>.\x64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin70.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin71.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -237,7 +237,7 @@
       <ProgramDataBaseFileName>.\x64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64uwp\icuin70d.dll</OutputFile>
+      <OutputFile>..\..\bin64uwp\icuin71d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\lib64uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\lib64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -254,7 +254,7 @@
       <ProgramDataBaseFileName>.\ARM\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin70.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin71.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -271,7 +271,7 @@
       <ProgramDataBaseFileName>.\ARM\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARMuwp\icuin70d.dll</OutputFile>
+      <OutputFile>..\..\binARMuwp\icuin71d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARMuwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARMuwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARMuwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -288,7 +288,7 @@
       <ProgramDataBaseFileName>.\ARM64\ReleaseUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARM64uwp\icuin70.dll</OutputFile>
+      <OutputFile>..\..\binARM64uwp\icuin71.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARM64uwp\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARM64uwp\icuin.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARM64uwp\icuuc.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -305,7 +305,7 @@
       <ProgramDataBaseFileName>.\ARM64\DebugUWP/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\binARM64uwp\icuin70d.dll</OutputFile>
+      <OutputFile>..\..\binARM64uwp\icuin71d.dll</OutputFile>
       <ProgramDatabaseFile>.\..\..\libARM64uwp\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\libARM64uwp\icuind.lib</ImportLibrary>
       <AdditionalDependencies>..\..\libARM64uwp\icuucd.lib;%(AdditionalDependencies)</AdditionalDependencies>
