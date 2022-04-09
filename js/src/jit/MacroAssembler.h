@@ -722,14 +722,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // accordingly.
 
   // Setup a call to C/C++ code, given the assumption that the framePushed
-  // accruately define the state of the stack, and that the top of the stack
+  // accurately defines the state of the stack, and that the top of the stack
   // was properly aligned. Note that this only supports cdecl.
-  void setupAlignedABICall();  // CRASH_ON(arm64)
+  //
+  // As a rule of thumb, this can be used in CodeGenerator but not in CacheIR or
+  // Baseline code (because the stack is not aligned to ABIStackAlignment).
+  void setupAlignedABICall();
 
   // As setupAlignedABICall, but for WebAssembly native ABI calls, which pass
   // through a builtin thunk that uses the wasm ABI. All the wasm ABI calls
   // can be native, since we always know the stack alignment a priori.
-  void setupWasmABICall();  // CRASH_ON(arm64)
+  void setupWasmABICall();
 
   // Setup an ABI call for when the alignment is not known. This may need a
   // scratch register.
