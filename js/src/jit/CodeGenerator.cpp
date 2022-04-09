@@ -4745,7 +4745,7 @@ static void EmitPostWriteBarrier(MacroAssembler& masm, CompileRuntime* runtime,
   Register runtimereg = regs.takeAny();
   masm.mov(ImmPtr(runtime), runtimereg);
 
-  masm.setupUnalignedABICall(regs.takeAny());
+  masm.setupAlignedABICall();
   masm.passABIArg(runtimereg);
   masm.passABIArg(objreg);
   if (isGlobal) {
@@ -4942,7 +4942,7 @@ void CodeGenerator::visitOutOfLineCallPostWriteElementBarrier(
 
   Register runtimereg = regs.takeAny();
   using Fn = void (*)(JSRuntime * rt, JSObject * obj, int32_t index);
-  masm.setupUnalignedABICall(runtimereg);
+  masm.setupAlignedABICall();
   masm.mov(ImmPtr(gen->runtime), runtimereg);
   masm.passABIArg(runtimereg);
   masm.passABIArg(objreg);
@@ -7870,7 +7870,7 @@ void CodeGenerator::emitGetNextEntryForIterator(LGetNextEntryForIterator* lir) {
               dataLength);
   masm.branch32(Assembler::AboveOrEqual, temp, dataLength, &iterDone);
   {
-    masm.push(iter);
+    masm.Push(iter);
 
     Register front = iter;
     RangeFront<OrderedHashTable>(masm, range, temp, front);
@@ -7879,7 +7879,7 @@ void CodeGenerator::emitGetNextEntryForIterator(LGetNextEntryForIterator* lir) {
 
     RangePopFront<OrderedHashTable>(masm, range, front, dataLength, temp);
 
-    masm.pop(iter);
+    masm.Pop(iter);
     masm.move32(Imm32(0), output);
   }
   masm.jump(&done);
