@@ -801,7 +801,7 @@ en{
         }
         PHP{
             "₱",
-            "Philippine Peso",
+            "Philippine Piso",
         }
         PKR{
             "PKR",
@@ -898,10 +898,6 @@ en{
         SKK{
             "SKK",
             "Slovak Koruna",
-        }
-        SLE{
-            "SLE",
-            "Sierra Leonean New Leone",
         }
         SLL{
             "SLL",
@@ -1050,10 +1046,6 @@ en{
         VEB{
             "VEB",
             "Venezuelan Bolívar (1871–2008)",
-        }
-        VED{
-            "VED",
-            "Bolívar Soberano",
         }
         VEF{
             "VEF",
@@ -2022,8 +2014,8 @@ en{
             other{"Papua New Guinean kina"}
         }
         PHP{
-            one{"Philippine peso"}
-            other{"Philippine pesos"}
+            one{"Philippine piso"}
+            other{"Philippine pisos"}
         }
         PKR{
             one{"Pakistani rupee"}
@@ -2120,10 +2112,6 @@ en{
         SKK{
             one{"Slovak koruna"}
             other{"Slovak korunas"}
-        }
-        SLE{
-            one{"Sierra Leonean new leone"}
-            other{"Sierra Leonean new leones"}
         }
         SLL{
             one{"Sierra Leonean leone"}
@@ -2272,10 +2260,6 @@ en{
         VEB{
             one{"Venezuelan bolívar (1871–2008)"}
             other{"Venezuelan bolívars (1871–2008)"}
-        }
-        VED{
-            one{"Bolívar Soberano"}
-            other{"Bolívar Soberanos"}
         }
         VEF{
             one{"Venezuelan bolívar (2008–2018)"}

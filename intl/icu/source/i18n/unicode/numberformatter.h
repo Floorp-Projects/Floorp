@@ -22,7 +22,6 @@
 #include "unicode/parseerr.h"
 #include "unicode/plurrule.h"
 #include "unicode/ucurr.h"
-#include "unicode/unounclass.h"
 #include "unicode/unum.h"
 #include "unicode/unumberformatter.h"
 #include "unicode/uobject.h"
@@ -641,33 +640,6 @@ class U_I18N_API Precision : public UMemory {
      */
     static IncrementPrecision increment(double roundingIncrement);
 
-#ifndef U_HIDE_DRAFT_API
-    /**
-     * Version of `Precision::increment()` that takes an integer at a particular power of 10.
-     *
-     * To round to the nearest 0.5 and display 2 fraction digits, with this function, you should write one of the following:
-     *
-     * <pre>
-     * Precision::incrementExact(5, -1).withMinFraction(2)
-     * Precision::incrementExact(50, -2).withMinFraction(2)
-     * Precision::incrementExact(50, -2)
-     * </pre>
-     *
-     * This is analagous to ICU4J `Precision.increment(new BigDecimal("0.50"))`.
-     *
-     * This behavior is modeled after ECMA-402. For more information, see:
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat/NumberFormat#roundingincrement
-     *
-     * @param mantissa
-     *            The increment to which to round numbers.
-     * @param magnitude
-     *            The power of 10 of the ones digit of the mantissa.
-     * @return A precision for chaining or passing to the NumberFormatter precision() setter.
-     * @draft ICU 71
-     */
-    static IncrementPrecision incrementExact(uint64_t mantissa, int16_t magnitude);
-#endif // U_HIDE_DRAFT_API
-
     /**
      * Show numbers rounded and padded according to the rules for the currency unit. The most common
      * rounding precision settings for currencies include <code>Precision::fixedFraction(2)</code>,
@@ -687,14 +659,16 @@ class U_I18N_API Precision : public UMemory {
      */
     static CurrencyPrecision currency(UCurrencyUsage currencyUsage);
 
+#ifndef U_HIDE_DRAFT_API
     /**
      * Configure how trailing zeros are displayed on numbers. For example, to hide trailing zeros
      * when the number is an integer, use UNUM_TRAILING_ZERO_HIDE_IF_WHOLE.
      *
      * @param trailingZeroDisplay Option to configure the display of trailing zeros.
-     * @stable ICU 69
+     * @draft ICU 69
      */
     Precision trailingZeroDisplay(UNumberTrailingZeroDisplay trailingZeroDisplay) const;
+#endif // U_HIDE_DRAFT_API
 
   private:
     enum PrecisionType {
@@ -733,23 +707,16 @@ class U_I18N_API Precision : public UMemory {
             impl::digits_t fMaxSig;
             /** @internal (private) */
             UNumberRoundingPriority fPriority;
-            /**
-             * Whether to retain trailing zeros based on the looser strategy.
-             * @internal (private)
-             */
-            bool fRetain;
         } fracSig;
         /** @internal (private) */
         struct IncrementSettings {
             // For RND_INCREMENT, RND_INCREMENT_ONE, and RND_INCREMENT_FIVE
-            // Note: This is a union, so we shouldn't own memory, since
-            // the default destructor would leak it.
             /** @internal (private) */
-            uint64_t fIncrement;
-            /** @internal (private) */
-            impl::digits_t fIncrementMagnitude;
+            double fIncrement;
             /** @internal (private) */
             impl::digits_t fMinFrac;
+            /** @internal (private) */
+            impl::digits_t fMaxFrac;
         } increment;
         UCurrencyUsage currencyUsage; // For RND_CURRENCY
         UErrorCode errorCode; // For RND_ERROR
@@ -792,10 +759,9 @@ class U_I18N_API Precision : public UMemory {
         const FractionPrecision &base,
         int32_t minSig,
         int32_t maxSig,
-        UNumberRoundingPriority priority,
-        bool retain);
+        UNumberRoundingPriority priority);
 
-    static IncrementPrecision constructIncrement(uint64_t increment, impl::digits_t magnitude);
+    static IncrementPrecision constructIncrement(double increment, int32_t minFrac);
 
     static CurrencyPrecision constructCurrency(UCurrencyUsage usage);
 
@@ -835,6 +801,7 @@ class U_I18N_API Precision : public UMemory {
  */
 class U_I18N_API FractionPrecision : public Precision {
   public:
+#ifndef U_HIDE_DRAFT_API
     /**
      * Override maximum fraction digits with maximum significant digits depending on the magnitude
      * of the number. See UNumberRoundingPriority.
@@ -847,12 +814,13 @@ class U_I18N_API FractionPrecision : public Precision {
      *            How to disambiguate between fraction digits and significant digits.
      * @return A precision for chaining or passing to the NumberFormatter precision() setter.
      *
-     * @stable ICU 69
+     * @draft ICU 69
      */
     Precision withSignificantDigits(
         int32_t minSignificantDigits,
         int32_t maxSignificantDigits,
         UNumberRoundingPriority priority) const;
+#endif // U_HIDE_DRAFT_API
 
     /**
      * Ensure that no less than this number of significant digits are retained when rounding
@@ -1202,31 +1170,30 @@ class U_I18N_API Scale : public UMemory {
 
 namespace impl {
 
-// Do not enclose entire StringProp with #ifndef U_HIDE_INTERNAL_API, needed for a protected field.
-// And do not enclose its class boilerplate within #ifndef U_HIDE_INTERNAL_API.
+// Do not enclose entire StringProp with #ifndef U_HIDE_INTERNAL_API, needed for a protected field
 /**
  * Manages NumberFormatterSettings::usage()'s char* instance on the heap.
  * @internal
  */
 class U_I18N_API StringProp : public UMemory {
 
-  public:
-    /** @internal */
-    ~StringProp();
+#ifndef U_HIDE_INTERNAL_API
 
+  public:
     /** @internal */
     StringProp(const StringProp &other);
 
     /** @internal */
     StringProp &operator=(const StringProp &other);
 
-#ifndef U_HIDE_INTERNAL_API
-
     /** @internal */
     StringProp(StringProp &&src) U_NOEXCEPT;
 
     /** @internal */
     StringProp &operator=(StringProp &&src) U_NOEXCEPT;
+
+    /** @internal */
+    ~StringProp();
 
     /** @internal */
     int16_t length() const {
@@ -2768,20 +2735,14 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
      */
     MeasureUnit getOutputUnit(UErrorCode& status) const;
 
-#ifndef U_HIDE_DRAFT_API
-
-    /**
-     * Gets the noun class of the formatted output. Returns `OTHER` when the noun class
-     * is not supported yet.
-     *
-     * @return `NounClass`
-     * @draft ICU 71.
-     */
-    NounClass getNounClass(UErrorCode &status) const;
-
-#endif // U_HIDE_DRAFT_API
-
 #ifndef U_HIDE_INTERNAL_API
+    /**
+     * Gets the gender of the formatted output. Returns "" when the gender is
+     * unknown, or for ungendered languages.
+     *
+     * @internal ICU 69 technology preview.
+     */
+    const char *getGender(UErrorCode& status) const;
 
     /**
      *  Gets the raw DecimalQuantity for plural rule selection.
@@ -2796,18 +2757,6 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
     void getAllFieldPositionsImpl(FieldPositionIteratorHandler& fpih, UErrorCode& status) const;
 
 #endif  /* U_HIDE_INTERNAL_API */
-
-#ifndef U_HIDE_DEPRECATED_API
-
-    /**
-     * Gets the gender of the formatted output. Returns "" when the gender is
-     * unknown, or for ungendered languages.
-     *
-     * @deprecated This API is for ICU internal use only.
-     */
-    const char *getGender(UErrorCode &status) const;
-
-#endif /* U_HIDE_DEPRECATED_API */
 
   private:
     // Can't use LocalPointer because UFormattedNumberData is forward-declared

@@ -1223,9 +1223,6 @@ ur{
         "Pacific:Johnston"{
             ec{"جانسٹن"}
         }
-        "Pacific:Kanton"{
-            ec{"کانٹن"}
-        }
         "Pacific:Kiritimati"{
             ec{"کریتیماٹی"}
         }

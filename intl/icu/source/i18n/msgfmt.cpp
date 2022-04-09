@@ -854,21 +854,19 @@ StringEnumeration*
 MessageFormat::getFormatNames(UErrorCode& status) {
     if (U_FAILURE(status))  return NULL;
 
-    LocalPointer<UVector> formatNames(new UVector(status), status);
+    UVector *fFormatNames = new UVector(status);
     if (U_FAILURE(status)) {
-        return nullptr;
+        status = U_MEMORY_ALLOCATION_ERROR;
+        return NULL;
     }
-    formatNames->setDeleter(uprv_deleteUObject);
+    fFormatNames->setDeleter(uprv_deleteUObject);
 
     for (int32_t partIndex = 0; (partIndex = nextTopLevelArgStart(partIndex)) >= 0;) {
-        LocalPointer<UnicodeString> name(getArgName(partIndex + 1).clone(), status);
-        formatNames->adoptElement(name.orphan(), status);
-        if (U_FAILURE(status))  return nullptr;
+        fFormatNames->addElementX(new UnicodeString(getArgName(partIndex + 1)), status);
     }
 
-    LocalPointer<StringEnumeration> nameEnumerator(
-        new FormatNameEnumeration(std::move(formatNames), status), status);
-    return U_SUCCESS(status) ? nameEnumerator.orphan() : nullptr;
+    StringEnumeration* nameEnumerator = new FormatNameEnumeration(fFormatNames, status);
+    return nameEnumerator;
 }
 
 // -------------------------------------
@@ -1914,9 +1912,9 @@ void MessageFormat::DummyFormat::parseObject(const UnicodeString&,
 }
 
 
-FormatNameEnumeration::FormatNameEnumeration(LocalPointer<UVector> nameList, UErrorCode& /*status*/) {
+FormatNameEnumeration::FormatNameEnumeration(UVector *fNameList, UErrorCode& /*status*/) {
     pos=0;
-    fFormatNames = std::move(nameList);
+    fFormatNames = fNameList;
 }
 
 const UnicodeString*
@@ -1938,6 +1936,7 @@ FormatNameEnumeration::count(UErrorCode& /*status*/) const {
 }
 
 FormatNameEnumeration::~FormatNameEnumeration() {
+    delete fFormatNames;
 }
 
 MessageFormat::PluralSelectorProvider::PluralSelectorProvider(const MessageFormat &mf, UPluralType t)
