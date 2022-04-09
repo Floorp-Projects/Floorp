@@ -41,7 +41,7 @@
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Faqerojtës ruajtur së fundi</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Shfaqi krejt</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Shfaqi krejt</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Shfaqi krejt faqerojtësit e ruajtur</string>
@@ -71,6 +71,8 @@
     <!-- Open in App "contextual feature recommendation" (CFR) -->
     <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
     <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Mund ta ujdisni Firefox-in të hapë automatikisht lidhje në aplikacione.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Mund ta ujdisni %1$s të hapë vetvetiu lidhjet me aplikacione.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Shko te rregullimet</string>
     <!-- Text for the negative action button -->
@@ -98,6 +100,9 @@
     <string name="tab_tray_inactive_auto_close_title">Të vetëmbyllen pas një muaji?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
     <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox-i mund të mbyllë skedat që s’i keni parë gjatë muajit të kaluar.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s mund të mbyllë skeda që s’i keni parë gjatë muajit të fundit.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Mbylli</string>
 
@@ -127,6 +132,8 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d sajte</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Shihni krejt skedat e njëkohësuara</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Pajisje e njëkohësuar</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
@@ -171,8 +178,6 @@
     <string name="browser_menu_add_to_homescreen">Shtoje te skena e Kreut</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instaloje</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Skeda të njëkohësuara</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Rinjëkohëso</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -205,8 +210,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Përpunoni</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Përshtateni kreun</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Përshtatni faqe hyrëse</string>
     <!-- Browser Toolbar -->
@@ -274,6 +277,8 @@
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Hapni një skedë të re Firefox</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Hapni një skedë të re %1$s</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Kërko</string>
     <!-- Text preview for larger sized widgets -->
@@ -329,6 +334,16 @@
     <string name="preferences_https_only_off">Off</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Mësoni më tepër</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Aktivizoje në krejt skedat</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Aktivizoje vetëm në skeda private</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">S’ka sajt të siguruar</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Sipas shumicës së gjasave, sajti thjesht nuk mbulon HTTPS-në.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Por, është gjithashtu e mundshme që të jetë dora e ndonjë agresori. Nëse vazhdoni te sajti, s’duhet të jepni ndonjë të dhënë rezervat. Nëse vazhdoni, mënyra Vetëm-HTTPS do të çaktivizohet përkohësisht për sajtin.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Përdorshmëri</string>
     <!-- Preference to override the Firefox Account server -->
@@ -659,6 +674,8 @@
     <string name="studies_active">Aktive</string>
     <!-- Description for studies, it indicates why Firefox use studies -->
     <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox-i mund të instalojë dhe zhvillojë studime herë pas here.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s mund të instalohet dhe xhirojë studime herë pas here.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Mësoni më tepër</string>
     <!-- Dialog message shown after removing a study -->
@@ -1059,7 +1076,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Faqerojtësit u ruajtën! </string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">U shtua te sajtet kryesuese!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">U shtua te sajtet kryesuese!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">U shtua te shkurtoret!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Skeda private u mbyll</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1184,6 +1203,10 @@
     <string name="onboarding_header">Mirë se vini te %s!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Njëkohësoni Firefox-in mes pajisjesh</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Njëkohësoni %1$s nëpër pajisje</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Sillni faqerojtës, historik dhe fjalëkalime te %1$s në këtë pajisje.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Regjistrohuni</string>
     <!-- text to display in the snackbar once account is signed-in -->
@@ -1192,6 +1215,8 @@
     <string name="onboarding_tracking_protection_header_3">Privatësi gjithnjë në punë</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox-i ndal automatikisht shoqëri t’ju ndjekin fshehtazi nëpër internet.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s i pengon vetvetiu shoqëritë t’ju ndjekin ju fshehtas nëpër internet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standarde (parazgjedhje)</string>
     <!-- text for standard blocking option button description -->
@@ -1531,6 +1556,8 @@
     <string name="credit_cards_menu_delete_card">Fshije kartën</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Fshije kartën</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Jeni i sigurt se doni të fshihet kjo kartë krediti?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Fshije</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1644,9 +1671,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Jeni i sigurt se doni të fshihet ky faqerojtës?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Shtoje te sajtet kryesuese</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Shtoje te sajtet kryesuese</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Hiqe nga sajtet kryesuese</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Hiqe nga sajtet kryesuese</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Shtoje te shkurtore</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Hiqe prej shkurtoresh</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verifikuar Nga: %1$s</string>
@@ -1706,6 +1737,8 @@
     <string name="synced_tabs_enable_tab_syncing">Ju lutemi, aktivizoni njëkohësim skedash.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">S’keni ndonjë skedë të hapur te Firefox-i në pajisje tuajat të tjera.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">S’keni ndonjë skedë të hapur në %1$s në pajisjet tuaja të tjera.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Shihni një listë skedash nga pajisje tuajat të tjera.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1714,23 +1747,31 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">S’ka skeda të hapura</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Zgjeroje grupin e skedave të njëkohësuara</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Tkurre grupin e skedave të njëkohësuara</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">U mbërrit te kufi sajtesh</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">U mbërrit te kufi sajtesh</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">U mbërrit në kufi shkurtoresh</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Që të shtoni një sajt të ri kryesues, hiqni një të tillë. Prekeni dhe mbajeni të shtypur sajtin dhe përzgjidhni Hiqe.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Që të shtoni një sajt të ri kryesues, hiqni një të tillë. Prekeni dhe mbajeni të shtypur sajtin dhe përzgjidhni Hiqe.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Që të shtoni një shkurtore të re, hiqni një të tillë. Prekeni dhe mbajeni të shtypur sajtin dhe përzgjidhni Hiqe.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, e mora vesh</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Sajtet kryesues më të vizituar</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Shkurtore</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Emër</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Emër sajti kryesor</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Emër sajti kryesor</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Emër shkurtoreje</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1807,6 +1848,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Mësoni më tepër</string>
 
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Që të dërgohen të dhëna, aktivizoni telemetrinë.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Kalo te rregullimet</string>
 </resources>
