@@ -23,7 +23,7 @@ const tests = [
     },
     roundingPriorities: {
       auto: "4.3",
-      lessPrecision: "4.30",
+      lessPrecision: "4.3",
       morePrecision: "4.32",
     },
   },
@@ -50,7 +50,7 @@ const tests = [
     },
     roundingPriorities: {
       auto: "4.3",
-      lessPrecision: "4.30",
+      lessPrecision: "4.3",
       morePrecision: "4.32",
     },
   },
@@ -67,7 +67,7 @@ const tests = [
       // Returning "1.00" for both options seems unexpected. Also filed at
       // <https://github.com/tc39/proposal-intl-numberformat-v3/issues/52>.
       lessPrecision: "1.00",
-      morePrecision: "1.00",
+      morePrecision: "1.0",
     },
   },
   {
@@ -80,7 +80,7 @@ const tests = [
     roundingPriorities: {
       auto: "1.0",
       lessPrecision: "1.00",
-      morePrecision: "1.00",
+      morePrecision: "1.0",
     },
   },
   {
@@ -92,7 +92,7 @@ const tests = [
     },
     roundingPriorities: {
       auto: "1.0",
-      lessPrecision: "1.00",
+      lessPrecision: "1.0",
       morePrecision: "1.00",
     },
   },
@@ -106,7 +106,7 @@ const tests = [
     },
     roundingPriorities: {
       auto: "1.0",
-      lessPrecision: "1.00",
+      lessPrecision: "1.0",
       morePrecision: "1.00",
     },
   },
