@@ -27,6 +27,24 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 });
 
 /**
+ * @typedef {object} Recommendation
+ *   A snapshot recommendation with an associated score.
+ * @property {Snapshot} snapshot
+ *   The recommended snapshot.
+ * @property {number} score
+ *   The score for this snapshot.
+ */
+
+/**
+ * @typedef {object} RecommendationGroup
+ *   A set of recommendatins with an associated weight to apply to their scores.
+ * @property {Recommendation[]} recommendations
+ *   The recommended snapshot.
+ * @property {number} weight
+ *   The weight for the scores in these recommendations.
+ */
+
+/**
  * The snapshot scorer receives sets of snapshots and scores them based on the
  * expected relevancy to the user. This order is subsequently used to display
  * the candidates.
@@ -62,27 +80,43 @@ const SnapshotScorer = new (class SnapshotScorer {
   }
 
   /**
-   * Combines groups of snapshots into one group, and scoring their relevance.
-   * If snapshots are present in multiple groups, the snapshot with the highest
-   * score is used.
-   * A snapshot score must meet the `snapshotThreshold` to be included in the
-   * results.
+   * Takes a list of recommendations with source specific scores and
+   * de-duplicates and generates a final scored list of recommendations.
+   * If recommendations are present from multiple sources the recommendation
+   * with the highest source score is used.
+   * A recommendations's final score must meet the `snapshotThreshold` to be
+   * included in the results.
    *
    * @param {SelectionContext} selectionContext
    *    The selection context to score against. See SnapshotSelector.#context.
-   * @param {Snapshot[]} snapshotGroups
-   *    One or more arrays of snapshot groups to combine.
-   * @returns {Snapshot[]}
-   *    The combined snapshot array in descending order of relevancy.
+   * @param {RecommendationGroup[]} recommendationGroups
+   *    A list of recommendations with a weight to apply.
+   * @returns {Recommendation[]}
+   *    The combined snapshot recommendations in descending order of score.
    */
-  combineAndScore(selectionContext, ...snapshotGroups) {
-    let combined = new Map();
-    let currentDate = this.#dateOverride ?? Date.now();
+  combineAndScore(selectionContext, ...recommendationGroups) {
+    /**
+     * @typedef {object} SnapshotScore
+     *   A currently known score for a snapshot.
+     * @property {Snapshot} snapshot
+     *   The snapshot.
+     * @property {number} snapshotScore
+     *   The score generated from this snapshot.
+     * @property {number} sourceScore
+     *   The score from the source of the recommendation.
+     */
 
+    /**
+     * Maintains the current score for each seen snapshot.
+     * @type {Map<string, SnapshotScore>}
+     */
+    let combined = new Map();
+
+    let currentDate = this.#dateOverride ?? Date.now();
     let currentSessionUrls = selectionContext.getCurrentSessionUrls();
 
-    for (let group of snapshotGroups) {
-      for (let snapshot of group) {
+    for (let { recommendations, weight } of recommendationGroups) {
+      for (let { snapshot, score } of recommendations) {
         if (
           selectionContext.filterAdult &&
           FilterAdult.isAdultUrl(snapshot.url)
@@ -90,25 +124,47 @@ const SnapshotScorer = new (class SnapshotScorer {
           continue;
         }
 
-        let existing = combined.get(snapshot.url);
-        let score = this.#score(snapshot, currentDate, currentSessionUrls);
-        logConsole.debug("Scored", score, "for", snapshot.url);
+        let currentScore = combined.get(snapshot.url);
+        if (currentScore) {
+          // We've already generated the snapshot specific score, update the
+          // source specific score.
+          currentScore.sourceScore = Math.max(
+            currentScore.sourceScore,
+            score * weight
+          );
+        } else {
+          currentScore = {
+            snapshot,
+            snapshotScore: this.#score(
+              snapshot,
+              currentDate,
+              currentSessionUrls
+            ),
+            sourceScore: score * weight,
+          };
 
-        if (existing) {
-          if (score > existing.relevancyScore) {
-            snapshot.relevancyScore = score;
-            combined.set(snapshot.url, snapshot);
-          }
-        } else if (score >= this.snapshotThreshold) {
-          snapshot.relevancyScore = score;
-          combined.set(snapshot.url, snapshot);
+          combined.set(snapshot.url, currentScore);
         }
       }
     }
 
-    return [...combined.values()].sort(
-      (a, b) => b.relevancyScore - a.relevancyScore
-    );
+    let recommendations = [];
+    for (let currentScore of combined.values()) {
+      let recommendation = {
+        snapshot: currentScore.snapshot,
+        score: currentScore.snapshotScore + currentScore.sourceScore,
+      };
+
+      logConsole.debug(
+        `Scored ${recommendation.score} for ${recommendation.snapshot.url}`
+      );
+
+      if (recommendation.score >= this.snapshotThreshold) {
+        recommendations.push(recommendation);
+      }
+    }
+
+    return recommendations.sort((a, b) => b.score - a.score);
   }
 
   /**
@@ -175,27 +231,6 @@ const SnapshotScorer = new (class SnapshotScorer {
    */
   _scoreCurrentSession(snapshot, currentSessionUrls) {
     return currentSessionUrls.has(snapshot.url) ? 1 : 0;
-  }
-
-  /**
-   * Calculate points based on whether the snapshot has interactions which share a common referrer with the context url's interactions
-   *
-   * @param {Snapshot} snapshot
-   * @returns {number}
-   */
-  _scoreInNavigation(snapshot) {
-    return snapshot.commonReferrerScore ?? 0;
-  }
-
-  /**
-   * Calculates points based on if the snapshot has been visited within a
-   * certain time period of another website.
-   *
-   * @param {Snapshot} snapshot
-   * @returns {number}
-   */
-  _scoreIsOverlappingVisit(snapshot) {
-    return snapshot.overlappingVisitScore ?? 0;
   }
 
   /**
