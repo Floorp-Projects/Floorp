@@ -282,7 +282,10 @@ uk{
         minimalPairs{
             case{
                 accusative{"Знайшли {0}"}
+                dative{"Це відповідає {0}"}
                 genitive{"Немає {0}"}
+                instrumental{"Вимірюється не {0}"}
+                locative{"Міститься в {0}"}
                 nominative{"Є {0}"}
             }
             gender{

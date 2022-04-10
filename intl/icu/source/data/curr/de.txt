@@ -1313,7 +1313,6 @@ de{
         ZMW{"K"}
     }
     Currencies%variant{
-        GEL{"₾"}
         TRY{"TL"}
     }
     CurrencyPlurals{

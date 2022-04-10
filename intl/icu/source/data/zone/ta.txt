@@ -1223,6 +1223,9 @@ ta{
         "Pacific:Johnston"{
             ec{"ஜோன்ஸ்டன்"}
         }
+        "Pacific:Kanton"{
+            ec{"கேன்டன்"}
+        }
         "Pacific:Kiritimati"{
             ec{"கிரிடிமாட்டி"}
         }

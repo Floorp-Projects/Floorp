@@ -5087,6 +5087,50 @@ metadata:table(nofallback){
                 replacement{"ZZ"}
             }
         }
+        unit{
+            inch-hg{
+                reason{"deprecated"}
+                replacement{"inch-ofhg"}
+            }
+            liter-per-100kilometers{
+                reason{"deprecated"}
+                replacement{"liter-per-100-kilometer"}
+            }
+            meter-per-second-squared{
+                reason{"deprecated"}
+                replacement{"meter-per-square-second"}
+            }
+            milligram-per-deciliter{
+                reason{"deprecated"}
+                replacement{"milligram-ofglucose-per-deciliter"}
+            }
+            millimeter-of-mercury{
+                reason{"deprecated"}
+                replacement{"millimeter-ofhg"}
+            }
+            part-per-million{
+                reason{"deprecated"}
+                replacement{"permillion"}
+            }
+            pound-foot{
+                reason{"deprecated"}
+                replacement{"pound-force-foot"}
+            }
+            pound-per-square-inch{
+                reason{"deprecated"}
+                replacement{"pound-force-per-square-inch"}
+            }
+        }
+        usage{
+            music-track{
+                reason{"deprecated"}
+                replacement{"media"}
+            }
+            tv-program{
+                reason{"deprecated"}
+                replacement{"media"}
+            }
+        }
         variant{
             heploc{
                 reason{"deprecated"}

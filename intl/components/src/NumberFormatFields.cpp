@@ -378,7 +378,7 @@ Maybe<NumberPartType> GetPartTypeForNumberField(UNumberFormatFields fieldName,
       return Some(NumberPartType::Unit);
     case UNUM_COMPACT_FIELD:
       return Some(NumberPartType::Compact);
-#if !MOZ_SYSTEM_ICU
+#ifndef U_HIDE_DRAFT_API
     case UNUM_APPROXIMATELY_SIGN_FIELD:
       return Some(NumberPartType::ApproximatelySign);
 #endif

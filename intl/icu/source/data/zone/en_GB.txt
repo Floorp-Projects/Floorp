@@ -940,6 +940,9 @@ en_GB{
         "Europe:Kaliningrad"{
             ec{"Kaliningrad"}
         }
+        "Europe:Kiev"{
+            ec{"Kiev"}
+        }
         "Europe:Lisbon"{
             ec{"Lisbon"}
         }

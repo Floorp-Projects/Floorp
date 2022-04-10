@@ -169,7 +169,7 @@ TEST(IntlNumberFormat, RoundingPriority)
 
   const char16_t* res16 = nf1->format(4.321).unwrap().data();
   ASSERT_TRUE(res16 != nullptr);
-  ASSERT_EQ(std::u16string_view(res16), u"4.30");
+  ASSERT_EQ(std::u16string_view(res16), u"4.3");
 
   options.mRoundingPriority =
       NumberFormatOptions::RoundingPriority::MorePrecision;

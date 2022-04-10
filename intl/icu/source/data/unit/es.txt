@@ -189,6 +189,7 @@ es{
         concentr{
             item{
                 dnam{"ítem"}
+                gender{"masculine"}
                 one{"{0} ítem"}
                 other{"{0} ítems"}
             }
@@ -205,6 +206,7 @@ es{
             }
             millimole-per-liter{
                 dnam{"milimoles por litro"}
+                gender{"masculine"}
                 one{"{0} milimol por litro"}
                 other{"{0} milimoles por litro"}
             }
@@ -248,6 +250,7 @@ es{
             }
             liter-per-kilometer{
                 dnam{"litros por kilómetro"}
+                gender{"masculine"}
                 one{"{0} litro por kilómetro"}
                 other{"{0} litros por kilómetro"}
             }
@@ -322,11 +325,13 @@ es{
             }
             petabyte{
                 dnam{"petabytes"}
+                gender{"masculine"}
                 one{"{0} petabyte"}
                 other{"{0} petabytes"}
             }
             terabit{
                 dnam{"terabits"}
+                gender{"masculine"}
                 one{"{0} terabit"}
                 other{"{0} terabits"}
             }
@@ -369,11 +374,13 @@ es{
             }
             microsecond{
                 dnam{"microsegundos"}
+                gender{"masculine"}
                 one{"{0} microsegundo"}
                 other{"{0} microsegundos"}
             }
             millisecond{
                 dnam{"milisegundos"}
+                gender{"masculine"}
                 one{"{0} milisegundo"}
                 other{"{0} milisegundos"}
             }
@@ -393,6 +400,7 @@ es{
             }
             nanosecond{
                 dnam{"nanosegundos"}
+                gender{"masculine"}
                 one{"{0} nanosegundo"}
                 other{"{0} nanosegundos"}
             }
@@ -427,6 +435,7 @@ es{
             }
             milliampere{
                 dnam{"miliamperios"}
+                gender{"masculine"}
                 one{"{0} miliamperio"}
                 other{"{0} miliamperios"}
             }
@@ -480,11 +489,13 @@ es{
             }
             kilojoule{
                 dnam{"kilojulios"}
+                gender{"masculine"}
                 one{"{0} kilojulio"}
                 other{"{0} kilojulios"}
             }
             kilowatt-hour{
                 dnam{"kilovatios hora"}
+                gender{"masculine"}
                 one{"{0} kilovatio hora"}
                 other{"{0} kilovatios hora"}
             }
@@ -497,6 +508,7 @@ es{
         force{
             kilowatt-hour-per-100-kilometer{
                 dnam{"kilovatios hora por 100 kilómetros"}
+                gender{"masculine"}
                 one{"{0} kilovatio hora por 100 kilómetros"}
                 other{"{0} kilovatios hora por 100 kilómetros"}
             }
@@ -515,6 +527,7 @@ es{
         frequency{
             gigahertz{
                 dnam{"gigahercios"}
+                gender{"masculine"}
                 one{"{0} gigahercio"}
                 other{"{0} gigahercios"}
             }
@@ -526,11 +539,13 @@ es{
             }
             kilohertz{
                 dnam{"kilohercios"}
+                gender{"masculine"}
                 one{"{0} kilohercio"}
                 other{"{0} kilohercios"}
             }
             megahertz{
                 dnam{"megahercios"}
+                gender{"masculine"}
                 one{"{0} megahercio"}
                 other{"{0} megahercios"}
             }
@@ -559,6 +574,7 @@ es{
             }
             megapixel{
                 dnam{"megapíxeles"}
+                gender{"masculine"}
                 one{"{0} megapíxel"}
                 other{"{0} megapíxeles"}
             }
@@ -570,6 +586,7 @@ es{
             }
             pixel-per-centimeter{
                 dnam{"píxeles por centímetro"}
+                gender{"masculine"}
                 one{"{0} píxel por centímetro"}
                 other{"{0} píxeles por centímetro"}
             }
@@ -594,6 +611,7 @@ es{
             }
             decimeter{
                 dnam{"decímetros"}
+                gender{"masculine"}
                 one{"{0} decímetro"}
                 other{"{0} decímetros"}
             }
@@ -647,6 +665,7 @@ es{
             }
             micrometer{
                 dnam{"micrómetros"}
+                gender{"masculine"}
                 one{"{0} micrómetro"}
                 other{"{0} micrómetros"}
             }
@@ -670,6 +689,7 @@ es{
             }
             nanometer{
                 dnam{"nanómetros"}
+                gender{"masculine"}
                 one{"{0} nanómetro"}
                 other{"{0} nanómetros"}
             }
@@ -781,6 +801,7 @@ es{
             }
             microgram{
                 dnam{"microgramos"}
+                gender{"masculine"}
                 one{"{0} microgramo"}
                 other{"{0} microgramos"}
             }
@@ -829,6 +850,7 @@ es{
         power{
             gigawatt{
                 dnam{"gigavatios"}
+                gender{"masculine"}
                 one{"{0} gigavatio"}
                 other{"{0} gigavatios"}
             }
@@ -851,6 +873,7 @@ es{
             }
             milliwatt{
                 dnam{"milivatios"}
+                gender{"masculine"}
                 one{"{0} milivatio"}
                 other{"{0} milivatios"}
             }
@@ -876,6 +899,7 @@ es{
             }
             hectopascal{
                 dnam{"hectopascales"}
+                gender{"masculine"}
                 one{"{0} hectopascal"}
                 other{"{0} hectopascales"}
             }
@@ -892,11 +916,13 @@ es{
             }
             megapascal{
                 dnam{"megapascales"}
+                gender{"masculine"}
                 one{"{0} megapascal"}
                 other{"{0} megapascales"}
             }
             millibar{
                 dnam{"milibares"}
+                gender{"masculine"}
                 one{"{0} milibar"}
                 other{"{0} milibares"}
             }
@@ -971,6 +997,7 @@ es{
         torque{
             newton-meter{
                 dnam{"newton metros"}
+                gender{"masculine"}
                 one{"{0} newton metro"}
                 other{"{0} newton metros"}
             }
@@ -1134,6 +1161,7 @@ es{
             }
             megaliter{
                 dnam{"megalitros"}
+                gender{"masculine"}
                 one{"{0} megalitro"}
                 other{"{0} megalitros"}
             }
