@@ -761,7 +761,6 @@ ne{
         ZMW{"ZK"}
     }
     Currencies%variant{
-        GEL{"₾"}
         NPR{"Rs"}
         TRY{"TL"}
     }

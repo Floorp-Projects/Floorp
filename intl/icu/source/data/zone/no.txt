@@ -1223,6 +1223,9 @@ no{
         "Pacific:Johnston"{
             ec{"Johnston"}
         }
+        "Pacific:Kanton"{
+            ec{"Kantonøya"}
+        }
         "Pacific:Kiritimati"{
             ec{"Kiritimati"}
         }

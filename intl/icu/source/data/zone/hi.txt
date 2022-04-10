@@ -1226,6 +1226,9 @@ hi{
         "Pacific:Johnston"{
             ec{"जॉनस्टन"}
         }
+        "Pacific:Kanton"{
+            ec{"कैंटन"}
+        }
         "Pacific:Kiritimati"{
             ec{"किरीतिमाति"}
         }

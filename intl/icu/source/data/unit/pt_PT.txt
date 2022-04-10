@@ -24,6 +24,7 @@ pt_PT{
             }
         }
         compound{
+            1024p8{"yobe{0}"}
             10p-1{"decí{0}"}
             10p-12{"picó{0}"}
             10p-15{"fentó{0}"}
@@ -70,10 +71,6 @@ pt_PT{
             }
         }
         concentr{
-            item{
-                one{"{0} item"}
-                other{"{0} itens"}
-            }
             karat{
                 dnam{"quilates"}
                 one{"{0} quilate"}
@@ -100,16 +97,6 @@ pt_PT{
         coordinate{
             east{"{0} este"}
             west{"{0} Oeste"}
-        }
-        digital{
-            bit{
-                one{"{0} bit"}
-                other{"{0} bits"}
-            }
-            byte{
-                one{"{0} byte"}
-                other{"{0} bytes"}
-            }
         }
         duration{
             hour{

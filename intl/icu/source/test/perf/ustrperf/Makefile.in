@@ -20,7 +20,7 @@ subdir = test/perf/ustrperf
 CLEANFILES = *~ $(DEPS)
 
 ## Target information
-TARGET = stringperf
+TARGET = ustrperf
 
 CPPFLAGS += -I$(top_srcdir)/common -I$(top_srcdir)/tools/toolutil -I$(top_srcdir)/tools/ctestfw
 LIBS = $(LIBCTESTFW) $(LIBICUI18N) $(LIBICUUC) $(LIBICUTOOLUTIL) $(DEFAULT_LIBS) $(LIB_M)
