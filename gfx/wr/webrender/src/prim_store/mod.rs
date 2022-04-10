@@ -1058,6 +1058,15 @@ pub enum PrimitiveInstanceKind {
     },
 }
 
+impl PrimitiveInstanceKind {
+    pub fn as_pic(&self) -> PictureIndex {
+        match self {
+            PrimitiveInstanceKind::Picture { pic_index, .. } => *pic_index,
+            _ => panic!("bug: as_pic called on a prim that is not a picture"),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]

@@ -3671,7 +3671,6 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         target: &ColorRenderTarget,
-        clear_color: Option<[f32; 4]>,
         clear_depth: Option<f32>,
         render_tasks: &RenderTaskGraph,
         projection: &default::Transform3D<f32>,
@@ -3702,6 +3701,10 @@ impl Renderer {
             if clear_depth.is_some() {
                 self.device.enable_depth_write();
             }
+
+            let clear_color = target
+                .clear_color
+                .map(|color| color.to_array());
 
             let clear_rect = match draw_target {
                 DrawTarget::NativeSurface { .. } => {
@@ -4902,7 +4905,6 @@ impl Renderer {
                 self.draw_color_target(
                     draw_target,
                     target,
-                    Some([0.0, 0.0, 0.0, 0.0]),
                     clear_depth,
                     &frame.render_tasks,
                     &projection,
