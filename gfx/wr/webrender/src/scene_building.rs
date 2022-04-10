@@ -57,12 +57,12 @@ use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive};
-use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo};
+use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo, PictureFlags};
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex, PictureIndex};
-use crate::prim_store::PolygonKey;
+use crate::prim_store::{PolygonKey};
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
 use crate::prim_store::gradient::{
     GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient,
@@ -230,6 +230,10 @@ struct PictureChainBuilder {
     flags: PrimitiveFlags,
     /// Requested raster space for enclosing stacking context
     raster_space: RasterSpace,
+    /// If true, set first picture as a resolve target
+    set_resolve_target: bool,
+    /// If true, mark the last picture as a sub-graph
+    establishes_sub_graph: bool,
 }
 
 impl PictureChainBuilder {
@@ -239,6 +243,7 @@ impl PictureChainBuilder {
         flags: PrimitiveFlags,
         spatial_node_index: SpatialNodeIndex,
         raster_space: RasterSpace,
+        is_sub_graph: bool,
     ) -> Self {
         PictureChainBuilder {
             current: PictureSource::PrimitiveList {
@@ -247,6 +252,8 @@ impl PictureChainBuilder {
             spatial_node_index,
             flags,
             raster_space,
+            establishes_sub_graph: is_sub_graph,
+            set_resolve_target: is_sub_graph,
         }
     }
 
@@ -264,6 +271,8 @@ impl PictureChainBuilder {
             flags,
             spatial_node_index,
             raster_space,
+            establishes_sub_graph: false,
+            set_resolve_target: false,
         }
     }
 
@@ -296,6 +305,12 @@ impl PictureChainBuilder {
             }
         };
 
+        let flags = if self.set_resolve_target {
+            PictureFlags::IS_RESOLVE_TARGET
+        } else {
+            PictureFlags::empty()
+        };
+
         let pic_index = PictureIndex(prim_store.pictures
             .alloc()
             .init(PicturePrimitive::new_image(
@@ -306,6 +321,7 @@ impl PictureChainBuilder {
                 prim_list,
                 self.spatial_node_index,
                 self.raster_space,
+                flags,
             ))
         );
 
@@ -324,6 +340,9 @@ impl PictureChainBuilder {
             spatial_node_index: self.spatial_node_index,
             flags: self.flags,
             raster_space: self.raster_space,
+            // We are now on a subsequent picture, so set_resolve_target has been handled
+            set_resolve_target: false,
+            establishes_sub_graph: self.establishes_sub_graph,
         }
     }
 
@@ -334,12 +353,25 @@ impl PictureChainBuilder {
         interners: &mut Interners,
         prim_store: &mut PrimitiveStore,
     ) -> PrimitiveInstance {
+        let mut flags = PictureFlags::empty();
+        if self.establishes_sub_graph {
+            flags |= PictureFlags::IS_SUB_GRAPH;
+        }
+
         match self.current {
             PictureSource::WrappedPicture { mut instance } => {
                 instance.clip_set.clip_chain_id = clip_chain_id;
+
+                let pic_index = instance.kind.as_pic();
+                prim_store.pictures[pic_index.0].flags |= flags;
+
                 instance
             }
             PictureSource::PrimitiveList { prim_list } => {
+                if self.set_resolve_target {
+                    flags |= PictureFlags::IS_RESOLVE_TARGET;
+                }
+
                 // If no picture was created for this stacking context, create a
                 // pass-through wrapper now. This is only needed in 1-2 edge cases
                 // now, and will be removed as a follow up.
@@ -353,6 +385,7 @@ impl PictureChainBuilder {
                         prim_list,
                         self.spatial_node_index,
                         self.raster_space,
+                        flags,
                     ))
                 );
 
@@ -2182,6 +2215,7 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_list,
                         stacking_context.spatial_node_index,
                         stacking_context.raster_space,
+                        PictureFlags::empty(),
                     ))
                 );
 
@@ -2207,6 +2241,7 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_flags,
                         stacking_context.spatial_node_index,
                         stacking_context.raster_space,
+                        false,
                     )
                 } else {
                     let composite_mode = Some(
@@ -2224,6 +2259,7 @@ impl<'a> SceneBuilder<'a> {
                             stacking_context.prim_list,
                             stacking_context.spatial_node_index,
                             stacking_context.raster_space,
+                            PictureFlags::empty(),
                         ))
                     );
 
@@ -2325,6 +2361,7 @@ impl<'a> SceneBuilder<'a> {
                     prim_list,
                     stacking_context.spatial_node_index,
                     stacking_context.raster_space,
+                    PictureFlags::empty(),
                 ))
             );
 
@@ -2822,6 +2859,7 @@ impl<'a> SceneBuilder<'a> {
                                 prim_list,
                                 pending_shadow.spatial_node_index,
                                 raster_space,
+                                PictureFlags::empty(),
                             ))
                         );
 
@@ -3714,6 +3752,7 @@ impl FlattenedStackingContext {
                 mem::replace(&mut self.prim_list, PrimitiveList::empty()),
                 self.spatial_node_index,
                 self.raster_space,
+                PictureFlags::empty(),
             ))
         );
 

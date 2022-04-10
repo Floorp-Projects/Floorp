@@ -184,6 +184,28 @@ pub struct PictureTask {
     pub valid_rect: Option<DeviceIntRect>,
     pub cmd_buffer_index: CommandBufferIndex,
     pub resolve_op: Option<ResolveOp>,
+
+    /// Whether this picture task is the target of a resolve operation
+    pub is_resolve_target: bool,
+}
+
+impl PictureTask {
+    /// Copy an existing picture task, but set a new command buffer for it to build in to.
+    /// Used for pictures that are split between render tasks (e.g. pre/post a backdrop
+    /// filter). Subsequent picture tasks never have a clear color as they are by definition
+    /// going to write to an existing target
+    pub fn duplicate(
+        &self,
+        cmd_buffer_index: CommandBufferIndex,
+    ) -> Self {
+        assert_eq!(self.resolve_op, None);
+
+        PictureTask {
+            clear_color: None,
+            cmd_buffer_index,
+            ..*self
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -324,10 +346,19 @@ impl RenderTaskKind {
         }
     }
 
+    /// Whether this task can be allocated on a shared render target surface
+    pub fn can_use_shared_surface(&self) -> bool {
+        match self {
+            &RenderTaskKind::Picture(ref info) => !info.is_resolve_target,
+            _ => true,
+        }
+    }
+
     pub fn should_advance_pass(&self) -> bool {
         match self {
             &RenderTaskKind::Image(..) => false,
             &RenderTaskKind::Cached(..) => false,
+            &RenderTaskKind::Picture(ref info) => !info.is_resolve_target,
             _ => true,
         }
     }
@@ -406,6 +437,7 @@ impl RenderTaskKind {
         valid_rect: Option<DeviceIntRect>,
         clear_color: Option<ColorF>,
         cmd_buffer_index: CommandBufferIndex,
+        is_resolve_target: bool,
     ) -> Self {
         render_task_sanity_check(&size);
 
@@ -423,6 +455,7 @@ impl RenderTaskKind {
             clear_color,
             cmd_buffer_index,
             resolve_op: None,
+            is_resolve_target,
         })
     }
 
@@ -762,9 +795,6 @@ pub struct RenderTask {
     pub uv_rect_handle: GpuCacheHandle,
     pub cache_handle: Option<RenderTaskCacheEntryHandle>,
     uv_rect_kind: UvRectKind,
-
-    /// Whether this task can be allocated on a shared render target surface
-    pub can_use_shared_surface: bool,
 }
 
 impl RenderTask {
@@ -783,12 +813,7 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
-            can_use_shared_surface: true,
         }
-    }
-
-    pub fn disable_surface_sharing(&mut self) {
-        self.can_use_shared_surface = false;
     }
 
     pub fn new_dynamic(
@@ -827,7 +852,6 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
-            can_use_shared_surface: true,
         }
     }
 
@@ -846,7 +870,6 @@ impl RenderTask {
             uv_rect_handle: GpuCacheHandle::new(),
             uv_rect_kind: UvRectKind::Rect,
             cache_handle: None,
-            can_use_shared_surface: true,
         }
     }
 

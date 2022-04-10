@@ -369,7 +369,7 @@ impl RenderTaskGraphBuilder {
                         // render targets.
 
                         let can_use_shared_surface =
-                            task.can_use_shared_surface &&
+                            task.kind.can_use_shared_surface() &&
                             task.render_on == PassId(task.free_after.0 + 1);
 
                         if can_use_shared_surface {
