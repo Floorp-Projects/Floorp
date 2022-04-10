@@ -29,6 +29,29 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 });
 
 /**
+ * @typedef {object} SelectionContext
+ *   The necessary context for selecting, filtering and scoring snapshot
+ *   recommendations. This context is expected to be specific to what the user
+ *   is doing.
+ * @property {number} count
+ *   The maximum number of recommendations to generate.
+ * @property {boolean} filterAdult
+ *   Whether to filter out adult sites.
+ * @property {boolean} selectOverlappingVisits
+ *   Whether to select snapshots where visits overlapped the current context
+ *   url.
+ * @property {boolean} selectCommonReferrer
+ *   Whether to select snapshots which share a common referrer with the context
+ *   url.
+ * @property {string | undefined} url
+ *   The page the snapshots are for.
+ * @property {PageDataCollector.DATA_TYPE | undefined} type
+ *   The type of snapshots desired.
+ * @property {function} getCurrentSessionUrls
+ *   A function that returns a Set containing the urls for the current session.
+ */
+
+/**
  * A snapshot selector is responsible for generating a list of snapshots based
  * on the current context. The context initially is just the url of the page
  * being viewed but will evolve to include things like the search terms that
@@ -61,43 +84,16 @@ class SnapshotSelector extends EventEmitter {
   /**
    * The context should be thought of as the current state for this specific
    * selector. Global state that impacts all selectors should not be kept here.
+   *
+   * @type {SelectionContext}
    */
   #context = {
-    /**
-     * The number of snapshots desired.
-     * @type {number}
-     */
     count: undefined,
-    /**
-     * Whether to filter adult sites.
-     * @type {boolean}
-     */
     filterAdult: false,
-    /**
-     * Whether to select snapshots where visits overlapped the current context url
-     * @type {boolean}
-     */
     selectOverlappingVisits: false,
-    /**
-     * Whether to select snapshots which share a common referrer with the context url
-     * @type {boolean}
-     */
     selectCommonReferrer: false,
-    /**
-     * The page the snapshots are for.
-     * @type {string | undefined}
-     */
     url: undefined,
-    /**
-     * The type of snapshots desired.
-     * @type {PageDataCollector.DATA_TYPE | undefined}
-     */
     type: undefined,
-
-    /**
-     * A function that returns a Set containing the urls for the current session.
-     * @type {function}
-     */
     getCurrentSessionUrls: undefined,
   };
 
@@ -261,17 +257,7 @@ class SnapshotSelector extends EventEmitter {
       snapshots = snapshots.concat(commonReferrerSnapshots);
     }
 
-    if (context.filterAdult) {
-      snapshots = snapshots.filter(snapshot => {
-        return !FilterAdult.isAdultUrl(snapshot.url);
-      });
-    }
-
-    snapshots = SnapshotScorer.combineAndScore(
-      this.#context.getCurrentSessionUrls(),
-      snapshots
-    );
-
+    snapshots = SnapshotScorer.combineAndScore(context, snapshots);
     snapshots = snapshots.slice(0, context.count);
 
     logConsole.debug(

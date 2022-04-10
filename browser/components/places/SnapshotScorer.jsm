@@ -7,14 +7,11 @@ const EXPORTED_SYMBOLS = ["SnapshotScorer"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
+  FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
@@ -71,21 +68,32 @@ const SnapshotScorer = new (class SnapshotScorer {
    * A snapshot score must meet the `snapshotThreshold` to be included in the
    * results.
    *
-   * @param {Set} currentSessionUrls
-   *    A set of urls that are in the current session.
+   * @param {SelectionContext} selectionContext
+   *    The selection context to score against. See SnapshotSelector.#context.
    * @param {Snapshot[]} snapshotGroups
    *    One or more arrays of snapshot groups to combine.
    * @returns {Snapshot[]}
    *    The combined snapshot array in descending order of relevancy.
    */
-  combineAndScore(currentSessionUrls, ...snapshotGroups) {
+  combineAndScore(selectionContext, ...snapshotGroups) {
     let combined = new Map();
     let currentDate = this.#dateOverride ?? Date.now();
+
+    let currentSessionUrls = selectionContext.getCurrentSessionUrls();
+
     for (let group of snapshotGroups) {
       for (let snapshot of group) {
+        if (
+          selectionContext.filterAdult &&
+          FilterAdult.isAdultUrl(snapshot.url)
+        ) {
+          continue;
+        }
+
         let existing = combined.get(snapshot.url);
         let score = this.#score(snapshot, currentDate, currentSessionUrls);
         logConsole.debug("Scored", score, "for", snapshot.url);
+
         if (existing) {
           if (score > existing.relevancyScore) {
             snapshot.relevancyScore = score;
