@@ -570,11 +570,11 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Tira para actualizar</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Desplázate para ocultar la barra de herramientas</string>
+    <string name="preference_gestures_dynamic_toolbar">Ocultar la barra de herramientas al desplazarse</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Desliza sobre la barra de herramientas hacia los lados para cambiar de pestaña</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Cambiar de pestaña al deslizar hacia los lados sobre la barra de herramientas</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Desliza sobre la barra de herramientas hacia arriba para abrir pestañas</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Cambiar de pestaña al deslizar hacia arriba sobre la barra de herramientas</string>
 
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->

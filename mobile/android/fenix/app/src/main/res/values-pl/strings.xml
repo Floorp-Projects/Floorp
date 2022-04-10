@@ -41,9 +41,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Ostatnio dodane zakładki</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Ostatnio dodane zakładki</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Ostatnio dodane zakładki</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Wyświetl wszystkie</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Wyświetl wszystkie</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Wyświetl wszystkie dodane zakładki</string>
 
@@ -75,7 +75,7 @@
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Można ustawić przeglądarkę %1$s tak, aby automatycznie otwierała odnośniki w aplikacjach.</string>
     <!-- Text for the positive action button -->
-    <string name="open_in_app_cfr_positive_button_text">Otwórz ustawienia</string>
+    <string name="open_in_app_cfr_positive_button_text">Przejdź do ustawień</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Zamknij</string>
 
@@ -179,8 +179,6 @@
     <string name="browser_menu_add_to_homescreen">Dodaj do ekranu głównego</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Zainstaluj</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Karty z innych urządzeń</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synchronizuj ponownie</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -214,8 +212,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Edytuj</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Dostosuj stronę startową</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Dostosuj stronę startową</string>
     <!-- Browser Toolbar -->
@@ -330,6 +326,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Zezwolenie spowoduje, że karty w trybie prywatnym także będą widoczne, kiedy otwartych jest wiele aplikacji</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dodaj skrót do trybu prywatnego</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Tryb używania wyłącznie protokołu HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Automatycznie próbuje łączyć się ze stronami za pomocą protokołu szyfrowania HTTPS w celu zwiększenia bezpieczeństwa.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Włączony</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Wyłączony</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Więcej informacji</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Włącz we wszystkich kartach</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Włącz tylko w kartach prywatnych</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Zabezpieczona witryna jest niedostępna</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Prawdopodobnie witryna po prostu nie obsługuje protokołu HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Możliwe jest również, że atakujący próbuje przechwycić informacje. Jeśli otworzysz tę witrynę, nie powinno się podawać na niej żadnych prywatnych informacji. Tryb używania wyłącznie protokołu HTTPS zostanie dla niej tymczasowo wyłączony.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Ułatwienia dostępu</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1070,7 +1086,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Dodano zakładki</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Dodano do popularnych stron</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Dodano do popularnych stron</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Dodano do skrótów</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Zamknięto prywatną kartę</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1621,18 +1639,18 @@
     <string name="search_delete_search_engine_success_message">Usunięto wyszukiwarkę „%s”</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Witamy w zupełnie nowej przeglądarce %s</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Witamy w zupełnie nowej przeglądarce %s</string>
 
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Czeka na Ciebie całkowicie przeprojektowana przeglądarka ze zwiększoną wydajnością i ulepszonymi funkcjami, aby więcej wyciągnąć z sieci.\n\nProsimy czekać, %s jest uzupełniany o Twoje dane:</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Czeka na Ciebie całkowicie przeprojektowana przeglądarka ze zwiększoną wydajnością i ulepszonymi funkcjami, aby więcej wyciągnąć z sieci.\n\nProsimy czekać, %s jest uzupełniany o Twoje dane:</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Aktualizowanie przeglądarki %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Aktualizowanie przeglądarki %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Uruchom przeglądarkę %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Uruchom przeglądarkę %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migracja została ukończona</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Migracja została ukończona</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Hasła</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Hasła</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Aby zezwolić:</string>
@@ -1662,9 +1680,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Czy na pewno usunąć tę zakładkę?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Dodaj do popularnych stron</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Dodaj do popularnych stron</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Usuń z popularnych stron</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Usuń z popularnych stron</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Dodaj do skrótów</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Usuń ze skrótów</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Zweryfikowane przez: %1$s</string>
@@ -1740,21 +1762,24 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Osiągnięto limit popularnych stron</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Osiągnięto limit popularnych stron</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Osiągnięto limit skrótów</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Aby dodać nową popularną stronę, usuń istniejącą. Dotknij i przytrzymaj którąś i wybierz „Usuń”.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Aby dodać nową popularną stronę, usuń istniejącą. Dotknij i przytrzymaj którąś i wybierz „Usuń”.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Aby dodać nowy skrót, usuń istniejący. Dotknij i przytrzymaj któryś i wybierz „Usuń”.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Najczęściej odwiedzane popularne strony</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Skróty</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nazwa</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Nazwa popularnej strony</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Nazwa popularnej strony</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Nazwa skrótu</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1830,4 +1855,9 @@
     <string name="pocket_stories_feature_caption">Część rodziny Firefoksa. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Więcej informacji</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Włącz telemetrię, aby wysyłać dane.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Przejdź do ustawień</string>
 </resources>

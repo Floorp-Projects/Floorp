@@ -346,6 +346,8 @@
     <string name="errorpage_httpsonly_title">Sito secur non disponibile</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Multo probabilemente, le sito web simplemente non supporta HTTPs.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Existe totevia le possibilitate que es implicate un attaccante. Si tu continua al sito web, tu deberea evitar de inserer alcun information sensibile. Si tu continua, le modalitate solo HTTPS essera temporarimente disactivate pro iste sito.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilitate</string>
     <!-- Preference to override the Firefox Account server -->
