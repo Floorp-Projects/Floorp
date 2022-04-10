@@ -33,7 +33,6 @@ add_task(async function test_combining_throw_away_first() {
   let combined = SnapshotScorer.combineAndScore(
     { getCurrentSessionUrls: () => new Set([TEST_URL1, TEST_URL2]) },
     {
-      // Set up so that the lower score will be thrown away.
       recommendations: [{ snapshot: snapshot1, score: 0.5 }],
       weight: 3.0,
     },
@@ -49,7 +48,7 @@ add_task(async function test_combining_throw_away_first() {
   assertRecommendations(combined, [
     {
       url: TEST_URL1,
-      score: 6,
+      score: 7.5,
     },
     {
       url: TEST_URL2,
@@ -81,7 +80,7 @@ add_task(async function test_combining_throw_away_second_and_sort() {
   assertRecommendations(combined, [
     {
       url: TEST_URL2,
-      score: 6,
+      score: 7.5,
     },
     {
       url: TEST_URL1,
