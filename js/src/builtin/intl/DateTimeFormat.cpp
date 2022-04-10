@@ -1335,9 +1335,7 @@ static mozilla::intl::DateIntervalFormat* NewDateIntervalFormat(
     return nullptr;
   }
 
-  // Determine the hour cycle used in the resolved pattern. This is needed to
-  // workaround <https://unicode-org.atlassian.net/browse/ICU-21154> and
-  // <https://unicode-org.atlassian.net/browse/ICU-21155>.
+  // Determine the hour cycle used in the resolved pattern.
   mozilla::Maybe<mozilla::intl::DateTimeFormat::HourCycle> hcPattern =
       mozilla::intl::DateTimeFormat::HourCycleFromPattern(pattern);
 
@@ -1357,7 +1355,7 @@ static mozilla::intl::DateIntervalFormat* NewDateIntervalFormat(
   mozilla::Span<const char16_t> timeZoneChars = timeZone.twoByteRange();
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
-  auto skelResult = mozDtf.GetOriginalSkeleton(skeleton, hcPattern);
+  auto skelResult = mozDtf.GetOriginalSkeleton(skeleton);
   if (skelResult.isErr()) {
     intl::ReportInternalError(cx, skelResult.unwrapErr());
     return nullptr;
