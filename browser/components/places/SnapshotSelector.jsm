@@ -236,7 +236,7 @@ class SnapshotSelector extends EventEmitter {
     let snapshots = [];
 
     if (context.selectOverlappingVisits) {
-      snapshots = await Snapshots.queryOverlapping(context.url);
+      snapshots = await Snapshots.recommendationSources.Overlapping(context);
 
       logConsole.debug(
         "Found overlapping snapshots:",
@@ -245,8 +245,8 @@ class SnapshotSelector extends EventEmitter {
     }
 
     if (context.selectCommonReferrer) {
-      let commonReferrerSnapshots = await Snapshots.queryCommonReferrer(
-        context.url
+      let commonReferrerSnapshots = await Snapshots.recommendationSources.CommonReferrer(
+        context
       );
 
       logConsole.debug(

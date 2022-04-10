@@ -318,7 +318,7 @@ add_task(async function test_query_single_context_increasing() {
   // Use the first url as the context
   let context = { url: "https://example.com/0/" };
 
-  let snapshots = await Snapshots.queryOverlapping(context.url);
+  let snapshots = await Snapshots.recommendationSources.Overlapping(context);
 
   // Ensure interactions closer to the context have higher scores
   let scores = {};
@@ -391,6 +391,8 @@ add_task(async function test_query_revisit() {
   ]);
   await Snapshots.add({ url: "https://example.com/1/" });
 
+  let context = { url: context_url };
+
   // The interaction should be near the lower end of the [0, 1] scoring range
   await assertOverlappingSnapshots(
     [
@@ -400,10 +402,10 @@ add_task(async function test_query_revisit() {
         overlappingVisitScoreLessThan: 1.0,
       },
     ],
-    { url: context_url }
+    context
   );
 
-  let snapshots = await Snapshots.queryOverlapping(context_url);
+  let snapshots = await Snapshots.recommendationSources.Overlapping(context);
   let scores = {};
   for (let s of snapshots) {
     scores[s.url] = s.overlappingVisitScore;
@@ -427,11 +429,11 @@ add_task(async function test_query_revisit() {
         overlappingVisitScoreLessThanEqualTo: 1.0,
       },
     ],
-    { url: context_url }
+    context
   );
 
   // Add another interaction: the score should increase (but still not exceed 1.0)
-  snapshots = await Snapshots.queryOverlapping(context_url);
+  snapshots = await Snapshots.recommendationSources.Overlapping(context);
   scores = {};
   for (let s of snapshots) {
     scores[s.url] = s.overlappingVisitScore;
@@ -454,7 +456,7 @@ add_task(async function test_query_revisit() {
         overlappingVisitScoreLessThanEqualTo: 1.0,
       },
     ],
-    { url: context_url }
+    context
   );
 });
 
@@ -464,6 +466,7 @@ add_task(async function test_query_numerous_revisit() {
 
   let now = Date.now();
   let context_url = "https://example.com/0/";
+  let context = { url: context_url };
   await addInteractions([
     { url: context_url, created_at: now, updated_at: now },
   ]);
@@ -486,7 +489,7 @@ add_task(async function test_query_numerous_revisit() {
         overlappingVisitScoreLessThanEqualTo: 1.0,
       },
     ],
-    { url: context_url }
+    context
   );
 });
 
@@ -515,6 +518,7 @@ add_task(async function test_query_pagedata() {
 
   let now = Date.now();
   let context_url = "https://example.com/0/";
+  let context = { url: context_url };
   await addInteractions([
     { url: context_url, created_at: now, updated_at: now },
   ]);
@@ -530,7 +534,7 @@ add_task(async function test_query_pagedata() {
 
   PageDataService.unlockEntry(actor, "https://example.com/1/");
 
-  let snapshot = await Snapshots.queryOverlapping(context_url);
+  let snapshot = await Snapshots.recommendationSources.Overlapping(context);
   Assert.equal(snapshot.length, 1, "One shapshot should be found");
   Assert.equal(
     snapshot[0].url,
