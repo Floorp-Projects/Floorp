@@ -1133,8 +1133,8 @@ ka{
         }
         concentr{
             item{
-                one{"{0} ერთეული"}
-                other{"{0} ერთეული"}
+                one{"{0} ერთე."}
+                other{"{0} ერთე."}
             }
             percent{
                 dnam{"%"}
@@ -1495,8 +1495,8 @@ ka{
         concentr{
             item{
                 dnam{"ერთეული"}
-                one{"{0} ერთეული"}
-                other{"{0} ერთეული"}
+                one{"{0} ერთე."}
+                other{"{0} ერთე."}
             }
             karat{
                 dnam{"კარატი"}

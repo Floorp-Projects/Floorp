@@ -1223,6 +1223,9 @@ lv{
         "Pacific:Johnston"{
             ec{"Džonstona atols"}
         }
+        "Pacific:Kanton"{
+            ec{"Kantona"}
+        }
         "Pacific:Kiritimati"{
             ec{"Kirisimasi"}
         }

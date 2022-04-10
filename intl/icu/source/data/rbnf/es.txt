@@ -21,6 +21,12 @@ es{
             "%digits-ordinal-feminine:",
             "-x: \u2212>>;",
             "0: =#,##0=.\u00AA;",
+            "%digits-ordinal-masculine-plural:",
+            "-x: \u2212>>;",
+            "0: =#,##0=.\u1D52\u02E2;",
+            "%digits-ordinal-feminine-plural:",
+            "-x: \u2212>>;",
+            "0: =#,##0=.\u1D43\u02E2;",
             "%digits-ordinal:",
             "0: =%digits-ordinal-masculine=;",
         }
