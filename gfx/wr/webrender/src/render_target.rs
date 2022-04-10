@@ -223,6 +223,7 @@ pub struct ColorRenderTarget {
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
     pub resolve_op: Option<ResolveOp>,
+    pub clear_color: Option<ColorF>,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -244,6 +245,7 @@ impl RenderTarget for ColorRenderTarget {
             texture_id,
             used_rect,
             resolve_op: None,
+            clear_color: Some(ColorF::TRANSPARENT),
         }
     }
 
@@ -274,6 +276,10 @@ impl RenderTarget for ColorRenderTarget {
                     } else {
                         Some(target_rect)
                     };
+
+                    if pic_task.is_resolve_target {
+                        self.clear_color = None;
+                    }
 
                     // TODO(gw): The type names of AlphaBatchBuilder and BatchBuilder
                     //           are still confusing. Once more of the picture caching
