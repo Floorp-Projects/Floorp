@@ -24,6 +24,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /**
+ * @typedef {object} Recommendation
+ *   A snapshot recommendation with an associated score.
+ * @property {Snapshot} snapshot
+ *   The recommended snapshot.
+ * @property {number} score
+ *   The score for this snapshot.
+ */
+
+/**
  * @typedef {object} SnapshotCriteria
  *   A set of tests to check if a set of interactions are a snapshot.
  * @property {string} property
@@ -640,7 +649,7 @@ const Snapshots = new (class Snapshots {
    *
    * @param {SelectionContext} selectionContext
    *   the selection context to inform recommendations
-   * @returns {Snapshot[]}
+   * @returns {Recommendation[]}
    *   Returns array of overlapping snapshots in order of descending overlappingVisitScore (Calculated as 1.0 to 0.0, as the overlap gap goes to snapshot_overlap_limit)
    */
   async #queryOverlapping(selectionContext) {
@@ -692,8 +701,8 @@ const Snapshots = new (class Snapshots {
     }
 
     return rows.map(row => ({
-      ...this.#translateRow(row),
-      overlappingVisitScore: row.getResultByName("overlappingVisitScore"),
+      snapshot: this.#translateRow(row),
+      score: row.getResultByName("overlappingVisitScore"),
     }));
   }
 
@@ -702,7 +711,7 @@ const Snapshots = new (class Snapshots {
    *
    * @param {SelectionContext} selectionContext
    *   the selection context to inform recommendations
-   * @returns {Snapshot[]}
+   * @returns {Recommendation[]}
    *   Returns array of snapshots with the common referrer
    */
   async #queryCommonReferrer(selectionContext) {
@@ -734,8 +743,8 @@ const Snapshots = new (class Snapshots {
     );
 
     return rows.map(row => ({
-      ...this.#translateRow(row),
-      commonReferrerScore: 1.0,
+      snapshot: this.#translateRow(row),
+      score: 1.0,
     }));
   }
 

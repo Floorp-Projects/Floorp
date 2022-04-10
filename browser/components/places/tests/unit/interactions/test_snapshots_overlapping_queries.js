@@ -87,15 +87,15 @@ add_task(async function test_query_single_context_overlap() {
 
   await assertOverlappingSnapshots(
     [
-      { url: "https://example.com/9/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/8/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/7/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/6/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/5/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/4/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/3/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/2/", overlappingVisitScoreGreaterThan: 0 },
-      { url: "https://example.com/1/", overlappingVisitScoreGreaterThan: 0 },
+      { url: "https://example.com/9/", scoreGreaterThan: 0 },
+      { url: "https://example.com/8/", scoreGreaterThan: 0 },
+      { url: "https://example.com/7/", scoreGreaterThan: 0 },
+      { url: "https://example.com/6/", scoreGreaterThan: 0 },
+      { url: "https://example.com/5/", scoreGreaterThan: 0 },
+      { url: "https://example.com/4/", scoreGreaterThan: 0 },
+      { url: "https://example.com/3/", scoreGreaterThan: 0 },
+      { url: "https://example.com/2/", scoreGreaterThan: 0 },
+      { url: "https://example.com/1/", scoreGreaterThan: 0 },
     ],
     context
   );
@@ -130,7 +130,7 @@ add_task(async function test_query_context_not_a_snapshot() {
   await Snapshots.add({ url: test_url });
 
   await assertOverlappingSnapshots(
-    [{ url: "https://example.com/1/", overlappingVisitScoreGreaterThan: 0 }],
+    [{ url: "https://example.com/1/", scoreGreaterThan: 0 }],
     { url: context_url }
   );
 });
@@ -215,8 +215,8 @@ add_task(async function test_query_interact_before_overlap() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: 0.1,
+        scoreGreaterThan: 0.0,
+        scoreLessThan: 0.1,
       },
     ],
     { url: context_url }
@@ -269,8 +269,8 @@ add_task(async function test_query_interact_after_overlap() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: 0.1,
+        scoreGreaterThan: 0.0,
+        scoreLessThan: 0.1,
       },
     ],
     { url: context_url }
@@ -301,8 +301,8 @@ add_task(async function test_query_interact_after_overlap() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: 0.9,
-        overlappingVisitScoreLessThan: 1.0,
+        scoreGreaterThan: 0.9,
+        scoreLessThan: 1.0,
       },
     ],
     { url: context_url }
@@ -323,50 +323,50 @@ add_task(async function test_query_single_context_increasing() {
   // Ensure interactions closer to the context have higher scores
   let scores = {};
   for (let s of snapshots) {
-    scores[s.url] = s.overlappingVisitScore;
+    scores[s.url] = s.score;
   }
   await assertOverlappingSnapshots(
     [
-      { url: "https://example.com/1/", overlappingVisitScoreGreaterThan: 0.0 },
+      { url: "https://example.com/1/", scoreGreaterThan: 0.0 },
       {
         url: "https://example.com/2/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/1/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/1/"],
       },
       {
         url: "https://example.com/3/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/2/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/2/"],
       },
       {
         url: "https://example.com/4/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/3/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/3/"],
       },
       {
         url: "https://example.com/5/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/4/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/4/"],
       },
       {
         url: "https://example.com/6/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/5/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/5/"],
       },
       {
         url: "https://example.com/7/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/6/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/6/"],
       },
       {
         url: "https://example.com/8/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/7/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/7/"],
       },
       {
         url: "https://example.com/9/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: scores["https://example.com/8/"],
+        scoreGreaterThan: 0.0,
+        scoreLessThan: scores["https://example.com/8/"],
       },
     ],
     context
@@ -398,8 +398,8 @@ add_task(async function test_query_revisit() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThan: 1.0,
+        scoreGreaterThan: 0.0,
+        scoreLessThan: 1.0,
       },
     ],
     context
@@ -408,7 +408,7 @@ add_task(async function test_query_revisit() {
   let snapshots = await Snapshots.recommendationSources.Overlapping(context);
   let scores = {};
   for (let s of snapshots) {
-    scores[s.url] = s.overlappingVisitScore;
+    scores[s.url] = s.score;
   }
 
   // Add another interaction: the score should increase (but not exceed 1.0)
@@ -425,8 +425,8 @@ add_task(async function test_query_revisit() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: scores["https://example.com/1/"],
-        overlappingVisitScoreLessThanEqualTo: 1.0,
+        scoreGreaterThan: scores["https://example.com/1/"],
+        scoreLessThanEqualTo: 1.0,
       },
     ],
     context
@@ -436,7 +436,7 @@ add_task(async function test_query_revisit() {
   snapshots = await Snapshots.recommendationSources.Overlapping(context);
   scores = {};
   for (let s of snapshots) {
-    scores[s.url] = s.overlappingVisitScore;
+    scores[s.url] = s.score;
   }
 
   await addInteractions([
@@ -452,8 +452,8 @@ add_task(async function test_query_revisit() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: scores["https://example.com/1/"],
-        overlappingVisitScoreLessThanEqualTo: 1.0,
+        scoreGreaterThan: scores["https://example.com/1/"],
+        scoreLessThanEqualTo: 1.0,
       },
     ],
     context
@@ -485,8 +485,8 @@ add_task(async function test_query_numerous_revisit() {
     [
       {
         url: "https://example.com/1/",
-        overlappingVisitScoreGreaterThan: 0.0,
-        overlappingVisitScoreLessThanEqualTo: 1.0,
+        scoreGreaterThan: 0.0,
+        scoreLessThanEqualTo: 1.0,
       },
     ],
     context
@@ -537,17 +537,17 @@ add_task(async function test_query_pagedata() {
   let snapshot = await Snapshots.recommendationSources.Overlapping(context);
   Assert.equal(snapshot.length, 1, "One shapshot should be found");
   Assert.equal(
-    snapshot[0].url,
+    snapshot[0].snapshot.url,
     "https://example.com/1/",
     "Correct snapshot should be found"
   );
   Assert.equal(
-    snapshot[0].siteName,
+    snapshot[0].snapshot.siteName,
     "Example site name",
     "Site name should be found"
   );
   Assert.deepEqual(
-    snapshot[0].pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
+    snapshot[0].snapshot.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
     { price: { value: 276, currency: "USD" } },
     "Should have the right price."
   );

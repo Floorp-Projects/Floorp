@@ -2705,10 +2705,13 @@ pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox
 // SnapshotScorer.
 pref("browser.snapshots.score.Visit", 1);
 pref("browser.snapshots.score.CurrentSession", 1);
-pref("browser.snapshots.score.InNavigation", 3);
-pref("browser.snapshots.score.IsOverlappingVisit", 3);
 pref("browser.snapshots.score.IsUserPersisted", 1);
 pref("browser.snapshots.score.IsUsedRemoved", -10);
+
+// A set of weights for the snapshot recommendation sources. The suffixes after
+// the last decimal map to the keys of `Snapshots.recommendationSources`.
+pref("browser.snapshots.source.CommonReferrer", 3);
+pref("browser.snapshots.source.Overlapping", 3);
 
 // Expiration days for snapshots.
 pref("browser.places.snapshots.expiration.days", 210);
