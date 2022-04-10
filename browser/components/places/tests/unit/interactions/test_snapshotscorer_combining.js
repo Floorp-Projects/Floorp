@@ -37,7 +37,7 @@ add_task(async function test_combining_throw_away_first() {
   snapshot1b.overlappingVisitScore = 1.0;
 
   let combined = SnapshotScorer.combineAndScore(
-    new Set([TEST_URL1, TEST_URL2]),
+    { getCurrentSessionUrls: () => new Set([TEST_URL1, TEST_URL2]) },
     [snapshot1a],
     [snapshot1b, snapshot2]
   );
@@ -65,7 +65,7 @@ add_task(async function test_combining_throw_away_second_and_sort() {
   snapshot2b.overlappingVisitScore = 0.5;
 
   let combined = SnapshotScorer.combineAndScore(
-    new Set([TEST_URL1, TEST_URL2]),
+    { getCurrentSessionUrls: () => new Set([TEST_URL1, TEST_URL2]) },
     [snapshot2a],
     [snapshot1, snapshot2b]
   );

@@ -213,9 +213,10 @@ add_task(async function test_scores() {
 
     handleSnapshotSetup(data, snapshot, sessionUrls);
 
-    let snapshots = await SnapshotScorer.combineAndScore(sessionUrls, [
-      snapshot,
-    ]);
+    let snapshots = await SnapshotScorer.combineAndScore(
+      { getCurrentSessionUrls: () => sessionUrls },
+      [snapshot]
+    );
 
     assertSnapshotScores(snapshots, [
       {
@@ -242,7 +243,7 @@ add_task(async function test_score_threshold() {
   }
 
   let snapshots = await SnapshotScorer.combineAndScore(
-    sessionUrls,
+    { getCurrentSessionUrls: () => sessionUrls },
     originalSnapshots
   );
 
