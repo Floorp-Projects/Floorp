@@ -106,18 +106,15 @@ class SnapshotSelector extends EventEmitter {
    *   calculations.
    * @param {boolean} [options.filterAdult]
    *   Whether adult sites should be filtered from the snapshots.
-   * @param {boolean} [options.selectOverlappingVisits]
-   *   Whether to select snapshots where visits overlapped the current context url
-   * @param {boolean} [options.selectCommonReferrer]
-   *   Whether to select snapshots which share a common referrer with the context url's interactions
+   * @param {object | undefined} [options.sourceWeights]
+   *   Overrides for the weights of different recommendation sources.
    * @param {function} [options.getCurrentSessionUrls]
    *   A function that returns a Set containing the urls for the current session.
    */
   constructor({
     count = 5,
     filterAdult = false,
-    selectOverlappingVisits = false,
-    selectCommonReferrer = false,
+    sourceWeights = undefined,
     getCurrentSessionUrls = () => new Set(),
   }) {
     super();
@@ -128,28 +125,23 @@ class SnapshotSelector extends EventEmitter {
     this.#context.count = count;
     this.#context.filterAdult = filterAdult;
 
-    if (selectOverlappingVisits || selectCommonReferrer) {
-      // This is temporary to avoid changing the API.
-      this.#context.sourceWeights = new Map([
-        [
-          "Overlapping",
-          selectOverlappingVisits
-            ? Services.prefs.getIntPref(
-                "browser.snapshots.source.Overlapping",
-                0
-              )
-            : 0,
-        ],
-        [
-          "CommonReferrer",
-          selectCommonReferrer
-            ? Services.prefs.getIntPref(
-                "browser.snapshots.source.CommonReferrer",
-                0
-              )
-            : 0,
-        ],
-      ]);
+    if (
+      sourceWeights ||
+      Services.prefs.getBoolPref(
+        "browser.pinebuild.snapshots.relevancy.enabled",
+        false
+      )
+    ) {
+      // Fetch the defaults
+      let branch = Services.prefs.getBranch("browser.snapshots.source.");
+      let weights = Object.fromEntries(
+        branch.getChildList("").map(name => [name, branch.getIntPref(name, 0)])
+      );
+
+      // Apply overrides
+      Object.assign(weights, sourceWeights ?? {});
+
+      this.#context.sourceWeights = new Map(Object.entries(weights));
     }
 
     this.#context.getCurrentSessionUrls = getCurrentSessionUrls;
