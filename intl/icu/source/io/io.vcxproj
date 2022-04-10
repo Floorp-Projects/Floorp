@@ -60,7 +60,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuio70d.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuio71d.dll</OutputFile>
       <ProgramDatabaseFile>..\..\$(IcuLibOutputDir)\icuiod.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuiod.lib</ImportLibrary>
       <AdditionalDependencies>icuucd.lib;icuind.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -73,7 +73,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\$(IcuBinOutputDir)\icuio70.dll</OutputFile>
+      <OutputFile>..\..\$(IcuBinOutputDir)\icuio71.dll</OutputFile>
       <ProgramDatabaseFile>..\..\$(IcuLibOutputDir)\icuio.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\$(IcuLibOutputDir)\icuio.lib</ImportLibrary>
       <AdditionalDependencies>icuuc.lib;icuin.lib;%(AdditionalDependencies)</AdditionalDependencies>

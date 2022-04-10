@@ -1898,6 +1898,9 @@ is{
             lg{"Tími í Yekaterinburg"}
             ls{"Staðaltími í Yekaterinborg"}
         }
+        "meta:Yukon"{
+            ls{"Tími í Júkon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

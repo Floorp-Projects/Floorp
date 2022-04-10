@@ -384,7 +384,7 @@ ar{
                 one{"ولد واحد حضر"}
                 other{"{0} ولد حضروا"}
                 two{"ولدان حضرا"}
-                zero{"{0} كتاب"}
+                zero{"{0} ولد حضر"}
             }
         }
         minimumGroupingDigits{"1"}
