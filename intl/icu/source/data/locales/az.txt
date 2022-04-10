@@ -213,8 +213,8 @@ az{
                 other{"{0}-cu sağ döngəni seçin."}
             }
             plural{
-                one{"Alış-veriş katınızda {0} X var. Almaq istəyirsiniz?"}
-                other{"Alış-veriş kartınızda {0} X var. Almaq istəyirsiniz?"}
+                one{"Alış-veriş kartınızda {0} var. Alınsın?"}
+                other{"Alış-veriş kartınızda {0} var. Alınsınlar?"}
             }
         }
         minimumGroupingDigits{"1"}

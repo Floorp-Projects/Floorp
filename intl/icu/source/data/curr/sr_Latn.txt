@@ -1234,7 +1234,6 @@ sr_Latn{
         ZMW{"ZK"}
     }
     Currencies%variant{
-        GEL{"ლ"}
         TRY{"TL"}
     }
     CurrencyPlurals{

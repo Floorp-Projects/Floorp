@@ -1132,7 +1132,7 @@ jv{
             }
             permillion{
                 dnam{"bagean/yuta"}
-                other{"{0} bagean saben yuta"}
+                other{"{0}bpj"}
             }
             permyriad{
                 dnam{"permiriad"}

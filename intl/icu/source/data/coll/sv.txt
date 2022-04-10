@@ -12,14 +12,14 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"40"}
+            Version{"41"}
         }
         search{
             Sequence{
                 "[import und-u-co-search]"
                 "[import sv-u-co-standard]"
             }
-            Version{"40"}
+            Version{"41"}
         }
         standard{
             Sequence{
@@ -30,7 +30,7 @@ sv{
                 "&Y<<ü<<<Ü<<ű<<<Ű"
                 "&[before 1]ǀ<å<<<Å<ä<<<Ä<<æ<<<Æ<<ę<<<Ę<ö<<<Ö<<ø<<<Ø<<ő<<<Ő<<œ<<<Œ<<ô<<<Ô"
             }
-            Version{"40"}
+            Version{"41"}
         }
     }
 }

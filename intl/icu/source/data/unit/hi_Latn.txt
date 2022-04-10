@@ -1,0 +1,101 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html
+// Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
+hi_Latn{
+    %%Parent{"en_IN"}
+    unitsNarrow{
+        concentr{
+            karat{
+                dnam{"karat"}
+                one{"{0}kt"}
+                other{"{0}kt"}
+            }
+        }
+        digital{
+            byte{
+                dnam{"byte"}
+            }
+            gigabit{
+                dnam{"Gbit"}
+            }
+            gigabyte{
+                dnam{"GByte"}
+            }
+            kilobit{
+                dnam{"kbit"}
+            }
+            kilobyte{
+                dnam{"kByte"}
+            }
+            megabit{
+                dnam{"Mbit"}
+            }
+            megabyte{
+                dnam{"MByte"}
+            }
+            petabyte{
+                dnam{"PByte"}
+            }
+            terabit{
+                dnam{"Tbit"}
+            }
+            terabyte{
+                dnam{"TByte"}
+            }
+        }
+        pressure{
+            bar{
+                one{"{0}bar"}
+                other{"{0}bars"}
+            }
+        }
+        speed{
+            mile-per-hour{
+                dnam{"mi/hr"}
+            }
+        }
+        volume{
+            fluid-ounce-imperial{
+                dnam{"Imp fl oz"}
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
+        }
+    }
+    unitsShort{
+        angle{
+            revolution{
+                one{"{0} rev"}
+                other{"{0} rev"}
+            }
+        }
+        concentr{
+            millimole-per-liter{
+                dnam{"millimol/litre"}
+            }
+        }
+        consumption{
+            mile-per-gallon{
+                dnam{"miles/gal US"}
+            }
+        }
+        mass{
+            carat{
+                one{"{0} CD"}
+                other{"{0} CD"}
+            }
+        }
+        pressure{
+            bar{
+                one{"{0} bar"}
+                other{"{0} bars"}
+            }
+        }
+        volume{
+            gallon{
+                one{"{0} gal US"}
+                other{"{0} gal US"}
+            }
+        }
+    }
+}

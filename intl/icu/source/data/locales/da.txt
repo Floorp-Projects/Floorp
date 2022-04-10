@@ -202,6 +202,10 @@ da{
             }
         }
         minimalPairs{
+            case{
+                genitive{"Med {0} mellemrum"}
+                nominative{"Jeg tror, ​​at {0} er nok."}
+            }
             gender{
                 common{"En {0}"}
                 neuter{"Et {0}"}

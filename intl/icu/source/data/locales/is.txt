@@ -212,7 +212,15 @@ is{
         }
         minimalPairs{
             case{
+                accusative{"um {0}"}
+                dative{"frá {0}"}
                 genitive{"til {0}"}
+                nominative{"hér er {0}"}
+            }
+            gender{
+                feminine{"Ein {0} eftir"}
+                masculine{"Einn {0} eftir"}
+                neuter{"Eitt {0} eftir"}
             }
             ordinal{
                 other{"Taktu {0}. beygju til hægri."}

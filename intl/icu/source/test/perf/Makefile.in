@@ -22,7 +22,7 @@ subdir = test/perf
 ## Files to remove for 'make clean'
 CLEANFILES = *~
 
-SUBDIRS = collationperf collperf collperf2 charperf dicttrieperf localecanperf normperf ubrkperf unisetperf usetperf ustrperf utfperf utrie2perf DateFmtPerf howExpensiveIs
+SUBDIRS = collationperf collperf collperf2 charperf dicttrieperf localecanperf normperf strsrchperf ubrkperf unisetperf usetperf ustrperf utfperf utrie2perf DateFmtPerf howExpensiveIs
 
 # Subdirs that support 'xperf'
 XSUBDIRS = DateFmtPerf
@@ -38,10 +38,7 @@ check check-recursive check-local xperf xperf-recursive
 
 ## List of standard targets
 everything: all-recursive all-local
-all:
-ifneq ($(RECURSIVE),YES)
-	@echo simply use \`make\' \(or \`make everything\'\) to do all
-endif
+all: everything
 
 install: install-recursive install-local
 clean: clean-recursive clean-local

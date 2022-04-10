@@ -22,6 +22,7 @@ ar{
             meter-per-square-second{
                 dnam{"متر في الثانية المربعة"}
                 few{"{0} متر في الثانية المربعة"}
+                gender{"masculine"}
                 many{"{0} متر في الثانية المربعة"}
                 one{"{0} متر في الثانية المربعة"}
                 other{"{0} متر في الثانية المربعة"}
@@ -113,6 +114,7 @@ ar{
             square-centimeter{
                 dnam{"سنتيمتر مربع"}
                 few{"{0} سنتيمتر مربع"}
+                gender{"masculine"}
                 many{"{0} سنتيمتر مربع"}
                 one{"{0} سنتيمتر مربع"}
                 other{"{0} سنتيمتر مربع"}
@@ -142,6 +144,7 @@ ar{
             square-kilometer{
                 dnam{"كيلومتر مربع"}
                 few{"{0} كيلومتر مربع"}
+                gender{"masculine"}
                 many{"{0} كيلومتر مربع"}
                 one{"{0} كيلومتر مربع"}
                 other{"{0} كيلومتر مربع"}
@@ -152,6 +155,7 @@ ar{
             square-meter{
                 dnam{"متر مربع"}
                 few{"{0} متر مربع"}
+                gender{"masculine"}
                 many{"{0} متر مربع"}
                 one{"{0} متر مربع"}
                 other{"{0} متر مربع"}
@@ -314,6 +318,7 @@ ar{
             item{
                 dnam{"عنصر"}
                 few{"{0} عناصر"}
+                gender{"masculine"}
                 many{"{0} عنصرًا"}
                 one{"عنصر واحد"}
                 other{"{0} عنصر"}
@@ -342,6 +347,7 @@ ar{
             millimole-per-liter{
                 dnam{"ملي مول/لتر"}
                 few{"{0} ملي مول/لتر"}
+                gender{"masculine"}
                 many{"{0} ملي مول/لتر"}
                 one{"{0} ملي مول/لتر"}
                 other{"{0} ملي مول/لتر"}
@@ -396,6 +402,7 @@ ar{
             liter-per-100-kilometer{
                 dnam{"لتر لكل ١٠٠ كيلومتر"}
                 few{"{0} لترات لكل ١٠٠ كيلومتر"}
+                gender{"masculine"}
                 many{"{0} لترًا لكل ١٠٠ كيلومتر"}
                 one{"{0} لتر لكل ١٠٠ كيلومتر"}
                 other{"{0} لتر لكل ١٠٠ كيلومتر"}
@@ -405,6 +412,7 @@ ar{
             liter-per-kilometer{
                 dnam{"لتر لكل كيلومتر"}
                 few{"{0} لترات لكل كيلومتر"}
+                gender{"masculine"}
                 many{"{0} لترًا لكل كيلومتر"}
                 one{"{0} لتر لكل كيلومتر"}
                 other{"{0} لتر لكل كيلومتر"}
@@ -441,6 +449,7 @@ ar{
             bit{
                 dnam{"بت"}
                 few{"{0} بت"}
+                gender{"masculine"}
                 many{"{0} بت"}
                 one{"{0} بت"}
                 other{"{0} بت"}
@@ -450,6 +459,7 @@ ar{
             byte{
                 dnam{"بايت"}
                 few{"{0} بايت"}
+                gender{"masculine"}
                 many{"{0} بايت"}
                 one{"{0} بايت"}
                 other{"{0} بايت"}
@@ -459,6 +469,7 @@ ar{
             gigabit{
                 dnam{"غيغابت"}
                 few{"{0} غيغابت"}
+                gender{"masculine"}
                 many{"{0} غيغابت"}
                 one{"{0} غيغابت"}
                 other{"{0} غيغابت"}
@@ -468,6 +479,7 @@ ar{
             gigabyte{
                 dnam{"غيغابايت"}
                 few{"{0} غيغابايت"}
+                gender{"masculine"}
                 many{"{0} غيغابايت"}
                 one{"{0} غيغابايت"}
                 other{"{0} غيغابايت"}
@@ -477,6 +489,7 @@ ar{
             kilobit{
                 dnam{"كيلوبت"}
                 few{"{0} كيلوبت"}
+                gender{"masculine"}
                 many{"{0} كيلوبت"}
                 one{"{0} كيلوبت"}
                 other{"{0} كيلوبت"}
@@ -486,6 +499,7 @@ ar{
             kilobyte{
                 dnam{"كيلوبايت"}
                 few{"{0} كيلوبايت"}
+                gender{"masculine"}
                 many{"{0} كيلوبايت"}
                 one{"{0} كيلوبايت"}
                 other{"{0} كيلوبايت"}
@@ -495,6 +509,7 @@ ar{
             megabit{
                 dnam{"ميغابت"}
                 few{"{0} ميغابت"}
+                gender{"masculine"}
                 many{"{0} ميغابت"}
                 one{"{0} ميغابت"}
                 other{"{0} ميغابت"}
@@ -504,6 +519,7 @@ ar{
             megabyte{
                 dnam{"ميغابايت"}
                 few{"{0} ميغابايت"}
+                gender{"masculine"}
                 many{"{0} ميغابايت"}
                 one{"{0} ميغابايت"}
                 other{"{0} ميغابايت"}
@@ -513,6 +529,7 @@ ar{
             petabyte{
                 dnam{"بيتابايت"}
                 few{"{0} بيتابايت"}
+                gender{"masculine"}
                 many{"{0} بيتابايت"}
                 one{"{0} بيتابايت"}
                 other{"{0} بيتابايت"}
@@ -522,6 +539,7 @@ ar{
             terabit{
                 dnam{"تيرابت"}
                 few{"{0} تيرابت"}
+                gender{"masculine"}
                 many{"{0} تيرابت"}
                 one{"{0} تيرابت"}
                 other{"{0} تيرابت"}
@@ -531,6 +549,7 @@ ar{
             terabyte{
                 dnam{"تيرابايت"}
                 few{"{0} تيرابايت"}
+                gender{"masculine"}
                 many{"{0} تيرابايت"}
                 one{"{0} تيرابايت"}
                 other{"{0} تيرابايت"}
@@ -556,7 +575,7 @@ ar{
                 many{"{0} يومًا"}
                 one{"يوم"}
                 other{"{0} يوم"}
-                per{"{0} كل يوم"}
+                per{"{0} في اليوم"}
                 two{"يومان"}
                 zero{"{0} يوم"}
             }
@@ -580,13 +599,14 @@ ar{
                 many{"{0} ساعة"}
                 one{"ساعة"}
                 other{"{0} ساعة"}
-                per{"{0} كل ساعة"}
+                per{"{0} في الساعة"}
                 two{"ساعتان"}
                 zero{"{0} ساعة"}
             }
             microsecond{
                 dnam{"ميكروثانية"}
                 few{"{0} ميكروثانية"}
+                gender{"feminine"}
                 many{"{0} ميكروثانية"}
                 one{"{0} ميكروثانية"}
                 other{"{0} ميكروثانية"}
@@ -596,6 +616,7 @@ ar{
             millisecond{
                 dnam{"ملي ثانية"}
                 few{"{0} ملي ثانية"}
+                gender{"feminine"}
                 many{"{0} ملي ثانية"}
                 one{"{0} ملي ثانية"}
                 other{"{0} ملي ثانية"}
@@ -627,6 +648,7 @@ ar{
             nanosecond{
                 dnam{"نانو ثانية"}
                 few{"{0} نانو ثانية"}
+                gender{"feminine"}
                 many{"{0} نانو ثانية"}
                 one{"{0} نانو ثانية"}
                 other{"{0} نانو ثانية"}
@@ -640,7 +662,7 @@ ar{
                 many{"{0} ثانية"}
                 one{"ثانية"}
                 other{"{0} ثانية"}
-                per{"{0}/ثانية"}
+                per{"{0} في الثانية"}
                 two{"ثانيتان"}
                 zero{"{0} ثانية"}
             }
@@ -651,7 +673,7 @@ ar{
                 many{"{0} أسبوعًا"}
                 one{"أسبوع"}
                 other{"{0} أسبوع"}
-                per{"{0} كل أسبوع"}
+                per{"{0} في الأسبوع"}
                 two{"أسبوعان"}
                 zero{"{0} أسبوع"}
             }
@@ -681,6 +703,7 @@ ar{
             milliampere{
                 dnam{"ملي أمبير"}
                 few{"{0} ملي أمبير"}
+                gender{"masculine"}
                 many{"{0} ملي أمبير"}
                 one{"{0} ملي أمبير"}
                 other{"{0} ملي أمبير"}
@@ -768,6 +791,7 @@ ar{
             kilojoule{
                 dnam{"كيلو جول"}
                 few{"{0} كيلو جول"}
+                gender{"masculine"}
                 many{"{0} كيلو جول"}
                 one{"{0} كيلو جول"}
                 other{"{0} كيلو جول"}
@@ -777,6 +801,7 @@ ar{
             kilowatt-hour{
                 dnam{"كيلو واط/ساعة"}
                 few{"{0} كيلو واط/ساعة"}
+                gender{"masculine"}
                 many{"{0} كيلو واط/ساعة"}
                 one{"{0} كيلو واط/ساعة"}
                 other{"{0} كيلو واط/ساعة"}
@@ -797,6 +822,7 @@ ar{
             kilowatt-hour-per-100-kilometer{
                 dnam{"كيلوواط ساعة لكل 100 كيلومتر"}
                 few{"{0} كيلوواط ساعة لكل 100 كيلومتر"}
+                gender{"masculine"}
                 many{"{0} كيلوواط ساعة لكل 100 كيلومتر"}
                 one{"{0} كيلوواط ساعة لكل 100 كيلومتر"}
                 other{"{0} كيلوواط ساعة لكل 100 كيلومتر"}
@@ -827,6 +853,7 @@ ar{
             gigahertz{
                 dnam{"غيغا هرتز"}
                 few{"{0} غيغا هرتز"}
+                gender{"masculine"}
                 many{"{0} غيغا هرتز"}
                 one{"{0} غيغا هرتز"}
                 other{"{0} غيغا هرتز"}
@@ -846,6 +873,7 @@ ar{
             kilohertz{
                 dnam{"كيلو هرتز"}
                 few{"{0} كيلو هرتز"}
+                gender{"masculine"}
                 many{"{0} كيلو هرتز"}
                 one{"{0} كيلو هرتز"}
                 other{"{0} كيلو هرتز"}
@@ -855,6 +883,7 @@ ar{
             megahertz{
                 dnam{"ميغا هرتز"}
                 few{"{0} ميغا هرتز"}
+                gender{"masculine"}
                 many{"{0} ميغا هرتز"}
                 one{"{0} ميغا هرتز"}
                 other{"{0} ميغا هرتز"}
@@ -903,6 +932,7 @@ ar{
             megapixel{
                 dnam{"ميغابكسل"}
                 few{"{0} ميغابكسل"}
+                gender{"masculine"}
                 many{"{0} ميغابكسل"}
                 one{"{0} ميغابكسل"}
                 other{"{0} ميغابكسل"}
@@ -922,6 +952,7 @@ ar{
             pixel-per-centimeter{
                 dnam{"بكسل لكل سنتيمتر"}
                 few{"{0} بكسل لكل سنتيمتر"}
+                gender{"masculine"}
                 many{"{0} بكسل لكل سنتيمتر"}
                 one{"{0} بكسل لكل سنتيمتر"}
                 other{"{0} بكسل لكل سنتيمتر"}
@@ -951,6 +982,7 @@ ar{
             centimeter{
                 dnam{"سنتيمتر"}
                 few{"{0} سنتيمتر"}
+                gender{"masculine"}
                 many{"{0} سنتيمتر"}
                 one{"{0} سنتيمتر"}
                 other{"{0} سنتيمتر"}
@@ -961,6 +993,7 @@ ar{
             decimeter{
                 dnam{"ديسيمتر"}
                 few{"{0} ديسيمتر"}
+                gender{"masculine"}
                 many{"{0} ديسيمتر"}
                 one{"{0} ديسيمتر"}
                 other{"{0} ديسيمتر"}
@@ -1017,6 +1050,7 @@ ar{
             kilometer{
                 dnam{"كيلومتر"}
                 few{"{0} كيلومتر"}
+                gender{"masculine"}
                 many{"{0} كيلومتر"}
                 one{"{0} كيلومتر"}
                 other{"{0} كيلومتر"}
@@ -1047,6 +1081,7 @@ ar{
             micrometer{
                 dnam{"ميكرومتر"}
                 few{"{0} ميكرومتر"}
+                gender{"masculine"}
                 many{"{0} ميكرومتر"}
                 one{"{0} ميكرومتر"}
                 other{"{0} ميكرومتر"}
@@ -1075,6 +1110,7 @@ ar{
             millimeter{
                 dnam{"مليمتر"}
                 few{"{0} مليمتر"}
+                gender{"masculine"}
                 many{"{0} مليمتر"}
                 one{"{0} مليمتر"}
                 other{"{0} مليمتر"}
@@ -1084,6 +1120,7 @@ ar{
             nanometer{
                 dnam{"نانو متر"}
                 few{"{0} نانو متر"}
+                gender{"masculine"}
                 many{"{0} نانو متر"}
                 one{"{0} نانو متر"}
                 other{"{0} نانو متر"}
@@ -1111,6 +1148,7 @@ ar{
             picometer{
                 dnam{"بيكومتر"}
                 few{"{0} بيكومتر"}
+                gender{"masculine"}
                 many{"{0} بيكومتر"}
                 one{"{0} بيكومتر"}
                 other{"{0} بيكومتر"}
@@ -1259,6 +1297,7 @@ ar{
             microgram{
                 dnam{"ميكروغرام"}
                 few{"{0} ميكروغرام"}
+                gender{"masculine"}
                 many{"{0} ميكروغرام"}
                 one{"{0} ميكروغرام"}
                 other{"{0} ميكروغرام"}
@@ -1268,6 +1307,7 @@ ar{
             milligram{
                 dnam{"مليغرام"}
                 few{"{0} مليغرام"}
+                gender{"masculine"}
                 many{"{0} مليغرام"}
                 one{"{0} مليغرام"}
                 other{"{0} مليغرام"}
@@ -1335,6 +1375,7 @@ ar{
             gigawatt{
                 dnam{"غيغا واط"}
                 few{"{0} غيغا واط"}
+                gender{"masculine"}
                 many{"{0} غيغا واط"}
                 one{"{0} غيغا واط"}
                 other{"{0} غيغا واط"}
@@ -1353,6 +1394,7 @@ ar{
             kilowatt{
                 dnam{"كيلوواط"}
                 few{"{0} كيلوواط"}
+                gender{"masculine"}
                 many{"{0} كيلوواط"}
                 one{"{0} كيلوواط"}
                 other{"{0} كيلوواط"}
@@ -1362,6 +1404,7 @@ ar{
             megawatt{
                 dnam{"ميغا واط"}
                 few{"{0} ميغا واط"}
+                gender{"masculine"}
                 many{"{0} ميغا واط"}
                 one{"{0} ميغا واط"}
                 other{"{0} ميغا واط"}
@@ -1371,6 +1414,7 @@ ar{
             milliwatt{
                 dnam{"ملي واط"}
                 few{"{0} ملي واط"}
+                gender{"masculine"}
                 many{"{0} ملي واط"}
                 one{"{0} ملي واط"}
                 other{"{0} ملي واط"}
@@ -1412,6 +1456,7 @@ ar{
             hectopascal{
                 dnam{"هكتوباسكال"}
                 few{"{0} هكتوباسكال"}
+                gender{"masculine"}
                 many{"{0} هكتوباسكال"}
                 one{"{0} هكتوباسكال"}
                 other{"{0} هكتوباسكال"}
@@ -1430,6 +1475,7 @@ ar{
             kilopascal{
                 dnam{"كيلوباسكال"}
                 few{"{0} كيلوباسكال"}
+                gender{"masculine"}
                 many{"{0} كيلوباسكال"}
                 one{"{0} كيلوباسكال"}
                 other{"{0} كيلوباسكال"}
@@ -1439,6 +1485,7 @@ ar{
             megapascal{
                 dnam{"ميغاباسكال"}
                 few{"{0} ميغاباسكال"}
+                gender{"masculine"}
                 many{"{0} ميغاباسكال"}
                 one{"{0} ميغاباسكال"}
                 other{"{0} ميغاباسكال"}
@@ -1448,6 +1495,7 @@ ar{
             millibar{
                 dnam{"ملي بار"}
                 few{"{0} ملي بار"}
+                gender{"masculine"}
                 many{"{0} ملي بار"}
                 one{"{0} ملي بار"}
                 other{"{0} ملي بار"}
@@ -1487,6 +1535,7 @@ ar{
             kilometer-per-hour{
                 dnam{"كيلومتر في الساعة"}
                 few{"{0} كيلومتر في الساعة"}
+                gender{"masculine"}
                 many{"{0} كيلومتر في الساعة"}
                 one{"{0} كيلومتر في الساعة"}
                 other{"{0} كيلومتر في الساعة"}
@@ -1505,6 +1554,7 @@ ar{
             meter-per-second{
                 dnam{"متر في الثانية"}
                 few{"{0} متر في الثانية"}
+                gender{"masculine"}
                 many{"{0} متر في الثانية"}
                 one{"{0} متر في الثانية"}
                 other{"{0} متر في الثانية"}
@@ -1566,6 +1616,7 @@ ar{
             newton-meter{
                 dnam{"نيوتن متر"}
                 few{"{0} نيوتن متر"}
+                gender{"masculine"}
                 many{"{0} نيوتن متر"}
                 one{"{0} نيوتن متر"}
                 other{"{0} نيوتن متر"}
@@ -1613,6 +1664,7 @@ ar{
             centiliter{
                 dnam{"سنتيلتر"}
                 few{"{0} سنتيلتر"}
+                gender{"masculine"}
                 many{"{0} سنتيلتر"}
                 one{"{0} سنتيلتر"}
                 other{"{0} سنتيلتر"}
@@ -1622,6 +1674,7 @@ ar{
             cubic-centimeter{
                 dnam{"سنتيمتر مكعب"}
                 few{"{0} سنتيمتر مكعب"}
+                gender{"masculine"}
                 many{"{0} سنتيمتر مكعب"}
                 one{"{0} سنتيمتر مكعب"}
                 other{"{0} سنتيمتر مكعب"}
@@ -1650,6 +1703,7 @@ ar{
             cubic-kilometer{
                 dnam{"كيلومتر مكعب"}
                 few{"{0} كيلومتر مكعب"}
+                gender{"masculine"}
                 many{"{0} كيلومتر مكعب"}
                 one{"{0} كيلومتر مكعب"}
                 other{"{0} كيلومتر مكعب"}
@@ -1659,6 +1713,7 @@ ar{
             cubic-meter{
                 dnam{"متر مكعب"}
                 few{"{0} متر مكعب"}
+                gender{"masculine"}
                 many{"{0} متر مكعب"}
                 one{"{0} متر مكعب"}
                 other{"{0} متر مكعب"}
@@ -1706,6 +1761,7 @@ ar{
             deciliter{
                 dnam{"ديسيلتر"}
                 few{"{0} ديسيلتر"}
+                gender{"masculine"}
                 many{"{0} ديسيلتر"}
                 one{"{0} ديسيلتر"}
                 other{"{0} ديسيلتر"}
@@ -1789,6 +1845,7 @@ ar{
             hectoliter{
                 dnam{"هكتولتر"}
                 few{"{0} هكتولتر"}
+                gender{"masculine"}
                 many{"{0} هكتولتر"}
                 one{"{0} هكتولتر"}
                 other{"{0} هكتولتر"}
@@ -1818,6 +1875,7 @@ ar{
             megaliter{
                 dnam{"ميغالتر"}
                 few{"{0} ميغالتر"}
+                gender{"masculine"}
                 many{"{0} ميغالتر"}
                 one{"{0} ميغالتر"}
                 other{"{0} ميغالتر"}
@@ -1827,6 +1885,7 @@ ar{
             milliliter{
                 dnam{"مليلتر"}
                 few{"{0} مليلتر"}
+                gender{"masculine"}
                 many{"{0} مليلتر"}
                 one{"{0} مليلتر"}
                 other{"{0} مليلتر"}

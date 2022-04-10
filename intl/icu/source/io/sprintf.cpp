@@ -41,6 +41,12 @@ u_sprintf_write(void        *context,
                 int32_t     count)
 {
     u_localized_print_string *output = (u_localized_print_string *)context;
+
+    /* just calculating buffer size */
+    if (output->str == 0) {
+        return count;
+    }
+
     int32_t size = ufmt_min(count, output->available);
 
     u_strncpy(output->str + (output->len - output->available), str, size);
@@ -57,6 +63,12 @@ u_sprintf_pad_and_justify(void                        *context,
     u_localized_print_string *output = (u_localized_print_string *)context;
     int32_t written = 0;
     int32_t lengthOfResult = resultLen;
+
+    /* just calculating buffer size */
+    if (output->str == 0 &&
+        info->fWidth != -1 && resultLen < info->fWidth) {
+        return info->fWidth;
+    }
 
     resultLen = ufmt_min(resultLen, output->available);
 

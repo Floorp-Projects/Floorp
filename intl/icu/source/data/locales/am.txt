@@ -213,8 +213,8 @@ am{
         }
         minimalPairs{
             case{
-                accusative{"ልጁ ለ {0} ቀረ"}
-                nominative{"{0} ዩኬ የሻይ ማንኪያ"}
+                accusative{"{0} ዩኬ የሻይ ማንኪያው"}
+                nominative{"የዩኬ {0} የሻይ ማንኪያ"}
             }
             ordinal{
                 other{"በቀኝ በኩል ባለው በ{0}ኛው መታጠፊያ ግባ።"}
@@ -911,6 +911,7 @@ am{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"M/d/y GGGGG"}
                 H{"H"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

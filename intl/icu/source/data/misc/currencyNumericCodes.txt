@@ -6,7 +6,7 @@
 // Corporation and others.  All Rights Reserved.
 //---------------------------------------------------------
 // Build tool: com.ibm.icu.dev.tool.currency.NumericCodeData
-// Build date: 2019-03-20T21:22:05Z
+// Build date: 2022-03-30T17:57:09Z
 //---------------------------------------------------------
 // >> !!! >>   THIS IS A MACHINE-GENERATED FILE   << !!! <<
 // >> !!! >>>            DO NOT EDIT             <<< !!! <<
@@ -234,6 +234,7 @@ currencyNumericCodes:table(nofallback){
         SHP:int{654}
         SIT:int{705}
         SKK:int{703}
+        SLE:int{695}
         SLL:int{694}
         SOS:int{706}
         SRD:int{968}
@@ -273,6 +274,7 @@ currencyNumericCodes:table(nofallback){
         UYW:int{927}
         UZS:int{860}
         VEB:int{862}
+        VED:int{926}
         VEF:int{937}
         VES:int{928}
         VNC:int{704}
