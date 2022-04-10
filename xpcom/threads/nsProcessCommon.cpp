@@ -117,17 +117,25 @@ void nsProcess::Monitor(void* aArg) {
   }
 
 #if defined(PROCESSMODEL_WINAPI)
+  HANDLE processHandle;
+  {
+    // The mutex region cannot include WaitForSingleObject otherwise we'll
+    // block calls such as Kill. So lock on access and store a local.
+    MutexAutoLock lock(process->mLock);
+    processHandle = process->mProcess;
+  }
+
   DWORD dwRetVal;
   unsigned long exitCode = -1;
 
-  dwRetVal = WaitForSingleObject(process->mProcess, INFINITE);
+  dwRetVal = WaitForSingleObject(processHandle, INFINITE);
   if (dwRetVal != WAIT_FAILED) {
-    if (GetExitCodeProcess(process->mProcess, &exitCode) == FALSE) {
+    if (GetExitCodeProcess(processHandle, &exitCode) == FALSE) {
       exitCode = -1;
     }
   }
 
-  // Lock in case Kill or GetExitCode are called during this
+  // Lock in case Kill or GetExitCode are called during this.
   {
     MutexAutoLock lock(process->mLock);
     CloseHandle(process->mProcess);
@@ -154,7 +162,14 @@ void nsProcess::Monitor(void* aArg) {
   }
 #  else
   int32_t exitCode = -1;
-  if (PR_WaitProcess(process->mProcess, &exitCode) != PR_SUCCESS) {
+  PRProcess* prProcess;
+  {
+    // The mutex region cannot include PR_WaitProcess otherwise we'll
+    // block calls such as Kill. So lock on access and store a local.
+    MutexAutoLock lock(process->mLock);
+    prProcess = process->mProcess;
+  }
+  if (PR_WaitProcess(prProcess, &exitCode) != PR_SUCCESS) {
     exitCode = -1;
   }
 #  endif
@@ -362,6 +377,8 @@ nsresult nsProcess::RunProcess(bool aBlocking, char** aMyArgv,
 
     CloseHandle(processInfo.hThread);
 
+    // TODO(bug 1763051): assess if we need further work around this locking.
+    MutexAutoLock lock(mLock);
     mProcess = processInfo.hProcess;
   } else {
     SHELLEXECUTEINFOW sinfo;
@@ -387,10 +404,14 @@ nsresult nsProcess::RunProcess(bool aBlocking, char** aMyArgv,
       return NS_ERROR_FILE_EXECUTION_FAILED;
     }
 
+    MutexAutoLock lock(mLock);
     mProcess = sinfo.hProcess;
   }
 
-  mPid = GetProcessId(mProcess);
+  {
+    MutexAutoLock lock(mLock);
+    mPid = GetProcessId(mProcess);
+  }
 #elif defined(XP_MACOSX)
   // Note: |aMyArgv| is already null-terminated as required by posix_spawnp.
   pid_t newPid = 0;
@@ -416,15 +437,22 @@ nsresult nsProcess::RunProcess(bool aBlocking, char** aMyArgv,
     return NS_ERROR_FAILURE;
   }
 #else
-  mProcess = PR_CreateProcess(aMyArgv[0], aMyArgv, nullptr, nullptr);
-  if (!mProcess) {
-    return NS_ERROR_FAILURE;
+  {
+    PRProcess* prProcess =
+        PR_CreateProcess(aMyArgv[0], aMyArgv, nullptr, nullptr);
+    if (!prProcess) {
+      return NS_ERROR_FAILURE;
+    }
+    {
+      MutexAutoLock lock(mLock);
+      mProcess = prProcess;
+    }
+    struct MYProcess {
+      uint32_t pid;
+    };
+    MYProcess* ptrProc = (MYProcess*)mProcess;
+    mPid = ptrProc->pid;
   }
-  struct MYProcess {
-    uint32_t pid;
-  };
-  MYProcess* ptrProc = (MYProcess*)mProcess;
-  mPid = ptrProc->pid;
 #endif
 
   NS_ADDREF_THIS();
