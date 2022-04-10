@@ -396,7 +396,9 @@ add_task(
       url: "https://example.com/product_b",
     };
 
-    let snapshot = await Snapshots.queryCommonReferrer(context.url);
+    let snapshot = await Snapshots.recommendationSources.CommonReferrer(
+      context
+    );
 
     Assert.equal(snapshot.length, 1, "One shapshot should be found");
     Assert.equal(

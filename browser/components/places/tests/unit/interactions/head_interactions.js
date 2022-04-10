@@ -353,11 +353,11 @@ function orderedGroups(list, order) {
  *
  * @param {Snapshot[]} expected
  *   The expected snapshots.
- * @param {object} context
+ * @param {SelectionContext} context
  *   @see SnapshotSelector.#context.
  */
 async function assertOverlappingSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryOverlapping(context.url);
+  let snapshots = await Snapshots.recommendationSources.Overlapping(context);
 
   await assertSnapshotList(snapshots, expected);
 }
@@ -367,11 +367,11 @@ async function assertOverlappingSnapshots(expected, context) {
  *
  * @param {Snapshot[]} expected
  *   The expected snapshots.
- * @param {object} context
+ * @param {SelectionContext} context
  *   @see SnapshotSelector.#context.
  */
 async function assertCommonReferrerSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryCommonReferrer(context.url);
+  let snapshots = await Snapshots.recommendationSources.CommonReferrer(context);
 
   await assertSnapshotList(snapshots, expected);
 }
