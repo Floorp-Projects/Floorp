@@ -220,8 +220,8 @@ hy{
                 other{"Թեքվեք աջ {0}-րդ խաչմերուկից:"}
             }
             plural{
-                one{"այդ {0} ժամը"}
-                other{"այդ {0} ժամերը"}
+                one{"այդ {0} պանակը"}
+                other{"այդ {0} պանակները"}
             }
         }
         minimumGroupingDigits{"1"}
@@ -460,7 +460,7 @@ hy{
                 Gy{"G y թ."}
                 GyMMM{"G y թ. MMM"}
                 GyMMMEd{"G y թ. MMM d, E"}
-                GyMMMd{"d MMM, y թ."}
+                GyMMMd{"d MMM, y թ. G"}
                 GyMd{"dd.MM.y GGGGG"}
                 H{"H"}
                 Hm{"H:mm"}

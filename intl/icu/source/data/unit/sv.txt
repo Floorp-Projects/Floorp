@@ -10,12 +10,24 @@ sv{
     units{
         acceleration{
             g-force{
+                case{
+                    genitive{
+                        one{"{0} g-krafts"}
+                        other{"{0} g-krafters"}
+                    }
+                }
                 dnam{"g-kraft"}
                 gender{"common"}
                 one{"{0} g-kraft"}
                 other{"{0} g-kraft"}
             }
             meter-per-square-second{
+                case{
+                    genitive{
+                        one{"{0} meter per kvadratsekunds"}
+                        other{"{0} meter per kvadratsekunds"}
+                    }
+                }
                 dnam{"meter per kvadratsekund"}
                 gender{"common"}
                 one{"{0} meter per kvadratsekund"}
@@ -24,30 +36,60 @@ sv{
         }
         angle{
             arc-minute{
+                case{
+                    genitive{
+                        one{"{0} bågminuts"}
+                        other{"{0} bågminuters"}
+                    }
+                }
                 dnam{"bågminuter"}
                 gender{"common"}
                 one{"{0} bågminut"}
                 other{"{0} bågminuter"}
             }
             arc-second{
+                case{
+                    genitive{
+                        one{"{0} bågsekunds"}
+                        other{"{0} bågsekunders"}
+                    }
+                }
                 dnam{"bågsekunder"}
                 gender{"common"}
                 one{"{0} bågsekund"}
                 other{"{0} bågsekunder"}
             }
             degree{
+                case{
+                    genitive{
+                        one{"{0} grads"}
+                        other{"{0} graders"}
+                    }
+                }
                 dnam{"grader"}
                 gender{"common"}
                 one{"{0} grad"}
                 other{"{0} grader"}
             }
             radian{
+                case{
+                    genitive{
+                        one{"{0} radians"}
+                        other{"{0} radianers"}
+                    }
+                }
                 dnam{"radianer"}
                 gender{"common"}
                 one{"{0} radian"}
                 other{"{0} radianer"}
             }
             revolution{
+                case{
+                    genitive{
+                        one{"{0} varvs"}
+                        other{"{0} varvs"}
+                    }
+                }
                 dnam{"varv"}
                 gender{"neuter"}
                 one{"{0} varv"}
@@ -67,12 +109,24 @@ sv{
                 other{"{0} turkiska dunam"}
             }
             hectare{
+                case{
+                    genitive{
+                        one{"{0} hektars"}
+                        other{"{0} hektars"}
+                    }
+                }
                 dnam{"hektar"}
                 gender{"common"}
                 one{"{0} hektar"}
                 other{"{0} hektar"}
             }
             square-centimeter{
+                case{
+                    genitive{
+                        one{"{0} kvadratcentimeters"}
+                        other{"{0} kvadratcentimeters"}
+                    }
+                }
                 dnam{"kvadratcentimeter"}
                 gender{"common"}
                 one{"{0} kvadratcentimeter"}
@@ -92,6 +146,12 @@ sv{
                 per{"{0} per kvadrattum"}
             }
             square-kilometer{
+                case{
+                    genitive{
+                        one{"{0} kvadratkilometers"}
+                        other{"{0} kvadratkilometers"}
+                    }
+                }
                 dnam{"kvadratkilometer"}
                 gender{"common"}
                 one{"{0} kvadratkilometer"}
@@ -99,7 +159,14 @@ sv{
                 per{"{0} per kvadratkilometer"}
             }
             square-meter{
+                case{
+                    genitive{
+                        one{"{0} kvadratmeters"}
+                        other{"{0} kvadratmeters"}
+                    }
+                }
                 dnam{"kvadratmeter"}
+                gender{"common"}
                 one{"{0} kvadratmeter"}
                 other{"{0} kvadratmeter"}
                 per{"{0} per kvadratmeter"}
@@ -151,17 +218,21 @@ sv{
                 one{
                     _{
                         _{"kvadrat{0}"}
+                        genitive{"kvadrat{0}"}
                     }
                     common{
                         _{"kvadrat{0}"}
+                        genitive{"kvadrat{0}"}
                     }
                 }
                 other{
                     _{
                         _{"kvadrat{0}"}
+                        genitive{"kvadrat{0}"}
                     }
                     common{
                         _{"kvadrat{0}"}
+                        genitive{"kvadrat{0}"}
                     }
                 }
             }
@@ -169,17 +240,21 @@ sv{
                 one{
                     _{
                         _{"kubik{0}"}
+                        genitive{"kubik{0}"}
                     }
                     common{
                         _{"kubik{0}"}
+                        genitive{"kubik{0}"}
                     }
                 }
                 other{
                     _{
                         _{"kubik{0}"}
+                        genitive{"kubik{0}"}
                     }
                     common{
                         _{"kubik{0}"}
+                        genitive{"kubik{0}"}
                     }
                 }
             }
@@ -187,11 +262,24 @@ sv{
         }
         concentr{
             item{
+                case{
+                    genitive{
+                        one{"{0} objekts"}
+                        other{"{0} objekts"}
+                    }
+                }
                 dnam{"objekt"}
+                gender{"neuter"}
                 one{"{0} objekt"}
                 other{"{0} objekt"}
             }
             karat{
+                case{
+                    genitive{
+                        one{"{0} karats"}
+                        other{"{0} karats"}
+                    }
+                }
                 dnam{"karat"}
                 gender{"common"}
                 one{"{0} karat"}
@@ -203,32 +291,71 @@ sv{
                 other{"{0} milligram per deciliter"}
             }
             millimole-per-liter{
+                case{
+                    genitive{
+                        one{"{0} millimol per liters"}
+                        other{"{0} millimol per liters"}
+                    }
+                }
                 dnam{"millimol per liter"}
+                gender{"common"}
                 one{"{0} millimol per liter"}
                 other{"{0} millimol per liter"}
             }
             mole{
+                case{
+                    genitive{
+                        one{"{0} mols"}
+                        other{"{0} mols"}
+                    }
+                }
                 gender{"common"}
+                one{"{0} mol"}
+                other{"{0} mol"}
             }
             percent{
+                case{
+                    genitive{
+                        one{"{0} procents"}
+                        other{"{0} procents"}
+                    }
+                }
                 dnam{"procent"}
                 gender{"common"}
                 one{"{0} procent"}
                 other{"{0} procent"}
             }
             permille{
+                case{
+                    genitive{
+                        one{"{0} promilles"}
+                        other{"{0} promilles"}
+                    }
+                }
                 dnam{"promille"}
                 gender{"common"}
                 one{"{0} promille"}
                 other{"{0} promille"}
             }
             permillion{
+                case{
+                    genitive{
+                        one{"{0} miljondels"}
+                        other{"{0} miljondelars"}
+                    }
+                }
                 dnam{"miljondelar"}
                 gender{"common"}
                 one{"{0} miljondel"}
                 other{"{0} miljondelar"}
             }
             permyriad{
+                case{
+                    genitive{
+                        one{"{0} promyriads"}
+                        other{"{0} promyriads"}
+                    }
+                }
                 dnam{"promyriad"}
                 gender{"common"}
                 one{"{0} promyriad"}
@@ -237,13 +364,26 @@ sv{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    genitive{
+                        one{"{0} liter per 100 kilometers"}
+                        other{"{0} liter per 100 kilometers"}
+                    }
+                }
                 dnam{"liter per 100 kilometer"}
                 gender{"common"}
                 one{"{0} liter per 100 kilometer"}
                 other{"{0} liter per 100 kilometer"}
             }
             liter-per-kilometer{
+                case{
+                    genitive{
+                        one{"{0} liter per kilometers"}
+                        other{"{0} liter per kilometers"}
+                    }
+                }
                 dnam{"liter per kilometer"}
+                gender{"common"}
                 one{"{0} liter per kilometer"}
                 other{"{0} liter per kilometer"}
             }
@@ -269,73 +409,160 @@ sv{
         }
         digital{
             bit{
+                case{
+                    genitive{
+                        one{"{0} bits"}
+                        other{"{0} bits"}
+                    }
+                }
                 dnam{"bit"}
                 gender{"common"}
                 one{"{0} bit"}
                 other{"{0} bit"}
             }
             byte{
+                case{
+                    genitive{
+                        one{"{0} bytes"}
+                        other{"{0} bytes"}
+                    }
+                }
                 dnam{"byte"}
                 gender{"common"}
                 one{"{0} byte"}
                 other{"{0} byte"}
             }
             gigabit{
+                case{
+                    genitive{
+                        one{"{0} gigabits"}
+                        other{"{0} gigabits"}
+                    }
+                }
                 dnam{"gigabit"}
+                gender{"common"}
                 one{"{0} gigabit"}
                 other{"{0} gigabit"}
             }
             gigabyte{
+                case{
+                    genitive{
+                        one{"{0} gigabytes"}
+                        other{"{0} gigabytes"}
+                    }
+                }
                 dnam{"gigabyte"}
+                gender{"common"}
                 one{"{0} gigabyte"}
                 other{"{0} gigabyte"}
             }
             kilobit{
+                case{
+                    genitive{
+                        one{"{0} kilobits"}
+                        other{"{0} kilobits"}
+                    }
+                }
                 dnam{"kilobit"}
+                gender{"common"}
                 one{"{0} kilobit"}
                 other{"{0} kilobit"}
             }
             kilobyte{
+                case{
+                    genitive{
+                        one{"{0} kilobytes"}
+                        other{"{0} kilobytes"}
+                    }
+                }
                 dnam{"kilobyte"}
+                gender{"common"}
                 one{"{0} kilobyte"}
                 other{"{0} kilobyte"}
             }
             megabit{
+                case{
+                    genitive{
+                        one{"{0} megabits"}
+                        other{"{0} megabits"}
+                    }
+                }
                 dnam{"megabit"}
+                gender{"common"}
                 one{"{0} megabit"}
                 other{"{0} megabit"}
             }
             megabyte{
+                case{
+                    genitive{
+                        one{"{0} megabytes"}
+                        other{"{0} megabytes"}
+                    }
+                }
                 dnam{"megabyte"}
+                gender{"common"}
                 one{"{0} megabyte"}
                 other{"{0} megabyte"}
             }
             petabyte{
+                case{
+                    genitive{
+                        one{"{0} petabytes"}
+                        other{"{0} petabytes"}
+                    }
+                }
                 dnam{"petabyte"}
+                gender{"common"}
                 one{"{0} petabyte"}
                 other{"{0} petabyte"}
             }
             terabit{
+                case{
+                    genitive{
+                        one{"{0} terabits"}
+                        other{"{0} terabits"}
+                    }
+                }
                 dnam{"terabit"}
+                gender{"common"}
                 one{"{0} terabit"}
                 other{"{0} terabit"}
             }
             terabyte{
+                case{
+                    genitive{
+                        one{"{0} terabytes"}
+                        other{"{0} terabytes"}
+                    }
+                }
                 dnam{"terabyte"}
+                gender{"common"}
                 one{"{0} terabyte"}
                 other{"{0} terabyte"}
             }
         }
         duration{
             century{
+                case{
+                    genitive{
+                        one{"{0} århundrades"}
+                        other{"{0} århundradens"}
+                    }
+                }
                 dnam{"århundraden"}
                 gender{"neuter"}
                 one{"{0} århundrade"}
                 other{"{0} århundraden"}
             }
             day{
+                case{
+                    genitive{
+                        one{"{0} dygns"}
+                        other{"{0} dygns"}
+                    }
+                }
                 dnam{"dygn"}
-                gender{"common"}
+                gender{"neuter"}
                 one{"{0} dygn"}
                 other{"{0} dygn"}
                 per{"{0} per dygn"}
@@ -344,12 +571,24 @@ sv{
                 gender{"common"}
             }
             decade{
+                case{
+                    genitive{
+                        one{"{0} årtiondes"}
+                        other{"{0} årtiondens"}
+                    }
+                }
                 dnam{"årtionden"}
                 gender{"neuter"}
                 one{"{0} årtionde"}
                 other{"{0} årtionden"}
             }
             hour{
+                case{
+                    genitive{
+                        one{"{0} timmes"}
+                        other{"{0} timmars"}
+                    }
+                }
                 dnam{"timmar"}
                 gender{"common"}
                 one{"{0} timme"}
@@ -357,16 +596,36 @@ sv{
                 per{"{0} per timme"}
             }
             microsecond{
+                case{
+                    genitive{
+                        one{"{0} mikrosekunds"}
+                        other{"{0} mikrosekunders"}
+                    }
+                }
                 dnam{"mikrosekunder"}
+                gender{"common"}
                 one{"{0} mikrosekund"}
                 other{"{0} mikrosekunder"}
             }
             millisecond{
+                case{
+                    genitive{
+                        one{"{0} millisekunds"}
+                        other{"{0} millisekunders"}
+                    }
+                }
                 dnam{"millisekunder"}
+                gender{"common"}
                 one{"{0} millisekund"}
                 other{"{0} millisekunder"}
             }
             minute{
+                case{
+                    genitive{
+                        one{"{0} minuts"}
+                        other{"{0} minuters"}
+                    }
+                }
                 dnam{"minuter"}
                 gender{"common"}
                 one{"{0} minut"}
@@ -374,6 +633,12 @@ sv{
                 per{"{0} per minut"}
             }
             month{
+                case{
+                    genitive{
+                        one{"{0} månads"}
+                        other{"{0} månaders"}
+                    }
+                }
                 dnam{"månader"}
                 gender{"common"}
                 one{"{0} månad"}
@@ -381,11 +646,24 @@ sv{
                 per{"{0} per månad"}
             }
             nanosecond{
+                case{
+                    genitive{
+                        one{"{0} nanosekunds"}
+                        other{"{0} nanosekunders"}
+                    }
+                }
                 dnam{"nanosekunder"}
+                gender{"common"}
                 one{"{0} nanosekund"}
                 other{"{0} nanosekunder"}
             }
             second{
+                case{
+                    genitive{
+                        one{"{0} sekunds"}
+                        other{"{0} sekunders"}
+                    }
+                }
                 dnam{"sekunder"}
                 gender{"common"}
                 one{"{0} sekund"}
@@ -393,6 +671,12 @@ sv{
                 per{"{0} per sekund"}
             }
             week{
+                case{
+                    genitive{
+                        one{"{0} veckas"}
+                        other{"{0} veckors"}
+                    }
+                }
                 dnam{"veckor"}
                 gender{"common"}
                 one{"{0} vecka"}
@@ -400,6 +684,12 @@ sv{
                 per{"{0} per vecka"}
             }
             year{
+                case{
+                    genitive{
+                        one{"{0} års"}
+                        other{"{0} års"}
+                    }
+                }
                 dnam{"år"}
                 gender{"neuter"}
                 one{"{0} år"}
@@ -409,23 +699,48 @@ sv{
         }
         electric{
             ampere{
+                case{
+                    genitive{
+                        one{"{0} amperes"}
+                        other{"{0} amperes"}
+                    }
+                }
                 dnam{"ampere"}
                 gender{"common"}
                 one{"{0} ampere"}
                 other{"{0} ampere"}
             }
             milliampere{
+                case{
+                    genitive{
+                        one{"{0} milliamperes"}
+                        other{"{0} milliamperes"}
+                    }
+                }
                 dnam{"milliampere"}
+                gender{"common"}
                 one{"{0} milliampere"}
                 other{"{0} milliampere"}
             }
             ohm{
+                case{
+                    genitive{
+                        one{"{0} ohms"}
+                        other{"{0} ohms"}
+                    }
+                }
                 dnam{"ohm"}
                 gender{"common"}
                 one{"{0} ohm"}
                 other{"{0} ohm"}
             }
             volt{
+                case{
+                    genitive{
+                        one{"{0} volts"}
+                        other{"{0} volts"}
+                    }
+                }
                 dnam{"volt"}
                 gender{"common"}
                 one{"{0} volt"}
@@ -439,6 +754,12 @@ sv{
                 other{"{0} British thermal units"}
             }
             calorie{
+                case{
+                    genitive{
+                        one{"{0} kaloris"}
+                        other{"{0} kaloriers"}
+                    }
+                }
                 dnam{"kalorier"}
                 gender{"common"}
                 one{"{0} kalori"}
@@ -456,6 +777,12 @@ sv{
                 other{"{0} kilokalorier"}
             }
             joule{
+                case{
+                    genitive{
+                        one{"{0} joules"}
+                        other{"{0} joules"}
+                    }
+                }
                 dnam{"joule"}
                 gender{"common"}
                 one{"{0} joule"}
@@ -468,12 +795,26 @@ sv{
                 other{"{0} kilokalorier"}
             }
             kilojoule{
+                case{
+                    genitive{
+                        one{"{0} kilojoules"}
+                        other{"{0} kilojoules"}
+                    }
+                }
                 dnam{"kilojoule"}
+                gender{"common"}
                 one{"{0} kilojoule"}
                 other{"{0} kilojoule"}
             }
             kilowatt-hour{
+                case{
+                    genitive{
+                        one{"{0} kilowattimmes"}
+                        other{"{0} kilowattimmars"}
+                    }
+                }
                 dnam{"kilowattimmar"}
+                gender{"common"}
                 one{"{0} kilowattimme"}
                 other{"{0} kilowattimmar"}
             }
@@ -484,10 +825,23 @@ sv{
         }
         force{
             kilowatt-hour-per-100-kilometer{
+                case{
+                    genitive{
+                        one{"{0} kWh/100 km"}
+                        other{"{0} kWh/100 km"}
+                    }
+                }
+                gender{"common"}
                 one{"{0} kWh/100 km"}
                 other{"{0} kWh/100 km"}
             }
             newton{
+                case{
+                    genitive{
+                        one{"{0} newtons"}
+                        other{"{0} newtons"}
+                    }
+                }
                 dnam{"newton"}
                 gender{"common"}
                 one{"{0} newton"}
@@ -501,23 +855,50 @@ sv{
         }
         frequency{
             gigahertz{
+                case{
+                    genitive{
+                        one{"{0} gigahertz"}
+                        other{"{0} gigahertz"}
+                    }
+                }
                 dnam{"gigahertz"}
+                gender{"common"}
                 one{"{0} gigahertz"}
                 other{"{0} gigahertz"}
             }
             hertz{
+                case{
+                    genitive{
+                        one{"{0} hertz"}
+                        other{"{0} hertz"}
+                    }
+                }
                 dnam{"hertz"}
                 gender{"common"}
                 one{"{0} hertz"}
                 other{"{0} hertz"}
             }
             kilohertz{
+                case{
+                    genitive{
+                        one{"{0} kilohertz"}
+                        other{"{0} kilohertz"}
+                    }
+                }
                 dnam{"kilohertz"}
+                gender{"common"}
                 one{"{0} kilohertz"}
                 other{"{0} kilohertz"}
             }
             megahertz{
+                case{
+                    genitive{
+                        one{"{0} megahertz"}
+                        other{"{0} megahertz"}
+                    }
+                }
                 dnam{"megahertz"}
+                gender{"common"}
                 one{"{0} megahertz"}
                 other{"{0} megahertz"}
             }
@@ -537,24 +918,50 @@ sv{
                 other{"{0} punkter per tum"}
             }
             em{
+                case{
+                    genitive{
+                        one{"{0} fyrkants"}
+                        other{"{0} fyrkanters"}
+                    }
+                }
                 dnam{"typografisk fyrkant"}
                 gender{"common"}
                 one{"{0} fyrkant"}
                 other{"{0} fyrkanter"}
             }
             megapixel{
+                case{
+                    genitive{
+                        one{"{0} megapixels"}
+                        other{"{0} megapixlars"}
+                    }
+                }
                 dnam{"megapixlar"}
+                gender{"common"}
                 one{"{0} megapixel"}
                 other{"{0} megapixlar"}
             }
             pixel{
+                case{
+                    genitive{
+                        one{"{0} pixels"}
+                        other{"{0} pixlars"}
+                    }
+                }
                 dnam{"pixlar"}
                 gender{"common"}
                 one{"{0} pixel"}
                 other{"{0} pixlar"}
             }
             pixel-per-centimeter{
+                case{
+                    genitive{
+                        one{"{0} pixel per centimeters"}
+                        other{"{0} pixlar per centimeters"}
+                    }
+                }
                 dnam{"pixlar per centimeter"}
+                gender{"common"}
                 one{"{0} pixel per centimeter"}
                 other{"{0} pixlar per centimeter"}
             }
@@ -571,6 +978,12 @@ sv{
                 other{"{0} astronomiska enheter"}
             }
             centimeter{
+                case{
+                    genitive{
+                        one{"{0} centimeters"}
+                        other{"{0} centimeters"}
+                    }
+                }
                 dnam{"centimeter"}
                 gender{"common"}
                 one{"{0} centimeter"}
@@ -578,6 +991,12 @@ sv{
                 per{"{0} per centimeter"}
             }
             decimeter{
+                case{
+                    genitive{
+                        one{"{0} decimeters"}
+                        other{"{0} decimeters"}
+                    }
+                }
                 dnam{"decimeter"}
                 gender{"common"}
                 one{"{0} decimeter"}
@@ -613,6 +1032,12 @@ sv{
                 per{"{0} per tum"}
             }
             kilometer{
+                case{
+                    genitive{
+                        one{"{0} kilometers"}
+                        other{"{0} kilometers"}
+                    }
+                }
                 dnam{"kilometer"}
                 gender{"common"}
                 one{"{0} kilometer"}
@@ -625,6 +1050,12 @@ sv{
                 other{"{0} ljusår"}
             }
             meter{
+                case{
+                    genitive{
+                        one{"{0} meters"}
+                        other{"{0} meters"}
+                    }
+                }
                 dnam{"meter"}
                 gender{"common"}
                 one{"{0} meter"}
@@ -632,7 +1063,14 @@ sv{
                 per{"{0} per meter"}
             }
             micrometer{
+                case{
+                    genitive{
+                        one{"{0} mikrometers"}
+                        other{"{0} mikrometers"}
+                    }
+                }
                 dnam{"mikrometer"}
+                gender{"common"}
                 one{"{0} mikrometer"}
                 other{"{0} mikrometer"}
             }
@@ -643,19 +1081,38 @@ sv{
                 other{"{0} engelska mil"}
             }
             mile-scandinavian{
+                case{
+                    genitive{
+                        one{"{0} mils"}
+                        other{"{0} mils"}
+                    }
+                }
                 dnam{"mil"}
                 gender{"common"}
                 one{"{0} mil"}
                 other{"{0} mil"}
             }
             millimeter{
+                case{
+                    genitive{
+                        one{"{0} millimeters"}
+                        other{"{0} millimeters"}
+                    }
+                }
                 dnam{"millimeter"}
                 gender{"common"}
                 one{"{0} millimeter"}
                 other{"{0} millimeter"}
             }
             nanometer{
+                case{
+                    genitive{
+                        one{"{0} nanometers"}
+                        other{"{0} nanometers"}
+                    }
+                }
                 dnam{"nanometer"}
+                gender{"common"}
                 one{"{0} nanometer"}
                 other{"{0} nanometer"}
             }
@@ -671,6 +1128,12 @@ sv{
                 other{"{0} parsec"}
             }
             picometer{
+                case{
+                    genitive{
+                        one{"{0} pikometers"}
+                        other{"{0} pikometers"}
+                    }
+                }
                 dnam{"pikometer"}
                 gender{"common"}
                 one{"{0} pikometer"}
@@ -696,18 +1159,36 @@ sv{
         }
         light{
             candela{
+                case{
+                    genitive{
+                        one{"{0} candelas"}
+                        other{"{0} candelas"}
+                    }
+                }
                 dnam{"candela"}
                 gender{"common"}
                 one{"{0} candela"}
                 other{"{0} candela"}
             }
             lumen{
+                case{
+                    genitive{
+                        one{"{0} lumens"}
+                        other{"{0} lumens"}
+                    }
+                }
                 dnam{"lumen"}
                 gender{"common"}
                 one{"{0} lumen"}
                 other{"{0} lumen"}
             }
             lux{
+                case{
+                    genitive{
+                        one{"{0} lux"}
+                        other{"{0} lux"}
+                    }
+                }
                 dnam{"lux"}
                 gender{"common"}
                 one{"{0} lux"}
@@ -722,6 +1203,12 @@ sv{
         }
         mass{
             carat{
+                case{
+                    genitive{
+                        one{"{0} karats"}
+                        other{"{0} karats"}
+                    }
+                }
                 dnam{"karat"}
                 gender{"common"}
                 one{"{0} karat"}
@@ -745,6 +1232,12 @@ sv{
                 other{"{0} grains"}
             }
             gram{
+                case{
+                    genitive{
+                        one{"{0} grams"}
+                        other{"{0} grams"}
+                    }
+                }
                 dnam{"gram"}
                 gender{"neuter"}
                 one{"{0} gram"}
@@ -752,6 +1245,12 @@ sv{
                 per{"{0} per gram"}
             }
             kilogram{
+                case{
+                    genitive{
+                        one{"{0} kilograms"}
+                        other{"{0} kilograms"}
+                    }
+                }
                 dnam{"kilogram"}
                 gender{"neuter"}
                 one{"{0} kilogram"}
@@ -759,17 +1258,36 @@ sv{
                 per{"{0} per kilogram"}
             }
             metric-ton{
+                case{
+                    genitive{
+                        one{"{0} tons"}
+                        other{"{0} tons"}
+                    }
+                }
                 dnam{"ton"}
                 gender{"neuter"}
                 one{"{0} ton"}
                 other{"{0} ton"}
             }
             microgram{
+                case{
+                    genitive{
+                        one{"{0} mikrograms"}
+                        other{"{0} mikrograms"}
+                    }
+                }
                 dnam{"mikrogram"}
+                gender{"neuter"}
                 one{"{0} mikrogram"}
                 other{"{0} mikrogram"}
             }
             milligram{
+                case{
+                    genitive{
+                        one{"{0} milligrams"}
+                        other{"{0} milligrams"}
+                    }
+                }
                 dnam{"milligram"}
                 gender{"neuter"}
                 one{"{0} milligram"}
@@ -777,7 +1295,7 @@ sv{
             }
             ounce{
                 dnam{"uns"}
-                gender{"common"}
+                gender{"neuter"}
                 one{"{0} uns"}
                 other{"{0} uns"}
                 per{"{0} per uns"}
@@ -813,7 +1331,14 @@ sv{
         }
         power{
             gigawatt{
+                case{
+                    genitive{
+                        one{"{0} gigawatts"}
+                        other{"{0} gigawatts"}
+                    }
+                }
                 dnam{"gigawatt"}
+                gender{"common"}
                 one{"{0} gigawatt"}
                 other{"{0} gigawatt"}
             }
@@ -823,21 +1348,48 @@ sv{
                 other{"{0} hästkrafter"}
             }
             kilowatt{
+                case{
+                    genitive{
+                        one{"{0} kilowatts"}
+                        other{"{0} kilowatts"}
+                    }
+                }
                 dnam{"kilowatt"}
+                gender{"common"}
                 one{"{0} kilowatt"}
                 other{"{0} kilowatt"}
             }
             megawatt{
+                case{
+                    genitive{
+                        one{"{0} megawatts"}
+                        other{"{0} megawatts"}
+                    }
+                }
                 dnam{"megawatt"}
+                gender{"common"}
                 one{"{0} megawatt"}
                 other{"{0} megawatt"}
             }
             milliwatt{
+                case{
+                    genitive{
+                        one{"{0} milliwatts"}
+                        other{"{0} milliwatts"}
+                    }
+                }
                 dnam{"milliwatt"}
+                gender{"common"}
                 one{"{0} milliwatt"}
                 other{"{0} milliwatt"}
             }
             watt{
+                case{
+                    genitive{
+                        one{"{0} watts"}
+                        other{"{0} watts"}
+                    }
+                }
                 dnam{"watt"}
                 gender{"common"}
                 one{"{0} watt"}
@@ -846,16 +1398,37 @@ sv{
         }
         pressure{
             atmosphere{
+                case{
+                    genitive{
+                        one{"{0} atmosfärs"}
+                        other{"{0} atmosfärs"}
+                    }
+                }
                 dnam{"atmosfärer"}
                 gender{"common"}
                 one{"{0} atmosfär"}
                 other{"{0} atmosfärer"}
             }
             bar{
+                case{
+                    genitive{
+                        one{"{0} bars"}
+                        other{"{0} bars"}
+                    }
+                }
                 gender{"common"}
+                one{"{0} bar"}
+                other{"{0} bar"}
             }
             hectopascal{
+                case{
+                    genitive{
+                        one{"{0} hektopascals"}
+                        other{"{0} hektopascals"}
+                    }
+                }
                 dnam{"hektopascal"}
+                gender{"common"}
                 one{"{0} hektopascal"}
                 other{"{0} hektopascal"}
             }
@@ -865,18 +1438,38 @@ sv{
                 other{"{0} tum kvicksilver"}
             }
             kilopascal{
+                case{
+                    genitive{
+                        one{"{0} kilopascals"}
+                        other{"{0} kilopascals"}
+                    }
+                }
                 dnam{"kilopascal"}
                 gender{"common"}
                 one{"{0} kilopascal"}
                 other{"{0} kilopascal"}
             }
             megapascal{
+                case{
+                    genitive{
+                        one{"{0} megapascals"}
+                        other{"{0} megapascals"}
+                    }
+                }
                 dnam{"megapascal"}
+                gender{"common"}
                 one{"{0} megapascal"}
                 other{"{0} megapascal"}
             }
             millibar{
+                case{
+                    genitive{
+                        one{"{0} millibars"}
+                        other{"{0} millibars"}
+                    }
+                }
                 dnam{"millibar"}
+                gender{"common"}
                 one{"{0} millibar"}
                 other{"{0} millibar"}
             }
@@ -886,6 +1479,12 @@ sv{
                 other{"{0} millimeter kvicksilver"}
             }
             pascal{
+                case{
+                    genitive{
+                        one{"{0} pascals"}
+                        other{"{0} pascals"}
+                    }
+                }
                 dnam{"pascal"}
                 gender{"common"}
                 one{"{0} pascal"}
@@ -899,6 +1498,12 @@ sv{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    genitive{
+                        one{"{0} kilometer per timmes"}
+                        other{"{0} kilometer per timmes"}
+                    }
+                }
                 dnam{"kilometer per timme"}
                 gender{"common"}
                 one{"{0} kilometer per timme"}
@@ -910,6 +1515,12 @@ sv{
                 other{"{0} knop"}
             }
             meter-per-second{
+                case{
+                    genitive{
+                        one{"{0} meter per sekunds"}
+                        other{"{0} meter per sekunds"}
+                    }
+                }
                 dnam{"meter per sekund"}
                 gender{"common"}
                 one{"{0} meter per sekund"}
@@ -924,6 +1535,12 @@ sv{
         }
         temperature{
             celsius{
+                case{
+                    genitive{
+                        one{"{0} grad Celsius"}
+                        other{"{0} grader Celsius"}
+                    }
+                }
                 dnam{"grader Celsius"}
                 gender{"common"}
                 one{"{0} grad Celsius"}
@@ -936,12 +1553,24 @@ sv{
                 other{"{0} grader Fahrenheit"}
             }
             generic{
+                case{
+                    genitive{
+                        one{"{0} grads"}
+                        other{"{0} graders"}
+                    }
+                }
                 dnam{"grader"}
                 gender{"common"}
-                one{"{0}°"}
-                other{"{0}°"}
+                one{"{0} grad"}
+                other{"{0} grader"}
             }
             kelvin{
+                case{
+                    genitive{
+                        one{"{0} kelvins"}
+                        other{"{0} kelvins"}
+                    }
+                }
                 dnam{"kelvin"}
                 gender{"common"}
                 one{"{0} kelvin"}
@@ -950,7 +1579,14 @@ sv{
         }
         torque{
             newton-meter{
+                case{
+                    genitive{
+                        one{"{0} newton-meters"}
+                        other{"{0} newton-meters"}
+                    }
+                }
                 dnam{"newton-meter"}
+                gender{"common"}
                 one{"{0} newton-meter"}
                 other{"{0} newton-meter"}
             }
@@ -975,12 +1611,24 @@ sv{
                 other{"{0} skäppor"}
             }
             centiliter{
+                case{
+                    genitive{
+                        one{"{0} centiliters"}
+                        other{"{0} centiliters"}
+                    }
+                }
                 dnam{"centiliter"}
                 gender{"common"}
                 one{"{0} centiliter"}
                 other{"{0} centiliter"}
             }
             cubic-centimeter{
+                case{
+                    genitive{
+                        one{"{0} kubikcentimeters"}
+                        other{"{0} kubikcentimeters"}
+                    }
+                }
                 dnam{"kubikcentimeter"}
                 gender{"common"}
                 one{"{0} kubikcentimeter"}
@@ -999,12 +1647,26 @@ sv{
                 other{"{0} kubiktum"}
             }
             cubic-kilometer{
+                case{
+                    genitive{
+                        one{"{0} kubikkilometers"}
+                        other{"{0} kubikkilometers"}
+                    }
+                }
                 dnam{"kubikkilometer"}
+                gender{"common"}
                 one{"{0} kubikkilometer"}
                 other{"{0} kubikkilometer"}
             }
             cubic-meter{
+                case{
+                    genitive{
+                        one{"{0} kubikmeters"}
+                        other{"{0} kubikmeters"}
+                    }
+                }
                 dnam{"kubikmeter"}
+                gender{"common"}
                 one{"{0} kubikmeter"}
                 other{"{0} kubikmeter"}
                 per{"{0} per kubikmeter"}
@@ -1027,12 +1689,24 @@ sv{
                 other{"{0} koppar"}
             }
             cup-metric{
+                case{
+                    genitive{
+                        one{"{0} kopp à 2,5 dl"}
+                        other{"{0} koppar à 2,5 dl"}
+                    }
+                }
                 dnam{"koppar à 2,5 dl"}
                 gender{"common"}
                 one{"{0} kopp à 2,5 dl"}
                 other{"{0} koppar à 2,5 dl"}
             }
             deciliter{
+                case{
+                    genitive{
+                        one{"{0} deciliters"}
+                        other{"{0} deciliters"}
+                    }
+                }
                 dnam{"deciliter"}
                 gender{"common"}
                 one{"{0} deciliter"}
@@ -1064,7 +1738,7 @@ sv{
             }
             fluid-ounce{
                 dnam{"fluid ounces"}
-                gender{"common"}
+                gender{"neuter"}
                 one{"{0} fluid ounce"}
                 other{"{0} fluid ounces"}
             }
@@ -1086,7 +1760,14 @@ sv{
                 per{"{0} per ämbar à 4,6 l"}
             }
             hectoliter{
+                case{
+                    genitive{
+                        one{"{0} hektoliters"}
+                        other{"{0} hektoliters"}
+                    }
+                }
                 dnam{"hektoliter"}
+                gender{"common"}
                 one{"{0} hektoliter"}
                 other{"{0} hektoliter"}
             }
@@ -1097,6 +1778,12 @@ sv{
                 other{"{0} mätglas"}
             }
             liter{
+                case{
+                    genitive{
+                        one{"{0} liters"}
+                        other{"{0} liters"}
+                    }
+                }
                 dnam{"liter"}
                 gender{"common"}
                 one{"{0} liter"}
@@ -1104,11 +1791,24 @@ sv{
                 per{"{0} per liter"}
             }
             megaliter{
+                case{
+                    genitive{
+                        one{"{0} megaliters"}
+                        other{"{0} megaliters"}
+                    }
+                }
                 dnam{"megaliter"}
+                gender{"common"}
                 one{"{0} megaliter"}
                 other{"{0} megaliter"}
             }
             milliliter{
+                case{
+                    genitive{
+                        one{"{0} milliliters"}
+                        other{"{0} milliliters"}
+                    }
+                }
                 dnam{"milliliter"}
                 gender{"common"}
                 one{"{0} milliliter"}
@@ -1125,6 +1825,12 @@ sv{
                 other{"{0} pint"}
             }
             pint-metric{
+                case{
+                    genitive{
+                        one{"{0} pint à 500 ml"}
+                        other{"{0} pint à 500 ml"}
+                    }
+                }
                 dnam{"pint à 500 ml"}
                 gender{"common"}
                 one{"{0} pint à 500 ml"}

@@ -26,7 +26,18 @@ el{
                 other{"{0} δυνάμεις επιτάχυνσης"}
             }
             meter-per-square-second{
+                case{
+                    accusative{
+                        one{"{0} μέτρο ανά τετραγωνικό δευτερόλεπτο"}
+                        other{"{0} μέτρα ανά τετραγωνικό δευτερόλεπτο"}
+                    }
+                    genitive{
+                        one{"{0} μέτρου ανά τετραγωνικό δευτερόλεπτο"}
+                        other{"{0} μέτρων ανά τετραγωνικό δευτερόλεπτο"}
+                    }
+                }
                 dnam{"μέτρα ανά τετραγωνικό δευτερόλεπτο"}
+                gender{"neuter"}
                 one{"{0} μέτρο ανά τετραγωνικό δευτερόλεπτο"}
                 other{"{0} μέτρα ανά τετραγωνικό δευτερόλεπτο"}
             }
@@ -141,7 +152,18 @@ el{
                 other{"{0} εκτάρια"}
             }
             square-centimeter{
+                case{
+                    accusative{
+                        one{"{0} τετραγωνικό εκατοστό"}
+                        other{"{0} τετραγωνικά εκατοστά"}
+                    }
+                    genitive{
+                        one{"{0} τετραγωνικού εκατοστού"}
+                        other{"{0} τετραγωνικών εκατοστών"}
+                    }
+                }
                 dnam{"τετραγωνικά εκατοστά"}
+                gender{"neuter"}
                 one{"{0} τετραγωνικό εκατοστό"}
                 other{"{0} τετραγωνικά εκατοστά"}
                 per{"{0}/τετραγωνικό εκατοστό"}
@@ -158,13 +180,35 @@ el{
                 per{"{0} ανά τετραγωνική ίντσα"}
             }
             square-kilometer{
+                case{
+                    accusative{
+                        one{"{0} τετραγωνικό χιλιόμετρο"}
+                        other{"{0} τετραγωνικά χιλιόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} τετραγωνικού χιλιομέτρου"}
+                        other{"{0} τετραγωνικών χιλιομέτρων"}
+                    }
+                }
                 dnam{"τετραγωνικά χιλιόμετρα"}
+                gender{"neuter"}
                 one{"{0} τετραγωνικό χιλιόμετρο"}
                 other{"{0} τετραγωνικά χιλιόμετρα"}
                 per{"{0}/τετραγωνικό χιλιόμετρο"}
             }
             square-meter{
+                case{
+                    accusative{
+                        one{"{0} τετραγωνικό μέτρο"}
+                        other{"{0} τετραγωνικά μέτρα"}
+                    }
+                    genitive{
+                        one{"{0} τετραγωνικού μέτρου"}
+                        other{"{0} τετραγωνικών μέτρων"}
+                    }
+                }
                 dnam{"τετραγωνικά μέτρα"}
+                gender{"neuter"}
                 one{"{0} τετραγωνικό μέτρο"}
                 other{"{0} τετραγωνικά μέτρα"}
                 per{"{0}/τετραγωνικό μέτρο"}
@@ -286,7 +330,18 @@ el{
         }
         concentr{
             item{
+                case{
+                    accusative{
+                        one{"{0} στοιχείο"}
+                        other{"{0} στοιχεία"}
+                    }
+                    genitive{
+                        one{"{0} στοιχείου"}
+                        other{"{0} στοιχείων"}
+                    }
+                }
                 dnam{"στοιχείο"}
+                gender{"neuter"}
                 one{"{0} στοιχείο"}
                 other{"{0} στοιχεία"}
             }
@@ -312,7 +367,18 @@ el{
                 other{"{0} χιλιοστόγραμμα ανά δεκατόλιτρο"}
             }
             millimole-per-liter{
+                case{
+                    accusative{
+                        one{"{0} χιλιοστογραμμομόριο ανά λίτρο"}
+                        other{"{0} χιλιοστογραμμομόρια ανά λίτρο"}
+                    }
+                    genitive{
+                        one{"{0} χιλιοστογραμμομορίου ανά λίτρο"}
+                        other{"{0} χιλιοστογραμμομορίων ανά λίτρο"}
+                    }
+                }
                 dnam{"χιλιοστογραμμομόρια ανά λίτρο"}
+                gender{"neuter"}
                 one{"{0} χιλιοστογραμμομόριο ανά λίτρο"}
                 other{"{0} χιλιοστογραμμομόρια ανά λίτρο"}
             }
@@ -399,12 +465,34 @@ el{
         }
         consumption{
             liter-per-100-kilometer{
+                case{
+                    accusative{
+                        one{"{0} λίτρο ανά 100 χιλιόμετρα"}
+                        other{"{0} λίτρα ανά 100 χιλιόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} λίτρου ανά 100 χιλιόμετρα"}
+                        other{"{0} λίτρων ανά 100 χιλιόμετρα"}
+                    }
+                }
                 dnam{"λίτρα ανά 100 χιλιόμετρα"}
+                gender{"neuter"}
                 one{"{0} λίτρο ανά 100 χιλιόμετρα"}
                 other{"{0} λίτρα ανά 100 χιλιόμετρα"}
             }
             liter-per-kilometer{
+                case{
+                    accusative{
+                        one{"{0} λίτρο ανά χιλιόμετρο"}
+                        other{"{0} λίτρα ανά χιλιόμετρο"}
+                    }
+                    genitive{
+                        one{"{0} λίτρου ανά χιλιόμετρο"}
+                        other{"{0} λίτρων ανά χιλιόμετρο"}
+                    }
+                }
                 dnam{"λίτρα ανά χιλιόμετρο"}
+                gender{"neuter"}
                 one{"{0} λίτρο ανά χιλιόμετρο"}
                 other{"{0} λίτρα ανά χιλιόμετρο"}
             }
@@ -460,47 +548,146 @@ el{
                 other{"{0} byte"}
             }
             gigabit{
+                case{
+                    accusative{
+                        one{"{0} gigabit"}
+                        other{"{0} gigabit"}
+                    }
+                    genitive{
+                        one{"{0} gigabit"}
+                        other{"{0} gigabit"}
+                    }
+                }
                 dnam{"gigabit"}
+                gender{"neuter"}
                 one{"{0} gigabit"}
                 other{"{0} gigabit"}
             }
             gigabyte{
+                case{
+                    accusative{
+                        one{"{0} gigabyte"}
+                        other{"{0} gigabyte"}
+                    }
+                    genitive{
+                        one{"{0} gigabyte"}
+                        other{"{0} gigabyte"}
+                    }
+                }
                 dnam{"gigabyte"}
+                gender{"neuter"}
                 one{"{0} gigabyte"}
                 other{"{0} gigabyte"}
             }
             kilobit{
+                case{
+                    accusative{
+                        one{"{0} kilobit"}
+                        other{"{0} kilobit"}
+                    }
+                    genitive{
+                        one{"{0} kilobit"}
+                        other{"{0} kilobit"}
+                    }
+                }
                 dnam{"kilobit"}
+                gender{"neuter"}
                 one{"{0} kilobit"}
                 other{"{0} kilobit"}
             }
             kilobyte{
+                case{
+                    accusative{
+                        one{"{0} kilobyte"}
+                        other{"{0} kilobyte"}
+                    }
+                    genitive{
+                        one{"{0} kilobyte"}
+                        other{"{0} kilobyte"}
+                    }
+                }
                 dnam{"kilobyte"}
+                gender{"neuter"}
                 one{"{0} kilobyte"}
                 other{"{0} kilobyte"}
             }
             megabit{
+                case{
+                    accusative{
+                        one{"{0} megabit"}
+                        other{"{0} megabit"}
+                    }
+                    genitive{
+                        one{"{0} megabit"}
+                        other{"{0} megabit"}
+                    }
+                }
                 dnam{"megabit"}
+                gender{"neuter"}
                 one{"{0} megabit"}
                 other{"{0} megabit"}
             }
             megabyte{
+                case{
+                    accusative{
+                        one{"{0} megabyte"}
+                        other{"{0} megabyte"}
+                    }
+                    genitive{
+                        one{"{0} megabyte"}
+                        other{"{0} megabyte"}
+                    }
+                }
                 dnam{"megabyte"}
+                gender{"neuter"}
                 one{"{0} megabyte"}
                 other{"{0} megabyte"}
             }
             petabyte{
+                case{
+                    accusative{
+                        one{"{0} petabyte"}
+                        other{"{0} petabyte"}
+                    }
+                    genitive{
+                        one{"{0} petabyte"}
+                        other{"{0} petabyte"}
+                    }
+                }
                 dnam{"petabyte"}
+                gender{"neuter"}
                 one{"{0} petabyte"}
                 other{"{0} petabyte"}
             }
             terabit{
+                case{
+                    accusative{
+                        one{"{0} terabit"}
+                        other{"{0} terabit"}
+                    }
+                    genitive{
+                        one{"{0} terabit"}
+                        other{"{0} terabit"}
+                    }
+                }
                 dnam{"terabit"}
+                gender{"neuter"}
                 one{"{0} terabit"}
                 other{"{0} terabit"}
             }
             terabyte{
+                case{
+                    accusative{
+                        one{"{0} terabyte"}
+                        other{"{0} terabyte"}
+                    }
+                    genitive{
+                        one{"{0} terabyte"}
+                        other{"{0} terabyte"}
+                    }
+                }
                 dnam{"terabyte"}
+                gender{"neuter"}
                 one{"{0} terabyte"}
                 other{"{0} terabyte"}
             }
@@ -588,12 +775,34 @@ el{
                 per{"{0} ανά ώρα"}
             }
             microsecond{
+                case{
+                    accusative{
+                        one{"{0} μικροδευτερόλεπτο"}
+                        other{"{0} μικροδευτερόλεπτα"}
+                    }
+                    genitive{
+                        one{"μικροδευτερόλεπτου"}
+                        other{"{0} μικροδευτερόλεπτων"}
+                    }
+                }
                 dnam{"μικροδευτερόλεπτα"}
+                gender{"neuter"}
                 one{"{0} μικροδευτερόλεπτο"}
                 other{"{0} μικροδευτερόλεπτα"}
             }
             millisecond{
+                case{
+                    accusative{
+                        one{"{0} χιλιοστό του δευτερολέπτου"}
+                        other{"{0} χιλιοστά του δευτερολέπτου"}
+                    }
+                    genitive{
+                        one{"{0} χιλιοστού του δευτερολέπτου"}
+                        other{"{0} χιλιοστών του δευτερολέπτου"}
+                    }
+                }
                 dnam{"χιλιοστά του δευτερολέπτου"}
+                gender{"neuter"}
                 one{"{0} χιλιοστό του δευτερολέπτου"}
                 other{"{0} χιλιοστά του δευτερολέπτου"}
             }
@@ -632,7 +841,18 @@ el{
                 per{"{0} ανά μήνα"}
             }
             nanosecond{
+                case{
+                    accusative{
+                        one{"{0} νανοδευτερόλεπτο"}
+                        other{"{0} νανοδευτερόλεπτα"}
+                    }
+                    genitive{
+                        one{"{0} νανοδευτερόλεπτου"}
+                        other{"{0} νανοδευτερόλεπτων"}
+                    }
+                }
                 dnam{"νανοδευτερόλεπτα"}
+                gender{"neuter"}
                 one{"{0} νανοδευτερόλεπτο"}
                 other{"{0} νανοδευτερόλεπτα"}
             }
@@ -706,7 +926,18 @@ el{
                 other{"{0} αμπέρ"}
             }
             milliampere{
+                case{
+                    accusative{
+                        one{"{0} μιλιαμπέρ"}
+                        other{"{0} μιλιαμπέρ"}
+                    }
+                    genitive{
+                        one{"{0} μιλιαμπέρ"}
+                        other{"{0} μιλιαμπέρ"}
+                    }
+                }
                 dnam{"μιλιαμπέρ"}
+                gender{"neuter"}
                 one{"{0} μιλιαμπέρ"}
                 other{"{0} μιλιαμπέρ"}
             }
@@ -797,12 +1028,34 @@ el{
                 other{"{0} χιλιοθερμίδες"}
             }
             kilojoule{
+                case{
+                    accusative{
+                        one{"{0} κιλοτζάουλ"}
+                        other{"{0} κιλοτζάουλ"}
+                    }
+                    genitive{
+                        one{"{0} κιλοτζάουλ"}
+                        other{"{0} κιλοτζάουλ"}
+                    }
+                }
                 dnam{"κιλοτζάουλ"}
+                gender{"neuter"}
                 one{"{0} κιλοτζάουλ"}
                 other{"{0} κιλοτζάουλ"}
             }
             kilowatt-hour{
+                case{
+                    accusative{
+                        one{"{0} κιλοβατώρα"}
+                        other{"{0} κιλοβατώρες"}
+                    }
+                    genitive{
+                        one{"{0} κιλοβατώρας"}
+                        other{"{0} κιλοβατωρών"}
+                    }
+                }
                 dnam{"κιλοβατώρες"}
+                gender{"feminine"}
                 one{"{0} κιλοβατώρα"}
                 other{"{0} κιλοβατώρες"}
             }
@@ -814,7 +1067,18 @@ el{
         }
         force{
             kilowatt-hour-per-100-kilometer{
+                case{
+                    accusative{
+                        one{"{0} κιλοβατώρα ανά 100 χιλιόμετρα"}
+                        other{"{0} κιλοβατώρες ανά 100 χιλιόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} κιλοβατώρας ανά 100 χιλιόμετρα"}
+                        other{"{0} κιλοβατωρών ανά 100 χιλιόμετρα"}
+                    }
+                }
                 dnam{"κιλοβατώρες ανά 100 χιλιόμετρα"}
+                gender{"feminine"}
                 one{"{0} κιλοβατώρα ανά 100 χιλιόμετρα"}
                 other{"{0} κιλοβατώρες ανά 100 χιλιόμετρα"}
             }
@@ -842,7 +1106,18 @@ el{
         }
         frequency{
             gigahertz{
+                case{
+                    accusative{
+                        one{"{0} γιγαχέρτζ"}
+                        other{"{0} γιγαχέρτζ"}
+                    }
+                    genitive{
+                        one{"{0} γιγαχέρτζ"}
+                        other{"{0} γιγαχέρτζ"}
+                    }
+                }
                 dnam{"γιγαχέρτζ"}
+                gender{"neuter"}
                 one{"{0} γιγαχέρτζ"}
                 other{"{0} γιγαχέρτζ"}
             }
@@ -863,12 +1138,34 @@ el{
                 other{"{0} χερτζ"}
             }
             kilohertz{
+                case{
+                    accusative{
+                        one{"{0} κιλοχέρτζ"}
+                        other{"{0} κιλοχέρτζ"}
+                    }
+                    genitive{
+                        one{"{0} κιλοχέρτζ"}
+                        other{"{0} κιλοχέρτζ"}
+                    }
+                }
                 dnam{"κιλοχέρτζ"}
+                gender{"neuter"}
                 one{"{0} κιλοχέρτζ"}
                 other{"{0} κιλοχέρτζ"}
             }
             megahertz{
+                case{
+                    accusative{
+                        one{"{0} μεγαχέρτζ"}
+                        other{"{0} μεγαχέρτζ"}
+                    }
+                    genitive{
+                        one{"{0} μεγαχέρτζ"}
+                        other{"{0} μεγαχέρτζ"}
+                    }
+                }
                 dnam{"μεγαχέρτζ"}
+                gender{"neuter"}
                 one{"{0} μεγαχέρτζ"}
                 other{"{0} μεγαχέρτζ"}
             }
@@ -906,7 +1203,18 @@ el{
                 other{"{0} τυπογραφικά em"}
             }
             megapixel{
+                case{
+                    accusative{
+                        one{"{0} megapixel"}
+                        other{"{0} megapixel"}
+                    }
+                    genitive{
+                        one{"{0} megapixel"}
+                        other{"{0} megapixel"}
+                    }
+                }
                 dnam{"megapixel"}
+                gender{"neuter"}
                 one{"{0} megapixel"}
                 other{"{0} megapixel"}
             }
@@ -927,7 +1235,18 @@ el{
                 other{"{0} pixel"}
             }
             pixel-per-centimeter{
+                case{
+                    accusative{
+                        one{"{0} pixel ανά εκατοστό"}
+                        other{"{0} pixel ανά εκατοστό"}
+                    }
+                    genitive{
+                        one{"{0} pixel ανά εκατοστό"}
+                        other{"{0} pixel ανά εκατοστό"}
+                    }
+                }
                 dnam{"pixel ανά εκατοστό"}
+                gender{"neuter"}
                 one{"{0} pixel ανά εκατοστό"}
                 other{"{0} pixel ανά εκατοστό"}
             }
@@ -944,13 +1263,35 @@ el{
                 other{"{0} αστρονομικές μονάδες"}
             }
             centimeter{
+                case{
+                    accusative{
+                        one{"{0} εκατοστό"}
+                        other{"{0} εκατοστά"}
+                    }
+                    genitive{
+                        one{"{0} εκατοστού"}
+                        other{"{0} εκατοστών"}
+                    }
+                }
                 dnam{"εκατοστά"}
+                gender{"neuter"}
                 one{"{0} εκατοστό"}
                 other{"{0} εκατοστά"}
                 per{"{0} ανά εκατοστό"}
             }
             decimeter{
+                case{
+                    accusative{
+                        one{"{0} δεκατόμετρο"}
+                        other{"{0} δεκατόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} δεκατόμετρο"}
+                        other{"{0} δεκατόμετρων"}
+                    }
+                }
                 dnam{"δεκατόμετρα"}
+                gender{"neuter"}
                 one{"{0} δεκατόμετρο"}
                 other{"{0} δεκατόμετρα"}
             }
@@ -982,7 +1323,18 @@ el{
                 per{"{0} ανά ίντσα"}
             }
             kilometer{
+                case{
+                    accusative{
+                        one{"{0} χιλιόμετρο"}
+                        other{"{0} χιλιόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} χιλιόμετρου"}
+                        other{"{0} χιλιομέτρων"}
+                    }
+                }
                 dnam{"χιλιόμετρα"}
+                gender{"neuter"}
                 one{"{0} χιλιόμετρο"}
                 other{"{0} χιλιόμετρα"}
                 per{"{0} ανά χιλιόμετρο"}
@@ -1010,6 +1362,17 @@ el{
                 per{"{0} ανά μέτρο"}
             }
             micrometer{
+                case{
+                    accusative{
+                        one{"{0} μικρόμετρο"}
+                        other{"{0} μικρόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} μικρόμετρο"}
+                        other{"{0} μικρόμετρων"}
+                    }
+                }
+                gender{"neuter"}
                 one{"{0} μικρόμετρο"}
                 other{"{0} μικρόμετρα"}
             }
@@ -1035,12 +1398,34 @@ el{
                 other{"{0} σκανδιναβικά μίλια"}
             }
             millimeter{
+                case{
+                    accusative{
+                        one{"{0} χιλιοστόμετρο"}
+                        other{"{0} χιλιοστόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} χιλιοστόμετρου"}
+                        other{"{0} χιλιοστόμετρων"}
+                    }
+                }
                 dnam{"χιλιοστόμετρα"}
+                gender{"neuter"}
                 one{"{0} χιλιοστόμετρο"}
                 other{"{0} χιλιοστόμετρα"}
             }
             nanometer{
+                case{
+                    accusative{
+                        one{"{0} νανόμετρο"}
+                        other{"{0} νανόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} νανόμετρου"}
+                        other{"{0} νανόμετρων"}
+                    }
+                }
                 dnam{"νανόμετρα"}
+                gender{"neuter"}
                 one{"{0} νανόμετρο"}
                 other{"{0} νανόμετρα"}
             }
@@ -1055,7 +1440,18 @@ el{
                 other{"{0} παρσέκ"}
             }
             picometer{
+                case{
+                    accusative{
+                        one{"{0} πικόμετρο"}
+                        other{"{0} πικόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} πικόμετρου"}
+                        other{"{0} πικόμετρων"}
+                    }
+                }
                 dnam{"πικόμετρα"}
+                gender{"neuter"}
                 one{"{0} πικόμετρο"}
                 other{"{0} πικόμετρα"}
             }
@@ -1211,12 +1607,34 @@ el{
                 other{"{0} τόνοι"}
             }
             microgram{
+                case{
+                    accusative{
+                        one{"{0} μικρογραμμάριο"}
+                        other{"{0} μικρογραμμάρια"}
+                    }
+                    genitive{
+                        one{"{0} μικρογραμμάριου"}
+                        other{"{0} μικρογραμμαρίων"}
+                    }
+                }
                 dnam{"μικρογραμμάρια"}
+                gender{"neuter"}
                 one{"{0} μικρογραμμάριο"}
                 other{"{0} μικρογραμμάρια"}
             }
             milligram{
+                case{
+                    accusative{
+                        one{"{0} χιλιοστόγραμμο"}
+                        other{"{0} χιλιοστόγραμμα"}
+                    }
+                    genitive{
+                        one{"{0} χιλιοστόγραμμου"}
+                        other{"{0} χιλιοστόγραμμων"}
+                    }
+                }
                 dnam{"χιλιοστόγραμμα"}
+                gender{"neuter"}
                 one{"{0} χιλιοστόγραμμο"}
                 other{"{0} χιλιοστόγραμμα"}
             }
@@ -1255,7 +1673,18 @@ el{
         }
         power{
             gigawatt{
+                case{
+                    accusative{
+                        one{"{0} γιγαβάτ"}
+                        other{"{0} γιγαβάτ"}
+                    }
+                    genitive{
+                        one{"{0} γιγαβάτ"}
+                        other{"{0} γιγαβάτ"}
+                    }
+                }
                 dnam{"γιγαβάτ"}
+                gender{"neuter"}
                 one{"{0} γιγαβάτ"}
                 other{"{0} γιγαβάτ"}
             }
@@ -1265,17 +1694,50 @@ el{
                 other{"{0} ίπποι"}
             }
             kilowatt{
+                case{
+                    accusative{
+                        one{"{0} κιλοβάτ"}
+                        other{"{0} κιλοβάτ"}
+                    }
+                    genitive{
+                        one{"{0} κιλοβάτ"}
+                        other{"{0} κιλοβάτ"}
+                    }
+                }
                 dnam{"κιλοβάτ"}
+                gender{"neuter"}
                 one{"{0} κιλοβάτ"}
                 other{"{0} κιλοβάτ"}
             }
             megawatt{
+                case{
+                    accusative{
+                        one{"{0} μεγαβάτ"}
+                        other{"{0} μεγαβάτ"}
+                    }
+                    genitive{
+                        one{"{0} μεγαβάτ"}
+                        other{"{0} μεγαβάτ"}
+                    }
+                }
                 dnam{"μεγαβάτ"}
+                gender{"neuter"}
                 one{"{0} μεγαβάτ"}
                 other{"{0} μεγαβάτ"}
             }
             milliwatt{
+                case{
+                    accusative{
+                        one{"{0} μιλιβάτ"}
+                        other{"{0} μιλιβάτ"}
+                    }
+                    genitive{
+                        one{"{0} μιλιβάτ"}
+                        other{"{0} μιλιβάτ"}
+                    }
+                }
                 dnam{"μιλιβάτ"}
+                gender{"neuter"}
                 one{"{0} μιλιβάτ"}
                 other{"{0} μιλιβάτ"}
             }
@@ -1330,7 +1792,18 @@ el{
                 other{"{0} μπαρ"}
             }
             hectopascal{
+                case{
+                    accusative{
+                        one{"{0} εκτοπασκάλ"}
+                        other{"{0} εκτοπασκάλ"}
+                    }
+                    genitive{
+                        one{"{0} εκτοπασκάλ"}
+                        other{"{0} εκτοπασκάλ"}
+                    }
+                }
                 dnam{"εκτοπασκάλ"}
+                gender{"neuter"}
                 one{"{0} εκτοπασκάλ"}
                 other{"{0} εκτοπασκάλ"}
             }
@@ -1340,17 +1813,50 @@ el{
                 other{"{0} ίντσες στήλης υδραργύρου"}
             }
             kilopascal{
+                case{
+                    accusative{
+                        one{"{0} κιλοπασκάλ"}
+                        other{"{0} κιλοπασκάλ"}
+                    }
+                    genitive{
+                        one{"{0} κιλοπασκάλ"}
+                        other{"{0} κιλοπασκάλ"}
+                    }
+                }
                 dnam{"κιλοπασκάλ"}
+                gender{"neuter"}
                 one{"{0} κιλοπασκάλ"}
                 other{"{0} κιλοπασκάλ"}
             }
             megapascal{
+                case{
+                    accusative{
+                        one{"{0} μεγαπασκάλ"}
+                        other{"{0} μεγαπασκάλ"}
+                    }
+                    genitive{
+                        one{"{0} μεγαπασκάλ"}
+                        other{"{0} μεγαπασκάλ"}
+                    }
+                }
                 dnam{"μεγαπασκάλ"}
+                gender{"neuter"}
                 one{"{0} μεγαπασκάλ"}
                 other{"{0} μεγαπασκάλ"}
             }
             millibar{
+                case{
+                    accusative{
+                        one{"{0} μιλιμπάρ"}
+                        other{"{0} μιλιμπάρ"}
+                    }
+                    genitive{
+                        one{"{0} μιλιμπάρ"}
+                        other{"{0} μιλιμπάρ"}
+                    }
+                }
                 dnam{"μιλιμπάρ"}
+                gender{"neuter"}
                 one{"{0} μιλιμπάρ"}
                 other{"{0} μιλιμπάρ"}
             }
@@ -1383,7 +1889,18 @@ el{
         }
         speed{
             kilometer-per-hour{
+                case{
+                    accusative{
+                        one{"{0} χιλιόμετρο ανά ώρα"}
+                        other{"{0} χιλιόμετρα ανά ώρα"}
+                    }
+                    genitive{
+                        one{"{0} χιλιόμετρου ανά ώρα"}
+                        other{"{0} χιλιομέτρων ανά ώρα"}
+                    }
+                }
                 dnam{"χιλιόμετρα ανά ώρα"}
+                gender{"neuter"}
                 one{"{0} χιλιόμετρο ανά ώρα"}
                 other{"{0} χιλιόμετρα ανά ώρα"}
             }
@@ -1393,7 +1910,18 @@ el{
                 other{"{0} κόμβοι"}
             }
             meter-per-second{
+                case{
+                    accusative{
+                        one{"{0} μέτρο ανά δευτερόλεπτο"}
+                        other{"{0} μέτρα ανά δευτερόλεπτο"}
+                    }
+                    genitive{
+                        one{"{0} μέτρου ανά δευτερόλεπτο"}
+                        other{"{0} μέτρων ανά δευτερόλεπτο"}
+                    }
+                }
                 dnam{"μέτρα ανά δευτερόλεπτο"}
+                gender{"neuter"}
                 one{"{0} μέτρο ανά δευτερόλεπτο"}
                 other{"{0} μέτρα ανά δευτερόλεπτο"}
             }
@@ -1460,7 +1988,18 @@ el{
         }
         torque{
             newton-meter{
+                case{
+                    accusative{
+                        one{"{0} νιουτόμετρο"}
+                        other{"{0} νιουτόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} νιουτόμετρου"}
+                        other{"{0} νιουτόμετρων"}
+                    }
+                }
                 dnam{"νιουτόμετρα"}
+                gender{"neuter"}
                 one{"{0} νιουτόμετρο"}
                 other{"{0} νιουτόμετρα"}
             }
@@ -1487,12 +2026,34 @@ el{
                 other{"{0} μπούσελ"}
             }
             centiliter{
+                case{
+                    accusative{
+                        one{"{0} εκατοστόλιτρο"}
+                        other{"{0} εκατοστόλιτρα"}
+                    }
+                    genitive{
+                        one{"{0} εκατοστόλιτρου"}
+                        other{"{0} εκατοστόλιτρων"}
+                    }
+                }
                 dnam{"εκατοστόλιτρα"}
+                gender{"neuter"}
                 one{"{0} εκατοστόλιτρο"}
                 other{"{0} εκατοστόλιτρα"}
             }
             cubic-centimeter{
+                case{
+                    accusative{
+                        one{"{0} κυβικό εκατοστό"}
+                        other{"{0} κυβικά εκατοστά"}
+                    }
+                    genitive{
+                        one{"{0} κυβικού εκατοστού"}
+                        other{"{0} κυβικών εκατοστών"}
+                    }
+                }
                 dnam{"κυβικά εκατοστά"}
+                gender{"neuter"}
                 one{"{0} κυβικό εκατοστό"}
                 other{"{0} κυβικά εκατοστά"}
                 per{"{0} ανά κυβικό εκατοστό"}
@@ -1508,12 +2069,34 @@ el{
                 other{"{0} κυβικές ίντσες"}
             }
             cubic-kilometer{
+                case{
+                    accusative{
+                        one{"{0} κυβικό χιλιόμετρο"}
+                        other{"{0} κυβικά χιλιόμετρα"}
+                    }
+                    genitive{
+                        one{"{0} κυβικού χιλιόμετρου"}
+                        other{"{0} κυβικών χιλιομέτρων"}
+                    }
+                }
                 dnam{"κυβικά χιλιόμετρα"}
+                gender{"neuter"}
                 one{"{0} κυβικό χιλιόμετρο"}
                 other{"{0} κυβικά χιλιόμετρα"}
             }
             cubic-meter{
+                case{
+                    accusative{
+                        one{"{0} κυβικό μέτρο"}
+                        other{"{0} κυβικά μέτρα"}
+                    }
+                    genitive{
+                        one{"{0} κυβικού μέτρου"}
+                        other{"{0} κυβικών μέτρων"}
+                    }
+                }
                 dnam{"κυβικά μέτρα"}
+                gender{"neuter"}
                 one{"{0} κυβικό μέτρο"}
                 other{"{0} κυβικά μέτρα"}
                 per{"{0} ανά κυβικό μέτρο"}
@@ -1550,7 +2133,18 @@ el{
                 other{"{0} μετρικά κύπελλα"}
             }
             deciliter{
+                case{
+                    accusative{
+                        one{"{0} δεκατόλιτρο"}
+                        other{"{0} δεκατόλιτρα"}
+                    }
+                    genitive{
+                        one{"{0} δεκατόλιτρου"}
+                        other{"{0} δεκατόλιτρων"}
+                    }
+                }
                 dnam{"δεκατόλιτρα"}
+                gender{"neuter"}
                 one{"{0} δεκατόλιτρο"}
                 other{"{0} δεκατόλιτρα"}
             }
@@ -1597,7 +2191,18 @@ el{
                 per{"{0} ανά αγγλοσαξονικό γαλόνι"}
             }
             hectoliter{
+                case{
+                    accusative{
+                        one{"{0} εκτόλιτρο"}
+                        other{"{0} εκτόλιτρα"}
+                    }
+                    genitive{
+                        one{"{0} εκτόλιτρου"}
+                        other{"{0} εκτόλιτρων"}
+                    }
+                }
                 dnam{"εκτόλιτρα"}
+                gender{"neuter"}
                 one{"{0} εκτόλιτρο"}
                 other{"{0} εκτόλιτρα"}
             }
@@ -1624,12 +2229,34 @@ el{
                 per{"{0} ανά λίτρο"}
             }
             megaliter{
+                case{
+                    accusative{
+                        one{"{0} μεγαλίτρο"}
+                        other{"{0} μεγαλίτρα"}
+                    }
+                    genitive{
+                        one{"{0} μεγαλίτρου"}
+                        other{"{0} μεγαλίτρων"}
+                    }
+                }
                 dnam{"μεγαλίτρα"}
+                gender{"neuter"}
                 one{"{0} μεγαλίτρο"}
                 other{"{0} μεγαλίτρα"}
             }
             milliliter{
+                case{
+                    accusative{
+                        one{"{0} χιλιοστόλιτρο"}
+                        other{"{0} χιλιοστόλιτρα"}
+                    }
+                    genitive{
+                        one{"{0} χιλιοστόλιτρου"}
+                        other{"{0} χιλιοστόλιτρων"}
+                    }
+                }
                 dnam{"χιλιοστόλιτρα"}
+                gender{"neuter"}
                 one{"{0} χιλιοστόλιτρο"}
                 other{"{0} χιλιοστόλιτρα"}
             }

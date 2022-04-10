@@ -1223,6 +1223,9 @@ sr{
         "Pacific:Johnston"{
             ec{"Џонстон"}
         }
+        "Pacific:Kanton"{
+            ec{"Кантон"}
+        }
         "Pacific:Kiritimati"{
             ec{"Киритимати"}
         }

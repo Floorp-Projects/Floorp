@@ -1223,6 +1223,9 @@ te{
         "Pacific:Johnston"{
             ec{"జాన్సటన్"}
         }
+        "Pacific:Kanton"{
+            ec{"కాంతోన్"}
+        }
         "Pacific:Kiritimati"{
             ec{"కిరీటిమాటి"}
         }
