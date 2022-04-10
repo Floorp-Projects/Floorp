@@ -40,7 +40,10 @@ add_task(async function test_setup() {
   selector = new SnapshotSelector({
     count: 5,
     filterAdult: false,
-    selectOverlappingVisits: true,
+    sourceWeights: {
+      CommonReferrer: 0,
+      Overlapping: 3,
+    },
     getCurrentSessionUrls,
   });
 });
