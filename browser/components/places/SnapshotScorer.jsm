@@ -82,8 +82,8 @@ const SnapshotScorer = new (class SnapshotScorer {
   /**
    * Takes a list of recommendations with source specific scores and
    * de-duplicates and generates a final scored list of recommendations.
-   * If recommendations are present from multiple sources the recommendation
-   * with the highest source score is used.
+   * If recommendations are present from multiple sources the scores from each
+   * source are added.
    * A recommendations's final score must meet the `snapshotThreshold` to be
    * included in the results.
    *
@@ -128,10 +128,7 @@ const SnapshotScorer = new (class SnapshotScorer {
         if (currentScore) {
           // We've already generated the snapshot specific score, update the
           // source specific score.
-          currentScore.sourceScore = Math.max(
-            currentScore.sourceScore,
-            score * weight
-          );
+          currentScore.sourceScore += score * weight;
         } else {
           currentScore = {
             snapshot,
