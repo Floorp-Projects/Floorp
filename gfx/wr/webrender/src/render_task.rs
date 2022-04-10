@@ -22,7 +22,7 @@ use crate::prim_store::gradient::{
 };
 use crate::resource_cache::{ResourceCache, ImageRequest};
 use std::{usize, f32, i32, u32};
-use crate::render_target::RenderTargetKind;
+use crate::render_target::{ResolveOp, RenderTargetKind};
 use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
 use crate::surface::SurfaceBuilder;
@@ -183,6 +183,7 @@ pub struct PictureTask {
     pub scissor_rect: Option<DeviceIntRect>,
     pub valid_rect: Option<DeviceIntRect>,
     pub cmd_buffer_index: CommandBufferIndex,
+    pub resolve_op: Option<ResolveOp>,
 }
 
 #[derive(Debug)]
@@ -421,6 +422,7 @@ impl RenderTaskKind {
             valid_rect,
             clear_color,
             cmd_buffer_index,
+            resolve_op: None,
         })
     }
 
