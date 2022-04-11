@@ -527,6 +527,10 @@ open class FxaAccountManager(
         } while (!eventQueue.isEmpty())
     }
 
+    /**
+     * Side-effects of entering [AccountState] type states - our stable states.
+     * Once we reach these states, we simply notify our observers.
+     */
     private suspend fun accountStateSideEffects(forState: State.Idle, via: Event): Unit = when (forState.accountState) {
         AccountState.NotAuthenticated -> when (via) {
             Event.Progress.LoggedOut -> {
@@ -565,6 +569,13 @@ open class FxaAccountManager(
         }
     }
 
+    /**
+     * Side-effects of entering [ProgressState] states. These side-effects are actions we need to take
+     * to perform a state transition. For example, we wipe local state while entering a [ProgressState.LoggingOut].
+     *
+     * @return An optional follow-up [Event] that we'd like state machine to process after entering [forState]
+     * and processing its side-effects.
+     */
     @Suppress("NestedBlockDepth", "LongMethod")
     private suspend fun internalStateSideEffects(
         forState: State.Active,

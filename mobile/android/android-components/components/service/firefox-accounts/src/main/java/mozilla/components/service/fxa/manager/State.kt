@@ -8,6 +8,50 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.sharing.ShareableAccount
 
+/**
+ * This file is the "heart" of the accounts system. It's a finite state machine.
+ * Described below are all of the possible states, transitions between them and events which can
+ * trigger these transitions.
+ *
+ * There are two types of states - [State.Idle] and [State.Active]. Idle states are modeled by
+ * [AccountState], while active states are modeled by [ProgressState].
+ *
+ * Correspondingly, there are also two types of events - [Event.Account] and [Event.Progress].
+ * [Event.Account] events will be "understood" by states of type [AccountState].
+ * [Event.Progress] events will be "understood" by states of type  [ProgressState].
+ * The word "understood" means "may trigger a state transition".
+ *
+ * [Event.Account] events are also referred to as "external events", since they are sent either directly
+ * by the user, or by some event of external origin (e.g. hitting an auth problem while communicating
+ * with a server).
+ *
+ * Similarly, [Event.Progress] events are referred to as "internal events", since they are sent by
+ * the internal processes within the state machine itself, e.g. as a result of some action being taken
+ * as a side-effect of a state transition.
+ *
+ * States of type [AccountState] are "stable" states (or, idle). After reaching one of these states,
+ * state machine will remain there unless an [Event.Account] is received. An example of a stable state
+ * is LoggedOut. No transitions will take place unless user tries to sign-in, or system tries to restore
+ * an account from disk (e.g. during startup).
+ *
+ * States of type [ProgressState] are "transition" state (or, active). These states represent certain processes
+ * that take place - for example, an in-progress authentication, or an account recovery.
+ * Once these processes are completed (either succeeding or failing), an [Event.Progress] is expected
+ * to be received, triggering a state transition.
+ *
+ * Most states have "side-effects" - actions that happen during a transition into the state.
+ * These side-effects are described in [FxaAccountManager]. For example, a side-effect of
+ * [ProgressState.BeginningAuthentication] may be sending a request to an auth server to initialize an OAuth flow.
+ *
+ * Side-effects of [AccountState] states are simply about notifying external observers that a certain
+ * stable account state was reached.
+ *
+ * Side-effects of [ProgressState] states are various actions we need to take to execute the transition,
+ * e.g. talking to servers, serializing some state to disk, cleaning up, etc.
+ *
+ * State transitions are described by a transition matrix, which is described in [State.next].
+ */
+
 internal enum class AccountState {
     NotAuthenticated,
     IncompleteMigration,

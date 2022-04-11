@@ -28,6 +28,29 @@ data class ShareableAccount(
  * Once an instance of [ShareableAccount] is obtained, it may be used with
  * [FxaAccountManager.migrateAccountAsync] directly,
  * or with [FirefoxAccount.migrateFromSessionTokenAsync] via [ShareableAccount.authInfo].
+ *
+ * Applications can register themselves as content providers for 'com.app.packagename.fxa.auth' authority,
+ * and provide account information to verified requesters.
+ *
+ * This singleton allows querying known fxa.auth providers. Before querying, their identity is verified.
+ *
+ * In both cases (querying for state, providing state) verification happens by comparing package signatures of
+ * the other side against a hardcoded list of packages and their legitimate signatures.
+ * This means that both sides must be aware of each other (e.g. which packages are able to query for,
+ * and provide account state).
+ *
+ * The ContentProvider data exchange protocol for the .fxa.auth providers is as follows:
+ * - application (let's assume its package name is org.mozilla.app) registers itself as an authority
+ * for content://org.mozilla.app.fxa.auth
+ * - a query that provides account state is: content://org.mozilla.app.fxa.auth/state
+ * - a single "row" is expected in a response, with following "columns":
+ * -- email, sessionToken, kSync, kXSCS
+ * -- if email is null, there is no authenticated account
+ * -- otherwise, all columns must be non-null
+ *
+ * [AccountSharing] only implements the querying side. Fennec (Firefox for Android before the Fenix rewrite)
+ * implemented the provider side, allowing for seamless account sharing between Fennec and Fenix if
+ * they were installed alongside each other.
  */
 object AccountSharing {
     internal const val KEY_EMAIL = "email"
