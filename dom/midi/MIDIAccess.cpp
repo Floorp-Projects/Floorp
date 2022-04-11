@@ -89,12 +89,14 @@ void MIDIAccess::FireConnectionEvent(MIDIPort* aPort) {
   aPort->GetId(id);
   ErrorResult rv;
   if (aPort->State() == MIDIPortDeviceState::Disconnected) {
-    if (aPort->Type() == MIDIPortType::Input &&
-        MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, rv)) {
-      MIDIInputMap_Binding::MaplikeHelpers::Delete(mInputMap, id, rv);
-    } else if (aPort->Type() == MIDIPortType::Output &&
-               MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id, rv)) {
-      MIDIOutputMap_Binding::MaplikeHelpers::Delete(mOutputMap, id, rv);
+    if (aPort->Type() == MIDIPortType::Input && mInputMap->Has(id)) {
+      MIDIInputMap_Binding::MaplikeHelpers::Delete(mInputMap, aPort->StableId(),
+                                                   rv);
+      mInputMap->Remove(id);
+    } else if (aPort->Type() == MIDIPortType::Output && mOutputMap->Has(id)) {
+      MIDIOutputMap_Binding::MaplikeHelpers::Delete(mOutputMap,
+                                                    aPort->StableId(), rv);
+      mOutputMap->Remove(id);
     }
     // Check to make sure Has()/Delete() calls haven't failed.
     if (NS_WARN_IF(rv.Failed())) {
@@ -106,31 +108,31 @@ void MIDIAccess::FireConnectionEvent(MIDIPort* aPort) {
     // this means a port that was disconnected has been reconnected, with the
     // port owner holding the object during that time, and we should add that
     // port object to our maps again.
-    if (aPort->Type() == MIDIPortType::Input &&
-        !MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, rv)) {
+    if (aPort->Type() == MIDIPortType::Input && !mInputMap->Has(id)) {
       if (NS_WARN_IF(rv.Failed())) {
         LOG("Input port not found");
         return;
       }
       MIDIInputMap_Binding::MaplikeHelpers::Set(
-          mInputMap, id, *(static_cast<MIDIInput*>(aPort)), rv);
+          mInputMap, aPort->StableId(), *(static_cast<MIDIInput*>(aPort)), rv);
       if (NS_WARN_IF(rv.Failed())) {
         LOG("Map Set failed for input port");
         return;
       }
-    } else if (aPort->Type() == MIDIPortType::Output &&
-               !MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id,
-                                                           rv)) {
+      mInputMap->Insert(id, aPort);
+    } else if (aPort->Type() == MIDIPortType::Output && mOutputMap->Has(id)) {
       if (NS_WARN_IF(rv.Failed())) {
         LOG("Output port not found");
         return;
       }
       MIDIOutputMap_Binding::MaplikeHelpers::Set(
-          mOutputMap, id, *(static_cast<MIDIOutput*>(aPort)), rv);
+          mOutputMap, aPort->StableId(), *(static_cast<MIDIOutput*>(aPort)),
+          rv);
       if (NS_WARN_IF(rv.Failed())) {
         LOG("Map set failed for output port");
         return;
       }
+      mOutputMap->Insert(id, aPort);
     }
   }
   RefPtr<MIDIConnectionEvent> event =
@@ -144,9 +146,7 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
   MIDIPortType type = static_cast<MIDIPortType>(aInfo.type());
   RefPtr<MIDIPort> port;
   if (type == MIDIPortType::Input) {
-    bool hasPort =
-        MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, aRv);
-    if (hasPort || NS_WARN_IF(aRv.Failed())) {
+    if (mInputMap->Has(id) || NS_WARN_IF(aRv.Failed())) {
       // We already have the port in our map.
       return;
     }
@@ -157,15 +157,15 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
       return;
     }
     MIDIInputMap_Binding::MaplikeHelpers::Set(
-        mInputMap, id, *(static_cast<MIDIInput*>(port.get())), aRv);
+        mInputMap, port->StableId(), *(static_cast<MIDIInput*>(port.get())),
+        aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       LOG("Coudld't set input port in map");
       return;
     }
+    mInputMap->Insert(id, port);
   } else if (type == MIDIPortType::Output) {
-    bool hasPort =
-        MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id, aRv);
-    if (hasPort || NS_WARN_IF(aRv.Failed())) {
+    if (mOutputMap->Has(id) || NS_WARN_IF(aRv.Failed())) {
       // We already have the port in our map.
       return;
     }
@@ -176,11 +176,13 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
       return;
     }
     MIDIOutputMap_Binding::MaplikeHelpers::Set(
-        mOutputMap, id, *(static_cast<MIDIOutput*>(port.get())), aRv);
+        mOutputMap, port->StableId(), *(static_cast<MIDIOutput*>(port.get())),
+        aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       LOG("Coudld't set output port in map");
       return;
     }
+    mOutputMap->Insert(id, port);
   } else {
     // If we hit this, then we have some port that is neither input nor output.
     // That is bad.
