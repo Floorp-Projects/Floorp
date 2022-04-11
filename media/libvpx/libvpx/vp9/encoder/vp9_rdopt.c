@@ -745,8 +745,8 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
   MODE_INFO *const mi = xd->mi[0];
   int64_t rd1, rd2, rd;
   int rate;
-  int64_t dist;
-  int64_t sse;
+  int64_t dist = INT64_MAX;
+  int64_t sse = INT64_MAX;
   const int coeff_ctx =
       combine_entropy_contexts(args->t_left[blk_row], args->t_above[blk_col]);
   struct buf_2d *recon = args->this_recon;
@@ -799,6 +799,13 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
     if (max_txsize_lookup[plane_bsize] == tx_size)
       skip_txfm_flag = x->skip_txfm[(plane << 2) + (block >> (tx_size << 1))];
 
+    // This reduces the risk of bad perceptual quality due to bad prediction.
+    // We always force the encoder to perform transform and quantization.
+    if (!args->cpi->sf.allow_skip_txfm_ac_dc &&
+        skip_txfm_flag == SKIP_TXFM_AC_DC) {
+      skip_txfm_flag = SKIP_TXFM_NONE;
+    }
+
     if (skip_txfm_flag == SKIP_TXFM_NONE ||
         (recon && skip_txfm_flag == SKIP_TXFM_AC_ONLY)) {
       // full forward transform and quantization
@@ -827,17 +834,7 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
         dist = VPXMAX(0, sse - dc_correct);
       }
     } else {
-      // SKIP_TXFM_AC_DC
-      // skip forward transform. Because this is handled here, the quantization
-      // does not need to do it.
-      x->plane[plane].eobs[block] = 0;
-      sse = x->bsse[(plane << 2) + (block >> (tx_size << 1))] << 4;
-      dist = sse;
-      if (recon) {
-        uint8_t *rec_ptr = &recon->buf[4 * (blk_row * recon->stride + blk_col)];
-        copy_block_visible(xd, pd, dst, dst_stride, rec_ptr, recon->stride,
-                           blk_row, blk_col, plane_bsize, tx_bsize);
-      }
+      assert(0 && "allow_skip_txfm_ac_dc does not allow SKIP_TXFM_AC_DC.");
     }
   }
 
@@ -4443,6 +4440,7 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
               tmp_best_sse = total_sse;
               tmp_best_skippable = skippable;
               tmp_best_mbmode = *mi;
+              x->sum_y_eobs[TX_4X4] = 0;
               for (i = 0; i < 4; i++) {
                 tmp_best_bmodes[i] = xd->mi[0]->bmi[i];
                 x->zcoeff_blk[TX_4X4][i] = !x->plane[0].eobs[i];
@@ -4476,6 +4474,11 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
             &rate, &rate_y, &distortion, &skippable, &total_sse,
             (int)this_rd_thresh, seg_mvs, bsi, 0, mi_row, mi_col);
         if (tmp_rd == INT64_MAX) continue;
+        x->sum_y_eobs[TX_4X4] = 0;
+        for (i = 0; i < 4; i++) {
+          x->zcoeff_blk[TX_4X4][i] = !x->plane[0].eobs[i];
+          x->sum_y_eobs[TX_4X4] += x->plane[0].eobs[i];
+        }
       } else {
         total_sse = tmp_best_sse;
         rate = tmp_best_rate;
@@ -4732,6 +4735,13 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
 
     mi->mv[0].as_int = xd->mi[0]->bmi[3].as_mv[0].as_int;
     mi->mv[1].as_int = xd->mi[0]->bmi[3].as_mv[1].as_int;
+  }
+  // If the second reference does not exist, set the corresponding mv to zero.
+  if (mi->ref_frame[1] == NONE) {
+    mi->mv[1].as_int = 0;
+    for (i = 0; i < 4; ++i) {
+      mi->bmi[i].as_mv[1].as_int = 0;
+    }
   }
 
   for (i = 0; i < REFERENCE_MODES; ++i) {

@@ -17,10 +17,9 @@ const BASE_SCREEN_CONTENT = {
   },
 };
 
-const makeTestContent = (id, contentAdditions, order = 0) => {
+const makeTestContent = (id, contentAdditions) => {
   return {
     id,
-    order,
     content: Object.assign({}, BASE_SCREEN_CONTENT, contentAdditions),
   };
 };
@@ -215,17 +214,13 @@ add_task(async function test_aboutwelcome_with_text_color_override() {
   });
 
   let screens = [];
-  for (let order = 0; order < 2; order++) {
-    // we need at least two screens to test the step indicator
+  // we need at least two screens to test the step indicator
+  for (let i = 0; i < 2; i++) {
     screens.push(
-      makeTestContent(
-        "TEST_TEXT_COLOR_OVERRIDE_STEP",
-        {
-          text_color: "dark",
-          background: "white",
-        },
-        order
-      )
+      makeTestContent("TEST_TEXT_COLOR_OVERRIDE_STEP", {
+        text_color: "dark",
+        background: "white",
+      })
     );
   }
 

@@ -66,12 +66,6 @@ static const arg_def_t kf_dist_arg =
     ARG_DEF("k", "kf-dist", 1, "number of frames between keyframes");
 static const arg_def_t scale_factors_arg =
     ARG_DEF("r", "scale-factors", 1, "scale factors (lowest to highest layer)");
-static const arg_def_t passes_arg =
-    ARG_DEF("p", "passes", 1, "Number of passes (1/2)");
-static const arg_def_t pass_arg =
-    ARG_DEF(NULL, "pass", 1, "Pass to execute (1/2)");
-static const arg_def_t fpf_name_arg =
-    ARG_DEF(NULL, "fpf", 1, "First pass statistics file name");
 static const arg_def_t min_q_arg =
     ARG_DEF(NULL, "min-q", 1, "Minimum quantizer");
 static const arg_def_t max_q_arg =
@@ -125,9 +119,6 @@ static const arg_def_t *svc_args[] = { &frames_arg,
                                        &spatial_layers_arg,
                                        &kf_dist_arg,
                                        &scale_factors_arg,
-                                       &passes_arg,
-                                       &pass_arg,
-                                       &fpf_name_arg,
                                        &min_q_arg,
                                        &max_q_arg,
                                        &min_bitrate_arg,
@@ -173,8 +164,6 @@ typedef struct {
   uint32_t frames_to_skip;
   struct VpxInputContext input_ctx;
   stats_io_t rc_stats;
-  int passes;
-  int pass;
   int tune_content;
   int inter_layer_pred;
 } AppInput;
@@ -197,9 +186,6 @@ static void parse_command_line(int argc, const char **argv_,
   char **argi = NULL;
   char **argj = NULL;
   vpx_codec_err_t res;
-  int passes = 0;
-  int pass = 0;
-  const char *fpf_file_name = NULL;
   unsigned int min_bitrate = 0;
   unsigned int max_bitrate = 0;
   char string_options[1024] = { 0 };
@@ -289,18 +275,6 @@ static void parse_command_line(int argc, const char **argv_,
               sizeof(string_options) - strlen(string_options) - 1);
       strncat(string_options, arg.val,
               sizeof(string_options) - strlen(string_options) - 1);
-    } else if (arg_match(&arg, &passes_arg, argi)) {
-      passes = arg_parse_uint(&arg);
-      if (passes < 1 || passes > 2) {
-        die("Error: Invalid number of passes (%d)\n", passes);
-      }
-    } else if (arg_match(&arg, &pass_arg, argi)) {
-      pass = arg_parse_uint(&arg);
-      if (pass < 1 || pass > 2) {
-        die("Error: Invalid pass selected (%d)\n", pass);
-      }
-    } else if (arg_match(&arg, &fpf_name_arg, argi)) {
-      fpf_file_name = arg.val;
     } else if (arg_match(&arg, &min_q_arg, argi)) {
       strncat(string_options, " min-quantizers=",
               sizeof(string_options) - strlen(string_options) - 1);
@@ -355,35 +329,7 @@ static void parse_command_line(int argc, const char **argv_,
   if (strlen(string_options) > 0)
     vpx_svc_set_options(svc_ctx, string_options + 1);
 
-  if (passes == 0 || passes == 1) {
-    if (pass) {
-      fprintf(stderr, "pass is ignored since there's only one pass\n");
-    }
-    enc_cfg->g_pass = VPX_RC_ONE_PASS;
-  } else {
-    if (pass == 0) {
-      die("pass must be specified when passes is 2\n");
-    }
-
-    if (fpf_file_name == NULL) {
-      die("fpf must be specified when passes is 2\n");
-    }
-
-    if (pass == 1) {
-      enc_cfg->g_pass = VPX_RC_FIRST_PASS;
-      if (!stats_open_file(&app_input->rc_stats, fpf_file_name, 0)) {
-        fatal("Failed to open statistics store");
-      }
-    } else {
-      enc_cfg->g_pass = VPX_RC_LAST_PASS;
-      if (!stats_open_file(&app_input->rc_stats, fpf_file_name, 1)) {
-        fatal("Failed to open statistics store");
-      }
-      enc_cfg->rc_twopass_stats_in = stats_get(&app_input->rc_stats);
-    }
-    app_input->passes = passes;
-    app_input->pass = pass;
-  }
+  enc_cfg->g_pass = VPX_RC_ONE_PASS;
 
   if (enc_cfg->rc_target_bitrate > 0) {
     if (min_bitrate > 0) {
@@ -828,12 +774,15 @@ static void svc_output_rc_stats(
   vpx_codec_control(codec, VP9E_GET_SVC_LAYER_ID, layer_id);
   parse_superframe_index(cx_pkt->data.frame.buf, cx_pkt->data.frame.sz,
                          sizes_parsed, &count);
-  if (enc_cfg->ss_number_layers == 1) sizes[0] = cx_pkt->data.frame.sz;
-  for (sl = 0; sl < enc_cfg->ss_number_layers; ++sl) {
-    sizes[sl] = 0;
-    if (cx_pkt->data.frame.spatial_layer_encoded[sl]) {
-      sizes[sl] = sizes_parsed[num_layers_encoded];
-      num_layers_encoded++;
+  if (enc_cfg->ss_number_layers == 1) {
+    sizes[0] = cx_pkt->data.frame.sz;
+  } else {
+    for (sl = 0; sl < enc_cfg->ss_number_layers; ++sl) {
+      sizes[sl] = 0;
+      if (cx_pkt->data.frame.spatial_layer_encoded[sl]) {
+        sizes[sl] = sizes_parsed[num_layers_encoded];
+        num_layers_encoded++;
+      }
     }
   }
   for (sl = 0; sl < enc_cfg->ss_number_layers; ++sl) {
@@ -1001,13 +950,11 @@ int main(int argc, const char **argv) {
   info.time_base.numerator = enc_cfg.g_timebase.num;
   info.time_base.denominator = enc_cfg.g_timebase.den;
 
-  if (!(app_input.passes == 2 && app_input.pass == 1)) {
-    // We don't save the bitstream for the 1st pass on two pass rate control
-    writer =
-        vpx_video_writer_open(app_input.output_filename, kContainerIVF, &info);
-    if (!writer)
-      die("Failed to open %s for writing\n", app_input.output_filename);
-  }
+  writer =
+      vpx_video_writer_open(app_input.output_filename, kContainerIVF, &info);
+  if (!writer)
+    die("Failed to open %s for writing\n", app_input.output_filename);
+
 #if OUTPUT_RC_STATS
   // Write out spatial layer stream.
   // TODO(marpan/jianj): allow for writing each spatial and temporal stream.
@@ -1049,6 +996,9 @@ int main(int argc, const char **argv) {
   vpx_codec_control(&encoder, VP9E_SET_NOISE_SENSITIVITY, 0);
 
   vpx_codec_control(&encoder, VP9E_SET_TUNE_CONTENT, app_input.tune_content);
+
+  vpx_codec_control(&encoder, VP9E_SET_DISABLE_OVERSHOOT_MAXQ_CBR, 0);
+  vpx_codec_control(&encoder, VP9E_SET_DISABLE_LOOPFILTER, 0);
 
   svc_drop_frame.framedrop_mode = FULL_SUPERFRAME_DROP;
   for (sl = 0; sl < (unsigned int)svc_ctx.spatial_layers; ++sl)
@@ -1224,7 +1174,6 @@ int main(int argc, const char **argv) {
 #endif
   if (vpx_codec_destroy(&encoder))
     die_codec(&encoder, "Failed to destroy codec");
-  if (app_input.passes == 2) stats_close(&app_input.rc_stats, 1);
   if (writer) {
     vpx_video_writer_close(writer);
   }

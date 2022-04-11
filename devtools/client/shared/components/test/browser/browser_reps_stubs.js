@@ -50,6 +50,21 @@ const EXPRESSIONS_BY_FILE = {
     ["False", `false`],
     ["NegZeroGrip", `1 / -Infinity`],
   ]),
+  "text-node.js": new Map([
+    [
+      "testRendering",
+      `let tn = document.createTextNode("hello world");
+       document.body.append(tn);
+       tn;`,
+    ],
+    ["testRenderingDisconnected", `document.createTextNode("hello world")`],
+    ["testRenderingWithEOL", `document.createTextNode("hello\\nworld")`],
+    ["testRenderingWithDoubleQuote", `document.createTextNode('hello"world')`],
+    [
+      "testRenderingWithLongString",
+      `document.createTextNode("a\\n" + ("a").repeat(20000))`,
+    ],
+  ]),
   "undefined.js": new Map([["Undefined", `undefined`]]),
   "window.js": new Map([["Window", `window`]]),
   // XXX: File a bug blocking Bug 1671400 for enabling automatic generation for one of
@@ -75,7 +90,6 @@ const EXPRESSIONS_BY_FILE = {
   // "regexp.js",
   // "stylesheet.js",
   // "symbol.js",
-  // "text-node.js",
 };
 
 add_task(async function() {

@@ -7,7 +7,6 @@ const { AboutWelcomeParent } = ChromeUtils.import(
 const TEST_PROTON_CONTENT = [
   {
     id: "AW_PIN_FIREFOX_STEP1",
-    order: 0,
     content: {
       position: "corner",
       title: "Step 1",
@@ -22,7 +21,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_SET_DEFAULT_STEP2",
-    order: 1,
     content: {
       title: "Step 2",
       primary_button: {

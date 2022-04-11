@@ -293,12 +293,15 @@ static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
 
 MOZ_THREAD_LOCAL(JS::GCContext*) js::TlsGCContext;
 
-JS::GCContext::GCContext(JSRuntime* runtime, bool isMainThread)
-    : runtime_(runtime), isMainThread_(isMainThread) {
-  MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(runtime));
-}
+JS::GCContext::GCContext(JSRuntime* runtime) : runtime_(runtime) {}
 
-JS::GCContext::~GCContext() { MOZ_ASSERT(!hasJitCodeToPoison()); }
+JS::GCContext::~GCContext() {
+  MOZ_ASSERT(!hasJitCodeToPoison());
+  MOZ_ASSERT(!isCollecting());
+  MOZ_ASSERT(gcUse() == GCUse::None);
+  MOZ_ASSERT(!gcSweepZone());
+  MOZ_ASSERT(!isTouchingGrayThings());
+}
 
 void JS::GCContext::poisonJitCode() {
   if (hasJitCodeToPoison()) {
@@ -380,7 +383,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       atomsZone(nullptr),
       systemZone(nullptr),
-      mainThreadContext(rt, true),
+      mainThreadContext(rt),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
@@ -4625,9 +4628,6 @@ extern JS_PUBLIC_API bool js::gc::detail::ObjectIsMarkedBlack(
 js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
     : GenericTracerImpl(rt, JS::TracerKind::ClearEdges,
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
-
-js::gc::ClearEdgesTracer::ClearEdgesTracer()
-    : ClearEdgesTracer(TlsContext.get()->runtime()) {}
 
 template <typename T>
 T* js::gc::ClearEdgesTracer::onEdge(T* thing) {

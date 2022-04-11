@@ -2214,10 +2214,20 @@ async function hasConsoleMessage({ toolbox }, msg) {
 }
 
 function evaluateExpressionInConsole(hud, expression) {
+  const seenMessages = new Set(
+    JSON.parse(
+      hud.ui.outputNode
+        .querySelector("[data-visible-messages]")
+        .getAttribute("data-visible-messages")
+    )
+  );
   const onResult = new Promise(res => {
     const onNewMessage = messages => {
       for (const message of messages) {
-        if (message.node.classList.contains("result")) {
+        if (
+          message.node.classList.contains("result") &&
+          !seenMessages.has(message.node.getAttribute("data-message-id"))
+        ) {
           hud.ui.off("new-messages", onNewMessage);
           res(message.node);
         }

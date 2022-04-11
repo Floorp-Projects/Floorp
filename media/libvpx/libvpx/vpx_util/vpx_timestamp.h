@@ -11,6 +11,8 @@
 #ifndef VPX_VPX_UTIL_VPX_TIMESTAMP_H_
 #define VPX_VPX_UTIL_VPX_TIMESTAMP_H_
 
+#include <assert.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -23,7 +25,9 @@ typedef struct vpx_rational64 {
 
 static INLINE int gcd(int64_t a, int b) {
   int r;  // remainder
-  while (b > 0) {
+  assert(a >= 0);
+  assert(b > 0);
+  while (b != 0) {
     r = (int)(a % b);
     a = b;
     b = r;

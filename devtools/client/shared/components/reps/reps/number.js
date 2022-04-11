@@ -49,8 +49,9 @@ define(function(require, exports, module) {
     };
   }
 
+  const SUPPORTED_TYPES = new Set(["boolean", "number", "-0"]);
   function supportsObject(object, noGrip = false) {
-    return ["boolean", "number", "-0"].includes(getGripType(object, noGrip));
+    return SUPPORTED_TYPES.has(getGripType(object, noGrip));
   }
 
   // Exports from this module

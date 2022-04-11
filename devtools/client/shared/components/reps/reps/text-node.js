@@ -15,7 +15,6 @@ define(function(require, exports, module) {
 
   // Reps
   const {
-    isGrip,
     cropString,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -126,11 +125,7 @@ define(function(require, exports, module) {
 
   // Registration
   function supportsObject(grip, noGrip = false) {
-    if (noGrip === true || !isGrip(grip)) {
-      return false;
-    }
-
-    return grip.preview && grip.class == "Text";
+    return grip?.preview && grip?.class == "Text";
   }
 
   // Exports from this module

@@ -4760,3 +4760,22 @@ nsDOMWindowUtils::GetHasScrollLinkedEffect(bool* aResult) {
   *aResult = doc->HasScrollLinkedEffect();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetOrientationLock(uint32_t* aOrientationLock) {
+  NS_WARNING("nsDOMWindowUtils::GetOrientationLock");
+
+  nsIDocShell* docShell = GetDocShell();
+  if (!docShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  BrowsingContext* bc = docShell->GetBrowsingContext();
+  bc = bc ? bc->Top() : nullptr;
+  if (!bc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aOrientationLock = static_cast<uint32_t>(bc->GetOrientationLock());
+  return NS_OK;
+}

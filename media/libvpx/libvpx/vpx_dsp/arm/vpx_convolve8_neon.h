@@ -72,6 +72,107 @@ static INLINE void load_u8_16x8(const uint8_t *s, const ptrdiff_t p,
   *s7 = vld1q_u8(s);
 }
 
+#if defined(__aarch64__) && defined(__ARM_FEATURE_DOTPROD) && \
+    (__ARM_FEATURE_DOTPROD == 1)
+
+static INLINE int32x4_t convolve8_4_dot_partial(const int8x16_t samples_lo,
+                                                const int8x16_t samples_hi,
+                                                const int32x4_t correction,
+                                                const int8x8_t filters) {
+  /* Sample range-clamping and permutation are performed by the caller. */
+  int32x4_t sum;
+
+  /* Accumulate dot product into 'correction' to account for range clamp. */
+  sum = vdotq_lane_s32(correction, samples_lo, filters, 0);
+  sum = vdotq_lane_s32(sum, samples_hi, filters, 1);
+
+  /* Narrowing and packing is performed by the caller. */
+  return sum;
+}
+
+static INLINE int32x4_t convolve8_4_dot(uint8x16_t samples,
+                                        const int8x8_t filters,
+                                        const int32x4_t correction,
+                                        const uint8x16_t range_limit,
+                                        const uint8x16x2_t permute_tbl) {
+  int8x16_t clamped_samples, permuted_samples[2];
+  int32x4_t sum;
+
+  /* Clamp sample range to [-128, 127] for 8-bit signed dot product. */
+  clamped_samples = vreinterpretq_s8_u8(vsubq_u8(samples, range_limit));
+
+  /* Permute samples ready for dot product. */
+  /* { 0,  1,  2,  3,  1,  2,  3,  4,  2,  3,  4,  5,  3,  4,  5,  6 } */
+  permuted_samples[0] = vqtbl1q_s8(clamped_samples, permute_tbl.val[0]);
+  /* { 4,  5,  6,  7,  5,  6,  7,  8,  6,  7,  8,  9,  7,  8,  9, 10 } */
+  permuted_samples[1] = vqtbl1q_s8(clamped_samples, permute_tbl.val[1]);
+
+  /* Accumulate dot product into 'correction' to account for range clamp. */
+  sum = vdotq_lane_s32(correction, permuted_samples[0], filters, 0);
+  sum = vdotq_lane_s32(sum, permuted_samples[1], filters, 1);
+
+  /* Narrowing and packing is performed by the caller. */
+  return sum;
+}
+
+static INLINE uint8x8_t convolve8_8_dot_partial(const int8x16_t samples0_lo,
+                                                const int8x16_t samples0_hi,
+                                                const int8x16_t samples1_lo,
+                                                const int8x16_t samples1_hi,
+                                                const int32x4_t correction,
+                                                const int8x8_t filters) {
+  /* Sample range-clamping and permutation are performed by the caller. */
+  int32x4_t sum0, sum1;
+  int16x8_t sum;
+
+  /* Accumulate dot product into 'correction' to account for range clamp. */
+  /* First 4 output values. */
+  sum0 = vdotq_lane_s32(correction, samples0_lo, filters, 0);
+  sum0 = vdotq_lane_s32(sum0, samples0_hi, filters, 1);
+  /* Second 4 output values. */
+  sum1 = vdotq_lane_s32(correction, samples1_lo, filters, 0);
+  sum1 = vdotq_lane_s32(sum1, samples1_hi, filters, 1);
+
+  /* Narrow and re-pack. */
+  sum = vcombine_s16(vqmovn_s32(sum0), vqmovn_s32(sum1));
+  return vqrshrun_n_s16(sum, 7);
+}
+
+static INLINE uint8x8_t convolve8_8_dot(uint8x16_t samples,
+                                        const int8x8_t filters,
+                                        const int32x4_t correction,
+                                        const uint8x16_t range_limit,
+                                        const uint8x16x3_t permute_tbl) {
+  int8x16_t clamped_samples, permuted_samples[3];
+  int32x4_t sum0, sum1;
+  int16x8_t sum;
+
+  /* Clamp sample range to [-128, 127] for 8-bit signed dot product. */
+  clamped_samples = vreinterpretq_s8_u8(vsubq_u8(samples, range_limit));
+
+  /* Permute samples ready for dot product. */
+  /* { 0,  1,  2,  3,  1,  2,  3,  4,  2,  3,  4,  5,  3,  4,  5,  6 } */
+  permuted_samples[0] = vqtbl1q_s8(clamped_samples, permute_tbl.val[0]);
+  /* { 4,  5,  6,  7,  5,  6,  7,  8,  6,  7,  8,  9,  7,  8,  9, 10 } */
+  permuted_samples[1] = vqtbl1q_s8(clamped_samples, permute_tbl.val[1]);
+  /* { 8,  9, 10, 11,  9, 10, 11, 12, 10, 11, 12, 13, 11, 12, 13, 14 } */
+  permuted_samples[2] = vqtbl1q_s8(clamped_samples, permute_tbl.val[2]);
+
+  /* Accumulate dot product into 'correction' to account for range clamp. */
+  /* First 4 output values. */
+  sum0 = vdotq_lane_s32(correction, permuted_samples[0], filters, 0);
+  sum0 = vdotq_lane_s32(sum0, permuted_samples[1], filters, 1);
+  /* Second 4 output values. */
+  sum1 = vdotq_lane_s32(correction, permuted_samples[1], filters, 0);
+  sum1 = vdotq_lane_s32(sum1, permuted_samples[2], filters, 1);
+
+  /* Narrow and re-pack. */
+  sum = vcombine_s16(vqmovn_s32(sum0), vqmovn_s32(sum1));
+  return vqrshrun_n_s16(sum, 7);
+}
+
+#endif
+
 static INLINE int16x4_t convolve8_4(const int16x4_t s0, const int16x4_t s1,
                                     const int16x4_t s2, const int16x4_t s3,
                                     const int16x4_t s4, const int16x4_t s5,

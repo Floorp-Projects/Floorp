@@ -154,8 +154,8 @@ add_task(async function() {
     text: "",
   });
 
-  const groupA = findMessage(hud, "[a]");
-  const groupJ = findMessage(hud, "[j]");
+  const groupA = await findMessageVirtualized({ hud, text: "[a]" });
+  const groupJ = await findMessageVirtualized({ hud, text: "[j]" });
 
   toggleGroup(groupA);
   toggleGroup(groupJ);

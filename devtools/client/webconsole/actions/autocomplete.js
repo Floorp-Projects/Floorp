@@ -34,10 +34,7 @@ function autocompleteUpdate(force, getterPath, expressionVars) {
     const inputValue = hud.getInputValue();
     const mappedVars = hud.getMappedVariables() ?? {};
     const allVars = (expressionVars ?? []).concat(Object.keys(mappedVars));
-    const frameActorId = await webConsoleUI.getFrameActor();
-    const webconsoleFront = await webConsoleUI.getWebconsoleFront({
-      frameActorId,
-    });
+    const frameActorId = await hud.getSelectedFrameActorID();
 
     const cursor = webConsoleUI.getInputCursor();
 
@@ -72,15 +69,13 @@ function autocompleteUpdate(force, getterPath, expressionVars) {
     const { input, originalExpression } = await getMappedInput(
       rawInput,
       mappedVars,
-      hud,
-      webconsoleFront
+      hud
     );
 
     return dispatch(
       autocompleteDataFetch({
         input,
         frameActorId,
-        webconsoleFront,
         authorizedEvaluations,
         force,
         allVars,
@@ -149,10 +144,9 @@ function updateAuthorizedEvaluations(
  * @param {String} rawInput The input to map.
  * @param {{[String]: String}} mappedVars Map of original to generated variable names.
  * @param {WebConsole} hud A reference to the webconsole hud.
- * @param {WebConsoleFront} webconsoleFront The webconsole front.
  * @returns {String} The source-mapped expression to autocomplete.
  */
-async function getMappedInput(rawInput, mappedVars, hud, webconsoleFront) {
+async function getMappedInput(rawInput, mappedVars, hud) {
   if (!mappedVars || Object.keys(mappedVars).length == 0) {
     return { input: rawInput, originalExpression: undefined };
   }
@@ -227,7 +221,6 @@ function generateRequestId() {
  *        - {String} input: the expression that we want to complete.
  *        - {String} frameActorId: The id of the frame we want to autocomplete in.
  *        - {Boolean} force: true if the user forced an autocompletion (with Ctrl+Space).
- *        - {WebConsoleFront} client: The webconsole front.
  *        - {Array} authorizedEvaluations: Array of the properties access which can be
  *                  executed by the engine.
  *                   Example: [["x", "myGetter"], ["x", "myGetter", "y", "glitter"]]
@@ -237,14 +230,39 @@ function autocompleteDataFetch({
   input,
   frameActorId,
   force,
-  webconsoleFront,
   authorizedEvaluations,
   allVars,
   mappedVars,
   originalExpression,
 }) {
-  return async ({ dispatch, webConsoleUI }) => {
-    const selectedNodeActor = webConsoleUI.getSelectedNodeActorID();
+  return async ({ dispatch, commands, webConsoleUI, hud }) => {
+    // Retrieve the right WebConsole front that relates either to (by order of priority):
+    // - the currently selected target in the context selector
+    //   (contextSelectedTargetFront),
+    // - the currently selected Node in the inspector (selectedNodeActor),
+    // - the currently selected frame in the debugger (when paused) (frameActor),
+    // - the currently selected target in the iframe dropdown
+    //   (selectedTargetFront from the TargetCommand)
+    const selectedNodeActorId = webConsoleUI.getSelectedNodeActorID();
+
+    let targetFront = commands.targetCommand.selectedTargetFront;
+    // Note that getSelectedTargetFront will return null if we default to the top level target.
+    // For now, in the browser console (without a toolbox), we don't support the context selector.
+    const contextSelectorTargetFront = hud.toolbox
+      ? hud.toolbox.getSelectedTargetFront()
+      : null;
+    const selectedActorId = selectedNodeActorId || frameActorId;
+    if (contextSelectorTargetFront) {
+      targetFront = contextSelectorTargetFront;
+    } else if (selectedActorId) {
+      const selectedFront = commands.client.getFrontByID(selectedActorId);
+      if (selectedFront) {
+        targetFront = selectedFront.targetFront;
+      }
+    }
+
+    const webconsoleFront = await targetFront.getFront("console");
+
     const id = generateRequestId();
     dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
 
@@ -253,7 +271,7 @@ function autocompleteDataFetch({
         input,
         undefined,
         frameActorId,
-        selectedNodeActor,
+        selectedNodeActorId,
         authorizedEvaluations,
         allVars
       )

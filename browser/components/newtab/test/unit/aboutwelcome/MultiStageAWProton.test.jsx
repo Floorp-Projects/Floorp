@@ -29,7 +29,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
     it("should render section left on first screen", () => {
       const SCREEN_PROPS = {
-        order: 0,
         content: {
           position: "corner",
           title: "test title",
@@ -127,7 +126,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
         screens: [
           {
             id: "AW_PIN_FIREFOX",
-            order: 0,
             content: {
               position: "corner",
               help_text: {
@@ -210,26 +208,21 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
         screens: [
           {
-            order: 0,
             content: {
               tiles: { type: "theme" },
             },
           },
-          { id: "hello", order: 1 },
+          { id: "hello" },
           {
-            order: 2,
             content: {
               tiles: { type: "theme" },
             },
           },
-          { id: "world", order: 3 },
+          { id: "world" },
         ],
       });
 
-      assert.deepEqual(screens, [
-        { id: "hello", order: 0 },
-        { id: "world", order: 1 },
-      ]);
+      assert.deepEqual(screens, [{ id: "hello" }, { id: "world" }]);
     });
     it("shouldn't remove colorway screens on win7", async () => {
       sandbox.stub(AppConstants, "isPlatformAndVersionAtMost").returns(true);
@@ -237,31 +230,28 @@ describe("MultiStageAboutWelcomeProton module", () => {
       const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
         screens: [
           {
-            order: 0,
             content: {
               tiles: { type: "colorway" },
             },
           },
-          { id: "hello", order: 1 },
+          { id: "hello" },
           {
-            order: 2,
             content: {
               tiles: { type: "theme" },
             },
           },
-          { id: "world", order: 3 },
+          { id: "world" },
         ],
       });
 
       assert.deepEqual(screens, [
         {
-          order: 0,
           content: {
             tiles: { type: "colorway" },
           },
         },
-        { id: "hello", order: 1 },
-        { id: "world", order: 2 },
+        { id: "hello" },
+        { id: "world" },
       ]);
     });
   });

@@ -121,14 +121,11 @@ add_task(async function() {
   );
 
   info("Wait for all messages to be visible in the split console");
-  const waitForMessagePromises = [];
-  for (let j = 1; j <= MESSAGES_COUNT; j++) {
-    waitForMessagePromises.push(
-      waitFor(() => findMessage(hud, "in-inspector log " + j))
-    );
-  }
-
-  await Promise.all(waitForMessagePromises);
+  await waitFor(
+    async () =>
+      (await findMessagesVirtualized({ hud, text: "in-inspector log " }))
+        .length === MESSAGES_COUNT
+  );
   ok(true, "All the messages logged when we are using the split console");
 
   await toolbox.closeSplitConsole();

@@ -1912,7 +1912,6 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) {
     if (!gfxConfig::IsEnabled(gfx::Feature::GPU_PROCESS)) {
       gfxConfig::UserForceEnable(gfx::Feature::GPU_PROCESS, "xpcshell-test");
     }
-    gpm->LaunchGPUProcess();
     gpm->EnsureGPUReady();
   } else {
     gfxConfig::UserDisable(gfx::Feature::GPU_PROCESS, "xpcshell-test");

@@ -12,6 +12,7 @@ DevToolsModules(
     "ConsoleOutput.js",
     "ConsoleTable.js",
     "GripMessageBody.js",
+    "LazyMessageList.js",
     "Message.js",
     "MessageContainer.js",
     "MessageIcon.js",

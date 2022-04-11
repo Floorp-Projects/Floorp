@@ -50,6 +50,7 @@ categories:
         - testing/geckodriver
         - testing/test-verification
         - testing/webrender
+        - testing/mochitest-plain
         - testing/xpcshell
         - web-platform
         - gtest

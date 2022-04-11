@@ -525,9 +525,6 @@ typedef struct SPEED_FEATURES {
     int prune_rect_thresh[4];
   } rd_ml_partition;
 
-  // Allow skipping partition search for still image frame
-  int allow_partition_search_skip;
-
   // Fast approximation of vp9_model_rd_from_var_lapndz
   int simple_model_rd_from_var;
 
@@ -612,6 +609,12 @@ typedef struct SPEED_FEATURES {
   // For real-time mode: force DC only under intra search when content
   // does not have high souce SAD.
   int rt_intra_dc_only_low_content;
+
+  // The encoder has a feature that skips forward transform and quantization
+  // based on a model rd estimation to reduce encoding time.
+  // However, this feature is dangerous since it could lead to bad perceptual
+  // quality. This flag is added to guard the feature.
+  int allow_skip_txfm_ac_dc;
 } SPEED_FEATURES;
 
 struct VP9_COMP;

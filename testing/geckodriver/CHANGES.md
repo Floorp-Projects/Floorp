@@ -19,6 +19,11 @@ All notable changes to this program are documented in this file.
 
 ### Added
 
+- Users with the [Rust] toolchain installed can now build and install
+  geckodriver from [crates.io] using Cargo:
+
+  % cargo install geckodriver
+
 - Support for [Get Element Shadow Root]
 
   Implemented by [David Burns].
@@ -1566,6 +1571,7 @@ and greater.
 [`--allow-origins`]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Flags.html#code-allow-origins-var-allow-origins-var-code
 [enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging
 [macOS notarization]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Notarization.html
+[Rust]: https://rustup.rs/
 
 [`CloseWindowResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CloseWindowResponse.html
 [`CookieResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CookieResponse.html

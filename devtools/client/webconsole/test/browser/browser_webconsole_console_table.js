@@ -415,24 +415,20 @@ add_task(async function() {
       });
     }
   );
-  const nodes = [];
-  for (const testCase of testCases) {
-    const node = await waitFor(() =>
-      findConsoleTable(hud.ui.outputNode, testCases.indexOf(testCase))
-    );
-    nodes.push(node);
-  }
-  const consoleTableNodes = hud.ui.outputNode.querySelectorAll(
-    ".message .consoletable"
-  );
-  is(
-    consoleTableNodes.length,
-    testCases.length,
-    "console has the expected number of consoleTable items"
-  );
-
+  const messages = await waitFor(async () => {
+    const msgs = await findAllMessagesVirtualized(hud);
+    if (msgs.length === testCases.length) {
+      return msgs;
+    }
+    return null;
+  });
   for (const [index, testCase] of testCases.entries()) {
-    await testItem(testCase, nodes[index]);
+    // Refresh the reference to the message, as it may have been scrolled out of existence.
+    const node = await findMessageVirtualized({
+      hud,
+      messageId: messages[index].getAttribute("data-message-id"),
+    });
+    await testItem(testCase, node.querySelector(".consoletable"));
   }
 });
 
@@ -493,18 +489,18 @@ async function testItem(testCase, node) {
   });
 
   if (testCase.expected.overflow) {
-    ok(node.scrollHeight > node.clientHeight, "table overflows");
+    ok(
+      node.isConnected,
+      "Node must be connected to test overflow. It is likely scrolled out of view."
+    );
+    ok(
+      node.scrollHeight > node.clientHeight,
+      testCase.info + " table overflows"
+    );
     ok(getComputedStyle(node).overflowY !== "hidden", "table can be scrolled");
   }
 
   if (typeof testCase.additionalTest === "function") {
     await testCase.additionalTest(node);
   }
-}
-
-function findConsoleTable(node, index) {
-  const condition = node.querySelector(
-    `.message:nth-of-type(${index + 1}) .consoletable`
-  );
-  return condition;
 }

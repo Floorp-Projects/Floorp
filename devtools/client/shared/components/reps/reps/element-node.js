@@ -15,7 +15,6 @@ define(function(require, exports, module) {
 
   // Utils
   const {
-    isGrip,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
   const {
@@ -295,13 +294,8 @@ define(function(require, exports, module) {
   }
 
   // Registration
-  function supportsObject(object, noGrip = false) {
-    if (noGrip === true || !isGrip(object)) {
-      return false;
-    }
-    return (
-      object.preview && object.preview.nodeType === nodeConstants.ELEMENT_NODE
-    );
+  function supportsObject(object) {
+    return object?.preview?.nodeType === nodeConstants.ELEMENT_NODE;
   }
 
   // Exports from this module
