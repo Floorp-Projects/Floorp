@@ -243,6 +243,12 @@ class WallpaperManager(
             Wallpaper.Remote.House(
                 "mei",
             ),
+            Wallpaper.Remote.Firefox(
+                "twilight-hills"
+            ),
+            Wallpaper.Remote.Firefox(
+                "beach-vibe"
+            ),
         )
         private val availableWallpapers = listOf(defaultWallpaper) + localWallpapers + remoteWallpapers
         private const val ANIMATION_DELAY_MS = 1500L

@@ -58,6 +58,16 @@ sealed class Wallpaper {
         ) : Remote() {
             override val remoteParentDirName: String = "house"
         }
+
+        /**
+         * Wallpapers that are original Firefox creations.
+         */
+        data class Firefox(
+            override val name: String,
+        ) : Remote() {
+            override val expirationDate: Date? = null
+            override val remoteParentDirName: String = "firefox"
+        }
     }
 
     companion object {
