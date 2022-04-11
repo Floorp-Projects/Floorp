@@ -354,11 +354,22 @@ already_AddRefed<MediaDataDecoder> WMFDecoderModule::CreateVideoDecoder(
     return nullptr;
   }
 
-  WmfDecoderModuleMarkerAndLog(
-      "WMFVDecoderCreation Success",
-      "WMFDecoderModule::CreateVideoDecoder success for manager with "
-      "description %s",
-      manager->GetDescriptionName().get());
+  nsAutoCString hwFailure;
+  if (!manager->IsHardwareAccelerated(hwFailure)) {
+    // The decoder description includes whether it is using software or
+    // hardware, but no information about how the hardware acceleration failed.
+    WmfDecoderModuleMarkerAndLog(
+        "WMFVDecoderCreation Success",
+        "WMFDecoderModule::CreateVideoDecoder success for manager with "
+        "description %s - DXVA failure: %s",
+        manager->GetDescriptionName().get(), hwFailure.get());
+  } else {
+    WmfDecoderModuleMarkerAndLog(
+        "WMFVDecoderCreation Success",
+        "WMFDecoderModule::CreateVideoDecoder success for manager with "
+        "description %s",
+        manager->GetDescriptionName().get());
+  }
 
   RefPtr<MediaDataDecoder> decoder = new WMFMediaDataDecoder(manager.release());
   return decoder.forget();
