@@ -292,6 +292,44 @@ add_task(async function() {
     false,
     "The output was not scrolled to the bottom"
   );
+
+  await clearOutput(hud);
+  // Log a big object that will be much larger than the output container
+  onMessage = waitForMessage(hud, "WE ALL LIVE IN A");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    const win = content.wrappedJSObject;
+    for (let i = 1; i < 100; i++) {
+      win["a" + i] = function(j) {
+        win["a" + j]();
+      }.bind(null, i + 1);
+    }
+    win.a100 = function() {
+      win.console.warn(new Error("WE ALL LIVE IN A"));
+    };
+    win.a1();
+  });
+  message = await onMessage;
+  // Give the intersection observer a chance to break this if it's going to
+  await wait(500);
+  // Assert here and below for ease of debugging where we lost the scroll
+  is(
+    isScrolledToBottom(outputContainer),
+    true,
+    "The output was scrolled to the bottom"
+  );
+  // Then log something else to make sure we haven't lost our scroll pinning
+  onMessage = waitForMessage(hud, "YELLOW SUBMARINE");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.wrappedJSObject.console.log("YELLOW SUBMARINE");
+  });
+  message = await onMessage;
+  // Again, give the scroll position a chance to be broken
+  await wait(500);
+  is(
+    isScrolledToBottom(outputContainer),
+    true,
+    "The output was scrolled to the bottom"
+  );
 });
 
 function hasVerticalOverflow(container) {
