@@ -12,7 +12,6 @@ import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
-import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.HomeMenu
@@ -87,10 +86,6 @@ private val Event.wrapper: EventWrapper<*>?
             {
                 BrowserSearch.inContent[label].add(1)
             }
-        )
-        is Event.ContextMenuItemTapped -> EventWrapper(
-            { ContextMenu.itemTapped.record(it) },
-            { ContextMenu.itemTappedKeys.valueOf(it) }
         )
 
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(

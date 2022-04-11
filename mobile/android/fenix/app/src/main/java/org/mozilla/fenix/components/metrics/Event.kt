@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.metrics
 
 import org.mozilla.fenix.GleanMetrics.Autoplay
-import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import java.util.Locale
 
@@ -102,27 +101,6 @@ sealed class Event {
     data class SearchInContent(val keyName: String) : Event() {
         val label: String
             get() = keyName
-    }
-
-    class ContextMenuItemTapped private constructor(val item: String) : Event() {
-        override val extras: Map<ContextMenu.itemTappedKeys, String>?
-            get() = mapOf(ContextMenu.itemTappedKeys.named to item)
-
-        companion object {
-            fun create(context_item: String) =
-                allowList[context_item]?.let { ContextMenuItemTapped(it) }
-
-            private val allowList = mapOf(
-                "mozac.feature.contextmenu.open_in_new_tab" to "open_in_new_tab",
-                "mozac.feature.contextmenu.open_in_private_tab" to "open_in_private_tab",
-                "mozac.feature.contextmenu.open_image_in_new_tab" to "open_image_in_new_tab",
-                "mozac.feature.contextmenu.save_image" to "save_image",
-                "mozac.feature.contextmenu.share_link" to "share_link",
-                "mozac.feature.contextmenu.copy_link" to "copy_link",
-                "mozac.feature.contextmenu.copy_image_location" to "copy_image_location",
-                "mozac.feature.contextmenu.share_image" to "share_image"
-            )
-        }
     }
 
     object AutoPlaySettingVisited : Event()
