@@ -11,6 +11,7 @@
 #  include "PlatformDecoderModule.h"
 #  include "aom/aom_decoder.h"
 #  include "mozilla/Span.h"
+#  include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -39,6 +40,210 @@ class AOMDecoder : public MediaDataDecoder,
 
   // Return the frame dimensions for a sample.
   static gfx::IntSize GetFrameSize(Span<const uint8_t> aBuffer);
+
+  // obu_type defined at:
+  // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=123
+  enum class OBUType : uint8_t {
+    Reserved = 0,
+    SequenceHeader = 1,
+    TemporalDelimiter = 2,
+    FrameHeader = 3,
+    TileGroup = 4,
+    Metadata = 5,
+    Frame = 6,
+    RedundantFrameHeader = 7,
+    TileList = 8,
+    Padding = 15
+  };
+
+  struct OBUInfo {
+    OBUType mType = OBUType::Reserved;
+    bool mExtensionFlag = false;
+    Span<const uint8_t> mContents;
+
+    bool IsValid() const {
+      switch (mType) {
+        case OBUType::SequenceHeader:
+        case OBUType::TemporalDelimiter:
+        case OBUType::FrameHeader:
+        case OBUType::TileGroup:
+        case OBUType::Metadata:
+        case OBUType::Frame:
+        case OBUType::RedundantFrameHeader:
+        case OBUType::TileList:
+        case OBUType::Padding:
+          return true;
+        default:
+          return false;
+      }
+    }
+  };
+
+  struct OBUIterator {
+   public:
+    explicit OBUIterator(const Span<const uint8_t>& aData)
+        : mData(aData), mPosition(0), mGoNext(true) {}
+    bool HasNext() {
+      UpdateNext();
+      return !mGoNext;
+    }
+    OBUInfo Next() {
+      UpdateNext();
+      mGoNext = true;
+      return mCurrent;
+    }
+
+   private:
+    const Span<const uint8_t>& mData;
+    size_t mPosition;
+    OBUInfo mCurrent;
+    bool mGoNext;
+
+    // Used to fill mCurrent with the next OBU in the iterator.
+    // mGoNext must be set to false if the next OBU is retrieved,
+    // otherwise it will be true so that HasNext() returns false.
+    // When an invalid OBU is read, the iterator will finish and
+    // mCurrent will be reset to default OBUInfo().
+    void UpdateNext();
+  };
+
+  // Create an iterator to parse Open Bitstream Units from a buffer.
+  static OBUIterator ReadOBUs(const Span<const uint8_t>& aData);
+  // Writes an Open Bitstream Unit header type and the contained subheader.
+  // Extension flag is set to 0 and size field is always present.
+  static already_AddRefed<MediaByteBuffer> CreateOBU(
+      const OBUType aType, const Span<const uint8_t>& aContents);
+
+  // chroma_sample_position defined at:
+  // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=131
+  enum class ChromaSamplePosition : uint8_t {
+    Unknown = 0,
+    Vertical = 1,
+    Colocated = 2,
+    Reserved = 3
+  };
+
+  struct OperatingPoint {
+    // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=125
+    // operating_point_idc[ i ]: A set of bitwise flags determining
+    // the temporal and spatial layers to decode.
+    // A value of 0 indicates that scalability is not being used.
+    uint16_t mLayers = 0;
+    // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=650
+    // See A.3: Levels for a definition of the available levels.
+    uint8_t mLevel = 0;
+    // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=126
+    // seq_tier[ i ]: The tier for the selected operating point.
+    uint8_t mTier = 0;
+
+    bool operator==(const OperatingPoint& aOther) const {
+      return mLayers == aOther.mLayers && mLevel == aOther.mLevel &&
+             mTier == aOther.mTier;
+    }
+    bool operator!=(const OperatingPoint& aOther) const {
+      return !(*this == aOther);
+    }
+  };
+
+  struct AV1SequenceInfo {
+    AV1SequenceInfo() = default;
+
+    AV1SequenceInfo(const AV1SequenceInfo& aOther) { *this = aOther; }
+
+    // Profiles, levels and tiers defined at:
+    // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=650
+    uint8_t mProfile = 0;
+
+    // choose_operating_point( ) defines that the operating points are
+    // specified in order of preference by the encoder. Higher operating
+    // points indices in the header will allow a tradeoff of quality for
+    // performance, dropping some data from the decoding process.
+    // Normally we are only interested in the first operating point.
+    // See: https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=126
+    nsTArray<OperatingPoint> mOperatingPoints = nsTArray<OperatingPoint>(1);
+
+    gfx::IntSize mImage = {0, 0};
+
+    // Color configs explained at:
+    // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=129
+    uint8_t mBitDepth = 8;
+    bool mMonochrome = false;
+    bool mSubsamplingX = true;
+    bool mSubsamplingY = true;
+    ChromaSamplePosition mChromaSamplePosition = ChromaSamplePosition::Unknown;
+
+    VideoColorSpace mColorSpace;
+
+    gfx::ColorDepth ColorDepth() const {
+      return gfx::ColorDepthForBitDepth(mBitDepth);
+    }
+
+    bool operator==(const AV1SequenceInfo& aOther) const {
+      if (mProfile != aOther.mProfile || mImage != aOther.mImage ||
+          mBitDepth != aOther.mBitDepth || mMonochrome != aOther.mMonochrome ||
+          mSubsamplingX != aOther.mSubsamplingX ||
+          mSubsamplingY != aOther.mSubsamplingY ||
+          mChromaSamplePosition != aOther.mChromaSamplePosition ||
+          mColorSpace != aOther.mColorSpace) {
+        return false;
+      }
+
+      size_t opCount = mOperatingPoints.Length();
+      if (opCount != aOther.mOperatingPoints.Length()) {
+        return false;
+      }
+      for (size_t i = 0; i < opCount; i++) {
+        if (mOperatingPoints[i] != aOther.mOperatingPoints[i]) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+    bool operator!=(const AV1SequenceInfo& aOther) const {
+      return !(*this == aOther);
+    }
+    AV1SequenceInfo& operator=(const AV1SequenceInfo& aOther) {
+      mProfile = aOther.mProfile;
+
+      size_t opCount = aOther.mOperatingPoints.Length();
+      mOperatingPoints.ClearAndRetainStorage();
+      mOperatingPoints.SetCapacity(opCount);
+      for (size_t i = 0; i < opCount; i++) {
+        mOperatingPoints.AppendElement(aOther.mOperatingPoints[i]);
+      }
+
+      mImage = aOther.mImage;
+      mBitDepth = aOther.mBitDepth;
+      mMonochrome = aOther.mMonochrome;
+      mSubsamplingX = aOther.mSubsamplingX;
+      mSubsamplingY = aOther.mSubsamplingY;
+      mChromaSamplePosition = aOther.mChromaSamplePosition;
+      mColorSpace = aOther.mColorSpace;
+      return *this;
+    }
+  };
+
+  // Get a sequence header's info from a sample.
+  // Returns false if the sample was not a sequence header.
+  static bool ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
+                                     AV1SequenceInfo& aDestInfo);
+  // Writes a sequence header OBU to the buffer.
+  static already_AddRefed<MediaByteBuffer> CreateSequenceHeader(
+      const AV1SequenceInfo& aInfo, nsresult& aResult);
+
+  // Reads the raw data of an ISOBMFF-compatible av1 configuration box (av1C),
+  // including any included sequence header.
+  static void ReadAV1CBox(const MediaByteBuffer* aBox,
+                          AV1SequenceInfo& aDestInfo, bool& aHadSeqHdr);
+  // Writes an ISOBMFF-compatible av1 configuration box (av1C) to the buffer.
+  static void WriteAV1CBox(const AV1SequenceInfo& aInfo,
+                           MediaByteBuffer* aDestBox, bool& aHasSeqHdr);
+
+  // Create sequence info from a MIME codecs string.
+  static Maybe<AV1SequenceInfo> CreateSequenceInfoFromCodecs(
+      const nsAString& aCodec);
+  static bool SetVideoInfo(VideoInfo* aDestInfo, const nsAString& aCodec);
 
  private:
   ~AOMDecoder();
