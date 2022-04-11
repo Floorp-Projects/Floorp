@@ -158,7 +158,7 @@ void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
 
   setRunning(lock);
 
-  JS::GCContext gcx(gc->rt, false);
+  JS::GCContext gcx(gc->rt);
   MOZ_RELEASE_ASSERT(TlsGCContext.init());
   TlsGCContext.set(&gcx);
 
