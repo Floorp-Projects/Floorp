@@ -59,6 +59,7 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/ModuleLoader.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/PathUtilsBinding.h"
@@ -75,6 +76,7 @@
 #  include "mozilla/dom/RTCIdentityProviderRegistrar.h"
 #endif
 #include "mozilla/dom/FileReaderBinding.h"
+#include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/StorageManager.h"
@@ -99,6 +101,7 @@
 
 using namespace mozilla;
 using namespace JS;
+using namespace JS::loader;
 using namespace xpc;
 
 using mozilla::dom::DestroyProtoAndIfaceCache;
@@ -110,10 +113,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(SandboxPrivate)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mModuleLoader)
   tmp->UnlinkObjectsInGlobal();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(SandboxPrivate)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mModuleLoader)
   tmp->TraverseObjectsInGlobal(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -2206,4 +2211,28 @@ nsresult xpc::SetSandboxMetadata(JSContext* cx, HandleObject sandbox,
   JS_SetReservedSlot(sandbox, XPCONNECT_SANDBOX_CLASS_METADATA_SLOT, metadata);
 
   return NS_OK;
+}
+
+ModuleLoaderBase* SandboxPrivate::GetModuleLoader(JSContext* aCx) {
+  if (mModuleLoader) {
+    return mModuleLoader;
+  }
+
+  JSObject* object = GetGlobalJSObject();
+  nsGlobalWindowInner* sandboxWindow = xpc::SandboxWindowOrNull(object, aCx);
+  if (!sandboxWindow) {
+    return nullptr;
+  }
+
+  ModuleLoader* mainModuleLoader =
+      static_cast<ModuleLoader*>(sandboxWindow->GetModuleLoader(aCx));
+
+  ScriptLoader* scriptLoader = mainModuleLoader->GetScriptLoader();
+
+  ModuleLoader* moduleLoader =
+      new ModuleLoader(scriptLoader, ModuleLoader::WebExtension);
+  scriptLoader->RegisterContentScriptModuleLoader(moduleLoader);
+  mModuleLoader = moduleLoader;
+
+  return moduleLoader;
 }
