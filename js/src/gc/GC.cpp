@@ -4626,9 +4626,6 @@ js::gc::ClearEdgesTracer::ClearEdgesTracer(JSRuntime* rt)
     : GenericTracerImpl(rt, JS::TracerKind::ClearEdges,
                         JS::WeakMapTraceAction::TraceKeysAndValues) {}
 
-js::gc::ClearEdgesTracer::ClearEdgesTracer()
-    : ClearEdgesTracer(TlsContext.get()->runtime()) {}
-
 template <typename T>
 T* js::gc::ClearEdgesTracer::onEdge(T* thing) {
   // We don't handle removing pointers to nursery edges from the store buffer
