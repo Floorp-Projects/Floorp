@@ -23,6 +23,7 @@ metrics_yamls = [
     "browser/modules/metrics.yaml",
     "browser/components/metrics.yaml",
     "toolkit/components/telemetry/metrics.yaml",
+    "dom/metrics.yaml",
 ]
 
 # The list of all Glean pings.yaml files, relative to the top src dir.
