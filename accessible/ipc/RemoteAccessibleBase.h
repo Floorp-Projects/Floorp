@@ -102,7 +102,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
     }
     return parent->mChildren.IndexOf(static_cast<const Derived*>(this));
   }
-  uint32_t EmbeddedChildCount() const;
+  virtual uint32_t EmbeddedChildCount() override;
   virtual int32_t IndexOfEmbeddedChild(Accessible* aChild) override;
   virtual Accessible* EmbeddedChildAt(uint32_t aChildIdx) override;
 
