@@ -33,20 +33,19 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.showKeyboard
-import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.AmoCollectionOverrideDialogBinding
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -280,7 +279,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToLocaleSettingsFragment()
             }
             resources.getString(R.string.pref_key_addons) -> {
-                requireContext().metrics.track(Event.AddonsOpenInSettings)
+                Addons.openAddonsInSettings.record(mozilla.components.service.glean.private.NoExtras())
                 SettingsFragmentDirections.actionSettingsFragmentToAddonsFragment()
             }
             resources.getString(R.string.pref_key_data_choices) -> {

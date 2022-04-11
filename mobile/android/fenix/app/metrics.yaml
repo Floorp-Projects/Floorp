@@ -5679,6 +5679,7 @@ addons:
       addon_id:
         description: |
           The id of the add-on that was interacted with in the toolbar menu
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/6174
       - https://github.com/mozilla-mobile/fenix/issues/19923
@@ -5704,6 +5705,7 @@ addons:
       addon_id:
         description: |
           The id of the add-on that was interacted with
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/17644
     data_reviews:

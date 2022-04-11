@@ -8,7 +8,6 @@ import android.content.Context
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
@@ -131,17 +130,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PocketHomeRecsCategoryClicked -> EventWrapper(
             { Pocket.homeRecsCategoryClicked.record(it) },
             { Pocket.homeRecsCategoryClickedKeys.valueOf(it) }
-        )
-        is Event.AddonsOpenInSettings -> EventWrapper<NoExtraKeys>(
-            { Addons.openAddonsInSettings.record(it) }
-        )
-        is Event.AddonsOpenInToolbarMenu -> EventWrapper(
-            { Addons.openAddonInToolbarMenu.record(it) },
-            { Addons.openAddonInToolbarMenuKeys.valueOf(it) }
-        )
-        is Event.AddonOpenSetting -> EventWrapper(
-            { Addons.openAddonSetting.record(it) },
-            { Addons.openAddonSettingKeys.valueOf(it) }
         )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }

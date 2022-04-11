@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.metrics
 
 import mozilla.components.browser.state.search.SearchEngine
-import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.Events
@@ -54,7 +53,6 @@ sealed class Event {
                 }
             )
     }
-    object AddonsOpenInSettings : Event()
     object SearchWidgetInstalled : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
@@ -130,16 +128,6 @@ sealed class Event {
     object CreditCardManagementCardTapped : Event()
 
     // Interaction events with extras
-
-    data class AddonsOpenInToolbarMenu(val addonId: String) : Event() {
-        override val extras: Map<Addons.openAddonInToolbarMenuKeys, String>?
-            get() = hashMapOf(Addons.openAddonInToolbarMenuKeys.addonId to addonId)
-    }
-
-    data class AddonOpenSetting(val addonId: String) : Event() {
-        override val extras: Map<Addons.openAddonSettingKeys, String>?
-            get() = hashMapOf(Addons.openAddonSettingKeys.addonId to addonId)
-    }
 
     data class PerformedSearch(val eventSource: EventSource) : Event() {
         sealed class EngineSource {

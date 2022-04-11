@@ -20,9 +20,9 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translateName
+import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentInstalledAddOnDetailsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -212,9 +212,8 @@ class InstalledAddonDetailsFragment : Fragment() {
         binding.settings.apply {
             isVisible = shouldSettingsBeVisible()
             setOnClickListener {
-                requireContext().components.analytics.metrics.track(
-                    Event.AddonOpenSetting(addon.id)
-                )
+                Addons.openAddonSetting.record(Addons.OpenAddonSettingExtra(addon.id))
+
                 val settingUrl = addon.installedState?.optionsPageUrl ?: return@setOnClickListener
                 val directions = if (addon.installedState?.openOptionsPageInTab == true) {
                     val components = it.context.components
