@@ -15,7 +15,6 @@ define(function(require, exports, module) {
   } = require("devtools/client/shared/components/reps/shared/grip-length-bubble");
   const {
     interleave,
-    isGrip,
     wrapRender,
     ellipsisElement,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -218,11 +217,8 @@ define(function(require, exports, module) {
     return grip.preview.size || 0;
   }
 
-  function supportsObject(grip, noGrip = false) {
-    if (noGrip === true || !isGrip(grip)) {
-      return false;
-    }
-    return grip.preview && grip.preview.kind == "MapLike";
+  function supportsObject(grip) {
+    return grip?.preview?.kind == "MapLike";
   }
 
   const maxLengthMap = new Map();

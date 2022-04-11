@@ -13,7 +13,6 @@ define(function(require, exports, module) {
   // Dependencies
   const {
     interleave,
-    isGrip,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
   const PropRep = require("devtools/client/shared/components/reps/reps/prop-rep");
@@ -372,17 +371,13 @@ define(function(require, exports, module) {
 
   // Registration
   function supportsObject(object, noGrip = false) {
-    if (noGrip === true || !isGrip(object)) {
-      return false;
-    }
-
-    if (object.class === "DeadObject") {
+    if (object?.class === "DeadObject") {
       return true;
     }
 
-    return object.preview
+    return object?.preview
       ? typeof object.preview.ownProperties !== "undefined"
-      : typeof object.ownPropertyLength !== "undefined";
+      : typeof object?.ownPropertyLength !== "undefined";
   }
 
   const maxLengthMap = new Map();
