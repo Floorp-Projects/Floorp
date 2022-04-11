@@ -60,7 +60,9 @@ class ThreadConfigurationCommand {
         )
     );
 
-    await Promise.all(
+    // Ignore threads that fail to be configured.
+    // Some workers may be destroying and `reconfigure` would be rejected.
+    await Promise.allSettled(
       threadFronts.map(threadFront => threadFront.reconfigure(configuration))
     );
   }
