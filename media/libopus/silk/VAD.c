@@ -312,6 +312,8 @@ void silk_VAD_GetNoiseLevels(
     /* Initially faster smoothing */
     if( psSilk_VAD->counter < 1000 ) { /* 1000 = 20 sec */
         min_coef = silk_DIV32_16( silk_int16_MAX, silk_RSHIFT( psSilk_VAD->counter, 4 ) + 1 );
+        /* Increment frame counter */
+        psSilk_VAD->counter++;
     } else {
         min_coef = 0;
     }
@@ -355,7 +357,4 @@ void silk_VAD_GetNoiseLevels(
         /* Store as part of state */
         psSilk_VAD->NL[ k ] = nl;
     }
-
-    /* Increment frame counter */
-    psSilk_VAD->counter++;
 }

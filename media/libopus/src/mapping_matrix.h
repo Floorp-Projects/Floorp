@@ -53,7 +53,7 @@ opus_int32 mapping_matrix_get_size(int rows, int cols);
 opus_int16 *mapping_matrix_get_data(const MappingMatrix *matrix);
 
 void mapping_matrix_init(
-    MappingMatrix * const st,
+    MappingMatrix * const matrix,
     int rows,
     int cols,
     int gain,

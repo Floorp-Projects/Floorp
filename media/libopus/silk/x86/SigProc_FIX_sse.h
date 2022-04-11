@@ -67,7 +67,7 @@ extern void (*const SILK_BURG_MODIFIED_IMPL[OPUS_ARCHMASK + 1])(
 
 #endif
 
-opus_int64 silk_inner_prod16_aligned_64_sse4_1(
+opus_int64 silk_inner_prod16_sse4_1(
     const opus_int16 *inVec1,
     const opus_int16 *inVec2,
     const opus_int   len
@@ -76,18 +76,18 @@ opus_int64 silk_inner_prod16_aligned_64_sse4_1(
 
 #if defined(OPUS_X86_PRESUME_SSE4_1)
 
-#define silk_inner_prod16_aligned_64(inVec1, inVec2, len, arch) \
-    ((void)(arch),silk_inner_prod16_aligned_64_sse4_1(inVec1, inVec2, len))
+#define silk_inner_prod16(inVec1, inVec2, len, arch) \
+    ((void)(arch),silk_inner_prod16_sse4_1(inVec1, inVec2, len))
 
 #else
 
-extern opus_int64 (*const SILK_INNER_PROD16_ALIGNED_64_IMPL[OPUS_ARCHMASK + 1])(
+extern opus_int64 (*const SILK_INNER_PROD16_IMPL[OPUS_ARCHMASK + 1])(
                     const opus_int16 *inVec1,
                     const opus_int16 *inVec2,
                     const opus_int   len);
 
-#  define silk_inner_prod16_aligned_64(inVec1, inVec2, len, arch) \
-    ((*SILK_INNER_PROD16_ALIGNED_64_IMPL[(arch) & OPUS_ARCHMASK])(inVec1, inVec2, len))
+#  define silk_inner_prod16(inVec1, inVec2, len, arch) \
+    ((*SILK_INNER_PROD16_IMPL[(arch) & OPUS_ARCHMASK])(inVec1, inVec2, len))
 
 #endif
 #endif

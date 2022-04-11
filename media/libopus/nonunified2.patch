@@ -1,5 +1,3 @@
-diff --git a/media/libopus/nonunified2.patch b/media/libopus/nonunified2.patch
-new file mode 100644
 diff --git a/media/libopus/sources.mozbuild b/media/libopus/sources.mozbuild
 --- a/media/libopus/sources.mozbuild
 +++ b/media/libopus/sources.mozbuild
