@@ -77,8 +77,7 @@ class ScriptFetchOptions {
 
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                      enum mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                     nsIPrincipal* aTriggeringPrincipal,
-                     nsIGlobalObject* aWebExtGlobal = nullptr);
+                     nsIPrincipal* aTriggeringPrincipal);
 
   /*
    *  The credentials mode used for the initial fetch (for module scripts)
@@ -97,12 +96,6 @@ class ScriptFetchOptions {
    *  Related to cryptographic nonce, used to determine CSP
    */
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
-
-  /* The Web Extension global -- Only used on DOM Modules.
-   *     Specifies a SandBox global with which to associate and run this script.
-   *     Propagated throughout the module tree if present. Not part of a spec.
-   */
-  nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 };
 
 /*

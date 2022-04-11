@@ -27,7 +27,6 @@
 #include "mozilla/Vector.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIGlobalObject.h"
 #include "nsIScriptElement.h"
 #include "js/loader/ScriptKind.h"
 
@@ -97,11 +96,6 @@ class ScriptLoadContext : public PreloaderBase {
   virtual void PrioritizeAsPreload() override;
 
   bool IsPreload() const;
-
-  // This will return nullptr in most cases,
-  // unless this is a module being imported by a WebExtension content script.
-  // In that case it's the Sandbox global executing that code.
-  nsIGlobalObject* GetWebExtGlobal() const;
 
   bool CompileStarted() const;
 

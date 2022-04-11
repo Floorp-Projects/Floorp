@@ -68,6 +68,10 @@ ModuleLoadRequest::ModuleLoadRequest(
   MOZ_ASSERT(mLoader);
 }
 
+nsIGlobalObject* ModuleLoadRequest::GetGlobalObject() {
+  return mLoader->GetGlobalObject();
+}
+
 void ModuleLoadRequest::Cancel() {
   ScriptLoadRequest::Cancel();
   mModuleScript = nullptr;
