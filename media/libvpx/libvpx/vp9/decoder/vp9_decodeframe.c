@@ -1298,9 +1298,8 @@ static void setup_token_decoder(const uint8_t *data, const uint8_t *data_end,
                                 struct vpx_internal_error_info *error_info,
                                 vpx_reader *r, vpx_decrypt_cb decrypt_cb,
                                 void *decrypt_state) {
-  // Validate the calculated partition length. If the buffer
-  // described by the partition can't be fully read, then restrict
-  // it to the portion that can be (for EC mode) or throw an error.
+  // Validate the calculated partition length. If the buffer described by the
+  // partition can't be fully read then throw an error.
   if (!read_is_valid(data, read_size, data_end))
     vpx_internal_error(error_info, VPX_CODEC_CORRUPT_FRAME,
                        "Truncated packet or corrupt tile length");

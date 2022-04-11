@@ -157,6 +157,9 @@ struct macroblock {
   // skip forward transform and quantization
   uint8_t skip_txfm[MAX_MB_PLANE << 2];
 #define SKIP_TXFM_NONE 0
+// TODO(chengchen): consider remove SKIP_TXFM_AC_DC from vp9 completely
+// since it increases risks of bad perceptual quality.
+// https://crbug.com/webm/1729
 #define SKIP_TXFM_AC_DC 1
 #define SKIP_TXFM_AC_ONLY 2
 

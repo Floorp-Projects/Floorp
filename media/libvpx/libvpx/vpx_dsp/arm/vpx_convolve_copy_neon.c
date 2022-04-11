@@ -33,7 +33,7 @@ void vpx_convolve_copy_neon(const uint8_t *src, ptrdiff_t src_stride,
       src += src_stride;
       dst += dst_stride;
       h -= 2;
-    } while (h > 0);
+    } while (h != 0);
   } else if (w == 8) {  // copy8
     uint8x8_t s0, s1;
     do {
@@ -47,7 +47,7 @@ void vpx_convolve_copy_neon(const uint8_t *src, ptrdiff_t src_stride,
       vst1_u8(dst, s1);
       dst += dst_stride;
       h -= 2;
-    } while (h > 0);
+    } while (h != 0);
   } else if (w < 32) {  // copy16
     uint8x16_t s0, s1;
     do {
@@ -61,7 +61,7 @@ void vpx_convolve_copy_neon(const uint8_t *src, ptrdiff_t src_stride,
       vst1q_u8(dst, s1);
       dst += dst_stride;
       h -= 2;
-    } while (h > 0);
+    } while (h != 0);
   } else if (w == 32) {  // copy32
     uint8x16_t s0, s1, s2, s3;
     do {
@@ -79,7 +79,7 @@ void vpx_convolve_copy_neon(const uint8_t *src, ptrdiff_t src_stride,
       vst1q_u8(dst + 16, s3);
       dst += dst_stride;
       h -= 2;
-    } while (h > 0);
+    } while (h != 0);
   } else {  // copy64
     uint8x16_t s0, s1, s2, s3;
     do {

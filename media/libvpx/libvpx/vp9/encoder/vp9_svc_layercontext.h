@@ -47,6 +47,9 @@ typedef struct {
   int min_q;
   int scaling_factor_num;
   int scaling_factor_den;
+  // Scaling factors used for internal resize scaling for single layer SVC.
+  int scaling_factor_num_resize;
+  int scaling_factor_den_resize;
   TWO_PASS twopass;
   vpx_fixed_buf_t rc_twopass_stats_in;
   unsigned int current_video_frame_in_layer;
@@ -68,6 +71,7 @@ typedef struct {
   int actual_num_seg2_blocks;
   int counter_encode_maxq_scene_change;
   uint8_t speed;
+  int loopfilter_ctrl;
 } LAYER_CONTEXT;
 
 typedef struct SVC {
@@ -169,6 +173,8 @@ typedef struct SVC {
   uint8_t fb_idx_temporal_layer_id[REF_FRAMES];
 
   int spatial_layer_sync[VPX_SS_MAX_LAYERS];
+  // Quantizer for each spatial layer.
+  int base_qindex[VPX_SS_MAX_LAYERS];
   uint8_t set_intra_only_frame;
   uint8_t previous_frame_is_intra_only;
   uint8_t superframe_has_layer_sync;
@@ -192,6 +198,10 @@ typedef struct SVC {
 
   // Every spatial layer on a superframe whose base is key is key too.
   int simulcast_mode;
+
+  // Flag to indicate SVC is dynamically switched to a single layer.
+  int single_layer_svc;
+  int resize_set;
 } SVC;
 
 struct VP9_COMP;
