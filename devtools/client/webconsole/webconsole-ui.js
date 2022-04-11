@@ -741,24 +741,6 @@ class WebConsoleUI {
     return frame.actor;
   }
 
-  getWebconsoleFront({ frameActorId } = {}) {
-    if (frameActorId) {
-      const frameFront = this.hud.getFrontByID(frameActorId);
-      return frameFront.getWebConsoleFront();
-    }
-
-    if (!this.hud.toolbox) {
-      return this.webConsoleFront;
-    }
-
-    const targetFront = this.hud.toolbox.getSelectedTargetFront();
-    if (!targetFront) {
-      return this.webConsoleFront;
-    }
-
-    return targetFront.getFront("console");
-  }
-
   getSelectedNodeActorID() {
     const inspectorSelection = this.hud.getInspectorSelection();
     return inspectorSelection?.nodeFront?.actorID;

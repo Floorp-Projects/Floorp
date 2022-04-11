@@ -63,6 +63,15 @@ add_task(async function() {
   await waitForEagerEvaluationResult(hud, `"example.org"`);
   ok(true, "The instant evaluation result is updated in the iframe context");
 
+  info("Select the top document via the context selector");
+  // This should take the lead over the currently selected element in the inspector
+  selectTargetInContextSelector(hud, "Top");
+
+  await waitForEagerEvaluationResult(hud, `"example.com"`);
+  await waitFor(() =>
+    evaluationContextSelectorButton.innerText.includes("Top")
+  );
+
   info("Select the second iframe h2 element");
   await selectNodeInFrames([".iframe-2", "h2"], inspector);
 
