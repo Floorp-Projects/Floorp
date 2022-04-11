@@ -1650,35 +1650,32 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
 
 already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
     MediaStreamTrack* aSelector) {
-  if (NS_FAILED(CheckApiState(false))) {
-    return nullptr;
-  }
-
   if (!mWindow) {
-    return nullptr;
+    MOZ_CRASH("Cannot create a promise without a window!");
   }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(global, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    rv.StealNSResult();
-    return nullptr;
+    MOZ_CRASH("Failed to create a promise!");
   }
 
-  GetStats(aSelector, false)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [promise,
-           window = mWindow](UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
-            RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
-            report->Incorporate(*aReport);
-            promise->MaybeResolve(std::move(report));
-          },
-          [promise, window = mWindow](nsresult aError) {
-            RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
-            promise->MaybeResolve(std::move(report));
-          });
+  if (!IsClosed()) {
+    GetStats(aSelector, false)
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [promise, window = mWindow](
+                UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
+              RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
+              report->Incorporate(*aReport);
+              promise->MaybeResolve(std::move(report));
+            },
+            [promise, window = mWindow](nsresult aError) {
+              RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
+              promise->MaybeResolve(std::move(report));
+            });
+  }
 
   return promise.forget();
 }
