@@ -1480,7 +1480,6 @@ win64-aarch64-eme/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64-eme
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
@@ -1532,7 +1531,6 @@ win64-aarch64-shippable/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
@@ -1695,7 +1693,6 @@ win64-aarch64-devedition/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
             USE_ARTIFACT: '1'
