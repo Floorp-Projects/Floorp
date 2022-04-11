@@ -162,12 +162,19 @@ function assertRecentDate(date) {
 /**
  * Asserts that an individual snapshot contains the expected values.
  *
- * @param {Snapshot} actual
+ * @param {Snapshot|Recommendation} actual
  *  The snapshot to test.
  * @param {Snapshot} expected
  *  The snapshot to test against.
  */
 function assertSnapshot(actual, expected) {
+  // This may be a recommendation.
+  let score = 0;
+  if ("snapshot" in actual) {
+    score = actual.score;
+    actual = actual.snapshot;
+  }
+
   Assert.equal(actual.url, expected.url, "Should have the expected URL");
   let expectedTitle = `test visit for ${expected.url}`;
   if (expected.hasOwnProperty("title")) {
@@ -209,32 +216,32 @@ function assertSnapshot(actual, expected) {
       "Should have the Snapshot URL's common name."
     );
   }
-  if (expected.overlappingVisitScoreIs != null) {
+  if (expected.scoreEqualTo != null) {
     Assert.equal(
-      actual.overlappingVisitScore,
-      expected.overlappingVisitScoreIs,
-      "Should have an overlappingVisitScore equal to the expected score"
+      score,
+      expected.scoreEqualTo,
+      "Should have a score equal to the expected score"
     );
   }
-  if (expected.overlappingVisitScoreGreaterThan != null) {
+  if (expected.scoreGreaterThan != null) {
     Assert.greater(
-      actual.overlappingVisitScore,
-      expected.overlappingVisitScoreGreaterThan,
-      "Should have an overlappingVisitScore greater than the expected score"
+      score,
+      expected.scoreGreaterThan,
+      "Should have a score greater than the expected score"
     );
   }
-  if (expected.overlappingVisitScoreLessThan != null) {
+  if (expected.scoreLessThan != null) {
     Assert.less(
-      actual.overlappingVisitScore,
-      expected.overlappingVisitScoreLessThan,
-      "Should have an overlappingVisitScore less than the expected score"
+      score,
+      expected.scoreLessThan,
+      "Should have a score less than the expected score"
     );
   }
-  if (expected.overlappingVisitScoreLessThanEqualTo != null) {
+  if (expected.scoreLessThanEqualTo != null) {
     Assert.lessOrEqual(
-      actual.overlappingVisitScore,
-      expected.overlappingVisitScoreLessThanEqualTo,
-      "Should have an overlappingVisitScore less than or equal to the expected score"
+      score,
+      expected.scoreLessThanEqualTo,
+      "Should have a score less than or equal to the expected score"
     );
   }
   if (expected.removedAt) {
@@ -248,13 +255,6 @@ function assertSnapshot(actual, expected) {
       actual.removedAt,
       null,
       "Should not have a removed at time"
-    );
-  }
-  if (expected.commonReferrerScoreEqualTo != null) {
-    Assert.equal(
-      actual.commonReferrerScore,
-      expected.commonReferrerScoreEqualTo,
-      "Should have a commonReferrerScore equal to the expected score"
     );
   }
 }
@@ -353,13 +353,15 @@ function orderedGroups(list, order) {
  *
  * @param {Snapshot[]} expected
  *   The expected snapshots.
- * @param {object} context
+ * @param {SelectionContext} context
  *   @see SnapshotSelector.#context.
  */
 async function assertOverlappingSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryOverlapping(context.url);
+  let recommendations = await Snapshots.recommendationSources.Overlapping(
+    context
+  );
 
-  await assertSnapshotList(snapshots, expected);
+  await assertSnapshotList(recommendations, expected);
 }
 
 /**
@@ -367,13 +369,15 @@ async function assertOverlappingSnapshots(expected, context) {
  *
  * @param {Snapshot[]} expected
  *   The expected snapshots.
- * @param {object} context
+ * @param {SelectionContext} context
  *   @see SnapshotSelector.#context.
  */
 async function assertCommonReferrerSnapshots(expected, context) {
-  let snapshots = await Snapshots.queryCommonReferrer(context.url);
+  let recommendations = await Snapshots.recommendationSources.CommonReferrer(
+    context
+  );
 
-  await assertSnapshotList(snapshots, expected);
+  await assertSnapshotList(recommendations, expected);
 }
 
 /**
@@ -387,28 +391,28 @@ async function reset() {
 /**
  * Asserts relevancy scores for snapshots are correct.
  *
- * @param {Snapshot[]} combinedSnapshots
+ * @param {Recommendation[]} recommendations
  *   The array of combined snapshots.
- * @param {object[]} expectedSnapshots
- *   An array of objects containing expected url and relevancyScore properties.
+ * @param {object[]} expected
+ *   An array of objects containing expected url and score properties.
  */
-function assertSnapshotScores(combinedSnapshots, expectedSnapshots) {
+function assertRecommendations(recommendations, expected) {
   Assert.equal(
-    combinedSnapshots.length,
-    expectedSnapshots.length,
-    "Should have returned the correct amount of snapshots"
+    recommendations.length,
+    expected.length,
+    "Should have returned the correct amount of recommendations"
   );
 
-  for (let i = 0; i < combinedSnapshots.length; i++) {
+  for (let i = 0; i < recommendations.length; i++) {
     Assert.equal(
-      combinedSnapshots[i].url,
-      expectedSnapshots[i].url,
-      "Should have returned the expected URL for the snapshot"
+      recommendations[i].snapshot.url,
+      expected[i].url,
+      "Should have returned the expected URL for the recommendation"
     );
     Assert.equal(
-      combinedSnapshots[i].relevancyScore,
-      expectedSnapshots[i].score,
-      `Should have set the expected score for ${expectedSnapshots[i].url}`
+      recommendations[i].score,
+      expected[i].score,
+      `Should have set the expected score for ${expected[i].url}`
     );
   }
 }

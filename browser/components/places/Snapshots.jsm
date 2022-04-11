@@ -24,6 +24,15 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 /**
+ * @typedef {object} Recommendation
+ *   A snapshot recommendation with an associated score.
+ * @property {Snapshot} snapshot
+ *   The recommended snapshot.
+ * @property {number} score
+ *   The score for this snapshot.
+ */
+
+/**
  * @typedef {object} SnapshotCriteria
  *   A set of tests to check if a set of interactions are a snapshot.
  * @property {string} property
@@ -148,6 +157,11 @@ const Snapshots = new (class Snapshots {
     if (!PlacesPreviews.enabled) {
       PageThumbs.addExpirationFilter(this);
     }
+
+    this.recommendationSources = {
+      Overlapping: this.#queryOverlapping.bind(this),
+      CommonReferrer: this.#queryCommonReferrer.bind(this),
+    };
   }
 
   #notify(topic, urls) {
@@ -633,15 +647,15 @@ const Snapshots = new (class Snapshots {
    *   For example, if a user visited Site A two days ago, we would generate a list of snapshots that were visited within an hour of that visit.
    *   Site A may have also been visited four days ago, we would like to see what websites were browsed then.
    *
-   * @param {string} context_url
-   *   the url that we're collection snapshots whose interactions overlapped
-   * @returns {Snapshot[]}
+   * @param {SelectionContext} selectionContext
+   *   the selection context to inform recommendations
+   * @returns {Recommendation[]}
    *   Returns array of overlapping snapshots in order of descending overlappingVisitScore (Calculated as 1.0 to 0.0, as the overlap gap goes to snapshot_overlap_limit)
    */
-  async queryOverlapping(context_url) {
-    let current_id = await this.queryPlaceIdFromUrl(context_url);
+  async #queryOverlapping(selectionContext) {
+    let current_id = await this.queryPlaceIdFromUrl(selectionContext.url);
     if (current_id == -1) {
-      logConsole.debug(`PlaceId not found for url ${context_url}`);
+      logConsole.debug(`PlaceId not found for url ${selectionContext.url}`);
       return [];
     }
 
@@ -686,23 +700,24 @@ const Snapshots = new (class Snapshots {
       return [];
     }
 
-    return rows.map(row =>
-      this.#translateRow(row, { includeOverlappingVisitScore: true })
-    );
+    return rows.map(row => ({
+      snapshot: this.#translateRow(row),
+      score: row.getResultByName("overlappingVisitScore"),
+    }));
   }
 
   /**
    * Queries snapshots which have interactions sharing a common referrer with the context url's interactions
    *
-   * @param {string} context_url
-   *   the url that we're collecting snapshots for
-   * @returns {Snapshot[]}
+   * @param {SelectionContext} selectionContext
+   *   the selection context to inform recommendations
+   * @returns {Recommendation[]}
    *   Returns array of snapshots with the common referrer
    */
-  async queryCommonReferrer(context_url) {
+  async #queryCommonReferrer(selectionContext) {
     let db = await PlacesUtils.promiseDBConnection();
 
-    let context_place_id = await this.queryPlaceIdFromUrl(context_url);
+    let context_place_id = await this.queryPlaceIdFromUrl(selectionContext.url);
     if (context_place_id == -1) {
       return [];
     }
@@ -727,11 +742,10 @@ const Snapshots = new (class Snapshots {
       { context_place_id }
     );
 
-    return rows.map(row => {
-      let snapshot = this.#translateRow(row);
-      snapshot.commonReferrerScore = 1.0;
-      return snapshot;
-    });
+    return rows.map(row => ({
+      snapshot: this.#translateRow(row),
+      score: 1.0,
+    }));
   }
 
   /**
@@ -739,12 +753,9 @@ const Snapshots = new (class Snapshots {
    *
    * @param {object} row
    *   The database row to translate.
-   * @param {object} [options]
-   * @param {boolean} [options.includeOverlappingVisitScore]
-   *   Whether to retrieve the overlappingVisitScore field
    * @returns {Snapshot}
    */
-  #translateRow(row, { includeOverlappingVisitScore = false } = {}) {
+  #translateRow(row) {
     // Maps data type to data.
     let pageData;
     let pageDataStr = row.getResultByName("page_data");
@@ -755,11 +766,6 @@ const Snapshots = new (class Snapshots {
       } catch (e) {
         logConsole.error(e);
       }
-    }
-
-    let overlappingVisitScore = 0;
-    if (includeOverlappingVisitScore) {
-      overlappingVisitScore = row.getResultByName("overlappingVisitScore");
     }
 
     let snapshot = {
@@ -778,7 +784,6 @@ const Snapshots = new (class Snapshots {
       ),
       documentType: row.getResultByName("document_type"),
       userPersisted: row.getResultByName("user_persisted"),
-      overlappingVisitScore,
       pageData: pageData ?? new Map(),
       visitCount: row.getResultByName("visit_count"),
     };

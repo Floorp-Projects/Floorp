@@ -28,6 +28,9 @@ TEST(BitWriter, BitWriter)
   b.WriteU32(16356);
   b.WriteU64(116356);
   b.WriteBits(~(0ULL) & ~1ULL, 16);
+  b.WriteULEB128(16ULL);
+  b.WriteULEB128(31895793ULL);
+  b.WriteULEB128(426894039235654ULL);
   const uint32_t length = b.BitCount();
   b.CloseWithRbspTrailing();
 
@@ -47,6 +50,9 @@ TEST(BitWriter, BitWriter)
   EXPECT_EQ(c.ReadU32(), 16356u);
   EXPECT_EQ(c.ReadU64(), 116356u);
   EXPECT_EQ(c.ReadBits(16), 0xfffeu);
+  EXPECT_EQ(c.ReadULEB128(), 16ull);
+  EXPECT_EQ(c.ReadULEB128(), 31895793ull);
+  EXPECT_EQ(c.ReadULEB128(), 426894039235654ull);
   EXPECT_EQ(length, BitReader::GetBitLength(test));
 }
 

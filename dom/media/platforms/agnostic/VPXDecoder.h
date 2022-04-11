@@ -101,60 +101,6 @@ class VPXDecoder : public MediaDataDecoder,
       }
     }
 
-    // Ref: ISO/IEC 23091-2:2019
-    enum class ColorPrimaries {
-      BT_709_6 = 1,
-      Unspecified = 2,
-      BT_470_6_M = 4,
-      BT_470_7_BG = 5,
-      BT_601_7 = 6,
-      SMPTE_ST_240 = 7,
-      Film = 8,
-      BT_2020_Nonconstant_Luminance = 9,
-      SMPTE_ST_428_1 = 10,
-      SMPTE_RP_431_2 = 11,
-      SMPTE_EG_432_1 = 12,
-      EBU_Tech_3213_E = 22,
-    };
-
-    // Ref: ISO/IEC 23091-2:2019
-    enum class TransferCharacteristics {
-      BT_709_6 = 1,
-      Unspecified = 2,
-      BT_470_6_M = 4,
-      BT_470_7_BG = 5,
-      BT_601_7 = 6,
-      SMPTE_ST_240 = 7,
-      Linear = 8,
-      Logrithmic = 9,
-      Logrithmic_Sqrt = 10,
-      IEC_61966_2_4 = 11,
-      BT_1361_0 = 12,
-      IEC_61966_2_1 = 13,
-      BT_2020_10bit = 14,
-      BT_2020_12bit = 15,
-      SMPTE_ST_2084 = 16,
-      SMPTE_ST_428_1 = 17,
-      BT_2100_HLG = 18,
-    };
-
-    enum class MatrixCoefficients {
-      Identity = 0,
-      BT_709_6 = 1,
-      Unspecified = 2,
-      FCC = 4,
-      BT_470_7_BG = 5,
-      BT_601_7 = 6,
-      SMPTE_ST_240 = 7,
-      YCgCo = 8,
-      BT_2020_Nonconstant_Luminance = 9,
-      BT_2020_Constant_Luminance = 10,
-      SMPTE_ST_2085 = 11,
-      Chromacity_Constant_Luminance = 12,
-      Chromacity_Nonconstant_Luminance = 13,
-      BT_2100_ICC = 14,
-    };
-
     /*
     mFullRange == false then:
       For BitDepth equals 8:

@@ -35,6 +35,10 @@
 
 namespace mozilla {
 
+using gfx::ColorRange;
+using gfx::CICP::ColourPrimaries;
+using gfx::CICP::MatrixCoefficients;
+using gfx::CICP::TransferCharacteristics;
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
 
@@ -301,14 +305,9 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
     return false;
   }
   ++fieldsItr;
-  uint8_t* fields[] = {&aProfile,
-                       &aLevel,
-                       &aBitDepth,
-                       &aChromaSubsampling,
-                       &aColorSpace.mPrimaryId,
-                       &aColorSpace.mTransferId,
-                       &aColorSpace.mMatrixId,
-                       &aColorSpace.mRangeId};
+  uint8_t primary, transfer, matrix, range;
+  uint8_t* fields[] = {&aProfile, &aLevel,   &aBitDepth, &aChromaSubsampling,
+                       &primary,  &transfer, &matrix,    &range};
   int fieldsCount = 0;
   nsresult rv;
   for (; fieldsItr != splitter.end(); ++fieldsItr, ++fieldsCount) {
@@ -385,15 +384,15 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // It is an integer that is defined by the "Colour primaries"
   // section of ISO/IEC 23001-8:2016 Table 2.
   // We treat reserved value as false case.
-  const auto& primaryId = aColorSpace.mPrimaryId;
-  if (primaryId == 0 || primaryId == 3 || primaryId > 22) {
+  if (primary == 0 || primary == 3 || primary > 22) {
     // reserved value.
     return false;
   }
-  if (primaryId > 12 && primaryId < 22) {
+  if (primary > 12 && primary < 22) {
     // 13~21 are reserved values.
     return false;
   }
+  aColorSpace.mPrimaries = static_cast<ColourPrimaries>(primary);
 
   if (fieldsCount == 5) {
     // No more options.
@@ -403,11 +402,11 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // It is an integer that is defined by the
   // "Transfer characteristics" section of ISO/IEC 23001-8:2016 Table 3.
   // We treat reserved value as false case.
-  const auto& transferId = aColorSpace.mTransferId;
-  if (transferId == 0 || transferId == 3 || transferId > 18) {
+  if (transfer == 0 || transfer == 3 || transfer > 18) {
     // reserved value.
     return false;
   }
+  aColorSpace.mTransfer = static_cast<TransferCharacteristics>(transfer);
 
   if (fieldsCount == 6) {
     // No more options.
@@ -417,14 +416,15 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // It is an integer that is defined by the
   // "Matrix coefficients" section of ISO/IEC 23001-8:2016 Table 4.
   // We treat reserved value as false case.
-  const auto& matrixId = aColorSpace.mMatrixId;
-  if (matrixId == 3 || matrixId > 11) {
+  if (matrix == 3 || matrix > 11) {
     return false;
   }
+  aColorSpace.mMatrix = static_cast<MatrixCoefficients>(matrix);
 
   // If matrixCoefficients is 0 (RGB), then chroma subsampling MUST be 3
   // (4:4:4).
-  if (matrixId == 0 && aChromaSubsampling != 3) {
+  if (aColorSpace.mMatrix == MatrixCoefficients::MC_IDENTITY &&
+      aChromaSubsampling != 3) {
     return false;
   }
 
@@ -436,8 +436,8 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // videoFullRangeFlag indicates the black level and range of the luma and
   // chroma signals. 0 = legal range (e.g. 16-235 for 8 bit sample depth);
   // 1 = full range (e.g. 0-255 for 8-bit sample depth).
-  const auto& rangeId = aColorSpace.mRangeId;
-  return rangeId <= 1;
+  aColorSpace.mRange = static_cast<ColorRange>(range);
+  return range <= 1;
 }
 
 bool ExtractH264CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
@@ -477,6 +477,257 @@ bool ExtractH264CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
     aLevel = H264_LEVEL_1_b;
   } else if (aLevel <= 5) {
     aLevel *= 10;
+  }
+
+  return true;
+}
+
+bool ExtractAV1CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
+                            uint8_t& aLevel, uint8_t& aTier, uint8_t& aBitDepth,
+                            bool& aMonochrome, bool& aSubsamplingX,
+                            bool& aSubsamplingY, uint8_t& aChromaSamplePosition,
+                            VideoColorSpace& aColorSpace) {
+  auto fourCC = Substring(aCodec, 0, 4);
+
+  if (!fourCC.EqualsLiteral("av01")) {
+    // Invalid 4CC
+    return false;
+  }
+
+  // Format is:
+  // av01.N.NN[MH].NN.B.BBN.NN.NN.NN.B
+  // where
+  //   N = decimal digit
+  //   [] = single character
+  //   B = binary digit
+  // Field order:
+  // <sample entry 4CC>.<profile>.<level><tier>.<bitDepth>
+  // [.<monochrome>.<chromaSubsampling>
+  // .<colorPrimaries>.<transferCharacteristics>.<matrixCoefficients>
+  // .<videoFullRangeFlag>]
+  //
+  // If any optional field is found, all the rest must be included.
+  //
+  // Parsing stops but does not fail upon encountering unexpected characters
+  // at the end of an otherwise well-formed string.
+  //
+  // See https://aomediacodec.github.io/av1-isobmff/#codecsparam
+
+  struct AV1Field {
+    uint8_t* field;
+    size_t length;
+  };
+  uint8_t monochrome;
+  uint8_t subsampling;
+  uint8_t primary;
+  uint8_t transfer;
+  uint8_t matrix;
+  uint8_t range;
+  AV1Field fields[] = {{&aProfile, 1},
+                       {&aLevel, 2},
+                       // parsing loop skips tier
+                       {&aBitDepth, 2},
+                       {&monochrome, 1},
+                       {&subsampling, 3},
+                       {&primary, 2},
+                       {&transfer, 2},
+                       {&matrix, 2},
+                       {&range, 1}};
+
+  auto splitter = aCodec.Split(u'.');
+  auto iter = splitter.begin();
+  ++iter;
+  size_t fieldCount = 0;
+  while (iter != splitter.end()) {
+    // Exit if there are too many fields.
+    if (fieldCount >= 9) {
+      return false;
+    }
+
+    AV1Field& field = fields[fieldCount];
+    auto fieldStr = *iter;
+
+    if (field.field == &aLevel) {
+      // Parse tier and remove it from the level field.
+      if (fieldStr.Length() < 3) {
+        return false;
+      }
+      auto tier = fieldStr[2];
+      switch (tier) {
+        case 'M':
+          aTier = 0;
+          break;
+        case 'H':
+          aTier = 1;
+          break;
+        default:
+          return false;
+      }
+      fieldStr.SetLength(2);
+    }
+
+    if (fieldStr.Length() < field.length) {
+      return false;
+    }
+
+    // Manually parse values since nsString.ToInteger silently stops parsing
+    // upon encountering unknown characters.
+    uint8_t value = 0;
+    for (size_t i = 0; i < field.length; i++) {
+      uint8_t oldValue = value;
+      char16_t character = fieldStr[i];
+      if ('0' <= character && character <= '9') {
+        value = (value * 10) + (character - '0');
+      } else {
+        return false;
+      }
+      if (value < oldValue) {
+        // Overflow is possible on the 3-digit subsampling field.
+        return false;
+      }
+    }
+
+    *field.field = value;
+
+    ++fieldCount;
+    ++iter;
+
+    // Field had extra characters, exit early.
+    if (fieldStr.Length() > field.length) {
+      // Disallow numbers as unexpected characters.
+      char16_t character = fieldStr[field.length];
+      if ('0' <= character && character <= '9') {
+        return false;
+      }
+      break;
+    }
+  }
+
+  // Spec requires profile, level/tier, bitdepth, or for all possible fields to
+  // be present.
+  if (fieldCount != 3 && fieldCount != 9) {
+    return false;
+  }
+
+  // Valid profiles are: Main (0), High (1), Professional (2).
+  // Levels range from 0 to 23.
+  if (aProfile > 2 || aLevel > 23) {
+    return false;
+  }
+
+  if (fieldCount == 3) {
+    // If only required fields are included, set to the spec defaults for the
+    // rest and continue validating.
+    aMonochrome = false;
+    aSubsamplingX = true;
+    aSubsamplingY = true;
+    aChromaSamplePosition = 0;
+    aColorSpace.mPrimaries = ColourPrimaries::CP_BT709;
+    aColorSpace.mTransfer = TransferCharacteristics::TC_BT709;
+    aColorSpace.mMatrix = MatrixCoefficients::MC_BT709;
+    aColorSpace.mRange = ColorRange::LIMITED;
+  } else {
+    // Extract the individual values for the remaining fields, and check for
+    // valid values for each.
+
+    // Monochrome is a boolean.
+    if (monochrome > 1) {
+      return false;
+    }
+    aMonochrome = !!monochrome;
+
+    // Extract individual digits of the subsampling field.
+    // Subsampling is two binary digits for x and y
+    // and one enumerated sample position field of
+    // Unknown (0), Vertical (1), Colocated (2).
+    uint8_t subsamplingX = (subsampling / 100) % 10;
+    uint8_t subsamplingY = (subsampling / 10) % 10;
+    if (subsamplingX > 1 || subsamplingY > 1) {
+      return false;
+    }
+    aSubsamplingX = !!subsamplingX;
+    aSubsamplingY = !!subsamplingY;
+    aChromaSamplePosition = subsampling % 10;
+    if (aChromaSamplePosition > 2) {
+      return false;
+    }
+
+    // We can validate the color space values using CICP enums, as the values
+    // are standardized in Rec. ITU-T H.273.
+    aColorSpace.mPrimaries = static_cast<ColourPrimaries>(primary);
+    aColorSpace.mTransfer = static_cast<TransferCharacteristics>(transfer);
+    aColorSpace.mMatrix = static_cast<MatrixCoefficients>(matrix);
+    if (gfx::CICP::IsReserved(aColorSpace.mPrimaries) ||
+        gfx::CICP::IsReserved(aColorSpace.mTransfer) ||
+        gfx::CICP::IsReserved(aColorSpace.mMatrix)) {
+      return false;
+    }
+    // Range is a boolean, true meaning full and false meaning limited range.
+    if (range > 1) {
+      return false;
+    }
+    aColorSpace.mRange = static_cast<ColorRange>(range);
+  }
+
+  // Begin validating all parameter values:
+
+  // Only Levels 8 and above (4.0 and greater) can specify Tier.
+  // See: 5.5.1. General sequence header OBU syntax,
+  // if ( seq_level_idx[ i ] > 7 ) seq_tier[ i ] = f(1)
+  // https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=42
+  // Also: Annex A, A.3. Levels, columns MainMbps and HighMbps
+  // at https://aomediacodec.github.io/av1-spec/av1-spec.pdf#page=652
+  if (aLevel < 8 && aTier > 0) {
+    return false;
+  }
+
+  // Supported bit depths are 8, 10 and 12.
+  if (aBitDepth != 8 && aBitDepth != 10 && aBitDepth != 12) {
+    return false;
+  }
+  // Profiles 0 and 1 only support 8-bit and 10-bit.
+  if (aProfile < 2 && aBitDepth == 12) {
+    return false;
+  }
+
+  // x && y subsampling is used to specify monochrome 4:0:0 as well
+  bool is420or400 = aSubsamplingX && aSubsamplingY;
+  bool is422 = aSubsamplingX && !aSubsamplingY;
+  bool is444 = !aSubsamplingX && !aSubsamplingY;
+
+  // Profile 0 only supports 4:2:0.
+  if (aProfile == 0 && !is420or400) {
+    return false;
+  }
+  // Profile 1 only supports 4:4:4.
+  if (aProfile == 1 && !is444) {
+    return false;
+  }
+  // Profile 2 only allows 4:2:2 at 10 bits and below.
+  if (aProfile == 2 && aBitDepth < 12 && !is422) {
+    return false;
+  }
+  // Chroma sample position can only be specified with 4:2:0.
+  if (aChromaSamplePosition != 0 && !is420or400) {
+    return false;
+  }
+
+  // When video is monochrome, subsampling must be 4:0:0.
+  if (aMonochrome && (aChromaSamplePosition != 0 || !is420or400)) {
+    return false;
+  }
+  // Monochrome can only be signaled when profile is 0 or 2.
+  // Note: This check is redundant with the above subsampling check,
+  // as profile 1 only supports 4:4:4.
+  if (aMonochrome && aProfile != 0 && aProfile != 2) {
+    return false;
+  }
+
+  // Identity matrix requires 4:4:4 subsampling.
+  if (aColorSpace.mMatrix == MatrixCoefficients::MC_IDENTITY &&
+      (aSubsamplingX || aSubsamplingY ||
+       aColorSpace.mRange != gfx::ColorRange::FULL)) {
+    return false;
   }
 
   return true;
@@ -694,8 +945,14 @@ bool IsVP9CodecString(const nsAString& aCodec) {
 }
 
 bool IsAV1CodecString(const nsAString& aCodec) {
+  uint8_t profile, level, tier, bitDepth, chromaPosition;
+  bool monochrome, subsamplingX, subsamplingY;
+  VideoColorSpace colorSpace;
   return aCodec.EqualsLiteral("av1") ||
-         StartsWith(NS_ConvertUTF16toUTF8(aCodec), "av01");
+         (StartsWith(NS_ConvertUTF16toUTF8(aCodec), "av01") &&
+          ExtractAV1CodecDetails(aCodec, profile, level, tier, bitDepth,
+                                 monochrome, subsamplingX, subsamplingY,
+                                 chromaPosition, colorSpace));
 }
 
 UniquePtr<TrackInfo> CreateTrackInfoWithMIMEType(

@@ -27,25 +27,28 @@ add_task(async function setup() {
 });
 
 add_task(async function test_combining_throw_away_first() {
-  let snapshot1a = await Snapshots.get(TEST_URL1);
-  let snapshot1b = await Snapshots.get(TEST_URL1);
+  let snapshot1 = await Snapshots.get(TEST_URL1);
   let snapshot2 = await Snapshots.get(TEST_URL2);
 
-  // Set up so that 1a will be thrown away.
-  snapshot1a.overlappingVisitScore = 0.5;
-  snapshot2.overlappingVisitScore = 0.5;
-  snapshot1b.overlappingVisitScore = 1.0;
-
   let combined = SnapshotScorer.combineAndScore(
-    new Set([TEST_URL1, TEST_URL2]),
-    [snapshot1a],
-    [snapshot1b, snapshot2]
+    { getCurrentSessionUrls: () => new Set([TEST_URL1, TEST_URL2]) },
+    {
+      recommendations: [{ snapshot: snapshot1, score: 0.5 }],
+      weight: 3.0,
+    },
+    {
+      recommendations: [
+        { snapshot: snapshot2, score: 0.5 },
+        { snapshot: snapshot1, score: 1 },
+      ],
+      weight: 3.0,
+    }
   );
 
-  assertSnapshotScores(combined, [
+  assertRecommendations(combined, [
     {
       url: TEST_URL1,
-      score: 6,
+      score: 7.5,
     },
     {
       url: TEST_URL2,
@@ -57,23 +60,27 @@ add_task(async function test_combining_throw_away_first() {
 add_task(async function test_combining_throw_away_second_and_sort() {
   // We swap the snapshots around a bit here to additionally test the sort.
   let snapshot1 = await Snapshots.get(TEST_URL1);
-  let snapshot2a = await Snapshots.get(TEST_URL2);
-  let snapshot2b = await Snapshots.get(TEST_URL2);
-
-  snapshot1.overlappingVisitScore = 0.5;
-  snapshot2a.overlappingVisitScore = 1.0;
-  snapshot2b.overlappingVisitScore = 0.5;
+  let snapshot2 = await Snapshots.get(TEST_URL2);
 
   let combined = SnapshotScorer.combineAndScore(
-    new Set([TEST_URL1, TEST_URL2]),
-    [snapshot2a],
-    [snapshot1, snapshot2b]
+    { getCurrentSessionUrls: () => new Set([TEST_URL1, TEST_URL2]) },
+    {
+      recommendations: [{ snapshot: snapshot2, score: 1 }],
+      weight: 3.0,
+    },
+    {
+      recommendations: [
+        { snapshot: snapshot1, score: 0.5 },
+        { snapshot: snapshot2, score: 0.5 },
+      ],
+      weight: 3.0,
+    }
   );
 
-  assertSnapshotScores(combined, [
+  assertRecommendations(combined, [
     {
       url: TEST_URL2,
-      score: 6,
+      score: 7.5,
     },
     {
       url: TEST_URL1,
