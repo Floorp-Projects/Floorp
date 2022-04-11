@@ -383,7 +383,10 @@ fuzzy(0-1,0-400) == path-06.svg path-06-ref.svg
 == pathLength-02.svg pass.svg
 
 == pattern-basic-01.svg pass.svg
-fuzzy(0-2,0-61) == pattern-big-image.html pattern-big-image-ref.html
+# Massively downsampling an image plays out differently when using WR instead of blob images.
+# In practive the two *look* identical, unfortunately the fuzziness is so high that the test is
+# barely meaningful.
+fuzzy(0-128,0-100) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-css-transform.html pattern-css-transform-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
 fuzzy(0-1,0-5) == pattern-live-01a.svg pattern-live-01-ref.svg
@@ -580,7 +583,7 @@ test-pref(svg.use-element.graphics-element-restrictions,1) ref-pref(svg.use-elem
 
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg
-== viewBox-and-pattern-03.svg pass.svg
+fuzzy(0-43,0-5) == viewBox-and-pattern-03.svg pass.svg
 == viewBox-and-pattern-04.svg pass.svg
 == viewBox-and-symbol-01.svg pass.svg
 == viewBox-invalid-01.svg pass.svg
