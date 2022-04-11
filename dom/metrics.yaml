@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by the Glean SDK. They are
+# automatically converted to platform-specific code at build time using the
+# `glean_parser` PyPI package.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: DOM: Core & HTML'
+
+perf:
+  page_load:
+    type: event
+    description: >
+        Recorded when a top level content document has been loaded.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+      - dpalmeiro@mozilla.com
+    expires: never
+    extra_keys:
+      load_time:
+        description:
+          "Time between loadEventStart and navigationStart, in ms."
+        type: quantity
+        unit: ms
+      response_time:
+        description:
+          "Time between responseStart and navigationStart, in ms."
+        type: quantity
+        unit: ms
+      fcp_time:
+        description:
+          "Time between firstContentfulPaint and naviationStart, in ms."
+        type: quantity
+        unit: ms
+      js_exec_time:
+        description:
+          "Time spent executing JS during page load, in ms."
+        type: quantity
+        unit: ms
+      load_type:
+        description:
+          "One of normal,reload,stop,link,history,error or other."
+        type: string
+    telemetry_mirror: Page_load_Toplevel_Content
