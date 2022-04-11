@@ -37,7 +37,7 @@ add_task(async function() {
   onCorsMessage = waitForMessage(hud, "Reason: CORS disabled");
   makeFaultyCorsCall("CORSDisabled");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSDisabled");
+  await checkCorsMessage(hud, message, "CORSDisabled");
   await pushPref("content.cors.disable", false);
 
   info("Test CORSPreflightDidNotSucceed");
@@ -47,7 +47,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSPreflightDidNotSucceed");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSPreflightDidNotSucceed");
+  await checkCorsMessage(hud, message, "CORSPreflightDidNotSucceed");
 
   info("Test CORS did not succeed");
   onCorsMessage = waitForMessage(
@@ -56,7 +56,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSDidNotSucceed");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSDidNotSucceed");
+  await checkCorsMessage(hud, message, "CORSDidNotSucceed");
 
   info("Test CORSExternalRedirectNotAllowed");
   onCorsMessage = waitForMessage(
@@ -65,7 +65,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSExternalRedirectNotAllowed");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSExternalRedirectNotAllowed");
+  await checkCorsMessage(hud, message, "CORSExternalRedirectNotAllowed");
 
   info("Test CORSMissingAllowOrigin");
   onCorsMessage = waitForMessage(
@@ -76,7 +76,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSMissingAllowOrigin");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMissingAllowOrigin");
+  await checkCorsMessage(hud, message, "CORSMissingAllowOrigin");
 
   info("Test CORSMultipleAllowOriginNotAllowed");
   onCorsMessage = waitForMessage(
@@ -87,7 +87,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSMultipleAllowOriginNotAllowed");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMultipleAllowOriginNotAllowed");
+  await checkCorsMessage(hud, message, "CORSMultipleAllowOriginNotAllowed");
 
   info("Test CORSAllowOriginNotMatchingOrigin");
   onCorsMessage = waitForMessage(
@@ -99,7 +99,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSAllowOriginNotMatchingOrigin");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSAllowOriginNotMatchingOrigin");
+  await checkCorsMessage(hud, message, "CORSAllowOriginNotMatchingOrigin");
 
   info("Test CORSNotSupportingCredentials");
   onCorsMessage = waitForMessage(
@@ -109,7 +109,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSNotSupportingCredentials");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSNotSupportingCredentials");
+  await checkCorsMessage(hud, message, "CORSNotSupportingCredentials");
 
   info("Test CORSMethodNotFound");
   onCorsMessage = waitForMessage(
@@ -119,7 +119,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSMethodNotFound");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMethodNotFound");
+  await checkCorsMessage(hud, message, "CORSMethodNotFound");
 
   info("Test CORSMissingAllowCredentials");
   onCorsMessage = waitForMessage(
@@ -129,7 +129,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSMissingAllowCredentials");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMissingAllowCredentials");
+  await checkCorsMessage(hud, message, "CORSMissingAllowCredentials");
 
   info("Test CORSInvalidAllowMethod");
   onCorsMessage = waitForMessage(
@@ -139,7 +139,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSInvalidAllowMethod");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSInvalidAllowMethod");
+  await checkCorsMessage(hud, message, "CORSInvalidAllowMethod");
 
   info("Test CORSInvalidAllowHeader");
   onCorsMessage = waitForMessage(
@@ -149,7 +149,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSInvalidAllowHeader");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSInvalidAllowHeader");
+  await checkCorsMessage(hud, message, "CORSInvalidAllowHeader");
 
   info("Test CORSMissingAllowHeaderFromPreflight");
   onCorsMessage = waitForMessage(
@@ -161,7 +161,7 @@ add_task(async function() {
   );
   makeFaultyCorsCall("CORSMissingAllowHeaderFromPreflight");
   message = await onCorsMessage;
-  await checkCorsMessage(message, "CORSMissingAllowHeaderFromPreflight");
+  await checkCorsMessage(hud, message, "CORSMissingAllowHeaderFromPreflight");
 
   // See Bug 1480671.
   // XXX: how to make Origin to not be included in the request ?
@@ -169,7 +169,7 @@ add_task(async function() {
   //   `Reason: CORS header ${quote("Origin")} cannot be added`);
   // makeFaultyCorsCall("CORSOriginHeaderNotAdded");
   // message = await onCorsMessage;
-  // await checkCorsMessage(message, "CORSOriginHeaderNotAdded");
+  // await checkCorsMessage(hud, message, "CORSOriginHeaderNotAdded");
 
   // See Bug 1480672.
   // XXX: Failing with another error: Console message: Security Error: Content at
@@ -181,11 +181,16 @@ add_task(async function() {
   // dir.append("sjs_cors-test-server.sjs");
   // makeFaultyCorsCall("CORSRequestNotHttp", Services.io.newFileURI(dir).spec);
   // message = await onCorsMessage;
-  // await checkCorsMessage(message, "CORSRequestNotHttp");
+  // await checkCorsMessage(hud, message, "CORSRequestNotHttp");
 });
 
-async function checkCorsMessage(message, category) {
-  const node = message.node;
+async function checkCorsMessage(hud, message, category) {
+  // Get a new reference to the node, as it may have been scrolled out of existence.
+  const node = await findMessageVirtualized({
+    hud,
+    messageId: message.node.getAttribute("data-message-id"),
+  });
+  node.scrollIntoView();
   ok(
     node.classList.contains("error"),
     "The cors message has the expected classname"

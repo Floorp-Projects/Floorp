@@ -128,8 +128,11 @@
 }
 
 /* We already paint a top border on jsterm-input-container (and we need to keep
- * it when scrolling console content), so remove the last item's border. */
- .webconsole-app:not(.jsterm-editor) .message:last-child {
+ * it when scrolling console content), so remove the last item's border. (NOTE:
+ * the last element is actually the second-to-last element when the output is
+ * scrolled all the way down, because we include an empty buffer div which
+ * grows to simulate the height of unrendered content.) */
+ .webconsole-app:not(.jsterm-editor) .message:nth-last-child(2) {
   border-bottom-width: 0;
   /* Adjust the min-height since we now only have a single border. */
   min-height: calc(var(--console-row-height) + 1px);
@@ -946,4 +949,14 @@ a.learn-more-link.webconsole-learn-more-link {
   left: -9999px;
   width: 0;
   height: 0;
+}
+
+.lazy-message-list-top,
+.lazy-message-list-bottom {
+  overflow-anchor: none;
+  pointer-events: none;
+  user-select: none;
+  padding: 0;
+  margin: 0;
+  border: none;
 }

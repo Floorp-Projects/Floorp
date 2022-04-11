@@ -87,13 +87,13 @@ add_task(async function testSameSiteCookieMessage() {
       "The badge has the expected text"
     );
 
-    checkConsoleOutputForWarningGroup(hud, [`▶︎⚠ ${test.groupLabel} 2`]);
+    await checkConsoleOutputForWarningGroup(hud, [`▶︎⚠ ${test.groupLabel} 2`]);
 
     info("Open the group");
     node.querySelector(".arrow").click();
     await waitFor(() => findMessage(hud, "SameSite"));
 
-    checkConsoleOutputForWarningGroup(hud, [
+    await checkConsoleOutputForWarningGroup(hud, [
       `▼︎⚠ ${test.groupLabel} 2`,
       `| ${test.message1}`,
       `| ${test.message2}`,
@@ -132,13 +132,13 @@ add_task(async function testInvalidSameSiteMessage() {
     "The badge has the expected text"
   );
 
-  checkConsoleOutputForWarningGroup(hud, [`▶︎⚠ ${groupLabel} 2`]);
+  await checkConsoleOutputForWarningGroup(hud, [`▶︎⚠ ${groupLabel} 2`]);
 
   info("Open the group");
   node.querySelector(".arrow").click();
   await waitFor(() => findMessage(hud, "SameSite"));
 
-  checkConsoleOutputForWarningGroup(hud, [
+  await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${groupLabel} 2`,
     `| ${message1}`,
     `| ${message2}`,
