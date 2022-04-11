@@ -463,6 +463,10 @@ bool HyperTextAccessibleBase::IsValidRange(int32_t aStartOffset,
          startOffset <= endOffset && endOffset <= CharacterCount();
 }
 
+uint32_t HyperTextAccessibleBase::LinkCount() {
+  return Acc()->EmbeddedChildCount();
+}
+
 Accessible* HyperTextAccessibleBase::LinkAt(uint32_t aIndex) {
   return Acc()->EmbeddedChildAt(aIndex);
 }
