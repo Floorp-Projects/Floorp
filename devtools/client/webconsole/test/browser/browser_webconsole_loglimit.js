@@ -22,11 +22,20 @@ add_task(async function() {
   });
   await onMessage;
 
-  ok(!findMessage(hud, "test message [0]"), "Message 0 has been pruned");
-  ok(!findMessage(hud, "test message [9]"), "Message 9 has been pruned");
-  ok(findMessage(hud, "test message [10]"), "Message 10 is still displayed");
+  ok(
+    !(await findMessageVirtualized({ hud, text: "test message [0]" })),
+    "Message 0 has been pruned"
+  );
+  ok(
+    !(await findMessageVirtualized({ hud, text: "test message [9]" })),
+    "Message 9 has been pruned"
+  );
+  ok(
+    await findMessageVirtualized({ hud, text: "test message [10]" }),
+    "Message 10 is still displayed"
+  );
   is(
-    findMessages(hud, "").length,
+    (await findAllMessagesVirtualized(hud)).length,
     140,
     "Number of displayed messages is correct"
   );
@@ -37,10 +46,16 @@ add_task(async function() {
   });
   await onMessage;
 
-  ok(!findMessage(hud, "test message [10]"), "Message 10 has been pruned");
-  ok(findMessage(hud, "test message [11]"), "Message 11 is still displayed");
+  ok(
+    !(await findMessageVirtualized({ hud, text: "test message [10]" })),
+    "Message 10 has been pruned"
+  );
+  ok(
+    await findMessageVirtualized({ hud, text: "test message [11]" }),
+    "Message 11 is still displayed"
+  );
   is(
-    findMessages(hud, "").length,
+    (await findAllMessagesVirtualized(hud)).length,
     140,
     "Number of displayed messages is still correct"
   );

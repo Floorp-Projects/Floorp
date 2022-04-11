@@ -603,11 +603,6 @@ function isGroupType(type) {
   ].includes(type);
 }
 
-function getInitialMessageCountForViewport(win) {
-  const minMessageHeight = 20;
-  return Math.ceil(win.innerHeight / minMessageHeight);
-}
-
 function isPacketPrivate(packet) {
   return (
     packet.private === true ||
@@ -910,7 +905,6 @@ module.exports = {
   createSimpleTableMessage,
   getArrayTypeNames,
   getDescriptorValue,
-  getInitialMessageCountForViewport,
   getNaturalOrder,
   getParentWarningGroupMessageId,
   getWarningGroupType,

@@ -35,6 +35,7 @@ function EvaluationResult(props) {
     timestampsVisible,
     maybeScrollToBottom,
     open,
+    setExpanded,
   } = props;
 
   const {
@@ -86,6 +87,7 @@ function EvaluationResult(props) {
         type,
         helperType,
         maybeScrollToBottom,
+        setExpanded,
         customFormat: true,
       })
     );

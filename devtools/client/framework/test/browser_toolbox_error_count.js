@@ -5,6 +5,12 @@
 // Test for error icon and the error count displayed at right of the
 // toolbox toolbar
 
+/* import-globals-from ../../webconsole/test/browser/shared-head.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/webconsole/test/browser/shared-head.js",
+  this
+);
+
 const TEST_URI = `https://example.com/document-builder.sjs?html=<meta charset=utf8></meta>
 <script>
   console.error("Cache Error1");
@@ -86,21 +92,18 @@ add_task(async function() {
     "When the console is selected, the icon does not have a title"
   );
 
-  const webconsoleDoc = toolbox.getCurrentPanel().hud.ui.window.document;
+  const hud = toolbox.getCurrentPanel().hud;
+  const webconsoleDoc = hud.ui.window.document;
   // wait until all error messages are displayed in the console
   await waitFor(
-    () =>
-      webconsoleDoc.querySelectorAll(".message.error").length ===
-      expectedErrorCount
+    async () => (await findAllErrors(hud)).length === expectedErrorCount
   );
 
   info("Clear the console output and check that the error icon is hidden");
   webconsoleDoc.querySelector(".devtools-clear-icon").click();
   await waitFor(() => !getErrorIcon(toolbox));
   ok(true, "Clearing the console does hide the icon");
-  await waitFor(
-    () => webconsoleDoc.querySelectorAll(".message.error").length === 0
-  );
+  await waitFor(async () => (await findAllErrors(hud)).length === 0);
 
   info("Check that the error count is capped at 99");
   expectedErrorCount = 100;
@@ -112,9 +115,7 @@ add_task(async function() {
 
   // Wait until all the messages are displayed in the console
   await waitFor(
-    () =>
-      webconsoleDoc.querySelectorAll(".message.error").length ===
-      expectedErrorCount
+    async () => (await findAllErrors(hud)).length === expectedErrorCount
   );
 
   await waitFor(() => getErrorIconCount(toolbox) === "99+");
@@ -132,9 +133,7 @@ add_task(async function() {
 
   // wait until all error messages are displayed in the console
   await waitFor(
-    () =>
-      webconsoleDoc.querySelectorAll(".message.error").length ===
-      expectedErrorCount
+    async () => (await findAllErrors(hud)).length === expectedErrorCount
   );
 
   info("Disable the error icon from the options panel");
@@ -160,9 +159,7 @@ add_task(async function() {
   // to render the error icon again.
   await toolbox.selectTool("webconsole");
   await waitFor(
-    () =>
-      webconsoleDoc.querySelectorAll(".message.error").length ===
-      expectedErrorCount
+    async () => (await findAllErrors(hud)).length === expectedErrorCount
   );
   is(
     getErrorIcon(toolbox),
@@ -181,3 +178,7 @@ add_task(async function() {
 
   toolbox.destroy();
 });
+
+function findAllErrors(hud) {
+  return findMessagesVirtualized({ hud, selector: ".message.error" });
+}

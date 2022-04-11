@@ -166,7 +166,8 @@ add_task(async function() {
   info("Check that we have the expected number of commands");
   const expectedInputsNumber = 16;
   is(
-    hud.ui.outputNode.querySelectorAll(".message.command").length,
+    (await findMessagesVirtualized({ hud, selector: ".message.command" }))
+      .length,
     expectedInputsNumber,
     "There is the expected number of commands messages"
   );
@@ -174,14 +175,15 @@ add_task(async function() {
   info("Check that we have as many errors as commands");
   const expectedErrorsNumber = expectedInputsNumber;
   is(
-    hud.ui.outputNode.querySelectorAll(".message.error").length,
+    (await findMessagesVirtualized({ hud, selector: ".message.error" })).length,
     expectedErrorsNumber,
     "There is the expected number of error messages"
   );
 
   info("Check that there's no result message");
   is(
-    hud.ui.outputNode.querySelectorAll(".message.result").length,
+    (await findMessagesVirtualized({ hud, selector: ".message.result" }))
+      .length,
     0,
     "There is no result messages"
   );
