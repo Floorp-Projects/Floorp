@@ -6,8 +6,8 @@ Bug 1315288: Add input checks for VP9 r=rillian
 diff --git a/media/libvpx/libvpx/vp9/vp9_cx_iface.c b/media/libvpx/libvpx/vp9/vp9_cx_iface.c
 --- a/media/libvpx/libvpx/vp9/vp9_cx_iface.c
 +++ b/media/libvpx/libvpx/vp9/vp9_cx_iface.c
-@@ -1129,21 +1129,30 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
-     unsigned char *cx_data;
+@@ -1353,21 +1353,30 @@ static vpx_codec_err_t encoder_encode(vp
+     cpi->svc.time_stamp_superframe = dst_time_stamp;
 
      // Set up internal flags
      if (ctx->base.init_flags & VPX_CODEC_USE_PSNR) cpi->b_calculate_psnr = 1;

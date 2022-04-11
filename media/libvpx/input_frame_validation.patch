@@ -8,7 +8,7 @@ MozReview-Commit-ID: BxDCnJe0mzs
 diff --git a/media/libvpx/libvpx/vp8/vp8_cx_iface.c b/media/libvpx/libvpx/vp8/vp8_cx_iface.c
 --- a/media/libvpx/libvpx/vp8/vp8_cx_iface.c
 +++ b/media/libvpx/libvpx/vp8/vp8_cx_iface.c
-@@ -855,20 +855,29 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
+@@ -921,20 +921,29 @@ static vpx_codec_err_t vp8e_encode(vpx_c
      dst_time_stamp =
          pts_val * ctx->timestamp_ratio.num / ctx->timestamp_ratio.den;
      dst_end_time_stamp = (pts_val + (int64_t)duration) *
