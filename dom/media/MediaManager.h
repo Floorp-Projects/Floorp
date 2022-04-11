@@ -300,7 +300,6 @@ class MediaManager final : public nsIMediaManagerService,
 
  private:
   static nsresult GenerateUUID(nsAString& aResult);
-  static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
 
  public:
   /**
