@@ -12,6 +12,7 @@ const checkFontSize = (actual, expected, str) => {
   let fs1 = actual.substring(0, actual.length - 2);
   let fs2 = expected;
   let diff = Math.abs(fs1 - fs2);
+  info(`Actual font size: ${fs1}. Expected font size: ${fs2}`);
   Assert.lessOrEqual(diff, ACCEPTABLE_DIFF, str);
 };
 
@@ -55,6 +56,11 @@ add_task(async () => {
 
       let width = pipWin.innerWidth;
       let height = pipWin.innerHeight;
+
+      pipWin.resizeTo(250 * (width / height), 250);
+
+      width = pipWin.innerWidth;
+      height = pipWin.innerHeight;
 
       let pipBrowser = pipWin.document.getElementById("browser");
 
