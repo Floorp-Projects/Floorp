@@ -45,6 +45,7 @@ class CSSWarning extends Component {
       repeat: PropTypes.any,
       serviceContainer: PropTypes.object,
       timestampsVisible: PropTypes.bool.isRequired,
+      setExpanded: PropTypes.func,
     };
   }
 
@@ -92,6 +93,7 @@ class CSSWarning extends Component {
       serviceContainer,
       timestampsVisible,
       inWarningGroup,
+      setExpanded,
     } = this.props;
 
     const {
@@ -136,6 +138,7 @@ class CSSWarning extends Component {
           escapeWhitespace: false,
           grip: cssMatchingElements,
           serviceContainer,
+          setExpanded,
         })
       );
 

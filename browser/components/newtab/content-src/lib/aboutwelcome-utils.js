@@ -54,7 +54,6 @@ export const AboutWelcomeUtils = {
 export const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
   utm_term: "rtamo",
-  order: 0,
   content: {
     position: "corner",
     hero_text: { string_id: "mr1-welcome-screen-hero-text" },

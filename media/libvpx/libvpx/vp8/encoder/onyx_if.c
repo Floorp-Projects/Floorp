@@ -301,9 +301,9 @@ static void init_temporal_layer_context(VP8_COMP *cpi, VP8_CONFIG *oxcf,
   /* Work out the average size of a frame within this layer */
   if (layer > 0) {
     lc->avg_frame_size_for_layer =
-        (int)((cpi->oxcf.target_bitrate[layer] -
-               cpi->oxcf.target_bitrate[layer - 1]) *
-              1000 / (lc->framerate - prev_layer_framerate));
+        (int)round((cpi->oxcf.target_bitrate[layer] -
+                    cpi->oxcf.target_bitrate[layer - 1]) *
+                   1000 / (lc->framerate - prev_layer_framerate));
   }
 
   lc->active_worst_quality = cpi->oxcf.worst_allowed_q;
@@ -1430,6 +1430,7 @@ void vp8_change_config(VP8_COMP *cpi, VP8_CONFIG *oxcf) {
   VP8_COMMON *cm = &cpi->common;
   int last_w, last_h;
   unsigned int prev_number_of_layers;
+  unsigned int raw_target_rate;
 
   if (!cpi) return;
 
@@ -1570,6 +1571,10 @@ void vp8_change_config(VP8_COMP *cpi, VP8_CONFIG *oxcf) {
     cpi->oxcf.maximum_buffer_size_in_ms = 240000;
   }
 
+  raw_target_rate = (unsigned int)((int64_t)cpi->oxcf.Width * cpi->oxcf.Height *
+                                   8 * 3 * cpi->framerate / 1000);
+  if (cpi->oxcf.target_bandwidth > raw_target_rate)
+    cpi->oxcf.target_bandwidth = raw_target_rate;
   /* Convert target bandwidth from Kbit/s to Bit/s */
   cpi->oxcf.target_bandwidth *= 1000;
 
@@ -3615,7 +3620,7 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
         if (cpi->this_key_frame_forced) {
           if (cpi->active_best_quality > cpi->avg_frame_qindex * 7 / 8) {
             cpi->active_best_quality = cpi->avg_frame_qindex * 7 / 8;
-          } else if (cpi->active_best_quality<cpi->avg_frame_qindex>> 2) {
+          } else if (cpi->active_best_quality < (cpi->avg_frame_qindex >> 2)) {
             cpi->active_best_quality = cpi->avg_frame_qindex >> 2;
           }
         }
@@ -4520,22 +4525,24 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
   /* Rolling monitors of whether we are over or underspending used to
    * help regulate min and Max Q in two pass.
    */
-  cpi->rolling_target_bits =
-      ((cpi->rolling_target_bits * 3) + cpi->this_frame_target + 2) / 4;
-  cpi->rolling_actual_bits =
-      ((cpi->rolling_actual_bits * 3) + cpi->projected_frame_size + 2) / 4;
-  cpi->long_rolling_target_bits =
-      ((cpi->long_rolling_target_bits * 31) + cpi->this_frame_target + 16) / 32;
-  cpi->long_rolling_actual_bits =
-      ((cpi->long_rolling_actual_bits * 31) + cpi->projected_frame_size + 16) /
-      32;
+  cpi->rolling_target_bits = (int)ROUND64_POWER_OF_TWO(
+      (int64_t)cpi->rolling_target_bits * 3 + cpi->this_frame_target, 2);
+  cpi->rolling_actual_bits = (int)ROUND64_POWER_OF_TWO(
+      (int64_t)cpi->rolling_actual_bits * 3 + cpi->projected_frame_size, 2);
+  cpi->long_rolling_target_bits = (int)ROUND64_POWER_OF_TWO(
+      (int64_t)cpi->long_rolling_target_bits * 31 + cpi->this_frame_target, 5);
+  cpi->long_rolling_actual_bits = (int)ROUND64_POWER_OF_TWO(
+      (int64_t)cpi->long_rolling_actual_bits * 31 + cpi->projected_frame_size,
+      5);
 
   /* Actual bits spent */
   cpi->total_actual_bits += cpi->projected_frame_size;
 
+#if 0 && CONFIG_INTERNAL_STATS
   /* Debug stats */
   cpi->total_target_vs_actual +=
       (cpi->this_frame_target - cpi->projected_frame_size);
+#endif
 
   cpi->buffer_level = cpi->bits_off_target;
 
@@ -4912,6 +4919,8 @@ int vp8_get_compressed_data(VP8_COMP *cpi, unsigned int *frame_flags,
 
       this_duration = cpi->source->ts_end - cpi->last_end_time_stamp_seen;
       last_duration = cpi->last_end_time_stamp_seen - cpi->last_time_stamp_seen;
+      // Cap this to avoid overflow of (this_duration - last_duration) * 10
+      this_duration = VPXMIN(this_duration, INT64_MAX / 10);
       /* do a step update if the duration changes by 10% */
       if (last_duration) {
         step = (int)(((this_duration - last_duration) * 10 / last_duration));
@@ -5309,17 +5318,13 @@ int vp8_set_roimap(VP8_COMP *cpi, unsigned char *map, unsigned int rows,
     return -1;
   }
 
-  // Range check the delta Q values and convert the external Q range values
-  // to internal ones.
-  if ((abs(delta_q[0]) > range) || (abs(delta_q[1]) > range) ||
-      (abs(delta_q[2]) > range) || (abs(delta_q[3]) > range)) {
-    return -1;
-  }
-
-  // Range check the delta lf values
-  if ((abs(delta_lf[0]) > range) || (abs(delta_lf[1]) > range) ||
-      (abs(delta_lf[2]) > range) || (abs(delta_lf[3]) > range)) {
-    return -1;
+  for (i = 0; i < MAX_MB_SEGMENTS; ++i) {
+    // Note abs() alone can't be used as the behavior of abs(INT_MIN) is
+    // undefined.
+    if (delta_q[i] > range || delta_q[i] < -range || delta_lf[i] > range ||
+        delta_lf[i] < -range) {
+      return -1;
+    }
   }
 
   // Also disable segmentation if no deltas are specified.

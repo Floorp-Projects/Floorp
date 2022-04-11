@@ -424,7 +424,6 @@ const MESSAGES = () => [
       screens: [
         {
           id: "AW_PIN_FIREFOX",
-          order: 0,
           content: {
             has_noodles: true,
             title: {
@@ -460,7 +459,6 @@ const MESSAGES = () => [
         },
         {
           id: "AW_SET_DEFAULT",
-          order: 1,
           content: {
             has_noodles: true,
             logo: {
@@ -495,7 +493,6 @@ const MESSAGES = () => [
         },
         {
           id: "BACKGROUND_IMAGE",
-          order: 2,
           content: {
             background:
               "url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) no-repeat center/cover",
@@ -521,7 +518,6 @@ const MESSAGES = () => [
         },
         {
           id: "BACKGROUND_COLOR",
-          order: 3,
           content: {
             background: "white",
             logo: {

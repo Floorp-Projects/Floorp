@@ -1674,8 +1674,8 @@ void vpx_lpf_vertical_4_dual_sse2(uint8_t *s, int pitch, const uint8_t *blimit0,
   transpose8x16(s - 4, s - 4 + pitch * 8, pitch, t_dst, 16);
 
   // Loop filtering
-  vpx_lpf_horizontal_4_dual_sse2(t_dst + 4 * 16, 16, blimit0, limit0, thresh0,
-                                 blimit1, limit1, thresh1);
+  vpx_lpf_horizontal_4_dual(t_dst + 4 * 16, 16, blimit0, limit0, thresh0,
+                            blimit1, limit1, thresh1);
   src[0] = t_dst;
   src[1] = t_dst + 8;
   dst[0] = s - 4;
@@ -1700,7 +1700,7 @@ void vpx_lpf_vertical_8_sse2(unsigned char *s, int pitch,
   transpose(src, pitch, dst, 8, 1);
 
   // Loop filtering
-  vpx_lpf_horizontal_8_sse2(t_dst + 4 * 8, 8, blimit, limit, thresh);
+  vpx_lpf_horizontal_8(t_dst + 4 * 8, 8, blimit, limit, thresh);
 
   src[0] = t_dst;
   dst[0] = s - 4;
@@ -1721,8 +1721,8 @@ void vpx_lpf_vertical_8_dual_sse2(uint8_t *s, int pitch, const uint8_t *blimit0,
   transpose8x16(s - 4, s - 4 + pitch * 8, pitch, t_dst, 16);
 
   // Loop filtering
-  vpx_lpf_horizontal_8_dual_sse2(t_dst + 4 * 16, 16, blimit0, limit0, thresh0,
-                                 blimit1, limit1, thresh1);
+  vpx_lpf_horizontal_8_dual(t_dst + 4 * 16, 16, blimit0, limit0, thresh0,
+                            blimit1, limit1, thresh1);
   src[0] = t_dst;
   src[1] = t_dst + 8;
 
@@ -1750,7 +1750,7 @@ void vpx_lpf_vertical_16_sse2(unsigned char *s, int pitch,
   transpose(src, pitch, dst, 8, 2);
 
   // Loop filtering
-  vpx_lpf_horizontal_16_sse2(t_dst + 8 * 8, 8, blimit, limit, thresh);
+  vpx_lpf_horizontal_16(t_dst + 8 * 8, 8, blimit, limit, thresh);
 
   src[0] = t_dst;
   src[1] = t_dst + 8 * 8;
@@ -1771,7 +1771,7 @@ void vpx_lpf_vertical_16_dual_sse2(unsigned char *s, int pitch,
   transpose8x16(s, s + 8 * pitch, pitch, t_dst + 8 * 16, 16);
 
   // Loop filtering
-  vpx_lpf_horizontal_16_dual_sse2(t_dst + 8 * 16, 16, blimit, limit, thresh);
+  vpx_lpf_horizontal_16_dual(t_dst + 8 * 16, 16, blimit, limit, thresh);
 
   // Transpose back
   transpose8x16(t_dst, t_dst + 8 * 16, 16, s - 8, pitch);

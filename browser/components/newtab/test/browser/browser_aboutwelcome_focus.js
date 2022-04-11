@@ -5,7 +5,6 @@ const ABOUT_WELCOME_FOCUS_PREF = "browser.aboutwelcome.skipFocus";
 const TEST_MULTISTAGE_JSON = [
   {
     id: "AW_STEP1",
-    order: 0,
     content: {
       title: "Step 1",
     },

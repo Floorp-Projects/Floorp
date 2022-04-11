@@ -19,6 +19,24 @@
 #include "vpx/vpx_integer.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 
+// Support for these xN intrinsics is lacking in older versions of GCC.
+#if defined(__GNUC__) && !defined(__clang__)
+#if __GNUC__ < 8 || defined(__arm__)
+static INLINE uint8x16x2_t vld1q_u8_x2(uint8_t const *ptr) {
+  uint8x16x2_t res = { { vld1q_u8(ptr + 0 * 16), vld1q_u8(ptr + 1 * 16) } };
+  return res;
+}
+#endif
+
+#if __GNUC__ < 9 || defined(__arm__)
+static INLINE uint8x16x3_t vld1q_u8_x3(uint8_t const *ptr) {
+  uint8x16x3_t res = { { vld1q_u8(ptr + 0 * 16), vld1q_u8(ptr + 1 * 16),
+                         vld1q_u8(ptr + 2 * 16) } };
+  return res;
+}
+#endif
+#endif
+
 static INLINE int16x4_t create_s16x4_neon(const int16_t c0, const int16_t c1,
                                           const int16_t c2, const int16_t c3) {
   return vcreate_s16((uint16_t)c0 | ((uint32_t)c1 << 16) |
@@ -95,7 +113,8 @@ static INLINE void uint32_to_mem(uint8_t *buf, uint32_t a) {
 }
 
 // Load 2 sets of 4 bytes when alignment is not guaranteed.
-static INLINE uint8x8_t load_unaligned_u8(const uint8_t *buf, int stride) {
+static INLINE uint8x8_t load_unaligned_u8(const uint8_t *buf,
+                                          ptrdiff_t stride) {
   uint32_t a;
   uint32x2_t a_u32 = vdup_n_u32(0);
   if (stride == 4) return vld1_u8(buf);
@@ -108,7 +127,7 @@ static INLINE uint8x8_t load_unaligned_u8(const uint8_t *buf, int stride) {
 }
 
 // Store 2 sets of 4 bytes when alignment is not guaranteed.
-static INLINE void store_unaligned_u8(uint8_t *buf, int stride,
+static INLINE void store_unaligned_u8(uint8_t *buf, ptrdiff_t stride,
                                       const uint8x8_t a) {
   const uint32x2_t a_u32 = vreinterpret_u32_u8(a);
   if (stride == 4) {
@@ -121,7 +140,8 @@ static INLINE void store_unaligned_u8(uint8_t *buf, int stride,
 }
 
 // Load 4 sets of 4 bytes when alignment is not guaranteed.
-static INLINE uint8x16_t load_unaligned_u8q(const uint8_t *buf, int stride) {
+static INLINE uint8x16_t load_unaligned_u8q(const uint8_t *buf,
+                                            ptrdiff_t stride) {
   uint32_t a;
   uint32x4_t a_u32 = vdupq_n_u32(0);
   if (stride == 4) return vld1q_u8(buf);
@@ -141,7 +161,7 @@ static INLINE uint8x16_t load_unaligned_u8q(const uint8_t *buf, int stride) {
 }
 
 // Store 4 sets of 4 bytes when alignment is not guaranteed.
-static INLINE void store_unaligned_u8q(uint8_t *buf, int stride,
+static INLINE void store_unaligned_u8q(uint8_t *buf, ptrdiff_t stride,
                                        const uint8x16_t a) {
   const uint32x4_t a_u32 = vreinterpretq_u32_u8(a);
   if (stride == 4) {
@@ -158,7 +178,7 @@ static INLINE void store_unaligned_u8q(uint8_t *buf, int stride,
 }
 
 // Load 2 sets of 4 bytes when alignment is guaranteed.
-static INLINE uint8x8_t load_u8(const uint8_t *buf, int stride) {
+static INLINE uint8x8_t load_u8(const uint8_t *buf, ptrdiff_t stride) {
   uint32x2_t a = vdup_n_u32(0);
 
   assert(!((intptr_t)buf % sizeof(uint32_t)));
@@ -171,7 +191,7 @@ static INLINE uint8x8_t load_u8(const uint8_t *buf, int stride) {
 }
 
 // Store 2 sets of 4 bytes when alignment is guaranteed.
-static INLINE void store_u8(uint8_t *buf, int stride, const uint8x8_t a) {
+static INLINE void store_u8(uint8_t *buf, ptrdiff_t stride, const uint8x8_t a) {
   uint32x2_t a_u32 = vreinterpret_u32_u8(a);
 
   assert(!((intptr_t)buf % sizeof(uint32_t)));

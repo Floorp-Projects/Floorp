@@ -30,7 +30,7 @@ add_task(async function() {
   );
 
   is(
-    findMessages(hud, "startup message").length,
+    (await findAllMessagesVirtualized(hud)).length,
     50,
     "We have the expected number of messages"
   );

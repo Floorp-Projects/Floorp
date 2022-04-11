@@ -323,13 +323,18 @@ void vp9_frame_init_quantizer(VP9_COMP *cpi) {
   vp9_init_plane_quantizers(cpi, &cpi->td.mb);
 }
 
-void vp9_set_quantizer(VP9_COMMON *cm, int q) {
+void vp9_set_quantizer(VP9_COMP *cpi, int q) {
+  VP9_COMMON *cm = &cpi->common;
   // quantizer has to be reinitialized with vp9_init_quantizer() if any
   // delta_q changes.
   cm->base_qindex = q;
   cm->y_dc_delta_q = 0;
   cm->uv_dc_delta_q = 0;
   cm->uv_ac_delta_q = 0;
+  if (cpi->oxcf.delta_q_uv != 0) {
+    cm->uv_dc_delta_q = cm->uv_ac_delta_q = cpi->oxcf.delta_q_uv;
+    vp9_init_quantizer(cpi);
+  }
 }
 
 // Table that converts 0-63 Q-range values passed in outside to the Qindex
