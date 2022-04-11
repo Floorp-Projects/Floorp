@@ -824,6 +824,7 @@ rtc_library("rtc_base") {
   deps = [
     ":checks",
     ":deprecation",
+    ":robo_caller",
     ":rtc_task_queue",
     ":stringutils",
     "../api:array_view",

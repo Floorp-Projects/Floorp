@@ -200,31 +200,29 @@ class JsepTransportController : public sigslot::has_slots<> {
   // Else => connecting
   RoboCaller<cricket::IceConnectionState> SignalIceConnectionState;
 
-  sigslot::signal1<PeerConnectionInterface::PeerConnectionState>
+  RoboCaller<PeerConnectionInterface::PeerConnectionState>
       SignalConnectionState;
 
-  sigslot::signal1<PeerConnectionInterface::IceConnectionState>
+  RoboCaller<PeerConnectionInterface::IceConnectionState>
       SignalStandardizedIceConnectionState;
 
   // If all transports done gathering => complete,
   // Else if any are gathering => gathering,
   // Else => new
-  sigslot::signal1<cricket::IceGatheringState> SignalIceGatheringState;
+  RoboCaller<cricket::IceGatheringState> SignalIceGatheringState;
 
-  // (mid, candidates)
-  sigslot::signal2<const std::string&, const std::vector<cricket::Candidate>&>
+  // [mid, candidates]
+  RoboCaller<const std::string&, const std::vector<cricket::Candidate>&>
       SignalIceCandidatesGathered;
 
-  sigslot::signal1<const cricket::IceCandidateErrorEvent&>
-      SignalIceCandidateError;
+  RoboCaller<const cricket::IceCandidateErrorEvent&> SignalIceCandidateError;
 
-  sigslot::signal1<const std::vector<cricket::Candidate>&>
-      SignalIceCandidatesRemoved;
+  RoboCaller<const std::vector<cricket::Candidate>&> SignalIceCandidatesRemoved;
 
-  sigslot::signal1<const cricket::CandidatePairChangeEvent&>
+  RoboCaller<const cricket::CandidatePairChangeEvent&>
       SignalIceCandidatePairChanged;
 
-  sigslot::signal1<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
+  RoboCaller<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
 
  private:
   RTCError ApplyDescription_n(bool local,
