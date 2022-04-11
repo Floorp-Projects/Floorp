@@ -35,6 +35,10 @@
 
 namespace mozilla {
 
+using gfx::ColorRange;
+using gfx::CICP::ColourPrimaries;
+using gfx::CICP::MatrixCoefficients;
+using gfx::CICP::TransferCharacteristics;
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
 
@@ -301,14 +305,9 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
     return false;
   }
   ++fieldsItr;
-  uint8_t* fields[] = {&aProfile,
-                       &aLevel,
-                       &aBitDepth,
-                       &aChromaSubsampling,
-                       &aColorSpace.mPrimaryId,
-                       &aColorSpace.mTransferId,
-                       &aColorSpace.mMatrixId,
-                       &aColorSpace.mRangeId};
+  uint8_t primary, transfer, matrix, range;
+  uint8_t* fields[] = {&aProfile, &aLevel,   &aBitDepth, &aChromaSubsampling,
+                       &primary,  &transfer, &matrix,    &range};
   int fieldsCount = 0;
   nsresult rv;
   for (; fieldsItr != splitter.end(); ++fieldsItr, ++fieldsCount) {
@@ -385,15 +384,15 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // It is an integer that is defined by the "Colour primaries"
   // section of ISO/IEC 23001-8:2016 Table 2.
   // We treat reserved value as false case.
-  const auto& primaryId = aColorSpace.mPrimaryId;
-  if (primaryId == 0 || primaryId == 3 || primaryId > 22) {
+  if (primary == 0 || primary == 3 || primary > 22) {
     // reserved value.
     return false;
   }
-  if (primaryId > 12 && primaryId < 22) {
+  if (primary > 12 && primary < 22) {
     // 13~21 are reserved values.
     return false;
   }
+  aColorSpace.mPrimaries = static_cast<ColourPrimaries>(primary);
 
   if (fieldsCount == 5) {
     // No more options.
@@ -403,11 +402,11 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // It is an integer that is defined by the
   // "Transfer characteristics" section of ISO/IEC 23001-8:2016 Table 3.
   // We treat reserved value as false case.
-  const auto& transferId = aColorSpace.mTransferId;
-  if (transferId == 0 || transferId == 3 || transferId > 18) {
+  if (transfer == 0 || transfer == 3 || transfer > 18) {
     // reserved value.
     return false;
   }
+  aColorSpace.mTransfer = static_cast<TransferCharacteristics>(transfer);
 
   if (fieldsCount == 6) {
     // No more options.
@@ -417,14 +416,15 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // It is an integer that is defined by the
   // "Matrix coefficients" section of ISO/IEC 23001-8:2016 Table 4.
   // We treat reserved value as false case.
-  const auto& matrixId = aColorSpace.mMatrixId;
-  if (matrixId == 3 || matrixId > 11) {
+  if (matrix == 3 || matrix > 11) {
     return false;
   }
+  aColorSpace.mMatrix = static_cast<MatrixCoefficients>(matrix);
 
   // If matrixCoefficients is 0 (RGB), then chroma subsampling MUST be 3
   // (4:4:4).
-  if (matrixId == 0 && aChromaSubsampling != 3) {
+  if (aColorSpace.mMatrix == MatrixCoefficients::MC_IDENTITY &&
+      aChromaSubsampling != 3) {
     return false;
   }
 
@@ -436,8 +436,8 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
   // videoFullRangeFlag indicates the black level and range of the luma and
   // chroma signals. 0 = legal range (e.g. 16-235 for 8 bit sample depth);
   // 1 = full range (e.g. 0-255 for 8-bit sample depth).
-  const auto& rangeId = aColorSpace.mRangeId;
-  return rangeId <= 1;
+  aColorSpace.mRange = static_cast<ColorRange>(range);
+  return range <= 1;
 }
 
 bool ExtractH264CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
