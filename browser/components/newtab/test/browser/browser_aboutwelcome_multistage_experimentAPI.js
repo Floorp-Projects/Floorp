@@ -13,7 +13,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP1",
-    order: 0,
     content: {
       title: "Step 1",
       primary_button: {
@@ -40,7 +39,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP2",
-    order: 1,
     content: {
       title: "Step 2",
       primary_button: {
@@ -57,7 +55,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP3",
-    order: 2,
     content: {
       title: "Step 3",
       tiles: {
@@ -95,7 +92,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP4",
-    order: 3,
     content: {
       title: "Step 4",
       primary_button: {
@@ -154,7 +150,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   const TEST_CONTENT = [
     {
       id: "AW_STEP1",
-      order: 0,
       content: {
         title: "Step 1",
         tiles: {
@@ -195,7 +190,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     },
     {
       id: "AW_STEP2",
-      order: 1,
       content: {
         zap: true,
         title: "Step 2 test",
@@ -213,7 +207,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     },
     {
       id: "AW_STEP3",
-      order: 2,
       content: {
         logo: {},
         title: "Step 3",

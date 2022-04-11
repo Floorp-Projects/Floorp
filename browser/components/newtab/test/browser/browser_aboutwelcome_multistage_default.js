@@ -5,7 +5,6 @@ const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP1",
-    order: 0,
     content: {
       position: "corner",
       title: "Step 1",
@@ -33,7 +32,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP2",
-    order: 1,
     content: {
       title: "Step 2",
       primary_button: {
@@ -50,7 +48,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP3",
-    order: 2,
     content: {
       title: "Step 3",
       tiles: {
@@ -88,7 +85,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP4",
-    order: 3,
     auto_advance: "primary_button",
     content: {
       title: "Step 4",
