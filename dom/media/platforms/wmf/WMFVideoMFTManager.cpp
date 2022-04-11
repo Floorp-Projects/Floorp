@@ -199,24 +199,35 @@ bool WMFVideoMFTManager::InitializeDXVA() {
     return false;
   }
 
-  nsACString* failureReason = &mDXVAFailureReason;
-  nsCString secondFailureReason;
-  if (StaticPrefs::media_wmf_dxva_d3d11_enabled() && IsWin8OrLater()) {
+  bool d3d11 = true;
+  if (!StaticPrefs::media_wmf_dxva_d3d11_enabled()) {
+    mDXVAFailureReason = nsPrintfCString(
+        "D3D11: %s is false",
+        StaticPrefs::GetPrefName_media_wmf_dxva_d3d11_enabled());
+    d3d11 = false;
+  }
+  if (!IsWin8OrLater()) {
+    mDXVAFailureReason.AssignLiteral("D3D11: Requires Windows 8 or later");
+    d3d11 = false;
+  }
+
+  if (d3d11) {
+    mDXVAFailureReason.AppendLiteral("D3D11: ");
     mDXVA2Manager.reset(
-        DXVA2Manager::CreateD3D11DXVA(mKnowsCompositor, *failureReason));
+        DXVA2Manager::CreateD3D11DXVA(mKnowsCompositor, mDXVAFailureReason));
     if (mDXVA2Manager) {
       return true;
     }
-    // Try again with d3d9, but record the failure reason
-    // into a new var to avoid overwriting the d3d11 failure.
-    failureReason = &secondFailureReason;
-    mDXVAFailureReason.AppendLiteral("; ");
   }
 
+  // Try again with d3d9, but record the failure reason
+  // into a new var to avoid overwriting the d3d11 failure.
+  nsAutoCString d3d9Failure;
   mDXVA2Manager.reset(
-      DXVA2Manager::CreateD3D9DXVA(mKnowsCompositor, *failureReason));
+      DXVA2Manager::CreateD3D9DXVA(mKnowsCompositor, d3d9Failure));
   // Make sure we include the messages from both attempts (if applicable).
-  mDXVAFailureReason.Append(secondFailureReason);
+  mDXVAFailureReason.AppendLiteral("; D3D9: ");
+  mDXVAFailureReason.Append(d3d9Failure);
 
   return mDXVA2Manager != nullptr;
 }
@@ -309,10 +320,20 @@ MediaResult WMFVideoMFTManager::InitInternal() {
   static const int MIN_H264_HW_HEIGHT = 132;
 
   mUseHwAccel = false;  // default value; changed if D3D setup succeeds.
-  bool useDxva = (mStreamType != WMFStreamType::H264 ||
-                  (mVideoInfo.ImageRect().width > MIN_H264_HW_WIDTH &&
-                   mVideoInfo.ImageRect().height > MIN_H264_HW_HEIGHT)) &&
-                 InitializeDXVA();
+  bool useDxva = true;
+
+  if (mStreamType == WMFStreamType::H264 &&
+      (mVideoInfo.ImageRect().width <= MIN_H264_HW_WIDTH ||
+       mVideoInfo.ImageRect().height <= MIN_H264_HW_HEIGHT)) {
+    useDxva = false;
+    mDXVAFailureReason = nsPrintfCString(
+        "H264 video resolution too low: %" PRIu32 "x%" PRIu32,
+        mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
+  }
+
+  if (useDxva) {
+    useDxva = InitializeDXVA();
+  }
 
   RefPtr<MFTDecoder> decoder = new MFTDecoder();
   HRESULT hr = WMFDecoderModule::CreateMFTDecoder(mStreamType, decoder);
@@ -382,6 +403,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       // MFT_MESSAGE_SET_D3D_MANAGER failed
       mDXVA2Manager.reset();
     }
+    LOG(nsPrintfCString("DXVA failure: %s", mDXVAFailureReason.get()).get());
     if (mStreamType == WMFStreamType::VP9 ||
         mStreamType == WMFStreamType::VP8 ||
         mStreamType == WMFStreamType::AV1) {
