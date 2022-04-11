@@ -61,5 +61,9 @@ if __name__ == "__main__":
                                 info = tar.gettarinfo(path)
                                 with open(path, "rb") as fh:
                                     info.name = str(stem / dest / relpath / f).lower()
+                                    # Set executable flag on .exe files, the Firefox build
+                                    # system wants it.
+                                    if info.name.endswith(".exe"):
+                                        info.mode |= (info.mode & 0o444) >> 2
                                     print("Adding", info.name)
                                     tar.addfile(info, fh)

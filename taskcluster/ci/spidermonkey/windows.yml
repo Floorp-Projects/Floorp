@@ -6,10 +6,8 @@ job-defaults:
     worker-type: b-win2012
     worker:
         max-run-time: 36000
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
-        tooltool-downloads: internal
+        tooltool-downloads: public
 
 sm-plain-win64/debug:
     description: "Spidermonkey Plain win64 debug"
@@ -26,6 +24,7 @@ sm-plain-win64/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
+            - win64-vs2017
 
 sm-plain-win32/debug:
     description: "Spidermonkey Plain win32 debug"
@@ -44,9 +43,7 @@ sm-plain-win32/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+            - win64-vs2017
 
 sm-plain-win64/opt:
     description: "Spidermonkey Plain win64 opt"
@@ -63,6 +60,7 @@ sm-plain-win64/opt:
             - win64-clang
             - win64-rust
             - win64-mozmake
+            - win64-vs2017
 
 sm-plain-win32/opt:
     description: "Spidermonkey Plain win32 opt"
@@ -81,9 +79,7 @@ sm-plain-win32/opt:
             - win64-clang
             - win64-rust
             - win64-mozmake
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+            - win64-vs2017
 
 sm-compacting-win64/debug:
     description: "Spidermonkey Compacting win64 debug"
@@ -100,6 +96,7 @@ sm-compacting-win64/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
+            - win64-vs2017
 
 sm-compacting-win32/debug:
     description: "Spidermonkey Compacting win32 debug"
@@ -118,6 +115,4 @@ sm-compacting-win32/debug:
             - win64-clang
             - win64-rust
             - win64-mozmake
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+            - win64-vs2017

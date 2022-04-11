@@ -308,8 +308,6 @@ win64-clang-13-raw:
         symbol: TW64(clang-13-raw)
     worker-type: b-win2012
     worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         max-run-time: 9000
     run:
         script: build-clang.sh
@@ -323,9 +321,7 @@ win64-clang-13-raw:
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/skip-stage-1-win64.json'
             - 'build/build-clang/4stages-pgo.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.zst
-        tooltool-downloads: internal
     fetches:
         fetch:
             - clang-13
@@ -334,6 +330,7 @@ win64-clang-13-raw:
         toolchain:
             - win64-clang-13-stage1
             - win64-compiler-rt-13
+            - win64-vs2017
 
 win64-clang-13:
     description: "Clang-cl 13 toolchain build"
@@ -372,9 +369,6 @@ win64-clang-13-stage1:
     treeherder:
         symbol: TW64(clang-13-stage1)
     worker-type: b-win2012
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         script: build-clang.sh
         arguments:
@@ -385,15 +379,15 @@ win64-clang-13-stage1:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'build/build-clang/1stage.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: win64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
-        tooltool-downloads: internal
     fetches:
         fetch:
             - clang-13
             - cmake
             - ninja
+        toolchain:
+            - win64-vs2017
 
 linux64-clang-trunk-raw:
     description: "Clang trunk toolchain build"
