@@ -18,6 +18,7 @@
 #  include "prthread.h"
 #  include "prenv.h"
 #  include "nsDebug.h"
+#  include "nsString.h"
 #  include "nsXULAppAPI.h"
 
 #  if defined(LINUX)
@@ -123,13 +124,40 @@ MOZ_NEVER_INLINE void child_ah_crap_handler(int signum) {
 static GLogFunc orig_log_func = nullptr;
 
 extern "C" {
-static void my_glib_log_func(const gchar* log_domain, GLogLevelFlags log_level,
-                             const gchar* message, gpointer user_data);
+static void glib_log_func(const gchar* log_domain, GLogLevelFlags log_level,
+                          const gchar* message, gpointer user_data);
 }
 
-/* static */ void my_glib_log_func(const gchar* log_domain,
-                                   GLogLevelFlags log_level,
-                                   const gchar* message, gpointer user_data) {
+// GDK sometimes avoids calling exit handlers, but we still want to know when we
+// crash, see https://gitlab.gnome.org/GNOME/gtk/-/issues/4514 and bug 1743144.
+static bool IsCrashyGtkMessage(const nsACString& aMessage) {
+  if (aMessage.EqualsLiteral("Lost connection to Wayland compositor.")) {
+    // https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/wayland/gdkeventsource.c#L210
+    return true;
+  }
+  if (StringBeginsWith(aMessage, "Error flushing display: "_ns)) {
+    // https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/wayland/gdkeventsource.c#L68
+    return true;
+  }
+  if (StringBeginsWith(aMessage, "Error reading events from display: "_ns)) {
+    // https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/wayland/gdkeventsource.c#L97
+    return true;
+  }
+  if (StringBeginsWith(aMessage, "Error "_ns) &&
+      StringEndsWith(aMessage, " dispatching to Wayland display."_ns)) {
+    // https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/wayland/gdkeventsource.c#L205
+    return true;
+  }
+  return false;
+}
+
+/* static */ void glib_log_func(const gchar* log_domain,
+                                GLogLevelFlags log_level, const gchar* message,
+                                gpointer user_data) {
+  if (MOZ_UNLIKELY(IsCrashyGtkMessage(nsDependentCString(message)))) {
+    MOZ_CRASH_UNSAFE(strdup(message));
+  }
+
   if (log_level &
       (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION)) {
     NS_DebugBreak(NS_DEBUG_ASSERTION, message, "glib assertion", __FILE__,
@@ -291,14 +319,11 @@ void InstallSignalHandlers(const char* aProgname) {
 #  if defined(MOZ_WIDGET_GTK) && \
       (GLIB_MAJOR_VERSION > 2 || \
        (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
-  const char* assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
-  if (assertString &&
-      (!strcmp(assertString, "suspend") || !strcmp(assertString, "stack") ||
-       !strcmp(assertString, "abort") || !strcmp(assertString, "trap") ||
-       !strcmp(assertString, "break"))) {
-    // Override the default glib logging function so we get stacks for it too.
-    orig_log_func = g_log_set_default_handler(my_glib_log_func, nullptr);
-  }
+  // Override the default glib logging function to intercept some crashes that
+  // are uninterceptable otherwise.
+  // Also, when XPCOM_DEBUG_BREAK is set, we can also get stacks for them.
+  // so we get stacks for it too.
+  orig_log_func = g_log_set_default_handler(glib_log_func, nullptr);
 #  endif
 }
 
