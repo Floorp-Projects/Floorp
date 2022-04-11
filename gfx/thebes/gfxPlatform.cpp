@@ -932,7 +932,7 @@ void gfxPlatform::Init() {
 
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     GPUProcessManager* gpu = GPUProcessManager::Get();
-    gpu->LaunchGPUProcess();
+    Unused << gpu->LaunchGPUProcess();
   }
 
   if (XRE_IsParentProcess()) {
