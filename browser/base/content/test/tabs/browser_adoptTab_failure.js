@@ -79,3 +79,29 @@ add_task(async function test_on_drop() {
   gBrowser.removeTab(nonAdoptableTab);
   await BrowserTestUtils.closeWindow(win2);
 });
+
+add_task(async function test_switchToTabHavingURI() {
+  const nonAdoptableTab = await addTab("data:text/plain,nonAdoptableTab");
+  const uri = nonAdoptableTab.linkedBrowser.currentURI;
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  const gBrowser2 = win2.gBrowser;
+
+  is(nonAdoptableTab.closing, false);
+  is(nonAdoptableTab.selected, false);
+  is(gBrowser2.tabs.length, 1);
+
+  makeAdoptTabFailOnceFor(gBrowser2, nonAdoptableTab);
+  win2.switchToTabHavingURI(uri, false, { adoptIntoActiveWindow: true });
+
+  is(nonAdoptableTab.closing, false);
+  is(nonAdoptableTab.selected, true);
+  is(gBrowser2.tabs.length, 1);
+
+  win2.switchToTabHavingURI(uri, false, { adoptIntoActiveWindow: true });
+
+  is(nonAdoptableTab.closing, true);
+  is(nonAdoptableTab.selected, false);
+  is(gBrowser2.tabs.length, 2);
+
+  await BrowserTestUtils.closeWindow(win2);
+});
