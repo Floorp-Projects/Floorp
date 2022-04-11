@@ -381,7 +381,7 @@ opus_int32 silk_inner_prod_aligned_scale(
     const opus_int              len                 /*    I vector lengths                                              */
 );
 
-opus_int64 silk_inner_prod16_aligned_64_c(
+opus_int64 silk_inner_prod16_c(
     const opus_int16            *inVec1,            /*    I input vector 1                                              */
     const opus_int16            *inVec2,            /*    I input vector 2                                              */
     const opus_int              len                 /*    I vector lengths                                              */
@@ -613,8 +613,8 @@ static OPUS_INLINE opus_int64 silk_max_64(opus_int64 a, opus_int64 b)
 #define silk_burg_modified(res_nrg, res_nrg_Q, A_Q16, x, minInvGain_Q30, subfr_length, nb_subfr, D, arch) \
     ((void)(arch), silk_burg_modified_c(res_nrg, res_nrg_Q, A_Q16, x, minInvGain_Q30, subfr_length, nb_subfr, D, arch))
 
-#define silk_inner_prod16_aligned_64(inVec1, inVec2, len, arch) \
-    ((void)(arch),silk_inner_prod16_aligned_64_c(inVec1, inVec2, len))
+#define silk_inner_prod16(inVec1, inVec2, len, arch) \
+    ((void)(arch),silk_inner_prod16_c(inVec1, inVec2, len))
 #endif
 
 #include "Inlines.h"
