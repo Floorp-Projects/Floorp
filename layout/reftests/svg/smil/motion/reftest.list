@@ -3,7 +3,7 @@
 
 == animateMotion-by-1.svg      lime.svg
 == animateMotion-by-2.svg      lime.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-800) == animateMotion-flattening-1.svg lime.svg # bug 951541
+fuzzy(0-15,0-1600) == animateMotion-flattening-1.svg lime.svg # bug 951541
 == animateMotion-from-to-1.svg lime.svg
 == animateMotion-indefinite-to-1.svg lime.svg
 == animateMotion-indefinite-to-2.svg lime.svg
@@ -11,9 +11,9 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.te
 == animateMotion-rotate-1b.svg lime.svg
 fuzzy(0-1,0-40) == animateMotion-rotate-2.svg lime.svg
 == animateMotion-to-overridden-1.svg lime.svg
-== animateMotion-values-linear-1.svg animateMotion-values-linear-1-ref.svg
-== animateMotion-values-paced-1a.svg animateMotion-values-paced-1-ref.svg
-fuzzy(0-1,0-30) == animateMotion-values-paced-1b.svg animateMotion-values-paced-1-ref.svg
+fuzzy(0-4,0-15) == animateMotion-values-linear-1.svg animateMotion-values-linear-1-ref.svg
+fuzzy(0-5,0-91) == animateMotion-values-paced-1a.svg animateMotion-values-paced-1-ref.svg
+fuzzy(0-5,0-91) == animateMotion-values-paced-1b.svg animateMotion-values-paced-1-ref.svg
 
 # Tests involving <mpath> sub-element
 == animateMotion-mpath-pathLength-1.svg lime.svg

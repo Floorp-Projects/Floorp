@@ -3,7 +3,7 @@
 == image-fill-01.svg          ../pass.svg
 == image-filter-01.svg        image-filter-01-ref.svg
 == image-load-01.svg          ../pass.svg
-fuzzy-if(Android&&!browserIsRemote,0-4,0-32) == image-opacity-01.svg image-opacity-01-ref.svg # Bug 779514 for Android
+fuzzy(0-4,0-110) == image-opacity-01.svg image-opacity-01-ref.svg # Bug 779514 for Android
 fuzzy(0-1,0-100) == image-opacity-02.svg image-opacity-02-ref.svg # Bug 776039 for Android
 == image-rotate-01.svg                        image-rotate-01-ref.svg
 == image-rotate-02a.svg                       image-rotate-02-ref.svg
@@ -35,10 +35,10 @@ fails-if(useDrawSnapshot) == image-zoom-02.svg                          image-zo
 == image-fill-opacity.html                    image-fill-opacity-ref.html
 
 # Tests for <image> with preserveAspectRatio
-== image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg
-== image-preserveAspectRatio-01-svg.svg    image-preserveAspectRatio-01-ref.svg
-== image-preserveAspectRatio-02-raster.svg image-preserveAspectRatio-02-ref.svg
-== image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg
-== image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg
-== image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg
+fuzzy(0-57,0-352) == image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg
+fuzzy(0-57,0-352) == image-preserveAspectRatio-01-svg.svg    image-preserveAspectRatio-01-ref.svg
+fuzzy(0-57,0-288) == image-preserveAspectRatio-02-raster.svg image-preserveAspectRatio-02-ref.svg
+fuzzy(0-57,0-288) == image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg
+fuzzy(0-57,0-288) == image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg
+fuzzy(0-57,0-288) == image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg
 == image-preserveAspectRatio-05.svg ../pass.svg

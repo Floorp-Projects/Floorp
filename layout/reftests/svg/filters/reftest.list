@@ -41,7 +41,7 @@ fuzzy(0-1,0-10000) == feComposite-2.svg feComposite-2-ref.svg
 fuzzy(0-1,0-1600) == feFlood-1.svg feFlood-1-ref.svg
 skip-if(d2d) fuzzy(0-1,0-6400) == feFlood-2.svg feFlood-2-ref.svg
 
-fuzzy(0-1,0-6404) fuzzy-if(!useDrawSnapshot,177-178,2556-3042) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(0-2,0-6404) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 fuzzy(0-2,0-304) == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
 fuzzy-if(!useDrawSnapshot,2-5,4764-8168) == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
@@ -99,7 +99,7 @@ fuzzy(0-10,0-1200) == filter-nested-filtering-02.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
 fuzzy-if(winWidget,0-1,0-39600) == feComposite-operator-lighter.svg feComposite-operator-lighter-ref.html
-fuzzy(0-1,0-26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
+fuzzy(0-85,0-28600) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
 fuzzy(0-1,0-10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 
