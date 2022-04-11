@@ -1038,7 +1038,7 @@ class AndroidWebview(ChromeAndroidBase):
         # https://chromium.googlesource.com/chromium/src/+/HEAD/android_webview/docs/channels.md
         command = ['adb']
         if self.device_serial:
-            command.extend(['-s', self.device_serial])
+            command.extend(['-s', self.device_serial[0]])
         command.extend(['shell', 'dumpsys', 'webviewupdate'])
         try:
             output = call(*command)
