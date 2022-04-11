@@ -2230,7 +2230,7 @@ ModuleLoaderBase* SandboxPrivate::GetModuleLoader(JSContext* aCx) {
   ScriptLoader* scriptLoader = mainModuleLoader->GetScriptLoader();
 
   ModuleLoader* moduleLoader =
-      new ModuleLoader(scriptLoader, ModuleLoader::WebExtension);
+      new ModuleLoader(scriptLoader, this, ModuleLoader::WebExtension);
   scriptLoader->RegisterContentScriptModuleLoader(moduleLoader);
   mModuleLoader = moduleLoader;
 

@@ -187,8 +187,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mBlockingDOMContentLoaded(false),
       mLoadEventFired(false),
       mGiveUpEncoding(false),
-      mReporter(new ConsoleReportCollector()),
-      mModuleLoader(new ModuleLoader(this, ModuleLoader::Normal)) {
+      mReporter(new ConsoleReportCollector()) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
 
   mSpeculativeOMTParsingEnabled = StaticPrefs::
@@ -249,6 +248,24 @@ ScriptLoader::~ScriptLoader() {
   }
 
   mModuleLoader = nullptr;
+}
+
+void ScriptLoader::SetGlobalObject(nsIGlobalObject* aGlobalObject) {
+  if (!aGlobalObject) {
+    // The document is being detached.
+    return;
+  }
+
+  MOZ_ASSERT(!HasPendingRequests());
+
+  if (mModuleLoader) {
+    MOZ_ASSERT(mModuleLoader->GetGlobalObject() == aGlobalObject);
+    return;
+  }
+
+  // The module loader is associated with a global object, so don't create it
+  // until we have a global set.
+  mModuleLoader = new ModuleLoader(this, aGlobalObject, ModuleLoader::Normal);
 }
 
 void ScriptLoader::RegisterContentScriptModuleLoader(ModuleLoader* aLoader) {
@@ -2543,7 +2560,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
   }
 }
 
-bool ScriptLoader::HasPendingRequests() {
+bool ScriptLoader::HasPendingRequests() const {
   return mParserBlockingRequest || !mXSLTRequests.isEmpty() ||
          !mLoadedAsyncRequests.isEmpty() ||
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
@@ -2553,7 +2570,7 @@ bool ScriptLoader::HasPendingRequests() {
 }
 
 bool ScriptLoader::HasPendingDynamicImports() const {
-  if (mModuleLoader->HasPendingDynamicImports()) {
+  if (mModuleLoader && mModuleLoader->HasPendingDynamicImports()) {
     return true;
   }
 
@@ -3354,7 +3371,9 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   mNonAsyncExternalScriptInsertedRequests.CancelRequestsAndClear();
   mXSLTRequests.CancelRequestsAndClear();
 
-  mModuleLoader->CancelAndClearDynamicImports();
+  if (mModuleLoader) {
+    mModuleLoader->CancelAndClearDynamicImports();
+  }
 
   for (ModuleLoader* loader : mWebExtModuleLoaders) {
     loader->CancelAndClearDynamicImports();
