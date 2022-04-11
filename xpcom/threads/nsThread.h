@@ -294,6 +294,7 @@ class nsThread : public nsIThreadInternal,
 
   static mozilla::OffTheBooksMutex& ThreadListMutex();
   static mozilla::LinkedList<nsThread>& ThreadList();
+  static void ClearThreadList();
 
   void AddToThreadList();
   void MaybeRemoveFromThreadList();
@@ -334,6 +335,8 @@ class nsThread : public nsIThreadInternal,
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
+
+  bool mHasTLSEntry = false;
 
   // The time the currently running event spent in event queues, and
   // when it started running.  If no event is running, they are
