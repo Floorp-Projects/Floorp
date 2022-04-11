@@ -353,7 +353,9 @@ nsresult ModuleLoaderBase::RestartModuleLoad(ModuleLoadRequest* aRequest) {
 
 nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
                                                     RestartRequest aRestart) {
+  MOZ_ASSERT(aRequest->mLoader == this);
   MOZ_ASSERT(aRequest->IsFetching());
+
   aRequest->SetUnknownDataType();
 
   // If we're restarting the request, the module should already be in the
@@ -430,6 +432,8 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
   // will have ModuleLoaded or LoadFailed on them when the promise is
   // resolved/rejected. This is set up in StartLoad.
 
+  MOZ_ASSERT(aRequest->mLoader == this);
+
   LOG(
       ("ScriptLoadRequest (%p): Module fetch finished (script == %p, result == "
        "%u)",
@@ -500,6 +504,7 @@ ModuleScript* ModuleLoaderBase::GetFetchedModule(
 
 nsresult ModuleLoaderBase::ProcessFetchedModuleSource(
     ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mLoader == this);
   MOZ_ASSERT(!aRequest->mModuleScript);
 
   nsresult rv = CreateModuleScript(aRequest);
@@ -846,6 +851,8 @@ ModuleLoaderBase::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
 }
 
 void ModuleLoaderBase::StartDynamicImport(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mLoader == this);
+
   LOG(("ScriptLoadRequest (%p): Start dynamic import", aRequest));
 
   mDynamicImportRequests.AppendElement(aRequest);
@@ -919,6 +926,8 @@ bool ModuleLoaderBase::HasPendingDynamicImports() const {
 
 void ModuleLoaderBase::CancelDynamicImport(ModuleLoadRequest* aRequest,
                                            nsresult aResult) {
+  MOZ_ASSERT(aRequest->mLoader == this);
+
   RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
   aRequest->Cancel();
   // FinishDynamicImport must happen exactly once for each dynamic import
@@ -933,8 +942,11 @@ void ModuleLoaderBase::RemoveDynamicImport(ModuleLoadRequest* aRequest) {
 }
 
 #ifdef DEBUG
-bool ModuleLoaderBase::HasDynamicImport(ModuleLoadRequest* aRequest) const {
-  return mDynamicImportRequests.Contains(aRequest);
+bool ModuleLoaderBase::HasDynamicImport(
+    const ModuleLoadRequest* aRequest) const {
+  MOZ_ASSERT(aRequest->mLoader == this);
+  return mDynamicImportRequests.Contains(
+      const_cast<ModuleLoadRequest*>(aRequest));
 }
 #endif
 
@@ -962,6 +974,7 @@ bool ModuleLoaderBase::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
   // Instantiate a top-level module and record any error.
 
   MOZ_ASSERT(aRequest);
+  MOZ_ASSERT(aRequest->mLoader == this);
   MOZ_ASSERT(aRequest->IsTopLevel());
 
   LOG(("ScriptLoadRequest (%p): Instantiate module tree", aRequest));
@@ -1035,6 +1048,8 @@ nsresult ModuleLoaderBase::InitDebuggerDataForModuleTree(
 }
 
 void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mLoader == this);
+
   if (aRequest->mModuleScript) {
     if (!InstantiateModuleTree(aRequest)) {
       aRequest->mModuleScript = nullptr;
@@ -1052,7 +1067,9 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 }
 
 nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
-                                          ScriptLoadRequest* aRequest) {
+                                          ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mLoader == this);
+
   AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
 
   mozilla::nsAutoMicroTask mt;
@@ -1145,7 +1162,7 @@ nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
   return rv;
 }
 
-nsresult ModuleLoaderBase::EvaluateModule(ScriptLoadRequest* aRequest) {
+nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   nsCOMPtr<nsIGlobalObject> globalObject =
       mLoader->GetGlobalForRequest(aRequest);
   if (!globalObject) {

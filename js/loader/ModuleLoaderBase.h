@@ -142,10 +142,12 @@ class ModuleLoaderBase : public nsISupports {
   // Public API methods.
 
  public:
+  ScriptLoaderInterface* GetScriptLoaderInterface() const { return mLoader; }
+
   bool HasPendingDynamicImports() const;
   void CancelDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
 #ifdef DEBUG
-  bool HasDynamicImport(ModuleLoadRequest* aRequest) const;
+  bool HasDynamicImport(const ModuleLoadRequest* aRequest) const;
 #endif
 
   // Start a load for a module script URI. Returns immediately if the module is
@@ -161,7 +163,7 @@ class ModuleLoaderBase : public nsISupports {
 
   // Implements https://html.spec.whatwg.org/#run-a-module-script
   nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
-                          ScriptLoadRequest* aRequest);
+                          ModuleLoadRequest* aRequest);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
@@ -215,7 +217,7 @@ class ModuleLoaderBase : public nsISupports {
   ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 
   // Helper function to set up the global correctly for dynamic imports.
-  nsresult EvaluateModule(ScriptLoadRequest* aRequest);
+  nsresult EvaluateModule(ModuleLoadRequest* aRequest);
 
   JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
   static nsresult InitDebuggerDataForModuleTree(JSContext* aCx,

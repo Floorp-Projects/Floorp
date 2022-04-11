@@ -64,7 +64,9 @@ ModuleLoadRequest::ModuleLoadRequest(
       mIsDynamicImport(aIsDynamicImport),
       mLoader(aLoader),
       mRootModule(aRootModule),
-      mVisitedSet(aVisitedSet) {}
+      mVisitedSet(aVisitedSet) {
+  MOZ_ASSERT(mLoader);
+}
 
 void ModuleLoadRequest::Cancel() {
   ScriptLoadRequest::Cancel();
@@ -185,8 +187,6 @@ void ModuleLoadRequest::LoadFinished() {
   }
 
   mLoader->ProcessLoadedModuleTree(request);
-
-  mLoader = nullptr;
 }
 
 void ModuleLoadRequest::ClearDynamicImport() {
