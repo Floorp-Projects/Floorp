@@ -30,11 +30,11 @@ function quoteNewlines(text) {
 
 describe("TextNode", () => {
   it("selects TextNode Rep as expected", () => {
-    expect(getRep(stubs.get("testRendering"))).toBe(TextNode.rep);
+    expect(getRep(stubs.get("testRendering")._grip)).toBe(TextNode.rep);
   });
 
   it("renders as expected", () => {
-    const object = stubs.get("testRendering");
+    const object = stubs.get("testRendering")._grip;
     const renderRep = props => shallow(TextNode.rep({ object, ...props }));
 
     const defaultOutput = '#text "hello world"';
@@ -61,7 +61,7 @@ describe("TextNode", () => {
   });
 
   it("renders as expected with EOL", () => {
-    const object = stubs.get("testRenderingWithEOL");
+    const object = stubs.get("testRenderingWithEOL")._grip;
     const renderRep = props => shallow(TextNode.rep({ object, ...props }));
 
     const defaultOutput = quoteNewlines('#text "hello\nworld"');
@@ -85,7 +85,7 @@ describe("TextNode", () => {
   });
 
   it("renders as expected with double quote", () => {
-    const object = stubs.get("testRenderingWithDoubleQuote");
+    const object = stubs.get("testRenderingWithDoubleQuote")._grip;
     const renderRep = props => shallow(TextNode.rep({ object, ...props }));
 
     const defaultOutput = '#text "hello\\"world"';
@@ -109,7 +109,7 @@ describe("TextNode", () => {
   });
 
   it("renders as expected with long string", () => {
-    const object = stubs.get("testRenderingWithLongString");
+    const object = stubs.get("testRenderingWithLongString")._grip;
     const renderRep = props => shallow(TextNode.rep({ object, ...props }));
     const initialString = object.preview.textContent.initial;
 
@@ -134,7 +134,7 @@ describe("TextNode", () => {
   });
 
   it("calls the expected function on mouseover", () => {
-    const object = stubs.get("testRendering");
+    const object = stubs.get("testRendering")._grip;
     const onDOMNodeMouseOver = jest.fn();
     const wrapper = shallow(TextNode.rep({ object, onDOMNodeMouseOver }));
 
@@ -145,7 +145,7 @@ describe("TextNode", () => {
   });
 
   it("calls the expected function on mouseout", () => {
-    const object = stubs.get("testRendering");
+    const object = stubs.get("testRendering")._grip;
     const onDOMNodeMouseOut = jest.fn();
     const wrapper = shallow(TextNode.rep({ object, onDOMNodeMouseOut }));
 
@@ -156,7 +156,7 @@ describe("TextNode", () => {
   });
 
   it("displays a button when the node is connected", () => {
-    const object = stubs.get("testRendering");
+    const object = stubs.get("testRendering")._grip;
 
     const onInspectIconClick = jest.fn();
     const wrapper = shallow(TextNode.rep({ object, onInspectIconClick }));
@@ -177,7 +177,7 @@ describe("TextNode", () => {
   });
 
   it("does not display a button when the node is connected", () => {
-    const object = stubs.get("testRenderingDisconnected");
+    const object = stubs.get("testRenderingDisconnected")._grip;
 
     const onInspectIconClick = jest.fn();
     const wrapper = shallow(TextNode.rep({ object, onInspectIconClick }));
