@@ -326,6 +326,17 @@ function internalSave(
     promiseTargetFile(fpParams, aSkipPrompt, relatedURI)
       .then(aDialogAccepted => {
         if (!aDialogAccepted) {
+          let browserWin = BrowserWindowTracker.getTopWindow();
+          if (
+            browserWin.gBrowser.selectedBrowser.currentURI.spec.startsWith(
+              "about:reader?"
+            )
+          ) {
+            let actor = browserWin.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+              "AboutReader"
+            );
+            actor.sendQuery("Reader:ShowToolbar");
+          }
           return;
         }
 
