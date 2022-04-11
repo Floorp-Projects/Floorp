@@ -7713,6 +7713,11 @@ void Document::SetScriptGlobalObject(
     mTemplateContentsOwner->SetScriptGlobalObject(aScriptGlobalObject);
   }
 
+  // Tell the script loader about the new global object.
+  if (mScriptLoader) {
+    mScriptLoader->SetGlobalObject(mScriptGlobalObject);
+  }
+
   if (!mMaybeServiceWorkerControlled && mDocumentContainer &&
       mScriptGlobalObject && GetChannel()) {
     // If we are shift-reloaded, don't associate with a ServiceWorker.

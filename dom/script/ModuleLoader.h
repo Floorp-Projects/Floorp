@@ -42,7 +42,8 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
  public:
   enum Kind { Normal, WebExtension };
 
-  ModuleLoader(ScriptLoader* aLoader, Kind aKind);
+  ModuleLoader(ScriptLoader* aLoader, nsIGlobalObject* aGlobalObject,
+               Kind aKind);
 
   Kind GetKind() const { return mKind; }
 
