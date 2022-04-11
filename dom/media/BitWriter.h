@@ -23,6 +23,8 @@ class BitWriter {
 
   // Write unsigned integer into Exp-Golomb-coded. 2^32-2 at most
   void WriteUE(uint32_t aValue);
+  // Write unsigned integer Little Endian Base 128 coded.
+  void WriteULEB128(uint64_t aValue);
 
   // Write RBSP trailing bits.
   void CloseWithRbspTrailing();

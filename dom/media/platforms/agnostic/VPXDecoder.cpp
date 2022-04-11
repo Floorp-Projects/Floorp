@@ -566,7 +566,7 @@ bool VPXDecoder::SetVideoInfo(VideoInfo* aDestInfo, const nsAString& aCodec) {
 
   aDestInfo->mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
   VPXDecoder::SetChroma(info, chroma);
-  info.mFullRange = colorSpace.mRangeId;
+  info.mFullRange = colorSpace.mRange == ColorRange::FULL;
   RefPtr<MediaByteBuffer> extraData = new MediaByteBuffer();
   VPXDecoder::GetVPCCBox(extraData, info);
   aDestInfo->mExtraData = extraData;

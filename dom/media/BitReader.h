@@ -27,6 +27,9 @@ class BitReader {
   uint32_t ReadUE();
   // Read signed integer Exp-Golomb-coded.
   int32_t ReadSE();
+  // Read unsigned integer Little Endian Base 128 coded.
+  // Limited to unsigned 64 bits.
+  CheckedUint64 ReadULEB128();
 
   // Return the number of bits parsed so far;
   size_t BitCount() const;
