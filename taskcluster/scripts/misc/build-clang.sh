@@ -8,10 +8,6 @@ CONFIGS=$(for c; do echo -n " -c $GECKO_PATH/$c"; done)
 
 cd $GECKO_PATH
 
-if [ -n "$TOOLTOOL_MANIFEST" ]; then
-  . taskcluster/scripts/misc/tooltool-download.sh
-fi
-
 if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
   export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi

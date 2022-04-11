@@ -49,9 +49,6 @@ win64-llvm-symbolizer:
     description: "llvm-symbolizer for Windows"
     treeherder:
         symbol: TW64(llvm-symbolizer)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments:
             - x86_64-pc-windows-msvc
@@ -59,5 +56,7 @@ win64-llvm-symbolizer:
         resources:
             - build/build-clang/clang-13.json
             - taskcluster/scripts/misc/build-llvm-common.sh
-            - taskcluster/scripts/misc/tooltool-download.sh
-        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-liblowercase
+            - win64-vs2017

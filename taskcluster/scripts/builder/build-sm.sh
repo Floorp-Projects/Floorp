@@ -10,11 +10,6 @@ set -x
 # Ensure upload dir exists
 mkdir -p $UPLOAD_DIR
 
-# Download via tooltool, if needed. (Currently only needed on Windows.)
-if [ -n "$TOOLTOOL_MANIFEST" ]; then
- . "$GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh"
-fi
-
 # Run the script
 export MOZ_UPLOAD_DIR="$(cd "$UPLOAD_DIR"; pwd)"
 export OBJDIR=$WORK/obj-spider

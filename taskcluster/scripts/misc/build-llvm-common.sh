@@ -120,12 +120,17 @@ case "$target" in
   "
   ;;
 *-pc-windows-msvc)
+  export LD_PRELOAD="/builds/worker/fetches/liblowercase/liblowercase.so"
+  export LOWERCASE_DIRS="/builds/worker/fetches/vs"
+  # WinMsvc.cmake before LLVM 15 doesn't support spaces in WINDSK_BASE. LLVM 15+ uses
+  # different input variables.
+  ln -s "windows kits/10" $MOZ_FETCHES_DIR/vs/sdk
   EXTRA_CMAKE_FLAGS="
     $EXTRA_CMAKE_FLAGS
     -DCMAKE_TOOLCHAIN_FILE=$MOZ_FETCHES_DIR/llvm-project/llvm/cmake/platforms/WinMsvc.cmake
     -DLLVM_NATIVE_TOOLCHAIN=$MOZ_FETCHES_DIR/clang
-    -DMSVC_BASE=$MOZ_FETCHES_DIR/vs2017_15.9.6/VC
-    -DWINSDK_BASE=$MOZ_FETCHES_DIR/vs2017_15.9.6/SDK
+    -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.16.27023
+    -DWINSDK_BASE=$MOZ_FETCHES_DIR/vs/sdk
     -DWINSDK_VER=10.0.17134.0
     -DHOST_ARCH=${target%-pc-windows-msvc}
   "
@@ -149,10 +154,6 @@ case "$target" in
   "
   ;;
 esac
-
-if [ -n "$TOOLTOOL_MANIFEST" ]; then
-  . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh
-fi
 
 mkdir build
 cd build
