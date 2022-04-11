@@ -174,10 +174,6 @@ bool ScriptLoadContext::IsPreload() const {
   return mIsPreload;
 }
 
-nsIGlobalObject* ScriptLoadContext::GetWebExtGlobal() const {
-  return mRequest->mFetchOptions->mWebExtGlobal;
-}
-
 bool ScriptLoadContext::CompileStarted() const {
   return mRequest->IsCompiling() ||
          (mRequest->IsReadyToRun() && mWasCompiledOMT);

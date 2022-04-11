@@ -32,19 +32,17 @@ namespace JS::loader {
 // ScriptFetchOptions
 //////////////////////////////////////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal,
-                         mWebExtGlobal)
+NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mTriggeringPrincipal)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScriptFetchOptions, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
 
 ScriptFetchOptions::ScriptFetchOptions(
     mozilla::CORSMode aCORSMode, mozilla::dom::ReferrerPolicy aReferrerPolicy,
-    nsIPrincipal* aTriggeringPrincipal, nsIGlobalObject* aWebExtGlobal)
+    nsIPrincipal* aTriggeringPrincipal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
-      mTriggeringPrincipal(aTriggeringPrincipal),
-      mWebExtGlobal(aWebExtGlobal) {
+      mTriggeringPrincipal(aTriggeringPrincipal) {
   MOZ_ASSERT(mTriggeringPrincipal);
 }
 
