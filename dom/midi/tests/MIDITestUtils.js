@@ -23,41 +23,31 @@ var MIDITestUtils = {
   // This list needs to stay synced with the ports in
   // dom/midi/TestMIDIPlatformService.
   inputInfo: {
-    get id() {
-      return MIDITestUtils.stableId(this);
-    },
+    id: "b744eebe-f7d8-499b-872b-958f63c8f522",
     name: "Test Control MIDI Device Input Port",
     manufacturer: "Test Manufacturer",
     version: "1.0.0",
   },
   outputInfo: {
-    get id() {
-      return MIDITestUtils.stableId(this);
-    },
+    id: "ab8e7fe8-c4de-436a-a960-30898a7c9a3d",
     name: "Test Control MIDI Device Output Port",
     manufacturer: "Test Manufacturer",
     version: "1.0.0",
   },
   stateTestInputInfo: {
-    get id() {
-      return MIDITestUtils.stableId(this);
-    },
+    id: "a9329677-8588-4460-a091-9d4a7f629a48",
     name: "Test State MIDI Device Input Port",
     manufacturer: "Test Manufacturer",
     version: "1.0.0",
   },
   stateTestOutputInfo: {
-    get id() {
-      return MIDITestUtils.stableId(this);
-    },
+    id: "478fa225-b5fc-4fa6-a543-d32d9cb651e7",
     name: "Test State MIDI Device Output Port",
     manufacturer: "Test Manufacturer",
     version: "1.0.0",
   },
   alwaysClosedTestOutputInfo: {
-    get id() {
-      return MIDITestUtils.stableId(this);
-    },
+    id: "f87d0c76-3c68-49a9-a44f-700f1125c07a",
     name: "Always Closed MIDI Device Output Port",
     manufacturer: "Test Manufacturer",
     version: "1.0.0",
@@ -69,30 +59,5 @@ var MIDITestUtils = {
     for (var i = 0; i < expected.length; ++i) {
       is(expected[i], actual[i], "Packet value " + expected[i] + " matches.");
     }
-  },
-  stableId: info => {
-    // This computes the stable ID of a MIDI port according to the logic we
-    // use in the Web MIDI implementation. See MIDIPortChild::GenerateStableId()
-    // and nsContentUtils::AnonymizeId().
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-    const id = info.name + info.manufacturer + info.version;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(id.padEnd(64));
-    let key = self.origin;
-
-    var digest;
-    let keyObject = Cc["@mozilla.org/security/keyobjectfactory;1"]
-      .getService(Ci.nsIKeyObjectFactory)
-      .keyFromString(Ci.nsIKeyObject.HMAC, key);
-    let cryptoHMAC = Cc["@mozilla.org/security/hmac;1"].createInstance(
-      Ci.nsICryptoHMAC
-    );
-
-    cryptoHMAC.init(Ci.nsICryptoHMAC.SHA256, keyObject);
-    cryptoHMAC.update(data, data.length);
-    digest = cryptoHMAC.finish(true);
-
-    return digest.slice(0, 64);
   },
 };

@@ -73,7 +73,6 @@ class MIDIPort : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(statechange)
 
   void DisconnectFromOwner() override;
-  const nsString& StableId();
 
  protected:
   // IPC Actor corresponding to this class
