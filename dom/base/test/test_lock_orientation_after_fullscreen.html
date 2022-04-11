@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1757431
+-->
+<head>
+<title>Test for Bug 1757431</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1757431">Mozilla Bug 1757431</a>
+<div id="fullscreen">fullscreen</div>
+<script>
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.screenorientation.allow-lock", true]]
+  });
+
+  const element = document.getElementById("fullscreen");
+  await SpecialPowers.wrap(element).requestFullscreen();
+  let newOrientationLock = SpecialPowers.getDOMWindowUtils(window).orientationLock;
+
+  ok(document.fullscreen, "Document should be in fullscreen");
+  is(newOrientationLock, 0, "Orientation lock in browsing context should be none by enterFullscreen");
+
+  const originalOrientationType = window.screen.orientation.type;
+  const newOrientationType = originalOrientationType.startsWith("landscape") ? "portrait-primary" : "landscape-primary";
+
+  await window.screen.orientation.lock(newOrientationType);
+  newOrientationLock = SpecialPowers.getDOMWindowUtils(window).orientationLock;
+  if (newOrientationType == "portrait-primary") {
+    is(newOrientationLock, 1, "Orientation lock in browsing context should be portrait-primary");
+  } else {
+    is(newOrientationLock, 4, "Orientation lock in browsing context should be landscape-primary");
+  }
+
+  await window.screen.orientation.lock(originalOrientationType);
+  newOrientationLock = SpecialPowers.getDOMWindowUtils(window).orientationLock;
+  if (originalOrientationType == "portrait-primary") {
+    is(newOrientationLock, 1, "Orientation lock in browsing context should be portrait-primary");
+  } else {
+    is(newOrientationLock, 4, "Orientation lock in browsing context should be landscape-primary");
+  }
+
+  await document.exitFullscreen();
+
+  // Wait fullscreen change in ScreenOrientation
+  await new Promise(r =>
+    window.requestAnimationFrame(() => window.requestAnimationFrame(r))
+  );
+
+  newOrientationLock = SpecialPowers.getDOMWindowUtils(window).orientationLock;
+  is(newOrientationLock, 0, "Orientation lock in browsing context should be none by exitFullscreen");
+});
+</script>
+</body>
+</html>
