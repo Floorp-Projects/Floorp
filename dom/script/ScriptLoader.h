@@ -133,6 +133,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   NS_DECL_CYCLE_COLLECTION_CLASS(ScriptLoader)
 
   /**
+   * Called when the document that owns this script loader changes global. The
+   * argument is null when the document is detached from a window.
+   */
+  void SetGlobalObject(nsIGlobalObject* aGlobalObject);
+
+  /**
    * The loader maintains a weak reference to the document with
    * which it is initialized. This call forces the reference to
    * be dropped.
@@ -322,7 +328,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   /**
    * Returns wether any request is queued, and not executed yet.
    */
-  bool HasPendingRequests();
+  bool HasPendingRequests() const;
 
   /**
    * Returns wether there are any dynamic module import requests pending.

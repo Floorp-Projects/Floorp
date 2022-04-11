@@ -52,7 +52,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase, mFetchedModules,
-                         mDynamicImportRequests, mLoader)
+                         mDynamicImportRequests, mGlobalObject, mLoader)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoaderBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoaderBase)
@@ -254,6 +254,8 @@ ModuleLoaderBase* ModuleLoaderBase::GetCurrentModuleLoader(JSContext* aCx) {
   if (!loader) {
     return nullptr;
   }
+
+  MOZ_ASSERT(loader->mGlobalObject == global);
 
   reportError.release();
   return loader;
@@ -460,6 +462,8 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
   if (!globalObject) {
     return NS_ERROR_FAILURE;
   }
+
+  MOZ_ASSERT(globalObject == mGlobalObject);
 
   AutoJSAPI jsapi;
   if (!jsapi.Init(globalObject)) {
@@ -832,8 +836,12 @@ void ModuleLoaderBase::FinishDynamicImport(
   aRequest->ClearDynamicImport();
 }
 
-ModuleLoaderBase::ModuleLoaderBase(ScriptLoaderInterface* aLoader)
-    : mLoader(aLoader) {
+ModuleLoaderBase::ModuleLoaderBase(ScriptLoaderInterface* aLoader,
+                                   nsIGlobalObject* aGlobalObject)
+    : mGlobalObject(aGlobalObject), mLoader(aLoader) {
+  MOZ_ASSERT(mGlobalObject);
+  MOZ_ASSERT(mLoader);
+
   EnsureModuleHooksInitialized();
 }
 
@@ -992,6 +1000,7 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
                                           ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
+  MOZ_ASSERT(aGlobalObject == mGlobalObject);
 
   AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
 

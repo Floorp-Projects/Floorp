@@ -92,6 +92,8 @@ class ModuleLoaderBase : public nsISupports {
   // List of dynamic imports that are currently being loaded.
   ScriptLoadRequestList mDynamicImportRequests;
 
+  nsCOMPtr<nsIGlobalObject> mGlobalObject;
+
  protected:
   RefPtr<ScriptLoaderInterface> mLoader;
 
@@ -100,7 +102,8 @@ class ModuleLoaderBase : public nsISupports {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
-  explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader);
+  explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader,
+                            nsIGlobalObject* aGlobalObject);
 
   using LoadedScript = JS::loader::LoadedScript;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
@@ -142,6 +145,8 @@ class ModuleLoaderBase : public nsISupports {
 
  public:
   ScriptLoaderInterface* GetScriptLoaderInterface() const { return mLoader; }
+
+  nsIGlobalObject* GetGlobalObject() const { return mGlobalObject; }
 
   bool HasPendingDynamicImports() const;
   void CancelDynamicImport(ModuleLoadRequest* aRequest, nsresult aResult);
