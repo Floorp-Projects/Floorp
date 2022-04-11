@@ -2,7 +2,6 @@
 
 const BASE_CONTENT = {
   id: "MOBILE_DOWNLOADS",
-  order: 0,
   content: {
     tiles: {
       type: "mobile_downloads",

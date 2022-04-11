@@ -34,7 +34,6 @@ const TEST_UA_ATTRIBUTION_DATA = {
 const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP1",
-    order: 0,
     content: {
       title: "Step 1",
       primary_button: {
@@ -48,7 +47,6 @@ const TEST_PROTON_CONTENT = [
   },
   {
     id: "AW_STEP2",
-    order: 1,
     content: {
       title: "Step 2",
       primary_button: {
