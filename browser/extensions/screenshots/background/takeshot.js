@@ -22,7 +22,6 @@ this.takeshot = (function() {
   });
 
   function screenshotPage(pos, screenshotType, devicePixelRatio) {
-    let zoomFactor = getZoomFactor();
     pos.width = Math.min(pos.right - pos.left, MAX_CANVAS_DIMENSION);
     pos.height = Math.min(pos.bottom - pos.top, MAX_CANVAS_DIMENSION);
 
@@ -41,8 +40,6 @@ this.takeshot = (function() {
       };
       options.rect = rectangle;
       options.resetScrollPosition = true;
-
-      options.scale = 1 / zoomFactor;
     } else if (screenshotType != "visible") {
       let rectangle = {
         x: pos.left,
