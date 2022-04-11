@@ -293,10 +293,7 @@ static_assert(std::size(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
 
 MOZ_THREAD_LOCAL(JS::GCContext*) js::TlsGCContext;
 
-JS::GCContext::GCContext(JSRuntime* runtime, bool isMainThread)
-    : runtime_(runtime), isMainThread_(isMainThread) {
-  MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(runtime));
-}
+JS::GCContext::GCContext(JSRuntime* runtime) : runtime_(runtime) {}
 
 JS::GCContext::~GCContext() { MOZ_ASSERT(!hasJitCodeToPoison()); }
 
@@ -380,7 +377,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       atomsZone(nullptr),
       systemZone(nullptr),
-      mainThreadContext(rt, true),
+      mainThreadContext(rt),
       heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),

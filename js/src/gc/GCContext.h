@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/ThreadLocal.h"
 
+#include "jspubtd.h"
 #include "jstypes.h"                  // JS_PUBLIC_API
 #include "gc/GCEnum.h"                // js::MemoryUse
 #include "jit/ExecutableAllocator.h"  // jit::JitPoisonRangeVector
@@ -67,7 +68,6 @@ class GCContext {
   using MemoryUse = js::MemoryUse;
 
   JSRuntime* const runtime_;
-  const bool isMainThread_;
 
   js::jit::JitPoisonRangeVector jitPoisonRanges;
 
@@ -89,11 +89,11 @@ class GCContext {
 #endif
 
  public:
-  explicit GCContext(JSRuntime* maybeRuntime, bool isMainThread);
+  explicit GCContext(JSRuntime* maybeRuntime);
   ~GCContext();
 
   JSRuntime* runtime() const {
-    MOZ_ASSERT(isMainThread_);
+    MOZ_ASSERT(onMainThread());
     return runtimeFromAnyThread();
   }
   JSRuntime* runtimeFromAnyThread() const {
@@ -101,10 +101,13 @@ class GCContext {
     return runtime_;
   }
 
-  bool onMainThread() const { return isMainThread_; }
   bool isCollecting() const { return isCollecting_; }
 
 #ifdef DEBUG
+  bool onMainThread() const {
+    return js::CurrentThreadCanAccessRuntime(runtime_);
+  }
+
   js::gc::GCUse gcUse() const { return gcUse_; }
   Zone* gcSweepZone() const { return gcSweepZone_; }
   bool isTouchingGrayThings() const { return isTouchingGrayThings_; }
