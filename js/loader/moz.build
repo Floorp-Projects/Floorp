@@ -8,7 +8,6 @@ EXPORTS.js.loader += [
     "LoadedScript.h",
     "ModuleLoaderBase.h",
     "ModuleLoadRequest.h",
-    "ModuleMapKey.h",
     "ScriptKind.h",
     "ScriptLoadRequest.h",
 ]
@@ -17,7 +16,6 @@ UNIFIED_SOURCES += [
     "LoadedScript.cpp",
     "ModuleLoaderBase.cpp",
     "ModuleLoadRequest.cpp",
-    "ModuleMapKey.cpp",
     "ScriptLoadRequest.cpp",
 ]
 

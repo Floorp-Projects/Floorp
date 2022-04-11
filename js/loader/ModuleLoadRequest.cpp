@@ -106,9 +106,7 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
-  nsIGlobalObject* global =
-      HasLoadContext() ? GetLoadContext()->GetWebExtGlobal() : nullptr;
-  mModuleScript = mLoader->GetFetchedModule(mURI, global);
+  mModuleScript = mLoader->GetFetchedModule(mURI);
   if (!mModuleScript || mModuleScript->HasParseError()) {
     ModuleErrored();
     return;
