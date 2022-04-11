@@ -23,44 +23,15 @@ const {
   MESSAGE_TYPE,
 } = require("devtools/client/webconsole/constants");
 
-const componentMap = new Map([
-  [
-    "ConsoleApiCall",
-    require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall"),
-  ],
-  [
-    "ConsoleCommand",
-    require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand"),
-  ],
-  [
-    "CSSWarning",
-    require("devtools/client/webconsole/components/Output/message-types/CSSWarning"),
-  ],
-  [
-    "DefaultRenderer",
-    require("devtools/client/webconsole/components/Output/message-types/DefaultRenderer"),
-  ],
-  [
-    "EvaluationResult",
-    require("devtools/client/webconsole/components/Output/message-types/EvaluationResult"),
-  ],
-  [
-    "NetworkEventMessage",
-    require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage"),
-  ],
-  [
-    "PageError",
-    require("devtools/client/webconsole/components/Output/message-types/PageError"),
-  ],
-  [
-    "SimpleTable",
-    require("devtools/client/webconsole/components/Output/message-types/SimpleTable"),
-  ],
-  [
-    "WarningGroup",
-    require("devtools/client/webconsole/components/Output/message-types/WarningGroup"),
-  ],
-]);
+const ConsoleApiCall = require("devtools/client/webconsole/components/Output/message-types/ConsoleApiCall");
+const ConsoleCommand = require("devtools/client/webconsole/components/Output/message-types/ConsoleCommand");
+const CSSWarning = require("devtools/client/webconsole/components/Output/message-types/CSSWarning");
+const DefaultRenderer = require("devtools/client/webconsole/components/Output/message-types/DefaultRenderer");
+const EvaluationResult = require("devtools/client/webconsole/components/Output/message-types/EvaluationResult");
+const NetworkEventMessage = require("devtools/client/webconsole/components/Output/message-types/NetworkEventMessage");
+const PageError = require("devtools/client/webconsole/components/Output/message-types/PageError");
+const SimpleTable = require("devtools/client/webconsole/components/Output/message-types/SimpleTable");
+const WarningGroup = require("devtools/client/webconsole/components/Output/message-types/WarningGroup");
 
 class MessageContainer extends Component {
   static get propTypes() {
@@ -105,42 +76,42 @@ class MessageContainer extends Component {
 
 function getMessageComponent(message) {
   if (!message) {
-    return componentMap.get("DefaultRenderer");
+    return DefaultRenderer;
   }
 
   switch (message.source) {
     case MESSAGE_SOURCE.CONSOLE_API:
-      return componentMap.get("ConsoleApiCall");
+      return ConsoleApiCall;
     case MESSAGE_SOURCE.NETWORK:
-      return componentMap.get("NetworkEventMessage");
+      return NetworkEventMessage;
     case MESSAGE_SOURCE.CSS:
-      return componentMap.get("CSSWarning");
+      return CSSWarning;
     case MESSAGE_SOURCE.JAVASCRIPT:
       switch (message.type) {
         case MESSAGE_TYPE.COMMAND:
-          return componentMap.get("ConsoleCommand");
+          return ConsoleCommand;
         case MESSAGE_TYPE.RESULT:
-          return componentMap.get("EvaluationResult");
+          return EvaluationResult;
         // @TODO this is probably not the right behavior, but works for now.
         // Chrome doesn't distinguish between page errors and log messages. We
         // may want to remove the PageError component and just handle errors
         // with ConsoleApiCall.
         case MESSAGE_TYPE.LOG:
-          return componentMap.get("PageError");
+          return PageError;
         default:
-          return componentMap.get("DefaultRenderer");
+          return DefaultRenderer;
       }
     case MESSAGE_SOURCE.CONSOLE_FRONTEND:
       if (isWarningGroup(message)) {
-        return componentMap.get("WarningGroup");
+        return WarningGroup;
       }
       if (message.type === MESSAGE_TYPE.SIMPLE_TABLE) {
-        return componentMap.get("SimpleTable");
+        return SimpleTable;
       }
       break;
   }
 
-  return componentMap.get("DefaultRenderer");
+  return DefaultRenderer;
 }
 
 module.exports.MessageContainer = MessageContainer;
