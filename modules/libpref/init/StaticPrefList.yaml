@@ -5696,7 +5696,7 @@
 
 - name: gfx.webrender.svg-images
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: gfx.webrender.debug.blob.paint-flashing
