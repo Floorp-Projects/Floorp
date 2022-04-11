@@ -127,15 +127,21 @@ ifdef MOZ_USING_SCCACHE
 export RUSTC_WRAPPER=$(CCACHE)
 endif
 
-ifdef MOZ_TSAN
 ifndef CROSS_COMPILE
-NATIVE_TSAN=1
-endif # CROSS_COMPILE
+ifdef MOZ_TSAN
+PASS_ONLY_BASE_CFLAGS_TO_RUST=1
+else
+ifneq (,$(MOZ_ASAN)$(MOZ_UBSAN))
+ifneq ($(OS_ARCH), Linux)
+PASS_ONLY_BASE_CFLAGS_TO_RUST=1
+endif # !Linux
+endif # MOZ_ASAN || MOZ_UBSAN
 endif # MOZ_TSAN
+endif # !CROSS_COMPILE
 
 ifeq (WINNT,$(HOST_OS_ARCH))
 ifdef MOZ_CODE_COVERAGE
-WIN_CODE_COVERAGE=1
+PASS_ONLY_BASE_CFLAGS_TO_RUST=1
 endif # MOZ_CODE_COVERAGE
 endif # WINNT
 
@@ -169,7 +175,7 @@ CC_BASE_FLAGS += -DUNICODE
 CXX_BASE_FLAGS += -DUNICODE
 endif
 
-ifeq (,$(NATIVE_TSAN)$(WIN_CODE_COVERAGE))
+ifneq (1,$(PASS_ONLY_BASE_CFLAGS_TO_RUST))
 # -DMOZILLA_CONFIG_H is added to prevent mozilla-config.h from injecting anything
 # in C/C++ compiles from rust. That's not needed in the other branch because the
 # base flags don't force-include mozilla-config.h.
@@ -182,8 +188,8 @@ else
 # scripts/procedural macros vs. those happening for the rust target,
 # we can't blindly pass all our flags down for cc-rs to use them, because of the
 # side effects they can have on what otherwise should be host builds.
-# So for thread-sanitizer and coverage builds, we only pass the base compiler flags.
-# This means C code built by rust is not going to be covered by thread-sanitizer
+# So for sanitizer and coverage builds, we only pass the base compiler flags.
+# This means C code built by rust is not going to be covered by sanitizers
 # and coverage. But at least we control what compiler is being used,
 # rather than relying on cc-rs guesses, which, sometimes fail us.
 export CFLAGS_$(rust_host_cc_env_name)=$(HOST_CC_BASE_FLAGS)
