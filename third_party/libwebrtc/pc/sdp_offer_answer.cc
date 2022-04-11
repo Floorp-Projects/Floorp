@@ -1802,8 +1802,7 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
   }
 
   observer->OnSetLocalDescriptionComplete(RTCError::OK());
-  pc_->NoteUsageEvent(
-      PeerConnection::UsageEvent::SET_LOCAL_DESCRIPTION_SUCCEEDED);
+  pc_->NoteUsageEvent(UsageEvent::SET_LOCAL_DESCRIPTION_SUCCEEDED);
 
   // Check if negotiation is needed. We must do this after informing the
   // observer that SetLocalDescription() has completed to ensure negotiation is
@@ -2062,8 +2061,7 @@ void SdpOfferAnswerHandler::DoSetRemoteDescription(
   }
 
   observer->OnSetRemoteDescriptionComplete(RTCError::OK());
-  pc_->NoteUsageEvent(
-      PeerConnection::UsageEvent::SET_REMOTE_DESCRIPTION_SUCCEEDED);
+  pc_->NoteUsageEvent(UsageEvent::SET_REMOTE_DESCRIPTION_SUCCEEDED);
 
   // Check if negotiation is needed. We must do this after informing the
   // observer that SetRemoteDescription() has completed to ensure negotiation is
@@ -2162,8 +2160,7 @@ bool SdpOfferAnswerHandler::AddIceCandidate(
   if (ready) {
     bool result = UseCandidate(ice_candidate);
     if (result) {
-      pc_->NoteUsageEvent(
-          PeerConnection::UsageEvent::ADD_ICE_CANDIDATE_SUCCEEDED);
+      pc_->NoteUsageEvent(UsageEvent::ADD_ICE_CANDIDATE_SUCCEEDED);
       NoteAddIceCandidateResult(kAddIceCandidateSuccess);
     } else {
       NoteAddIceCandidateResult(kAddIceCandidateFailNotUsable);
@@ -4235,18 +4232,15 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
 
 void SdpOfferAnswerHandler::ReportRemoteIceCandidateAdded(
     const cricket::Candidate& candidate) {
-  pc_->NoteUsageEvent(PeerConnection::UsageEvent::REMOTE_CANDIDATE_ADDED);
+  pc_->NoteUsageEvent(UsageEvent::REMOTE_CANDIDATE_ADDED);
   if (candidate.address().IsPrivateIP()) {
-    pc_->NoteUsageEvent(
-        PeerConnection::UsageEvent::REMOTE_PRIVATE_CANDIDATE_ADDED);
+    pc_->NoteUsageEvent(UsageEvent::REMOTE_PRIVATE_CANDIDATE_ADDED);
   }
   if (candidate.address().IsUnresolvedIP()) {
-    pc_->NoteUsageEvent(
-        PeerConnection::UsageEvent::REMOTE_MDNS_CANDIDATE_ADDED);
+    pc_->NoteUsageEvent(UsageEvent::REMOTE_MDNS_CANDIDATE_ADDED);
   }
   if (candidate.address().family() == AF_INET6) {
-    pc_->NoteUsageEvent(
-        PeerConnection::UsageEvent::REMOTE_IPV6_CANDIDATE_ADDED);
+    pc_->NoteUsageEvent(UsageEvent::REMOTE_IPV6_CANDIDATE_ADDED);
   }
 }
 

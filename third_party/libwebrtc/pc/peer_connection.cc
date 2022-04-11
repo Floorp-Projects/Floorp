@@ -3066,33 +3066,11 @@ void PeerConnection::ReportIceCandidateCollected(
 
 void PeerConnection::NoteUsageEvent(UsageEvent event) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  usage_event_accumulator_ |= static_cast<int>(event);
+  usage_pattern_.NoteUsageEvent(event);
 }
 
 void PeerConnection::ReportUsagePattern() const {
-  RTC_DLOG(LS_INFO) << "Usage signature is " << usage_event_accumulator_;
-  RTC_HISTOGRAM_ENUMERATION_SPARSE("WebRTC.PeerConnection.UsagePattern",
-                                   usage_event_accumulator_,
-                                   static_cast<int>(UsageEvent::MAX_VALUE));
-  const int bad_bits =
-      static_cast<int>(UsageEvent::SET_LOCAL_DESCRIPTION_SUCCEEDED) |
-      static_cast<int>(UsageEvent::CANDIDATE_COLLECTED);
-  const int good_bits =
-      static_cast<int>(UsageEvent::SET_REMOTE_DESCRIPTION_SUCCEEDED) |
-      static_cast<int>(UsageEvent::REMOTE_CANDIDATE_ADDED) |
-      static_cast<int>(UsageEvent::ICE_STATE_CONNECTED);
-  if ((usage_event_accumulator_ & bad_bits) == bad_bits &&
-      (usage_event_accumulator_ & good_bits) == 0) {
-    // If called after close(), we can't report, because observer may have
-    // been deallocated, and therefore pointer is null. Write to log instead.
-    if (observer_) {
-      Observer()->OnInterestingUsage(usage_event_accumulator_);
-    } else {
-      RTC_LOG(LS_INFO) << "Interesting usage signature "
-                       << usage_event_accumulator_
-                       << " observed after observer shutdown";
-    }
-  }
+  usage_pattern_.ReportUsagePattern(observer_);
 }
 
 bool PeerConnection::SrtpRequired() const {
