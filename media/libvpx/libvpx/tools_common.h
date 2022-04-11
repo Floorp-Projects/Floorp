@@ -110,6 +110,8 @@ extern "C" {
 
 #if defined(__GNUC__)
 #define VPX_NO_RETURN __attribute__((noreturn))
+#elif defined(_MSC_VER)
+#define VPX_NO_RETURN __declspec(noreturn)
 #else
 #define VPX_NO_RETURN
 #endif
@@ -117,14 +119,14 @@ extern "C" {
 /* Sets a stdio stream into binary mode */
 FILE *set_binary_mode(FILE *stream);
 
-void die(const char *fmt, ...) VPX_NO_RETURN;
-void fatal(const char *fmt, ...) VPX_NO_RETURN;
+VPX_NO_RETURN void die(const char *fmt, ...);
+VPX_NO_RETURN void fatal(const char *fmt, ...);
 void warn(const char *fmt, ...);
 
-void die_codec(vpx_codec_ctx_t *ctx, const char *s) VPX_NO_RETURN;
+VPX_NO_RETURN void die_codec(vpx_codec_ctx_t *ctx, const char *s);
 
 /* The tool including this file must define usage_exit() */
-void usage_exit(void) VPX_NO_RETURN;
+VPX_NO_RETURN void usage_exit(void);
 
 #undef VPX_NO_RETURN
 

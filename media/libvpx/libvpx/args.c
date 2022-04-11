@@ -16,8 +16,10 @@
 #include "vpx/vpx_integer.h"
 #include "vpx_ports/msvc.h"
 
-#if defined(__GNUC__) && __GNUC__
-extern void die(const char *fmt, ...) __attribute__((noreturn));
+#if defined(__GNUC__)
+__attribute__((noreturn)) extern void die(const char *fmt, ...);
+#elif defined(_MSC_VER)
+__declspec(noreturn) extern void die(const char *fmt, ...);
 #else
 extern void die(const char *fmt, ...);
 #endif

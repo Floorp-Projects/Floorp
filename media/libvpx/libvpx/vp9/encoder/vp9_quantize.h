@@ -49,7 +49,7 @@ void vp9_init_plane_quantizers(struct VP9_COMP *cpi, MACROBLOCK *x);
 
 void vp9_init_quantizer(struct VP9_COMP *cpi);
 
-void vp9_set_quantizer(struct VP9Common *cm, int q);
+void vp9_set_quantizer(struct VP9_COMP *cm, int q);
 
 int vp9_quantizer_to_qindex(int quantizer);
 

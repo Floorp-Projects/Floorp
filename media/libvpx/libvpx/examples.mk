@@ -65,6 +65,7 @@ endif
 # while EXAMPLES demonstrate specific portions of the API.
 UTILS-$(CONFIG_DECODERS)    += vpxdec.c
 vpxdec.SRCS                 += md5_utils.c md5_utils.h
+vpxdec.SRCS                 += vpx_ports/compiler_attributes.h
 vpxdec.SRCS                 += vpx_ports/mem_ops.h
 vpxdec.SRCS                 += vpx_ports/mem_ops_aligned.h
 vpxdec.SRCS                 += vpx_ports/msvc.h
@@ -167,6 +168,7 @@ decode_to_md5.SRCS                 += y4minput.c y4minput.h
 decode_to_md5.SRCS                 += tools_common.h tools_common.c
 decode_to_md5.SRCS                 += video_common.h
 decode_to_md5.SRCS                 += video_reader.h video_reader.c
+decode_to_md5.SRCS                 += vpx_ports/compiler_attributes.h
 decode_to_md5.SRCS                 += vpx_ports/mem_ops.h
 decode_to_md5.SRCS                 += vpx_ports/mem_ops_aligned.h
 decode_to_md5.SRCS                 += vpx_ports/msvc.h
@@ -374,6 +376,7 @@ $(1): $($(1:.$(VCPROJ_SFX)=).SRCS) vpx.$(VCPROJ_SFX)
             --ver=$$(CONFIG_VS_VERSION)\
             --proj-guid=$$($$(@:.$(VCPROJ_SFX)=).GUID)\
             --src-path-bare="$(SRC_PATH_BARE)" \
+            --as=$$(AS) \
             $$(if $$(CONFIG_STATIC_MSVCRT),--static-crt) \
             --out=$$@ $$(INTERNAL_CFLAGS) $$(CFLAGS) \
             $$(INTERNAL_LDFLAGS) $$(LDFLAGS) -l$$(CODEC_LIB) $$^

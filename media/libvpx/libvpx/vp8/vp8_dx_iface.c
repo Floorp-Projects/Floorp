@@ -456,6 +456,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
     }
 
     if (setjmp(pbi->common.error.jmp)) {
+      vpx_clear_system_state();
       /* We do not know if the missing frame(s) was supposed to update
        * any of the reference buffers, but we act conservative and
        * mark only the last buffer as corrupted.
@@ -591,8 +592,10 @@ static vpx_codec_err_t vp8_get_reference(vpx_codec_alg_priv_t *ctx,
 static vpx_codec_err_t vp8_get_quantizer(vpx_codec_alg_priv_t *ctx,
                                          va_list args) {
   int *const arg = va_arg(args, int *);
+  VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
   if (arg == NULL) return VPX_CODEC_INVALID_PARAM;
-  *arg = vp8dx_get_quantizer(ctx->yv12_frame_buffers.pbi[0]);
+  if (pbi == NULL) return VPX_CODEC_CORRUPT_FRAME;
+  *arg = vp8dx_get_quantizer(pbi);
   return VPX_CODEC_OK;
 }
 
@@ -622,6 +625,7 @@ static vpx_codec_err_t vp8_get_last_ref_updates(vpx_codec_alg_priv_t *ctx,
 
   if (update_info) {
     VP8D_COMP *pbi = (VP8D_COMP *)ctx->yv12_frame_buffers.pbi[0];
+    if (pbi == NULL) return VPX_CODEC_CORRUPT_FRAME;
 
     *update_info = pbi->common.refresh_alt_ref_frame * (int)VP8_ALTR_FRAME +
                    pbi->common.refresh_golden_frame * (int)VP8_GOLD_FRAME +
@@ -639,13 +643,16 @@ static vpx_codec_err_t vp8_get_last_ref_frame(vpx_codec_alg_priv_t *ctx,
 
   if (ref_info) {
     VP8D_COMP *pbi = (VP8D_COMP *)ctx->yv12_frame_buffers.pbi[0];
-    VP8_COMMON *oci = &pbi->common;
-    *ref_info =
-        (vp8dx_references_buffer(oci, ALTREF_FRAME) ? VP8_ALTR_FRAME : 0) |
-        (vp8dx_references_buffer(oci, GOLDEN_FRAME) ? VP8_GOLD_FRAME : 0) |
-        (vp8dx_references_buffer(oci, LAST_FRAME) ? VP8_LAST_FRAME : 0);
-
-    return VPX_CODEC_OK;
+    if (pbi) {
+      VP8_COMMON *oci = &pbi->common;
+      *ref_info =
+          (vp8dx_references_buffer(oci, ALTREF_FRAME) ? VP8_ALTR_FRAME : 0) |
+          (vp8dx_references_buffer(oci, GOLDEN_FRAME) ? VP8_GOLD_FRAME : 0) |
+          (vp8dx_references_buffer(oci, LAST_FRAME) ? VP8_LAST_FRAME : 0);
+      return VPX_CODEC_OK;
+    } else {
+      return VPX_CODEC_CORRUPT_FRAME;
+    }
   } else {
     return VPX_CODEC_INVALID_PARAM;
   }
@@ -680,7 +687,7 @@ static vpx_codec_err_t vp8_set_decryptor(vpx_codec_alg_priv_t *ctx,
   return VPX_CODEC_OK;
 }
 
-vpx_codec_ctrl_fn_map_t vp8_ctf_maps[] = {
+static vpx_codec_ctrl_fn_map_t vp8_ctf_maps[] = {
   { VP8_SET_REFERENCE, vp8_set_reference },
   { VP8_COPY_REFERENCE, vp8_get_reference },
   { VP8_SET_POSTPROC, vp8_set_postproc },

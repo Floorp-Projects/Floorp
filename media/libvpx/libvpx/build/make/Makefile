@@ -147,6 +147,10 @@ $(BUILD_PFX)%_avx512.c.o: CFLAGS += -mavx512f -mavx512cd -mavx512bw -mavx512dq -
 $(BUILD_PFX)%_vsx.c.d: CFLAGS += -maltivec -mvsx
 $(BUILD_PFX)%_vsx.c.o: CFLAGS += -maltivec -mvsx
 
+# MIPS
+$(BUILD_PFX)%_msa.c.d: CFLAGS += -mmsa
+$(BUILD_PFX)%_msa.c.o: CFLAGS += -mmsa
+
 $(BUILD_PFX)%.c.d: %.c
 	$(if $(quiet),@echo "    [DEP] $@")
 	$(qexec)mkdir -p $(dir $@)
