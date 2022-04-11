@@ -57,6 +57,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_idle_period.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "nsViewManager.h"
@@ -3094,11 +3095,20 @@ TimeStamp nsRefreshDriver::GetIdleDeadlineHint(TimeStamp aDefault,
   }
 
   if (aCheckType == IdleCheck::AllVsyncListeners && XRE_IsParentProcess()) {
-    Maybe<TimeDuration> rate = mozilla::gfx::VsyncSource::GetFastestVsyncRate();
-    if (rate.isSome()) {
-      TimeStamp newHint = TimeStamp::Now() + *rate -
-                          TimeDuration::FromMilliseconds(
-                              StaticPrefs::layout_idle_period_time_limit());
+    Maybe<TimeDuration> maybeRate =
+        mozilla::gfx::VsyncSource::GetFastestVsyncRate();
+    if (maybeRate.isSome()) {
+      TimeDuration minIdlePeriod =
+          TimeDuration::FromMilliseconds(StaticPrefs::idle_period_min());
+      TimeDuration layoutIdleLimit = TimeDuration::FromMilliseconds(
+          StaticPrefs::layout_idle_period_time_limit());
+      TimeDuration rate = *maybeRate - layoutIdleLimit;
+
+      // If the rate is very short, don't let it affect idle processing in the
+      // parent process too much.
+      rate = std::max(rate, minIdlePeriod + minIdlePeriod);
+
+      TimeStamp newHint = TimeStamp::Now() + rate;
       if (newHint < aDefault) {
         return newHint;
       }
