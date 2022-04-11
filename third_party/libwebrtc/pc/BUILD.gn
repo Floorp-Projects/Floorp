@@ -230,6 +230,7 @@ rtc_library("peerconnection") {
     ":rtp_sender",
     ":rtp_transceiver",
     ":stats_collector_interface",
+    ":usage_pattern",
     ":video_track_source",
     "../api:array_view",
     "../api:audio_options_api",
@@ -302,6 +303,18 @@ rtc_library("peer_connection_message_handler") {
     "../api:rtc_error",
     "../rtc_base",
     "../rtc_base/synchronization:sequence_checker",
+  ]
+}
+
+rtc_library("usage_pattern") {
+  sources = [
+    "usage_pattern.cc",
+    "usage_pattern.h",
+  ]
+  deps = [
+    "../api:libjingle_peerconnection_api",
+    "../rtc_base:logging",
+    "../system_wrappers:metrics",
   ]
 }
 
@@ -745,6 +758,7 @@ if (rtc_include_tests) {
       ":rtp_receiver",
       ":rtp_sender",
       ":rtp_transceiver",
+      ":usage_pattern",
       ":video_track_source",
       "../api:array_view",
       "../api:audio_options_api",
