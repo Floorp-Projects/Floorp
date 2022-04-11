@@ -462,8 +462,7 @@ class ScriptRequestProcessor : public Runnable {
   NS_IMETHOD Run() override {
     if (mRequest->IsModuleRequest() &&
         mRequest->AsModuleRequest()->IsDynamicImport()) {
-      mLoader->GetModuleLoader()->ProcessDynamicImport(
-          mRequest->AsModuleRequest());
+      mRequest->AsModuleRequest()->ProcessDynamicImport();
       return NS_OK;
     }
 
@@ -490,7 +489,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   aRequest->mFetchSourceOnly = true;
   nsresult rv;
   if (aRequest->IsModuleRequest()) {
-    rv = mModuleLoader->RestartModuleLoad(aRequest->AsModuleRequest());
+    rv = aRequest->AsModuleRequest()->RestartModuleLoad();
   } else {
     rv = StartLoad(aRequest);
   }
@@ -505,7 +504,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
 
 nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
-    return mModuleLoader->StartModuleLoad(aRequest->AsModuleRequest());
+    return aRequest->AsModuleRequest()->StartModuleLoad();
   }
 
   return StartClassicLoad(aRequest);
@@ -1117,7 +1116,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       mozilla::nsAutoMicroTask mt;
     }
 
-    nsresult rv = mModuleLoader->ProcessFetchedModuleSource(modReq);
+    nsresult rv = modReq->ProcessFetchedModuleSource();
     if (NS_FAILED(rv)) {
       ReportErrorToConsole(modReq, rv);
       HandleLoadError(modReq, rv);
@@ -1352,7 +1351,7 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->GetLoadContext()->mOffThreadToken);
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
-    return mModuleLoader->ProcessFetchedModuleSource(request);
+    return request->ProcessFetchedModuleSource();
   }
 
   // Element may not be ready yet if speculatively compiling, so process the
@@ -1674,7 +1673,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
     if (request->mModuleScript) {
-      if (!mModuleLoader->InstantiateModuleTree(request)) {
+      if (!request->InstantiateModuleTree()) {
         request->mModuleScript = nullptr;
       }
     }
@@ -2076,7 +2075,7 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   }
 
   if (aRequest->IsModuleRequest()) {
-    return mModuleLoader->EvaluateModule(globalObject, aRequest);
+    return aRequest->AsModuleRequest()->EvaluateModule(globalObject);
   }
   return EvaluateScript(globalObject, aRequest);
 }
@@ -2963,8 +2962,7 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsModuleRequest() && !aRequest->GetLoadContext()->mIsInline) {
     auto* request = aRequest->AsModuleRequest();
-    mModuleLoader->SetModuleFetchFinishedAndResumeWaitingRequests(request,
-                                                                  aResult);
+    request->SetModuleFetchFinishedAndResumeWaitingRequests(aResult);
   }
 
   if (aRequest->GetLoadContext()->mInDeferList) {
@@ -3007,7 +3005,7 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     if (modReq->IsDynamicImport()) {
       MOZ_ASSERT(modReq->IsTopLevel());
       if (aRequest->isInList()) {
-        mModuleLoader->CancelDynamicImport(modReq, aResult);
+        modReq->CancelDynamicImport(aResult);
       }
     } else {
       MOZ_ASSERT(!modReq->IsTopLevel());
@@ -3242,17 +3240,16 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   // inserting the request in the array. However it's an unlikely case
   // so if you see this assertion it is likely something else that is
   // wrong, especially if you see it more than once.
-  NS_ASSERTION(
-      mDeferRequests.Contains(aRequest) ||
-          mLoadingAsyncRequests.Contains(aRequest) ||
-          mNonAsyncExternalScriptInsertedRequests.Contains(aRequest) ||
-          mXSLTRequests.Contains(aRequest) ||
-          (aRequest->IsModuleRequest() &&
-           (mModuleLoader->HasDynamicImport(aRequest->AsModuleRequest()) ||
-            !aRequest->AsModuleRequest()->IsTopLevel())) ||
-          mPreloads.Contains(aRequest, PreloadRequestComparator()) ||
-          mParserBlockingRequest == aRequest,
-      "aRequest should be pending!");
+  NS_ASSERTION(mDeferRequests.Contains(aRequest) ||
+                   mLoadingAsyncRequests.Contains(aRequest) ||
+                   mNonAsyncExternalScriptInsertedRequests.Contains(aRequest) ||
+                   mXSLTRequests.Contains(aRequest) ||
+                   (aRequest->IsModuleRequest() &&
+                    (aRequest->AsModuleRequest()->IsRegisteredDynamicImport() ||
+                     !aRequest->AsModuleRequest()->IsTopLevel())) ||
+                   mPreloads.Contains(aRequest, PreloadRequestComparator()) ||
+                   mParserBlockingRequest == aRequest,
+               "aRequest should be pending!");
 
   nsCOMPtr<nsIURI> uri;
   rv = channel->GetOriginalURI(getter_AddRefs(uri));
@@ -3287,7 +3284,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     }
 
     // Otherwise compile it right away and start fetching descendents.
-    return mModuleLoader->ProcessFetchedModuleSource(request);
+    return request->ProcessFetchedModuleSource();
   }
 
   // The script is now loaded and ready to run.

@@ -86,6 +86,32 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     mIsMarkedForBytecodeEncoding = true;
   }
 
+  // Convenience methods to call into the module loader for this request.
+
+  void CancelDynamicImport(nsresult aResult) {
+    MOZ_ASSERT(IsDynamicImport());
+    mLoader->CancelDynamicImport(this, aResult);
+  }
+#ifdef DEBUG
+  bool IsRegisteredDynamicImport() const {
+    return IsDynamicImport() && mLoader->HasDynamicImport(this);
+  }
+#endif
+  nsresult StartModuleLoad() { return mLoader->StartModuleLoad(this); }
+  nsresult RestartModuleLoad() { return mLoader->RestartModuleLoad(this); }
+  void SetModuleFetchFinishedAndResumeWaitingRequests(nsresult aResult) {
+    mLoader->SetModuleFetchFinishedAndResumeWaitingRequests(this, aResult);
+  }
+  nsresult ProcessFetchedModuleSource() {
+    return mLoader->ProcessFetchedModuleSource(this);
+  }
+  bool InstantiateModuleTree() { return mLoader->InstantiateModuleTree(this); }
+  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject) {
+    return mLoader->EvaluateModule(aGlobalObject, this);
+  }
+  void StartDynamicImport() { mLoader->StartDynamicImport(this); }
+  void ProcessDynamicImport() { mLoader->ProcessDynamicImport(this); }
+
  private:
   void LoadFinished();
   void CancelImports();
