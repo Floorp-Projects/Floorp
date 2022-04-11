@@ -1595,7 +1595,7 @@
     },
 
     _setTabLabel(aTab, aLabel, { beforeTabOpen, isContentTitle } = {}) {
-      if (!aLabel) {
+      if (!aLabel || aLabel.includes("about:reader?")) {
         return false;
       }
 
