@@ -531,9 +531,11 @@ continue_loading:
   return ret;
 }
 
+#if defined(EARLY_BETA_OR_EARLIER)
 // Map of specific thread proc addresses we should block. In particular,
 // LoadLibrary* APIs which indicate DLL injection
 static void* gStartAddressesToBlock[4];
+#endif  // defined(EARLY_BETA_OR_EARLIER)
 
 static bool ShouldBlockThread(void* aStartAddress) {
   // Allows crashfirefox.exe to continue to work. Also if your threadproc is
@@ -542,11 +544,13 @@ static bool ShouldBlockThread(void* aStartAddress) {
     return false;
   }
 
+#if defined(EARLY_BETA_OR_EARLIER)
   for (auto p : gStartAddressesToBlock) {
     if (p == aStartAddress) {
       return true;
     }
   }
+#endif
 
   bool shouldBlock = false;
   MEMORY_BASIC_INFORMATION startAddressInfo = {0};
@@ -614,6 +618,7 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
     }
   }
 
+#if defined(EARLY_BETA_OR_EARLIER)
   // Populate a list of thread start addresses to block.
   HMODULE hKernel = GetModuleHandleW(L"kernel32.dll");
   if (hKernel) {
@@ -631,6 +636,7 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
     pProc = (void*)GetProcAddress(hKernel, "LoadLibraryExW");
     gStartAddressesToBlock[3] = pProc;
   }
+#endif
 
   if (aInitFlags & eDllBlocklistInitFlagWasBootstrapped) {
     GetNativeNtBlockSetWriter();
