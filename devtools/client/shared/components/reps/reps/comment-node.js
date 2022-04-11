@@ -10,7 +10,6 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { span } = require("devtools/client/shared/vendor/react-dom-factories");
   const {
-    isGrip,
     cropString,
     cropMultipleLines,
     wrapRender,
@@ -65,13 +64,8 @@ define(function(require, exports, module) {
   }
 
   // Registration
-  function supportsObject(object, noGrip = false) {
-    if (noGrip === true || !isGrip(object)) {
-      return false;
-    }
-    return (
-      object.preview && object.preview.nodeType === nodeConstants.COMMENT_NODE
-    );
+  function supportsObject(object) {
+    return object?.preview?.nodeType === nodeConstants.COMMENT_NODE;
   }
 
   // Exports from this module
