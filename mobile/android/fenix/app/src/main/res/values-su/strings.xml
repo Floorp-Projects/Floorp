@@ -42,7 +42,7 @@
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Anyar dicirian</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Témbongkeun sadayana</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Témbongkeun sadayana</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Témbongkeun sadaya markah anu diteundeun</string>
 
@@ -178,8 +178,6 @@
     <string name="browser_menu_add_to_homescreen">Tambahkeun ka layar Tepas</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Pasang</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Tab singkron</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Singkronkeun deui</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -212,8 +210,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Ropéa</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Kustomkeun tepas</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Kustomkeun tepas</string>
     <!-- Browser Toolbar -->
@@ -346,6 +342,8 @@
     <string name="errorpage_httpsonly_title">Situs aman teu sayaga</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Sigana, raramatlokana teu ngarojong HTTPs.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Nanging, bisa waé aya panyerang kalibet. Upama diteruskeun asup kana raramatlokana, anjeun ulah ngasupkeun émbaran sénsitip. Upama diteruskeun, mode Ngan-HTTPS bakal dipareuman samentawis pikeun éta loka.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Aksésibilitas</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1088,7 +1086,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Markah diteundeun!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Ditambahkeun kana loka kawentar!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Ditambahkeun kana loka kawentar!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Ditambahkeun ka takulan!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Tab nyamuni ditutup</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1689,10 +1689,14 @@
     <string name="bookmark_deletion_confirmation">Yakin anjeun rék mupus ieu markah?</string>
 
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Tambahkeun ka loka kawentar</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Tambahkeun ka loka kawentar</string>
 
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Piceun ti loka top</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Piceun ti loka top</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Tambah ka takulan</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Piceun tina takulan</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Dipéripikasi ku: %1$s</string>
@@ -1767,21 +1771,24 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Wates loka top geus kahontal</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Wates loka top geus kahontal</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Wates takulan geus kahontal</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">Pikeun nambah loka anyar pangluhurna, piceun hiji. Pencét lila lokana sarta pilih piceun.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Pikeun nambah loka anyar pangluhurna, piceun hiji. Pencét lila lokana sarta pilih piceun.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Pikeun nambah takulan anyar, piceun hiji. Teken lokana kara lila sarta pilih piceun.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Okéh, Ngarti</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Loka punclut anu pangmindengna dianjangan</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Takulan</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Ngaran</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Ngaran loka onjoy</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Ngaran loka onjoy</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Ngaran takulan</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Heug</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1859,6 +1866,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Lenyepan</string>
 
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Aktipkeun telemétri pikeun ngirim data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Buka setélan</string>
 </resources>
