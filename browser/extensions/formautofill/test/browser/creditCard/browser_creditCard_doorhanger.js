@@ -928,7 +928,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let onChanged = waitForStorageChangedEvents("add");
+  let onChanged = waitForStorageChangedEvents("update");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -953,7 +953,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
         `chrome://formautofill/content/third-party/cc-logo-amex`,
         `CC Logo should be amex`
       );
-      await clickDoorhangerButton(SECONDARY_BUTTON);
+      await clickDoorhangerButton(MAIN_BUTTON);
     }
   );
   await onChanged;
@@ -1004,7 +1004,7 @@ add_task(async function test_update_generic_creditCard_logo() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
-  let onChanged = waitForStorageChangedEvents("add");
+  let onChanged = waitForStorageChangedEvents("update");
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
@@ -1029,7 +1029,7 @@ add_task(async function test_update_generic_creditCard_logo() {
         `chrome://formautofill/content/icon-credit-card-generic`,
         `CC Logo should be generic`
       );
-      await clickDoorhangerButton(SECONDARY_BUTTON);
+      await clickDoorhangerButton(MAIN_BUTTON);
     }
   );
   await onChanged;
