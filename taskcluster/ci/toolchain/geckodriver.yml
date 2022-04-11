@@ -84,15 +84,9 @@ win32-geckodriver:
     treeherder:
         symbol: TW32(gd)
         platform: win32/opt
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments: ['i686-pc-windows-msvc']
-        resources:
-            - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/geckodriver.zip
-        tooltool-downloads: internal
     attributes:
         build_platform: win32-geckodriver
     fetches:
@@ -100,20 +94,15 @@ win32-geckodriver:
             - linux64-clang-toolchain
             - linux64-liblowercase
             - linux64-rust-windows
+            - win64-vs2017
 
 win64-geckodriver:
     treeherder:
         symbol: TW64(gd)
         platform: win64/opt
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments: ['x86_64-pc-windows-msvc']
-        resources:
-            - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/geckodriver.zip
-        tooltool-downloads: internal
     attributes:
         build_platform: win64-geckodriver
     fetches:
@@ -121,3 +110,4 @@ win64-geckodriver:
             - linux64-clang-toolchain
             - linux64-liblowercase
             - linux64-rust-windows
+            - win64-vs2017

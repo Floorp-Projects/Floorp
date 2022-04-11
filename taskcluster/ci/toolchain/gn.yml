@@ -40,13 +40,10 @@ win32-gn:
     worker-type: b-win2012
     worker:
         max-run-time: 3600
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         script: build-gn-win32.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        tooltool-downloads: internal
     fetches:
         fetch:
             - ninja
+        toolchain:
+            - win64-vs2017

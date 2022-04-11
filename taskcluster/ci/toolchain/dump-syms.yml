@@ -60,14 +60,9 @@ win64-dump_syms:
     treeherder:
         symbol: TW64(dump_syms)
     worker-type: b-win2012
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         toolchain-artifact: public/build/dump_syms.tar.zst
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-        tooltool-downloads: internal
     fetches:
         toolchain:
             - win64-rust-1.57
+            - win64-vs2017

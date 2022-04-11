@@ -17,10 +17,6 @@ esac
 
 cd $GECKO_PATH
 
-if [ -n "$TOOLTOOL_MANIFEST" ]; then
-  . taskcluster/scripts/misc/tooltool-download.sh
-fi
-
 # OSX cross builds are a bit harder
 case "$TARGET" in
 *-apple-darwin)
