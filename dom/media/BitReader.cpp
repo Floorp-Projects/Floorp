@@ -93,6 +93,19 @@ uint64_t BitReader::ReadU64() {
   return (hi << 32) | lo;
 }
 
+CheckedUint64 BitReader::ReadULEB128() {
+  // See https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer
+  CheckedUint64 value = 0;
+  for (size_t i = 0; i < sizeof(uint64_t) * 8 / 7; i++) {
+    bool more = ReadBit();
+    value += static_cast<uint64_t>(ReadBits(7)) << (i * 7);
+    if (!more) {
+      break;
+    }
+  }
+  return value;
+}
+
 uint64_t BitReader::ReadUTF8() {
   int64_t val = ReadBits(8);
   uint32_t top = (val & 0x80) >> 1;

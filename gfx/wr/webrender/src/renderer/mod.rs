@@ -85,6 +85,7 @@ use crate::profiler::{self, GpuProfileTag, TransactionProfile};
 use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use crate::render_backend::RenderBackend;
+use crate::render_target::ResolveOp;
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task::{RenderTask, RenderTaskKind, ReadbackTask};
 use crate::resource_cache::ResourceCache;
@@ -2745,6 +2746,92 @@ impl Renderer {
         );
     }
 
+    fn handle_resolve(
+        &mut self,
+        draw_target: DrawTarget,
+        resolve_op: Option<ResolveOp>,
+        render_tasks: &RenderTaskGraph,
+    ) {
+        if let Some(resolve_op) = resolve_op {
+            let src_task = &render_tasks[resolve_op.src_task_id];
+            let src_info = match src_task.kind {
+                RenderTaskKind::Picture(ref info) => info,
+                _ => panic!("bug: not a picture"),
+            };
+            let src_task_rect = src_task.get_target_rect().to_f32();
+
+            let dest_task = &render_tasks[resolve_op.dest_task_id];
+            let dest_task_rect = dest_task.get_target_rect().to_f32();
+
+            // Get the rect that we ideally want, in space of the parent surface
+            let wanted_rect = DeviceRect::from_origin_and_size(
+                resolve_op.dest_origin,
+                dest_task_rect.size().to_f32(),
+            );
+
+            // Get the rect that is available on the parent surface. It may be smaller
+            // than desired because this is a picture cache tile covering only part of
+            // the wanted rect and/or because the parent surface was clipped.
+            let avail_rect = DeviceRect::from_origin_and_size(
+                src_info.content_origin,
+                src_task_rect.size().to_f32(),
+            );
+
+            if let Some(int_rect) = wanted_rect.intersection(&avail_rect) {
+                // If there is a valid intersection, work out the correct origins and
+                // sizes of the copy rects, and do the blit.
+                let copy_size = int_rect.size().to_i32();
+
+                let src_origin = src_task_rect.min.to_f32() +
+                    int_rect.min.to_vector() -
+                    src_info.content_origin.to_vector();
+
+                let src = DeviceIntRect::from_origin_and_size(
+                    src_origin.to_i32(),
+                    copy_size,
+                );
+
+                let dest_origin = dest_task_rect.min.to_f32() +
+                    int_rect.min.to_vector() -
+                    resolve_op.dest_origin.to_vector();
+
+                let dest = DeviceIntRect::from_origin_and_size(
+                    dest_origin.to_i32(),
+                    copy_size,
+                );
+
+                let texture_source = TextureSource::TextureCache(
+                    dest_task.get_target_texture(),
+                    Swizzle::default(),
+                );
+                let (cache_texture, _) = self.texture_resolver
+                    .resolve(&texture_source).expect("bug: no source texture");
+
+                let cache_draw_target = DrawTarget::from_texture(
+                    cache_texture,
+                    false,
+                );
+
+                // Should always be drawing to picture cache tiles or off-screen surface!
+                debug_assert!(!draw_target.is_default());
+                let device_to_framebuffer = Scale::new(1i32);
+
+                self.device.blit_render_target(
+                    draw_target.into(),
+                    src * device_to_framebuffer,
+                    cache_draw_target,
+                    dest * device_to_framebuffer,
+                    TextureFilter::Linear,
+                );
+
+                // Restore draw target to current pass render target, and reset
+                // the read target.
+                self.device.bind_draw_target(draw_target);
+                self.device.reset_read_target();
+            }
+        }
+    }
+
     fn draw_picture_cache_target(
         &mut self,
         target: &PictureCacheTarget,
@@ -2824,6 +2911,12 @@ impl Renderer {
             projection,
             render_tasks,
             stats,
+        );
+
+        self.handle_resolve(
+            draw_target,
+            target.resolve_op,
+            render_tasks,
         );
 
         self.device.invalidate_depth_target();
@@ -3578,7 +3671,6 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         target: &ColorRenderTarget,
-        clear_color: Option<[f32; 4]>,
         clear_depth: Option<f32>,
         render_tasks: &RenderTaskGraph,
         projection: &default::Transform3D<f32>,
@@ -3609,6 +3701,10 @@ impl Renderer {
             if clear_depth.is_some() {
                 self.device.enable_depth_write();
             }
+
+            let clear_color = target
+                .clear_color
+                .map(|color| color.to_array());
 
             let clear_rect = match draw_target {
                 DrawTarget::NativeSurface { .. } => {
@@ -3714,6 +3810,12 @@ impl Renderer {
         if clear_depth.is_some() {
             self.device.invalidate_depth_target();
         }
+
+        self.handle_resolve(
+            draw_target,
+            target.resolve_op,
+            render_tasks,
+        );
     }
 
     fn draw_blurs(
@@ -4803,7 +4905,6 @@ impl Renderer {
                 self.draw_color_target(
                     draw_target,
                     target,
-                    Some([0.0, 0.0, 0.0, 0.0]),
                     clear_depth,
                     &frame.render_tasks,
                     &projection,
