@@ -27,6 +27,9 @@ extern "C" {
 // Bits Per MB at different Q (Multiplied by 512)
 #define BPER_MB_NORMBITS 9
 
+#define DEFAULT_KF_BOOST 2000
+#define DEFAULT_GF_BOOST 2000
+
 #define MIN_GF_INTERVAL 4
 #define MAX_GF_INTERVAL 16
 #define FIXED_GF_INTERVAL 8  // Used in some testing modes only
@@ -83,7 +86,7 @@ static const double rate_thresh_mult[FRAME_SCALE_STEPS] = { 1.0, 2.0 };
 static const double rcf_mult[FRAME_SCALE_STEPS] = { 1.0, 2.0 };
 
 typedef struct {
-  // Rate targetting variables
+  // Rate targeting variables
   int base_frame_target;  // A baseline frame target before adjustment
                           // for previous under or over shoot.
   int this_frame_target;  // Actual frame target after rc adjustment.
@@ -195,7 +198,8 @@ typedef struct {
   int use_post_encode_drop;
   // External flag to enable post encode frame dropping, controlled by user.
   int ext_use_post_encode_drop;
-
+  // Flag to disable CBR feature to increase Q on overshoot detection.
+  int disable_overshoot_maxq_cbr;
   int damped_adjustment[RATE_FACTOR_LEVELS];
   double arf_active_best_quality_adjustment_factor;
   int arf_increase_active_best_quality;
@@ -203,6 +207,10 @@ typedef struct {
   int preserve_arf_as_gld;
   int preserve_next_arf_as_gld;
   int show_arf_as_gld;
+
+  // Flag to constrain golden frame interval on key frame frequency for 1 pass
+  // VBR.
+  int constrain_gf_key_freq_onepass_vbr;
 } RATE_CONTROL;
 
 struct VP9_COMP;
@@ -252,6 +260,12 @@ int vp9_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
 // encode_frame_to_data_rate() function.
 void vp9_rc_get_one_pass_vbr_params(struct VP9_COMP *cpi);
 void vp9_rc_get_one_pass_cbr_params(struct VP9_COMP *cpi);
+int vp9_calc_pframe_target_size_one_pass_cbr(const struct VP9_COMP *cpi);
+int vp9_calc_iframe_target_size_one_pass_cbr(const struct VP9_COMP *cpi);
+int vp9_calc_pframe_target_size_one_pass_vbr(const struct VP9_COMP *cpi);
+int vp9_calc_iframe_target_size_one_pass_vbr(const struct VP9_COMP *cpi);
+void vp9_set_gf_update_one_pass_vbr(struct VP9_COMP *const cpi);
+void vp9_update_buffer_level_preencode(struct VP9_COMP *cpi);
 void vp9_rc_get_svc_params(struct VP9_COMP *cpi);
 
 // Post encode update of the rate control parameters based
@@ -329,6 +343,8 @@ int vp9_encodedframe_overshoot(struct VP9_COMP *cpi, int frame_size, int *q);
 void vp9_configure_buffer_updates(struct VP9_COMP *cpi, int gf_group_index);
 
 void vp9_estimate_qp_gop(struct VP9_COMP *cpi);
+
+void vp9_compute_frame_low_motion(struct VP9_COMP *const cpi);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -17,6 +17,7 @@
  */
 #include "./vp8.h"
 #include "./vpx_encoder.h"
+#include "./vpx_ext_ratectrl.h"
 
 /*!\file
  * \brief Provides definitions for using VP8 or VP9 encoder algorithm within the
@@ -676,6 +677,71 @@ enum vp8e_enc_control_id {
    * Supported in codecs: VP9
    */
   VP9E_SET_POSTENCODE_DROP,
+
+  /*!\brief Codec control function to set delta q for uv.
+   *
+   * Cap it at +/-15.
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_SET_DELTA_Q_UV,
+
+  /*!\brief Codec control function to disable increase Q on overshoot in CBR.
+   *
+   * 0: On (default), 1: Disable.
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_SET_DISABLE_OVERSHOOT_MAXQ_CBR,
+
+  /*!\brief Codec control function to disable loopfilter.
+   *
+   * 0: Loopfilter on all frames, 1: Disable on non reference frames.
+   * 2: Disable on all frames.
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_SET_DISABLE_LOOPFILTER,
+
+  /*!\brief Codec control function to enable external rate control library.
+   *
+   * args[0]: path of the rate control library
+   *
+   * args[1]: private config of the rate control library
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_SET_EXTERNAL_RATE_CONTROL,
+
+  /*!\brief Codec control to disable internal features in rate control.
+   *
+   * This will do 3 things, only for 1 pass:
+   *  - Turn off low motion computation
+   *  - Turn off gf update constraint on key frame frequency
+   *  - Turn off content mode for cyclic refresh
+   *
+   * With those, the rate control is expected to work exactly the same as the
+   * interface provided in ratectrl_rtc.cc/h
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_SET_RTC_EXTERNAL_RATECTRL,
+
+  /*!\brief Codec control function to get loopfilter level in the encoder.
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_GET_LOOPFILTER_LEVEL,
+
+  /*!\brief Codec control to get last quantizers for all spatial layers.
+   *
+   * Return value uses an array of internal quantizers scale defined by the
+   * codec, for all spatial layers.
+   * The size of the array passed in should be #VPX_SS_MAX_LAYERS.
+   *
+   * Supported in codecs: VP9
+   */
+  VP9E_GET_LAST_QUANTIZER_SVC_LAYERS,
 };
 
 /*!\brief vpx 1-D scaling mode
@@ -933,6 +999,9 @@ VPX_CTRL_USE_TYPE(VP8E_GET_LAST_QUANTIZER, int *)
 #define VPX_CTRL_VP8E_GET_LAST_QUANTIZER
 VPX_CTRL_USE_TYPE(VP8E_GET_LAST_QUANTIZER_64, int *)
 #define VPX_CTRL_VP8E_GET_LAST_QUANTIZER_64
+VPX_CTRL_USE_TYPE(VP9E_GET_LAST_QUANTIZER_SVC_LAYERS, int *)
+#define VPX_CTRL_VP9E_GET_LAST_QUANTIZER_SVC_LAYERS
+
 VPX_CTRL_USE_TYPE(VP9E_GET_SVC_LAYER_ID, vpx_svc_layer_id_t *)
 #define VPX_CTRL_VP9E_GET_SVC_LAYER_ID
 
@@ -1001,6 +1070,9 @@ VPX_CTRL_USE_TYPE(VP9E_SET_ROW_MT, unsigned int)
 VPX_CTRL_USE_TYPE(VP9E_GET_LEVEL, int *)
 #define VPX_CTRL_VP9E_GET_LEVEL
 
+VPX_CTRL_USE_TYPE(VP9E_GET_LOOPFILTER_LEVEL, int *)
+#define VPX_CTRL_VP9E_GET_LOOPFILTER_LEVEL
+
 VPX_CTRL_USE_TYPE(VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST, unsigned int)
 #define VPX_CTRL_VP9E_ENABLE_MOTION_VECTOR_UNIT_TEST
 
@@ -1022,6 +1094,21 @@ VPX_CTRL_USE_TYPE(VP9E_SET_SVC_SPATIAL_LAYER_SYNC,
 
 VPX_CTRL_USE_TYPE(VP9E_SET_POSTENCODE_DROP, unsigned int)
 #define VPX_CTRL_VP9E_SET_POSTENCODE_DROP
+
+VPX_CTRL_USE_TYPE(VP9E_SET_DELTA_Q_UV, int)
+#define VPX_CTRL_VP9E_SET_DELTA_Q_UV
+
+VPX_CTRL_USE_TYPE(VP9E_SET_DISABLE_OVERSHOOT_MAXQ_CBR, int)
+#define VPX_CTRL_VP9E_SET_DISABLE_OVERSHOOT_MAXQ_CBR
+
+VPX_CTRL_USE_TYPE(VP9E_SET_DISABLE_LOOPFILTER, int)
+#define VPX_CTRL_VP9E_SET_DISABLE_LOOPFILTER
+
+VPX_CTRL_USE_TYPE(VP9E_SET_RTC_EXTERNAL_RATECTRL, int)
+#define VPX_CTRL_VP9E_SET_RTC_EXTERNAL_RATECTRL
+
+VPX_CTRL_USE_TYPE(VP9E_SET_EXTERNAL_RATE_CONTROL, vpx_rc_funcs_t *)
+#define VPX_CTRL_VP9E_SET_EXTERNAL_RATE_CONTROL
 
 /*!\endcond */
 /*! @} - end defgroup vp8_encoder */

@@ -90,6 +90,10 @@ function getObjectInspector(
     openLink: serviceContainer.openLink,
     sourceMapURLService: serviceContainer.sourceMapURLService,
     customFormat: override.customFormat !== false,
+    setExpanded: override.setExpanded,
+    initiallyExpanded: override.initiallyExpanded,
+    queueActorsForCleanup: override.queueActorsForCleanup,
+    cachedNodes: override.cachedNodes,
     urlCropLimit: 120,
     renderStacktrace: stacktrace =>
       createElement(SmartTrace, {

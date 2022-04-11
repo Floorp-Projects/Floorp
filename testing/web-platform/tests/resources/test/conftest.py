@@ -16,7 +16,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 WPT_ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 HARNESS = os.path.join(HERE, 'harness.html')
 TEST_TYPES = ('functional', 'unit')
-DEFAULT_VARIANTS = ["?default"]
 
 sys.path.insert(0, os.path.normpath(os.path.join(WPT_ROOT, "tools")))
 import localpaths
@@ -149,7 +148,6 @@ class HTMLItem(pytest.Item, pytest.Collector):
     def __init__(self, parent, filename, test_type):
         self.url = parent.session.config.server.url(filename)
         self.type = test_type
-        self.variants = []
         # Some tests are reliant on the WPT servers substitution functionality,
         # so tests must be retrieved from the server rather than read from the
         # file system directly.
@@ -165,15 +163,11 @@ class HTMLItem(pytest.Item, pytest.Collector):
 
         parsed = html5lib.parse(markup, namespaceHTMLElements=False)
         name = None
-        includes_variants_script = False
         self.expected = None
 
         for element in parsed.iter():
             if not name and element.tag == 'title':
                 name = element.text
-                continue
-            if element.tag == 'meta' and element.attrib.get('name') == 'variant':
-                self.variants.append(element.attrib.get('content'))
                 continue
             if element.tag == 'script':
                 if element.attrib.get('id') == 'expected':
@@ -183,23 +177,11 @@ class HTMLItem(pytest.Item, pytest.Collector):
                         print("Failed parsing JSON in %s" % filename)
                         raise
 
-                src = element.attrib.get('src', '')
-
-                if 'variants.js' in src:
-                    includes_variants_script = True
-                    if not resolve_uri(filename, src):
-                        raise ValueError('Could not resolve path "%s" from %s' % (src, filename))
-
         if not name:
             raise ValueError('No name found in %s add a <title> element' % filename)
         elif self.type == 'functional':
             if not self.expected:
                 raise ValueError('Functional tests must specify expected report data')
-            if not includes_variants_script:
-                raise ValueError('No variants script found in file %s add '
-                                 '\'<script src="../../variants.js"></script>\'' % filename)
-            if len(self.variants) == 0:
-                self.variants = DEFAULT_VARIANTS
         elif self.type == 'unit' and self.expected:
             raise ValueError('Unit tests must not specify expected report data')
 
@@ -247,16 +229,12 @@ class HTMLItem(pytest.Item, pytest.Collector):
             assert test[u'status_string'] == u'PASS', msg
 
     def _run_functional_test(self):
-        for variant in self.variants:
-            self._run_functional_test_variant(variant)
-
-    def _run_functional_test_variant(self, variant):
         driver = self.session.config.driver
         server = self.session.config.server
 
         driver.url = server.url(HARNESS)
 
-        test_url = self.url + variant
+        test_url = self.url
         actual = driver.execute_async_script('runTest("%s", "foo", arguments[0])' % test_url)
 
         print(json.dumps(actual, indent=2))

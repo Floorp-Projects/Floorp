@@ -152,19 +152,33 @@ void js::GCParallelTask::runFromMainThread() {
   runTask(lock);
 }
 
+class MOZ_RAII AutoGCContext {
+  JS::GCContext context;
+
+ public:
+  explicit AutoGCContext(JSRuntime* runtime) : context(runtime) {
+    MOZ_RELEASE_ASSERT(TlsGCContext.init(),
+                       "Failed to initialize TLS for GC context");
+
+    MOZ_ASSERT(!TlsGCContext.get());
+    TlsGCContext.set(&context);
+  }
+
+  ~AutoGCContext() {
+    MOZ_ASSERT(TlsGCContext.get() == &context);
+    TlsGCContext.set(nullptr);
+  }
+};
+
 void js::GCParallelTask::runHelperThreadTask(AutoLockHelperThreadState& lock) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   AutoTraceLog logCompile(logger, TraceLogger_GC);
 
   setRunning(lock);
 
-  JS::GCContext gcx(gc->rt, false);
-  MOZ_RELEASE_ASSERT(TlsGCContext.init());
-  TlsGCContext.set(&gcx);
+  AutoGCContext gcContext(gc->rt);
 
   runTask(lock);
-
-  TlsGCContext.set(nullptr);
 
   setFinished(lock);
 }

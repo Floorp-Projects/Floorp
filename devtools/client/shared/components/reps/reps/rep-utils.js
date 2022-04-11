@@ -69,13 +69,6 @@ define(function(require, exports, module) {
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const { span } = dom;
 
-  /**
-   * Returns true if the given object is a grip (see RDP protocol)
-   */
-  function isGrip(object) {
-    return object && object.actor;
-  }
-
   function escapeNewLines(value) {
     return value.replace(/\r/gm, "\\r").replace(/\n/gm, "\\n");
   }
@@ -478,7 +471,6 @@ define(function(require, exports, module) {
 
   module.exports = {
     interleave,
-    isGrip,
     isURL,
     cropString,
     containsURL,

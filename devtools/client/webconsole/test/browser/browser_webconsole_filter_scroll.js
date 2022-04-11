@@ -28,7 +28,7 @@ add_task(async function() {
     "Filter out some messages and check that the scroll position is not impacted"
   );
   let onMessagesFiltered = waitFor(
-    () => !findMessage(hud, "init-1"),
+    () => !findMessage(hud, "init-0"),
     null,
     200
   );
@@ -43,7 +43,7 @@ add_task(async function() {
     "Clear the text filter and check that the scroll position is not impacted"
   );
   let onMessagesUnFiltered = waitFor(
-    () => findMessage(hud, "init-1"),
+    () => findMessage(hud, "init-0"),
     null,
     200
   );
@@ -63,7 +63,11 @@ add_task(async function() {
   );
 
   await setFilterState(hud, { text: "init-9" });
-  onMessagesFiltered = waitFor(() => !findMessage(hud, "init-1"), null, 200);
+  onMessagesFiltered = waitFor(
+    async () => !findMessage(hud, "init-0"),
+    null,
+    200
+  );
   await onMessagesFiltered;
   is(
     outputContainer.scrollTop,
@@ -74,7 +78,7 @@ add_task(async function() {
   info(
     "Clear the text filter and check that the scroll position is not impacted"
   );
-  onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-1"), null, 200);
+  onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-0"), null, 200);
   await setFilterState(hud, { text: "" });
   await onMessagesUnFiltered;
   is(

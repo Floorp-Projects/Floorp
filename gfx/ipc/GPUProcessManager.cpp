@@ -10,6 +10,7 @@
 #include "gfxPlatform.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessListener.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
@@ -135,7 +136,7 @@ GPUProcessManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "application-foreground")) {
     mManager->mAppInForeground = true;
     if (!mManager->mProcess && gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-      mManager->LaunchGPUProcess();
+      Unused << mManager->LaunchGPUProcess();
     }
   } else if (!strcmp(aTopic, "application-background")) {
     mManager->mAppInForeground = false;
@@ -177,9 +178,13 @@ void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
 }
 
-void GPUProcessManager::LaunchGPUProcess() {
+bool GPUProcessManager::LaunchGPUProcess() {
   if (mProcess) {
-    return;
+    return true;
+  }
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown)) {
+    return false;
   }
 
   // Start listening for pref changes so we can
@@ -224,6 +229,8 @@ void GPUProcessManager::LaunchGPUProcess() {
   if (!mProcess->Launch(extraArgs)) {
     DisableGPUProcess("Failed to launch GPU process");
   }
+
+  return true;
 }
 
 bool GPUProcessManager::IsGPUProcessLaunching() {
@@ -286,7 +293,9 @@ bool GPUProcessManager::EnsureGPUReady() {
 
   // Launch the GPU process if it is enabled but hasn't been (re-)launched yet.
   if (!mProcess && gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-    LaunchGPUProcess();
+    if (!LaunchGPUProcess()) {
+      return false;
+    }
   }
 
   if (mProcess && !mProcess->IsConnected()) {
@@ -772,7 +781,7 @@ void GPUProcessManager::HandleProcessLost() {
   // until the app is in the foreground again.
   if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
     if (mAppInForeground) {
-      LaunchGPUProcess();
+      Unused << LaunchGPUProcess();
     }
   } else {
     // If the GPU process is disabled we can reinitialize rendering immediately.

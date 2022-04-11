@@ -23,7 +23,6 @@ describe("Multistage AboutWelcome module", () => {
     const COLORWAY_SCREEN_PROPS = {
       id: "test-colorway-screen",
       totalNumberofScreens: 1,
-      order: 0,
       content: {
         subtitle: "test subtitle",
         tiles: {

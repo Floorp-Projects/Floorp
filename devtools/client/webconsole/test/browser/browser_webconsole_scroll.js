@@ -7,13 +7,13 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console tes
   <script>
     var a = () => b();
     var b = () => c();
-    var c = () => console.trace("trace in C");
+    var c = (i) => console.trace("trace in C " + i);
 
-    for (let i = 0; i < 100; i++) {
-      if (i % 10 === 0) {
-        c();
-      }
+    for (let i = 0; i <= 100; i++) {
       console.log("init-" + i);
+      if (i % 10 === 0) {
+        c(i);
+      }
     }
   </script>
 `;
@@ -23,7 +23,7 @@ add_task(async function() {
   const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
   info("Console should be scrolled to bottom on initial load from page logs");
-  await waitFor(() => findMessage(hud, "init-99"));
+  await waitFor(() => findMessage(hud, "init-100"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -31,8 +31,8 @@ add_task(async function() {
   );
 
   info("Wait until all stacktraces are rendered");
-  await waitFor(
-    () => outputContainer.querySelectorAll(".frames").length === 10
+  await waitFor(() =>
+    findMessages(hud, "")?.every(m => m.textContent.length > 0)
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -42,7 +42,7 @@ add_task(async function() {
   await reloadBrowser();
 
   info("Console should be scrolled to bottom after refresh from page logs");
-  await waitFor(() => findMessage(hud, "init-99"));
+  await waitFor(() => findMessage(hud, "init-100"));
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -50,8 +50,17 @@ add_task(async function() {
   );
 
   info("Wait until all stacktraces are rendered");
-  await waitFor(
-    () => outputContainer.querySelectorAll(".frames").length === 10
+  await waitFor(() =>
+    findMessages(hud, "")?.every(m => m.textContent.length > 0)
+  );
+
+  // There's an annoying race here where the SmartTrace from above goes into
+  // the DOM, our waitFor passes, but the SmartTrace still hasn't called its
+  // onReady callback. If this happens, it will call ConsoleOutput's
+  // maybeScrollToBottomMessageCallback *after* we set scrollTop below,
+  // causing it to undo our work. Waiting a little bit here should resolve it.
+  await new Promise(r =>
+    window.requestAnimationFrame(() => TestUtils.executeSoon(r))
   );
   ok(
     isScrolledToBottom(outputContainer),
@@ -291,6 +300,44 @@ add_task(async function() {
     isScrolledToBottom(outputContainer),
     false,
     "The output was not scrolled to the bottom"
+  );
+
+  await clearOutput(hud);
+  // Log a big object that will be much larger than the output container
+  onMessage = waitForMessage(hud, "WE ALL LIVE IN A");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    const win = content.wrappedJSObject;
+    for (let i = 1; i < 100; i++) {
+      win["a" + i] = function(j) {
+        win["a" + j]();
+      }.bind(null, i + 1);
+    }
+    win.a100 = function() {
+      win.console.warn(new Error("WE ALL LIVE IN A"));
+    };
+    win.a1();
+  });
+  message = await onMessage;
+  // Give the intersection observer a chance to break this if it's going to
+  await wait(500);
+  // Assert here and below for ease of debugging where we lost the scroll
+  is(
+    isScrolledToBottom(outputContainer),
+    true,
+    "The output was scrolled to the bottom"
+  );
+  // Then log something else to make sure we haven't lost our scroll pinning
+  onMessage = waitForMessage(hud, "YELLOW SUBMARINE");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.wrappedJSObject.console.log("YELLOW SUBMARINE");
+  });
+  message = await onMessage;
+  // Again, give the scroll position a chance to be broken
+  await wait(500);
+  is(
+    isScrolledToBottom(outputContainer),
+    true,
+    "The output was scrolled to the bottom"
   );
 });
 

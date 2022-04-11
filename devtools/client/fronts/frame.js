@@ -21,10 +21,6 @@ class FrameFront extends FrontClassWithSpec(frameSpec) {
     this.asyncCause = json.asyncCause;
     this.state = json.state;
   }
-
-  getWebConsoleFront() {
-    return this.targetFront.getFront("console");
-  }
 }
 
 module.exports = FrameFront;

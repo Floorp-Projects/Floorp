@@ -2,6 +2,7 @@ LIBVPX_TEST_SRCS-yes += test-data.mk
 
 # Encoder test source
 LIBVPX_TEST_DATA-$(CONFIG_ENCODERS) += hantro_collage_w352h288.yuv
+LIBVPX_TEST_DATA-$(CONFIG_ENCODERS) += hantro_collage_w352h288_nv12.yuv
 LIBVPX_TEST_DATA-$(CONFIG_ENCODERS) += hantro_odd.yuv
 LIBVPX_TEST_DATA-$(CONFIG_ENCODERS) += desktop_office1.1280_720-020.yuv
 LIBVPX_TEST_DATA-$(CONFIG_ENCODERS) += slides_code_term_web_plot.1920_1080.yuv
@@ -26,7 +27,7 @@ LIBVPX_TEST_DATA-$(CONFIG_VP9_ENCODER) += noisy_clip_640_360.y4m
 LIBVPX_TEST_DATA-$(CONFIG_VP9_ENCODER) += rush_hour_444.y4m
 LIBVPX_TEST_DATA-$(CONFIG_VP9_ENCODER) += screendata.y4m
 LIBVPX_TEST_DATA-$(CONFIG_VP9_ENCODER) += niklas_640_480_30.yuv
-LIBVPX_TEST_DATA-$(CONFIG_RATE_CTRL) += bus_352x288_420_f20_b8.yuv
+LIBVPX_TEST_DATA-$(CONFIG_VP9_ENCODER) += bus_352x288_420_f20_b8.yuv
 
 # Test vectors
 LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += vp80-00-comprehensive-001.ivf
@@ -737,6 +738,8 @@ endif  # CONFIG_VP9_HIGHBITDEPTH
 # Invalid files for testing libvpx error checking.
 LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-bug-1443.ivf
 LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-bug-1443.ivf.res
+LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-bug-148271109.ivf
+LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-bug-148271109.ivf.res
 LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-token-partition.ivf
 LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-token-partition.ivf.res
 LIBVPX_TEST_DATA-$(CONFIG_VP8_DECODER) += invalid-vp80-00-comprehensive-018.ivf.2kf_0x6.ivf

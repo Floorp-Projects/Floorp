@@ -176,8 +176,8 @@ const MultiStageAboutWelcome = props => {
       background: props.backdrop
     } : {}
   }, screens.map((screen, order) => {
-    const isFirstCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[0].order;
-    const isLastCenteredScreen = screen.content.position !== "corner" && screen.order === centeredScreens[centeredScreens.length - 1].order;
+    const isFirstCenteredScreen = screen.content.position !== "corner" && screen === centeredScreens[0];
+    const isLastCenteredScreen = screen.content.position !== "corner" && screen === centeredScreens[centeredScreens.length - 1];
     /* If first screen is corner positioned, don't include it in the count for the steps indicator. This assumes corner positioning will only be used on the first screen. */
 
     const totalNumberOfScreens = screens[0].content.position === "corner" ? screens.length - 1 : screens.length;
@@ -512,7 +512,6 @@ const AboutWelcomeUtils = {
 const DEFAULT_RTAMO_CONTENT = {
   template: "return_to_amo",
   utm_term: "rtamo",
-  order: 0,
   content: {
     position: "corner",
     hero_text: {

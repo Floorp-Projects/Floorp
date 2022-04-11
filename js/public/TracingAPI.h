@@ -88,28 +88,18 @@ enum class WeakMapTraceAction {
 // Whether a tracer should trace weak edges. GCMarker sets this to Skip.
 enum class WeakEdgeTraceAction { Skip, Trace };
 
-// Whether a tracer can skip tracing JS::Ids. This is needed by the cycle
-// collector to skip some Ids for performance reasons. Not all Ids are skipped.
-enum class IdTraceAction { CanSkip, Trace };
-
 struct TraceOptions {
   JS::WeakMapTraceAction weakMapAction = WeakMapTraceAction::TraceValues;
   JS::WeakEdgeTraceAction weakEdgeAction = WeakEdgeTraceAction::Trace;
-  JS::IdTraceAction idAction = IdTraceAction::Trace;
 
   TraceOptions() = default;
   TraceOptions(JS::WeakMapTraceAction weakMapActionArg,
-               JS::WeakEdgeTraceAction weakEdgeActionArg,
-               JS::IdTraceAction idActionArg = IdTraceAction::Trace)
-      : weakMapAction(weakMapActionArg),
-        weakEdgeAction(weakEdgeActionArg),
-        idAction(idActionArg) {}
+               JS::WeakEdgeTraceAction weakEdgeActionArg)
+      : weakMapAction(weakMapActionArg), weakEdgeAction(weakEdgeActionArg) {}
   MOZ_IMPLICIT TraceOptions(JS::WeakMapTraceAction weakMapActionArg)
       : weakMapAction(weakMapActionArg) {}
   MOZ_IMPLICIT TraceOptions(JS::WeakEdgeTraceAction weakEdgeActionArg)
       : weakEdgeAction(weakEdgeActionArg) {}
-  MOZ_IMPLICIT TraceOptions(JS::IdTraceAction idActionArg)
-      : idAction(idActionArg) {}
 };
 
 class AutoTracingName;
@@ -201,9 +191,6 @@ class JS_PUBLIC_API JSTracer {
   }
   bool traceWeakEdges() const {
     return options_.weakEdgeAction == JS::WeakEdgeTraceAction::Trace;
-  }
-  bool canSkipJsids() const {
-    return options_.idAction == JS::IdTraceAction::CanSkip;
   }
 
   JS::TracingContext& context() { return context_; }

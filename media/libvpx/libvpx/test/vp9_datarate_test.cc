@@ -46,6 +46,7 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
     denoiser_offon_test_ = 0;
     denoiser_offon_period_ = -1;
     frame_parallel_decoding_mode_ = 1;
+    delta_q_uv_ = 0;
     use_roi_ = false;
   }
 
@@ -138,6 +139,10 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
       encoder->Control(VP9E_SET_AQ_MODE, 0);
     }
 
+    if (delta_q_uv_ != 0) {
+      encoder->Control(VP9E_SET_DELTA_Q_UV, delta_q_uv_);
+    }
+
     if (cfg_.ts_number_layers > 1) {
       if (video->frame() == 0) {
         encoder->Control(VP9E_SET_SVC, 1);
@@ -222,6 +227,7 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
   int denoiser_offon_test_;
   int denoiser_offon_period_;
   int frame_parallel_decoding_mode_;
+  int delta_q_uv_;
   bool use_roi_;
   vpx_roi_map_t roi_;
 };
@@ -695,7 +701,7 @@ TEST_P(DatarateTestVP9RealTime, RegionOfInterest) {
   // Use 2 states: 1 is center square, 0 is the rest.
   roi_.roi_map = reinterpret_cast<uint8_t *>(
       calloc(roi_.rows * roi_.cols, sizeof(*roi_.roi_map)));
-  ASSERT_TRUE(roi_.roi_map != NULL);
+  ASSERT_NE(roi_.roi_map, nullptr);
 
   for (unsigned int i = 0; i < roi_.rows; ++i) {
     for (unsigned int j = 0; j < roi_.cols; ++j) {
@@ -714,6 +720,52 @@ TEST_P(DatarateTestVP9RealTime, RegionOfInterest) {
       << " The datarate for the file missed the target!";
 
   free(roi_.roi_map);
+}
+
+// Params: speed setting, delta q UV.
+class DatarateTestVP9RealTimeDeltaQUV
+    : public DatarateTestVP9,
+      public ::libvpx_test::CodecTestWith2Params<int, int> {
+ public:
+  DatarateTestVP9RealTimeDeltaQUV() : DatarateTestVP9(GET_PARAM(0)) {}
+  virtual ~DatarateTestVP9RealTimeDeltaQUV() {}
+
+ protected:
+  virtual void SetUp() {
+    InitializeConfig();
+    SetMode(::libvpx_test::kRealTime);
+    set_cpu_used_ = GET_PARAM(1);
+    ResetModel();
+  }
+};
+
+TEST_P(DatarateTestVP9RealTimeDeltaQUV, DeltaQUV) {
+  cfg_.rc_buf_initial_sz = 500;
+  cfg_.rc_buf_optimal_sz = 500;
+  cfg_.rc_buf_sz = 1000;
+  cfg_.rc_dropframe_thresh = 0;
+  cfg_.rc_min_quantizer = 0;
+  cfg_.rc_max_quantizer = 63;
+  cfg_.rc_end_usage = VPX_CBR;
+  cfg_.g_lag_in_frames = 0;
+
+  ::libvpx_test::I420VideoSource video("niklas_640_480_30.yuv", 640, 480, 30, 1,
+                                       0, 400);
+
+  cfg_.rc_target_bitrate = 450;
+  cfg_.g_w = 640;
+  cfg_.g_h = 480;
+
+  ResetModel();
+
+  delta_q_uv_ = GET_PARAM(2);
+
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  ASSERT_GE(cfg_.rc_target_bitrate, effective_datarate_[0] * 0.90)
+      << " The datarate for the file exceeds the target!";
+
+  ASSERT_LE(cfg_.rc_target_bitrate, effective_datarate_[0] * 1.4)
+      << " The datarate for the file missed the target!";
 }
 
 // Params: test mode, speed setting and index for bitrate array.
@@ -883,19 +935,23 @@ TEST_P(DatarateTestVP9RealTimeDenoiser, DenoiserOffOn) {
 }
 #endif  // CONFIG_VP9_TEMPORAL_DENOISING
 
-VP9_INSTANTIATE_TEST_CASE(DatarateTestVP9RealTimeMultiBR,
-                          ::testing::Range(5, 10), ::testing::Range(0, 4));
+VP9_INSTANTIATE_TEST_SUITE(DatarateTestVP9RealTimeMultiBR,
+                           ::testing::Range(5, 10), ::testing::Range(0, 4));
 
-VP9_INSTANTIATE_TEST_CASE(DatarateTestVP9LargeVBR, ::testing::Range(5, 9),
-                          ::testing::Range(0, 2));
+VP9_INSTANTIATE_TEST_SUITE(DatarateTestVP9LargeVBR, ::testing::Range(5, 9),
+                           ::testing::Range(0, 2));
 
-VP9_INSTANTIATE_TEST_CASE(DatarateTestVP9RealTime, ::testing::Range(5, 10));
+VP9_INSTANTIATE_TEST_SUITE(DatarateTestVP9RealTime, ::testing::Range(5, 10));
 
-VP9_INSTANTIATE_TEST_CASE(DatarateTestVP9PostEncodeDrop,
-                          ::testing::Range(5, 6));
+VP9_INSTANTIATE_TEST_SUITE(DatarateTestVP9RealTimeDeltaQUV,
+                           ::testing::Range(5, 10),
+                           ::testing::Values(-5, -10, -15));
+
+VP9_INSTANTIATE_TEST_SUITE(DatarateTestVP9PostEncodeDrop,
+                           ::testing::Range(5, 6));
 
 #if CONFIG_VP9_TEMPORAL_DENOISING
-VP9_INSTANTIATE_TEST_CASE(DatarateTestVP9RealTimeDenoiser,
-                          ::testing::Range(5, 10));
+VP9_INSTANTIATE_TEST_SUITE(DatarateTestVP9RealTimeDenoiser,
+                           ::testing::Range(5, 10));
 #endif
 }  // namespace

@@ -20,8 +20,8 @@ promise_test(async t => {
   };
   await navigation.back().finished;
   assert_not_equals(window.scrollY, 0);
-  navigate_event.restoreScroll();
+  assert_throws_dom("InvalidStateError", () => navigate_event.restoreScroll());
   assert_not_equals(window.scrollY, 0);
-}, "scrollRestoration: restoreScroll() should not work after a navigation finished promise fulfills");
+}, "scrollRestoration: restoreScroll() should throw after a navigation finished promise fulfills");
 </script>
 </body>

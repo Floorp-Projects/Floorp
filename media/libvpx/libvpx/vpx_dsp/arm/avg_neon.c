@@ -22,15 +22,13 @@
 uint32_t vpx_avg_4x4_neon(const uint8_t *a, int a_stride) {
   const uint8x16_t b = load_unaligned_u8q(a, a_stride);
   const uint16x8_t c = vaddl_u8(vget_low_u8(b), vget_high_u8(b));
-  const uint32x2_t d = horizontal_add_uint16x8(c);
-  return vget_lane_u32(vrshr_n_u32(d, 4), 0);
+  return (horizontal_add_uint16x8(c) + (1 << 3)) >> 4;
 }
 
 uint32_t vpx_avg_8x8_neon(const uint8_t *a, int a_stride) {
   int i;
   uint8x8_t b, c;
   uint16x8_t sum;
-  uint32x2_t d;
   b = vld1_u8(a);
   a += a_stride;
   c = vld1_u8(a);
@@ -43,9 +41,7 @@ uint32_t vpx_avg_8x8_neon(const uint8_t *a, int a_stride) {
     sum = vaddw_u8(sum, d);
   }
 
-  d = horizontal_add_uint16x8(sum);
-
-  return vget_lane_u32(vrshr_n_u32(d, 6), 0);
+  return (horizontal_add_uint16x8(sum) + (1 << 5)) >> 6;
 }
 
 // coeff: 16 bits, dynamic range [-32640, 32640].
@@ -139,8 +135,7 @@ int16_t vpx_int_pro_col_neon(uint8_t const *ref, const int width) {
     ref += 16;
   }
 
-  return vget_lane_s16(vreinterpret_s16_u32(horizontal_add_uint16x8(vec_sum)),
-                       0);
+  return (int16_t)horizontal_add_uint16x8(vec_sum);
 }
 
 // ref, src = [0, 510] - max diff = 16-bits

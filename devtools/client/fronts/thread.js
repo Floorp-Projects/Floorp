@@ -71,10 +71,6 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     return this.actorID;
   }
 
-  getWebconsoleFront() {
-    return this.targetFront.getFront("console");
-  }
-
   _assertPaused(command) {
     if (!this.paused) {
       throw Error(
