@@ -9,7 +9,6 @@
 
 #include "AccessibleHypertext_i.c"
 
-#include "HyperTextAccessibleWrap.h"
 #include "IUnknownImpl.h"
 
 using namespace mozilla::a11y;
@@ -17,11 +16,6 @@ using namespace mozilla::a11y;
 HyperTextAccessibleBase* ia2AccessibleHypertext::TextAcc() {
   Accessible* acc = Acc();
   return acc ? acc->AsHyperTextBase() : nullptr;
-}
-
-HyperTextAccessibleWrap* ia2AccessibleHypertext::LocalTextAcc() {
-  AccessibleWrap* acc = LocalAcc();
-  return static_cast<HyperTextAccessibleWrap*>(acc);
 }
 
 // IUnknown
@@ -62,7 +56,7 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount) {
 
   *aHyperlinkCount = 0;
 
-  HyperTextAccessibleWrap* hyperText = LocalTextAcc();
+  HyperTextAccessibleBase* hyperText = TextAcc();
   if (!hyperText) return CO_E_OBJNOTCONNECTED;
 
   *aHyperlinkCount = hyperText->LinkCount();
@@ -114,7 +108,7 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   *aHyperlinks = nullptr;
   *aNHyperlinks = 0;
 
-  HyperTextAccessibleWrap* hyperText = LocalTextAcc();
+  HyperTextAccessibleBase* hyperText = TextAcc();
   if (!hyperText) {
     return CO_E_OBJNOTCONNECTED;
   }
@@ -134,11 +128,8 @@ ia2AccessibleHypertext::get_hyperlinks(IAccessibleHyperlink*** aHyperlinks,
   }
 
   for (uint32_t i = 0; i < count; ++i) {
-    LocalAccessible* hyperLink = hyperText->LinkAt(i);
+    Accessible* hyperLink = hyperText->LinkAt(i);
     MOZ_ASSERT(hyperLink);
-    // GetNativeInterface returns an IAccessible, but we need an
-    // IAccessibleHyperlink, so use MsaaAccessible::GetFrom instead and let
-    // RefPtr cast it.
     RefPtr<IAccessibleHyperlink> iaHyper = MsaaAccessible::GetFrom(hyperLink);
     iaHyper.forget(&(*aHyperlinks)[i]);
   }
