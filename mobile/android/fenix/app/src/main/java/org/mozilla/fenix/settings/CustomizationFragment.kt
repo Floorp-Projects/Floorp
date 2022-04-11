@@ -12,11 +12,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -85,9 +84,9 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     private fun bindDarkTheme() {
         radioDarkTheme = requirePreference(R.string.pref_key_dark_theme)
         radioDarkTheme.onClickListener {
-            requireContext().components.analytics.metrics.track(
-                Event.DarkThemeSelected(
-                    Event.DarkThemeSelected.Source.SETTINGS
+            AppTheme.darkThemeSelected.record(
+                AppTheme.DarkThemeSelectedExtra(
+                    "SETTINGS"
                 )
             )
             setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)

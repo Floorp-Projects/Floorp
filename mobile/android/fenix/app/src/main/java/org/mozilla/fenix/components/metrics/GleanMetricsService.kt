@@ -10,7 +10,6 @@ import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
-import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
@@ -219,10 +218,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PocketHomeRecsCategoryClicked -> EventWrapper(
             { Pocket.homeRecsCategoryClicked.record(it) },
             { Pocket.homeRecsCategoryClickedKeys.valueOf(it) }
-        )
-        is Event.DarkThemeSelected -> EventWrapper(
-            { AppTheme.darkThemeSelected.record(it) },
-            { AppTheme.darkThemeSelectedKeys.valueOf(it) }
         )
         is Event.AddonsOpenInSettings -> EventWrapper<NoExtraKeys>(
             { Addons.openAddonsInSettings.record(it) }

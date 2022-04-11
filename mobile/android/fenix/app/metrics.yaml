@@ -5289,6 +5289,7 @@ app_theme:
       A user selected Dark Theme
     extra_keys:
       source:
+        type: string
         description: |
           The source from where dark theme was selected. The source can be
           'SETTINGS' or 'ONBOARDING'
