@@ -156,6 +156,11 @@ class Accessible {
   virtual GroupPos GroupPosition();
 
   /**
+   * Return embedded accessible children count.
+   */
+  virtual uint32_t EmbeddedChildCount() = 0;
+
+  /**
    * Return embedded accessible child at the given index.
    */
   virtual Accessible* EmbeddedChildAt(uint32_t aIndex) = 0;

@@ -692,28 +692,11 @@ AtkObject* getParentCB(AtkObject* aAtkObj) {
 }
 
 gint getChildCountCB(AtkObject* aAtkObj) {
-  if (AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj)) {
-    if (nsAccUtils::MustPrune(accWrap)) {
-      return 0;
-    }
-
-    uint32_t count = accWrap->EmbeddedChildCount();
-    if (count) {
-      return static_cast<gint>(count);
-    }
-
-    OuterDocAccessible* outerDoc = accWrap->AsOuterDoc();
-    if (outerDoc && outerDoc->RemoteChildDoc()) {
-      return 1;
-    }
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc || nsAccUtils::MustPrune(acc)) {
+    return 0;
   }
-
-  RemoteAccessible* proxy = GetProxy(aAtkObj);
-  if (proxy && !nsAccUtils::MustPrune(proxy)) {
-    return proxy->EmbeddedChildCount();
-  }
-
-  return 0;
+  return static_cast<gint>(acc->EmbeddedChildCount());
 }
 
 AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
