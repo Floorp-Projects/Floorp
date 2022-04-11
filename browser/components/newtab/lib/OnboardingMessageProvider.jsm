@@ -56,7 +56,6 @@ const ONBOARDING_MESSAGES = () => [
       screens: [
         {
           id: "UPGRADE_PIN_FIREFOX",
-          order: 0,
           content: {
             logo: {
               imageURL:
@@ -128,7 +127,6 @@ const ONBOARDING_MESSAGES = () => [
               screens: [
                 {
                   id: "DEFAULT_MODAL_UI",
-                  order: 0,
                   content: {
                     logo: {
                       imageURL:
