@@ -1,1 +1,2 @@
 vendored:third_party/python/glean_parser
+vendored:third_party/python/vsdownload
