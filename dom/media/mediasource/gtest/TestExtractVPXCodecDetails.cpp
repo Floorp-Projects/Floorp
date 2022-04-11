@@ -121,10 +121,10 @@ TEST(ExtractVPXCodecDetails, TestParsingOutput)
   EXPECT_EQ(bitDepth, 8);
   // Should keep spec defined default value.
   EXPECT_EQ(chromaSubsampling, 1);
-  EXPECT_EQ(colorSpace.mPrimaryId, 1);
-  EXPECT_EQ(colorSpace.mTransferId, 1);
-  EXPECT_EQ(colorSpace.mMatrixId, 1);
-  EXPECT_EQ(colorSpace.mRangeId, 0);
+  EXPECT_EQ(colorSpace.mPrimaries, gfx::CICP::CP_BT709);
+  EXPECT_EQ(colorSpace.mTransfer, gfx::CICP::TC_BT709);
+  EXPECT_EQ(colorSpace.mMatrix, gfx::CICP::MC_BT709);
+  EXPECT_EQ(colorSpace.mRange, gfx::ColorRange::LIMITED);
 
   data = u"vp09.02.10.10.01.09.16.09.01";
   result = ExtractVPXCodecDetails(nsString(data), profile, level, bitDepth,
@@ -134,8 +134,8 @@ TEST(ExtractVPXCodecDetails, TestParsingOutput)
   EXPECT_EQ(level, 10);
   EXPECT_EQ(bitDepth, 10);
   EXPECT_EQ(chromaSubsampling, 1);
-  EXPECT_EQ(colorSpace.mPrimaryId, 9);
-  EXPECT_EQ(colorSpace.mTransferId, 16);
-  EXPECT_EQ(colorSpace.mMatrixId, 9);
-  EXPECT_EQ(colorSpace.mRangeId, 1);
+  EXPECT_EQ(colorSpace.mPrimaries, gfx::CICP::CP_BT2020);
+  EXPECT_EQ(colorSpace.mTransfer, gfx::CICP::TC_SMPTE2084);
+  EXPECT_EQ(colorSpace.mMatrix, gfx::CICP::MC_BT2020_NCL);
+  EXPECT_EQ(colorSpace.mRange, gfx::ColorRange::FULL);
 }
