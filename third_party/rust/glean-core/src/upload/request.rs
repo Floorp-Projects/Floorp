@@ -32,7 +32,7 @@ fn create_date_header_value(current_time: DateTime<Utc>) -> String {
     current_time.format("%a, %d %b %Y %T GMT").to_string()
 }
 
-fn create_user_agent_header_value(
+fn create_x_telemetry_agent_header_value(
     version: &str,
     language_binding_name: &str,
     system: &str,
@@ -70,8 +70,12 @@ impl Builder {
         let mut headers = HashMap::new();
         headers.insert("Date".to_string(), create_date_header_value(Utc::now()));
         headers.insert(
-            "User-Agent".to_string(),
-            create_user_agent_header_value(crate::GLEAN_VERSION, language_binding_name, system::OS),
+            "X-Telemetry-Agent".to_string(),
+            create_x_telemetry_agent_header_value(
+                crate::GLEAN_VERSION,
+                language_binding_name,
+                system::OS,
+            ),
         );
         headers.insert(
             "Content-Type".to_string(),
@@ -202,7 +206,7 @@ impl PingRequest {
     /// # Arguments
     ///
     /// * `language_binding_name` - The name of the language used by the binding that instantiated this Glean instance.
-    ///                             This is used to build the User-Agent header value.
+    ///                             This is used to build the X-Telemetry-Agent header value.
     /// * `body_max_size` - The maximum size in bytes the compressed ping body may have to be eligible for upload.
     pub fn builder(language_binding_name: &str, body_max_size: usize) -> Builder {
         Builder::new(language_binding_name, body_max_size)
@@ -248,8 +252,8 @@ mod test {
     }
 
     #[test]
-    fn user_agent_header_resolution() {
-        let test_value = create_user_agent_header_value("0.0.0", "Rust", "Windows");
+    fn x_telemetry_agent_header_resolution() {
+        let test_value = create_x_telemetry_agent_header_value("0.0.0", "Rust", "Windows");
         assert_eq!("Glean/0.0.0 (Rust on Windows)", test_value);
     }
 
@@ -267,7 +271,7 @@ mod test {
 
         // Make sure all the expected headers were added.
         assert!(request.headers.contains_key("Date"));
-        assert!(request.headers.contains_key("User-Agent"));
+        assert!(request.headers.contains_key("X-Telemetry-Agent"));
         assert!(request.headers.contains_key("Content-Type"));
         assert!(request.headers.contains_key("X-Client-Type"));
         assert!(request.headers.contains_key("X-Client-Version"));
