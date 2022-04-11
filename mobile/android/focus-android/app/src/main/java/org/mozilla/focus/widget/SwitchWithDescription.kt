@@ -32,16 +32,15 @@ class SwitchWithDescription @JvmOverloads constructor(
                 R.styleable.SwitchWithDescription_switchIcon,
                 R.drawable.mozac_ic_shield
             )
-            updateIcon(icon)
 
-            updateTitle(
-                resources.getString(
-                    getResourceId(
-                        R.styleable.SwitchWithDescription_switchTitle,
-                        R.string.enhanced_tracking_protection
-                    )
+            val switchTitle = resources.getString(
+                getResourceId(
+                    R.styleable.SwitchWithDescription_switchTitle,
+                    R.string.enhanced_tracking_protection
                 )
             )
+            updateIcon(icon = icon, iconContentDescription = switchTitle)
+            updateTitle(switchTitle)
 
             updateDescription(
                 resources.getString(
@@ -62,9 +61,12 @@ class SwitchWithDescription @JvmOverloads constructor(
         binding.description.text = description
     }
 
-    internal fun updateIcon(icon: Int) {
-        binding.switchWidget.putCompoundDrawablesRelativeWithIntrinsicBounds(
-            start = AppCompatResources.getDrawable(context, icon)
-        )
+    internal fun updateIcon(icon: Int, iconContentDescription: String) {
+        with(binding.switchWidget) {
+            putCompoundDrawablesRelativeWithIntrinsicBounds(
+                start = AppCompatResources.getDrawable(context, icon)
+            )
+            contentDescription = iconContentDescription
+        }
     }
 }

@@ -97,9 +97,10 @@ class TrackingProtectionPanel(
             R.drawable.mozac_ic_shield_disabled
         }
 
+        val iconContentDescription = context.getString(R.string.enhanced_tracking_protection)
         binding.enhancedTracking.apply {
             updateDescription(description)
-            updateIcon(icon)
+            updateIcon(icon = icon, iconContentDescription = iconContentDescription)
             binding.switchWidget.isChecked = isTrackingProtectionOn
         }
     }
