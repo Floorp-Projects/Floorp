@@ -626,7 +626,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void GiveUpBytecodeEncoding();
 
   already_AddRefed<nsIGlobalObject> GetGlobalForRequest(
-      ScriptLoadRequest* aRequest) override;
+      ScriptLoadRequest* aRequest);
 
   // This is a marker class to ensure proper handling of requests with a
   // WebExtGlobal.

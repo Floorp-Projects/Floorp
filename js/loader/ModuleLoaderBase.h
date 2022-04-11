@@ -57,10 +57,6 @@ class ScriptLoaderInterface : public nsISupports {
   // In some environments, we will need to default to a base URI
   virtual nsIURI* GetBaseURI() const = 0;
 
-  // Get the global for the associated request.
-  virtual already_AddRefed<nsIGlobalObject> GetGlobalForRequest(
-      ScriptLoadRequest* aRequest) = 0;
-
   virtual void ReportErrorToConsole(ScriptLoadRequest* aRequest,
                                     nsresult aResult) const = 0;
 
@@ -166,8 +162,7 @@ class ModuleLoaderBase : public nsISupports {
   bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
 
   // Implements https://html.spec.whatwg.org/#run-a-module-script
-  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
-                          ModuleLoadRequest* aRequest);
+  nsresult EvaluateModule(ModuleLoadRequest* aRequest);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
@@ -218,9 +213,6 @@ class ModuleLoaderBase : public nsISupports {
   void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
 
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
-
-  // Helper function to set up the global correctly for dynamic imports.
-  nsresult EvaluateModule(ModuleLoadRequest* aRequest);
 
   JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
   static nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
