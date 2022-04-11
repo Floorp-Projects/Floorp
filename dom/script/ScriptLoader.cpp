@@ -2064,8 +2064,7 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   nsCOMPtr<nsIGlobalObject> globalObject;
   nsCOMPtr<nsIScriptContext> context;
   if (aRequest->GetLoadContext()->GetWebExtGlobal()) {
-    // Executing a module from a WebExtension content-script.
-    globalObject = aRequest->GetLoadContext()->GetWebExtGlobal();
+    MOZ_ASSERT(aRequest->IsModuleRequest());
   } else {
     // Otherwise we have to ensure that there is a nsIScriptContext.
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
@@ -2100,8 +2099,9 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   }
 
   if (aRequest->IsModuleRequest()) {
-    return aRequest->AsModuleRequest()->EvaluateModule(globalObject);
+    return aRequest->AsModuleRequest()->EvaluateModule();
   }
+
   return EvaluateScript(globalObject, aRequest);
 }
 
