@@ -56,7 +56,7 @@ nsILoadContext* BrowserHost::GetLoadContext() const {
 bool BrowserHost::CanRecv() const { return mRoot && mRoot->CanRecv(); }
 
 a11y::DocAccessibleParent* BrowserHost::GetTopLevelDocAccessible() const {
-  return mRoot->GetTopLevelDocAccessible();
+  return mRoot ? mRoot->GetTopLevelDocAccessible() : nullptr;
 }
 
 void BrowserHost::LoadURL(nsDocShellLoadState* aLoadState) {
