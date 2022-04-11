@@ -229,8 +229,6 @@ sealed class Event {
         }
     }
 
-    data class AddonInstalled(val addonId: String) : Event()
-
     object AutoPlaySettingVisited : Event()
 
     data class AutoPlaySettingChanged(val setting: AutoplaySetting) : Event() {

@@ -30,11 +30,9 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.FragmentAddOnsManagementBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
@@ -231,7 +229,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private fun showInstallationDialog(addon: Addon) {
         if (!isInstallationInProgress && !hasExistingAddonInstallationDialogFragment()) {
-            requireComponents.analytics.metrics.track(Event.AddonInstalled(addon.id))
             val context = requireContext()
             val addonCollectionProvider = context.components.addonCollectionProvider
 
