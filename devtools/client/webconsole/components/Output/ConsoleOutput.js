@@ -94,12 +94,12 @@ class ConsoleOutput extends Component {
     this.lastMessageIntersectionObserver = new IntersectionObserver(
       entries => {
         for (const entry of entries) {
-          // Consider that we're not pinned to the bottom anymore if the last message is
-          // less than half-visible.
-          this.scrolledToBottom = entry.intersectionRatio >= 0.5;
+          // Consider that we're not pinned to the bottom anymore if the bottom of the
+          // scrollable area is within 10px of visible (half the typical element height.)
+          this.scrolledToBottom = entry.intersectionRatio > 0;
         }
       },
-      { root: this.outputNode, threshold: [0.5] }
+      { root: this.outputNode, rootMargin: "10px" }
     );
 
     this.resizeObserver.observe(this.getElementToObserve());
