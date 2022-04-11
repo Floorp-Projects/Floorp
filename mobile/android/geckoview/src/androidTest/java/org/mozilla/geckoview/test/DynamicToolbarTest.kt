@@ -8,7 +8,9 @@ import android.graphics.*
 import android.graphics.Bitmap
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.os.SystemClock
 import android.util.Base64
+import android.view.MotionEvent
 import java.io.ByteArrayOutputStream
 import org.hamcrest.Matchers.*
 import org.junit.Test
@@ -371,5 +373,55 @@ class DynamicToolbarTest : BaseSessionTest() {
             override fun onShowDynamicToolbar(session: GeckoSession) {
             }
         })
+    }
+
+    // With dynamic toolbar, there was a floating point rounding error in Gecko layout side.
+    // The error was appeared by user interactive async scrolling, not by programatic async
+    // scrolling, e.g. scrollTo() method. If the error happens there will appear 1px gap
+    // between <body> and an element which covers up the <body> element.
+    // This test simulates the situation.
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun noGapAppearsBetweenBodyAndElementFullyCoveringBody() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        val reference = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        mainSession.loadTestPath(BaseSessionTest.BODY_FULLY_COVERED_BY_GREEN_ELEMENT)
+        mainSession.waitForPageStop()
+
+        // Scrolling down by touch events.
+        var downTime = SystemClock.uptimeMillis();
+        var down = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 50f, 70f, 0)
+        mainSession.panZoomController.onTouchEvent(down)
+        var move = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, 50f, 30f, 0)
+        mainSession.panZoomController.onTouchEvent(move)
+        var up = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, 50f, 10f, 0)
+        mainSession.panZoomController.onTouchEvent(up)
+        mainSession.flushApzRepaints()
+
+        // Scrolling up by touch events to restore the original position.
+        downTime = SystemClock.uptimeMillis();
+        down = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_DOWN, 50f, 10f, 0)
+        mainSession.panZoomController.onTouchEvent(down)
+        move = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, 50f, 30f, 0)
+        mainSession.panZoomController.onTouchEvent(move)
+        up = MotionEvent.obtain(
+                downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, 50f, 70f, 0)
+        mainSession.panZoomController.onTouchEvent(up)
+        mainSession.flushApzRepaints()
+
+        sessionRule.display?.let {
+            assertScreenshotResult(it.capturePixels(), reference)
+        }
     }
 }
