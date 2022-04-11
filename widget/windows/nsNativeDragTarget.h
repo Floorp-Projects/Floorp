@@ -89,7 +89,7 @@ class nsNativeDragTarget final : public IDropTarget {
 
   // Gecko Stuff
   nsIWidget* mWidget;
-  nsIDragService* mDragService;
+  nsCOMPtr<nsIDragService> mDragService;
   // Drag target helper
   IDropTargetHelper* GetDropTargetHelper();
 
