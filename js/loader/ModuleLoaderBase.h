@@ -193,9 +193,9 @@ class ModuleLoaderBase : public nsISupports {
   static bool HostGetSupportedImportAssertions(
       JSContext* aCx, JS::ImportAssertionVector& aValues);
 
-  static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-      ModuleLoaderBase* aLoader, LoadedScript* aScript,
-      const nsAString& aSpecifier);
+  already_AddRefed<nsIURI> ResolveModuleSpecifier(LoadedScript* aScript,
+                                                  const nsAString& aSpecifier);
+
   static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
                                        const nsAString& aSpecifier,
                                        uint32_t aLineNumber,

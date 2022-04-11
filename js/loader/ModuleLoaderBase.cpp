@@ -187,8 +187,7 @@ JSObject* ModuleLoaderBase::HostResolveImportedModule(
       return nullptr;
     }
 
-    nsCOMPtr<nsIURI> uri =
-        ModuleLoaderBase::ResolveModuleSpecifier(loader, script, string);
+    nsCOMPtr<nsIURI> uri = loader->ResolveModuleSpecifier(script, string);
 
     // This cannot fail because resolving a module specifier must have been
     // previously successful with these same two arguments.
@@ -263,8 +262,7 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
     return false;
   }
 
-  nsCOMPtr<nsIURI> uri =
-      ModuleLoaderBase::ResolveModuleSpecifier(loader, script, specifier);
+  nsCOMPtr<nsIURI> uri = loader->ResolveModuleSpecifier(script, specifier);
   if (!uri) {
     JS::Rooted<JS::Value> error(aCx);
     nsresult rv = ModuleLoaderBase::HandleResolveFailure(aCx, script, specifier,
@@ -647,8 +645,7 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
 }
 
 already_AddRefed<nsIURI> ModuleLoaderBase::ResolveModuleSpecifier(
-    ModuleLoaderBase* aLoader, LoadedScript* aScript,
-    const nsAString& aSpecifier) {
+    LoadedScript* aScript, const nsAString& aSpecifier) {
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
   //  - a valid relative URL that starts with "/", "./" or "../"
@@ -677,7 +674,7 @@ already_AddRefed<nsIURI> ModuleLoaderBase::ResolveModuleSpecifier(
   if (aScript) {
     baseURL = aScript->BaseURL();
   } else {
-    baseURL = aLoader->mLoader->GetBaseURI();
+    baseURL = mLoader->GetBaseURI();
   }
 
   rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
@@ -724,9 +721,8 @@ nsresult ModuleLoaderBase::ResolveRequestedModules(
 
     // Let url be the result of resolving a module specifier given module script
     // and requested.
-    ModuleLoaderBase* requestModuleLoader = aRequest->mLoader;
-    nsCOMPtr<nsIURI> uri =
-        ResolveModuleSpecifier(requestModuleLoader, ms, specifier);
+    ModuleLoaderBase* loader = aRequest->mLoader;
+    nsCOMPtr<nsIURI> uri = loader->ResolveModuleSpecifier(ms, specifier);
     if (!uri) {
       uint32_t lineNumber = 0;
       uint32_t columnNumber = 0;
