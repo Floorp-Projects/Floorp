@@ -33,6 +33,7 @@
 #include "rtc_base/openssl_adapter.h"
 #include "rtc_base/openssl_digest.h"
 #include "rtc_base/openssl_identity.h"
+#include "rtc_base/robo_caller.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/stream.h"
 #include "rtc_base/task_utils/to_queued_task.h"
@@ -931,6 +932,7 @@ int OpenSSLStreamAdapter::ContinueSSL() {
       RTC_DLOG(LS_VERBOSE) << " -- error " << code << ", " << err_code << ", "
                            << ERR_GET_REASON(err_code);
       SignalSSLHandshakeError(ssl_handshake_err);
+      SSLHandshakeErrorSignal.Send(ssl_handshake_err);
       return (ssl_error != 0) ? ssl_error : -1;
   }
 
