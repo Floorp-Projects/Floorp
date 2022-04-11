@@ -41,7 +41,7 @@
    $make -j32
 
  * Build vp9 fuzzer
-   $ $CXX $CXXFLAGS -std=c++11 -DDECODER=vp9 \
+   $ $CXX $CXXFLAGS -std=gnu++11 -DDECODER=vp9 \
    -fsanitize=fuzzer -I../libvpx -I. -Wl,--start-group \
    ../libvpx/examples/vpx_dec_fuzzer.cc -o ./vpx_dec_fuzzer_vp9 \
    ./libvpx.a -Wl,--end-group
@@ -92,6 +92,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   vpx_codec_dec_cfg_t cfg = { threads, 0, 0 };
   if (vpx_codec_dec_init(&codec, VPXD_INTERFACE(DECODER), &cfg, 0)) {
     return 0;
+  }
+
+  if (threads > 1) {
+    const int enable = (data[IVF_FILE_HDR_SZ] & 0xa0) != 0;
+    const vpx_codec_err_t err =
+        vpx_codec_control(&codec, VP9D_SET_LOOP_FILTER_OPT, enable);
+    static_cast<void>(err);
   }
 
   data += IVF_FILE_HDR_SZ;

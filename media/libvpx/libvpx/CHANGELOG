@@ -1,3 +1,83 @@
+2021-09-27 v1.11.0 "Smew Duck"
+  This maintenance release adds support for VBR mode in VP9 rate control
+  interface, new codec controls to get quantization parameters and loop filter
+  levels, and includes several improvements to NEON and numerous bug fixes.
+
+  - Upgrading:
+    New codec control is added to get quantization parameters and loop filter
+    levels.
+
+    VBR mode is supported in VP9 rate control library.
+
+  - Enhancement:
+    Numerous improvements for Neon optimizations.
+    Code clean-up and refactoring.
+    Calculation of rd multiplier is changed with BDRATE gains.
+
+  - Bug fixes:
+    Fix to overflow on duration.
+    Fix to several instances of -Wunused-but-set-variable.
+    Fix to avoid chroma resampling for 420mpeg2 input.
+    Fix to overflow in calc_iframe_target_size.
+    Fix to disallow skipping transform and quantization.
+    Fix some -Wsign-compare warnings in simple_encode.
+    Fix input file path in simple_encode_test.
+    Fix valid range for under/over_shoot pct.
+
+2021-03-09 v1.10.0 "Ruddy Duck"
+  This maintenance release adds support for darwin20 and new codec controls, as
+  well as numerous bug fixes.
+
+  - Upgrading:
+    New codec control is added to disable loopfilter for VP9.
+
+    New encoder control is added to disable feature to increase Q on overshoot
+    detection for CBR.
+
+    Configure support for darwin20 is added.
+
+    New codec control is added for VP9 rate control. The control ID of this
+    interface is VP9E_SET_EXTERNAL_RATE_CONTROL. To make VP9 use a customized
+    external rate control model, users will have to implement each callback
+    function in vpx_rc_funcs_t and register them using libvpx API
+    vpx_codec_control_() with the control ID.
+
+  - Enhancement:
+    Use -std=gnu++11 instead of -std=c++11 for c++ files.
+
+  - Bug fixes:
+    Override assembler with --as option of configure for MSVS.
+    Fix several compilation issues with gcc 4.8.5.
+    Fix to resetting rate control for temporal layers.
+    Fix to the rate control stats of SVC example encoder when number of spatial
+    layers is 1.
+    Fix to reusing motion vectors from the base spatial layer in SVC.
+    2 pass related flags removed from SVC example encoder.
+
+2020-07-29 v1.9.0 "Quacking Duck"
+  This release adds support for NV12, a separate library for rate control, as
+  well as incremental improvements.
+
+  - Upgrading:
+    NV12 support is added to this release.
+    A new interface is added for VP9 rate control. The new library libvp9rc.a
+    must be linked by applications.
+    Googletest is updated to v1.10.0.
+    simple_encode.cc is compiled into a new library libsimple_encode.a with
+    CONFIG_RATE_CTRL.
+
+  - Enhancement:
+    Various changes to improve VP9 SVC, rate control, quality and speed to real
+    time encoding.
+
+  - Bug fixes:
+    Fix key frame update refresh simulcast flexible svc.
+    Fix to disable_16x16part speed feature for real time encoding.
+    Fix some signed integer overflows for VP9 rate control.
+    Fix initialization of delta_q_uv.
+    Fix condition in regulate_q for cyclic refresh.
+    Various fixes to dynamic resizing for VP9 SVC.
+
 2019-12-09 v1.8.2 "Pekin Duck"
   This release collects incremental improvements to many aspects of the library.
 
@@ -362,7 +442,7 @@
       of particular interest to real time streaming applications.
 
       Temporal scalability allows the encoder to produce a stream that can
-      be decimated to different frame rates, with independent rate targetting
+      be decimated to different frame rates, with independent rate targeting
       for each substream.
 
       Multiframe quality enhancement postprocessing can make visual quality

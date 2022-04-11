@@ -14,7 +14,7 @@
 
 #include "./vpx_config.h"
 #include "vpx/vpx_integer.h"
-#include "vpx_ports/mem.h"
+#include "vpx_ports/compiler_attributes.h"
 
 // TODO(chiyotsai@google.com): Refactor the code here. Currently this is pretty
 // hacky and awful to read. Note that there is a filter_x[3] == 128 check in

@@ -166,7 +166,7 @@ static INLINE uint64_t xgetbv(void) {
 
 static INLINE int x86_simd_caps(void) {
   unsigned int flags = 0;
-  unsigned int mask = ~0;
+  unsigned int mask = ~0u;
   unsigned int max_cpuid_val, reg_eax, reg_ebx, reg_ecx, reg_edx;
   char *env;
   (void)reg_ebx;
@@ -223,6 +223,8 @@ static INLINE int x86_simd_caps(void) {
     }
   }
 
+  (void)reg_eax;  // Avoid compiler warning on unused-but-set variable.
+
   return flags & mask;
 }
 
@@ -240,7 +242,7 @@ static INLINE int x86_simd_caps(void) {
 // x86_readtsc directly, but prevent the CPU's out-of-order execution from
 // affecting the measurement (by having earlier/later instructions be evaluated
 // in the time interval). See the white paper, "How to Benchmark Code
-// Execution Times on Intel® IA-32 and IA-64 Instruction Set Architectures" by
+// Execution Times on Intel(R) IA-32 and IA-64 Instruction Set Architectures" by
 // Gabriele Paoloni for more information.
 //
 // If you are timing a large function (CPU time > a couple of seconds), use
@@ -306,14 +308,26 @@ static INLINE unsigned int x86_readtscp(void) {
 
 static INLINE unsigned int x86_tsc_start(void) {
   unsigned int reg_eax, reg_ebx, reg_ecx, reg_edx;
+  // This call should not be removed. See function notes above.
   cpuid(0, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
+  // Avoid compiler warnings on unused-but-set variables.
+  (void)reg_eax;
+  (void)reg_ebx;
+  (void)reg_ecx;
+  (void)reg_edx;
   return x86_readtsc();
 }
 
 static INLINE unsigned int x86_tsc_end(void) {
   uint32_t v = x86_readtscp();
   unsigned int reg_eax, reg_ebx, reg_ecx, reg_edx;
+  // This call should not be removed. See function notes above.
   cpuid(0, 0, reg_eax, reg_ebx, reg_ecx, reg_edx);
+  // Avoid compiler warnings on unused-but-set variables.
+  (void)reg_eax;
+  (void)reg_ebx;
+  (void)reg_ecx;
+  (void)reg_edx;
   return v;
 }
 

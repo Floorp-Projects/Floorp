@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <climits>
+#include <cstring>
+
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
 #include "./vpx_config.h"
@@ -17,6 +20,12 @@
 namespace {
 
 #define NELEMENTS(x) static_cast<int>(sizeof(x) / sizeof(x[0]))
+
+bool IsVP9(const vpx_codec_iface_t *iface) {
+  static const char kVP9Name[] = "WebM Project VP9";
+  return strncmp(kVP9Name, vpx_codec_iface_name(iface), sizeof(kVP9Name) - 1) ==
+         0;
+}
 
 TEST(EncodeAPI, InvalidParams) {
   static const vpx_codec_iface_t *kCodecs[] = {
@@ -34,29 +43,33 @@ TEST(EncodeAPI, InvalidParams) {
 
   EXPECT_EQ(&img, vpx_img_wrap(&img, VPX_IMG_FMT_I420, 1, 1, 1, buf));
 
-  EXPECT_EQ(VPX_CODEC_INVALID_PARAM, vpx_codec_enc_init(NULL, NULL, NULL, 0));
-  EXPECT_EQ(VPX_CODEC_INVALID_PARAM, vpx_codec_enc_init(&enc, NULL, NULL, 0));
-  EXPECT_EQ(VPX_CODEC_INVALID_PARAM, vpx_codec_encode(NULL, NULL, 0, 0, 0, 0));
-  EXPECT_EQ(VPX_CODEC_INVALID_PARAM, vpx_codec_encode(NULL, &img, 0, 0, 0, 0));
-  EXPECT_EQ(VPX_CODEC_INVALID_PARAM, vpx_codec_destroy(NULL));
   EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
-            vpx_codec_enc_config_default(NULL, NULL, 0));
+            vpx_codec_enc_init(nullptr, nullptr, nullptr, 0));
   EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
-            vpx_codec_enc_config_default(NULL, &cfg, 0));
-  EXPECT_TRUE(vpx_codec_error(NULL) != NULL);
+            vpx_codec_enc_init(&enc, nullptr, nullptr, 0));
+  EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
+            vpx_codec_encode(nullptr, nullptr, 0, 0, 0, 0));
+  EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
+            vpx_codec_encode(nullptr, &img, 0, 0, 0, 0));
+  EXPECT_EQ(VPX_CODEC_INVALID_PARAM, vpx_codec_destroy(nullptr));
+  EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
+            vpx_codec_enc_config_default(nullptr, nullptr, 0));
+  EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
+            vpx_codec_enc_config_default(nullptr, &cfg, 0));
+  EXPECT_NE(vpx_codec_error(nullptr), nullptr);
 
   for (int i = 0; i < NELEMENTS(kCodecs); ++i) {
     SCOPED_TRACE(vpx_codec_iface_name(kCodecs[i]));
     EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
-              vpx_codec_enc_init(NULL, kCodecs[i], NULL, 0));
+              vpx_codec_enc_init(nullptr, kCodecs[i], nullptr, 0));
     EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
-              vpx_codec_enc_init(&enc, kCodecs[i], NULL, 0));
+              vpx_codec_enc_init(&enc, kCodecs[i], nullptr, 0));
     EXPECT_EQ(VPX_CODEC_INVALID_PARAM,
               vpx_codec_enc_config_default(kCodecs[i], &cfg, 1));
 
     EXPECT_EQ(VPX_CODEC_OK, vpx_codec_enc_config_default(kCodecs[i], &cfg, 0));
     EXPECT_EQ(VPX_CODEC_OK, vpx_codec_enc_init(&enc, kCodecs[i], &cfg, 0));
-    EXPECT_EQ(VPX_CODEC_OK, vpx_codec_encode(&enc, NULL, 0, 0, 0, 0));
+    EXPECT_EQ(VPX_CODEC_OK, vpx_codec_encode(&enc, nullptr, 0, 0, 0, 0));
 
     EXPECT_EQ(VPX_CODEC_OK, vpx_codec_destroy(&enc));
   }
@@ -180,15 +193,120 @@ TEST(EncodeAPI, MultiResEncode) {
     }
 
     // VP9 should report incapable, VP8 invalid for all configurations.
-    const char kVP9Name[] = "WebM Project VP9";
-    const bool is_vp9 = strncmp(kVP9Name, vpx_codec_iface_name(iface),
-                                sizeof(kVP9Name) - 1) == 0;
-    EXPECT_EQ(is_vp9 ? VPX_CODEC_INCAPABLE : VPX_CODEC_INVALID_PARAM,
+    EXPECT_EQ(IsVP9(iface) ? VPX_CODEC_INCAPABLE : VPX_CODEC_INVALID_PARAM,
               vpx_codec_enc_init_multi(&enc[0], iface, &cfg[0], 2, 0, &dsf[0]));
 
     for (int i = 0; i < 2; i++) {
       vpx_codec_destroy(&enc[i]);
     }
+  }
+}
+
+TEST(EncodeAPI, SetRoi) {
+  static struct {
+    const vpx_codec_iface_t *iface;
+    int ctrl_id;
+  } kCodecs[] = {
+#if CONFIG_VP8_ENCODER
+    { &vpx_codec_vp8_cx_algo, VP8E_SET_ROI_MAP },
+#endif
+#if CONFIG_VP9_ENCODER
+    { &vpx_codec_vp9_cx_algo, VP9E_SET_ROI_MAP },
+#endif
+  };
+  constexpr int kWidth = 64;
+  constexpr int kHeight = 64;
+
+  for (const auto &codec : kCodecs) {
+    SCOPED_TRACE(vpx_codec_iface_name(codec.iface));
+    vpx_codec_ctx_t enc;
+    vpx_codec_enc_cfg_t cfg;
+
+    EXPECT_EQ(vpx_codec_enc_config_default(codec.iface, &cfg, 0), VPX_CODEC_OK);
+    cfg.g_w = kWidth;
+    cfg.g_h = kHeight;
+    EXPECT_EQ(vpx_codec_enc_init(&enc, codec.iface, &cfg, 0), VPX_CODEC_OK);
+
+    vpx_roi_map_t roi = {};
+    uint8_t roi_map[kWidth * kHeight] = {};
+    if (IsVP9(codec.iface)) {
+      roi.rows = (cfg.g_w + 7) >> 3;
+      roi.cols = (cfg.g_h + 7) >> 3;
+    } else {
+      roi.rows = (cfg.g_w + 15) >> 4;
+      roi.cols = (cfg.g_h + 15) >> 4;
+    }
+    EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), VPX_CODEC_OK);
+
+    roi.roi_map = roi_map;
+    // VP8 only. This value isn't range checked.
+    roi.static_threshold[1] = 1000;
+    roi.static_threshold[2] = INT_MIN;
+    roi.static_threshold[3] = INT_MAX;
+
+    for (const auto delta : { -63, -1, 0, 1, 63 }) {
+      for (int i = 0; i < 8; ++i) {
+        roi.delta_q[i] = delta;
+        roi.delta_lf[i] = delta;
+        // VP9 only.
+        roi.skip[i] ^= 1;
+        roi.ref_frame[i] = (roi.ref_frame[i] + 1) % 4;
+        EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), VPX_CODEC_OK);
+      }
+    }
+
+    vpx_codec_err_t expected_error;
+    for (const auto delta : { -64, 64, INT_MIN, INT_MAX }) {
+      expected_error = VPX_CODEC_INVALID_PARAM;
+      for (int i = 0; i < 8; ++i) {
+        roi.delta_q[i] = delta;
+        // The max segment count for VP8 is 4, the remainder of the entries are
+        // ignored.
+        if (i >= 4 && !IsVP9(codec.iface)) expected_error = VPX_CODEC_OK;
+
+        EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), expected_error)
+            << "delta_q[" << i << "]: " << delta;
+        roi.delta_q[i] = 0;
+
+        roi.delta_lf[i] = delta;
+        EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), expected_error)
+            << "delta_lf[" << i << "]: " << delta;
+        roi.delta_lf[i] = 0;
+      }
+    }
+
+    // VP8 should ignore skip[] and ref_frame[] values.
+    expected_error =
+        IsVP9(codec.iface) ? VPX_CODEC_INVALID_PARAM : VPX_CODEC_OK;
+    for (const auto skip : { -2, 2, INT_MIN, INT_MAX }) {
+      for (int i = 0; i < 8; ++i) {
+        roi.skip[i] = skip;
+        EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), expected_error)
+            << "skip[" << i << "]: " << skip;
+        roi.skip[i] = 0;
+      }
+    }
+
+    // VP9 allows negative values to be used to disable segmentation.
+    for (int ref_frame = -3; ref_frame < 0; ++ref_frame) {
+      for (int i = 0; i < 8; ++i) {
+        roi.ref_frame[i] = ref_frame;
+        EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), VPX_CODEC_OK)
+            << "ref_frame[" << i << "]: " << ref_frame;
+        roi.ref_frame[i] = 0;
+      }
+    }
+
+    for (const auto ref_frame : { 4, INT_MIN, INT_MAX }) {
+      for (int i = 0; i < 8; ++i) {
+        roi.ref_frame[i] = ref_frame;
+        EXPECT_EQ(vpx_codec_control_(&enc, codec.ctrl_id, &roi), expected_error)
+            << "ref_frame[" << i << "]: " << ref_frame;
+        roi.ref_frame[i] = 0;
+      }
+    }
+
+    EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
   }
 }
 

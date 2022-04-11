@@ -820,13 +820,21 @@ void vp9_read_mode_info(TileWorkerData *twd, VP9Decoder *const pbi, int mi_row,
   if (frame_is_intra_only(cm)) {
     read_intra_frame_mode_info(cm, xd, mi_row, mi_col, r, x_mis, y_mis);
   } else {
+    // Cache mi->ref_frame and mi->mv so that the compiler can prove that they
+    // are constant for the duration of the loop and avoids reloading them.
+    MV_REFERENCE_FRAME mi_ref_frame[2];
+    int_mv mi_mv[2];
+
     read_inter_frame_mode_info(pbi, xd, mi_row, mi_col, r, x_mis, y_mis);
+
+    copy_ref_frame_pair(mi_ref_frame, mi->ref_frame);
+    copy_mv_pair(mi_mv, mi->mv);
 
     for (h = 0; h < y_mis; ++h) {
       for (w = 0; w < x_mis; ++w) {
         MV_REF *const mv = frame_mvs + w;
-        copy_ref_frame_pair(mv->ref_frame, mi->ref_frame);
-        copy_mv_pair(mv->mv, mi->mv);
+        copy_ref_frame_pair(mv->ref_frame, mi_ref_frame);
+        copy_mv_pair(mv->mv, mi_mv);
       }
       frame_mvs += cm->mi_cols;
     }
