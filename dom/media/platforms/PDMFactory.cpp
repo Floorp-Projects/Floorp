@@ -421,7 +421,8 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
   }
 
   if ((MP4Decoder::IsH264(config.mMimeType) ||
-       VPXDecoder::IsVPX(config.mMimeType)) &&
+       VPXDecoder::IsVPX(config.mMimeType) ||
+       AOMDecoder::IsAV1(config.mMimeType)) &&
       !aParams.mUseNullDecoder.mUse && !aParams.mNoWrapper.mDontUseWrapper) {
     return MediaChangeMonitor::Create(aPDM, aParams);
   }

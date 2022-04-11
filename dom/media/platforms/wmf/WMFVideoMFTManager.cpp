@@ -9,6 +9,7 @@
 #include <psapi.h>
 #include <winsdkver.h>
 #include <algorithm>
+#include "AOMDecoder.h"
 #include "DXVA2Manager.h"
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
 #include "IMFYCbCrImage.h"
@@ -272,6 +273,21 @@ MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
               NS_ERROR_DOM_MEDIA_FATAL_ERR,
               RESULT_DETAIL(
                   "Can't decode VP9 stream encoded in YUV 4:2:2 or 4:4:4."));
+        }
+      }
+      break;
+    case WMFStreamType::AV1:
+      if (mVideoInfo.mExtraData && !mVideoInfo.mExtraData->IsEmpty()) {
+        // Read AV1 codec configuration and check support for profiles and pixel
+        // formats.
+        AOMDecoder::AV1SequenceInfo av1Info;
+        bool hadSeqHdr;
+        AOMDecoder::ReadAV1CBox(mVideoInfo.mExtraData, av1Info, hadSeqHdr);
+
+        if (av1Info.mProfile != 0) {
+          return MediaResult(
+              NS_ERROR_DOM_MEDIA_FATAL_ERR,
+              RESULT_DETAIL("Can only decode AV1 streams in profile 0"));
         }
       }
       break;

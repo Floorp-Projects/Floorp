@@ -14,6 +14,8 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "AOMDecoder.h"
+#include "gfxUtils.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
@@ -274,6 +276,105 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   const float mDisplayAspectRatioFromContainer;
 };
 
+class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
+ public:
+  explicit AV1ChangeMonitor(const VideoInfo& aInfo) : mCurrentConfig(aInfo) {
+    mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
+
+    if (mCurrentConfig.mExtraData && !mCurrentConfig.mExtraData->IsEmpty()) {
+      // If we're passed AV1 codec configuration, store it so that we can
+      // instantiate a decoder in MediaChangeMonitor::Create.
+      AOMDecoder::AV1SequenceInfo seqInfo;
+      bool hadSeqHdr;
+      AOMDecoder::ReadAV1CBox(mCurrentConfig.mExtraData, seqInfo, hadSeqHdr);
+      // If the av1C box doesn't include a sequence header specifying image
+      // size, keep the one provided by VideoInfo.
+      if (hadSeqHdr) {
+        seqInfo.mImage = mCurrentConfig.mImage;
+      }
+
+      UpdateConfig(seqInfo);
+    }
+  }
+
+  bool CanBeInstantiated() const override {
+    // We want to have enough codec configuration to determine whether hardware
+    // decoding can be used before creating a decoder. The av1C box or a
+    // sequence header from a sample will contain this information.
+    return mInfo || mCurrentConfig.mCrypto.IsEncrypted();
+  }
+
+  void UpdateConfig(const AOMDecoder::AV1SequenceInfo& aInfo) {
+    mInfo = Some(aInfo);
+    mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(mInfo->mBitDepth);
+    mCurrentConfig.mColorSpace = gfxUtils::CicpToColorSpace(
+        mInfo->mColorSpace.mMatrix, mInfo->mColorSpace.mPrimaries,
+        gMediaDecoderLog);
+    mCurrentConfig.mColorRange = mInfo->mColorSpace.mRange;
+    mCurrentConfig.mImage = mInfo->mImage;
+  }
+
+  MediaResult CheckForChange(MediaRawData* aSample) override {
+    // Don't look at encrypted content.
+    if (aSample->mCrypto.IsEncrypted()) {
+      return NS_OK;
+    }
+    auto dataSpan = Span<const uint8_t>(aSample->Data(), aSample->Size());
+
+    // We don't trust the keyframe flag as set on the MediaRawData.
+    AOMDecoder::AV1SequenceInfo info;
+
+    if (!AOMDecoder::ReadSequenceHeaderInfo(dataSpan, info)) {
+      return NS_OK;
+    }
+
+    nsresult rv = NS_OK;
+    if (mInfo.isSome() &&
+        (mInfo->mProfile != info.mProfile ||
+         mInfo->ColorDepth() != info.ColorDepth() ||
+         mInfo->mMonochrome != info.mMonochrome ||
+         mInfo->mSubsamplingX != info.mSubsamplingX ||
+         mInfo->mSubsamplingY != info.mSubsamplingY ||
+         mInfo->mChromaSamplePosition != info.mChromaSamplePosition ||
+         mInfo->mImage != info.mImage)) {
+      PROFILER_MARKER_TEXT(
+          "AV1 Stream Change", MEDIA_PLAYBACK, {},
+          "AV1ChangeMonitor::CheckForChange has detected a change in a "
+          "stream and will request a new decoder");
+      LOG("AV1ChangeMonitor detected a change and requests a new decoder");
+      rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
+    }
+
+    bool wroteSequenceHeader = false;
+    // Our headers should all be around the same size.
+    mCurrentConfig.mExtraData->ClearAndRetainStorage();
+    AOMDecoder::WriteAV1CBox(info, mCurrentConfig.mExtraData.get(),
+                             wroteSequenceHeader);
+    MOZ_ASSERT(wroteSequenceHeader);
+    UpdateConfig(info);
+
+    if (rv == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
+      mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
+    }
+    return rv;
+  }
+
+  const TrackInfo& Config() const override { return mCurrentConfig; }
+
+  MediaResult PrepareSample(MediaDataDecoder::ConversionRequired aConversion,
+                            MediaRawData* aSample,
+                            bool aNeedKeyFrame) override {
+    aSample->mTrackInfo = mTrackInfo;
+    return NS_OK;
+  }
+
+ private:
+  VideoInfo mCurrentConfig;
+  Maybe<AOMDecoder::AV1SequenceInfo> mInfo;
+  uint32_t mStreamID = 0;
+  RefPtr<TrackInfoSharedPtr> mTrackInfo;
+};
+
 MediaChangeMonitor::MediaChangeMonitor(
     PlatformDecoderModule* aPDM,
     UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
@@ -291,6 +392,8 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
   const VideoInfo& currentConfig = aParams.VideoConfig();
   if (VPXDecoder::IsVPX(currentConfig.mMimeType)) {
     changeMonitor = MakeUnique<VPXChangeMonitor>(currentConfig);
+  } else if (AOMDecoder::IsAV1(currentConfig.mMimeType)) {
+    changeMonitor = MakeUnique<AV1ChangeMonitor>(currentConfig);
   } else {
     MOZ_ASSERT(MP4Decoder::IsH264(currentConfig.mMimeType));
     changeMonitor = MakeUnique<H264ChangeMonitor>(

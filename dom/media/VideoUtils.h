@@ -232,14 +232,21 @@ bool ExtractH264CodecDetails(const nsAString& aCodecs, uint8_t& aProfile,
                              uint8_t& aConstraint, uint8_t& aLevel);
 
 struct VideoColorSpace {
-  // TODO: Define the value type as strong type enum
-  // to better know the exact meaning corresponding to ISO/IEC 23001-8:2016.
-  // Default value is listed
+  // Default values are set according to
   // https://www.webmproject.org/vp9/mp4/#optional-fields
-  uint8_t mPrimaryId = 1;   // Table 2
-  uint8_t mTransferId = 1;  // Table 3
-  uint8_t mMatrixId = 1;    // Table 4
-  uint8_t mRangeId = 0;
+  // and https://aomediacodec.github.io/av1-isobmff/#codecsparam
+  gfx::CICP::ColourPrimaries mPrimaries = gfx::CICP::CP_BT709;
+  gfx::CICP::TransferCharacteristics mTransfer = gfx::CICP::TC_BT709;
+  gfx::CICP::MatrixCoefficients mMatrix = gfx::CICP::MC_BT709;
+  gfx::ColorRange mRange = gfx::ColorRange::LIMITED;
+
+  bool operator==(const VideoColorSpace& aOther) const {
+    return mPrimaries == aOther.mPrimaries && mTransfer == aOther.mTransfer &&
+           mMatrix == aOther.mMatrix && mRange == aOther.mRange;
+  }
+  bool operator!=(const VideoColorSpace& aOther) const {
+    return !(*this == aOther);
+  }
 };
 
 // Extracts the VPX codecs parameter string.
@@ -251,6 +258,15 @@ bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
 bool ExtractVPXCodecDetails(const nsAString& aCodec, uint8_t& aProfile,
                             uint8_t& aLevel, uint8_t& aBitDepth,
                             uint8_t& aChromaSubsampling,
+                            VideoColorSpace& aColorSpace);
+
+// Extracts AV1 codecs parameter string.
+// See https://aomediacodec.github.io/av1-isobmff/#codecsparam
+// Returns false if the codec is invalid.
+bool ExtractAV1CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
+                            uint8_t& aLevel, uint8_t& aTier, uint8_t& aBitDepth,
+                            bool& aMonochrome, bool& aSubsamplingX,
+                            bool& aSubsamplingY, uint8_t& aChromaSamplePosition,
                             VideoColorSpace& aColorSpace);
 
 // Use a cryptographic quality PRNG to generate raw random bytes

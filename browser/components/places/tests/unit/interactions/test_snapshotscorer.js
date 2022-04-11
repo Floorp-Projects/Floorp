@@ -11,7 +11,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: false,
     score: 1,
@@ -21,7 +21,7 @@ const SCORE_TESTS = [
     lastVisit: 4,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     userRemoved: false,
     score: 1.1294362440155186,
@@ -31,7 +31,7 @@ const SCORE_TESTS = [
     lastVisit: 6,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     userRemoved: false,
     score: 0.8487456913539,
@@ -50,7 +50,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 100,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: false,
     score: 1.99,
@@ -60,7 +60,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 0,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     userRemoved: false,
     score: 1,
@@ -70,7 +70,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: true,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: false,
     score: 2,
@@ -80,7 +80,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 1.0,
+    sourceScore: 1.0,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: false,
     score: 4,
@@ -90,7 +90,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0.5,
+    sourceScore: 0.5,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: false,
     score: 2.5,
@@ -100,7 +100,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     userRemoved: false,
     score: 2,
@@ -110,7 +110,7 @@ const SCORE_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0,
+    sourceScore: 0,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: true,
     score: -9, // 1 for the visit, -10 for removed
@@ -124,7 +124,7 @@ const THRESHOLD_TESTS = [
     lastVisit: 0,
     visitCount: 100,
     currentSession: true,
-    overlappingVisitScore: 1.0,
+    sourceScore: 1.0,
     userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     userRemoved: false,
     score: 6.99,
@@ -133,7 +133,7 @@ const THRESHOLD_TESTS = [
     lastVisit: 0,
     visitCount: 100,
     currentSession: false,
-    overlappingVisitScore: 0.35,
+    sourceScore: 0.35,
     userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     userRemoved: false,
     score: 4.04,
@@ -142,7 +142,7 @@ const THRESHOLD_TESTS = [
     lastVisit: 0,
     visitCount: 1,
     currentSession: false,
-    overlappingVisitScore: 0.0,
+    sourceScore: 0.0,
     userPersisted: Snapshots.USER_PERSISTED.NO,
     userRemoved: false,
     score: 1,
@@ -190,9 +190,6 @@ add_task(async function setup() {
 });
 
 function handleSnapshotSetup(testData, snapshot, sessionUrls) {
-  if (testData.overlappingVisitScore) {
-    snapshot.overlappingVisitScore = testData.overlappingVisitScore;
-  }
   if (testData.currentSession) {
     sessionUrls.add(snapshot.url);
   }
@@ -213,11 +210,15 @@ add_task(async function test_scores() {
 
     handleSnapshotSetup(data, snapshot, sessionUrls);
 
-    let snapshots = await SnapshotScorer.combineAndScore(sessionUrls, [
-      snapshot,
-    ]);
+    let snapshots = await SnapshotScorer.combineAndScore(
+      { getCurrentSessionUrls: () => sessionUrls },
+      {
+        recommendations: [{ snapshot, score: data.sourceScore ?? 0 }],
+        weight: 3.0,
+      }
+    );
 
-    assertSnapshotScores(snapshots, [
+    assertRecommendations(snapshots, [
       {
         url,
         score: data.score,
@@ -231,22 +232,25 @@ add_task(async function test_score_threshold() {
   Services.prefs.setIntPref("browser.places.snapshots.threshold", THRESHOLD);
 
   let sessionUrls = new Set([`https://mochitest:8888/`]);
-  let originalSnapshots = [];
+  let sourceRecommendations = [];
 
   for (let i = 0; i < THRESHOLD_TESTS.length; i++) {
     let url = `https://example.com/${i + SCORE_TESTS.length}`;
     let snapshot = await Snapshots.get(url, true);
 
     handleSnapshotSetup(THRESHOLD_TESTS[i], snapshot, sessionUrls);
-    originalSnapshots.push(snapshot);
+    sourceRecommendations.push({
+      snapshot,
+      score: THRESHOLD_TESTS[i].sourceScore,
+    });
   }
 
   let snapshots = await SnapshotScorer.combineAndScore(
-    sessionUrls,
-    originalSnapshots
+    { getCurrentSessionUrls: () => sessionUrls },
+    { recommendations: sourceRecommendations, weight: 3.0 }
   );
 
-  assertSnapshotScores(
+  assertRecommendations(
     snapshots,
     // map before filter so that we get the url values correct.
     THRESHOLD_TESTS.map((t, i) => {

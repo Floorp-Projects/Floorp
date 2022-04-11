@@ -65,9 +65,11 @@ nsTArray<UniquePtr<TrackInfo>> WebMDecoder::GetTracksInfo(
     }
 #ifdef MOZ_AV1
     if (StaticPrefs::media_av1_enabled() && IsAV1CodecString(codec)) {
-      tracks.AppendElement(
+      auto trackInfo =
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              "video/av1"_ns, aType));
+              "video/av1"_ns, aType);
+      AOMDecoder::SetVideoInfo(trackInfo->GetAsVideoInfo(), codec);
+      tracks.AppendElement(std::move(trackInfo));
       continue;
     }
 #endif

@@ -133,8 +133,8 @@ add_task(async function test_query_common_referrer() {
   };
   await assertCommonReferrerSnapshots(
     [
-      { url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 },
-      { url: "https://example.com/product_c", commonReferrerScoreEqualTo: 1.0 },
+      { url: "https://example.com/product_b", scoreEqualTo: 1.0 },
+      { url: "https://example.com/product_c", scoreEqualTo: 1.0 },
     ],
     context
   );
@@ -144,8 +144,8 @@ add_task(async function test_query_common_referrer() {
   };
   await assertCommonReferrerSnapshots(
     [
-      { url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 },
-      { url: "https://example.com/product_c", commonReferrerScoreEqualTo: 1.0 },
+      { url: "https://example.com/product_a", scoreEqualTo: 1.0 },
+      { url: "https://example.com/product_c", scoreEqualTo: 1.0 },
     ],
     context
   );
@@ -155,8 +155,8 @@ add_task(async function test_query_common_referrer() {
   };
   await assertCommonReferrerSnapshots(
     [
-      { url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 },
-      { url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 },
+      { url: "https://example.com/product_a", scoreEqualTo: 1.0 },
+      { url: "https://example.com/product_b", scoreEqualTo: 1.0 },
     ],
     context
   );
@@ -211,7 +211,7 @@ add_task(async function test_query_common_referrer_hierarchical() {
     [
       {
         url: "https://example.com/product_search",
-        commonReferrerScoreEqualTo: 1.0,
+        scoreEqualTo: 1.0,
       },
     ],
     context
@@ -224,7 +224,7 @@ add_task(async function test_query_common_referrer_hierarchical() {
     [
       {
         url: "https://example.com/services_search",
-        commonReferrerScoreEqualTo: 1.0,
+        scoreEqualTo: 1.0,
       },
     ],
     context
@@ -235,14 +235,14 @@ add_task(async function test_query_common_referrer_hierarchical() {
     url: "https://example.com/product_a",
   };
   await assertCommonReferrerSnapshots(
-    [{ url: "https://example.com/product_b", commonReferrerScoreEqualTo: 1.0 }],
+    [{ url: "https://example.com/product_b", scoreEqualTo: 1.0 }],
     context
   );
   context = {
     url: "https://example.com/product_b",
   };
   await assertCommonReferrerSnapshots(
-    [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
+    [{ url: "https://example.com/product_a", scoreEqualTo: 1.0 }],
     context
   );
 });
@@ -296,7 +296,7 @@ add_task(async function test_query_common_referrer_multiple_interaction() {
     url: "https://example.com/product_b",
   };
   await assertCommonReferrerSnapshots(
-    [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
+    [{ url: "https://example.com/product_a", scoreEqualTo: 1.0 }],
     context
   );
 
@@ -304,7 +304,7 @@ add_task(async function test_query_common_referrer_multiple_interaction() {
     url: "https://example.com/product_b",
   };
   await assertCommonReferrerSnapshots(
-    [{ url: "https://example.com/product_a", commonReferrerScoreEqualTo: 1.0 }],
+    [{ url: "https://example.com/product_a", scoreEqualTo: 1.0 }],
     context
   );
 
@@ -396,31 +396,35 @@ add_task(
       url: "https://example.com/product_b",
     };
 
-    let snapshot = await Snapshots.queryCommonReferrer(context.url);
+    let recommendations = await Snapshots.recommendationSources.CommonReferrer(
+      context
+    );
 
-    Assert.equal(snapshot.length, 1, "One shapshot should be found");
+    Assert.equal(recommendations.length, 1, "One shapshot should be found");
     Assert.equal(
-      snapshot[0].url,
+      recommendations[0].snapshot.url,
       "https://example.com/product_a",
       "Correct snapshot should be found"
     );
     Assert.equal(
-      snapshot[0].siteName,
+      recommendations[0].snapshot.siteName,
       "Example site name",
       "Site name should be found"
     );
     Assert.equal(
-      snapshot[0].description,
+      recommendations[0].snapshot.description,
       "Example site description",
       "Site description should be found"
     );
     Assert.equal(
-      snapshot[0].pageData.size,
+      recommendations[0].snapshot.pageData.size,
       1,
       "Should have 1 item of page data."
     );
     Assert.deepEqual(
-      snapshot[0].pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
+      recommendations[0].snapshot.pageData.get(
+        PageDataSchema.DATA_TYPE.PRODUCT
+      ),
       { price: { value: 276, currency: "USD" } },
       "Should have the right price."
     );

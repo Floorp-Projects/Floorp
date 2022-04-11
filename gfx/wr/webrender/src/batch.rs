@@ -3813,12 +3813,24 @@ pub enum CommandBufferBuilderKind {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CommandBufferBuilder {
     pub kind: CommandBufferBuilderKind,
+
+    /// If a command buffer establishes a sub-graph, then at the end of constructing
+    /// the surface, the parent surface is supplied as an input dependency, and the
+    /// parent surface gets a duplicated (existing) task with the same location, and
+    /// with the sub-graph output as an input dependency.
+    pub establishes_sub_graph: bool,
+
+    /// If this surface builds a sub-graph, it will mark a task in the filter sub-graph
+    /// as a resolve source for the input from the parent surface.
+    pub resolve_source: Option<RenderTaskId>,
 }
 
 impl CommandBufferBuilder {
     pub fn empty() -> Self {
         CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Invalid,
+            establishes_sub_graph: false,
+            resolve_source: None,
         }
     }
 
@@ -3830,12 +3842,15 @@ impl CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Tiled {
                 tiles,
             },
+            establishes_sub_graph: false,
+            resolve_source: None,
         }
     }
 
     /// Construct a simple command buffer builder
     pub fn new_simple(
         render_task_id: RenderTaskId,
+        establishes_sub_graph: bool,
         root_task_id: Option<RenderTaskId>,
     ) -> Self {
         CommandBufferBuilder {
@@ -3843,6 +3858,8 @@ impl CommandBufferBuilder {
                 render_task_id,
                 root_task_id,
             },
+            establishes_sub_graph,
+            resolve_source: None,
         }
     }
 }
