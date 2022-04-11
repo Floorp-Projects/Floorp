@@ -193,10 +193,6 @@ rtc_library("peerconnection") {
     "rtc_stats_traversal.h",
     "rtp_data_channel.cc",
     "rtp_data_channel.h",
-    "rtp_parameters_conversion.cc",
-    "rtp_parameters_conversion.h",
-    "rtp_transceiver.cc",
-    "rtp_transceiver.h",
     "sctp_data_channel.cc",
     "sctp_data_channel.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular
@@ -229,8 +225,10 @@ rtc_library("peerconnection") {
     ":media_stream",
     ":peer_connection_message_handler",
     ":rtc_pc_base",
+    ":rtp_parameters_conversion",
     ":rtp_receiver",
     ":rtp_sender",
+    ":rtp_transceiver",
     ":stats_collector_interface",
     ":video_track_source",
     "../api:array_view",
@@ -307,9 +305,26 @@ rtc_library("peer_connection_message_handler") {
   ]
 }
 
-# Temporary empty target to permit fixing blockers that prevent landing
-# https://webrtc-review.googlesource.com/c/src/+/186843
-rtc_source_set("rtp_parameters_conversion") {
+rtc_library("rtp_transceiver") {
+  sources = [
+    "rtp_transceiver.cc",
+    "rtp_transceiver.h",
+  ]
+  deps = [
+    ":rtc_pc_base",
+    ":rtp_parameters_conversion",
+    ":rtp_receiver",
+    ":rtp_sender",
+    "../api:libjingle_peerconnection_api",
+    "../api:rtp_parameters",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("rtp_receiver") {
@@ -354,6 +369,28 @@ rtc_library("rtp_sender") {
     "../rtc_base:checks",
     "../rtc_base:rtc_base",
     "../rtc_base/synchronization:mutex",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("rtp_parameters_conversion") {
+  sources = [
+    "rtp_parameters_conversion.cc",
+    "rtp_parameters_conversion.h",
+  ]
+  deps = [
+    ":rtc_pc_base",
+    "../api:array_view",
+    "../api:libjingle_peerconnection_api",
+    "../api:rtc_error",
+    "../api:rtp_parameters",
+    "../media:rtc_media_base",
+    "../rtc_base:checks",
+    "../rtc_base:rtc_base",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -704,8 +741,10 @@ if (rtc_include_tests) {
       ":media_stream",
       ":peerconnection",
       ":rtc_pc_base",
+      ":rtp_parameters_conversion",
       ":rtp_receiver",
       ":rtp_sender",
+      ":rtp_transceiver",
       ":video_track_source",
       "../api:array_view",
       "../api:audio_options_api",
