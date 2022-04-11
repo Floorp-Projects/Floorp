@@ -254,6 +254,7 @@ linux64-winchecksec:
     run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
+        arguments: ['x86_64-unknown-linux-gnu']
         toolchain-artifact: public/build/winchecksec.tar.zst
         tooltool-downloads: internal
     fetches:
@@ -272,6 +273,7 @@ win64-winchecksec:
     run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
+        arguments: ['x86_64-pc-windows-msvc']
         toolchain-artifact: public/build/winchecksec.tar.zst
         tooltool-downloads: internal
     fetches:
