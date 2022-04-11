@@ -7,12 +7,12 @@ package org.mozilla.fenix.settings.quicksettings
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -292,7 +292,7 @@ class AutoplayValueTest {
 
         val value = AutoplayValue.AllowAll(
             label = "label",
-            rules = mock(),
+            rules = mockk(),
             sitePermission = null
         )
 
@@ -319,7 +319,7 @@ class AutoplayValueTest {
 
         val value = AutoplayValue.BlockAll(
             label = "label",
-            rules = mock(),
+            rules = mockk(),
             sitePermission = null
         )
 
@@ -346,7 +346,7 @@ class AutoplayValueTest {
 
         val value = AutoplayValue.BlockAudible(
             label = "label",
-            rules = mock(),
+            rules = mockk(),
             sitePermission = null
         )
 

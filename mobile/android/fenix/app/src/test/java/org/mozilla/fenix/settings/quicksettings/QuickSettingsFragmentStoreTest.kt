@@ -20,7 +20,6 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -284,7 +283,7 @@ class QuickSettingsFragmentStoreTest {
             val initialState = QuickSettingsFragmentState(
                 webInfoState = websiteInfoState,
                 websitePermissionsState = initialWebsitePermissionsState,
-                trackingProtectionState = mock()
+                trackingProtectionState = mockk()
             )
             val store = QuickSettingsFragmentStore(initialState)
 

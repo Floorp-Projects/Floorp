@@ -13,10 +13,10 @@ import io.mockk.spyk
 import io.mockk.MockKAnnotations
 import io.mockk.verify
 import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.assertEquals
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
@@ -157,17 +157,17 @@ class WebsitePermissionViewTest {
         val options = listOf(
             AutoplayValue.BlockAll(
                 label = "BlockAll",
-                rules = mock(),
+                rules = mockk(),
                 sitePermission = null
             ),
             AutoplayValue.AllowAll(
                 label = "AllowAll",
-                rules = mock(),
+                rules = mockk(),
                 sitePermission = null
             ),
             AutoplayValue.BlockAudible(
                 label = "BlockAudible",
-                rules = mock(),
+                rules = mockk(),
                 sitePermission = null
             )
         )
@@ -189,7 +189,7 @@ class WebsitePermissionViewTest {
         assertEquals(permission.autoplayValue, permissionView.status.selectedItem)
 
         permissionView.status.onItemSelectedListener!!.onItemSelected(
-            mock(),
+            mockk(),
             permissionView.status,
             1,
             0L
@@ -200,7 +200,7 @@ class WebsitePermissionViewTest {
 
         permissionView.status.setSelection(2)
         permissionView.status.onItemSelectedListener!!.onItemSelected(
-            mock(),
+            mockk(),
             permissionView.status,
             2,
             0L

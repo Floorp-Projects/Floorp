@@ -19,7 +19,6 @@ import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStat
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.AutoplayAction
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -448,7 +447,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
 
         val value = AutoplayValue.AllowAll(
             label = "label",
-            rules = mock(),
+            rules = mockk(),
             sitePermission = null
         )
 
@@ -476,7 +475,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
 
         val value = AutoplayValue.BlockAll(
             label = "label",
-            rules = mock(),
+            rules = mockk(),
             sitePermission = null
         )
 
@@ -504,7 +503,7 @@ class SitePermissionsManageExceptionsPhoneFeatureFragmentTest {
 
         val value = AutoplayValue.BlockAudible(
             label = "label",
-            rules = mock(),
+            rules = mockk(),
             sitePermission = null
         )
 

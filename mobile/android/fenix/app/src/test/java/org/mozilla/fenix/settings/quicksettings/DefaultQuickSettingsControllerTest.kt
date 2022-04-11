@@ -27,7 +27,6 @@ import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DE
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -231,7 +230,7 @@ class DefaultQuickSettingsControllerTest {
         every { store.dispatch(any()) } returns mockk()
         every { controller.handleAutoplayAdd(any()) } returns Unit
         every { controller.handlePermissionsChange(any()) } returns Unit
-        every { autoplayValue.updateSitePermissions(any()) } returns mock()
+        every { autoplayValue.updateSitePermissions(any()) } returns mockk()
 
         controller.handleAutoplayChanged(autoplayValue)
 

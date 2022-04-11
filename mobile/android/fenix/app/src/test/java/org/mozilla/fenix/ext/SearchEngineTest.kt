@@ -4,8 +4,8 @@
 
 package org.mozilla.fenix.ext
 
+import io.mockk.mockk
 import mozilla.components.browser.state.search.SearchEngine
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,7 +18,7 @@ class SearchEngineTest {
         val searchEngine = SearchEngine(
             id = UUID.randomUUID().toString(),
             name = "Not custom",
-            icon = mock(),
+            icon = mockk(),
             type = SearchEngine.Type.BUNDLED,
             resultUrls = listOf(
                 "https://www.startpage.com/sp/search?q={searchTerms}"
@@ -28,7 +28,7 @@ class SearchEngineTest {
         val customSearchEngine = SearchEngine(
             id = UUID.randomUUID().toString(),
             name = "Custom",
-            icon = mock(),
+            icon = mockk(),
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf(
                 "https://www.startpage.com/sp/search?q={searchTerms}"
@@ -44,7 +44,7 @@ class SearchEngineTest {
         val searchEngine = SearchEngine(
             id = UUID.randomUUID().toString(),
             name = "Not well known",
-            icon = mock(),
+            icon = mockk(),
             type = SearchEngine.Type.BUNDLED,
             resultUrls = listOf(
                 "https://www.random.com/sp/search?q={searchTerms}"
@@ -54,7 +54,7 @@ class SearchEngineTest {
         val wellKnownSearchEngine = SearchEngine(
             id = UUID.randomUUID().toString(),
             name = "Well known",
-            icon = mock(),
+            icon = mockk(),
             type = SearchEngine.Type.CUSTOM,
             resultUrls = listOf(
                 "https://www.startpage.com/sp/search?q={searchTerms}"
