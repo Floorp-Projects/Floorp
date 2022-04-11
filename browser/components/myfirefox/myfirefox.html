@@ -8,11 +8,69 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'">
     <meta name="color-scheme" content="light dark">
-    <title>This space intentionally left blank</title>
-    <script src="chrome://browser/content/myfirefox.js"></script>
+    <title data-l10n-id="myfirefox-page-title"></title>
+    <link rel="localization" href="preview/myFirefox.ftl"/>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://browser/content/myfirefox.css">
+    <script type="module" src="chrome://browser/content/tabs-pickup.js"></script>
+    <script type="module" src="chrome://browser/content/myfirefox.js"></script>
   </head>
 
   <body>
-    <button id="colorway-closet-button">Colorway Closet</button>
+    <nav>
+      <div class="brand-logo"></div>
+    </nav>
+    <main>
+      <template id="sync-setup-template">
+        <named-deck class="sync-setup-container">
+          <div name="sync-setup-view0" class="card setup-step">
+            <h2 data-l10n-id="myfirefox-tabpickup-step-signin-header" class="card-header"></h2>
+            <section class="step-body">
+              <p class="step-content" data-l10n-id="myfirefox-tabpickup-step-signin-description"></p>
+              <button class="primary" data-action="view0-primary-action" data-l10n-id="myfirefox-tabpickup-step-signin-primarybutton"></button>
+            </section>
+            <progress class="step-progress" max="100" value="11"/>
+          </div>
+          <div name="sync-setup-view1" class="card setup-step">
+            <h2 data-l10n-id="myfirefox-tabpickup-adddevice-header"></h2>
+            <section class="step-body">
+              <p class="step-content" data-l10n-id="myfirefox-tabpickup-adddevice-description"></p>
+              <button class="primary" data-action="view1-primary-action" data-l10n-id="myfirefox-tabpickup-adddevice-primarybutton"></button>
+            </section>
+            <progress class="step-progress" max="100" value="33"/>
+          </div>
+          <div name="sync-setup-view2" class="card setup-step">
+            <h2 data-l10n-id="myfirefox-tabpickup-synctabs-header"></h2>
+            <section class="step-body">
+              <p class="step-content" data-l10n-id="myfirefox-tabpickup-synctabs-description"></p>
+              <button class="primary" data-action="view2-primary-action" data-l10n-id="myfirefox-tabpickup-synctabs-primarybutton"></button>
+            </section>
+            <progress class="step-progress" max="100" value="66"/>
+          </div>
+          <div name="sync-setup-view3" class="card setup-step">
+            <h2 data-l10n-id="myfirefox-tabpickup-setupsuccess-header"></h2>
+            <section class="step-body">
+              <p class="step-content" data-l10n-id="myfirefox-tabpickup-setupsuccess-description"></p>
+              <button class="primary" data-action="view3-primary-action" data-l10n-id="myfirefox-tabpickup-setupsuccess-primarybutton"></button>
+            </section>
+          </div>
+        </named-deck>
+      </template>
+      <template id="synced-tabs-template">
+        <div class="synced-tabs-container" hidden>
+          <div class="card">
+            <h2 data-l10n-id="myfirefox-tabpickup-recenttabs-description"></h2>
+          </div>
+        </div>
+      </template>
+
+      <section is="tabs-pickup-container" id="tabs-pickup-container">
+        <h1 data-l10n-id="myfirefox-tabpickup-header"></h1>
+        <p data-l10n-id="myfirefox-tabpickup-description"></p>
+      </section>
+      <aside>
+        <button data-l10n-id="myfirefox-colorway-button" id="colorway-closet-button"></button>
+      </aside>
+    </main>
   </body>
 </html>
