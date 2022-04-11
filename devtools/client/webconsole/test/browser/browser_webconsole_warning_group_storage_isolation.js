@@ -72,7 +72,7 @@ add_task(async function testStorageIsolationMessage() {
     "The badge has the expected text"
   );
 
-  checkConsoleOutputForWarningGroup(hud, [
+  await checkConsoleOutputForWarningGroup(hud, [
     `▶︎⚠ ${STORAGE_ISOLATION_GROUP_LABEL} 2`,
   ]);
 
@@ -80,7 +80,7 @@ add_task(async function testStorageIsolationMessage() {
   node.querySelector(".arrow").click();
   await waitFor(() => findMessage(hud, url1));
 
-  checkConsoleOutputForWarningGroup(hud, [
+  await checkConsoleOutputForWarningGroup(hud, [
     `▼︎⚠ ${STORAGE_ISOLATION_GROUP_LABEL} 2`,
     `| ${getWarningMessage(url1)}`,
     `| ${getWarningMessage(url2)}`,

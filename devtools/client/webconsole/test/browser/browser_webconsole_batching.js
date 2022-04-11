@@ -23,9 +23,15 @@ async function testSimpleBatchLogging(hud, messageNumber) {
   ) {
     content.wrappedJSObject.batchLog(numMessages);
   });
-
+  const allMessages = await waitFor(async () => {
+    const msgs = await findAllMessagesVirtualized(hud);
+    if (msgs.length == messageNumber) {
+      return msgs;
+    }
+    return null;
+  });
   for (let i = 0; i < messageNumber; i++) {
-    const node = await waitFor(() => findMessageAtIndex(hud, i, i));
+    const node = allMessages[i].querySelector(".message-body");
     is(
       node.textContent,
       i.toString(),
@@ -47,9 +53,4 @@ async function testBatchLoggingAndClear(hud, messageNumber) {
   // whatever their content is.
   const messages = findMessages(hud, "");
   is(messages.length, 1, "console was cleared as expected");
-}
-
-function findMessageAtIndex(hud, text, index) {
-  const selector = `.message:nth-of-type(${index + 1}) .message-body`;
-  return findMessage(hud, text, selector);
 }

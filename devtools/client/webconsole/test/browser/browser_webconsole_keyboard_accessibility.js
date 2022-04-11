@@ -18,7 +18,7 @@ add_task(async function() {
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
   await waitFor(
-    () => findMessages(hud, "").length == 100,
+    () => findMessage(hud, "console message 100"),
     "waiting for all the messages to be displayed",
     100,
     1000

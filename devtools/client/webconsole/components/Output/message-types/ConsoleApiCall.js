@@ -45,6 +45,7 @@ function ConsoleApiCall(props) {
     timestampsVisible,
     repeat,
     maybeScrollToBottom,
+    setExpanded,
   } = props;
   const {
     id: messageId,
@@ -70,6 +71,7 @@ function ConsoleApiCall(props) {
     serviceContainer,
     type,
     maybeScrollToBottom,
+    setExpanded,
     // When the object is a parameter of a console.dir call, we always want to show its
     // properties, like regular object (i.e. not showing the DOM tree for an Element, or
     // only showing the message + stacktrace for Error object).
@@ -114,6 +116,7 @@ function ConsoleApiCall(props) {
       serviceContainer,
       useQuotes: false,
       transformEmptyString: true,
+      setExpanded,
       type,
     });
   }
@@ -173,6 +176,7 @@ function formatReps(options = {}) {
     userProvidedStyles,
     type,
     maybeScrollToBottom,
+    setExpanded,
     customFormat,
   } = options;
 
@@ -192,6 +196,7 @@ function formatReps(options = {}) {
         loadedObjectEntries,
         type,
         maybeScrollToBottom,
+        setExpanded,
         customFormat,
       })
     );

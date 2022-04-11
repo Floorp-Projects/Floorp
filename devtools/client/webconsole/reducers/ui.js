@@ -43,6 +43,7 @@ const UiState = overrides =>
         editorPrettifiedAt: null,
         showEditorOnboarding: false,
         filterBarDisplayMode: FILTERBAR_DISPLAY_MODES.WIDE,
+        cacheGeneration: 0,
       },
       overrides
     )
@@ -67,7 +68,12 @@ function ui(state = UiState(), action) {
     case INITIALIZE:
       return { ...state, initialized: true };
     case MESSAGES_CLEAR:
-      return { ...state, sidebarVisible: false, frontInSidebar: null };
+      return {
+        ...state,
+        sidebarVisible: false,
+        frontInSidebar: null,
+        cacheGeneration: state.cacheGeneration + 1,
+      };
     case SHOW_OBJECT_IN_SIDEBAR:
       if (action.front === state.frontInSidebar) {
         return state;

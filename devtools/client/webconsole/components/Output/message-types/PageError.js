@@ -26,6 +26,7 @@ PageError.propTypes = {
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
   maybeScrollToBottom: PropTypes.func,
+  setExpanded: PropTypes.func,
   inWarningGroup: PropTypes.bool.isRequired,
 };
 
@@ -42,6 +43,7 @@ function PageError(props) {
     serviceContainer,
     timestampsVisible,
     maybeScrollToBottom,
+    setExpanded,
     inWarningGroup,
   } = props;
   const {
@@ -81,6 +83,7 @@ function PageError(props) {
         type,
         customFormat: true,
         maybeScrollToBottom,
+        setExpanded,
         ...repsProps,
       })
     );

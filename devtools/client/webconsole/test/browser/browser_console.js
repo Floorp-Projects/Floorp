@@ -66,7 +66,11 @@ async function testMessages() {
   // Wait a bit to let room for the message to be displayed
   await wait(1000);
   is(
-    findMessage(hud, "The Web Console logging API", ".warn"),
+    await findMessageVirtualized({
+      hud,
+      text: "The Web Console logging API",
+      selector: ".warn",
+    }),
     undefined,
     "The message about disabled console API is not displayed"
   );

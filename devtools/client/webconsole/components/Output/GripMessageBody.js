@@ -42,6 +42,7 @@ GripMessageBody.propTypes = {
   type: PropTypes.string,
   helperType: PropTypes.string,
   maybeScrollToBottom: PropTypes.func,
+  setExpanded: PropTypes.func,
 };
 
 GripMessageBody.defaultProps = {
@@ -58,6 +59,7 @@ function GripMessageBody(props) {
     mode = MODE.LONG,
     dispatch,
     maybeScrollToBottom,
+    setExpanded,
     customFormat = false,
   } = props;
 
@@ -73,6 +75,7 @@ function GripMessageBody(props) {
     autoExpandDepth: shouldAutoExpandObjectInspector(props) ? 1 : 0,
     mode,
     maybeScrollToBottom,
+    setExpanded,
     customFormat,
     onCmdCtrlClick: (node, { depth, event, focused, expanded }) => {
       const front = objectInspector.utils.node.getFront(node);
