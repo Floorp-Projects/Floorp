@@ -202,6 +202,8 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
 
   ModuleLoader* GetModuleLoader() { return mModuleLoader; }
 
+  void RegisterContentScriptModuleLoader(ModuleLoader* aLoader);
+
   /**
    *  Check whether to speculatively OMT parse scripts as soon as
    *  they are fetched, even if not a parser blocking request.
@@ -321,6 +323,11 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * Returns wether any request is queued, and not executed yet.
    */
   bool HasPendingRequests();
+
+  /**
+   * Returns wether there are any dynamic module import requests pending.
+   */
+  bool HasPendingDynamicImports() const;
 
   /**
    * Processes any pending requests that are ready for processing.
@@ -725,6 +732,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   RefPtr<AsyncCompileShutdownObserver> mShutdownObserver;
 
   RefPtr<ModuleLoader> mModuleLoader;
+  nsTArray<RefPtr<ModuleLoader>> mWebExtModuleLoaders;
 
   // Logging
  public:

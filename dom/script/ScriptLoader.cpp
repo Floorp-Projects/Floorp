@@ -167,7 +167,8 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mOffThreadCompilingRequests, mDeferRequests,
                          mXSLTRequests, mParserBlockingRequest,
                          mBytecodeEncodingQueue, mPreloads,
-                         mPendingChildLoaders, mModuleLoader)
+                         mPendingChildLoaders, mModuleLoader,
+                         mWebExtModuleLoaders)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
@@ -187,7 +188,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mLoadEventFired(false),
       mGiveUpEncoding(false),
       mReporter(new ConsoleReportCollector()),
-      mModuleLoader(new ModuleLoader(this)) {
+      mModuleLoader(new ModuleLoader(this, ModuleLoader::Normal)) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
 
   mSpeculativeOMTParsingEnabled = StaticPrefs::
@@ -248,6 +249,13 @@ ScriptLoader::~ScriptLoader() {
   }
 
   mModuleLoader = nullptr;
+}
+
+void ScriptLoader::RegisterContentScriptModuleLoader(ModuleLoader* aLoader) {
+  MOZ_ASSERT(aLoader);
+  MOZ_ASSERT(aLoader->GetScriptLoader() == this);
+
+  mWebExtModuleLoaders.AppendElement(aLoader);
 }
 
 // Collect telemtry data about the cache information, and the kind of source
@@ -2539,10 +2547,23 @@ bool ScriptLoader::HasPendingRequests() {
   return mParserBlockingRequest || !mXSLTRequests.isEmpty() ||
          !mLoadedAsyncRequests.isEmpty() ||
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
-         !mDeferRequests.isEmpty() ||
-         mModuleLoader->HasPendingDynamicImports() ||
+         !mDeferRequests.isEmpty() || HasPendingDynamicImports() ||
          !mPendingChildLoaders.IsEmpty();
   // mOffThreadCompilingRequests are already being processed.
+}
+
+bool ScriptLoader::HasPendingDynamicImports() const {
+  if (mModuleLoader->HasPendingDynamicImports()) {
+    return true;
+  }
+
+  for (ModuleLoader* loader : mWebExtModuleLoaders) {
+    if (loader->HasPendingDynamicImports()) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void ScriptLoader::ProcessPendingRequestsAsync() {
@@ -3334,6 +3355,10 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   mXSLTRequests.CancelRequestsAndClear();
 
   mModuleLoader->CancelAndClearDynamicImports();
+
+  for (ModuleLoader* loader : mWebExtModuleLoaders) {
+    loader->CancelAndClearDynamicImports();
+  }
 
   if (mParserBlockingRequest) {
     mParserBlockingRequest->Cancel();

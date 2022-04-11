@@ -18,6 +18,8 @@
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 
+#include "js/loader/ModuleLoaderBase.h"
+
 #include "js/Object.h"  // JS::GetPrivate, JS::SetPrivate
 #include "js/RootingAPI.h"
 
@@ -82,15 +84,7 @@ class SandboxPrivate : public nsIGlobalObject,
     MOZ_CRASH("SandboxPrivate doesn't use DOM bindings!");
   }
 
-  JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) override {
-    JSObject* object = GetGlobalJSObject();
-    nsGlobalWindowInner* sandboxWindow = xpc::SandboxWindowOrNull(object, aCx);
-    if (!sandboxWindow) {
-      return nullptr;
-    }
-
-    return sandboxWindow->GetModuleLoader(aCx);
-  }
+  JS::loader::ModuleLoaderBase* GetModuleLoader(JSContext* aCx) override;
 
   size_t ObjectMoved(JSObject* obj, JSObject* old) {
     UpdateWrapper(obj, old);
@@ -103,6 +97,8 @@ class SandboxPrivate : public nsIGlobalObject,
   virtual ~SandboxPrivate() = default;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  RefPtr<JS::loader::ModuleLoaderBase> mModuleLoader;
 };
 
 #endif  // __SANDBOXPRIVATE_H__
