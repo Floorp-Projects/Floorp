@@ -295,7 +295,13 @@ MOZ_THREAD_LOCAL(JS::GCContext*) js::TlsGCContext;
 
 JS::GCContext::GCContext(JSRuntime* runtime) : runtime_(runtime) {}
 
-JS::GCContext::~GCContext() { MOZ_ASSERT(!hasJitCodeToPoison()); }
+JS::GCContext::~GCContext() {
+  MOZ_ASSERT(!hasJitCodeToPoison());
+  MOZ_ASSERT(!isCollecting());
+  MOZ_ASSERT(gcUse() == GCUse::None);
+  MOZ_ASSERT(!gcSweepZone());
+  MOZ_ASSERT(!isTouchingGrayThings());
+}
 
 void JS::GCContext::poisonJitCode() {
   if (hasJitCodeToPoison()) {
