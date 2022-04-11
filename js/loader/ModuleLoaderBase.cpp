@@ -457,16 +457,8 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
   LOG(("ScriptLoadRequest (%p): Create module script", aRequest));
 
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      mLoader->GetGlobalForRequest(aRequest);
-  if (!globalObject) {
-    return NS_ERROR_FAILURE;
-  }
-
-  MOZ_ASSERT(globalObject == mGlobalObject);
-
   AutoJSAPI jsapi;
-  if (!jsapi.Init(globalObject)) {
+  if (!jsapi.Init(mGlobalObject)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -481,7 +473,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
                                                &introductionScript);
 
     if (NS_SUCCEEDED(rv)) {
-      JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
+      JS::Rooted<JSObject*> global(cx, mGlobalObject->GetGlobalJSObject());
       rv = CompileOrFinishModuleScript(cx, global, options, aRequest, &module);
     }
 
@@ -997,15 +989,13 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   }
 }
 
-nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
-                                          ModuleLoadRequest* aRequest) {
+nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
-  MOZ_ASSERT(aGlobalObject == mGlobalObject);
 
   AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
 
   mozilla::nsAutoMicroTask mt;
-  mozilla::dom::AutoEntryScript aes(aGlobalObject, "EvaluateModule", true);
+  mozilla::dom::AutoEntryScript aes(mGlobalObject, "EvaluateModule", true);
   JSContext* cx = aes.cx();
 
   nsAutoCString profilerLabelString;
@@ -1092,16 +1082,6 @@ nsresult ModuleLoaderBase::EvaluateModule(nsIGlobalObject* aGlobalObject,
   mLoader->MaybeTriggerBytecodeEncoding();
 
   return rv;
-}
-
-nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      mLoader->GetGlobalForRequest(aRequest);
-  if (!globalObject) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return EvaluateModule(globalObject, aRequest);
 }
 
 void ModuleLoaderBase::CancelAndClearDynamicImports() {

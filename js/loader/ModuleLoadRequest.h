@@ -106,9 +106,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
     return mLoader->ProcessFetchedModuleSource(this);
   }
   bool InstantiateModuleTree() { return mLoader->InstantiateModuleTree(this); }
-  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject) {
-    return mLoader->EvaluateModule(aGlobalObject, this);
-  }
+  nsresult EvaluateModule() { return mLoader->EvaluateModule(this); }
   void StartDynamicImport() { mLoader->StartDynamicImport(this); }
   void ProcessDynamicImport() { mLoader->ProcessDynamicImport(this); }
 
