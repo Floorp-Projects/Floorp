@@ -21,9 +21,6 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-/* Define Interface IDs */
-static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
-
 // This is cached for Leave notification
 static POINTL gDragLastPoint;
 
@@ -39,19 +36,12 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget* aWidget)
       mTookOwnRef(false),
       mWidget(aWidget),
       mDropTargetHelper(nullptr) {
-  static NS_DEFINE_IID(kCDragServiceCID, NS_DRAGSERVICE_CID);
-
   mHWnd = (HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW);
 
-  /*
-   * Create/Get the DragService that we have implemented
-   */
-  CallGetService(kCDragServiceCID, &mDragService);
+  mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
 }
 
 nsNativeDragTarget::~nsNativeDragTarget() {
-  NS_RELEASE(mDragService);
-
   if (mDropTargetHelper) {
     mDropTargetHelper->Release();
     mDropTargetHelper = nullptr;
@@ -163,7 +153,7 @@ void nsNativeDragTarget::DispatchDragDropEvent(EventMessage aEventMessage,
   modifierKeyState.InitInputEvent(event);
 
   event.mInputSource =
-      static_cast<nsBaseDragService*>(mDragService)->GetInputSource();
+      static_cast<nsBaseDragService*>(mDragService.get())->GetInputSource();
 
   mWidget->DispatchInputEvent(&event);
 }
@@ -191,7 +181,7 @@ void nsNativeDragTarget::ProcessDrag(EventMessage aEventMessage,
   // DRAGDROP_ACTION_UNINITIALIZED, it means that the last event was sent
   // to the child process and this event is also being sent to the child
   // process. In this case, use the last event's action instead.
-  nsDragService* dragService = static_cast<nsDragService*>(mDragService);
+  nsDragService* dragService = static_cast<nsDragService*>(mDragService.get());
   currSession->GetDragAction(&geckoAction);
 
   int32_t childDragAction = dragService->TakeChildProcessDragAction();
@@ -274,7 +264,8 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
   // This cast is ok because in the constructor we created a
   // the actual implementation we wanted, so we know this is
   // a nsDragService. It should be a private interface, though.
-  nsDragService* winDragService = static_cast<nsDragService*>(mDragService);
+  nsDragService* winDragService =
+      static_cast<nsDragService*>(mDragService.get());
   winDragService->SetIDataObject(pIDataSource);
 
   // Now process the native drag state and then dispatch the event
@@ -324,7 +315,8 @@ nsNativeDragTarget::DragOver(DWORD grfKeyState, POINTL ptl, LPDWORD pdwEffect) {
       // The drop helper only updates the image during DragEnter, so emulate
       // a DragEnter if the image was changed.
       POINT pt = {ptl.x, ptl.y};
-      nsDragService* dragService = static_cast<nsDragService*>(mDragService);
+      nsDragService* dragService =
+          static_cast<nsDragService*>(mDragService.get());
       GetDropTargetHelper()->DragEnter(mHWnd, dragService->GetDataObject(), &pt,
                                        *pdwEffect);
     }
@@ -422,7 +414,8 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData, DWORD grfKeyState, POINTL aPT,
   // This cast is ok because in the constructor we created a
   // the actual implementation we wanted, so we know this is
   // a nsDragService (but it should still be a private interface)
-  nsDragService* winDragService = static_cast<nsDragService*>(mDragService);
+  nsDragService* winDragService =
+      static_cast<nsDragService*>(mDragService.get());
   winDragService->SetIDataObject(pData);
 
   // NOTE: ProcessDrag spins the event loop which may destroy arbitrary objects.

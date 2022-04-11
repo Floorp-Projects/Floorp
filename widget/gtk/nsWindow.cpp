@@ -314,8 +314,6 @@ class CurrentX11TimeGetter {
 
 }  // namespace mozilla
 
-static NS_DEFINE_IID(kCDragServiceCID, NS_DRAGSERVICE_CID);
-
 // The window from which the focus manager asks us to dispatch key events.
 static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
@@ -4428,7 +4426,8 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
 
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+    nsCOMPtr<nsIDragService> dragService =
+        do_GetService("@mozilla.org/widget/dragservice;1");
     nsCOMPtr<nsIDragSession> dragSession;
     dragService->GetCurrentSession(getter_AddRefs(dragSession));
 
@@ -7152,7 +7151,8 @@ bool nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY, bool aIsWheel,
 
 /* static */
 bool nsWindow::DragInProgress(void) {
-  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService) {
     return false;
   }
@@ -7176,7 +7176,8 @@ MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(GdkEventButton* aEvent) {
     return;
   }
 
-  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
   if (!dragService) {
     return;
   }

@@ -56,9 +56,8 @@ nsNativeDragSource::Release(void) {
 
 STDMETHODIMP
 nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState) {
-  static NS_DEFINE_IID(kCDragServiceCID, NS_DRAGSERVICE_CID);
-
-  nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+  nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
   if (dragService) {
     DWORD pos = ::GetMessagePos();
     dragService->DragMoved(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
