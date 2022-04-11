@@ -23,6 +23,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 var gUrlsToDocContentType = new Map();
+var gUrlsToDocTitle = new Map();
 
 class AboutReaderChild extends JSWindowActorChild {
   constructor() {
@@ -53,6 +54,7 @@ class AboutReaderChild extends JSWindowActorChild {
             this.document.URL,
             this.document.contentType
           );
+          gUrlsToDocTitle.set(this.document.URL, this.document.title);
           this._articlePromise = ReaderMode.parseDocument(this.document).catch(
             Cu.reportError
           );
@@ -133,10 +135,12 @@ class AboutReaderChild extends JSWindowActorChild {
               ? "text/plain"
               : "document";
 
+          let docTitle = gUrlsToDocTitle.get(url);
           this._reader = new AboutReader(
             this,
             this._articlePromise,
-            docContentType
+            docContentType,
+            docTitle
           );
           this._articlePromise = null;
         }
