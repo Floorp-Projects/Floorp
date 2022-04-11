@@ -33,6 +33,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Pings
+import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -376,7 +377,7 @@ class DefaultSessionControlController(
     override fun handleRemoveTopSiteClicked(topSite: TopSite) {
         TopSites.remove.record(NoExtras())
         when (topSite.url) {
-            SupportUtils.POCKET_TRENDING_URL -> metrics.track(Event.PocketTopSiteRemoved)
+            SupportUtils.POCKET_TRENDING_URL -> Pocket.pocketTopSiteRemoved.record(NoExtras())
             SupportUtils.GOOGLE_URL -> TopSites.googleTopSiteRemoved.record(NoExtras())
             SupportUtils.BAIDU_URL -> TopSites.baiduTopSiteRemoved.record(NoExtras())
         }
@@ -413,7 +414,7 @@ class DefaultSessionControlController(
         when (topSite.url) {
             SupportUtils.GOOGLE_URL -> TopSites.openGoogleSearchAttribution.record(NoExtras())
             SupportUtils.BAIDU_URL -> TopSites.openBaiduSearchAttribution.record(NoExtras())
-            SupportUtils.POCKET_TRENDING_URL -> metrics.track(Event.PocketTopSiteClicked)
+            SupportUtils.POCKET_TRENDING_URL -> Pocket.pocketTopSiteClicked.record(NoExtras())
         }
 
         val availableEngines = getAvailableSearchEngines()

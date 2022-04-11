@@ -386,7 +386,6 @@ class HomeFragment : Fragment() {
                 homeActivity = activity,
                 appStore = components.appStore,
                 navController = findNavController(),
-                metrics = requireComponents.analytics.metrics
             )
         )
 

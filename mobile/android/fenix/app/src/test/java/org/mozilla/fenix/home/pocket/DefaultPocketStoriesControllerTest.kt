@@ -11,18 +11,29 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
 import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class) // For gleanTestRule
 class DefaultPocketStoriesControllerTest {
-    val metrics: MetricController = mockk(relaxed = true)
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Test
     fun `GIVEN a category is selected WHEN that same category is clicked THEN deselect it and record telemetry`() {
@@ -37,12 +48,22 @@ class DefaultPocketStoriesControllerTest {
                 )
             )
         )
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        assertFalse(Pocket.homeRecsCategoryClicked.testHasValue())
 
         controller.handleCategoryClick(category2)
         verify(exactly = 0) { store.dispatch(AppAction.SelectPocketStoriesCategory(category2.name)) }
         verify { store.dispatch(AppAction.DeselectPocketStoriesCategory(category2.name)) }
-        verify { metrics.track(Event.PocketHomeRecsCategoryClicked(category2.name, 1, false)) }
+
+        assertTrue(Pocket.homeRecsCategoryClicked.testHasValue())
+        val event = Pocket.homeRecsCategoryClicked.testGetValue()
+        assertEquals(1, event.size)
+        assertTrue(event.single().extra!!.containsKey("category_name"))
+        assertEquals(category2.name, event.single().extra!!["category_name"])
+        assertTrue(event.single().extra!!.containsKey("new_state"))
+        assertEquals("deselected", event.single().extra!!["new_state"])
+        assertTrue(event.single().extra!!.containsKey("selected_total"))
+        assertEquals("1", event.single().extra!!["selected_total"])
     }
 
     @Test
@@ -65,13 +86,23 @@ class DefaultPocketStoriesControllerTest {
                 )
             )
         )
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
+        assertFalse(Pocket.homeRecsCategoryClicked.testHasValue())
 
         controller.handleCategoryClick(PocketRecommendedStoriesCategory(newSelectedCategory.name))
 
         verify { store.dispatch(AppAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
         verify { store.dispatch(AppAction.SelectPocketStoriesCategory(newSelectedCategory.name)) }
-        verify { metrics.track(Event.PocketHomeRecsCategoryClicked(newSelectedCategory.name, 8, true)) }
+
+        assertTrue(Pocket.homeRecsCategoryClicked.testHasValue())
+        val event = Pocket.homeRecsCategoryClicked.testGetValue()
+        assertEquals(1, event.size)
+        assertTrue(event.single().extra!!.containsKey("category_name"))
+        assertEquals(newSelectedCategory.name, event.single().extra!!["category_name"])
+        assertTrue(event.single().extra!!.containsKey("new_state"))
+        assertEquals("selected", event.single().extra!!["new_state"])
+        assertTrue(event.single().extra!!.containsKey("selected_total"))
+        assertEquals("8", event.single().extra!!["selected_total"])
     }
 
     @Test
@@ -93,25 +124,37 @@ class DefaultPocketStoriesControllerTest {
             )
         )
         val newSelectedCategoryName = "newSelectedCategory"
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
 
         controller.handleCategoryClick(PocketRecommendedStoriesCategory(newSelectedCategoryName))
 
         verify(exactly = 0) { store.dispatch(AppAction.DeselectPocketStoriesCategory(oldestSelectedCategory.name)) }
         verify { store.dispatch(AppAction.SelectPocketStoriesCategory(newSelectedCategoryName)) }
-        verify { metrics.track(Event.PocketHomeRecsCategoryClicked(newSelectedCategoryName, 7, true)) }
+
+        assertTrue(Pocket.homeRecsCategoryClicked.testHasValue())
+        val event = Pocket.homeRecsCategoryClicked.testGetValue()
+        assertEquals(1, event.size)
+        assertTrue(event.single().extra!!.containsKey("category_name"))
+        assertEquals(newSelectedCategoryName, event.single().extra!!["category_name"])
+        assertTrue(event.single().extra!!.containsKey("new_state"))
+        assertEquals("selected", event.single().extra!!["new_state"])
+        assertTrue(event.single().extra!!.containsKey("selected_total"))
+        assertEquals("7", event.single().extra!!["selected_total"])
     }
 
     @Test
     fun `WHEN new stories are shown THEN update the State and record telemetry`() {
         val store = spyk(AppStore())
-        val controller = DefaultPocketStoriesController(mockk(), store, mockk(), metrics)
+        val controller = DefaultPocketStoriesController(mockk(), store, mockk())
         val storiesShown: List<PocketRecommendedStory> = mockk()
+        assertFalse(Pocket.homeRecsShown.testHasValue())
 
         controller.handleStoriesShown(storiesShown)
 
         verify { store.dispatch(AppAction.PocketStoriesShown(storiesShown)) }
-        verify { metrics.track(Event.PocketHomeRecsShown) }
+        assertTrue(Pocket.homeRecsShown.testHasValue())
+        assertEquals(1, Pocket.homeRecsShown.testGetValue().size)
+        assertNull(Pocket.homeRecsShown.testGetValue().single().extra)
     }
 
     @Test
@@ -126,36 +169,49 @@ class DefaultPocketStoriesControllerTest {
             timesShown = 123
         )
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true), metrics)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        assertFalse(Pocket.homeRecsStoryClicked.testHasValue())
 
         controller.handleStoryClicked(story, 1 to 2)
 
         verify { homeActivity.openToBrowserAndLoad(story.url, true, BrowserDirection.FromHome) }
-        metrics.track(Event.PocketHomeRecsStoryClicked(story.timesShown, 1 to 2))
+
+        assertTrue(Pocket.homeRecsStoryClicked.testHasValue())
+        val event = Pocket.homeRecsStoryClicked.testGetValue()
+        assertEquals(1, event.size)
+        assertTrue(event.single().extra!!.containsKey("position"))
+        assertEquals("1x2", event.single().extra!!["position"])
+        assertTrue(event.single().extra!!.containsKey("times_shown"))
+        assertEquals(story.timesShown.inc().toString(), event.single().extra!!["times_shown"])
     }
 
     @Test
     fun `WHEN discover more is clicked then open that using HomeActivity and record telemetry`() {
         val link = "http://getpocket.com/explore"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true), metrics)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        assertFalse(Pocket.homeRecsDiscoverClicked.testHasValue())
 
         controller.handleDiscoverMoreClicked(link)
 
         verify { homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome) }
-        metrics.track(Event.PocketHomeRecsDiscoverMoreClicked)
+        assertTrue(Pocket.homeRecsDiscoverClicked.testHasValue())
+        assertEquals(1, Pocket.homeRecsDiscoverClicked.testGetValue().size)
+        assertNull(Pocket.homeRecsDiscoverClicked.testGetValue().single().extra)
     }
 
     @Test
     fun `WHEN learn more is clicked then open that using HomeActivity and record telemetry`() {
         val link = "https://www.mozilla.org/en-US/firefox/pocket/"
         val homeActivity: HomeActivity = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true), metrics)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), mockk(relaxed = true))
+        assertFalse(Pocket.homeRecsLearnMoreClicked.testHasValue())
 
         controller.handleLearnMoreClicked(link)
 
         verify { homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome) }
-        metrics.track(Event.PocketHomeRecsLearnMoreClicked)
+        assertTrue(Pocket.homeRecsLearnMoreClicked.testHasValue())
+        assertNull(Pocket.homeRecsLearnMoreClicked.testGetValue().single().extra)
     }
 
     @Test
@@ -166,7 +222,7 @@ class DefaultPocketStoriesControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController, metrics)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
 
         controller.handleStoryClicked(story, 1 to 2)
 
@@ -184,7 +240,7 @@ class DefaultPocketStoriesControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController, metrics)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
 
         controller.handleDiscoverMoreClicked(link)
 
@@ -202,7 +258,7 @@ class DefaultPocketStoriesControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
-        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController, metrics)
+        val controller = DefaultPocketStoriesController(homeActivity, mockk(), navController)
 
         controller.handleLearnMoreClicked(link)
 
@@ -218,7 +274,7 @@ class DefaultPocketStoriesControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
-        val controller = DefaultPocketStoriesController(mockk(), mockk(), navController, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), mockk(), navController)
 
         controller.dismissSearchDialogIfDisplayed()
 
@@ -228,7 +284,7 @@ class DefaultPocketStoriesControllerTest {
     @Test
     fun `GIVEN search dialog is not currently focused WHEN dismissSearchDialogIfDisplayed is called THEN do nothing`() {
         val navController: NavController = mockk(relaxed = true)
-        val controller = DefaultPocketStoriesController(mockk(), mockk(), navController, mockk())
+        val controller = DefaultPocketStoriesController(mockk(), mockk(), navController)
 
         controller.dismissSearchDialogIfDisplayed()
 

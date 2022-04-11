@@ -20,7 +20,6 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Pings
-import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentSearches
@@ -103,29 +102,6 @@ private val Event.wrapper: EventWrapper<*>?
             { ContextMenu.itemTappedKeys.valueOf(it) }
         )
 
-        is Event.PocketTopSiteClicked -> EventWrapper<NoExtraKeys>(
-            { Pocket.pocketTopSiteClicked.record(it) }
-        )
-        is Event.PocketTopSiteRemoved -> EventWrapper<NoExtraKeys>(
-            { Pocket.pocketTopSiteRemoved.record(it) }
-        )
-        is Event.PocketHomeRecsShown -> EventWrapper<NoExtraKeys>(
-            { Pocket.homeRecsShown.record(it) }
-        )
-        is Event.PocketHomeRecsLearnMoreClicked -> EventWrapper<NoExtraKeys>(
-            { Pocket.homeRecsLearnMoreClicked.record(it) }
-        )
-        is Event.PocketHomeRecsDiscoverMoreClicked -> EventWrapper<NoExtraKeys>(
-            { Pocket.homeRecsDiscoverClicked.record(it) }
-        )
-        is Event.PocketHomeRecsStoryClicked -> EventWrapper(
-            { Pocket.homeRecsStoryClicked.record(it) },
-            { Pocket.homeRecsStoryClickedKeys.valueOf(it) }
-        )
-        is Event.PocketHomeRecsCategoryClicked -> EventWrapper(
-            { Pocket.homeRecsCategoryClicked.record(it) },
-            { Pocket.homeRecsCategoryClickedKeys.valueOf(it) }
-        )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }
         )

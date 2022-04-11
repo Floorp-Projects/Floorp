@@ -6,14 +6,14 @@ package org.mozilla.fenix.home.pocket
 
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 
 /**
  * Contract for how all user interactions with the Pocket recommended stories feature are to be handled.
@@ -67,11 +67,10 @@ internal class DefaultPocketStoriesController(
     private val homeActivity: HomeActivity,
     private val appStore: AppStore,
     private val navController: NavController,
-    private val metrics: MetricController
 ) : PocketStoriesController {
     override fun handleStoriesShown(storiesShown: List<PocketRecommendedStory>) {
         appStore.dispatch(AppAction.PocketStoriesShown(storiesShown))
-        metrics.track(Event.PocketHomeRecsShown)
+        Pocket.homeRecsShown.record(NoExtras())
     }
 
     override fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
@@ -80,11 +79,11 @@ internal class DefaultPocketStoriesController(
         // First check whether the category is clicked to be deselected.
         if (initialCategoriesSelections.map { it.name }.contains(categoryClicked.name)) {
             appStore.dispatch(AppAction.DeselectPocketStoriesCategory(categoryClicked.name))
-            metrics.track(
-                Event.PocketHomeRecsCategoryClicked(
-                    categoryClicked.name,
-                    initialCategoriesSelections.size,
-                    false
+            Pocket.homeRecsCategoryClicked.record(
+                Pocket.HomeRecsCategoryClickedExtra(
+                    categoryName = categoryClicked.name,
+                    newState = "deselected",
+                    selectedTotal = initialCategoriesSelections.size.toString()
                 )
             )
             return
@@ -105,11 +104,11 @@ internal class DefaultPocketStoriesController(
         // Finally update the selection.
         appStore.dispatch(AppAction.SelectPocketStoriesCategory(categoryClicked.name))
 
-        metrics.track(
-            Event.PocketHomeRecsCategoryClicked(
-                categoryClicked.name,
-                initialCategoriesSelections.size,
-                true
+        Pocket.homeRecsCategoryClicked.record(
+            Pocket.HomeRecsCategoryClickedExtra(
+                categoryName = categoryClicked.name,
+                newState = "selected",
+                selectedTotal = initialCategoriesSelections.size.toString()
             )
         )
     }
@@ -120,10 +119,10 @@ internal class DefaultPocketStoriesController(
     ) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(storyClicked.url, true, BrowserDirection.FromHome)
-        metrics.track(
-            Event.PocketHomeRecsStoryClicked(
-                storyClicked.timesShown.inc(),
-                storyPosition
+        Pocket.homeRecsStoryClicked.record(
+            Pocket.HomeRecsStoryClickedExtra(
+                position = "${storyPosition.first}x${storyPosition.second}",
+                timesShown = storyClicked.timesShown.inc().toString()
             )
         )
     }
@@ -131,13 +130,13 @@ internal class DefaultPocketStoriesController(
     override fun handleLearnMoreClicked(link: String) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
-        metrics.track(Event.PocketHomeRecsLearnMoreClicked)
+        Pocket.homeRecsLearnMoreClicked.record(NoExtras())
     }
 
     override fun handleDiscoverMoreClicked(link: String) {
         dismissSearchDialogIfDisplayed()
         homeActivity.openToBrowserAndLoad(link, true, BrowserDirection.FromHome)
-        metrics.track(Event.PocketHomeRecsDiscoverMoreClicked)
+        Pocket.homeRecsDiscoverClicked.record(NoExtras())
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
