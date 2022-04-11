@@ -498,6 +498,26 @@
     <!-- Onboarding: Description -->
     <string name="onboarding_description">Shkalla pasuese në shfletim privat, kur e doni</string>
 
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Atje ku inkonjito takohet me të padukshmen</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s është shfletuesi që vë privatësinë mbi gjithçka, me mbrojtje të brendshme ekstra të fuqishme kundër gjurmimeve dhe cookie-ve.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Shfletoni sikur kjo s’ndodhi kurrë</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Një prekje fshin historikun dhe cookie-t e shfletimit tuaj — dhe pengon reklamat t’ju ndjekin ngado.</string>
+    <string name="onboarding_history_description2">Një prekje fshin historikun dhe cookie-t e shfletimit tuaj — dhe pengon reklamat t’ju ndjekin ngado.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privatësi për çfarëdo situate</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Nëse ndryshojnë nevojat e shfletimit tuaj, është e lehtë të përshkallëzoni rregullimet tuaja për më pak ose më shumë privatësi.</string>
+
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">Nisni shfletimin</string>
 
@@ -910,13 +930,21 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Mbylle skedën</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Duket sikur ky sajt po përpiqej t’ju ndiqte. Klikoni mburojën, për rregullime sajti dhe statistika bllokimi gjurmuesish.</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Mbylleni flluskën</string>
 
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Jeni i mbrojtur!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Këto rregullime parazgjedhje ofrojnë mbrojtje të fuqishme. Por s’është e lehtë të përimtohen gjërat, për të plotësuar nevojat tuaja specifike.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Hidhe tej</string>
 
-    </resources>
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Hiqni qafe të dhënat tuaja personale, historikun e shfletimit, etj nga ky sesion, duke prekur butonin e hedhurinave. Provojeni!</string>
+
+</resources>

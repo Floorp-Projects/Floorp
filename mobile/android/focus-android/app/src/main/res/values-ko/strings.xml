@@ -489,7 +489,38 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s에 오신 것을 환영합니다!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">나의 차세대 개인 정보 보호 브라우징</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">시크릿 브라우징이 보이지도 않을 때</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s는 아주 강력한 추적 방지 기능과 쿠키 보호를 내장한 개인정보 보호를 최우선으로 하는 브라우저입니다.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">이런 브라우징은 지금까지 없었다</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">탭 한 번으로 검색 기록과 쿠키가 지워지고 광고가 사용자를 따라다니는 것을 방지합니다.</string>
+
+    <string name="onboarding_history_description2">탭 한 번으로 검색 기록과 쿠키가 지워지고 광고가 사용자를 따라다니는 것을 방지합니다.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">모든 상황에 맞는 프라이버시</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">브라우징이 변경되어야 할 떄 개인 정보 설정을 쉽게 확장하거나 축소할 수 있습니다.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">탐색 시작</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">개인정보 보호 강화하기</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">한 단계 높은 개인 정보 보호 브라우징을 즐겨보세요. 사이트의 경계를 넘어 개인정보를 추적하거나, 페이지 로딩 속도를 늦추는 원인이 되는 광고 및 기타 콘텐츠를 자동으로 차단해 줍니다.</string>

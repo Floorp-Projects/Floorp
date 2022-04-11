@@ -826,7 +826,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_safe_browsing_summary">თაღლითურ და მოიერიშედ მიჩნეული, აგრეთვე საზიანო და არასასურველი პროგრამების გამავრცელებელი საიტების შეზღუდვა.</string>
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
-    <string name="preference_https_only_title">მხოლოდ-HTTPS რეჟიმი</string>
+    <string name="preference_https_only_title">მხოლოდ-HTTPS-რეჟიმი</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">თავადვე ეცდება დაუკავშირდეს საიტებს HTTPS-ით, მეტი უსაფრთხოებისთვის. HTTPS-კავშირებით მონაცემები გადაიცემა დაცულად, დაშიფრულად საიტზე, რომელსაც ეწვევით.</string>
