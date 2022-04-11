@@ -92,10 +92,10 @@ void WorkerRef::Notify() {
     return;
   }
 
-  std::function<void()> callback = std::move(mCallback);
-  MOZ_ASSERT(!mCallback);
+  mCallback();
 
-  callback();
+  // Avoid any re-entrance trouble.
+  mCallback = nullptr;
 }
 
 // ----------------------------------------------------------------------------
