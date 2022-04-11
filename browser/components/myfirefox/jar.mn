@@ -5,4 +5,5 @@
 browser.jar:
     content/browser/myfirefox.html
     content/browser/myfirefox.js
-
+    content/browser/myfirefox.css
+    content/browser/tabs-pickup.js

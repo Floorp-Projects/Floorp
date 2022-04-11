@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  display: flex;
+  align-items: stretch;
+  padding-block: 40px 80px;
+}
+
+body > nav {
+  border-inline-end-width: 1px;
+  width: var(--in-content-sidebar-width);
+  flex: 0 1 auto;
+}
+
+body > main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 16px;
+}
+
+body > main > section {
+  grid-column: 1 / 9;
+}
+
+body > main > aside {
+  grid-column: 9 / 12;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.setup-step > h2 {
+  margin-block: 4px;
+}
+
+.setup-step > .step-body {
+  display: flex;
+  justify-content: space-between;
+}
+
+.setup-step > .step-body > :is(.step-content, button.primary) {
+  flex: 0 1 auto;
+}
