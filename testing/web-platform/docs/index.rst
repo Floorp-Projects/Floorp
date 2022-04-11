@@ -112,7 +112,8 @@ Under ``testing/web-platform`` are the following directories:
 
 ``mozilla/tests``
   Tests that will not be upstreamed and may
-  make use of Mozilla-specific features.
+  make use of Mozilla-specific features. They can access
+  the ``SpecialPowers`` APIs.
 
 ``mozilla/meta``
   Metadata for the Mozilla-specific tests.
