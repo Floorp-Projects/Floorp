@@ -44,7 +44,9 @@ if __name__ == "__main__":
             reduced.append(filtered)
     with open(args.output, "w") as out:
         print("# Generated with:", file=out)
-        print("# ./mach python --virtualenv build build/vs/generate_yaml.py \\", file=out)
+        print(
+            "# ./mach python --virtualenv build build/vs/generate_yaml.py \\", file=out
+        )
         for i, arg in enumerate(sys.argv[1:]):
             if i < len(sys.argv) - 2:
                 print("#  ", arg, "\\", file=out)
