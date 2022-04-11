@@ -254,19 +254,15 @@ class WebConsole {
   }
 
   /**
-   * Retrieve information about the JavaScript debugger's stackframes list. This
-   * is used to allow the Web Console to evaluate code in the selected
-   * stackframe.
+   * Retrieve information about the JavaScript debugger's currently selected stackframe.
+   * is used to allow the Web Console to evaluate code in the selected stackframe.
    *
-   * @return object|null
-   *         An object which holds:
-   *         - frames: the active ThreadFront.cachedFrames array.
-   *         - selected: depth/index of the selected stackframe in the debugger
-   *         UI.
+   * @return {String}
+   *         The Frame Actor ID.
    *         If the debugger is not open or if it's not paused, then |null| is
    *         returned.
    */
-  getDebuggerFrames() {
+  getSelectedFrameActorID() {
     const { toolbox } = this;
     if (!toolbox) {
       return null;
@@ -277,7 +273,7 @@ class WebConsole {
       return null;
     }
 
-    return panel.getFrames();
+    return panel.getSelectedFrameActorID();
   }
 
   /**

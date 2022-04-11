@@ -34,7 +34,7 @@ function autocompleteUpdate(force, getterPath, expressionVars) {
     const inputValue = hud.getInputValue();
     const mappedVars = hud.getMappedVariables() ?? {};
     const allVars = (expressionVars ?? []).concat(Object.keys(mappedVars));
-    const frameActorId = await webConsoleUI.getFrameActor();
+    const frameActorId = await hud.getSelectedFrameActorID();
 
     const cursor = webConsoleUI.getInputCursor();
 
