@@ -8313,25 +8313,6 @@ telemetry.test:
     record_in_processes: ["all"]
     release_channel_collection: opt-out
 
-
-# The following section contains counters for corruption of internal omni jar files.
-corroborate:
-  omnijar_mismatch:
-    bug_numbers:
-      - 1608308
-    description: >-
-          Whether the build IDs of the omni jar (omni.ja) and libxul do not match.
-    expires: "80"
-    kind: boolean
-    notification_emails:
-      - rhelmer@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
-
 cache:
   integrity_check_count:
     bug_numbers:

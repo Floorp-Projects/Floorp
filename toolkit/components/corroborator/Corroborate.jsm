@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -20,19 +16,7 @@ var EXPORTED_SYMBOLS = ["Corroborate"];
  * Tools for verifying internal files in Mozilla products.
  */
 this.Corroborate = {
-  async init() {
-    // Check whether libxul's build ID matches the one in the GRE omni jar.
-    // As above, Firefox could be running with an omni jar unpacked, in which
-    // case we're really just checking that the version in the unpacked
-    // AppConstants.jsm matches libxul.
-    let mismatchedOmnijar =
-      Services.appinfo.platformBuildID != AppConstants.MOZ_BUILDID;
-
-    Services.telemetry.scalarSet(
-      "corroborate.omnijar_mismatch",
-      mismatchedOmnijar
-    );
-  },
+  async init() {},
 
   /**
    * Verify signed state of arbitrary JAR file. Currently only JAR files signed
