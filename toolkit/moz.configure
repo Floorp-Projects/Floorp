@@ -1503,7 +1503,14 @@ def check_for_midl(target, compile_environment):
 
 
 midl = check_prog(
-    "MIDL", midl_names, when=check_for_midl, allow_missing=True, paths=sdk_bin_path
+    "MIDL",
+    midl_names,
+    when=check_for_midl,
+    allow_missing=True,
+    paths=sdk_bin_path,
+    # MIDL being used from a python wrapper script, we can live with it
+    # having spaces.
+    allow_spaces=True,
 )
 
 option(env="MIDL_FLAGS", nargs=1, help="Extra flags to pass to MIDL")
@@ -1812,6 +1819,9 @@ with only_when(compile_environment):
         ("fxc.exe", "fxc2.exe"),
         when=depends(target)(lambda t: t.kernel == "WINNT"),
         paths=sdk_bin_path,
+        # FXC being used from a python wrapper script, we can live with it
+        # having spaces.
+        allow_spaces=True,
     )
 
 
