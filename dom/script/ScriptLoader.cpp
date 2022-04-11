@@ -571,6 +571,16 @@ nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
   return NS_OK;
 }
 
+static bool IsWebExtensionRequest(ScriptLoadRequest* aRequest) {
+  if (!aRequest->IsModuleRequest()) {
+    return false;
+  }
+
+  ModuleLoader* loader =
+      ModuleLoader::From(aRequest->AsModuleRequest()->mLoader);
+  return loader->GetKind() == ModuleLoader::WebExtension;
+}
+
 nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
                                          nsSecurityFlags securityFlags) {
   nsContentPolicyType contentPolicyType =
@@ -610,10 +620,8 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
     }
   }
 
-  // Module requests aren't cached, so ignore WebExtGlobal here.
-  nsCOMPtr<nsIScriptGlobalObject> globalObject =
-      GetScriptGlobalObject(WebExtGlobal::Ignore);
-  if (!globalObject) {
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = GetScriptGlobalObject();
+  if (!scriptGlobal) {
     return NS_ERROR_FAILURE;
   }
 
@@ -622,7 +630,7 @@ nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
   if (cic && StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
-    MOZ_ASSERT(!aRequest->GetLoadContext()->GetWebExtGlobal(),
+    MOZ_ASSERT(!IsWebExtensionRequest(aRequest),
                "Can not bytecode cache WebExt code");
     if (!aRequest->mFetchSourceOnly) {
       // Inform the HTTP cache that we prefer to have information coming from
@@ -1837,17 +1845,17 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void ScriptLoader::FireScriptEvaluated(
 
 already_AddRefed<nsIGlobalObject> ScriptLoader::GetGlobalForRequest(
     ScriptLoadRequest* aRequest) {
-  if (aRequest->GetLoadContext()->GetWebExtGlobal()) {
-    nsCOMPtr<nsIGlobalObject> global =
-        aRequest->GetLoadContext()->GetWebExtGlobal();
+  if (aRequest->IsModuleRequest()) {
+    ModuleLoader* loader =
+        ModuleLoader::From(aRequest->AsModuleRequest()->mLoader);
+    nsCOMPtr<nsIGlobalObject> global = loader->GetGlobalObject();
     return global.forget();
   }
 
-  return GetScriptGlobalObject(WebExtGlobal::Handled);
+  return GetScriptGlobalObject();
 }
 
-already_AddRefed<nsIScriptGlobalObject> ScriptLoader::GetScriptGlobalObject(
-    WebExtGlobal) {
+already_AddRefed<nsIScriptGlobalObject> ScriptLoader::GetScriptGlobalObject() {
   if (!mDocument) {
     return nullptr;
   }
@@ -2063,15 +2071,16 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
 
   nsCOMPtr<nsIGlobalObject> globalObject;
   nsCOMPtr<nsIScriptContext> context;
-  if (aRequest->GetLoadContext()->GetWebExtGlobal()) {
-    MOZ_ASSERT(aRequest->IsModuleRequest());
-  } else {
+  if (!IsWebExtensionRequest(aRequest)) {
     // Otherwise we have to ensure that there is a nsIScriptContext.
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
-        GetScriptGlobalObject(WebExtGlobal::Handled);
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = GetScriptGlobalObject();
     if (!scriptGlobal) {
       return NS_ERROR_FAILURE;
     }
+
+    MOZ_ASSERT_IF(
+        aRequest->IsModuleRequest(),
+        aRequest->AsModuleRequest()->GetGlobalObject() == scriptGlobal);
 
     // Make sure context is a strong reference since we access it after
     // we've executed a script, which may cause all other references to
@@ -2084,7 +2093,7 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
     globalObject = scriptGlobal;
   }
 
-  // Update our current script
+  // Update our current script.
   // This must be destroyed after destroying nsAutoMicroTask, see:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1620505#c4
   nsIScriptElement* currentScript =
@@ -2407,8 +2416,7 @@ void ScriptLoader::EncodeBytecode() {
   }
 
   // Should not be encoding modules at all.
-  nsCOMPtr<nsIScriptGlobalObject> globalObject =
-      GetScriptGlobalObject(WebExtGlobal::Ignore);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
   if (!globalObject) {
     GiveUpBytecodeEncoding();
     return;
@@ -2424,8 +2432,8 @@ void ScriptLoader::EncodeBytecode() {
   RefPtr<ScriptLoadRequest> request;
   while (!mBytecodeEncodingQueue.isEmpty()) {
     request = mBytecodeEncodingQueue.StealFirst();
-    MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal(),
-               "Not handling global above");
+    MOZ_ASSERT(!IsWebExtensionRequest(request),
+               "Bytecode for web extension content scrips is not cached");
     EncodeRequestBytecode(aes.cx(), request);
     request->mScriptBytecode.clearAndFree();
     request->DropBytecodeCacheReferences();
@@ -2519,8 +2527,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
   // would not keep a large buffer around.  If we cannot, we fallback on the
   // removal of all request from the current list and these large buffers would
   // be removed at the same time as the source object.
-  nsCOMPtr<nsIScriptGlobalObject> globalObject =
-      GetScriptGlobalObject(WebExtGlobal::Ignore);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
   AutoAllowLegacyScriptExecution exemption;
   Maybe<AutoEntryScript> aes;
 
@@ -2536,7 +2543,7 @@ void ScriptLoader::GiveUpBytecodeEncoding() {
     LOG(("ScriptLoadRequest (%p): Cannot serialize bytecode", request.get()));
     TRACE_FOR_TEST_NONE(request->GetLoadContext()->GetScriptElement(),
                         "scriptloader_bytecode_failed");
-    MOZ_ASSERT(!request->GetLoadContext()->GetWebExtGlobal());
+    MOZ_ASSERT(!IsWebExtensionRequest(request));
 
     if (aes.isSome()) {
       bool result;

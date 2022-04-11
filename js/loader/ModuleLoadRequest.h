@@ -62,6 +62,8 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   bool IsDynamicImport() const { return mIsDynamicImport; }
 
+  nsIGlobalObject* GetGlobalObject();
+
   void SetReady() override;
   void Cancel() override;
   void ClearDynamicImport();

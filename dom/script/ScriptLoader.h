@@ -628,12 +628,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   already_AddRefed<nsIGlobalObject> GetGlobalForRequest(
       ScriptLoadRequest* aRequest);
 
-  // This is a marker class to ensure proper handling of requests with a
-  // WebExtGlobal.
-  enum class WebExtGlobal { Ignore, Handled };
-
-  already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject(
-      WebExtGlobal aWebExtGlobal);
+  already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject();
 
   // Fill in CompileOptions, as well as produce the introducer script for
   // subsequent calls to UpdateDebuggerMetadata

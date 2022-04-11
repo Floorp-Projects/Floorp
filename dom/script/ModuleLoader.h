@@ -77,6 +77,10 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
       JS::Handle<JSString*> aSpecifier,
       JS::Handle<JSObject*> aPromise) override;
 
+  static ModuleLoader* From(ModuleLoaderBase* aLoader) {
+    return static_cast<ModuleLoader*>(aLoader);
+  }
+
  private:
   const Kind mKind;
 };

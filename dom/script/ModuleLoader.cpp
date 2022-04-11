@@ -281,22 +281,13 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
     // there.
     Document* document = GetScriptLoader()->GetDocument();
 
-    // Use the document's principal for all loads, except WebExtension
-    // content-scripts.
-    // Only remember the global for content-scripts as well.
-    nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal(aCx);
-    nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
-    if (!BasePrincipal::Cast(principal)->ContentScriptAddonPolicy()) {
-      principal = document->NodePrincipal();
-      MOZ_ASSERT(global);
-      global = nullptr;  // Null global is the usual case for most loads.
-    } else {
-      MOZ_ASSERT(
-          xpc::IsWebExtensionContentScriptSandbox(global->GetGlobalJSObject()));
-    }
+    nsCOMPtr<nsIPrincipal> principal = GetGlobalObject()->PrincipalOrNull();
+    MOZ_ASSERT_IF(GetKind() == WebExtension,
+                  BasePrincipal::Cast(principal)->ContentScriptAddonPolicy());
+    MOZ_ASSERT_IF(GetKind() == Normal, principal == document->NodePrincipal());
 
-    options = new ScriptFetchOptions(
-        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, global);
+    options = new ScriptFetchOptions(mozilla::CORS_NONE,
+                                     document->GetReferrerPolicy(), principal);
     baseURL = document->GetDocBaseURI();
     context = new ScriptLoadContext(nullptr);
   }
