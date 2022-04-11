@@ -16,7 +16,6 @@ define(function(require, exports, module) {
   const {
     interleave,
     getGripType,
-    isGrip,
     wrapRender,
     ellipsisElement,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -235,12 +234,8 @@ define(function(require, exports, module) {
   }
 
   function supportsObject(grip, noGrip = false) {
-    if (noGrip === true || !isGrip(grip)) {
-      return false;
-    }
-
     return (
-      grip.preview &&
+      grip?.preview &&
       (grip.preview.kind == "ArrayLike" ||
         getGripType(grip, noGrip) === "DocumentFragment")
     );

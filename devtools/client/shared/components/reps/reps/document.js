@@ -13,7 +13,6 @@ define(function(require, exports, module) {
   // Reps
   const {
     getGripType,
-    isGrip,
     getURLDisplayString,
     wrapRender,
   } = require("devtools/client/shared/components/reps/reps/rep-utils");
@@ -69,12 +68,7 @@ define(function(require, exports, module) {
 
   // Registration
   function supportsObject(object, noGrip = false) {
-    if (noGrip === true || !isGrip(object)) {
-      return false;
-    }
-
-    const type = getGripType(object, noGrip);
-    return object.preview && type === "HTMLDocument";
+    return object?.preview && getGripType(object, noGrip) === "HTMLDocument";
   }
 
   // Exports from this module
