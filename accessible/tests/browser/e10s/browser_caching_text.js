@@ -170,14 +170,16 @@ addAccessibleTask(
     const container = findAccessibleChildByID(docAcc, "container", [
       nsIAccessibleHyperText,
     ]);
+    is(container.linkCount, 1, "container linkCount is 1");
     let link = container.getLinkAt(0);
-    queryInterfaces(link, [nsIAccessible]);
+    queryInterfaces(link, [nsIAccessible, nsIAccessibleHyperText]);
     is(getAccessibleDOMNodeID(link), "link", "LinkAt 0 is the link");
     is(container.getLinkIndex(link), 0, "getLinkIndex for link is 0");
     is(link.startIndex, 1, "link's startIndex is 1");
     is(link.endIndex, 2, "link's endIndex is 2");
     is(container.getLinkIndexAtOffset(1), 0, "getLinkIndexAtOffset(1) is 0");
     is(container.getLinkIndexAtOffset(0), -1, "getLinkIndexAtOffset(0) is -1");
+    is(link.linkCount, 0, "link linkCount is 0");
   },
   {
     chrome: true,

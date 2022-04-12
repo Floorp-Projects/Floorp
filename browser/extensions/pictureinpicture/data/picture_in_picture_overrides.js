@@ -63,6 +63,12 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.netflix.com/search*": { policy: TOGGLE_POLICIES.HIDDEN },
     },
 
+    tubi: {
+      "https://*.tubitv.com/*": {
+        videoWrapperScriptPath: "video-wrappers/tubi.js",
+      },
+    },
+
     twitch: {
       "https://*.twitch.tv/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
       "https://*.twitch.tech/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
