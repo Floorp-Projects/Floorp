@@ -19,12 +19,12 @@ class StartupCache;
 }  // namespace mozilla
 
 nsresult ReadCachedStencil(mozilla::scache::StartupCache* cache,
-                           nsACString& uri, JSContext* cx,
+                           nsACString& cachePath, JSContext* cx,
                            const JS::DecodeOptions& options,
                            JS::Stencil** stencilOut);
 
 nsresult WriteCachedStencil(mozilla::scache::StartupCache* cache,
-                            nsACString& uri, JSContext* cx,
+                            nsACString& cachePath, JSContext* cx,
                             JS::Stencil* stencil);
 
 #endif /* mozJSLoaderUtils_h */
