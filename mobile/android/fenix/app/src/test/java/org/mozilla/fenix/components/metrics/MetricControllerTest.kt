@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
+import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.media.facts.MediaFacts
@@ -27,10 +28,13 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
@@ -495,5 +499,73 @@ class MetricControllerTest {
         verify { dataService1.track(Event.SearchTermGroupCount(5)) }
         verify { dataService1.track(Event.AverageTabsPerSearchTermGroup(2.5)) }
         verify { dataService1.track(Event.JumpBackInGroupTapped) }
+    }
+
+    @Test
+    fun `WHEN processing a FEATURE_AUTOFILL fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        var fact = Fact(
+            Component.FEATURE_AUTOFILL,
+            mockk(relaxed = true),
+            AutofillFacts.Items.AUTOFILL_REQUEST,
+            metadata = mapOf(AutofillFacts.Metadata.HAS_MATCHING_LOGINS to true)
+        )
+
+        with(controller) {
+            assertFalse(AndroidAutofill.requestMatchingLogins.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.requestMatchingLogins.testHasValue())
+
+            fact = fact.copy(metadata = mapOf(AutofillFacts.Metadata.HAS_MATCHING_LOGINS to false))
+            assertFalse(AndroidAutofill.requestNoMatchingLogins.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.requestNoMatchingLogins.testHasValue())
+
+            fact = fact.copy(item = AutofillFacts.Items.AUTOFILL_SEARCH, action = Action.DISPLAY, metadata = null)
+            assertFalse(AndroidAutofill.searchDisplayed.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.searchDisplayed.testHasValue())
+
+            fact = fact.copy(action = Action.SELECT)
+            assertFalse(AndroidAutofill.searchItemSelected.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.searchItemSelected.testHasValue())
+
+            fact = fact.copy(item = AutofillFacts.Items.AUTOFILL_CONFIRMATION, action = Action.CONFIRM)
+            assertFalse(AndroidAutofill.confirmSuccessful.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.confirmSuccessful.testHasValue())
+
+            fact = fact.copy(action = Action.DISPLAY)
+            assertFalse(AndroidAutofill.confirmCancelled.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.confirmCancelled.testHasValue())
+
+            fact = fact.copy(item = AutofillFacts.Items.AUTOFILL_LOCK, action = Action.CONFIRM)
+            assertFalse(AndroidAutofill.unlockSuccessful.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.unlockSuccessful.testHasValue())
+
+            fact = fact.copy(action = Action.DISPLAY)
+            assertFalse(AndroidAutofill.unlockCancelled.testHasValue())
+
+            fact.process()
+
+            assertTrue(AndroidAutofill.unlockCancelled.testHasValue())
+        }
     }
 }

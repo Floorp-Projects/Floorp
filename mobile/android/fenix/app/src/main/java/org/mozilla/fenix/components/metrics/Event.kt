@@ -64,16 +64,6 @@ sealed class Event {
     // Recently visited/Recent searches
     object RecentSearchesGroupDeleted : Event()
 
-    // Android Autofill
-    object AndroidAutofillUnlockSuccessful : Event()
-    object AndroidAutofillUnlockCanceled : Event()
-    object AndroidAutofillSearchDisplayed : Event()
-    object AndroidAutofillSearchItemSelected : Event()
-    object AndroidAutofillConfirmationSuccessful : Event()
-    object AndroidAutofillConfirmationCanceled : Event()
-    object AndroidAutofillRequestWithLogins : Event()
-    object AndroidAutofillRequestWithoutLogins : Event()
-
     // Credit cards
     object CreditCardSaved : Event()
     object CreditCardDeleted : Event()

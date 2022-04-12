@@ -37,6 +37,7 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.ContextMenu
+import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.LoginDialog
@@ -107,6 +108,7 @@ internal class ReleaseMetricController(
     }
 
     @VisibleForTesting
+    @Suppress("LongMethod")
     internal fun Fact.process(): Unit = when (component to item) {
         Component.FEATURE_PROMPTS to LoginDialogFacts.Items.DISPLAY -> {
             LoginDialog.displayed.record(NoExtras())
@@ -160,6 +162,36 @@ internal class ReleaseMetricController(
                 Addons.openAddonInToolbarMenu.record(Addons.OpenAddonInToolbarMenuExtra(it.toString()))
             }
             Unit
+        }
+
+        Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_REQUEST -> {
+            val hasMatchingLogins = metadata?.get(AutofillFacts.Metadata.HAS_MATCHING_LOGINS) as Boolean?
+            if (hasMatchingLogins == true) {
+                AndroidAutofill.requestMatchingLogins.record(NoExtras())
+            } else {
+                AndroidAutofill.requestNoMatchingLogins.record(NoExtras())
+            }
+        }
+        Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_SEARCH -> {
+            if (action == Action.SELECT) {
+                AndroidAutofill.searchItemSelected.record(NoExtras())
+            } else {
+                AndroidAutofill.searchDisplayed.record(NoExtras())
+            }
+        }
+        Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_CONFIRMATION -> {
+            if (action == Action.CONFIRM) {
+                AndroidAutofill.confirmSuccessful.record(NoExtras())
+            } else {
+                AndroidAutofill.confirmCancelled.record(NoExtras())
+            }
+        }
+        Component.FEATURE_AUTOFILL to AutofillFacts.Items.AUTOFILL_LOCK -> {
+            if (action == Action.CONFIRM) {
+                AndroidAutofill.unlockSuccessful.record(NoExtras())
+            } else {
+                AndroidAutofill.unlockCancelled.record(NoExtras())
+            }
         }
 
         else -> {
@@ -333,35 +365,6 @@ internal class ReleaseMetricController(
         }
         Component.FEATURE_SEARCH == component && InContentTelemetry.IN_CONTENT_SEARCH == item -> {
             Event.SearchInContent(value!!)
-        }
-        Component.FEATURE_AUTOFILL == component && AutofillFacts.Items.AUTOFILL_REQUEST == item -> {
-            val hasMatchingLogins = metadata?.get(AutofillFacts.Metadata.HAS_MATCHING_LOGINS) as Boolean?
-            if (hasMatchingLogins == true) {
-                Event.AndroidAutofillRequestWithLogins
-            } else {
-                Event.AndroidAutofillRequestWithoutLogins
-            }
-        }
-        Component.FEATURE_AUTOFILL == component && AutofillFacts.Items.AUTOFILL_SEARCH == item -> {
-            if (action == Action.SELECT) {
-                Event.AndroidAutofillSearchItemSelected
-            } else {
-                Event.AndroidAutofillSearchDisplayed
-            }
-        }
-        Component.FEATURE_AUTOFILL == component && AutofillFacts.Items.AUTOFILL_LOCK == item -> {
-            if (action == Action.CONFIRM) {
-                Event.AndroidAutofillUnlockSuccessful
-            } else {
-                Event.AndroidAutofillUnlockCanceled
-            }
-        }
-        Component.FEATURE_AUTOFILL == component && AutofillFacts.Items.AUTOFILL_CONFIRMATION == item -> {
-            if (action == Action.CONFIRM) {
-                Event.AndroidAutofillConfirmationSuccessful
-            } else {
-                Event.AndroidAutofillConfirmationCanceled
-            }
         }
         else -> null
     }
