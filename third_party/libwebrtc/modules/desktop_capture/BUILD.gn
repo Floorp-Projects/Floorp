@@ -138,17 +138,19 @@ if (rtc_include_tests) {
       }
       deps += [ ":desktop_capture_mock" ]
       public_configs = [ ":x11_config" ]
-      if (rtc_use_pipewire) {
+      if (is_linux) {
         public_configs += [ ":pipewire_config" ]
-        configs += [
-          ":pipewire_config",
-          ":gio",
-        ]
+        if (rtc_use_pipewire) {
+          configs += [
+            ":pipewire_config",
+            ":gio",
+          ]
 
-        if (rtc_link_pipewire) {
-          configs += [ ":pipewire" ]
-        } else {
-          deps += [ ":pipewire_stubs" ]
+          if (rtc_link_pipewire) {
+            configs += [ ":pipewire" ]
+          } else {
+            deps += [ ":pipewire_stubs" ]
+          }
         }
       }
     }
