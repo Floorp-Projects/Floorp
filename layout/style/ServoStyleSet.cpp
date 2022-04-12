@@ -225,12 +225,15 @@ RestyleHint ServoStyleSet::MediumFeaturesChanged(
 
   const bool mayAffectDefaultStyle =
       bool(aReason & kMediaFeaturesAffectingDefaultStyle);
+  const MediumFeaturesChangedResult result =
+      Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), &nonDocumentStyles,
+                                           mayAffectDefaultStyle);
+
   const bool viewportChanged =
       bool(aReason & MediaFeatureChangeReason::ViewportChange);
-  const MediumFeaturesChangedResult result =
-      Servo_StyleSet_MediumFeaturesChanged(
-          mRawSet.get(), &nonDocumentStyles, mayAffectDefaultStyle,
-          viewportChanged, mDocument->GetRootElement());
+  if (viewportChanged) {
+    InvalidateForViewportUnits(OnlyDynamic::No);
+  }
 
   const bool rulesChanged =
       result.mAffectsDocumentRules || result.mAffectsNonDocumentRules;
@@ -1323,6 +1326,16 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ReparentComputedStyle(
                              aNewParentIgnoringFirstLine, aNewLayoutParent,
                              aElement, mRawSet.get())
       .Consume();
+}
+
+void ServoStyleSet::InvalidateForViewportUnits(OnlyDynamic aOnlyDynamic) {
+  dom::Element* root = mDocument->GetRootElement();
+  if (!root) {
+    return;
+  }
+
+  Servo_InvalidateForViewportUnits(mRawSet.get(), root,
+                                   aOnlyDynamic == OnlyDynamic::Yes);
 }
 
 NS_IMPL_ISUPPORTS(UACacheReporter, nsIMemoryReporter)

@@ -2766,6 +2766,9 @@ void nsPresContext::UpdateDynamicToolbarOffset(ScreenIntCoord aOffset) {
           mPresShell->GetMobileViewportManager()) {
     mvm->UpdateVisualViewportSizeByDynamicToolbar(-aOffset);
   }
+
+  mPresShell->StyleSet()->InvalidateForViewportUnits(
+      ServoStyleSet::OnlyDynamic::Yes);
 }
 
 DynamicToolbarState nsPresContext::GetDynamicToolbarState() const {

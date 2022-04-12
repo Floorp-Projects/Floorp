@@ -1817,8 +1817,6 @@ pub unsafe extern "C" fn Servo_StyleSet_MediumFeaturesChanged(
     document_set: &RawServoStyleSet,
     non_document_styles: &mut nsTArray<&mut RawServoAuthorStyles>,
     may_affect_default_style: bool,
-    viewport_changed: bool,
-    root: Option<&RawGeckoElement>,
 ) -> structs::MediumFeaturesChangedResult {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -1862,16 +1860,6 @@ pub unsafe extern "C" fn Servo_StyleSet_MediumFeaturesChanged(
         if affected_style {
             affects_non_document_rules = true;
             author_styles.stylesheets.force_dirty();
-        }
-    }
-
-    if viewport_changed && document_data.stylist.device().used_viewport_size() {
-        if let Some(root) = root {
-            if style::invalidation::viewport_units::invalidate(GeckoElement(root)) {
-                // The invalidation machinery propagates the bits up, but we still need
-                // to tell the Gecko restyle root machinery about it.
-                bindings::Gecko_NoteDirtySubtreeForInvalidation(root);
-            }
         }
     }
 
@@ -7387,4 +7375,28 @@ pub extern "C" fn Servo_LayerStatementRule_GetNameAt(
             name.to_css(&mut CssWriter::new(result)).unwrap()
         }
     })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
+    document_style: &RawServoStyleSet,
+    root: &RawGeckoElement,
+    dynamic_only: bool,
+) {
+    let document_data = PerDocumentStyleData::from_ffi(document_style).borrow();
+    let device = document_data.stylist.device();
+
+    if !device.used_viewport_size() {
+        return;
+    }
+
+    if dynamic_only && !device.used_dynamic_viewport_size() {
+        return;
+    }
+
+    if style::invalidation::viewport_units::invalidate(GeckoElement(root)) {
+        // The invalidation machinery propagates the bits up, but we still need
+        // to tell the Gecko restyle root machinery about it.
+        bindings::Gecko_NoteDirtySubtreeForInvalidation(root);
+    }
 }
