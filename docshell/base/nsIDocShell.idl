@@ -102,11 +102,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   void prepareForNewContentModel();
 
   /**
-   * For editors and suchlike who wish to change the URI associated with the
-   * document. Note if you want to get the current URI, use the read-only
-   * property on nsIWebNavigation.
+   * Helper for the session store to change the URI associated with the
+   * document.
    */
-  void setCurrentURI(in nsIURI aURI);
+  void setCurrentURIForSessionStore(in nsIURI aURI);
 
   /**
    * Notify the associated content viewer and all child docshells that they are
