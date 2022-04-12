@@ -13,6 +13,7 @@ add_task(async function test_first_time_save() {
     ],
   });
 
+  let onAdded = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
@@ -21,16 +22,13 @@ add_task(async function test_first_time_save() {
       gBrowser,
       "about:preferences#privacy"
     );
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.getElementById("form");
-      form.querySelector("#organization").focus();
-      form.querySelector("#organization").value = "Sesame Street";
-      form.querySelector("#street-address").value = "123 Sesame Street";
-      form.querySelector("#tel").value = "1-345-345-3456";
-
-      // Wait 500ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 500));
-      form.querySelector("input[type=submit]").click();
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#organization",
+      newValues: {
+        "#organization": "Sesame Street",
+        "#street-address": "123 Sesame Street",
+        "#tel": "1-345-345-3456",
+      },
     });
 
     await promiseShown;
@@ -42,6 +40,7 @@ add_task(async function test_first_time_save() {
     ok(tab, "Privacy panel opened");
     BrowserTestUtils.removeTab(tab);
   });
+  await onAdded;
 
   addresses = await getAddresses();
   is(addresses.length, 1, "Address saved");
@@ -62,27 +61,27 @@ add_task(async function test_non_first_time_save() {
   is(ftuPref, false, "First time use flag is false");
   is(addresses.length, 1, "1 address in storage");
 
+  let onAdded = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.getElementById("form");
-      form.querySelector("#organization").focus();
-      form.querySelector("#organization").value = "Mozilla";
-      form.querySelector("#street-address").value = "331 E. Evelyn Avenue";
-      form.querySelector("#tel").value = "1-650-903-0800";
-
-      // Wait 500ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 500));
-      form.querySelector("input[type=submit]").click();
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#organization",
+      newValues: {
+        "#organization": "Mozilla",
+        "#street-address": "331 E. Evelyn Avenue",
+        "#tel": "1-650-903-0800",
+      },
     });
 
     await sleep(1000);
     is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
   });
+  await onAdded;
 
   addresses = await getAddresses();
   is(addresses.length, 2, "Another address saved");
+
   await SpecialPowers.popPrefEnv();
 });
 
@@ -93,9 +92,11 @@ add_task(async function test_first_time_save_with_sync_account() {
       [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
       [AUTOFILL_ADDRESSES_AVAILABLE_PREF, "on"],
       [SYNC_USERNAME_PREF, "foo@bar.com"],
+      [SYNC_ADDRESSES_PREF, false],
     ],
   });
 
+  let onAdded = waitForStorageChangedEvents("add");
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
@@ -104,26 +105,18 @@ add_task(async function test_first_time_save_with_sync_account() {
       gBrowser,
       "about:preferences#privacy-address-autofill"
     );
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.getElementById("form");
-      form.querySelector("#organization").focus();
-      form.querySelector("#organization").value = "Foobar";
-      form.querySelector("#email").value = "foo@bar.com";
-      form.querySelector("#tel").value = "1-234-567-8900";
-
-      // Wait 500ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 500));
-      form.querySelector("input[type=submit]").click();
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#organization",
+      newValues: {
+        "#organization": "Foobar",
+        "#email": "foo@bar.com",
+        "#tel": "1-234-567-8900",
+      },
     });
 
     await promiseShown;
     let cb = getDoorhangerCheckbox();
     ok(!cb.hidden, "Sync checkbox should be visible");
-    is(
-      SpecialPowers.getBoolPref(SYNC_ADDRESSES_PREF),
-      false,
-      "addresses sync should be disabled at first"
-    );
 
     is(cb.checked, false, "Checkbox state should match addresses sync state");
     cb.click();
@@ -138,8 +131,10 @@ add_task(async function test_first_time_save_with_sync_account() {
     ok(tab, "Privacy panel opened");
     BrowserTestUtils.removeTab(tab);
   });
+  await onAdded;
 
   let ftuPref = SpecialPowers.getBoolPref(FTU_PREF);
   is(ftuPref, false, "First time use flag is false");
+
   await SpecialPowers.popPrefEnv();
 });
