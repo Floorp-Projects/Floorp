@@ -27,10 +27,10 @@ class URLQueryStrippingListService {
       "nsIURLQueryStrippingListService",
     ]);
     this.observers = new Set();
-    this.prefStripList = [];
-    this.prefAllowList = [];
-    this.remoteStripList = [];
-    this.remoteAllowList = [];
+    this.prefStripList = new Set();
+    this.prefAllowList = new Set();
+    this.remoteStripList = new Set();
+    this.remoteAllowList = new Set();
     this.isParentProcess =
       Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
   }
@@ -88,16 +88,16 @@ class URLQueryStrippingListService {
   }
 
   _onRemoteSettingsUpdate(entries) {
-    this.remoteStripList = [];
-    this.remoteAllowList = [];
+    this.remoteStripList.clear();
+    this.remoteAllowList.clear();
 
     for (let entry of entries) {
       for (let item of entry.stripList) {
-        this.remoteStripList.push(item);
+        this.remoteStripList.add(item);
       }
 
       for (let item of entry.allowList) {
-        this.remoteAllowList.push(item);
+        this.remoteAllowList.add(item);
       }
     }
 
@@ -121,11 +121,11 @@ class URLQueryStrippingListService {
   _onPrefUpdate(pref, value) {
     switch (pref) {
       case PREF_STRIP_LIST_NAME:
-        this.prefStripList = value ? value.split(" ") : [];
+        this.prefStripList = new Set(value ? value.split(" ") : []);
         break;
 
       case PREF_ALLOW_LIST_NAME:
-        this.prefAllowList = value ? value.split(",") : [];
+        this.prefAllowList = new Set(value ? value.split(",") : []);
         break;
 
       default:
@@ -147,10 +147,20 @@ class URLQueryStrippingListService {
   }
 
   _notifyObservers(observer) {
-    let stripEntries = this.prefStripList.concat(this.remoteStripList);
-    let allowEntries = this.prefAllowList.concat(this.remoteAllowList);
-    let stripEntriesAsString = stripEntries.join(" ").toLowerCase();
-    let allowEntriesAsString = allowEntries.join(",").toLowerCase();
+    let stripEntries = new Set([
+      ...this.prefStripList,
+      ...this.remoteStripList,
+    ]);
+    let allowEntries = new Set([
+      ...this.prefAllowList,
+      ...this.remoteAllowList,
+    ]);
+    let stripEntriesAsString = Array.from(stripEntries)
+      .join(" ")
+      .toLowerCase();
+    let allowEntriesAsString = Array.from(allowEntries)
+      .join(",")
+      .toLowerCase();
 
     let observers = observer ? [observer] : this.observers;
 
