@@ -2758,22 +2758,32 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   mUsingOMTCompositor = aUseOMTC;
 }
 
-// Returning NO from this method only disallows ordering on mousedown - in order
-// to prevent it for mouseup too, we need to call [NSApp preventWindowOrdering]
-// when handling the mousedown event.
+// By default, clicking on a window brings the clicked window to the foreground.
+// This method is called before -[NSView mouseDown:] in order to influence that behavior.
 - (BOOL)shouldDelayWindowOrderingForEvent:(NSEvent*)aEvent {
-  // Always using system-provided window ordering for normal windows.
-  if (![[self window] isKindOfClass:[PopupWindow class]]) return NO;
+  NSWindow* window = self.window;
 
-  // Don't reorder when we don't have a parent window, like when we're a
-  // context menu or a tooltip.
-  return ![[self window] parentWindow];
+  // Prevent reordering for clicks on context menus or tooltips. These are implemented
+  // as PopupWindows without parent windows.
+  if ([window isKindOfClass:[PopupWindow class]] && !window.parentWindow) {
+    return YES;
+  }
+
+  // Prevent reordering for clicks on always-on-top video like the Picture-in-picture window.
+  if (window.level == NSFloatingWindowLevel) {
+    return YES;
+  }
+
+  return NO;
 }
 
 - (void)mouseDown:(NSEvent*)theEvent {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if ([self shouldDelayWindowOrderingForEvent:theEvent]) {
+    // By default, returning NO from shouldDelayWindowOrderingForEvent delays reordering
+    // so that it happens on the mouseup rather than on the mousedown. In order to prevent
+    // reordering entirely, we also need to call [NSApp preventWindowOrdering].
     [NSApp preventWindowOrdering];
   }
 

@@ -129,15 +129,6 @@ SimpleTest.waitForExplicitFinish();
         catch (e) {
           ok(false, 'Error in setHTML() test: ' + e)
         }
-
-        // test sanitizeFor:
-        try {
-          const newDiv = testSanitizer.sanitizeFor('div', testString);
-          is(newDiv.innerHTML, testExpected, `Sanitizer.sanitizeFor('div', input) should turn(${testType}) '${testInput}' into '${testExpected}'`);
-        }
-        catch (e) {
-          ok(false, 'Error in sanitizeFor() test: ' + e)
-        }
       }
     }
   }

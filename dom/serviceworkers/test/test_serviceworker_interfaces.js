@@ -291,6 +291,10 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "TextEncoder",
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "TransformStream", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "TransformStreamDefaultController", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "URL",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "URLSearchParams",

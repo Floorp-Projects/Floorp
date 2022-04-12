@@ -3645,7 +3645,7 @@
 
 - name: dom.streams.transform_streams.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: dom.streams.pipeTo.enabled

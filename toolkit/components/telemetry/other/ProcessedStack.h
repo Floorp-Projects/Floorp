@@ -6,14 +6,13 @@
 #ifndef ProcessedStack_h__
 #define ProcessedStack_h__
 
-#include <string>
 #include <vector>
 
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
-#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/Vector.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 #if defined(MOZ_GECKO_PROFILER)
 #  include "shared-libraries.h"
 #endif  // MOZ_GECKO_PROFILER
