@@ -626,6 +626,8 @@ nsresult MediaTransportHandlerSTS::SetIceConfig(
     return rv;
   }
 
+  MOZ_RELEASE_ASSERT(mInitPromise);
+
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
