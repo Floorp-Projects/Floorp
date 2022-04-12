@@ -13,6 +13,10 @@ Test the rendering of a stack trace
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 <body>
+  <section id=s1></section>
+  <section id=s2></section>
+  <section id=s3></section>
+  <section id=s4></section>
 <script src="head.js"></script>
 <script>
 "use strict";
@@ -24,38 +28,125 @@ window.onload = function() {
     browserRequire("devtools/client/shared/components/SmartTrace"));
   ok(SmartTrace, "Got the SmartTrace factory");
 
-  add_task(async function() {
-    const stacktrace = [
-      {
-        filename: "http://myfile.com/mahscripts.js",
-        lineNumber: 55,
-        columnNumber: 10,
-        functionName: null,
-      },
-      {
-        functionName: "loadFunc",
-        filename: "http://myfile.com/loader.js -> http://myfile.com/loadee.js",
-        lineNumber: 10,
-      },
-    ];
+  const stacktrace = [
+    {
+      filename: "http://myfile.com/mahscripts.js",
+      lineNumber: 55,
+      columnNumber: 10,
+      functionName: null,
+    },
+    {
+      functionName: "loadFunc",
+      filename: "http://myfile.com/loader.js -> http://myfile.com/loadee.js",
+      lineNumber: 10,
+    },
+  ];
 
+  add_task(async function testBasic() {
+    info("Check basic rendering");
     let onReadyCount = 0;
-
     const props = {
       stacktrace,
       onViewSourceInDebugger: () => {},
       onReady: () => {
         onReadyCount++;
-      }
+      },
     };
+    await renderSmartTraceAndAssertContent(
+      window.document.body.querySelector("#s1"),
+      props
+    );
+    is(onReadyCount, 1, "onReady was called once");
+  });
 
-    const trace = ReactDOM.render(SmartTrace(props), window.document.body);
-    await forceRender(trace);
+  add_task(async function testZeroDelay() {
+    info("Check rendering with source map service and 0 initial delay");
+    let onReadyCount = 0;
+    const props = {
+      stacktrace,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
+      initialRenderDelay: 0,
+      sourceMapURLService: {
+        subscribeByLocation: () => {}
+      },
+    };
+    await renderSmartTraceAndAssertContent(
+      window.document.body.querySelector("#s2"),
+      props
+    );
+    is(onReadyCount, 1, "onReady was called once");
+  });
+
+  add_task(async function testNullDelay() {
+    info("Check rendering with source map service and null initial delay");
+    let onReadyCount = 0;
+    const props = {
+      stacktrace,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
+      initialRenderDelay: 0,
+      sourceMapURLService: {
+        subscribeByLocation: () => {}
+      },
+    };
+    await renderSmartTraceAndAssertContent(
+      window.document.body.querySelector("#s3"),
+      props
+    );
+    is(onReadyCount, 1, "onReady was called once");
+  });
+
+  add_task(async function testDelay() {
+    info("Check rendering with source map service and initial delay");
+    let onReadyCount = 0;
+    const props = {
+      stacktrace,
+      onViewSourceInDebugger: () => {},
+      onReady: () => {
+        onReadyCount++;
+      },
+      initialRenderDelay: 500,
+      sourceMapURLService: {
+        subscribeByLocation: () => {}
+      },
+    };
+    const el = window.document.body.querySelector("#s4");
+    await renderSmartTraceAndAssertContent(
+      el,
+      props,
+      false
+    );
+    is(onReadyCount, 0, "onReady wasn't called at first");
+    info(`Wait for ${props.initialRenderDelay}ms so the stacktrace should be rendered`)
+    await new Promise(res => setTimeout(res, props.initialRenderDelay))
+    is(onReadyCount, 1, "onReady was called after waiting for the initial delay");
+    assertRenderedElementContent(el);
+  });
+
+  async function renderSmartTraceAndAssertContent(el, props, shouldBeRendered = true) {
+    let trace;
+    await new Promise(resolve => {
+      trace = ReactDOM.render(SmartTrace(props), el, resolve);
+    });
 
     const traceEl = ReactDOM.findDOMNode(trace);
-    ok(traceEl, "Rendered SmartTrace has an element");
 
-    const frameEls = Array.from(traceEl.querySelectorAll(".frame"));
+    if (!shouldBeRendered) {
+      ok(!traceEl, "SmartTrace wasn't rendered initially");
+      return;
+    }
+
+    ok(traceEl, "Rendered SmartTrace has an element");
+    assertRenderedElementContent(traceEl);
+  }
+
+  function assertRenderedElementContent(el) {
+    const frameEls = Array.from(el.querySelectorAll(".frame"));
     ok(frameEls, "Rendered SmartTrace has frames");
     is(frameEls.length, 2, "SmartTrace has 2 frames");
 
@@ -73,9 +164,8 @@ window.onload = function() {
       location: "http://myfile.com/loadee.js:10",
       tooltip: "View source in Debugger → http://myfile.com/loadee.js:10",
     });
+  }
 
-    is(onReadyCount, 1, "onReady was called once");
-  });
 };
 </script>
 </body>
