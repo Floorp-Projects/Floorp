@@ -57,10 +57,12 @@ add_task(async function test_each_status_can_be_caught_in_snapshot() {
   const startSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
 
   const expectedIncrements = {};
-  for (const status of Object.values(UptakeTelemetry.STATUS)) {
-    expectedIncrements[status] = 1;
-    await UptakeTelemetry.report(COMPONENT, status, { source });
-  }
+  await withFakeChannel("nightly", async () => {
+    for (const status of Object.values(UptakeTelemetry.STATUS)) {
+      expectedIncrements[status] = 1;
+      await UptakeTelemetry.report(COMPONENT, status, { source });
+    }
+  });
 
   const endSnapshot = getUptakeTelemetrySnapshot(COMPONENT, source);
   checkUptakeTelemetry(startSnapshot, endSnapshot, expectedIncrements);
