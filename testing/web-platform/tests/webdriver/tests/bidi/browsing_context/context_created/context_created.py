@@ -104,7 +104,9 @@ async def test_evaluate_window_open_with_url(
     )
 
 
-async def test_navigate_creates_iframes(bidi_session, current_session, test_page_multiple_frames):
+async def test_navigate_creates_iframes(
+    bidi_session, current_session, top_context, test_page_multiple_frames
+):
     # Unsubscribe in case a previous tests subscribed to the event
     await bidi_session.session.unsubscribe(events=[CONTEXT_CREATED_EVENT])
 
@@ -116,7 +118,9 @@ async def test_navigate_creates_iframes(bidi_session, current_session, test_page
     remove_listener = bidi_session.add_event_listener(CONTEXT_CREATED_EVENT, on_event)
     await bidi_session.session.subscribe(events=[CONTEXT_CREATED_EVENT])
 
-    current_session.url = test_page_multiple_frames
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=test_page_multiple_frames, wait="complete"
+    )
 
     wait = AsyncPoll(
         current_session,
@@ -153,7 +157,7 @@ async def test_navigate_creates_iframes(bidi_session, current_session, test_page
 
 
 async def test_navigate_creates_nested_iframes(
-    bidi_session, current_session, test_page_nested_frames
+    bidi_session, current_session, top_context, test_page_nested_frames
 ):
     # Unsubscribe in case a previous tests subscribed to the event
     await bidi_session.session.unsubscribe(events=[CONTEXT_CREATED_EVENT])
@@ -166,7 +170,9 @@ async def test_navigate_creates_nested_iframes(
     remove_listener = bidi_session.add_event_listener(CONTEXT_CREATED_EVENT, on_event)
     await bidi_session.session.subscribe(events=[CONTEXT_CREATED_EVENT])
 
-    current_session.url = test_page_nested_frames
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=test_page_nested_frames, wait="complete"
+    )
 
     wait = AsyncPoll(
         current_session,

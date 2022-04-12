@@ -15,10 +15,10 @@ async def test_params_context_invalid_value(bidi_session):
         await bidi_session.browsing_context.close(context="foo")
 
 
-async def test_child_context(
-    bidi_session, current_session, test_page_same_origin_frame
-):
-    current_session.url = test_page_same_origin_frame
+async def test_child_context(bidi_session, test_page_same_origin_frame, top_context):
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=test_page_same_origin_frame, wait="complete"
+    )
 
     all_contexts = await bidi_session.browsing_context.get_tree()
 

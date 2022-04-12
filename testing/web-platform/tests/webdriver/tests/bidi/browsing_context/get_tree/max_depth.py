@@ -13,11 +13,14 @@ async def test_params_boundaries(bidi_session, value):
 async def test_null(
     bidi_session,
     current_session,
+    top_context,
     test_page,
     test_page_same_origin_frame,
     test_page_nested_frames,
 ):
-    current_session.url = test_page_nested_frames
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=test_page_nested_frames, wait="complete"
+    )
 
     # Retrieve browsing contexts for current tab only
     top_level_context_id = current_session.window_handle
@@ -57,8 +60,10 @@ async def test_null(
     assert child2_info["context"] != child1_info["context"]
 
 
-async def test_top_level_only(bidi_session, current_session, test_page_nested_frames):
-    current_session.url = test_page_nested_frames
+async def test_top_level_only(bidi_session, current_session, top_context, test_page_nested_frames):
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=test_page_nested_frames, wait="complete"
+    )
 
     # Retrieve browsing contexts for current tab only
     top_level_context_id = current_session.window_handle
@@ -81,10 +86,13 @@ async def test_top_level_only(bidi_session, current_session, test_page_nested_fr
 async def test_top_level_and_one_child(
     bidi_session,
     current_session,
+    top_context,
     test_page_nested_frames,
     test_page_same_origin_frame,
 ):
-    current_session.url = test_page_nested_frames
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=test_page_nested_frames, wait="complete"
+    )
 
     # Retrieve browsing contexts for current tab only
     top_level_context_id = current_session.window_handle
