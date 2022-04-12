@@ -72,6 +72,8 @@ pub enum ImmutableScriptFlagsEnum {
     HasMappedArgsObj = 1 << 27,
     #[allow(dead_code)]
     IsInlinableLargeFunction = 1 << 28,
+    #[allow(dead_code)]
+    FunctionHasNewTargetBinding = 1 << 29,
 }
 
 #[derive(Debug, Clone, Copy)]
