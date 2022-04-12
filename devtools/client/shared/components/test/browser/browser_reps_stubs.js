@@ -50,6 +50,11 @@ const EXPRESSIONS_BY_FILE = {
     ["False", `false`],
     ["NegZeroGrip", `1 / -Infinity`],
   ]),
+  "symbol.js": new Map([
+    ["Symbol", `Symbol("foo")`],
+    ["SymbolWithoutIdentifier", `Symbol()`],
+    ["SymbolWithLongString", `Symbol("aa".repeat(10000))`],
+  ]),
   "text-node.js": new Map([
     [
       "testRendering",
@@ -89,7 +94,6 @@ const EXPRESSIONS_BY_FILE = {
   // "promise.js",
   // "regexp.js",
   // "stylesheet.js",
-  // "symbol.js",
 };
 
 add_task(async function() {
