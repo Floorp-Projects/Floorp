@@ -707,8 +707,9 @@ function run() {
       ? expression_should_be_parseable
       : expression_should_not_be_parseable;
     should_be_parseable_if_enabled("prefers-contrast");
-    should_be_parseable_if_enabled("prefers-contrast: high");
-    should_be_parseable_if_enabled("prefers-contrast: low");
+    should_be_parseable_if_enabled("prefers-contrast: more");
+    should_be_parseable_if_enabled("prefers-contrast: less");
+    should_be_parseable_if_enabled("prefers-contrast: custom");
     should_be_parseable_if_enabled("prefers-contrast: no-preference");
   }
 
