@@ -3,10 +3,6 @@ set -x -e -v
 
 COMPRESS_EXT=zst
 
-if [ -n "$TOOLTOOL_MANIFEST" ]; then
-  . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh
-fi
-
 cd $MOZ_FETCHES_DIR/nasm-*
 
 case $(cat version) in

@@ -10,8 +10,6 @@ set -x -e -v
 
 cd $GECKO_PATH
 
-# This will download the rustc, MSVC, and wrench-deps artifacts.
-. taskcluster/scripts/misc/tooltool-download.sh
 export PATH=$PATH:$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin
 
 .  taskcluster/scripts/misc/vs-setup.sh

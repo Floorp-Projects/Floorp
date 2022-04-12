@@ -267,9 +267,6 @@ win64-winchecksec:
         local-toolchain: true
     treeherder:
         symbol: TW64(winchecksec)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
@@ -282,6 +279,7 @@ win64-winchecksec:
         toolchain:
             - linux64-clang-toolchain
             - linux64-liblowercase
+            - win64-vs2017
 
 linux64-makecab:
     description: "makecab toolchain build"
@@ -302,9 +300,6 @@ win64-mozmake:
         local-toolchain: true
     treeherder:
         symbol: TW64(mozmake)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     worker-type: b-win2012
     run-on-projects: [trunk]
     run:
@@ -314,6 +309,8 @@ win64-mozmake:
     fetches:
         fetch:
             - gnumake
+        toolchain:
+            - win64-vs2017
 
 nsis:
     description: "NSIS for Linux and Windows"

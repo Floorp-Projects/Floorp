@@ -13,10 +13,9 @@ x86_64-pc-windows-msvc)
     export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
     export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
-    export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs2017_15.9.6
+    export LOWERCASE_DIRS=$MOZ_FETCHES_DIR/vs
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
-    . $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh
 
     # Patch pe-parse because clang-cl doesn't support /analyze.
     patch -p1 <<'EOF'
