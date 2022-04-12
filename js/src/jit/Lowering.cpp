@@ -5377,7 +5377,8 @@ void LIRGenerator::visitWasmStackResult(MWasmStackResult* ins) {
   add(lir, ins);
 }
 
-void LIRGenerator::visitWasmCall(MWasmCall* ins) {
+template <class MWasmCallT>
+void LIRGenerator::visitWasmCall(MWasmCallT ins) {
   bool needsBoundsCheck = true;
   mozilla::Maybe<uint32_t> tableSize;
 
@@ -5428,6 +5429,18 @@ void LIRGenerator::visitWasmCall(MWasmCall* ins) {
     assignWasmSafepoint(adjunctSafepoint);
     lir->setAdjunctSafepoint(adjunctSafepoint);
   }
+}
+
+void LIRGenerator::visitWasmCallCatchable(MWasmCallCatchable* ins) {
+  visitWasmCall(ins);
+}
+
+void LIRGenerator::visitWasmCallUncatchable(MWasmCallUncatchable* ins) {
+  visitWasmCall(ins);
+}
+
+void LIRGenerator::visitWasmCallLandingPrePad(MWasmCallLandingPrePad* ins) {
+  add(new (alloc()) LWasmCallLandingPrePad, ins);
 }
 
 void LIRGenerator::visitSetDOMProperty(MSetDOMProperty* ins) {

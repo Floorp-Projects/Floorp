@@ -1190,6 +1190,9 @@ class MVariadicT : public T {
   MUse* getUseFor(size_t index) final { return &operands_[index]; }
   const MUse* getUseFor(size_t index) const final { return &operands_[index]; }
 
+  // The MWasmCallBase mixin performs initialization for it's subclasses.
+  friend class MWasmCallBase;
+
  public:
   // Will assert if called before initialization.
   MDefinition* getOperand(size_t index) const final {
@@ -1676,6 +1679,25 @@ class MAryControlInstruction : public MControlInstruction {
   void replaceOperand(size_t index, MDefinition* operand) final {
     operands_[index].replaceProducer(operand);
   }
+  size_t numSuccessors() const final { return Successors; }
+  MBasicBlock* getSuccessor(size_t i) const final { return successors_[i]; }
+  void replaceSuccessor(size_t i, MBasicBlock* succ) final {
+    successors_[i] = succ;
+  }
+};
+
+template <size_t Successors>
+class MVariadicControlInstruction : public MVariadicT<MControlInstruction> {
+  mozilla::Array<MBasicBlock*, Successors> successors_;
+
+ protected:
+  explicit MVariadicControlInstruction(Opcode op)
+      : MVariadicT<MControlInstruction>(op) {}
+  void setSuccessor(size_t index, MBasicBlock* successor) {
+    successors_[index] = successor;
+  }
+
+ public:
   size_t numSuccessors() const final { return Successors; }
   MBasicBlock* getSuccessor(size_t i) const final { return successors_[i]; }
   void replaceSuccessor(size_t i, MBasicBlock* succ) final {
@@ -9946,27 +9968,25 @@ class MWasmStackResult : public MUnaryInstruction, public NoTypePolicy::Data {
   }
 };
 
-class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
-  wasm::CallSiteDesc desc_;
-  wasm::CalleeDesc callee_;
-  wasm::FailureMode builtinMethodFailureMode_;
-  FixedList<AnyRegister> argRegs_;
-  uint32_t stackArgAreaSizeUnaligned_;
-  ABIArg instanceArg_;
-  bool inTry_;
+// Arguments for constructing a catchable wasm call inside of a try block.
+struct MWasmCallTryDesc {
+  bool inTry;
+  uint32_t relativeTryDepth;
+  size_t tryNoteIndex;
+  MBasicBlock* fallthroughBlock;
+  MBasicBlock* prePadBlock;
 
-  MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
-            uint32_t stackArgAreaSizeUnaligned, bool inTry)
-      : MVariadicInstruction(classOpcode),
-        desc_(desc),
-        callee_(callee),
-        builtinMethodFailureMode_(wasm::FailureMode::Infallible),
-        stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned),
-        inTry_(inTry) {}
+  MWasmCallTryDesc()
+      : inTry(false),
+        relativeTryDepth(0),
+        tryNoteIndex(0),
+        fallthroughBlock(nullptr),
+        prePadBlock(nullptr) {}
+};
 
+// Mixin class for wasm calls that may or may not be catchable.
+class MWasmCallBase {
  public:
-  INSTRUCTION_HEADER(WasmCall)
-
   struct Arg {
     AnyRegister reg;
     MDefinition* def;
@@ -9974,16 +9994,53 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   };
   typedef Vector<Arg, 8, SystemAllocPolicy> Args;
 
-  static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-                        const wasm::CalleeDesc& callee, const Args& args,
-                        uint32_t stackArgAreaSizeUnaligned, bool inTry,
-                        MDefinition* tableIndex = nullptr);
+ protected:
+  wasm::CallSiteDesc desc_;
+  wasm::CalleeDesc callee_;
+  wasm::FailureMode builtinMethodFailureMode_;
+  FixedList<AnyRegister> argRegs_;
+  uint32_t stackArgAreaSizeUnaligned_;
+  ABIArg instanceArg_;
+  bool inTry_;
+  size_t tryNoteIndex_;
 
-  static MWasmCall* NewBuiltinInstanceMethodCall(
-      TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-      const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
-      const ABIArg& instanceArg, const Args& args,
-      uint32_t stackArgAreaSizeUnaligned);
+  MWasmCallBase(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
+                uint32_t stackArgAreaSizeUnaligned, bool inTry,
+                size_t tryNoteIndex)
+      : desc_(desc),
+        callee_(callee),
+        builtinMethodFailureMode_(wasm::FailureMode::Infallible),
+        stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned),
+        inTry_(inTry),
+        tryNoteIndex_(tryNoteIndex) {}
+
+  template <class MVariadicT>
+  [[nodiscard]] bool initWithArgs(TempAllocator& alloc, MVariadicT* ins,
+                                  const Args& args, MDefinition* tableIndex) {
+    if (!argRegs_.init(alloc, args.length())) {
+      return false;
+    }
+    for (size_t i = 0; i < argRegs_.length(); i++) {
+      argRegs_[i] = args[i].reg;
+    }
+
+    if (!ins->init(alloc, argRegs_.length() + (tableIndex ? 1 : 0))) {
+      return false;
+    }
+    // FixedList doesn't initialize its elements, so do an unchecked init.
+    for (size_t i = 0; i < argRegs_.length(); i++) {
+      ins->initOperand(i, args[i].def);
+    }
+    if (tableIndex) {
+      ins->initOperand(argRegs_.length(), tableIndex);
+    }
+    return true;
+  }
+
+ public:
+  static bool IsWasmCall(MDefinition* def) {
+    return def->isWasmCallCatchable() || def->isWasmCallUncatchable();
+  }
 
   size_t numArgs() const { return argRegs_.length(); }
   AnyRegister registerForArg(size_t index) const {
@@ -10000,13 +10057,99 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
     return stackArgAreaSizeUnaligned_;
   }
 
-  bool possiblyCalls() const override { return true; }
-
   const ABIArg& instanceArg() const { return instanceArg_; }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   bool inTry() { return inTry_; }
-#endif
+  size_t tryNoteIndex() { return tryNoteIndex_; }
+};
+
+// A wasm call that is catchable. This instruction is a control instruction,
+// and terminates the block it is on. A normal return will proceed in a the
+// fallthrough block. An exceptional return will unwind into the landing pad
+// block for this call. The landing pad block must begin with an
+// MWasmCallLandingPrePad.
+class MWasmCallCatchable final : public MVariadicControlInstruction<2>,
+                                 public MWasmCallBase,
+                                 public NoTypePolicy::Data {
+  MWasmCallCatchable(const wasm::CallSiteDesc& desc,
+                     const wasm::CalleeDesc& callee,
+                     uint32_t stackArgAreaSizeUnaligned, size_t tryNoteIndex)
+      : MVariadicControlInstruction(classOpcode),
+        MWasmCallBase(desc, callee, stackArgAreaSizeUnaligned, true,
+                      tryNoteIndex) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmCallCatchable)
+
+  static MWasmCallCatchable* New(TempAllocator& alloc,
+                                 const wasm::CallSiteDesc& desc,
+                                 const wasm::CalleeDesc& callee,
+                                 const Args& args,
+                                 uint32_t stackArgAreaSizeUnaligned,
+                                 const MWasmCallTryDesc& tryDesc,
+                                 MDefinition* tableIndex = nullptr);
+
+  bool possiblyCalls() const override { return true; }
+
+  static const size_t FallthroughBranchIndex = 0;
+  static const size_t PrePadBranchIndex = 1;
+};
+
+// A wasm call that is not catchable. This instruction is not a control
+// instruction, and therefore is not a block terminator.
+class MWasmCallUncatchable final : public MVariadicInstruction,
+                                   public MWasmCallBase,
+                                   public NoTypePolicy::Data {
+  MWasmCallUncatchable(const wasm::CallSiteDesc& desc,
+                       const wasm::CalleeDesc& callee,
+                       uint32_t stackArgAreaSizeUnaligned)
+      : MVariadicInstruction(classOpcode),
+        MWasmCallBase(desc, callee, stackArgAreaSizeUnaligned, false, 0) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmCallUncatchable)
+
+  static MWasmCallUncatchable* New(TempAllocator& alloc,
+                                   const wasm::CallSiteDesc& desc,
+                                   const wasm::CalleeDesc& callee,
+                                   const Args& args,
+                                   uint32_t stackArgAreaSizeUnaligned,
+                                   MDefinition* tableIndex = nullptr);
+
+  static MWasmCallUncatchable* NewBuiltinInstanceMethodCall(
+      TempAllocator& alloc, const wasm::CallSiteDesc& desc,
+      const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
+      const ABIArg& instanceArg, const Args& args,
+      uint32_t stackArgAreaSizeUnaligned);
+
+  bool possiblyCalls() const override { return true; }
+};
+
+// A marker instruction for a block which is the landing pad for a catchable
+// wasm call. This instruction does not emit any code, only filling in
+// metadata. This instruction must be the first instruction added to the
+// landing pad block.
+class MWasmCallLandingPrePad : public MNullaryInstruction {
+  // The block of the call that may unwind to this landing pad.
+  MBasicBlock* callBlock_;
+  // The index of the try note to initialize a landing pad for.
+  size_t tryNoteIndex_;
+
+  explicit MWasmCallLandingPrePad(MBasicBlock* callBlock, size_t tryNoteIndex)
+      : MNullaryInstruction(classOpcode),
+        callBlock_(callBlock),
+        tryNoteIndex_(tryNoteIndex) {
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmCallLandingPrePad)
+  TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  size_t tryNoteIndex() { return tryNoteIndex_; }
+  MBasicBlock* callBlock() { return callBlock_; }
 };
 
 class MWasmSelect : public MTernaryInstruction, public NoTypePolicy::Data {

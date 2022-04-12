@@ -75,6 +75,9 @@ class LIRGenerator final : public LIRGeneratorSpecific {
 #define MIR_OP(op) void visit##op(M##op* ins);
   MIR_OPCODE_LIST(MIR_OP)
 #undef MIR_OP
+
+  template <class MWasmCallT>
+  void visitWasmCall(MWasmCallT ins);
 };
 
 }  // namespace jit
