@@ -18,7 +18,7 @@ const { FileUtils } = ChromeUtils.import(
 );
 
 const SOURCE =
-  "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
+  "https://chromium.googlesource.com/chromium/src/+/refs/heads/main/net/http/transport_security_state_static.json?format=TEXT";
 const TOOL_SOURCE =
   "https://hg.mozilla.org/mozilla-central/file/default/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js";
 const OUTPUT = "nsSTSPreloadList.inc";
