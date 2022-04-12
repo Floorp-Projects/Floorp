@@ -6,10 +6,8 @@
 #ifndef TelemetryIPC_h__
 #define TelemetryIPC_h__
 
-#include <stdint.h>
 #include "mozilla/TelemetryProcessEnums.h"
 #include "nsTArray.h"
-#include "nsXULAppAPI.h"
 
 // This module provides the interface to accumulate Telemetry from child
 // processes. Top-level actors for different child processes types
