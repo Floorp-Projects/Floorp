@@ -6,9 +6,11 @@
   }
 }
 
-body {
+html {
   font: menu;
+}
 
+body {
   &.theme_dark {
     color: #FBFBFE;
   }
@@ -23,8 +25,8 @@ hr {
 
 .header_large {
   margin: 12px 0 8px;
-  font-size: 1.15em;
-  line-height: 1.53em;
+  font-size: 1.25rem;
+  line-height: 1.65rem;
 
   .stp_button {
     margin: 0;
@@ -33,14 +35,14 @@ hr {
 
 .header_medium {
   margin: 12px 0 8px;
-  font-size: 1em;
-  line-height: 1.23em;
+  font-size: 1.1rem;
+  line-height: 1.35rem;
 }
 
 .header_small {
   margin: 12px 0 8px;
-  font-size: 0.84em;
-  line-height: 1.07em;
+  font-size: 0.95rem;
+  line-height: 1.16rem;
 }
 
 .header_flex {
@@ -55,6 +57,6 @@ hr {
 
 p {
   margin: 8px 0;
-  font-size: 0.84em;
-  line-height: 1.07em;
+  font-size: 0.95rem;
+  line-height: 1.16rem;
 }
