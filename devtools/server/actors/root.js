@@ -290,7 +290,7 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
    *
    * See BrowserTabList.prototype.getTab for the definition of these IDs.
    */
-  getTab: async function({ browserId, tabId }) {
+  getTab: async function({ browserId }) {
     const tabList = this._parameters.tabList;
     if (!tabList) {
       throw {
@@ -309,7 +309,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     try {
       descriptorActor = await tabList.getTab({
         browserId,
-        tabId,
       });
     } catch (error) {
       if (error.error) {
