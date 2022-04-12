@@ -33,7 +33,6 @@ remote.jar:
   content/marionette/packets.js (packets.js)
   content/marionette/permissions.js (permissions.js)
   content/marionette/prefs.js (prefs.js)
-  content/marionette/print.js (print.js)
   content/marionette/reftest.js (reftest.js)
   content/marionette/reftest.xhtml (chrome/reftest.xhtml)
   content/marionette/reftest-content.js (reftest-content.js)

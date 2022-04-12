@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   capture: "chrome://remote/content/marionette/capture.js",
   Log: "chrome://remote/content/shared/Log.jsm",
   navigate: "chrome://remote/content/marionette/navigate.js",
-  print: "chrome://remote/content/marionette/print.js",
+  print: "chrome://remote/content/shared/PDF.jsm",
   windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
