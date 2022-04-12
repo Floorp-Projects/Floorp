@@ -450,11 +450,16 @@ interface nsIWebProgressListener : nsISupports
    *   This flag is on for same-document location changes where only the URI's
    *   reference fragment has changed. This flag implies
    *   LOCATION_CHANGE_SAME_DOCUMENT.
+   *
+   * LOCATION_CHANGE_SESSION_STORE
+   *   This flag is on for location changes that are the result of the session
+   *   store updating the URI of aWebProgress without actually navigating.
    */
   const unsigned long LOCATION_CHANGE_SAME_DOCUMENT   = 0x00000001;
   const unsigned long LOCATION_CHANGE_ERROR_PAGE      = 0x00000002;
   const unsigned long LOCATION_CHANGE_RELOAD          = 0x00000004;
   const unsigned long LOCATION_CHANGE_HASHCHANGE      = 0x00000008;
+  const unsigned long LOCATION_CHANGE_SESSION_STORE   = 0x00000010;
 
   /**
    * Called when the location of the window being watched changes.  This is not
