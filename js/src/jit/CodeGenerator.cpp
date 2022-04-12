@@ -7943,18 +7943,17 @@ void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
 }
 
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {
-  MWasmCall* mir = lir->mir();
+  MWasmCallBase* mir = lir->mir();
 
 #ifdef ENABLE_WASM_EXCEPTIONS
   // If this call is in Wasm try code block, initialise a WasmTryNote for this
   // call.
   bool inTry = mir->inTry();
-  size_t tryNoteIndex = 0;
-  if (inTry && !masm.wasmStartTry(&tryNoteIndex)) {
-    // Handle an OOM in allocating a try note by forcing inTry to false, this
-    // will skip the logic below that uses the try note. This is okay as
-    // compilation will be aborted after this.
-    inTry = false;
+  if (inTry) {
+    size_t tryNoteIndex = mir->tryNoteIndex();
+    wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
+    wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
+    tryNote.begin = masm.currentOffset();
   }
 #endif
 
@@ -8047,24 +8046,50 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 
 #ifdef ENABLE_WASM_EXCEPTIONS
   if (inTry) {
-    // A call that threw will not return here normally, but will jump to this
-    // WasmCall's WasmTryNote entryPoint below. To make exceptional control flow
-    // easier to track, we set the entry point in this very call. The exception
-    // handling mechanism takes care of reloading the WasmTlsData, leaving a
-    // thrown exception in Instance::pendingException. After the call
-    // instruction is finished we check Instance::pendingException to see if we
-    // returned normally or exceptionally, and branch accordingly.
-
+    // Set the end of the try note range
+    size_t tryNoteIndex = mir->tryNoteIndex();
     wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
     tryNote.end = masm.currentOffset();
-    tryNote.entryPoint = tryNote.end;
-    tryNote.framePushed = masm.framePushed();
-
-    // Required by WasmTryNote.
     MOZ_ASSERT(tryNote.end > tryNote.begin);
+
+    // This instruction or the adjunct safepoint must be the last instruction
+    // in the block. No other instructions may be inserted.
+    LBlock* block = lir->block();
+    MOZ_RELEASE_ASSERT(*block->rbegin() == lir ||
+                       (block->rbegin()->isWasmCallIndirectAdjunctSafepoint() &&
+                        *(++block->rbegin()) == lir));
+
+    // Jump to the fallthrough block
+    jumpToBlock(lir->mirCatchable()->getSuccessor(
+        MWasmCallCatchable::FallthroughBranchIndex));
   }
 #endif
+}
+
+void CodeGenerator::visitWasmCallLandingPrePad(LWasmCallLandingPrePad* lir) {
+  LBlock* block = lir->block();
+  MWasmCallLandingPrePad* mir = lir->mir();
+  MBasicBlock* mirBlock = mir->block();
+  MBasicBlock* callMirBlock = mir->callBlock();
+
+  // This block must be the pre-pad successor of the call block. No blocks may
+  // be inserted between us, such as for critical edge splitting.
+  MOZ_RELEASE_ASSERT(mirBlock == callMirBlock->getSuccessor(
+                                     MWasmCallCatchable::PrePadBranchIndex));
+
+  // This instruction or a move group must be the first instruction in the
+  // block. No other instructions may be inserted.
+  MOZ_RELEASE_ASSERT(*block->begin() == lir || (block->begin()->isMoveGroup() &&
+                                                *(++block->begin()) == lir));
+
+  wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
+  wasm::WasmTryNote& tryNote = tryNotes[mir->tryNoteIndex()];
+  // Set the entry point for the call try note to be the beginning of this
+  // block. The above assertions (and assertions in visitWasmCall) guarantee
+  // that we are not skipping over instructions that should be executed.
+  tryNote.entryPoint = block->label()->offset();
+  tryNote.framePushed = masm.framePushed();
 }
 
 void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(

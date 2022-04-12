@@ -223,3 +223,5 @@ wasm32-wasi-compiler-rt-13:
         fetch:
             - clang-13
             - wasi-sdk
+        toolchain:
+            - linux64-clang-13-stage1

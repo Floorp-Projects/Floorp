@@ -2791,6 +2791,9 @@
 - name: WasmCall
   gen_boilerplate: false
 
+- name: WasmCallLandingPrePad
+  mir_op: true
+
 - name: WasmRegisterResult
   gen_boilerplate: false
 

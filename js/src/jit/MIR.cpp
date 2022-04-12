@@ -5533,43 +5533,52 @@ MDefinition* MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
-                          const wasm::CalleeDesc& callee, const Args& args,
-                          uint32_t stackArgAreaSizeUnaligned, bool inTry,
-                          MDefinition* tableIndex) {
-  MWasmCall* call =
-      new (alloc) MWasmCall(desc, callee, stackArgAreaSizeUnaligned, inTry);
+MWasmCallCatchable* MWasmCallCatchable::New(TempAllocator& alloc,
+                                            const wasm::CallSiteDesc& desc,
+                                            const wasm::CalleeDesc& callee,
+                                            const Args& args,
+                                            uint32_t stackArgAreaSizeUnaligned,
+                                            const MWasmCallTryDesc& tryDesc,
+                                            MDefinition* tableIndex) {
+  MOZ_ASSERT(tryDesc.inTry);
 
-  if (!call->argRegs_.init(alloc, args.length())) {
-    return nullptr;
-  }
-  for (size_t i = 0; i < call->argRegs_.length(); i++) {
-    call->argRegs_[i] = args[i].reg;
-  }
+  MWasmCallCatchable* call = new (alloc) MWasmCallCatchable(
+      desc, callee, stackArgAreaSizeUnaligned, tryDesc.tryNoteIndex);
 
-  if (!call->init(alloc,
-                  call->argRegs_.length() + (callee.isTable() ? 1 : 0))) {
+  call->setSuccessor(FallthroughBranchIndex, tryDesc.fallthroughBlock);
+  call->setSuccessor(PrePadBranchIndex, tryDesc.prePadBlock);
+
+  MOZ_ASSERT_IF(callee.isTable(), tableIndex);
+  if (!call->initWithArgs(alloc, call, args, tableIndex)) {
     return nullptr;
-  }
-  // FixedList doesn't initialize its elements, so do an unchecked init.
-  for (size_t i = 0; i < call->argRegs_.length(); i++) {
-    call->initOperand(i, args[i].def);
-  }
-  if (callee.isTable()) {
-    call->initOperand(call->argRegs_.length(), tableIndex);
   }
 
   return call;
 }
 
-MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
+MWasmCallUncatchable* MWasmCallUncatchable::New(
+    TempAllocator& alloc, const wasm::CallSiteDesc& desc,
+    const wasm::CalleeDesc& callee, const Args& args,
+    uint32_t stackArgAreaSizeUnaligned, MDefinition* tableIndex) {
+  MWasmCallUncatchable* call =
+      new (alloc) MWasmCallUncatchable(desc, callee, stackArgAreaSizeUnaligned);
+
+  MOZ_ASSERT_IF(callee.isTable(), tableIndex);
+  if (!call->initWithArgs(alloc, call, args, tableIndex)) {
+    return nullptr;
+  }
+
+  return call;
+}
+
+MWasmCallUncatchable* MWasmCallUncatchable::NewBuiltinInstanceMethodCall(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
     const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
     const ABIArg& instanceArg, const Args& args,
     uint32_t stackArgAreaSizeUnaligned) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
-  MWasmCall* call = MWasmCall::New(alloc, desc, callee, args,
-                                   stackArgAreaSizeUnaligned, false, nullptr);
+  MWasmCallUncatchable* call = MWasmCallUncatchable::New(
+      alloc, desc, callee, args, stackArgAreaSizeUnaligned, nullptr);
   if (!call) {
     return nullptr;
   }

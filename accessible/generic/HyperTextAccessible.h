@@ -73,11 +73,6 @@ class HyperTextAccessible : public AccessibleWrap,
   // HyperLinkAccessible
 
   /**
-   * Return link count within this hypertext accessible.
-   */
-  uint32_t LinkCount() { return EmbeddedChildCount(); }
-
-  /**
    * Return link accessible at the given index.
    */
   LocalAccessible* LinkAt(uint32_t aIndex) { return EmbeddedChildAt(aIndex); }
