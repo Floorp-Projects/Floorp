@@ -12,9 +12,25 @@
 // Worker contexts do not support Services; in that case we have to rely
 // on the support URL redirection.
 const Services = require("Services");
-const supportBaseURL = !isWorker
-  ? Services.urlFormatter.formatURLPref("app.support.baseURL")
-  : "https://support.mozilla.org/kb/";
+
+loader.lazyGetter(this, "supportBaseURL", () => {
+  // Fallback URL used for worker targets, as well as when app.support.baseURL
+  // cannot be formatted.
+  let url = "https://support.mozilla.org/kb/";
+
+  if (!isWorker) {
+    try {
+      // formatURLPref might throw if tokens used in app.support.baseURL
+      // are not available for the current binary. See Bug 1755626.
+      url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    } catch (e) {
+      console.warn(
+        `Failed to format app.support.baseURL, falling back to ${url} (${e.message})`
+      );
+    }
+  }
+  return url;
+});
 
 const baseErrorURL =
   "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/";
