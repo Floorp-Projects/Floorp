@@ -33,6 +33,11 @@ class SmartTrace extends Component {
       onViewSourceInDebugger: PropTypes.func.isRequired,
       // Service to enable the source map feature.
       sourceMapURLService: PropTypes.object,
+      // A number in ms (defaults to 100) which we'll wait before doing the first actual
+      // render of this component, in order to avoid shifting layout rapidly in case the
+      // page is using sourcemap.
+      // Setting it to 0 or anything else than a number will force the first render to
+      // happen immediatly, without any delay.
       initialRenderDelay: PropTypes.number,
       onSourceMapResultDebounceDelay: PropTypes.number,
       // Function that will be called when the SmartTrace is ready, i.e. once it was
@@ -55,7 +60,7 @@ class SmartTrace extends Component {
       // If a sourcemap service is passed, we want to introduce a small delay in rendering
       // so we can have the results from the sourcemap service, or render if they're not
       // available yet.
-      ready: !props.sourceMapURLService,
+      ready: !props.sourceMapURLService || !this.hasInitialRenderDelay(),
       updateCount: 0,
       // Original positions for each indexed position
       originalLocations: null,
@@ -93,6 +98,12 @@ class SmartTrace extends Component {
         )
       );
 
+      // Without initial render delay, we don't have to do anything; if the frames are
+      // sourcemapped, we will get new renders from onSourceMapServiceChange.
+      if (!this.hasInitialRenderDelay()) {
+        return;
+      }
+
       const delay = new Promise(res => {
         this.initialRenderDelayTimeoutId = setTimeout(
           res,
@@ -100,8 +111,8 @@ class SmartTrace extends Component {
         );
       });
 
-      // We wait either for the delay to be other or the sourcemapService results to
-      // be available before setting the state as initialized.
+      // We wait either for the delay to be over (if it exists), or the sourcemapService
+      // results to be available, before setting the state as initialized.
       Promise.race([delay, sourceMapInit]).then(() => {
         if (this.initialRenderDelayTimeoutId) {
           clearTimeout(this.initialRenderDelayTimeoutId);
@@ -199,10 +210,17 @@ class SmartTrace extends Component {
     }
   }
 
+  hasInitialRenderDelay() {
+    return (
+      Number.isFinite(this.props.initialRenderDelay) &&
+      this.props.initialRenderDelay > 0
+    );
+  }
+
   render() {
     if (
       this.state.hasError ||
-      (Number.isFinite(this.props.initialRenderDelay) && !this.state.ready)
+      (this.hasInitialRenderDelay() && !this.state.ready)
     ) {
       return null;
     }

@@ -64,6 +64,7 @@ class ConsoleOutput extends Component {
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
       editorMode: PropTypes.bool.isRequired,
       cacheGeneration: PropTypes.number.isRequired,
+      disableVirtualization: PropTypes.bool,
     };
   }
 
@@ -91,6 +92,10 @@ class ConsoleOutput extends Component {
   }
 
   componentDidMount() {
+    if (this.props.disableVirtualization) {
+      return;
+    }
+
     if (this.props.visibleMessages.length > 0) {
       this.scrollToBottom();
     }
@@ -300,11 +305,14 @@ class ConsoleOutput extends Component {
 
     // scrollOverdrawCount tells the list to draw extra elements above and
     // below the scrollport so that we can avoid flashes of blank space
-    // when scrolling. Regarding the pref, this is really only intended to
-    // be used by tests, and specifically tests that *need* to change this
-    // value because the existing findMessageVirtualized and friends will not
-    // work for their use case.
-    const scrollOverdrawCount = 20;
+    // when scrolling. When `disableVirtualization` is passed we make it as large as the
+    // number of messages to render them all and effectively disabling virtualization (this
+    // should only be used for some actions that requires all the messages to be rendered
+    // in the DOM, like "Copy All Messages").
+    const scrollOverdrawCount = this.props.disableVirtualization
+      ? visibleMessages.length
+      : 20;
+
     const attrs = {
       className: "webconsole-output",
       role: "main",
