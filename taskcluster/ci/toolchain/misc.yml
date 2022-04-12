@@ -330,3 +330,21 @@ nsis:
         toolchain:
             - linux64-clang-toolchain
             - sysroot-x86_64-linux-gnu
+
+win64-vs2017:
+    description: "VS 2017"
+    attributes:
+        artifact_prefix: project/gecko/vs
+    treeherder:
+        symbol: TW64(msvc2017)
+    worker:
+        env:
+            MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+    run:
+        script: pack-vs.sh
+        arguments:
+            - build/vs/vs2017.yaml
+        resources:
+            - build/vs/pack_vs.py
+            - build/vs/vs2017.yaml
+        toolchain-artifact: project/gecko/vs/vs.tar.zst
