@@ -667,9 +667,21 @@ static constexpr auto UnsupportedCurrencies() {
   };
 }
 
+/**
+ * Return a list of known, missing currencies which aren't returned by
+ * |Currency::GetISOCurrencies()|.
+ */
+static constexpr auto MissingCurrencies() {
+  return std::array{
+      "SLE",  // https://unicode-org.atlassian.net/browse/ICU-21989
+      "VED",  // https://unicode-org.atlassian.net/browse/ICU-21989
+  };
+}
+
 // Defined outside of the function to workaround bugs in GCC<9.
 // Also see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85589>.
 static constexpr auto UnsupportedCurrenciesArray = UnsupportedCurrencies();
+static constexpr auto MissingCurrenciesArray = MissingCurrencies();
 
 /**
  * AvailableCurrencies ( )
@@ -680,7 +692,7 @@ static ArrayObject* AvailableCurrencies(JSContext* cx) {
   {
     // Hazard analysis complains that the mozilla::Result destructor calls a
     // GC function, which is unsound when returning an unrooted value. Work
-    // around this issue by restricting the lifetime of |keywords| to a
+    // around this issue by restricting the lifetime of |currencies| to a
     // separate block.
     auto currencies = mozilla::intl::Currency::GetISOCurrencies();
     if (currencies.isErr()) {
@@ -691,6 +703,17 @@ static ArrayObject* AvailableCurrencies(JSContext* cx) {
     static constexpr auto& unsupported = UnsupportedCurrenciesArray;
 
     if (!EnumerationIntoList<unsupported>(cx, currencies.unwrap(), &list)) {
+      return nullptr;
+    }
+  }
+
+  // Add known missing values.
+  for (const char* value : MissingCurrenciesArray) {
+    auto* string = NewStringCopyZ<CanGC>(cx, value);
+    if (!string) {
+      return nullptr;
+    }
+    if (!list.append(string)) {
       return nullptr;
     }
   }
