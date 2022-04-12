@@ -89,8 +89,6 @@ class WebConsoleWrapper {
     this.telemetry = new Telemetry();
   }
 
-  #serviceContainer;
-
   async init() {
     const { webConsoleUI } = this;
 
@@ -106,13 +104,20 @@ class WebConsoleWrapper {
         },
       });
 
+      const serviceContainer = setupServiceContainer({
+        webConsoleUI,
+        toolbox: this.toolbox,
+        hud: this.hud,
+        webConsoleWrapper: this,
+      });
+
       const app = AppErrorBoundary(
         {
           componentName: "Console",
           panel: L10N.getStr("ToolboxTabWebconsole.label"),
         },
         App({
-          serviceContainer: this.getServiceContainer(),
+          serviceContainer,
           webConsoleUI,
           onFirstMeaningfulPaint: resolve,
           closeSplitConsole: this.closeSplitConsole.bind(this),
@@ -368,18 +373,6 @@ class WebConsoleWrapper {
 
   getStore() {
     return store;
-  }
-
-  getServiceContainer() {
-    if (!this.#serviceContainer) {
-      this.#serviceContainer = setupServiceContainer({
-        webConsoleUI: this.webConsoleUI,
-        toolbox: this.toolbox,
-        hud: this.hud,
-        webConsoleWrapper: this,
-      });
-    }
-    return this.#serviceContainer;
   }
 
   subscribeToStore(callback) {
