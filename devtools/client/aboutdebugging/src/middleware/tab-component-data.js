@@ -27,8 +27,7 @@ const tabComponentDataMiddleware = store => next => action => {
 function toComponentData(tabs) {
   return tabs.map(tab => {
     const type = DEBUG_TARGETS.TAB;
-    // @backward-compat { version 99 } The fallback to outerWindowID can be removed once 100 is released
-    const id = tab.browserId || "outerID-" + tab.outerWindowID;
+    const id = tab.browserId;
     const icon = tab.favicon
       ? `data:image/png;base64,${btoa(
           String.fromCharCode.apply(String, tab.favicon)
