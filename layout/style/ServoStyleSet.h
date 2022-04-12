@@ -449,6 +449,12 @@ class ServoStyleSet {
       ComputedStyle* aNewParentIgnoringFirstLine,
       ComputedStyle* aNewLayoutParent, dom::Element* aElement);
 
+  /**
+   * Invalidate styles where there's any viewport units dependent style.
+   */
+  enum class OnlyDynamic : bool { No, Yes };
+  void InvalidateForViewportUnits(OnlyDynamic);
+
  private:
   friend class AutoSetInServoTraversal;
   friend class AutoPrepareTraversal;

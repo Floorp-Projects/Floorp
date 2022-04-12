@@ -375,6 +375,60 @@ class DynamicToolbarTest : BaseSessionTest() {
         })
     }
 
+    private fun getComputedViewportHeight(style: String): Double {
+        val viewportHeight = mainSession.evaluateJS("""
+            const target = document.createElement('div');
+            target.style.height = '$style';
+            document.body.appendChild(target);
+            parseFloat(getComputedStyle(target).height);
+        """.trimIndent()) as Double
+
+        return viewportHeight
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun viewportVariants() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.VIEWPORT_PATH)
+        mainSession.waitForPageStop()
+
+        val pixelRatio = mainSession.evaluateJS("window.devicePixelRatio") as Double
+        val scale = mainSession.evaluateJS("window.visualViewport.scale") as Double
+
+        var smallViewportHeight = getComputedViewportHeight("100svh");
+        assertThat("svh value at the initial state", smallViewportHeight,
+                   closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1));
+
+        var largeViewportHeight = getComputedViewportHeight("100lvh");
+        assertThat("lvh value at the initial state", largeViewportHeight,
+                   closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1));
+
+        var dynamicViewportHeight = getComputedViewportHeight("100dvh");
+        assertThat("dvh value at the initial state", dynamicViewportHeight,
+                   closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1));
+
+        // Move down the toolbar at the half of its position.
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight / 2) }
+
+        smallViewportHeight = getComputedViewportHeight("100svh");
+        assertThat("svh value during toolbar transition", smallViewportHeight,
+                   closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight) / scale / pixelRatio, 0.1));
+
+        largeViewportHeight = getComputedViewportHeight("100lvh");
+        assertThat("lvh value during toolbar transition", largeViewportHeight,
+                   closeTo(SCREEN_HEIGHT / scale / pixelRatio, 0.1));
+
+        dynamicViewportHeight = getComputedViewportHeight("100dvh");
+        assertThat("dvh value during toolbar transition", dynamicViewportHeight,
+                   closeTo((SCREEN_HEIGHT - dynamicToolbarMaxHeight / 2) / scale / pixelRatio, 0.1));
+    }
+
     // With dynamic toolbar, there was a floating point rounding error in Gecko layout side.
     // The error was appeared by user interactive async scrolling, not by programatic async
     // scrolling, e.g. scrollTo() method. If the error happens there will appear 1px gap
