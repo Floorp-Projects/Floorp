@@ -7,6 +7,7 @@
 #include "mozilla/dom/MIDIPortChild.h"
 #include "mozilla/dom/MIDIPort.h"
 #include "mozilla/dom/MIDIPortInterface.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -54,4 +55,15 @@ void MIDIPortChild::SetActorAlive() {
   MOZ_ASSERT(!mActorWasAlive);
   mActorWasAlive = true;
   AddRef();
+}
+
+nsresult MIDIPortChild::GenerateStableId(const nsACString& aOrigin) {
+  const size_t kIdLength = 64;
+  mStableId.SetCapacity(kIdLength);
+  mStableId.Append(Name());
+  mStableId.Append(Manufacturer());
+  mStableId.Append(Version());
+  nsContentUtils::AnonymizeId(mStableId, aOrigin,
+                              nsContentUtils::OriginFormat::Plain);
+  return NS_OK;
 }
