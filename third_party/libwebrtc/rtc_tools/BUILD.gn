@@ -56,7 +56,6 @@ rtc_library("video_file_reader") {
   deps = [
     "../api:scoped_refptr",
     "../api/video:video_frame",
-    "../api/video:video_frame_i420",
     "../api/video:video_rtp_headers",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
@@ -76,7 +75,6 @@ rtc_library("video_file_writer") {
     ":video_file_reader",
     "../api:scoped_refptr",
     "../api/video:video_frame",
-    "../api/video:video_frame_i420",
     "../api/video:video_rtp_headers",
     "../rtc_base:rtc_base_approved",
   ]
@@ -105,7 +103,6 @@ rtc_library("video_quality_analysis") {
     "../api:array_view",
     "../api:scoped_refptr",
     "../api/video:video_frame",
-    "../api/video:video_frame_i420",
     "../api/video:video_rtp_headers",
     "../common_video",
     "../rtc_base:checks",
@@ -487,7 +484,6 @@ if (rtc_include_tests) {
       ":video_quality_analysis",
       "../api:scoped_refptr",
       "../api/video:video_frame",
-      "../api/video:video_frame_i420",
       "../api/video:video_rtp_headers",
       "../common_video",
       "../rtc_base",

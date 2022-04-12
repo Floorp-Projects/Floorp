@@ -124,10 +124,7 @@ if (!build_with_chromium) {
       "analyzer/video/simulcast_dummy_buffer_helper.cc",
       "analyzer/video/simulcast_dummy_buffer_helper.h",
     ]
-    deps = [
-      "../../../api/video:video_frame",
-      "../../../api/video:video_frame_i420",
-    ]
+    deps = [ "../../../api/video:video_frame" ]
   }
 
   rtc_library("quality_analyzing_video_decoder") {
@@ -144,7 +141,6 @@ if (!build_with_chromium) {
       "../../../api:video_quality_analyzer_api",
       "../../../api/video:encoded_image",
       "../../../api/video:video_frame",
-      "../../../api/video:video_frame_i420",
       "../../../api/video:video_rtp_headers",
       "../../../api/video_codecs:video_codecs_api",
       "../../../modules/video_coding:video_codec_interface",
@@ -522,7 +518,6 @@ if (!build_with_chromium) {
         "../../../api:rtp_packet_info",
         "../../../api/video:encoded_image",
         "../../../api/video:video_frame",
-        "../../../api/video:video_frame_i420",
         "../../../common_video",
         "../../../modules/rtp_rtcp:rtp_rtcp_format",
         "../../../rtc_base:stringutils",
@@ -645,7 +640,6 @@ if (!build_with_chromium) {
       "../../../api/units:timestamp",
       "../../../api/video:encoded_image",
       "../../../api/video:video_frame",
-      "../../../api/video:video_frame_i420",
       "../../../api/video:video_rtp_headers",
       "../../../common_video",
       "../../../rtc_base:criticalsection",
