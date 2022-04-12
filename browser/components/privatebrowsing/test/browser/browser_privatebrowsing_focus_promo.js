@@ -5,11 +5,18 @@ const { ASRouter } = ChromeUtils.import(
 
 const initialHomeRegion = Region._home;
 const intialCurrentRegion = Region._current;
+const initialLocale = Services.locale.appLocaleAsBCP47;
 
 // Helper to run tests for specific regions
 async function setupRegions(home, current) {
   Region._setHomeRegion(home || "");
   Region._setCurrentRegion(current || "");
+}
+
+// Helper to run tests for specific locales
+function setLocale(locale) {
+  Services.locale.availableLocales = [locale];
+  Services.locale.requestedLocales = [locale];
 }
 
 add_task(async function test_focus_promo_in_allowed_region() {
@@ -46,4 +53,30 @@ add_task(async function test_focus_promo_in_disallowed_region() {
 
   await BrowserTestUtils.closeWindow(win);
   setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+});
+
+add_task(async function test_focus_promo_in_DE_region_with_English_locale() {
+  await ASRouter.resetMessageState();
+
+  const testRegion = "DE"; // Germany
+  const testLocale = "en-GB"; // British English
+  setupRegions(testRegion);
+  setLocale(testLocale);
+
+  const { win, tab } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab, [], async function() {
+    const buttonText = content.document.querySelector(
+      "#private-browsing-vpn-link"
+    ).textContent;
+    Assert.equal(
+      buttonText,
+      "Download Firefox Klar",
+      "The promo button text should read 'Download Firefox Klar'"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+  setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
+  setLocale(initialLocale); // revert changes to locale
 });
