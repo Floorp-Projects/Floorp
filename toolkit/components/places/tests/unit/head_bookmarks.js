@@ -27,6 +27,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-add_setup(async function() {
+add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 });
