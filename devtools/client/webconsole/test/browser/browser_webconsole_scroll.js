@@ -31,9 +31,7 @@ add_task(async function() {
   );
 
   info("Wait until all stacktraces are rendered");
-  await waitFor(() =>
-    findMessages(hud, "")?.every(m => m.textContent.length > 0)
-  );
+  await waitFor(() => allTraceMessagesAreExpanded(hud));
   ok(
     isScrolledToBottom(outputContainer),
     "The console is scrolled to the bottom"
@@ -50,9 +48,7 @@ add_task(async function() {
   );
 
   info("Wait until all stacktraces are rendered");
-  await waitFor(() =>
-    findMessages(hud, "")?.every(m => m.textContent.length > 0)
-  );
+  await waitFor(() => allTraceMessagesAreExpanded(hud));
 
   // There's an annoying race here where the SmartTrace from above goes into
   // the DOM, our waitFor passes, but the SmartTrace still hasn't called its
@@ -353,5 +349,15 @@ function isScrolledToBottom(container) {
   return (
     container.scrollTop + container.clientHeight >=
     container.scrollHeight - lastNodeHeight / 2
+  );
+}
+
+// This validates that 1) the last trace exists, and 2) that all *shown* traces
+// are expanded. Traces that have been scrolled out of existence due to
+// LazyMessageList are disregarded.
+function allTraceMessagesAreExpanded(hud) {
+  return (
+    findMessage(hud, "trace in C 100") &&
+    findMessages(hud, "trace in C").every(m => m.querySelector(".frames"))
   );
 }

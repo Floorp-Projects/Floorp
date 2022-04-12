@@ -12,7 +12,7 @@
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TelemetryProcessEnums.h"
 #include "nsTArray.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace Telemetry {

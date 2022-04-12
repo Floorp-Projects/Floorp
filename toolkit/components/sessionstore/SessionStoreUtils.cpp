@@ -1489,7 +1489,7 @@ void SessionStoreUtils::RestoreDocShellState(
     nsIDocShell* aDocShell, const DocShellRestoreState& aState) {
   if (aDocShell) {
     if (aState.URI()) {
-      aDocShell->SetCurrentURI(aState.URI());
+      aDocShell->SetCurrentURIForSessionStore(aState.URI());
     }
     RestoreDocShellCapabilities(aDocShell, aState.docShellCaps());
   }

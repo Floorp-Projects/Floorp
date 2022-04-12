@@ -839,6 +839,7 @@ dialog:-moz-modal-dialog {
   -moz-top-layer: top !important;
   position: fixed;
   overflow: auto;
+  visibility: visible;
   inset-block-start: 0;
   inset-block-end: 0;
   max-width: calc(100% - 6px - 2em);

@@ -20,6 +20,8 @@ file_header = """\
 #ifndef mozilla_TelemetryProcessEnums_h
 #define mozilla_TelemetryProcessEnums_h
 
+#include <cstdint>
+
 namespace mozilla {
 namespace Telemetry {
 """
