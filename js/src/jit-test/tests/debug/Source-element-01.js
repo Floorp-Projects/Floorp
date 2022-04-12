@@ -1,13 +1,6 @@
-// Source.prototype.element can be an object or undefined.
+// Specifying an owning element in a cross-global evaluation shouldn't crash.
+// That is, when 'evaluate' switches compartments, it should properly wrap
+// the CompileOptions members that will become cross-compartment
+// references.
 
-var g = newGlobal({newCompartment: true});
-var dbg = new Debugger;
-var gw = dbg.addDebuggee(g);
-g.evaluate("function f(x) { return 2*x; }", {element: { foo: "bar" }});
-var fw = gw.getOwnPropertyDescriptor('f').value;
-assertEq(typeof fw.script.source.element, "object");
-assertEq(fw.script.source.element instanceof Debugger.Object, true);
-assertEq(fw.script.source.element.getOwnPropertyDescriptor("foo").value, "bar");
-g.evaluate("function f(x) { return 2*x; }");
-var fw = gw.getOwnPropertyDescriptor('f').value;
-assertEq(typeof fw.script.source.element, "undefined");
+evaluate('42 + 1729', { global: newGlobal(), element: {} });
