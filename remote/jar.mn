@@ -17,6 +17,7 @@ remote.jar:
   content/shared/Log.jsm (shared/Log.jsm)
   content/shared/MobileTabBrowser.jsm (shared/MobileTabBrowser.jsm)
   content/shared/Navigate.jsm (shared/Navigate.jsm)
+  content/shared/PDF.jsm (shared/PDF.jsm)
   content/shared/RecommendedPreferences.jsm (shared/RecommendedPreferences.jsm)
   content/shared/Stack.jsm (shared/Stack.jsm)
   content/shared/Sync.jsm (shared/Sync.jsm)
