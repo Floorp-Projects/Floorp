@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Preferences: "resource://gre/modules/Preferences.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
   CDP: "chrome://remote/content/cdp/CDP.jsm",
@@ -37,7 +36,6 @@ const CDP_ACTIVE = 0x2;
 const DEFAULT_PORT = 9222;
 // By default force local connections only
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
-const PREF_FORCE_LOCAL = "remote.force-local";
 
 class RemoteAgentClass {
   #allowHosts;
@@ -185,7 +183,7 @@ class RemoteAgentClass {
     }
 
     let { host, port } = url;
-    if (Preferences.get(PREF_FORCE_LOCAL) && !LOOPBACKS.includes(host)) {
+    if (!LOOPBACKS.includes(host)) {
       throw Components.Exception(
         "Restricted to loopback devices",
         Cr.NS_ERROR_ILLEGAL_VALUE
