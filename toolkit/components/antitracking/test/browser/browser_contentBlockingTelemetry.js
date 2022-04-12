@@ -21,6 +21,30 @@ function clearTelemetry() {
   Services.telemetry.getHistogramById("STORAGE_ACCESS_REMAINING_DAYS").clear();
 }
 
+const expectedExpiredDays = getExpectedExpiredDaysFromPref(
+  "privacy.restrict3rdpartystorage.expiration"
+);
+const expectedExpiredDaysRedirect = getExpectedExpiredDaysFromPref(
+  "privacy.restrict3rdpartystorage.expiration_redirect"
+);
+
+function getExpectedExpiredDaysFromPref(pref) {
+  let expiredSecond = Services.prefs.getIntPref(pref);
+
+  // This is unlikely to happen, but just in case.
+  if (expiredSecond <= 0) {
+    return 0;
+  }
+
+  // We need to subtract one second from the expect expired second because there
+  // will be a short delay between the time we add the permission and the time
+  // we record the telemetry. Subtracting one can help us to get the correct
+  // expected expired days.
+  //
+  // Note that 86400 is seconds in one day.
+  return Math.trunc((expiredSecond - 1) / 86400);
+}
+
 async function testTelemetry(
   aProbeInParent,
   aExpectedCnt,
@@ -179,7 +203,7 @@ add_task(async function testTelemetryForStorageAccessAPI() {
 
   // The storage access permission will be expired in 29 days, so the expected
   // index in the telemetry probe would be 29.
-  await testTelemetry(false, 1, LABEL_STORAGE_ACCESS_API, 29);
+  await testTelemetry(false, 1, LABEL_STORAGE_ACCESS_API, expectedExpiredDays);
 });
 
 add_task(async function testTelemetryForWindowOpenHeuristic() {
@@ -254,7 +278,7 @@ add_task(async function testTelemetryForWindowOpenHeuristic() {
 
   // The storage access permission will be expired in 29 days, so the expected
   // index in the telemetry probe would be 29.
-  await testTelemetry(false, 1, LABEL_OPENER, 29);
+  await testTelemetry(false, 1, LABEL_OPENER, expectedExpiredDays);
 });
 
 add_task(async function testTelemetryForUserInteractionHeuristic() {
@@ -340,7 +364,7 @@ add_task(async function testTelemetryForUserInteractionHeuristic() {
   //
   // Note that the expected count here is 2. It's because the opener heuristic
   // will also be triggered when triggered UserInteraction Heuristic.
-  await testTelemetry(false, 2, LABEL_OPENER_AFTER_UI, 29);
+  await testTelemetry(false, 2, LABEL_OPENER_AFTER_UI, expectedExpiredDays);
 });
 
 add_task(async function testTelemetryForRedirectHeuristic() {
@@ -376,7 +400,7 @@ add_task(async function testTelemetryForRedirectHeuristic() {
   info("Removing the tab");
   BrowserTestUtils.removeTab(tab);
 
-  // We would only grant the storage permission for 15 mins for the redirect
-  // heuristic, so the expected index in the telemetry probe would be 0.
-  await testTelemetry(true, 1, LABEL_REDIRECT, 0);
+  // We would only grant the storage permission for 29 days for the redirect
+  // heuristic, so the expected index in the telemetry probe would be 29.
+  await testTelemetry(true, 1, LABEL_REDIRECT, expectedExpiredDaysRedirect);
 });
