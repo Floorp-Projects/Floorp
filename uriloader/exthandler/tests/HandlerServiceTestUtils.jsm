@@ -155,11 +155,10 @@ var HandlerServiceTestUtils = {
       };
     } else {
       // On Desktop, the default preferredAction for MIME types is saveToDisk,
-      // while for protocols it is alwaysAsk.
-      // With the new download improvements, for MIME types we default to not
-      // asking before handling
-      alwaysAskBeforeHandling = !Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel",
+      // while for protocols it is alwaysAsk. Since Bug 1735843, for new MIME
+      // types we default to not asking before handling unless a pref is set.
+      alwaysAskBeforeHandling = Services.prefs.getBoolPref(
+        "browser.download.always_ask_before_handling_new_types",
         false
       );
 

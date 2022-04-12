@@ -58,3 +58,68 @@ add_task(async function skipDialogAndDownloadFile() {
     info("The file " + download.target.path + " is not removed, " + ex);
   }
 });
+
+// Test that pref browser.download.always_ask_before_handling_new_types causes
+// the UCT dialog to be opened for unrecognized mime types
+add_task(async function skipDialogAndDownloadFile() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", true],
+      ["browser.download.useDownloadDir", true],
+    ],
+  });
+
+  let UCTObserver = {
+    opened: PromiseUtils.defer(),
+    closed: PromiseUtils.defer(),
+    observe(aSubject, aTopic, aData) {
+      let win = aSubject;
+      switch (aTopic) {
+        case "domwindowopened":
+          win.addEventListener(
+            "load",
+            function onLoad(event) {
+              // Let the dialog initialize
+              SimpleTest.executeSoon(function() {
+                UCTObserver.opened.resolve(win);
+              });
+            },
+            { once: true }
+          );
+          break;
+        case "domwindowclosed":
+          if (
+            win.location ==
+            "chrome://mozapps/content/downloads/unknownContentType.xhtml"
+          ) {
+            this.closed.resolve();
+          }
+          break;
+      }
+    },
+  };
+  Services.ww.registerNotification(UCTObserver);
+
+  info("Opening new tab with file of unknown content type");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url:
+        "http://mochi.test:8888/browser/toolkit/mozapps/downloads/tests/browser/unknownContentType_dialog_layout_data.pif",
+      waitForLoad: false,
+      waitForStateStop: true,
+    },
+    async function() {
+      let uctWindow = await UCTObserver.opened.promise;
+      info("Unknown content type dialog opened");
+      let focusOnDialog = SimpleTest.promiseFocus(uctWindow);
+      uctWindow.focus();
+      await focusOnDialog;
+      uctWindow.document.getElementById("unknownContentType").cancelDialog();
+      info("Unknown content type dialog canceled");
+      uctWindow = null;
+      Services.ww.unregisterNotification(UCTObserver);
+    }
+  );
+});
