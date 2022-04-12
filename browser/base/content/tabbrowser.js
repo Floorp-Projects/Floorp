@@ -2211,11 +2211,12 @@
             break;
           case "currentURI":
             getter = () => {
-              let url = SessionStore.getLazyTabValue(aTab, "url");
               // Avoid recreating the same nsIURI object over and over again...
               if (browser._cachedCurrentURI) {
                 return browser._cachedCurrentURI;
               }
+              let url =
+                SessionStore.getLazyTabValue(aTab, "url") || "about:blank";
               return (browser._cachedCurrentURI = Services.io.newURI(url));
             };
             break;
@@ -2255,7 +2256,8 @@
             break;
           case "remoteType":
             getter = () => {
-              let url = SessionStore.getLazyTabValue(aTab, "url");
+              let url =
+                SessionStore.getLazyTabValue(aTab, "url") || "about:blank";
               // Avoid recreating the same nsIURI object over and over again...
               let uri;
               if (browser._cachedCurrentURI) {
