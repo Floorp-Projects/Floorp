@@ -84,7 +84,7 @@ class ScriptLoadContext : public PreloaderBase {
   virtual ~ScriptLoadContext();
 
  public:
-  explicit ScriptLoadContext(Element* aElement);
+  explicit ScriptLoadContext();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadContext)
@@ -187,7 +187,6 @@ class ScriptLoadContext : public PreloaderBase {
 
   // Set on scripts and top level modules.
   bool mIsPreload;
-  nsCOMPtr<Element> mElement;
 
   RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 

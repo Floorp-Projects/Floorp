@@ -492,7 +492,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     RefPtr<ModuleScript> moduleScript =
         new ModuleScript(aRequest->mFetchOptions, aRequest->mBaseURL,
-                         aRequest->mLoadContext->mElement);
+                         aRequest->mFetchOptions->mElement);
     aRequest->mModuleScript = moduleScript;
 
     if (!module) {
