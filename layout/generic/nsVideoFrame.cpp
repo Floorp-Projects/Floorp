@@ -185,6 +185,7 @@ class DispatchResizeEvent : public Runnable {
 };
 
 bool nsVideoFrame::ReflowFinished() {
+  mReflowCallbackPosted = false;
   auto GetSize = [&](nsIContent* aContent) -> Maybe<nsSize> {
     if (!aContent) {
       return Nothing();
@@ -321,6 +322,7 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         MOZ_ASSERT(child->IsPrimaryFrame(),
                    "We only look at the primary frame in ReflowFinished");
         if (!mReflowCallbackPosted) {
+          mReflowCallbackPosted = true;
           PresShell()->PostReflowCallback(this);
         }
       }
