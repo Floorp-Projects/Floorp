@@ -39,6 +39,16 @@ class RelativeLuminanceUtils {
     return NS_RGBA(r1, g1, b1, NS_GET_A(aColor));
   }
 
+  // https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio
+  static float ContrastRatio(nscolor aColor1, nscolor aColor2) {
+    float l1 = Compute(aColor1);
+    float l2 = Compute(aColor2);
+    if (l1 < l2) {
+      std::swap(l1, l2);
+    }
+    return (l1 + 0.05f) / (l2 + 0.05f);
+  }
+
  private:
   static float ComputeComponent(uint8_t aComponent) {
     float v = float(aComponent) / 255.0f;

@@ -1,0 +1,49 @@
+<!doctype html>
+<title>Test for Bug 922669</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+  function assertMatches(query) {
+    ok(matchMedia(query).matches, `${query} should match`);
+  }
+  function assertPrefersContrastIs(value) {
+    assertMatches(`(prefers-contrast: ${value})`);
+  }
+  add_task(async function setupPrefs() {
+    assertPrefersContrastIs("no-preference");
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.display.document_color_use", 2],
+        ["browser.display.use_system_colors", false],
+      ]
+    });
+    assertMatches("(prefers-contrast)");
+  });
+  async function testColors(foreground, background, expected) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.display.foreground_color", foreground],
+        ["browser.display.background_color", background],
+      ]
+    });
+
+    assertPrefersContrastIs(expected);
+
+    // Test the inversed order too.
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.display.foreground_color", background],
+        ["browser.display.background_color", foreground],
+      ]
+    });
+
+    assertPrefersContrastIs(expected);
+  }
+
+  add_task(async function test_prefers_contrast_colors() {
+    await testColors("black", "black", "less");
+    await testColors("black", "white", "more");
+    await testColors("red", "black", "custom");
+  });
+</script>
