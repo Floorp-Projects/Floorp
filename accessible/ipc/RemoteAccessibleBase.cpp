@@ -94,7 +94,7 @@ void RemoteAccessibleBase<Derived>::ClearChildDoc(
 }
 
 template <class Derived>
-uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() const {
+uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() {
   size_t count = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (mChildren[i]->IsEmbeddedObject()) {

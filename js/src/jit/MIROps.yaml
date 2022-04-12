@@ -2642,7 +2642,13 @@
 - name: WasmStackResult
   gen_boilerplate: false
 
-- name: WasmCall
+- name: WasmCallCatchable
+  gen_boilerplate: false
+
+- name: WasmCallUncatchable
+  gen_boilerplate: false
+
+- name: WasmCallLandingPrePad
   gen_boilerplate: false
 
 - name: WasmSelect

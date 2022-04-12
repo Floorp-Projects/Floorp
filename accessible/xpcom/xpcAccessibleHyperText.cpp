@@ -647,15 +647,14 @@ xpcAccessibleHyperText::GetLinkCount(int32_t* aLinkCount) {
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aLinkCount = static_cast<int32_t>(IntlLocal()->LinkCount());
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    *aLinkCount = mIntl->AsRemote()->LinkCount();
-#endif
   }
+#endif
+
+  *aLinkCount = static_cast<int32_t>(Intl()->LinkCount());
   return NS_OK;
 }
 

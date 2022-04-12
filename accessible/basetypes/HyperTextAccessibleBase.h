@@ -130,6 +130,11 @@ class HyperTextAccessibleBase {
   bool IsValidRange(int32_t aStartOffset, int32_t aEndOffset);
 
   /**
+   * Return link count within this hypertext accessible.
+   */
+  uint32_t LinkCount();
+
+  /**
    * Return link accessible at the given index.
    */
   Accessible* LinkAt(uint32_t aIndex);

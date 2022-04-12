@@ -431,7 +431,7 @@ sm-fuzzing-linux64/opt:
         spidermonkey-variant: fuzzing
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang
             - linux64-rust
             - linux64-cbindgen
             - linux64-dump_syms
