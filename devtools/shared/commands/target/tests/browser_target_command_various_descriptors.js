@@ -105,12 +105,12 @@ async function testLocalTab() {
 
 async function testRemoteTab() {
   info(
-    "Test TargetCommand against remote tab descriptor (via getTab({ outerWindowID }))"
+    "Test TargetCommand against remote tab descriptor (via getTab({ browserId }))"
   );
 
   const tab = await addTab(TEST_URL);
   const commands = await CommandsFactory.forRemoteTabInTest({
-    outerWindowID: tab.linkedBrowser.outerWindowID,
+    browserId: tab.linkedBrowser.browserId,
   });
   const { descriptorFront } = commands;
   is(
