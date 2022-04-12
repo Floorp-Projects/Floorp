@@ -254,7 +254,7 @@ async function waitForAutofill(target, selector, value) {
       let form = content.document.getElementById("form");
       let element = form.querySelector(selector);
       return element.value == val;
-    }, "Credit card detail never fills");
+    }, "Autofill never fills");
   });
 }
 
@@ -274,6 +274,8 @@ async function waitForAutofill(target, selector, value) {
  * @param {string} args.formId
  *        The id of the form to be updated. This function uses "form" if
  *        this argument is not present
+ * @param {string} args.formSelector
+ *        A selector used to query the form element
  * @param {Object} args.newValues
  *        Elements to be updated. Key is the element selector, value is the
  *        new value of the element.
@@ -298,10 +300,15 @@ async function focusUpdateSubmitForm(target, args, submit = true) {
   let alreadyFocused = await SpecialPowers.spawn(target, [args], obj => {
     let focused = false;
 
-    let formId = obj.formId ?? "form";
-    let form = content.document.getElementById(formId);
+    let form;
+    if (obj.formSelector) {
+      form = content.document.querySelector(obj.formSelector);
+    } else {
+      form = content.document.getElementById(obj.formId ?? "form");
+    }
     let element = form.querySelector(obj.focusSelector);
     if (element != content.document.activeElement) {
+      info(`focus on element (id=${element.id})`);
       element.focus();
     } else {
       focused = true;
@@ -329,8 +336,13 @@ async function focusUpdateSubmitForm(target, args, submit = true) {
 
   if (submit) {
     await SpecialPowers.spawn(target, [args], obj => {
-      let formId = obj.formId ?? "form";
-      let form = content.document.getElementById(formId);
+      let form;
+      if (obj.formSelector) {
+        form = content.document.querySelector(obj.formSelector);
+      } else {
+        form = content.document.getElementById(obj.formId ?? "form");
+      }
+      info(`submit form (id=${form.id})`);
       form.querySelector("input[type=submit]").click();
     });
   }
