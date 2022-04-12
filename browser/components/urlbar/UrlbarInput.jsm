@@ -321,8 +321,11 @@ class UrlbarInput {
    * @param {boolean} [dueToTabSwitch]
    *        True if this is being called due to switching tabs and false
    *        otherwise.
+   * @param {boolean} [dueToSessionRestore]
+   *        True if this is being called due to session restore and false
+   *        otherwise.
    */
-  setURI(uri = null, dueToTabSwitch = false) {
+  setURI(uri = null, dueToTabSwitch = false, dueToSessionRestore = false) {
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
@@ -355,9 +358,13 @@ class UrlbarInput {
           value = "about:blank";
         }
       }
-
+      // If we update the URI while restoring a session, set the proxyState to
+      // invalid, because we don't have a valid security state to show via site
+      // identity yet. See Bug 1746383.
       valid =
-        !this.window.isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
+        !dueToSessionRestore &&
+        (!this.window.isBlankPageURL(uri.spec) ||
+          uri.schemeIs("moz-extension"));
     } else if (
       this.window.isInitialPage(value) &&
       BrowserUIUtils.checkEmptyPageOrigin(this.window.gBrowser.selectedBrowser)
