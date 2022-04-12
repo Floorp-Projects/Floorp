@@ -452,7 +452,7 @@ TimerThread::Run() {
         // resolution. We use mAllowedEarlyFiringMicroseconds, calculated
         // before, to do the optimal rounding (i.e., of how to decide what
         // interval is so small we should not wait at all).
-        double microseconds = (timeout - now).ToMilliseconds() * 1000;
+        double microseconds = (timeout - now).ToMicroseconds();
 
         if (ChaosMode::isActive(ChaosFeature::TimerScheduling)) {
           // The mean value of sFractions must be 1 to ensure that
