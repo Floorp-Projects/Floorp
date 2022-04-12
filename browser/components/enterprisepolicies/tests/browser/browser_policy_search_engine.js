@@ -2,6 +2,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+const { SearchUtils } = ChromeUtils.import(
+  "resource://gre/modules/SearchUtils.jsm"
+);
 const { CustomizableUITestUtils } = ChromeUtils.import(
   "resource://testing-common/CustomizableUITestUtils.jsm"
 );
@@ -466,5 +472,54 @@ add_task(async function test_install_with_suggest() {
 
   // Clean up
   await Services.search.removeEngine(engine);
+  EnterprisePolicyTesting.resetRunOnceState();
+});
+
+add_task(async function test_reset_default() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Remove: ["DuckDuckGo"],
+      },
+    },
+  });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
+
+  let engine = Services.search.getEngineByName("DuckDuckGo");
+
+  is(engine.hidden, true, "Application specified engine should be hidden.");
+
+  await BrowserTestUtils.withNewTab(
+    "about:preferences#search",
+    async browser => {
+      let tree = browser.contentDocument.querySelector("#engineList");
+      for (let i = 0; i < tree.view.rowCount; i++) {
+        let cellName = tree.view.getCellText(
+          i,
+          tree.columns.getNamedColumn("engineName")
+        );
+        isnot(cellName, "DuckDuckGo", "DuckDuckGo should be invisible");
+      }
+      let restoreDefaultsButton = browser.contentDocument.getElementById(
+        "restoreDefaultSearchEngines"
+      );
+      let updatedPromise = SearchTestUtils.promiseSearchNotification(
+        SearchUtils.MODIFIED_TYPE.CHANGED,
+        SearchUtils.TOPIC_ENGINE_MODIFIED
+      );
+      restoreDefaultsButton.click();
+      await updatedPromise;
+      for (let i = 0; i < tree.view.rowCount; i++) {
+        let cellName = tree.view.getCellText(
+          i,
+          tree.columns.getNamedColumn("engineName")
+        );
+        isnot(cellName, "DuckDuckGo", "DuckDuckGo should be invisible");
+      }
+    }
+  );
+
+  engine.hidden = false;
   EnterprisePolicyTesting.resetRunOnceState();
 });
