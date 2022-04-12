@@ -7747,7 +7747,7 @@
 #   chrome and ua.
 - name: layout.css.prefers-contrast.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
