@@ -400,45 +400,45 @@ rtc_library("rtc_media_engine_defaults") {
 }
 
 if (!build_with_mozilla) {
-  rtc_library("rtc_data") {
-    defines = [
-      # "SCTP_DEBUG" # Uncomment for SCTP debugging.
-    ]
-    deps = [
-      ":rtc_media_base",
-      "../api:call_api",
-      "../api:transport_api",
-      "../p2p:rtc_p2p",
-      "../rtc_base",
-      "../rtc_base:rtc_base_approved",
-      "../rtc_base/synchronization:mutex",
-      "../rtc_base/third_party/sigslot",
-      "../system_wrappers",
-    ]
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/algorithm:container",
-      "//third_party/abseil-cpp/absl/base:core_headers",
-      "//third_party/abseil-cpp/absl/types:optional",
-    ]
+rtc_library("rtc_data") {
+  defines = [
+    # "SCTP_DEBUG" # Uncomment for SCTP debugging.
+  ]
+  deps = [
+    ":rtc_media_base",
+    "../api:call_api",
+    "../api:transport_api",
+    "../p2p:rtc_p2p",
+    "../rtc_base",
+    "../rtc_base:rtc_base_approved",
+    "../rtc_base/synchronization:mutex",
+    "../rtc_base/third_party/sigslot",
+    "../system_wrappers",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 
-    if (rtc_enable_sctp) {
-      sources = [
-        "sctp/sctp_transport.cc",
-        "sctp/sctp_transport.h",
-        "sctp/sctp_transport_internal.h",
-      ]
-    } else {
-      # libtool on mac does not like empty targets.
-      sources = [ "sctp/noop.cc" ]
-    }
-
-    if (rtc_enable_sctp && rtc_build_usrsctp) {
-      deps += [
-        "../api/transport:sctp_transport_factory_interface",
-        "//third_party/usrsctp",
-      ]
-    }
+  if (rtc_enable_sctp) {
+    sources = [
+      "sctp/sctp_transport.cc",
+      "sctp/sctp_transport.h",
+      "sctp/sctp_transport_internal.h",
+    ]
+  } else {
+    # libtool on mac does not like empty targets.
+    sources = [ "sctp/noop.cc" ]
   }
+
+  if (rtc_enable_sctp && rtc_build_usrsctp) {
+    deps += [
+      "../api/transport:sctp_transport_factory_interface",
+      "//third_party/usrsctp",
+    ]
+  }
+}
 }
 
 rtc_source_set("rtc_media") {

@@ -351,21 +351,21 @@ if (is_mac) {
 }
 
 if (rtc_include_tests) {
-  rtc_source_set("mock_audio_device") {
-    testonly = true
-    sources = [
-      "include/mock_audio_device.h",
-      "include/mock_audio_transport.h",
-      "mock_audio_device_buffer.h",
-    ]
-    deps = [
-      ":audio_device",
-      ":audio_device_buffer",
-      ":audio_device_impl",
-      "../../rtc_base:refcount",
-      "../../test:test_support",
-    ]
-  }
+rtc_source_set("mock_audio_device") {
+  testonly = true
+  sources = [
+    "include/mock_audio_device.h",
+    "include/mock_audio_transport.h",
+    "mock_audio_device_buffer.h",
+  ]
+  deps = [
+    ":audio_device",
+    ":audio_device_buffer",
+    ":audio_device_impl",
+    "../../rtc_base:refcount",
+    "../../test:test_support",
+  ]
+}
 }
 
 if (rtc_include_tests) {

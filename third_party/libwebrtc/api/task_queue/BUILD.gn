@@ -30,50 +30,50 @@ rtc_library("task_queue") {
 }
 
 if (rtc_include_tests) {
-  rtc_library("task_queue_test") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "task_queue_test.cc",
-      "task_queue_test.h",
+rtc_library("task_queue_test") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [
+    "task_queue_test.cc",
+    "task_queue_test.h",
+  ]
+
+  check_includes = false  # no-presubmit-check TODO(bugs.webrtc.org/9419)
+  if (build_with_chromium) {
+    visibility = []
+    visibility = webrtc_default_visibility
+    visibility += [
+      # This is the only Chromium target that can depend on this. The reason
+      # behind this is the fact that this is a 'testonly' target and as such
+      # it cannot be part of the WebRTC component.
+      "//third_party/blink/renderer/platform:blink_platform_unittests_sources",
     ]
 
-    check_includes = false  # no-presubmit-check TODO(bugs.webrtc.org/9419)
-    if (build_with_chromium) {
-      visibility = []
-      visibility = webrtc_default_visibility
-      visibility += [
-        # This is the only Chromium target that can depend on this. The reason
-        # behind this is the fact that this is a 'testonly' target and as such
-        # it cannot be part of the WebRTC component.
-        "//third_party/blink/renderer/platform:blink_platform_unittests_sources",
-      ]
-
-      # Don't depend on WebRTC code outside of webrtc_overrides:webrtc_component
-      # because this will break the WebRTC component build in Chromium.
-      deps = [
-        "../../../webrtc_overrides:webrtc_component",
-        "../../test:test_support",
-      ]
-      absl_deps = [
-        "//third_party/abseil-cpp/absl/memory",
-        "//third_party/abseil-cpp/absl/strings",
-      ]
-    } else {
-      deps = [
-        ":task_queue",
-        "../../rtc_base:refcount",
-        "../../rtc_base:rtc_event",
-        "../../rtc_base:timeutils",
-        "../../rtc_base/task_utils:to_queued_task",
-        "../../test:test_support",
-      ]
-      absl_deps = [
-        "//third_party/abseil-cpp/absl/memory",
-        "//third_party/abseil-cpp/absl/strings",
-      ]
-    }
+    # Don't depend on WebRTC code outside of webrtc_overrides:webrtc_component
+    # because this will break the WebRTC component build in Chromium.
+    deps = [
+      "../../../webrtc_overrides:webrtc_component",
+      "../../test:test_support",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/strings",
+    ]
+  } else {
+    deps = [
+      ":task_queue",
+      "../../rtc_base:refcount",
+      "../../rtc_base:rtc_event",
+      "../../rtc_base:timeutils",
+      "../../rtc_base/task_utils:to_queued_task",
+      "../../test:test_support",
+    ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/strings",
+    ]
   }
+}
 }
 
 rtc_library("default_task_queue_factory") {
