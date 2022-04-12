@@ -92,11 +92,9 @@ void WorkerRef::Notify() {
     return;
   }
 
-  std::function<void()> callback = mCallback;
-  // We want to be sure to be null before we call the callback.
-  // std::move on std::function is not guaranteed to null out the source
-  // (source "is left in an unspecified but valid state").
-  mCallback = nullptr;
+  std::function<void()> callback = std::move(mCallback);
+  MOZ_ASSERT(!mCallback);
+
   callback();
 }
 
