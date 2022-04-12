@@ -6,14 +6,15 @@
 #ifndef TelemetryCommon_h__
 #define TelemetryCommon_h__
 
-#include "jsapi.h"
+#include "PLDHashTable.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/TelemetryProcessEnums.h"
 #include "nsHashtablesFwd.h"
-#include "nsIScriptError.h"
 #include "nsTHashSet.h"
 #include "nsTHashtable.h"
-#include "nsHashKeys.h"
+#include "nsIScriptError.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {

@@ -728,6 +728,22 @@ EngineStore.prototype = {
         added++;
       }
     }
+
+    // We can't do this as part of the loop above because the indices are
+    // used for moving engines.
+    let policyRemovedEngineNames =
+      Services.policies.getActivePolicies()?.SearchEngines?.Remove || [];
+    for (let engineName of policyRemovedEngineNames) {
+      let engine = Services.search.getEngineByName(engineName);
+      if (engine) {
+        try {
+          await Services.search.removeEngine(engine);
+        } catch (ex) {
+          // Engine might not exist
+        }
+      }
+    }
+
     Services.search.resetToOriginalDefaultEngine();
     gSearchPane.showRestoreDefaults(false);
     gSearchPane.buildDefaultEngineDropDowns();

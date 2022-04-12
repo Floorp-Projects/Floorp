@@ -6,7 +6,6 @@
 
 #include "Telemetry.h"
 #include "TelemetryEvent.h"
-#include <prtime.h>
 #include <limits>
 #include "ipc/TelemetryIPCAccumulator.h"
 #include "jsapi.h"
@@ -16,7 +15,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Unused.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserverService.h"

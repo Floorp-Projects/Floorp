@@ -1572,12 +1572,16 @@ nsDocShell::GetChromeEventHandler(EventTarget** aChromeEventHandler) {
 }
 
 NS_IMETHODIMP
-nsDocShell::SetCurrentURI(nsIURI* aURI) {
+nsDocShell::SetCurrentURIForSessionStore(nsIURI* aURI) {
   // Note that securityUI will set STATE_IS_INSECURE, even if
   // the scheme of |aURI| is "https".
-  SetCurrentURI(aURI, nullptr, /* aFireOnLocationChange */ true,
-                /* aIsInitialAboutBlank */ false,
-                /* aLocationFlags */ 0);
+  SetCurrentURI(aURI, nullptr,
+                /* aFireOnLocationChange */
+                true,
+                /* aIsInitialAboutBlank */
+                false,
+                /* aLocationFlags */
+                nsIWebProgressListener::LOCATION_CHANGE_SESSION_STORE);
   return NS_OK;
 }
 

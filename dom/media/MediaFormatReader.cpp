@@ -3162,7 +3162,7 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
   CopyUTF8toUTF16(audioDecoderName, aInfo.mAudioDecoderName);
   CopyUTF8toUTF16(audioType, aInfo.mAudioType);
   aInfo.mAudioChannels = audioInfo.mChannels;
-  aInfo.mAudioRate = audioInfo.mRate / 1000.0f;
+  aInfo.mAudioRate = audioInfo.mRate;
   aInfo.mAudioFramesDecoded = mAudio.mNumSamplesOutputTotal;
 
   VideoInfo videoInfo;
