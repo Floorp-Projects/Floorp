@@ -705,11 +705,18 @@ def main():
         extra_cxxflags = []
         # clang-cl would like to figure out what it's supposed to be emulating
         # by looking at an MSVC install, but we don't really have that here.
-        # Force things on.
-        extra_cflags2 = []
-        extra_cxxflags2 = [
-            "-fms-compatibility-version=19.15.26726",
-        ]
+        # Force things on based on WinMsvc.cmake.
+        # Ideally, we'd just use WinMsvc.cmake as a toolchain file, but it only
+        # really works for cross-compiles, which this is not.
+        with open(os.path.join(llvm_source_dir, "cmake/platforms/WinMsvc.cmake")) as f:
+            compat = [
+                item
+                for line in f
+                for item in line.split()
+                if "-fms-compatibility-version=" in item
+            ][0]
+        extra_cflags2 = [compat]
+        extra_cxxflags2 = [compat]
         extra_asmflags = []
         extra_ldflags = []
 
