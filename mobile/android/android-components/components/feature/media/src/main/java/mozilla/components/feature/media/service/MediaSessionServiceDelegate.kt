@@ -104,7 +104,7 @@ internal class MediaSessionServiceDelegate(
 
         when (intent?.action) {
             AbstractMediaSessionService.ACTION_LAUNCH -> {
-                startForegroundNotification()
+                startForegroundNotificationIfNeeded()
             }
             AbstractMediaSessionService.ACTION_PLAY -> {
                 controller?.play()

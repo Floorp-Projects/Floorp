@@ -153,7 +153,7 @@ class MediaSessionServiceDelegateTest {
                 service::class.java
             )
         )
-        verify(service, times(2)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
 
         delegate.onStartCommand(
             AbstractMediaSessionService.launchIntent(
@@ -161,7 +161,7 @@ class MediaSessionServiceDelegateTest {
                 service::class.java
             )
         )
-        verify(service, times(3)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
     }
 
     @Test
@@ -269,7 +269,7 @@ class MediaSessionServiceDelegateTest {
             )
         )
 
-        verify(service, times(2)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
 
         delegate.onStartCommand(
             AbstractMediaSessionService.pauseIntent(
@@ -279,7 +279,7 @@ class MediaSessionServiceDelegateTest {
         )
         verify(controller).pause()
         mediaSessionCallback.onPause()
-        verify(service, times(2)).startForeground(ArgumentMatchers.anyInt(), any())
+        verify(service, times(1)).startForeground(ArgumentMatchers.anyInt(), any())
 
         mediaSessionCallback.onPlay()
         verify(controller, times(1)).play()
