@@ -7,10 +7,11 @@
 #ifndef GeckoViewStreamingTelemetry_h__
 #define GeckoViewStreamingTelemetry_h__
 
-#include "mozilla/RefCounted.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
-#include "nsISupportsImpl.h"
-#include "nsString.h"
+#include "nsISupports.h"
+#include "nsStringFwd.h"
+#include "nsTArray.h"
 
 #include <cstdint>
 

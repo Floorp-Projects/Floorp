@@ -10,7 +10,6 @@
 #include "js/Array.h"               // JS::NewArrayObject
 #include "js/PropertyAndElement.h"  // JS_DefineElement, JS_DefineProperty
 #include "js/String.h"
-#include "mozilla/HangAnnotations.h"
 
 namespace mozilla::Telemetry {
 
