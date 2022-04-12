@@ -692,10 +692,16 @@ struct JSRuntime {
                           js::MutableHandleValue vp);
   void assertSelfHostedFunctionHasCanonicalName(js::HandlePropertyName name);
 
+ private:
+  void setSelfHostingStencil(
+      JS::MutableHandle<js::UniquePtr<js::frontend::CompilationInput>> input,
+      RefPtr<js::frontend::CompilationStencil>&& stencil);
+
   //-------------------------------------------------------------------------
   // Locale information
   //-------------------------------------------------------------------------
 
+ public:
   /*
    * Set the default locale for the ECMAScript Internationalization API
    * (Intl.Collator, Intl.NumberFormat, Intl.DateTimeFormat).
