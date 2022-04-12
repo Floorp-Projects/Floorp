@@ -216,11 +216,7 @@ class AttachmentDownloader extends Downloader {
   async deleteAll() {
     let allRecords = await this._client.db.list();
     return Promise.all(
-      allRecords
-        .filter(r => !!r.attachment)
-        .map(r =>
-          Promise.all([this.deleteDownloaded(r), this.deleteFromDisk(r)])
-        )
+      allRecords.filter(r => !!r.attachment).map(r => this.delete(r))
     );
   }
 }
