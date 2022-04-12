@@ -203,7 +203,111 @@ const ONBOARDING_MESSAGES = () => [
       ],
       lifetime: 3,
     },
-    targeting: "true",
+    targeting: "!(region == 'DE' && localeLanguageCode == 'en')",
+  },
+  {
+    id: "PB_NEWTAB_KLAR_PROMO",
+    template: "pb_newtab",
+    groups: ["pbNewtab"],
+    content: {
+      infoBody: "fluent:about-private-browsing-info-description-simplified",
+      infoEnabled: true,
+      infoIcon: "chrome://global/skin/icons/indicator-private-browsing.svg",
+      infoLinkText: "fluent:about-private-browsing-learn-more-link",
+      infoTitle: "",
+      infoTitleEnabled: false,
+      promoEnabled: true,
+      promoType: "FOCUS",
+      promoHeader: "Firefox Klar: Private browsing on-the-go",
+      promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
+      promoLinkText: "Download Firefox Klar",
+      promoLinkType: "button",
+      promoSectionStyle: "below-search",
+      promoTitle: "fluent:about-private-browsing-focus-promo-text",
+      promoTitleEnabled: true,
+      promoButton: {
+        action: {
+          type: "SHOW_SPOTLIGHT",
+          data: {
+            content: {
+              id: "KLAR_PROMO",
+              template: "multistage",
+              modal: "tab",
+              metrics: "block",
+              backdrop: "transparent",
+              screens: [
+                {
+                  id: "DEFAULT_MODAL_UI",
+                  order: 0,
+                  content: {
+                    logo: {
+                      imageURL:
+                        "chrome://browser/content/assets/focus-logo.svg",
+                      height: "48px",
+                    },
+                    title: "Get Firefox Klar",
+                    subtitle: {
+                      string_id: "spotlight-focus-promo-subtitle",
+                    },
+                    dismiss_button: {
+                      action: {
+                        navigate: true,
+                      },
+                    },
+                    ios: {
+                      action: {
+                        data: {
+                          args:
+                            "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fapps.apple.com%2Fde%2Fapp%2Fklar-by-firefox%2Fid1073435754",
+                          where: "tabshifted",
+                        },
+                        type: "OPEN_URL",
+                        navigate: true,
+                      },
+                    },
+                    android: {
+                      action: {
+                        data: {
+                          args:
+                            "https://app.adjust.com/a8bxj8j?campaign=firefox-desktop&adgroup=pb&creative=focus-omc172&redirect=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dorg.mozilla.klar",
+                          where: "tabshifted",
+                        },
+                        type: "OPEN_URL",
+                        navigate: true,
+                      },
+                    },
+                    tiles: {
+                      type: "mobile_downloads",
+                      data: {
+                        QR_code: {
+                          image_url:
+                            "chrome://browser/content/assets/klar-qr-code.svg",
+                          alt_text: {
+                            string_id: "spotlight-focus-promo-qr-code",
+                          },
+                        },
+                        marketplace_buttons: ["ios", "android"],
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+    priority: 2,
+    frequency: {
+      custom: [
+        {
+          cap: 1,
+          period: 604800000, // Max 1 per week
+        },
+      ],
+      lifetime: 3,
+    },
+    targeting: "region == 'DE' && localeLanguageCode == 'en'",
   },
   {
     id: "PB_NEWTAB_INFO_SECTION",
