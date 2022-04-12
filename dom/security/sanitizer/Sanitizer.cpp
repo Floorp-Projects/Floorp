@@ -132,56 +132,6 @@ RefPtr<DocumentFragment> Sanitizer::SanitizeFragment(
   return aFragment.forget();
 }
 
-already_AddRefed<Element> Sanitizer::SanitizeFor(const nsAString& aElement,
-                                                 const nsAString& aInput,
-                                                 ErrorResult& aRv) {
-  aRv = nsContentUtils::CheckQName(aElement, false);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  RefPtr<nsAtom> elemName = NS_Atomize(aElement);
-  // FIXME(freddyb): Invalid parameters for SanitizeFor should throw, just like
-  // Element.setHTML does. Cf. https://github.com/WICG/sanitizer-api/issues/125
-  if (elemName == nsGkAtoms::script) {
-    // aRv.ThrowTypeError("This does not work on <script> elements");
-    return nullptr;
-  }
-  if (elemName == nsGkAtoms::object) {
-    // aRv.ThrowTypeError("This does not work on <object> elements");
-    return nullptr;
-  }
-  if (elemName == nsGkAtoms::iframe) {
-    // aRv.ThrowTypeError("This does not work on <iframe> elements");
-    return nullptr;
-  }
-  RefPtr<Document> inertDoc = nsContentUtils::CreateInertHTMLDocument(nullptr);
-  if (!inertDoc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  RefPtr<DocumentFragment> fragment = new (inertDoc->NodeInfoManager())
-      DocumentFragment(inertDoc->NodeInfoManager());
-
-  aRv = nsContentUtils::ParseFragmentHTML(aInput, fragment, elemName,
-                                          kNameSpaceID_XHTML, false, true);
-
-  if (aRv.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  mTreeSanitizer.Sanitize(fragment);
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (!window || !window->GetDoc()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  RefPtr<mozilla::dom::Element> element =
-      window->GetDoc()->CreateHTMLElement(elemName);
-  element->AppendChild(*fragment, aRv);
-
-  return element.forget();
-}
-
 /* ------ Logging ------ */
 
 void Sanitizer::LogLocalizedString(const char* aName,
