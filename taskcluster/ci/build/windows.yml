@@ -5,6 +5,7 @@
 job-defaults:
     run:
         using: mozharness
+        tooltool-downloads: internal
     fetches:
         toolchain:
             - win64-pdbstr
@@ -26,6 +27,7 @@ win32/debug:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
@@ -41,7 +43,7 @@ win32/debug:
             mozconfig_platform: win32
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     use-sccache: true
     fetches:
         toolchain:
@@ -60,7 +62,6 @@ win32/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -81,6 +82,7 @@ win32/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
@@ -95,7 +97,7 @@ win32/opt:
             mozconfig_platform: win32
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -115,7 +117,6 @@ win32/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -136,6 +137,7 @@ win64/debug:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
@@ -151,7 +153,7 @@ win64/debug:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     use-sccache: true
     fetches:
         toolchain:
@@ -170,7 +172,6 @@ win64/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -189,6 +190,7 @@ win64-hybrid/plain:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: hybrid
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         options: [append-env-variables-from-configs]
         actions: [get-secrets, build]
@@ -202,7 +204,7 @@ win64-hybrid/plain:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     use-sccache: true
     run-on-projects: ['integration']
     fetches:
@@ -222,7 +224,6 @@ win64-hybrid/plain:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -243,6 +244,7 @@ win64-fuzzing/debug:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -256,7 +258,7 @@ win64-fuzzing/debug:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: debug-fuzzing
     run-on-projects: ['trunk']
     use-sccache: true
@@ -277,7 +279,6 @@ win64-fuzzing/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
     optimization:
@@ -297,6 +298,7 @@ win64-plain/debug:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [build]
         options: [append-env-variables-from-configs]
@@ -320,7 +322,6 @@ win64-plain/debug:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - nsis
             - sysroot-wasm32-wasi
     optimization:
@@ -343,6 +344,7 @@ win64/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
@@ -361,7 +363,7 @@ win64/opt:
                 # of fetch-content starts while the library is being extracted by
                 # another.
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -381,7 +383,6 @@ win64/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -399,6 +400,7 @@ win64-plain/opt:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: plain
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [build]
         options: [append-env-variables-from-configs]
@@ -422,7 +424,6 @@ win64-plain/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - nsis
             - sysroot-wasm32-wasi
     optimization:
@@ -461,6 +462,7 @@ win32-shippable/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
@@ -476,7 +478,7 @@ win32-shippable/opt:
             mozconfig_platform: win32
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     fetches:
         toolchain:
             - linux64-binutils
@@ -493,7 +495,6 @@ win32-shippable/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -519,6 +520,7 @@ win64-shippable/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
@@ -534,7 +536,7 @@ win64-shippable/opt:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     fetches:
         toolchain:
             - linux64-binutils
@@ -551,7 +553,6 @@ win64-shippable/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -568,6 +569,8 @@ win32-add-on-devel/opt:
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -581,7 +584,7 @@ win32-add-on-devel/opt:
             mozconfig_platform: win32
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
     use-sccache: true
@@ -602,7 +605,6 @@ win32-add-on-devel/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -619,6 +621,8 @@ win64-add-on-devel/opt:
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -632,7 +636,7 @@ win64-add-on-devel/opt:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: add-on-devel
     run-on-projects: ['mozilla-beta', 'mozilla-release']
     use-sccache: true
@@ -653,7 +657,6 @@ win64-add-on-devel/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -670,6 +673,8 @@ win64-noopt/debug:
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -684,7 +689,7 @@ win64-noopt/debug:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     run-on-projects: ['mozilla-central']
     use-sccache: true
     fetches:
@@ -704,7 +709,6 @@ win64-noopt/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -721,6 +725,8 @@ win32-noopt/debug:
     worker:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -735,7 +741,7 @@ win32-noopt/debug:
             mozconfig_platform: win32
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     run-on-projects: ['mozilla-central']
     use-sccache: true
     fetches:
@@ -755,7 +761,6 @@ win32-noopt/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -773,6 +778,7 @@ win32-rusttests/opt:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -800,7 +806,6 @@ win32-rusttests/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
@@ -819,6 +824,7 @@ win32-rusttests/debug:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -846,7 +852,6 @@ win32-rusttests/debug:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
@@ -865,6 +870,7 @@ win64-rusttests/opt:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -889,7 +895,6 @@ win64-rusttests/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
@@ -908,6 +913,7 @@ win64-rusttests/debug:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -932,7 +938,6 @@ win64-rusttests/debug:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - sysroot-wasm32-wasi
     optimization:
         test-inclusive: [rusttests]
@@ -956,6 +961,7 @@ win64-ccov/opt:
               type: file
         max-run-time: 9000
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             RUSTC_BOOTSTRAP: '1'
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -983,7 +989,6 @@ win64-ccov/opt:
             - win64-winchecksec
             - win64-mozmake
             - win64-dump_syms
-            - win64-vs2017
             - nsis
             - sysroot-wasm32-wasi
 
@@ -1001,6 +1006,7 @@ win64-asan/debug:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
     run:
         actions: [get-secrets, build]
@@ -1015,7 +1021,7 @@ win64-asan/debug:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: debug-asan
     use-sccache: true
     fetches:
@@ -1036,7 +1042,6 @@ win64-asan/debug:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
         fetch:
             - upx-3.95-win
     optimization:
@@ -1056,6 +1061,7 @@ win64-asan/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -1071,7 +1077,7 @@ win64-asan/opt:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: nightly-asan
     use-sccache: true
     fetches:
@@ -1092,7 +1098,6 @@ win64-asan/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -1116,6 +1121,7 @@ win64-asan-reporter-shippable/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: "asan-reporter"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -1133,7 +1139,7 @@ win64-asan-reporter-shippable/opt:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: nightly-asan-reporter
         mar-channel-id:
             firefox-mozilla-central-asan
@@ -1157,7 +1163,6 @@ win64-asan-reporter-shippable/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -1174,6 +1179,7 @@ win64-asan-fuzzing/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: fuzzing-asan
     run:
         actions: [get-secrets, build]
@@ -1188,7 +1194,7 @@ win64-asan-fuzzing/opt:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: nightly-fuzzing-asan
     use-sccache: true
     fetches:
@@ -1209,7 +1215,6 @@ win64-asan-fuzzing/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
             - win64-llvm-symbolizer
-            - win64-vs2017
         fetch:
             - upx-3.95-win
     optimization:
@@ -1246,6 +1251,7 @@ win32-devedition/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
@@ -1261,7 +1267,7 @@ win32-devedition/opt:
             mozconfig_platform: win32
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -1280,7 +1286,6 @@ win32-devedition/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -1305,6 +1310,7 @@ win64-devedition/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 10800
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         actions: [get-secrets, build]
@@ -1320,7 +1326,7 @@ win64-devedition/opt:
             mozconfig_platform: win64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -1339,7 +1345,6 @@ win64-devedition/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
 
@@ -1359,6 +1364,7 @@ win64-aarch64/debug:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
         actions: [get-secrets, build]
@@ -1373,7 +1379,7 @@ win64-aarch64/debug:
             mozconfig_platform: win64-aarch64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: debug
     use-sccache: true
     fetches:
@@ -1393,7 +1399,6 @@ win64-aarch64/debug:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
     optimization:
@@ -1420,6 +1425,7 @@ win64-aarch64/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -1435,7 +1441,7 @@ win64-aarch64/opt:
             mozconfig_platform: win64-aarch64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     run-on-projects: ['integration']
     use-sccache: true
     fetches:
@@ -1455,7 +1461,6 @@ win64-aarch64/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
     optimization:
@@ -1475,6 +1480,7 @@ win64-aarch64-eme/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64-eme
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
@@ -1526,6 +1532,7 @@ win64-aarch64-shippable/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
@@ -1625,6 +1632,7 @@ win64-aarch64-shippable-no-eme/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -1641,7 +1649,7 @@ win64-aarch64-shippable-no-eme/opt:
             mozconfig_platform: win64-aarch64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
     run-on-projects: ['all']
     fetches:
         toolchain:
@@ -1659,7 +1667,6 @@ win64-aarch64-shippable-no-eme/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
     optimization:
@@ -1688,6 +1695,7 @@ win64-aarch64-devedition/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
             MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
             USE_ARTIFACT: '1'
@@ -1786,6 +1794,7 @@ win64-aarch64-devedition-no-eme/opt:
         docker-image: {in-tree: debian11-amd64-build}
         max-run-time: 7200
         env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
             MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
@@ -1802,7 +1811,7 @@ win64-aarch64-devedition-no-eme/opt:
             mozconfig_platform: win64-aarch64
             env:
                 LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                LOWERCASE_DIRS: "/builds/worker/fetches/vs"
+                LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
         mozconfig-variant: devedition
     run-on-projects: ['mozilla-beta']
     fetches:
@@ -1821,6 +1830,5 @@ win64-aarch64-devedition-no-eme/opt:
             - nsis
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
-            - win64-vs2017
         fetch:
             - upx-3.95-win
