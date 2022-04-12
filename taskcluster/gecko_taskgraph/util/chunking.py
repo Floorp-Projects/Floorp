@@ -50,10 +50,16 @@ def guess_mozinfo_from_task(task):
         "ccov": setting["build"].get("ccov", False),
         "debug": setting["build"]["type"] in ("debug", "debug-isolated-process"),
         "e10s": not setting["runtime"].get("1proc", False),
-        "fission": any("fission" in key for key in setting["runtime"].keys()),
+        "no-fission": "no-fission" in setting["runtime"].keys(),
+        "fission": any(
+            "fission" in key and "no-fission" not in key
+            for key in setting["runtime"].keys()
+        ),
         "headless": "-headless" in task["test-name"],
         "tsan": setting["build"].get("tsan", False),
         "xorigin": any("xorigin" in key for key in setting["runtime"].keys()),
+        "socketprocess_networking": "socketprocess_networking"
+        in setting["runtime"].keys(),
     }
     for platform in ("android", "linux", "mac", "win"):
         if p_os["name"].startswith(platform):
