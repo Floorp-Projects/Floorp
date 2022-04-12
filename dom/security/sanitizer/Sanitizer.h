@@ -62,16 +62,6 @@ class Sanitizer final : public nsISupports, public nsWrapperCache {
       const mozilla::dom::DocumentFragmentOrDocument& aInput, ErrorResult& aRv);
 
   /**
-   * sanitizeFor method.
-   * @param aElement      name of HTML element to be constructed
-   * @param aInput       "bad" HTML that needs to be sanitized
-   * @return DocumentFragment of the sanitized HTML
-   */
-  already_AddRefed<Element> SanitizeFor(const nsAString& aElement,
-                                        const nsAString& aInput,
-                                        ErrorResult& aRv);
-
-  /**
    * Sanitizes a fragment in place. This assumes that the fragment
    * belongs but an inert document.
    *
