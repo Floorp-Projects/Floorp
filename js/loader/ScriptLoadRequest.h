@@ -53,10 +53,16 @@ class ScriptLoadRequestList;
  * with the exception of the following properties:
  *   cryptographic nonce
  *      The cryptographic nonce metadata used for the initial fetch and for
- *      fetching any imported modules. This is handled by the principal.
+ *      fetching any imported modules. As this is populated by a DOM element,
+ *      this is implemented via mozilla::dom::Element as the field
+ *      mElement. The default value is an empty string, and is indicated
+ *      when this field is a nullptr. Nonce is not represented on the dom
+ *      side as per bug 1374612.
  *   parser metadata
  *      The parser metadata used for the initial fetch and for fetching any
- *      imported modules. This is not implemented.
+ *      imported modules. This is populated from a mozilla::dom::Element and is
+ *      handled by the field mElement. The default value is an empty string,
+ *      and is indicated when this field is a nullptr.
  *   integrity metadata
  *      The integrity metadata used for the initial fetch. This is
  *      implemented in ScriptLoadRequest, as it changes for every
@@ -77,7 +83,8 @@ class ScriptFetchOptions {
 
   ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                      enum mozilla::dom::ReferrerPolicy aReferrerPolicy,
-                     nsIPrincipal* aTriggeringPrincipal);
+                     nsIPrincipal* aTriggeringPrincipal,
+                     mozilla::dom::Element* aElement = nullptr);
 
   /*
    *  The credentials mode used for the initial fetch (for module scripts)
@@ -93,9 +100,16 @@ class ScriptFetchOptions {
   const enum mozilla::dom::ReferrerPolicy mReferrerPolicy;
 
   /*
-   *  Related to cryptographic nonce, used to determine CSP
+   *  Used to determine CSP
    */
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  /*
+   *      Represents fields populated by DOM elements (nonce, parser metadata)
+   *      Leave this field as a nullptr for any fetch that requires the
+   *      default classic script options.
+   *      (https://html.spec.whatwg.org/multipage/webappapis.html#default-classic-script-fetch-options)
+   */
+  nsCOMPtr<mozilla::dom::Element> mElement;
 };
 
 /*
