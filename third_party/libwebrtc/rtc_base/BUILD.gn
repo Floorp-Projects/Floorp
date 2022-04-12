@@ -642,27 +642,27 @@ config("rtc_json_suppressions") {
 }
 
 if (false) {
-  rtc_library("rtc_json") {
-    public_configs = [ ":rtc_json_suppressions" ]
-    poisonous = [ "rtc_json" ]
-    defines = []
-    sources = [
-      "strings/json.cc",
-      "strings/json.h",
-    ]
-    deps = [ ":stringutils" ]
-    all_dependent_configs = [ "//third_party/jsoncpp:jsoncpp_config" ]
-    if (rtc_build_json) {
-      public_deps =  # no-presubmit-check TODO(webrtc:8603)
-          [ "//third_party/jsoncpp" ]
-    } else {
-      include_dirs = [ "$rtc_jsoncpp_root" ]
+rtc_library("rtc_json") {
+  public_configs = [ ":rtc_json_suppressions" ]
+  poisonous = [ "rtc_json" ]
+  defines = []
+  sources = [
+    "strings/json.cc",
+    "strings/json.h",
+  ]
+  deps = [ ":stringutils" ]
+  all_dependent_configs = [ "//third_party/jsoncpp:jsoncpp_config" ]
+  if (rtc_build_json) {
+    public_deps =  # no-presubmit-check TODO(webrtc:8603)
+        [ "//third_party/jsoncpp" ]
+  } else {
+    include_dirs = [ "$rtc_jsoncpp_root" ]
 
-      # When defined changes the include path for json.h to where it is
-      # expected to be when building json outside of the standalone build.
-      defines += [ "WEBRTC_EXTERNAL_JSON" ]
-    }
+    # When defined changes the include path for json.h to where it is
+    # expected to be when building json outside of the standalone build.
+    defines += [ "WEBRTC_EXTERNAL_JSON" ]
   }
+}
 }
 
 rtc_source_set("net_helpers") {
@@ -1052,123 +1052,123 @@ rtc_source_set("gtest_prod") {
 }
 
 if (rtc_include_tests) {
-  rtc_library("gunit_helpers") {
-    testonly = true
-    sources = [
-      "gunit.cc",
-      "gunit.h",
-    ]
-    deps = [
-      ":logging",
-      ":rtc_base",
-      ":rtc_base_tests_utils",
-      ":stringutils",
-      "../test:test_support",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-  }
+rtc_library("gunit_helpers") {
+  testonly = true
+  sources = [
+    "gunit.cc",
+    "gunit.h",
+  ]
+  deps = [
+    ":logging",
+    ":rtc_base",
+    ":rtc_base_tests_utils",
+    ":stringutils",
+    "../test:test_support",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
 
-  rtc_library("testclient") {
-    testonly = true
-    sources = [
-      "test_client.cc",
-      "test_client.h",
-    ]
-    deps = [
-      ":criticalsection",
-      ":gunit_helpers",
-      ":rtc_base",
-      ":rtc_base_tests_utils",
-      ":timeutils",
-      "synchronization:mutex",
-    ]
-  }
+rtc_library("testclient") {
+  testonly = true
+  sources = [
+    "test_client.cc",
+    "test_client.h",
+  ]
+  deps = [
+    ":criticalsection",
+    ":gunit_helpers",
+    ":rtc_base",
+    ":rtc_base_tests_utils",
+    ":timeutils",
+    "synchronization:mutex",
+  ]
+}
 
-  rtc_library("robo_caller_unittests") {
-    testonly = true
+rtc_library("robo_caller_unittests") {
+  testonly = true
 
-    sources = [ "robo_caller_unittest.cc" ]
-    deps = [
-      ":gunit_helpers",
-      ":robo_caller",
-      ":rtc_base",
-      "../api:function_view",
-      "../test:test_support",
-    ]
-  }
+  sources = [ "robo_caller_unittest.cc" ]
+  deps = [
+    ":gunit_helpers",
+    ":robo_caller",
+    ":rtc_base",
+    "../api:function_view",
+    "../test:test_support",
+  ]
+}
 
-  rtc_library("rtc_base_tests_utils") {
-    testonly = true
-    sources = [
-      "cpu_time.cc",
-      "cpu_time.h",
-      "fake_clock.cc",
-      "fake_clock.h",
-      "fake_mdns_responder.h",
-      "fake_network.h",
-      "fake_ssl_identity.cc",
-      "fake_ssl_identity.h",
-      "firewall_socket_server.cc",
-      "firewall_socket_server.h",
-      "memory_stream.cc",
-      "memory_stream.h",
-      "memory_usage.cc",
-      "memory_usage.h",
-      "nat_server.cc",
-      "nat_server.h",
-      "nat_socket_factory.cc",
-      "nat_socket_factory.h",
-      "nat_types.cc",
-      "nat_types.h",
-      "proxy_server.cc",
-      "proxy_server.h",
-      "server_socket_adapters.cc",
-      "server_socket_adapters.h",
-      "sigslot_tester.h",
-      "socket_stream.cc",
-      "socket_stream.h",
-      "test_base64.h",
-      "test_certificate_verifier.h",
-      "test_echo_server.cc",
-      "test_echo_server.h",
-      "test_utils.cc",
-      "test_utils.h",
-      "virtual_socket_server.cc",
-      "virtual_socket_server.h",
-    ]
-    deps = [
-      ":checks",
-      ":rtc_base",
-      "../api/units:time_delta",
-      "../api/units:timestamp",
-      "memory:fifo_buffer",
-      "synchronization:mutex",
-      "third_party/sigslot",
-    ]
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/algorithm:container",
-      "//third_party/abseil-cpp/absl/memory",
-    ]
-  }
+rtc_library("rtc_base_tests_utils") {
+  testonly = true
+  sources = [
+    "cpu_time.cc",
+    "cpu_time.h",
+    "fake_clock.cc",
+    "fake_clock.h",
+    "fake_mdns_responder.h",
+    "fake_network.h",
+    "fake_ssl_identity.cc",
+    "fake_ssl_identity.h",
+    "firewall_socket_server.cc",
+    "firewall_socket_server.h",
+    "memory_stream.cc",
+    "memory_stream.h",
+    "memory_usage.cc",
+    "memory_usage.h",
+    "nat_server.cc",
+    "nat_server.h",
+    "nat_socket_factory.cc",
+    "nat_socket_factory.h",
+    "nat_types.cc",
+    "nat_types.h",
+    "proxy_server.cc",
+    "proxy_server.h",
+    "server_socket_adapters.cc",
+    "server_socket_adapters.h",
+    "sigslot_tester.h",
+    "socket_stream.cc",
+    "socket_stream.h",
+    "test_base64.h",
+    "test_certificate_verifier.h",
+    "test_echo_server.cc",
+    "test_echo_server.h",
+    "test_utils.cc",
+    "test_utils.h",
+    "virtual_socket_server.cc",
+    "virtual_socket_server.h",
+  ]
+  deps = [
+    ":checks",
+    ":rtc_base",
+    "../api/units:time_delta",
+    "../api/units:timestamp",
+    "memory:fifo_buffer",
+    "synchronization:mutex",
+    "third_party/sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/memory",
+  ]
+}
 
-  rtc_library("task_queue_for_test") {
-    testonly = true
+rtc_library("task_queue_for_test") {
+  testonly = true
 
-    sources = [
-      "task_queue_for_test.cc",
-      "task_queue_for_test.h",
-    ]
-    deps = [
-      ":checks",
-      ":rtc_base_approved",
-      ":rtc_event",
-      ":rtc_task_queue",
-      "../api/task_queue",
-      "../api/task_queue:default_task_queue_factory",
-      "task_utils:to_queued_task",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-  }
+  sources = [
+    "task_queue_for_test.cc",
+    "task_queue_for_test.h",
+  ]
+  deps = [
+    ":checks",
+    ":rtc_base_approved",
+    ":rtc_event",
+    ":rtc_task_queue",
+    "../api/task_queue",
+    "../api/task_queue:default_task_queue_factory",
+    "task_utils:to_queued_task",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
 }
 
 if (rtc_include_tests) {

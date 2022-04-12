@@ -43,16 +43,16 @@ rtc_library("fifo_buffer") {
 }
 
 if (rtc_include_tests) {
-  rtc_library("unittests") {
-    testonly = true
-    sources = [
-      "aligned_malloc_unittest.cc",
-      "fifo_buffer_unittest.cc",
-    ]
-    deps = [
-      ":aligned_malloc",
-      ":fifo_buffer",
-      "../../test:test_support",
-    ]
-  }
+rtc_library("unittests") {
+  testonly = true
+  sources = [
+    "aligned_malloc_unittest.cc",
+    "fifo_buffer_unittest.cc",
+  ]
+  deps = [
+    ":aligned_malloc",
+    ":fifo_buffer",
+    "../../test:test_support",
+  ]
+}
 }
