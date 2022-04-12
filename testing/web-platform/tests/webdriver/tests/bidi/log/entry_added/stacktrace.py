@@ -15,8 +15,8 @@ from . import assert_console_entry, assert_javascript_entry
     ("warn", True),
 ])
 async def test_console_entry_sync_callstack(bidi_session,
-                                            current_session,
                                             inline,
+                                            top_context,
                                             wait_for_event,
                                             log_method,
                                             expect_stack):
@@ -51,7 +51,9 @@ async def test_console_entry_sync_callstack(bidi_session,
     else:
         expected_stack = None
 
-    current_session.url = url
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=url, wait="complete"
+    )
 
     event_data = await on_entry_added
 
@@ -64,13 +66,15 @@ async def test_console_entry_sync_callstack(bidi_session,
 
     # Navigate to a page with no error to avoid polluting the next tests with
     # JavaScript errors.
-    current_session.url = inline("<p>foo")
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=inline("<p>foo"), wait="complete"
+    )
 
 
 @pytest.mark.asyncio
 async def test_javascript_entry_sync_callstack(bidi_session,
-                                               current_session,
                                                inline,
+                                               top_context,
                                                wait_for_event):
     url = inline("""
         <script>
@@ -90,7 +94,9 @@ async def test_javascript_entry_sync_callstack(bidi_session,
         {"columnNumber": 13, "functionName": "", "lineNumber": 6, "url": url},
     ]
 
-    current_session.url = url
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=url, wait="complete"
+    )
 
     event_data = await on_entry_added
 
@@ -103,4 +109,6 @@ async def test_javascript_entry_sync_callstack(bidi_session,
 
     # Navigate to a page with no error to avoid polluting the next tests with
     # JavaScript errors.
-    current_session.url = inline("<p>foo")
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"], url=inline("<p>foo"), wait="complete"
+    )
