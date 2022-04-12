@@ -6,7 +6,7 @@ const { AppConstants } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-const { UptakeTelemetry } = ChromeUtils.import(
+const { UptakeTelemetry, Policy } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
 const { RemoteSettingsClient } = ChromeUtils.import(
@@ -75,10 +75,15 @@ function run_test() {
   server = new HttpServer();
   server.start(-1);
 
+  // Pretend we are in nightly channel to make sure all telemetry events are sent.
+  let oldGetChannel = Policy.getChannel;
+  Policy.getChannel = () => "nightly";
+
   run_next_test();
 
-  registerCleanupFunction(function() {
-    server.stop(function() {});
+  registerCleanupFunction(() => {
+    Policy.getChannel = oldGetChannel;
+    server.stop(() => {});
   });
 }
 
@@ -189,9 +194,7 @@ add_task(async function test_check_success() {
   };
   Services.obs.addObserver(observer, "remote-settings:changes-poll-end");
 
-  await withFakeChannel("nightly", async () => {
-    await RemoteSettings.pollChanges();
-  });
+  await RemoteSettings.pollChanges();
 
   // It didn't fail, hence we are sure that the unknown collection ``some-other-bucket/test-collection``
   // was ignored, otherwise it would have tried to reach the network.
@@ -401,21 +404,72 @@ const TELEMETRY_EVENTS_FILTERS = {
   method: "uptake",
 };
 add_task(async function test_age_of_data_is_reported_in_uptake_status() {
-  await withFakeChannel("nightly", async () => {
-    const serverTime = 1552323900000;
-    const recordsTimestamp = serverTime - 3600 * 1000;
+  const serverTime = 1552323900000;
+  const recordsTimestamp = serverTime - 3600 * 1000;
+  server.registerPathHandler(
+    CHANGES_PATH,
+    serveChangesEntries(serverTime, [
+      {
+        id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
+        last_modified: recordsTimestamp,
+        host: "localhost",
+        bucket: "main",
+        collection: "some-entry",
+      },
+    ])
+  );
+
+  await RemoteSettings.pollChanges();
+
+  TelemetryTestUtils.assertEvents(
+    [
+      [
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.SUCCESS,
+        {
+          source: TELEMETRY_SOURCE_POLL,
+          age: "3600",
+          trigger: "manual",
+        },
+      ],
+      [
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.SUCCESS,
+        {
+          source: TELEMETRY_SOURCE_SYNC,
+          duration: () => true,
+          trigger: "manual",
+          timestamp: `"${recordsTimestamp}"`,
+        },
+      ],
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
+});
+add_task(clear_state);
+
+add_task(
+  async function test_synchronization_duration_is_reported_in_uptake_status() {
     server.registerPathHandler(
       CHANGES_PATH,
-      serveChangesEntries(serverTime, [
+      serveChangesEntries(10000, [
         {
           id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-          last_modified: recordsTimestamp,
+          last_modified: 42,
           host: "localhost",
           bucket: "main",
           collection: "some-entry",
         },
       ])
     );
+    const c = RemoteSettings("some-entry");
+    // Simulate a synchronization that lasts 1 sec.
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    c.maybeSync = () => new Promise(resolve => setTimeout(resolve, 1000));
 
     await RemoteSettings.pollChanges();
 
@@ -425,10 +479,10 @@ add_task(async function test_age_of_data_is_reported_in_uptake_status() {
           "uptake.remotecontent.result",
           "uptake",
           "remotesettings",
-          UptakeTelemetry.STATUS.SUCCESS,
+          "success",
           {
             source: TELEMETRY_SOURCE_POLL,
-            age: "3600",
+            age: () => true,
             trigger: "manual",
           },
         ],
@@ -436,71 +490,16 @@ add_task(async function test_age_of_data_is_reported_in_uptake_status() {
           "uptake.remotecontent.result",
           "uptake",
           "remotesettings",
-          UptakeTelemetry.STATUS.SUCCESS,
+          "success",
           {
             source: TELEMETRY_SOURCE_SYNC,
-            duration: () => true,
+            duration: v => v >= 1000,
             trigger: "manual",
-            timestamp: `"${recordsTimestamp}"`,
           },
         ],
       ],
       TELEMETRY_EVENTS_FILTERS
     );
-  });
-});
-add_task(clear_state);
-
-add_task(
-  async function test_synchronization_duration_is_reported_in_uptake_status() {
-    await withFakeChannel("nightly", async () => {
-      server.registerPathHandler(
-        CHANGES_PATH,
-        serveChangesEntries(10000, [
-          {
-            id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
-            last_modified: 42,
-            host: "localhost",
-            bucket: "main",
-            collection: "some-entry",
-          },
-        ])
-      );
-      const c = RemoteSettings("some-entry");
-      // Simulate a synchronization that lasts 1 sec.
-      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-      c.maybeSync = () => new Promise(resolve => setTimeout(resolve, 1000));
-
-      await RemoteSettings.pollChanges();
-
-      TelemetryTestUtils.assertEvents(
-        [
-          [
-            "uptake.remotecontent.result",
-            "uptake",
-            "remotesettings",
-            "success",
-            {
-              source: TELEMETRY_SOURCE_POLL,
-              age: () => true,
-              trigger: "manual",
-            },
-          ],
-          [
-            "uptake.remotecontent.result",
-            "uptake",
-            "remotesettings",
-            "success",
-            {
-              source: TELEMETRY_SOURCE_SYNC,
-              duration: v => v >= 1000,
-              trigger: "manual",
-            },
-          ],
-        ],
-        TELEMETRY_EVENTS_FILTERS
-      );
-    });
   }
 );
 add_task(clear_state);

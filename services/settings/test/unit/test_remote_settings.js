@@ -15,7 +15,7 @@ const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
 const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
-const { UptakeTelemetry } = ChromeUtils.import(
+const { UptakeTelemetry, Policy } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
@@ -62,6 +62,10 @@ function run_test() {
   server = new HttpServer();
   server.start(-1);
 
+  // Pretend we are in nightly channel to make sure all telemetry events are sent.
+  let oldGetChannel = Policy.getChannel;
+  Policy.getChannel = () => "nightly";
+
   // Point the blocklist clients to use this local HTTP server.
   Services.prefs.setCharPref(
     "services.settings.server",
@@ -94,7 +98,8 @@ function run_test() {
 
   run_next_test();
 
-  registerCleanupFunction(function() {
+  registerCleanupFunction(() => {
+    Policy.getChannel = oldGetChannel;
     server.stop(() => {});
   });
 }
@@ -970,29 +975,27 @@ add_task(async function test_telemetry_reports_error_name_as_event_nightly() {
     throw e;
   };
 
-  await withFakeChannel("nightly", async () => {
-    try {
-      await client.maybeSync(2000);
-    } catch (e) {}
+  try {
+    await client.maybeSync(2000);
+  } catch (e) {}
 
-    TelemetryTestUtils.assertEvents(
+  TelemetryTestUtils.assertEvents(
+    [
       [
-        [
-          "uptake.remotecontent.result",
-          "uptake",
-          "remotesettings",
-          UptakeTelemetry.STATUS.UNKNOWN_ERROR,
-          {
-            source: client.identifier,
-            trigger: "manual",
-            duration: v => v >= 0,
-            errorName: "ThrownError",
-          },
-        ],
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.UNKNOWN_ERROR,
+        {
+          source: client.identifier,
+          trigger: "manual",
+          duration: v => v >= 0,
+          errorName: "ThrownError",
+        },
       ],
-      TELEMETRY_EVENTS_FILTERS
-    );
-  });
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 
   client.db.list = backup;
 });
