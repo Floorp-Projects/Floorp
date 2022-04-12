@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
-
 const URL = "http://localhost:0";
 
 add_agent_task(async function debuggerAddress() {
@@ -92,16 +88,6 @@ add_agent_task(async function listenRestrictedToLoopbackDevice() {
   } catch (e) {
     is(e.result, Cr.NS_ERROR_ILLEGAL_VALUE);
     is(e.message, "Restricted to loopback devices");
-  }
-});
-
-add_agent_task(async function listenNonLoopbackDevice() {
-  try {
-    Preferences.set("remote.force-local", false);
-    await RemoteAgent.listen("http://0.0.0.0:0");
-    await RemoteAgent.close();
-  } finally {
-    Preferences.reset("remote.force-local");
   }
 });
 
