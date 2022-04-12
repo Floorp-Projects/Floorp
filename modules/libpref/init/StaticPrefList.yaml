@@ -11573,7 +11573,7 @@
 # Anti-tracking permission expiration.
 - name: privacy.restrict3rdpartystorage.expiration_redirect
   type: uint32_t
-  value: 900    # 15 minutes
+  value: 2592000   # 30 days (in seconds)
   mirror: always
 
 # Anti-tracking user-interaction expiration.
