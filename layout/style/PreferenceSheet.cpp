@@ -181,11 +181,10 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   *this = {};
 
   mIsChrome = aIsChrome;
-
+  mUseAccessibilityTheme =
+      LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme);
   // Chrome documents always use system colors, not stand-ins, not forced, etc.
   if (!aIsChrome) {
-    mUseAccessibilityTheme =
-        LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme);
     mUseDocumentColors = UseDocumentColors(mUseAccessibilityTheme);
     mUsePrefColors = !StaticPrefs::browser_display_use_system_colors();
     mUseStandins = UseStandinsForNativeColors();

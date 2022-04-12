@@ -282,13 +282,22 @@ StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return StylePrefersContrast::NoPreference;
   }
-  if (!!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
+  const auto& prefs = PreferenceSheet::PrefsFor(*aDocument);
+  if (!prefs.mUseAccessibilityTheme && prefs.mUseDocumentColors) {
+    return StylePrefersContrast::NoPreference;
+  }
+  const auto& colors = prefs.ColorsFor(ColorScheme::Light);
+  float ratio = RelativeLuminanceUtils::ContrastRatio(colors.mDefaultBackground,
+                                                      colors.mDefault);
+  // https://www.w3.org/TR/WCAG21/#contrast-minimum
+  if (ratio < 4.5f) {
+    return StylePrefersContrast::Less;
+  }
+  // https://www.w3.org/TR/WCAG21/#contrast-enhanced
+  if (ratio >= 7.0f) {
     return StylePrefersContrast::More;
   }
-  if (!PreferenceSheet::PrefsFor(*aDocument).mUseDocumentColors) {
-    return StylePrefersContrast::More;
-  }
-  return StylePrefersContrast::NoPreference;
+  return StylePrefersContrast::Custom;
 }
 
 StyleDynamicRange Gecko_MediaFeatures_DynamicRange(const Document* aDocument) {
