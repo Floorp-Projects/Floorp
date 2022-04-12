@@ -134,7 +134,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
                 bool aWindowIsFullscreen, bool aMouseMovedRecently);
     CALayer* FindVideoLayerToIsolate(
         WhichRepresentation aRepresentation,
-        const nsTArray<RefPtr<NativeLayerCA>>& aSublayers);
+        const nsTArray<NativeLayerCA*>& aSublayers);
     CALayer* mRootCALayer = nullptr;  // strong
     bool mIsIsolatingVideo = false;
     bool mMutatedLayerStructure = false;
