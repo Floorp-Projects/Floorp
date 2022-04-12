@@ -1290,9 +1290,9 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Indicates if the Unified Search feature should be visible.
      */
-    var showUnifiedSearchFeature by featureFlagPreference(
+    var showUnifiedSearchFeature by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_show_unified_search),
-        default = false,
+        default = { homescreenSections[HomeScreenSection.UNIFIED_SEARCH] == true },
         featureFlag = FeatureFlags.unifiedSearchFeature
     )
 

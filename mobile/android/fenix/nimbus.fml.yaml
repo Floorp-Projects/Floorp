@@ -20,6 +20,7 @@ features:
             "recent-explorations": true,
             "pocket": true,
             "contile-top-sites": false,
+            "unified-search": false,
           }
     defaults:
       - channel: nightly
@@ -31,6 +32,7 @@ features:
             "recent-explorations": true,
             "pocket": true,
             "contile-top-sites": false,
+            "unified-search": false,
           }
         }
   nimbus-validation:
@@ -310,6 +312,8 @@ types:
           description: The pocket section. This should only be available in the US.
         contile-top-sites:
           description: The sponsored shortcuts in the homescreen.
+        unified-search:
+          description: The unified search toolbar.
     MessageSurfaceId:
       description: The identity of a message surface, used in the default browser experiments
       variants:
