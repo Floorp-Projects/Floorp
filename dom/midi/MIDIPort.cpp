@@ -14,6 +14,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Unused.h"
+#include "nsContentUtils.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "MIDILog.h"
 
@@ -63,8 +64,17 @@ MIDIPort::~MIDIPort() {
 }
 
 bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
+  nsIURI* uri = GetDocumentIfCurrent()->GetDocumentURI();
+  nsAutoCString origin;
+  nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
   RefPtr<MIDIPortChild> port =
       new MIDIPortChild(aPortInfo, aSysexEnabled, this);
+  if (NS_FAILED(port->GenerateStableId(origin))) {
+    return false;
+  }
   PBackgroundChild* b = BackgroundChild::GetForCurrentThread();
   MOZ_ASSERT(b,
              "Should always have a valid BackgroundChild when creating a port "
@@ -91,7 +101,7 @@ void MIDIPort::UnsetIPCPort() {
 
 void MIDIPort::GetId(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
-  aRetVal = mPort->MIDIPortInterface::Id();
+  aRetVal = mPort->StableId();
 }
 
 void MIDIPort::GetManufacturer(nsString& aRetVal) const {
@@ -251,5 +261,7 @@ void MIDIPort::DontKeepAliveOnStatechange() {
     mKeepAlive = false;
   }
 }
+
+const nsString& MIDIPort::StableId() { return mPort->StableId(); }
 
 }  // namespace mozilla::dom

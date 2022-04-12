@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Stable MIDI port id test</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
+</head>
+<body>
+<script>
+    async function get_first_input_id() {
+    let access = await navigator.requestMIDIAccess({ sysex: false });
+    const inputs = access.inputs.values();
+    const input = inputs.next();
+    return input.value.id;
+}
+</script>
+</body>
+</html>

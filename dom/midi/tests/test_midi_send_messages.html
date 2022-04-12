@@ -17,7 +17,6 @@
       const access = await navigator.requestMIDIAccess({ sysex: true });
       const output = access.outputs.get(MIDITestUtils.stateTestOutputInfo.id);
 
-      dump("output = " + JSON.stringify(output, null, "  ") + "\n");
 
       // Note on(off).
       output.send([0xff, 0x90, 0x00, 0x00, 0x90, 0x07, 0x00]);
@@ -25,7 +24,6 @@
       try {
         output.send([0x00, 0x01])
       } catch (ex) {
-        dump("Caught exception");
         ok(true, "Caught exception");
       }
 

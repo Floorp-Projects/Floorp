@@ -7,7 +7,9 @@
 #ifndef mozilla_dom_MIDIInputMap_h
 #define mozilla_dom_MIDIInputMap_h
 
+#include "mozilla/dom/MIDIPort.h"
 #include "nsCOMPtr.h"
+#include "nsTHashMap.h"
 #include "nsWrapperCache.h"
 
 class nsPIDOMWindowInner;
@@ -27,9 +29,15 @@ class MIDIInputMap final : public nsISupports, public nsWrapperCache {
   explicit MIDIInputMap(nsPIDOMWindowInner* aParent);
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+  bool Has(nsAString& aId) { return mPorts.Get(aId) != nullptr; }
+  void Insert(nsAString& aId, RefPtr<MIDIPort> aPort) {
+    mPorts.InsertOrUpdate(aId, aPort);
+  }
+  void Remove(nsAString& aId) { mPorts.Remove(aId); }
 
  private:
   ~MIDIInputMap() = default;
+  nsTHashMap<nsString, RefPtr<MIDIPort>> mPorts;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
