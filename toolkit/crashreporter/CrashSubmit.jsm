@@ -242,14 +242,18 @@ Submitter.prototype = {
 
     // add the minidumps
     let promises = [
-      File.createFromFileName(this.dump).then(file => {
+      File.createFromFileName(this.dump, {
+        type: "application/octet-stream",
+      }).then(file => {
         formData.append("upload_file_minidump", file);
       }),
     ];
 
     if (this.memory) {
       promises.push(
-        File.createFromFileName(this.memory).then(file => {
+        File.createFromFileName(this.memory, {
+          type: "application/gzip",
+        }).then(file => {
           formData.append("memory_report", file);
         })
       );
@@ -260,7 +264,9 @@ Submitter.prototype = {
       for (let i of this.additionalDumps) {
         names.push(i.name);
         promises.push(
-          File.createFromFileName(i.dump).then(file => {
+          File.createFromFileName(i.dump, {
+            type: "application/octet-stream",
+          }).then(file => {
             formData.append("upload_file_minidump_" + i.name, file);
           })
         );
