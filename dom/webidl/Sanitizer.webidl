@@ -20,6 +20,8 @@ interface Sanitizer {
   constructor(optional SanitizerConfig sanitizerConfig = {});
   [UseCounter, Throws]
   DocumentFragment sanitize(SanitizerInput input);
+  [UseCounter, Throws]
+  Element? sanitizeFor(DOMString element, DOMString input);
 };
 
 dictionary SanitizerConfig {
