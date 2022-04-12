@@ -48,6 +48,9 @@ with Files("tests/xpcshell/test_UpdateUtils*.js"):
 with Files("AsyncPrefs.jsm"):
     BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
 
+with Files("AsanReporter.jsm"):
+    BUG_COMPONENT = ("Firefox Build System", "General")
+
 with Files("Color.jsm"):
     BUG_COMPONENT = ("Toolkit", "Find Toolbar")
 
@@ -215,6 +218,11 @@ EXTRA_JS_MODULES += [
     "UpdateUtils.jsm",
     "WebChannel.jsm",
 ]
+
+if CONFIG["MOZ_ASAN_REPORTER"]:
+    EXTRA_JS_MODULES += [
+        "AsanReporter.jsm",
+    ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXTRA_JS_MODULES += [
