@@ -3262,7 +3262,15 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
     this->setIsCall();
   }
 
-  MWasmCall* mir() const { return mir_->toWasmCall(); }
+  MWasmCallBase* mir() const {
+    if (mir_->isWasmCallCatchable()) {
+      return static_cast<MWasmCallBase*>(mir_->toWasmCallCatchable());
+    }
+    return static_cast<MWasmCallBase*>(mir_->toWasmCallUncatchable());
+  }
+  MWasmCallCatchable* mirCatchable() const {
+    return mir_->toWasmCallCatchable();
+  }
 
   static bool isCallPreserved(AnyRegister reg) {
     // All MWasmCalls preserve the TLS register:
@@ -3270,6 +3278,10 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
     //  - import calls do by explicitly saving/restoring at the callsite
     //  - builtin calls do because the TLS reg is non-volatile
     // See also CodeGeneratorShared::emitWasmCall.
+    //
+    // All other registers are not preserved. This is is relied upon by
+    // MWasmCallCatchable which needs all live registers to be spilled before
+    // a call.
     return !reg.isFloat() && reg.gpr() == InstanceReg;
   }
 

@@ -211,7 +211,8 @@ bool jit::ReorderInstructions(MIRGraph& graph) {
             postCallTarget = target;
           }
         } else if (postCallTarget) {
-          MOZ_ASSERT(prev->isWasmCall() || prev->isIonToWasmCall());
+          MOZ_ASSERT(MWasmCallBase::IsWasmCall(prev) ||
+                     prev->isIonToWasmCall());
           postCallTarget = nullptr;
         }
 
