@@ -1,6 +1,7 @@
 #!/bin/bash
 set -x -e -v
 
+. $GECKO_PATH/taskcluster/scripts/misc/tooltool-download.sh
 . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
 
 cd $MOZ_FETCHES_DIR/make
