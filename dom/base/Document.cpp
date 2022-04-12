@@ -3750,6 +3750,20 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   return NS_OK;
 }
 
+static Document* GetInProcessParentDocumentFrom(BrowsingContext* aContext) {
+  BrowsingContext* parentContext = aContext->GetParent();
+  if (!parentContext) {
+    return nullptr;
+  }
+
+  WindowContext* windowContext = parentContext->GetCurrentWindowContext();
+  if (!windowContext) {
+    return nullptr;
+  }
+
+  return windowContext->GetDocument();
+}
+
 already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
   BrowsingContext* browsingContext = GetBrowsingContext();
   if (!browsingContext) {
@@ -3767,6 +3781,11 @@ already_AddRefed<dom::FeaturePolicy> Document::GetParentFeaturePolicy() {
 
   if (XRE_IsParentProcess()) {
     return do_AddRef(browsingContext->Canonical()->GetContainerFeaturePolicy());
+  }
+
+  if (Document* parentDocument =
+          GetInProcessParentDocumentFrom(browsingContext)) {
+    return do_AddRef(parentDocument->FeaturePolicy());
   }
 
   WindowContext* windowContext = browsingContext->GetCurrentWindowContext();

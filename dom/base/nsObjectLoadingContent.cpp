@@ -83,6 +83,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/widget/IMEData.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLObjectElement.h"
@@ -361,6 +362,8 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
     mFrameLoader = nullptr;
     return nullptr;
   }
+
+  MaybeStoreCrossOriginFeaturePolicy();
 
   return docShell.forget();
 }
@@ -2362,5 +2365,33 @@ void nsObjectLoadingContent::SubdocumentIntrinsicSizeOrRatioChanged(
 
   if (nsSubDocumentFrame* sdf = do_QueryFrame(thisContent->GetPrimaryFrame())) {
     sdf->SubdocumentIntrinsicSizeOrRatioChanged();
+  }
+}
+
+void nsObjectLoadingContent::MaybeStoreCrossOriginFeaturePolicy() {
+  MOZ_DIAGNOSTIC_ASSERT(mFrameLoader);
+
+  // If the browsingContext is not ready (because docshell is dead), don't try
+  // to create one.
+  if (!mFrameLoader->IsRemoteFrame() && !mFrameLoader->GetExistingDocShell()) {
+    return;
+  }
+
+  RefPtr<BrowsingContext> browsingContext = mFrameLoader->GetBrowsingContext();
+
+  if (!browsingContext || !browsingContext->IsContentSubframe()) {
+    return;
+  }
+
+  nsCOMPtr<nsIContent> thisContent = AsContent();
+
+  if (!thisContent->IsInComposedDoc()) {
+    return;
+  }
+
+  FeaturePolicy* featurePolicy = thisContent->OwnerDoc()->FeaturePolicy();
+
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    Unused << cc->SendSetContainerFeaturePolicy(browsingContext, featurePolicy);
   }
 }
