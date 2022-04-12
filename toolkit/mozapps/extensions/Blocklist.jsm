@@ -976,7 +976,6 @@ const ExtensionBlocklistMLBF = {
       _source: rsAttachmentSource,
     } = await this._client.attachments.download(record, {
       attachmentId: this.RS_ATTACHMENT_ID,
-      useCache: true,
       fallbackToCache: true,
       fallbackToDump: true,
     });
