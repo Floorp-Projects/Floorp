@@ -216,9 +216,11 @@ function createContextMenu(event, message, webConsoleWrapper) {
       label: l10n.getStr("webconsole.menu.copyAllMessages.label"),
       accesskey: l10n.getStr("webconsole.menu.copyAllMessages.accesskey"),
       disabled: false,
-      click: () => {
-        const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-        clipboardHelper.copyString(getElementText(webconsoleOutput));
+      click: async function() {
+        const outputText = await getUnvirtualizedConsoleOutputText(
+          webConsoleWrapper
+        );
+        clipboardHelper.copyString(outputText);
       },
     })
   );
@@ -231,15 +233,17 @@ function createContextMenu(event, message, webConsoleWrapper) {
       accesskey: l10n.getStr("webconsole.menu.saveAllMessagesFile.accesskey"),
       disabled: false,
       // Note: not async, but returns a promise for the actual save.
-      click: () => {
+      click: async () => {
         const date = new Date();
         const suggestedName =
           `console-export-${date.getFullYear()}-` +
           `${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-` +
           `${date.getMinutes()}-${date.getSeconds()}.txt`;
-        const webconsoleOutput = parentNode.querySelector(".webconsole-output");
-        const data = new TextEncoder().encode(getElementText(webconsoleOutput));
-        return saveAs(window, data, suggestedName);
+        const outputText = await getUnvirtualizedConsoleOutputText(
+          webConsoleWrapper
+        );
+        const data = new TextEncoder().encode(outputText);
+        saveAs(window, data, suggestedName);
       },
     })
   );
@@ -290,3 +294,58 @@ function createContextMenu(event, message, webConsoleWrapper) {
 }
 
 exports.createContextMenu = createContextMenu;
+
+/**
+ * Returns the whole text content of the console output.
+ * We're creating a new ConsoleOutput using the current store, turning off virtualization
+ * so we can have access to all the messages.
+ *
+ * @param {WebConsoleWrapper} webConsoleWrapper
+ * @returns Promise<String>
+ */
+async function getUnvirtualizedConsoleOutputText(webConsoleWrapper) {
+  return new Promise(resolve => {
+    const ReactDOM = require("devtools/client/shared/vendor/react-dom");
+    const {
+      createElement,
+      createFactory,
+    } = require("devtools/client/shared/vendor/react");
+    const ConsoleOutput = createFactory(
+      require("devtools/client/webconsole/components/Output/ConsoleOutput")
+    );
+    const { Provider } = require("devtools/client/shared/vendor/react-redux");
+    const ToolboxProvider = require("devtools/client/framework/store-provider");
+
+    const { parentNode, toolbox } = webConsoleWrapper;
+    const doc = parentNode.ownerDocument;
+
+    // Create an element that won't impact the layout of the console
+    const singleUseElement = doc.createElement("section");
+    singleUseElement.classList.add("clipboard-only");
+    doc.body.append(singleUseElement);
+
+    const consoleOutput = ConsoleOutput({
+      serviceContainer: {
+        ...webConsoleWrapper.getServiceContainer(),
+        preventStacktraceInitialRenderDelay: true,
+      },
+      disableVirtualization: true,
+    });
+
+    ReactDOM.render(
+      createElement(
+        Provider,
+        {
+          store: webConsoleWrapper.getStore(),
+        },
+        createElement(ToolboxProvider, { store: toolbox.store }, consoleOutput)
+      ),
+      singleUseElement,
+      () => {
+        resolve(getElementText(singleUseElement));
+        singleUseElement.remove();
+        ReactDOM.unmountComponentAtNode(singleUseElement);
+      }
+    );
+  });
+}

@@ -95,8 +95,8 @@ function getObjectInspector(
     queueActorsForCleanup: override.queueActorsForCleanup,
     cachedNodes: override.cachedNodes,
     urlCropLimit: 120,
-    renderStacktrace: stacktrace =>
-      createElement(SmartTrace, {
+    renderStacktrace: stacktrace => {
+      const attrs = {
         key: "stacktrace",
         stacktrace,
         onViewSourceInDebugger: serviceContainer
@@ -108,7 +108,13 @@ function getObjectInspector(
         sourceMapURLService: serviceContainer
           ? serviceContainer.sourceMapURLService
           : null,
-      }),
+      };
+
+      if (serviceContainer?.preventStacktraceInitialRenderDelay) {
+        attrs.initialRenderDelay = 0;
+      }
+      return createElement(SmartTrace, attrs);
+    },
     onDOMNodeMouseOver,
     onDOMNodeMouseOut,
     onInspectIconClick,
