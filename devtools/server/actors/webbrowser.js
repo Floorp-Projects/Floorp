@@ -322,13 +322,13 @@ BrowserTabList.prototype._getActorForBrowser = async function(browser) {
 };
 
 /**
- * Return the tab descriptor for the tab identified by one of the IDs
- * passed as argument.
+ * Return the tab descriptor :
+ * - for the tab matching a browserId if one is passed
+ * - OR the currently selected tab if no browserId is passed.
  *
- * @param {Number} browserId: use to match any tab (should become the new way to identify any remote tab)
- * @param {Number} tabId: used to match tabs in child processes (obsolete, use browserId)
+ * @param {Number} browserId: use to match any tab
  */
-BrowserTabList.prototype.getTab = function({ browserId, tabId }) {
+BrowserTabList.prototype.getTab = function({ browserId }) {
   if (typeof browserId == "number") {
     const browsingContext = BrowsingContext.getCurrentTopByBrowserId(browserId);
     if (!browsingContext) {
@@ -345,21 +345,6 @@ BrowserTabList.prototype.getTab = function({ browserId, tabId }) {
       });
     }
     return this._getActorForBrowser(browser);
-  }
-  if (typeof tabId == "number") {
-    // Tabs OOP
-    for (const browser of this._getBrowsers()) {
-      if (
-        browser.frameLoader?.remoteTab &&
-        browser.frameLoader.remoteTab.tabId === tabId
-      ) {
-        return this._getActorForBrowser(browser);
-      }
-    }
-    return Promise.reject({
-      error: "noTab",
-      message: "Unable to find tab with tabId '" + tabId + "'",
-    });
   }
 
   const topAppWindow = Services.wm.getMostRecentWindow(
