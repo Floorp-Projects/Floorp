@@ -166,6 +166,9 @@ def _purge_vendor_dir(vendor_dir):
         # We manage installing "virtualenv" package manually, and we have a custom
         # "virtualenv.py" entry module.
         "virtualenv",
+        # We manage vendoring "vsdownload" with a moz.yaml file (there is no module
+        # on PyPI).
+        "vsdownload",
         # The moz.build file isn't a vendored module, so don't delete it.
         "moz.build",
         "requirements.in",
