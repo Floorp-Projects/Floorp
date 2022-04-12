@@ -79,6 +79,24 @@ class RTC_EXPORT VideoFrameBuffer : public rtc::RefCountInterface {
   // behave as the other GetXXX methods below.
   virtual const I420BufferInterface* GetI420() const;
 
+  // A format specific scale function. Default implementation works by
+  // converting to I420. But more efficient implementations may override it,
+  // especially for kNative.
+  // First, the image is cropped to |crop_width| and |crop_height| and then
+  // scaled to |scaled_width| and |scaled_height|.
+  virtual rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(int offset_x,
+                                                            int offset_y,
+                                                            int crop_width,
+                                                            int crop_height,
+                                                            int scaled_width,
+                                                            int scaled_height);
+
+  // Alias for common use case.
+  rtc::scoped_refptr<VideoFrameBuffer> Scale(int scaled_width,
+                                             int scaled_height) {
+    return CropAndScale(0, 0, width(), height(), scaled_width, scaled_height);
+  }
+
   // These functions should only be called if type() is of the correct type.
   // Calling with a different type will result in a crash.
   const I420ABufferInterface* GetI420A() const;

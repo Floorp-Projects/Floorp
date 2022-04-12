@@ -10,9 +10,24 @@
 
 #include "api/video/video_frame_buffer.h"
 
+#include "api/video/i420_buffer.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
+
+rtc::scoped_refptr<VideoFrameBuffer> VideoFrameBuffer::CropAndScale(
+    int offset_x,
+    int offset_y,
+    int crop_width,
+    int crop_height,
+    int scaled_width,
+    int scaled_height) {
+  rtc::scoped_refptr<I420Buffer> result =
+      I420Buffer::Create(scaled_width, scaled_height);
+  result->CropAndScaleFrom(*this->ToI420(), offset_x, offset_y, crop_width,
+                           crop_height);
+  return result;
+}
 
 const I420BufferInterface* VideoFrameBuffer::GetI420() const {
   // Overridden by subclasses that can return an I420 buffer without any
@@ -124,5 +139,4 @@ int NV12BufferInterface::ChromaWidth() const {
 int NV12BufferInterface::ChromaHeight() const {
   return (height() + 1) / 2;
 }
-
 }  // namespace webrtc
