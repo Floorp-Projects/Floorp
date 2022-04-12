@@ -26,6 +26,10 @@ httpServer.registerPathHandler("/test.js", function(request, response) {
         console.log(new Error("error object"));
         console.trace("myConsoleTrace");
         console.info("world", "!");
+        /* add enough messages to trigger virtualization */
+        for (let i = 0; i < 100; i++) {
+          console.log("item-"+i);
+        }
       }
       wrapper();
     };
@@ -45,6 +49,9 @@ var FileUtils = ChromeUtils.import("resource://gre/modules/FileUtils.jsm")
 // clipboard text for different log messages to find if everything is copied to clipboard.
 
 add_task(async function testExportToClipboard() {
+  // Clear clipboard content.
+  SpecialPowers.clipboardCopyString("");
+
   const hud = await openNewTabAndConsole(TEST_URI);
   await clearOutput(hud);
 
@@ -55,68 +62,53 @@ add_task(async function testExportToClipboard() {
 
   info("Test export to clipboard ");
   // Let's wait until we have all the logged messages.
-  await waitFor(() => findMessages(hud, "").length === 5);
-  // And also until the stacktraces are rendered (there should be 2)
-  await waitFor(
-    () => hud.ui.outputNode.querySelectorAll(".frames").length === 2
-  );
+  const lastMessage = await waitFor(() => findMessage(hud, "item-99"));
 
-  const message = findMessage(hud, "hello");
-  const clipboardText = await exportAllToClipboard(hud, message);
+  const clipboardText = await exportAllToClipboard(hud, lastMessage);
   ok(true, "Clipboard text was found and saved");
 
   checkExportedText(clipboardText);
-});
 
-add_task(async function testExportToFile() {
-  const hud = await openNewTabAndConsole(TEST_URI);
-  await clearOutput(hud);
-
-  info("Call the log function defined in the test page");
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    content.wrappedJSObject.logStuff();
-  });
-
-  info("Test export to clipboard ");
-  // Let's wait until we have all the logged messages.
-  await waitFor(() => findMessages(hud, "").length === 5);
-  // And also until the stacktraces are rendered (there should be 2)
-  await waitFor(
-    () => hud.ui.outputNode.querySelectorAll(".frames").length === 2
-  );
-
-  const message = findMessage(hud, "hello");
-  const text = await exportAllToFile(hud, message);
-  checkExportedText(text);
+  info("Test export to file");
+  const fileText = await exportAllToFile(hud, lastMessage);
+  checkExportedText(fileText);
 });
 
 function checkExportedText(text) {
   // Here we should have:
-  //   -------------------------------------------------------------------
+  //   -----------------------------------------------------
   //   hello test.js:4:17
-  //   -------------------------------------------------------------------
+  //   -----------------------------------------------------
   //   myObject:
   //   Object { a: 1 }
   //    myArray:
   //   Array [ "b", "c"]
   //   test.js:5:17
-  //   -------------------------------------------------------------------
+  //   -----------------------------------------------------
   //   Error: error object
   //       wrapper test.js:5
-  //       logStuff test.js:17
+  //       logStuff test.js:14
   //   test.js:6:17
-  //   -------------------------------------------------------------------
+  //   -----------------------------------------------------
   //   console.trace() myConsoleTrace test.js:7:9
   //       wrapper test.js:7
-  //       logStuff test.js:17
-  //   -------------------------------------------------------------------
+  //       logStuff test.js:14
+  //   -----------------------------------------------------
   //   world ! test.js:8:17
-  //   -------------------------------------------------------------------
+  //   -----------------------------------------------------
+  //   item-0 test.js:11:19
+  //   -----------------------------------------------------
+  //   item-1 test.js:11:19
+  //   -----------------------------------------------------
+  //   […]
+  //   -----------------------------------------------------
+  //   item-99 test.js:11:19
+  //   -----------------------------------------------------
   info("Check if all messages where exported as expected");
   const lines = text.split("\n").map(line => line.replace(/\r$/, ""));
 
-  is(lines.length, 15, "There's 15 lines of text");
-  is(lines[lines.length - 1], "", "Last line is empty");
+  is(lines.length, 115, "There's 115 lines of text");
+  is(lines.at(-1), "", "Last line is empty");
 
   info("Check simple text message");
   is(lines[0], "hello test.js:4:17", "Simple log has expected text");
@@ -131,16 +123,25 @@ function checkExportedText(text) {
   info("Check logged error object");
   is(lines[6], `Error: error object`);
   is(lines[7], `    wrapper ${TEST_URI}test.js:6`);
-  is(lines[8], `    logStuff ${TEST_URI}test.js:10`);
+  is(lines[8], `    logStuff ${TEST_URI}test.js:14`);
   is(lines[9], `test.js:6:17`);
 
   info("Check console.trace message");
   is(lines[10], `console.trace() myConsoleTrace test.js:7:17`);
   is(lines[11], `    wrapper ${TEST_URI}test.js:7`);
-  is(lines[12], `    logStuff ${TEST_URI}test.js:10`);
+  is(lines[12], `    logStuff ${TEST_URI}test.js:14`);
 
   info("Check console.info message");
   is(lines[13], `world ! test.js:8:17`);
+
+  const numberMessagesStartIndex = 14;
+  for (let i = 0; i < 100; i++) {
+    is(
+      lines[numberMessagesStartIndex + i],
+      `item-${i} test.js:11:19`,
+      `Got expected text for line ${numberMessagesStartIndex + i}`
+    );
+  }
 }
 
 async function exportAllToFile(hud, message) {
@@ -174,13 +175,9 @@ async function exportAllToClipboard(hud, message) {
   );
   ok(exportClipboard, "copy menu item is enabled");
 
-  let clipboardText;
-  await waitForClipboardPromise(
+  const clipboardText = await waitForClipboardPromise(
     () => exportClipboard.click(),
-    data => {
-      clipboardText = data;
-      return data;
-    }
+    data => data.includes("hello")
   );
 
   menuPopup.hidePopup();
