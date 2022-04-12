@@ -830,19 +830,6 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
   rt->addRefScriptPrivate(value);
 }
 
-JSObject* ScriptSourceObject::unwrappedElement(JSContext* cx) const {
-  JS::RootedValue privateValue(cx, getPrivate());
-  if (privateValue.isUndefined()) {
-    return nullptr;
-  }
-
-  if (cx->runtime()->sourceElementCallback) {
-    return (*cx->runtime()->sourceElementCallback)(cx, privateValue);
-  }
-
-  return nullptr;
-}
-
 class ScriptSource::LoadSourceMatcher {
   JSContext* const cx_;
   ScriptSource* const ss_;

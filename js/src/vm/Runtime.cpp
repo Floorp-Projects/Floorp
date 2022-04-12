@@ -322,11 +322,6 @@ void JSRuntime::setTelemetryCallback(
   rt->telemetryCallback = callback;
 }
 
-void JSRuntime::setSourceElementCallback(JSRuntime* rt,
-                                         JSSourceElementCallback callback) {
-  rt->sourceElementCallback = callback;
-}
-
 void JSRuntime::setUseCounter(JSObject* obj, JSUseCounter counter) {
   if (useCounterCallback) {
     (*useCounterCallback)(obj, counter);
