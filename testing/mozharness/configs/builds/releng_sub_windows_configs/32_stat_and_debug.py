@@ -12,7 +12,6 @@ config = {
     ],
     "stage_platform": "win32-st-an-debug",
     "debug_build": True,
-    "tooltool_manifest_src": "browser/config/tooltool-manifests/vs2017-15.9.manifest",
     #### 32 bit build specific #####
     "env": {
         "HG_SHARE_BASE_DIR": "C:/builds/hg-shared",
