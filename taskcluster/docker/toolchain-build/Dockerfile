@@ -32,7 +32,6 @@ RUN apt-get update && \
       libtool \
       libucl-dev \
       libxml2-dev \
-      msitools \
       ninja-build \
       openssh-client \
       p7zip-full \
