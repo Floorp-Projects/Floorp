@@ -99,13 +99,14 @@ struct Control {
 // When an exception is thrown, the unwinder will search for the nearest
 // enclosing try block and redirect control flow to it. The code that executes
 // before any catch blocks is called the 'landing pad'. The 'landing pad' is
-// responsible to unwrap the exception object and branch to the correct catch
-// block, if any, or else rethrow.
+// responsible to:
+//   1. Consume the pending exception state from
+//      Instance::pendingException(Tag)
+//   2. Branch to the correct catch block, or else rethrow
 //
 // There is one landing pad for each try block. The immediate predecessors of
-// the landing pad are called 'pre-pad' blocks. The pre-pad blocks are
-// responsible to acquire the tag and exception objects for the landing pad.
-// There is one pre-pad block per throwing instruction.
+// the landing pad are called 'pre-pad' blocks. There is one pre-pad block per
+// throwing instruction.
 //
 // ## Creating pre-pad blocks
 //
@@ -113,13 +114,17 @@ struct Control {
 // are branching after a local throw instruction, or after a wasm call:
 //
 // - If we encounter a local throw, we create the exception and tag objects,
-//   create and jump to a pre-pad block. The exception and tag objects are
-//   pushed to the pre-pad block.
+//   store them to Instance::pendingException(Tag), and then jump to the
+//   landing pad.
 //
-// - If we encounter a wasm call, then we construct a MWasmCallCatchable which
-//   is a control instruction with either a branch to a fallthrough block or
-//   to a pre-pad block. The pre-pad will load the pending exception from
-//   Instance::pendingException and tag from Instance::pendingExceptionTag.
+// - If we encounter a wasm call, we construct a MWasmCallCatchable which is a
+//   control instruction with either a branch to a fallthrough block or
+//   to a pre-pad block.
+//
+//   The pre-pad block for a wasm call is empty except for a jump to the
+//   landing pad. It only exists to avoid critical edges which when split would
+//   violate the invariants of MWasmCallCatchable. The pending exception state
+//   is taken care of by the unwinder.
 //
 // Each pre-pad ends with a pending jump to the landing pad. The pending jumps
 // to the landing pad are tracked in `tryPadPatches`. These are called
@@ -1963,7 +1968,10 @@ class FunctionCompiler {
     return true;
   }
 
-  bool catchableCall(const CallSiteDesc& desc, const CalleeDesc& callee, const MWasmCallBase::Args& args, const ArgTypeVector& argTypes, MDefinition* index = nullptr) {
+  bool catchableCall(const CallSiteDesc& desc, const CalleeDesc& callee,
+                     const MWasmCallBase::Args& args,
+                     const ArgTypeVector& argTypes,
+                     MDefinition* index = nullptr) {
     MWasmCallTryDesc tryDesc;
 #ifdef ENABLE_WASM_EXCEPTIONS
     if (!beginTryCall(&tryDesc)) {
@@ -1974,10 +1982,12 @@ class FunctionCompiler {
     MInstruction* ins;
     if (tryDesc.inTry) {
       ins = MWasmCallCatchable::New(alloc(), desc, callee, args,
-                                    StackArgAreaSizeUnaligned(argTypes), tryDesc, index);
+                                    StackArgAreaSizeUnaligned(argTypes),
+                                    tryDesc, index);
     } else {
-      ins = MWasmCallUncatchable::New(alloc(), desc, callee, args,
-                                      StackArgAreaSizeUnaligned(argTypes), index);
+      ins =
+          MWasmCallUncatchable::New(alloc(), desc, callee, args,
+                                    StackArgAreaSizeUnaligned(argTypes), index);
     }
     if (!ins) {
       return false;
@@ -2651,43 +2661,40 @@ class FunctionCompiler {
     return tag;
   }
 
-  MDefinition* loadPendingException() {
-    MWasmLoadTls* exn = MWasmLoadTls::New(
+  void loadPendingExceptionState(MInstruction** exception, MInstruction** tag) {
+    *exception = MWasmLoadTls::New(
         alloc(), tlsPointer_, wasm::Instance::offsetOfPendingException(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
-    curBlock_->add(exn);
-    return exn;
-  }
+    curBlock_->add(*exception);
 
-  MDefinition* loadPendingExceptionTag() {
-    MWasmLoadTls* tag = MWasmLoadTls::New(
+    *tag = MWasmLoadTls::New(
         alloc(), tlsPointer_, wasm::Instance::offsetOfPendingExceptionTag(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
-    curBlock_->add(tag);
-    return tag;
+    curBlock_->add(*tag);
   }
 
-  void clearPendingExceptionState() {
-    // Clear the pending exception object
-    auto* exceptionLoc = MWasmDerivedPointer::New(
+  bool setPendingExceptionState(MDefinition* exception, MDefinition* tag) {
+    // Set the pending exception object
+    auto* exceptionAddr = MWasmDerivedPointer::New(
         alloc(), tlsPointer_, Instance::offsetOfPendingException());
-    curBlock_->add(exceptionLoc);
-    auto* null = nullRefConstant();
-    auto* clearException =
-        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionLoc, null,
+    curBlock_->add(exceptionAddr);
+    auto* setException =
+        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionAddr, exception,
                            AliasSet::WasmPendingException);
-    curBlock_->add(clearException);
-    // No post barrier is required here as we are storing null
+    curBlock_->add(setException);
+    if (!postBarrierPrecise(0, exceptionAddr, exception)) {
+      return false;
+    }
 
-    // Clear the pending exception tag object
-    auto* exceptionTagLoc = MWasmDerivedPointer::New(
+    // Set the pending exception tag object
+    auto* exceptionTagAddr = MWasmDerivedPointer::New(
         alloc(), tlsPointer_, Instance::offsetOfPendingExceptionTag());
-    curBlock_->add(exceptionTagLoc);
-    auto* clearExceptionTag =
-        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionTagLoc, null,
+    curBlock_->add(exceptionTagAddr);
+    auto* setExceptionTag =
+        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionTagAddr, tag,
                            AliasSet::WasmPendingException);
-    curBlock_->add(clearExceptionTag);
-    // No post barrier is required here as we are storing null
+    curBlock_->add(setExceptionTag);
+    return postBarrierPrecise(0, exceptionTagAddr, tag);
   }
 
   bool addPadPatch(MControlInstruction* ins, size_t relativeTryDepth) {
@@ -2696,26 +2703,10 @@ class FunctionCompiler {
     return padPatches.emplaceBack(ins);
   }
 
-  bool endWithPadPatch(MBasicBlock* block, MDefinition* exn, MDefinition* tag,
-                       uint32_t relativeTryDepth) {
-    MOZ_ASSERT(iter().controlKind(relativeTryDepth) == LabelKind::Try);
-    MOZ_ASSERT(exn);
-    MOZ_ASSERT(exn->type() == MIRType::RefOrNull);
-    MOZ_ASSERT(tag && tag->type() == MIRType::RefOrNull);
-    MOZ_ASSERT(numPushed(block) == 0);
-
-    // Push the exception and its tag index on the stack to make them available
-    // to the landing pad.
-    if (!block->ensureHasSlots(2)) {
-      return false;
-    }
-    block->push(exn);
-    block->push(tag);
-
-    MGoto* insToPatch = MGoto::New(alloc());
-    block->end(insToPatch);
-
-    return addPadPatch(insToPatch, relativeTryDepth);
+  bool endWithPadPatch(uint32_t relativeTryDepth) {
+    MGoto* jumpToLandingPad = MGoto::New(alloc());
+    curBlock_->end(jumpToLandingPad);
+    return addPadPatch(jumpToLandingPad, relativeTryDepth);
   }
 
   bool delegatePadPatches(const ControlInstructionVector& patches,
@@ -2767,15 +2758,9 @@ class FunctionCompiler {
     // Mark this as the landing pad for the call
     curBlock_->add(
         MWasmCallLandingPrePad::New(alloc(), callBlock, call->tryNoteIndex));
-    // Load the pending exception
-    MDefinition* pendingException = loadPendingException();
-    // Load the tag index of the pending exception
-    MDefinition* pendingTag = loadPendingExceptionTag();
-    // Clear the pending exception state
-    clearPendingExceptionState();
-    // Finish the prePadBlock with a patch.
-    if (!endWithPadPatch(call->prePadBlock, pendingException, pendingTag,
-                         call->relativeTryDepth)) {
+
+    // End with a pending jump to the landing pad
+    if (!endWithPadPatch(call->relativeTryDepth)) {
       return false;
     }
 
@@ -2784,19 +2769,13 @@ class FunctionCompiler {
     return true;
   }
 
-  // If there are throws or calls in the try block, then there are stored
-  // pad-patches (a ControlInstructionVector) for this control item. The
-  // following function binds these control instructions (branches) to a join
-  // which will become the landing pad, and also become the curBlock_.
-  //
-  // For the latter to work, the last block in the try code (the curBlock_)
-  // should be either dead code or finished before createTryLandingPadIfNeeded
-  // gets called. This function should only be called when try code ends.
+  // Create a landing pad for a try block if there are any throwing
+  // instructions.
   bool createTryLandingPadIfNeeded(Control& control, MBasicBlock** landingPad) {
     // If there are no pad-patches for this try control, it means there are no
-    // instructions in the try code that could throw a Wasm exception. In this
+    // instructions in the try code that could throw an exception. In this
     // case, all the catches are dead code, and the try code ends up equivalent
-    // to a plain Wasm block.
+    // to a plain wasm block.
     ControlInstructionVector& patches = control.tryPadPatches;
     if (patches.empty()) {
       *landingPad = nullptr;
@@ -2804,33 +2783,59 @@ class FunctionCompiler {
     }
 
     // Otherwise, if there are (pad-) branches from places in the try code that
-    // may throw a Wasm exception, bind these branches to a new landing pad
+    // may throw an exception, bind these branches to a new landing pad
     // block. This is done similarly to what is done in bindBranches.
     MControlInstruction* ins = patches[0];
     MBasicBlock* pred = ins->block();
-    MBasicBlock* pad = nullptr;
-    if (!newBlock(pred, &pad)) {
+    if (!newBlock(pred, landingPad)) {
       return false;
     }
-    ins->replaceSuccessor(0, pad);
+    ins->replaceSuccessor(0, *landingPad);
     for (size_t i = 1; i < patches.length(); i++) {
       ins = patches[i];
       pred = ins->block();
-      if (!pad->addPredecessor(alloc(), pred)) {
+      if (!(*landingPad)->addPredecessor(alloc(), pred)) {
         return false;
       }
-      ins->replaceSuccessor(0, pad);
+      ins->replaceSuccessor(0, *landingPad);
     }
 
-    // At this point we have finished the try or previous catch block, with a
-    // control flow patch to be joined with the end if each catch block. We are
-    // now ready to start the landing pad, which will eventually branch to each
-    // catch block.
-    *landingPad = pad;
-    mirGraph().moveBlockToEnd(pad);
+    // Set up the slots in the landing pad block.
+    if (!setupLandingPadSlots(*landingPad)) {
+      return false;
+    }
 
     // Clear the now bound pad patches.
     patches.clear();
+    return true;
+  }
+
+  // Consume the pending exception state from instance, and set up the slots
+  // of the landing pad with the exception state.
+  bool setupLandingPadSlots(MBasicBlock* landingPad) {
+    MBasicBlock* prevBlock = curBlock_;
+    curBlock_ = landingPad;
+
+    // Load the pending exception and tag
+    MInstruction* exception;
+    MInstruction* tag;
+    loadPendingExceptionState(&exception, &tag);
+
+    // Clear the pending exception and tag
+    auto* null = nullRefConstant();
+    if (!setPendingExceptionState(null, null)) {
+      return false;
+    }
+
+    // Push the exception and its tag on the stack to make them available
+    // to the landing pad blocks.
+    if (!landingPad->ensureHasSlots(2)) {
+      return false;
+    }
+    landingPad->push(exception);
+    landingPad->push(tag);
+
+    curBlock_ = prevBlock;
     return true;
   }
 
@@ -3157,17 +3162,15 @@ class FunctionCompiler {
     // pad-patch to its tryPadPatches.
     uint32_t relativeTryDepth;
     if (inTryBlock(&relativeTryDepth)) {
-      MBasicBlock* prePadBlock = nullptr;
-      if (!newBlock(curBlock_, &prePadBlock)) {
+      // Set the pending exception state, the landing pad will read from this
+      if (!setPendingExceptionState(exn, tag)) {
         return false;
       }
-      MGoto* ins = MGoto::New(alloc(), prePadBlock);
 
-      // Finish the prePadBlock with a control flow (pad) patch.
-      if (!endWithPadPatch(prePadBlock, exn, tag, relativeTryDepth)) {
+      // End with a pending jump to the landing pad
+      if (!endWithPadPatch(relativeTryDepth)) {
         return false;
       }
-      curBlock_->end(ins);
       curBlock_ = nullptr;
       return true;
     }
