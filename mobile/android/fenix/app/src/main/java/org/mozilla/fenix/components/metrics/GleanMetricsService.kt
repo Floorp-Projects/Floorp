@@ -30,7 +30,6 @@ import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tabs
-import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.ext.components
 
@@ -357,38 +356,6 @@ private val Event.wrapper: EventWrapper<*>?
                     Messaging.MessageExpiredExtra(
                         messageKey = this.messageId
                     )
-                )
-            }
-        )
-        is Event.WallpaperSettingsOpened -> EventWrapper<NoExtraKeys>(
-            { Wallpapers.wallpaperSettingsOpened.record() }
-        )
-        is Event.WallpaperSelected -> EventWrapper<NoExtraKeys>(
-            {
-                Wallpapers.wallpaperSelected.record(
-                    Wallpapers.WallpaperSelectedExtra(
-                        name = this.wallpaper.name,
-                        themeCollection = this.wallpaper::class.simpleName,
-                    ),
-                )
-            }
-        )
-        is Event.WallpaperSwitched -> EventWrapper<NoExtraKeys>(
-            {
-                Wallpapers.wallpaperSwitched.record(
-                    Wallpapers.WallpaperSwitchedExtra(
-                        name = this.wallpaper.name,
-                        themeCollection = this.wallpaper::class.simpleName,
-                    ),
-                )
-            }
-        )
-        is Event.ChangeWallpaperWithLogoToggled -> EventWrapper<NoExtraKeys>(
-            {
-                Wallpapers.changeWallpaperLogoToggled.record(
-                    Wallpapers.ChangeWallpaperLogoToggledExtra(
-                        checked = this.checked,
-                    ),
                 )
             }
         )

@@ -253,11 +253,6 @@ sealed class Event {
 
     sealed class Search
 
-    object WallpaperSettingsOpened : Event()
-    data class WallpaperSelected(val wallpaper: org.mozilla.fenix.wallpapers.Wallpaper) : Event()
-    data class WallpaperSwitched(val wallpaper: org.mozilla.fenix.wallpapers.Wallpaper) : Event()
-    data class ChangeWallpaperWithLogoToggled(val checked: Boolean) : Event()
-
     sealed class Messaging(open val messageId: String) : Event() {
         data class MessageShown(override val messageId: String) : Messaging(messageId)
         data class MessageDismissed(override val messageId: String) : Messaging(messageId)
