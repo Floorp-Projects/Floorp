@@ -234,6 +234,7 @@ def build_one_stage(
             "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
             "-DLLVM_ENABLE_BINDINGS=OFF",
             "-DLLVM_ENABLE_CURL=OFF",
+            "-DLLVM_INCLUDE_TESTS=OFF",
         ]
         if "TASK_ID" in os.environ:
             cmake_args += [
@@ -252,7 +253,6 @@ def build_one_stage(
         if not is_final_stage:
             cmake_args += [
                 "-DLLVM_ENABLE_PROJECTS=clang",
-                "-DLLVM_INCLUDE_TESTS=OFF",
                 "-DLLVM_TOOL_LLI_BUILD=OFF",
             ]
 
