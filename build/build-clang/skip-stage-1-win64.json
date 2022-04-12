@@ -2,5 +2,7 @@
     "skip_stages": "1",
     "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl.exe",
     "cxx": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl.exe",
-    "ml": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl.exe"
+    "ml": "{MOZ_FETCHES_DIR}/clang/bin/clang-cl.exe",
+    "link": "{MOZ_FETCHES_DIR}/clang/bin/lld-link.exe",
+    "lib": "{MOZ_FETCHES_DIR}/clang/bin/llvm-lib.exe"
 }
