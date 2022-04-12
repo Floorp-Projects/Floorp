@@ -257,21 +257,18 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: debian11-amd64-build}
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         run:
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_linux_64_builds.py
-            tooltool-downloads: internal
             extra-config:
                 stage_platform: win32
                 mozconfig_platform: win32
                 env:
                     LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+                    LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         fetches:
             toolchain:
                 - linux64-binutils
@@ -288,6 +285,7 @@ jobs:
                 - nsis
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
+                - win64-vs2017
             fetch:
                 - upx-3.95-win
 
@@ -302,21 +300,18 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: debian11-amd64-build}
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
         run:
             options: [append-env-variables-from-configs]
             mozconfig-variant: profile-generate
             config:
                 - builds/releng_base_firefox.py
                 - builds/releng_base_linux_64_builds.py
-            tooltool-downloads: internal
             extra-config:
                 stage_platform: win64
                 mozconfig_platform: win64
                 env:
                     LD_PRELOAD: "/builds/worker/fetches/liblowercase/liblowercase.so"
-                    LOWERCASE_DIRS: "/builds/worker/checkouts/gecko/vs2017_15.9.6"
+                    LOWERCASE_DIRS: "/builds/worker/fetches/vs"
         fetches:
             toolchain:
                 - linux64-binutils
@@ -333,5 +328,6 @@ jobs:
                 - nsis
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
+                - win64-vs2017
             fetch:
                 - upx-3.95-win

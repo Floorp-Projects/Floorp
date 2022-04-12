@@ -8,14 +8,11 @@ if test `uname -s` = Linux; then
 
 # Configure expects executables for check_prog, so set the relevant files
 # as executable on the first evaluation of the mozconfig where they exist.
-if [ -d "${VSPATH}" -a ! -x "${VSPATH}/VC/bin/Hostx64/x64/cl.exe" ]; then
-    find "${VSPATH}" -type f -name \*.exe -exec chmod +x {} \;
-fi
 export UPX="${MOZ_FETCHES_DIR}/upx-3.95-win64/upx.exe"
 if [ -f "${UPX}" ]; then
     chmod +x "${UPX}"
 fi
-mk_add_options "export PATH=${VSPATH}/VC/bin/Hostx64/x64:${PATH}"
+mk_add_options "export PATH=${VC_PATH}/bin/hostx64/x64:${PATH}"
 
 unset VC_PATH
 

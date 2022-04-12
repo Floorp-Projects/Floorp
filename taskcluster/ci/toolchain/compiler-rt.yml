@@ -176,45 +176,39 @@ win32-compiler-rt-13:
     description: "win32 x86 Compiler-rt for Clang 13 toolchain build"
     treeherder:
         symbol: TW32(crt-13)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments:
             - build/build-clang/clang-13.json
         resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
             - build/build-clang/clang-13.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-artifact: public/build/compiler-rt-i686-pc-windows-msvc.tar.zst
-        tooltool-downloads: internal
     fetches:
         fetch:
             - clang-13
         toolchain:
             - linux64-clang-13-stage1
+            - linux64-liblowercase
+            - win64-vs2017
 
 win64-compiler-rt-13:
     description: "win64 x64 Compiler-rt for Clang 13 toolchain build"
     treeherder:
         symbol: TW64(crt-13)
-    worker:
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     run:
         arguments:
             - build/build-clang/clang-13.json
         resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
             - build/build-clang/clang-13.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-artifact: public/build/compiler-rt-x86_64-pc-windows-msvc.tar.zst
-        tooltool-downloads: internal
     fetches:
         fetch:
             - clang-13
         toolchain:
             - linux64-clang-13-stage1
+            - linux64-liblowercase
+            - win64-vs2017
 
 wasm32-wasi-compiler-rt-13:
     description: "wasm32-wasi Compiler-rt for Clang 13 toolchain build"
