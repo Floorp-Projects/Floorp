@@ -33,15 +33,16 @@ static nsresult HandleTranscodeResult(JSContext* cx,
   return NS_ERROR_FAILURE;
 }
 
-nsresult ReadCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
-                           const JS::DecodeOptions& options,
+nsresult ReadCachedStencil(StartupCache* cache, nsACString& cachePath,
+                           JSContext* cx, const JS::DecodeOptions& options,
                            JS::Stencil** stencilOut) {
   MOZ_ASSERT(options.borrowBuffer);
   MOZ_ASSERT(!options.usePinnedBytecode);
 
   const char* buf;
   uint32_t len;
-  nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);
+  nsresult rv =
+      cache->GetBuffer(PromiseFlatCString(cachePath).get(), &buf, &len);
   if (NS_FAILED(rv)) {
     return rv;  // don't warn since NOT_AVAILABLE is an ok error
   }
@@ -51,8 +52,8 @@ nsresult ReadCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
   return HandleTranscodeResult(cx, code);
 }
 
-nsresult WriteCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
-                            JS::Stencil* stencil) {
+nsresult WriteCachedStencil(StartupCache* cache, nsACString& cachePath,
+                            JSContext* cx, JS::Stencil* stencil) {
   JS::TranscodeBuffer buffer;
   JS::TranscodeResult code = JS::EncodeStencil(cx, stencil, buffer);
   if (code != JS::TranscodeResult::Ok) {
@@ -67,7 +68,7 @@ nsresult WriteCachedStencil(StartupCache* cache, nsACString& uri, JSContext* cx,
   // Move the vector buffer into a unique pointer buffer.
   UniquePtr<char[]> buf(
       reinterpret_cast<char*>(buffer.extractOrCopyRawBuffer()));
-  nsresult rv =
-      cache->PutBuffer(PromiseFlatCString(uri).get(), std::move(buf), size);
+  nsresult rv = cache->PutBuffer(PromiseFlatCString(cachePath).get(),
+                                 std::move(buf), size);
   return rv;
 }
