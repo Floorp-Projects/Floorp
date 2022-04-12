@@ -526,6 +526,7 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
   br.ReadBit();  // enable_intra_edge_filter
 
   if (reducedStillPicture) {
+    aDestInfo = tempInfo;
     return true;
   }
 
