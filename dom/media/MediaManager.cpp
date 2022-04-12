@@ -2870,7 +2870,7 @@ RefPtr<LocalDeviceSetPromise> MediaManager::AnonymizeDevices(
             RefPtr anonymized = new LocalMediaDeviceSetRefCnt();
             for (const RefPtr<MediaDevice>& device : *rawDevices) {
               nsString id = device->mRawID;
-              AnonymizeId(id, aOriginKey);
+              nsContentUtils::AnonymizeId(id, aOriginKey);
 
               nsString groupId = device->mRawGroupID;
               // Use window id to salt group id in order to make it session
@@ -2879,7 +2879,7 @@ RefPtr<LocalDeviceSetPromise> MediaManager::AnonymizeDevices(
               // against the spec.  Furthermore, since device ids are the same
               // after a browser restart the fingerprint is not bigger.
               groupId.AppendInt(windowId);
-              AnonymizeId(groupId, aOriginKey);
+              nsContentUtils::AnonymizeId(groupId, aOriginKey);
 
               nsString name = device->mRawName;
               if (name.Find(u"AirPods"_ns) != -1) {
@@ -2897,52 +2897,6 @@ RefPtr<LocalDeviceSetPromise> MediaManager::AnonymizeDevices(
                 MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                 __func__);
           });
-}
-
-/* static */
-nsresult MediaManager::AnonymizeId(nsAString& aId,
-                                   const nsACString& aOriginKey) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv;
-  nsCOMPtr<nsIKeyObjectFactory> factory =
-      do_GetService("@mozilla.org/security/keyobjectfactory;1", &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCString rawKey;
-  rv = Base64Decode(aOriginKey, rawKey);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCOMPtr<nsIKeyObject> key;
-  rv = factory->KeyFromString(nsIKeyObject::HMAC, rawKey, getter_AddRefs(key));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsICryptoHMAC> hasher =
-      do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = hasher->Init(nsICryptoHMAC::SHA256, key);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  NS_ConvertUTF16toUTF8 id(aId);
-  rv = hasher->Update(reinterpret_cast<const uint8_t*>(id.get()), id.Length());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  nsCString mac;
-  rv = hasher->Finish(true, mac);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  CopyUTF8toUTF16(mac, aId);
-  return NS_OK;
 }
 
 RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
