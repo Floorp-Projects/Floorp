@@ -9,7 +9,7 @@ const { RemoteSettings } = ChromeUtils.import(
 const { RemoteSettingsClient } = ChromeUtils.import(
   "resource://services-settings/RemoteSettingsClient.jsm"
 );
-const { UptakeTelemetry } = ChromeUtils.import(
+const { UptakeTelemetry, Policy } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
@@ -78,9 +78,16 @@ function run_test() {
   server = new HttpServer();
   server.start(-1);
 
+  // Pretend we are in nightly channel to make sure all telemetry events are sent.
+  let oldGetChannel = Policy.getChannel;
+  Policy.getChannel = () => "nightly";
+
   run_next_test();
 
-  registerCleanupFunction(() => server.stop(() => {}));
+  registerCleanupFunction(() => {
+    Policy.getChannel = oldGetChannel;
+    server.stop(() => {});
+  });
 }
 
 add_task(async function test_check_signatures() {
@@ -634,28 +641,26 @@ add_task(async function test_check_synchronization_with_signatures() {
     method: "uptake",
   };
 
-  await withFakeChannel("nightly", async () => {
-    // Events telemetry is sampled on released, use fake channel.
-    await client.maybeSync(5000);
+  // Events telemetry is sampled on released, use fake channel.
+  await client.maybeSync(5000);
 
-    // We should report a corruption_error.
-    TelemetryTestUtils.assertEvents(
+  // We should report a corruption_error.
+  TelemetryTestUtils.assertEvents(
+    [
       [
-        [
-          "uptake.remotecontent.result",
-          "uptake",
-          "remotesettings",
-          UptakeTelemetry.STATUS.CORRUPTION_ERROR,
-          {
-            source: client.identifier,
-            duration: v => v > 0,
-            trigger: "manual",
-          },
-        ],
+        "uptake.remotecontent.result",
+        "uptake",
+        "remotesettings",
+        UptakeTelemetry.STATUS.CORRUPTION_ERROR,
+        {
+          source: client.identifier,
+          duration: v => v > 0,
+          trigger: "manual",
+        },
       ],
-      TELEMETRY_EVENTS_FILTERS
-    );
-  });
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 
   // The local data was corrupted, and the Telemetry status reflects it.
   // But the sync overwrote the bad data and was eventually a success.
