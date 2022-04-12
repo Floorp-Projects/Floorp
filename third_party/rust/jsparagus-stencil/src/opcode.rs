@@ -115,7 +115,6 @@ macro_rules! using_opcode_database {
                 (Hole, hole, NULL, 1, 0, 1, JOF_BYTE),
                 (RegExp, reg_exp, NULL, 5, 0, 1, JOF_REGEXP),
                 (Lambda, lambda, NULL, 5, 0, 1, JOF_OBJECT),
-                (LambdaArrow, lambda_arrow, NULL, 5, 1, 1, JOF_OBJECT),
                 (SetFunName, set_fun_name, NULL, 2, 2, 1, JOF_UINT8),
                 (InitHomeObject, init_home_object, NULL, 1, 2, 1, JOF_BYTE),
                 (CheckClassHeritage, check_class_heritage, NULL, 1, 1, 1, JOF_BYTE),
