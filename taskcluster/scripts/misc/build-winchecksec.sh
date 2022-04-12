@@ -5,7 +5,11 @@ mkdir -p $UPLOAD_DIR
 
 cd $MOZ_FETCHES_DIR/winchecksec
 
-if test -n "$TOOLTOOL_MANIFEST"; then
+SUFFIX=
+
+case "$1" in
+x86_64-pc-windows-msvc)
+    SUFFIX=.exe
     export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
     export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
@@ -38,7 +42,8 @@ EOF
       -DCMAKE_SYSTEM_NAME=Windows
       -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
     '
-fi
+    ;;
+esac
 
 eval cmake \
   -GNinja \
@@ -49,5 +54,5 @@ eval cmake \
 ninja -v
 
 cd ..
-tar -caf winchecksec.tar.zst winchecksec/winchecksec${TOOLTOOL_MANIFEST:+.exe}
+tar -caf winchecksec.tar.zst winchecksec/winchecksec${SUFFIX}
 cp winchecksec.tar.zst $UPLOAD_DIR/
