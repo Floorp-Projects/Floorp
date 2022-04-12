@@ -929,14 +929,7 @@ Inspector.prototype = {
    * Returns tab that is explicitly selected by user.
    */
   getSelectedSidebar: function() {
-    const pref = "devtools.inspector.selectedSidebar";
-    // @backward-compat { version 99 } If selected sidebar pref is not set from older versions,
-    //                                 falls back to active sidebar pref.
-    if (!Services.prefs.prefHasUserValue(pref)) {
-      return this.getActiveSidebar();
-    }
-
-    return Services.prefs.getCharPref(pref);
+    return Services.prefs.getCharPref("devtools.inspector.selectedSidebar");
   },
 
   setSelectedSidebar: function(toolId) {
