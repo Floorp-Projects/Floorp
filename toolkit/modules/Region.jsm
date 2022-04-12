@@ -446,7 +446,7 @@ class RegionDetector {
     const toDelete = deleted.filter(d => d.attachment);
     // Remove local files of deleted records
     await Promise.all(
-      toDelete.map(entry => this._rsClient.attachments.delete(entry))
+      toDelete.map(entry => this._rsClient.attachments.deleteDownloaded(entry))
     );
     await this._ensureRegionFilesDownloaded();
   }
@@ -464,10 +464,7 @@ class RegionDetector {
       log.info("_ensureRegionFilesDownloaded: Nothing to download");
       return;
     }
-    let opts = { useCache: true };
-    await Promise.all(
-      records.map(r => this._rsClient.attachments.download(r, opts))
-    );
+    await Promise.all(records.map(r => this._rsClient.attachments.download(r)));
     log.info("_ensureRegionFilesDownloaded complete");
     this._regionFilesReady = true;
   }
@@ -480,9 +477,7 @@ class RegionDetector {
    */
   async _fetchAttachment(id) {
     let record = (await this._rsClient.get({ filters: { id } })).pop();
-    let { buffer } = await this._rsClient.attachments.download(record, {
-      useCache: true,
-    });
+    let { buffer } = await this._rsClient.attachments.download(record);
     let text = new TextDecoder("utf-8").decode(buffer);
     return JSON.parse(text);
   }

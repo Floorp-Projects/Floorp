@@ -116,50 +116,37 @@ class Downloader {
    *                        If omitted, the attachmentId option must be set.
    * @param {Object} options Some download options.
    * @param {Number} options.retries Number of times download should be retried (default: `3`)
-   * @param {Number} options.checkHash Check content integrity (default: `true`)
+   * @param {Boolean} options.checkHash Check content integrity (default: `true`)
    * @param {string} options.attachmentId The attachment identifier to use for
    *                                      caching and accessing the attachment.
-   *                                      (default: record.id)
-   * @param {Boolean} options.useCache Whether to use a cache to read and store
-   *                                   the attachment. (default: false)
+   *                                      (default: `record.id`)
    * @param {Boolean} options.fallbackToCache Return the cached attachment when the
    *                                          input record cannot be fetched.
-   *                                          (default: false)
+   *                                          (default: `false`)
    * @param {Boolean} options.fallbackToDump Use the remote settings dump as a
    *                                         potential source of the attachment.
-   *                                         (default: false)
+   *                                         (default: `false`)
    * @throws {Downloader.DownloadError} if the file could not be fetched.
    * @throws {Downloader.BadContentError} if the downloaded content integrity is not valid.
    * @returns {Object} An object with two properties:
-   *   buffer: ArrayBuffer with the file content.
-   *   record: Record associated with the bytes.
-   *   _source: identifies the source of the result. Used for testing.
+   *   `buffer` `ArrayBuffer`: the file content.
+   *   `record` `Object`: record associated with the attachment.
+   *   `_source` `String`: identifies the source of the result. Used for testing.
    */
   async download(record, options) {
     let {
       retries,
       checkHash,
       attachmentId = record?.id,
-      useCache = false,
       fallbackToCache = false,
       fallbackToDump = false,
     } = options || {};
-
-    if (!useCache) {
-      // For backwards compatibility.
-      // WARNING: Its return type is different from what's documented.
-      // See downloadToDisk's documentation.
-      return this.downloadToDisk(record, options);
-    }
-
-    if (!this.cacheImpl) {
-      throw new Error("useCache is true but there is no cacheImpl!");
-    }
-
     if (!attachmentId) {
       // Check for pre-condition. This should not happen, but it is explicitly
       // checked to avoid mixing up attachments, which could be dangerous.
-      throw new Error("download() was called without attachmentId or recordID");
+      throw new Error(
+        "download() was called without attachmentId or `record.id`"
+      );
     }
 
     const dumpInfo = new LazyRecordAndBuffer(() =>
@@ -184,7 +171,7 @@ class Downloader {
     }
 
     // Check if the requested attachment has already been cached.
-    if (useCache && record) {
+    if (record) {
       if (await cacheInfo.isMatchingRequestedRecord(record)) {
         try {
           return { ...(await cacheInfo.getResult()), _source: "cache_match" };
@@ -206,12 +193,10 @@ class Downloader {
           checkHash,
         });
         const blob = new Blob([newBuffer]);
-        if (useCache) {
-          // Caching is optional, don't wait for the cache before returning.
-          this.cacheImpl
-            .set(attachmentId, { record, blob })
-            .catch(e => Cu.reportError(e));
-        }
+        // Store in cache but don't wait for it before returning.
+        this.cacheImpl
+          .set(attachmentId, { record, blob })
+          .catch(e => Cu.reportError(e));
         return { buffer: newBuffer, record, _source: "remote_match" };
       } catch (e) {
         // No network, corrupted content, etc.
@@ -263,6 +248,30 @@ class Downloader {
   }
 
   /**
+   * Delete the record attachment downloaded locally.
+   * No-op if the attachment does not exist.
+   *
+   * @param record A Remote Settings entry with attachment.
+   * @param {Object} options Some options.
+   * @param {string} options.attachmentId The attachment identifier to use for
+   *                                      accessing and deleting the attachment.
+   *                                      (default: `record.id`)
+   */
+  async deleteDownloaded(record, options) {
+    let { attachmentId = record?.id } = options || {};
+    if (!attachmentId) {
+      // Check for pre-condition. This should not happen, but it is explicitly
+      // checked to avoid mixing up attachments, which could be dangerous.
+      throw new Error(
+        "deleteDownloaded() was called without attachmentId or `record.id`"
+      );
+    }
+    return this.cacheImpl.delete(attachmentId);
+  }
+
+  /**
+   * @deprecated See https://bugzilla.mozilla.org/show_bug.cgi?id=1634127
+   *
    * Download the record attachment into the local profile directory
    * and return a file:// URL that points to the local path.
    *
@@ -308,7 +317,7 @@ class Downloader {
           checkHash: false, // Hash will be checked on file.
           retries: 0, // Already in a retry loop.
         });
-        await OS.File.writeAtomic(localFilePath, buffer, {
+        await IOUtils.write(localFilePath, new Uint8Array(buffer), {
           tmpPath: `${localFilePath}.tmp`,
         });
       } catch (e) {
@@ -326,7 +335,7 @@ class Downloader {
    * @param {Object} record A Remote Settings entry with attachment.
    * @param {Object} options Some download options.
    * @param {Number} options.retries Number of times download should be retried (default: `3`)
-   * @param {Number} options.checkHash Check content integrity (default: `true`)
+   * @param {Boolean} options.checkHash Check content integrity (default: `true`)
    * @throws {Downloader.DownloadError} if the file could not be fetched.
    * @throws {Downloader.BadContentError} if the downloaded content integrity is not valid.
    * @returns {ArrayBuffer} the file content.
@@ -361,12 +370,18 @@ class Downloader {
   }
 
   /**
+   * @deprecated See https://bugzilla.mozilla.org/show_bug.cgi?id=1634127
+   *
    * Delete the record attachment downloaded locally.
+   * This is the counterpart of `downloadToDisk()`.
+   * Use `deleteDownloaded()` if `download()` was used to retrieve
+   * the attachment.
+   *
    * No-op if the related file does not exist.
    *
    * @param record A Remote Settings entry with attachment.
    */
-  async delete(record) {
+  async deleteFromDisk(record) {
     const {
       attachment: { filename },
     } = record;
@@ -375,12 +390,8 @@ class Downloader {
       ...this.folders,
       filename
     );
-    await OS.File.remove(path, { ignoreAbsent: true });
+    await IOUtils.remove(path);
     await this._rmDirs();
-  }
-
-  async deleteCached(attachmentId) {
-    return this.cacheImpl.delete(attachmentId);
   }
 
   async _baseAttachmentsURL() {
@@ -457,7 +468,7 @@ class Downloader {
       OS.Constants.Path.localProfileDir,
       ...this.folders
     );
-    await OS.File.makeDir(dirPath, { from: OS.Constants.Path.localProfileDir });
+    await IOUtils.makeDirectory(dirPath, { createAncestors: true });
   }
 
   async _rmDirs() {
@@ -467,7 +478,7 @@ class Downloader {
         ...this.folders.slice(0, i)
       );
       try {
-        await OS.File.removeEmptyDir(dirPath, { ignoreAbsent: true });
+        await IOUtils.remove(dirPath);
       } catch (e) {
         // This could fail if there's something in
         // the folder we're not permitted to remove.
