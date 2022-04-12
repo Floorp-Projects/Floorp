@@ -20,7 +20,7 @@ add_task(async function() {
 
   info("Create a first commands, which will destroy its top target");
   const commands = await CommandsFactory.forRemoteTabInTest({
-    outerWindowID: tab.linkedBrowser.outerWindowID,
+    browserId: tab.linkedBrowser.browserId,
   });
   const targetCommand = commands.targetCommand;
 
@@ -39,7 +39,7 @@ add_task(async function() {
   );
   const secondCommands = await CommandsFactory.forRemoteTabInTest({
     client: commands.client,
-    outerWindowID: tab.linkedBrowser.outerWindowID,
+    browserId: tab.linkedBrowser.browserId,
   });
   const secondTargetCommand = secondCommands.targetCommand;
 
