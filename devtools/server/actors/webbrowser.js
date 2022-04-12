@@ -326,14 +326,9 @@ BrowserTabList.prototype._getActorForBrowser = async function(browser) {
  * passed as argument.
  *
  * @param {Number} browserId: use to match any tab (should become the new way to identify any remote tab)
- * @param {Number} outerWindowID: used to match tabs in parent process (obsolete, use browserId)
  * @param {Number} tabId: used to match tabs in child processes (obsolete, use browserId)
  */
-BrowserTabList.prototype.getTab = function({
-  browserId,
-  outerWindowID,
-  tabId,
-}) {
+BrowserTabList.prototype.getTab = function({ browserId, tabId }) {
   if (typeof browserId == "number") {
     const browsingContext = BrowsingContext.getCurrentTopByBrowserId(browserId);
     if (!browsingContext) {
@@ -351,34 +346,7 @@ BrowserTabList.prototype.getTab = function({
     }
     return this._getActorForBrowser(browser);
   }
-  if (typeof outerWindowID == "number") {
-    // First look for in-process frames with this ID
-    const window = Services.wm.getOuterWindowWithId(outerWindowID);
-    // Safety check to prevent debugging top level window via getTab
-    if (window?.isChromeWindow) {
-      return Promise.reject({
-        error: "forbidden",
-        message: "Window with outerWindowID '" + outerWindowID + "' is chrome",
-      });
-    }
-    if (window) {
-      const iframe = window.browsingContext.embedderElement;
-      if (iframe) {
-        return this._getActorForBrowser(iframe);
-      }
-    }
-    // Then also look on registered <xul:browsers> when using outerWindowID for
-    // OOP tabs
-    for (const browser of this._getBrowsers()) {
-      if (browser.outerWindowID == outerWindowID) {
-        return this._getActorForBrowser(browser);
-      }
-    }
-    return Promise.reject({
-      error: "noTab",
-      message: "Unable to find tab with outerWindowID '" + outerWindowID + "'",
-    });
-  } else if (typeof tabId == "number") {
+  if (typeof tabId == "number") {
     // Tabs OOP
     for (const browser of this._getBrowsers()) {
       if (

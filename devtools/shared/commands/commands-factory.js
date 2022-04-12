@@ -74,7 +74,7 @@ exports.CommandsFactory = {
   /**
    * For now, this method is only used by browser_target_command_various_descriptors.js
    * in order to cover about:debugging codepath, where we connect to remote tabs via
-   * their current outerWindowID.
+   * their current browserId.
    * But:
    *  1) this can also be used to debug local tab, but TabDescriptor.localTab/isLocalTab will be null/false.
    *  2) beyond this test, this isn't used to connect to remote tab just yet.
@@ -82,17 +82,17 @@ exports.CommandsFactory = {
    * and will finaly be used to connect to remote tabs.
 
    * @param {Object} options
-   * @param {Number} options.outerWindowID: Mandatory attribute, to identify which tab we should
+   * @param {Number} options.browserId: Mandatory attribute, to identify which tab we should
    *        create commands for.
    * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
    *        a new one will be created.
    */
-  async forRemoteTabInTest({ outerWindowID, client }) {
+  async forRemoteTabInTest({ browserId, client }) {
     if (!client) {
       client = await createLocalClient();
     }
 
-    const descriptor = await client.mainRoot.getTab({ outerWindowID });
+    const descriptor = await client.mainRoot.getTab({ browserId });
     const commands = await createCommandsDictionary(descriptor);
     return commands;
   },
