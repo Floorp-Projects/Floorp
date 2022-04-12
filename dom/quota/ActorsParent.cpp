@@ -3993,7 +3993,7 @@ void QuotaManager::Shutdown() {
   StopIdleMaintenance();
 
   const bool needsToWait =
-      initiateShutdownWorkThreads() | static_cast<bool>(gNormalOriginOps);
+      initiateShutdownWorkThreads() || static_cast<bool>(gNormalOriginOps);
 
   // If any clients cannot shutdown immediately, spin the event loop while we
   // wait on all the threads to close.
