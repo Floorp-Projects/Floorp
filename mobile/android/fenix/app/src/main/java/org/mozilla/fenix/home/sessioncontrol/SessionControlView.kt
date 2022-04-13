@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
-import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.ext.components
@@ -180,7 +179,6 @@ private fun collectionTabItems(collection: TabCollection) =
     }
 
 class SessionControlView(
-    store: AppStore,
     val containerView: View,
     viewLifecycleOwner: LifecycleOwner,
     internal val interactor: SessionControlInteractor
@@ -189,7 +187,6 @@ class SessionControlView(
     val view: RecyclerView = containerView as RecyclerView
 
     private val sessionControlAdapter = SessionControlAdapter(
-        store,
         interactor,
         viewLifecycleOwner,
         containerView.context.components

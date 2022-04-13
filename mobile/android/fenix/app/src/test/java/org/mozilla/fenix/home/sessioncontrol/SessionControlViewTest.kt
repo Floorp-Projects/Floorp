@@ -95,7 +95,6 @@ class SessionControlViewTest {
         val interactor = mockk<SessionControlInteractor>(relaxed = true)
         val view = RecyclerView(testContext)
         val controller = SessionControlView(
-            mockk(relaxed = true),
             view,
             mockk(relaxed = true),
             interactor
@@ -117,7 +116,6 @@ class SessionControlViewTest {
         val interactor = mockk<SessionControlInteractor>(relaxed = true)
         val view = RecyclerView(testContext)
         val controller = SessionControlView(
-            mockk(relaxed = true),
             view,
             mockk(relaxed = true),
             interactor

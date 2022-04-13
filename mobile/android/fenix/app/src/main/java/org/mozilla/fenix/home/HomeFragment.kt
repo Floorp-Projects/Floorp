@@ -391,7 +391,6 @@ class HomeFragment : Fragment() {
 
         updateLayout(binding.root)
         sessionControlView = SessionControlView(
-            components.appStore,
             binding.sessionControlRecyclerView,
             viewLifecycleOwner,
             sessionControlInteractor
