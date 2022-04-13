@@ -103,6 +103,11 @@ add_task(async function test_open_pip_window_history_nav() {
       });
 
       ok(!pipWin.closed, "pip windows should still be open");
+
+      let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);
+      let closeButton = pipWin.document.getElementById("close");
+      EventUtils.synthesizeMouseAtCenter(closeButton, {}, pipWin);
+      await pipClosed;
     }
   );
 });
