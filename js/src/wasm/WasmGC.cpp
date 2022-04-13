@@ -67,7 +67,7 @@ wasm::StackMap* wasm::ConvertStackMapBoolVectorToStackMap(
 // MacroAssembler::wasmReserveStackChecked, in the case where the frame is
 // "small", as determined by that function.
 bool wasm::CreateStackMapForFunctionEntryTrap(
-    const wasm::ArgTypeVector& argTypes, const MachineState& trapExitLayout,
+    const wasm::ArgTypeVector& argTypes, const RegisterOffsets& trapExitLayout,
     size_t trapExitLayoutWords, size_t nBytesReservedBeforeTrap,
     size_t nInboundStackArgBytes, wasm::StackMap** result) {
   // Ensure this is defined on all return paths.
@@ -171,13 +171,9 @@ bool wasm::CreateStackMapForFunctionEntryTrap(
 }
 
 bool wasm::GenerateStackmapEntriesForTrapExit(
-    const ArgTypeVector& args, const MachineState& trapExitLayout,
+    const ArgTypeVector& args, const RegisterOffsets& trapExitLayout,
     const size_t trapExitLayoutNumWords, ExitStubMapVector* extras) {
   MOZ_ASSERT(extras->empty());
-
-  // If this doesn't hold, we can't distinguish saved and not-saved
-  // registers in the MachineState.  See MachineState::MachineState().
-  MOZ_ASSERT(trapExitLayoutNumWords < 0x100);
 
   if (!extras->appendN(false, trapExitLayoutNumWords)) {
     return false;
@@ -188,8 +184,7 @@ bool wasm::GenerateStackmapEntriesForTrapExit(
       continue;
     }
 
-    size_t offsetFromTop =
-        reinterpret_cast<size_t>(trapExitLayout.address(i->gpr()));
+    size_t offsetFromTop = trapExitLayout.getOffset(i->gpr());
 
     // If this doesn't hold, the associated register wasn't saved by
     // the trap exit stub.  Better to crash now than much later, in

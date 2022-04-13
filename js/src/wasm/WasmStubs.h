@@ -265,8 +265,8 @@ extern bool GenerateEntryStubs(jit::MacroAssembler& masm,
                                const Maybe<jit::ImmPtr>& callee, bool isAsmJS,
                                CodeRangeVector* codeRanges);
 
-extern void GenerateTrapExitMachineState(jit::MachineState* machine,
-                                         size_t* numWords);
+extern void GenerateTrapExitRegisterOffsets(jit::RegisterOffsets* offsets,
+                                            size_t* numWords);
 
 extern bool GenerateProvisionalLazyJitEntryStub(jit::MacroAssembler& masm,
                                                 Offsets* offsets);
