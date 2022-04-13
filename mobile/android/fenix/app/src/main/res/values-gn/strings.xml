@@ -331,6 +331,8 @@
     <string name="preferences_add_private_browsing_shortcut">Embojuaju jeike pya’eha tendayke ñemiguáre</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS ayvúpe añoite</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Eñeha’ã eike hag̃ua tendakuérape eipurúvo pe taperekoite HTTPS ipapapýva tekorosãverã.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on">Hendy</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
@@ -343,6 +345,10 @@
     <string name="preferences_https_only_in_private_tabs">Embojuruja tendayke ñemiguápe</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">Tenda rekorosã oñembotýva</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Pe ikatúva hína ñanduti renda ndojokupytypái HTTPS ndive.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Upéicharamo jepe, ikatu avei peteĩ mba’evaiapoha. Eime meméramo ñanduti rendápe, aníke emoinge marandu emomba’evéva. Eiméramo pype, pe HTTPS ayvu añoite omboguéta sapy’aite pe tendápe g̃uarã.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Jeikekuaaha</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1790,6 +1796,8 @@
     <string name="shortcut_max_limit_title">Emohu’ãma mbopya’ehápe g̃uarã</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Embojuaju hag̃ua tenda pyahu, embogue peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Embojuaju hag̃ua jeike pyahu, embogue peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
 

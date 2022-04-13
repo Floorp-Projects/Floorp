@@ -42,13 +42,11 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">ਸੱਜਰੇ ਬੁੱਕਮਾਰਕ</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">ਤਾਜ਼ਾ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕ</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">ਤਾਜ਼ਾ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕ</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all"></string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources"></string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">ਸਾਰੇ ਸੰਭਾਲੇ ਬੁੱਕਮਾਰਕਾਂ ਨੂੰ ਵੇਖੋ</string>
-    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">ਸਾਰੇ ਸੰਭਾਲੇ ਹੋਏ ਬੁੱਕਮਾਰਕ ਵੇਖਾਉਣ ਬਟਨ</string>
 
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">ਹਟਾਓ</string>
@@ -132,8 +130,6 @@
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
-    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">ਸਾਰੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ ਨੂੰ ਵੇਖਾਓ</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">\&quot;%1$s\&quot; ਲਈ ਤੁਹਾਡੀ ਖੋਜ</string>
@@ -156,8 +152,6 @@
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
     <string name="past_explorations_show_all_content_description_2">ਸਾਰੀਆਂ ਪਿਛਲੀਆਂ ਛਾਣਬੀਣਾਂ ਨੂੰ ਵੇਖਾਓ</string>
-    <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">ਸਾਰੀਆਂ ਪਿਛਲੀਆਂ ਖੋਜਾਂ ਦੇ ਬਟਨ ਨੂੰ ਵੇਖਾਓ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -186,8 +180,6 @@
     <string name="browser_menu_add_to_homescreen">ਮੁੱਖ ਸਕਰੀਨ ‘ਤੇ ਜੋੜੋ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ਇੰਸਟਾਲ ਕਰੋ</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ਮੁੜ-ਸਿੰਕ ਕਰੋ</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -221,8 +213,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">ਸੋਧੋ</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">ਘਰ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
     <!-- Browser Toolbar -->
@@ -256,7 +246,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s ਤੁਹਾਡੇ ਵਲੋਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਲਿਖੀ ਹਰ ਚੀਜ਼ ਨੂੰ ਤੁਹਾਡੇ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨਾਲ ਸਾਂਝਾ ਕਰੇਗਾ।</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">ਹੋਰ ਜਾਣੋ</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">ਹੋਰ ਜਾਣੋ</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ਖੋਜ</string>
@@ -1060,7 +1050,7 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">ਬੁੱਕਮਾਰਕ ਸੰਭਾਲੇ ਗਏ!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਬੰਦ ਕੀਤੀ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1157,40 +1147,39 @@
 
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">ਫਾਇਰਫਾਕਸ ਪ੍ਰੀਵਿਊ ਹੁਣ ਫਾਇਰਫਾਕਸ ਨਾਈਟਲੀ ਹੈ</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">ਫਾਇਰਫਾਕਸ ਪ੍ਰੀਵਿਊ ਹੁਣ ਫਾਇਰਫਾਕਸ ਨਾਈਟਲੀ ਹੈ</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly ਹਰ ਰਾਤ ਅੱਪਡੇਟ ਹੁੰਦੀ ਹੈ ਅਤੇ ਤਜਰਬੇ ਅਧੀਨ ਨਵੇਂ ਫ਼ੀਚਰ ਪ੍ਰਾਪਤ ਕਰਦੀ ਹੈ।
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly ਹਰ ਰਾਤ ਅੱਪਡੇਟ ਹੁੰਦੀ ਹੈ ਅਤੇ ਤਜਰਬੇ ਅਧੀਨ ਨਵੇਂ ਫ਼ੀਚਰ ਪ੍ਰਾਪਤ ਕਰਦੀ ਹੈ।
         ਪਰ ਸਥਿਤ ਘੱਟ ਹੋ ਸਕਦੀ ਹੈ। ਵੱਧ ਸਥਿਰ ਤਜਰਬੇ ਵਾਸਤੇ ਸਾਡੇ ਬੀਟਾ ਬਰਾਊਜ਼ਰ ਨੂੰ ਡਾਊਨਲੋਡ ਕਰੋ।</string>
     <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">ਐਂਡਰਾਇਡ ਬੀਟਾ ਲਈ ਫਾਇਰਫਾਕਸ ਲਵੋ</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">ਐਂਡਰਾਇਡ ਬੀਟਾ ਲਈ ਫਾਇਰਫਾਕਸ ਲਵੋ</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly ਬਦਲਿਆ</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly ਬਦਲਿਆ</string>
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">ਇਹ ਐਪ ਸੁਰੱਖਿਆ ਅੱਪਡੇਟ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕਰੇਗੀ। ਇਹ ਐਪ ਨੂੰ ਵਰਤਣਾ ਛੱਡ ਕੇ ਨਵੇਂ ਨਾਈਟਲੀ (Nightly ਨੂੰ ਵਰਤੋਂ।
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">ਇਹ ਐਪ ਸੁਰੱਖਿਆ ਅੱਪਡੇਟ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕਰੇਗੀ। ਇਹ ਐਪ ਨੂੰ ਵਰਤਣਾ ਛੱਡ ਕੇ ਨਵੇਂ ਨਾਈਟਲੀ (Nightly ਨੂੰ ਵਰਤੋਂ।
         \n\nਆਪਣੇ ਬੁੱਕਮਾਰਕਾਂ, ਲਾਗਇਨਾਂ ਅਤੇ ਅਤੀਤ ਨੂੰ ਹੋਰ ਐਪ ਉੱਤੇ ਤਬਦੀਲ ਕਰਨ ਲਈ ਫਾਇਰਫਾਕਸ ਖਾਤਾ ਬਣਾਓ।</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">ਨਵੇਂ ਨਾਈਟਲੀ ਲਈ ਬਦਲੋ</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">ਨਵੇਂ ਨਾਈਟਲੀ ਲਈ ਬਦਲੋ</string>
 
     <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly ਬਦਲਿਆ</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly ਬਦਲਿਆ</string>
 
     <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">ਇਹ ਐਪ ਸੁਰੱਖਿਆ ਅੱਪਡੇਟ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕਰੇਗੀ। ਇਹ ਐਪ ਨੂੰ ਵਰਤਣਾ ਛੱਡ ਕੇ ਨਵੇਂ ਨਾਈਟਲੀ (Nightly ਨੂੰ ਵਰਤੋਂ।
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">ਇਹ ਐਪ ਸੁਰੱਖਿਆ ਅੱਪਡੇਟ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕਰੇਗੀ। ਇਹ ਐਪ ਨੂੰ ਵਰਤਣਾ ਛੱਡ ਕੇ ਨਵੇਂ ਨਾਈਟਲੀ (Nightly ਨੂੰ ਵਰਤੋਂ।
         \n\nਆਪਣੇ ਬੁੱਕਮਾਰਕਾਂ, ਲਾਗਇਨਾਂ ਅਤੇ ਅਤੀਤ ਨੂੰ ਹੋਰ ਐਪ ਉੱਤੇ ਤਬਦੀਲ ਕਰਨ ਲਈ ਫਾਇਰਫਾਕਸ ਖਾਤਾ ਬਣਾਓ।</string>
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">ਨਵਾਂ ਨਾਈਟਲੀ ਲਵੋ</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">ਨਵਾਂ ਨਾਈਟਲੀ ਲਵੋ</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s ਵਲੋਂ ਜੀ ਆਇਆਂ ਨੂੰ!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:RemovedIn="99" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ Firefox ਸਿੰਕ ਕਰੋ</string>
+    <string name="onboarding_account_sign_in_header_1">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ Firefox ਸਿੰਕ ਕਰੋ</string>
 
     <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
-    <string name="onboarding_account_sign_in_header_2">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ %1$s ਸਿੰਕ ਕਰੋ</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ %1$s ਸਿੰਕ ਕਰੋ</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
     <string name="onboarding_manual_sign_in_description_2">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਿੱਚ ਬੁੱਕਮਾਰਕ, ਅਤੀਤ ਅਤੇ ਪਾਸਵਰਡ ਲਿਆਓ।</string>
     <!-- text for the button to manually sign into Firefox account. -->
@@ -1387,7 +1376,7 @@
 
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->
-    <string name="about_debug_menu_toast_progress">ਡੀਬੱਗ ਮੇਨੂ: ਸਮਰੱਥ ਕਰਨ ਲਈ %1$d %1$d ਖੱਬੇ ਕਲਿੱਕ</string>
+    <string name="about_debug_menu_toast_progress">ਡੀਬੱਗ ਮੇਨੂ: ਸਮਰੱਥ ਕਰਨ ਲਈ %1$d ਖੱਬੇ ਕਲਿੱਕ</string>
     <string name="about_debug_menu_toast_done">ਡੀਬੱਗ ਮੇਨੂ ਸਮਰੱਥ ਕੀਤਾ</string>
 
     <!-- Browser long press popup menu -->
@@ -1615,17 +1604,17 @@
     <string name="search_delete_search_engine_success_message">%s ਹਟਾਓ</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">ਨਵੇਂ ਨਕੋਰ %s ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">ਨਵੇਂ ਨਕੋਰ %s ਲਈ ਜੀ ਆਇਆਂ ਨੂੰ</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">ਪੂਰੀ ਤਰ੍ਹਾਂ ਮੁੜ-ਡਿਜ਼ਾਈਨ ਕੀਤਾ ਬਰਾਊਜ਼ਰ ਤਿਆਰ ਹੈ, ਸੁਧਾਰੀ ਕਾਰਗੁਜ਼ਾਰੀ ਅਤੇ ਫੀਚਰਾਂ ਨਾਲ ਤੁਹਾਨੂੰ ਆਨਲਾਈਨ ਹੋਰ ਵੱਧ ਕਰਨ ਲਈ ਮਦਦ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ ਵਲੋਂ %s ਨਾਲ ਇਹ ਅੱਪਡੇਟ ਕੀਤੇ ਜਾਣ ਤੱਕ ਉਡੀਕੋ</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">ਪੂਰੀ ਤਰ੍ਹਾਂ ਮੁੜ-ਡਿਜ਼ਾਈਨ ਕੀਤਾ ਬਰਾਊਜ਼ਰ ਤਿਆਰ ਹੈ, ਸੁਧਾਰੀ ਕਾਰਗੁਜ਼ਾਰੀ ਅਤੇ ਫੀਚਰਾਂ ਨਾਲ ਤੁਹਾਨੂੰ ਆਨਲਾਈਨ ਹੋਰ ਵੱਧ ਕਰਨ ਲਈ ਮਦਦ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ ਵਲੋਂ %s ਨਾਲ ਇਹ ਅੱਪਡੇਟ ਕੀਤੇ ਜਾਣ ਤੱਕ ਉਡੀਕੋ</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">…%s ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">…%s ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s ਚਲਾਓ</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s ਚਲਾਓ</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">ਮਾਈਗਰੇਸ਼ਨ ਪੂਰੀ ਹੋਈ</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">ਮਾਈਗਰੇਸ਼ਨ ਪੂਰੀ ਹੋਈ</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">ਪਾਸਵਰਡ</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">ਪਾਸਵਰਡ</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">ਇਸਨੂੰ ਸਹਿਮਤੀ ਦੇਣ ਲਈ:</string>
@@ -1655,9 +1644,9 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">ਕੀ ਤੁਸੀਂ ਇਹ ਬੁੱਕਮਾਰਕ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਤੋਂ ਹਟਾਓ</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਤੋਂ ਹਟਾਓ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ਤਸਦੀਕ ਕੀਤਾ: %1$s</string>
@@ -1712,9 +1701,9 @@
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
     <string name="synced_tabs_enable_tab_syncing">ਟੈਬ ਨੂੰ ਸਿੰਕ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ।</string>
     <!-- Text displayed when user has no tabs that have been synced -->
-    <string moz:removedIn="99" name="synced_tabs_no_tabs" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ ਫਾਇਰਫਾਕਸ ਵਿੱਚ ਕੋਈ ਵੀ ਖੋਲ੍ਹੀ ਹੋਈ ਟੈਬ ਨਹੀਂ ਹੈ।</string>
+    <string name="synced_tabs_no_tabs">ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ ਫਾਇਰਫਾਕਸ ਵਿੱਚ ਕੋਈ ਵੀ ਖੋਲ੍ਹੀ ਹੋਈ ਟੈਬ ਨਹੀਂ ਹੈ।</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
-    <string name="synced_tabs_no_tabs_2">ਤੁਸੀਂ ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਿੱਚ ਕੋਈ ਹੋਰ ਟੈਬ ਖੋਲ੍ਹੀ ਨਹੀਂ ਹੈ।</string>
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">ਤੁਸੀਂ ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਿੱਚ ਕੋਈ ਹੋਰ ਟੈਬ ਖੋਲ੍ਹੀ ਨਹੀਂ ਹੈ।</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">ਤੁਹਾਡੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਟੈਬਾਂ ਦੀ ਸੂਚੀ ਵੇਖੋ।</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1730,22 +1719,19 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">ਸਿਖਰਲੀ ਸਾਈਟ ਦੀ ਲਿਮਟ ਅੱਪੜੀ</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ਸਿਖਰਲੀ ਸਾਈਟ ਦੀ ਲਿਮਟ ਅੱਪੜੀ</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">ਨਵੀਂ ਸਿਖਰਲੀ ਸਾਈਟ ਜੋੜਨ ਲਈ ਪਹਿਲਾਂ ਇੱਕ ਨੂੰ ਹਟਾਓ। ਸਾਈਟ ਨੂੰ ਛੂਹ ਕੇ ਰੱਖੋ ਤੇ ਹਟਾਓ ਨੂੰ ਚੁਣੋ।</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">ਨਵੀਂ ਸਿਖਰਲੀ ਸਾਈਟ ਜੋੜਨ ਲਈ ਪਹਿਲਾਂ ਇੱਕ ਨੂੰ ਹਟਾਓ। ਸਾਈਟ ਨੂੰ ਛੂਹ ਕੇ ਰੱਖੋ ਤੇ ਹਟਾਓ ਨੂੰ ਚੁਣੋ।</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">ਸਭ ਤੋਂ ਵੱਧ ਖੋਲ੍ਹੀਆਂ ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">ਸ਼ਾਰਟਕੱਟ</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ਨਾਂ</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">ਸਿਰਖਲੀ ਸਾਈਟ ਦਾ ਨਾਂ</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ਸਿਰਖਲੀ ਸਾਈਟ ਦਾ ਨਾਂ</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ਠੀਕ ਹੈ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ਰੱਦ ਕਰੋ</string>
@@ -1821,4 +1807,5 @@
     <string name="pocket_stories_feature_caption">Firefox ਪਰਿਵਾਰ ਦਾ ਹਿੱਸਾ। %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ਹੋਰ ਜਾਣੋ</string>
-</resources>
+
+    </resources>
