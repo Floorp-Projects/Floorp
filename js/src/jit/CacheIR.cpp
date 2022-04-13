@@ -3681,11 +3681,23 @@ static Maybe<PropertyInfo> LookupShapeForSetSlot(JSOp op, NativeObject* obj,
     return mozilla::Nothing();
   }
 
-  // If this is an op like JSOp::InitElem / [[DefineOwnProperty]], the
-  // property's attributes may have to be changed too, so make sure it's a
-  // simple data property.
-  if (IsPropertyInitOp(op) && (!prop->configurable() || !prop->enumerable())) {
-    return mozilla::Nothing();
+  // If this is a property init operation, the property's attributes may have to
+  // be changed too, so make sure the current flags match.
+  if (IsPropertyInitOp(op)) {
+    // Don't support locked init operations.
+    if (IsLockedInitOp(op)) {
+      return mozilla::Nothing();
+    }
+
+    // Can't redefine a non-configurable property.
+    if (!prop->configurable()) {
+      return mozilla::Nothing();
+    }
+
+    // Make sure the enumerable flag matches the init operation.
+    if (IsHiddenInitOp(op) == prop->enumerable()) {
+      return mozilla::Nothing();
+    }
   }
 
   return prop;
