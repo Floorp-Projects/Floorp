@@ -9,7 +9,7 @@
 */
 
 @media not print {
-  body {
+  :root {
     /* The colors here were chosen to be readable over the corresponding
        backgrounds. This is important in case this ImageDocument is for an
        image that happens to be corrupt, in which case we'll display a textual
