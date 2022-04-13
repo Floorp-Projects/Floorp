@@ -303,6 +303,8 @@ class JSObject
   /* Return the allocKind we would use if we were to tenure this object. */
   js::gc::AllocKind allocKindForTenure(const js::Nursery& nursery) const;
 
+  bool canHaveFixedElements() const;
+
   size_t tenuredSizeOfThis() const {
     MOZ_ASSERT(isTenured());
     return js::gc::Arena::thingSize(asTenured().getAllocKind());
