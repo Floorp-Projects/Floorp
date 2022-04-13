@@ -26,7 +26,7 @@ object Versions {
     const val sentry_latest = "5.6.1"
     const val okhttp = "3.13.1"
     const val zxing = "3.3.0"
-    const val jna = "5.5.0"
+    const val jna = "5.8.0"
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.8.1"
 
