@@ -89,11 +89,10 @@ static void SubscriptCachePath(JSContext* cx, nsIURI* uri,
   // StartupCache must distinguish between non-syntactic vs global when
   // computing the cache key.
   if (!JS_IsGlobalObject(targetObj)) {
-    cachePath.AssignLiteral(JSSUB_CACHE_PREFIX("non-syntactic"));
+    PathifyURI(JSSUB_CACHE_PREFIX("non-syntactic"), uri, cachePath);
   } else {
-    cachePath.AssignLiteral(JSSUB_CACHE_PREFIX("global"));
+    PathifyURI(JSSUB_CACHE_PREFIX("global"), uri, cachePath);
   }
-  PathifyURI(uri, cachePath);
 }
 
 static void ReportError(JSContext* cx, const nsACString& msg) {
