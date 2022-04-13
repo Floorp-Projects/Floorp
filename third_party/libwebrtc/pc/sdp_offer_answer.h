@@ -127,6 +127,9 @@ class SdpOfferAnswerHandler {
       const std::vector<cricket::Candidate>& candidates);
   bool ShouldFireNegotiationNeededEvent(uint32_t event_id);
 
+  bool AddStream(MediaStreamInterface* local_stream);
+  void RemoveStream(MediaStreamInterface* local_stream);
+
   absl::optional<bool> is_caller();
   bool HasNewIceCredentials();
   bool IceRestartPending(const std::string& content_name) const;
@@ -147,6 +150,9 @@ class SdpOfferAnswerHandler {
 
   // Destroys all BaseChannels and destroys the SCTP data channel, if present.
   void DestroyAllChannels();
+
+  rtc::scoped_refptr<StreamCollectionInterface> local_streams();
+  rtc::scoped_refptr<StreamCollectionInterface> remote_streams();
 
  private:
   class ImplicitCreateSessionDescriptionObserver;
@@ -517,6 +523,16 @@ class SdpOfferAnswerHandler {
 
   // Whether this peer is the caller. Set when the local description is applied.
   absl::optional<bool> is_caller_ RTC_GUARDED_BY(signaling_thread());
+
+  // Streams added via AddStream.
+  const rtc::scoped_refptr<StreamCollection> local_streams_
+      RTC_GUARDED_BY(signaling_thread());
+  // Streams created as a result of SetRemoteDescription.
+  const rtc::scoped_refptr<StreamCollection> remote_streams_
+      RTC_GUARDED_BY(signaling_thread());
+
+  std::vector<std::unique_ptr<MediaStreamObserver>> stream_observers_
+      RTC_GUARDED_BY(signaling_thread());
 
   // The operations chain is used by the offer/answer exchange methods to ensure
   // they are executed in the right order. For example, if

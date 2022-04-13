@@ -93,20 +93,6 @@ static const char kDefaultVideoSenderId[] = "defaultv0";
 
 static const int REPORT_USAGE_PATTERN_DELAY_MS = 60000;
 
-// Check if we can send |new_stream| on a PeerConnection.
-bool CanAddLocalMediaStream(webrtc::StreamCollectionInterface* current_streams,
-                            webrtc::MediaStreamInterface* new_stream) {
-  if (!new_stream || !current_streams) {
-    return false;
-  }
-  if (current_streams->find(new_stream->id()) != nullptr) {
-    RTC_LOG(LS_ERROR) << "MediaStream with ID " << new_stream->id()
-                      << " is already added.";
-    return false;
-  }
-  return true;
-}
-
 
 uint32_t ConvertIceTransportTypeToCandidateFilter(
     PeerConnectionInterface::IceTransportsType type) {
@@ -355,8 +341,6 @@ PeerConnection::PeerConnection(PeerConnectionFactory* factory,
     : factory_(factory),
       event_log_(std::move(event_log)),
       event_log_ptr_(event_log_.get()),
-      local_streams_(StreamCollection::Create()),
-      remote_streams_(StreamCollection::Create()),
       call_(std::move(call)),
       call_ptr_(call_.get()),
       sdp_handler_(this),
@@ -682,7 +666,7 @@ rtc::scoped_refptr<StreamCollectionInterface> PeerConnection::local_streams() {
   RTC_CHECK(!IsUnifiedPlan()) << "local_streams is not available with Unified "
                                  "Plan SdpSemantics. Please use GetSenders "
                                  "instead.";
-  return local_streams_;
+  return sdp_handler_.local_streams();
 }
 
 rtc::scoped_refptr<StreamCollectionInterface> PeerConnection::remote_streams() {
@@ -690,7 +674,7 @@ rtc::scoped_refptr<StreamCollectionInterface> PeerConnection::remote_streams() {
   RTC_CHECK(!IsUnifiedPlan()) << "remote_streams is not available with Unified "
                                  "Plan SdpSemantics. Please use GetReceivers "
                                  "instead.";
-  return remote_streams_;
+  return sdp_handler_.remote_streams();
 }
 
 bool PeerConnection::AddStream(MediaStreamInterface* local_stream) {
@@ -698,35 +682,7 @@ bool PeerConnection::AddStream(MediaStreamInterface* local_stream) {
   RTC_CHECK(!IsUnifiedPlan()) << "AddStream is not available with Unified Plan "
                                  "SdpSemantics. Please use AddTrack instead.";
   TRACE_EVENT0("webrtc", "PeerConnection::AddStream");
-  if (IsClosed()) {
-    return false;
-  }
-  if (!CanAddLocalMediaStream(local_streams_, local_stream)) {
-    return false;
-  }
-
-  local_streams_->AddStream(local_stream);
-  MediaStreamObserver* observer = new MediaStreamObserver(local_stream);
-  observer->SignalAudioTrackAdded.connect(this,
-                                          &PeerConnection::OnAudioTrackAdded);
-  observer->SignalAudioTrackRemoved.connect(
-      this, &PeerConnection::OnAudioTrackRemoved);
-  observer->SignalVideoTrackAdded.connect(this,
-                                          &PeerConnection::OnVideoTrackAdded);
-  observer->SignalVideoTrackRemoved.connect(
-      this, &PeerConnection::OnVideoTrackRemoved);
-  stream_observers_.push_back(std::unique_ptr<MediaStreamObserver>(observer));
-
-  for (const auto& track : local_stream->GetAudioTracks()) {
-    AddAudioTrack(track.get(), local_stream);
-  }
-  for (const auto& track : local_stream->GetVideoTracks()) {
-    AddVideoTrack(track.get(), local_stream);
-  }
-
-  stats_->AddStream(local_stream);
-  sdp_handler_.UpdateNegotiationNeeded();
-  return true;
+  return sdp_handler_.AddStream(local_stream);
 }
 
 void PeerConnection::RemoveStream(MediaStreamInterface* local_stream) {
@@ -735,27 +691,7 @@ void PeerConnection::RemoveStream(MediaStreamInterface* local_stream) {
                                  "Plan SdpSemantics. Please use RemoveTrack "
                                  "instead.";
   TRACE_EVENT0("webrtc", "PeerConnection::RemoveStream");
-  if (!IsClosed()) {
-    for (const auto& track : local_stream->GetAudioTracks()) {
-      RemoveAudioTrack(track.get(), local_stream);
-    }
-    for (const auto& track : local_stream->GetVideoTracks()) {
-      RemoveVideoTrack(track.get(), local_stream);
-    }
-  }
-  local_streams_->RemoveStream(local_stream);
-  stream_observers_.erase(
-      std::remove_if(
-          stream_observers_.begin(), stream_observers_.end(),
-          [local_stream](const std::unique_ptr<MediaStreamObserver>& observer) {
-            return observer->stream()->id().compare(local_stream->id()) == 0;
-          }),
-      stream_observers_.end());
-
-  if (IsClosed()) {
-    return;
-  }
-  sdp_handler_.UpdateNegotiationNeeded();
+  sdp_handler_.RemoveStream(local_stream);
 }
 
 RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> PeerConnection::AddTrack(
@@ -2027,6 +1963,7 @@ rtc::scoped_refptr<RtpReceiverInterface> PeerConnection::RemoveAndStopReceiver(
 
 void PeerConnection::AddAudioTrack(AudioTrackInterface* track,
                                    MediaStreamInterface* stream) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsClosed());
   RTC_DCHECK(track);
   RTC_DCHECK(stream);
@@ -2060,6 +1997,7 @@ void PeerConnection::AddAudioTrack(AudioTrackInterface* track,
 // indefinitely, when we have unified plan SDP.
 void PeerConnection::RemoveAudioTrack(AudioTrackInterface* track,
                                       MediaStreamInterface* stream) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsClosed());
   auto sender = FindSenderForTrack(track);
   if (!sender) {
@@ -2072,6 +2010,7 @@ void PeerConnection::RemoveAudioTrack(AudioTrackInterface* track,
 
 void PeerConnection::AddVideoTrack(VideoTrackInterface* track,
                                    MediaStreamInterface* stream) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsClosed());
   RTC_DCHECK(track);
   RTC_DCHECK(stream);
@@ -2097,6 +2036,7 @@ void PeerConnection::AddVideoTrack(VideoTrackInterface* track,
 
 void PeerConnection::RemoveVideoTrack(VideoTrackInterface* track,
                                       MediaStreamInterface* stream) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!IsClosed());
   auto sender = FindSenderForTrack(track);
   if (!sender) {
@@ -2262,13 +2202,13 @@ absl::optional<std::string> PeerConnection::GetDataMid() const {
 }
 
 void PeerConnection::OnRemoteSenderAdded(const RtpSenderInfo& sender_info,
+                                         MediaStreamInterface* stream,
                                          cricket::MediaType media_type) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_LOG(LS_INFO) << "Creating " << cricket::MediaTypeToString(media_type)
                    << " receiver for track_id=" << sender_info.sender_id
                    << " and stream_id=" << sender_info.stream_id;
 
-  MediaStreamInterface* stream = remote_streams_->find(sender_info.stream_id);
   if (media_type == cricket::MEDIA_TYPE_AUDIO) {
     CreateAudioReceiver(stream, sender_info);
   } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
@@ -2279,13 +2219,12 @@ void PeerConnection::OnRemoteSenderAdded(const RtpSenderInfo& sender_info,
 }
 
 void PeerConnection::OnRemoteSenderRemoved(const RtpSenderInfo& sender_info,
+                                           MediaStreamInterface* stream,
                                            cricket::MediaType media_type) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_LOG(LS_INFO) << "Removing " << cricket::MediaTypeToString(media_type)
                    << " receiver for track_id=" << sender_info.sender_id
                    << " and stream_id=" << sender_info.stream_id;
-
-  MediaStreamInterface* stream = remote_streams_->find(sender_info.stream_id);
 
   rtc::scoped_refptr<RtpReceiverInterface> receiver;
   if (media_type == cricket::MEDIA_TYPE_AUDIO) {
