@@ -27,6 +27,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FinderIterator.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "ClipboardHelper",
@@ -149,7 +155,9 @@ Finder.prototype = {
   },
 
   set clipboardSearchString(aSearchString) {
-    SetClipboardSearchString(aSearchString);
+    if (!PrivateBrowsingUtils.isContentWindowPrivate(this._getWindow())) {
+      SetClipboardSearchString(aSearchString);
+    }
   },
 
   set caseSensitive(aSensitive) {
