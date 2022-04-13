@@ -309,10 +309,6 @@ class PeerConnection : public PeerConnectionInternal,
     RTC_DCHECK_RUN_ON(signaling_thread());
     return &configuration_;
   }
-  rtc::scoped_refptr<StreamCollection> remote_streams_internal() const {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return remote_streams_;
-  }
   absl::optional<std::string> sctp_mid() {
     RTC_DCHECK_RUN_ON(signaling_thread());
     return sctp_mid_s_;
@@ -389,16 +385,12 @@ class PeerConnection : public PeerConnectionInternal,
 
   // May be called either by AddStream/RemoveStream, or when a track is
   // added/removed from a stream previously added via AddStream.
-  void AddAudioTrack(AudioTrackInterface* track, MediaStreamInterface* stream)
-      RTC_RUN_ON(signaling_thread());
+  void AddAudioTrack(AudioTrackInterface* track, MediaStreamInterface* stream);
   void RemoveAudioTrack(AudioTrackInterface* track,
-                        MediaStreamInterface* stream)
-      RTC_RUN_ON(signaling_thread());
-  void AddVideoTrack(VideoTrackInterface* track, MediaStreamInterface* stream)
-      RTC_RUN_ON(signaling_thread());
+                        MediaStreamInterface* stream);
+  void AddVideoTrack(VideoTrackInterface* track, MediaStreamInterface* stream);
   void RemoveVideoTrack(VideoTrackInterface* track,
-                        MediaStreamInterface* stream)
-      RTC_RUN_ON(signaling_thread());
+                        MediaStreamInterface* stream);
 
   // AddTrack implementation when Unified Plan is specified.
   RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrackUnifiedPlan(
@@ -503,12 +495,14 @@ class PeerConnection : public PeerConnectionInternal,
   // session description. It creates a remote MediaStreamTrackInterface
   // implementation and triggers CreateAudioReceiver or CreateVideoReceiver.
   void OnRemoteSenderAdded(const RtpSenderInfo& sender_info,
+                           MediaStreamInterface* stream,
                            cricket::MediaType media_type);
 
   // Triggered when a remote sender has been removed from a remote session
   // description. It removes the remote sender with id |sender_id| from a remote
   // MediaStream and triggers DestroyAudioReceiver or DestroyVideoReceiver.
   void OnRemoteSenderRemoved(const RtpSenderInfo& sender_info,
+                             MediaStreamInterface* stream,
                              cricket::MediaType media_type);
 
   // Triggered when a local sender has been seen for the first time in a local
@@ -763,16 +757,6 @@ class PeerConnection : public PeerConnectionInternal,
   std::unique_ptr<rtc::SSLCertificateVerifier>
       tls_cert_verifier_;  // TODO(bugs.webrtc.org/9987): Accessed on both
                            // signaling and network thread.
-
-  // Streams added via AddStream.
-  const rtc::scoped_refptr<StreamCollection> local_streams_
-      RTC_GUARDED_BY(signaling_thread());
-  // Streams created as a result of SetRemoteDescription.
-  const rtc::scoped_refptr<StreamCollection> remote_streams_
-      RTC_GUARDED_BY(signaling_thread());
-
-  std::vector<std::unique_ptr<MediaStreamObserver>> stream_observers_
-      RTC_GUARDED_BY(signaling_thread());
 
   // These lists store sender info seen in local/remote descriptions.
   std::vector<RtpSenderInfo> remote_audio_sender_infos_

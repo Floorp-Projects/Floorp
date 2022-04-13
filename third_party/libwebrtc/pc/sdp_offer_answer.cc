@@ -16,6 +16,7 @@
 #include "api/media_stream_proxy.h"
 #include "api/uma_metrics.h"
 #include "pc/media_stream.h"
+#include "pc/media_stream_observer.h"
 #include "pc/peer_connection.h"
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_media_utils.h"
@@ -669,6 +670,20 @@ void AddRtpDataChannelOptions(
   }
 }
 
+// Check if we can send |new_stream| on a PeerConnection.
+bool CanAddLocalMediaStream(webrtc::StreamCollectionInterface* current_streams,
+                            webrtc::MediaStreamInterface* new_stream) {
+  if (!new_stream || !current_streams) {
+    return false;
+  }
+  if (current_streams->find(new_stream->id()) != nullptr) {
+    RTC_LOG(LS_ERROR) << "MediaStream with ID " << new_stream->id()
+                      << " is already added.";
+    return false;
+  }
+  return true;
+}
+
 }  // namespace
 
 // Used by parameterless SetLocalDescription() to create an offer or answer.
@@ -872,6 +887,8 @@ class SdpOfferAnswerHandler::LocalIceCredentialsToReplace {
 
 SdpOfferAnswerHandler::SdpOfferAnswerHandler(PeerConnection* pc)
     : pc_(pc),
+      local_streams_(StreamCollection::Create()),
+      remote_streams_(StreamCollection::Create()),
       operations_chain_(rtc::OperationsChain::Create()),
       rtcp_cname_(GenerateRtcpCname()),
       local_ice_credentials_to_replace_(new LocalIceCredentialsToReplace()),
@@ -2088,11 +2105,11 @@ void SdpOfferAnswerHandler::SetAssociatedRemoteStreams(
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> media_streams;
   for (const std::string& stream_id : stream_ids) {
     rtc::scoped_refptr<MediaStreamInterface> stream =
-        pc_->remote_streams_internal()->find(stream_id);
+        remote_streams_->find(stream_id);
     if (!stream) {
       stream = MediaStreamProxy::Create(rtc::Thread::Current(),
                                         MediaStream::Create(stream_id));
-      pc_->remote_streams_internal()->AddStream(stream);
+      remote_streams_->AddStream(stream);
       added_streams->push_back(stream);
     }
     media_streams.push_back(stream);
@@ -2392,6 +2409,88 @@ bool SdpOfferAnswerHandler::ShouldFireNegotiationNeededEvent(
   }
   // All checks have passed - please fire "negotiationneeded" now!
   return true;
+}
+
+rtc::scoped_refptr<StreamCollectionInterface>
+SdpOfferAnswerHandler::local_streams() {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_CHECK(!IsUnifiedPlan()) << "local_streams is not available with Unified "
+                                 "Plan SdpSemantics. Please use GetSenders "
+                                 "instead.";
+  return local_streams_;
+}
+
+rtc::scoped_refptr<StreamCollectionInterface>
+SdpOfferAnswerHandler::remote_streams() {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_CHECK(!IsUnifiedPlan()) << "remote_streams is not available with Unified "
+                                 "Plan SdpSemantics. Please use GetReceivers "
+                                 "instead.";
+  return remote_streams_;
+}
+
+bool SdpOfferAnswerHandler::AddStream(MediaStreamInterface* local_stream) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_CHECK(!IsUnifiedPlan()) << "AddStream is not available with Unified Plan "
+                                 "SdpSemantics. Please use AddTrack instead.";
+  if (pc_->IsClosed()) {
+    return false;
+  }
+  if (!CanAddLocalMediaStream(local_streams_, local_stream)) {
+    return false;
+  }
+
+  local_streams_->AddStream(local_stream);
+  MediaStreamObserver* observer = new MediaStreamObserver(local_stream);
+  observer->SignalAudioTrackAdded.connect(pc_,
+                                          &PeerConnection::OnAudioTrackAdded);
+  observer->SignalAudioTrackRemoved.connect(
+      pc_, &PeerConnection::OnAudioTrackRemoved);
+  observer->SignalVideoTrackAdded.connect(pc_,
+                                          &PeerConnection::OnVideoTrackAdded);
+  observer->SignalVideoTrackRemoved.connect(
+      pc_, &PeerConnection::OnVideoTrackRemoved);
+  stream_observers_.push_back(std::unique_ptr<MediaStreamObserver>(observer));
+
+  for (const auto& track : local_stream->GetAudioTracks()) {
+    pc_->AddAudioTrack(track.get(), local_stream);
+  }
+  for (const auto& track : local_stream->GetVideoTracks()) {
+    pc_->AddVideoTrack(track.get(), local_stream);
+  }
+
+  pc_->stats()->AddStream(local_stream);
+  UpdateNegotiationNeeded();
+  return true;
+}
+
+void SdpOfferAnswerHandler::RemoveStream(MediaStreamInterface* local_stream) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_CHECK(!IsUnifiedPlan()) << "RemoveStream is not available with Unified "
+                                 "Plan SdpSemantics. Please use RemoveTrack "
+                                 "instead.";
+  TRACE_EVENT0("webrtc", "PeerConnection::RemoveStream");
+  if (!pc_->IsClosed()) {
+    for (const auto& track : local_stream->GetAudioTracks()) {
+      pc_->RemoveAudioTrack(track.get(), local_stream);
+    }
+    for (const auto& track : local_stream->GetVideoTracks()) {
+      pc_->RemoveVideoTrack(track.get(), local_stream);
+    }
+  }
+  local_streams_->RemoveStream(local_stream);
+  stream_observers_.erase(
+      std::remove_if(
+          stream_observers_.begin(), stream_observers_.end(),
+          [local_stream](const std::unique_ptr<MediaStreamObserver>& observer) {
+            return observer->stream()->id().compare(local_stream->id()) == 0;
+          }),
+      stream_observers_.end());
+
+  if (pc_->IsClosed()) {
+    return;
+  }
+  UpdateNegotiationNeeded();
 }
 
 RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
@@ -3752,7 +3851,7 @@ void SdpOfferAnswerHandler::RemoveRemoteStreamsIfEmpty(
   for (const auto& remote_stream : remote_streams) {
     if (remote_stream->GetAudioTracks().empty() &&
         remote_stream->GetVideoTracks().empty()) {
-      pc_->remote_streams_internal()->RemoveStream(remote_stream);
+      remote_streams_->RemoveStream(remote_stream);
       removed_streams->push_back(remote_stream);
     }
   }
@@ -3838,7 +3937,8 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
         sender_exists) {
       ++sender_it;
     } else {
-      pc_->OnRemoteSenderRemoved(info, media_type);
+      pc_->OnRemoteSenderRemoved(info, remote_streams_->find(info.stream_id),
+                                 media_type);
       sender_it = current_senders->erase(sender_it);
     }
   }
@@ -3865,12 +3965,12 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
     uint32_t ssrc = params.first_ssrc();
 
     rtc::scoped_refptr<MediaStreamInterface> stream =
-        pc_->remote_streams_internal()->find(stream_id);
+        remote_streams_->find(stream_id);
     if (!stream) {
       // This is a new MediaStream. Create a new remote MediaStream.
       stream = MediaStreamProxy::Create(rtc::Thread::Current(),
                                         MediaStream::Create(stream_id));
-      pc_->remote_streams_internal()->AddStream(stream);
+      remote_streams_->AddStream(stream);
       new_streams->AddStream(stream);
     }
 
@@ -3879,19 +3979,19 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
     if (!sender_info) {
       current_senders->push_back(
           PeerConnection::RtpSenderInfo(stream_id, sender_id, ssrc));
-      pc_->OnRemoteSenderAdded(current_senders->back(), media_type);
+      pc_->OnRemoteSenderAdded(current_senders->back(), stream, media_type);
     }
   }
 
   // Add default sender if necessary.
   if (default_sender_needed) {
     rtc::scoped_refptr<MediaStreamInterface> default_stream =
-        pc_->remote_streams_internal()->find(kDefaultStreamId);
+        remote_streams_->find(kDefaultStreamId);
     if (!default_stream) {
       // Create the new default MediaStream.
       default_stream = MediaStreamProxy::Create(
           rtc::Thread::Current(), MediaStream::Create(kDefaultStreamId));
-      pc_->remote_streams_internal()->AddStream(default_stream);
+      remote_streams_->AddStream(default_stream);
       new_streams->AddStream(default_stream);
     }
     std::string default_sender_id = (media_type == cricket::MEDIA_TYPE_AUDIO)
@@ -3903,7 +4003,8 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
     if (!default_sender_info) {
       current_senders->push_back(PeerConnection::RtpSenderInfo(
           kDefaultStreamId, default_sender_id, /*ssrc=*/0));
-      pc_->OnRemoteSenderAdded(current_senders->back(), media_type);
+      pc_->OnRemoteSenderAdded(current_senders->back(), default_stream,
+                               media_type);
     }
   }
 }
@@ -4114,15 +4215,15 @@ void SdpOfferAnswerHandler::ReportNegotiatedSdpSemantics(
 void SdpOfferAnswerHandler::UpdateEndedRemoteMediaStreams() {
   RTC_DCHECK_RUN_ON(signaling_thread());
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> streams_to_remove;
-  for (size_t i = 0; i < pc_->remote_streams_internal()->count(); ++i) {
-    MediaStreamInterface* stream = pc_->remote_streams_internal()->at(i);
+  for (size_t i = 0; i < remote_streams_->count(); ++i) {
+    MediaStreamInterface* stream = remote_streams_->at(i);
     if (stream->GetAudioTracks().empty() && stream->GetVideoTracks().empty()) {
       streams_to_remove.push_back(stream);
     }
   }
 
   for (auto& stream : streams_to_remove) {
-    pc_->remote_streams_internal()->RemoveStream(stream);
+    remote_streams_->RemoveStream(stream);
     pc_->Observer()->OnRemoveStream(std::move(stream));
   }
 }
