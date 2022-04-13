@@ -755,6 +755,8 @@ addAccessibleTask(
 </div>
   `,
   async function(browser, docAcc) {
+    queryInterfaces(docAcc, [nsIAccessibleText]);
+
     const textarea = findAccessibleChildByID(docAcc, "textarea", [
       nsIAccessibleText,
     ]);
@@ -764,6 +766,7 @@ addAccessibleTask(
     await caretMoved;
     testSelectionRange(browser, textarea, textarea, 0, textarea, 0);
     is(textarea.selectionCount, 0, "textarea selectionCount is 0");
+    is(docAcc.selectionCount, 0, "document selectionCount is 0");
 
     info("Selecting a in textarea");
     let selChanged = waitForSelectionChange(textarea);
@@ -805,6 +808,7 @@ addAccessibleTask(
     testSelectionRange(browser, editable, p1, 0, p1, 0);
     is(editable.selectionCount, 0, "editable selectionCount is 0");
     is(p1.selectionCount, 0, "p1 selectionCount is 0");
+    is(docAcc.selectionCount, 0, "document selectionCount is 0");
 
     info("Selecting a in editable");
     selChanged = waitForSelectionChange(p1);
