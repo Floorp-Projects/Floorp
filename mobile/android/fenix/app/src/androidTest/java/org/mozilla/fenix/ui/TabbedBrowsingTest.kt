@@ -10,12 +10,12 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -47,6 +47,10 @@ class TabbedBrowsingTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
+
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
@@ -172,7 +176,6 @@ class TabbedBrowsingTest {
         }
     }
 
-    @Ignore("Currently failing, will need some investigation, see https://github.com/mozilla-mobile/fenix/issues/22640")
     @Test
     fun verifyUndoSnackBarTest() {
         // disabling these features because they interfere with the snackbar visibility
