@@ -3319,7 +3319,7 @@ Talos test lists
 .. dropdown:: pdfpaint
    :container: + anchor-id-pdfpaint
 
-   * contact: :bdahl and Compiler and Development Tools team
+   * contact: :calixte and CI and Quality Tools team
    * source:
    * type: `Page load`_
    * reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
