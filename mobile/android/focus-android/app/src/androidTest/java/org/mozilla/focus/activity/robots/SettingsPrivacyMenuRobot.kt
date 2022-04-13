@@ -10,7 +10,6 @@ import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
@@ -97,11 +96,11 @@ class SettingsPrivacyMenuRobot {
 
     fun verifyAutoplaySection() {
         privacySettingsList.waitForExists(waitingTime)
-        autoplayAllowAudioAndVideoOption().check(matches(isDisplayed()))
-        autoplayBlockAudioOnlyOption().check(matches(isDisplayed()))
-        recommendedDescription().check(matches(isDisplayed()))
+        assertTrue(autoplayAllowAudioAndVideoOption.exists())
+        assertTrue(autoplayBlockAudioOnlyOption.exists())
+        assertTrue(recommendedDescription.exists())
         assertBlockAudioOnlyIsChecked()
-        blockAudioAndVideoOption().check(matches(isDisplayed()))
+        assertTrue(blockAudioAndVideoOption.exists())
     }
 
     fun verifyBlockAdTrackersEnabled(enabled: Boolean) {
@@ -701,21 +700,25 @@ private fun autoplayOption() = onView(withText(R.string.preference_autoplay))
 
 private fun autoplayDefaultOption() = onView(withText(R.string.preference_block_autoplay_audio_only))
 
-private fun autoplayAllowAudioAndVideoOption() = onView(withText(R.string.preference_allow_audio_video_autoplay))
+private val autoplayAllowAudioAndVideoOption =
+    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_allow_audio_video_autoplay)))
 
-private fun autoplayBlockAudioOnlyOption() = onView(withText(R.string.preference_block_autoplay_audio_only))
+private val autoplayBlockAudioOnlyOption =
+    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only)))
 
-private fun recommendedDescription() = onView(withText(R.string.preference_block_autoplay_audio_only_summary))
+private val recommendedDescription =
+    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only_summary)))
 
-private fun blockAudioAndVideoOption() = onView(withText(R.string.preference_block_autoplay_audio_video))
+private val blockAudioAndVideoOption =
+    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_video)))
 
-private fun assertBlockAudioOnlyIsChecked() =
-    onView(
-        allOf(
-            withId(R.id.radio_button),
-            hasSibling(withText(R.string.preference_block_autoplay_audio_only))
-        )
-    ).check(matches(isChecked()))
+private fun assertBlockAudioOnlyIsChecked() {
+    val radioButton =
+        mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only)))
+            .getFromParent(UiSelector().className("android.widget.RadioButton"))
+
+    assertTrue(radioButton.isChecked)
+}
 
 private val blockCookiesPromptHeading =
     mDevice.findObject(
