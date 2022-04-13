@@ -5331,19 +5331,16 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard(JSFunction* callee) {
   // native from a different realm.
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
 
-  bool isConstructing = IsConstructPC(pc_);
-  CallFlags flags(isConstructing, IsSpreadPC(pc_));
-
   ValOperandId calleeValId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags);
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags_);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
   writer.guardSpecificFunction(calleeObjId, callee);
 
   // If we're constructing we also need to guard newTarget == callee.
-  if (isConstructing) {
+  if (flags_.isConstructing()) {
     MOZ_ASSERT(&newTarget_.toObject() == callee);
     ValOperandId newTargetValId =
-        writer.loadArgumentFixedSlot(ArgumentKind::NewTarget, argc_, flags);
+        writer.loadArgumentFixedSlot(ArgumentKind::NewTarget, argc_, flags_);
     ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
     writer.guardSpecificFunction(newTargetObjId, callee);
   }
@@ -6376,11 +6373,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringConstructor(
   // Guard callee is the 'String' function.
   emitNativeCalleeGuard(callee);
 
-  CallFlags flags(IsConstructPC(pc_), IsSpreadPC(pc_));
-
   // Guard on number and convert to string.
   ValOperandId argId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags_);
   StringOperandId strId = emitToStringGuard(argId, args_[0]);
 
   writer.newStringObjectResult(templateObj, strId);
@@ -8921,12 +8916,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor(
   // function.
   emitNativeCalleeGuard(callee);
 
-  CallFlags flags(IsConstructPC(pc_), IsSpreadPC(pc_));
-
   Int32OperandId lengthId;
   if (argc_ == 1) {
     ValOperandId arg0Id =
-        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags_);
     lengthId = writer.guardToInt32(arg0Id);
   } else {
     MOZ_ASSERT(argc_ == 0);
@@ -8942,7 +8935,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor(
 
 AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor(
     HandleFunction callee) {
-  MOZ_ASSERT(IsConstructPC(pc_));
+  MOZ_ASSERT(flags_.isConstructing());
 
   if (argc_ == 0 || argc_ > 3) {
     return AttachDecision::NoAction;
@@ -8989,9 +8982,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor(
   // Guard callee and newTarget are this TypedArray constructor function.
   emitNativeCalleeGuard(callee);
 
-  CallFlags flags(IsConstructPC(pc_), IsSpreadPC(pc_));
   ValOperandId arg0Id =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags_);
 
   if (args_[0].isInt32()) {
     // From length.
@@ -9012,14 +9004,14 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor(
       ValOperandId byteOffsetId;
       if (argc_ > 1) {
         byteOffsetId =
-            writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_, flags);
+            writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_, flags_);
       } else {
         byteOffsetId = writer.loadUndefined();
       }
       ValOperandId lengthId;
       if (argc_ > 2) {
         lengthId =
-            writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_, flags);
+            writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_, flags_);
       } else {
         lengthId = writer.loadUndefined();
       }
