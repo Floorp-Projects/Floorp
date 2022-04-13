@@ -6058,9 +6058,12 @@
 #---------------------------------------------------------------------------
 
 # Turn HTML:inert on or off.
+#
+# Do not enable this by default until there's consensus in:
+# https://github.com/whatwg/html/issues/7796
 - name: html5.inert.enabled
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Toggle which thread the HTML5 parser uses for stream parsing.
