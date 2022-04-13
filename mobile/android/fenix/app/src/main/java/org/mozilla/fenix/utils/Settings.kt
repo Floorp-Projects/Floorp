@@ -1292,7 +1292,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var showUnifiedSearchFeature by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_show_unified_search),
-        default = { homescreenSections[HomeScreenSection.UNIFIED_SEARCH] == true },
+        default = { FxNimbus.features.unifiedSearch.value(appContext).enabled },
         featureFlag = FeatureFlags.unifiedSearchFeature
     )
 

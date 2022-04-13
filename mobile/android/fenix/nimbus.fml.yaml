@@ -20,7 +20,6 @@ features:
             "recent-explorations": true,
             "pocket": true,
             "contile-top-sites": false,
-            "unified-search": false,
           }
     defaults:
       - channel: nightly
@@ -32,7 +31,6 @@ features:
             "recent-explorations": true,
             "pocket": true,
             "contile-top-sites": false,
-            "unified-search": false,
           }
         }
   nimbus-validation:
@@ -178,6 +176,17 @@ features:
               trigger: [ "I_AM_NOT_DEFAULT_BROWSER" ]
               style: "DEFAULT"
               button-label: preferences_set_as_default_browser
+  unified-search:
+    description: A feature allowing user to easily search for specified results directly in the search bar.
+    variables:
+      enabled:
+        description: If true, the feature shows up in the search bar.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: false
 
 types:
   objects:
@@ -268,8 +277,6 @@ types:
           description: The pocket section. This should only be available in the US.
         contile-top-sites:
           description: The sponsored shortcuts in the homescreen.
-        unified-search:
-          description: The unified search toolbar.
     MessageSurfaceId:
       description: The identity of a message surface, used in the default browser experiments
       variants:
