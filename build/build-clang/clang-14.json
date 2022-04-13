@@ -9,13 +9,9 @@
       "Remove-FlushViewOfFile-when-unmaping-gcda-files.patch",
       "fuzzing_ccov_build_clang_12.patch",
       "win64-no-symlink.patch",
-      "revert-llvmorg-13-init-8182-gc2297544c047.patch",
-      "revert-llvmorg-12-init-7827-g2a078c307204.patch",
-      "llvmorg-14-init-3166-gd9ab62ca3d29.patch",
-      "llvmorg-14-init-4465-g22ea0cea595e-v2.patch",
-      "llvmorg-14-init-10524-g1ad7de9e92bc.patch",
-      "llvmorg-14-init-12719-gc4b45eeb44fd.patch",
-      "llvmorg-14-init-13305-g319181f76718.patch",
-      "llvmorg-14-init-13854-g782791ee84d2.patch"
+      "revert-llvmorg-14-init-14141-gd6d3000a2f6d.patch",
+      "revert-llvmorg-14-init-11890-gf86deb18cab6.patch",
+      "llvmorg-15-init-283-g4db89e23190d.patch",
+      "llvmorg-15-init-7469-gcfa4fe7c5187.patch"
     ]
 }

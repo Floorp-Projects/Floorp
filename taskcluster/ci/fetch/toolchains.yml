@@ -352,12 +352,12 @@ clang-5.0:
         repo: https://github.com/llvm/llvm-project
         revision: 6a075b6de4cafebec9ca1ff9eec7229a617c93f6
 
-clang-13:
-    description: clang 13.0.1 source code
+clang-14:
+    description: clang 14.0.0 source code + libc++ fixes
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: 75e33f71c2dae584b13a7d1186ae0a038ba98838
+        revision: 3f43d803382d57e3fc010ca19833077d1023e9c9
 
 clang-trunk:
     description: clang main branch source code
