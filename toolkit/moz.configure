@@ -2771,13 +2771,9 @@ wine = check_prog(
 
 # DOM Streams
 # ==============================================================
-option(
-    "--disable-dom-streams",
-    help="Disable DOM Streams (use JS Streams)",
-)
-
-set_config("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
-set_define("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
+# Set this to true so the JS engine knows we're doing a browser build.
+set_config("MOZ_DOM_STREAMS", True)
+set_define("MOZ_DOM_STREAMS", True)
 
 # libevent
 # ==============================================================

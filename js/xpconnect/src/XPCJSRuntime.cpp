@@ -3014,19 +3014,6 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
 
   js::SetWindowProxyClass(cx, &OuterWindowProxyClass);
 
-#ifndef MOZ_DOM_STREAMS
-  {
-    JS::AbortSignalIsAborted isAborted = [](JSObject* obj) {
-      dom::AbortSignal* domObj = dom::UnwrapDOMObject<dom::AbortSignal>(obj);
-      MOZ_ASSERT(domObj);
-      return domObj->Aborted();
-    };
-
-    JS::InitPipeToHandling(dom::AbortSignal_Binding::GetJSClass(), isAborted,
-                           cx);
-  }
-#endif
-
   JS::SetXrayJitInfo(&gXrayJitInfo);
   JS::SetProcessLargeAllocationFailureCallback(
       OnLargeAllocationFailureCallback);

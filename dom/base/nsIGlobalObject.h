@@ -223,7 +223,6 @@ class nsIGlobalObject : public nsISupports,
 
   void RemoveReportRecords();
 
-#ifdef MOZ_DOM_STREAMS
   // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
   // This function is set once by CountQueuingStrategy::GetSize.
   already_AddRefed<mozilla::dom::Function>
@@ -234,7 +233,6 @@ class nsIGlobalObject : public nsISupports,
   GetByteLengthQueuingStrategySizeFunction();
   void SetByteLengthQueuingStrategySizeFunction(
       mozilla::dom::Function* aFunction);
-#endif
 
   /**
    * Check whether we should avoid leaking distinguishing information to JS/CSS.
@@ -273,13 +271,11 @@ class nsIGlobalObject : public nsISupports,
   nsTArray<RefPtr<mozilla::dom::ReportingObserver>> mReportingObservers;
   nsTArray<RefPtr<mozilla::dom::Report>> mReportRecords;
 
-#ifdef MOZ_DOM_STREAMS
   // https://streams.spec.whatwg.org/#count-queuing-strategy-size-function
   RefPtr<mozilla::dom::Function> mCountQueuingStrategySizeFunction;
 
   // https://streams.spec.whatwg.org/#byte-length-queuing-strategy-size-function
   RefPtr<mozilla::dom::Function> mByteLengthQueuingStrategySizeFunction;
-#endif
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIGlobalObject, NS_IGLOBALOBJECT_IID)

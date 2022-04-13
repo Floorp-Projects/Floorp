@@ -68,9 +68,7 @@
 #include "mozilla/dom/PromiseDebuggingBinding.h"
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/RequestBinding.h"
-#ifdef MOZ_DOM_STREAMS
-#  include "mozilla/dom/ReadableStreamBinding.h"
-#endif
+#include "mozilla/dom/ReadableStreamBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/RTCIdentityProviderRegistrar.h"
@@ -974,10 +972,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       Window = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "XMLSerializer")) {
       XMLSerializer = true;
-#ifdef MOZ_DOM_STREAMS
     } else if (JS_LinearStringEqualsLiteral(nameStr, "ReadableStream")) {
       ReadableStream = true;
-#endif
     } else if (JS_LinearStringEqualsLiteral(nameStr, "atob")) {
       atob = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "btoa")) {
@@ -1140,10 +1136,8 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   if (XMLSerializer && !dom::XMLSerializer_Binding::GetConstructorObject(cx))
     return false;
 
-#ifdef MOZ_DOM_STREAMS
   if (ReadableStream && !dom::ReadableStream_Binding::GetConstructorObject(cx))
     return false;
-#endif
 
   if (atob && !JS_DefineFunction(cx, obj, "atob", Atob, 1, 0)) return false;
 
