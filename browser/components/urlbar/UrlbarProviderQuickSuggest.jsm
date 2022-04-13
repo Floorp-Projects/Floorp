@@ -46,21 +46,27 @@ const TELEMETRY_REMOTE_SETTINGS_LATENCY =
   "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 
 const TELEMETRY_SCALARS = {
-  IMPRESSION: "contextual.services.quicksuggest.impression",
-  IMPRESSION_SPONSORED_BEST_MATCH:
-    "contextual.services.quicksuggest.impression_sponsored_bestmatch",
-  IMPRESSION_NONSPONSORED_BEST_MATCH:
-    "contextual.services.quicksuggest.impression_nonsponsored_bestmatch",
+  BLOCK_SPONSORED: "contextual.services.quicksuggest.block_sponsored",
+  BLOCK_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.block_sponsored_bestmatch",
+  BLOCK_NONSPONSORED: "contextual.services.quicksuggest.block_nonsponsored",
+  BLOCK_NONSPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.block_nonsponsored_bestmatch",
   CLICK: "contextual.services.quicksuggest.click",
-  CLICK_SPONSORED_BEST_MATCH:
-    "contextual.services.quicksuggest.click_sponsored_bestmatch",
   CLICK_NONSPONSORED_BEST_MATCH:
     "contextual.services.quicksuggest.click_nonsponsored_bestmatch",
+  CLICK_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.click_sponsored_bestmatch",
   HELP: "contextual.services.quicksuggest.help",
-  HELP_SPONSORED_BEST_MATCH:
-    "contextual.services.quicksuggest.help_sponsored_bestmatch",
   HELP_NONSPONSORED_BEST_MATCH:
     "contextual.services.quicksuggest.help_nonsponsored_bestmatch",
+  HELP_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.help_sponsored_bestmatch",
+  IMPRESSION: "contextual.services.quicksuggest.impression",
+  IMPRESSION_NONSPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.impression_nonsponsored_bestmatch",
+  IMPRESSION_SPONSORED_BEST_MATCH:
+    "contextual.services.quicksuggest.impression_sponsored_bestmatch",
 };
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
@@ -161,7 +167,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    this._addedResultInLastQuery = false;
+    this._resultFromLastQuery = null;
 
     // If the sources don't include search or the user used a restriction
     // character other than search, don't allow any suggestions.
@@ -325,7 +331,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     addCallback(this, result);
 
-    this._addedResultInLastQuery = true;
+    this._resultFromLastQuery = result;
 
     // The user triggered a suggestion. Depending on the experiment the user is
     // enrolled in (if any), we may need to record the Nimbus exposure event.
@@ -361,23 +367,25 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * the result, it should return false. The meaning of "blocked" depends on the
    * provider and the type of result.
    *
+   * @param {UrlbarQueryContext} queryContext
    * @param {UrlbarResult} result
-   *   The result that was picked.
+   *   The result that should be blocked.
    * @returns {boolean}
    *   Whether the result was blocked.
    */
-  blockResult(result) {
+  blockResult(queryContext, result) {
     if (
       (!result.isBestMatch &&
         !UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
       (result.isBestMatch && !UrlbarPrefs.get("bestMatchBlockingEnabled"))
     ) {
-      this.logger.info("Blocking disabled, ignoring key shortcut");
+      this.logger.info("Blocking disabled, ignoring block");
       return false;
     }
 
     this.logger.info("Blocking result: " + JSON.stringify(result));
     this.blockSuggestion(result.payload.originalUrl);
+    this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
     return true;
   }
 
@@ -455,40 +463,58 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
-    if (!this._addedResultInLastQuery) {
+    if (!this._resultFromLastQuery) {
       return;
     }
-    this._addedResultInLastQuery = false;
+    let result = this._resultFromLastQuery;
+    this._resultFromLastQuery = null;
 
     // Per spec, we count impressions only when the user picks a result, i.e.,
     // when `state` is "engagement".
-    if (state != "engagement") {
-      return;
-    }
-
-    // Get the index of the quick suggest result. Usually it will be last, so to
-    // avoid an O(n) lookup in the common case, check the last result first. It
-    // may not be last if `browser.urlbar.showSearchSuggestionsFirst` is false
-    // or its position is configured differently via Nimbus.
-    let resultIndex = queryContext.results.length - 1;
-    let result = queryContext.results[resultIndex];
-    if (result.providerName != this.name) {
-      resultIndex = queryContext.results.findIndex(
-        r => r.providerName == this.name
+    if (state == "engagement") {
+      this._recordEngagementTelemetry(
+        result,
+        isPrivate,
+        details.selIndex == result.rowIndex ? details.selType : ""
       );
-      if (resultIndex < 0) {
-        this.logger.error(`Could not find quick suggest result`);
-        return;
-      }
-      result = queryContext.results[resultIndex];
     }
+  }
 
+  /**
+   * Records engagement telemetry. This should be called only at the end of an
+   * engagement when a quick suggest result is present or when a quick suggest
+   * result is blocked.
+   *
+   * @param {UrlbarResult} result
+   *   The quick suggest result that was present (and possibly picked) at the
+   *   end of the engagement or that was blocked.
+   * @param {boolean} isPrivate
+   *   Whether the engagement is in a private context.
+   * @param {string} selType
+   *   This parameter indicates the part of the row the user picked, if any, and
+   *   should be one of the following values:
+   *
+   *   - "": The user didn't pick the row or any part of it
+   *   - "quicksuggest": The user picked the main part of the row
+   *   - "help": The user picked the help button
+   *   - "block": The user picked the block button or used the key shortcut
+   *
+   *   An empty string means the user picked some other row to end the
+   *   engagement, not the quick suggest row. In that case only impression
+   *   telemetry will be recorded.
+   *
+   *   A non-empty string means the user picked the quick suggest row or some
+   *   part of it, and both impression and click telemetry will be recorded. The
+   *   non-empty-string values come from the `details.selType` passed in to
+   *   `onEngagement()`; see `TelemetryEvent.typeFromElement()`.
+   */
+  _recordEngagementTelemetry(result, isPrivate, selType) {
     // Update impression stats.
     this._updateImpressionStats(result.payload.isSponsored);
 
-    // Record telemetry.  We want to record the 1-based index of the result, so
-    // add 1 to the 0-based resultIndex.
-    let telemetryResultIndex = resultIndex + 1;
+    // Indexes recorded in quick suggest telemetry are 1-based, so add 1 to the
+    // 0-based `result.rowIndex`.
+    let telemetryResultIndex = result.rowIndex + 1;
 
     // impression scalars
     Services.telemetry.keyedScalarAdd(
@@ -506,40 +532,61 @@ class ProviderQuickSuggest extends UrlbarProvider {
       );
     }
 
-    if (details.selIndex == resultIndex) {
-      // click or help scalars
-      Services.telemetry.keyedScalarAdd(
-        details.selType == "help"
-          ? TELEMETRY_SCALARS.HELP
-          : TELEMETRY_SCALARS.CLICK,
-        telemetryResultIndex,
-        1
-      );
-      if (result.isBestMatch) {
-        if (details.selType == "help") {
-          Services.telemetry.keyedScalarAdd(
-            result.payload.isSponsored
-              ? TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH
-              : TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH,
-            telemetryResultIndex,
-            1
-          );
-        } else {
-          Services.telemetry.keyedScalarAdd(
+    // scalars related to clicking the result and other elements in its row
+    let clickScalars = [];
+    switch (selType) {
+      case "quicksuggest":
+        clickScalars.push(TELEMETRY_SCALARS.CLICK);
+        if (result.isBestMatch) {
+          clickScalars.push(
             result.payload.isSponsored
               ? TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH
-              : TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH,
-            telemetryResultIndex,
-            1
+              : TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH
           );
         }
-      }
+        break;
+      case "help":
+        clickScalars.push(TELEMETRY_SCALARS.HELP);
+        if (result.isBestMatch) {
+          clickScalars.push(
+            result.payload.isSponsored
+              ? TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH
+              : TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH
+          );
+        }
+        break;
+      case "block":
+        clickScalars.push(
+          result.payload.isSponsored
+            ? TELEMETRY_SCALARS.BLOCK_SPONSORED
+            : TELEMETRY_SCALARS.BLOCK_NONSPONSORED
+        );
+        if (result.isBestMatch) {
+          clickScalars.push(
+            result.payload.isSponsored
+              ? TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH
+              : TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH
+          );
+        }
+        break;
+      default:
+        if (selType) {
+          this.logger.error(
+            "Engagement telemetry error, unknown selType: " + selType
+          );
+        }
+        break;
+    }
+    for (let scalar of clickScalars) {
+      Services.telemetry.keyedScalarAdd(scalar, telemetryResultIndex, 1);
     }
 
     // Send the custom impression and click pings
     if (!isPrivate) {
-      let is_clicked =
-        details.selIndex == resultIndex && details.selType !== "help";
+      // `is_clicked` is whether the user clicked the suggestion. `selType` will
+      // be "quicksuggest" in that case. See this method's JSDoc for all
+      // possible `selType` values.
+      let is_clicked = selType == "quicksuggest";
       let scenario = UrlbarPrefs.get("quicksuggest.scenario");
       let match_type = result.isBestMatch ? "best-match" : "firefox-suggest";
 
@@ -1372,8 +1419,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
   // `UrlbarPrefs.get("quickSuggestEnabled")` directly instead.
   _quickSuggestEnabled = false;
 
-  // Whether we added a result during the most recent query.
-  _addedResultInLastQuery = false;
+  // The result we added during the most recent query.
+  _resultFromLastQuery = null;
 
   // An object that keeps track of impression stats per sponsored and
   // non-sponsored suggestion types. It looks like this:

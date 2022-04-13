@@ -6665,6 +6665,23 @@ urlbar.picked:
       record_in_processes:
         - main
 
+    quicksuggest:
+      bug_numbers:
+        - 1761059
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
+        - adw@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
     remotetab:
       bug_numbers:
         - 1671508
@@ -7484,6 +7501,74 @@ contextual.services.quicksuggest:
       button in sponsored Firefox Suggest best match (a.k.a. top pick) results
       in the urlbar (not including the help button). The key is the 1-based
       index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  block_nonsponsored:
+    bug_numbers:
+      - 1761059
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      non-sponsored Firefox Suggest results in the urlbar, including best
+      matches (a.k.a. top picks). The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  block_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1761059
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      non-sponsored Firefox Suggest best match (a.k.a. top pick) results in the
+      urlbar. The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  block_sponsored:
+    bug_numbers:
+      - 1761059
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      sponsored Firefox Suggest results in the urlbar, including best matches
+      (a.k.a. top picks). The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - adw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  block_sponsored_bestmatch:
+    bug_numbers:
+      - 1761059
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      sponsored Firefox Suggest best match (a.k.a. top pick) results in the
+      urlbar. The key is the 1-based index of each result.
     expires: never
     kind: uint
     keyed: true

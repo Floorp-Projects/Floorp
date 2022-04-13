@@ -543,6 +543,10 @@ class UrlbarController {
     //   newly added telemetryType.
     // * Add a test named browser_UsageTelemetry_urlbar_newType.js to
     //   browser/modules/test/browser.
+    // * Add the telemetryType to UrlbarUtils.SELECTED_RESULT_TYPES, which is
+    //   used by the histograms below. These histograms are deprecated, but the
+    //   code below logs an error if telemetryType is not in
+    //   SELECTED_RESULT_TYPES.
     //
     // The "topsite" type overrides the other ones, because it starts from a
     // unique user interaction, that we want to count apart. We do this here
@@ -586,7 +590,7 @@ class UrlbarController {
    * Handles deletion of results from the last query context and the view. There
    * are two kinds of results that can be deleted:
    *
-   * - Results for which `provider.blockResult(result)` returns true
+   * - Results for which `provider.blockResult()` returns true
    * - Results whose source is `HISTORY` are handled specially by this method
    *   and can always be removed
    *
@@ -604,6 +608,7 @@ class UrlbarController {
       Cu.reportError("Cannot delete - the latest query is not present");
       return false;
     }
+    let { queryContext } = this._lastQueryContextWrapper;
 
     if (!result) {
       // No result specified, so use the currently selected result.
@@ -620,12 +625,16 @@ class UrlbarController {
       return false;
     }
 
-    // First call `provider.blockResult(result)`.
+    // First call `provider.blockResult()`.
     let provider = UrlbarProvidersManager.getProvider(result.providerName);
     if (!provider) {
       Cu.reportError(`Provider not found: ${result.providerName}`);
     }
-    let blockedByProvider = provider?.tryMethod("blockResult", result);
+    let blockedByProvider = provider?.tryMethod(
+      "blockResult",
+      queryContext,
+      result
+    );
 
     // If the provider didn't block the result, then continue only if the result
     // is from history.
@@ -636,7 +645,6 @@ class UrlbarController {
       return false;
     }
 
-    let { queryContext } = this._lastQueryContextWrapper;
     let index = queryContext.results.indexOf(result);
     if (index < 0) {
       Cu.reportError("Failed to find the selected result in the results");
@@ -951,6 +959,9 @@ class TelemetryEvent {
         return row.result.type == UrlbarUtils.RESULT_TYPE.TIP
           ? "tiphelp"
           : "help";
+      }
+      if (element.classList.contains("urlbarView-button-block")) {
+        return "block";
       }
     }
     // Now handle the result.
