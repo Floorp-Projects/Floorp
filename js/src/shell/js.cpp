@@ -4444,38 +4444,6 @@ static void DestroyShellCompartmentPrivate(JS::GCContext* gcx,
 static void SetWorkerContextOptions(JSContext* cx);
 static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 
-static JSObject* ShellSourceElementCallback(JSContext* cx,
-                                            JS::HandleValue privateValue) {
-  if (!privateValue.isObject()) {
-    return nullptr;
-  }
-
-  // Due to nukeCCW shenanigans in the shell, we need to check for dead-proxy
-  // objects that may have replaced an CCW.  Otherwise the GetProperty below
-  // would throw an exception which we do not want to support in this callback.
-  if (js::IsDeadProxyObject(&privateValue.toObject())) {
-    return nullptr;
-  }
-
-  RootedObject infoObject(cx,
-                          CheckedUnwrapStatic(privateValue.toObjectOrNull()));
-  AutoRealm ar(cx, infoObject);
-
-  RootedValue elementValue(cx);
-  if (!JS_GetProperty(cx, infoObject, "element", &elementValue)) {
-    // This shouldn't happen in the shell, as ParseDebugMetadata always
-    // creates the infoObject with this property. In any case, this callback
-    // must not leave an exception pending, so:
-    MOZ_CRASH("error getting source element");
-  }
-
-  if (elementValue.isObject()) {
-    return &elementValue.toObject();
-  }
-
-  return nullptr;
-}
-
 static constexpr size_t gWorkerStackSize = 2 * 128 * sizeof(size_t) * 1024;
 
 static void WorkerMain(UniquePtr<WorkerInput> input) {
@@ -4511,7 +4479,6 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
                                   DummyHasReleasedWrapperCallback);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
-  JS::SetSourceElementCallback(cx, ShellSourceElementCallback);
 
   js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
@@ -12574,7 +12541,6 @@ int main(int argc, char** argv) {
   JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
-  JS::SetSourceElementCallback(cx, ShellSourceElementCallback);
 
   js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
