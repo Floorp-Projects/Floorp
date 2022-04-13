@@ -4212,7 +4212,9 @@ AttachDecision SetPropIRGenerator::tryAttachAddOrUpdateSparseElement(
   // have a different notion of which elements are dense), but they can
   // only be data properties, so our specialized Set handler is ok to bind
   // to them.
-  ShapeGuardProtoChain(writer, aobj, objId);
+  if (IsPropertySetOp(op)) {
+    ShapeGuardProtoChain(writer, aobj, objId);
+  }
 
   // Ensure that if we're adding an element to the object, the object's
   // length is writable.
@@ -4576,6 +4578,13 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     return false;
   }
 
+  JSOp op = JSOp(*pc_);
+  if (IsPropertyInitOp(op)) {
+    return true;
+  }
+
+  MOZ_ASSERT(IsPropertySetOp(op));
+
   // Walk up the object prototype chain and ensure that all prototypes are
   // native, and that all prototypes have no setter defined on the property.
   for (JSObject* proto = obj->staticPrototype(); proto;
@@ -4659,6 +4668,8 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   }
 #endif
 
+  JSOp op = JSOp(*pc_);
+
   // Basic shape checks.
   if (newShape->isDictionary() || !propInfo.isDataProperty() ||
       !propInfo.writable()) {
@@ -4678,7 +4689,10 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
     writer.guardFunctionIsNonBuiltinCtor(objId);
   }
 
-  ShapeGuardProtoChain(writer, nobj, objId);
+  // Also shape guard the proto chain, unless this is an InitElem.
+  if (IsPropertySetOp(op)) {
+    ShapeGuardProtoChain(writer, nobj, objId);
+  }
 
   // If the JSClass has an addProperty hook, we need to call a VM function to
   // invoke this hook. Ignore the Array addProperty hook, because it doesn't do
