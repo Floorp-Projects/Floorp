@@ -3076,10 +3076,6 @@ mozilla::dom::TouchEventsOverride BrowsingContext::TouchEventsOverride() const {
   return mozilla::dom::TouchEventsOverride::None;
 }
 
-bool BrowsingContext::TargetTopLevelLinkClicksToBlank() const {
-  return Top()->GetTargetTopLevelLinkClicksToBlankInternal();
-}
-
 // We map `watchedByDevTools` WebIDL attribute to `watchedByDevToolsInternal`
 // BC field. And we map it to the top level BrowsingContext.
 bool BrowsingContext::WatchedByDevTools() {
@@ -3477,13 +3473,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_HasSessionHistory>,
   if (GetHasSessionHistory() && !aOldValue) {
     CreateChildSHistory();
   }
-}
-
-bool BrowsingContext::CanSet(
-    FieldIndex<IDX_TargetTopLevelLinkClicksToBlankInternal>,
-    const bool& aTargetTopLevelLinkClicksToBlankInternal,
-    ContentParent* aSource) {
-  return XRE_IsParentProcess() && !aSource && IsTop();
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_BrowserId>, const uint32_t& aValue,
