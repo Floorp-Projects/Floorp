@@ -503,7 +503,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
   CallIRGenerator& generator_;
   CacheIRWriter& writer;
   JSContext* cx_;
-  jsbytecode* pc_;
   HandleScript script_;
 
   HandleValue callee_;
@@ -658,7 +657,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
       : generator_(generator),
         writer(generator.writer),
         cx_(generator.cx_),
-        pc_(generator.pc_),
         script_(generator.script_),
         callee_(generator.callee_),
         newTarget_(generator.newTarget_),
