@@ -98,6 +98,7 @@ rtc_library("media_stream_interface") {
   sources = [
     "media_stream_interface.cc",
     "media_stream_interface.h",
+    "media_stream_track.h",
     "notifier.h",
   ]
   deps = [
