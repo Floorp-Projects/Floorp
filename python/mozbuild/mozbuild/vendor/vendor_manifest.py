@@ -39,6 +39,7 @@ class VendorManifest(MozbuildObject):
         manifest,
         revision,
         check_for_update,
+        force,
         add_to_exports,
         patch_mode,
     ):
@@ -77,7 +78,7 @@ class VendorManifest(MozbuildObject):
             )
             return
 
-        if self.manifest["origin"]["revision"] == ref:
+        if not force and self.manifest["origin"]["revision"] == ref:
             # We're up to date, don't do anything
             self.log(
                 logging.INFO,

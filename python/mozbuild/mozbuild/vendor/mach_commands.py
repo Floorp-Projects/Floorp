@@ -40,6 +40,12 @@ from mozbuild.vendor.moz_yaml import load_moz_yaml, MozYamlVerifyError
 )
 @CommandArgument("-r", "--revision", help="Repository tag or commit to update to.")
 @CommandArgument(
+    "-f",
+    "--force",
+    action="store_true",
+    help="Force a re-vendor even if we're up to date",
+)
+@CommandArgument(
     "--verify", "-v", action="store_true", help="(Only) verify the manifest."
 )
 @CommandArgument(
@@ -56,6 +62,7 @@ def vendor(
     ignore_modified=False,
     check_for_update=False,
     add_to_exports=False,
+    force=False,
     verify=False,
     patch_mode="",
 ):
@@ -117,6 +124,7 @@ def vendor(
         manifest,
         revision,
         check_for_update,
+        force,
         add_to_exports,
         patch_mode,
     )
