@@ -747,8 +747,9 @@ nsresult mozJSComponentLoader::ObjectForLocation(
 
   aInfo.EnsureResolvedURI();
 
-  nsAutoCString cachePath(JS_CACHE_PREFIX("non-syntactic"));
-  rv = PathifyURI(aInfo.ResolvedURI(), cachePath);
+  nsAutoCString cachePath;
+  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic"), aInfo.ResolvedURI(),
+                  cachePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::DecodeOptions decodeOptions;
