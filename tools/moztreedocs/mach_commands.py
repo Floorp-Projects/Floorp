@@ -281,7 +281,10 @@ def _run_sphinx(docdir, savedir, config=None, fmt="html", jobs=None, verbose=Non
             warnings = warn_file.readlines()
         return status, warnings
     finally:
-        os.unlink(warn_path)
+        try:
+            os.unlink(warn_path)
+        except Exception as ex:
+            print(ex)
 
 
 def _check_sphinx_warnings(warnings):
