@@ -1384,7 +1384,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
 
   if (op == JSOp::InitProp || op == JSOp::InitLockedProp ||
       op == JSOp::InitHiddenProp) {
-    if (!InitPropertyOperation(cx, op, obj, name, rhs)) {
+    if (!InitPropertyOperation(cx, pc, obj, name, rhs)) {
       return false;
     }
   } else if (op == JSOp::SetName || op == JSOp::StrictSetName ||

@@ -284,9 +284,10 @@ inline void InitGlobalLexicalOperation(
   lexicalEnv->setSlot(prop->slot(), value);
 }
 
-inline bool InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj,
-                                  HandlePropertyName name, HandleValue rhs) {
-  unsigned propAttrs = GetInitDataPropAttrs(op);
+inline bool InitPropertyOperation(JSContext* cx, jsbytecode* pc,
+                                  HandleObject obj, HandlePropertyName name,
+                                  HandleValue rhs) {
+  unsigned propAttrs = GetInitDataPropAttrs(JSOp(*pc));
   return DefineDataProperty(cx, obj, name, rhs, propAttrs);
 }
 
