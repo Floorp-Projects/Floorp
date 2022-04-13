@@ -33,6 +33,7 @@ class URLStringUtilsTest {
         assertEquals(expectedUrl, toNormalizedURL("http://mozilla.org"))
         assertEquals(expectedUrl, toNormalizedURL("  http://mozilla.org  "))
         assertEquals(expectedUrl, toNormalizedURL("mozilla.org"))
+        assertEquals(expectedUrl, toNormalizedURL("HTTP://mozilla.org"))
     }
 
     @Test

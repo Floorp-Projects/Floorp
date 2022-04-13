@@ -36,6 +36,8 @@ object URLStringUtils {
         var uri = Uri.parse(trimmedInput)
         if (TextUtils.isEmpty(uri.scheme)) {
             uri = Uri.parse("http://$trimmedInput")
+        } else {
+            uri = uri.normalizeScheme()
         }
         return uri.toString()
     }

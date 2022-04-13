@@ -28,8 +28,8 @@ class StringKtTest {
     @Test
     fun `default schema if http is missing`() {
         assertEquals("https://www.example.com", "https://www.example.com".toNormalizedUrl())
-        assertEquals("htTPs://www.example.com", "htTPs://www.example.com".toNormalizedUrl())
-        assertEquals("HTTP://www.example.com", "HTTP://www.example.com".toNormalizedUrl())
+        assertEquals("https://www.example.com", "htTPs://www.example.com".toNormalizedUrl())
+        assertEquals("http://www.example.com", "HTTP://www.example.com".toNormalizedUrl())
         assertEquals("http://www.example.com", "http://www.example.com".toNormalizedUrl())
         assertEquals("http://www.example.com", "www.example.com".toNormalizedUrl())
         assertEquals("http://example.com", "example.com".toNormalizedUrl())
@@ -37,7 +37,7 @@ class StringKtTest {
         assertEquals("http://example", "  example ".toNormalizedUrl())
 
         assertEquals("ftp://example.com", "ftp://example.com".toNormalizedUrl())
-        assertEquals("FTP://example.com", "FTP://example.com".toNormalizedUrl())
+        assertEquals("ftp://example.com", "FTP://example.com".toNormalizedUrl())
 
         assertEquals("http://httpexample.com", "httpexample.com".toNormalizedUrl())
         assertEquals("http://httpsexample.com", "httpsexample.com".toNormalizedUrl())

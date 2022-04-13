@@ -51,8 +51,8 @@ fun String.toNormalizedUrl(): String {
     val s = this.trim()
     // Most commonly we'll encounter http or https schemes.
     // For these, avoid running through toNormalizedURL as an optimization.
-    return if (!s.startsWith("http://", ignoreCase = true) &&
-        !s.startsWith("https://", ignoreCase = true)
+    return if (!s.startsWith("http://") &&
+        !s.startsWith("https://")
     ) {
         URLStringUtils.toNormalizedURL(s)
     } else {

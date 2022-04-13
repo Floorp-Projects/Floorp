@@ -246,7 +246,7 @@ class TabIntentProcessorTest {
         handler.process(intent)
         store.waitUntilIdle()
         assertEquals(5, store.state.tabs.size)
-        assertEquals("HTTPS://tweets.mozilla.org", store.state.tabs[4].content.url)
+        assertEquals("https://tweets.mozilla.org", store.state.tabs[4].content.url)
         assertTrue(store.state.tabs[4].source is SessionState.Source.External.ActionSend)
 
         // Intent with a url that's missing a scheme
