@@ -549,34 +549,12 @@ RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl() {
   // Let p be a new promise.
   RefPtr<dom::Promise> p = sender->MakePromise();
 
-  // Let sending be true if transceiver.[[CurrentDirection]] is "sendrecv" or
-  // "sendonly", and false otherwise.
-  bool sending = mTransceiver->IsSending();
-
-  // Run the following steps in parallel:
-
-  // If sending is true, and withTrack is null, have the sender stop sending.
-  if (sending && !mNewTrack) {
-    sender->Stop();
-    sender->SeamlessTrackSwitch(mNewTrack);
-  }
-
-  // If sending is true, and withTrack is not null, determine if withTrack can
-  // be sent immediately by the sender without violating the sender's
-  // already-negotiated envelope, and if it cannot, then reject p with a newly
-  // created InvalidModificationError, and abort these steps.
-
-  // If sending is true, and withTrack is not null, have the sender switch
-  // seamlessly to transmitting withTrack instead of the sender's existing
-  // track.
-  if (sending && mNewTrack) {
-    if (!sender->SeamlessTrackSwitch(mNewTrack)) {
-      MOZ_LOG(gSenderLog, LogLevel::Info,
-              ("%s Could not seamlessly replace track", __FUNCTION__));
-      p->MaybeRejectWithInvalidModificationError(
-          "Could not seamlessly replace track");
-      return p;
-    }
+  if (!sender->SeamlessTrackSwitch(mNewTrack)) {
+    MOZ_LOG(gSenderLog, LogLevel::Info,
+            ("%s Could not seamlessly replace track", __FUNCTION__));
+    p->MaybeRejectWithInvalidModificationError(
+        "Could not seamlessly replace track");
+    return p;
   }
 
   // Queue a task that runs the following steps:
@@ -613,8 +591,8 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
   }
 
   MOZ_LOG(gSenderLog, LogLevel::Debug,
-          ("%s[%s]: %s (%p)", mPc->GetHandle().c_str(), GetMid().c_str(),
-           __FUNCTION__, aWithTrack));
+          ("%s[%s]: %s (%p to %p)", mPc->GetHandle().c_str(), GetMid().c_str(),
+           __FUNCTION__, mSenderTrack.get(), aWithTrack));
 
   // Return the result of chaining the following steps to connection's
   // operations chain:
@@ -637,24 +615,40 @@ bool RTCRtpSender::SeamlessTrackSwitch(
   // queued task after this is done (this happens in
   // SetSenderTrackWithClosedCheck).
 
+  // Let sending be true if transceiver.[[CurrentDirection]] is "sendrecv" or
+  // "sendonly", and false otherwise.
+  bool sending = mTransceiverImpl->IsSending();
+  if (sending && !aWithTrack) {
+    // If sending is true, and withTrack is null, have the sender stop sending.
+    Stop();
+  }
+
   mPipeline->SetTrack(aWithTrack);
 
-  if (mTransceiverImpl->IsVideo()) {
-    // We update the media conduits here so we can apply different codec
-    // settings for different sources (e.g. screensharing as opposed to camera.)
-    Maybe<MediaSourceEnum> oldType;
-    Maybe<MediaSourceEnum> newType;
-    if (mSenderTrack) {
-      oldType = Some(mSenderTrack->GetSource().GetMediaSource());
-    }
-    if (aWithTrack) {
-      newType = Some(aWithTrack->GetSource().GetMediaSource());
-    }
-    if (oldType != newType) {
+  if (sending && aWithTrack) {
+    // If sending is true, and withTrack is not null, determine if withTrack can
+    // be sent immediately by the sender without violating the sender's
+    // already-negotiated envelope, and if it cannot, then reject p with a newly
+    // created InvalidModificationError, and abort these steps.
+
+    if (mTransceiverImpl->IsVideo()) {
+      // We update the media conduits here so we can apply different codec
+      // settings for different sources (e.g. screensharing as opposed to
+      // camera.)
+      Maybe<MediaSourceEnum> oldType;
+      Maybe<MediaSourceEnum> newType;
+      if (mSenderTrack) {
+        oldType = Some(mSenderTrack->GetSource().GetMediaSource());
+      }
+      if (aWithTrack) {
+        newType = Some(aWithTrack->GetSource().GetMediaSource());
+      }
+      if (oldType != newType) {
+        UpdateConduit();
+      }
+    } else if (!mSenderTrack != !aWithTrack) {
       UpdateConduit();
     }
-  } else if (!mSenderTrack != !aWithTrack) {
-    UpdateConduit();
   }
 
   // There may eventually be cases where a renegotiation is necessary to switch.

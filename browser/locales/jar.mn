@@ -12,7 +12,9 @@
   preview/protections.ftl                          (../components/protections/content/protections.ftl)
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
+#ifdef NIGHTLY_BUILD
   preview/myFirefox.ftl                            (../components/myfirefox/myFirefox.ftl)
+#endif
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:

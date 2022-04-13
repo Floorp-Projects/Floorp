@@ -2282,7 +2282,7 @@ BrowserGlue.prototype = {
 
     if (AppConstants.ASAN_REPORTER) {
       var { AsanReporter } = ChromeUtils.import(
-        "resource:///modules/AsanReporter.jsm"
+        "resource://gre/modules/AsanReporter.jsm"
       );
       AsanReporter.init();
     }
