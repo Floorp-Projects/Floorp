@@ -265,17 +265,19 @@ class VendorManifest(MozbuildObject):
                 )
                 tar.extractall(tmpextractdir)
 
-                prefix = self.manifest["origin"]["name"] + "-" + revision
-                prefix = prefix.replace("@", "-")
-                prefix = prefix.replace("/", "-")
+                def get_first_dir(p):
+                    halves = os.path.split(p)
+                    return get_first_dir(halves[0]) if halves[0] else halves[1]
+
+                one_prefix = get_first_dir(tar.getnames()[0])
                 has_prefix = all(
-                    map(lambda name: name.startswith(prefix), tar.getnames())
+                    map(lambda name: name.startswith(one_prefix), tar.getnames())
                 )
                 tar.close()
 
                 # GitLab puts everything down a directory; move it up.
                 if has_prefix:
-                    tardir = mozpath.join(tmpextractdir, prefix)
+                    tardir = mozpath.join(tmpextractdir, one_prefix)
                     mozfile.copy_contents(tardir, tmpextractdir)
                     mozfile.remove(tardir)
 
@@ -319,7 +321,6 @@ class VendorManifest(MozbuildObject):
                     to_exclude = []
 
                 to_exclude = list(set(to_exclude) - set(to_include))
-
                 if to_exclude:
                     self.log(
                         logging.INFO,
