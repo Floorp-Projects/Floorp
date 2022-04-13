@@ -5361,8 +5361,7 @@ void CallIRGenerator::emitCalleeGuard(ObjOperandId calleeId,
   }
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush() {
   // Only optimize on obj.push(val);
   if (argc_ != 1 || !thisval_.isObject()) {
     return AttachDecision::NoAction;
@@ -5430,7 +5429,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayPopShift(
-    HandleFunction callee, InlinableNative native) {
+    InlinableNative native) {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -5480,8 +5479,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayPopShift(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachArrayJoin(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachArrayJoin() {
   // Only handle argc <= 1.
   if (argc_ > 1) {
     return AttachDecision::NoAction;
@@ -5530,8 +5528,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayJoin(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachArraySlice(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachArraySlice() {
   // Only handle argc <= 2.
   if (argc_ > 2) {
     return AttachDecision::NoAction;
@@ -5594,8 +5591,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArraySlice(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachArrayIsArray(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachArrayIsArray() {
   // Need a single argument.
   if (argc_ != 1) {
     return AttachDecision::NoAction;
@@ -5617,7 +5613,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayIsArray(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
-    HandleFunction callee, Scalar::Type type) {
+    Scalar::Type type) {
   // Ensure |this| is a DataViewObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
     return AttachDecision::NoAction;
@@ -5688,7 +5684,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewGet(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
-    HandleFunction callee, Scalar::Type type) {
+    Scalar::Type type) {
   // Ensure |this| is a DataViewObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<DataViewObject>()) {
     return AttachDecision::NoAction;
@@ -5758,7 +5754,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachDataViewSet(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeGetReservedSlot(
-    HandleFunction callee, InlinableNative native) {
+    InlinableNative native) {
   // Self-hosted code calls this with (object, int32) arguments.
   MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isObject());
@@ -5809,8 +5805,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeGetReservedSlot(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeSetReservedSlot(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeSetReservedSlot() {
   // Self-hosted code calls this with (object, int32, value) arguments.
   MOZ_ASSERT(argc_ == 3);
   MOZ_ASSERT(args_[0].isObject());
@@ -5848,8 +5843,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachUnsafeSetReservedSlot(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsSuspendedGenerator(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsSuspendedGenerator() {
   // The IsSuspendedGenerator intrinsic is only called in
   // self-hosted code, so it's safe to assume we have a single
   // argument and the callee is our intrinsic.
@@ -5876,7 +5870,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsSuspendedGenerator(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachToObject(
-    HandleFunction callee, InlinableNative native) {
+    InlinableNative native) {
   // Self-hosted code calls this with a single argument.
   MOZ_ASSERT_IF(native == InlinableNative::IntrinsicToObject, argc_ == 1);
 
@@ -5913,8 +5907,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachToObject(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachToInteger(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachToInteger() {
   // Self-hosted code calls this with a single argument.
   MOZ_ASSERT(argc_ == 1);
 
@@ -5943,8 +5936,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachToInteger(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachToLength(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachToLength() {
   // Self-hosted code calls this with a single argument.
   MOZ_ASSERT(argc_ == 1);
 
@@ -5971,8 +5963,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachToLength(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsObject(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsObject() {
   // Self-hosted code calls this with a single argument.
   MOZ_ASSERT(argc_ == 1);
 
@@ -5990,8 +5981,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsObject(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsPackedArray(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsPackedArray() {
   // Self-hosted code calls this with a single object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -6011,8 +6001,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsPackedArray(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsCallable(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsCallable() {
   // Self-hosted code calls this with a single argument.
   MOZ_ASSERT(argc_ == 1);
 
@@ -6030,8 +6019,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsCallable(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructor() {
   // Self-hosted code calls this with a single argument.
   MOZ_ASSERT(argc_ == 1);
 
@@ -6058,8 +6046,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructor(
 }
 
 AttachDecision
-InlinableNativeIRGenerator::tryAttachIsCrossRealmArrayConstructor(
-    HandleFunction callee) {
+InlinableNativeIRGenerator::tryAttachIsCrossRealmArrayConstructor() {
   // Self-hosted code calls this with an object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -6084,7 +6071,7 @@ InlinableNativeIRGenerator::tryAttachIsCrossRealmArrayConstructor(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachGuardToClass(
-    HandleFunction callee, InlinableNative native) {
+    InlinableNative native) {
   // Self-hosted code calls this with an object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -6116,7 +6103,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachGuardToClass(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
-    HandleFunction callee, const JSClass* clasp, bool isPossiblyWrapped) {
+    const JSClass* clasp, bool isPossiblyWrapped) {
   // Self-hosted code calls this with an object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -6147,7 +6134,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachHasClass(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
-    HandleFunction callee, InlinableNative native) {
+    InlinableNative native) {
   // Self-hosted code calls this with (object, string, number) arguments.
   MOZ_ASSERT(argc_ == 3);
   MOZ_ASSERT(args_[0].isObject());
@@ -6200,8 +6187,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpMatcherSearcherTester(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachRegExpPrototypeOptimizable(
-    HandleFunction callee) {
+AttachDecision
+InlinableNativeIRGenerator::tryAttachRegExpPrototypeOptimizable() {
   // Self-hosted code calls this with a single object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -6221,8 +6208,8 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpPrototypeOptimizable(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachRegExpInstanceOptimizable(
-    HandleFunction callee) {
+AttachDecision
+InlinableNativeIRGenerator::tryAttachRegExpInstanceOptimizable() {
   // Self-hosted code calls this with two object arguments.
   MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isObject());
@@ -6246,8 +6233,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachRegExpInstanceOptimizable(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachGetFirstDollarIndex(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachGetFirstDollarIndex() {
   // Self-hosted code calls this with a single string argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isString());
@@ -6267,8 +6253,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachGetFirstDollarIndex(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachSubstringKernel(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachSubstringKernel() {
   // Self-hosted code calls this with (string, int32, int32) arguments.
   MOZ_ASSERT(argc_ == 3);
   MOZ_ASSERT(args_[0].isString());
@@ -6296,8 +6281,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSubstringKernel(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachObjectHasPrototype(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachObjectHasPrototype() {
   // Self-hosted code calls this with (object, object) arguments.
   MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isObject());
@@ -6327,8 +6311,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectHasPrototype(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachString(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachString() {
   // Need a single argument that is or can be converted to a string.
   if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
     return AttachDecision::NoAction;
@@ -6352,8 +6335,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachString(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringConstructor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringConstructor() {
   // Need a single argument that is or can be converted to a string.
   if (argc_ != 1 || !(args_[0].isString() || args_[0].isNumber())) {
     return AttachDecision::NoAction;
@@ -6385,8 +6367,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringConstructor(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringToStringValueOf(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringToStringValueOf() {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -6416,8 +6397,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringToStringValueOf(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringReplaceString(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringReplaceString() {
   // Self-hosted code calls this with (string, string, string) arguments.
   MOZ_ASSERT(argc_ == 3);
   MOZ_ASSERT(args_[0].isString());
@@ -6445,8 +6425,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringReplaceString(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringSplitString(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringSplitString() {
   // Self-hosted code calls this with (string, string) arguments.
   MOZ_ASSERT(argc_ == 2);
   MOZ_ASSERT(args_[0].isString());
@@ -6471,7 +6450,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringSplitString(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
-    HandleFunction callee, StringChar kind) {
+    StringChar kind) {
   // Need one argument.
   if (argc_ != 1) {
     return AttachDecision::NoAction;
@@ -6515,18 +6494,15 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringChar(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringCharCodeAt(
-    HandleFunction callee) {
-  return tryAttachStringChar(callee, StringChar::CodeAt);
+AttachDecision InlinableNativeIRGenerator::tryAttachStringCharCodeAt() {
+  return tryAttachStringChar(StringChar::CodeAt);
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringCharAt(
-    HandleFunction callee) {
-  return tryAttachStringChar(callee, StringChar::At);
+AttachDecision InlinableNativeIRGenerator::tryAttachStringCharAt() {
+  return tryAttachStringChar(StringChar::At);
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode() {
   // Need one int32 argument.
   if (argc_ != 1 || !args_[0].isInt32()) {
     return AttachDecision::NoAction;
@@ -6550,8 +6526,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCharCode(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCodePoint(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCodePoint() {
   // Need one int32 argument.
   if (argc_ != 1 || !args_[0].isInt32()) {
     return AttachDecision::NoAction;
@@ -6581,8 +6556,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringFromCodePoint(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringToLowerCase(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringToLowerCase() {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -6612,8 +6586,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringToLowerCase(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachStringToUpperCase(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachStringToUpperCase() {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -6643,14 +6616,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStringToUpperCase(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathRandom(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathRandom() {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
   }
 
-  MOZ_ASSERT(cx_->realm() == callee->realm(),
+  MOZ_ASSERT(cx_->realm() == callee_->realm(),
              "Shouldn't inline cross-realm Math.random because per-realm RNG");
 
   // Initialize the input operand.
@@ -6669,8 +6641,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathRandom(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathAbs(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathAbs() {
   // Need one argument.
   if (argc_ != 1) {
     return AttachDecision::NoAction;
@@ -6704,8 +6675,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathAbs(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathClz32(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathClz32() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -6734,8 +6704,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathClz32(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathSign(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathSign() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -6773,8 +6742,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathSign(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathImul(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathImul() {
   // Need two (number) arguments.
   if (argc_ != 2 || !args_[0].isNumber() || !args_[1].isNumber()) {
     return AttachDecision::NoAction;
@@ -6807,8 +6775,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathImul(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathFloor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathFloor() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -6852,8 +6819,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathFloor(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathCeil(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathCeil() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -6897,8 +6863,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathCeil(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathTrunc(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathTrunc() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -6941,8 +6906,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathTrunc(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathRound(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathRound() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -6986,8 +6950,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathRound(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathSqrt(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathSqrt() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -7009,8 +6972,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathSqrt(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathFRound(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathFRound() {
   // Need one (number) argument.
   if (argc_ != 1 || !args_[0].isNumber()) {
     return AttachDecision::NoAction;
@@ -7060,8 +7022,7 @@ static bool CanAttachInt32Pow(const Value& baseVal, const Value& powerVal) {
   return mozilla::NumberIsInt32(res, &unused);
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathPow(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathPow() {
   // Need two number arguments.
   if (argc_ != 2 || !args_[0].isNumber() || !args_[1].isNumber()) {
     return AttachDecision::NoAction;
@@ -7094,8 +7055,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathPow(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathHypot(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathHypot() {
   // Only optimize if there are 2-4 arguments.
   if (argc_ < 2 || argc_ > 4) {
     return AttachDecision::NoAction;
@@ -7153,8 +7113,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathHypot(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathATan2(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathATan2() {
   // Requires two numbers as arguments.
   if (argc_ != 2 || !args_[0].isNumber() || !args_[1].isNumber()) {
     return AttachDecision::NoAction;
@@ -7179,8 +7138,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathATan2(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMathMinMax(
-    HandleFunction callee, bool isMax) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMathMinMax(bool isMax) {
   // For now only optimize if there are 1-4 arguments.
   if (argc_ < 1 || argc_ > 4) {
     return AttachDecision::NoAction;
@@ -7234,7 +7192,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathMinMax(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachSpreadMathMinMax(
-    HandleFunction callee, bool isMax) {
+    bool isMax) {
   MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Spread);
 
   // The result will be an int32 if there is at least one argument,
@@ -7271,7 +7229,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSpreadMathMinMax(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachMathFunction(
-    HandleFunction callee, UnaryMathFunction fun) {
+    UnaryMathFunction fun) {
   // Need one argument.
   if (argc_ != 1) {
     return AttachDecision::NoAction;
@@ -7313,8 +7271,7 @@ StringOperandId IRGenerator::emitToStringGuard(ValOperandId id,
   return writer.callNumberToString(numId);
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString() {
   // Expecting no arguments, which means base 10.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -7346,8 +7303,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNumberToString(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachReflectGetPrototypeOf(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachReflectGetPrototypeOf() {
   // Need one argument.
   if (argc_ != 1) {
     return AttachDecision::NoAction;
@@ -7411,8 +7367,7 @@ static bool AtomicsMeetsPreconditions(TypedArrayObject* typedArray,
   return true;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsCompareExchange(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsCompareExchange() {
   if (!JitSupportsAtomics()) {
     return AttachDecision::NoAction;
   }
@@ -7506,8 +7461,7 @@ bool InlinableNativeIRGenerator::canAttachAtomicsReadWriteModify() {
 }
 
 InlinableNativeIRGenerator::AtomicsReadWriteModifyOperands
-InlinableNativeIRGenerator::emitAtomicsReadWriteModifyOperands(
-    HandleFunction callee) {
+InlinableNativeIRGenerator::emitAtomicsReadWriteModifyOperands() {
   MOZ_ASSERT(canAttachAtomicsReadWriteModify());
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
@@ -7536,14 +7490,13 @@ InlinableNativeIRGenerator::emitAtomicsReadWriteModifyOperands(
   return {objId, intPtrIndexId, numericValueId};
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsExchange(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsExchange() {
   if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands();
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
 
@@ -7555,14 +7508,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsExchange(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAdd(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAdd() {
   if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands();
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   bool forEffect = ignoresResult();
@@ -7575,14 +7527,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAdd(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsSub(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsSub() {
   if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands();
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   bool forEffect = ignoresResult();
@@ -7595,14 +7546,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsSub(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAnd(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAnd() {
   if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands();
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   bool forEffect = ignoresResult();
@@ -7615,14 +7565,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAnd(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsOr(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsOr() {
   if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands();
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   bool forEffect = ignoresResult();
@@ -7635,14 +7584,13 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsOr(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsXor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsXor() {
   if (!canAttachAtomicsReadWriteModify()) {
     return AttachDecision::NoAction;
   }
 
   auto [objId, intPtrIndexId, numericValueId] =
-      emitAtomicsReadWriteModifyOperands(callee);
+      emitAtomicsReadWriteModifyOperands();
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
   bool forEffect = ignoresResult();
@@ -7655,8 +7603,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsXor(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsLoad(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsLoad() {
   if (!JitSupportsAtomics()) {
     return AttachDecision::NoAction;
   }
@@ -7702,8 +7649,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsLoad(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsStore(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsStore() {
   if (!JitSupportsAtomics()) {
     return AttachDecision::NoAction;
   }
@@ -7780,8 +7726,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsStore(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsIsLockFree(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsIsLockFree() {
   // Need one argument.
   if (argc_ != 1) {
     return AttachDecision::NoAction;
@@ -7809,8 +7754,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsIsLockFree(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachBoolean(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachBoolean() {
   // Need zero or one argument.
   if (argc_ > 1) {
     return AttachDecision::NoAction;
@@ -7837,8 +7781,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachBoolean(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachBailout(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachBailout() {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -7858,8 +7801,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachBailout(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAssertFloat32(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAssertFloat32() {
   // Expecting two arguments.
   if (argc_ != 2) {
     return AttachDecision::NoAction;
@@ -7881,8 +7823,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAssertFloat32(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachAssertRecoveredOnBailout(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachAssertRecoveredOnBailout() {
   // Expecting two arguments.
   if (argc_ != 2) {
     return AttachDecision::NoAction;
@@ -7907,8 +7848,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAssertRecoveredOnBailout(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachObjectIs(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachObjectIs() {
   // Need two arguments.
   if (argc_ != 2) {
     return AttachDecision::NoAction;
@@ -8009,8 +7949,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectIs(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachObjectIsPrototypeOf(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachObjectIsPrototypeOf() {
   // Ensure |this| is an object.
   if (!thisval_.isObject()) {
     return AttachDecision::NoAction;
@@ -8041,8 +7980,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectIsPrototypeOf(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachObjectToString(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachObjectToString() {
   // Expecting no arguments.
   if (argc_ != 0) {
     return AttachDecision::NoAction;
@@ -8076,8 +8014,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectToString(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachBigIntAsIntN(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachBigIntAsIntN() {
   // Need two arguments (Int32, BigInt).
   if (argc_ != 2 || !args_[0].isInt32() || !args_[1].isBigInt()) {
     return AttachDecision::NoAction;
@@ -8111,8 +8048,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachBigIntAsIntN(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachBigIntAsUintN(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachBigIntAsUintN() {
   // Need two arguments (Int32, BigInt).
   if (argc_ != 2 || !args_[0].isInt32() || !args_[1].isBigInt()) {
     return AttachDecision::NoAction;
@@ -8146,8 +8082,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachBigIntAsUintN(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachSetHas(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachSetHas() {
   // Ensure |this| is a SetObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<SetObject>()) {
     return AttachDecision::NoAction;
@@ -8234,8 +8169,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSetHas(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMapHas(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMapHas() {
   // Ensure |this| is a MapObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<MapObject>()) {
     return AttachDecision::NoAction;
@@ -8322,8 +8256,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapHas(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachMapGet(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachMapGet() {
   // Ensure |this| is a MapObject.
   if (!thisval_.isObject() || !thisval_.toObject().is<MapObject>()) {
     return AttachDecision::NoAction;
@@ -8483,7 +8416,7 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArray(
-    HandleFunction callee, bool isPossiblyWrapped) {
+    bool isPossiblyWrapped) {
   // Self-hosted code calls this with a single object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -8503,8 +8436,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArray(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArrayConstructor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArrayConstructor() {
   // Self-hosted code calls this with a single object argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -8523,8 +8455,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsTypedArrayConstructor(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset() {
   // Self-hosted code calls this with a single TypedArrayObject argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -8550,8 +8481,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayByteOffset(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayElementSize(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayElementSize() {
   // Self-hosted code calls this with a single TypedArrayObject argument.
   MOZ_ASSERT(argc_ == 1);
   MOZ_ASSERT(args_[0].isObject());
@@ -8572,7 +8502,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayElementSize(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
-    HandleFunction callee, bool isPossiblyWrapped) {
+    bool isPossiblyWrapped) {
   // Self-hosted code calls this with a single, possibly wrapped,
   // TypedArrayObject argument.
   MOZ_ASSERT(argc_ == 1);
@@ -8611,7 +8541,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayLength(
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayBufferByteLength(
-    HandleFunction callee, bool isPossiblyWrapped) {
+    bool isPossiblyWrapped) {
   // Self-hosted code calls this with a single, possibly wrapped,
   // ArrayBufferObject argument.
   MOZ_ASSERT(argc_ == 1);
@@ -8649,8 +8579,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayBufferByteLength(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructing(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructing() {
   // Self-hosted code calls this with no arguments in function scripts.
   MOZ_ASSERT(argc_ == 0);
   MOZ_ASSERT(script()->isFunction());
@@ -8668,8 +8597,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructing(
 }
 
 AttachDecision
-InlinableNativeIRGenerator::tryAttachGetNextMapSetEntryForIterator(
-    HandleFunction callee, bool isMap) {
+InlinableNativeIRGenerator::tryAttachGetNextMapSetEntryForIterator(bool isMap) {
   // Self-hosted code calls this with two objects.
   MOZ_ASSERT(argc_ == 2);
   if (isMap) {
@@ -8698,8 +8626,7 @@ InlinableNativeIRGenerator::tryAttachGetNextMapSetEntryForIterator(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachFinishBoundFunctionInit(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachFinishBoundFunctionInit() {
   // Self-hosted code calls this with (boundFunction, targetObj, argCount)
   // arguments.
   MOZ_ASSERT(argc_ == 3);
@@ -8732,8 +8659,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachFinishBoundFunctionInit(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachNewArrayIterator(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachNewArrayIterator() {
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
 
@@ -8755,8 +8681,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNewArrayIterator(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachNewStringIterator(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachNewStringIterator() {
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
 
@@ -8778,8 +8703,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNewStringIterator(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachNewRegExpStringIterator(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachNewRegExpStringIterator() {
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
 
@@ -8802,8 +8726,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachNewRegExpStringIterator(
 }
 
 AttachDecision
-InlinableNativeIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
-    HandleFunction callee) {
+InlinableNativeIRGenerator::tryAttachArrayIteratorPrototypeOptimizable() {
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
 
@@ -8839,8 +8762,7 @@ InlinableNativeIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachObjectCreate(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachObjectCreate() {
   // Need a single object-or-null argument.
   if (argc_ != 1 || !args_[0].isObjectOrNull()) {
     return AttachDecision::NoAction;
@@ -8880,8 +8802,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectCreate(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor() {
   // Only optimize the |Array()| and |Array(n)| cases (with or without |new|)
   // for now. Note that self-hosted code calls this without |new| via std_Array.
   if (argc_ > 1) {
@@ -8900,7 +8821,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor(
   // object is allocated in that realm. See CanInlineNativeCrossRealm.
   JSObject* templateObj;
   {
-    AutoRealm ar(cx_, callee);
+    AutoRealm ar(cx_, callee_);
     templateObj = NewDenseFullyAllocatedArray(cx_, length, TenuredObject);
     if (!templateObj) {
       cx_->recoverFromOutOfMemory();
@@ -8932,8 +8853,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor(
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor(
-    HandleFunction callee) {
+AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
   MOZ_ASSERT(flags_.isConstructing());
 
   if (argc_ == 0 || argc_ > 3) {
@@ -8963,7 +8883,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor(
 #endif
 
   RootedObject templateObj(cx_);
-  if (!TypedArrayObject::GetTemplateObjectForNative(cx_, callee->native(),
+  if (!TypedArrayObject::GetTemplateObjectForNative(cx_, callee_->native(),
                                                     args_, &templateObj)) {
     cx_->recoverFromOutOfMemory();
     return AttachDecision::NoAction;
@@ -9296,17 +9216,15 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
-  HandleFunction callee(callee_);
-
-  if (!callee->hasJitInfo() ||
-      callee->jitInfo()->type() != JSJitInfo::InlinableNative) {
+  if (!callee_->hasJitInfo() ||
+      callee_->jitInfo()->type() != JSJitInfo::InlinableNative) {
     return AttachDecision::NoAction;
   }
 
-  InlinableNative native = callee->jitInfo()->inlinableNative;
+  InlinableNative native = callee_->jitInfo()->inlinableNative;
 
   // Not all natives can be inlined cross-realm.
-  if (cx_->realm() != callee->realm() && !CanInlineNativeCrossRealm(native)) {
+  if (cx_->realm() != callee_->realm() && !CanInlineNativeCrossRealm(native)) {
     return AttachDecision::NoAction;
   }
 
@@ -9314,16 +9232,16 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   if (flags_.isConstructing()) {
     // newTarget must match the callee. CacheIR for this is emitted in
     // emitNativeCalleeGuard.
-    if (ObjectValue(*callee) != newTarget_) {
+    if (ObjectValue(*callee_) != newTarget_) {
       return AttachDecision::NoAction;
     }
     switch (native) {
       case InlinableNative::Array:
-        return tryAttachArrayConstructor(callee);
+        return tryAttachArrayConstructor();
       case InlinableNative::TypedArrayConstructor:
-        return tryAttachTypedArrayConstructor(callee);
+        return tryAttachTypedArrayConstructor();
       case InlinableNative::String:
-        return tryAttachStringConstructor(callee);
+        return tryAttachStringConstructor();
       default:
         break;
     }
@@ -9334,9 +9252,9 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   if (flags_.getArgFormat() == CallFlags::Spread) {
     switch (native) {
       case InlinableNative::MathMin:
-        return tryAttachSpreadMathMinMax(callee, /*isMax = */ false);
+        return tryAttachSpreadMathMinMax(/*isMax = */ false);
       case InlinableNative::MathMax:
-        return tryAttachSpreadMathMinMax(callee, /*isMax = */ true);
+        return tryAttachSpreadMathMinMax(/*isMax = */ true);
       default:
         break;
     }
@@ -9347,60 +9265,60 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   switch (native) {
     // Array natives.
     case InlinableNative::Array:
-      return tryAttachArrayConstructor(callee);
+      return tryAttachArrayConstructor();
     case InlinableNative::ArrayPush:
-      return tryAttachArrayPush(callee);
+      return tryAttachArrayPush();
     case InlinableNative::ArrayPop:
     case InlinableNative::ArrayShift:
-      return tryAttachArrayPopShift(callee, native);
+      return tryAttachArrayPopShift(native);
     case InlinableNative::ArrayJoin:
-      return tryAttachArrayJoin(callee);
+      return tryAttachArrayJoin();
     case InlinableNative::ArraySlice:
-      return tryAttachArraySlice(callee);
+      return tryAttachArraySlice();
     case InlinableNative::ArrayIsArray:
-      return tryAttachArrayIsArray(callee);
+      return tryAttachArrayIsArray();
 
     // DataView natives.
     case InlinableNative::DataViewGetInt8:
-      return tryAttachDataViewGet(callee, Scalar::Int8);
+      return tryAttachDataViewGet(Scalar::Int8);
     case InlinableNative::DataViewGetUint8:
-      return tryAttachDataViewGet(callee, Scalar::Uint8);
+      return tryAttachDataViewGet(Scalar::Uint8);
     case InlinableNative::DataViewGetInt16:
-      return tryAttachDataViewGet(callee, Scalar::Int16);
+      return tryAttachDataViewGet(Scalar::Int16);
     case InlinableNative::DataViewGetUint16:
-      return tryAttachDataViewGet(callee, Scalar::Uint16);
+      return tryAttachDataViewGet(Scalar::Uint16);
     case InlinableNative::DataViewGetInt32:
-      return tryAttachDataViewGet(callee, Scalar::Int32);
+      return tryAttachDataViewGet(Scalar::Int32);
     case InlinableNative::DataViewGetUint32:
-      return tryAttachDataViewGet(callee, Scalar::Uint32);
+      return tryAttachDataViewGet(Scalar::Uint32);
     case InlinableNative::DataViewGetFloat32:
-      return tryAttachDataViewGet(callee, Scalar::Float32);
+      return tryAttachDataViewGet(Scalar::Float32);
     case InlinableNative::DataViewGetFloat64:
-      return tryAttachDataViewGet(callee, Scalar::Float64);
+      return tryAttachDataViewGet(Scalar::Float64);
     case InlinableNative::DataViewGetBigInt64:
-      return tryAttachDataViewGet(callee, Scalar::BigInt64);
+      return tryAttachDataViewGet(Scalar::BigInt64);
     case InlinableNative::DataViewGetBigUint64:
-      return tryAttachDataViewGet(callee, Scalar::BigUint64);
+      return tryAttachDataViewGet(Scalar::BigUint64);
     case InlinableNative::DataViewSetInt8:
-      return tryAttachDataViewSet(callee, Scalar::Int8);
+      return tryAttachDataViewSet(Scalar::Int8);
     case InlinableNative::DataViewSetUint8:
-      return tryAttachDataViewSet(callee, Scalar::Uint8);
+      return tryAttachDataViewSet(Scalar::Uint8);
     case InlinableNative::DataViewSetInt16:
-      return tryAttachDataViewSet(callee, Scalar::Int16);
+      return tryAttachDataViewSet(Scalar::Int16);
     case InlinableNative::DataViewSetUint16:
-      return tryAttachDataViewSet(callee, Scalar::Uint16);
+      return tryAttachDataViewSet(Scalar::Uint16);
     case InlinableNative::DataViewSetInt32:
-      return tryAttachDataViewSet(callee, Scalar::Int32);
+      return tryAttachDataViewSet(Scalar::Int32);
     case InlinableNative::DataViewSetUint32:
-      return tryAttachDataViewSet(callee, Scalar::Uint32);
+      return tryAttachDataViewSet(Scalar::Uint32);
     case InlinableNative::DataViewSetFloat32:
-      return tryAttachDataViewSet(callee, Scalar::Float32);
+      return tryAttachDataViewSet(Scalar::Float32);
     case InlinableNative::DataViewSetFloat64:
-      return tryAttachDataViewSet(callee, Scalar::Float64);
+      return tryAttachDataViewSet(Scalar::Float64);
     case InlinableNative::DataViewSetBigInt64:
-      return tryAttachDataViewSet(callee, Scalar::BigInt64);
+      return tryAttachDataViewSet(Scalar::BigInt64);
     case InlinableNative::DataViewSetBigUint64:
-      return tryAttachDataViewSet(callee, Scalar::BigUint64);
+      return tryAttachDataViewSet(Scalar::BigUint64);
 
     // Intl natives.
     case InlinableNative::IntlGuardToCollator:
@@ -9410,7 +9328,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::IntlGuardToNumberFormat:
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
-      return tryAttachGuardToClass(callee, native);
+      return tryAttachGuardToClass(native);
 
     // Slot intrinsics.
     case InlinableNative::IntrinsicUnsafeGetReservedSlot:
@@ -9418,29 +9336,29 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::IntrinsicUnsafeGetInt32FromReservedSlot:
     case InlinableNative::IntrinsicUnsafeGetStringFromReservedSlot:
     case InlinableNative::IntrinsicUnsafeGetBooleanFromReservedSlot:
-      return tryAttachUnsafeGetReservedSlot(callee, native);
+      return tryAttachUnsafeGetReservedSlot(native);
     case InlinableNative::IntrinsicUnsafeSetReservedSlot:
-      return tryAttachUnsafeSetReservedSlot(callee);
+      return tryAttachUnsafeSetReservedSlot();
 
     // Intrinsics.
     case InlinableNative::IntrinsicIsSuspendedGenerator:
-      return tryAttachIsSuspendedGenerator(callee);
+      return tryAttachIsSuspendedGenerator();
     case InlinableNative::IntrinsicToObject:
-      return tryAttachToObject(callee, native);
+      return tryAttachToObject(native);
     case InlinableNative::IntrinsicToInteger:
-      return tryAttachToInteger(callee);
+      return tryAttachToInteger();
     case InlinableNative::IntrinsicToLength:
-      return tryAttachToLength(callee);
+      return tryAttachToLength();
     case InlinableNative::IntrinsicIsObject:
-      return tryAttachIsObject(callee);
+      return tryAttachIsObject();
     case InlinableNative::IntrinsicIsPackedArray:
-      return tryAttachIsPackedArray(callee);
+      return tryAttachIsPackedArray();
     case InlinableNative::IntrinsicIsCallable:
-      return tryAttachIsCallable(callee);
+      return tryAttachIsCallable();
     case InlinableNative::IntrinsicIsConstructor:
-      return tryAttachIsConstructor(callee);
+      return tryAttachIsConstructor();
     case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
-      return tryAttachIsCrossRealmArrayConstructor(callee);
+      return tryAttachIsCrossRealmArrayConstructor();
     case InlinableNative::IntrinsicGuardToArrayIterator:
     case InlinableNative::IntrinsicGuardToMapIterator:
     case InlinableNative::IntrinsicGuardToSetIterator:
@@ -9449,251 +9367,248 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::IntrinsicGuardToWrapForValidIterator:
     case InlinableNative::IntrinsicGuardToIteratorHelper:
     case InlinableNative::IntrinsicGuardToAsyncIteratorHelper:
-      return tryAttachGuardToClass(callee, native);
+      return tryAttachGuardToClass(native);
     case InlinableNative::IntrinsicSubstringKernel:
-      return tryAttachSubstringKernel(callee);
+      return tryAttachSubstringKernel();
     case InlinableNative::IntrinsicIsConstructing:
-      return tryAttachIsConstructing(callee);
+      return tryAttachIsConstructing();
     case InlinableNative::IntrinsicFinishBoundFunctionInit:
-      return tryAttachFinishBoundFunctionInit(callee);
+      return tryAttachFinishBoundFunctionInit();
     case InlinableNative::IntrinsicNewArrayIterator:
-      return tryAttachNewArrayIterator(callee);
+      return tryAttachNewArrayIterator();
     case InlinableNative::IntrinsicNewStringIterator:
-      return tryAttachNewStringIterator(callee);
+      return tryAttachNewStringIterator();
     case InlinableNative::IntrinsicNewRegExpStringIterator:
-      return tryAttachNewRegExpStringIterator(callee);
+      return tryAttachNewRegExpStringIterator();
     case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
-      return tryAttachArrayIteratorPrototypeOptimizable(callee);
+      return tryAttachArrayIteratorPrototypeOptimizable();
     case InlinableNative::IntrinsicObjectHasPrototype:
-      return tryAttachObjectHasPrototype(callee);
+      return tryAttachObjectHasPrototype();
 
     // RegExp natives.
     case InlinableNative::IsRegExpObject:
-      return tryAttachHasClass(callee, &RegExpObject::class_,
+      return tryAttachHasClass(&RegExpObject::class_,
                                /* isPossiblyWrapped = */ false);
     case InlinableNative::IsPossiblyWrappedRegExpObject:
-      return tryAttachHasClass(callee, &RegExpObject::class_,
+      return tryAttachHasClass(&RegExpObject::class_,
                                /* isPossiblyWrapped = */ true);
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
     case InlinableNative::RegExpTester:
-      return tryAttachRegExpMatcherSearcherTester(callee, native);
+      return tryAttachRegExpMatcherSearcherTester(native);
     case InlinableNative::RegExpPrototypeOptimizable:
-      return tryAttachRegExpPrototypeOptimizable(callee);
+      return tryAttachRegExpPrototypeOptimizable();
     case InlinableNative::RegExpInstanceOptimizable:
-      return tryAttachRegExpInstanceOptimizable(callee);
+      return tryAttachRegExpInstanceOptimizable();
     case InlinableNative::GetFirstDollarIndex:
-      return tryAttachGetFirstDollarIndex(callee);
+      return tryAttachGetFirstDollarIndex();
 
     // String natives.
     case InlinableNative::String:
-      return tryAttachString(callee);
+      return tryAttachString();
     case InlinableNative::StringToString:
     case InlinableNative::StringValueOf:
-      return tryAttachStringToStringValueOf(callee);
+      return tryAttachStringToStringValueOf();
     case InlinableNative::StringCharCodeAt:
-      return tryAttachStringCharCodeAt(callee);
+      return tryAttachStringCharCodeAt();
     case InlinableNative::StringCharAt:
-      return tryAttachStringCharAt(callee);
+      return tryAttachStringCharAt();
     case InlinableNative::StringFromCharCode:
-      return tryAttachStringFromCharCode(callee);
+      return tryAttachStringFromCharCode();
     case InlinableNative::StringFromCodePoint:
-      return tryAttachStringFromCodePoint(callee);
+      return tryAttachStringFromCodePoint();
     case InlinableNative::StringToLowerCase:
-      return tryAttachStringToLowerCase(callee);
+      return tryAttachStringToLowerCase();
     case InlinableNative::StringToUpperCase:
-      return tryAttachStringToUpperCase(callee);
+      return tryAttachStringToUpperCase();
     case InlinableNative::IntrinsicStringReplaceString:
-      return tryAttachStringReplaceString(callee);
+      return tryAttachStringReplaceString();
     case InlinableNative::IntrinsicStringSplitString:
-      return tryAttachStringSplitString(callee);
+      return tryAttachStringSplitString();
 
     // Math natives.
     case InlinableNative::MathRandom:
-      return tryAttachMathRandom(callee);
+      return tryAttachMathRandom();
     case InlinableNative::MathAbs:
-      return tryAttachMathAbs(callee);
+      return tryAttachMathAbs();
     case InlinableNative::MathClz32:
-      return tryAttachMathClz32(callee);
+      return tryAttachMathClz32();
     case InlinableNative::MathSign:
-      return tryAttachMathSign(callee);
+      return tryAttachMathSign();
     case InlinableNative::MathImul:
-      return tryAttachMathImul(callee);
+      return tryAttachMathImul();
     case InlinableNative::MathFloor:
-      return tryAttachMathFloor(callee);
+      return tryAttachMathFloor();
     case InlinableNative::MathCeil:
-      return tryAttachMathCeil(callee);
+      return tryAttachMathCeil();
     case InlinableNative::MathTrunc:
-      return tryAttachMathTrunc(callee);
+      return tryAttachMathTrunc();
     case InlinableNative::MathRound:
-      return tryAttachMathRound(callee);
+      return tryAttachMathRound();
     case InlinableNative::MathSqrt:
-      return tryAttachMathSqrt(callee);
+      return tryAttachMathSqrt();
     case InlinableNative::MathFRound:
-      return tryAttachMathFRound(callee);
+      return tryAttachMathFRound();
     case InlinableNative::MathHypot:
-      return tryAttachMathHypot(callee);
+      return tryAttachMathHypot();
     case InlinableNative::MathATan2:
-      return tryAttachMathATan2(callee);
+      return tryAttachMathATan2();
     case InlinableNative::MathSin:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Sin);
+      return tryAttachMathFunction(UnaryMathFunction::Sin);
     case InlinableNative::MathTan:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Tan);
+      return tryAttachMathFunction(UnaryMathFunction::Tan);
     case InlinableNative::MathCos:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Cos);
+      return tryAttachMathFunction(UnaryMathFunction::Cos);
     case InlinableNative::MathExp:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Exp);
+      return tryAttachMathFunction(UnaryMathFunction::Exp);
     case InlinableNative::MathLog:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Log);
+      return tryAttachMathFunction(UnaryMathFunction::Log);
     case InlinableNative::MathASin:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ASin);
+      return tryAttachMathFunction(UnaryMathFunction::ASin);
     case InlinableNative::MathATan:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ATan);
+      return tryAttachMathFunction(UnaryMathFunction::ATan);
     case InlinableNative::MathACos:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ACos);
+      return tryAttachMathFunction(UnaryMathFunction::ACos);
     case InlinableNative::MathLog10:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Log10);
+      return tryAttachMathFunction(UnaryMathFunction::Log10);
     case InlinableNative::MathLog2:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Log2);
+      return tryAttachMathFunction(UnaryMathFunction::Log2);
     case InlinableNative::MathLog1P:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Log1P);
+      return tryAttachMathFunction(UnaryMathFunction::Log1P);
     case InlinableNative::MathExpM1:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ExpM1);
+      return tryAttachMathFunction(UnaryMathFunction::ExpM1);
     case InlinableNative::MathCosH:
-      return tryAttachMathFunction(callee, UnaryMathFunction::CosH);
+      return tryAttachMathFunction(UnaryMathFunction::CosH);
     case InlinableNative::MathSinH:
-      return tryAttachMathFunction(callee, UnaryMathFunction::SinH);
+      return tryAttachMathFunction(UnaryMathFunction::SinH);
     case InlinableNative::MathTanH:
-      return tryAttachMathFunction(callee, UnaryMathFunction::TanH);
+      return tryAttachMathFunction(UnaryMathFunction::TanH);
     case InlinableNative::MathACosH:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ACosH);
+      return tryAttachMathFunction(UnaryMathFunction::ACosH);
     case InlinableNative::MathASinH:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ASinH);
+      return tryAttachMathFunction(UnaryMathFunction::ASinH);
     case InlinableNative::MathATanH:
-      return tryAttachMathFunction(callee, UnaryMathFunction::ATanH);
+      return tryAttachMathFunction(UnaryMathFunction::ATanH);
     case InlinableNative::MathCbrt:
-      return tryAttachMathFunction(callee, UnaryMathFunction::Cbrt);
+      return tryAttachMathFunction(UnaryMathFunction::Cbrt);
     case InlinableNative::MathPow:
-      return tryAttachMathPow(callee);
+      return tryAttachMathPow();
     case InlinableNative::MathMin:
-      return tryAttachMathMinMax(callee, /* isMax = */ false);
+      return tryAttachMathMinMax(/* isMax = */ false);
     case InlinableNative::MathMax:
-      return tryAttachMathMinMax(callee, /* isMax = */ true);
+      return tryAttachMathMinMax(/* isMax = */ true);
 
     // Map intrinsics.
     case InlinableNative::IntrinsicGuardToMapObject:
-      return tryAttachGuardToClass(callee, native);
+      return tryAttachGuardToClass(native);
     case InlinableNative::IntrinsicGetNextMapEntryForIterator:
-      return tryAttachGetNextMapSetEntryForIterator(callee, /* isMap = */ true);
+      return tryAttachGetNextMapSetEntryForIterator(/* isMap = */ true);
 
     // Number natives.
     case InlinableNative::NumberToString:
-      return tryAttachNumberToString(callee);
+      return tryAttachNumberToString();
 
     // Object natives.
     case InlinableNative::Object:
-      return tryAttachToObject(callee, native);
+      return tryAttachToObject(native);
     case InlinableNative::ObjectCreate:
-      return tryAttachObjectCreate(callee);
+      return tryAttachObjectCreate();
     case InlinableNative::ObjectIs:
-      return tryAttachObjectIs(callee);
+      return tryAttachObjectIs();
     case InlinableNative::ObjectIsPrototypeOf:
-      return tryAttachObjectIsPrototypeOf(callee);
+      return tryAttachObjectIsPrototypeOf();
     case InlinableNative::ObjectToString:
-      return tryAttachObjectToString(callee);
+      return tryAttachObjectToString();
 
     // Set intrinsics.
     case InlinableNative::IntrinsicGuardToSetObject:
-      return tryAttachGuardToClass(callee, native);
+      return tryAttachGuardToClass(native);
     case InlinableNative::IntrinsicGetNextSetEntryForIterator:
-      return tryAttachGetNextMapSetEntryForIterator(callee,
-                                                    /* isMap = */ false);
+      return tryAttachGetNextMapSetEntryForIterator(/* isMap = */ false);
 
     // ArrayBuffer intrinsics.
     case InlinableNative::IntrinsicGuardToArrayBuffer:
-      return tryAttachGuardToClass(callee, native);
+      return tryAttachGuardToClass(native);
     case InlinableNative::IntrinsicArrayBufferByteLength:
-      return tryAttachArrayBufferByteLength(callee,
-                                            /* isPossiblyWrapped = */ false);
+      return tryAttachArrayBufferByteLength(/* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:
-      return tryAttachArrayBufferByteLength(callee,
-                                            /* isPossiblyWrapped = */ true);
+      return tryAttachArrayBufferByteLength(/* isPossiblyWrapped = */ true);
 
     // SharedArrayBuffer intrinsics.
     case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
-      return tryAttachGuardToClass(callee, native);
+      return tryAttachGuardToClass(native);
 
     // TypedArray intrinsics.
     case InlinableNative::TypedArrayConstructor:
       return AttachDecision::NoAction;  // Not callable.
     case InlinableNative::IntrinsicIsTypedArray:
-      return tryAttachIsTypedArray(callee, /* isPossiblyWrapped = */ false);
+      return tryAttachIsTypedArray(/* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
-      return tryAttachIsTypedArray(callee, /* isPossiblyWrapped = */ true);
+      return tryAttachIsTypedArray(/* isPossiblyWrapped = */ true);
     case InlinableNative::IntrinsicIsTypedArrayConstructor:
-      return tryAttachIsTypedArrayConstructor(callee);
+      return tryAttachIsTypedArrayConstructor();
     case InlinableNative::IntrinsicTypedArrayByteOffset:
-      return tryAttachTypedArrayByteOffset(callee);
+      return tryAttachTypedArrayByteOffset();
     case InlinableNative::IntrinsicTypedArrayElementSize:
-      return tryAttachTypedArrayElementSize(callee);
+      return tryAttachTypedArrayElementSize();
     case InlinableNative::IntrinsicTypedArrayLength:
-      return tryAttachTypedArrayLength(callee, /* isPossiblyWrapped = */ false);
+      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ false);
     case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
-      return tryAttachTypedArrayLength(callee, /* isPossiblyWrapped = */ true);
+      return tryAttachTypedArrayLength(/* isPossiblyWrapped = */ true);
 
     // Reflect natives.
     case InlinableNative::ReflectGetPrototypeOf:
-      return tryAttachReflectGetPrototypeOf(callee);
+      return tryAttachReflectGetPrototypeOf();
 
     // Atomics intrinsics:
     case InlinableNative::AtomicsCompareExchange:
-      return tryAttachAtomicsCompareExchange(callee);
+      return tryAttachAtomicsCompareExchange();
     case InlinableNative::AtomicsExchange:
-      return tryAttachAtomicsExchange(callee);
+      return tryAttachAtomicsExchange();
     case InlinableNative::AtomicsAdd:
-      return tryAttachAtomicsAdd(callee);
+      return tryAttachAtomicsAdd();
     case InlinableNative::AtomicsSub:
-      return tryAttachAtomicsSub(callee);
+      return tryAttachAtomicsSub();
     case InlinableNative::AtomicsAnd:
-      return tryAttachAtomicsAnd(callee);
+      return tryAttachAtomicsAnd();
     case InlinableNative::AtomicsOr:
-      return tryAttachAtomicsOr(callee);
+      return tryAttachAtomicsOr();
     case InlinableNative::AtomicsXor:
-      return tryAttachAtomicsXor(callee);
+      return tryAttachAtomicsXor();
     case InlinableNative::AtomicsLoad:
-      return tryAttachAtomicsLoad(callee);
+      return tryAttachAtomicsLoad();
     case InlinableNative::AtomicsStore:
-      return tryAttachAtomicsStore(callee);
+      return tryAttachAtomicsStore();
     case InlinableNative::AtomicsIsLockFree:
-      return tryAttachAtomicsIsLockFree(callee);
+      return tryAttachAtomicsIsLockFree();
 
     // BigInt natives.
     case InlinableNative::BigIntAsIntN:
-      return tryAttachBigIntAsIntN(callee);
+      return tryAttachBigIntAsIntN();
     case InlinableNative::BigIntAsUintN:
-      return tryAttachBigIntAsUintN(callee);
+      return tryAttachBigIntAsUintN();
 
     // Boolean natives.
     case InlinableNative::Boolean:
-      return tryAttachBoolean(callee);
+      return tryAttachBoolean();
 
     // Set natives.
     case InlinableNative::SetHas:
-      return tryAttachSetHas(callee);
+      return tryAttachSetHas();
 
     // Map natives.
     case InlinableNative::MapHas:
-      return tryAttachMapHas(callee);
+      return tryAttachMapHas();
     case InlinableNative::MapGet:
-      return tryAttachMapGet(callee);
+      return tryAttachMapGet();
 
     // Testing functions.
     case InlinableNative::TestBailout:
-      return tryAttachBailout(callee);
+      return tryAttachBailout();
     case InlinableNative::TestAssertFloat32:
-      return tryAttachAssertFloat32(callee);
+      return tryAttachAssertFloat32();
     case InlinableNative::TestAssertRecoveredOnBailout:
-      return tryAttachAssertRecoveredOnBailout(callee);
+      return tryAttachAssertRecoveredOnBailout();
 
     case InlinableNative::Limit:
       break;
