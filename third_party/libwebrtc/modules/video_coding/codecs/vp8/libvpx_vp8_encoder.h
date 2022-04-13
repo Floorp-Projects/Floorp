@@ -93,6 +93,10 @@ class LibvpxVp8Encoder : public VideoEncoder {
 
   bool UpdateVpxConfiguration(size_t stream_index);
 
+  void MaybeUpdatePixelFormat(vpx_img_fmt fmt);
+  void PrepareI420Image(const I420BufferInterface* frame);
+  void PrepareNV12Image(const NV12BufferInterface* frame);
+
   const std::unique_ptr<LibvpxInterface> libvpx_;
 
   const CpuSpeedExperiment experimental_cpu_speed_config_arm_;
