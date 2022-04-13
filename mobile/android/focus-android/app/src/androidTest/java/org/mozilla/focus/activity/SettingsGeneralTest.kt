@@ -50,7 +50,6 @@ class SettingsGeneralTest {
         changeLocale("en")
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun changeThemeTest() {

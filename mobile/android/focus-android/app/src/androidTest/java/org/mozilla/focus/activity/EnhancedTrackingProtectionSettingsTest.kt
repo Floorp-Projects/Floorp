@@ -162,7 +162,6 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun blockSocialTrackersTest() {
@@ -225,7 +224,6 @@ class EnhancedTrackingProtectionSettingsTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun blockOtherContentTrackersTest() {

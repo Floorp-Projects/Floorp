@@ -5,7 +5,6 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +28,6 @@ class SettingsTest {
         }
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun verifyGeneralSettingsMenuTest() {

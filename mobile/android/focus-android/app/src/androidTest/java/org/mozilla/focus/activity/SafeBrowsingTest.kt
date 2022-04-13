@@ -6,7 +6,6 @@ package org.mozilla.focus.activity
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -15,7 +14,6 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.MockWebServerHelper
-import org.mozilla.focus.helpers.TestAssetHelper.getPermissionsPageAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -98,7 +96,6 @@ class SafeBrowsingTest {
         }
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun unblockSafeBrowsingTest() {
@@ -137,17 +134,5 @@ class SafeBrowsingTest {
         }.openSiteSecurityInfoSheet {
             verifySiteConnectionInfoIsSecure(false)
         }.closeSecurityInfoSheet { }
-    }
-
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
-    @Test
-    fun testLocationSharingNotAllowed() {
-        val permissionsPage = getPermissionsPageAsset(webServer)
-
-        searchScreen {
-        }.loadPage(permissionsPage.url) {
-            clickGetLocationButton()
-            verifyPageContent("No location info")
-        }
     }
 }

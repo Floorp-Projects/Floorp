@@ -19,7 +19,6 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -60,7 +59,6 @@ class HomeScreenScreenshots : ScreenshotTest() {
         Screengrab.screenshot("Home_View")
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @Test
     fun takeScreenshotShortCutsHomeScreen() {
         homeScreen {
@@ -75,7 +73,6 @@ class HomeScreenScreenshots : ScreenshotTest() {
         }
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @Test
     fun openWebsiteFocus() {
         var currentLocale: String = Locale.getDefault().getLanguage()

@@ -6,7 +6,6 @@ package org.mozilla.focus.activity
 import androidx.test.espresso.Espresso.pressBack
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.browserScreen
@@ -64,7 +63,6 @@ class SearchTest {
         }
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @SmokeTest
     @Test
     fun enableSearchSuggestionOnFirstRunTest() {
@@ -116,7 +114,6 @@ class SearchTest {
         }
     }
 
-    @Ignore("Failing , see https://github.com/mozilla-mobile/focus-android/issues/6812")
     @Test
     fun testSearchBarShowsSearchTermOnEdit() {
         val searchString = "mozilla focus"
