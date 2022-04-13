@@ -249,8 +249,8 @@ class GeckoJavaSampler
       jstring javaString =
           (jstring)(aJni->GetObjectArrayElement(aJavaArray.Get(), i));
       const char* filterString = aJni->GetStringUTFChars(javaString, 0);
-      // These strings are leaked. FIXME
-      MOZ_RELEASE_ASSERT(aCharArray.append(&filterString, 0));
+      // FIXME. These strings are leaked.
+      MOZ_RELEASE_ASSERT(aCharArray.append(filterString));
     }
   }
 
