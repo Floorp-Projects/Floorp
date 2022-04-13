@@ -9,6 +9,7 @@
 #include "AudioPacketizer.h"
 #include "AudioSegment.h"
 #include "AudioDeviceInfo.h"
+#include "DeviceInputTrack.h"
 #include "MediaEngineWebRTC.h"
 #include "MediaTrackListener.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -224,6 +225,10 @@ class AudioProcessingTrack : public ProcessedMediaTrack {
   // Only accessed on the main thread. Link to the track producing raw audio
   // input data. Graph thread should use mInputs to get the source
   RefPtr<MediaInputPort> mPort;
+
+  // Only accessed on the main thread. This is the track producing raw audio
+  // input data. Graph thread should MediaInputPort::GetSource() to get this
+  RefPtr<NativeInputTrack> mDeviceInputTrack;
 
   // Only accessed on the main thread. Used for bookkeeping on main thread, such
   // that DisconnectDeviceInput can be idempotent.
