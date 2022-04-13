@@ -367,7 +367,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the result was blocked.
    */
   blockResult(result) {
-    if (!UrlbarPrefs.get("bestMatch.blockingEnabled")) {
+    if (
+      (!result.isBestMatch &&
+        !UrlbarPrefs.get("quickSuggestBlockingEnabled")) ||
+      (result.isBestMatch && !UrlbarPrefs.get("bestMatchBlockingEnabled"))
+    ) {
       this.logger.info("Blocking disabled, ignoring key shortcut");
       return false;
     }
@@ -391,7 +395,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       this.logger.debug(`Got digest for '${originalUrl}': ${digest}`);
       this._blockedDigests.add(digest);
       let json = JSON.stringify([...this._blockedDigests]);
-      UrlbarPrefs.set("quickSuggest.blockedDigests", json);
+      this._updatingBlockedDigests = true;
+      try {
+        UrlbarPrefs.set("quicksuggest.blockedDigests", json);
+      } finally {
+        this._updatingBlockedDigests = false;
+      }
       this.logger.debug(`All blocked suggestions: ${json}`);
     });
   }
@@ -424,7 +433,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     await this._blockTaskQueue.queue(() => {
       this.logger.info(`Clearing all blocked suggestions`);
       this._blockedDigests.clear();
-      UrlbarPrefs.clear("quickSuggest.blockedDigests");
+      UrlbarPrefs.clear("quicksuggest.blockedDigests");
     });
   }
 
@@ -578,9 +587,13 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case "quickSuggest.blockedDigests":
-        this.logger.info("browser.urlbar.quickSuggest.blockedDigests changed");
-        this._loadBlockedDigests();
+      case "quicksuggest.blockedDigests":
+        if (!this._updatingBlockedDigests) {
+          this.logger.info(
+            "browser.urlbar.quicksuggest.blockedDigests changed"
+          );
+          this._loadBlockedDigests();
+        }
         break;
       case "quicksuggest.impressionCaps.stats":
         if (!this._updatingImpressionStats) {
@@ -1292,9 +1305,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
     this.logger.debug(`Queueing _loadBlockedDigests`);
     await this._blockTaskQueue.queue(() => {
       this.logger.info(`Loading blocked suggestion digests`);
-      let json = UrlbarPrefs.get("quickSuggest.blockedDigests");
+      let json = UrlbarPrefs.get("quicksuggest.blockedDigests");
       this.logger.debug(
-        `browser.urlbar.quickSuggest.blockedDigests value: ${json}`
+        `browser.urlbar.quicksuggest.blockedDigests value: ${json}`
       );
       if (!json) {
         this.logger.info(`There are no blocked suggestion digests`);
@@ -1419,12 +1432,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
   // do *not* store digests for any security or obfuscation reason.
   //
   // This value is serialized as a JSON'ed array to the
-  // `browser.urlbar.quickSuggest.blockedDigests` pref.
+  // `browser.urlbar.quicksuggest.blockedDigests` pref.
   _blockedDigests = new Set();
 
   // Used to serialize access to blocked suggestions. This is only necessary
   // because getting a suggestion's URL digest is async.
   _blockTaskQueue = new TaskQueue();
+
+  // Whether blocked digests are currently being updated.
+  _updatingBlockedDigests = false;
 }
 
 var UrlbarProviderQuickSuggest = new ProviderQuickSuggest();
