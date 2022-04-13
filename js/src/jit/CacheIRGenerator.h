@@ -473,11 +473,62 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   HandleValue newTarget_;
   HandleValueArray args_;
 
+  friend class InlinableNativeIRGenerator;
+
   ScriptedThisResult getThisShapeForScripted(HandleFunction calleeFunc,
                                              MutableHandleShape result);
 
-  void emitNativeCalleeGuard(JSFunction* callee);
   void emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee);
+
+  AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
+  AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
+  AttachDecision tryAttachCallScripted(HandleFunction calleeFunc);
+  AttachDecision tryAttachInlinableNative(HandleFunction calleeFunc);
+  AttachDecision tryAttachWasmCall(HandleFunction calleeFunc);
+  AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
+  AttachDecision tryAttachCallHook(HandleObject calleeObj);
+
+  void trackAttached(const char* name);
+
+ public:
+  CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
+                  ICState state, uint32_t argc, HandleValue callee,
+                  HandleValue thisval, HandleValue newTarget,
+                  HandleValueArray args);
+
+  AttachDecision tryAttachStub();
+};
+
+class MOZ_RAII InlinableNativeIRGenerator {
+  CallIRGenerator& generator_;
+  CacheIRWriter& writer;
+  JSContext* cx_;
+  jsbytecode* pc_;
+  HandleScript script_;
+
+  HandleValue callee_;
+  HandleValue newTarget_;
+  HandleValue thisval_;
+  HandleValueArray args_;
+  uint32_t argc_;
+  CallFlags flags_;
+  JSOp op_;
+  bool isFirstStub_;
+
+  void emitNativeCalleeGuard(JSFunction* callee);
+
+  auto emitToStringGuard(ValOperandId id, const Value& v) {
+    return generator_.emitToStringGuard(id, v);
+  }
+
+  auto emitNumericGuard(ValOperandId valId, Scalar::Type type) {
+    return generator_.emitNumericGuard(valId, type);
+  }
+
+  auto guardToIntPtrIndex(const Value& index, ValOperandId indexId,
+                          bool supportOOB) {
+    return generator_.guardToIntPtrIndex(index, indexId, supportOOB);
+  }
 
   bool canAttachAtomicsReadWriteModify();
 
@@ -598,21 +649,25 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachMapHas(HandleFunction callee);
   AttachDecision tryAttachMapGet(HandleFunction callee);
 
-  AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
-  AttachDecision tryAttachFunApply(HandleFunction calleeFunc);
-  AttachDecision tryAttachCallScripted(HandleFunction calleeFunc);
-  AttachDecision tryAttachInlinableNative(HandleFunction calleeFunc);
-  AttachDecision tryAttachWasmCall(HandleFunction calleeFunc);
-  AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
-  AttachDecision tryAttachCallHook(HandleObject calleeObj);
-
-  void trackAttached(const char* name);
+  void trackAttached(const char* name) {
+    return generator_.trackAttached(name);
+  }
 
  public:
-  CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
-                  ICState state, uint32_t argc, HandleValue callee,
-                  HandleValue thisval, HandleValue newTarget,
-                  HandleValueArray args);
+  InlinableNativeIRGenerator(CallIRGenerator& generator, CallFlags flags)
+      : generator_(generator),
+        writer(generator.writer),
+        cx_(generator.cx_),
+        pc_(generator.pc_),
+        script_(generator.script_),
+        callee_(generator.callee_),
+        newTarget_(generator.newTarget_),
+        thisval_(generator.thisval_),
+        args_(generator.args_),
+        argc_(generator.argc_),
+        flags_(flags),
+        op_(generator.op_),
+        isFirstStub_(generator.isFirstStub_) {}
 
   AttachDecision tryAttachStub();
 };
