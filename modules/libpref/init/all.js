@@ -4099,13 +4099,10 @@ pref("media.gmp-manager.url", "https://aus5.mozilla.org/update/3/GMP/%VERSION%/%
 // header. Information from this header will be used to validate the response.
 // If this header is not present, is malformed, or cannot be determined as
 // valid then the update will fail.
-#ifdef EARLY_BETA_OR_EARLIER
-  // The plan is to have the feature gated by this pref to eventually replace
-  // the features controlled by the media.gmp-manager.cert.* prefs. Once that
-  // happens we can remove related code and prefs, but while testing we'll use
-  // this to gate (see bug 1714621 for more info).
-  pref("media.gmp-manager.checkContentSignature", true);
-#endif
+// We should eventually remove this pref and any cert pinning code and make
+// the content signature path the sole path. We retain this for now in case
+// we need to debug content sig vs cert pin.
+pref("media.gmp-manager.checkContentSignature", true);
 
 // When |media.gmp-manager.cert.requireBuiltIn| is true or not specified the
 // final certificate and all certificates the connection is redirected to before
