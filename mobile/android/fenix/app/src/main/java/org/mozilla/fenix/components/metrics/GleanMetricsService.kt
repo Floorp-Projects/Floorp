@@ -12,7 +12,6 @@ import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
-import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
@@ -177,36 +176,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.RecentBookmarkCount -> EventWrapper<NoExtraKeys>(
             { RecentBookmarks.recentBookmarksCount.set(this.count.toLong()) },
-        )
-        is Event.CreditCardSaved -> EventWrapper<NoExtraKeys>(
-            { CreditCards.saved.add() }
-        )
-        is Event.CreditCardDeleted -> EventWrapper<NoExtraKeys>(
-            { CreditCards.deleted.add() }
-        )
-        is Event.CreditCardModified -> EventWrapper<NoExtraKeys>(
-            { CreditCards.modified.record(it) }
-        )
-        is Event.CreditCardFormDetected -> EventWrapper<NoExtraKeys>(
-            { CreditCards.formDetected.record(it) }
-        )
-        is Event.CreditCardAutofillPromptShown -> EventWrapper<NoExtraKeys>(
-            { CreditCards.autofillPromptShown.record(it) }
-        )
-        is Event.CreditCardAutofillPromptExpanded -> EventWrapper<NoExtraKeys>(
-            { CreditCards.autofillPromptExpanded.record(it) }
-        )
-        is Event.CreditCardAutofillPromptDismissed -> EventWrapper<NoExtraKeys>(
-            { CreditCards.autofillPromptDismissed.record(it) }
-        )
-        is Event.CreditCardAutofilled -> EventWrapper<NoExtraKeys>(
-            { CreditCards.autofilled.record(it) }
-        )
-        is Event.CreditCardManagementAddTapped -> EventWrapper<NoExtraKeys>(
-            { CreditCards.managementAddTapped.record(it) }
-        )
-        is Event.CreditCardManagementCardTapped -> EventWrapper<NoExtraKeys>(
-            { CreditCards.managementCardTapped.record(it) }
         )
         is Event.SearchTermGroupCount -> EventWrapper(
             { SearchTerms.numberOfSearchTermGroup.record(it) },

@@ -57,18 +57,6 @@ sealed class Event {
     // Recently visited/Recent searches
     object RecentSearchesGroupDeleted : Event()
 
-    // Credit cards
-    object CreditCardSaved : Event()
-    object CreditCardDeleted : Event()
-    object CreditCardModified : Event()
-    object CreditCardFormDetected : Event()
-    object CreditCardAutofilled : Event()
-    object CreditCardAutofillPromptShown : Event()
-    object CreditCardAutofillPromptExpanded : Event()
-    object CreditCardAutofillPromptDismissed : Event()
-    object CreditCardManagementAddTapped : Event()
-    object CreditCardManagementCardTapped : Event()
-
     // Interaction events with extras
 
     data class SearchWithAds(val providerName: String) : Event() {

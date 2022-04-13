@@ -7,37 +7,50 @@ package org.mozilla.fenix.settings.creditcards
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.telemetry.glean.testing.GleanTestRule
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.CreditCards
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.controller.CreditCardsManagementController
 import org.mozilla.fenix.settings.creditcards.interactor.DefaultCreditCardsManagementInteractor
 
+@RunWith(FenixRobolectricTestRunner::class)
 class DefaultCreditCardsManagementInteractorTest {
 
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
+
     private val controller: CreditCardsManagementController = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
 
     private lateinit var interactor: DefaultCreditCardsManagementInteractor
 
     @Before
     fun setup() {
-        interactor = DefaultCreditCardsManagementInteractor(controller, metrics)
+        interactor = DefaultCreditCardsManagementInteractor(controller)
     }
 
     @Test
     fun onSelectCreditCard() {
         val creditCard: CreditCard = mockk(relaxed = true)
+        assertFalse(CreditCards.managementCardTapped.testHasValue())
+
         interactor.onSelectCreditCard(creditCard)
         verify { controller.handleCreditCardClicked(creditCard) }
-        verify { metrics.track(Event.CreditCardManagementCardTapped) }
+        assertTrue(CreditCards.managementCardTapped.testHasValue())
     }
 
     @Test
     fun onClickAddCreditCard() {
+        assertFalse(CreditCards.managementAddTapped.testHasValue())
+
         interactor.onAddCreditCardClick()
         verify { controller.handleAddCreditCardClicked() }
-        verify { metrics.track(Event.CreditCardManagementAddTapped) }
+        assertTrue(CreditCards.managementAddTapped.testHasValue())
     }
 }

@@ -49,7 +49,6 @@ class CreditCardsManagementFragment : SecureFragment() {
             controller = DefaultCreditCardsManagementController(
                 navController = findNavController()
             ),
-            requireContext().components.analytics.metrics
         )
         val binding = ComponentCreditCardsBinding.bind(view)
 
