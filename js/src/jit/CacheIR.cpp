@@ -3508,36 +3508,31 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachStub() {
   ThrowMsgKind msgKind;
   GetCheckPrivateFieldOperands(pc_, &condition, &msgKind);
 
-  bool hasOwn = false;
-  if (!HasOwnDataPropertyPure(cx_, obj, key, &hasOwn)) {
-    // Can't determine if HasOwnProperty purely.
+  PropertyResult prop;
+  if (!LookupOwnPropertyPure(cx_, obj, key, &prop)) {
     return AttachDecision::NoAction;
   }
 
-  if (CheckPrivateFieldWillThrow(condition, hasOwn)) {
+  if (CheckPrivateFieldWillThrow(condition, prop.isFound())) {
     // Don't attach a stub if the operation will throw.
     return AttachDecision::NoAction;
   }
 
-  TRY_ATTACH(tryAttachNative(obj, objId, key, keyId, hasOwn));
+  auto* nobj = &obj->as<NativeObject>();
+
+  TRY_ATTACH(tryAttachNative(nobj, objId, key, keyId, prop));
 
   return AttachDecision::NoAction;
 }
 
-AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(JSObject* obj,
-                                                             ObjOperandId objId,
-                                                             jsid key,
-                                                             ValOperandId keyId,
-                                                             bool hasOwn) {
-  if (!obj->is<NativeObject>()) {
-    return AttachDecision::NoAction;
-  }
-  auto* nobj = &obj->as<NativeObject>();
+AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(
+    NativeObject* obj, ObjOperandId objId, jsid key, ValOperandId keyId,
+    PropertyResult prop) {
+  MOZ_ASSERT(prop.isNativeProperty() || prop.isNotFound());
 
-  Maybe<ObjOperandId> tempId;
   emitIdGuard(keyId, idVal_, key);
-  EmitReadSlotGuard(writer, nobj, nobj, objId, &tempId);
-  writer.loadBooleanResult(hasOwn);
+  TestMatchingNativeReceiver(writer, obj, objId);
+  writer.loadBooleanResult(prop.isFound());
   writer.returnFromIC();
 
   trackAttached("NativeCheckPrivateField");
