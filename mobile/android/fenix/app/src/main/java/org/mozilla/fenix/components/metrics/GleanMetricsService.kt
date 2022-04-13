@@ -11,7 +11,6 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
-import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
@@ -100,18 +99,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
             { Tabs.settingOpened.record(it) }
-        )
-        Event.ContextMenuCopyTapped -> EventWrapper<NoExtraKeys>(
-            { ContextualMenu.copyTapped.record(it) }
-        )
-        is Event.ContextMenuSearchTapped -> EventWrapper<NoExtraKeys>(
-            { ContextualMenu.searchTapped.record(it) }
-        )
-        is Event.ContextMenuSelectAllTapped -> EventWrapper<NoExtraKeys>(
-            { ContextualMenu.selectAllTapped.record(it) }
-        )
-        is Event.ContextMenuShareTapped -> EventWrapper<NoExtraKeys>(
-            { ContextualMenu.shareTapped.record(it) }
         )
         is Event.SyncedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
             { SyncedTabs.syncedTabsSuggestionClicked.record(it) }

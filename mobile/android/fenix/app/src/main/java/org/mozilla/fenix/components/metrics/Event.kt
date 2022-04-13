@@ -25,11 +25,6 @@ sealed class Event {
 
     object TabSettingsOpened : Event()
 
-    object ContextMenuCopyTapped : Event()
-    object ContextMenuSearchTapped : Event()
-    object ContextMenuSelectAllTapped : Event()
-    object ContextMenuShareTapped : Event()
-
     object SyncedTabSuggestionClicked : Event()
     object BookmarkSuggestionClicked : Event()
     object ClipboardSuggestionClicked : Event()

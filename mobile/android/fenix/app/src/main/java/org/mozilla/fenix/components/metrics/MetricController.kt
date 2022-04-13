@@ -38,6 +38,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
+import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.Events
@@ -204,6 +205,16 @@ internal class ReleaseMetricController(
                 AndroidAutofill.unlockCancelled.record(NoExtras())
             }
         }
+        Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.TEXT_SELECTION_OPTION -> {
+            when (metadata?.get("textSelectionOption")?.toString()) {
+                CONTEXT_MENU_COPY -> ContextualMenu.copyTapped.record(NoExtras())
+                CONTEXT_MENU_SEARCH,
+                CONTEXT_MENU_SEARCH_PRIVATELY -> ContextualMenu.searchTapped.record(NoExtras())
+                CONTEXT_MENU_SELECT_ALL -> ContextualMenu.selectAllTapped.record(NoExtras())
+                CONTEXT_MENU_SHARE -> ContextualMenu.shareTapped.record(NoExtras())
+                else -> Unit
+            }
+        }
 
         else -> {
             this.toEvent()?.also {
@@ -271,16 +282,6 @@ internal class ReleaseMetricController(
 
     @Suppress("LongMethod", "MaxLineLength")
     private fun Fact.toEvent(): Event? = when {
-        Component.FEATURE_CONTEXTMENU == component && ContextMenuFacts.Items.TEXT_SELECTION_OPTION == item -> {
-            when (metadata?.get("textSelectionOption")?.toString()) {
-                CONTEXT_MENU_COPY -> Event.ContextMenuCopyTapped
-                CONTEXT_MENU_SEARCH, CONTEXT_MENU_SEARCH_PRIVATELY -> Event.ContextMenuSearchTapped
-                CONTEXT_MENU_SELECT_ALL -> Event.ContextMenuSelectAllTapped
-                CONTEXT_MENU_SHARE -> Event.ContextMenuShareTapped
-                else -> null
-            }
-        }
-
         Component.SUPPORT_WEBEXTENSIONS == component && WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED == item -> {
             metadata?.get("installed")?.let { installedAddons ->
                 if (installedAddons is List<*>) {

@@ -13,6 +13,7 @@ import io.mockk.verifyAll
 import mozilla.components.browser.toolbar.facts.ToolbarFacts
 import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
+import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
@@ -35,10 +36,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
+import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
+import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -466,6 +469,34 @@ class MetricControllerTest {
             fact.process()
 
             assertTrue(AndroidAutofill.unlockCancelled.testHasValue())
+        }
+    }
+
+    @Test
+    fun `WHEN processing a ContextualMenu fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+
+        val longPressItemsToEvents = listOf(
+            Companion.CONTEXT_MENU_COPY to ContextualMenu.copyTapped,
+            Companion.CONTEXT_MENU_SEARCH to ContextualMenu.searchTapped,
+            Companion.CONTEXT_MENU_SELECT_ALL to ContextualMenu.selectAllTapped,
+            Companion.CONTEXT_MENU_SHARE to ContextualMenu.shareTapped,
+        )
+
+        longPressItemsToEvents.forEach { (item, event) ->
+            val fact = Fact(
+                Component.FEATURE_CONTEXTMENU,
+                mockk(),
+                ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
+                metadata = mapOf("textSelectionOption" to item)
+            )
+            with(controller) {
+                fact.process()
+            }
+
+            assertEquals(true, event.testHasValue())
+            assertEquals(1, event.testGetValue().size)
+            assertEquals(null, event.testGetValue().single().extra)
         }
     }
 
