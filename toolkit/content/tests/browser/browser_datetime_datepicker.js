@@ -987,30 +987,3 @@ add_task(async function test_datepicker_value_higher_than_max() {
 
   await helper.tearDown();
 });
-
-/**
- * Test that date picker opens with showPicker.
- */
-add_task(async function test_datepicker_showPicker() {
-  const date = new Date();
-
-  await helper.openPicker(
-    "data:text/html, <input type='date'>",
-    false,
-    "showPicker"
-  );
-
-  if (date.getMonth() === new Date().getMonth()) {
-    Assert.equal(
-      helper.getElement(MONTH_YEAR).textContent,
-      DATE_FORMAT_LOCAL(date)
-    );
-  } else {
-    Assert.ok(
-      true,
-      "Skipping datepicker today test if month changes when opening picker."
-    );
-  }
-
-  await helper.tearDown();
-});
