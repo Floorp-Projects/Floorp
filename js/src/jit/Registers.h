@@ -275,6 +275,36 @@ class MachineState {
   }
 };
 
+// Class for mapping each register to an offset.
+class RegisterOffsets {
+  mozilla::Array<uint32_t, Registers::Total> offsets_;
+
+  // Sentinel value representing an uninitialized offset.
+  static constexpr uint32_t InvalidOffset = UINT32_MAX;
+
+ public:
+  RegisterOffsets() {
+    for (size_t i = 0; i < Registers::Total; i++) {
+      offsets_[i] = InvalidOffset;
+    }
+  }
+
+  RegisterOffsets(const RegisterOffsets&) = delete;
+  void operator=(const RegisterOffsets&) = delete;
+
+  bool hasOffset(Register reg) const {
+    return offsets_[reg.code()] != InvalidOffset;
+  }
+  uint32_t getOffset(Register reg) const {
+    MOZ_ASSERT(hasOffset(reg));
+    return offsets_[reg.code()];
+  }
+  void setOffset(Register reg, size_t offset) {
+    MOZ_ASSERT(offset < InvalidOffset);
+    offsets_[reg.code()] = uint32_t(offset);
+  }
+};
+
 class MacroAssembler;
 
 // Declares a register as owned within the scope of the object.

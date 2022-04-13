@@ -128,9 +128,9 @@ static bool GenerateCraneliftCode(
     CodeOffset trapInsnOffset = pair.first;
     size_t nBytesReservedBeforeTrap = pair.second;
 
-    MachineState trapExitLayout;
+    RegisterOffsets trapExitLayout;
     size_t trapExitLayoutNumWords;
-    GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
+    GenerateTrapExitRegisterOffsets(&trapExitLayout, &trapExitLayoutNumWords);
 
     size_t nInboundStackArgBytes = StackArgAreaSizeUnaligned(funcType.args());
 

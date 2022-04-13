@@ -11689,7 +11689,7 @@ void CodeGenerator::visitRest(LRest* lir) {
 // stackmap is created, and nullptr is returned.  For a debug build, a
 // stackmap is always created and returned.
 static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
-                                         const MachineState& trapExitLayout,
+                                         const RegisterOffsets& trapExitLayout,
                                          size_t trapExitLayoutNumWords,
                                          size_t nInboundStackArgBytes,
                                          wasm::StackMap** result) {
@@ -11734,8 +11734,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     }
     for (; gcRegsIter.more(); ++gcRegsIter) {
       Register reg = *gcRegsIter;
-      size_t offsetFromTop =
-          reinterpret_cast<size_t>(trapExitLayout.address(reg));
+      size_t offsetFromTop = trapExitLayout.getOffset(reg);
 
       // If this doesn't hold, the associated register wasn't saved by
       // the trap exit stub.  Better to crash now than much later, in
@@ -11820,7 +11819,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 
 bool CodeGenerator::generateWasm(
     wasm::TypeIdDesc funcTypeId, wasm::BytecodeOffset trapOffset,
-    const wasm::ArgTypeVector& argTypes, const MachineState& trapExitLayout,
+    const wasm::ArgTypeVector& argTypes, const RegisterOffsets& trapExitLayout,
     size_t trapExitLayoutNumWords, wasm::FuncOffsets* offsets,
     wasm::StackMaps* stackMaps, wasm::Decoder* decoder) {
   AutoCreatedBy acb(masm, "CodeGenerator::generateWasm");
