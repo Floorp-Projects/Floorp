@@ -5,15 +5,15 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize("value", ["none", "interactive", "complete"])
-async def test_expected_url(bidi_session, inline, top_context, value):
+async def test_expected_url(bidi_session, inline, new_tab, value):
     url = inline("<div>foo</div>")
     result = await bidi_session.browsing_context.navigate(
-        context=top_context["context"], url=url, wait=value
+        context=new_tab["context"], url=url, wait=value
     )
     assert result["url"] == url
     if value != "none":
         contexts = await bidi_session.browsing_context.get_tree(
-            parent=top_context["context"], max_depth=0
+            parent=new_tab["context"], max_depth=0
         )
         assert contexts[0]["url"] == url
 
@@ -26,7 +26,7 @@ async def test_expected_url(bidi_session, inline, top_context, value):
         ("complete", True),
     ],
 )
-async def test_slow_image(bidi_session, inline, top_context, wait, expect_timeout):
+async def test_slow_image(bidi_session, inline, new_tab, wait, expect_timeout):
     script_url = "/webdriver/tests/bidi/browsing_context/navigate/support/empty.svg"
     url = inline(f"<img src='{script_url}?pipe=trickle(d10)'>")
 
@@ -34,7 +34,7 @@ async def test_slow_image(bidi_session, inline, top_context, wait, expect_timeou
     # See https://github.com/w3c/webdriver-bidi/issues/188.
     wait_for_navigation = asyncio.wait_for(
         bidi_session.browsing_context.navigate(
-            context=top_context["context"], url=url, wait=wait
+            context=new_tab["context"], url=url, wait=wait
         ),
         timeout=1,
     )
@@ -47,7 +47,7 @@ async def test_slow_image(bidi_session, inline, top_context, wait, expect_timeou
 
     if wait != "none":
         contexts = await bidi_session.browsing_context.get_tree(
-            parent=top_context["context"], max_depth=0
+            parent=new_tab["context"], max_depth=0
         )
         assert contexts[0]["url"] == url
 
@@ -60,14 +60,14 @@ async def test_slow_image(bidi_session, inline, top_context, wait, expect_timeou
         ("complete", True),
     ],
 )
-async def test_slow_page(bidi_session, url, top_context, wait, expect_timeout):
+async def test_slow_page(bidi_session, new_tab, url, wait, expect_timeout):
     page_url = url(
         "/webdriver/tests/bidi/browsing_context/navigate/support/empty.html?pipe=trickle(d10)"
     )
 
     wait_for_navigation = asyncio.wait_for(
         bidi_session.browsing_context.navigate(
-            context=top_context["context"], url=page_url, wait=wait
+            context=new_tab["context"], url=page_url, wait=wait
         ),
         timeout=1,
     )
@@ -90,13 +90,13 @@ async def test_slow_page(bidi_session, url, top_context, wait, expect_timeout):
         ("complete", True),
     ],
 )
-async def test_slow_script(bidi_session, inline, top_context, wait, expect_timeout):
+async def test_slow_script(bidi_session, inline, new_tab, wait, expect_timeout):
     script_url = "/webdriver/tests/bidi/browsing_context/navigate/support/empty.js"
     url = inline(f"<script src='{script_url}?pipe=trickle(d10)'></script>")
 
     wait_for_navigation = asyncio.wait_for(
         bidi_session.browsing_context.navigate(
-            context=top_context["context"], url=url, wait=wait
+            context=new_tab["context"], url=url, wait=wait
         ),
         timeout=1,
     )
@@ -109,6 +109,6 @@ async def test_slow_script(bidi_session, inline, top_context, wait, expect_timeo
 
     if wait != "none":
         contexts = await bidi_session.browsing_context.get_tree(
-            parent=top_context["context"], max_depth=0
+            parent=new_tab["context"], max_depth=0
         )
         assert contexts[0]["url"] == url

@@ -2,6 +2,19 @@ import pytest
 
 
 @pytest.fixture
+async def new_tab(bidi_session, current_session):
+    # Open and focus a new tab to run the test in a foreground tab.
+    context_id = current_session.new_window(type_hint="tab")
+    current_session.window_handle = context_id
+
+    # Retrieve the browsing context info for the new tab
+    contexts = await bidi_session.browsing_context.get_tree(parent=context_id, max_depth=0)
+    yield contexts[0]
+
+    await bidi_session.browsing_context.close(context=contexts[0]["context"])
+
+
+@pytest.fixture
 def test_page(inline):
     return inline("<div>foo</div>")
 
