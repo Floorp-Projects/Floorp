@@ -30,7 +30,6 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SCOPE_SESSION
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
-import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
@@ -164,11 +163,6 @@ class BackgroundServices(
         ),
         crashReporter
     ).also { accountManager ->
-        // TODO this needs to change once we have a SyncManager
-        context.settings().fxaHasSyncedItems = accountManager.authenticatedAccount()?.let {
-            SyncEnginesStorage(context).getStatus().any { it.value }
-        } ?: false
-
         // Register a telemetry account observer to keep track of FxA auth metrics.
         accountManager.register(telemetryAccountObserver)
 
