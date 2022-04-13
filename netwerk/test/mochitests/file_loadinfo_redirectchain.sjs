@@ -4,8 +4,7 @@
  */
 
 function createIframeContent(aQuery) {
-  var content =
-    `
+  var content = `
   <!DOCTYPE HTML>
   <html>
   <head><meta charset="utf-8">
@@ -14,29 +13,27 @@ function createIframeContent(aQuery) {
   <body>
   <script type="text/javascript">
     var myXHR = new XMLHttpRequest();
-    myXHR.open("GET", "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?` +
-    aQuery +
-    `");
+    myXHR.open("GET", "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?${aQuery}");
     myXHR.onload = function() {
-    var loadinfo = SpecialPowers.wrap(myXHR).channel.loadInfo;
-    var redirectChain = loadinfo.redirectChain;
-    var redirectChainIncludingInternalRedirects = loadinfo.redirectChainIncludingInternalRedirects;
-    var resultOBJ = { redirectChain : [], redirectChainIncludingInternalRedirects : [] };
-    for (var i = 0; i < redirectChain.length; i++) {
-      resultOBJ.redirectChain.push(redirectChain[i].principal.spec);
+      var loadinfo = SpecialPowers.wrap(myXHR).channel.loadInfo;
+      var redirectChain = loadinfo.redirectChain;
+      var redirectChainIncludingInternalRedirects = loadinfo.redirectChainIncludingInternalRedirects;
+      var resultOBJ = { redirectChain : [], redirectChainIncludingInternalRedirects : [] };
+      for (var i = 0; i < redirectChain.length; i++) {
+        resultOBJ.redirectChain.push(redirectChain[i].principal.spec);
+      }
+      for (var i = 0; i < redirectChainIncludingInternalRedirects.length; i++) {
+        resultOBJ.redirectChainIncludingInternalRedirects.push(redirectChainIncludingInternalRedirects[i].principal.spec);
+      }
+      var loadinfoJSON = JSON.stringify(resultOBJ);
+      window.parent.postMessage({ loadinfo: loadinfoJSON }, "*");
     }
-    for (var i = 0; i < redirectChainIncludingInternalRedirects.length; i++) {
-      resultOBJ.redirectChainIncludingInternalRedirects.push(redirectChainIncludingInternalRedirects[i].principal.spec);
+    myXHR.onerror = function() {
+      var resultOBJ = { redirectChain : [], redirectChainIncludingInternalRedirects : [] };
+      var loadinfoJSON = JSON.stringify(resultOBJ);
+      window.parent.postMessage({ loadinfo: loadinfoJSON }, "*");
     }
-    var loadinfoJSON = JSON.stringify(resultOBJ);
-    window.parent.postMessage({ loadinfo: loadinfoJSON }, "*");
-  }
-  myXHR.onerror = function() {
-    var resultOBJ = { redirectChain : [], redirectChainIncludingInternalRedirects : [] };
-    var loadinfoJSON = JSON.stringify(resultOBJ);
-    window.parent.postMessage({ loadinfo: loadinfoJSON }, "*");
-  }
-  myXHR.send();
+    myXHR.send();
   </script>
   </body>
   </html>`;
@@ -79,7 +76,7 @@ function handleRequest(request, response) {
   }
 
   // must be a redirect
-  var newLoaction = "";
+  var newLocation = "";
   switch (queryString) {
     case "redir-err-2":
       newLocation =
