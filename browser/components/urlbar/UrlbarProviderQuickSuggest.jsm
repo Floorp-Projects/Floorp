@@ -581,6 +581,22 @@ class ProviderQuickSuggest extends UrlbarProvider {
       Services.telemetry.keyedScalarAdd(scalar, telemetryResultIndex, 1);
     }
 
+    // engagement event
+    let match_type = result.isBestMatch ? "best-match" : "firefox-suggest";
+    Services.telemetry.recordEvent(
+      TELEMETRY_EVENT_CATEGORY,
+      "engagement",
+      selType == "quicksuggest" ? "click" : selType || "impression_only",
+      "",
+      {
+        match_type,
+        position: String(telemetryResultIndex),
+        suggestion_type: result.payload.isSponsored
+          ? "sponsored"
+          : "nonsponsored",
+      }
+    );
+
     // Send the custom impression and click pings
     if (!isPrivate) {
       // `is_clicked` is whether the user clicked the suggestion. `selType` will
@@ -588,7 +604,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // possible `selType` values.
       let is_clicked = selType == "quicksuggest";
       let scenario = UrlbarPrefs.get("quicksuggest.scenario");
-      let match_type = result.isBestMatch ? "best-match" : "firefox-suggest";
 
       // Always use lowercase to make the reporting consistent
       let advertiser = result.payload.sponsoredAdvertiser.toLocaleLowerCase();

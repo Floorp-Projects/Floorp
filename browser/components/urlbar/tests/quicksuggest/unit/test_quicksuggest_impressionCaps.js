@@ -3325,12 +3325,13 @@ async function checkSearch({ name, searchString, expectedResults }) {
 }
 
 async function checkTelemetryEvents(expectedEvents) {
-  TelemetryTestUtils.assertEvents(
+  QuickSuggestTestUtils.assertEvents(
     expectedEvents.map(event => ({
       ...event,
       category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
       method: "impression_cap",
-    }))
+    })),
+    // Filter in only impression_cap events.
+    { method: "impression_cap" }
   );
-  Services.telemetry.clearEvents();
 }
