@@ -25,9 +25,44 @@
  *  (4) checkLoadInfoWithInternalRedirectsAndFallback
  *      perform two redirects including CSPs upgrade-insecure-requests
  *      including a 404 repsonse and hence a fallback.
+ *  (5) checkHTTPURITruncation
+ *      perform a redirect to a URI with an HTTP scheme to check that unwanted
+ *      URI components are removed before being added to the redirectchain.
+ *  (6) checkHTTPSURITruncation
+ *      perform a redirect to a URI with an HTTPS scheme to check that unwanted
+ *      URI components are removed before being added to the redirectchain.
  */
 
 SimpleTest.waitForExplicitFinish();
+
+// ************** HELPERS ***************
+
+function compareChains(aLoadInfo, aExpectedRedirectChain, aExpectedRedirectChainIncludingInternalRedirects) {
+  var redirectChain = aLoadInfo.redirectChain;
+  var redirectChainIncludingInternalRedirects = aLoadInfo.redirectChainIncludingInternalRedirects;
+
+  is(redirectChain.length,
+    aExpectedRedirectChain.length,
+    "confirming length of redirectChain is " + aExpectedRedirectChain.length);
+
+  is(redirectChainIncludingInternalRedirects.length,
+    aExpectedRedirectChainIncludingInternalRedirects.length,
+    "confirming length of redirectChainIncludingInternalRedirects is " +
+    aExpectedRedirectChainIncludingInternalRedirects.length);
+}
+
+function compareTruncatedChains(redirectChain, aExpectedRedirectChain) {
+  is(redirectChain.length,
+    aExpectedRedirectChain.length,
+    "confirming length of redirectChain is " + aExpectedRedirectChain.length);
+
+  for (var i = 0; i < redirectChain.length; i++) {
+    is(redirectChain[i],
+      aExpectedRedirectChain[i],
+      "redirect chain should match expected chain");
+  }
+}
+
 
 // *************** TEST 1 ***************
 
@@ -77,9 +112,11 @@ function checkLoadInfoWithTwoRedirects() {
   myXHR.open("GET", "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-2");
 
   const EXPECTED_REDIRECT_CHAIN = [
-    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-2",
-    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-1"
+    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs",
+    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs"
   ];
+
+  const EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS = EXPECTED_REDIRECT_CHAIN;
 
   // Referrer header will not change when redirect
   const EXPECTED_REFERRER =
@@ -91,29 +128,12 @@ function checkLoadInfoWithTwoRedirects() {
     is(myXHR.responseText, "checking redirectchain", "sanity check to make sure redirects succeeded");
 
     var loadinfo = SpecialPowers.wrap(myXHR).channel.loadInfo;
-    var redirectChain = loadinfo.redirectChain;
-    var redirectChainIncludingInternalRedirects = loadinfo.redirectChainIncludingInternalRedirects;
 
-    is(redirectChain.length,
-       EXPECTED_REDIRECT_CHAIN.length,
-       "two redirects, chain should have length 2");
-    is(redirectChainIncludingInternalRedirects.length,
-       EXPECTED_REDIRECT_CHAIN.length,
-       "two redirect, chainInternal should have length 2");
+    compareChains(loadinfo, EXPECTED_REDIRECT_CHAIN, EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS);
 
-    for (var i = 0; i < redirectChain.length; i++) {
-      is(redirectChain[i].principal.spec,
-        EXPECTED_REDIRECT_CHAIN[i],
-         "redirectChain at index [" + i + "] should match");
-      is(redirectChainIncludingInternalRedirects[i].principal.spec,
-         EXPECTED_REDIRECT_CHAIN[i],
-         "redirectChainIncludingInternalRedirects at index [" + i + "] should match");
-      is(redirectChain[i].referrerURI.spec,
-         EXPECTED_REFERRER,
-         "referrer should match");
-      is(redirectChain[i].remoteAddress,
-         EXPECTED_REMOTE_IP,
-         "remote address should match");
+    for (var i = 0; i < loadinfo.redirectChain.length; i++) {
+      is(loadinfo.redirectChain[i].referrerURI.spec, EXPECTED_REFERRER, "referrer should match");
+      is(loadinfo.redirectChain[i].remoteAddress, EXPECTED_REMOTE_IP, "remote address should match");
     }
 
     // move on to the next test
@@ -125,38 +145,9 @@ function checkLoadInfoWithTwoRedirects() {
   myXHR.send();
 }
 
-// ************** HELPERS ***************
-
-function compareChains(aLoadInfo, aExpectedRedirectChain, aExpectedRedirectChainIncludingInternalRedirects) {
-
-  var redirectChain = aLoadInfo.redirectChain;
-  var redirectChainIncludingInternalRedirects = aLoadInfo.redirectChainIncludingInternalRedirects;
-
-    is(redirectChain.length,
-       aExpectedRedirectChain.length,
-       "confirming length of redirectChain");
-
-    is(redirectChainIncludingInternalRedirects.length,
-       aExpectedRedirectChainIncludingInternalRedirects.length,
-       "confirming length of redirectChainIncludingInternalRedirects");
-
-    for (var i = 0; i < redirectChain.length; i++) {
-      is(redirectChain[i],
-         aExpectedRedirectChain[i],
-         "redirectChain at index [" + i + "] should match");
-    }
-
-    for (var i = 0; i < redirectChainIncludingInternalRedirects.length; i++) {
-      is(redirectChainIncludingInternalRedirects[i],
-         aExpectedRedirectChainIncludingInternalRedirects[i],
-         "redirectChainIncludingInternalRedirects at index [" + i + "] should match");
-    }
-}
-
 // *************** TEST 3 ***************
 
 function confirmCheckLoadInfoWithInternalRedirects(event) {
-
   const EXPECTED_REDIRECT_CHAIN = [
     "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-2",
     "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-1"
@@ -189,7 +180,6 @@ function checkLoadInfoWithInternalRedirects() {
 // *************** TEST 4 ***************
 
 function confirmCheckLoadInfoWithInternalRedirectsAndFallback(event) {
-
   var EXPECTED_REDIRECT_CHAIN = [
     "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-err-2",
   ];
@@ -205,7 +195,7 @@ function confirmCheckLoadInfoWithInternalRedirectsAndFallback(event) {
 
   // remove the postMessage listener and finish test
   window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback);
-  SimpleTest.finish();
+  checkHTTPURITruncation();
 }
 
 function checkLoadInfoWithInternalRedirectsAndFallback() {
@@ -214,6 +204,60 @@ function checkLoadInfoWithInternalRedirectsAndFallback() {
   window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback);
   document.getElementById("testframe").src =
     "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?iframe-redir-err-2";
+}
+
+// *************** TEST 5 ***************
+
+function checkHTTPURITruncation() {
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "http://root:toor@mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-1#baz");
+
+  const EXPECTED_REDIRECT_CHAIN = [
+    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs", // redir-1
+  ];
+
+  var loadinfo = SpecialPowers.wrap(myXHR).channel.loadInfo;
+
+  myXHR.onload = function() {
+    var redirectChain = [];
+
+    for (var i = 0; i < loadinfo.redirectChain.length; i++) {
+      redirectChain[i] = loadinfo.redirectChain[i].principal.asciiSpec;
+    }
+
+    compareTruncatedChains(redirectChain, EXPECTED_REDIRECT_CHAIN);
+
+    // move on to the next test
+    checkHTTPSURITruncation();
+  }
+  myXHR.onerror = function(e) {
+    ok(false, "xhr problem within checkHTTPURITruncation()" + e);
+  }
+  myXHR.send();
+}
+
+// *************** TEST 6 ***************
+
+function confirmCheckHTTPSURITruncation(event) {
+  const EXPECTED_REDIRECT_CHAIN = [
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs", // redir-https-2
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs", // redir-https-1
+  ];
+
+  var loadinfo = JSON.parse(event.data.loadinfo);
+  compareTruncatedChains(loadinfo.redirectChain, EXPECTED_REDIRECT_CHAIN);
+
+  // remove the postMessage listener and move on to the next test
+  window.removeEventListener("message", confirmCheckHTTPSURITruncation);
+  SimpleTest.finish();
+}
+
+function checkHTTPSURITruncation() {
+  // load the XHR request into an iframe so we can apply a CSP to the iframe
+  // a postMessage returns the result back to the main page.
+  window.addEventListener("message", confirmCheckHTTPSURITruncation);
+  document.getElementById("testframe").src =
+    "https://root:toor@example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?iframe-redir-https-2#baz";
 }
 
 // *************** START TESTS ***************
