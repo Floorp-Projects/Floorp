@@ -16,10 +16,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-#ifndef MOZ_DOM_STREAMS
-#  error "Shouldn't be compiling with this header without MOZ_DOM_STREAMS set"
-#endif
-
 namespace mozilla::dom {
 
 class TransformStream;

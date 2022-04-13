@@ -43,7 +43,6 @@ already_AddRefed<Promise> FileSystemFileHandle::GetFile() {
   return promise.forget();
 }
 
-#ifdef MOZ_DOM_STREAMS
 already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
     const FileSystemCreateWritableOptions& aOptions) {
   IgnoredErrorResult rv;
@@ -57,7 +56,6 @@ already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
 
   return promise.forget();
 }
-#endif
 
 already_AddRefed<Promise> FileSystemFileHandle::CreateSyncAccessHandle() {
   IgnoredErrorResult rv;
