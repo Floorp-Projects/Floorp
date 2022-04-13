@@ -150,6 +150,14 @@ class gfxContext final {
   void SetMatrix(const mozilla::gfx::Matrix& matrix);
   void SetMatrixDouble(const gfxMatrix& matrix);
 
+  void SetCrossProcessPaintScale(float aScale) {
+    MOZ_ASSERT(mCrossProcessPaintScale == 1.0f,
+               "Should only be initialized once");
+    mCrossProcessPaintScale = aScale;
+  }
+
+  float GetCrossProcessPaintScale() const { return mCrossProcessPaintScale; }
+
   /**
    * Returns the current transformation matrix.
    */
@@ -512,6 +520,7 @@ class gfxContext final {
   }
 
   RefPtr<DrawTarget> mDT;
+  float mCrossProcessPaintScale = 1.0f;
 };
 
 /**
