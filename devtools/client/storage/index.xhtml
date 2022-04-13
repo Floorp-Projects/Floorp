@@ -8,10 +8,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/storage.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/components/SidebarToggle.css" type="text/css"?>
 
-<!DOCTYPE window [
-  <!ENTITY % storageDTD SYSTEM "chrome://devtools/locale/storage.dtd">
-  %storageDTD;
-]>
+<!DOCTYPE window>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml">
@@ -24,23 +21,30 @@
   <popupset id="storagePopupSet">
     <menupopup id="storage-tree-popup">
       <menuitem id="storage-tree-popup-delete-all"
-                label="&storage.popupMenu.deleteAllLabel;"/>
+                data-l10n-id="storage-context-menu-delete-all"/>
       <menuitem id="storage-tree-popup-delete-all-session-cookies"
-                label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
-      <menuitem id="storage-tree-popup-delete"/>
+                data-l10n-id="storage-context-menu-delete-all-session-cookies"/>
+      <menuitem id="storage-tree-popup-delete"
+                data-l10n-id="storage-context-menu-delete"
+                data-l10n-args='{"itemName": ""}'/>
     </menupopup>
     <menupopup id="variable-view-popup">
       <menuitem id="variable-view-popup-copy"
-                label="&storage.popupMenu.copyLabel;"/>
+                data-l10n-id="storage-context-menu-copy"/>
     </menupopup>
     <menupopup id="storage-table-popup">
-      <menuitem id="storage-table-popup-add"/>
-      <menuitem id="storage-table-popup-delete"/>
-      <menuitem id="storage-table-popup-delete-all-from"/>
+      <menuitem id="storage-table-popup-add"
+                data-l10n-id="storage-context-menu-add-item"/>
+      <menuitem id="storage-table-popup-delete"
+                data-l10n-id="storage-context-menu-delete"
+                data-l10n-args='{"itemName": ""}'/>
+      <menuitem id="storage-table-popup-delete-all-from"
+                data-l10n-id="storage-context-menu-delete-all-from"
+                data-l10n-args='{"host": ""}'/>
       <menuitem id="storage-table-popup-delete-all"
-                label="&storage.popupMenu.deleteAllLabel;"/>
+                data-l10n-id="storage-context-menu-delete-all"/>
       <menuitem id="storage-table-popup-delete-all-session-cookies"
-                label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
+                data-l10n-id="storage-context-menu-delete-all-session-cookies"/>
     </menupopup>
   </popupset>
 
@@ -51,12 +55,14 @@
       <hbox id="storage-toolbar" class="devtools-toolbar devtools-input-toolbar">
         <html:input id="storage-searchbox"
                     class="devtools-filterinput"
-                    placeholder="&searchBox.placeholder;"/>
+                    data-l10n-id="storage-search-box"/>
         <hbox class="devtools-separator"/>
         <html:button id="add-button"
-                class="devtools-button add-button"></html:button>
+                class="devtools-button add-button"
+                data-l10n-id="storage-add-button"></html:button>
         <html:button id="refresh-button"
-                class="devtools-button refresh-button"></html:button>
+                class="devtools-button refresh-button"
+                data-l10n-id="storage-refresh-button"></html:button>
         <html:button class="devtools-button sidebar-toggle" hidden=""></html:button>
       </hbox>
       <vbox id="storage-table" class="theme-sidebar" flex="1"/>
