@@ -1347,29 +1347,24 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
       out_frame.video_frame_buffer()->type() !=
           VideoFrameBuffer::Type::kNative) {
     // If the frame can't be converted to I420, drop it.
-    auto i420_buffer = video_frame.video_frame_buffer()->ToI420();
-    if (!i420_buffer) {
-      RTC_LOG(LS_ERROR) << "Frame conversion for crop failed, dropping frame.";
-      return;
-    }
     int cropped_width = video_frame.width() - crop_width_;
     int cropped_height = video_frame.height() - crop_height_;
-    rtc::scoped_refptr<I420Buffer> cropped_buffer =
-        I420Buffer::Create(cropped_width, cropped_height);
+    rtc::scoped_refptr<VideoFrameBuffer> cropped_buffer;
     // TODO(ilnik): Remove scaling if cropping is too big, as it should never
     // happen after SinkWants signaled correctly from ReconfigureEncoder.
     VideoFrame::UpdateRect update_rect = video_frame.update_rect();
     if (crop_width_ < 4 && crop_height_ < 4) {
-      cropped_buffer->CropAndScaleFrom(*i420_buffer, crop_width_ / 2,
-                                       crop_height_ / 2, cropped_width,
-                                       cropped_height);
+      cropped_buffer = video_frame.video_frame_buffer()->CropAndScale(
+          crop_width_ / 2, crop_height_ / 2, cropped_width, cropped_height,
+          cropped_width, cropped_height);
       update_rect.offset_x -= crop_width_ / 2;
       update_rect.offset_y -= crop_height_ / 2;
       update_rect.Intersect(
           VideoFrame::UpdateRect{0, 0, cropped_width, cropped_height});
 
     } else {
-      cropped_buffer->ScaleFrom(*i420_buffer);
+      cropped_buffer = video_frame.video_frame_buffer()->Scale(cropped_width,
+                                                               cropped_height);
       if (!update_rect.IsEmpty()) {
         // Since we can't reason about pixels after scaling, we invalidate whole
         // picture, if anything changed.
@@ -1377,6 +1372,11 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
             VideoFrame::UpdateRect{0, 0, cropped_width, cropped_height};
       }
     }
+    if (!cropped_buffer) {
+      RTC_LOG(LS_ERROR) << "Cropping and scaling frame failed, dropping frame.";
+      return;
+    }
+
     out_frame.set_video_frame_buffer(cropped_buffer);
     out_frame.set_update_rect(update_rect);
     out_frame.set_ntp_time_ms(video_frame.ntp_time_ms());
