@@ -2109,21 +2109,23 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
 
 Address BaseCompiler::addressOfTableField(const TableDesc& table,
                                           uint32_t fieldOffset, RegPtr tls) {
-  uint32_t tableToTlsOffset =
-      wasm::Instance::offsetOfGlobalArea() + table.globalDataOffset + fieldOffset;
+  uint32_t tableToTlsOffset = wasm::Instance::offsetOfGlobalArea() +
+                              table.globalDataOffset + fieldOffset;
   return Address(tls, tableToTlsOffset);
 }
 
 void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr tls,
                                    RegI32 length) {
-  masm.load32(addressOfTableField(table, offsetof(TableInstanceData, length), tls),
-              length);
+  masm.load32(
+      addressOfTableField(table, offsetof(TableInstanceData, length), tls),
+      length);
 }
 
 void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr tls,
                                      RegPtr elements) {
-  masm.loadPtr(addressOfTableField(table, offsetof(TableInstanceData, elements), tls),
-               elements);
+  masm.loadPtr(
+      addressOfTableField(table, offsetof(TableInstanceData, elements), tls),
+      elements);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -5906,7 +5908,8 @@ void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
   Label ok;
   masm.wasmBoundsCheck32(
       Assembler::Condition::Below, index,
-      addressOfTableField(table, offsetof(TableInstanceData, length), tls), &ok);
+      addressOfTableField(table, offsetof(TableInstanceData, length), tls),
+      &ok);
   masm.wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset());
   masm.bind(&ok);
 }
@@ -6054,7 +6057,8 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
 }
 
 bool BaseCompiler::emitPostBarrierPrecise(const Maybe<RegRef>& object,
-                                          RegPtr valueAddr, RegRef prevValue, RegRef value) {
+                                          RegPtr valueAddr, RegRef prevValue,
+                                          RegRef value) {
   uint32_t bytecodeOffset = iter_.lastOpcodeOffset();
 
   // Push `object` and `value` to preserve them across the call.
@@ -10164,7 +10168,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
                            const CompilerEnvironment& compilerEnv,
                            const FuncCompileInput& func,
                            const ValTypeVector& locals,
-                           const MachineState& trapExitLayout,
+                           const RegisterOffsets& trapExitLayout,
                            size_t trapExitLayoutNumWords, Decoder& decoder,
                            StkVector& stkSource, TempAllocator* alloc,
                            MacroAssembler* masm, StackMaps* stackMaps)
@@ -10288,9 +10292,9 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
   }
 
   // Create a description of the stack layout created by GenerateTrapExit().
-  MachineState trapExitLayout;
+  RegisterOffsets trapExitLayout;
   size_t trapExitLayoutNumWords;
-  GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
+  GenerateTrapExitRegisterOffsets(&trapExitLayout, &trapExitLayoutNumWords);
 
   // The compiler's operand stack.  We reuse it across all functions so as to
   // avoid malloc/free.  Presize it to 128 elements in the hope of avoiding
