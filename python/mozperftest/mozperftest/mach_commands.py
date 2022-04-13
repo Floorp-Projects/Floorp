@@ -233,8 +233,6 @@ def _run_tests(command_context, **kwargs):
     if sys.platform == "darwin" and ON_TRY:
         run_coverage_check = False
 
-    import pytest
-
     options = "-xs"
     if kwargs.get("verbose"):
         options += "v"
@@ -243,7 +241,7 @@ def _run_tests(command_context, **kwargs):
         assert checkout_python_script(
             venv, "coverage", ["erase"], label="remove old coverage data"
         )
-    args = ["run", pytest.__file__, options, "--duration", "10", tests]
+    args = ["run", "-m", "pytest", options, "--durations", "10", tests]
     assert checkout_python_script(
         venv, "coverage", args, label="running tests", verbose=verbose
     )
