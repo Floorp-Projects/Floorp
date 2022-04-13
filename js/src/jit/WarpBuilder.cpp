@@ -2742,6 +2742,10 @@ bool WarpBuilder::build_InitElem(BytecodeLocation loc) {
   return buildIC(loc, CacheKind::SetElem, {obj, id, val});
 }
 
+bool WarpBuilder::build_InitLockedElem(BytecodeLocation loc) {
+  return build_InitElem(loc);
+}
+
 bool WarpBuilder::build_InitHiddenElem(BytecodeLocation loc) {
   return build_InitElem(loc);
 }
