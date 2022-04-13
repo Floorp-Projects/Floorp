@@ -27,6 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
     { id: 'normal', type: 'prevent-default-1', result: false },
     { id: 'normal', type: 'prevent-default-2', result: false },
     { id: 'normal', type: 'click-method', result: true },
+    { id: 'normal', type: 'show-picker', result: true },
     { id: 'normal', type: 'right-click', result: false },
     { id: 'normal', type: 'middle-click', result: false },
     { id: 'label-1', result: true },
@@ -86,6 +87,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
           break;
         case 'click-method':
           element.click();
+          break;
+        case 'show-picker':
+          SpecialPowers.wrap(document).notifyUserGestureActivation();
+          element.showPicker();
           break;
         case 'right-click':
           synthesizeMouseAtCenter(element, { button: 2 });

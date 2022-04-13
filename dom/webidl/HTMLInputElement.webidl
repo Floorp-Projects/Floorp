@@ -134,6 +134,9 @@ interface HTMLInputElement : HTMLElement {
   [Throws]
   void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 
+  [Throws, Pref="dom.input.showPicker"]
+  void showPicker();
+
   // also has obsolete members
 };
 
