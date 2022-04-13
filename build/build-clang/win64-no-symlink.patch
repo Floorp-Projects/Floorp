@@ -1,8 +1,8 @@
 diff --git a/llvm/cmake/modules/LLVMInstallSymlink.cmake b/llvm/cmake/modules/LLVMInstallSymlink.cmake
-index 3e6a2c9a2648..09fed8085c23 100644
+index b5c35f706cb7..d9f629be06a7 100644
 --- a/llvm/cmake/modules/LLVMInstallSymlink.cmake
 +++ b/llvm/cmake/modules/LLVMInstallSymlink.cmake
-@@ -4,17 +4,18 @@
+@@ -6,17 +6,18 @@ include(GNUInstallDirs)
  
  function(install_symlink name target outdir)
    set(DESTDIR $ENV{DESTDIR})
@@ -12,7 +12,7 @@ index 3e6a2c9a2648..09fed8085c23 100644
 +    set(LINK_OR_COPY copy)
 +  endif()
 +
-   set(bindir "${DESTDIR}${CMAKE_INSTALL_PREFIX}/${outdir}/")
+   set(bindir "${DESTDIR}${CMAKE_INSTALL_PREFIX}/${outdir}")
  
    message(STATUS "Creating ${name}")
  
