@@ -34,13 +34,16 @@ class ScalabilityStructureFullSvc : public ScalableVideoController {
 
  private:
   enum FramePattern {
-    kKey,
+    kNone,
+    kDeltaT2A,
     kDeltaT1,
+    kDeltaT2B,
     kDeltaT0,
   };
+  static constexpr absl::string_view kFramePatternNames[] = {
+      "None", "DeltaT2A", "DeltaT1", "DeltaT2B", "DeltaT0"};
   static constexpr int kMaxNumSpatialLayers = 3;
-  // TODO(bugs.webrtc.org/11999): Support up to 3 temporal layers.
-  static constexpr int kMaxNumTemporalLayers = 2;
+  static constexpr int kMaxNumTemporalLayers = 3;
 
   // Index of the buffer to store last frame for layer (`sid`, `tid`)
   int BufferIndex(int sid, int tid) const {
@@ -52,6 +55,7 @@ class ScalabilityStructureFullSvc : public ScalableVideoController {
   void SetDecodeTargetIsActive(int sid, int tid, bool value) {
     active_decode_targets_.set(sid * num_temporal_layers_ + tid, value);
   }
+  FramePattern NextPattern() const;
   bool TemporalLayerIsActive(int tid) const;
   static DecodeTargetIndication Dti(int sid,
                                     int tid,
@@ -60,8 +64,9 @@ class ScalabilityStructureFullSvc : public ScalableVideoController {
   const int num_spatial_layers_;
   const int num_temporal_layers_;
 
-  FramePattern next_pattern_ = kKey;
-  std::bitset<kMaxNumSpatialLayers> can_depend_on_t0_frame_for_spatial_id_ = 0;
+  FramePattern last_pattern_ = kNone;
+  std::bitset<kMaxNumSpatialLayers> can_reference_t0_frame_for_spatial_id_ = 0;
+  std::bitset<kMaxNumSpatialLayers> can_reference_t1_frame_for_spatial_id_ = 0;
   std::bitset<32> active_decode_targets_;
 };
 

@@ -10,12 +10,8 @@
 #ifndef MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L1T3_H_
 #define MODULES_VIDEO_CODING_CODECS_AV1_SCALABILITY_STRUCTURE_L1T3_H_
 
-#include <vector>
-
-#include "absl/types/optional.h"
 #include "api/transport/rtp/dependency_descriptor.h"
-#include "common_video/generic_frame_descriptor/generic_frame_info.h"
-#include "modules/video_coding/codecs/av1/scalable_video_controller.h"
+#include "modules/video_coding/codecs/av1/scalability_structure_full_svc.h"
 
 namespace webrtc {
 
@@ -25,27 +21,12 @@ namespace webrtc {
 //         |_/     |_/
 // T0     0-------0------
 // Time-> 0 1 2 3 4 5 6 7
-class ScalabilityStructureL1T3 : public ScalableVideoController {
+class ScalabilityStructureL1T3 : public ScalabilityStructureFullSvc {
  public:
+  ScalabilityStructureL1T3() : ScalabilityStructureFullSvc(1, 3) {}
   ~ScalabilityStructureL1T3() override;
 
-  StreamLayersConfig StreamConfig() const override;
   FrameDependencyStructure DependencyStructure() const override;
-
-  std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
-  absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) override;
-
- private:
-  enum FramePattern {
-    kKeyFrame,
-    kDeltaFrameT2A,
-    kDeltaFrameT1,
-    kDeltaFrameT2B,
-    kDeltaFrameT0,
-  };
-
-  FramePattern next_pattern_ = kKeyFrame;
 };
 
 }  // namespace webrtc

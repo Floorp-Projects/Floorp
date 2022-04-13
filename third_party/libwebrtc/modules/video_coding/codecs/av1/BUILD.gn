@@ -129,14 +129,21 @@ rtc_library("libaom_av1_encoder") {
 if (rtc_include_tests) {
   rtc_library("scalability_structure_tests") {
     testonly = true
-    sources = [ "scalability_structure_unittest.cc" ]
+    sources = [
+      "scalability_structure_l3t3_unittest.cc",
+      "scalability_structure_test_helpers.cc",
+      "scalability_structure_test_helpers.h",
+      "scalability_structure_unittest.cc",
+    ]
     deps = [
       ":scalability_structures",
       ":scalable_video_controller",
       "../..:chain_diff_calculator",
       "../..:frame_dependencies_calculator",
       "../../../../api/transport/rtp:dependency_descriptor",
+      "../../../../api/video:video_bitrate_allocation",
       "../../../../api/video:video_frame_type",
+      "../../../../common_video/generic_frame_descriptor",
       "../../../../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
