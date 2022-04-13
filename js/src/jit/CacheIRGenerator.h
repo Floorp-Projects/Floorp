@@ -518,7 +518,13 @@ class MOZ_RAII InlinableNativeIRGenerator {
 
   void emitNativeCalleeGuard();
 
-  void initializeInputOperand() { (void)writer.setInputOperandId(0); }
+  void initializeInputOperand() {
+    // The input operand is already initialized for FunCall.
+    if (flags_.getArgFormat() == CallFlags::FunCall) {
+      return;
+    }
+    (void)writer.setInputOperandId(0);
+  }
 
   auto emitToStringGuard(ValOperandId id, const Value& v) {
     return generator_.emitToStringGuard(id, v);
@@ -646,15 +652,16 @@ class MOZ_RAII InlinableNativeIRGenerator {
 
  public:
   InlinableNativeIRGenerator(CallIRGenerator& generator, HandleFunction callee,
-                             CallFlags flags)
+                             HandleValue newTarget, HandleValue thisValue,
+                             HandleValueArray args, CallFlags flags)
       : generator_(generator),
         writer(generator.writer),
         cx_(generator.cx_),
         callee_(callee),
-        newTarget_(generator.newTarget_),
-        thisval_(generator.thisval_),
-        args_(generator.args_),
-        argc_(generator.argc_),
+        newTarget_(newTarget),
+        thisval_(thisValue),
+        args_(args),
+        argc_(args.length()),
         flags_(flags) {}
 
   AttachDecision tryAttachStub();
