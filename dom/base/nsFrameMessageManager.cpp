@@ -131,7 +131,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
-static const char kMessageManagerCachePrefix[] = "mm";
+#define CACHE_PREFIX(type) "mm/" type
 
 nsFrameMessageManager::nsFrameMessageManager(MessageManagerCallback* aCallback,
                                              MessageManagerFlags aFlags)
@@ -1276,7 +1276,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   RefPtr<JS::Stencil> stencil;
   if (useScriptPreloader) {
     nsAutoCString cachePath;
-    rv = scache::PathifyURI(kMessageManagerCachePrefix, uri, cachePath);
+    rv = scache::PathifyURI(CACHE_PREFIX("script"), uri, cachePath);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     JS::DecodeOptions decodeOptions;
@@ -1358,7 +1358,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
 
   if (useScriptPreloader) {
     nsAutoCString cachePath;
-    rv = scache::PathifyURI(kMessageManagerCachePrefix, uri, cachePath);
+    rv = scache::PathifyURI(CACHE_PREFIX("script"), uri, cachePath);
     NS_ENSURE_SUCCESS(rv, nullptr);
     ScriptPreloader::GetChildSingleton().NoteStencil(url, cachePath, stencil,
                                                      isRunOnce);
