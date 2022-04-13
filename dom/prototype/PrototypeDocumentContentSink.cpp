@@ -671,8 +671,7 @@ nsresult PrototypeDocumentContentSink::DoneWalking() {
   if (IsChromeURI(mDocumentURI) &&
       nsXULPrototypeCache::GetInstance()->IsEnabled()) {
     bool isCachedOnDisk;
-    nsXULPrototypeCache::GetInstance()->HasPrototype(mDocumentURI,
-                                                     &isCachedOnDisk);
+    nsXULPrototypeCache::GetInstance()->HasData(mDocumentURI, &isCachedOnDisk);
     if (!isCachedOnDisk) {
       nsXULPrototypeCache::GetInstance()->WritePrototype(mCurrentPrototype);
     }
