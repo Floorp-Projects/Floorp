@@ -5,8 +5,6 @@
 <!DOCTYPE window [
 <!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
  %editMenuStrings;
-<!ENTITY % sourceEditorStrings SYSTEM "chrome://devtools/locale/sourceeditor.dtd">
- %sourceEditorStrings;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
@@ -69,9 +67,7 @@
                 accesskey="&findAgainCmd.accesskey;" command="cmd_findAgain"/>
       <menuseparator/>
       <menuitem id="se-menu-gotoLine"
-          label="&gotoLineCmd.label;"
-          accesskey="&gotoLineCmd.accesskey;"
-          key="key_gotoLine"
+          data-l10n-id="styleeditor-go-to-line"
           command="cmd_gotoLine"/>
     </menupopup>
     <menupopup id="sidebar-context" incontentshell="false">
