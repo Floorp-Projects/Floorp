@@ -7235,7 +7235,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMathMinMax(
 
 AttachDecision InlinableNativeIRGenerator::tryAttachSpreadMathMinMax(
     HandleFunction callee, bool isMax) {
-  MOZ_ASSERT(op_ == JSOp::SpreadCall);
+  MOZ_ASSERT(flags_.getArgFormat() == CallFlags::Spread);
 
   // The result will be an int32 if there is at least one argument,
   // and all the arguments are int32.
@@ -7565,7 +7565,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAdd(
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  bool forEffect = (op_ == JSOp::CallIgnoresRv);
+  bool forEffect = ignoresResult();
 
   writer.atomicsAddResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type(), forEffect);
@@ -7585,7 +7585,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsSub(
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  bool forEffect = (op_ == JSOp::CallIgnoresRv);
+  bool forEffect = ignoresResult();
 
   writer.atomicsSubResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type(), forEffect);
@@ -7605,7 +7605,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsAnd(
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  bool forEffect = (op_ == JSOp::CallIgnoresRv);
+  bool forEffect = ignoresResult();
 
   writer.atomicsAndResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type(), forEffect);
@@ -7625,7 +7625,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsOr(
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  bool forEffect = (op_ == JSOp::CallIgnoresRv);
+  bool forEffect = ignoresResult();
 
   writer.atomicsOrResult(objId, intPtrIndexId, numericValueId,
                          typedArray->type(), forEffect);
@@ -7645,7 +7645,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsXor(
       emitAtomicsReadWriteModifyOperands(callee);
 
   auto* typedArray = &args_[0].toObject().as<TypedArrayObject>();
-  bool forEffect = (op_ == JSOp::CallIgnoresRv);
+  bool forEffect = ignoresResult();
 
   writer.atomicsXorResult(objId, intPtrIndexId, numericValueId,
                           typedArray->type(), forEffect);
@@ -7740,8 +7740,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachAtomicsStore(
     return AttachDecision::NoAction;
   }
 
-  bool guardIsInt32 =
-      !Scalar::isBigIntType(elementType) && op_ != JSOp::CallIgnoresRv;
+  bool guardIsInt32 = !Scalar::isBigIntType(elementType) && !ignoresResult();
 
   if (guardIsInt32 && !args_[2].isInt32()) {
     return AttachDecision::NoAction;
@@ -9319,7 +9318,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   }
 
   // Check for special-cased native constructors.
-  if (op_ == JSOp::New) {
+  if (flags_.isConstructing()) {
     // newTarget must match the callee. CacheIR for this is emitted in
     // emitNativeCalleeGuard.
     if (callee_ != newTarget_) {
@@ -9339,7 +9338,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   }
 
   // Check for special-cased native spread calls.
-  if (op_ == JSOp::SpreadCall) {
+  if (flags_.getArgFormat() == CallFlags::Spread) {
     switch (native) {
       case InlinableNative::MathMin:
         return tryAttachSpreadMathMinMax(callee, /*isMax = */ false);
