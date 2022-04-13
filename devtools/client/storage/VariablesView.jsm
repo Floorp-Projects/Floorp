@@ -105,22 +105,22 @@ VariablesView.prototype = {
    * This new scope will be considered the parent of any other scope
    * added afterwards.
    *
-   * @param string aName
-   *        The scope's name (e.g. "Local", "Global" etc.).
+   * @param string l10nId
+   *        The scope localized string id.
    * @param string aCustomClass
    *        An additional class name for the containing element.
    * @return Scope
    *         The newly created Scope instance.
    */
-  addScope: function(aName = "", aCustomClass = "") {
+  addScope: function(l10nId = "", aCustomClass = "") {
     this._removeEmptyNotice();
     this._toggleSearchVisibility(true);
 
-    const scope = new Scope(this, aName, { customClass: aCustomClass });
+    const scope = new Scope(this, l10nId, { customClass: aCustomClass });
     this._store.push(scope);
     this._itemsByElement.set(scope._target, scope);
-    this._currHierarchy.set(aName, scope);
-    scope.header = !!aName;
+    this._currHierarchy.set(l10nId, scope);
+    scope.header = !!l10nId;
 
     return scope;
   },
@@ -397,25 +397,6 @@ VariablesView.prototype = {
   },
 
   /**
-   * Sets the text displayed for the searchbox in this container.
-   * @param string aValue
-   */
-  set searchPlaceholder(aValue) {
-    if (this._searchboxNode) {
-      this._searchboxNode.setAttribute("placeholder", aValue);
-    }
-    this._searchboxPlaceholder = aValue;
-  },
-
-  /**
-   * Gets the text displayed for the searchbox in this container.
-   * @return string
-   */
-  get searchPlaceholder() {
-    return this._searchboxPlaceholder;
-  },
-
-  /**
    * Enables variable and property searching in this view.
    * Use the "searchEnabled" setter to enable searching.
    */
@@ -441,7 +422,7 @@ VariablesView.prototype = {
       "input"
     ));
     searchbox.className = "variables-view-searchinput devtools-filterinput";
-    searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
+    searchbox.setAttribute("data-l10n-id", "storage-variable-view-search-box");
     searchbox.addEventListener("input", this._onSearchboxInput);
     searchbox.addEventListener("keydown", this._onSearchboxKeyDown);
 
@@ -1045,7 +1026,6 @@ VariablesView.prototype = {
   _list: null,
   _searchboxNode: null,
   _searchboxContainer: null,
-  _searchboxPlaceholder: "",
   _emptyTextNode: null,
   _emptyTextValue: "",
 };
@@ -1272,12 +1252,12 @@ VariablesView.getterOrSetterDeleteCallback = function(aItem) {
  *
  * @param VariablesView aView
  *        The view to contain this scope.
- * @param string aName
- *        The scope's name.
+ * @param string l10nId
+ *        The scope localized string id.
  * @param object aFlags [optional]
  *        Additional options or flags for this scope.
  */
-function Scope(aView, aName, aFlags = {}) {
+function Scope(aView, l10nId, aFlags = {}) {
   this.ownerView = aView;
 
   this._onClick = this._onClick.bind(this);
@@ -1301,7 +1281,7 @@ function Scope(aView, aName, aFlags = {}) {
   this.contextMenuId = aView.contextMenuId;
   this.separatorStr = aView.separatorStr;
 
-  this._init(aName, aFlags);
+  this._init(l10nId, aFlags);
 }
 
 Scope.prototype = {
@@ -1833,18 +1813,18 @@ Scope.prototype = {
   /**
    * Initializes this scope's id, view and binds event listeners.
    *
-   * @param string aName
-   *        The scope's name.
+   * @param string l10nId
+   *        The scope localized string id.
    * @param object aFlags [optional]
    *        Additional options or flags for this scope.
    */
-  _init: function(aName, aFlags) {
-    this._idString = generateId((this._nameString = aName));
-    this._displayScope(
-      aName,
-      `${this.targetClassName} ${aFlags.customClass}`,
-      "devtools-toolbar"
-    );
+  _init: function(l10nId, aFlags) {
+    this._idString = generateId((this._nameString = l10nId));
+    this._displayScope({
+      l10nId,
+      targetClassName: `${this.targetClassName} ${aFlags.customClass}`,
+      titleClassName: "devtools-toolbar",
+    });
     this._addEventListeners();
     this.parentNode.appendChild(this._target);
   },
@@ -1852,30 +1832,42 @@ Scope.prototype = {
   /**
    * Creates the necessary nodes for this scope.
    *
-   * @param string aName
-   *        The scope's name.
-   * @param string aTargetClassName
+   * @param Object options
+   * @param string options.l10nId [optional]
+   *        The scope localized string id.
+   * @param string options.value [optional]
+   *        The scope's name. Either this or l10nId need to be passed
+   * @param string options.targetClassName
    *        A custom class name for this scope's target element.
-   * @param string aTitleClassName [optional]
+   * @param string options.titleClassName [optional]
    *        A custom class name for this scope's title element.
    */
-  _displayScope: function(aName = "", aTargetClassName, aTitleClassName = "") {
+  _displayScope: function({
+    l10nId,
+    value,
+    targetClassName,
+    titleClassName = "",
+  }) {
     const document = this.document;
 
     const element = (this._target = document.createXULElement("vbox"));
     element.id = this._idString;
-    element.className = aTargetClassName;
+    element.className = targetClassName;
 
     const arrow = (this._arrow = document.createXULElement("hbox"));
     arrow.className = "arrow theme-twisty";
 
     const name = (this._name = document.createXULElement("label"));
     name.className = "plain name";
-    name.setAttribute("value", aName.trim());
+    if (l10nId) {
+      name.setAttribute("data-l10n-id", l10nId);
+    } else {
+      name.setAttribute("value", value);
+    }
     name.setAttribute("crop", "end");
 
     const title = (this._title = document.createXULElement("hbox"));
-    title.className = "title " + aTitleClassName;
+    title.className = "title " + titleClassName;
     title.setAttribute("align", "center");
 
     const enumerable = (this._enum = document.createXULElement("vbox"));
@@ -2608,7 +2600,7 @@ Variable.prototype = extend(Scope.prototype, {
    */
   _init: function(aName, aDescriptor) {
     this._idString = generateId((this._nameString = aName));
-    this._displayScope(aName, this.targetClassName);
+    this._displayScope({ value: aName, targetClassName: this.targetClassName });
     this._displayVariable();
     this._customizeVariable();
     this._prepareTooltips();

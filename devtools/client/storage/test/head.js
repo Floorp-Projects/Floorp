@@ -969,10 +969,11 @@ var focusSearchBoxUsingShortcut = async function(panelWin, callback) {
   const focused = once(searchBox, "focus");
 
   panelWin.focus();
-  const strings = Services.strings.createBundle(
-    "chrome://devtools/locale/storage.properties"
+
+  const shortcut = await panelWin.document.l10n.formatValue(
+    "storage-filter-key"
   );
-  synthesizeKeyShortcut(strings.GetStringFromName("storage.filter.key"));
+  synthesizeKeyShortcut(shortcut);
 
   await focused;
 
