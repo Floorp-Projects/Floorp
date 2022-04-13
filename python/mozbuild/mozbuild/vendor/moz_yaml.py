@@ -290,7 +290,7 @@ def load_moz_yaml(filename, verify=True, require_license_file=True):
     # Load and parse YAML.
     try:
         with open(filename, "r") as f:
-            manifest = yaml.safe_load(f)
+            manifest = yaml.load(f, Loader=yaml.BaseLoader)
     except IOError as e:
         if e.errno == errno.ENOENT:
             raise MozYamlVerifyError(filename, "Failed to find manifest: %s" % filename)
@@ -304,15 +304,17 @@ def load_moz_yaml(filename, verify=True, require_license_file=True):
     # Verify schema.
     if "schema" not in manifest:
         raise MozYamlVerifyError(filename, 'Missing manifest "schema"')
-    if manifest["schema"] == 1:
+    if manifest["schema"] == "1":
         schema = _schema_1()
         schema_additional = _schema_1_additional
+        schema_transform = _schema_1_transform
     else:
         raise MozYamlVerifyError(filename, "Unsupported manifest schema")
 
     try:
         schema(manifest)
         schema_additional(filename, manifest, require_license_file=require_license_file)
+        manifest = schema_transform(manifest)
     except (voluptuous.Error, ValueError) as e:
         raise MozYamlVerifyError(filename, e)
 
@@ -359,7 +361,7 @@ def _schema_1():
     """Returns Voluptuous Schema object."""
     return Schema(
         {
-            Required("schema"): 1,
+            Required("schema"): "1",
             Required("bugzilla"): {
                 Required("product"): All(str, Length(min=1)),
                 Required("component"): All(str, Length(min=1)),
@@ -519,6 +521,22 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
     # Verify YAML can be updated.
     if "vendor" in manifest:
         update_moz_yaml(filename, "", "", verify=False, write=True)
+
+
+# Do type conversion for the few things that need it.
+# Everythig is parsed as a string to (a) not cause problems with revisions that
+# are only numerals and (b) not strip leading zeros from the numbers if we just
+# converted them to string
+def _schema_1_transform(manifest):
+    if "updatebot" in manifest:
+        if "tasks" in manifest["updatebot"]:
+            for i in range(len(manifest["updatebot"]["tasks"])):
+                if "enabled" in manifest["updatebot"]["tasks"][i]:
+                    val = manifest["updatebot"]["tasks"][i]["enabled"]
+                    manifest["updatebot"]["tasks"][i]["enabled"] = (
+                        val.lower() == "true" or val.lower() == "yes"
+                    )
+    return manifest
 
 
 class UpdateActions(object):
