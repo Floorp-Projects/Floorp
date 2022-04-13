@@ -64,36 +64,47 @@ const HEADERS_L10N_IDS = {
 };
 
 // We only localize certain table headers. The headers that we do not localize
-// along with their English translation are stored in this Map for easy
-// reference.
-const NON_L10N_STRINGS = new Map([
-  ["Cache.url", "URL"],
-  ["cookies.host", "Domain"],
-  ["cookies.hostOnly", "HostOnly"],
-  ["cookies.isHttpOnly", "HttpOnly"],
-  ["cookies.isSecure", "Secure"],
-  ["cookies.path", "Path"],
-  ["cookies.sameSite", "SameSite"],
-  ["cookies.uniqueKey", "Unique key"],
-  ["extensionStorage.name", "Key"],
-  ["extensionStorage.value", "Value"],
-  ["indexedDB.autoIncrement", "Auto Increment"],
-  ["indexedDB.db", "Database Name"],
-  ["indexedDB.indexes", "Indexes"],
-  ["indexedDB.keyPath", "Key Path"],
-  ["indexedDB.name", "Key"],
-  ["indexedDB.objectStore", "Object Store Name"],
-  ["indexedDB.objectStores", "Object Stores"],
-  ["indexedDB.origin", "Origin"],
-  ["indexedDB.storage", "Storage"],
-  ["indexedDB.uniqueKey", "Unique key"],
-  ["indexedDB.value", "Value"],
-  ["indexedDB.version", "Version"],
-  ["localStorage.name", "Key"],
-  ["localStorage.value", "Value"],
-  ["sessionStorage.name", "Key"],
-  ["sessionStorage.value", "Value"],
-]);
+// along with their label are stored in this dictionary for easy reference.
+const HEADERS_NON_L10N_STRINGS = {
+  Cache: {
+    url: "URL",
+  },
+  cookies: {
+    host: "Domain",
+    hostOnly: "HostOnly",
+    isHttpOnly: "HttpOnly",
+    isSecure: "Secure",
+    path: "Path",
+    sameSite: "SameSite",
+    uniqueKey: "Unique key",
+  },
+  extensionStorage: {
+    name: "Key",
+    value: "Value",
+  },
+  indexedDB: {
+    autoIncrement: "Auto Increment",
+    db: "Database Name",
+    indexes: "Indexes",
+    keyPath: "Key Path",
+    name: "Key",
+    objectStore: "Object Store Name",
+    objectStores: "Object Stores",
+    origin: "Origin",
+    storage: "Storage",
+    uniqueKey: "Unique key",
+    value: "Value",
+    version: "Version",
+  },
+  localStorage: {
+    name: "Key",
+    value: "Value",
+  },
+  sessionStorage: {
+    name: "Key",
+    value: "Value",
+  },
+};
 
 /**
  * StorageUI is controls and builds the UI of the Storage Inspector.
@@ -672,8 +683,8 @@ class StorageUI {
    *        The field name that may need to be localized.
    */
   _getColumnName(type, name) {
-    // If the ID exists in NON_L10N_STRINGS then we do not translate it
-    const columnName = NON_L10N_STRINGS.get(`${type}.${name}`);
+    // If the ID exists in HEADERS_NON_L10N_STRINGS then we do not translate it
+    const columnName = HEADERS_NON_L10N_STRINGS[type]?.[name];
     if (columnName) {
       return columnName;
     }
@@ -1283,7 +1294,7 @@ class StorageUI {
         // need to log an error if they are not localized.
         columns[f.name] = f.name;
         console.error(
-          `No string defined in NON_L10N_STRINGS for '${type}.${f.name}'`
+          `No string defined in HEADERS_NON_L10N_STRINGS for '${type}.${f.name}'`
         );
       }
     });
