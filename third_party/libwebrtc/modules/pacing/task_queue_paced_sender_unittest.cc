@@ -469,6 +469,7 @@ namespace test {
 
     // Expected size for each probe in a cluster is twice the expected bits
     // sent during min_probe_delta.
+    // Expect one additional call since probe always starts with a small
     const TimeDelta kProbeTimeDelta = TimeDelta::Millis(2);
     const DataSize kProbeSize = kProbeRate * kProbeTimeDelta;
     const size_t kNumPacketsInProbe =
@@ -477,7 +478,7 @@ namespace test {
         packet_router,
         SendPacket(_, ::testing::Field(&PacedPacketInfo::probe_cluster_id,
                                        kProbeClusterId)))
-        .Times(kNumPacketsInProbe);
+        .Times(kNumPacketsInProbe + 1);
 
     pacer.EnqueuePackets(
         GeneratePackets(RtpPacketMediaType::kVideo, kNumPacketsInProbe));
@@ -546,7 +547,10 @@ namespace test {
     time_controller.AdvanceTime(kMinProbeDelta);
 
     // Verify the amount of probing data sent.
-    EXPECT_EQ(data_sent, kProbingRate * TimeDelta::Millis(1));
+    // Probe always starts with a small (1 byte) padding packet that's not
+    // counted into the probe rate here.
+    EXPECT_EQ(data_sent,
+              kProbingRate * TimeDelta::Millis(1) + DataSize::Bytes(1));
   }
 }  // namespace test
 }  // namespace webrtc

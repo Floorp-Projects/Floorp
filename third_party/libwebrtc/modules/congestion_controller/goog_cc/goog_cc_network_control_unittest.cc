@@ -573,7 +573,7 @@ TEST_F(GoogCcNetworkControllerTest,
   // trial, we have worse behavior.
   DataRate average_bitrate =
       AverageBitrateAfterCrossInducedLoss("googcc_unit/no_cross_loss_based");
-  RTC_DCHECK_LE(average_bitrate, DataRate::KilobitsPerSec(650));
+  RTC_DCHECK_LE(average_bitrate, DataRate::KilobitsPerSec(625));
 }
 
 TEST_F(GoogCcNetworkControllerTest,
@@ -583,7 +583,7 @@ TEST_F(GoogCcNetworkControllerTest,
   ScopedFieldTrials trial("WebRTC-Bwe-LossBasedControl/Enabled/");
   DataRate average_bitrate =
       AverageBitrateAfterCrossInducedLoss("googcc_unit/cross_loss_based");
-  RTC_DCHECK_GE(average_bitrate, DataRate::KilobitsPerSec(750));
+  RTC_DCHECK_GE(average_bitrate, DataRate::KilobitsPerSec(725));
 }
 
 TEST_F(GoogCcNetworkControllerTest, LossBasedEstimatorCapsRateAtModerateLoss) {

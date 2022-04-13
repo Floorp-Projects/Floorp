@@ -244,5 +244,69 @@ TEST(VideoStreamTest, ResolutionAdaptsToAvailableBandwidth) {
   EXPECT_GT(num_vga_frames_, 0u);
 }
 
+TEST(VideoStreamTest, SuspendsBelowMinBitrate) {
+  const DataRate kMinVideoBitrate = DataRate::KilobitsPerSec(30);
+
+  // Declared before scenario to avoid use after free.
+  std::atomic<Timestamp> last_frame_timestamp(Timestamp::MinusInfinity());
+
+  Scenario s;
+  NetworkSimulationConfig net_config;
+  net_config.bandwidth = kMinVideoBitrate * 4;
+  net_config.delay = TimeDelta::Millis(10);
+  auto* client = s.CreateClient("send", [&](CallClientConfig* c) {
+    // Min transmit rate needs to be lower than kMinVideoBitrate for this test
+    // to make sense.
+    c->transport.rates.min_rate = kMinVideoBitrate / 2;
+    c->transport.rates.start_rate = kMinVideoBitrate;
+    c->transport.rates.max_rate = kMinVideoBitrate * 2;
+  });
+  auto send_net = s.CreateMutableSimulationNode(
+      [&](NetworkSimulationConfig* c) { *c = net_config; });
+  auto ret_net = {s.CreateSimulationNode(net_config)};
+  auto* route =
+      s.CreateRoutes(client, {send_net->node()},
+                     s.CreateClient("return", CallClientConfig()), ret_net);
+
+  s.CreateVideoStream(route->forward(), [&](VideoStreamConfig* c) {
+    c->hooks.frame_pair_handlers = {[&](const VideoFramePair& pair) {
+      if (pair.repeated == 0) {
+        last_frame_timestamp = pair.capture_time;
+      }
+    }};
+    c->source.framerate = 30;
+    c->source.generator.width = 320;
+    c->source.generator.height = 180;
+    c->encoder.implementation = CodecImpl::kFake;
+    c->encoder.codec = Codec::kVideoCodecVP8;
+    c->encoder.min_data_rate = kMinVideoBitrate;
+    c->encoder.suspend_below_min_bitrate = true;
+    c->stream.pad_to_rate = kMinVideoBitrate;
+  });
+
+  // Run for a few seconds, check we have received at least one frame.
+  s.RunFor(TimeDelta::Seconds(2));
+  EXPECT_TRUE(last_frame_timestamp.load().IsFinite());
+
+  // Degrade network to below min bitrate.
+  send_net->UpdateConfig([&](NetworkSimulationConfig* c) {
+    c->bandwidth = kMinVideoBitrate * 0.9;
+  });
+
+  // Run for 20s, verify that no frames arrive that were captured after the
+  // first five seconds, allowing some margin for BWE backoff to trigger and
+  // packets already in the pipeline to potentially arrive.
+  s.RunFor(TimeDelta::Seconds(20));
+  EXPECT_GT(s.Now() - last_frame_timestamp, TimeDelta::Seconds(15));
+
+  // Relax the network constraints and run for a while more, verify that we
+  // start receiving frames again.
+  send_net->UpdateConfig(
+      [&](NetworkSimulationConfig* c) { c->bandwidth = kMinVideoBitrate * 4; });
+  last_frame_timestamp = Timestamp::MinusInfinity();
+  s.RunFor(TimeDelta::Seconds(15));
+  EXPECT_TRUE(last_frame_timestamp.load().IsFinite());
+}
+
 }  // namespace test
 }  // namespace webrtc
