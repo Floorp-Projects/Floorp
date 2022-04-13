@@ -505,7 +505,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   CacheIRWriter& writer;
   JSContext* cx_;
 
-  HandleValue callee_;
+  HandleFunction callee_;
   HandleValue newTarget_;
   HandleValue thisval_;
   HandleValueArray args_;
@@ -655,11 +655,12 @@ class MOZ_RAII InlinableNativeIRGenerator {
   }
 
  public:
-  InlinableNativeIRGenerator(CallIRGenerator& generator, CallFlags flags)
+  InlinableNativeIRGenerator(CallIRGenerator& generator, HandleFunction callee,
+                             CallFlags flags)
       : generator_(generator),
         writer(generator.writer),
         cx_(generator.cx_),
-        callee_(generator.callee_),
+        callee_(callee),
         newTarget_(generator.newTarget_),
         thisval_(generator.thisval_),
         args_(generator.args_),
