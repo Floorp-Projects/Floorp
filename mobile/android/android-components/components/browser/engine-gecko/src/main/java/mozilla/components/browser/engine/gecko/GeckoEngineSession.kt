@@ -587,6 +587,9 @@ class GeckoEngineSession(
                                 onLaunchIntentRequest(url = url, appIntent = appIntent)
                             }
                         }
+                        else -> {
+                            // no-op
+                        }
                     }
                 }
             } else {

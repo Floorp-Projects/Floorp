@@ -51,6 +51,9 @@ class ThumbnailsMiddleware(
             is TabListAction.RemoveTabsAction -> {
                 action.tabIds.forEach { thumbnailStorage.deleteThumbnail(it) }
             }
+            else -> {
+                // no-op
+            }
         }
 
         next(action)

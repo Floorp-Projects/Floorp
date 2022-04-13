@@ -47,6 +47,9 @@ internal class TabsRemovedMiddleware(
             is CustomTabListAction.RemoveCustomTabAction -> context.state.findCustomTab(action.tabId)?.let {
                 onTabsRemoved(context, listOf(it))
             }
+            else -> {
+                // no-op
+            }
         }
 
         next(action)

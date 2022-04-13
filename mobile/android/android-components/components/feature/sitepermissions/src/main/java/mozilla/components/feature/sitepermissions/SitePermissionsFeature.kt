@@ -899,6 +899,9 @@ class SitePermissionsFeature(
                     is ContentAudioCapture, is ContentAudioMicrophone -> {
                         systemPermissions.add(RECORD_AUDIO)
                     }
+                    else -> {
+                        // no-op
+                    }
                 }
             }
             return systemPermissions.all { context.isPermissionGranted((it)) }

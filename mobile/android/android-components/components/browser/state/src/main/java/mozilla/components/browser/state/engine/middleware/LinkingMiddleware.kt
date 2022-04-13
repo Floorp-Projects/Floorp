@@ -48,6 +48,9 @@ internal class LinkingMiddleware(
             is EngineAction.UnlinkEngineSessionAction -> {
                 unlink(context, action)
             }
+            else -> {
+                // no-op
+            }
         }
 
         next(action)
@@ -57,6 +60,9 @@ internal class LinkingMiddleware(
                 context.state.findTabOrCustomTab(action.tabId)?.let { tab ->
                     engineObserver = link(context, action.engineSession, tab, action.skipLoading)
                 }
+            }
+            else -> {
+                // no-op
             }
         }
 

@@ -37,6 +37,7 @@ class LoginExceptionStorageTest {
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @get:Rule
+    @Suppress("DEPRECATION")
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         LoginExceptionStorage::class.java.canonicalName,
