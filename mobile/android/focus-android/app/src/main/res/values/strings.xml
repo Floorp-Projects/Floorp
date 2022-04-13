@@ -658,7 +658,7 @@
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Go to Settings</string>
 
-    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Toggle <b>%1$s</b> to ON]]></string>
 
     <!-- Preference for altering the camera access for all websites -->
