@@ -336,17 +336,17 @@ class QSTestUtils {
 
     let blockButton = row._buttons.get("block");
     if (!isBestMatch) {
-      this.Assert.ok(
-        !blockButton,
-        "The block button is not present since the row is not a best match"
-      );
-    } else if (!UrlbarPrefs.get("bestMatch.blockingEnabled")) {
-      this.Assert.ok(
-        !blockButton,
-        "The block button is not present since blocking is disabled"
+      this.Assert.equal(
+        !!blockButton,
+        UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+        "The block button is present iff quick suggest blocking is enabled"
       );
     } else {
-      this.Assert.ok(blockButton, "The block button is present");
+      this.Assert.equal(
+        !!blockButton,
+        UrlbarPrefs.get("bestMatchBlockingEnabled"),
+        "The block button is present iff best match blocking is enabled"
+      );
     }
 
     return details;
