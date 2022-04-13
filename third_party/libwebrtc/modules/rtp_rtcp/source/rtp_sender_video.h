@@ -24,6 +24,7 @@
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
+#include "api/video/video_layers_allocation.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/absolute_capture_time_sender.h"
 #include "modules/rtp_rtcp/source/active_decode_targets_helper.h"
@@ -118,8 +119,21 @@ class RTPSenderVideo {
   // All calls to SendVideo after this call must use video_header compatible
   // with the video_structure.
   void SetVideoStructure(const FrameDependencyStructure* video_structure);
-  void SetVideoStructureUnderLock(
+  // Should only be used by a RTPSenderVideoFrameTransformerDelegate and exists
+  // to ensure correct syncronization.
+  void SetVideoStructureAfterTransformation(
       const FrameDependencyStructure* video_structure);
+
+  // Sets current active VideoLayersAllocation. The allocation will be sent
+  // using the rtp video layers allocation extension. The allocation will be
+  // sent in full on every key frame. The allocation will be sent once on a
+  // none discardable delta frame per call to this method and will not contain
+  // resolution and frame rate.
+  void SetVideoLayersAllocation(VideoLayersAllocation allocation);
+  // Should only be used by a RTPSenderVideoFrameTransformerDelegate and exists
+  // to ensure correct syncronization.
+  void SetVideoLayersAllocationAfterTransformation(
+      VideoLayersAllocation allocation);
 
   // Returns the current packetization overhead rate, in bps. Note that this is
   // the payload overhead, eg the VP8 payload headers, not the RTP headers
@@ -145,6 +159,10 @@ class RTPSenderVideo {
     RateStatistics frame_rate_fp1000s;
     int64_t last_frame_time_ms;
   };
+
+  void SetVideoStructureInternal(
+      const FrameDependencyStructure* video_structure);
+  void SetVideoLayersAllocationInternal(VideoLayersAllocation allocation);
 
   void AddRtpHeaderExtensions(
       const RTPVideoHeader& video_header,
@@ -182,10 +200,14 @@ class RTPSenderVideo {
   bool transmit_color_space_next_frame_ RTC_GUARDED_BY(send_checker_);
   std::unique_ptr<FrameDependencyStructure> video_structure_
       RTC_GUARDED_BY(send_checker_);
+  absl::optional<VideoLayersAllocation> allocation_
+      RTC_GUARDED_BY(send_checker_);
+  // Flag indicating if we should send |allocation_|.
+  bool send_allocation_ RTC_GUARDED_BY(send_checker_);
 
   // Current target playout delay.
   VideoPlayoutDelay current_playout_delay_ RTC_GUARDED_BY(send_checker_);
-  // Flag indicating if we need to propagate |current_playout_delay_| in order
+  // Flag indicating if we need to send |current_playout_delay_| in order
   // to guarantee it gets delivered.
   bool playout_delay_pending_;
   // Set by the field trial WebRTC-ForceSendPlayoutDelay to override the playout

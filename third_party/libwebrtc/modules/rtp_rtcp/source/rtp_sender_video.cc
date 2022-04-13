@@ -34,6 +34,7 @@
 #include "modules/rtp_rtcp/source/rtp_generic_frame_descriptor_extension.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
+#include "modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.h"
 #include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -129,6 +130,18 @@ absl::optional<VideoPlayoutDelay> LoadVideoPlayoutDelayOverride(
              : absl::nullopt;
 }
 
+// Some packets can be skipped and the stream can still be decoded. Those
+// packets are less likely to be retransmitted if they are lost.
+bool PacketWillLikelyBeRequestedForRestransmitionIfLost(
+    const RTPVideoHeader& video_header) {
+  return IsBaseLayer(video_header) &&
+         !(video_header.generic.has_value()
+               ? absl::c_linear_search(
+                     video_header.generic->decode_target_indications,
+                     DecodeTargetIndication::kDiscardable)
+               : false);
+}
+
 }  // namespace
 
 RTPSenderVideo::RTPSenderVideo(const Config& config)
@@ -140,6 +153,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
               : (kRetransmitBaseLayer | kConditionallyRetransmitHigherLayers)),
       last_rotation_(kVideoRotation_0),
       transmit_color_space_next_frame_(false),
+      send_allocation_(false),
       current_playout_delay_{-1, -1},
       playout_delay_pending_(false),
       forced_playout_delay_(LoadVideoPlayoutDelayOverride(config.field_trials)),
@@ -223,11 +237,15 @@ void RTPSenderVideo::SetVideoStructure(
     frame_transformer_delegate_->SetVideoStructureUnderLock(video_structure);
     return;
   }
-  // Lock is being held by SetVideoStructure() caller.
-  SetVideoStructureUnderLock(video_structure);
+  SetVideoStructureInternal(video_structure);
 }
 
-void RTPSenderVideo::SetVideoStructureUnderLock(
+void RTPSenderVideo::SetVideoStructureAfterTransformation(
+    const FrameDependencyStructure* video_structure) {
+  SetVideoStructureInternal(video_structure);
+}
+
+void RTPSenderVideo::SetVideoStructureInternal(
     const FrameDependencyStructure* video_structure) {
   RTC_DCHECK_RUNS_SERIALIZED(&send_checker_);
   if (video_structure == nullptr) {
@@ -255,6 +273,28 @@ void RTPSenderVideo::SetVideoStructureUnderLock(
   video_structure_ =
       std::make_unique<FrameDependencyStructure>(*video_structure);
   video_structure_->structure_id = structure_id;
+}
+
+void RTPSenderVideo::SetVideoLayersAllocation(
+    VideoLayersAllocation allocation) {
+  if (frame_transformer_delegate_) {
+    frame_transformer_delegate_->SetVideoLayersAllocationUnderLock(
+        std::move(allocation));
+    return;
+  }
+  SetVideoLayersAllocationInternal(std::move(allocation));
+}
+
+void RTPSenderVideo::SetVideoLayersAllocationAfterTransformation(
+    VideoLayersAllocation allocation) {
+  SetVideoLayersAllocationInternal(std::move(allocation));
+}
+
+void RTPSenderVideo::SetVideoLayersAllocationInternal(
+    VideoLayersAllocation allocation) {
+  RTC_DCHECK_RUNS_SERIALIZED(&send_checker_);
+  allocation_ = std::move(allocation);
+  send_allocation_ = true;
 }
 
 void RTPSenderVideo::AddRtpHeaderExtensions(
@@ -387,6 +427,18 @@ void RTPSenderVideo::AddRtpHeaderExtensions(
           generic_descriptor);
     }
   }
+
+  if (first_packet && send_allocation_) {
+    if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
+      packet->SetExtension<RtpVideoLayersAllocationExtension>(
+          allocation_.value());
+    } else if (PacketWillLikelyBeRequestedForRestransmitionIfLost(
+                   video_header)) {
+      VideoLayersAllocation allocation = allocation_.value();
+      allocation.resolution_and_frame_rate_is_valid = false;
+      packet->SetExtension<RtpVideoLayersAllocationExtension>(allocation);
+    }
+  }
 }
 
 bool RTPSenderVideo::SendVideo(
@@ -417,10 +469,15 @@ bool RTPSenderVideo::SendVideo(
   }
 
   MaybeUpdateCurrentPlayoutDelay(video_header);
-  if (video_header.frame_type == VideoFrameType::kVideoFrameKey &&
-      !IsNoopDelay(current_playout_delay_)) {
-    // Force playout delay on key-frames, if set.
-    playout_delay_pending_ = true;
+  if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
+    if (!IsNoopDelay(current_playout_delay_)) {
+      // Force playout delay on key-frames, if set.
+      playout_delay_pending_ = true;
+    }
+    if (allocation_) {
+      // Send the bitrate allocation on every key frame.
+      send_allocation_ = true;
+    }
   }
 
   if (video_structure_ != nullptr && video_header.generic) {
@@ -639,15 +696,11 @@ bool RTPSenderVideo::SendVideo(
   }
 
   if (video_header.frame_type == VideoFrameType::kVideoFrameKey ||
-      (IsBaseLayer(video_header) &&
-       !(video_header.generic.has_value()
-             ? absl::c_linear_search(
-                   video_header.generic->decode_target_indications,
-                   DecodeTargetIndication::kDiscardable)
-             : false))) {
-    // This frame has guaranteed delivery, no need to populate playout
+      PacketWillLikelyBeRequestedForRestransmitionIfLost(video_header)) {
+    // This frame will likely be delivered, no need to populate playout
     // delay extensions until it changes again.
     playout_delay_pending_ = false;
+    send_allocation_ = false;
   }
 
   TRACE_EVENT_ASYNC_END1("webrtc", "Video", capture_time_ms, "timestamp",
