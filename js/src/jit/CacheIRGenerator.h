@@ -516,7 +516,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   bool isFirstStub() const { return generator_.isFirstStub_; }
   bool ignoresResult() const { return generator_.op_ == JSOp::CallIgnoresRv; }
 
-  void emitNativeCalleeGuard(JSFunction* callee);
+  void emitNativeCalleeGuard();
 
   auto emitToStringGuard(ValOperandId id, const Value& v) {
     return generator_.emitToStringGuard(id, v);
