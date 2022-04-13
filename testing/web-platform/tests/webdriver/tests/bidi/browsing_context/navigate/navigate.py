@@ -4,17 +4,17 @@ import asyncio
 pytestmark = pytest.mark.asyncio
 
 
-async def test_payload(bidi_session, inline, top_context):
+async def test_payload(bidi_session, inline, new_tab):
     url = inline("<div>foo</div>")
     result = await bidi_session.browsing_context.navigate(
-        context=top_context["context"], url=url
+        context=new_tab["context"], url=url
     )
 
     assert "navigation" in result
     assert result["url"] == url
 
 
-async def test_interactive_simultaneous_navigation(bidi_session, inline, top_context):
+async def test_interactive_simultaneous_navigation(bidi_session, inline, new_tab):
     frame1_start_url = inline("frame1")
     frame2_start_url = inline("frame2")
 
@@ -23,12 +23,10 @@ async def test_interactive_simultaneous_navigation(bidi_session, inline, top_con
     )
 
     result = await bidi_session.browsing_context.navigate(
-        context=top_context["context"], url=url, wait="complete"
+        context=new_tab["context"], url=url, wait="complete"
     )
     assert result["url"] == url
-    contexts = await bidi_session.browsing_context.get_tree(
-        parent=top_context["context"]
-    )
+    contexts = await bidi_session.browsing_context.get_tree(parent=new_tab["context"])
     assert len(contexts) == 1
     assert contexts[0]["url"] == url
     assert len(contexts[0]["children"]) == 2
@@ -70,14 +68,12 @@ async def test_interactive_simultaneous_navigation(bidi_session, inline, top_con
     frame1_result = frame1_task.result()
     assert frame1_result["url"] == frame1_url
 
-    contexts = await bidi_session.browsing_context.get_tree(
-        parent=top_context["context"]
-    )
+    contexts = await bidi_session.browsing_context.get_tree(parent=new_tab["context"])
     assert contexts[0]["children"][0]["url"] == frame1_url
     assert contexts[0]["children"][1]["url"] == frame2_url
 
 
-async def test_relative_url(bidi_session, url, top_context):
+async def test_relative_url(bidi_session, new_tab, url):
     url_before = url(
         "/webdriver/tests/bidi/browsing_context/navigate/support/empty.html"
     )
@@ -85,19 +81,19 @@ async def test_relative_url(bidi_session, url, top_context):
     # Navigate to page1 with wait=interactive to make sure the document's base URI
     # was updated.
     result = await bidi_session.browsing_context.navigate(
-        context=top_context["context"], url=url_before, wait="interactive"
+        context=new_tab["context"], url=url_before, wait="interactive"
     )
     contexts = await bidi_session.browsing_context.get_tree(
-        parent=top_context["context"], max_depth=0
+        parent=new_tab["context"], max_depth=0
     )
     assert contexts[0]["url"] == url_before
 
     url_after = url_before.replace("empty.html", "other.html")
     result = await bidi_session.browsing_context.navigate(
-        context=top_context["context"], url="other.html", wait="interactive"
+        context=new_tab["context"], url="other.html", wait="interactive"
     )
     contexts = await bidi_session.browsing_context.get_tree(
-        parent=top_context["context"], max_depth=0
+        parent=new_tab["context"], max_depth=0
     )
     assert contexts[0]["url"] == url_after
     assert result["url"] == url_after
