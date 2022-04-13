@@ -3936,7 +3936,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
       ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-      if (!InitPropertyOperation(cx, JSOp(*REGS.pc), obj, name, rval)) {
+      if (!InitPropertyOperation(cx, REGS.pc, obj, name, rval)) {
         goto error;
       }
 
