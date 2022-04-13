@@ -503,7 +503,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
   CallIRGenerator& generator_;
   CacheIRWriter& writer;
   JSContext* cx_;
-  HandleScript script_;
 
   HandleValue callee_;
   HandleValue newTarget_;
@@ -512,7 +511,9 @@ class MOZ_RAII InlinableNativeIRGenerator {
   uint32_t argc_;
   CallFlags flags_;
   JSOp op_;
-  bool isFirstStub_;
+
+  HandleScript script() const { return generator_.script_; }
+  bool isFirstStub() const { return generator_.isFirstStub_; }
 
   void emitNativeCalleeGuard(JSFunction* callee);
 
@@ -657,15 +658,13 @@ class MOZ_RAII InlinableNativeIRGenerator {
       : generator_(generator),
         writer(generator.writer),
         cx_(generator.cx_),
-        script_(generator.script_),
         callee_(generator.callee_),
         newTarget_(generator.newTarget_),
         thisval_(generator.thisval_),
         args_(generator.args_),
         argc_(generator.argc_),
         flags_(flags),
-        op_(generator.op_),
-        isFirstStub_(generator.isFirstStub_) {}
+        op_(generator.op_) {}
 
   AttachDecision tryAttachStub();
 };
