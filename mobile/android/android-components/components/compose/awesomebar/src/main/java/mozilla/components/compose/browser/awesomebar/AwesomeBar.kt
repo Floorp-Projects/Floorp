@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -88,14 +90,16 @@ fun AwesomeBar(
             .background(colors.background)
     ) {
         val fetcher = remember(groups) { SuggestionFetcher(groups, profiler) }
+        val suggestions by remember {
+            derivedStateOf { fetcher.state.value }
+        }
 
         LaunchedEffect(text, fetcher) {
             fetcher.fetch(text)
         }
 
         Suggestions(
-            groups,
-            fetcher,
+            suggestions,
             colors,
             orientation,
             onSuggestionClicked,

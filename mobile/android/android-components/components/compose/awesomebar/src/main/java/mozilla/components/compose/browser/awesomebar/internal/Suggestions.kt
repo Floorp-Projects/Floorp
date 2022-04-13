@@ -20,8 +20,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Composable
 @Suppress("LongParameterList")
 internal fun Suggestions(
-    groups: List<AwesomeBar.SuggestionProviderGroup>,
-    fetcher: SuggestionFetcher,
+    suggestions: Map<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
@@ -36,30 +35,25 @@ internal fun Suggestions(
         state = state,
         modifier = Modifier.testTag("mozac.awesomebar.suggestions")
     ) {
-        val suggestions = fetcher.state.value
 
-        groups.forEach { group ->
-            val groupSuggestions = suggestions[group] ?: emptyList()
-
-            if (groupSuggestions.isNotEmpty()) {
-                group.title?.let { title ->
-                    item(group.id) {
-                        SuggestionGroup(title, colors)
-                    }
+        suggestions.forEach { (group, suggestions) ->
+            group.title?.let { title ->
+                item(group.id) {
+                    SuggestionGroup(title, colors)
                 }
+            }
 
-                items(
-                    items = groupSuggestions.take(group.limit),
-                    key = { suggestion -> "${group.id}:${suggestion.provider.id}:${suggestion.id}" }
-                ) { suggestion ->
-                    Suggestion(
-                        suggestion,
-                        colors,
-                        orientation,
-                        onSuggestionClicked = { onSuggestionClicked(group, suggestion) },
-                        onAutoComplete = { onAutoComplete(group, suggestion) }
-                    )
-                }
+            items(
+                items = suggestions.take(group.limit),
+                key = { suggestion -> "${group.id}:${suggestion.provider.id}:${suggestion.id}" }
+            ) { suggestion ->
+                Suggestion(
+                    suggestion,
+                    colors,
+                    orientation,
+                    onSuggestionClicked = { onSuggestionClicked(group, suggestion) },
+                    onAutoComplete = { onAutoComplete(group, suggestion) }
+                )
             }
         }
     }
