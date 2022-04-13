@@ -4,9 +4,9 @@
 
 #include "AccGroupInfo.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/TableAccessibleBase.h"
 
 #include "nsAccUtils.h"
-#include "TableAccessible.h"
 
 #include "States.h"
 
@@ -218,33 +218,29 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
   uint32_t itemCount = 0;
   switch (aContainer->Role()) {
     case roles::TABLE:
-      if (!aContainer->IsLocal()) {
-        break;
-      }
-      if (nsCoreUtils::GetUIntAttr(aContainer->AsLocal()->GetContent(),
-                                   nsGkAtoms::aria_rowcount,
-                                   (int32_t*)&itemCount)) {
-        break;
-      }
-
-      if (TableAccessible* tableAcc = aContainer->AsLocal()->AsTable()) {
-        return tableAcc->RowCount();
-      }
-
-      break;
-    case roles::ROW:
-      if (!aContainer->IsLocal()) {
-        break;
-      }
-      if (LocalAccessible* table =
-              nsAccUtils::TableFor(aContainer->AsLocal())) {
-        if (nsCoreUtils::GetUIntAttr(table->GetContent(),
-                                     nsGkAtoms::aria_colcount,
+      if (LocalAccessible* localContainer = aContainer->AsLocal()) {
+        if (nsCoreUtils::GetUIntAttr(localContainer->GetContent(),
+                                     nsGkAtoms::aria_rowcount,
                                      (int32_t*)&itemCount)) {
           break;
         }
+      }
 
-        if (TableAccessible* tableAcc = table->AsLocal()->AsTable()) {
+      if (TableAccessibleBase* tableAcc = aContainer->AsTableBase()) {
+        return tableAcc->RowCount();
+      }
+      break;
+    case roles::ROW:
+      if (Accessible* table = nsAccUtils::TableFor(aContainer)) {
+        if (LocalAccessible* localTable = table->AsLocal()) {
+          if (nsCoreUtils::GetUIntAttr(localTable->GetContent(),
+                                       nsGkAtoms::aria_colcount,
+                                       (int32_t*)&itemCount)) {
+            break;
+          }
+        }
+
+        if (TableAccessibleBase* tableAcc = table->AsTableBase()) {
           return tableAcc->ColCount();
         }
       }

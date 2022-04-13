@@ -59,14 +59,18 @@ add_clang_library(clangTidyMozillaModule
 %(names)s
 
   LINK_LIBS
-  clangAST
-  clangASTMatchers
-  clangBasic
-  clangLex
   clangTidy
   clangTidyReadabilityModule
   clangTidyUtils
   clangTidyMPIModule
+  )
+
+clang_target_link_libraries(clangTidyMozillaModule
+  PRIVATE
+  clangAST
+  clangASTMatchers
+  clangBasic
+  clangLex
   )"""
             % {"names": "\n".join(names)}
         )

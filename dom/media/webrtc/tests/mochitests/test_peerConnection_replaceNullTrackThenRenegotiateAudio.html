@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1763832",
+    title: "Renegotiation (audio): Start with no track and recvonly, then replace and set direction to sendrecv, then renegotiate"
+  });
+
+  runNetworkTest(async () => {
+    await pushPrefs(
+      ['media.audio_loopback_dev', ''],
+      ['media.navigator.streams.fake', true]);
+    const offerer = new RTCPeerConnection();
+    const answerer = new RTCPeerConnection();
+    const transceiverSend = offerer.addTransceiver('audio', {direction: 'recvonly'});
+
+    const add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    offerer.onicecandidate = e => add(answerer, e.candidate, generateErrorCallback());
+    answerer.onicecandidate = e => add(offerer, e.candidate, generateErrorCallback());
+
+    await offerer.setLocalDescription();
+    await answerer.setRemoteDescription(offerer.localDescription);
+    await answerer.setLocalDescription();
+    await offerer.setRemoteDescription(answerer.localDescription);
+
+    // add audio with replaceTrack, set send bit, and renegotiate
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    const [track] = stream.getAudioTracks();
+    transceiverSend.sender.replaceTrack(track);
+    transceiverSend.direction = "sendrecv";
+    const remoteStreamAvailable = new Promise(r => {
+      answerer.ontrack = ({track}) => r(new MediaStream([track]));
+    });
+
+    await offerer.setLocalDescription();
+    await answerer.setRemoteDescription(offerer.localDescription);
+    await answerer.setLocalDescription();
+    await offerer.setRemoteDescription(answerer.localDescription);
+
+    const remoteStream = await remoteStreamAvailable;
+    const h = new AudioStreamHelper();
+    await h.checkAudioFlowing(remoteStream);
+  });
+
+</script>
+</pre>
+</body>
+</html>

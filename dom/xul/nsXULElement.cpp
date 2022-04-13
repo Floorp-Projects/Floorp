@@ -1651,8 +1651,6 @@ nsresult nsXULPrototypeScript::Serialize(
   nsresult rv;
   rv = aStream->Write32(mLineNo);
   if (NS_FAILED(rv)) return rv;
-  rv = aStream->Write32(0);  // See bug 1418294.
-  if (NS_FAILED(rv)) return rv;
 
   JSContext* cx = jsapi.cx();
   MOZ_ASSERT(xpc::CompilationScope() == JS::CurrentGlobalOrNull(cx));
@@ -1708,9 +1706,6 @@ nsresult nsXULPrototypeScript::Deserialize(
 
   // Read basic prototype data
   rv = aStream->Read32(&mLineNo);
-  if (NS_FAILED(rv)) return rv;
-  uint32_t dummy;
-  rv = aStream->Read32(&dummy);  // See bug 1418294.
   if (NS_FAILED(rv)) return rv;
 
   AutoJSAPI jsapi;

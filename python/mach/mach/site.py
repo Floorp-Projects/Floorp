@@ -17,7 +17,6 @@ import shutil
 import site
 import subprocess
 import sys
-from collections import OrderedDict
 import sysconfig
 from pathlib import Path
 import tempfile
@@ -320,12 +319,8 @@ class MachSiteManager:
         if self._site_packages_source == SitePackagesSource.NONE:
             return SiteUpToDateResult(True)
         elif self._site_packages_source == SitePackagesSource.SYSTEM:
-            pthfile_lines = [
-                *self._requirements.pths_as_absolute(self._topsrcdir),
-                *sys.path,
-            ]
             _assert_pip_check(
-                self._topsrcdir, pthfile_lines, "mach", self._requirements
+                self._topsrcdir, self._sys_path(), "mach", self._requirements
             )
             return SiteUpToDateResult(True)
         elif self._site_packages_source == SitePackagesSource.VENV:
@@ -367,35 +362,17 @@ class MachSiteManager:
             if self._site_packages_source == SitePackagesSource.VENV
             else sys.executable,
         ):
-            if self._site_packages_source == SitePackagesSource.SYSTEM:
-                # Add our Mach modules to the sys.path.
-                # Note that "[0:0]" is used to ensure that Mach's modules are prioritized
-                # over the system modules. Since Mach-env activation happens so early in
-                # the Mach lifecycle, we can assume that no system packages have been
-                # imported yet, and this is a safe operation to do.
-                sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
-
-                # Remove duplicates (most likely to creep in during nested Mach calls
-                # that use the "system" python).
-                sys.path = list(OrderedDict.fromkeys(sys.path))
-            elif self._site_packages_source == SitePackagesSource.NONE:
-                # Since the system packages aren't used, clean the sys.path
-                # down to just the standard library.
-                sys.path = list(self._metadata.original_python.stdlib_paths())
-                sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
-            elif self._site_packages_source == SitePackagesSource.VENV:
-                # Don't activate Mach virtualenv if this Python process was already
-                # started from the Mach virtualenv.
-                if Path(sys.prefix) != Path(self._metadata.prefix):
-                    # Since the system packages aren't used, clean the sys.path
-                    # down to just the standard library.
-                    sys.path = list(self._metadata.original_python.stdlib_paths())
-
-                    # Activate the Mach virtualenv in the current Python context. This
-                    # automatically adds the virtualenv's "site-packages" to our scope, in
-                    # addition to our first-party/vendored modules since they're specified
-                    # in the "mach.pth" file.
-                    activate_virtualenv(self._virtualenv())
+            # Reset the sys.path to insulate ourselves from the environment.
+            # This should be safe to do, since activation of the Mach site happens so
+            # early in the Mach lifecycle that no packages should have been imported
+            # from external sources yet.
+            sys.path = self._sys_path()
+            if self._site_packages_source == SitePackagesSource.VENV:
+                # Activate the Mach virtualenv in the current Python context. This
+                # automatically adds the virtualenv's "site-packages" to our scope, in
+                # addition to our first-party/vendored modules since they're specified
+                # in the "mach.pth" file.
+                activate_virtualenv(self._virtualenv())
 
     def _build(self):
         if self._site_packages_source != SitePackagesSource.VENV:
@@ -413,12 +390,35 @@ class MachSiteManager:
             self._metadata,
         )
 
+    def _sys_path(self):
+        if self._site_packages_source == SitePackagesSource.SYSTEM:
+            stdlib_paths, system_site_paths = self._metadata.original_python.sys_path()
+            return [
+                *stdlib_paths,
+                *self._requirements.pths_as_absolute(self._topsrcdir),
+                *system_site_paths,
+            ]
+        elif self._site_packages_source == SitePackagesSource.NONE:
+            stdlib_paths = self._metadata.original_python.sys_path_stdlib()
+            return [
+                *stdlib_paths,
+                *self._requirements.pths_as_absolute(self._topsrcdir),
+            ]
+        elif self._site_packages_source == SitePackagesSource.VENV:
+            stdlib_paths = self._metadata.original_python.sys_path_stdlib()
+            return [
+                *stdlib_paths,
+                # self._requirements will be added as part of the virtualenv activation.
+            ]
+
     def _pthfile_lines(self, environment):
         return [
             # Prioritize vendored and first-party modules first.
             *self._requirements.pths_as_absolute(self._topsrcdir),
             # Then, include the virtualenv's site-packages.
-            *_deprioritize_venv_packages(environment),
+            *_deprioritize_venv_packages(
+                environment, self._site_packages_source == SitePackagesSource.VENV
+            ),
         ]
 
     def _virtualenv(self):
@@ -702,28 +702,8 @@ class CommandSiteManager:
         mach_site_packages_source = self._mach_site_packages_source
         if mach_site_packages_source == SitePackagesSource.SYSTEM:
             # When Mach is using the system environment, add it next.
-            stdlib_paths = self._metadata.original_python.stdlib_paths()
-            system_sys_path = [p for p in sys.path if p not in stdlib_paths]
-
-            # When a virtualenv is activated, it implicitly adds some paths to the
-            # sys.path. When this function is run from such an activated virtualenv,
-            # we don't want to include its paths in the pthfile because they'd be
-            # redundant - so, scrub them.
-            # Note that some platforms include just a site's $site-packages-dir to the
-            # sys.path, while other platforms (such as Windows) add the $prefix as well.
-            # We can catch these cases by matching all paths that start with $prefix.
-            prefix_normalized = os.path.normcase(
-                os.path.normpath(self._virtualenv.prefix)
-            )
-            system_sys_path = [
-                p
-                for p in system_sys_path
-                if not os.path.normcase(os.path.normpath(p)).startswith(
-                    prefix_normalized
-                )
-            ]
-
-            lines.extend(system_sys_path)
+            _, system_site_paths = self._metadata.original_python.sys_path()
+            lines.extend(system_site_paths)
         elif mach_site_packages_source == SitePackagesSource.VENV:
             # When Mach is using its on-disk virtualenv, add its site-packages directory.
             assert self._mach_virtualenv_root
@@ -733,13 +713,11 @@ class CommandSiteManager:
 
         # Add this command's vendored and first-party modules.
         lines.extend(self._requirements.pths_as_absolute(self._topsrcdir))
-        if self._populate_virtualenv:
-            # Finally, ensure that pip-installed packages are the lowest-priority
-            # source to import from.
-            lines.extend(_deprioritize_venv_packages(self._virtualenv))
-
-        # De-duplicate
-        lines = list(OrderedDict.fromkeys(lines))
+        # Finally, ensure that pip-installed packages are the lowest-priority
+        # source to import from.
+        lines.extend(
+            _deprioritize_venv_packages(self._virtualenv, self._populate_virtualenv)
+        )
 
         # Note that an on-disk virtualenv is always created for commands, even if they
         # are using the system as their site-packages source. This is to support use
@@ -804,10 +782,20 @@ class PythonVirtualenv:
         return os.path.join(normalized_venv_root, relative_path)
 
     def site_packages_dirs(self):
-        return [
-            self.resolve_sysconfig_packages_path("purelib"),
-            self.resolve_sysconfig_packages_path("platlib"),
-        ]
+        return list(
+            filter(
+                None,
+                [
+                    # On Windows, the top of the virtualenv is added to the sys.path.
+                    self.prefix if sys.platform.startswith("win") else None,
+                    # De-dupe with set literal in case purelib and platlib are identical
+                    *{
+                        self.resolve_sysconfig_packages_path("purelib"),
+                        self.resolve_sysconfig_packages_path("platlib"),
+                    },
+                ],
+            )
+        )
 
     def pip_install_with_constraints(self, pip_args):
         """Create a pip constraints file or existing packages
@@ -935,19 +923,75 @@ class ExternalPythonSite:
         self.python_path = python_executable
 
     @functools.lru_cache(maxsize=None)
-    def stdlib_paths(self):
-        stdlib_paths = subprocess.check_output(
+    def sys_path(self):
+        """Return lists of sys.path entries: one for standard library, one for the site
+
+        These two lists are calculated at the same time so that we can interpret them
+        in a single Python subprocess, as running a whole Python instance is
+        very expensive in the context of Mach initialization.
+        """
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            # Don't include items injected by IDEs into the system path.
+            if k not in ("PYTHONPATH", "PYDEVD_LOAD_VALUES_ASYNC")
+        }
+        stdlib = subprocess.Popen(
             [
                 self.python_path,
-                # Don't "import site", so we don't include system/user pip-installed
-                # packages.
+                # Don't "import site" right away, so we can split the standard library
+                # paths from the site paths.
                 "-S",
                 "-c",
-                "import sys; print(sys.path)",
+                "import sys; from collections import OrderedDict; "
+                # Skip the first item in the sys.path, as it's the working directory
+                # of the invoked script (so, in this case, "").
+                # Use list(OrderectDict...) to de-dupe items, such as when using
+                # pyenv on Linux.
+                "print(list(OrderedDict.fromkeys(sys.path[1:])))",
             ],
             universal_newlines=True,
+            env=env,
+            stdout=subprocess.PIPE,
         )
-        return ast.literal_eval(stdlib_paths)
+        system = subprocess.Popen(
+            [
+                self.python_path,
+                "-c",
+                "import os; import sys; import site; "
+                "packages = site.getsitepackages(); "
+                # Only add the "user site packages" if not in a virtualenv (which is
+                # identified by the prefix == base_prefix check
+                "packages.insert(0, site.getusersitepackages()) if "
+                "    sys.prefix == sys.base_prefix else None; "
+                # When a Python instance launches, it only adds each
+                # "site.getsitepackages()" entry if it exists on the file system.
+                # Replicate that behaviour to get a more accurate list of system paths.
+                "packages = [p for p in packages if os.path.exists(p)]; "
+                "print(packages)",
+            ],
+            universal_newlines=True,
+            env=env,
+            stdout=subprocess.PIPE,
+        )
+        # Run python processes in parallel - they take roughly the same time, so this
+        # cuts this functions run time in half.
+        stdlib_out, _ = stdlib.communicate()
+        system_out, _ = system.communicate()
+        assert stdlib.returncode == 0
+        assert system.returncode == 0
+        stdlib = ast.literal_eval(stdlib_out)
+        system = ast.literal_eval(system_out)
+        # On Windows, some paths are both part of the default sys.path *and* are included
+        # in the "site packages" list. Keep the "stdlib" one, and remove the dupe from
+        # the "system packages" list.
+        system = [path for path in system if path not in stdlib]
+        return stdlib, system
+
+    def sys_path_stdlib(self):
+        """Return list of default sys.path entries for the standard library"""
+        stdlib, _ = self.sys_path()
+        return stdlib
 
 
 @functools.lru_cache(maxsize=None)
@@ -1087,23 +1131,16 @@ def _assert_pip_check(topsrcdir, pthfile_lines, virtualenv_name, requirements):
         ] = "1"
 
 
-def _deprioritize_venv_packages(virtualenv):
+def _deprioritize_venv_packages(virtualenv, populate_virtualenv):
     # Virtualenvs implicitly add some "site packages" to the sys.path upon being
     # activated. However, Mach generally wants to prioritize the existing sys.path
     # (such as vendored packages) over packages installed to virtualenvs.
     # So, this function moves the virtualenv's site-packages to the bottom of the sys.path
     # at activation-time.
 
-    # Unixes only add "<venv>/lib/<site-packages-dir>", while Windows also
-    # includes "<venv>" itself.
-    implicitly_added_dirs = [
-        virtualenv.prefix,
-        *virtualenv.site_packages_dirs(),
-    ]
-
     return [
         line
-        for site_packages_dir in implicitly_added_dirs
+        for site_packages_dir in virtualenv.site_packages_dirs()
         # repr(...) is needed to ensure Windows path backslashes aren't mistaken for
         # escape sequences.
         # Additionally, when removing the existing "site-packages" folder's entry, we have
@@ -1111,10 +1148,15 @@ def _deprioritize_venv_packages(virtualenv):
         # * Python adds it as <venv>/lib/site-packages
         # * While sysconfig tells us it's <venv>/Lib/site-packages
         # * (note: on-disk, it's capitalized, so sysconfig is slightly more accurate).
-        for line in (
-            "import sys; sys.path = [p for p in sys.path if "
-            f"p.lower() != {repr(site_packages_dir)}.lower()]",
-            f"import sys; sys.path.append({repr(site_packages_dir)})",
+        for line in filter(
+            None,
+            (
+                "import sys; sys.path = [p for p in sys.path if "
+                f"p.lower() != {repr(site_packages_dir)}.lower()]",
+                f"import sys; sys.path.append({repr(site_packages_dir)})"
+                if populate_virtualenv
+                else None,
+            ),
         )
     ]
 
@@ -1233,7 +1275,7 @@ def activate_virtualenv(virtualenv: PythonVirtualenv):
     )
     os.environ["VIRTUAL_ENV"] = virtualenv.prefix
 
-    for path in (virtualenv.prefix, *virtualenv.site_packages_dirs()):
+    for path in virtualenv.site_packages_dirs():
         site.addsitedir(os.path.realpath(path))
 
     sys.prefix = virtualenv.prefix

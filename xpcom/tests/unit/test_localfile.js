@@ -152,12 +152,16 @@ add_task(function test_diskCapacity() {
 
 add_task(
   {
-    // TODO: Bug 1742928. Fix this on non-Mac platforms.
-    skip_if: () => AppConstants.platform != "macosx",
+    // nsIFile::CreationTime is only supported on macOS and Windows.
+    skip_if: () => !["macosx", "win"].includes(AppConstants.platform),
   },
   function test_file_creation_time() {
     const file = do_get_profile();
-    file.append("testfile");
+    // If we re-use the same file name from the other tests, even if the
+    // file.exists() check fails at 165, this test will likely fail due to the
+    // creation time being copied over from the previous instance of the file on
+    // Windows.
+    file.append("testfile-creation-time");
 
     if (file.exists()) {
       file.remove(true);
@@ -168,20 +172,7 @@ add_task(
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
     Assert.ok(file.exists());
 
-    let creationTime;
-    try {
-      creationTime = file.creationTime;
-    } catch (e) {
-      if (e.name === "NS_ERROR_NOT_AVAILABLE") {
-        // Creation time is not supported on this platform.
-        file.remove(true);
-        return;
-      }
-    }
-
-    const diff = Math.abs(creationTime - now);
-    Assert.ok(diff < MAX_TIME_DIFFERENCE);
-
+    const creationTime = file.creationTime;
     Assert.ok(creationTime === file.lastModifiedTime);
 
     file.lastModifiedTime = now + MILLIS_PER_DAY;

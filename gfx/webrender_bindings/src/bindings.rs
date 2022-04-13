@@ -1110,13 +1110,6 @@ pub extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThreadPool {
 
     let workers = Arc::new(worker.unwrap());
 
-    // This effectively leaks the thread pool. Not great but we only create one and it lives
-    // for as long as the browser.
-    // Do this to avoid intermittent race conditions with nsThreadManager shutdown.
-    // A better fix would involve removing the dependency between implicit nsThreadManager
-    // and webrender's threads, or be able to synchronously terminate rayon's thread pool.
-    mem::forget(Arc::clone(&workers));
-
     Box::into_raw(Box::new(WrThreadPool(workers)))
 }
 

@@ -9,8 +9,8 @@
     border-radius: 4px;
     font-style: normal;
     font-weight: normal;
-    font-size: 1em;
-    line-height: 1.2em;
+    font-size: 1rem;
+    line-height: 1.2rem;
     color: #15141A;
     margin-bottom: 10px;
   }
@@ -20,11 +20,11 @@
     border-radius: 4px;
     color: #15141A;
     display: inline-block;
-    font-size: 0.7em;
+    font-size: 0.85rem;
+    line-height: 1rem;
     font-style: normal;
-    line-height: 1em;
     font-weight: 600;
-    padding: 4px 8px;
+    padding: 0 8px;
     transition: background-color 200ms ease-in-out;
 
     @include theme_dark {
@@ -96,6 +96,8 @@
   }
 
   .stp_tag_picker_button {
+    font-size: 0.95rem;
+    line-height: 1.1rem;
     padding: 4px 6px;
     background-color: #F0F0F4;
     border: 1px solid #8F8F9D;

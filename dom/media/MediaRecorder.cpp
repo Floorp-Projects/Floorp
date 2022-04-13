@@ -655,14 +655,10 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       mMediaStream->RegisterTrackListener(this);
 
       uint8_t trackTypes = 0;
-      int32_t audioTracks = 0;
-      int32_t videoTracks = 0;
       for (const auto& track : mMediaStreamTracks) {
         if (track->AsAudioStreamTrack()) {
-          ++audioTracks;
           trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
         } else if (track->AsVideoStreamTrack()) {
-          ++videoTracks;
           trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
         } else {
           MOZ_CRASH("Unexpected track type");

@@ -72,6 +72,7 @@ def get_global_excludes(**lintargs):
     category="devenv",
     description="Run linters.",
     parser=setup_argument_parser,
+    virtualenv_name="lint",
 )
 def lint(command_context, *runargs, **lintargs):
     """Run linters."""

@@ -391,9 +391,10 @@ a:active {
   color: #006b9d;
 }
 
-body {
+html {
   font: menu;
 }
+
 body.theme_dark {
   color: #FBFBFE;
 }
@@ -407,8 +408,8 @@ hr {
 
 .header_large {
   margin: 12px 0 8px;
-  font-size: 1.15em;
-  line-height: 1.53em;
+  font-size: 1.25rem;
+  line-height: 1.65rem;
 }
 .header_large .stp_button {
   margin: 0;
@@ -416,14 +417,14 @@ hr {
 
 .header_medium {
   margin: 12px 0 8px;
-  font-size: 1em;
-  line-height: 1.23em;
+  font-size: 1.1rem;
+  line-height: 1.35rem;
 }
 
 .header_small {
   margin: 12px 0 8px;
-  font-size: 0.84em;
-  line-height: 1.07em;
+  font-size: 0.95rem;
+  line-height: 1.16rem;
 }
 
 .header_flex {
@@ -438,8 +439,8 @@ hr {
 
 p {
   margin: 8px 0;
-  font-size: 0.84em;
-  line-height: 1.07em;
+  font-size: 0.95rem;
+  line-height: 1.16rem;
 }
 
 .stp_panel_container {
@@ -2030,8 +2031,8 @@ body.theme_dark #stp_style_guide {
   border-radius: 4px;
   font-style: normal;
   font-weight: normal;
-  font-size: 1em;
-  line-height: 1.2em;
+  font-size: 1rem;
+  line-height: 1.2rem;
   color: #15141A;
   margin-bottom: 10px;
 }
@@ -2040,11 +2041,11 @@ body.theme_dark #stp_style_guide {
   border-radius: 4px;
   color: #15141A;
   display: inline-block;
-  font-size: 0.7em;
+  font-size: 0.85rem;
+  line-height: 1rem;
   font-style: normal;
-  line-height: 1em;
   font-weight: 600;
-  padding: 4px 8px;
+  padding: 0 8px;
   transition: background-color 200ms ease-in-out;
 }
 body.theme_dark .stp_tag_picker .stp_tag_picker_tag {
@@ -2106,6 +2107,8 @@ body.theme_dark .stp_tag_picker .stp_tag_picker_input:focus {
   outline: 1px solid #0060DF;
 }
 .stp_tag_picker .stp_tag_picker_button {
+  font-size: 0.95rem;
+  line-height: 1.1rem;
   padding: 4px 6px;
   background-color: #F0F0F4;
   border: 1px solid #8F8F9D;
@@ -2134,10 +2137,10 @@ body.theme_dark .stp_tag_picker .stp_tag_picker_input:focus {
   display: inline-block;
   background: #F0F0F4;
   border-radius: 4px;
-  font-size: 0.77em;
+  font-size: 0.85rem;
+  line-height: 1rem;
   font-style: normal;
   font-weight: 600;
-  line-height: 1.2em;
   margin-inline-end: 8px;
   margin-bottom: 8px;
   padding: 4px 8px;
@@ -2200,8 +2203,8 @@ body.theme_dark .stp_article_list .stp_article_list_link:hover, body.theme_dark 
 .stp_article_list .stp_article_list_header {
   font-style: normal;
   font-weight: 600;
-  font-size: 0.85em;
-  line-height: 1.27em;
+  font-size: 0.95rem;
+  line-height: 1.18rem;
   color: #15141A;
   margin: 0 0 4px;
   -webkit-line-clamp: 2;
@@ -2217,8 +2220,8 @@ body.theme_dark .stp_article_list .stp_article_list_header {
 .stp_article_list .stp_article_list_publisher {
   font-style: normal;
   font-weight: normal;
-  font-size: 0.85em;
-  line-height: 1.27em;
+  font-size: 0.95rem;
+  line-height: 1.18rem;
   color: #52525E;
   margin: 4px 0 0;
 }
@@ -2231,7 +2234,6 @@ body.theme_dark .stp_article_list .stp_article_list_publisher {
   justify-content: space-between;
   align-items: center;
   margin: 16px 0 12px;
-  font-size: 1em;
   font-weight: 600;
 }
 .stp_header .stp_header_logo {
@@ -2258,10 +2260,10 @@ body.theme_dark .stp_header .stp_header_logo {
 }
 .stp_button.stp_button_text {
   color: #0060DF;
-  font-size: 0.85em;
+  font-size: 0.95rem;
+  line-height: 1.2rem;
   font-style: normal;
   font-weight: 600;
-  line-height: 1.27em;
 }
 .stp_button.stp_button_text:focus {
   text-decoration: underline;
@@ -2282,11 +2284,11 @@ body.theme_dark .stp_button.stp_button_text {
   background: #0060DF;
   border-radius: 4px;
   color: #FBFBFE;
-  font-size: 0.85em;
+  font-size: 0.85rem;
+  line-height: 1rem;
   font-style: normal;
   font-weight: 600;
   justify-content: center;
-  line-height: 1.27em;
   padding: 6px 12px;
 }
 .stp_button.stp_button_primary:focus {
@@ -2314,10 +2316,10 @@ body.theme_dark .stp_button.stp_button_primary:focus {
   background: #F0F0F4;
   border-radius: 4px;
   color: #15141A;
-  font-size: 0.85em;
+  font-size: 0.85rem;
+  line-height: 1rem;
   font-style: normal;
   font-weight: 600;
-  line-height: 1.27em;
   padding: 6px 12px;
 }
 .stp_button.stp_button_secondary:focus {
@@ -2347,12 +2349,12 @@ body.theme_dark .stp_button.stp_button_secondary:focus {
   padding: 8px 12px;
 }
 .stp_button_wide .stp_button.stp_button_primary {
-  font-size: 1em;
-  line-height: 1.22em;
+  font-size: 1.1rem;
+  line-height: 1.35rem;
 }
 .stp_button_wide .stp_button.stp_button_secondary {
-  font-size: 0.85em;
-  line-height: 1.07em;
+  font-size: 0.85rem;
+  line-height: 1rem;
 }
 
 .stp_button_wide .stp_button {

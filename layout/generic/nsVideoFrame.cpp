@@ -319,7 +319,10 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                         ReflowChildFlags::Default);
 
       if (child->GetSize() != oldChildSize) {
-        MOZ_ASSERT(child->IsPrimaryFrame(),
+        // We might find non-primary frames in printing due to
+        // ReplicateFixedFrames, but we don't care about that.
+        MOZ_ASSERT(child->IsPrimaryFrame() ||
+                       PresContext()->IsPrintingOrPrintPreview(),
                    "We only look at the primary frame in ReflowFinished");
         if (!mReflowCallbackPosted) {
           mReflowCallbackPosted = true;
