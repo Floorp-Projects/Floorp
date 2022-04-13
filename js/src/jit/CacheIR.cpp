@@ -7927,7 +7927,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectIs(
   HandleValue lhs = args_[0];
   HandleValue rhs = args_[1];
 
-  if (!isFirstStub_) {
+  if (!isFirstStub()) {
     writer.sameValueResult(lhsId, rhsId);
   } else if (lhs.isNumber() && rhs.isNumber() &&
              !(lhs.isInt32() && rhs.isInt32())) {
@@ -8177,7 +8177,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSetHas(
   // Assume the hash key will likely always have the same type when attaching
   // the first stub. If the call is polymorphic on the hash key, attach a stub
   // which handles any value.
-  if (isFirstStub_) {
+  if (isFirstStub()) {
     switch (args_[0].type()) {
       case ValueType::Double:
       case ValueType::Int32:
@@ -8265,7 +8265,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapHas(
   // Assume the hash key will likely always have the same type when attaching
   // the first stub. If the call is polymorphic on the hash key, attach a stub
   // which handles any value.
-  if (isFirstStub_) {
+  if (isFirstStub()) {
     switch (args_[0].type()) {
       case ValueType::Double:
       case ValueType::Int32:
@@ -8353,7 +8353,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachMapGet(
   // Assume the hash key will likely always have the same type when attaching
   // the first stub. If the call is polymorphic on the hash key, attach a stub
   // which handles any value.
-  if (isFirstStub_) {
+  if (isFirstStub()) {
     switch (args_[0].type()) {
       case ValueType::Double:
       case ValueType::Int32:
@@ -8654,7 +8654,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachIsConstructing(
     HandleFunction callee) {
   // Self-hosted code calls this with no arguments in function scripts.
   MOZ_ASSERT(argc_ == 0);
-  MOZ_ASSERT(script_->isFunction());
+  MOZ_ASSERT(script()->isFunction());
 
   // Initialize the input operand.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -8808,7 +8808,7 @@ InlinableNativeIRGenerator::tryAttachArrayIteratorPrototypeOptimizable(
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
 
-  if (!isFirstStub_) {
+  if (!isFirstStub()) {
     // Attach only once to prevent slowdowns for polymorphic calls.
     return AttachDecision::NoAction;
   }
@@ -8847,7 +8847,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachObjectCreate(
     return AttachDecision::NoAction;
   }
 
-  if (!isFirstStub_) {
+  if (!isFirstStub()) {
     // Attach only once to prevent slowdowns for polymorphic calls.
     return AttachDecision::NoAction;
   }
@@ -8941,7 +8941,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor(
     return AttachDecision::NoAction;
   }
 
-  if (!isFirstStub_) {
+  if (!isFirstStub()) {
     // Attach only once to prevent slowdowns for polymorphic calls.
     return AttachDecision::NoAction;
   }
