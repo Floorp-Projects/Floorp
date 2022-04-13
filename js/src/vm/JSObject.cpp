@@ -3207,26 +3207,22 @@ JS_PUBLIC_API void js::DumpBacktrace(JSContext* cx) {
 
 /* * */
 
-bool JSObject::canHaveFixedElements() const {
-  return (is<ArrayObject>() || IF_RECORD_TUPLE(is<TupleType>(), false));
-}
-
 js::gc::AllocKind JSObject::allocKindForTenure(
     const js::Nursery& nursery) const {
   using namespace js::gc;
 
   MOZ_ASSERT(IsInsideNursery(this));
 
-  if (canHaveFixedElements()) {
-    const NativeObject& nobj = as<NativeObject>();
-    MOZ_ASSERT(nobj.numFixedSlots() == 0);
+  if (is<ArrayObject>()) {
+    const ArrayObject& aobj = as<ArrayObject>();
+    MOZ_ASSERT(aobj.numFixedSlots() == 0);
 
     /* Use minimal size object if we are just going to copy the pointer. */
-    if (!nursery.isInside(nobj.getElementsHeader())) {
+    if (!nursery.isInside(aobj.getElementsHeader())) {
       return gc::AllocKind::OBJECT0_BACKGROUND;
     }
 
-    size_t nelements = nobj.getDenseCapacity();
+    size_t nelements = aobj.getDenseCapacity();
     return ForegroundToBackgroundAllocKind(GetGCArrayKind(nelements));
   }
 
