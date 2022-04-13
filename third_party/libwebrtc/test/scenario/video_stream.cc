@@ -265,6 +265,7 @@ VideoEncoderConfig CreateVideoEncoderConfig(VideoStreamConfig config) {
   if (config.encoder.max_framerate) {
     for (auto& layer : encoder_config.simulcast_layers) {
       layer.max_framerate = *config.encoder.max_framerate;
+      layer.min_bitrate_bps = config.encoder.min_data_rate->bps_or(-1);
     }
   }
 
@@ -412,6 +413,8 @@ SendVideoStream::SendVideoStream(CallClient* sender,
   send_config.encoder_settings.encoder_factory = encoder_factory_.get();
   send_config.encoder_settings.bitrate_allocator_factory =
       bitrate_allocator_factory_.get();
+  send_config.suspend_below_min_bitrate =
+      config.encoder.suspend_below_min_bitrate;
 
   sender_->SendTask([&] {
     if (config.stream.fec_controller_factory) {
