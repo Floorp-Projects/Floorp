@@ -255,6 +255,29 @@ add_task(async function testOOPiframe() {
   });
 });
 
+add_task(async function testOOPiframeScale() {
+  let scale = 2;
+  await runTest({
+    html: `<!DOCTYPE html>
+      <meta charset=utf-8>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        body {
+          background: yellow;
+          margin: 0;
+        }
+      </style>
+      <iframe frameborder="0" style="width: 300px; height: 300px" src="http://example.net/tests/toolkit/components/extensions/test/mochitest/file_green_blue.html"></iframe>
+    `,
+    coords: [
+      { x: 20 * scale, y: 20 * scale, color: [0, 255, 0] },
+      { x: 200 * scale, y: 20 * scale, color: [0, 0, 255] },
+      { x: 20 * scale, y: 200 * scale, color: [0, 0, 255] },
+    ],
+    scale,
+  });
+});
+
 add_task(async function testCaptureTabPermissions() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
