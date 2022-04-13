@@ -43,6 +43,6 @@ TEST(DecisionLogic, CreateAndDestroy) {
   logic->SetSampleRate(fs_hz, output_size_samples);
 }
 
-// TODO(hlundin): Write more tests.
+// TODO(jakobi): Write more tests.
 
 }  // namespace webrtc
