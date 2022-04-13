@@ -48,12 +48,6 @@ sealed class Event {
     object StartOnHomeEnterHomeScreen : Event()
     object StartOnHomeOpenTabsTray : Event()
 
-    // Recent bookmarks
-    object BookmarkClicked : Event()
-    object ShowAllBookmarks : Event()
-    object RecentBookmarksShown : Event()
-    data class RecentBookmarkCount(val count: Int) : Event()
-
     // Recently visited/Recent searches
     object RecentSearchesGroupDeleted : Event()
 

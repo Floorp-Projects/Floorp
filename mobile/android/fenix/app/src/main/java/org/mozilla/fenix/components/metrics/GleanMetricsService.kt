@@ -16,7 +16,6 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
-import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchTerms
@@ -158,25 +157,10 @@ private val Event.wrapper: EventWrapper<*>?
             { StartOnHome.openTabsTray.record(it) }
         )
 
-        is Event.BookmarkClicked -> EventWrapper<NoExtraKeys>(
-            { RecentBookmarks.bookmarkClicked.add() }
-        )
-
-        is Event.ShowAllBookmarks -> EventWrapper<NoExtraKeys>(
-            { RecentBookmarks.showAllBookmarks.add() }
-        )
-
         is Event.RecentSearchesGroupDeleted -> EventWrapper<NoExtraKeys>(
             { RecentSearches.groupDeleted.record(it) }
         )
 
-        is Event.RecentBookmarksShown -> EventWrapper<NoExtraKeys>(
-            { RecentBookmarks.shown.record(it) }
-        )
-
-        is Event.RecentBookmarkCount -> EventWrapper<NoExtraKeys>(
-            { RecentBookmarks.recentBookmarksCount.set(this.count.toLong()) },
-        )
         is Event.SearchTermGroupCount -> EventWrapper(
             { SearchTerms.numberOfSearchTermGroup.record(it) },
             { SearchTerms.numberOfSearchTermGroupKeys.valueOf(it) }

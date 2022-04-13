@@ -13,7 +13,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Awesomebar
-import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -62,21 +61,6 @@ class GleanMetricsServiceTest {
         assertFalse(Awesomebar.openedTabSuggestionClicked.testHasValue())
         gleanService.track(Event.OpenedTabSuggestionClicked)
         assertTrue(Awesomebar.openedTabSuggestionClicked.testHasValue())
-    }
-
-    @Test
-    fun `Home screen recent bookmarks events are correctly recorded`() {
-        assertFalse(RecentBookmarks.shown.testHasValue())
-        gleanService.track(Event.RecentBookmarksShown)
-        assertTrue(RecentBookmarks.shown.testHasValue())
-
-        assertFalse(RecentBookmarks.bookmarkClicked.testHasValue())
-        gleanService.track(Event.BookmarkClicked)
-        assertTrue(RecentBookmarks.bookmarkClicked.testHasValue())
-
-        assertFalse(RecentBookmarks.showAllBookmarks.testHasValue())
-        gleanService.track(Event.ShowAllBookmarks)
-        assertTrue(RecentBookmarks.showAllBookmarks.testHasValue())
     }
 
     @Test

@@ -11,12 +11,11 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
@@ -60,11 +59,11 @@ class DefaultRecentBookmarksController(
             from = BrowserDirection.FromHome,
             flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL)
         )
-        activity.components.core.metrics.track(Event.BookmarkClicked)
+        RecentBookmarks.bookmarkClicked.add()
     }
 
     override fun handleShowAllBookmarksClicked() {
-        activity.components.core.metrics.track(Event.ShowAllBookmarks)
+        RecentBookmarks.showAllBookmarks.add()
         dismissSearchDialogIfDisplayed()
         navController.navigate(
             HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)

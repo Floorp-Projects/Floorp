@@ -10,22 +10,21 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
+import org.mozilla.fenix.GleanMetrics.RecentBookmarks as RecentBookmarksMetrics
 
 class RecentBookmarksViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
     val interactor: RecentBookmarksInteractor,
-    val metrics: MetricController
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
-        metrics.track(Event.RecentBookmarksShown)
+        RecentBookmarksMetrics.shown.record(NoExtras())
     }
 
     companion object {
