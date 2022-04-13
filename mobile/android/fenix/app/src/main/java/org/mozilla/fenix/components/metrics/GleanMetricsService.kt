@@ -19,7 +19,6 @@ import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.GleanMetrics.RecentSearches
-import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
@@ -158,26 +157,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.StartOnHomeOpenTabsTray -> EventWrapper<NoExtraKeys>(
             { StartOnHome.openTabsTray.record(it) }
-        )
-
-        is Event.OpenRecentTab -> EventWrapper<NoExtraKeys>(
-            { RecentTabs.recentTabOpened.record(it) }
-        )
-
-        is Event.OpenInProgressMediaTab -> EventWrapper<NoExtraKeys>(
-            { RecentTabs.inProgressMediaTabOpened.record(it) }
-        )
-
-        is Event.ShowAllRecentTabs -> EventWrapper<NoExtraKeys>(
-            { RecentTabs.showAllClicked.record(it) }
-        )
-
-        is Event.RecentTabsSectionIsVisible -> EventWrapper<NoExtraKeys>(
-            { RecentTabs.sectionVisible.set(true) }
-        )
-
-        is Event.RecentTabsSectionIsNotVisible -> EventWrapper<NoExtraKeys>(
-            { RecentTabs.sectionVisible.set(false) }
         )
 
         is Event.BookmarkClicked -> EventWrapper<NoExtraKeys>(

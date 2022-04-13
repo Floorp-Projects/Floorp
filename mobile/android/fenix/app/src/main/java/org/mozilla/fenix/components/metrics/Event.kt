@@ -48,13 +48,6 @@ sealed class Event {
     object StartOnHomeEnterHomeScreen : Event()
     object StartOnHomeOpenTabsTray : Event()
 
-    // Recent tabs
-    object ShowAllRecentTabs : Event()
-    object OpenRecentTab : Event()
-    object OpenInProgressMediaTab : Event()
-    object RecentTabsSectionIsVisible : Event()
-    object RecentTabsSectionIsNotVisible : Event()
-
     // Recent bookmarks
     object BookmarkClicked : Event()
     object ShowAllBookmarks : Event()

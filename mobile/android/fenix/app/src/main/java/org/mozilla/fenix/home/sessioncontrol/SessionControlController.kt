@@ -35,6 +35,7 @@ import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
+import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -647,16 +648,12 @@ class DefaultSessionControlController(
     }
 
     override fun handleReportSessionMetrics(state: AppState) {
-        with(metrics) {
-            track(
-                if (state.recentTabs.isEmpty()) {
-                    Event.RecentTabsSectionIsNotVisible
-                } else {
-                    Event.RecentTabsSectionIsVisible
-                }
-            )
-
-            track(Event.RecentBookmarkCount(state.recentBookmarks.size))
+        if (state.recentTabs.isEmpty()) {
+            RecentTabs.sectionVisible.set(false)
+        } else {
+            RecentTabs.sectionVisible.set(true)
         }
+
+        metrics.track(Event.RecentBookmarkCount(state.recentBookmarks.size))
     }
 }
