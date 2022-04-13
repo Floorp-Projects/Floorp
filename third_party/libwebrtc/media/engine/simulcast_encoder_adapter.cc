@@ -377,7 +377,7 @@ int SimulcastEncoderAdapter::Encode(
   }
 
   // Temporary thay may hold the result of texture to i420 buffer conversion.
-  rtc::scoped_refptr<I420BufferInterface> src_buffer;
+  rtc::scoped_refptr<VideoFrameBuffer> src_buffer;
   int src_width = input_image.width();
   int src_height = input_image.height();
   for (size_t stream_idx = 0; stream_idx < streaminfos_.size(); ++stream_idx) {
@@ -433,12 +433,14 @@ int SimulcastEncoderAdapter::Encode(
       }
     } else {
       if (src_buffer == nullptr) {
-        src_buffer = input_image.video_frame_buffer()->ToI420();
+        src_buffer = input_image.video_frame_buffer();
       }
-      rtc::scoped_refptr<I420Buffer> dst_buffer =
-          I420Buffer::Create(dst_width, dst_height);
-
-      dst_buffer->ScaleFrom(*src_buffer);
+      rtc::scoped_refptr<VideoFrameBuffer> dst_buffer =
+          src_buffer->Scale(dst_width, dst_height);
+      if (!dst_buffer) {
+        RTC_LOG(LS_ERROR) << "Failed to scale video frame";
+        return WEBRTC_VIDEO_CODEC_ENCODER_FAILURE;
+      }
 
       // UpdateRect is not propagated to lower simulcast layers currently.
       // TODO(ilnik): Consider scaling UpdateRect together with the buffer.
