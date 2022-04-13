@@ -81,7 +81,8 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader() = default;
 
 NS_IMPL_ISUPPORTS(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
-#define JSSUB_CACHE_PREFIX(aType) "jssubloader/" aType
+#define JSSUB_CACHE_PREFIX(aScopeType, aCompilationTarget) \
+  "jssubloader/" aScopeType "/" aCompilationTarget
 
 static void SubscriptCachePath(JSContext* cx, nsIURI* uri,
                                JS::HandleObject targetObj,
@@ -89,9 +90,9 @@ static void SubscriptCachePath(JSContext* cx, nsIURI* uri,
   // StartupCache must distinguish between non-syntactic vs global when
   // computing the cache key.
   if (!JS_IsGlobalObject(targetObj)) {
-    PathifyURI(JSSUB_CACHE_PREFIX("non-syntactic"), uri, cachePath);
+    PathifyURI(JSSUB_CACHE_PREFIX("non-syntactic", "script"), uri, cachePath);
   } else {
-    PathifyURI(JSSUB_CACHE_PREFIX("global"), uri, cachePath);
+    PathifyURI(JSSUB_CACHE_PREFIX("global", "script"), uri, cachePath);
   }
 }
 
