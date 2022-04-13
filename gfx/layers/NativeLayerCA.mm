@@ -351,22 +351,16 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
     }
   }
 
-  // We're going to do a full update now, which requires a transaction. Update all of the
-  // sublayers. Afterwards, only continue processing the sublayers which have an extent.
+  // We're going to do a full update now, which requires a transaction.
   AutoCATransaction transaction;
-  nsTArray<NativeLayerCA*> sublayersWithExtent;
   for (auto layer : aSublayers) {
     mustRebuild |= layer->WillUpdateAffectLayers(aRepresentation);
     layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All);
-    CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation);
-    if (!caLayer.masksToBounds || !NSIsEmptyRect(caLayer.bounds)) {
-      sublayersWithExtent.AppendElement(layer);
-    }
   }
 
   if (mustRebuild) {
     // Bug 1731821 should eliminate this most of this logic and allow us to unconditionally
-    // accept sublayersWithExtent.
+    // accept aSublayers.
 
     // We're going to check for an opportunity to isolate the topmost video layer. We'll avoid
     // modifying mRootCALayer.sublayers unless we absolutely must, which will avoid flickering
@@ -378,13 +372,11 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
     //    video might have changed in some way that doesn't prevent isolation, so ignore them.
     //    Leave our sublayers unchanged.
 
-    uint32_t sublayersCount = sublayersWithExtent.Length();
-
     // Define a block we'll use to accept the provided sublayers if we must. In the different
     // cases, we'll call this at different times.
-    auto acceptProvidedSublayers = [&]() {
-      NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:sublayersCount];
-      for (auto layer : sublayersWithExtent) {
+    void (^acceptProvidedSublayers)() = ^() {
+      NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:aSublayers.Length()];
+      for (auto layer : aSublayers) {
         [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
       }
       mRootCALayer.sublayers = sublayers;
@@ -393,9 +385,8 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
     // See if the top layer is already rooted in our mRootCALayer. If it is, then we can check
     // for isolation without first disrupting our sublayers.
     bool topLayerIsRooted =
-        sublayersCount &&
-        (sublayersWithExtent.LastElement()->UnderlyingCALayer(aRepresentation).superlayer ==
-         mRootCALayer);
+        aSublayers.Length() &&
+        (aSublayers.LastElement()->UnderlyingCALayer(aRepresentation).superlayer == mRootCALayer);
 
     if (!topLayerIsRooted) {
       // We have to accept the provided sublayers. We may still isolate, but it's because the
@@ -408,14 +399,14 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
     // them and isolate a single video layer. It's important that the topmost layer is a
     // child of mRootCALayer for this logic to work.
     MOZ_DIAGNOSTIC_ASSERT(
-        !sublayersCount ||
-            (sublayersWithExtent.LastElement()->UnderlyingCALayer(aRepresentation).superlayer ==
+        !aSublayers.Length() ||
+            (aSublayers.LastElement()->UnderlyingCALayer(aRepresentation).superlayer ==
              mRootCALayer),
         "The topmost layer must be a child of mRootCALayer.");
 
     bool didIsolate = false;
     if (mightIsolate && aWindowIsFullscreen && !aMouseMovedRecently) {
-      CALayer* isolatedLayer = FindVideoLayerToIsolate(aRepresentation, sublayersWithExtent);
+      CALayer* isolatedLayer = FindVideoLayerToIsolate(aRepresentation, aSublayers);
       if (isolatedLayer) {
         // No matter what happens next, we did choose to isolate.
         didIsolate = true;
@@ -454,7 +445,7 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
 }
 
 CALayer* NativeLayerRootCA::Representation::FindVideoLayerToIsolate(
-    WhichRepresentation aRepresentation, const nsTArray<NativeLayerCA*>& aSublayers) {
+    WhichRepresentation aRepresentation, const nsTArray<RefPtr<NativeLayerCA>>& aSublayers) {
   // Run a heuristic to determine if any one of aSublayers is a video layer that should be
   // isolated. These layers are ordered back-to-front. This function will return a candidate
   // CALayer if all of the following are true:
