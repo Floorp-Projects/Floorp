@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/str_replace.h"
+#include "api/media_stream_track.h"
 #include "api/rtp_parameters.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
@@ -31,7 +32,6 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/port.h"
 #include "pc/media_stream.h"
-#include "pc/media_stream_track.h"
 #include "pc/test/fake_data_channel_provider.h"
 #include "pc/test/fake_peer_connection_for_stats.h"
 #include "pc/test/mock_data_channel.h"
