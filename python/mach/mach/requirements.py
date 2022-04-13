@@ -62,12 +62,10 @@ class MachEnvRequirements:
         self.vendored_requirements = []
 
     def pths_as_absolute(self, topsrcdir: str):
-        return sorted(
-            [
-                os.path.normcase(Path(topsrcdir) / pth.path)
-                for pth in (self.pth_requirements + self.vendored_requirements)
-            ]
-        )
+        return [
+            os.path.normcase(Path(topsrcdir) / pth.path)
+            for pth in (self.pth_requirements + self.vendored_requirements)
+        ]
 
     @classmethod
     def from_requirements_definition(
