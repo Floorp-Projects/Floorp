@@ -111,6 +111,8 @@ const kSafeSchemes = [
   "xmpp",
 ];
 
+const STANDARD_SAFE_PROTOCOLS = kSafeSchemes;
+
 // Note that even if the scheme fits the criteria for a web-handled scheme
 // (ie it is compatible with the checks registerProtocolHandler uses), it may
 // not be web-handled - it could still be handled via the OS by another app.
@@ -275,6 +277,7 @@ var E10SUtils = {
   PRIVILEGEDMOZILLA_REMOTE_TYPE,
   FISSION_WEB_REMOTE_TYPE,
   SERVICEWORKER_REMOTE_TYPE,
+  STANDARD_SAFE_PROTOCOLS,
 
   /**
    * @param aURI The URI of the about page
