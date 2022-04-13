@@ -4409,6 +4409,11 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     mStartOffline = true;
   }
 
+  // On Windows, to get working console arrangements so help/version/etc
+  // print something, we need to initialize the native app support.
+  rv = NS_CreateNativeAppSupport(getter_AddRefs(mNativeApp));
+  if (NS_FAILED(rv)) return 1;
+
   // Handle --help, --full-version and --version command line arguments.
   // They should return quickly, so we deal with them here.
   if (CheckArg("h") || CheckArg("help") || CheckArg("?")) {
@@ -4875,9 +4880,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #ifdef MOZ_JPROF
   setupProfilingStuff();
 #endif
-
-  rv = NS_CreateNativeAppSupport(getter_AddRefs(mNativeApp));
-  if (NS_FAILED(rv)) return 1;
 
   bool canRun = false;
   rv = mNativeApp->Start(&canRun);
