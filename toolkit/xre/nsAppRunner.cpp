@@ -5486,13 +5486,13 @@ nsresult XREMain::XRE_mainRun() {
     appStartup = components::AppStartup::Service();
     NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
-    mDirProvider.DoStartup();
-
 #ifdef XP_WIN
     // It needs to be called on the main thread because it has to use
     // nsObserverService.
     EnsureWin32kInitialized();
 #endif
+
+    mDirProvider.DoStartup();
 
     // As FilePreferences need the profile directory, we must initialize right
     // here.
