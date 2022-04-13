@@ -782,20 +782,17 @@ class PythonVirtualenv:
         return os.path.join(normalized_venv_root, relative_path)
 
     def site_packages_dirs(self):
-        return list(
-            filter(
-                None,
-                [
-                    # On Windows, the top of the virtualenv is added to the sys.path.
-                    self.prefix if sys.platform.startswith("win") else None,
-                    # De-dupe with set literal in case purelib and platlib are identical
-                    *{
-                        self.resolve_sysconfig_packages_path("purelib"),
-                        self.resolve_sysconfig_packages_path("platlib"),
-                    },
-                ],
-            )
-        )
+        dirs = []
+        if sys.platform.startswith("win"):
+            dirs.append(self.prefix)
+        purelib = self.resolve_sysconfig_packages_path("purelib")
+        platlib = self.resolve_sysconfig_packages_path("platlib")
+
+        dirs.append(purelib)
+        if platlib != purelib:
+            dirs.append(platlib)
+
+        return dirs
 
     def pip_install_with_constraints(self, pip_args):
         """Create a pip constraints file or existing packages
