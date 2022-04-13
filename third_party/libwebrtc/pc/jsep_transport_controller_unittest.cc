@@ -93,24 +93,14 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
         [this](cricket::IceConnectionState s) {
           JsepTransportControllerTest::OnConnectionState(s);
         });
-    transport_controller_->SignalConnectionState.AddReceiver(
-        [this](PeerConnectionInterface::PeerConnectionState s) {
-          JsepTransportControllerTest::OnCombinedConnectionState(s);
-        });
-    transport_controller_->SignalStandardizedIceConnectionState.AddReceiver(
-        [this](PeerConnectionInterface::IceConnectionState s) {
-          JsepTransportControllerTest::OnStandardizedIceConnectionState(s);
-        });
-    transport_controller_->SignalIceGatheringState.AddReceiver(
-        [this](cricket::IceGatheringState s) {
-          JsepTransportControllerTest::OnGatheringState(s);
-        });
-    transport_controller_->SignalIceCandidatesGathered.AddReceiver(
-        [this](const std::string& transport,
-               const std::vector<cricket::Candidate>& candidates) {
-          JsepTransportControllerTest::OnCandidatesGathered(transport,
-                                                            candidates);
-        });
+    transport_controller_->SignalStandardizedIceConnectionState.connect(
+        this, &JsepTransportControllerTest::OnStandardizedIceConnectionState);
+    transport_controller_->SignalConnectionState.connect(
+        this, &JsepTransportControllerTest::OnCombinedConnectionState);
+    transport_controller_->SignalIceGatheringState.connect(
+        this, &JsepTransportControllerTest::OnGatheringState);
+    transport_controller_->SignalIceCandidatesGathered.connect(
+        this, &JsepTransportControllerTest::OnCandidatesGathered);
   }
 
   std::unique_ptr<cricket::SessionDescription>
