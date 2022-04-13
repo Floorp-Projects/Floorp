@@ -9280,8 +9280,8 @@ AttachDecision CallIRGenerator::tryAttachWasmCall(HandleFunction calleeFunc) {
   return AttachDecision::Attach;
 }
 
-AttachDecision CallIRGenerator::tryAttachInlinableNative(
-    HandleFunction callee) {
+AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
+                                                         CallFlags flags) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNativeWithoutJitEntry());
 
@@ -9290,13 +9290,6 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
       op_ != JSOp::SpreadCall) {
     return AttachDecision::NoAction;
   }
-
-  // TODO: Move to caller?
-  bool isSpecialized = mode_ == ICState::Mode::Specialized;
-  bool isSpread = IsSpreadPC(pc_);
-  bool isSameRealm = isSpecialized && cx_->realm() == callee->realm();
-  bool isConstructing = IsConstructPC(pc_);
-  CallFlags flags(isConstructing, isSpread, isSameRealm);
 
   InlinableNativeIRGenerator nativeGen(*this, flags);
   return nativeGen.tryAttachStub();
@@ -9880,7 +9873,7 @@ AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 
   // Check for specific native-function optimizations.
   if (isSpecialized) {
-    TRY_ATTACH(tryAttachInlinableNative(calleeFunc));
+    TRY_ATTACH(tryAttachInlinableNative(calleeFunc, flags));
   }
 
   // Load argc.
