@@ -331,6 +331,25 @@ class VendorManifest(MozbuildObject):
                     for exclusion in to_exclude:
                         mozfile.remove(exclusion)
 
+                # Clear out empty directories
+                # removeEmpty() won't remove directories containing only empty directories
+                #   so just keep callign it as long as it's doing something
+                def removeEmpty(tmpextractdir):
+                    removed = False
+                    folders = list(os.walk(tmpextractdir))[1:]
+                    for folder in folders:
+                        if not folder[2]:
+                            try:
+                                os.rmdir(folder[0])
+                                removed = True
+                            except Exception:
+                                pass
+                    return removed
+
+                while removeEmpty(tmpextractdir):
+                    pass
+
+                # Then copy over the directories
                 mozfile.copy_contents(tmpextractdir, vendor_dir)
 
     def update_yaml(self, yaml_file, revision, timestamp):
