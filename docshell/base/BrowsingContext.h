@@ -159,6 +159,7 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(AllowContentRetargetingOnChildren, bool)                              \
   FIELD(ForceEnableTrackingProtection, bool)                                  \
   FIELD(UseGlobalHistory, bool)                                               \
+  FIELD(TargetTopLevelLinkClicksToBlankInternal, bool)                        \
   FIELD(FullscreenAllowedByOwner, bool)                                       \
   /*                                                                          \
    * "is popup" in the spec.                                                  \
@@ -557,6 +558,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void SetWatchedByDevTools(bool aWatchedByDevTools, ErrorResult& aRv);
 
   dom::TouchEventsOverride TouchEventsOverride() const;
+  bool TargetTopLevelLinkClicksToBlank() const;
 
   bool FullscreenAllowed() const;
 
@@ -1137,6 +1139,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_DefaultLoadFlags>);
 
   bool CanSet(FieldIndex<IDX_UseGlobalHistory>, const bool& aUseGlobalHistory,
+              ContentParent* aSource);
+
+  bool CanSet(FieldIndex<IDX_TargetTopLevelLinkClicksToBlankInternal>,
+              const bool& aTargetTopLevelLinkClicksToBlankInternal,
               ContentParent* aSource);
 
   void DidSet(FieldIndex<IDX_HasSessionHistory>, bool aOldValue);
