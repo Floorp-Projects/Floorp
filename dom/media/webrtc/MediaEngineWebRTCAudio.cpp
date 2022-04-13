@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "AudioConverter.h"
-#include "DeviceInputTrack.h"
 #include "MediaManager.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackConstraints.h"
@@ -1339,11 +1338,11 @@ nsresult AudioProcessingTrack::ConnectDeviceInput(
     NS_WARNING("Failed to open audio device.");
     return r.unwrapErr();
   }
-  RefPtr<NativeInputTrack> input = r.unwrap();
-  MOZ_ASSERT(input);
-  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input.get(),
-      this);
-  mPort = AllocateInputPort(input.get());
+  mDeviceInputTrack = r.unwrap();
+  MOZ_ASSERT(mDeviceInputTrack);
+  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId,
+      mDeviceInputTrack.get(), this);
+  mPort = AllocateInputPort(mDeviceInputTrack.get());
   return NS_OK;
 }
 
@@ -1355,11 +1354,11 @@ void AudioProcessingTrack::DisconnectDeviceInput() {
   }
   MOZ_ASSERT(mPort);
   MOZ_ASSERT(mDeviceId.isSome());
-  RefPtr<NativeInputTrack> input(mPort->GetSource()->AsNativeInputTrack());
   LOG("Close device %p (InputTrack=%p) for Mic source %p ", *mDeviceId,
-      input.get(), this);
+      mDeviceInputTrack.get(), this);
   mPort->Destroy();
-  NativeInputTrack::CloseAudio(std::move(input), mInputListener.get());
+  NativeInputTrack::CloseAudio(std::move(mDeviceInputTrack),
+                               mInputListener.get());
   mInputListener = nullptr;
   mDeviceId = Nothing();
 }
