@@ -9291,12 +9291,12 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
     return AttachDecision::NoAction;
   }
 
-  InlinableNativeIRGenerator nativeGen(*this, flags);
+  InlinableNativeIRGenerator nativeGen(*this, callee, flags);
   return nativeGen.tryAttachStub();
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
-  RootedFunction callee(cx_, &callee_.toObject().as<JSFunction>());
+  HandleFunction callee(callee_);
 
   if (!callee->hasJitInfo() ||
       callee->jitInfo()->type() != JSJitInfo::InlinableNative) {
@@ -9314,7 +9314,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
   if (flags_.isConstructing()) {
     // newTarget must match the callee. CacheIR for this is emitted in
     // emitNativeCalleeGuard.
-    if (callee_ != newTarget_) {
+    if (ObjectValue(*callee) != newTarget_) {
       return AttachDecision::NoAction;
     }
     switch (native) {
