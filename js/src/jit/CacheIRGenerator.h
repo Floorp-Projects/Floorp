@@ -387,8 +387,9 @@ class MOZ_RAII CheckPrivateFieldIRGenerator : public IRGenerator {
   HandleValue val_;
   HandleValue idVal_;
 
-  AttachDecision tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
-                                 ValOperandId keyId, bool hasOwn);
+  AttachDecision tryAttachNative(NativeObject* obj, ObjOperandId objId,
+                                 jsid key, ValOperandId keyId,
+                                 PropertyResult prop);
 
   void trackAttached(const char* name);
 
