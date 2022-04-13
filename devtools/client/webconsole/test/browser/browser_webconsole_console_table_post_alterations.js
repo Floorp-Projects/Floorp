@@ -16,7 +16,15 @@ add_task(async function() {
     content.wrappedJSObject.console.table(x);
     x.push("c");
     content.wrappedJSObject.console.table(x);
-    x.sort((a, b) => b - a);
+    x.sort((a, b) => {
+      if (a < b) {
+        return 1;
+      }
+      if (a > b) {
+        return -1;
+      }
+      return 0;
+    });
     content.wrappedJSObject.console.table(x);
   });
 
