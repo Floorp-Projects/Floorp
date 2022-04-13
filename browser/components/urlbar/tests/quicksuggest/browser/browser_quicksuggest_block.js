@@ -37,6 +37,9 @@ const SUGGESTIONS = [
   },
 ];
 
+// Spy for the custom impression/click sender
+let spy;
+
 add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -45,12 +48,16 @@ add_task(async function init() {
     ],
   });
 
+  ({ spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
+
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
 
   await UrlbarProviderQuickSuggest._blockTaskQueue.emptyPromise;
   await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
+
+  Services.telemetry.clearScalars();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit(SUGGESTIONS);
 });
@@ -121,6 +128,8 @@ add_combo_task(async function basic_keyShortcut({ suggestion, isBestMatch }) {
 });
 
 async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
+  spy.resetHistory();
+
   // Do a search that triggers the suggestion.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -132,11 +141,12 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
     "Two rows are present after searching (heuristic + suggestion)"
   );
 
+  let isSponsored = suggestion.keywords[0] == "sponsored";
   let details = await QuickSuggestTestUtils.assertIsQuickSuggest({
     window,
     isBestMatch,
+    isSponsored,
     originalUrl: suggestion.url,
-    isSponsored: suggestion.keywords[0] == "sponsored",
   });
 
   // Block the suggestion.
@@ -160,6 +170,47 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
     await UrlbarProviderQuickSuggest.isSuggestionBlocked(suggestion.url),
     "Suggestion is blocked"
   );
+
+  // Check telemetry scalars.
+  let index = 2;
+  let scalars = {
+    [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index,
+  };
+  if (isSponsored) {
+    scalars[QuickSuggestTestUtils.SCALARS.BLOCK_SPONSORED] = index;
+  } else {
+    scalars[QuickSuggestTestUtils.SCALARS.BLOCK_NONSPONSORED] = index;
+  }
+  if (isBestMatch) {
+    if (isSponsored) {
+      scalars = {
+        ...scalars,
+        [QuickSuggestTestUtils.SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index,
+        [QuickSuggestTestUtils.SCALARS.BLOCK_SPONSORED_BEST_MATCH]: index,
+      };
+    } else {
+      scalars = {
+        ...scalars,
+        [QuickSuggestTestUtils.SCALARS
+          .IMPRESSION_NONSPONSORED_BEST_MATCH]: index,
+        [QuickSuggestTestUtils.SCALARS.BLOCK_NONSPONSORED_BEST_MATCH]: index,
+      };
+    }
+  }
+  QuickSuggestTestUtils.assertScalars(scalars);
+
+  // Check the custom telemetry pings.
+  QuickSuggestTestUtils.assertImpressionPing({
+    spy,
+    // `assertImpressionPing()` expects a zero-based result index, not a
+    // 1-based telemetry index, so subtract 1.
+    index: index - 1,
+    block_id: suggestion.id,
+    advertiser: suggestion.advertiser.toLowerCase(),
+    reporting_url: suggestion.impression_url,
+    match_type: isBestMatch ? "best-match" : "firefox-suggest",
+  });
+  QuickSuggestTestUtils.assertNoClickPing(spy);
 
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
