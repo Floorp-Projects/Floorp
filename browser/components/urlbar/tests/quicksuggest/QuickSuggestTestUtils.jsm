@@ -407,6 +407,31 @@ class QSTestUtils {
   }
 
   /**
+   * Checks quick suggest telemetry events. This is the same as
+   * `TelemetryTestUtils.assertEvents()` except it filters in only quick suggest
+   * events by default. If you are expecting events that are not in the quick
+   * suggest category, use `TelemetryTestUtils.assertEvents()` directly or pass
+   * in a filter override for `category`.
+   *
+   * @param {array} expectedEvents
+   *   List of expected telemetry events.
+   * @param {object} filterOverrides
+   *   Extra properties to set in the filter object.
+   * @param {object} options
+   *   The options object to pass to `TelemetryTestUtils.assertEvents()`.
+   */
+  assertEvents(expectedEvents, filterOverrides = {}, options = undefined) {
+    TelemetryTestUtils.assertEvents(
+      expectedEvents,
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        ...filterOverrides,
+      },
+      options
+    );
+  }
+
+  /**
    * Creates a `sinon.sandbox` and `sinon.spy` that can be used to instrument
    * the quick suggest custom telemetry pings. If `init` was called with a test
    * scope where `registerCleanupFunction` is defined, the sandbox will
@@ -456,11 +481,11 @@ class QSTestUtils {
   assertImpressionPing({
     index,
     spy,
-    advertiser = "test-advertiser",
+    advertiser = "testadvertiser",
     block_id = 1,
     is_clicked = false,
     match_type = "firefox-suggest",
-    reporting_url = "http://impression.reporting.test.com/",
+    reporting_url = "http://example.com/impression",
     request_id = null,
     scenario = "offline",
   }) {
@@ -524,10 +549,10 @@ class QSTestUtils {
   assertClickPing({
     index,
     spy,
-    advertiser = "test-advertiser",
+    advertiser = "testadvertiser",
     block_id = 1,
     match_type = "firefox-suggest",
-    reporting_url = "http://click.reporting.test.com/",
+    reporting_url = "http://example.com/click",
     request_id = null,
     scenario = "offline",
   }) {

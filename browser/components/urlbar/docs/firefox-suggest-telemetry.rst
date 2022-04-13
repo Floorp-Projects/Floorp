@@ -391,6 +391,45 @@ Changelog
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
 .. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
+contextservices.quicksuggest.engagement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This event is recorded when an engagement occurs in the address bar while a
+Firefox Suggest suggestion is present. In other words, it is recorded in two
+cases:
+
+- The user picks a Firefox Suggest suggestion or a related UI element like its
+  help button.
+- While a Firefox Suggest suggestion is present in the address bar, the user
+  picks some other row.
+
+The event's objects are the following possible values:
+
+:block:
+  The user dismissed ("blocked") the suggestion.
+:click:
+  The user picked the suggestion.
+:help:
+  The user picked the suggestion's help button.
+:impression_only:
+  The user picked some other row.
+
+The event's ``extra`` contains the following properties:
+
+:match_type:
+  "best-match" if the suggestion was a best match or "firefox-suggest" if it was
+  a non-best-match suggestion.
+:position:
+  The index of the suggestion in the list of results (1-based).
+:suggestion_type:
+  The type of suggestion, one of: "sponsored", "nonsponsored"
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761059_]
+
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+
 contextservices.quicksuggest.impression_cap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -403,7 +442,7 @@ event's objects are the following possible values:
   Recorded when a cap's counter is reset because its interval period has
   elapsed.
 
-The event's ``extra`` object value contains the following properties:
+The event's ``extra`` contains the following properties:
 
 :count:
   The number of impressions during the cap's interval period.
