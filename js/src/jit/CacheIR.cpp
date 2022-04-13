@@ -5331,6 +5331,11 @@ void InlinableNativeIRGenerator::emitNativeCalleeGuard() {
   // native from a different realm.
   MOZ_ASSERT(callee_->isNativeWithoutJitEntry());
 
+  // We've already emitted a function guard for FunCall.
+  if (flags_.getArgFormat() == CallFlags::FunCall) {
+    return;
+  }
+
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_, flags_);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
@@ -8353,7 +8358,7 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
   if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
     return AttachDecision::NoAction;
   }
-  auto* target = &thisval_.toObject().as<JSFunction>();
+  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
 
   bool isScripted = target->hasJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNativeWithoutJitEntry());
@@ -8386,6 +8391,48 @@ AttachDecision CallIRGenerator::tryAttachFunCall(HandleFunction callee) {
     if (isScripted) {
       writer.callScriptedFunction(thisObjId, argcId, targetFlags);
     } else {
+      // The stack layout is already in the correct form for calls with at least
+      // one argument.
+      //
+      // clang-format off
+      //
+      // *** STACK LAYOUT (bottom to top) ***   *** INDEX ***
+      //   Callee                               <-- argc+1
+      //   ThisValue                            <-- argc
+      //   Args: | Arg0 |                       <-- argc-1
+      //         | Arg1 |                       <-- argc-2
+      //         | ...  |                       <-- ...
+      //         | ArgN |                       <-- 0
+      //
+      // When passing |argc-1| as the number of arguments, we get:
+      //
+      // *** STACK LAYOUT (bottom to top) ***   *** INDEX ***
+      //   Callee                               <-- (argc-1)+1 = argc   = ThisValue
+      //   ThisValue                            <-- (argc-1)   = argc-1 = Arg0
+      //   Args: | Arg0   |                     <-- (argc-1)-1 = argc-2 = Arg1
+      //         | Arg1   |                     <-- (argc-1)-2 = argc-3 = Arg2
+      //         | ...    |                     <-- ...
+      //
+      // clang-format on
+      //
+      // This allows to call |loadArgumentFixedSlot(ArgumentKind::Arg0)| and we
+      // still load the correct argument index from |ArgumentKind::Arg1|.
+      //
+      // When no arguments are passed, i.e. |argc==0|, we have to replace
+      // |ArgumentKind::Arg0| with the undefined value. But we don't yet support
+      // this case.
+      if (argc_ > 0) {
+        HandleValue newTarget = NullHandleValue;
+        HandleValue thisValue = args_[0];
+        HandleValueArray args =
+            HandleValueArray::subarray(args_, 1, args_.length() - 1);
+
+        // Check for specific native-function optimizations.
+        InlinableNativeIRGenerator nativeGen(*this, target, newTarget,
+                                             thisValue, args, targetFlags);
+        TRY_ATTACH(nativeGen.tryAttachStub());
+      }
+
       writer.callNativeFunction(thisObjId, argcId, op_, target, targetFlags);
     }
   } else {
@@ -9211,7 +9258,8 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(HandleFunction callee,
     return AttachDecision::NoAction;
   }
 
-  InlinableNativeIRGenerator nativeGen(*this, callee, flags);
+  InlinableNativeIRGenerator nativeGen(*this, callee, newTarget_, thisval_,
+                                       args_, flags);
   return nativeGen.tryAttachStub();
 }
 
