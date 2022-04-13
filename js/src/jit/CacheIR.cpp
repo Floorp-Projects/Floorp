@@ -3914,6 +3914,9 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
                                                    ObjOperandId objId,
                                                    HandleId id,
                                                    ValOperandId rhsId) {
+  // Don't attach a setter stub for ops like JSOp::InitElem.
+  MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
+
   NativeObject* holder = nullptr;
   Maybe<PropertyInfo> prop;
   if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &prop)) {
@@ -4271,6 +4274,9 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
 AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
     Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
     ValOperandId rhsId, bool handleDOMProxies) {
+  // Don't attach a proxy stub for ops like JSOp::InitElem.
+  MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
+
   writer.guardIsProxy(objId);
 
   if (!handleDOMProxies) {
@@ -4301,6 +4307,9 @@ AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
 AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
     Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
     ValOperandId rhsId) {
+  // Don't attach a proxy stub for ops like JSOp::InitElem.
+  MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
+
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   maybeEmitIdGuard(id);
@@ -4315,6 +4324,9 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
 AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
     ValOperandId rhsId) {
+  // Don't attach a proxy stub for ops like JSOp::InitElem.
+  MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
+
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   JSObject* proto = obj->staticPrototype();
@@ -4356,6 +4368,9 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
 AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
     ValOperandId rhsId) {
+  // Don't attach a proxy stub for ops like JSOp::InitElem.
+  MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
+
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   Value expandoVal = GetProxyPrivate(obj);
@@ -4491,6 +4506,9 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
                                                         ObjOperandId objId,
                                                         HandleId id,
                                                         ValOperandId rhsId) {
+  // Don't attach a window proxy stub for ops like JSOp::InitElem.
+  MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
+
   // Attach a stub when the receiver is a WindowProxy and we can do the set
   // on the Window (the global object).
 
