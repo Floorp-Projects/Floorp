@@ -518,6 +518,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
 
   void emitNativeCalleeGuard();
 
+  void initializeInputOperand() { (void)writer.setInputOperandId(0); }
+
   auto emitToStringGuard(ValOperandId id, const Value& v) {
     return generator_.emitToStringGuard(id, v);
   }
