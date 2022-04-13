@@ -205,6 +205,12 @@ interface BrowsingContext {
   readonly attribute TouchEventsOverride touchEventsOverride;
 
   /**
+   * Returns true if the top-level BrowsingContext has been configured to
+   * default-target user-initiated link clicks to _blank.
+   */
+  readonly attribute boolean targetTopLevelLinkClicksToBlank;
+
+  /**
    * Partially determines whether script execution is allowed in this
    * BrowsingContext. Script execution will be permitted only if this
    * attribute is true and script execution is allowed in the parent
@@ -322,6 +328,12 @@ interface CanonicalBrowsingContext : BrowsingContext {
    * are available in a specific BrowsingContext and its descendents.
    */
   [SetterThrows] inherit attribute TouchEventsOverride touchEventsOverride;
+
+  /**
+   * Set to true to configure the top-level BrowsingContext to default-target
+   * user-initiated link clicks to _blank.
+   */
+  [SetterThrows] inherit attribute boolean targetTopLevelLinkClicksToBlank;
 
   /**
    * Set the cross-group opener of this BrowsingContext. This is used to
