@@ -236,8 +236,6 @@ void ImageDocument::SetScriptGlobalObject(
       if (!nsContentUtils::IsChildOfSameType(this)) {
         LinkStylesheet(nsLiteralString(
             u"resource://content-accessible/TopLevelImageDocument.css"));
-        LinkStylesheet(nsLiteralString(
-            u"chrome://global/skin/media/TopLevelImageDocument.css"));
       }
       InitialSetupDone();
     }

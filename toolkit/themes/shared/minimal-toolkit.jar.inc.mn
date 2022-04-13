@@ -18,8 +18,6 @@ toolkit.jar:
 # images and CSS we need for widgets like video controls
   skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
 
-  skin/classic/global/media/TopLevelImageDocument.css      (../../shared/media/TopLevelImageDocument.css)
-  skin/classic/global/media/TopLevelVideoDocument.css      (../../shared/media/TopLevelVideoDocument.css)
   skin/classic/global/media/imagedoc-lightnoise.png        (../../shared/media/imagedoc-lightnoise.png)
   skin/classic/global/media/imagedoc-darknoise.png         (../../shared/media/imagedoc-darknoise.png)
 
