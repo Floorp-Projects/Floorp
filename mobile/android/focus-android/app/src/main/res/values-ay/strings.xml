@@ -1,128 +1,345 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Suyt\'ayaña</string>
-  <string name="action_ok">Walikiwa</string>
-  <string name="action_save">Imaña</string>
-  <string name="urlbar_hint">Thaqtam jan ukax imayluma</string>
-  <string name="teaser">Justupach jark\'as thaqtaña. Thaqhaña. Pichsuña. Mayampi.</string>
-  <string name="feedback_erase">Taqpach thaqhatanakamax pichsutawa.</string>
-  <string name="search_hint">Thaqtam %1$s</string>
-  <string name="menu_share">Ch\'iqiyaña</string>
-  <string name="menu_report_site_issue">Llika janjat yatiyaña</string>
-  <string name="menu_open_with_default_browser2">Jist\'aram %1$s</string>
-  <string name="menu_open_with_a_browser2">Jist\'aram...</string>
-  <string name="menu_add_to_home_screen">Janja llikar yapkatam</string>
-  <string name="menu_whats_new">kuna yatiyäwis utji</string>
-  <string name="menu_settings">Mayjt\'ayaña</string>
-  <string name="menu_about">Ukxata</string>
-  <string name="menu_help">Yanapa</string>
-  <string name="menu_rights">Yäqayasiñataki</string>
-  <string name="menu_trackers_blocked_title">Thaqhañanakax jark\'antatawa</string>
-  <string name="menu_custom_tab_branding">Ukamp ch\'amañchatawa %1$s</string>
-  <string name="share_dialog_title">Uka tuq ch\'iqiyaña</string>
-  <string name="notification_erase_text">Thaqhañ imatanak pichsuña</string>
-  <string name="notification_action_open">Jist\'araña</string>
-  <string name="notification_action_erase_and_open">Pichsuña ukat jist\'araña</string>
-  <string name="shortcut_erase_short_label">Pichsuña</string>
-  <string name="shortcut_erase_long_label">Thaqhañ imatanak pichsuña</string>
-  <string name="text_selection_search_action">Jiwasak thaqhaña</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Imantatäña ukatx jark\'atäña</string>
-  <string name="preference_privacy_and_security_summary">Thaqhata, kukinaka, ukatx utjir ajllinaka</string>
-  <string name="preference_search_summary">Pantjat imaña, justupach phuqhaña</string>
-  <string name="preference_mozilla_summary">%1$s ukxata, yanapa</string>
-  <string name="preference_category_tracking_protection">Thaqhatanak uñjaña</string>
-  <string name="preference_category_web_content">Llikan utjirinaka</string>
-  <string name="preference_category_switching_apps">Lurañanak turkaña</string>
-  <string name="preference_category_general">Taqpacha</string>
-  <string name="preference_category_data_collection_use">Utjirinak apthapita ukatx apnaqaña</string>
-  <string name="preference_category_search">Taqhaña</string>
-  <string name="preference_search_engine_default">Pantjata</string>
-  <string name="preference_state_on">Aqtayata</string>
-  <string name="preference_state_off">jiwt\'ayata</string>
-  <string name="preference_subitem_autocomplete">URL justupach phuqhachata</string>
-  <string name="preference_autocomplete_action_add">URL ukar wakt\'ayasiñ yapt\'aña</string>
-  <string name="preference_autocomplete_title_add">URL ukar wakt\'ayasiñ yapt\'aña</string>
-  <string name="custom_autocomplete_quick_add">URL Wakt\'ayasiñ yapt\'aña</string>
-  <string name="preference_category_cookies">juk\'a yatiyäwimp llikan utjirinakampi</string>
-  <string name="preference_category_data_choices">Utjirinak ajlliña</string>
-  <string name="preference_autocomplete_title_remove">URLs wakicht\'atanak jittayaña</string>
-  <string name="preference_autocomplete_learn_more">Juk\'amp amuyañataki</string>
-  <string name="preference_autocomplete_custom_summary">URLs ukar yapkatam ukat justupach wakicht\'añar ucht\'am</string>
-  <string name="preference_autocomplete_add_title">URL ukar yapkataña</string>
-  <string name="preference_autocomplete_add_hint">URL uk ucht\'am jan ukax mantaña</string>
-  <string name="preference_autocomplete_add_example2">Sakiñani: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Sakiñani: ukhama.com</string>
-  <string name="preference_autocomplete_add_confirmation">Machaq wakt\'ayasiña URL yapkatatawa.</string>
-  <string name="preference_autocomplete_menu_remove">Jittayaña</string>
-  <string name="preference_autocomplete_action_remove_content_description">Jittayaña</string>
-  <string name="preference_autocomplete_add_error">Pay kut uka URL uk uchktas ukar limt\'am.</string>
-  <string name="preference_language">Aru</string>
-  <string name="preference_language_systemdefault">Llikaw jan walt\'kiti</string>
-  <string name="preference_category_privacy">Maynitakiki</string>
-  <string name="preference_privacy_block_ads">Yatiyawinak uñachayir jark\'antaña</string>
-  <string name="preference_privacy_block_ads_summary">Yaqhip yatiyanakax uñstaskakiwa, janis ukar limt\'kat ukhaxa</string>
-  <string name="preference_privacy_block_analytics">Uñakipir thaqhirinak jark\'antaña</string>
-  <string name="preference_privacy_block_analytics_summary">Uka apthapiña, uñakipiri ukhamarak tupur luratanak llamt\'as saraqas apnaqaña</string>
-  <string name="preference_privacy_block_social">Jaqit thaqhirinak jark\'antaña</string>
-  <string name="preference_privacy_block_social_summary">Uka llika janjan k\'iñantatanak mantatanakam thaqtaña ukatx wutunanakar uñacht\'ayaña</string>
-  <string name="preference_privacy_block_content">Yaqha utjir thaqhirinak jark\'antaña</string>
-  <string name="preference_privacy_block_content_summary2">Jark\'antasinx inas yaqhip llika janjanakax jan walixchispati</string>
-  <string name="preference_privacy_category_cookies">Yatiyanak jark\'antaña</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Janiwa</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">"Yatiyawinakx chikatan chikatapak 3  jist\'antaña"</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Jisa</string>
-  <string name="preference_privacy_secure_mode">Amuyump unxtaña</string>
-  <string name="preference_privacy_stealth_summary">Llika janjanak imantaña, kunawsatix wakichanakax rukatak ukha</string>
-  <string name="preference_category_performance">Luraña</string>
-  <string name="preference_performance_block_webfonts">Llikan qillqanakap jark\'antaña</string>
-  <string name="preference_performance_block_webfonts_summary">Inas uka chimpus jamuqas jan uñstxchispati</string>
-  <string name="preference_performance_block_javascript">JavaScript Jark\'antaña</string>
-  <string name="preference_performance_block_javascript_summary">Janja llikanakax jank\'akiw phuqhachasispa, inas jan ukhamarakikchispati</string>
-  <string name="preference_default_browser2">%1$s justupach thaqhiri</string>
-  <string name="preference_category_mozilla">Musilla</string>
-  <string name="preference_mozilla_telemetry2">Apnaqat imatanak apayaña</string>
-  <string name="preference_mozilla_telemetry_summary">Juk’amp yatiña</string>
-  <string name="preference_mozilla_telemetry_summary2">"Musillax ajllsuwa kunatix askiki ukak churi ukhamarak taqinitakis  sumaptayi %1$s"</string>
-  <string name="preference_privacy_notice">Maynitakik yatiya</string>
-  <string name="preference_about">Kunxatasa %1$s</string>
-  <string name="preference_search_installed_search_engines">Thaqhirinak uchaña</string>
-  <string name="preference_search_restore">Jan walt’ir thaqhirinak kutt’ayaniña</string>
-  <string name="preference_search_add2">Yaqha thakhir yapkataña</string>
-  <string name="preference_search_remove_title">Thakhirinak jittayaña</string>
-  <string name="preference_search_remove">Jittayaña</string>
-  <string name="action_option_add_search_engine">Thaqhir yapkataña</string>
-  <string name="search_add_manually_name_hint">Thaqhirin sutip thaqtaña</string>
-  <string name="search_add_manually_string">Apnaqat arunak thaqtaña</string>
-  <string name="search_add_manually_save">Imaña</string>
-  <string name="search_add_manually_example">Ukhama: ukhama.com</string>
-  <string name="search_add_confirmation">Machaq thaqhiriw yapkatata</string>
-  <string name="search_add_error_empty_name">Thaqhirin sutip ucham</string>
-  <string name="search_add_error_duplicate_name">Apaqat thaqhiriw pach sutin utji</string>
-  <string name="search_add_error_empty_search">Thaqhir arunak ucham</string>
-  <string name="search_add_error_format">Thaqhir arunakax purapt’añapawa, uñakipt’am</string>
-  <string name="content_description_clear_input">Uchat pichsum</string>
-  <string name="content_description_dismiss_input">Apanukuña</string>
-  <string name="content_description_erase">Thaqhatanak pichsum</string>
-  <string name="content_description_tab_counter">P’uyunak jist’araña: %1$s</string>
-  <string name="content_description_lock">Suma waythapiriwa</string>
-  <string name="accessibility_announcement_loading">Phuqhachaskiwa</string>
-  <string name="accessibility_announcement_loading_finished">Phuqhachat llika janjanaka</string>
-  <string name="content_description_menu">Juk’ampinaka</string>
-  <string name="content_description_forward">Nayraqatar tuyuskakim</string>
-  <string name="content_description_reload">Mayamp mantam uka llika janjaru</string>
-  <string name="content_description_back">Qhipar kutt’am</string>
-  <string name="content_description_stop">Llika janjanak phuqhachir sayt’ayaña</string>
-  <string name="content_description_customtab_exit">Nayrir wakichañar kutt’aña</string>
-  <string name="content_description_blocking_switch">Thaqhirinak jark’antaña</string>
-  <string name="your_rights">Yäqayasiñanakama</string>
-  <string name="external_app_prompt_title">Chhitthap yaqha wakichar jist’aram</string>
-  <string name="external_app_prompt">Jaytxasmawa %1$s uka chhitthap jist\'arañataki %2$s</string>
-  <string name="external_app_prompt_no_app_title">Mä lurañ thaqtam chhitthap jist\'arañapataki</string>
-  <string name="external_app_prompt_no_app">"Janiw kuna lurawis uka chhitthapx jawsañaman jist\'arkaspati. Jaytxakim %1$s ukhamat yaqha  %2$s lurir jist\'arañapataki."</string>
-  <string name="external_multiple_apps_matched_exit">Uka maynitakik thaqhañat misxatati?</string>
-  <string name="download_snackbar_finished">%1$s tukutawa</string>
-  <string name="download_snackbar_open">Jist\'araña</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Suyt\'ayaña</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">Walikiwa</string>
+
+    <string name="action_save">Imaña</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Thaqtam jan ukax imayluma</string>
+
+    <string name="teaser">Justupach jark\'as thaqtaña. Thaqhaña. Pichsuña. Mayampi.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Taqpach thaqhatanakamax pichsutawa.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Thaqtam %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Ch\'iqiyaña</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Llika janjat yatiyaña</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Jist\'aram %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Jist\'aram...</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Janja llikar yapkatam</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">kuna yatiyäwis utji</string>
+    <string name="menu_settings">Mayjt\'ayaña</string>
+    <string name="menu_about">Ukxata</string>
+    <string name="menu_help">Yanapa</string>
+    <string name="menu_rights">Yäqayasiñataki</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Thaqhañanakax jark\'antatawa</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Ukamp ch\'amañchatawa %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Uka tuq ch\'iqiyaña</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Thaqhañ imatanak pichsuña</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Jist\'araña</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Pichsuña ukat jist\'araña</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Pichsuña</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Thaqhañ imatanak pichsuña</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Jiwasak thaqhaña</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Imantatäña ukatx jark\'atäña</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Thaqhata, kukinaka, ukatx utjir ajllinaka</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Pantjat imaña, justupach phuqhaña</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">%1$s ukxata, yanapa</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Llikan utjirinaka</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Lurañanak turkaña</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Taqpacha</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Utjirinak apthapita ukatx apnaqaña</string>
+
+    <string name="preference_category_search">Taqhaña</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Pantjata</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Aqtayata</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">jiwt\'ayata</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL justupach phuqhachata</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">URL ukar wakt\'ayasiñ yapt\'aña</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">URL ukar wakt\'ayasiñ yapt\'aña</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">URL Wakt\'ayasiñ yapt\'aña</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">juk\'a yatiyäwimp llikan utjirinakampi</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Utjirinak ajlliña</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">URLs wakicht\'atanak jittayaña</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Juk\'amp amuyañataki</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">URLs ukar yapkatam ukat justupach wakicht\'añar ucht\'am</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL ukar yapkataña</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">URL uk ucht\'am jan ukax mantaña</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Sakiñani: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Sakiñani: ukhama.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Machaq wakt\'ayasiña URL yapkatatawa.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Jittayaña</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Jittayaña</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Pay kut uka URL uk uchktas ukar limt\'am.</string>
+
+    <string name="preference_language">Aru</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Llikaw jan walt\'kiti</string>
+
+    <string name="preference_category_privacy">Maynitakiki</string>
+    <string name="preference_privacy_block_ads">Yatiyawinak uñachayir jark\'antaña</string>
+    <string name="preference_privacy_block_ads_summary">Yaqhip yatiyanakax uñstaskakiwa, janis ukar limt\'kat ukhaxa</string>
+    <string name="preference_privacy_block_analytics">Uñakipir thaqhirinak jark\'antaña</string>
+    <string name="preference_privacy_block_analytics_summary">Uka apthapiña, uñakipiri ukhamarak tupur luratanak llamt\'as saraqas apnaqaña</string>
+    <string name="preference_privacy_block_social">Jaqit thaqhirinak jark\'antaña</string>
+    <string name="preference_privacy_block_social_summary">Uka llika janjan k\'iñantatanak mantatanakam thaqtaña ukatx wutunanakar uñacht\'ayaña</string>
+    <string name="preference_privacy_block_content">Yaqha utjir thaqhirinak jark\'antaña</string>
+    <string name="preference_privacy_block_content_summary2">Jark\'antasinx inas yaqhip llika janjanakax jan walixchispati</string>
+    <string name="preference_privacy_category_cookies">Yatiyanak jark\'antaña</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">&quot;Yatiyawinakx chikatan chikatapak 3  jist\'antaña&quot;</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Amuyump unxtaña</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Llika janjanak imantaña, kunawsatix wakichanakax rukatak ukha</string>
+
+    <string name="preference_category_performance">Luraña</string>
+    <string name="preference_performance_block_webfonts">Llikan qillqanakap jark\'antaña</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Inas uka chimpus jamuqas jan uñstxchispati</string>
+
+    <string name="preference_performance_block_javascript">JavaScript Jark\'antaña</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Janja llikanakax jank\'akiw phuqhachasispa, inas jan ukhamarakikchispati</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s justupach thaqhiri</string>
+
+    <string name="preference_category_mozilla">Musilla</string>
+    <string name="preference_mozilla_telemetry2">Apnaqat imatanak apayaña</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Juk’amp yatiña</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">&quot;Musillax ajllsuwa kunatix askiki ukak churi ukhamarak taqinitakis  sumaptayi %1$s&quot;</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Maynitakik yatiya</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Kunxatasa %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Thaqhirinak uchaña</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Jan walt’ir thaqhirinak kutt’ayaniña</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">Yaqha thakhir yapkataña</string>
+    <string name="preference_search_remove_title">Thakhirinak jittayaña</string>
+    <string name="preference_search_remove">Jittayaña</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Thaqhir yapkataña</string>
+
+    <string name="search_add_manually_name_hint">Thaqhirin sutip thaqtaña</string>
+    <string name="search_add_manually_string">Apnaqat arunak thaqtaña</string>
+    <string name="search_add_manually_save">Imaña</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Ukhama: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Machaq thaqhiriw yapkatata</string>
+
+    <string name="search_add_error_empty_name">Thaqhirin sutip ucham</string>
+    <string name="search_add_error_duplicate_name">Apaqat thaqhiriw pach sutin utji</string>
+
+    <string name="search_add_error_empty_search">Thaqhir arunak ucham</string>
+
+    <string name="search_add_error_format">Thaqhir arunakax purapt’añapawa, uñakipt’am</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Uchat pichsum</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Apanukuña</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Thaqhatanak pichsum</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">P’uyunak jist’araña: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Suma waythapiriwa</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Phuqhachaskiwa</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Phuqhachat llika janjanaka</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Juk’ampinaka</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Nayraqatar tuyuskakim</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Mayamp mantam uka llika janjaru</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Qhipar kutt’am</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Llika janjanak phuqhachir sayt’ayaña</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Nayrir wakichañar kutt’aña</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Thaqhirinak jark’antaña</string>
+
+    <string name="your_rights">Yäqayasiñanakama</string>
+
+    <string name="external_app_prompt_title">Chhitthap yaqha wakichar jist’aram</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Jaytxasmawa %1$s uka chhitthap jist\'arañataki %2$s</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Mä lurañ thaqtam chhitthap jist\'arañapataki</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">&quot;Janiw kuna lurawis uka chhitthapx jawsañaman jist\'arkaspati. Jaytxakim %1$s ukhamat yaqha  %2$s lurir jist\'arañapataki.&quot;</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Uka maynitakik thaqhañat misxatati?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s tukutawa</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Jist\'araña</string>
 
 
 
@@ -150,47 +367,114 @@
 
 
 
-  <string name="firstrun_defaultbrowser_title">jumankirikis uk ch\'amañcham</string>
-  <string name="firstrun_defaultbrowser_text2">Uka juman thaqhatam yaqhar apam. Yatiyäwinak jark\'antam ukat yaqha utjirinak llika janjanakan jan jayarst\'añatal thaqtasmawa.</string>
-  <string name="firstrun_search_title">Thaqhatam ukhamark jumankiri</string>
-  <string name="firstrun_search_text">Yaqht thaqhaskta? Yaqha thaqhañamp thaqtam.</string>
-  <string name="firstrun_shortcut_title">Jank\'ak mantañanak uka mantañawjar ucht\'asim.</string>
-  <string name="firstrun_shortcut_text">Sapa kut mantat llikarjank\'ak %1$s kutt\'am. \"Mantañawjar yapkatam\" jiskis uka ajllt\'asin %1$s ucht\'asim.</string>
-  <string name="firstrun_privacy_title">Uka jumatakikis ukx sapakut ucht\'asim</string>
-  <string name="firstrun_privacy_text">%1$s uka thaqhirinakx justupach mistsur ucht\'asim ukat sum aka tuqin jist\'arañanak tuqinakat jikxatam.</string>
-  <string name="firstrun_close_button">Ukhamax, amuyataxiwa.</string>
-  <string name="firstrun_skip_button">T\'isktam</string>
-  <string name="firstrun_next_button">Ukxaru</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Yapt\'aña</string>
-  <string name="dialog_addtohomescreen_action_cancel">Sayt\'aña</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Uka jak\'aptayatx yaqha jatk\'at thaqhañampix jist\'ararakismawa</string>
-  <string name="notification_browsing_session_channel_name">Jumatakik thaqhañawja</string>
-  <string name="notification_browsing_session_channel_description">Uka yatiyaw tuqix pichsuñ yanapt\'iristam%1$s limt\'asaki. Janiw uka wakichaw jist\'arañamakiti ukhamarak yaqhatuq thaqtasasa.</string>
-  <string name="tabs_tray_action_erase">Uka thaqhatanak pichsum</string>
-  <string name="download_firefox">Firefox apaqaña</string>
-  <string name="your_rights_content1">"%1$s Ukax inakiwa  ukhamarak uka Mozillan luratanak apaqt\'asim."</string>
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">jumankirikis uk ch\'amañcham</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Uka juman thaqhatam yaqhar apam. Yatiyäwinak jark\'antam ukat yaqha utjirinak llika janjanakan jan jayarst\'añatal thaqtasmawa.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Thaqhatam ukhamark jumankiri</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Yaqht thaqhaskta? Yaqha thaqhañamp thaqtam.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Jank\'ak mantañanak uka mantañawjar ucht\'asim.</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Sapa kut mantat llikarjank\'ak %1$s kutt\'am. \&quot;Mantañawjar yapkatam\&quot; jiskis uka ajllt\'asin %1$s ucht\'asim.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Uka jumatakikis ukx sapakut ucht\'asim</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">%1$s uka thaqhirinakx justupach mistsur ucht\'asim ukat sum aka tuqin jist\'arañanak tuqinakat jikxatam.</string>
+
+    <string name="firstrun_close_button">Ukhamax, amuyataxiwa.</string>
+    <string name="firstrun_skip_button">T\'isktam</string>
+    <string name="firstrun_next_button">Ukxaru</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Yapt\'aña</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Sayt\'aña</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Jumatakik thaqhañawja</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Uka yatiyaw tuqix pichsuñ yanapt\'iristam%1$s limt\'asaki. Janiw uka wakichaw jist\'arañamakiti ukhamarak yaqhatuq thaqtasasa.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Uka thaqhatanak pichsum</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefox apaqaña</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA["%1$s Ukax inakiwa  ukhamarak uka Mozillan luratanak apaqt\'asim."]]></string>
 
 
 
-  <string name="gv_prompt_username_hint">Suti (qillqayasita)</string>
-  <string name="gv_prompt_password_hint">Chimpu</string>
-  <string name="gv_prompt_clear">Pichsuña</string>
-  <string name="security_popup_secure_connection">Makhatax walikiskiwa</string>
-  <string name="security_popup_insecure_connection">Makhatax janiw walikiti</string>
-  <string name="security_popup_security_verified">Uñakipatawa: %1$s</string>
-  <string name="site_security_icon_content_description">LLika janjanakan sumt\'añapataki</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL ukax utjxiwa</string>
-  <string name="find_in_page">Llika janjan jikxatasma</string>
-  <string name="find_in_page_input">Llika janjan jikxatam</string>
-  <string name="find_in_page_result">"%1$d /%2$d "</string>
-  <string name="accessibility_find_in_page_result">%1$d mistsutawa %2$d</string>
-  <string name="accessibility_next_result">Ukxarukix uk jikxatam</string>
-  <string name="accessibility_previous_result">Nayrir katjat jikxatam</string>
-  <string name="accessibility_dismiss_find_in_page">Kutt\'añ thaqhañanxa</string>
+  <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Suti (qillqayasita)</string>
+    <string name="gv_prompt_password_hint">Chimpu</string>
+    <string name="gv_prompt_clear">Pichsuña</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Makhatax walikiskiwa</string>
+    <string name="security_popup_insecure_connection">Makhatax janiw walikiti</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Uñakipatawa: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">LLika janjanakan sumt\'añapataki</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL ukax utjxiwa</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Llika janjan jikxatasma</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Llika janjan jikxatam</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">&quot;%1$d /%2$d &quot;</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d mistsutawa %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Ukxarukix uk jikxatam</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Nayrir katjat jikxatam</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Kutt\'añ thaqhañanxa</string>
 
 
 
-  <string name="preference_performance_request_desktop_site">Qhanankix uka llik mayiña</string>
-  <string name="custom_tab_copy_url_action">URL waruqataxiwa</string>
-</resources>
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Qhanankix uka llik mayiña</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL waruqataxiwa</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+    </resources>

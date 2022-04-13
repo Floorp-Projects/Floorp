@@ -366,7 +366,7 @@
     <string name="search_add_manually_save">Chuva´a</string>
 
     <!-- Example of search engine url -->
-    <string name="search_add_manually_example">Kua: nakuvi.com/search/?q=</string>
+    <string name="search_add_manually_example">Kua: example.com/search/?q=%s</string>
 
     <string name="search_add_confirmation">A jíía ka̱a̱ nánuku ntee.</string>
 
@@ -827,4 +827,5 @@
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Nakasɨ pestaña</string>
-</resources>
+
+    </resources>

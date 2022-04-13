@@ -25,7 +25,7 @@
     <string name="feedback_erase_custom_tab">O histórico de navegação da aba foi apagado.</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
-    <string name="search_hint">Pesquisar %@</string>
+    <string name="search_hint">Pesquisar %1$s</string>
 
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">Compartilhar…</string>
