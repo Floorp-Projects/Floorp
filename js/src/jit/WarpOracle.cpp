@@ -509,6 +509,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::InitHiddenProp:
       case JSOp::InitElem:
       case JSOp::InitHiddenElem:
+      case JSOp::InitLockedElem:
       case JSOp::InitElemInc:
       case JSOp::SetName:
       case JSOp::StrictSetName:

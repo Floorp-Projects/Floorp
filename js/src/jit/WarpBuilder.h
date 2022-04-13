@@ -49,7 +49,6 @@ namespace jit {
   _(DelName)                             \
   _(SetIntrinsic)                        \
   /* Private Fields */                   \
-  _(InitLockedElem)                      \
   _(GetAliasedDebugVar)                  \
   /* Non-syntactic scope */              \
   _(NonSyntacticGlobalThis)              \
