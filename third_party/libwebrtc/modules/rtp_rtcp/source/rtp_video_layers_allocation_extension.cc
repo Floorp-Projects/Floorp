@@ -148,6 +148,7 @@ bool RtpVideoLayersAllocationExtension::Parse(
   rtc::BitBuffer reader(data.data(), data.size());
   if (!allocation)
     return false;
+  allocation->active_spatial_layers.clear();
 
   uint32_t val;
   // NS:
