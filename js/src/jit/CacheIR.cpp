@@ -3999,11 +3999,19 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
   // Setting holes requires extra code for marking the elements non-packed.
   MOZ_ASSERT(!rhsVal_.isMagic(JS_ELEMENTS_HOLE));
 
+  JSOp op = JSOp(*pc_);
+
+  // We don't currently emit locked init for any indexed properties.
+  MOZ_ASSERT(!IsLockedInitOp(op));
+
+  // We don't currently emit hidden init for any existing indexed properties.
+  MOZ_ASSERT(!IsHiddenInitOp(op));
+
   // Don't optimize InitElem (DefineProperty) on non-extensible objects: when
   // the elements are sealed, we have to throw an exception. Note that we have
   // to check !isExtensible instead of denseElementsAreSealed because sealing
   // a (non-extensible) object does not necessarily trigger a Shape change.
-  if (IsPropertyInitOp(JSOp(*pc_)) && !nobj->isExtensible()) {
+  if (IsPropertyInitOp(op) && !nobj->isExtensible()) {
     return AttachDecision::NoAction;
   }
 
@@ -4081,7 +4089,12 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
   JSOp op = JSOp(*pc_);
   MOZ_ASSERT(IsPropertySetOp(op) || IsPropertyInitOp(op));
 
-  if (op == JSOp::InitHiddenElem) {
+  // We don't currently emit locked init for any indexed properties.
+  MOZ_ASSERT(!IsLockedInitOp(op));
+
+  // Hidden init can be emitted for absent indexed properties.
+  if (IsHiddenInitOp(op)) {
+    MOZ_ASSERT(op == JSOp::InitHiddenElem);
     return AttachDecision::NoAction;
   }
 
@@ -4251,8 +4264,13 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
     handleOOB = true;
   }
 
+  JSOp op = JSOp(*pc_);
+
+  // The only expected property init operation is InitElem.
+  MOZ_ASSERT_IF(IsPropertyInitOp(op), op == JSOp::InitElem);
+
   // InitElem (DefineProperty) has to throw an exception on out-of-bounds.
-  if (handleOOB && IsPropertyInitOp(JSOp(*pc_))) {
+  if (handleOOB && IsPropertyInitOp(op)) {
     return AttachDecision::NoAction;
   }
 
