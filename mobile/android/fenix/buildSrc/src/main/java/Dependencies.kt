@@ -18,7 +18,7 @@ object Versions {
     const val leakcanary = "2.8.1"
     const val osslicenses_plugin = "0.10.4"
     const val detekt = "1.19.0"
-    const val jna = "5.6.0"
+    const val jna = "5.8.0"
 
     const val androidx_activity_compose = "1.4.0"
     const val androidx_compose = "1.0.5"
