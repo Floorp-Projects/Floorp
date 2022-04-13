@@ -476,8 +476,11 @@ inline bool IsGetPropPC(const jsbytecode* pc) { return IsGetPropOp(JSOp(*pc)); }
 inline bool IsHiddenInitOp(JSOp op) {
   return op == JSOp::InitHiddenProp || op == JSOp::InitHiddenElem ||
          op == JSOp::InitHiddenPropGetter || op == JSOp::InitHiddenElemGetter ||
-         op == JSOp::InitHiddenPropSetter || op == JSOp::InitHiddenElemSetter ||
-         op == JSOp::InitLockedElem;
+         op == JSOp::InitHiddenPropSetter || op == JSOp::InitHiddenElemSetter;
+}
+
+inline bool IsLockedInitOp(JSOp op) {
+  return op == JSOp::InitLockedProp || op == JSOp::InitLockedElem;
 }
 
 inline bool IsStrictSetPC(jsbytecode* pc) {

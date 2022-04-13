@@ -4625,6 +4625,33 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
   return true;
 }
 
+static PropertyFlags SetPropertyFlags(JSOp op, bool isFunctionPrototype) {
+  // Locked properties are non-writable, non-enumerable, and non-configurable.
+  if (IsLockedInitOp(op)) {
+    return {};
+  }
+
+  // Hidden properties are writable, non-enumerable, and configurable.
+  if (IsHiddenInitOp(op)) {
+    return {
+        PropertyFlag::Writable,
+        PropertyFlag::Configurable,
+    };
+  }
+
+  // This is a special case to overwrite an unresolved function.prototype
+  // property. The initial property flags of this property are writable,
+  // non-enumerable, and non-configurable. See canAttachAddSlotStub.
+  if (isFunctionPrototype) {
+    return {
+        PropertyFlag::Writable,
+    };
+  }
+
+  // Other properties are writable, enumerable, and configurable.
+  return PropertyFlags::defaultDataPropFlags;
+}
+
 AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   ValOperandId objValId(writer.setInputOperandId(0));
   ValOperandId rhsValId;
@@ -4683,10 +4710,11 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
   bool isFunctionPrototype = IsFunctionPrototype(cx_->names(), nobj, id);
 
   JSOp op = JSOp(*pc_);
+  PropertyFlags flags = SetPropertyFlags(op, isFunctionPrototype);
 
   // Basic shape checks.
   if (newShape->isDictionary() || !propInfo.isDataProperty() ||
-      !propInfo.writable()) {
+      propInfo.flags() != flags) {
     return AttachDecision::NoAction;
   }
 
