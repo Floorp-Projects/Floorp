@@ -208,8 +208,8 @@ nsresult nsXULPrototypeCache::WritePrototype(
 
 nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
                                              nsIObjectInputStream** stream) {
-  nsAutoCString spec(kXULCachePrefix);
-  nsresult rv = PathifyURI(uri, spec);
+  nsAutoCString spec;
+  nsresult rv = PathifyURI(kXULCachePrefix, uri, spec);
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
   const char* buf;
@@ -278,8 +278,8 @@ nsresult nsXULPrototypeCache::FinishOutputStream(nsIURI* uri) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mStartupCacheURITable.GetEntry(uri)) {
-    nsAutoCString spec(kXULCachePrefix);
-    rv = PathifyURI(uri, spec);
+    nsAutoCString spec;
+    rv = PathifyURI(kXULCachePrefix, uri, spec);
     if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
     rv = sc->PutBuffer(spec.get(), std::move(buf), len);
     if (NS_SUCCEEDED(rv)) {
@@ -298,8 +298,8 @@ nsresult nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists) {
     *exists = true;
     return NS_OK;
   }
-  nsAutoCString spec(kXULCachePrefix);
-  nsresult rv = PathifyURI(uri, spec);
+  nsAutoCString spec;
+  nsresult rv = PathifyURI(kXULCachePrefix, uri, spec);
   if (NS_FAILED(rv)) {
     *exists = false;
     return NS_OK;
