@@ -317,8 +317,6 @@ void CanonicalBrowsingContext::ReplacedBy(
   // about:blank documents created in it.
   txn.SetSandboxFlags(GetSandboxFlags());
   txn.SetInitialSandboxFlags(GetSandboxFlags());
-  txn.SetTargetTopLevelLinkClicksToBlankInternal(
-      TargetTopLevelLinkClicksToBlank());
   if (aNewContext->EverAttached()) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
   } else {
@@ -2678,12 +2676,6 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
 void CanonicalBrowsingContext::SetTouchEventsOverride(
     dom::TouchEventsOverride aOverride, ErrorResult& aRv) {
   SetTouchEventsOverrideInternal(aOverride, aRv);
-}
-
-void CanonicalBrowsingContext::SetTargetTopLevelLinkClicksToBlank(
-    bool aTargetTopLevelLinkClicksToBlank, ErrorResult& aRv) {
-  SetTargetTopLevelLinkClicksToBlankInternal(aTargetTopLevelLinkClicksToBlank,
-                                             aRv);
 }
 
 void CanonicalBrowsingContext::AddPageAwakeRequest() {

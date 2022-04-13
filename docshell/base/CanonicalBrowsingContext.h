@@ -322,8 +322,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   }
 
   void SetTouchEventsOverride(dom::TouchEventsOverride, ErrorResult& aRv);
-  void SetTargetTopLevelLinkClicksToBlank(bool aTargetTopLevelLinkClicksToBlank,
-                                          ErrorResult& aRv);
 
   bool IsReplaced() const { return mIsReplaced; }
 

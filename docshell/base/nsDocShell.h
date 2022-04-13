@@ -1114,8 +1114,7 @@ class nsDocShell final : public nsDocLoader,
   bool NoopenerForceEnabled();
 
   bool ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
-                               nsIURI* aLinkURI, nsIContent* aContent,
-                               bool aIsUserTriggered);
+                               nsIURI* aLinkURI, nsIContent* aContent);
 
   void RecordSingleChannelId(bool aStartRequest, nsIRequest* aRequest);
 
