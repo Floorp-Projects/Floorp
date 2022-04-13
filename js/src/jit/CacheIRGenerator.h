@@ -510,10 +510,10 @@ class MOZ_RAII InlinableNativeIRGenerator {
   HandleValueArray args_;
   uint32_t argc_;
   CallFlags flags_;
-  JSOp op_;
 
   HandleScript script() const { return generator_.script_; }
   bool isFirstStub() const { return generator_.isFirstStub_; }
+  bool ignoresResult() const { return generator_.op_ == JSOp::CallIgnoresRv; }
 
   void emitNativeCalleeGuard(JSFunction* callee);
 
@@ -663,8 +663,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
         thisval_(generator.thisval_),
         args_(generator.args_),
         argc_(generator.argc_),
-        flags_(flags),
-        op_(generator.op_) {}
+        flags_(flags) {}
 
   AttachDecision tryAttachStub();
 };
