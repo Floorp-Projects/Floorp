@@ -787,6 +787,14 @@
       "type": "boolean"
     },
 
+    "PasswordManagerExceptions": {
+      "type": "array",
+      "strict": false,
+      "items": {
+        "type": "origin"
+      }
+    },
+
     "PDFjs": {
       "type": "object",
       "properties": {
