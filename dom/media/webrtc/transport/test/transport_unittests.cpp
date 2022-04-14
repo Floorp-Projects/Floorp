@@ -1383,7 +1383,7 @@ class TransportSrtpParameterTest
     : public TransportTest,
       public ::testing::WithParamInterface<uint16_t> {};
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     SrtpParamInit, TransportSrtpParameterTest,
     ::testing::ValuesIn(TransportLayerDtls::GetDefaultSrtpCiphers()));
 

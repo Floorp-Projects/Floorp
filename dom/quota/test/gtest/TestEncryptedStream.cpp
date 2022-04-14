@@ -740,7 +740,7 @@ TEST_P(ParametrizedSeekCryptTest, DummyCipherStrategy_Seek) {
             Span{readData}.First(read).AsConst());
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DOM_Quota_EncryptedStream_Parametrized, ParametrizedCryptTest,
     testing::Combine(
         /* dataSize */ testing::Values(0u, 16u, 256u, 512u, 513u),
@@ -755,7 +755,7 @@ INSTANTIATE_TEST_CASE_P(
         testing::Values(FlushMode::Never, FlushMode::AfterEachChunk)),
     TestParamToString);
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     DOM_IndexedDB_EncryptedStream_ParametrizedSeek, ParametrizedSeekCryptTest,
     testing::Combine(
         /* dataSize */ testing::Values(0u, 16u, 256u, 512u, 513u),
