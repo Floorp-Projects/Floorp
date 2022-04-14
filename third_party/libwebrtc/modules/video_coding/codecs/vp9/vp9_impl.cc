@@ -27,12 +27,16 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/codecs/vp9/svc_rate_allocator.h"
+#include "modules/video_coding/svc/create_scalability_structure.h"
+#include "modules/video_coding/svc/scalable_video_controller.h"
+#include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "libyuv/include/libyuv/convert.h"
@@ -214,6 +218,107 @@ void UpdateRateSettings(vpx_codec_enc_cfg_t* config,
   config->rc_dropframe_thresh = new_settings.rc_dropframe_thresh;
 }
 
+std::unique_ptr<ScalableVideoController> CreateVp9ScalabilityStructure(
+    const VideoCodec& codec) {
+  int num_spatial_layers = codec.VP9().numberOfSpatialLayers;
+  int num_temporal_layers =
+      std::max(1, int{codec.VP9().numberOfTemporalLayers});
+  if (num_spatial_layers == 1 && num_temporal_layers == 1) {
+    return std::make_unique<ScalableVideoControllerNoLayering>();
+  }
+
+  if (codec.VP9().interLayerPred != InterLayerPredMode::kOn ||
+      codec.mode == VideoCodecMode::kScreensharing) {
+    // TODO(bugs.webrtc.org/11999): Return names of the structure when they are
+    // implemented and support frame skipping.
+    return nullptr;
+  }
+
+  char name[20];
+  rtc::SimpleStringBuilder ss(name);
+  ss << "L" << num_spatial_layers << "T" << num_temporal_layers;
+
+  // Check spatial ratio.
+  if (num_spatial_layers > 1 && codec.spatialLayers[0].targetBitrate > 0) {
+    if (codec.width != codec.spatialLayers[num_spatial_layers - 1].width ||
+        codec.height != codec.spatialLayers[num_spatial_layers - 1].height) {
+      RTC_LOG(LS_WARNING)
+          << "Top layer resolution expected to match overall resolution";
+      return nullptr;
+    }
+    // Check if the ratio is one of the supported.
+    int numerator;
+    int denominator;
+    if (codec.spatialLayers[1].width == 2 * codec.spatialLayers[0].width) {
+      numerator = 1;
+      denominator = 2;
+      // no suffix for 1:2 ratio.
+    } else if (2 * codec.spatialLayers[1].width ==
+               3 * codec.spatialLayers[0].width) {
+      numerator = 2;
+      denominator = 3;
+      ss << "h";
+    } else {
+      RTC_LOG(LS_WARNING) << "Unsupported scalability ratio "
+                          << codec.spatialLayers[0].width << ":"
+                          << codec.spatialLayers[1].width;
+      return nullptr;
+    }
+    // Validate ratio is consistent for all spatial layer transitions.
+    for (int sid = 1; sid < num_spatial_layers; ++sid) {
+      if (codec.spatialLayers[sid].width * numerator !=
+              codec.spatialLayers[sid - 1].width * denominator ||
+          codec.spatialLayers[sid].height * numerator !=
+              codec.spatialLayers[sid - 1].height * denominator) {
+        RTC_LOG(LS_WARNING) << "Inconsistent scalability ratio " << numerator
+                            << ":" << denominator;
+        return nullptr;
+      }
+    }
+  }
+
+  auto scalability_structure_controller = CreateScalabilityStructure(name);
+  if (scalability_structure_controller == nullptr) {
+    RTC_LOG(LS_WARNING) << "Unsupported scalability structure " << name;
+  } else {
+    RTC_LOG(LS_INFO) << "Created scalability structure " << name;
+  }
+  return scalability_structure_controller;
+}
+
+vpx_svc_ref_frame_config_t Vp9References(
+    rtc::ArrayView<const ScalableVideoController::LayerFrameConfig> layers) {
+  vpx_svc_ref_frame_config_t ref_config = {};
+  for (const ScalableVideoController::LayerFrameConfig& layer_frame : layers) {
+    const auto& buffers = layer_frame.Buffers();
+    RTC_DCHECK_LE(buffers.size(), 3);
+    int sid = layer_frame.SpatialId();
+    if (!buffers.empty()) {
+      ref_config.lst_fb_idx[sid] = buffers[0].id;
+      ref_config.reference_last[sid] = buffers[0].referenced;
+      if (buffers[0].updated) {
+        ref_config.update_buffer_slot[sid] |= (1 << buffers[0].id);
+      }
+    }
+    if (buffers.size() > 1) {
+      ref_config.gld_fb_idx[sid] = buffers[1].id;
+      ref_config.reference_golden[sid] = buffers[1].referenced;
+      if (buffers[1].updated) {
+        ref_config.update_buffer_slot[sid] |= (1 << buffers[1].id);
+      }
+    }
+    if (buffers.size() > 2) {
+      ref_config.alt_fb_idx[sid] = buffers[2].id;
+      ref_config.reference_alt_ref[sid] = buffers[2].referenced;
+      if (buffers[2].updated) {
+        ref_config.update_buffer_slot[sid] |= (1 << buffers[2].id);
+      }
+    }
+  }
+  // TODO(bugs.webrtc.org/11999): Fill ref_config.duration
+  return ref_config;
+}
+
 }  // namespace
 
 void VP9EncoderImpl::EncoderOutputCodedPacketCallback(vpx_codec_cx_pkt* pkt,
@@ -262,6 +367,9 @@ VP9EncoderImpl::VP9EncoderImpl(const cricket::VideoCodec& codec,
       first_frame_in_picture_(true),
       ss_info_needed_(false),
       force_all_active_layers_(false),
+      use_svc_controller_(
+          absl::StartsWith(trials.Lookup("WebRTC-Vp9DependencyDescriptor"),
+                           "Enabled")),
       num_cores_(0),
       is_flexible_mode_(false),
       variable_framerate_experiment_(ParseVariableFramerateConfig(trials)),
@@ -439,6 +547,18 @@ bool VP9EncoderImpl::SetSvcRates(
     force_all_active_layers_ = true;
   }
 
+  if (svc_controller_) {
+    VideoBitrateAllocation allocation;
+    for (int sid = 0; sid < num_spatial_layers_; ++sid) {
+      for (int tid = 0; tid < num_temporal_layers_; ++tid) {
+        allocation.SetBitrate(
+            sid, tid,
+            config_->layer_target_bitrate[sid * num_temporal_layers_ + tid] *
+                1000);
+      }
+    }
+    svc_controller_->OnRatesUpdated(allocation);
+  }
   current_bitrate_allocation_ = bitrate_allocation;
   cpu_speed_ = GetCpuSpeed(highest_active_width, highest_active_height);
   config_changed_ = true;
@@ -529,6 +649,9 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
     num_temporal_layers_ = 1;
   }
 
+  if (use_svc_controller_) {
+    svc_controller_ = CreateVp9ScalabilityStructure(*inst);
+  }
   framerate_controller_ = std::vector<FramerateController>(
       num_spatial_layers_, FramerateController(codec_.maxFramerate));
 
@@ -707,7 +830,13 @@ int VP9EncoderImpl::InitAndSetControlSettings(const VideoCodec* inst) {
     svc_params_.min_quantizers[i] = config_->rc_min_quantizer;
   }
   config_->ss_number_layers = num_spatial_layers_;
-  if (ExplicitlyConfiguredSpatialLayers()) {
+  if (svc_controller_) {
+    auto stream_config = svc_controller_->StreamConfig();
+    for (int i = 0; i < stream_config.num_spatial_layers; ++i) {
+      svc_params_.scaling_factor_num[i] = stream_config.scaling_factor_num[i];
+      svc_params_.scaling_factor_den[i] = stream_config.scaling_factor_den[i];
+    }
+  } else if (ExplicitlyConfiguredSpatialLayers()) {
     for (int i = 0; i < num_spatial_layers_; ++i) {
       const auto& layer = codec_.spatialLayers[i];
       RTC_CHECK_GT(layer.width, 0);
@@ -921,6 +1050,13 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
     force_key_frame_ = true;
   }
 
+  if (svc_controller_) {
+    layer_frames_ = svc_controller_->NextFrameConfig(force_key_frame_);
+    if (layer_frames_.empty()) {
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+  }
+
   vpx_svc_layer_id_t layer_id = {0};
   if (!force_key_frame_) {
     const size_t gof_idx = (pics_since_key_ + 1) % gof_.num_frames_in_gof;
@@ -990,6 +1126,15 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
 
   if (layer_id.spatial_layer_id < first_active_layer_) {
     layer_id.spatial_layer_id = first_active_layer_;
+  }
+
+  if (svc_controller_) {
+    layer_id.spatial_layer_id = layer_frames_.front().SpatialId();
+    layer_id.temporal_layer_id = layer_frames_.front().TemporalId();
+    for (const auto& layer : layer_frames_) {
+      layer_id.temporal_layer_id_per_spatial[layer.SpatialId()] =
+          layer.TemporalId();
+    }
   }
 
   vpx_codec_control(encoder_, VP9E_SET_SVC_LAYER_ID, &layer_id);
@@ -1095,7 +1240,10 @@ int VP9EncoderImpl::Encode(const VideoFrame& input_image,
     flags = VPX_EFLAG_FORCE_KF;
   }
 
-  if (external_ref_control_) {
+  if (svc_controller_) {
+    vpx_svc_ref_frame_config_t ref_config = Vp9References(layer_frames_);
+    vpx_codec_control(encoder_, VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_config);
+  } else if (external_ref_control_) {
     vpx_svc_ref_frame_config_t ref_config =
         SetReferences(force_key_frame_, layer_id.spatial_layer_id);
 
@@ -1305,6 +1453,31 @@ void VP9EncoderImpl::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
   }
 
   first_frame_in_picture_ = false;
+
+  // Populate codec-agnostic section in the codec specific structure.
+  if (svc_controller_) {
+    auto it = absl::c_find_if(
+        layer_frames_,
+        [&](const ScalableVideoController::LayerFrameConfig& config) {
+          return config.SpatialId() == spatial_idx->value_or(0);
+        });
+    RTC_CHECK(it != layer_frames_.end())
+        << "Failed to find spatial id " << spatial_idx->value_or(0);
+    codec_specific->generic_frame_info = svc_controller_->OnEncodeDone(*it);
+    if (is_key_frame) {
+      codec_specific->template_structure =
+          svc_controller_->DependencyStructure();
+      auto& resolutions = codec_specific->template_structure->resolutions;
+      resolutions.resize(num_spatial_layers_);
+      for (int sid = 0; sid < num_spatial_layers_; ++sid) {
+        resolutions[sid] = RenderResolution(
+            /*width=*/codec_.width * svc_params_.scaling_factor_num[sid] /
+                svc_params_.scaling_factor_den[sid],
+            /*height=*/codec_.height * svc_params_.scaling_factor_num[sid] /
+                svc_params_.scaling_factor_den[sid]);
+      }
+    }
+  }
 }
 
 void VP9EncoderImpl::FillReferenceIndices(const vpx_codec_cx_pkt& pkt,
