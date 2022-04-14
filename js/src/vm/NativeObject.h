@@ -997,9 +997,9 @@ class NativeObject : public JSObject {
                                            HandleNativeObject obj,
                                            uint32_t nfixed);
 
+  void freeDynamicSlotsAfterSwap(NativeObject* old);
   [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
                                             HandleNativeObject obj,
-                                            NativeObject* old,
                                             HandleValueVector values);
 
  public:
