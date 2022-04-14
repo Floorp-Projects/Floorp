@@ -37,12 +37,14 @@ add_task(async function() {
   );
 
   const beforeCreateXUL = await waitFor(() =>
-    findMessage(hud, "before createXULElement")
+    findMessage(hud, "before createXULElement", ".console-api")
   );
   const afterCreateXUL = await waitFor(() =>
-    findMessage(hud, "after createXULElement")
+    findMessage(hud, "after createXULElement", ".console-api")
   );
-  const inMicroTask = await waitFor(() => findMessage(hud, "in microtask"));
+  const inMicroTask = await waitFor(() =>
+    findMessage(hud, "in microtask", ".console-api")
+  );
 
   const getMessageIndex = msg => {
     const text = msg.textContent;
