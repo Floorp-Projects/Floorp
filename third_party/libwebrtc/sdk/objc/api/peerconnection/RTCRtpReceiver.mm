@@ -125,8 +125,6 @@ void RtpReceiverDelegateAdapter::OnFirstPacketReceived(
       return RTCRtpMediaTypeVideo;
     case cricket::MEDIA_TYPE_DATA:
       return RTCRtpMediaTypeData;
-    case cricket::MEDIA_TYPE_UNSUPPORTED:
-      return RTCRtpMediaTypeUnsupported;
   }
 }
 
@@ -138,8 +136,6 @@ void RtpReceiverDelegateAdapter::OnFirstPacketReceived(
       return cricket::MEDIA_TYPE_VIDEO;
     case RTCRtpMediaTypeData:
       return cricket::MEDIA_TYPE_DATA;
-    case RTCRtpMediaTypeUnsupported:
-      return cricket::MEDIA_TYPE_UNSUPPORTED;
   }
 }
 
@@ -151,8 +147,6 @@ void RtpReceiverDelegateAdapter::OnFirstPacketReceived(
       return @"VIDEO";
     case RTCRtpMediaTypeData:
       return @"DATA";
-    case RTCRtpMediaTypeUnsupported:
-      return @"UNSUPPORTED";
   }
 }
 

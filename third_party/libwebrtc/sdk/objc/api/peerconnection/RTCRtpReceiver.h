@@ -21,7 +21,6 @@ typedef NS_ENUM(NSInteger, RTCRtpMediaType) {
   RTCRtpMediaTypeAudio,
   RTCRtpMediaTypeVideo,
   RTCRtpMediaTypeData,
-  RTCRtpMediaTypeUnsupported,
 };
 
 @class RTC_OBJC_TYPE(RTCRtpReceiver);
