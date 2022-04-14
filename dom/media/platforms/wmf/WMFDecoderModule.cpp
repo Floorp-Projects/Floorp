@@ -182,6 +182,11 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
                                      VP8_USABLE_BUILD);
         return E_FAIL;
       }
+      if (!gfx::gfxVars::UseVP8HwDecode()) {
+        WmfDecoderModuleMarkerAndLog("WMFInit VP8 Failure",
+                                     "Gfx VP8 blocklist");
+        return E_FAIL;
+      }
       [[fallthrough]];
     case WMFStreamType::VP9:
       if (!sDXVAEnabled) {
