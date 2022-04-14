@@ -410,6 +410,78 @@ const gTestcases = [
     expectConstruction: true,
     expectReflow: true,
   },
+  // changing scroll-behavior should not cause reflow or frame construction
+  {
+    elem: document.documentElement,
+    /* beforeStyle: implicitly 'scroll-behavior: auto' */
+    afterStyle:  "scroll-behavior: smooth",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "scroll-behavior: smooth",
+    afterStyle:  "scroll-behavior: auto",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'scroll-behavior: auto' */
+    afterStyle:  "scroll-behavior: smooth",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "scroll-behavior: smooth",
+    afterStyle:  "scroll-behavior: auto",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  // changing scroll-snap-type should not cause reflow or frame construction
+  {
+    elem: document.documentElement,
+    /* beforeStyle: implicitly 'scroll-snap-type: none' */
+    afterStyle:  "scroll-snap-type: y mandatory",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.documentElement,
+    /* beforeStyle: implicitly 'scroll-snap-type: none' */
+    afterStyle:  "scroll-snap-type: x proximity",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "scroll-snap-type: y mandatory",
+    afterStyle:  "scroll-snap-type: none",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'scroll-snap-type: none' */
+    afterStyle:  "scroll-snap-type: y mandatory",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.body,
+    /* beforeStyle: implicitly 'scroll-snap-type: none' */
+    afterStyle:  "scroll-snap-type: x proximity",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.body,
+    beforeStyle: "scroll-snap-type: y mandatory",
+    afterStyle:  "scroll-snap-type: none",
+    expectConstruction: false,
+    expectReflow: false,
+  },
 ];
 
 // Helper function to let us call either "is" or "isnot" & assemble
