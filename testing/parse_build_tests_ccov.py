@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import zipfile
 import buildconfig
+from mozbuild import shellutil
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
     if buildconfig.substs["OS_TARGET"] == "WINNT":
         # We use WINDOWSSDKDIR to find the directory holding the system headers on Windows.
         windows_sdk_dir = None
-        config_opts = buildconfig.substs["MOZ_CONFIGURE_OPTIONS"].split(" ")
+        config_opts = shellutil.split(buildconfig.substs["MOZ_CONFIGURE_OPTIONS"])
         for opt in config_opts:
             if opt.startswith("WINDOWSSDKDIR="):
                 windows_sdk_dir = opt[len("WINDOWSSDKDIR=") :]
