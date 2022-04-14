@@ -86,7 +86,7 @@ add_task(
     });
 
     info("Open a DevTools toolbox on the target extension");
-    const { devtoolsTab } = await openAboutDevtoolsToolbox(
+    const { devtoolsTab, devtoolsWindow } = await openAboutDevtoolsToolbox(
       document,
       tab,
       window,
@@ -156,6 +156,28 @@ add_task(
       // the one associated to the devtools toolbox tab.
       targetElement: target,
     });
+
+    info(
+      "Wait for warning message expected to be logged for the event page not terminated on idle"
+    );
+    const toolbox = getToolbox(devtoolsWindow);
+    const webconsole = await toolbox.selectTool("webconsole");
+    const { hud } = webconsole;
+    const expectedWarning =
+      "Background event page was not terminated on idle because a DevTools toolbox is attached to the extension.";
+    let consoleElements;
+    await waitUntil(() => {
+      consoleElements = findMessages(hud, expectedWarning);
+      return consoleElements.length > 0;
+    });
+
+    const locationElement = consoleElements[0].querySelector(
+      ".frame-link-filename"
+    );
+    ok(
+      locationElement.textContent.endsWith("_generated_background_page.html"),
+      "The warning message is associated to the event page url"
+    );
 
     info(
       "Verify event page is terminated on idle after closing the DevTools toolbox"

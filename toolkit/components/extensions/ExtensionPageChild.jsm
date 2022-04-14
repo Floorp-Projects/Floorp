@@ -77,6 +77,29 @@ const initializeBackgroundPage = context => {
     Services.console.logMessage(consoleMsg);
   }
 
+  function ignoredSuspendListener() {
+    logWarningMessage({
+      text:
+        "Background event page was not terminated on idle because a DevTools toolbox is attached to the extension.",
+      filename: context.contentWindow.location.href,
+    });
+  }
+
+  if (!context.extension.manifest.background.persistent) {
+    context.extension.on(
+      "background-script-suspend-ignored",
+      ignoredSuspendListener
+    );
+    context.callOnClose({
+      close: () => {
+        context.extension.off(
+          "background-script-suspend-ignored",
+          ignoredSuspendListener
+        );
+      },
+    });
+  }
+
   let alertOverwrite = text => {
     const { filename, columnNumber, lineNumber } = Components.stack.caller;
 

@@ -252,11 +252,3 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
 });
-
-function findMessages(hud, text, selector = ".message") {
-  const messages = hud.ui.outputNode.querySelectorAll(selector);
-  const elements = Array.prototype.filter.call(messages, el =>
-    el.textContent.includes(text)
-  );
-  return elements;
-}

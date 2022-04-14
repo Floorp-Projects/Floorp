@@ -2034,6 +2034,7 @@ const PROXIED_EVENTS = new Set([
   "test-harness-message",
   "add-permissions",
   "remove-permissions",
+  "background-script-suspend-ignored",
 ]);
 
 class BootstrapScope {
