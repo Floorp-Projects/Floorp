@@ -134,7 +134,7 @@ class BaseChannel : public ChannelInterface,
   // This method will also remove any existing streams that were bound to this
   // channel on the basis of payload type, since one of these streams might
   // actually belong to a new channel. See: crbug.com/webrtc/11477
-  void SetPayloadTypeDemuxingEnabled(bool enabled) override;
+  bool SetPayloadTypeDemuxingEnabled(bool enabled) override;
 
   bool Enable(bool enable) override;
 
@@ -224,7 +224,7 @@ class BaseChannel : public ChannelInterface,
   bool AddRecvStream_w(const StreamParams& sp);
   bool RemoveRecvStream_w(uint32_t ssrc);
   void ResetUnsignaledRecvStream_w();
-  void SetPayloadTypeDemuxingEnabled_w(bool enabled);
+  bool SetPayloadTypeDemuxingEnabled_w(bool enabled);
   bool AddSendStream_w(const StreamParams& sp);
   bool RemoveSendStream_w(uint32_t ssrc);
 
@@ -322,6 +322,8 @@ class BaseChannel : public ChannelInterface,
   webrtc::RtpTransceiverDirection remote_content_direction_ =
       webrtc::RtpTransceiverDirection::kInactive;
 
+  // Cached list of payload types, used if payload type demuxing is re-enabled.
+  std::set<uint8_t> payload_types_ RTC_GUARDED_BY(worker_thread());
   webrtc::RtpDemuxerCriteria demuxer_criteria_;
   // This generator is used to generate SSRCs for local streams.
   // This is needed in cases where SSRCs are not negotiated or set explicitly
