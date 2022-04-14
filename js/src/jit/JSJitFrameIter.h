@@ -404,7 +404,10 @@ class SnapshotIterator {
   uintptr_t fromRegister(Register reg) const { return machine_->read(reg); }
 
   bool hasRegister(FloatRegister reg) const { return machine_->has(reg); }
-  double fromRegister(FloatRegister reg) const { return machine_->read(reg); }
+  template <typename T>
+  T fromRegister(FloatRegister reg) const {
+    return machine_->read<T>(reg);
+  }
 
   // Read an uintptr_t from the stack.
   bool hasStack(int32_t offset) const { return true; }

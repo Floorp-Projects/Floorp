@@ -1627,19 +1627,10 @@ Value SnapshotIterator::allocationValue(const RValueAllocation& alloc,
       return NullValue();
 
     case RValueAllocation::DOUBLE_REG:
-      return DoubleValue(fromRegister(alloc.fpuReg()));
+      return DoubleValue(fromRegister<double>(alloc.fpuReg()));
 
-    case RValueAllocation::ANY_FLOAT_REG: {
-      union {
-        double d;
-        float f;
-      } pun;
-      MOZ_ASSERT(alloc.fpuReg().isSingle());
-      pun.d = fromRegister(alloc.fpuReg());
-      // The register contains the encoding of a float32. We just read
-      // the bits without making any conversion.
-      return Float32Value(pun.f);
-    }
+    case RValueAllocation::ANY_FLOAT_REG:
+      return Float32Value(fromRegister<float>(alloc.fpuReg()));
 
     case RValueAllocation::ANY_FLOAT_STACK:
       return Float32Value(ReadFrameFloat32Slot(fp_, alloc.stackOffset()));
@@ -2241,18 +2232,28 @@ uintptr_t MachineState::read(Register reg) const {
   MOZ_CRASH("Invalid state");
 }
 
-double MachineState::read(FloatRegister reg) const {
+template <typename T>
+T MachineState::read(FloatRegister reg) const {
+  MOZ_ASSERT(reg.size() == sizeof(T));
+
   if (state_.is<BailoutState>()) {
     uint32_t offset = reg.getRegisterDumpOffsetInBytes();
 
     MOZ_ASSERT((offset % sizeof(FloatRegisters::RegisterContent)) == 0);
     uint32_t index = offset / sizeof(FloatRegisters::RegisterContent);
 
-    return state_.as<BailoutState>().floatRegs[index].d;
+    FloatRegisters::RegisterContent content =
+        state_.as<BailoutState>().floatRegs[index];
+    if constexpr (std::is_same_v<T, double>) {
+      return content.d;
+    } else {
+      static_assert(std::is_same_v<T, float>);
+      return content.s;
+    }
   }
   if (state_.is<SafepointState>()) {
     char* addr = state_.as<SafepointState>().addressOfRegister(reg);
-    return *reinterpret_cast<double*>(addr);
+    return *reinterpret_cast<T*>(addr);
   }
   MOZ_CRASH("Invalid state");
 }

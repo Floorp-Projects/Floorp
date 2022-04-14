@@ -235,6 +235,7 @@ class FloatRegisters {
 
   // Content spilled during bailouts.
   union RegisterContent {
+    float s;
     double d;
   };
 
