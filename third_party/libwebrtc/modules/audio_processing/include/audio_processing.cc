@@ -71,19 +71,15 @@ AudioProcessing::Config::Pipeline::Pipeline()
     : maximum_internal_processing_rate(GetDefaultMaxInternalRate()) {}
 
 std::string AudioProcessing::Config::ToString() const {
-  char buf[1024];
+  char buf[2048];
   rtc::SimpleStringBuilder builder(buf);
   builder << "AudioProcessing::Config{ "
              "pipeline: {"
              "maximum_internal_processing_rate: "
           << pipeline.maximum_internal_processing_rate
           << ", multi_channel_render: " << pipeline.multi_channel_render
-          << ", "
-             ", multi_channel_capture: "
-          << pipeline.multi_channel_capture
-          << "}, "
-             "pre_amplifier: { enabled: "
-          << pre_amplifier.enabled
+          << ", multi_channel_capture: " << pipeline.multi_channel_capture
+          << "}, pre_amplifier: { enabled: " << pre_amplifier.enabled
           << ", fixed_gain_factor: " << pre_amplifier.fixed_gain_factor
           << " }, high_pass_filter: { enabled: " << high_pass_filter.enabled
           << " }, echo_canceller: { enabled: " << echo_canceller.enabled
@@ -106,18 +102,29 @@ std::string AudioProcessing::Config::ToString() const {
           << " }, gain_controller2: { enabled: " << gain_controller2.enabled
           << ", fixed_digital: { gain_db: "
           << gain_controller2.fixed_digital.gain_db
-          << " }, adaptive_digital: { enabled: "
-          << gain_controller2.adaptive_digital.enabled << ", level_estimator: "
+          << "}, adaptive_digital: { enabled: "
+          << gain_controller2.adaptive_digital.enabled
+          << ", level_estimator: { type: "
           << GainController2LevelEstimatorToString(
                  gain_controller2.adaptive_digital.level_estimator)
-          << ", use_saturation_protector: "
-          << gain_controller2.adaptive_digital.use_saturation_protector
+          << ", adjacent_speech_frames_threshold: "
+          << gain_controller2.adaptive_digital
+                 .level_estimator_adjacent_speech_frames_threshold
+          << ", initial_saturation_margin_db: "
+          << gain_controller2.adaptive_digital.initial_saturation_margin_db
           << ", extra_saturation_margin_db: "
           << gain_controller2.adaptive_digital.extra_saturation_margin_db
+          << "}, gain_applier: { adjacent_speech_frames_threshold: "
+          << gain_controller2.adaptive_digital
+                 .gain_applier_adjacent_speech_frames_threshold
+          << ", max_gain_change_db_per_second: "
+          << gain_controller2.adaptive_digital.max_gain_change_db_per_second
+          << ", max_output_noise_level_dbfs: "
+          << gain_controller2.adaptive_digital.max_output_noise_level_dbfs
           << " } }, residual_echo_detector: { enabled: "
           << residual_echo_detector.enabled
           << " }, level_estimation: { enabled: " << level_estimation.enabled
-          << " } }";
+          << " }}}";
   return builder.str();
 }
 
