@@ -11,6 +11,9 @@
 #ifndef PC_SDP_OFFER_ANSWER_H_
 #define PC_SDP_OFFER_ANSWER_H_
 
+#include <stddef.h>
+#include <stdint.h>
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -18,25 +21,50 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
+#include "api/candidate.h"
+#include "api/jsep.h"
 #include "api/jsep_ice_candidate.h"
+#include "api/media_stream_interface.h"
+#include "api/media_types.h"
 #include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_transceiver_direction.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/set_local_description_observer_interface.h"
+#include "api/set_remote_description_observer_interface.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/turn_customizer.h"
+#include "media/base/stream_params.h"
+#include "p2p/base/port_allocator.h"
+#include "pc/channel.h"
+#include "pc/channel_interface.h"
+#include "pc/channel_manager.h"
 #include "pc/data_channel_controller.h"
 #include "pc/ice_server_parsing.h"
 #include "pc/jsep_transport_controller.h"
+#include "pc/media_session.h"
+#include "pc/media_stream_observer.h"
 #include "pc/peer_connection_factory.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/rtc_stats_collector.h"
+#include "pc/rtp_receiver.h"
 #include "pc/rtp_sender.h"
 #include "pc/rtp_transceiver.h"
 #include "pc/sctp_transport.h"
+#include "pc/session_description.h"
 #include "pc/stats_collector.h"
 #include "pc/stream_collection.h"
+#include "pc/transceiver_list.h"
 #include "pc/webrtc_session_description_factory.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/operations_chain.h"
 #include "rtc_base/race_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
 #include "rtc_base/weak_ptr.h"
 
@@ -156,8 +184,10 @@ class SdpOfferAnswerHandler {
 
  private:
   class ImplicitCreateSessionDescriptionObserver;
+
   friend class ImplicitCreateSessionDescriptionObserver;
   class SetSessionDescriptionObserverAdapter;
+
   friend class SetSessionDescriptionObserverAdapter;
 
   enum class SessionError {
