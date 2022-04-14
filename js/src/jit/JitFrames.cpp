@@ -1715,21 +1715,6 @@ Value SnapshotIterator::allocationValue(const RValueAllocation& alloc,
   }
 }
 
-const FloatRegisters::RegisterContent* SnapshotIterator::floatAllocationPointer(
-    const RValueAllocation& alloc) const {
-  switch (alloc.mode()) {
-    case RValueAllocation::ANY_FLOAT_REG:
-      return machine_->address(alloc.fpuReg());
-
-    case RValueAllocation::ANY_FLOAT_STACK:
-      return (FloatRegisters::RegisterContent*)AddressOfFrameSlot(
-          fp_, alloc.stackOffset());
-
-    default:
-      MOZ_CRASH("Not a float allocation.");
-  }
-}
-
 Value SnapshotIterator::maybeRead(const RValueAllocation& a,
                                   MaybeReadFallback& fallback) {
   if (allocationReadable(a)) {

@@ -421,10 +421,6 @@ class SnapshotIterator {
   void writeAllocationValuePayload(const RValueAllocation& a, const Value& v);
   void warnUnreadableAllocation();
 
- private:
-  const FloatRegisters::RegisterContent* floatAllocationPointer(
-      const RValueAllocation& a) const;
-
  public:
   // Handle iterating over RValueAllocations of the snapshots.
   inline RValueAllocation readAllocation() {
