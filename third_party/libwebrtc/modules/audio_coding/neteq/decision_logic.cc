@@ -198,26 +198,24 @@ void DecisionLogic::ExpandDecision(NetEq::Operation operation) {
   }
 }
 
-absl::optional<int> DecisionLogic::PacketArrived(bool is_cng_or_dtmf,
-                                                 size_t packet_length_samples,
-                                                 bool should_update_stats,
-                                                 uint16_t main_sequence_number,
-                                                 uint32_t main_timestamp,
-                                                 int fs_hz) {
-  if (is_cng_or_dtmf) {
+absl::optional<int> DecisionLogic::PacketArrived(
+    int fs_hz,
+    bool should_update_stats,
+    const PacketArrivedInfo& info) {
+  if (info.is_cng_or_dtmf) {
     last_pack_cng_or_dtmf_ = true;
     return absl::nullopt;
   }
   if (!should_update_stats) {
     return absl::nullopt;
   }
-  if (packet_length_samples > 0 && fs_hz > 0 &&
-      packet_length_samples != packet_length_samples_) {
-    packet_length_samples_ = packet_length_samples;
+  if (info.packet_length_samples > 0 && fs_hz > 0 &&
+      info.packet_length_samples != packet_length_samples_) {
+    packet_length_samples_ = info.packet_length_samples;
     delay_manager_->SetPacketAudioLength(packet_length_samples_ * 1000 / fs_hz);
   }
   auto relative_delay = delay_manager_->Update(
-      main_timestamp, fs_hz, /*reset=*/last_pack_cng_or_dtmf_);
+      info.main_timestamp, fs_hz, /*reset=*/last_pack_cng_or_dtmf_);
   last_pack_cng_or_dtmf_ = false;
   return relative_delay;
 }

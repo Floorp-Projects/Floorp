@@ -284,6 +284,8 @@ TEST_F(NetEqImplTest, RemoveAllPayloadTypes) {
 }
 
 TEST_F(NetEqImplTest, InsertPacket) {
+  using ::testing::AllOf;
+  using ::testing::Field;
   CreateInstance();
   const size_t kPayloadLength = 100;
   const uint8_t kPayloadType = 0;
@@ -347,20 +349,32 @@ TEST_F(NetEqImplTest, InsertPacket) {
     // All expectations within this block must be called in this specific order.
     InSequence sequence;  // Dummy variable.
     // Expectations when the first packet is inserted.
-    EXPECT_CALL(*mock_neteq_controller_,
-                PacketArrived(/*last_cng_or_dtmf*/ false,
-                              /*packet_length_samples*/ _,
-                              /*should_update_stats*/ _,
-                              /*main_sequence_number*/ kFirstSequenceNumber,
-                              /*main_timestamp*/ kFirstTimestamp,
-                              /*fs_hz*/ 8000));
-    EXPECT_CALL(*mock_neteq_controller_,
-                PacketArrived(/*last_cng_or_dtmf*/ false,
-                              /*packet_length_samples*/ _,
-                              /*should_update_stats*/ _,
-                              /*main_sequence_number*/ kFirstSequenceNumber + 1,
-                              /*main_timestamp*/ kFirstTimestamp + 160,
-                              /*fs_hz*/ 8000));
+    EXPECT_CALL(
+        *mock_neteq_controller_,
+        PacketArrived(
+            /*fs_hz*/ 8000,
+            /*should_update_stats*/ _,
+            /*info*/
+            AllOf(
+                Field(&NetEqController::PacketArrivedInfo::is_cng_or_dtmf,
+                      false),
+                Field(&NetEqController::PacketArrivedInfo::main_sequence_number,
+                      kFirstSequenceNumber),
+                Field(&NetEqController::PacketArrivedInfo::main_timestamp,
+                      kFirstTimestamp))));
+    EXPECT_CALL(
+        *mock_neteq_controller_,
+        PacketArrived(
+            /*fs_hz*/ 8000,
+            /*should_update_stats*/ _,
+            /*info*/
+            AllOf(
+                Field(&NetEqController::PacketArrivedInfo::is_cng_or_dtmf,
+                      false),
+                Field(&NetEqController::PacketArrivedInfo::main_sequence_number,
+                      kFirstSequenceNumber + 1),
+                Field(&NetEqController::PacketArrivedInfo::main_timestamp,
+                      kFirstTimestamp + 160))));
   }
 
   // Insert first packet.
@@ -1517,6 +1531,8 @@ TEST_F(NetEqImplTest, InsertEmptyPacket) {
 }
 
 TEST_F(NetEqImplTest, EnableRtxHandling) {
+  using ::testing::AllOf;
+  using ::testing::Field;
   UseNoMocks();
   use_mock_neteq_controller_ = true;
   config_.enable_rtx_handling = true;
@@ -1545,14 +1561,19 @@ TEST_F(NetEqImplTest, EnableRtxHandling) {
   // Insert second packet that was sent before the first packet.
   rtp_header.sequenceNumber -= 1;
   rtp_header.timestamp -= kPayloadLengthSamples;
-  EXPECT_CALL(*mock_neteq_controller_,
-              PacketArrived(
-                  /*last_cng_or_dtmf*/ _,
-                  /*packet_length_samples*/ kPayloadLengthSamples,
-                  /*should_update_stats*/ _,
-                  /*main_sequence_number*/ rtp_header.sequenceNumber,
-                  /*main_timestamp*/ rtp_header.timestamp,
-                  /*fs_hz*/ 8000));
+  EXPECT_CALL(
+      *mock_neteq_controller_,
+      PacketArrived(
+          /*fs_hz*/ 8000,
+          /*should_update_stats*/ _,
+          /*info*/
+          AllOf(
+              Field(&NetEqController::PacketArrivedInfo::packet_length_samples,
+                    kPayloadLengthSamples),
+              Field(&NetEqController::PacketArrivedInfo::main_sequence_number,
+                    rtp_header.sequenceNumber),
+              Field(&NetEqController::PacketArrivedInfo::main_timestamp,
+                    rtp_header.timestamp))));
 
   EXPECT_EQ(NetEq::kOK, neteq_->InsertPacket(rtp_header, payload));
 }

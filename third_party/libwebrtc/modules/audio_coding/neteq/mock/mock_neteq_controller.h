@@ -51,6 +51,12 @@ class MockNetEqController : public NetEqController {
                uint32_t main_timestamp,
                int fs_hz),
               (override));
+  MOCK_METHOD(absl::optional<int>,
+              PacketArrived,
+              (int fs_hz,
+               bool should_update_stats,
+               const PacketArrivedInfo& info),
+              (override));
   MOCK_METHOD(bool, PeakFound, (), (const, override));
   MOCK_METHOD(int, GetFilteredBufferLevel, (), (const, override));
   MOCK_METHOD(void, set_sample_memory, (int32_t value), (override));

@@ -680,6 +680,7 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
   }
 
   PacketList parsed_packet_list;
+  bool is_dtx = false;
   while (!packet_list.empty()) {
     Packet& packet = packet_list.front();
     const DecoderDatabase::DecoderInfo* info =
@@ -720,6 +721,7 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
         for (auto& result : results) {
           RTC_DCHECK(result.frame);
           RTC_DCHECK_GE(result.priority, 0);
+          is_dtx = is_dtx || result.frame->IsDtxPacket();
           if (first) {
             // Re-use the node and move it to parsed_packet_list.
             packet_list.front() = packet_from_result(result);
@@ -801,10 +803,13 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
       decoder_database_->GetDecoderInfo(main_payload_type);
   assert(dec_info);  // Already checked that the payload type is known.
 
-  const bool last_cng_or_dtmf =
-      dec_info->IsComfortNoise() || dec_info->IsDtmf();
-  const size_t packet_length_samples =
+  NetEqController::PacketArrivedInfo info;
+  info.is_cng_or_dtmf = dec_info->IsComfortNoise() || dec_info->IsDtmf();
+  info.packet_length_samples =
       number_of_primary_packets * decoder_frame_length_;
+  info.main_timestamp = main_timestamp;
+  info.main_sequence_number = main_sequence_number;
+  info.is_dtx = is_dtx;
   // Only update statistics if incoming packet is not older than last played
   // out packet or RTX handling is enabled, and if new codec flag is not
   // set.
@@ -813,9 +818,8 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
        static_cast<int32_t>(main_timestamp - timestamp_) >= 0) &&
       !new_codec_;
 
-  auto relative_delay = controller_->PacketArrived(
-      last_cng_or_dtmf, packet_length_samples, should_update_stats,
-      main_sequence_number, main_timestamp, fs_hz_);
+  auto relative_delay =
+      controller_->PacketArrived(fs_hz_, should_update_stats, info);
   if (relative_delay) {
     stats_->RelativePacketArrivalDelay(relative_delay.value());
   }
