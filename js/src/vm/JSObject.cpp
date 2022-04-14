@@ -1050,7 +1050,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   // This object has just been swapped with some other object, and its shape
   // no longer reflects its allocated size. Correct this information and
   // fill the slots in with the specified values.
-  MOZ_ASSERT(obj->slotSpan() == values.length());
+  MOZ_ASSERT_IF(!obj->inDictionaryMode(), obj->slotSpan() == values.length());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
   // Make sure the shape's numFixedSlots() is correct.
@@ -1063,7 +1063,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   }
 
   uint32_t oldDictionarySlotSpan =
-      obj->inDictionaryMode() ? obj->dictionaryModeSlotSpan() : 0;
+      obj->inDictionaryMode() ? values.length() : 0;
 
   size_t ndynamic =
       calculateDynamicSlots(nfixed, values.length(), obj->getClass());
