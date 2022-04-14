@@ -125,6 +125,7 @@ static const size_t kMaxAllowedValuesOfSamplesPerFrame = 480;
 // TODO(peah): Decrease this once we properly handle hugely unbalanced
 // reverse and forward call numbers.
 static const size_t kMaxNumFramesToBuffer = 100;
+
 }  // namespace
 
 // Throughout webrtc, it's assumed that success is represented by zero.
@@ -545,34 +546,10 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
       config_.echo_canceller.mobile_mode != config.echo_canceller.mobile_mode;
 
   const bool agc1_config_changed =
-      config_.gain_controller1.enabled != config.gain_controller1.enabled ||
-      config_.gain_controller1.mode != config.gain_controller1.mode ||
-      config_.gain_controller1.target_level_dbfs !=
-          config.gain_controller1.target_level_dbfs ||
-      config_.gain_controller1.compression_gain_db !=
-          config.gain_controller1.compression_gain_db ||
-      config_.gain_controller1.enable_limiter !=
-          config.gain_controller1.enable_limiter ||
-      config_.gain_controller1.analog_level_minimum !=
-          config.gain_controller1.analog_level_minimum ||
-      config_.gain_controller1.analog_level_maximum !=
-          config.gain_controller1.analog_level_maximum ||
-      config_.gain_controller1.analog_gain_controller.enabled !=
-          config.gain_controller1.analog_gain_controller.enabled ||
-      config_.gain_controller1.analog_gain_controller.startup_min_volume !=
-          config.gain_controller1.analog_gain_controller.startup_min_volume ||
-      config_.gain_controller1.analog_gain_controller.clipped_level_min !=
-          config.gain_controller1.analog_gain_controller.clipped_level_min ||
-      config_.gain_controller1.analog_gain_controller
-              .enable_agc2_level_estimator !=
-          config.gain_controller1.analog_gain_controller
-              .enable_agc2_level_estimator ||
-      config_.gain_controller1.analog_gain_controller.enable_digital_adaptive !=
-          config.gain_controller1.analog_gain_controller
-              .enable_digital_adaptive;
+      config_.gain_controller1 != config.gain_controller1;
 
   const bool agc2_config_changed =
-      config_.gain_controller2.enabled != config.gain_controller2.enabled;
+      config_.gain_controller2 != config.gain_controller2;
 
   const bool voice_detection_config_changed =
       config_.voice_detection.enabled != config.voice_detection.enabled;
