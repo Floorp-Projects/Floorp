@@ -121,6 +121,8 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
 
   void OnBitrateAllocationUpdated(
       const VideoBitrateAllocation& allocation) override;
+  void OnVideoLayersAllocationUpdated(
+      VideoLayersAllocation allocation) override;
 
   // Implements EncodedImageCallback. The implementation routes encoded frames
   // to the |payload_router_| and |config.pre_encode_callback| if set.

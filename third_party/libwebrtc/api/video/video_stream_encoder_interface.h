@@ -19,6 +19,7 @@
 #include "api/scoped_refptr.h"
 #include "api/units/data_rate.h"
 #include "api/video/video_bitrate_allocator.h"
+#include "api/video/video_layers_allocation.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "api/video_codecs/video_encoder.h"
@@ -52,6 +53,9 @@ class VideoStreamEncoderInterface : public rtc::VideoSinkInterface<VideoFrame> {
 
     virtual void OnBitrateAllocationUpdated(
         const VideoBitrateAllocation& allocation) = 0;
+
+    virtual void OnVideoLayersAllocationUpdated(
+        VideoLayersAllocation allocation) = 0;
   };
 
   // If the resource is overusing, the VideoStreamEncoder will try to reduce

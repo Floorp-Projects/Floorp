@@ -21,7 +21,6 @@ rtc_library("video_rtp_headers") {
     "hdr_metadata.h",
     "video_content_type.cc",
     "video_content_type.h",
-    "video_layers_allocation.h",
     "video_rotation.h",
     "video_timing.cc",
     "video_timing.h",
@@ -194,6 +193,13 @@ rtc_library("video_bitrate_allocation") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_source_set("video_layers_allocation") {
+  visibility = [ "*" ]
+  sources = [ "video_layers_allocation.h" ]
+  deps = [ "../units:data_rate" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
+}
+
 rtc_library("video_bitrate_allocator") {
   visibility = [ "*" ]
   sources = [
@@ -276,6 +282,7 @@ rtc_source_set("video_stream_encoder") {
     ":video_bitrate_allocator_factory",
     ":video_codec_constants",
     ":video_frame",
+    ":video_layers_allocation",
     "..:rtp_parameters",
     "..:scoped_refptr",
     "../:fec_controller_api",
