@@ -41,6 +41,10 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   // Launch a new Utility process asynchronously
   RefPtr<GenericNonExclusivePromise> LaunchProcess(SandboxingKind aSandbox);
 
+  template <typename Actor>
+  RefPtr<GenericNonExclusivePromise> StartUtility(RefPtr<Actor> aActor,
+                                                  SandboxingKind aSandbox);
+
   RefPtr<AudioDecodingPromise> StartAudioDecoding(
       base::ProcessId aOtherProcess);
 

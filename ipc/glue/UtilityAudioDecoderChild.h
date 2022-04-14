@@ -9,6 +9,7 @@
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/UtilityProcessParent.h"
 #include "mozilla/ipc/PUtilityAudioDecoderChild.h"
 
 #include "PDMFactory.h"
@@ -23,6 +24,28 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild {
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
       const PDMFactory::MediaCodecsSupported& aSupported);
+
+  nsresult BindToUtilityProcess(RefPtr<UtilityProcessParent> aUtilityParent) {
+    Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
+    Endpoint<PUtilityAudioDecoderParent> utilityAudioDecoderParentEnd;
+    nsresult rv = PUtilityAudioDecoder::CreateEndpoints(
+        aUtilityParent->OtherPid(), base::GetCurrentProcId(),
+        &utilityAudioDecoderParentEnd, &utilityAudioDecoderChildEnd);
+
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT(false, "Protocol endpoints failure");
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!aUtilityParent->SendStartUtilityAudioDecoderService(
+            std::move(utilityAudioDecoderParentEnd))) {
+      MOZ_ASSERT(false, "StartUtilityAudioDecoder service failure");
+      return NS_ERROR_FAILURE;
+    }
+
+    Bind(std::move(utilityAudioDecoderChildEnd));
+    return NS_OK;
+  }
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 
