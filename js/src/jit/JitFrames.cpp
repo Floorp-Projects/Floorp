@@ -2185,81 +2185,85 @@ bool InlineFrameIterator::isFunctionFrame() const { return !!calleeTemplate_; }
 
 bool InlineFrameIterator::isModuleFrame() const { return script()->module(); }
 
-MachineState MachineState::FromBailout(RegisterDump::GPRArray& regs,
-                                       RegisterDump::FPUArray& fpregs) {
-  MachineState machine;
+uintptr_t* MachineState::SafepointState::addressOfRegister(Register reg) const {
+  size_t offset = regs.offsetOfPushedRegister(reg);
 
-  for (unsigned i = 0; i < Registers::Total; i++) {
-    machine.setRegisterLocation(Register::FromCode(i), &regs[i].r);
-  }
-#ifdef JS_CODEGEN_ARM
-  float* fbase = (float*)&fpregs[0];
-  for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++) {
-    machine.setRegisterLocation(FloatRegister(i, FloatRegister::Double),
-                                &fpregs[i].d);
-  }
-  for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++) {
-    machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single),
-                                (double*)&fbase[i]);
-#  ifdef ENABLE_WASM_SIMD
-#    error "More care needed here"
-#  endif
-  }
-#elif defined(JS_CODEGEN_MIPS32)
-  for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-    machine.setRegisterLocation(
-        FloatRegister::FromIndex(i, FloatRegister::Double), &fpregs[i]);
-    machine.setRegisterLocation(
-        FloatRegister::FromIndex(i, FloatRegister::Single), &fpregs[i]);
-#  ifdef ENABLE_WASM_SIMD
-#    error "More care needed here"
-#  endif
-  }
-#elif defined(JS_CODEGEN_MIPS64)
-  for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double),
-                                &fpregs[i]);
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single),
-                                &fpregs[i]);
-#  ifdef ENABLE_WASM_SIMD
-#    error "More care needed here"
-#  endif
-  }
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single),
-                                &fpregs[i]);
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double),
-                                &fpregs[i]);
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Simd128),
-                                &fpregs[i]);
-  }
-#elif defined(JS_CODEGEN_ARM64)
-  for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-    machine.setRegisterLocation(
-        FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Single),
-        &fpregs[i]);
-    machine.setRegisterLocation(
-        FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Double),
-        &fpregs[i]);
-    // No SIMD support in bailouts, SIMD is internal to wasm
-  }
-#elif defined(JS_CODEGEN_LOONG64)
-  for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-    machine.setRegisterLocation(
-        FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Single),
-        &fpregs[i]);
-    machine.setRegisterLocation(
-        FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Double),
-        &fpregs[i]);
-  }
+  MOZ_ASSERT((offset % sizeof(uintptr_t)) == 0);
+  uint32_t index = offset / sizeof(uintptr_t);
 
-#elif defined(JS_CODEGEN_NONE)
-  MOZ_CRASH();
-#else
-#  error "Unknown architecture!"
+#ifdef DEBUG
+  // Assert correctness with a slower algorithm in debug builds.
+  uint32_t expectedIndex = 0;
+  bool found = false;
+  for (GeneralRegisterBackwardIterator iter(regs); iter.more(); ++iter) {
+    expectedIndex++;
+    if (*iter == reg) {
+      found = true;
+      break;
+    }
+  }
+  MOZ_ASSERT(found);
+  MOZ_ASSERT(expectedIndex == index);
 #endif
-  return machine;
+
+  return spillBase - index;
+}
+
+char* MachineState::SafepointState::addressOfRegister(FloatRegister reg) const {
+  // Note: this could be optimized similar to the GPR case above by implementing
+  // offsetOfPushedRegister for FloatRegisterSet. Float register sets are
+  // complicated though and this case is very uncommon: it's only reachable for
+  // exception bailouts with live float registers.
+  MOZ_ASSERT(!reg.isSimd128());
+  char* ptr = floatSpillBase;
+  for (FloatRegisterBackwardIterator iter(floatRegs); iter.more(); ++iter) {
+    ptr -= (*iter).size();
+    for (uint32_t a = 0; a < (*iter).numAlignedAliased(); a++) {
+      // Only say that registers that actually start here start here.
+      // e.g. d0 should not start at s1, only at s0.
+      FloatRegister ftmp = (*iter).alignedAliased(a);
+      if (ftmp == reg) {
+        return ptr;
+      }
+    }
+  }
+  MOZ_CRASH("Invalid register");
+}
+
+uintptr_t MachineState::read(Register reg) const {
+  if (state_.is<BailoutState>()) {
+    return state_.as<BailoutState>().regs[reg.code()].r;
+  }
+  if (state_.is<SafepointState>()) {
+    uintptr_t* addr = state_.as<SafepointState>().addressOfRegister(reg);
+    return *addr;
+  }
+  MOZ_CRASH("Invalid state");
+}
+
+double MachineState::read(FloatRegister reg) const {
+  if (state_.is<BailoutState>()) {
+    uint32_t offset = reg.getRegisterDumpOffsetInBytes();
+
+    MOZ_ASSERT((offset % sizeof(FloatRegisters::RegisterContent)) == 0);
+    uint32_t index = offset / sizeof(FloatRegisters::RegisterContent);
+
+    return state_.as<BailoutState>().floatRegs[index].d;
+  }
+  if (state_.is<SafepointState>()) {
+    char* addr = state_.as<SafepointState>().addressOfRegister(reg);
+    return *reinterpret_cast<double*>(addr);
+  }
+  MOZ_CRASH("Invalid state");
+}
+
+void MachineState::write(Register reg, uintptr_t value) const {
+  if (state_.is<SafepointState>()) {
+    uintptr_t* addr = state_.as<SafepointState>().addressOfRegister(reg);
+    *addr = value;
+    return;
+  }
+  MOZ_CRASH("Invalid state");
 }
 
 bool InlineFrameIterator::isConstructing() const {
