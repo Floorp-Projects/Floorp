@@ -791,4 +791,52 @@ TEST_F(SctpTransportTest, RejectsSendTooLargeMessages) {
   EXPECT_FALSE(SendData(transport1(), 1, eleven_characters, &result));
 }
 
+// Regression test for: crbug.com/1137936
+TEST_F(SctpTransportTest, SctpRestartWithPendingDataDoesNotDeadlock) {
+  // In order to trigger a restart, we'll connect two transports, then
+  // disconnect them and connect the first to a third, which will initiate the
+  // new handshake.
+  FakeDtlsTransport fake_dtls1("fake dtls 1", 0);
+  FakeDtlsTransport fake_dtls2("fake dtls 2", 0);
+  FakeDtlsTransport fake_dtls3("fake dtls 3", 0);
+  SctpFakeDataReceiver recv1;
+  SctpFakeDataReceiver recv2;
+  SctpFakeDataReceiver recv3;
+
+  std::unique_ptr<SctpTransport> transport1(
+      CreateTransport(&fake_dtls1, &recv1));
+  std::unique_ptr<SctpTransport> transport2(
+      CreateTransport(&fake_dtls2, &recv2));
+  std::unique_ptr<SctpTransport> transport3(
+      CreateTransport(&fake_dtls3, &recv3));
+  SctpTransportObserver observer(transport1.get());
+
+  // Connect the first two transports.
+  fake_dtls1.SetDestination(&fake_dtls2, /*asymmetric=*/false);
+  transport1->OpenStream(1);
+  transport2->OpenStream(1);
+  transport1->Start(5000, 5000, kSctpSendBufferSize);
+  transport2->Start(5000, 5000, kSctpSendBufferSize);
+
+  // Sanity check that we can send data.
+  SendDataResult result;
+  ASSERT_TRUE(SendData(transport1.get(), 1, "foo", &result));
+  ASSERT_TRUE_WAIT(ReceivedData(&recv2, 1, "foo"), kDefaultTimeout);
+
+  // Disconnect the transports and attempt to send a message, which will be
+  // stored in an output queue; this is necessary to reproduce the bug.
+  fake_dtls1.SetDestination(nullptr, /*asymmetric=*/false);
+  EXPECT_TRUE(SendData(transport1.get(), 1, "bar", &result));
+
+  // Now connect to the third transport.
+  fake_dtls1.SetDestination(&fake_dtls3, /*asymmetric=*/false);
+  transport3->OpenStream(1);
+  transport3->Start(5000, 5000, kSctpSendBufferSize);
+
+  // Send data from the new endpoint to the original endpoint. If data is
+  // received that means the restart must have been successful.
+  EXPECT_TRUE(SendData(transport3.get(), 1, "baz", &result));
+  EXPECT_TRUE_WAIT(ReceivedData(&recv1, 1, "baz"), kDefaultTimeout);
+}
+
 }  // namespace cricket
