@@ -108,6 +108,10 @@ uniform bool u_mali_workaround_dummy;
 #if __VERSION__ != 100
     /// Find the appropriate half range to apply the AA approximation over.
     /// This range represents a coefficient to go from one CSS pixel to half a device pixel.
+    vec2 compute_aa_range_xy(vec2 position) {
+        return fwidth(position);
+    }
+
     float compute_aa_range(vec2 position) {
         // The constant factor is chosen to compensate for the fact that length(fw) is equal
         // to sqrt(2) times the device pixel ratio in the typical case.
@@ -154,7 +158,23 @@ uniform bool u_mali_workaround_dummy;
     ///
     /// See the comments in `compute_aa_range()` for more information on the
     /// cutoff values of -0.5 and 0.5.
+    float distance_aa_xy(vec2 aa_range, vec2 signed_distance) {
+        // The aa_range is the raw per-axis filter width, so we need to divide
+        // the local signed distance by the filter width to get an approximation
+        // of screen distance.
+        #ifdef SWGL
+            // The SWGL fwidth() approximation returns uniform X and Y ranges.
+            vec2 dist = signed_distance * recip(aa_range.x);
+        #else
+            vec2 dist = signed_distance / aa_range;
+        #endif
+        // Choose whichever axis is further outside the rectangle for AA.
+        return clamp(0.5 - max(dist.x, dist.y), 0.0, 1.0);
+    }
+
     float distance_aa(float aa_range, float signed_distance) {
+        // The aa_range is already stored as a reciprocal with uniform scale,
+        // so just multiply it, then use that for AA.
         float dist = signed_distance * aa_range;
         return clamp(0.5 - dist, 0.0, 1.0);
     }
