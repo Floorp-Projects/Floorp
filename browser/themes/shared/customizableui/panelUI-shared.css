@@ -2009,9 +2009,11 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 /* Override themes for the Pocket panel, because the Pocket
-   panel doesn't currently support multiple themes. */
-#customizationui-widget-panel[viewId="PanelUI-savetopocket"] {
-  --arrowpanel-background: #fbfbfb;
+   panel currently only supports dark and light themes. */
+@media not (prefers-color-scheme: dark){
+  #customizationui-widget-panel[viewId="PanelUI-savetopocket"] {
+    --arrowpanel-background: #fbfbfb;
+  }
 }
 
 #PanelUI-profiler-content {
