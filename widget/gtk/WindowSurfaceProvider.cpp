@@ -161,28 +161,36 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
 
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-#if defined(MOZ_WAYLAND)
-  if (GdkIsWaylandDisplay() && moz_container_wayland_is_commiting_to_parent(
-                                   mWidget->GetMozContainer())) {
-    // If we're drawing directly to wl_surface owned by Gtk we need to use it
-    // in main thread to sync with Gtk access to it.
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "WindowSurfaceProvider::EndRemoteDrawingInRegion",
-        [RefPtr{mWidget}, this, aInvalidRegion]() {
-          MutexAutoLock lock(mMutex);
-          // Commit to mWindowSurface only when we have a valid one.
-          if (mWindowSurface && mWindowSurfaceValid) {
-            mWindowSurface->Commit(aInvalidRegion);
-          }
-        }));
+  MutexAutoLock lock(mMutex);
+  // Commit to mWindowSurface only if we have a valid one.
+  if (!mWindowSurface || !mWindowSurfaceValid) {
     return;
   }
-#endif
-  MutexAutoLock lock(mMutex);
-  // Commit to mWindowSurface only when we have a valid one.
-  if (mWindowSurface && mWindowSurfaceValid) {
-    mWindowSurface->Commit(aInvalidRegion);
+#if defined(MOZ_WAYLAND)
+  if (GdkIsWaylandDisplay()) {
+    // We're called too early or we're unmapped.
+    // Don't draw anything.
+    if (!mWidget) {
+      return;
+    }
+    if (moz_container_wayland_is_commiting_to_parent(
+            mWidget->GetMozContainer())) {
+      // If we're drawing directly to wl_surface owned by Gtk we need to use it
+      // in main thread to sync with Gtk access to it.
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "WindowSurfaceProvider::EndRemoteDrawingInRegion",
+          [RefPtr{mWidget}, this, aInvalidRegion]() {
+            MutexAutoLock lock(mMutex);
+            // Commit to mWindowSurface only when we have a valid one.
+            if (mWindowSurface && mWindowSurfaceValid) {
+              mWindowSurface->Commit(aInvalidRegion);
+            }
+          }));
+      return;
+    }
   }
+#endif
+  mWindowSurface->Commit(aInvalidRegion);
 }
 
 }  // namespace widget
