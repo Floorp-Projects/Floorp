@@ -35,17 +35,15 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SyncPreferenceView
-import org.mozilla.fenix.settings.biometric.BiometricPromptFeature
 import org.mozilla.fenix.settings.biometric.BiometricPromptPreferenceFragment
 import org.mozilla.fenix.settings.requirePreference
 
 /**
- * "Credit cards" settings fragment displays a list of settings related to autofilling, adding and
- * syncing credit cards. Authentication for saved credit cards uses [BiometricPromptFeature]
- * or [KeyguardManager].
+ * Autofill settings fragment displays a list of settings related to autofilling, adding and
+ * syncing credit cards and addresses.
  */
 @SuppressWarnings("TooManyFunctions")
-class CreditCardsSettingFragment : BiometricPromptPreferenceFragment() {
+class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
     private lateinit var creditCardsStore: CreditCardsFragmentStore
     private var isCreditCardsListLoaded: Boolean = false
@@ -133,7 +131,7 @@ class CreditCardsSettingFragment : BiometricPromptPreferenceFragment() {
             },
             onReconnectClicked = {
                 findNavController().navigate(
-                    CreditCardsSettingFragmentDirections.actionGlobalAccountProblemFragment()
+                    AutofillSettingFragmentDirections.actionGlobalAccountProblemFragment()
                 )
             }
         )
