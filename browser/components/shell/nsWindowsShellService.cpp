@@ -1042,6 +1042,13 @@ static nsresult GetMatchingShortcut(int aCSIDL, const nsAutoString& aAUMID,
 }
 static nsresult PinCurrentAppToTaskbarWin7(bool aCheckOnly,
                                            nsAutoString aShortcutPath) {
+  // Currently disabled due to
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1763573 At the time of
+  // writing, the only callers eat any errors from here so it's safe to return
+  // one. This is a short term workaround to confirm that this code is indeed
+  // causing the bug above. If it is, we'll rework this code to avoid it.
+  return NS_ERROR_ABORT;
+
   // This is a less generalized version of the code from the NSIS
   // Invoke Shell Verb plugin.
   // https://nsis.sourceforge.io/Invoke_Shell_Verb_plugin
