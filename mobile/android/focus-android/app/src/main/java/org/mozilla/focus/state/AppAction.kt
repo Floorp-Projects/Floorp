@@ -70,6 +70,11 @@ sealed class AppAction : Action {
     internal object ShowFirstRun : AppAction()
 
     /**
+     * Forces showing the home screen.
+     */
+    internal object ShowHomeScreen : AppAction()
+
+    /**
      * Opens the tab with the given [tabId] and actively switches to the browser screen if needed.
      */
     data class OpenTab(val tabId: String) : AppAction()

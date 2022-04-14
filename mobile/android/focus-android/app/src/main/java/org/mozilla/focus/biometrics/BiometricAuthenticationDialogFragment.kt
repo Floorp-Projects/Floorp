@@ -20,6 +20,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.databinding.BiometricPromptDialogContentBinding
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.topsites.TopSitesIntegration
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 @Suppress("TooManyFunctions")
@@ -27,10 +28,12 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     private var handler: BiometricAuthenticationHandler? = null
     private var _binding: BiometricPromptDialogContentBinding? = null
     private val binding get() = _binding!!
+    private val topSitesIntegration by lazy { TopSitesIntegration(requireComponents.topSitesStorage) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(DialogFragment.STYLE_NORMAL, R.style.DialogStyle)
+        lifecycle.addObserver(topSitesIntegration)
     }
 
     override fun onCancel(dialog: DialogInterface) {
@@ -63,7 +66,6 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         binding.newSessionButton.setText(R.string.biometric_auth_new_session)
         binding.newSessionButton.setOnClickListener {
             biometricNewSessionButtonClicked()
-            dismiss()
         }
 
         binding.fingerprintIcon.setImageResource(R.drawable.ic_fingerprint)
@@ -93,6 +95,8 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
 
     private fun biometricNewSessionButtonClicked() {
         requireComponents.tabsUseCases.removePrivateTabs()
+        requireComponents.appStore.dispatch(AppAction.ShowHomeScreen)
+        topSitesIntegration.deleteAllTopSites()
         dismiss()
     }
 

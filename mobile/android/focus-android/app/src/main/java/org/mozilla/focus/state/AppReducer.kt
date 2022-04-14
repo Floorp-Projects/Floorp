@@ -37,6 +37,7 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.ShowEraseTabsCfrChange -> showEraseTabsCfrChanged(state, action)
             is AppAction.ShowTrackingProtectionCfrChange -> showTrackingProtectionCfrChanged(state, action)
             is AppAction.OpenSitePermissionOptionsScreen -> openSitePermissionOptionsScreen(state, action)
+            is AppAction.ShowHomeScreen -> showHomeScreen(state)
         }
     }
 }
@@ -58,10 +59,9 @@ private fun selectionChanged(state: AppState, action: AppAction.SelectionChanged
  * All tabs have been closed.
  */
 private fun noTabs(state: AppState): AppState {
-    if (state.screen is Screen.Home || state.screen is Screen.FirstRun) {
+    if (state.screen is Screen.Home || state.screen is Screen.FirstRun || state.screen is Screen.Locked) {
         return state
     }
-
     return state.copy(screen = Screen.Home)
 }
 
@@ -112,6 +112,12 @@ private fun showFirstRun(state: AppState): AppState {
     return state.copy(screen = Screen.FirstRun)
 }
 
+/**
+ * Force showing the home screen.
+ */
+private fun showHomeScreen(state: AppState): AppState {
+    return state.copy(screen = Screen.Home)
+}
 /**
  * Lock the application.
  */
