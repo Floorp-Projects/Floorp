@@ -85,7 +85,10 @@ class RecentSyncedTabFeature(
     override fun stopLoading() = Unit
 
     override fun onError(error: SyncedTabsView.ErrorType) {
-        store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None))
+        val isSyncing = store.state.recentSyncedTabState == RecentSyncedTabState.Loading
+        if ((!isSyncing && error == SyncedTabsView.ErrorType.NO_TABS_AVAILABLE) || error.isFatal()) {
+            store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None))
+        }
     }
 
     override fun start() {
@@ -106,6 +109,19 @@ class RecentSyncedTabFeature(
         if (tab == lastSyncedTab) {
             RecentSyncedTabs.latestSyncedTabIsStale.add()
         }
+    }
+
+    // Fatal errors represent any that will force a NONE state for the recent synced tab, such that
+    // it won't be displayed.
+    // SYNC_UNAVAILABLE is sent even though displaySyncedTabs is never called when an account
+    // is not authenticated. NO_TABS_AVAILABLE is only fatal if encountered after a sync is
+    // completed, and is handled separately above.
+    private fun SyncedTabsView.ErrorType.isFatal(): Boolean = when (this) {
+        SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE,
+        SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE,
+        SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION -> true
+        SyncedTabsView.ErrorType.NO_TABS_AVAILABLE,
+        SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> false
     }
 }
 

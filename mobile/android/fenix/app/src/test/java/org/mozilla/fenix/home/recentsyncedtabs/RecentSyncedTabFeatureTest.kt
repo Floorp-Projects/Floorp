@@ -176,13 +176,6 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `WHEN error is received THEN action dispatched with empty synced state`() {
-        feature.onError(SyncedTabsView.ErrorType.NO_TABS_AVAILABLE)
-
-        verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
-    }
-
-    @Test
     fun `WHEN synced tab displayed THEN labeled counter metric recorded with device type`() {
         val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
 
@@ -220,6 +213,26 @@ class RecentSyncedTabFeatureTest {
         feature.displaySyncedTabs(listOf(tab2))
 
         assertFalse(RecentSyncedTabs.latestSyncedTabIsStale.testHasValue())
+    }
+
+    @Test
+    fun `GIVEN that feature is not loading WHEN no tabs error received THEN dispatches NONE state`() {
+        every { store.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+        feature.onError(SyncedTabsView.ErrorType.NO_TABS_AVAILABLE)
+
+        verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
+    }
+
+    @Test
+    fun `GIVEN that feature is loading WHEN fatal error received THEN dispatches NONE state`() {
+        every { store.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.Loading
+        }
+        feature.onError(SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
+
+        verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
 
     private fun createActiveTab(
