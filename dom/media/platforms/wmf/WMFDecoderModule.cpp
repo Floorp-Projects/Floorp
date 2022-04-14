@@ -176,21 +176,21 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
     case WMFStreamType::VP8:
       static const uint32_t VP8_USABLE_BUILD = 16287;
       if (!IsWindowsBuildOrLater(VP8_USABLE_BUILD)) {
-        WmfDecoderModuleMarkerAndLog("WMFInit VP8 Failure",
+        WmfDecoderModuleMarkerAndLog("CreateMFTDecoder, VP8 Failure",
                                      "VP8 MFT requires Windows build %" PRId32
                                      " or later",
                                      VP8_USABLE_BUILD);
         return E_FAIL;
       }
       if (!gfx::gfxVars::UseVP8HwDecode()) {
-        WmfDecoderModuleMarkerAndLog("WMFInit VP8 Failure",
+        WmfDecoderModuleMarkerAndLog("CreateMFTDecoder, VP8 Failure",
                                      "Gfx VP8 blocklist");
         return E_FAIL;
       }
       [[fallthrough]];
     case WMFStreamType::VP9:
       if (!sDXVAEnabled) {
-        WmfDecoderModuleMarkerAndLog("WMFInit VPx Disabled",
+        WmfDecoderModuleMarkerAndLog("CreateMFTDecoder, VPx Disabled",
                                      "%s MFT requires DXVA",
                                      StreamTypeToString(aType));
         return E_FAIL;
@@ -200,7 +200,7 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
         gfx::WMFVPXVideoCrashGuard guard;
         if (guard.Crashed()) {
           WmfDecoderModuleMarkerAndLog(
-              "WMFInit VPx Failure",
+              "CreateMFTDecoder, VPx Failure",
               "Will not use VPx MFT due to crash guard reporting a crash");
           return E_FAIL;
         }
@@ -213,7 +213,7 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
       // layers acceleration is setup. This prevents creating the AV1 decoder
       // twice.
       if (!sDXVAEnabled) {
-        WmfDecoderModuleMarkerAndLog("WMFInit AV1 Disabled",
+        WmfDecoderModuleMarkerAndLog("CreateMFTDecoder AV1 Disabled",
                                      "AV1 MFT requires DXVA");
         return E_FAIL;
       }
