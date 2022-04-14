@@ -7,7 +7,7 @@ use std::sync::RwLock;
 
 use super::{DispatchError, DispatchGuard, Dispatcher};
 
-pub const GLOBAL_DISPATCHER_LIMIT: usize = 100;
+pub const GLOBAL_DISPATCHER_LIMIT: usize = 1000;
 static GLOBAL_DISPATCHER: Lazy<RwLock<Option<Dispatcher>>> =
     Lazy::new(|| RwLock::new(Some(Dispatcher::new(GLOBAL_DISPATCHER_LIMIT))));
 
