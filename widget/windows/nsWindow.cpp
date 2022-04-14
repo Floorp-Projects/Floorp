@@ -1830,30 +1830,6 @@ void nsWindow::SetThemeRegion() {
       }
     }
   }
-
-  // Popup types that have a visual styles region applied (bug 376408). This can
-  // be expanded for other window types as needed. The regions are applied
-  // generically to the base window so default constants are used for part and
-  // state. At some point we might need part and state values from
-  // nsNativeThemeWin's GetThemePartAndState, but currently windows that change
-  // shape based on state haven't come up.
-  else if (!HasGlass() &&
-           (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
-            (mPopupType == ePopupTypeTooltip ||
-             mPopupType == ePopupTypePanel))) {
-    HRGN hRgn = nullptr;
-    RECT rect = {0, 0, mBounds.Width(), mBounds.Height()};
-
-    HDC dc = ::GetDC(mWnd);
-    GetThemeBackgroundRegion(nsUXThemeData::GetTheme(eUXTooltip), dc,
-                             TTP_STANDARD, TS_NORMAL, &rect, &hRgn);
-    if (hRgn) {
-      if (!SetWindowRgn(mWnd, hRgn,
-                        false))  // do not delete or alter hRgn if accepted.
-        DeleteObject(hRgn);
-    }
-    ::ReleaseDC(mWnd, dc);
-  }
 }
 
 /**************************************************************
