@@ -6,6 +6,7 @@
 #ifndef _include_ipc_glue_UtilityAudioDecoderChild_h__
 #define _include_ipc_glue_UtilityAudioDecoderChild_h__
 
+#include "mozilla/ProcInfo.h"
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/ipc/Endpoint.h"
@@ -24,6 +25,8 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild {
 
   mozilla::ipc::IPCResult RecvUpdateMediaCodecsSupported(
       const PDMFactory::MediaCodecsSupported& aSupported);
+
+  UtilityActorName GetActorName() { return UtilityActorName::AudioDecoder; }
 
   nsresult BindToUtilityProcess(RefPtr<UtilityProcessParent> aUtilityParent) {
     Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;

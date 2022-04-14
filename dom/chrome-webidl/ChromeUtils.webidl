@@ -678,6 +678,20 @@ dictionary WindowInfoDictionary {
   boolean isInProcess = false;
 };
 
+/*
+ * Add new entry to WebIDLUtilityActorName here and update accordingly
+ * UtilityActorNameToWebIDL in dom/base/ChromeUtils.cpp as well as
+ * UtilityActorName in toolkit/components/processtools/ProcInfo.h
+ */
+enum WebIDLUtilityActorName {
+  "unknown",
+  "audioDecoder",
+};
+
+dictionary UtilityActorsDictionary {
+  WebIDLUtilityActorName actorName = "unknown";
+};
+
 /**
  * Information on a child process.
  *
@@ -725,6 +739,9 @@ dictionary ChildProcInfoDictionary {
 
   // The windows implemented by this process.
   sequence<WindowInfoDictionary> windows = [];
+
+  // The utility process list of actors if any
+  sequence<UtilityActorsDictionary> utilityActors = [];
 };
 
 /**
