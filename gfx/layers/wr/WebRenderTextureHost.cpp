@@ -79,6 +79,10 @@ already_AddRefed<gfx::DataSourceSurface> WebRenderTextureHost::GetAsSurface() {
   return mWrappedTextureHost->GetAsSurface();
 }
 
+gfx::ColorDepth WebRenderTextureHost::GetColorDepth() const {
+  return mWrappedTextureHost->GetColorDepth();
+}
+
 gfx::YUVColorSpace WebRenderTextureHost::GetYUVColorSpace() const {
   return mWrappedTextureHost->GetYUVColorSpace();
 }

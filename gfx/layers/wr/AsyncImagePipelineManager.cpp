@@ -251,13 +251,14 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   // If we already had a texture and the format hasn't changed, better to reuse
   // the image keys than create new ones.
   auto backend = aSceneBuilderTxn.GetBackendType();
-  bool canUpdate = !!previousTexture &&
-                   previousTexture->GetSize() == texture->GetSize() &&
-                   previousTexture->GetFormat() == texture->GetFormat() &&
-                   previousTexture->NeedsYFlip() == texture->NeedsYFlip() &&
-                   previousTexture->SupportsExternalCompositing(backend) ==
-                       texture->SupportsExternalCompositing(backend) &&
-                   aPipeline->mKeys.Length() == numKeys;
+  bool canUpdate =
+      !!previousTexture && previousTexture->GetSize() == texture->GetSize() &&
+      previousTexture->GetFormat() == texture->GetFormat() &&
+      previousTexture->GetColorDepth() == texture->GetColorDepth() &&
+      previousTexture->NeedsYFlip() == texture->NeedsYFlip() &&
+      previousTexture->SupportsExternalCompositing(backend) ==
+          texture->SupportsExternalCompositing(backend) &&
+      aPipeline->mKeys.Length() == numKeys;
 
   if (!canUpdate) {
     for (auto key : aPipeline->mKeys) {
