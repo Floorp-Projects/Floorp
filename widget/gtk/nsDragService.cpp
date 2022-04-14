@@ -1954,15 +1954,25 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
       // DrawDrag ensured that this is a popup frame.
       nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget();
       if (widget) {
-        LOGDRAGSERVICE(("  set drag popup [%p]", widget.get()));
         gtkWidget = (GtkWidget*)widget->GetNativeData(NS_NATIVE_SHELLWIDGET);
         if (gtkWidget) {
+          // When mDragPopup has a parent it's already attached to D&D context.
+          // That may happens when D&D operation is aborted but not finished
+          // on Gtk side yet so let's remove it now.
+          GtkWidget* parent;
+          if (parent = gtk_widget_get_parent(gtkWidget)) {
+            gtk_container_remove(GTK_CONTAINER(parent), gtkWidget);
+          }
+          LOGDRAGSERVICE(("  set drag popup [%p]", widget.get()));
           OpenDragPopup();
           gtk_drag_set_icon_widget(aContext, gtkWidget, offsetX, offsetY);
+          return;
         }
       }
     }
-  } else if (surface) {
+  }
+
+  if (surface) {
     if (!SetAlphaPixmap(surface, aContext, offsetX, offsetY, dragRect)) {
       RefPtr<GdkPixbuf> dragPixbuf = nsImageToPixbuf::SourceSurfaceToPixbuf(
           surface, dragRect.width, dragRect.height);
