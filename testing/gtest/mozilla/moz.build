@@ -4,6 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 if CONFIG["ENABLE_TESTS"]:
+    # Export the gtest-custom files so we can override configuration options as
+    # recommended by gtest.
+    EXPORTS.gtest.internal.custom += [
+        "gtest-custom/gtest-port.h",
+        "gtest-custom/gtest-printers.h",
+        "gtest-custom/gtest.h",
+    ]
+    EXPORTS.gmock.internal.custom += [
+        "gmock-custom/gmock-generated-actions.h",
+        "gmock-custom/gmock-matchers.h",
+        "gmock-custom/gmock-port.h",
+    ]
+
     SOURCES += [
         "GTestRunner.cpp",
         "MozGTestBench.cpp",

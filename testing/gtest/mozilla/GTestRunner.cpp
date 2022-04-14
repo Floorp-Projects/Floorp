@@ -75,7 +75,7 @@ class MozillaPrinter : public EmptyTestEventListener {
               aTestPartResult.file_name(), aTestPartResult.line_number());
   }
   virtual void OnTestEnd(const TestInfo& aTestInfo) override {
-    MOZ_PRINT("TEST-%s | %s.%s | test completed (time: %llims)\n",
+    MOZ_PRINT("TEST-%s | %s.%s | test completed (time: %" PRIi64 "ms)\n",
               aTestInfo.result()->Passed() ? "PASS" : "UNEXPECTED-FAIL",
               aTestInfo.test_case_name(), aTestInfo.name(),
               aTestInfo.result()->elapsed_time());
