@@ -361,7 +361,7 @@
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Навори абзорҳо</string>
     <!-- Preference for changing default theme to dark or light mode -->
-    <string name="preferences_theme">Мавзӯъ</string>
+    <string name="preferences_theme">Мавзуъ</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Саҳифаи асосӣ</string>
     <!-- Preference for gestures based actions -->
@@ -565,7 +565,7 @@
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">Аз ҷониби сарфаи батарея муқаррар карда шудааст</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Дар мавзӯи дастгоҳ асос меёбад</string>
+    <string name="preference_follow_device_theme">Дар мавзуи дастгоҳ асос меёбад</string>
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
@@ -1254,7 +1254,7 @@
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Мавзӯи худро интихоб кунед</string>
+    <string name="onboarding_theme_picker_header">Мавзуи худро интихоб кунед</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description_2">Ба воситаи реҷаи торик барқи батареяро сарфа кунед ва биноии худро ҳифз намоед.</string>
     <!-- Automatic theme setting (will follow device setting) -->
@@ -1262,9 +1262,9 @@
     <!-- Summary of automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_summary">Ба танзимоти дастгоҳи шумо мутобиқат мекунад</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Мавзӯи торик</string>
+    <string name="onboarding_theme_dark_title">Мавзуи торик</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Мавзӯи равшан</string>
+    <string name="onboarding_theme_light_title">Мавзуи равшан</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Варақаҳо фиристода шуданд!</string>
@@ -1848,7 +1848,7 @@
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Ҳикояҳои андешаангез</string>
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_categories_header">Ҳикояҳо аз рӯи мавзӯъ</string>
+    <string name="pocket_stories_categories_header">Ҳикояҳо аз рӯи мавзуъ</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Бештар омӯзед</string>
     <!-- Title of an app feature. Smaller than a heading.-->
