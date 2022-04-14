@@ -12798,12 +12798,13 @@ eu.meteorapp.com
 co.pl
 
 // Microsoft Corporation : http://microsoft.com
-// Submitted by Mitch Webster <miwebst@microsoft.com>
+// Submitted by Public Suffix List Admin <msftpsladmin@microsoft.com>
 *.azurecontainer.io
 azurewebsites.net
 azure-mobile.net
 cloudapp.net
 azurestaticapps.net
+1.azurestaticapps.net
 centralus.azurestaticapps.net
 eastasia.azurestaticapps.net
 eastus2.azurestaticapps.net
