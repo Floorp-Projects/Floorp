@@ -12,6 +12,7 @@ html {
 
 body {
   &.theme_dark {
+    background: #42414c;
     color: #FBFBFE;
   }
 }
@@ -21,6 +22,10 @@ hr {
   background-color: #F0F0F4;
   height: 1px;
   border: none;
+
+  @include theme_dark {
+    background-color: #52525E;
+  }
 }
 
 .header_large {
