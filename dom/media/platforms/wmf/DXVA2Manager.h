@@ -67,7 +67,8 @@ class DXVA2Manager {
 
   virtual ~DXVA2Manager();
 
-  virtual bool SupportsConfig(IMFMediaType* aType, float aFramerate) = 0;
+  virtual bool SupportsConfig(IMFMediaType* aInputType,
+                              IMFMediaType* aOutputType, float aFramerate) = 0;
 
   static bool IsNV12Supported(uint32_t aVendorID, uint32_t aDeviceID,
                               const nsAString& aDriverVersionString);
