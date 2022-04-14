@@ -10,6 +10,7 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ScopeExit.h"
 #include "mozJSComponentLoader.h"
 #include "jsapi.h"
@@ -221,7 +222,10 @@ void JSActorManager::JSActorDidDestroy() {
   for (const auto& entry : actors.Values()) {
     CrashReporter::AutoAnnotateCrashReport autoActorName(
         CrashReporter::Annotation::JSActorName, entry->Name());
-    entry->AfterDestroy();
+    // Do not risk to run script very late in shutdown
+    if (!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
+      entry->AfterDestroy();
+    }
   }
 }
 
