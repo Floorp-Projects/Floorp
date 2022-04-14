@@ -6468,6 +6468,15 @@ void profiler_record_wakeup_count(const nsACString& aProcessType) {
 
     previousThreadWakeCount += newWakeups;
   }
+
+#ifdef NIGHTLY_BUILD
+  ThreadRegistry::LockedRegistry lockedRegistry;
+  for (ThreadRegistry::OffThreadRef offThreadRef : lockedRegistry) {
+    const ThreadRegistry::UnlockedConstReaderAndAtomicRW& threadData =
+        offThreadRef.UnlockedConstReaderAndAtomicRWRef();
+    threadData.RecordWakeCount();
+  }
+#endif
 }
 
 void profiler_mark_thread_awake() {

@@ -157,3 +157,143 @@ power:
       - florian@mozilla.com
     expires: never
     telemetry_mirror: POWER_TOTAL_THREAD_WAKEUPS
+
+power.wakeups_per_thread:
+  parent_active: &per_thread_wakeups
+    type: labeled_counter
+    description: >
+      How many times threads woke up and could have woken up a CPU core.
+      Broken down by thread name for a given process type.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1763474
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1763474
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels: &per_thread_labels
+      - asynclogger
+      - audioipc
+      - audioipc_callback_rpc
+      - audioipc_client_callback
+      - audioipc_client_rpc
+      - audioipc_devicecollection_rpc
+      - audioipc_server_callback
+      - audioipc_server_rpc
+      - backgroundthreadpool
+      - bgiothreadpool
+      - bgreadurls
+      - bhmgr_monitor
+      - bhmgr_processor
+      - cameras_ipc
+      - capturethread
+      - classifier_update
+      - com_mta
+      - compositor
+      - cookie
+      - cubeboperation
+      - datachannel_io
+      - dns_resolver
+      - dom_worker
+      - domcachethread
+      - extensionprotocolhandler
+      - font_loader
+      - fontenumthread
+      - fs_broker
+      - geckomain
+      - gmpthread
+      - graphrunner
+      - html5_parser
+      - imagebridgechld
+      - imageio
+      - indexeddb
+      - initfontlist
+      - inotifyeventthread
+      - ipc_i_o_child
+      - ipc_i_o_parent
+      - ipc_launch
+      - ipdl_background
+      - js_watchdog
+      - jump_list
+      - libwebrtcmodulethread
+      - link_monitor
+      - ls_thread
+      - mediacache
+      - mediadecoderstatemachine
+      - mediapdecoder
+      - mediasupervisor
+      - mediatimer
+      - mediatrackgrph
+      - memorypoller
+      - mozstorage
+      - mtransport
+      - netlink_monitor
+      - pacerthread
+      - permission
+      - playeventsound
+      - processhangmon
+      - profilerchild
+      - proxyresolution
+      - quotamanager_io
+      - registerfonts
+      - remotebackbuffer
+      - remotelzystream
+      - remvidchild
+      - renderer
+      - sandboxreporter
+      - savescripts
+      - socket_thread
+      - softwarevsyncthread
+      - ssl_cert
+      - startupcache
+      - streamtrans
+      - stylethread
+      - swcomposite
+      - taskcontroller
+      - timer
+      - toastbgthread
+      - trr_background
+      - untrusted_modules
+      - url_classifier
+      - videocapture
+      - vsynciothread
+      - webrtccallthread
+      - webrtcworker
+      - wincompositor
+      - windowsvsyncthread
+      - winwindowocclusioncalc
+      - worker_launcher
+      - wrrenderbackend
+      - wrscenebuilder
+      - wrscenebuilderlp
+      - wrworker
+      - wrworkerlp
+
+  parent_inactive: *per_thread_wakeups
+  content_foreground: *per_thread_wakeups
+  content_background: *per_thread_wakeups
+  gpu_process: *per_thread_wakeups
+
+power.cpu_ms_per_thread:
+  parent_active: &per_thread_cpu_ms
+    type: labeled_counter
+    description: >
+      How many miliseconds of CPU time were used.
+      Broken down by thread name for a given process type.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1763474
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1763474
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    labels: *per_thread_labels
+
+  parent_inactive: *per_thread_cpu_ms
+  content_foreground: *per_thread_cpu_ms
+  content_background: *per_thread_cpu_ms
+  gpu_process: *per_thread_cpu_ms
