@@ -466,6 +466,10 @@ bool nsVideoFrame::ShouldDisplayPoster() const {
 }
 
 nsSize nsVideoFrame::GetVideoIntrinsicSize() const {
+  if (!HasVideoElement()) {
+    return nsSize(0, 0);
+  }
+
   // 'contain:size' replaced elements have intrinsic size 0,0.
   if (StyleDisplay()->IsContainSize()) {
     return nsSize(0, 0);
