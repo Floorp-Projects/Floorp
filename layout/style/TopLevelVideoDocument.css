@@ -8,7 +8,8 @@
   are top level (e.g. not iframes).
 */
 
-html {
+:root {
+  background-color: black;
   /* Fill the viewport height, so that our '-moz-user-focus' styling will
      disregard clicks in the whole background area (so the video element
      doesn't inadvertently lose focus from a stray click on the background). */

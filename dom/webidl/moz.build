@@ -391,7 +391,6 @@ GENERATED_WEBIDL_FILES = [
 
 PREPROCESSED_WEBIDL_FILES = [
     "Animation.webidl",
-    "FileSystemFileHandle.webidl",
     "Node.webidl",
     "Window.webidl",
 ]
@@ -555,6 +554,7 @@ WEBIDL_FILES = [
     "FileSystemDirectoryReader.webidl",
     "FileSystemEntry.webidl",
     "FileSystemFileEntry.webidl",
+    "FileSystemFileHandle.webidl",
     "FileSystemHandle.webidl",
     "FileSystemSyncAccessHandle.webidl",
     "FinalizationRegistry.webidl",

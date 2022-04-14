@@ -76,6 +76,10 @@ HomeOverlay.prototype = {
         />,
         document.querySelector(`body`)
       );
+
+      if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+        document.querySelector(`body`).classList.add(`theme_dark`);
+      }
     } else {
       // For English, we have a discover topics link.
       // For non English, we don't have a link yet for this.

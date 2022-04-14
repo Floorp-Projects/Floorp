@@ -118,6 +118,64 @@ Changelog
 .. _1755100: https://bugzilla.mozilla.org/show_bug.cgi?id=1755100
 .. _1756917: https://bugzilla.mozilla.org/show_bug.cgi?id=1756917
 
+contextual.services.quicksuggest.block_nonsponsored
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user dismisses ("blocks") a
+non-sponsored suggestion, including both best matches and the usual
+non-best-match suggestions. Each key is the index at which a suggestion appeared
+in the results (1-based), and the corresponding value is the number of
+dismissals at that index.
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761059_]
+
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+
+contextual.services.quicksuggest.block_nonsponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user dismisses ("blocks") a
+non-sponsored best match. Each key is the index at which a suggestion appeared
+in the results (1-based), and the corresponding value is the number of
+dismissals at that index.
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761059_]
+
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+
+contextual.services.quicksuggest.block_sponsored
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user dismisses ("blocks") a
+sponsored suggestion, including both best matches and the usual non-best-match
+suggestions. Each key is the index at which a suggestion appeared in the results
+(1-based), and the corresponding value is the number of dismissals at that
+index.
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761059_]
+
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+
+contextual.services.quicksuggest.block_sponsored_bestmatch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This keyed scalar is incremented each time the user dismisses ("blocks") a
+sponsored best match. Each key is the index at which a suggestion appeared in
+the results (1-based), and the corresponding value is the number of dismissals
+at that index.
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761059_]
+
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+
 contextual.services.quicksuggest.click
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -333,6 +391,45 @@ Changelog
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
 .. _1740965: https://bugzilla.mozilla.org/show_bug.cgi?id=1740965
 
+contextservices.quicksuggest.engagement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This event is recorded when an engagement occurs in the address bar while a
+Firefox Suggest suggestion is present. In other words, it is recorded in two
+cases:
+
+- The user picks a Firefox Suggest suggestion or a related UI element like its
+  help button.
+- While a Firefox Suggest suggestion is present in the address bar, the user
+  picks some other row.
+
+The event's objects are the following possible values:
+
+:block:
+  The user dismissed ("blocked") the suggestion.
+:click:
+  The user picked the suggestion.
+:help:
+  The user picked the suggestion's help button.
+:impression_only:
+  The user picked some other row.
+
+The event's ``extra`` contains the following properties:
+
+:match_type:
+  "best-match" if the suggestion was a best match or "firefox-suggest" if it was
+  a non-best-match suggestion.
+:position:
+  The index of the suggestion in the list of results (1-based).
+:suggestion_type:
+  The type of suggestion, one of: "sponsored", "nonsponsored"
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1761059_]
+
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
+
 contextservices.quicksuggest.impression_cap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -345,7 +442,7 @@ event's objects are the following possible values:
   Recorded when a cap's counter is reset because its interval period has
   elapsed.
 
-The event's ``extra`` object value contains the following properties:
+The event's ``extra`` contains the following properties:
 
 :count:
   The number of impressions during the cap's interval period.
@@ -368,8 +465,8 @@ The event's ``extra`` object value contains the following properties:
 :maxCount:
   The maximum number of impressions allowed in the cap's interval period.
 :startDate:
-  The timestamp at which the cap's interval period started, in number of seconds
-  since Unix epoch.
+  The timestamp at which the cap's interval period started, in number of
+  milliseconds since Unix epoch.
 :type:
   The type of cap, one of: "sponsored", "nonsponsored"
 
@@ -706,6 +803,8 @@ following two conditions hold:
 - At the time the user completed the engagement, a suggestion was present in the
   results.
 
+It is also recorded when the user dismisses ("blocks") a suggestion.
+
 The impression ping payload contains the following:
 
 :advertiser:
@@ -716,7 +815,9 @@ The impression ping payload contains the following:
   A UUID representing this user. Note that it's not client_id, nor can it be
   used to link to a client_id.
 :is_clicked:
-  Whether or not the user also clicked the suggestion.
+  Whether or not the user also clicked the suggestion. When true, we will also
+  send a separate click ping. When the impression ping is recorded because the
+  user dismissed ("blocked") the suggestion, this will be false.
 :matched_keywords (**Removed from Firefox 97**):
   The matched keywords that lead to the suggestion. This is only included when
   the user has opted in to data collection and the suggestion is provided by
@@ -773,6 +874,10 @@ Changelog
   Firefox 99.0
     ``match_type`` is added to the payload. [Bug 1754622_]
 
+  Firefox 101.0
+    The impression ping is now also recorded when the user dismisses ("blocks")
+    a suggestion. [Bug 1761059_]
+
 .. _1689365: https://bugzilla.mozilla.org/show_bug.cgi?id=1689365
 .. _1725492: https://bugzilla.mozilla.org/show_bug.cgi?id=1725492
 .. _1728188: https://bugzilla.mozilla.org/show_bug.cgi?id=1728188
@@ -781,6 +886,7 @@ Changelog
 .. _1735976: https://bugzilla.mozilla.org/show_bug.cgi?id=1735976
 .. _1748348: https://bugzilla.mozilla.org/show_bug.cgi?id=1748348
 .. _1754622: https://bugzilla.mozilla.org/show_bug.cgi?id=1754622
+.. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
 
 Nimbus Exposure Event
 ---------------------

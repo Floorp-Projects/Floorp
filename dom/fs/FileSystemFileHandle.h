@@ -28,10 +28,8 @@ class FileSystemFileHandle final : public FileSystemHandle {
 
   already_AddRefed<Promise> GetFile();
 
-#ifdef MOZ_DOM_STREAMS
   already_AddRefed<Promise> CreateWritable(
       const FileSystemCreateWritableOptions& aOptions);
-#endif
 
   already_AddRefed<Promise> CreateSyncAccessHandle();
 

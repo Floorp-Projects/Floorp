@@ -69,6 +69,7 @@
 #include "mozilla/dom/MessageManagerCallback.h"
 #include "mozilla/dom/ipc/SharedMap.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/scache/StartupCacheUtils.h"
 #include "nsASCIIMask.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
@@ -129,6 +130,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
+
+#define CACHE_PREFIX(type) "mm/" type
 
 nsFrameMessageManager::nsFrameMessageManager(MessageManagerCallback* aCallback,
                                              MessageManagerFlags aFlags)
@@ -1272,10 +1275,14 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
 
   RefPtr<JS::Stencil> stencil;
   if (useScriptPreloader) {
+    nsAutoCString cachePath;
+    rv = scache::PathifyURI(CACHE_PREFIX("script"), uri, cachePath);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
     JS::DecodeOptions decodeOptions;
     ScriptPreloader::FillDecodeOptionsForCachedStencil(decodeOptions);
     stencil = ScriptPreloader::GetChildSingleton().GetCachedStencil(
-        cx, decodeOptions, url);
+        cx, decodeOptions, cachePath);
   }
 
   if (!stencil) {
@@ -1350,7 +1357,10 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
   MOZ_ASSERT(stencil);
 
   if (useScriptPreloader) {
-    ScriptPreloader::GetChildSingleton().NoteStencil(url, url, stencil,
+    nsAutoCString cachePath;
+    rv = scache::PathifyURI(CACHE_PREFIX("script"), uri, cachePath);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    ScriptPreloader::GetChildSingleton().NoteStencil(url, cachePath, stencil,
                                                      isRunOnce);
   }
 

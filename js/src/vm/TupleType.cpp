@@ -11,12 +11,9 @@
 
 #include "jsapi.h"
 
-#include "builtin/Array.h"  // IsArray()
 #include "builtin/TupleObject.h"
 #include "gc/Allocator.h"
 #include "gc/AllocKind.h"
-#include "gc/Nursery.h"
-#include "gc/Tracer.h"
 
 #include "js/TypeDecls.h"
 #include "js/Value.h"
@@ -512,7 +509,10 @@ static bool ArrayToTuple(JSContext* cx, const CallArgs& args) {
 }
 
 // Takes an array as a single argument and returns a tuple of the
-// array elements, without copying the array
+// array elements. This method copies the array, because the callee
+// may still hold a pointer to it and it would break garbage collection
+// to change the type of the object from ArrayObject to TupleType (which
+// is the only way to re-use the same object if it has fixed elements.)
 // Should only be called from self-hosted tuple methods;
 // assumes all elements are non-objects and the array is packed
 bool js::tuple_construct(JSContext* cx, unsigned argc, Value* vp) {
@@ -530,33 +530,13 @@ bool js::tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 TupleType* TupleType::createUnchecked(JSContext* cx, HandleArrayObject aObj) {
-  gc::AllocKind allocKind = GuessArrayGCKind(aObj->getDenseInitializedLength());
-
-  RootedShape shape(cx, TupleType::getInitialShape(cx));
-  if (!shape) {
-    return nullptr;
-  }
-
-  JSObject* obj =
-      js::AllocateObject(cx, allocKind, 0, gc::DefaultHeap, &TupleType::class_);
-
-  if (!obj) {
-    return nullptr;
-  }
-
-  TupleType* tup = static_cast<TupleType*>(obj);
-  tup->initShape(shape);
-  tup->initEmptyDynamicSlots();
-  tup->setFixedElements(0);
-
+  size_t len = aObj->getDenseInitializedLength();
+  MOZ_ASSERT(aObj->getElementsHeader()->numShiftedElements() == 0);
+  TupleType* tup = createUninitialized(cx, len);
   if (!tup) {
     return nullptr;
   }
-
-  tup->elements_ = aObj->getElementsHeader()->elements();
-
-  aObj->shrinkCapacityToInitializedLength(cx);
-
+  tup->initDenseElements(aObj, 0, len);
   tup->finishInitialization(cx);
   return tup;
 }

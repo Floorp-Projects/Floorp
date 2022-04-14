@@ -87,8 +87,6 @@ void VideoDocument::SetScriptGlobalObject(
     if (!nsContentUtils::IsChildOfSameType(this)) {
       LinkStylesheet(nsLiteralString(
           u"resource://content-accessible/TopLevelVideoDocument.css"));
-      LinkStylesheet(nsLiteralString(
-          u"chrome://global/skin/media/TopLevelVideoDocument.css"));
       LinkScript(u"chrome://global/content/TopLevelVideoDocument.js"_ns);
     }
     InitialSetupDone();

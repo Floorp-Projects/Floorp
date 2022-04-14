@@ -437,6 +437,10 @@ pref("browser.urlbar.quicksuggest.impressionCaps.nonSponsoredEnabled", false);
 // caps.
 pref("browser.urlbar.quicksuggest.impressionCaps.sponsoredEnabled", false);
 
+// Whether the usual non-best-match quick suggest results can be blocked. This
+// pref is a fallback for the Nimbus variable `quickSuggestBlockingEnabled`.
+pref("browser.urlbar.quicksuggest.blockingEnabled", false);
+
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);
@@ -524,7 +528,8 @@ pref("browser.urlbar.merino.clientVariants", "");
 // Whether the best match feature in the urlbar is enabled.
 pref("browser.urlbar.bestMatch.enabled", false);
 
-// Whether best match results can be blocked.
+// Whether best match results can be blocked. This pref is a fallback for the
+// Nimbus variable `bestMatchBlockingEnabled`.
 pref("browser.urlbar.bestMatch.blockingEnabled", false);
 
 pref("browser.altClickSave", false);

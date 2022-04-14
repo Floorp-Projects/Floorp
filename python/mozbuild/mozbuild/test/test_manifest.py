@@ -32,7 +32,7 @@ class TestManifest(unittest.TestCase):
     # ===========================================================================================
     def test_simple(self):
         simple_dict = {
-            "schema": 1,
+            "schema": "1",
             "origin": {
                 "description": "2D Graphics Library",
                 "license": ["MPL-1.1", "LGPL-2.1"],
@@ -92,7 +92,7 @@ bugzilla:
             [
                 (
                     {
-                        "schema": 1,
+                        "schema": "1",
                         "origin": {
                             "description": "2D Graphics Library",
                             "license": ["MPL-1.1", "LGPL-2.1"],
@@ -130,7 +130,45 @@ updatebot:
                 # -------------------------------------------------
                 (
                     {
-                        "schema": 1,
+                        "schema": "1",
+                        "origin": {
+                            "description": "2D Graphics Library",
+                            "license": ["MPL-1.1", "LGPL-2.1"],
+                            "name": "cairo",
+                            "release": "version 1.6.4",
+                            "revision": "001122334455",
+                            "url": "https://www.cairographics.org/",
+                        },
+                        "bugzilla": {"component": "Graphics", "product": "Core"},
+                        "updatebot": {
+                            "maintainer-phab": "tjr",
+                            "maintainer-bz": "a@example.com",
+                        },
+                    },
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: 001122334455
+bugzilla:
+  product: Core
+  component: Graphics
+updatebot:
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    {
+                        "schema": "1",
                         "origin": {
                             "description": "2D Graphics Library",
                             "license": ["MPL-1.1", "LGPL-2.1"],
@@ -181,7 +219,7 @@ updatebot:
                 # -------------------------------------------------
                 (
                     {
-                        "schema": 1,
+                        "schema": "1",
                         "origin": {
                             "description": "2D Graphics Library",
                             "license": ["MPL-1.1", "LGPL-2.1"],
@@ -250,7 +288,7 @@ updatebot:
                 # -------------------------------------------------
                 (
                     {
-                        "schema": 1,
+                        "schema": "1",
                         "origin": {
                             "description": "2D Graphics Library",
                             "license": ["MPL-1.1", "LGPL-2.1"],
@@ -773,7 +811,7 @@ updatebot:
             [
                 (
                     {
-                        "schema": 1,
+                        "schema": "1",
                         "origin": {
                             "description": "2D Graphics Library",
                             "license": ["MPL-1.1", "LGPL-2.1"],

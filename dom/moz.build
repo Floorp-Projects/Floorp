@@ -84,6 +84,7 @@ DIRS += [
     "messagechannel",
     "promise",
     "smil",
+    "streams",
     "url",
     "webauthn",
     "webidl",
@@ -112,8 +113,6 @@ DIRS += [
     "origin-trials",
 ]
 
-if CONFIG["MOZ_DOM_STREAMS"]:
-    DIRS += ["streams"]
 
 TEST_DIRS += [
     "tests",
