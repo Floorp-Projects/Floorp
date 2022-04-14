@@ -30,11 +30,11 @@ interface nsINSSComponent : nsISupports {
   [noscript] void logoutAuthenticatedPK11();
 
   /**
-   * Used to determine if the given CERTCertificate is the certificate we use in
-   * tests to simulate a built-in root certificate. Returns false in non-debug
-   * builds.
+   * Used to determine if the given certificate (represented as an array of
+   * bytes) is the certificate we use in tests to simulate a built-in root
+   * certificate. Returns false in non-debug builds.
    */
-  [noscript] bool isCertTestBuiltInRoot(in CERTCertificatePtr cert);
+  [noscript] bool isCertTestBuiltInRoot(in Array<octet> cert);
 
   /**
    * Used to determine if the given certificate (represented as an array of

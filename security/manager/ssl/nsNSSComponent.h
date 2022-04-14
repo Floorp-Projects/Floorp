@@ -126,7 +126,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   // The following members are accessed from more than one thread:
 
 #ifdef DEBUG
-  nsString mTestBuiltInRootHash;
+  nsCString mTestBuiltInRootHash;
 #endif
   nsCString mContentSigningRootHash;
   RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;

@@ -165,39 +165,28 @@ Result IsDelegatedCredentialAcceptable(const DelegatedCredentialInfo& dcInfo) {
 // has been added to the NSS trust store, because it has been approved
 // for inclusion according to the Mozilla CA policy, and might be accepted
 // by Mozilla applications as an issuer for certificates seen on the public web.
-// Ideally this would only be called from the socket thread. In the context of
-// TLS server certificate verification, IsCertBuiltInRootWithSyncDispatch
-// ensures this function is only called from the socket thread. However, there
-// are other code paths that reach this function that do not run on the socket
-// thread. None of these code paths should be reachable during TLS server
-// certificate verification.
 Result IsCertBuiltInRoot(Input certInput, bool& result) {
+  result = false;
+
   if (NS_FAILED(BlockUntilLoadableCertsLoaded())) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());
-  SECItem certDER(UnsafeMapInputToSECItem(certInput));
-  UniqueCERTCertificate cert(
-      CERT_NewTempCertificate(certDB, &certDER, nullptr, false, true));
-  if (!cert) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
-  }
-
-  result = false;
 #ifdef DEBUG
   nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
   if (!component) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-  nsresult rv = component->IsCertTestBuiltInRoot(cert.get(), &result);
-  if (NS_FAILED(rv)) {
+  nsTArray<uint8_t> certBytes;
+  certBytes.AppendElements(certInput.UnsafeGetData(), certInput.GetLength());
+  if (NS_FAILED(component->IsCertTestBuiltInRoot(certBytes, &result))) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   if (result) {
     return Success;
   }
 #endif  // DEBUG
+  SECItem certItem(UnsafeMapInputToSECItem(certInput));
   AutoSECMODListReadLock lock;
   for (SECMODModuleList* list = SECMOD_GetDefaultModuleList(); list;
        list = list->next) {
@@ -216,16 +205,19 @@ Result IsCertBuiltInRoot(Input certInput, bool& result) {
       // is expected to comply with additional requirements.
       // If the certificate has attribute CKA_NSS_MOZILLA_CA_POLICY set to true,
       // then we treat it as a "builtin root".
-      if (PK11_IsPresent(slot) && PK11_HasRootCerts(slot)) {
-        CK_OBJECT_HANDLE handle =
-            PK11_FindCertInSlot(slot, cert.get(), nullptr);
-        if (handle != CK_INVALID_HANDLE &&
-            PK11_HasAttributeSet(slot, handle, CKA_NSS_MOZILLA_CA_POLICY,
-                                 false)) {
-          // Attribute was found, and is set to true
-          result = true;
-          break;
-        }
+      if (!PK11_IsPresent(slot) || !PK11_HasRootCerts(slot)) {
+        continue;
+      }
+      CK_OBJECT_HANDLE handle =
+          PK11_FindEncodedCertInSlot(slot, &certItem, nullptr);
+      if (handle == CK_INVALID_HANDLE) {
+        continue;
+      }
+      if (PK11_HasAttributeSet(slot, handle, CKA_NSS_MOZILLA_CA_POLICY,
+                               false)) {
+        // Attribute was found, and is set to true
+        result = true;
+        break;
       }
     }
   }
