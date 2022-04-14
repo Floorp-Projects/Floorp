@@ -15,9 +15,9 @@
 #include "jstypes.h"
 
 #include "jit/IonTypes.h"  // js::jit::Bailout{Id,Kind}, js::jit::SnapshotOffset
-#include "jit/Registers.h"  // js::jit::MachineState
-#include "js/TypeDecls.h"   // jsbytecode
-#include "vm/JSContext.h"   // JSContext
+#include "jit/MachineState.h"  // js::jit::MachineState
+#include "js/TypeDecls.h"      // jsbytecode
+#include "vm/JSContext.h"      // JSContext
 
 namespace js {
 

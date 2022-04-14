@@ -12,6 +12,7 @@
 #include "jstypes.h"
 
 #include "jit/JitCode.h"
+#include "jit/MachineState.h"
 #include "jit/Snapshots.h"
 #include "js/ProfilingFrameIterator.h"
 #include "vm/JSFunction.h"
