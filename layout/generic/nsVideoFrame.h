@@ -71,6 +71,12 @@ class nsVideoFrame final : public nsContainerFrame,
 #endif
 
   bool IsFrameOfType(uint32_t aFlags) const override {
+    // audio element with visible controls is an inline element, so we don't
+    // apply aspect-ratio.
+    if ((aFlags & nsIFrame::eSupportsAspectRatio) && !HasVideoElement()) {
+      return false;
+    }
+
     return nsSplittableFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }

@@ -608,7 +608,7 @@ TEST(Hashtable, Keys)
 template <typename TypeParam>
 class BaseHashtableTest : public ::testing::Test {};
 
-TYPED_TEST_CASE_P(BaseHashtableTest);
+TYPED_TEST_SUITE_P(BaseHashtableTest);
 
 TYPED_TEST_P(BaseHashtableTest, Contains) {
   auto table =
@@ -1012,7 +1012,7 @@ TYPED_TEST_P(BaseHashtableTest, MarkImmutable) {
   table.MarkImmutable();
 }
 
-REGISTER_TYPED_TEST_CASE_P(
+REGISTER_TYPED_TEST_SUITE_P(
     BaseHashtableTest, Contains, GetGeneration, SizeOfExcludingThis,
     SizeOfIncludingThis, Count, IsEmpty, Get_OutputParam, Get, MaybeGet,
     LookupOrInsert_Default, LookupOrInsert_NonDefault,
@@ -1031,8 +1031,8 @@ using BaseHashtableTestTypes =
                      NonDefaultConstructible_NonDefaultConstructible,
                      NonDefaultConstructible_MovingNonDefaultConstructible>;
 
-INSTANTIATE_TYPED_TEST_CASE_P(Hashtables, BaseHashtableTest,
-                              BaseHashtableTestTypes, TypeNames);
+INSTANTIATE_TYPED_TEST_SUITE_P(Hashtables, BaseHashtableTest,
+                               BaseHashtableTestTypes, TypeNames);
 
 TEST(Hashtables, DataHashtable)
 {
