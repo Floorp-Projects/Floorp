@@ -22,23 +22,23 @@ namespace {
 rtc::Thread* MaybeStartThread(rtc::Thread* old_thread,
                               const std::string& thread_name,
                               bool with_socket_server,
-                              std::unique_ptr<rtc::Thread>* thread_holder) {
+                              std::unique_ptr<rtc::Thread>& thread_holder) {
   if (old_thread) {
     return old_thread;
   }
   if (with_socket_server) {
-    *thread_holder = rtc::Thread::CreateWithSocketServer();
+    thread_holder = rtc::Thread::CreateWithSocketServer();
   } else {
-    *thread_holder = rtc::Thread::Create();
+    thread_holder = rtc::Thread::Create();
   }
-  (*thread_holder)->SetName(thread_name, nullptr);
-  (*thread_holder)->Start();
-  return (*thread_holder).get();
+  thread_holder->SetName(thread_name, nullptr);
+  thread_holder->Start();
+  return thread_holder.get();
 }
 
 rtc::Thread* MaybeWrapThread(rtc::Thread* signaling_thread,
-                             bool* wraps_current_thread) {
-  *wraps_current_thread = false;
+                             bool& wraps_current_thread) {
+  wraps_current_thread = false;
   if (signaling_thread) {
     return signaling_thread;
   }
@@ -47,9 +47,22 @@ rtc::Thread* MaybeWrapThread(rtc::Thread* signaling_thread,
     // If this thread isn't already wrapped by an rtc::Thread, create a
     // wrapper and own it in this class.
     this_thread = rtc::ThreadManager::Instance()->WrapCurrentThread();
-    *wraps_current_thread = true;
+    wraps_current_thread = true;
   }
   return this_thread;
+}
+
+std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
+    std::unique_ptr<SctpTransportFactoryInterface> factory,
+    rtc::Thread* network_thread) {
+  if (factory) {
+    return factory;
+  }
+#ifdef HAVE_SCTP
+  return std::make_unique<cricket::SctpTransportFactory>(network_thread);
+#else
+  return nullptr;
+#endif
 }
 
 }  // namespace
@@ -59,34 +72,28 @@ ConnectionContext::ConnectionContext(
     : network_thread_(MaybeStartThread(dependencies.network_thread,
                                        "pc_network_thread",
                                        true,
-                                       &owned_network_thread_)),
+                                       owned_network_thread_)),
       worker_thread_(MaybeStartThread(dependencies.worker_thread,
                                       "pc_worker_thread",
                                       false,
-                                      &owned_worker_thread_)),
+                                      owned_worker_thread_)),
       signaling_thread_(MaybeWrapThread(dependencies.signaling_thread,
-                                        &wraps_current_thread_)),
+                                        wraps_current_thread_)),
       network_monitor_factory_(std::move(dependencies.network_monitor_factory)),
       call_factory_(std::move(dependencies.call_factory)),
       media_engine_(std::move(dependencies.media_engine)),
-      sctp_factory_(std::move(dependencies.sctp_factory)),
+      sctp_factory_(MaybeCreateSctpFactory(std::move(dependencies.sctp_factory),
+                                           network_thread())),
       trials_(dependencies.trials ? std::move(dependencies.trials)
                                   : std::make_unique<FieldTrialBasedConfig>()) {
   signaling_thread_->AllowInvokesToThread(worker_thread_);
   signaling_thread_->AllowInvokesToThread(network_thread_);
   worker_thread_->AllowInvokesToThread(network_thread_);
   network_thread_->DisallowAllInvokes();
-
-#ifdef HAVE_SCTP
-  if (!sctp_factory_) {
-    sctp_factory_ =
-        std::make_unique<cricket::SctpTransportFactory>(network_thread());
-  }
-#endif
 }
 
 ConnectionContext::~ConnectionContext() {
-  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   channel_manager_.reset(nullptr);
 
   // Make sure |worker_thread()| and |signaling_thread()| outlive
@@ -100,12 +107,12 @@ ConnectionContext::~ConnectionContext() {
 
 void ConnectionContext::SetOptions(
     const PeerConnectionFactoryInterface::Options& options) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   options_ = options;
 }
 
 bool ConnectionContext::Initialize() {
-  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::InitRandom(rtc::Time32());
 
   // If network_monitor_factory_ is non-null, it will be used to create a
