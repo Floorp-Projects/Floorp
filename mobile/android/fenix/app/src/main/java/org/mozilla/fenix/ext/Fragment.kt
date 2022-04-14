@@ -84,7 +84,7 @@ fun Fragment.redirectToReAuth(
             }
             R.id.creditCardEditorFragment,
             R.id.creditCardsManagementFragment -> {
-                findNavController().popBackStack(R.id.creditCardsSettingFragment, false)
+                findNavController().popBackStack(R.id.autofillSettingFragment, false)
             }
         }
     }

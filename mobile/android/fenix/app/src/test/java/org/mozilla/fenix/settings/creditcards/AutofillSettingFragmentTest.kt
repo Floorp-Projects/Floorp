@@ -77,8 +77,8 @@ class AutofillSettingFragmentTest {
         )
 
         val directions =
-            CreditCardsSettingFragmentDirections
-                .actionCreditCardsSettingFragmentToCreditCardEditorFragment()
+            AutofillSettingFragmentDirections
+                .actionAutofillSettingFragmentToCreditCardEditorFragment()
 
         val creditCardsState = CreditCardsListState(creditCards = emptyList())
         val creditCardsStore = CreditCardsFragmentStore(creditCardsState)

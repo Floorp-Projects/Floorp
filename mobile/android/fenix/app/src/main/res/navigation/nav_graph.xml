@@ -141,8 +141,8 @@
         android:id="@+id/action_global_savedLoginsAuthFragment"
         app:destination="@id/savedLoginsAuthFragment" />
     <action
-        android:id="@+id/action_global_creditCardsSettingFragment"
-        app:destination="@id/credit_cards_graph" />
+        android:id="@+id/action_global_autofillSettingFragment"
+        app:destination="@id/autofill_graph" />
     <action
         android:id="@+id/action_global_tabHistoryDialogFragment"
         app:destination="@id/tabHistoryDialogFragment" />
@@ -513,8 +513,8 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
         <action
-            android:id="@+id/action_settingsFragment_to_creditCardsSettingFragment"
-            app:destination="@id/credit_cards_graph"
+            android:id="@+id/action_settingsFragment_to_autofillSettingFragment"
+            app:destination="@id/autofill_graph"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
@@ -1186,21 +1186,21 @@
     </navigation>
 
     <navigation
-        android:id="@+id/credit_cards_graph"
-        app:startDestination="@id/creditCardsSettingFragment">
+        android:id="@+id/autofill_graph"
+        app:startDestination="@id/autofillSettingFragment">
         <fragment
-            android:id="@+id/creditCardsSettingFragment"
-            android:name="org.mozilla.fenix.settings.creditcards.CreditCardsSettingFragment"
+            android:id="@+id/autofillSettingFragment"
+            android:name="org.mozilla.fenix.settings.creditcards.AutofillSettingFragment"
             android:label="@string/preferences_credit_cards">
             <action
-                android:id="@+id/action_creditCardsSettingFragment_to_creditCardEditorFragment"
+                android:id="@+id/action_autofillSettingFragment_to_creditCardEditorFragment"
                 app:destination="@id/creditCardEditorFragment"
                 app:enterAnim="@anim/slide_in_right"
                 app:exitAnim="@anim/slide_out_left"
                 app:popEnterAnim="@anim/slide_in_left"
                 app:popExitAnim="@anim/slide_out_right" />
             <action
-                android:id="@+id/action_creditCardsSettingFragment_to_creditCardsManagementFragment"
+                android:id="@+id/action_autofillSettingFragment_to_creditCardsManagementFragment"
                 app:destination="@id/creditCardsManagementFragment"
                 app:enterAnim="@anim/slide_in_right"
                 app:exitAnim="@anim/slide_out_left"

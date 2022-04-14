@@ -165,8 +165,8 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
                 verifyCredentialsOrShowSetupWarning(requireContext(), creditCardPreferences)
             } else {
                 navController.navigate(
-                    CreditCardsSettingFragmentDirections
-                        .actionCreditCardsSettingFragmentToCreditCardEditorFragment()
+                    AutofillSettingFragmentDirections
+                        .actionAutofillSettingFragmentToCreditCardEditorFragment()
                 )
             }
             super.onPreferenceTreeClick(it)
@@ -233,8 +233,8 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
     private fun navigateToCreditCardManagementFragment() {
         val directions =
-            CreditCardsSettingFragmentDirections
-                .actionCreditCardsSettingFragmentToCreditCardsManagementFragment()
+            AutofillSettingFragmentDirections
+                .actionAutofillSettingFragmentToCreditCardsManagementFragment()
         findNavController().navigate(directions)
     }
 

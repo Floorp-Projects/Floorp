@@ -314,7 +314,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToSavedLoginsAuthFragment()
             }
             resources.getString(R.string.pref_key_credit_cards) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToCreditCardsSettingFragment()
+                SettingsFragmentDirections.actionSettingsFragmentToAutofillSettingFragment()
             }
             resources.getString(R.string.pref_key_about) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()
