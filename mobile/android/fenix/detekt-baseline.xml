@@ -199,8 +199,6 @@
     <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillSearchItemSelected : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillUnlockCanceled : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillUnlockSuccessful : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AutoPlaySettingChanged : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AutoPlaySettingVisited : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$AverageTabsPerSearchTermGroup : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$BaiduTopSiteRemoved : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$BookmarkClicked : Event</ID>
@@ -420,7 +418,6 @@
     <ID>UndocumentedPublicClass:Event.kt$Event$WallpaperSettingsOpened : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$WallpaperSwitched : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$WhatsNewTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.AutoPlaySettingChanged$AutoplaySetting</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.BrowserMenuItemTapped$Item</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.DarkThemeSelected$Source</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event.Messaging$MessageClicked : Messaging</ID>

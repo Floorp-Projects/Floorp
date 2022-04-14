@@ -6185,7 +6185,8 @@ autoplay:
       autoplay_setting:
         description: |
           The new setting for autoplay: block_cellular,
-          block_audio, or block_all.
+          block_audio, allow_all or block_all.
+        type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/11579
     data_reviews:

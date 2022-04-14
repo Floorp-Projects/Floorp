@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.components.metrics
 
-import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.SearchTerms
-import java.util.Locale
 
 sealed class Event {
 
@@ -61,17 +59,6 @@ sealed class Event {
     data class SearchInContent(val keyName: String) : Event() {
         val label: String
             get() = keyName
-    }
-
-    object AutoPlaySettingVisited : Event()
-
-    data class AutoPlaySettingChanged(val setting: AutoplaySetting) : Event() {
-        enum class AutoplaySetting {
-            BLOCK_CELLULAR, BLOCK_AUDIO, BLOCK_ALL, ALLOW_ALL
-        }
-
-        override val extras: Map<Autoplay.settingChangedKeys, String>?
-            get() = mapOf(Autoplay.settingChangedKeys.autoplaySetting to setting.toString().lowercase(Locale.ROOT))
     }
 
     data class SearchTermGroupCount(val count: Int) : Event() {

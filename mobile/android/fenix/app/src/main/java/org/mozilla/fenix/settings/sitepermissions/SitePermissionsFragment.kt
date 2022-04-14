@@ -9,10 +9,10 @@ import androidx.navigation.Navigation
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceFragmentCompat
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.PhoneFeature
@@ -73,7 +73,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
             .actionSitePermissionsToManagePhoneFeatures(phoneFeature)
 
         if (phoneFeature == PhoneFeature.AUTOPLAY_AUDIBLE) {
-            requireComponents.analytics.metrics.track(Event.AutoPlaySettingVisited)
+            Autoplay.visitedSetting.record(NoExtras())
         }
 
         Navigation.findNavController(requireView()).navigate(directions)

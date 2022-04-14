@@ -8,7 +8,6 @@ import android.content.Context
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.HomeMenu
@@ -83,13 +82,6 @@ private val Event.wrapper: EventWrapper<*>?
             }
         )
 
-        is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
-            { Autoplay.visitedSetting.record(it) }
-        )
-        is Event.AutoPlaySettingChanged -> EventWrapper(
-            { Autoplay.settingChanged.record(it) },
-            { Autoplay.settingChangedKeys.valueOf(it) }
-        )
         is Event.ProgressiveWebAppOpenFromHomescreenTap -> EventWrapper<NoExtraKeys>(
             { ProgressiveWebApp.homescreenTap.record(it) }
         )
