@@ -8,6 +8,7 @@
 #define mozilla_fuzzing_Nyx_h
 
 #include <stdint.h>
+#include <atomic>
 
 #ifndef NYX_DISALLOW_COPY_AND_ASSIGN
 #  define NYX_DISALLOW_COPY_AND_ASSIGN(T) \
@@ -23,14 +24,15 @@ class Nyx {
   static Nyx& instance();
 
   void start(void);
+  bool started(void);
   bool is_enabled(const char* identifier);
   uint32_t get_data(uint8_t* data, uint32_t size);
-  void release(void);
+  void release(uint32_t iterations = 1);
   void handle_event(const char* type, const char* file, int line,
                     const char* reason);
 
  private:
-  bool mInited = false;
+  std::atomic<bool> mInited;
 
   Nyx();
   NYX_DISALLOW_COPY_AND_ASSIGN(Nyx);

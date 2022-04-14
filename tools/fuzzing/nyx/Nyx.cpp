@@ -22,9 +22,10 @@ extern "C" {
 MOZ_EXPORT __attribute__((weak)) void nyx_start(void);
 MOZ_EXPORT __attribute__((weak)) uint32_t nyx_get_next_fuzz_data(void*,
                                                                  uint32_t);
-MOZ_EXPORT __attribute__((weak)) void nyx_release(void);
+MOZ_EXPORT __attribute__((weak)) void nyx_release(uint32_t);
 MOZ_EXPORT __attribute__((weak)) void nyx_handle_event(const char*, const char*,
                                                        int, const char*);
+MOZ_EXPORT __attribute__((weak)) void nyx_puts(const char*);
 }
 
 /*
@@ -50,9 +51,12 @@ void Nyx::start(void) {
   NYX_CHECK_API(nyx_get_next_fuzz_data);
   NYX_CHECK_API(nyx_release);
   NYX_CHECK_API(nyx_handle_event);
+  NYX_CHECK_API(nyx_puts);
 
   nyx_start();
 }
+
+bool Nyx::started(void) { return mInited; }
 
 bool Nyx::is_enabled(const char* identifier) {
   static char* fuzzer = getenv("NYX_FUZZER");
@@ -67,9 +71,9 @@ uint32_t Nyx::get_data(uint8_t* data, uint32_t size) {
   return nyx_get_next_fuzz_data(data, size);
 }
 
-void Nyx::release(void) {
+void Nyx::release(uint32_t iterations) {
   MOZ_RELEASE_ASSERT(mInited);
-  nyx_release();
+  nyx_release(iterations);
 }
 
 void Nyx::handle_event(const char* type, const char* file, int line,

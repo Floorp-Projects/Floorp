@@ -24,6 +24,8 @@ MOZ_EXPORT __attribute__((weak)) void nyx_handle_event(const char* type,
                                                        const char* file,
                                                        int line,
                                                        const char* reason);
+
+MOZ_EXPORT __attribute__((weak)) void nyx_puts(const char*);
 #ifdef __cplusplus
 }
 #endif
