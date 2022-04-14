@@ -70,23 +70,21 @@ ScalabilityStructureS2T1::NextFrameConfig(bool restart) {
   return result;
 }
 
-absl::optional<GenericFrameInfo> ScalabilityStructureS2T1::OnEncodeDone(
-    LayerFrameConfig config) {
-  absl::optional<GenericFrameInfo> frame_info;
+GenericFrameInfo ScalabilityStructureS2T1::OnEncodeDone(
+    const LayerFrameConfig& config) {
+  GenericFrameInfo frame_info;
   if (config.SpatialId() < 0 ||
       config.SpatialId() >= int{ABSL_ARRAYSIZE(kDtis)}) {
     RTC_LOG(LS_ERROR) << "Unexpected spatial id " << config.SpatialId();
     return frame_info;
   }
-  frame_info.emplace();
-  frame_info->spatial_id = config.SpatialId();
-  frame_info->temporal_id = config.TemporalId();
-  frame_info->encoder_buffers = std::move(config.Buffers());
-  frame_info->decode_target_indications.assign(
+  frame_info.spatial_id = config.SpatialId();
+  frame_info.temporal_id = config.TemporalId();
+  frame_info.encoder_buffers = std::move(config.Buffers());
+  frame_info.decode_target_indications.assign(
       std::begin(kDtis[config.SpatialId()]),
       std::end(kDtis[config.SpatialId()]));
-  frame_info->part_of_chain = {config.SpatialId() == 0,
-                               config.SpatialId() == 1};
+  frame_info.part_of_chain = {config.SpatialId() == 0, config.SpatialId() == 1};
   return frame_info;
 }
 

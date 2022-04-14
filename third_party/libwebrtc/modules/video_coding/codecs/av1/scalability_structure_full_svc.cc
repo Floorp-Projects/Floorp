@@ -244,28 +244,28 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
   return configs;
 }
 
-absl::optional<GenericFrameInfo> ScalabilityStructureFullSvc::OnEncodeDone(
-    LayerFrameConfig config) {
-  absl::optional<GenericFrameInfo> frame_info(absl::in_place);
-  frame_info->spatial_id = config.SpatialId();
-  frame_info->temporal_id = config.TemporalId();
-  frame_info->encoder_buffers = config.Buffers();
-  frame_info->decode_target_indications.reserve(num_spatial_layers_ *
-                                                num_temporal_layers_);
+GenericFrameInfo ScalabilityStructureFullSvc::OnEncodeDone(
+    const LayerFrameConfig& config) {
+  GenericFrameInfo frame_info;
+  frame_info.spatial_id = config.SpatialId();
+  frame_info.temporal_id = config.TemporalId();
+  frame_info.encoder_buffers = config.Buffers();
+  frame_info.decode_target_indications.reserve(num_spatial_layers_ *
+                                               num_temporal_layers_);
   for (int sid = 0; sid < num_spatial_layers_; ++sid) {
     for (int tid = 0; tid < num_temporal_layers_; ++tid) {
-      frame_info->decode_target_indications.push_back(Dti(sid, tid, config));
+      frame_info.decode_target_indications.push_back(Dti(sid, tid, config));
     }
   }
   if (config.TemporalId() == 0) {
-    frame_info->part_of_chain.resize(num_spatial_layers_);
+    frame_info.part_of_chain.resize(num_spatial_layers_);
     for (int sid = 0; sid < num_spatial_layers_; ++sid) {
-      frame_info->part_of_chain[sid] = config.SpatialId() <= sid;
+      frame_info.part_of_chain[sid] = config.SpatialId() <= sid;
     }
   } else {
-    frame_info->part_of_chain.assign(num_spatial_layers_, false);
+    frame_info.part_of_chain.assign(num_spatial_layers_, false);
   }
-  frame_info->active_decode_targets = active_decode_targets_;
+  frame_info.active_decode_targets = active_decode_targets_;
   return frame_info;
 }
 

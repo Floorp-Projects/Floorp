@@ -13,7 +13,6 @@
 #include <bitset>
 #include <vector>
 
-#include "absl/types/optional.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/video_coding/codecs/av1/scalable_video_controller.h"
@@ -28,8 +27,7 @@ class ScalabilityStructureFullSvc : public ScalableVideoController {
   StreamLayersConfig StreamConfig() const override;
 
   std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
-  absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) override;
+  GenericFrameInfo OnEncodeDone(const LayerFrameConfig& config) override;
   void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
 
  private:

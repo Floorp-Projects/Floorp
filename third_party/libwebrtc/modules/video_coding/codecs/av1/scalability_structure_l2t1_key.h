@@ -29,8 +29,7 @@ class ScalabilityStructureL2T1Key : public ScalableVideoController {
   FrameDependencyStructure DependencyStructure() const override;
 
   std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
-  absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) override;
+  GenericFrameInfo OnEncodeDone(const LayerFrameConfig& config) override;
 
  private:
   LayerFrameConfig KeyFrameConfig() const;

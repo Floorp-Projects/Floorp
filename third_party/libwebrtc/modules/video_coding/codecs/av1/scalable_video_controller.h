@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
-#include "absl/types/optional.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
@@ -95,8 +94,7 @@ class ScalableVideoController {
   virtual std::vector<LayerFrameConfig> NextFrameConfig(bool restart) = 0;
 
   // Returns configuration to pass to EncoderCallback.
-  virtual absl::optional<GenericFrameInfo> OnEncodeDone(
-      LayerFrameConfig config) = 0;
+  virtual GenericFrameInfo OnEncodeDone(const LayerFrameConfig& config) = 0;
 };
 
 // Below are implementation details.
