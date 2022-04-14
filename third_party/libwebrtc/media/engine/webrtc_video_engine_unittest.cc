@@ -368,6 +368,19 @@ TEST_F(WebRtcVideoEngineTestWithGenericDescriptor,
   ExpectRtpCapabilitySupport(RtpExtension::kGenericFrameDescriptorUri00, true);
 }
 
+class WebRtcVideoEngineTestWithDependencyDescriptor
+    : public WebRtcVideoEngineTest {
+ public:
+  WebRtcVideoEngineTestWithDependencyDescriptor()
+      : WebRtcVideoEngineTest(
+            "WebRTC-DependencyDescriptorAdvertised/Enabled/") {}
+};
+
+TEST_F(WebRtcVideoEngineTestWithDependencyDescriptor,
+       AdvertiseDependencyDescriptor) {
+  ExpectRtpCapabilitySupport(RtpExtension::kDependencyDescriptorUri, true);
+}
+
 TEST_F(WebRtcVideoEngineTest, CVOSetHeaderExtensionBeforeCapturer) {
   // Allocate the source first to prevent early destruction before channel's
   // dtor is called.

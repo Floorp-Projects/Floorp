@@ -633,6 +633,11 @@ WebRtcVideoEngine::GetRtpHeaderExtensions() const {
                       IsEnabled(trials_, "WebRTC-GenericDescriptorAdvertised")
                           ? webrtc::RtpTransceiverDirection::kSendRecv
                           : webrtc::RtpTransceiverDirection::kStopped);
+  result.emplace_back(
+      webrtc::RtpExtension::kDependencyDescriptorUri, id,
+      IsEnabled(trials_, "WebRTC-DependencyDescriptorAdvertised")
+          ? webrtc::RtpTransceiverDirection::kSendRecv
+          : webrtc::RtpTransceiverDirection::kStopped);
   return result;
 }
 
