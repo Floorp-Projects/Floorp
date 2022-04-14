@@ -226,8 +226,10 @@ bool WMFVideoMFTManager::InitializeDXVA() {
   mDXVA2Manager.reset(
       DXVA2Manager::CreateD3D9DXVA(mKnowsCompositor, d3d9Failure));
   // Make sure we include the messages from both attempts (if applicable).
-  mDXVAFailureReason.AppendLiteral("; D3D9: ");
-  mDXVAFailureReason.Append(d3d9Failure);
+  if (!d3d9Failure.IsEmpty()) {
+    mDXVAFailureReason.AppendLiteral("; D3D9: ");
+    mDXVAFailureReason.Append(d3d9Failure);
+  }
 
   return mDXVA2Manager != nullptr;
 }
@@ -396,6 +398,12 @@ MediaResult WMFVideoMFTManager::InitInternal() {
     }
   }
 
+  if (!mDXVAFailureReason.IsEmpty()) {
+    // DXVA failure reason being set can mean that D3D11 failed, or that DXVA is
+    // entirely disabled.
+    LOG(nsPrintfCString("DXVA failure: %s", mDXVAFailureReason.get()).get());
+  }
+
   if (!mUseHwAccel) {
     if (mDXVA2Manager) {
       // Either mDXVAEnabled was set to false prior the second call to
@@ -403,7 +411,6 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       // MFT_MESSAGE_SET_D3D_MANAGER failed
       mDXVA2Manager.reset();
     }
-    LOG(nsPrintfCString("DXVA failure: %s", mDXVAFailureReason.get()).get());
     if (mStreamType == WMFStreamType::VP9 ||
         mStreamType == WMFStreamType::VP8 ||
         mStreamType == WMFStreamType::AV1) {
@@ -430,7 +437,16 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                   RESULT_DETAIL("Fail to get the input media type.")));
 
-  if (mUseHwAccel && !CanUseDXVA(inputType, mFramerate)) {
+  RefPtr<IMFMediaType> outputType;
+  hr = mDecoder->GetOutputMediaType(outputType);
+  NS_ENSURE_TRUE(
+      SUCCEEDED(hr),
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("Fail to get the output media type.")));
+
+  if (mUseHwAccel && !CanUseDXVA(inputType, outputType, mFramerate)) {
+    LOG("DXVA manager determined that the input type was unsupported in "
+        "hardware, retrying init without DXVA.");
     mDXVAEnabled = false;
     // DXVA initialization with current decoder actually failed,
     // re-do initialization.
@@ -439,13 +455,6 @@ MediaResult WMFVideoMFTManager::InitInternal() {
 
   LOG("Video Decoder initialized, Using DXVA: %s",
       (mUseHwAccel ? "Yes" : "No"));
-
-  RefPtr<IMFMediaType> outputType;
-  hr = mDecoder->GetOutputMediaType(outputType);
-  NS_ENSURE_TRUE(
-      SUCCEEDED(hr),
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  RESULT_DETAIL("Fail to get the output media type.")));
 
   if (mUseHwAccel) {
     hr = mDXVA2Manager->ConfigureForSize(
@@ -589,12 +598,14 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
 // Ideally we'd know the framerate during initialization and would also ensure
 // that new decoders are created if the resolution changes. Then we could move
 // this check into Init and consolidate the main thread blocking code.
-bool WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType, float aFramerate) {
+bool WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aInputType,
+                                    IMFMediaType* aOutputType,
+                                    float aFramerate) {
   MOZ_ASSERT(mDXVA2Manager);
   // Check if we're able to use hardware decoding with H264 or AV1.
   // TODO: Do the same for VPX, if the VPX MFT has a slow software fallback?
   if (mStreamType == WMFStreamType::H264 || mStreamType == WMFStreamType::AV1) {
-    return mDXVA2Manager->SupportsConfig(aType, aFramerate);
+    return mDXVA2Manager->SupportsConfig(aInputType, aOutputType, aFramerate);
   }
 
   return true;
