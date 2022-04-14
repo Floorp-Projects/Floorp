@@ -1032,9 +1032,20 @@ JS_PUBLIC_API bool JS_InitializePropertiesFromCompatibleNativeObject(
       cx, dst.as<NativeObject>(), src.as<NativeObject>());
 }
 
+void NativeObject::freeDynamicSlotsAfterSwap(NativeObject* old) {
+  if (!hasDynamicSlots()) {
+    return;
+  }
+
+  ObjectSlots* slotsHeader = getSlotsHeader();
+  size_t size = ObjectSlots::allocSize(slotsHeader->capacity());
+  zone()->removeCellMemory(old, size, MemoryUse::ObjectSlots);
+  js_free(slotsHeader);
+  setEmptyDynamicSlots(0);
+}
+
 /* static */
 bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
-                                   NativeObject* old,
                                    HandleValueVector values) {
   // This object has just been swapped with some other object, and its shape
   // no longer reflects its allocated size. Correct this information and
@@ -1053,15 +1064,6 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
 
   uint32_t oldDictionarySlotSpan =
       obj->inDictionaryMode() ? obj->dictionaryModeSlotSpan() : 0;
-
-  Zone* zone = obj->zone();
-  if (obj->hasDynamicSlots()) {
-    ObjectSlots* slotsHeader = obj->getSlotsHeader();
-    size_t size = ObjectSlots::allocSize(slotsHeader->capacity());
-    zone->removeCellMemory(old, size, MemoryUse::ObjectSlots);
-    js_free(slotsHeader);
-    obj->setEmptyDynamicSlots(0);
-  }
 
   size_t ndynamic =
       calculateDynamicSlots(nfixed, values.length(), obj->getClass());
@@ -1307,15 +1309,23 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     js_memcpy(b, &tmp, sizeof tmp);
 
     if (na) {
-      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), na, avals)) {
+      b.as<NativeObject>()->freeDynamicSlotsAfterSwap(na);
+    }
+    if (nb) {
+      a.as<NativeObject>()->freeDynamicSlotsAfterSwap(nb);
+    }
+
+    if (na) {
+      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), avals)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
     if (nb) {
-      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), nb, bvals)) {
+      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), bvals)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
+
     if (aIsProxyWithInlineValues) {
       if (!b->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, avals)) {
         oomUnsafe.crash("initExternalValueArray");
