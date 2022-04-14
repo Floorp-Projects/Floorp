@@ -16,6 +16,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CycleCollectedJSContext.h"  // nsAutoMicroTask
 #include "mozilla/EventQueue.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/Mutex.h"
@@ -694,6 +695,35 @@ nsThreadManager::DispatchToMainThread(nsIRunnable* aEvent, uint32_t aPriority,
         new PrioritizableRunnable(event.forget(), aPriority), 0);
   }
   return mMainThread->DispatchFromScript(aEvent, 0);
+}
+
+class AutoMicroTaskWrapperRunnable final : public Runnable {
+ public:
+  explicit AutoMicroTaskWrapperRunnable(nsIRunnable* aEvent)
+      : Runnable("AutoMicroTaskWrapperRunnable"), mEvent(aEvent) {
+    MOZ_ASSERT(aEvent);
+  }
+
+ private:
+  ~AutoMicroTaskWrapperRunnable() = default;
+
+  NS_IMETHOD Run() override {
+    nsAutoMicroTask mt;
+
+    return mEvent->Run();
+  }
+
+  RefPtr<nsIRunnable> mEvent;
+};
+
+NS_IMETHODIMP
+nsThreadManager::DispatchToMainThreadWithMicroTask(nsIRunnable* aEvent,
+                                                   uint32_t aPriority,
+                                                   uint8_t aArgc) {
+  RefPtr<AutoMicroTaskWrapperRunnable> runnable =
+      new AutoMicroTaskWrapperRunnable(aEvent);
+
+  return DispatchToMainThread(runnable, aPriority, aArgc);
 }
 
 void nsThreadManager::EnableMainThreadEventPrioritization() {

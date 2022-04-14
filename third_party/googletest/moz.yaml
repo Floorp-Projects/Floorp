@@ -1,0 +1,53 @@
+schema: 1
+
+bugzilla:
+  product: Testing
+  component: GTest
+
+origin:
+  name: googletest
+  description: Google Testing and Mocking Framework
+
+  url: https://google.github.io/googletest/
+
+  release: commit af29db7ec28d6df1c7f0f745186884091e602e07 (2022-03-23T22:08:26Z).
+
+  revision: af29db7ec28d6df1c7f0f745186884091e602e07
+
+  license: BSD-3-Clause
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/google/googletest
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - .github/
+    - ci/
+    - docs/
+    - googlemock/docs/
+    - googlemock/samples/
+    - googlemock/scripts/
+    - googlemock/test/
+    - googletest/docs/
+    - googletest/samples/
+    - googletest/scripts/
+    - googletest/test/
+    # Customization points, replaced by headers in testing/gtest/mozilla/
+    - googlemock/include/gmock/internal/custom
+    - googletest/include/gtest/internal/custom
+
+  keep:
+    - gen_moz_build.py
+
+  skip-vendoring-steps:
+    - update-moz-build # Handled by gen_moz_build.py
+
+  update-actions:
+    - action: run-script
+      script: "{yaml_dir}/gen_moz_build.py"
+      cwd: "{yaml_dir}"
+
+  patches:
+    - "*.patch"

@@ -10,6 +10,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
+#include <algorithm>
+
 #include "gtest/gtest.h"
 
 MOZ_EXPORT bool gStackWalkTesterDummy = true;

@@ -482,5 +482,5 @@ TEST_P(UrlClassifierPrefixSetTest, LoadSaveNoDelta) {
 
 // To run the same test for different configurations of
 // "browser_safebrowsing_prefixset_max_array_size"
-INSTANTIATE_TEST_CASE_P(UrlClassifierPrefixSetTest, UrlClassifierPrefixSetTest,
-                        ::testing::Values(0, UINT32_MAX));
+INSTANTIATE_TEST_SUITE_P(UrlClassifierPrefixSetTest, UrlClassifierPrefixSetTest,
+                         ::testing::Values(0, UINT32_MAX));
