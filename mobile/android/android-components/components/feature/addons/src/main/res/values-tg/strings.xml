@@ -49,7 +49,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Дастрас кардани таърихи тамошо</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Назорат кардани истифодаи васеъшавӣ ва идора кардани мавзӯъҳо</string>
+    <string name="mozac_feature_addons_permissions_management_description">Назорат кардани истифодаи васеъшавӣ ва идора кардани мавзуъҳо</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Мубодила кардани паёмҳо бо барномаҳо ба ғайр аз барномаи ҷорӣ</string>
     <!-- Description for notifications permission. -->
