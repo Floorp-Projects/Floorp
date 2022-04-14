@@ -71,6 +71,29 @@ RefPtr<GenericPromise> FlushAndUseFOGData();
 void TestTriggerMetrics(uint32_t processType,
                         const RefPtr<dom::Promise>& promise);
 
+#ifdef NIGHTLY_BUILD
+/**
+ * This function records the CPU activity (CPU time used and wakeup count)
+ * of a specific thread. It is called only by profiler code, either multiple
+ * times in a row when RecordPowerMetrics asks the profiler to record
+ * the wakeup counts of all threads, or once when a thread is unregistered.
+ *
+ * @param aThreadName The name of the thread for which the CPU data is being
+ *                    recorded.
+ *                    The name will be converted to lower case, and characters
+ *                    that are not valid for glean labels will be replaced with
+ *                    '_'. The resulting name should be part of the
+ *                    per_thread_labels static list of labels defined in
+ *                    toolkit/components/processtools/metrics.yaml.
+ * @param aCpuTimeMs CPU time in miliseconds since the last time CPU use data
+ *                   was recorded for this thread.
+ * @param aWakeCount How many times the thread woke up since the previous time
+ *                   CPU use data was recorded for this thread.
+ */
+void RecordThreadCpuUse(const nsACString& aThreadName, uint64_t aCpuTimeMs,
+                        uint64_t aWakeCount);
+#endif
+
 void RecordPowerMetrics();
 
 }  // namespace glean
