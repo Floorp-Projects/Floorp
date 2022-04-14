@@ -29,14 +29,18 @@
       });
 #  endif
 
-#  define MOZ_FUZZING_HANDLE_CRASH_EVENT2(aType, aReason)   \
-    do {                                                    \
-      nyx_handle_event(aType, __FILE__, __LINE__, aReason); \
+#  define MOZ_FUZZING_HANDLE_CRASH_EVENT2(aType, aReason)     \
+    do {                                                      \
+      if (nyx_handle_event) {                                 \
+        nyx_handle_event(aType, __FILE__, __LINE__, aReason); \
+      }                                                       \
     } while (false)
 
 #  define MOZ_FUZZING_HANDLE_CRASH_EVENT4(aType, aFilename, aLine, aReason) \
     do {                                                                    \
-      nyx_handle_event(aType, aFilename, aLine, aReason);                   \
+      if (nyx_handle_event) {                                               \
+        nyx_handle_event(aType, aFilename, aLine, aReason);                 \
+      }                                                                     \
     } while (false)
 
 #  define MOZ_FUZZING_NYX_PRINT(aMsg) \
