@@ -431,6 +431,8 @@ rtc_library("desktop_capture_generic") {
       "win/d3d_device.h",
       "win/desktop.cc",
       "win/desktop.h",
+      "win/desktop_capture_utils.cc",
+      "win/desktop_capture_utils.h",
       "win/display_configuration_monitor.cc",
       "win/display_configuration_monitor.h",
       "win/dxgi_adapter_duplicator.cc",
