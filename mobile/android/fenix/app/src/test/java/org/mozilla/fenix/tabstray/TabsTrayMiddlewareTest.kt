@@ -6,7 +6,6 @@ package org.mozilla.fenix.tabstray
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.service.glean.testing.GleanTestRule
@@ -20,8 +19,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -49,23 +48,41 @@ class TabsTrayMiddlewareTest {
 
     @Test
     fun `WHEN search term groups are updated AND there is at least one group THEN report the average tabs per group`() {
+        assertFalse(SearchTerms.averageTabsPerGroup.testHasValue())
+
         store.dispatch(TabsTrayAction.UpdateTabPartitions(generateSearchTermTabGroupsForAverage()))
         store.waitUntilIdle()
-        verify { metrics.track(Event.AverageTabsPerSearchTermGroup(5.0)) }
+
+        assertTrue(SearchTerms.averageTabsPerGroup.testHasValue())
+        val event = SearchTerms.averageTabsPerGroup.testGetValue()
+        assertEquals(1, event.size)
+        assertEquals("5.0", event.single().extra!!["count"])
     }
 
     @Test
     fun `WHEN search term groups are updated AND there is at least one group THEN report the distribution of tab sizes`() {
+        assertFalse(SearchTerms.groupSizeDistribution.testHasValue())
+
         store.dispatch(TabsTrayAction.UpdateTabPartitions(generateSearchTermTabGroupsForDistribution()))
         store.waitUntilIdle()
-        verify { metrics.track(Event.SearchTermGroupSizeDistribution(listOf(3L, 2L, 1L, 4L))) }
+
+        assertTrue(SearchTerms.groupSizeDistribution.testHasValue())
+        val event = SearchTerms.groupSizeDistribution.testGetValue().values
+        // Verify the distribution correctly describes the tab group sizes
+        assertEquals(mapOf(0L to 0L, 1L to 1L, 2L to 1L, 3L to 1L, 4L to 1L), event)
     }
 
     @Test
     fun `WHEN search term groups are updated THEN report the count of search term tab groups`() {
+        assertFalse(SearchTerms.numberOfSearchTermGroup.testHasValue())
+
         store.dispatch(TabsTrayAction.UpdateTabPartitions(null))
         store.waitUntilIdle()
-        verify { metrics.track(Event.SearchTermGroupCount(0)) }
+
+        assertTrue(SearchTerms.numberOfSearchTermGroup.testHasValue())
+        val event = SearchTerms.numberOfSearchTermGroup.testGetValue()
+        assertEquals(1, event.size)
+        assertEquals("0", event.single().extra!!["count"])
     }
 
     @Test

@@ -16,7 +16,6 @@ import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
-import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Tabs
@@ -140,20 +139,6 @@ private val Event.wrapper: EventWrapper<*>?
             { RecentSearches.groupDeleted.record(it) }
         )
 
-        is Event.SearchTermGroupCount -> EventWrapper(
-            { SearchTerms.numberOfSearchTermGroup.record(it) },
-            { SearchTerms.numberOfSearchTermGroupKeys.valueOf(it) }
-        )
-        is Event.AverageTabsPerSearchTermGroup -> EventWrapper(
-            { SearchTerms.averageTabsPerGroup.record(it) },
-            { SearchTerms.averageTabsPerGroupKeys.valueOf(it) }
-        )
-        is Event.SearchTermGroupSizeDistribution -> EventWrapper<NoExtraKeys>(
-            { SearchTerms.groupSizeDistribution.accumulateSamples(this.groupSizes.toLongArray()) },
-        )
-        is Event.JumpBackInGroupTapped -> EventWrapper<NoExtraKeys>(
-            { SearchTerms.jumpBackInGroupTapped.record(it) }
-        )
         is Event.Messaging.MessageShown -> EventWrapper<NoExtraKeys>(
             {
                 Messaging.messageShown.record(

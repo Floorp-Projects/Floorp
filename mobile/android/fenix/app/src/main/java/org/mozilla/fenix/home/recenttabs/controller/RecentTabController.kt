@@ -10,11 +10,10 @@ import androidx.navigation.NavController
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases.SelectTabUseCase
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.inProgressMediaTab
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recenttabs.RecentTab
@@ -56,7 +55,6 @@ interface RecentTabController {
 class DefaultRecentTabsController(
     private val selectTabUseCase: SelectTabUseCase,
     private val navController: NavController,
-    private val metrics: MetricController,
     private val store: BrowserStore,
     private val appStore: AppStore,
 ) : RecentTabController {
@@ -79,7 +77,7 @@ class DefaultRecentTabsController(
     }
 
     override fun handleRecentSearchGroupClicked(tabId: String) {
-        metrics.track(Event.JumpBackInGroupTapped)
+        SearchTerms.jumpBackInGroupTapped.record(NoExtras())
         navController.navigate(
             HomeFragmentDirections.actionGlobalTabsTrayFragment(
                 focusGroupTabId = tabId

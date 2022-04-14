@@ -7297,6 +7297,7 @@ search_terms:
       Number of search term group when tabs tray is opened.
     extra_keys:
       count:
+        type: string
         description: |
           The number of tabs per search group
     bugs:
@@ -7314,6 +7315,7 @@ search_terms:
       Number of search term tabs per group when tabs tray is opened.
     extra_keys:
       count:
+        type: string
         description: |
           The average number of tabs per search group
     bugs:

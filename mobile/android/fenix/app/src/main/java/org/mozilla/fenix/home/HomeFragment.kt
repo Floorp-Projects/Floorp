@@ -359,7 +359,6 @@ class HomeFragment : Fragment() {
             recentTabController = DefaultRecentTabsController(
                 selectTabUseCase = components.useCases.tabsUseCases.selectTab,
                 navController = findNavController(),
-                metrics = requireComponents.analytics.metrics,
                 store = components.core.store,
                 appStore = components.appStore,
             ),

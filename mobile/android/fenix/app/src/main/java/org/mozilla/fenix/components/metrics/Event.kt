@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.components.metrics
 
-import org.mozilla.fenix.GleanMetrics.SearchTerms
-
 sealed class Event {
 
     // Interaction Events
@@ -60,20 +58,6 @@ sealed class Event {
         val label: String
             get() = keyName
     }
-
-    data class SearchTermGroupCount(val count: Int) : Event() {
-        override val extras: Map<SearchTerms.numberOfSearchTermGroupKeys, String>
-            get() = hashMapOf(SearchTerms.numberOfSearchTermGroupKeys.count to count.toString())
-    }
-
-    data class AverageTabsPerSearchTermGroup(val averageSize: Double) : Event() {
-        override val extras: Map<SearchTerms.averageTabsPerGroupKeys, String>
-            get() = hashMapOf(SearchTerms.averageTabsPerGroupKeys.count to averageSize.toString())
-    }
-
-    data class SearchTermGroupSizeDistribution(val groupSizes: List<Long>) : Event()
-
-    object JumpBackInGroupTapped : Event()
 
     sealed class Search
 
