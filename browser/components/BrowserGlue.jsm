@@ -889,7 +889,6 @@ BrowserGlue.prototype = {
   _migrationImportsDefaultBookmarks: false,
   _placesBrowserInitComplete: false,
   _isNewProfile: undefined,
-  _defaultCookieBehaviorAtStartup: null,
 
   _setPrefToSaveSession: function BG__setPrefToSaveSession(aForce) {
     if (!this._saveSession && !aForce) {
@@ -1676,16 +1675,9 @@ BrowserGlue.prototype = {
     PlacesUtils.favicons.setDefaultIconURIPreferredSize(
       16 * aWindow.devicePixelRatio
     );
-
-    // Keep track of the initial default cookie behavior to revert to when
-    // users opt-out. This is used by _setDefaultCookieBehavior.
-    BrowserGlue._defaultCookieBehaviorAtStartup = Services.prefs
-      .getDefaultBranch("")
-      .getIntPref("network.cookie.cookieBehavior");
     // _setDefaultCookieBehavior needs to run before other functions that modify
     // privacy preferences such as _setPrefExpectationsAndUpdate and _matchCBCategory
     this._setDefaultCookieBehavior();
-
     this._setPrefExpectationsAndUpdate();
     this._matchCBCategory();
 
@@ -1761,7 +1753,7 @@ BrowserGlue.prototype = {
       "network.cookie.cookieBehavior",
       dFPIEnabled
         ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
-        : BrowserGlue._defaultCookieBehaviorAtStartup
+        : Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
     );
 
     Services.telemetry.scalarSet(
