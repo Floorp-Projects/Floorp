@@ -99,30 +99,25 @@ ScalabilityStructureL2T2KeyShift::NextFrameConfig(bool restart) {
   return result;
 }
 
-absl::optional<GenericFrameInfo> ScalabilityStructureL2T2KeyShift::OnEncodeDone(
-    LayerFrameConfig config) {
-  if (config.IsKeyframe()) {
-    config = KeyFrameConfig();
-  }
+GenericFrameInfo ScalabilityStructureL2T2KeyShift::OnEncodeDone(
+    const LayerFrameConfig& config) {
+  RTC_CHECK_GE(config.Id(), 0);
+  RTC_CHECK_LT(config.Id(), ABSL_ARRAYSIZE(kDtis));
 
-  absl::optional<GenericFrameInfo> frame_info;
-  if (config.Id() < 0 || config.Id() >= int{ABSL_ARRAYSIZE(kDtis)}) {
-    RTC_LOG(LS_ERROR) << "Unexpected config id " << config.Id();
-    return frame_info;
-  }
-  frame_info.emplace();
-  frame_info->spatial_id = config.SpatialId();
-  frame_info->temporal_id = config.TemporalId();
-  frame_info->encoder_buffers = config.Buffers();
-  frame_info->decode_target_indications.assign(std::begin(kDtis[config.Id()]),
-                                               std::end(kDtis[config.Id()]));
+  GenericFrameInfo frame_info;
+  frame_info.spatial_id = config.SpatialId();
+  frame_info.temporal_id = config.TemporalId();
+  frame_info.encoder_buffers = config.Buffers();
+  int config_id = config.IsKeyframe() ? 0 : config.Id();
+  frame_info.decode_target_indications.assign(std::begin(kDtis[config_id]),
+                                              std::end(kDtis[config_id]));
   if (config.IsKeyframe()) {
-    frame_info->part_of_chain = {true, true};
+    frame_info.part_of_chain = {true, true};
   } else if (config.TemporalId() == 0) {
-    frame_info->part_of_chain = {config.SpatialId() == 0,
-                                 config.SpatialId() == 1};
+    frame_info.part_of_chain = {config.SpatialId() == 0,
+                                config.SpatialId() == 1};
   } else {
-    frame_info->part_of_chain = {false, false};
+    frame_info.part_of_chain = {false, false};
   }
   return frame_info;
 }

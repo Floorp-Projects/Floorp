@@ -50,17 +50,17 @@ ScalableVideoControllerNoLayering::NextFrameConfig(bool restart) {
   return result;
 }
 
-absl::optional<GenericFrameInfo>
-ScalableVideoControllerNoLayering::OnEncodeDone(LayerFrameConfig config) {
+GenericFrameInfo ScalableVideoControllerNoLayering::OnEncodeDone(
+    const LayerFrameConfig& config) {
   RTC_DCHECK_EQ(config.Id(), 0);
-  absl::optional<GenericFrameInfo> frame_info(absl::in_place);
-  frame_info->encoder_buffers = config.Buffers();
+  GenericFrameInfo frame_info;
+  frame_info.encoder_buffers = config.Buffers();
   if (config.IsKeyframe()) {
-    for (auto& buffer : frame_info->encoder_buffers) {
+    for (auto& buffer : frame_info.encoder_buffers) {
       buffer.referenced = false;
     }
   }
-  frame_info->decode_target_indications = {DecodeTargetIndication::kSwitch};
+  frame_info.decode_target_indications = {DecodeTargetIndication::kSwitch};
   return frame_info;
 }
 
