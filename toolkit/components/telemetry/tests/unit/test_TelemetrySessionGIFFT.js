@@ -27,10 +27,6 @@ add_task(function test_setup() {
 add_task(function test_assemblingInstrumentation() {
   Telemetry.clearScalars();
 
-  Assert.equal(
-    undefined,
-    Glean.gifftValidation.mainPingAssembling.testGetValue()
-  );
   let snapshot = Telemetry.getSnapshotForScalars().parent;
   Assert.ok(
     !snapshot || !("gifft.validation.main_ping_assembling" in snapshot)
@@ -42,7 +38,6 @@ add_task(function test_assemblingInstrumentation() {
 
   let payload = TelemetrySession.getPayload("reason", true);
 
-  Assert.equal(true, Glean.gifftValidation.mainPingAssembling.testGetValue());
   // Assembling the payload clears the subsession, so these should've been set
   // and then cleared.
   snapshot = Telemetry.getSnapshotForScalars().parent;
@@ -54,13 +49,8 @@ add_task(function test_assemblingInstrumentation() {
       !("gifft.validation.mirror_for_main_ping_assembling" in snapshot)
   );
 
-  // We can verify that any assembled payload has both values.
+  // We can verify that any assembled payload has one value.
   Assert.ok(
     payload.processes.parent.scalars["gifft.validation.main_ping_assembling"]
-  );
-  Assert.ok(
-    payload.processes.parent.scalars[
-      "gifft.validation.mirror_for_main_ping_assembling"
-    ]
   );
 });
