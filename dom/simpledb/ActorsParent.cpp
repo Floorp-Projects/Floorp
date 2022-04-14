@@ -452,22 +452,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
  public:
   QuotaClient();
 
-  static bool IsShuttingDownOnBackgroundThread() {
-    AssertIsOnBackgroundThread();
-
-    if (sInstance) {
-      return sInstance->IsShuttingDown();
-    }
-
-    return QuotaManager::IsShuttingDown();
-  }
-
-  static bool IsShuttingDownOnNonBackgroundThread() {
-    MOZ_ASSERT(!IsOnBackgroundThread());
-
-    return QuotaManager::IsShuttingDown();
-  }
-
   bool IsShuttingDown() const {
     AssertIsOnBackgroundThread();
 
