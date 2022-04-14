@@ -900,9 +900,11 @@ bool SctpTransport::ConfigureSctpSocket() {
   }
 
   // Subscribe to SCTP event notifications.
+  // TODO(crbug.com/1137936): Subscribe to SCTP_SEND_FAILED_EVENT once deadlock
+  // is fixed upstream, or we switch to the upcall API:
+  // https://github.com/sctplab/usrsctp/issues/537
   int event_types[] = {SCTP_ASSOC_CHANGE, SCTP_PEER_ADDR_CHANGE,
-                       SCTP_SEND_FAILED_EVENT, SCTP_SENDER_DRY_EVENT,
-                       SCTP_STREAM_RESET_EVENT};
+                       SCTP_SENDER_DRY_EVENT, SCTP_STREAM_RESET_EVENT};
   struct sctp_event event = {0};
   event.se_assoc_id = SCTP_ALL_ASSOC;
   event.se_on = 1;
