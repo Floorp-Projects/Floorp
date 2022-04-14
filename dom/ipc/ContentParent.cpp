@@ -2064,15 +2064,18 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
   }
 
   // Remove any and all idle listeners.
-  nsCOMPtr<nsIUserIdleService> idleService =
-      do_GetService("@mozilla.org/widget/useridleservice;1");
-  MOZ_ASSERT(idleService);
-  RefPtr<ParentIdleListener> listener;
-  for (int32_t i = mIdleListeners.Length() - 1; i >= 0; --i) {
-    listener = static_cast<ParentIdleListener*>(mIdleListeners[i].get());
-    idleService->RemoveIdleObserver(listener, listener->mTime);
+  if (mIdleListeners.Length() > 0) {
+    nsCOMPtr<nsIUserIdleService> idleService =
+        do_GetService("@mozilla.org/widget/useridleservice;1");
+    if (idleService) {
+      RefPtr<ParentIdleListener> listener;
+      for (const auto& lentry : mIdleListeners) {
+        listener = static_cast<ParentIdleListener*>(lentry.get());
+        idleService->RemoveIdleObserver(listener, listener->mTime);
+      }
+    }
+    mIdleListeners.Clear();
   }
-  mIdleListeners.Clear();
 
   MOZ_LOG(ContentParent::GetLog(), LogLevel::Verbose,
           ("destroying Subprocess in ActorDestroy: ContentParent %p "
@@ -2080,16 +2083,18 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
            this, mSubprocess,
            mSubprocess ? (uintptr_t)mSubprocess->GetChildProcessHandle() : -1));
   // FIXME (bug 1520997): does this really need an additional dispatch?
-  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
-      "DelayedDeleteSubprocessRunnable", [subprocess = mSubprocess] {
-        MOZ_LOG(
-            ContentParent::GetLog(), LogLevel::Debug,
-            ("destroyed Subprocess in ActorDestroy: Subprocess %p handle "
-             "%" PRIuPTR,
-             subprocess,
-             subprocess ? (uintptr_t)subprocess->GetChildProcessHandle() : -1));
-        subprocess->Destroy();
-      }));
+  if (GetCurrentSerialEventTarget()) {
+    GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+        "DelayedDeleteSubprocessRunnable", [subprocess = mSubprocess] {
+          MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
+                  ("destroyed Subprocess in ActorDestroy: Subprocess %p handle "
+                   "%" PRIuPTR,
+                   subprocess,
+                   subprocess ? (uintptr_t)subprocess->GetChildProcessHandle()
+                              : -1));
+          subprocess->Destroy();
+        }));
+  }
   mSubprocess = nullptr;
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
@@ -4695,7 +4700,9 @@ mozilla::ipc::IPCResult ContentParent::RecvAddGeolocationListener(
 mozilla::ipc::IPCResult ContentParent::RecvRemoveGeolocationListener() {
   if (mGeolocationWatchID != -1) {
     RefPtr<Geolocation> geo = Geolocation::NonWindowSingleton();
-    geo->ClearWatch(mGeolocationWatchID);
+    if (geo) {
+      geo->ClearWatch(mGeolocationWatchID);
+    }
     mGeolocationWatchID = -1;
   }
   return IPC_OK();

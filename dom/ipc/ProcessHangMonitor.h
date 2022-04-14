@@ -79,7 +79,7 @@ class ProcessHangMonitor final : public nsIObserver {
   void InitiateCPOWTimeout();
   bool ShouldTimeOutCPOWs();
 
-  void Dispatch(already_AddRefed<nsIRunnable> aRunnable);
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable);
   bool IsOnThread();
 
  private:
