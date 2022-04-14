@@ -396,6 +396,7 @@ html {
 }
 
 body.theme_dark {
+  background: #42414c;
   color: #FBFBFE;
 }
 
@@ -404,6 +405,9 @@ hr {
   background-color: #F0F0F4;
   height: 1px;
   border: none;
+}
+body.theme_dark hr {
+  background-color: #52525E;
 }
 
 .header_large {
