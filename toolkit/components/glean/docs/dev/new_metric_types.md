@@ -66,6 +66,25 @@ If you add a GIFFT mirror, don't forget to test that the mirror works.
 You should be able to do this by adding a task to
 [`toolkit/components/glean/tests/xpcshell/test_GIFFT.js`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/xpcshell/test_GIFFT.js).
 
+### GIFFT C++ State: Typical Locking and Shutdown
+
+Some metric types (`labeled_*`, `timespan`, `timing_distribution`)
+require holding state in C++ to make GIFFT work.
+Pings also hold state to support `testBeforeNextSubmit()`.
+If your new metric type requires state in C++,
+the current state-of-the-art is a `StaticDataMutex`-locked `UniquePtr` to a `nsTHashTable`.
+Access to the inner map is guarded by the lock and is controlled and lazily-instantiated through a single access function.
+[See Ping's `GetCallbackMapLock()`](https://searchfox.org/mozilla-central/source/toolkit/components/glean/bindings/private/Ping.cpp)
+for example.
+
+It is important to clear this state to avoid leaks.
+(See [bug 1752417](https://bugzilla.mozilla.org/show_bug.cgi?id=1752417).)
+However, instrumentation may call metrics APIs at any time.
+
+Therefore, GIFFT explicitly stops supporting these state-requiring operations after the
+[`AppShutdownTelemetry` shutdown phase](https://searchfox.org/mozilla-central/source/xpcom/base/ShutdownPhase.h).
+This is because during the next phase (`XPCOMWillShutdown`) we clear the state.
+
 ## Rust
 
 FOG uses the Rust Language Binding APIs (the `glean` crate) with a layer of IPC on top.

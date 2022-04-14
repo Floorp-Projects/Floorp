@@ -14,6 +14,7 @@
 namespace mozilla::dom::quota {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
+using mozilla::ipc::IsOnBackgroundThread;
 
 namespace {
 
@@ -244,6 +245,18 @@ void Client::FinalizeShutdownWorkThreads() {
   QuotaManager::MaybeRecordQuotaClientShutdownStep(GetType(), "completed"_ns);
 
   FinalizeShutdown();
+}
+
+// static
+bool Client::IsShuttingDownOnBackgroundThread() {
+  MOZ_ASSERT(IsOnBackgroundThread());
+  return QuotaManager::IsShuttingDown();
+}
+
+// static
+bool Client::IsShuttingDownOnNonBackgroundThread() {
+  MOZ_ASSERT(!IsOnBackgroundThread());
+  return QuotaManager::IsShuttingDown();
 }
 
 }  // namespace mozilla::dom::quota

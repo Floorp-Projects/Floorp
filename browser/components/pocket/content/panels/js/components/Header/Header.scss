@@ -12,7 +12,7 @@
     width: 121px;
 
     @include theme_dark {
-      background: url(../img/pocketlogo-dark.svg) bottom center no-repeat;
+      background-image: url(../img/pocketlogo-dark.svg);
     }
   }
 

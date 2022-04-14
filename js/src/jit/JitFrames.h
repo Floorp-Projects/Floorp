@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "jit/CalleeToken.h"
+#include "jit/MachineState.h"
 #include "jit/Registers.h"
 #include "js/Id.h"
 #include "js/TypeDecls.h"

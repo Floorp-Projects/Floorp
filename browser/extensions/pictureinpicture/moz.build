@@ -28,6 +28,7 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["lib"] += [
 ]
 
 FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] += [
+    "video-wrappers/airmozilla.js",
     "video-wrappers/funimation.js",
     "video-wrappers/mock-wrapper.js",
     "video-wrappers/netflix.js",

@@ -4,6 +4,7 @@
    It is only for internal use by types in
    toolkit/components/glean/bindings/private */
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
@@ -25,19 +26,35 @@ typedef nsTHashMap<SubmetricIdHashKey, Tuple<ScalarID, nsString>>
     SubmetricToLabeledMirrorMapType;
 typedef StaticDataMutex<UniquePtr<SubmetricToLabeledMirrorMapType>>
     SubmetricToMirrorMutex;
-static inline SubmetricToMirrorMutex::AutoLock GetLabeledMirrorLock() {
+static inline Maybe<SubmetricToMirrorMutex::AutoLock> GetLabeledMirrorLock() {
   static SubmetricToMirrorMutex sLabeledMirrors("sLabeledMirrors");
   auto lock = sLabeledMirrors.Lock();
+  // GIFFT will work up to the end of AppShutdownTelemetry.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+    return Nothing();
+  }
   if (!*lock) {
     *lock = MakeUnique<SubmetricToLabeledMirrorMapType>();
-    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+    RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
       RunOnShutdown([&] {
         auto lock = sLabeledMirrors.Lock();
         *lock = nullptr;  // deletes, see UniquePtr.h
-      });
-    }));
+      }, ShutdownPhase::XPCOMWillShutdown);
+    });
+    // Both getting the main thread and dispatching to it can fail.
+    // In that event we leak. Grab a pointer so we have something to NS_RELEASE
+    // in that case.
+    nsIRunnable* temp = cleanupFn.get();
+    if (NS_FAILED(NS_DispatchToMainThread(cleanupFn.forget()))) {
+      // Failed to dispatch cleanup routine.
+      // First, un-leak the runnable:
+      NS_RELEASE(temp);
+      // Next, cleanup immediately, and allow metrics to try again later.
+      *lock = nullptr;
+      return Nothing();
+    }
   }
-  return lock;
+  return Some(std::move(lock));
 }
 
 namespace {
@@ -65,19 +82,35 @@ class ScalarIDHashKey : public PLDHashEntryHdr {
 };
 }  // namespace
 typedef StaticDataMutex<UniquePtr<nsTHashMap<ScalarIDHashKey, TimeStamp>>> TimesToStartsMutex;
-static inline TimesToStartsMutex::AutoLock GetTimesToStartsLock() {
+static inline Maybe<TimesToStartsMutex::AutoLock> GetTimesToStartsLock() {
   static TimesToStartsMutex sTimespanStarts("sTimespanStarts");
   auto lock = sTimespanStarts.Lock();
+  // GIFFT will work up to the end of AppShutdownTelemetry.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+    return Nothing();
+  }
   if (!*lock) {
     *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
-    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [&] {
+    RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
       RunOnShutdown([&] {
         auto lock = sTimespanStarts.Lock();
         *lock = nullptr;  // deletes, see UniquePtr.h
-      });
-    }));
+      }, ShutdownPhase::XPCOMWillShutdown);
+    });
+    // Both getting the main thread and dispatching to it can fail.
+    // In that event we leak. Grab a pointer so we have something to NS_RELEASE
+    // in that case.
+    nsIRunnable* temp = cleanupFn.get();
+    if (NS_FAILED(NS_DispatchToMainThread(cleanupFn.forget()))) {
+      // Failed to dispatch cleanup routine.
+      // First, un-leak the runnable:
+      NS_RELEASE(temp);
+      // Next, cleanup immediately, and allow metrics to try again later.
+      *lock = nullptr;
+      return Nothing();
+    }
   }
-  return lock;
+  return Some(std::move(lock));
 }
 
 static inline bool IsSubmetricId(uint32_t aId) {

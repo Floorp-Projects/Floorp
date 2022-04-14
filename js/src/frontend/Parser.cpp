@@ -5703,6 +5703,9 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
 
   ListNodeType importAssertionList =
       handler_.newList(ParseNodeKind::ImportAssertionList, pos());
+  if (!importAssertionList) {
+    return null();
+  }
   if (tt == TokenKind::Assert) {
     tokenStream.consumeKnownToken(TokenKind::Assert,
                                   TokenStream::SlashIsRegExp);
@@ -5718,6 +5721,9 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
 
   BinaryNodeType moduleRequest = handler_.newModuleRequest(
       moduleSpec, importAssertionList, TokenPos(moduleSpecPos, pos().end));
+  if (!moduleRequest) {
+    return null();
+  }
 
   BinaryNodeType node =
       handler_.newExportFromDeclaration(begin, specList, moduleRequest);
