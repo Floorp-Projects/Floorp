@@ -8,6 +8,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/ProcInfo.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 
@@ -40,6 +41,10 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   // Launch a new Utility process asynchronously
   RefPtr<GenericNonExclusivePromise> LaunchProcess(SandboxingKind aSandbox);
+
+  template <typename Actor>
+  RefPtr<GenericNonExclusivePromise> StartUtility(RefPtr<Actor> aActor,
+                                                  SandboxingKind aSandbox);
 
   RefPtr<AudioDecodingPromise> StartAudioDecoding(
       base::ProcessId aOtherProcess);
@@ -81,6 +86,25 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
       return nullptr;
     }
     return p->mProcess;
+  }
+
+  void RegisterActor(const RefPtr<UtilityProcessParent>& aParent,
+                     UtilityActorName aActorName) {
+    for (auto& p : mProcesses) {
+      if (p && p->mProcessParent && p->mProcessParent == aParent) {
+        p->mActors.AppendElement(aActorName);
+        return;
+      }
+    }
+  }
+
+  Span<const UtilityActorName> GetActors(GeckoChildProcessHost* aHost) {
+    for (auto& p : mProcesses) {
+      if (p && p->mProcess == aHost) {
+        return p->mActors;
+      }
+    }
+    return {};
   }
 
   // Shutdown the Utility process for that sandbox.
@@ -141,6 +165,8 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
     // the initial map is passed in command-line arguments) to be sent
     // when the process can receive IPC messages.
     nsTArray<dom::Pref> mQueuedPrefs;
+
+    nsTArray<UtilityActorName> mActors;
 
     SandboxingKind mSandbox = SandboxingKind::COUNT;
 

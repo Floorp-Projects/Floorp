@@ -447,32 +447,8 @@ class CloseOp final : public ConnectionOperationBase {
 class QuotaClient final : public mozilla::dom::quota::Client {
   static QuotaClient* sInstance;
 
-  bool mShutdownRequested;
-
  public:
   QuotaClient();
-
-  static bool IsShuttingDownOnBackgroundThread() {
-    AssertIsOnBackgroundThread();
-
-    if (sInstance) {
-      return sInstance->IsShuttingDown();
-    }
-
-    return QuotaManager::IsShuttingDown();
-  }
-
-  static bool IsShuttingDownOnNonBackgroundThread() {
-    MOZ_ASSERT(!IsOnBackgroundThread());
-
-    return QuotaManager::IsShuttingDown();
-  }
-
-  bool IsShuttingDown() const {
-    AssertIsOnBackgroundThread();
-
-    return mShutdownRequested;
-  }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(QuotaClient, override)
 
@@ -1639,7 +1615,7 @@ void CloseOp::OnSuccess() {
 
 QuotaClient* QuotaClient::sInstance = nullptr;
 
-QuotaClient::QuotaClient() : mShutdownRequested(false) {
+QuotaClient::QuotaClient() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
 
@@ -1760,9 +1736,6 @@ void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::InitiateShutdown() {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mShutdownRequested);
-
-  mShutdownRequested = true;
 
   if (gOpenConnections) {
     for (const auto& connection : *gOpenConnections) {

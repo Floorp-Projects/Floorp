@@ -256,6 +256,7 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
     info.type = request.processType;
     info.origin = request.origin;
     info.windows = std::move(request.windowInfo);
+    info.utilityActors = std::move(request.utilityInfo);
 
     // Let's look at the threads
     nsCString taskPath;

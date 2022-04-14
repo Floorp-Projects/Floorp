@@ -36,6 +36,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    airmozilla: {
+      "https://*.mozilla.hosted.panopto.com/*": {
+        videoWrapperScriptPath: "video-wrappers/airmozilla.js",
+      },
+    },
+
     funimation: {
       "https://*.funimation.com/*": {
         videoWrapperScriptPath: "video-wrappers/funimation.js",

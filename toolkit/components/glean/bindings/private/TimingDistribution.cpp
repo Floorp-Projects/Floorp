@@ -23,9 +23,10 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStart(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
-    auto lock = mozilla::glean::GetTimerIdToStartsLock();
-    (void)NS_WARN_IF(lock.ref()->Remove(aTimerId));
-    lock.ref()->InsertOrUpdate(aTimerId, mozilla::TimeStamp::Now());
+    mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
+      (void)NS_WARN_IF(lock.ref()->Remove(aTimerId));
+      lock.ref()->InsertOrUpdate(aTimerId, mozilla::TimeStamp::Now());
+    });
   }
 }
 
@@ -34,11 +35,12 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStopAndAccumulate(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
-    auto lock = mozilla::glean::GetTimerIdToStartsLock();
-    auto optStart = lock.ref()->Extract(aTimerId);
-    if (!NS_WARN_IF(!optStart)) {
-      AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
-    }
+    mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
+      auto optStart = lock.ref()->Extract(aTimerId);
+      if (!NS_WARN_IF(!optStart)) {
+        AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
+      }
+    });
   }
 }
 
@@ -56,8 +58,8 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionCancel(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
-    auto lock = mozilla::glean::GetTimerIdToStartsLock();
-    (void)NS_WARN_IF(!lock.ref()->Remove(aTimerId));
+    mozilla::glean::GetTimerIdToStartsLock().apply(
+        [&](auto& lock) { (void)NS_WARN_IF(!lock.ref()->Remove(aTimerId)); });
   }
 }
 

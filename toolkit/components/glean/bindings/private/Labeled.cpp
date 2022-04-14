@@ -23,10 +23,11 @@ BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
   // to the label string and mirrored scalar so we can mirror its operations.
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
-    auto lock = GetLabeledMirrorLock();
-    auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
-        mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-    lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
+    GetLabeledMirrorLock().apply([&](auto& lock) {
+      auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
+          mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
+      lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
+    });
   }
   return BooleanMetric(submetricId);
 }
@@ -38,10 +39,11 @@ CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
   // to the label string and mirrored scalar so we can mirror its operations.
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
-    auto lock = GetLabeledMirrorLock();
-    auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
-        mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-    lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
+    GetLabeledMirrorLock().apply([&](auto& lock) {
+      auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
+          mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
+      lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
+    });
   }
   return CounterMetric(submetricId);
 }
@@ -79,10 +81,11 @@ already_AddRefed<nsISupports> GleanLabeled::NamedGetter(const nsAString& aName,
 
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
-    auto lock = GetLabeledMirrorLock();
-    auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(mirrorId.extract(),
-                                                          nsString(aName));
-    lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
+    GetLabeledMirrorLock().apply([&](auto& lock) {
+      auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(mirrorId.extract(),
+                                                            nsString(aName));
+      lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
+    });
   }
   return submetric;
 }

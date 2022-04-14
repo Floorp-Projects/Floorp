@@ -4,6 +4,7 @@
    It is only for internal use by types in
    toolkit/components/glean/bindings/private */
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"

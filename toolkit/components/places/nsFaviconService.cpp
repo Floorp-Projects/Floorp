@@ -537,6 +537,10 @@ nsFaviconService::GetFaviconURLForPage(nsIURI* aPageURI,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aCallback);
+  // Use the default value, may be UINT16_MAX if a default is not set.
+  if (aPreferredWidth == 0) {
+    aPreferredWidth = mDefaultIconURIPreferredSize;
+  }
 
   nsAutoCString pageSpec;
   nsresult rv = aPageURI->GetSpec(pageSpec);
@@ -562,6 +566,10 @@ nsFaviconService::GetFaviconDataForPage(nsIURI* aPageURI,
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aPageURI);
   NS_ENSURE_ARG(aCallback);
+  // Use the default value, may be UINT16_MAX if a default is not set.
+  if (aPreferredWidth == 0) {
+    aPreferredWidth = mDefaultIconURIPreferredSize;
+  }
 
   nsAutoCString pageSpec;
   nsresult rv = aPageURI->GetSpec(pageSpec);
@@ -772,6 +780,7 @@ nsFaviconService::SetDefaultIconURIPreferredSize(uint16_t aDefaultSize) {
 
 NS_IMETHODIMP
 nsFaviconService::PreferredSizeFromURI(nsIURI* aURI, uint16_t* _size) {
+  NS_ENSURE_ARG(aURI);
   *_size = mDefaultIconURIPreferredSize;
   nsAutoCString ref;
   // Check for a ref first.

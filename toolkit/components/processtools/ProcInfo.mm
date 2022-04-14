@@ -78,6 +78,7 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(nsTArray<ProcInfoRequest>&
     info.type = request.processType;
     info.origin = std::move(request.origin);
     info.windows = std::move(request.windowInfo);
+    info.utilityActors = std::move(request.utilityInfo);
 
     struct proc_taskinfo pti;
     if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTASKINFO, 0, &pti, PROC_PIDTASKINFO_SIZE) <

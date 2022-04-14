@@ -158,6 +158,8 @@ policy-OverridePostUpdatePage = Override the post-update “What’s New” page
 
 policy-PasswordManagerEnabled = Enable saving passwords to the password manager.
 
+policy-PasswordManagerExceptions = Prevent { -brand-short-name } from saving passwords for specific sites.
+
 # PDF.js and PDF should not be translated
 policy-PDFjs = Disable or configure PDF.js, the built-in PDF viewer in { -brand-short-name }.
 

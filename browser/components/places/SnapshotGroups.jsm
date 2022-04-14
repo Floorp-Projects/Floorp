@@ -49,6 +49,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   This title should only be used if `title` is not present.
  * @property {string} imageUrl
  *   The image url to use for the group.
+ * @property {string} faviconDataUrl
+ *   The data url to use for the favicon, null if not available.
+ * @property {string} imagePageUrl
+ *   The url of the snapshot used to get the image and favicon urls.
  * @property {number} lastAccessed
  *   The last access time of the most recently accessed snapshot.
  *   Stored as the number of milliseconds since the epoch.
@@ -372,7 +376,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       params
     );
 
-    return rows.map(row => this.#translateSnapshotGroupRow(row));
+    return Promise.all(rows.map(row => this.#translateSnapshotGroupRow(row)));
   }
 
   /**
@@ -499,7 +503,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   The database row to translate.
    * @returns {SnapshotGroup}
    */
-  #translateSnapshotGroupRow(row) {
+  async #translateSnapshotGroupRow(row) {
     // Group image selection should be done in this order:
     //   1. Oldest view in group featured image
     //   2. Second Oldest View in group featured image
@@ -512,7 +516,7 @@ const SnapshotGroups = new (class SnapshotGroups {
     // available.
     // The query returns featured1|featured2|url1|url2
     let imageUrls = row.getResultByName("image_urls")?.split("|");
-    let imageUrl = null;
+    let imageUrl, faviconDataUrl, imagePageUrl;
     if (imageUrls) {
       imageUrl = imageUrls[0] || imageUrls[1];
       if (!imageUrl && imageUrls[2]) {
@@ -524,11 +528,41 @@ const SnapshotGroups = new (class SnapshotGroups {
           imageUrl = PageThumbs.getThumbnailURL(imageUrl);
         }
       }
+
+      // The favicon is for the same page we return a preview image for.
+      imagePageUrl =
+        imageUrls[2] && !imageUrls[0] && imageUrls[1]
+          ? imageUrls[3]
+          : imageUrls[2];
+      if (imagePageUrl) {
+        faviconDataUrl = await new Promise(resolve => {
+          PlacesUtils.favicons.getFaviconDataForPage(
+            Services.io.newURI(imagePageUrl),
+            (uri, dataLength, data, mimeType) => {
+              if (dataLength) {
+                // NOTE: honestly this is awkward and inefficient. We build a string
+                // with String.fromCharCode and then btoa that. It's a Uint8Array
+                // under the hood, and we should probably just expose something in
+                // ChromeUtils to Base64 encode a Uint8Array directly, but this is
+                // fine for now.
+                let b64 = btoa(
+                  data.reduce((d, byte) => d + String.fromCharCode(byte), "")
+                );
+                resolve(`data:${mimeType};base64,${b64}`);
+                return;
+              }
+              resolve(undefined);
+            }
+          );
+        });
+      }
     }
 
     let snapshotGroup = {
       id: row.getResultByName("id"),
+      faviconDataUrl,
       imageUrl,
+      imagePageUrl,
       title: row.getResultByName("title") || "",
       hidden: row.getResultByName("hidden") == 1,
       builder: row.getResultByName("builder"),

@@ -206,30 +206,16 @@ MachineState JSJitFrameIter::machineState() const {
   }
 
   SafepointReader reader(ionScript(), safepoint());
+
+  FloatRegisterSet fregs = reader.allFloatSpills().set().reduceSetForPush();
+  GeneralRegisterSet regs = reader.allGprSpills().set();
+
   uintptr_t* spill = spillBase();
-  MachineState machine;
-
-  for (GeneralRegisterBackwardIterator iter(reader.allGprSpills()); iter.more();
-       ++iter) {
-    machine.setRegisterLocation(*iter, --spill);
-  }
-
-  uint8_t* spillAlign = alignDoubleSpill(reinterpret_cast<uint8_t*>(spill));
-
+  uint8_t* spillAlign =
+      alignDoubleSpill(reinterpret_cast<uint8_t*>(spill - regs.size()));
   char* floatSpill = reinterpret_cast<char*>(spillAlign);
-  FloatRegisterSet fregs = reader.allFloatSpills().set();
-  fregs = fregs.reduceSetForPush();
-  for (FloatRegisterBackwardIterator iter(fregs); iter.more(); ++iter) {
-    floatSpill -= (*iter).size();
-    for (uint32_t a = 0; a < (*iter).numAlignedAliased(); a++) {
-      // Only say that registers that actually start here start here.
-      // e.g. d0 should not start at s1, only at s0.
-      FloatRegister ftmp = (*iter).alignedAliased(a);
-      machine.setRegisterLocation(ftmp, (double*)floatSpill);
-    }
-  }
 
-  return machine;
+  return MachineState::FromSafepoint(fregs, regs, floatSpill, spill);
 }
 
 JitFrameLayout* JSJitFrameIter::jsFrame() const {

@@ -2247,7 +2247,7 @@ body.theme_dark .stp_article_list .stp_article_list_publisher {
   width: 121px;
 }
 body.theme_dark .stp_header .stp_header_logo {
-  background: url(../img/pocketlogo-dark.svg) bottom center no-repeat;
+  background-image: url(../img/pocketlogo-dark.svg);
 }
 
 .stp_header .stp_button {

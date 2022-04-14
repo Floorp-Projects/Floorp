@@ -152,7 +152,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // For bug 943174: Skip the EnsureProcessTerminated call in the destructor.
   void SetAlreadyDead();
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+#if defined(MOZ_SANDBOX) && defined(XP_MACOSX)
   // Start the sandbox from the child process.
   static bool StartMacSandbox(int aArgc, char** aArgv,
                               std::string& aErrorMessage);
@@ -171,7 +171,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // disabled to avoid connection attempts to diagnosticd(8) which are
   // blocked in child processes due to sandboxing.
   void DisableOSActivityMode();
-#endif
+#endif  // defined(MOZ_SANDBOX) && defined(XP_MACOSX)
   typedef std::function<void(GeckoChildProcessHost*)> GeckoProcessCallback;
 
   // Iterates over all instances and calls aCallback with each one of them.

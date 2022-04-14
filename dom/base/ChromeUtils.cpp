@@ -45,6 +45,9 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "IOActivityMonitor.h"
 #include "nsThreadUtils.h"
@@ -897,6 +900,30 @@ static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
 
 #undef PROCTYPE_TO_WEBIDL_CASE
 
+#define UTILITYACTORNAME_TO_WEBIDL_CASE(_utilityActorName, _webidl) \
+  case mozilla::UtilityActorName::_utilityActorName:                \
+    return WebIDLUtilityActorName::_webidl
+
+static WebIDLUtilityActorName UtilityActorNameToWebIDL(
+    mozilla::UtilityActorName aType) {
+  // Max is the value of the last enum, not the length, so add one.
+  static_assert(WebIDLUtilityActorNameValues::Count ==
+                    static_cast<size_t>(UtilityActorName::AudioDecoder) + 1,
+                "In order for this static cast to be okay, "
+                "UtilityActorName must match UtilityActorName exactly");
+
+  // These must match the similar ones in ProcInfo.h and ChromeUtils.webidl
+  switch (aType) {
+    UTILITYACTORNAME_TO_WEBIDL_CASE(Unknown, Unknown);
+    UTILITYACTORNAME_TO_WEBIDL_CASE(AudioDecoder, AudioDecoder);
+  }
+
+  MOZ_ASSERT(false, "Unhandled case in WebIDLUtilityActorName");
+  return WebIDLUtilityActorName::Unknown;
+}
+
+#undef UTILITYACTORNAME_TO_WEBIDL_CASE
+
 /* static */
 already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                                                        ErrorResult& aRv) {
@@ -938,7 +965,8 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
       /* aPid = */ base::GetCurrentProcId(),
       /* aProcessType = */ ProcType::Browser,
       /* aOrigin = */ ""_ns,
-      /* aWindowInfo = */ nsTArray<WindowInfo>());
+      /* aWindowInfo = */ nsTArray<WindowInfo>(),
+      /* aUtilityInfo = */ nsTArray<UtilityInfo>());
 
   // First handle non-ContentParent processes.
   mozilla::ipc::GeckoChildProcessHost::GetAll(
@@ -957,6 +985,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
             // These processes are handled separately.
             return;
           }
+
 #define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
                            process_bin_type, procinfo_typename,               \
                            webidl_typename, allcaps_name)                     \
@@ -979,6 +1008,19 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
             break;
         }
 
+        // Attach utility actor information to the process.
+        nsTArray<UtilityInfo> utilityActors;
+        if (aGeckoProcess->GetProcessType() ==
+            GeckoProcessType::GeckoProcessType_Utility) {
+          RefPtr<mozilla::ipc::UtilityProcessManager> upm =
+              mozilla::ipc::UtilityProcessManager::GetSingleton();
+          if (!utilityActors.AppendElements(upm->GetActors(aGeckoProcess),
+                                            fallible)) {
+            NS_WARNING("Error adding actors");
+            return;
+          }
+        }
+
         requests.EmplaceBack(
             /* aPid = */ childPid,
             /* aProcessType = */ type,
@@ -986,6 +1028,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
             /* aWindowInfo = */ nsTArray<WindowInfo>(),  // Without a
                                                          // ContentProcess, no
                                                          // DOM windows.
+            /* aUtilityInfo = */ std::move(utilityActors),
             /* aChild = */ 0  // Without a ContentProcess, no ChildId.
 #ifdef XP_MACOSX
             ,
@@ -1087,6 +1130,7 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
         /* aProcessType = */ type,
         /* aOrigin = */ origin,
         /* aWindowInfo = */ std::move(windows),
+        /* aUtilityInfo = */ nsTArray<UtilityInfo>(),
         /* aChild = */ contentParent->ChildID()
 #ifdef XP_MACOSX
             ,
@@ -1153,6 +1197,20 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                   dest->mDocumentTitle = source.documentTitle;
                   dest->mIsProcessRoot = source.isProcessRoot;
                   dest->mIsInProcess = source.isInProcess;
+                }
+
+                if (sysProcInfo.type == ProcType::Utility) {
+                  for (const auto& source : sysProcInfo.utilityActors) {
+                    auto* dest =
+                        childInfo->mUtilityActors.AppendElement(fallible);
+                    if (!dest) {
+                      domPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+                      return;
+                    }
+
+                    dest->mActorName =
+                        UtilityActorNameToWebIDL(source.actorName);
+                  }
                 }
               }
             }

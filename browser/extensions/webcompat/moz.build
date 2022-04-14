@@ -84,7 +84,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
     "injections/js/bug1739489-draftjs-beforeinput.js",
     "injections/js/bug1756692-effectiveType-shim.js",
-    "injections/js/bug1761930-instagram.com-readablestream-pipeto.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [

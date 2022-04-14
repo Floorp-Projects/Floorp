@@ -336,3 +336,20 @@ add_task(async function test_autolaunchprotocolsfromorigins() {
     Ci.nsIPermissionManager.ALLOW_ACTION
   );
 });
+
+// This again seems out of places, but PasswordManagerExceptions
+// is all permissions.
+add_task(async function test_passwordmanagerexceptions() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      PasswordManagerExceptions: ["https://pwexception.example.com"],
+    },
+  });
+  equal(
+    PermissionTestUtils.testPermission(
+      URI("https://pwexception.example.com"),
+      "login-saving"
+    ),
+    Ci.nsIPermissionManager.DENY_ACTION
+  );
+});

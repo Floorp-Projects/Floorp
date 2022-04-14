@@ -47,7 +47,7 @@ add_task(async function test_overflow() {
   );
   let visibleNodes = [];
   for (let node of children) {
-    if (node.style.visibility == "visible") {
+    if (getComputedStyle(node).visibility == "visible") {
       visibleNodes.push(node);
     }
   }
@@ -111,7 +111,7 @@ add_task(async function test_separator_first() {
     "Found the first bookmark"
   );
   Assert.equal(
-    children[1].style.visibility,
+    getComputedStyle(children[1]).visibility,
     "visible",
     "The first bookmark is visible"
   );
@@ -163,7 +163,8 @@ async function test_index(desc, index, expected) {
   let originalLen = children.length;
   let nodeExisted = children.length > index;
   let previousNodeIsVisible =
-    nodeExisted && children[index - 1].style.visibility == "visible";
+    nodeExisted &&
+    getComputedStyle(children[index - 1]).visibility == "visible";
   let promise = promiseUpdateVisibility(
     expected == "visible" || previousNodeIsVisible
   );
@@ -189,7 +190,7 @@ async function test_index(desc, index, expected) {
       "Found the added bookmark at the expected position"
     );
     Assert.equal(
-      children[index].style.visibility,
+      getComputedStyle(children[index]).visibility,
       expected,
       `The bookmark node should be ${expected}`
     );
@@ -214,7 +215,7 @@ async function test_index(desc, index, expected) {
       "Found the previous bookmark at the expected position"
     );
     Assert.equal(
-      children[index].style.visibility,
+      getComputedStyle(children[index]).visibility,
       expected,
       `The bookmark node should be ${expected}`
     );
@@ -237,7 +238,7 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
   let existingIndex = fromIndex < toIndex ? toIndex - 1 : toIndex + 1;
 
   Assert.equal(
-    children[fromIndex].style.visibility,
+    getComputedStyle(children[fromIndex]).visibility,
     original,
     `The bookmark node should be ${original}`
   );
@@ -268,13 +269,13 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
       "Found the moved bookmark at the expected position"
     );
     Assert.equal(
-      children[toIndex].style.visibility,
+      getComputedStyle(children[toIndex]).visibility,
       expected,
       `The destination bookmark node should be ${expected}`
     );
   }
   Assert.equal(
-    children[fromIndex].style.visibility,
+    getComputedStyle(children[fromIndex]).visibility,
     original,
     `The origin bookmark node should be ${original}`
   );
@@ -310,13 +311,13 @@ async function test_move_index(desc, fromIndex, toIndex, original, expected) {
   );
   if (expected) {
     Assert.equal(
-      children[toIndex].style.visibility,
+      getComputedStyle(children[toIndex]).visibility,
       expected,
       `The bookmark node should be ${expected}`
     );
   }
   Assert.equal(
-    children[fromIndex].style.visibility,
+    getComputedStyle(children[fromIndex]).visibility,
     original,
     `The bookmark node should be ${original}`
   );
@@ -353,12 +354,12 @@ add_task(async function test_separator_first() {
   let children = getPlacesChildren();
   Assert.equal(children.length, 2, "The expected elements are visible");
   Assert.equal(
-    children[0].style.visibility,
+    getComputedStyle(children[0]).visibility,
     "visible",
     "The first bookmark is visible"
   );
   Assert.equal(
-    children[1].style.visibility,
+    getComputedStyle(children[1]).visibility,
     "visible",
     "The second bookmark is visible"
   );
