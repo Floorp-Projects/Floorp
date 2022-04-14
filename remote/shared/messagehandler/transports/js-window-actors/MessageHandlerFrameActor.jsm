@@ -40,7 +40,7 @@ const FRAME_ACTOR_CONFIG = {
 const MessageHandlerFrameActor = {
   registered: false,
 
-  register: () => {
+  register() {
     if (this.registered) {
       return;
     }
