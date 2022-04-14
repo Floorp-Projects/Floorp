@@ -281,7 +281,9 @@ fun SyncedTabsErrorButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.clip(RoundedCornerShape(size = 4.dp)),
+        modifier = Modifier
+            .clip(RoundedCornerShape(size = 4.dp))
+            .fillMaxWidth(),
         elevation = ButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
         colors = ButtonDefaults.outlinedButtonColors(backgroundColor = FirefoxTheme.colors.actionPrimary),
     ) {
