@@ -34,73 +34,13 @@ rtc_library("libaom_av1_decoder") {
   }
 }
 
-rtc_source_set("scalable_video_controller") {
-  sources = [
-    "scalable_video_controller.h",
-    "scalable_video_controller_no_layering.cc",
-    "scalable_video_controller_no_layering.h",
-  ]
-  deps = [
-    "../../../../api/transport/rtp:dependency_descriptor",
-    "../../../../api/video:video_bitrate_allocation",
-    "../../../../common_video/generic_frame_descriptor",
-    "../../../../rtc_base:checks",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/container:inlined_vector",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
-rtc_source_set("scalability_structures") {
-  sources = [
-    "create_scalability_structure.cc",
-    "create_scalability_structure.h",
-    "scalability_structure_full_svc.cc",
-    "scalability_structure_full_svc.h",
-    "scalability_structure_l1t2.cc",
-    "scalability_structure_l1t2.h",
-    "scalability_structure_l1t3.cc",
-    "scalability_structure_l1t3.h",
-    "scalability_structure_l2t1.cc",
-    "scalability_structure_l2t1.h",
-    "scalability_structure_l2t1_key.cc",
-    "scalability_structure_l2t1_key.h",
-    "scalability_structure_l2t1h.cc",
-    "scalability_structure_l2t1h.h",
-    "scalability_structure_l2t2.cc",
-    "scalability_structure_l2t2.h",
-    "scalability_structure_l2t2_key.cc",
-    "scalability_structure_l2t2_key.h",
-    "scalability_structure_l2t2_key_shift.cc",
-    "scalability_structure_l2t2_key_shift.h",
-    "scalability_structure_l3t1.cc",
-    "scalability_structure_l3t1.h",
-    "scalability_structure_l3t3.cc",
-    "scalability_structure_l3t3.h",
-    "scalability_structure_s2t1.cc",
-    "scalability_structure_s2t1.h",
-  ]
-  deps = [
-    ":scalable_video_controller",
-    "../../../../api/transport/rtp:dependency_descriptor",
-    "../../../../common_video/generic_frame_descriptor",
-    "../../../../rtc_base:checks",
-    "../../../../rtc_base:logging",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
 rtc_library("libaom_av1_encoder") {
   visibility = [ "*" ]
   poisonous = [ "software_video_codecs" ]
   public = [ "libaom_av1_encoder.h" ]
   deps = [
     "../../../../api/video_codecs:video_codecs_api",
+    "../../svc:scalable_video_controller",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -127,28 +67,6 @@ rtc_library("libaom_av1_encoder") {
 }
 
 if (rtc_include_tests) {
-  rtc_library("scalability_structure_tests") {
-    testonly = true
-    sources = [
-      "scalability_structure_l3t3_unittest.cc",
-      "scalability_structure_test_helpers.cc",
-      "scalability_structure_test_helpers.h",
-      "scalability_structure_unittest.cc",
-    ]
-    deps = [
-      ":scalability_structures",
-      ":scalable_video_controller",
-      "../..:chain_diff_calculator",
-      "../..:frame_dependencies_calculator",
-      "../../../../api/transport/rtp:dependency_descriptor",
-      "../../../../api/video:video_bitrate_allocation",
-      "../../../../api/video:video_frame_type",
-      "../../../../common_video/generic_frame_descriptor",
-      "../../../../test:test_support",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-  }
-
   rtc_library("video_coding_codecs_av1_tests") {
     testonly = true
 
@@ -160,8 +78,6 @@ if (rtc_include_tests) {
       deps = [
         ":libaom_av1_decoder",
         ":libaom_av1_encoder",
-        ":scalability_structures",
-        ":scalable_video_controller",
         "../..:encoded_video_frame_producer",
         "../..:video_codec_interface",
         "../../../../api:mock_video_encoder",
@@ -170,6 +86,8 @@ if (rtc_include_tests) {
         "../../../../api/video:video_frame",
         "../../../../api/video_codecs:video_codecs_api",
         "../../../../test:test_support",
+        "../../svc:scalability_structures",
+        "../../svc:scalable_video_controller",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     }
