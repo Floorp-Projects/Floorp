@@ -107,13 +107,15 @@ class PeerConnection : public PeerConnectionInternal,
   // remote side. This will become populated once the DTLS connection with the
   // peer has been completed, as indicated by the ICE connection state
   // transitioning to kIceConnectionCompleted.
-  // Note that this will be removed once we implement RTCDtlsTransport which
-  // has standardized method for getting this information.
+  // Deprecated - users should insted query the DTLS transpport for this info.
   // See https://www.w3.org/TR/webrtc/#rtcdtlstransport-interface
-  std::unique_ptr<rtc::SSLCertificate> GetRemoteAudioSSLCertificate();
+
+  RTC_DEPRECATED std::unique_ptr<rtc::SSLCertificate>
+  GetRemoteAudioSSLCertificate();
 
   // Version of the above method that returns the full certificate chain.
-  std::unique_ptr<rtc::SSLCertChain> GetRemoteAudioSSLCertChain();
+  RTC_DEPRECATED std::unique_ptr<rtc::SSLCertChain>
+  GetRemoteAudioSSLCertChain();
 
   rtc::scoped_refptr<RtpSenderInterface> CreateSender(
       const std::string& kind,
