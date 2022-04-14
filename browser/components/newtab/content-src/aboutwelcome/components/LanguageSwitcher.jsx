@@ -98,15 +98,18 @@ export function useLanguageSwitcher(
     [negotiatedLanguage]
   );
 
-  const shouldHideLanguageSwitcher =
-    screen && appAndSystemLocaleInfo?.matchType !== "language-mismatch";
-
   const [languageFilteredScreens, setLanguageFilteredScreens] = useState(
     screens
   );
   useEffect(
     function filterScreen() {
-      if (shouldHideLanguageSwitcher || negotiatedLanguage?.langPack === null) {
+      // Remove the language screen if it exists (already removed for no live
+      // reload) and we either don't-need-to or can't switch.
+      if (
+        screen &&
+        (appAndSystemLocaleInfo?.matchType !== "language-mismatch" ||
+          negotiatedLanguage?.langPack === null)
+      ) {
         if (screenIndex > languageMismatchScreenIndex) {
           setScreenIndex(screenIndex - 1);
         }
