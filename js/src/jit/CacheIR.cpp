@@ -8885,8 +8885,15 @@ AttachDecision InlinableNativeIRGenerator::tryAttachArrayConstructor() {
 
   Int32OperandId lengthId;
   if (argc_ == 1) {
+    // Use standard call flags when this is an inline Function.prototype.call(),
+    // because GetIndexOfArgument() doesn't yet support |CallFlags::FunCall|.
+    CallFlags flags = flags_;
+    if (flags.getArgFormat() == CallFlags::FunCall) {
+      flags = CallFlags(CallFlags::Standard);
+    }
+
     ValOperandId arg0Id =
-        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags_);
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_, flags);
     lengthId = writer.guardToInt32(arg0Id);
   } else {
     MOZ_ASSERT(argc_ == 0);
