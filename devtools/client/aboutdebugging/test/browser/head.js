@@ -446,3 +446,26 @@ function clickOnAddonWidget(addonId) {
   info("Show the web extension popup");
   browserActionEl.click();
 }
+
+/**
+ * Retrieve console panel messages that includes a given string.
+ *
+ * @param {WebConsole} hud
+ *        The WebConsole instance.
+ * @param {string} text
+ *        The string of text that should be used to select the
+ *        console message elements to return.
+ * @param {string} [selector]
+ *        An optional CSS selector string (defaults to .message).
+ *
+ * @returns {Array<DOMElement>}
+ *          The console panel DOM elements which are matching the
+ *          given text and selector.
+ */
+function findMessages(hud, text, selector = ".message") {
+  const messages = hud.ui.outputNode.querySelectorAll(selector);
+  const elements = Array.prototype.filter.call(messages, el =>
+    el.textContent.includes(text)
+  );
+  return elements;
+}
