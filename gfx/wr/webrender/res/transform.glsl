@@ -99,18 +99,34 @@ bool has_valid_transform_bounds() {
 }
 
 float init_transform_fs(vec2 local_pos) {
+    // Ideally we want to track distances in screen space after transformation
+    // as signed distance calculations lose context about the direction vector
+    // to exit the geometry, merely remembering the minimum distance to the
+    // exit. However, we can't always sanely track distances in screen space
+    // due to perspective transforms, clipping, and other concerns, so we do
+    // this in local space. However, this causes problems tracking distances
+    // in local space when attempting to scale by a uniform AA range later in
+    // the presence of a transform which actually has non-uniform scaling.
+    //
+    // To work around this, we independently track the distances on the local
+    // space X and Y axes and then scale them by the independent AA ranges (as
+    // computed from fwidth derivatives) for the X and Y axes. This can break
+    // down at certain angles (45 degrees or close to it), but still gives a
+    // better approximation of screen-space distances in the presence of non-
+    // uniform scaling for other rotations.
+    //
     // Get signed distance from local rect bounds.
-    float d = signed_distance_rect(
+    vec2 d = signed_distance_rect_xy(
         local_pos,
         vTransformBounds.xy,
         vTransformBounds.zw
     );
 
     // Find the appropriate distance to apply the AA smoothstep over.
-    float aa_range = compute_aa_range(local_pos);
+    vec2 aa_range = compute_aa_range_xy(local_pos);
 
     // Only apply AA to fragments outside the signed distance field.
-    return distance_aa(aa_range, d);
+    return distance_aa_xy(aa_range, d);
 }
 
 float init_transform_rough_fs(vec2 local_pos) {

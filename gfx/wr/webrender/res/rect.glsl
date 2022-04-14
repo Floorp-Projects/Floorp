@@ -17,12 +17,17 @@ float point_inside_rect(vec2 p, vec2 p0, vec2 p1) {
     return s.x * s.y;
 }
 
-float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
-    vec2 d = max(p0 - pos, pos - p1);
+vec2 signed_distance_rect_xy(vec2 pos, vec2 p0, vec2 p1) {
     // Instead of using a true signed distance to rect here, we just use the
     // simpler approximation of the maximum distance on either axis from the
     // outside of the rectangle. This avoids expensive use of length() and only
     // causes mostly imperceptible differences at corner pixels.
+    return max(p0 - pos, pos - p1);
+}
+
+float signed_distance_rect(vec2 pos, vec2 p0, vec2 p1) {
+    // Collapse the per-axis distances to edges to a single approximate value.
+    vec2 d = signed_distance_rect_xy(pos, p0, p1);
     return max(d.x, d.y);
 }
 
