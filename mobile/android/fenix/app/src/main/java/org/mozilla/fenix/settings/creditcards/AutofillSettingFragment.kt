@@ -113,7 +113,11 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
     override fun onResume() {
         super.onResume()
 
-        showToolbar(getString(R.string.preferences_credit_cards))
+        if (requireComponents.settings.addressFeature) {
+            showToolbar(getString(R.string.preferences_autofill))
+        } else {
+            showToolbar(getString(R.string.preferences_credit_cards))
+        }
 
         SyncPreferenceView(
             syncPreference = requirePreference(R.string.pref_key_credit_cards_sync_cards_across_devices),
