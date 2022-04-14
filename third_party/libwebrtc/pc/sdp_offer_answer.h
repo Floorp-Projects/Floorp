@@ -490,7 +490,7 @@ class SdpOfferAnswerHandler {
   const std::string GetTransportName(const std::string& content_name);
   // Based on number of transceivers per media type, enabled or disable
   // payload type based demuxing in the affected channels.
-  void UpdatePayloadTypeDemuxingState(cricket::ContentSource source);
+  bool UpdatePayloadTypeDemuxingState(cricket::ContentSource source);
 
   // ==================================================================
   // Access to pc_ variables
