@@ -351,6 +351,7 @@ var gPermissionManager = {
   },
 
   _createPermissionListItem(permission) {
+    let disabledByPolicy = this._permissionDisabledByPolicy(permission);
     let richlistitem = document.createXULElement("richlistitem");
     richlistitem.setAttribute("origin", permission.origin);
     let row = document.createXULElement("hbox");
@@ -358,6 +359,8 @@ var gPermissionManager = {
 
     let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
+    website.setAttribute("disabled", disabledByPolicy);
+    website.setAttribute("class", "website-name-value");
     website.setAttribute("value", permission.origin);
     hbox.setAttribute("width", "0");
     hbox.setAttribute("class", "website-name");
@@ -368,6 +371,7 @@ var gPermissionManager = {
     if (!this._hideStatusColumn) {
       hbox = document.createXULElement("hbox");
       let capability = document.createXULElement("label");
+      capability.setAttribute("disabled", disabledByPolicy);
       capability.setAttribute("class", "website-capability-value");
       document.l10n.setAttributes(
         capability,
@@ -439,15 +443,31 @@ var gPermissionManager = {
     }
 
     let hasSelection = this._list.selectedIndex >= 0;
-    let hasRows = this._list.itemCount > 0;
-    this._removeButton.disabled = !hasSelection;
-    this._removeAllButton.disabled = !hasRows;
+
+    let disabledByPolicy = false;
+    if (Services.policies.status === Services.policies.ACTIVE && hasSelection) {
+      let origin = this._list.selectedItem.getAttribute("origin");
+      disabledByPolicy = this._permissionDisabledByPolicy(
+        this._permissions.get(origin)
+      );
+    }
+
+    this._removeButton.disabled = !hasSelection || disabledByPolicy;
+    let disabledItems = this._list.querySelectorAll(
+      "label.website-name-value[disabled='true']"
+    );
+
+    this._removeAllButton.disabled =
+      this._list.itemCount == disabledItems.length;
   },
 
   onPermissionDelete() {
     let richlistitem = this._list.selectedItem;
     let origin = richlistitem.getAttribute("origin");
     let permission = this._permissions.get(origin);
+    if (this._permissionDisabledByPolicy(permission)) {
+      return;
+    }
 
     this._removePermission(permission);
 
@@ -456,6 +476,9 @@ var gPermissionManager = {
 
   onAllPermissionsDelete() {
     for (let permission of this._permissions.values()) {
+      if (this._permissionDisabledByPolicy(permission)) {
+        continue;
+      }
       this._removePermission(permission);
     }
 
@@ -516,6 +539,17 @@ var gPermissionManager = {
     this._list.appendChild(frag);
 
     this._setRemoveButtonState();
+  },
+
+  _permissionDisabledByPolicy(permission) {
+    let permissionObject = Services.perms.getPermissionObject(
+      permission.principal,
+      this._type,
+      false
+    );
+    return (
+      permissionObject?.expireType == Ci.nsIPermissionManager.EXPIRE_POLICY
+    );
   },
 
   _sortPermissions(list, frag, column) {
