@@ -161,7 +161,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
     def kwargs_wptrun(self, kwargs):
         """Setup kwargs for wpt-run which is only used for non-gecko browser products"""
-        from tools.wpt import run
+        from tools.wpt import run, virtualenv
 
         kwargs = self.kwargs_common(kwargs)
 
@@ -189,7 +189,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
                     path, require_hashes=False
                 )
 
-        venv = run.virtualenv.Virtualenv(
+        venv = virtualenv.Virtualenv(
             self.virtualenv_manager.virtualenv_root, skip_virtualenv_setup=True
         )
         try:

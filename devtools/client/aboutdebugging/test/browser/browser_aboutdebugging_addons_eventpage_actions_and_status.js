@@ -2,50 +2,18 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm"
-);
-
 /* import-globals-from helper-addons.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-addons.js", this);
 
-function promiseBackgroundContextEvent(extensionId, eventName) {
-  return new Promise(resolve => {
-    Management.on(eventName, function listener(_evtName, context) {
-      if (context.extension.id === extensionId) {
-        Management.off(eventName, listener);
-        resolve();
-      }
-    });
-  });
-}
-
-function promiseBackgroundContextLoaded(extensionId) {
-  return promiseBackgroundContextEvent(extensionId, "proxy-context-load");
-}
-
-function promiseBackgroundContextUnloaded(extensionId) {
-  return promiseBackgroundContextEvent(extensionId, "proxy-context-unload");
-}
-
-async function assertBackgroundStatus(extName, { document, expectedStatus }) {
-  const target = findDebugTargetByText(extName, document);
-  const getBackgroundStatusElement = () =>
-    target.querySelector(".extension-backgroundscript__status");
-  await waitFor(
-    () =>
-      getBackgroundStatusElement()?.classList.contains(
-        `extension-backgroundscript__status--${expectedStatus}`
-      ),
-    `Wait ${extName} Background script status "${expectedStatus}" to be rendered`
-  );
-}
-
-// Test that the reload button updates the addon list with the correct metadata.
-add_task(async function() {
+add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.eventPages.enabled", true]],
   });
+});
+
+// Test that the terminate button is shutting down the background script as expected
+// and the background script status is updated occordingly.
+add_task(async function test_eventpage_terminate_and_status_updates() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
@@ -61,10 +29,7 @@ add_task(async function() {
     EXTENSION_ID
   );
 
-  let waitForBGStatusUpdate = waitForDispatch(
-    window.AboutDebugging.store,
-    "EXTENSION_BGSCRIPT_STATUS_UPDATED"
-  );
+  let waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
 
   // Install the extension using an event page (non persistent background page).
   await installTemporaryExtensionFromXPI(
@@ -160,17 +125,13 @@ add_task(async function() {
     window.AboutDebugging.store,
     "TERMINATE_EXTENSION_BGSCRIPT_SUCCESS"
   );
-  waitForBGStatusUpdate = waitForDispatch(
-    window.AboutDebugging.store,
-    "EXTENSION_BGSCRIPT_STATUS_UPDATED"
-  );
-
+  waitForBGStatusUpdate = promiseBackgroundStatusUpdate(window);
   terminateButton.click();
   await waitForTerminateSuccess;
 
   info("Wait for the extension background script to be unloaded");
   await promiseBackgroundUnloaded;
-
+  await waitForBGStatusUpdate;
   await assertBackgroundStatus(EXTENSION_NAME, {
     document,
     expectedStatus: "stopped",

@@ -134,14 +134,7 @@ ClassList.prototype = {
  * @return {Boolean}
  */
 function isXUL(window) {
-  // XXX: We temporarily return true for HTML documents if the document disables
-  // scroll frames since the regular highlighter is broken in this case. This
-  // should be removed when bug 1594587 is fixed.
-  return (
-    window.document.documentElement.namespaceURI === XUL_NS ||
-    (window.isChromeWindow &&
-      window.document.documentElement.getAttribute("scrolling") === "false")
-  );
+  return window.document.documentElement.namespaceURI === XUL_NS;
 }
 exports.isXUL = isXUL;
 

@@ -267,6 +267,7 @@ var State = {
       threads: null,
       displayRank: Control._getDisplayGroupRank(cur, windows),
       windows,
+      utilityActors: cur.utilityActors,
       // If this process has an unambiguous title, store it here.
       title: null,
     };
@@ -527,6 +528,9 @@ var View = {
           break;
         case "preallocated":
           fluentName = "about-processes-preallocated-process";
+          break;
+        case "utility":
+          fluentName = "about-processes-utility-process";
           break;
         // The following are probably not going to show up for users
         // but let's handle the case anyway to avoid heisenoranges
@@ -846,6 +850,34 @@ var View = {
         document.l10n.setAttributes(killButton, "about-processes-shutdown-tab");
       }
     }
+  },
+
+  displayUtilityActorRow(data, parent) {
+    const cellCount = 2;
+    // The actor name is expected to be unique within a given utility process.
+    let rowId = "u:" + parent.pid + data.actorName;
+    let row = this._getOrCreateRow(rowId, cellCount);
+    row.actor = data;
+    row.className = "actor";
+
+    // Column: name
+    let nameCell = row.firstChild;
+    let fluentName;
+    let fluentArgs = {};
+    switch (data.actorName) {
+      case "audioDecoder":
+        fluentName = "about-processes-utility-actor-audio-decoder";
+        break;
+
+      default:
+        fluentName = "about-processes-utility-actor-unknown";
+        break;
+    }
+    this._fillCell(nameCell, {
+      fluentName,
+      fluentArgs,
+      classes: ["name", "indent", "favicon"],
+    });
   },
 
   /**
@@ -1210,6 +1242,12 @@ var Control = {
           if (SHOW_ALL_SUBFRAMES || win.tab || win.isProcessRoot) {
             View.displayDOMWindowRow(win, process);
           }
+        }
+      }
+
+      if (process.type === "utility") {
+        for (let actor of process.utilityActors) {
+          View.displayUtilityActorRow(actor, process);
         }
       }
 

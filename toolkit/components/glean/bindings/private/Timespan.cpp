@@ -22,9 +22,10 @@ void TimespanMetric::Start() const {
   auto optScalarId = ScalarIdForMetric(mId);
   if (optScalarId) {
     auto scalarId = optScalarId.extract();
-    auto lock = GetTimesToStartsLock();
-    (void)NS_WARN_IF(lock.ref()->Remove(scalarId));
-    lock.ref()->InsertOrUpdate(scalarId, TimeStamp::Now());
+    GetTimesToStartsLock().apply([&](auto& lock) {
+      (void)NS_WARN_IF(lock.ref()->Remove(scalarId));
+      lock.ref()->InsertOrUpdate(scalarId, TimeStamp::Now());
+    });
   }
   fog_timespan_start(mId);
 }
@@ -33,18 +34,19 @@ void TimespanMetric::Stop() const {
   auto optScalarId = ScalarIdForMetric(mId);
   if (optScalarId) {
     auto scalarId = optScalarId.extract();
-    auto lock = GetTimesToStartsLock();
-    auto optStart = lock.ref()->Extract(scalarId);
-    if (!NS_WARN_IF(!optStart)) {
-      double delta = (TimeStamp::Now() - optStart.extract()).ToMilliseconds();
-      uint32_t theDelta = static_cast<uint32_t>(delta);
-      if (delta > std::numeric_limits<uint32_t>::max()) {
-        theDelta = std::numeric_limits<uint32_t>::max();
-      } else if (MOZ_UNLIKELY(delta < 0)) {
-        theDelta = 0;
+    GetTimesToStartsLock().apply([&](auto& lock) {
+      auto optStart = lock.ref()->Extract(scalarId);
+      if (!NS_WARN_IF(!optStart)) {
+        double delta = (TimeStamp::Now() - optStart.extract()).ToMilliseconds();
+        uint32_t theDelta = static_cast<uint32_t>(delta);
+        if (delta > std::numeric_limits<uint32_t>::max()) {
+          theDelta = std::numeric_limits<uint32_t>::max();
+        } else if (MOZ_UNLIKELY(delta < 0)) {
+          theDelta = 0;
+        }
+        Telemetry::ScalarSet(scalarId, theDelta);
       }
-      Telemetry::ScalarSet(scalarId, theDelta);
-    }
+    });
   }
   fog_timespan_stop(mId);
 }
@@ -53,8 +55,8 @@ void TimespanMetric::Cancel() const {
   auto optScalarId = ScalarIdForMetric(mId);
   if (optScalarId) {
     auto scalarId = optScalarId.extract();
-    auto lock = GetTimesToStartsLock();
-    lock.ref()->Remove(scalarId);
+    GetTimesToStartsLock().apply(
+        [&](auto& lock) { lock.ref()->Remove(scalarId); });
   }
   fog_timespan_cancel(mId);
 }

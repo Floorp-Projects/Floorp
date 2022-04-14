@@ -204,3 +204,19 @@ the value passed to the metric's Telemetry mirror will be clamped to $2^{32} - 1
 The same happens for samples in `timing_distribution` metrics:
 values passed to the Telemetry mirror histogram will saturate at $2^{32} - 1$
 until they get past $2^{64}$ when they'll overflow.
+
+### App Shutdown
+
+Telemetry only works up to
+[`ShutdownPhase::AppShutdownTelemetry` aka `profile-before-change-telemetry`][app-shutdown].
+Telemetry data recorded after that phase just aren't persisted.
+
+FOG _presently_ shuts down Glean in a later phase,
+and so is able to collect data deeper into shutdown.
+(The particular phase is not presently something anyone's asked us to guarantee,
+so that's why I'm not being precise.)
+
+What this means is that, for data recorded later in shutdown,
+Glean will report more complete information than Telemetry will.
+
+[app-shutdown]: https://searchfox.org/mozilla-central/source/xpcom/base/AppShutdown.cpp#57

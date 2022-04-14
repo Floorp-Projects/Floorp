@@ -190,12 +190,6 @@ class NetworkObserver {
   }
 
   _onRequest(channel, topic) {
-    try {
-      channel.QueryInterface(Ci.nsIHttpChannel);
-    } catch (ex) {
-      return;
-    }
-
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
     const browser = loadContext?.topFrameElement;

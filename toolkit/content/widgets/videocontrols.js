@@ -2460,9 +2460,11 @@ this.VideoControlsImplWidget = class {
       },
 
       get pipToggleEnabled() {
-        return this.prefs[
-          "media.videocontrols.picture-in-picture.video-toggle.enabled"
-        ];
+        return (
+          this.prefs[
+            "media.videocontrols.picture-in-picture.video-toggle.enabled"
+          ] && this.prefs["media.videocontrols.picture-in-picture.enabled"]
+        );
       },
 
       init(shadowRoot, prefs) {
@@ -3310,9 +3312,11 @@ this.NoControlsDesktopImplWidget = class {
       },
 
       get pipToggleEnabled() {
-        return this.prefs[
-          "media.videocontrols.picture-in-picture.video-toggle.enabled"
-        ];
+        return (
+          this.prefs[
+            "media.videocontrols.picture-in-picture.video-toggle.enabled"
+          ] && this.prefs["media.videocontrols.picture-in-picture.enabled"]
+        );
       },
     };
     this.Utils.init(this.shadowRoot, this.prefs);

@@ -3741,7 +3741,7 @@ void QuotaManager::MaybeRecordQuotaClientShutdownStep(
   auto* const quotaManager = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
-  if (quotaManager->ShutdownStarted()) {
+  if (quotaManager->IsShuttingDown()) {
     quotaManager->RecordShutdownStep(Some(aClientType), aStepDescription);
   }
 }
@@ -3753,7 +3753,7 @@ void QuotaManager::SafeMaybeRecordQuotaClientShutdownStep(
 
   auto* const quotaManager = QuotaManager::Get();
 
-  if (quotaManager && quotaManager->ShutdownStarted()) {
+  if (quotaManager && quotaManager->IsShuttingDown()) {
     quotaManager->RecordShutdownStep(Some(aClientType), aStepDescription);
   }
 }
@@ -3770,16 +3770,14 @@ void QuotaManager::MaybeRecordQuotaManagerShutdownStep(
     const nsACString& aStepDescription) {
   // Callable on any thread.
 
-  if (ShutdownStarted()) {
+  if (IsShuttingDown()) {
     RecordQuotaManagerShutdownStep(aStepDescription);
   }
 }
 
-bool QuotaManager::ShutdownStarted() const { return mShutdownStarted; }
-
 void QuotaManager::RecordShutdownStep(const Maybe<Client::Type> aClientType,
                                       const nsACString& aStepDescription) {
-  MOZ_ASSERT(mShutdownStarted);
+  MOZ_ASSERT(IsShuttingDown());
 
   const TimeDuration elapsedSinceShutdownStart =
       TimeStamp::NowLoRes() - *mShutdownStartedAt;
@@ -3813,7 +3811,6 @@ void QuotaManager::RecordShutdownStep(const Maybe<Client::Type> aClientType,
 
 void QuotaManager::Shutdown() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mShutdownStarted);
   MOZ_DIAGNOSTIC_ASSERT(!gShutdown);
 
   // Define some local helper functions

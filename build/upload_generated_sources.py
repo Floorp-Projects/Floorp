@@ -10,7 +10,6 @@ from contextlib import contextmanager
 import gzip
 import io
 import logging
-from mozbuild.base import MozbuildObject
 from mozbuild.generated_sources import (
     get_filename_with_digest,
     get_s3_region_and_bucket,
@@ -160,10 +159,6 @@ def main(argv):
     parser.add_argument("artifact", help="generated-sources artifact from build task")
     args = parser.parse_args(argv)
     region, bucket = get_s3_region_and_bucket()
-
-    config = MozbuildObject.from_environment()
-    config.activate_virtualenv()
-    config.virtualenv_manager.install_pip_package("boto3==1.4.4")
 
     with timed() as elapsed:
         do_work(region=region, bucket=bucket, artifact=args.artifact)

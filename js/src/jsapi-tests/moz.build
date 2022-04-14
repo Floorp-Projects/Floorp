@@ -84,6 +84,7 @@ UNIFIED_SOURCES += [
     "testNullRoot.cpp",
     "testNumberToString.cpp",
     "testObjectEmulatingUndefined.cpp",
+    "testObjectSwap.cpp",
     "testOOM.cpp",
     "testParseJSON.cpp",
     "testParserAtom.cpp",

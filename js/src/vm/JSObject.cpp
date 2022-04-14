@@ -1032,14 +1032,25 @@ JS_PUBLIC_API bool JS_InitializePropertiesFromCompatibleNativeObject(
       cx, dst.as<NativeObject>(), src.as<NativeObject>());
 }
 
+void NativeObject::freeDynamicSlotsAfterSwap(NativeObject* old) {
+  if (!hasDynamicSlots()) {
+    return;
+  }
+
+  ObjectSlots* slotsHeader = getSlotsHeader();
+  size_t size = ObjectSlots::allocSize(slotsHeader->capacity());
+  zone()->removeCellMemory(old, size, MemoryUse::ObjectSlots);
+  js_free(slotsHeader);
+  setEmptyDynamicSlots(0);
+}
+
 /* static */
 bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
-                                   NativeObject* old,
                                    HandleValueVector values) {
   // This object has just been swapped with some other object, and its shape
   // no longer reflects its allocated size. Correct this information and
   // fill the slots in with the specified values.
-  MOZ_ASSERT(obj->slotSpan() == values.length());
+  MOZ_ASSERT_IF(!obj->inDictionaryMode(), obj->slotSpan() == values.length());
   MOZ_ASSERT(!IsInsideNursery(obj));
 
   // Make sure the shape's numFixedSlots() is correct.
@@ -1052,16 +1063,7 @@ bool NativeObject::fillInAfterSwap(JSContext* cx, HandleNativeObject obj,
   }
 
   uint32_t oldDictionarySlotSpan =
-      obj->inDictionaryMode() ? obj->dictionaryModeSlotSpan() : 0;
-
-  Zone* zone = obj->zone();
-  if (obj->hasDynamicSlots()) {
-    ObjectSlots* slotsHeader = obj->getSlotsHeader();
-    size_t size = ObjectSlots::allocSize(slotsHeader->capacity());
-    zone->removeCellMemory(old, size, MemoryUse::ObjectSlots);
-    js_free(slotsHeader);
-    obj->setEmptyDynamicSlots(0);
-  }
+      obj->inDictionaryMode() ? values.length() : 0;
 
   size_t ndynamic =
       calculateDynamicSlots(nfixed, values.length(), obj->getClass());
@@ -1171,7 +1173,8 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   MOZ_ASSERT(cx->compartment() == a->compartment());
 
   // Only certain types of objects are allowed to be swapped. This allows the
-  // JITs to better optimize objects that can never swap.
+  // JITs to better optimize objects that can never swap and rules out most
+  // builtin objects that have special behaviour.
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(a));
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(b));
 
@@ -1192,22 +1195,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   }
 
   unsigned r = NotifyGCPreSwap(a, b);
-
-  // Do the fundamental swapping of the contents of two objects.
-  MOZ_ASSERT(a->compartment() == b->compartment());
-  MOZ_ASSERT(a->is<JSFunction>() == b->is<JSFunction>());
-
-  // Don't try to swap functions with different sizes.
-  MOZ_ASSERT_IF(a->is<JSFunction>(),
-                a->tenuredSizeOfThis() == b->tenuredSizeOfThis());
-
-  // Watch for oddball objects that have special organizational issues and
-  // can't be swapped.
-  MOZ_ASSERT(!a->is<RegExpObject>() && !b->is<RegExpObject>());
-  MOZ_ASSERT(!a->is<ArrayObject>() && !b->is<ArrayObject>());
-  MOZ_ASSERT(!a->is<ArrayBufferObject>() && !b->is<ArrayBufferObject>());
-  MOZ_ASSERT(!a->is<TypedArrayObject>() && !b->is<TypedArrayObject>());
-  MOZ_ASSERT(!a->is<TypedObject>() && !b->is<TypedObject>());
 
   // Don't swap objects that may currently be participating in shape
   // teleporting optimizations.
@@ -1239,8 +1226,7 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
 
     size_t size = a->tenuredSizeOfThis();
 
-    char tmp[mozilla::tl::Max<sizeof(JSFunction),
-                              sizeof(JSObject_Slots16)>::value];
+    char tmp[sizeof(JSObject_Slots16)];
     MOZ_ASSERT(size <= sizeof(tmp));
 
     js_memcpy(tmp, a, size);
@@ -1307,15 +1293,23 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
     js_memcpy(b, &tmp, sizeof tmp);
 
     if (na) {
-      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), na, avals)) {
+      b.as<NativeObject>()->freeDynamicSlotsAfterSwap(na);
+    }
+    if (nb) {
+      a.as<NativeObject>()->freeDynamicSlotsAfterSwap(nb);
+    }
+
+    if (na) {
+      if (!NativeObject::fillInAfterSwap(cx, b.as<NativeObject>(), avals)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
     if (nb) {
-      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), nb, bvals)) {
+      if (!NativeObject::fillInAfterSwap(cx, a.as<NativeObject>(), bvals)) {
         oomUnsafe.crash("fillInAfterSwap");
       }
     }
+
     if (aIsProxyWithInlineValues) {
       if (!b->as<ProxyObject>().initExternalValueArrayAfterSwap(cx, avals)) {
         oomUnsafe.crash("initExternalValueArray");
