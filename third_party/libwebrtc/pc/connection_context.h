@@ -38,6 +38,10 @@ class RtcEventLog;
 // interferes with the operation of other PeerConnections.
 class ConnectionContext : public rtc::RefCountInterface {
  public:
+  // This class is not copyable or movable.
+  ConnectionContext(const ConnectionContext&) = delete;
+  ConnectionContext& operator=(const ConnectionContext&) = delete;
+
   // Functions called from PeerConnectionFactory
   void SetOptions(const PeerConnectionFactoryInterface::Options& options);
 
@@ -45,15 +49,18 @@ class ConnectionContext : public rtc::RefCountInterface {
 
   // Functions called from PeerConnection and friends
   SctpTransportFactoryInterface* sctp_transport_factory() const {
-    RTC_DCHECK_RUN_ON(signaling_thread());
+    RTC_DCHECK_RUN_ON(signaling_thread_);
     return sctp_factory_.get();
   }
 
   cricket::ChannelManager* channel_manager() const;
 
-  rtc::Thread* signaling_thread() const { return signaling_thread_; }
-  rtc::Thread* worker_thread() const { return worker_thread_; }
-  rtc::Thread* network_thread() const { return network_thread_; }
+  rtc::Thread* signaling_thread() { return signaling_thread_; }
+  const rtc::Thread* signaling_thread() const { return signaling_thread_; }
+  rtc::Thread* worker_thread() { return worker_thread_; }
+  const rtc::Thread* worker_thread() const { return worker_thread_; }
+  rtc::Thread* network_thread() { return network_thread_; }
+  const rtc::Thread* network_thread() const { return network_thread_; }
 
   const PeerConnectionFactoryInterface::Options& options() const {
     return options_;
@@ -62,16 +69,16 @@ class ConnectionContext : public rtc::RefCountInterface {
   const WebRtcKeyValueConfig& trials() const { return *trials_.get(); }
 
   // Accessors only used from the PeerConnectionFactory class
-  rtc::BasicNetworkManager* default_network_manager() const {
-    RTC_DCHECK_RUN_ON(signaling_thread());
+  rtc::BasicNetworkManager* default_network_manager() {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
     return default_network_manager_.get();
   }
-  rtc::BasicPacketSocketFactory* default_socket_factory() const {
-    RTC_DCHECK_RUN_ON(signaling_thread());
+  rtc::BasicPacketSocketFactory* default_socket_factory() {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
     return default_socket_factory_.get();
   }
-  CallFactoryInterface* call_factory() const {
-    RTC_DCHECK_RUN_ON(worker_thread());
+  CallFactoryInterface* call_factory() {
+    RTC_DCHECK_RUN_ON(worker_thread_);
     return call_factory_.get();
   }
 
@@ -83,34 +90,36 @@ class ConnectionContext : public rtc::RefCountInterface {
   virtual ~ConnectionContext();
 
  private:
+  // The following three variables are used to communicate between the
+  // constructor and the destructor, and are never exposed externally.
   bool wraps_current_thread_;
   // Note: Since owned_network_thread_ and owned_worker_thread_ are used
   // in the initialization of network_thread_ and worker_thread_, they
   // must be declared before them, so that they are initialized first.
   std::unique_ptr<rtc::Thread> owned_network_thread_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<rtc::Thread> owned_worker_thread_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread_);
   rtc::Thread* const network_thread_;
   rtc::Thread* const worker_thread_;
   rtc::Thread* const signaling_thread_;
   PeerConnectionFactoryInterface::Options options_
-      RTC_GUARDED_BY(signaling_thread());
-  // Accessed both on signaling thread and worker thread.
+      RTC_GUARDED_BY(signaling_thread_);
+  // channel_manager is accessed both on signaling thread and worker thread.
   std::unique_ptr<cricket::ChannelManager> channel_manager_;
   std::unique_ptr<rtc::NetworkMonitorFactory> const network_monitor_factory_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<rtc::BasicNetworkManager> default_network_manager_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<webrtc::CallFactoryInterface> const call_factory_
-      RTC_GUARDED_BY(worker_thread());
+      RTC_GUARDED_BY(worker_thread_);
 
   std::unique_ptr<rtc::BasicPacketSocketFactory> default_socket_factory_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<cricket::MediaEngineInterface> media_engine_
-      RTC_GUARDED_BY(signaling_thread());
-  std::unique_ptr<SctpTransportFactoryInterface> sctp_factory_
-      RTC_GUARDED_BY(signaling_thread());
+      RTC_GUARDED_BY(signaling_thread_);
+  std::unique_ptr<SctpTransportFactoryInterface> const sctp_factory_
+      RTC_GUARDED_BY(signaling_thread_);
   // Accessed both on signaling thread and worker thread.
   std::unique_ptr<WebRtcKeyValueConfig> const trials_;
 };
