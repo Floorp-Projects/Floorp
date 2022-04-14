@@ -261,8 +261,8 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   void BeginStartingDebugger();
   void EndStartingDebugger();
 
-  void Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
-    mHangMonitor->Dispatch(std::move(aRunnable));
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
+    return mHangMonitor->Dispatch(std::move(aRunnable));
   }
   bool IsOnThread() { return mHangMonitor->IsOnThread(); }
 
@@ -692,9 +692,12 @@ void HangMonitorParent::Shutdown() {
     mProcess = nullptr;
   }
 
-  Dispatch(NewNonOwningRunnableMethod("HangMonitorParent::ShutdownOnThread",
-                                      this,
-                                      &HangMonitorParent::ShutdownOnThread));
+  nsresult rv = Dispatch(
+      NewNonOwningRunnableMethod("HangMonitorParent::ShutdownOnThread", this,
+                                 &HangMonitorParent::ShutdownOnThread));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 
   while (!mShutdownDone) {
     mMonitor.Wait();
@@ -1151,8 +1154,9 @@ void mozilla::CreateHangMonitorChild(
           std::move(aEndpoint)));
 }
 
-void ProcessHangMonitor::Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
-  mThread->Dispatch(std::move(aRunnable), nsIEventTarget::NS_DISPATCH_NORMAL);
+nsresult ProcessHangMonitor::Dispatch(already_AddRefed<nsIRunnable> aRunnable) {
+  return mThread->Dispatch(std::move(aRunnable),
+                           nsIEventTarget::NS_DISPATCH_NORMAL);
 }
 
 bool ProcessHangMonitor::IsOnThread() {
