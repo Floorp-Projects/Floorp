@@ -93,6 +93,13 @@ interface nsIThreadManager : nsISupports
   void dispatchToMainThread(in nsIRunnable event, [optional] in uint32_t priority);
 
   /**
+   * Similar to dispatchToMainThread, but wraps the event with extra
+   * runnable that allocates nsAutoMicroTask.
+   */
+  [optional_argc]
+  void dispatchToMainThreadWithMicroTask(in nsIRunnable event, [optional] in uint32_t priority);
+
+  /**
    * This queues a runnable to the main thread's idle queue.
    *
    * @param event

@@ -250,8 +250,8 @@ TEST_P(BTVerificationTest, BTVerificationSimpleTest) {
                                  params.mDigestAlgorithm));
 }
 
-INSTANTIATE_TEST_CASE_P(BTVerificationTest, BTVerificationTest,
-                        testing::ValuesIn(BT_VERIFICATION_TEST_PARAMS));
+INSTANTIATE_TEST_SUITE_P(BTVerificationTest, BTVerificationTest,
+                         testing::ValuesIn(BT_VERIFICATION_TEST_PARAMS));
 
 }  // namespace ct
 }  // namespace mozilla

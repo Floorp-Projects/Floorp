@@ -244,8 +244,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
     }
   }
 
-  bool IsInMicroTask() const { return mMicroTaskLevel != 0; }
-
   uint32_t MicroTaskLevel() const { return mMicroTaskLevel; }
 
   void SetMicroTaskLevel(uint32_t aLevel) { mMicroTaskLevel = aLevel; }
