@@ -184,3 +184,79 @@ function prepareMockFilePicker(pathOrFile) {
   MockFilePicker.setFiles([file]);
 }
 /* exported prepareMockFilePicker */
+
+function promiseBackgroundContextEvent(extensionId, eventName) {
+  const { Management } = ChromeUtils.import(
+    "resource://gre/modules/Extension.jsm"
+  );
+
+  return new Promise(resolve => {
+    Management.on(eventName, function listener(_evtName, context) {
+      if (context.extension.id === extensionId) {
+        Management.off(eventName, listener);
+        resolve();
+      }
+    });
+  });
+}
+
+function promiseBackgroundContextLoaded(extensionId) {
+  return promiseBackgroundContextEvent(extensionId, "proxy-context-load");
+}
+/* exported promiseBackgroundContextLoaded */
+
+function promiseBackgroundContextUnloaded(extensionId) {
+  return promiseBackgroundContextEvent(extensionId, "proxy-context-unload");
+}
+/* exported promiseBackgroundContextUnloaded */
+
+async function assertBackgroundStatus(
+  extName,
+  { document, expectedStatus, targetElement }
+) {
+  const target = targetElement || findDebugTargetByText(extName, document);
+  const getBackgroundStatusElement = () =>
+    target.querySelector(".extension-backgroundscript__status");
+  await waitFor(
+    () =>
+      getBackgroundStatusElement()?.classList.contains(
+        `extension-backgroundscript__status--${expectedStatus}`
+      ),
+    `Wait ${extName} Background script status "${expectedStatus}" to be rendered`
+  );
+}
+/* exported assertBackgroundStatus */
+
+function getExtensionInstance(extensionId) {
+  const policy = WebExtensionPolicy.getByID(extensionId);
+  ok(policy, `Got a WebExtensionPolicy instance for ${extensionId}`);
+  ok(policy.extension, `Got an Extension class instance for ${extensionId}`);
+  return policy.extension;
+}
+/* exported getExtensionInstance */
+
+async function triggerExtensionEventPageIdleTimeout(extensionId) {
+  await getExtensionInstance(extensionId).terminateBackground();
+}
+/* exported triggerExtensionEventPageIdleTimeout */
+
+async function wakeupExtensionEventPage(extensionId) {
+  await getExtensionInstance(extensionId).wakeupBackground();
+}
+/* exported wakeupExtensionEventPage */
+
+function promiseTerminateBackgroundScriptIgnored(extensionId) {
+  const extension = getExtensionInstance(extensionId);
+  return new Promise(resolve => {
+    extension.once("background-script-suspend-ignored", resolve);
+  });
+}
+/* exported promiseTerminateBackgroundScriptIgnored */
+
+async function promiseBackgroundStatusUpdate(window) {
+  waitForDispatch(
+    window.AboutDebugging.store,
+    "EXTENSION_BGSCRIPT_STATUS_UPDATED"
+  );
+}
+/* exported promiseBackgroundStatusUpdate */
