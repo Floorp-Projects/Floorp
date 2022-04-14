@@ -382,10 +382,15 @@ void RTPSenderVideo::AddRtpHeaderExtensions(
         descriptor.active_decode_targets_bitmask =
             active_decode_targets_tracker_.ActiveDecodeTargetsBitmask();
       }
-      // To avoid extra structure copy, temporary share ownership of the
-      // video_structure with the dependency descriptor.
+      // VP9 mark all layer frames of the first picture as kVideoFrameKey,
+      // Structure should be attached to the descriptor to lowest spatial layer
+      // when inter layer dependency is used, i.e. L structures; or to all
+      // layers when inter layer dependency is not used, i.e. S structures.
+      // Distinguish these two cases by checking if there are any dependencies.
       if (video_header.frame_type == VideoFrameType::kVideoFrameKey &&
-          first_packet) {
+          video_header.generic->dependencies.empty() && first_packet) {
+        // To avoid extra structure copy, temporary share ownership of the
+        // video_structure with the dependency descriptor.
         descriptor.attached_structure =
             absl::WrapUnique(video_structure_.get());
       }
