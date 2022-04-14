@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko.profiler
 
 import mozilla.components.concept.base.profiler.Profiler
+import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 
 /**
@@ -62,5 +63,22 @@ class Profiler(
      */
     override fun addMarker(markerName: String) {
         runtime.profilerController.addMarker(markerName)
+    }
+
+    override fun startProfiler(filters: Array<String>, features: Array<String>) {
+        runtime.profilerController.startProfiler(filters, features)
+    }
+
+    override fun stopProfiler(onSuccess: (ByteArray?) -> Unit, onError: (Throwable) -> Unit) {
+        runtime.profilerController.stopProfiler().then(
+            { profileResult ->
+                onSuccess(profileResult)
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            }
+        )
     }
 }

@@ -132,4 +132,24 @@ interface Profiler {
      * @param markerName Name of the event as a string.
      */
     fun addMarker(markerName: String)
+
+    /**
+     * Start the Gecko profiler with the given settings. This is used by embedders which want to
+     * control the profiler from the embedding app. This allows them to provide an easier access point
+     * to profiling, as an alternative to the traditional way of using a desktop Firefox instance
+     * connected via USB + adb.
+     *
+     * @param aFilters The list of threads to profile, as an array of string of thread names filters.
+     *     Each filter is used as a case-insensitive substring match against the actual thread names.
+     * @param aFeaturesArr The list of profiler features to enable for profiling, as a string array.
+     */
+    fun startProfiler(filters: Array<String>, features: Array<String>)
+
+    /**
+     * Stop the profiler and capture the recorded profile. This method is asynchronous.
+     *
+     * @return GeckoResult for the captured profile. The profile is returned as a byte[] buffer
+     *     containing a gzip-compressed payload (with gzip header) of the profile JSON.
+     */
+    fun stopProfiler(onSuccess: (ByteArray?) -> Unit, onError: (Throwable) -> Unit)
 }
