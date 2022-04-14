@@ -89,12 +89,13 @@
   border-width: 0;
   margin: 0 !important /* override tabbox.css */;
   padding: 0 !important /* override tabbox.css */;
-  -moz-box-align: stretch;
-}
-
-.tabbrowser-tab {
-  min-height: var(--tab-min-height);
   padding-inline: 2px !important;
+  -moz-box-align: stretch;
+  /* Needed so that overflowing content overflows towards the end rather than
+     getting centered. That prevents tab opening animation from looking off at
+     the start, see bug 1759221. */
+  -moz-box-pack: start;
+  min-height: var(--tab-min-height);
 }
 
 /* tabbrowser-tab keyboard focus */
