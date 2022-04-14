@@ -22,6 +22,7 @@
 #include "api/peer_connection_interface.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/turn_customizer.h"
+#include "pc/connection_context.h"
 #include "pc/data_channel_controller.h"
 #include "pc/ice_server_parsing.h"
 #include "pc/jsep_transport_controller.h"
@@ -71,7 +72,7 @@ class PeerConnection : public PeerConnectionInternal,
                        public RtpSenderBase::SetStreamsObserver,
                        public sigslot::has_slots<> {
  public:
-  explicit PeerConnection(PeerConnectionFactory* factory,
+  explicit PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
                           std::unique_ptr<RtcEventLog> event_log,
                           std::unique_ptr<Call> call);
 
@@ -220,14 +221,14 @@ class PeerConnection : public PeerConnectionInternal,
   void Close() override;
 
   rtc::Thread* signaling_thread() const final {
-    return factory_->signaling_thread();
+    return context_->signaling_thread();
   }
 
   // PeerConnectionInternal implementation.
   rtc::Thread* network_thread() const final {
-    return factory_->network_thread();
+    return context_->network_thread();
   }
-  rtc::Thread* worker_thread() const final { return factory_->worker_thread(); }
+  rtc::Thread* worker_thread() const final { return context_->worker_thread(); }
 
   std::string session_id() const override {
     RTC_DCHECK_RUN_ON(signaling_thread());
@@ -717,7 +718,7 @@ class PeerConnection : public PeerConnectionInternal,
   // However, since the reference counting is done in the
   // PeerConnectionFactoryInterface all instances created using the raw pointer
   // will refer to the same reference count.
-  const rtc::scoped_refptr<PeerConnectionFactory> factory_;
+  const rtc::scoped_refptr<ConnectionContext> context_;
   PeerConnectionObserver* observer_ RTC_GUARDED_BY(signaling_thread()) =
       nullptr;
 
