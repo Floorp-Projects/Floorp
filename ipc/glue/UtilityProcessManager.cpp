@@ -246,6 +246,7 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
           }
 
           MOZ_DIAGNOSTIC_ASSERT(aActor->CanSend(), "IPC established for actor");
+          self->RegisterActor(utilityParent, aActor->GetActorName());
         }
 
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
@@ -261,6 +262,7 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess) {
   RefPtr<UtilityProcessManager> self = this;
   RefPtr<UtilityAudioDecoderChild> uadc =
       UtilityAudioDecoderChild::GetSingleton();
+  MOZ_ASSERT(uadc, "Unable to get a singleton for UtilityAudioDecoderChild");
   return StartUtility(uadc, SandboxingKind::UTILITY_AUDIO_DECODING)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
@@ -268,6 +270,12 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess) {
             base::ProcessId process =
                 self->GetProcessParent(SandboxingKind::UTILITY_AUDIO_DECODING)
                     ->OtherPid();
+
+            if (!uadc->CanSend()) {
+              MOZ_ASSERT(false, "UtilityAudioDecoderChild lost in the middle");
+              return AudioDecodingPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                           __func__);
+            }
 
             Endpoint<PRemoteDecoderManagerChild> childPipe;
             Endpoint<PRemoteDecoderManagerParent> parentPipe;

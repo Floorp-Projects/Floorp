@@ -149,6 +149,7 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
     info.type = request.processType;
     info.origin = request.origin;
     info.windows = std::move(request.windowInfo);
+    info.utilityActors = std::move(request.utilityInfo);
     info.cpuTime = cpuTime;
     info.cpuCycleCount = cpuCycleTime;
     info.memory = memoryCounters.PrivateUsage;
