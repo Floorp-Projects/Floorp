@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings.creditcards
+package org.mozilla.fenix.settings.autofill
 
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
@@ -23,6 +23,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.creditcards.CreditCardsFragmentStore
+import org.mozilla.fenix.settings.creditcards.CreditCardsListState
 import org.robolectric.Robolectric
 
 @RunWith(FenixRobolectricTestRunner::class)

@@ -1190,7 +1190,7 @@
         app:startDestination="@id/autofillSettingFragment">
         <fragment
             android:id="@+id/autofillSettingFragment"
-            android:name="org.mozilla.fenix.settings.creditcards.AutofillSettingFragment"
+            android:name="org.mozilla.fenix.settings.autofill.AutofillSettingFragment"
             android:label="@string/preferences_credit_cards">
             <action
                 android:id="@+id/action_autofillSettingFragment_to_creditCardEditorFragment"

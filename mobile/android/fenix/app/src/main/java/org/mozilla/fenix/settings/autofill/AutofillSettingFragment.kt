@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.settings.creditcards
+package org.mozilla.fenix.settings.autofill
 
 import android.app.KeyguardManager
 import android.content.Context
@@ -36,6 +36,9 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SyncPreferenceView
 import org.mozilla.fenix.settings.biometric.BiometricPromptPreferenceFragment
+import org.mozilla.fenix.settings.creditcards.CreditCardsAction
+import org.mozilla.fenix.settings.creditcards.CreditCardsFragmentStore
+import org.mozilla.fenix.settings.creditcards.CreditCardsListState
 import org.mozilla.fenix.settings.requirePreference
 
 /**
