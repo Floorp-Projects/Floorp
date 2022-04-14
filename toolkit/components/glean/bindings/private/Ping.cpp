@@ -6,7 +6,10 @@
 
 #include "mozilla/glean/bindings/Ping.h"
 
-#include "mozilla/ClearOnShutdown.h"
+#ifndef MOZ_GLEAN_ANDROID
+#  include "mozilla/AppShutdown.h"
+#  include "mozilla/ClearOnShutdown.h"
+#endif
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 #include "nsString.h"
@@ -18,17 +21,23 @@ namespace impl {
 #ifndef MOZ_GLEAN_ANDROID
 using CallbackMapType = nsTHashMap<uint32_t, PingTestCallback>;
 using MetricIdToCallbackMutex = StaticDataMutex<UniquePtr<CallbackMapType>>;
-static MetricIdToCallbackMutex::AutoLock GetCallbackMapLock() {
+static Maybe<MetricIdToCallbackMutex::AutoLock> GetCallbackMapLock() {
   static MetricIdToCallbackMutex sCallbacks("sCallbacks");
   auto lock = sCallbacks.Lock();
+  // Test callbacks will continue to work until the end of AppShutdownTelemetry
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+    return Nothing();
+  }
   if (!*lock) {
     *lock = MakeUnique<CallbackMapType>();
-    RunOnShutdown([&] {
-      auto lock = sCallbacks.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
+    RunOnShutdown(
+        [&] {
+          auto lock = sCallbacks.Lock();
+          *lock = nullptr;  // deletes, see UniquePtr.h
+        },
+        ShutdownPhase::XPCOMWillShutdown);
   }
-  return lock;
+  return Some(std::move(lock));
 }
 #endif
 
@@ -37,11 +46,12 @@ void Ping::Submit(const nsACString& aReason) const {
   Unused << mId;
 #else
   {
-    auto lock = GetCallbackMapLock();
-    auto callback = lock.ref()->Extract(mId);
-    if (callback) {
-      callback.extract()(aReason);
-    }
+    GetCallbackMapLock().apply([&](auto& lock) {
+      auto callback = lock.ref()->Extract(mId);
+      if (callback) {
+        callback.extract()(aReason);
+      }
+    });
   }
   fog_submit_ping_by_id(mId, &aReason);
 #endif
@@ -52,8 +62,8 @@ void Ping::TestBeforeNextSubmit(PingTestCallback&& aCallback) const {
   return;
 #else
   {
-    auto lock = GetCallbackMapLock();
-    lock.ref()->InsertOrUpdate(mId, aCallback);
+    GetCallbackMapLock().apply(
+        [&](auto& lock) { lock.ref()->InsertOrUpdate(mId, aCallback); });
   }
 #endif
 }
