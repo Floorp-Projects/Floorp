@@ -226,6 +226,7 @@ rtc_library("video_stream_encoder_impl") {
     "../api/video:video_bitrate_allocator_factory",
     "../api/video:video_codec_constants",
     "../api/video:video_frame",
+    "../api/video:video_layers_allocation",
     "../api/video:video_rtp_headers",
     "../api/video:video_stream_encoder",
     "../api/video_codecs:video_codecs_api",

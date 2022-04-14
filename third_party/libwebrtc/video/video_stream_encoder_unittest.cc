@@ -1254,6 +1254,16 @@ class VideoStreamEncoderTest : public ::testing::Test {
       return number_of_bitrate_allocations_;
     }
 
+    VideoLayersAllocation GetLastVideoLayersAllocation() {
+      MutexLock lock(&mutex_);
+      return last_layers_allocation_;
+    }
+
+    int number_of_layers_allocations() const {
+      MutexLock lock(&mutex_);
+      return number_of_layers_allocations_;
+    }
+
    private:
     Result OnEncodedImage(
         const EncodedImage& encoded_image,
@@ -1296,6 +1306,24 @@ class VideoStreamEncoderTest : public ::testing::Test {
       last_bitrate_allocation_ = allocation;
     }
 
+    void OnVideoLayersAllocationUpdated(
+        VideoLayersAllocation allocation) override {
+      MutexLock lock(&mutex_);
+      ++number_of_layers_allocations_;
+      last_layers_allocation_ = allocation;
+      rtc::StringBuilder log;
+      for (const auto& layer : allocation.active_spatial_layers) {
+        log << layer.width << "x" << layer.height << "@" << layer.frame_rate_fps
+            << "[";
+        for (const auto target_bitrate :
+             layer.target_bitrate_per_temporal_layer) {
+          log << target_bitrate.kbps() << ",";
+        }
+        log << "]";
+      }
+      RTC_DLOG(INFO) << "OnVideoLayersAllocationUpdated " << log.str();
+    }
+
     TimeController* const time_controller_;
     mutable Mutex mutex_;
     TestEncoder* test_encoder_;
@@ -1313,6 +1341,8 @@ class VideoStreamEncoderTest : public ::testing::Test {
     int min_transmit_bitrate_bps_ = 0;
     VideoBitrateAllocation last_bitrate_allocation_ RTC_GUARDED_BY(&mutex_);
     int number_of_bitrate_allocations_ RTC_GUARDED_BY(&mutex_) = 0;
+    VideoLayersAllocation last_layers_allocation_ RTC_GUARDED_BY(&mutex_);
+    int number_of_layers_allocations_ RTC_GUARDED_BY(&mutex_) = 0;
   };
 
   class VideoBitrateAllocatorProxyFactory
@@ -4009,6 +4039,100 @@ TEST_F(VideoStreamEncoderTest, ReportsVideoBitrateAllocation) {
     AdvanceTime(TimeDelta::Millis(1) / kDefaultFps);
   }
   EXPECT_GT(sink_.number_of_bitrate_allocations(), 3);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, ReportsVideoLayersAllocationForV8Simulcast) {
+  ResetEncoder("VP8", /*num_streams*/ 2, 1, 1, /*screenshare*/ false,
+               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+                   kVideoLayersAllocation);
+
+  const int kDefaultFps = 30;
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kLowTargetBitrateBps),
+      DataRate::BitsPerSec(kLowTargetBitrateBps),
+      DataRate::BitsPerSec(kLowTargetBitrateBps), 0, 0, 0);
+
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(sink_.number_of_layers_allocations(), 1);
+  VideoLayersAllocation last_layer_allocation =
+      sink_.GetLastVideoLayersAllocation();
+  // kLowTargetBitrateBps is only enough for one spatial layer.
+  ASSERT_EQ(last_layer_allocation.active_spatial_layers.size(), 1u);
+
+  VideoBitrateAllocation bitrate_allocation =
+      fake_encoder_.GetAndResetLastRateControlSettings()->bitrate;
+  // Check that encoder has been updated too, not just allocation observer.
+  EXPECT_EQ(bitrate_allocation.get_sum_bps(), kLowTargetBitrateBps);
+  AdvanceTime(TimeDelta::Seconds(1) / kDefaultFps);
+
+  // VideoLayersAllocation might be updated if frame rate change.
+  int number_of_layers_allocation = 1;
+  const int64_t start_time_ms = CurrentTimeMs();
+  while (CurrentTimeMs() - start_time_ms < 10 * kProcessIntervalMs) {
+    video_source_.IncomingCapturedFrame(
+        CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
+    WaitForEncodedFrame(CurrentTimeMs());
+    AdvanceTime(TimeDelta::Millis(1) / kDefaultFps);
+    if (number_of_layers_allocation != sink_.number_of_layers_allocations()) {
+      number_of_layers_allocation = sink_.number_of_layers_allocations();
+      VideoLayersAllocation new_allocation =
+          sink_.GetLastVideoLayersAllocation();
+      ASSERT_EQ(new_allocation.active_spatial_layers.size(), 1u);
+      EXPECT_NE(new_allocation.active_spatial_layers[0].frame_rate_fps,
+                last_layer_allocation.active_spatial_layers[0].frame_rate_fps);
+      EXPECT_EQ(new_allocation.active_spatial_layers[0]
+                    .target_bitrate_per_temporal_layer,
+                last_layer_allocation.active_spatial_layers[0]
+                    .target_bitrate_per_temporal_layer);
+      last_layer_allocation = new_allocation;
+    }
+  }
+  EXPECT_LE(sink_.number_of_layers_allocations(), 3);
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       ReportsUpdatedVideoLayersAllocationWhenBweChanges) {
+  ResetEncoder("VP8", /*num_streams*/ 2, 1, 1, /*screenshare*/ false,
+               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+                   kVideoLayersAllocation);
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kLowTargetBitrateBps),
+      DataRate::BitsPerSec(kLowTargetBitrateBps),
+      DataRate::BitsPerSec(kLowTargetBitrateBps), 0, 0, 0);
+
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(sink_.number_of_layers_allocations(), 1);
+  VideoLayersAllocation last_layer_allocation =
+      sink_.GetLastVideoLayersAllocation();
+  // kLowTargetBitrateBps is only enough for one spatial layer.
+  ASSERT_EQ(last_layer_allocation.active_spatial_layers.size(), 1u);
+  EXPECT_EQ(last_layer_allocation.active_spatial_layers[0]
+                .target_bitrate_per_temporal_layer[0],
+            DataRate::BitsPerSec(kLowTargetBitrateBps));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps), 0, 0, 0);
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
+  WaitForEncodedFrame(CurrentTimeMs());
+
+  EXPECT_EQ(sink_.number_of_layers_allocations(), 2);
+  last_layer_allocation = sink_.GetLastVideoLayersAllocation();
+  ASSERT_EQ(last_layer_allocation.active_spatial_layers.size(), 2u);
+  EXPECT_GT(last_layer_allocation.active_spatial_layers[1]
+                .target_bitrate_per_temporal_layer[0],
+            DataRate::Zero());
 
   video_stream_encoder_->Stop();
 }
