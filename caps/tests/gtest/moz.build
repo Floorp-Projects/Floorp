@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     "TestOriginAttributes.cpp",
     "TestPrincipalAttributes.cpp",
     "TestPrincipalSerialization.cpp",
+    "TestRedirectChainURITruncation.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

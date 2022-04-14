@@ -92,7 +92,7 @@ export class AboutCertificateSection extends HTMLElement {
     if (!embeddedScts) {
       return;
     }
-    let items = embeddedScts.shadowRoot.querySelectorAll(".version");
+    let items = embeddedScts.shadowRoot.querySelectorAll(".timestamp");
 
     for (let i = 0; i < items.length; i++) {
       items[i].classList.add("padding");

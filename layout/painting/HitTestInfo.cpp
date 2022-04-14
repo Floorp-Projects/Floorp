@@ -19,7 +19,7 @@ namespace mozilla {
 static StaticAutoPtr<const HitTestInfo> gEmptyHitTestInfo;
 
 const HitTestInfo& HitTestInfo::Empty() {
-  if (gEmptyHitTestInfo) {
+  if (!gEmptyHitTestInfo) {
     gEmptyHitTestInfo = new HitTestInfo();
   }
 

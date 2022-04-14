@@ -557,6 +557,41 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
 });
 
 /**
+ * Test when bidi live reloading is not supported and no langpacks.
+ */
+add_task(
+  async function test_aboutwelcome_languageSwitcher_bidiNotSupported_noLangPacks() {
+    sandbox.restore();
+    await pushPrefs(["intl.multilingual.liveReloadBidirectional", false]);
+
+    const { resolveLangPacks, mockable } = mockAddonAndLocaleAPIs({
+      systemLocale: "ar-EG", // Arabic (Egypt)
+      appLocale: "en-US",
+    });
+    resolveLangPacks([]);
+
+    const { browser } = await openAboutWelcome();
+
+    info("Clicking the primary button to start installing the langpack.");
+    await clickVisibleButton(browser, "button.primary");
+
+    await testScreenContent(
+      browser,
+      "Language selection skipped for bidi",
+      // Expected selectors:
+      [`.screen-1`],
+      // Unexpected selectors:
+      [
+        `[data-l10n-id*="onboarding-live-language"]`,
+        `[data-l10n-id="onboarding-live-language-header"]`,
+      ]
+    );
+
+    sinon.assert.notCalled(mockable.setRequestedAppLocales);
+  }
+);
+
+/**
  * Test when bidi live reloading is supported.
  */
 add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {

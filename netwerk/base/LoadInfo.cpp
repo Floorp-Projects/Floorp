@@ -47,8 +47,7 @@
 
 using namespace mozilla::dom;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 static nsContentPolicyType InternalContentPolicyTypeForFrame(
     CanonicalBrowsingContext* aBrowsingContext) {
@@ -1378,6 +1377,119 @@ LoadInfo::GetInitialSecurityCheckDone(bool* aResult) {
   return NS_OK;
 }
 
+// To prevent unintenional credential and information leaks in content
+// processes we can use this function to truncate a Principal's URI as much as
+// possible.
+already_AddRefed<nsIPrincipal> CreateTruncatedPrincipal(
+    nsIPrincipal* aPrincipal) {
+  nsCOMPtr<nsIPrincipal> truncatedPrincipal;
+  // System Principal URIs don't need to be truncated as they don't contain any
+  // sensitive browsing history information.
+  if (aPrincipal->IsSystemPrincipal()) {
+    truncatedPrincipal = aPrincipal;
+    return truncatedPrincipal.forget();
+  }
+
+  // Content Principal URIs are the main location of the information we need to
+  // truncate.
+  if (aPrincipal->GetIsContentPrincipal()) {
+    // Certain URIs (chrome, resource, about) don't need to be truncated as they
+    // should be free of any sensitive user browsing history.
+    if (aPrincipal->SchemeIs("chrome") || aPrincipal->SchemeIs("resource") ||
+        aPrincipal->SchemeIs("about")) {
+      truncatedPrincipal = aPrincipal;
+      return truncatedPrincipal.forget();
+    }
+
+    // Different parts of the URI are preserved due to being vital to the
+    // browser's operation.
+    // Scheme for differentiating between different types of URIs and how to
+    // truncate them and later on utilize them.
+    // Host and Port to retain the redirect chain's core functionality.
+    // Path would ideally be removed but needs to be retained to ensure that
+    // http/https redirect loops can be detected.
+    // The entirety of the Query String, Reference Fragment, and User Info
+    // subcomponents must be stripped to avoid leaking Oauth tokens, user
+    // identifiers, and similar bits of information that these subcomponents may
+    // contain.
+    nsAutoCString scheme;
+    nsAutoCString separator("://");
+    nsAutoCString hostPort;
+    nsAutoCString path;
+    nsAutoCString uriString("");
+    if (aPrincipal->SchemeIs("view-source")) {
+      // The path portion of the view-source URI will be the URI whose source is
+      // being viewed, so we create a new URI object with a truncated form of
+      // the path and append the view-source scheme to the front again.
+      nsAutoCString viewSourcePath;
+      aPrincipal->GetFilePath(viewSourcePath);
+
+      nsCOMPtr<nsIURI> nestedURI;
+      nsresult rv = NS_NewURI(getter_AddRefs(nestedURI), viewSourcePath);
+
+      if (NS_FAILED(rv)) {
+        // Since the path here should be an already validated URI this should
+        // never happen.
+        NS_WARNING(viewSourcePath.get());
+        MOZ_ASSERT(false,
+                   "Failed to create truncated form of URI with NS_NewURI.");
+        truncatedPrincipal = aPrincipal;
+        return truncatedPrincipal.forget();
+      }
+
+      nestedURI->GetScheme(scheme);
+      nestedURI->GetHostPort(hostPort);
+      nestedURI->GetFilePath(path);
+      uriString += "view-source:";
+    } else {
+      aPrincipal->GetScheme(scheme);
+      aPrincipal->GetHostPort(hostPort);
+      aPrincipal->GetFilePath(path);
+    }
+    uriString += scheme + separator + hostPort + path;
+
+    nsCOMPtr<nsIURI> truncatedURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(truncatedURI), uriString);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(uriString.get());
+      MOZ_ASSERT(false,
+                 "Failed to create truncated form of URI with NS_NewURI.");
+      truncatedPrincipal = aPrincipal;
+      return truncatedPrincipal.forget();
+    }
+
+    return BasePrincipal::CreateContentPrincipal(
+        truncatedURI, aPrincipal->OriginAttributesRef());
+  }
+
+  // Null Principal Precursor URIs can also contain information that needs to
+  // be truncated.
+  if (aPrincipal->GetIsNullPrincipal()) {
+    nsCOMPtr<nsIPrincipal> precursorPrincipal =
+        aPrincipal->GetPrecursorPrincipal();
+    // If there is no precursor then nothing needs to be truncated.
+    if (!precursorPrincipal) {
+      truncatedPrincipal = aPrincipal;
+      return truncatedPrincipal.forget();
+    }
+
+    // Otherwise we return a new Null Principal with the original's Origin
+    // Attributes and a truncated version of the original's precursor URI.
+    nsCOMPtr<nsIPrincipal> truncatedPrecursor =
+        CreateTruncatedPrincipal(precursorPrincipal);
+    return NullPrincipal::CreateWithInheritedAttributes(truncatedPrecursor);
+  }
+
+  // If we hit this assertion we need to update this function to add the
+  // Principals and URIs seen as new corner cases to handle.
+  // For example we may need to do this for Expanded Principals and moz-icon
+  // URIs.
+  MOZ_ASSERT(false, "Unhandled Principal or URI type encountered.");
+
+  truncatedPrincipal = aPrincipal;
+  return truncatedPrincipal.forget();
+}
+
 NS_IMETHODIMP
 LoadInfo::AppendRedirectHistoryEntry(nsIChannel* aChannel,
                                      bool aIsInternalRedirect) {
@@ -1408,8 +1520,11 @@ LoadInfo::AppendRedirectHistoryEntry(nsIChannel* aChannel,
     Unused << intChannel->GetRemoteAddress(remoteAddress);
   }
 
+  nsCOMPtr<nsIPrincipal> truncatedPrincipal =
+      CreateTruncatedPrincipal(uriPrincipal);
+
   nsCOMPtr<nsIRedirectHistoryEntry> entry =
-      new nsRedirectHistoryEntry(uriPrincipal, referrer, remoteAddress);
+      new nsRedirectHistoryEntry(truncatedPrincipal, referrer, remoteAddress);
 
   mRedirectChainIncludingInternalRedirects.AppendElement(entry);
   if (!aIsInternalRedirect) {
@@ -2023,5 +2138,4 @@ already_AddRefed<nsIContentSecurityPolicy> LoadInfo::GetCspToInherit() {
   return cspToInherit.forget();
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

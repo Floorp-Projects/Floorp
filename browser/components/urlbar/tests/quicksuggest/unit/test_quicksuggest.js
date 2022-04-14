@@ -1038,9 +1038,9 @@ add_task(async function blockedSuggestionsAPI() {
     "_blockedDigests is empty"
   );
   Assert.equal(
-    UrlbarPrefs.get("quickSuggest.blockedDigests"),
+    UrlbarPrefs.get("quicksuggest.blockedDigests"),
     "",
-    "quickSuggest.blockedDigests is an empty string"
+    "quicksuggest.blockedDigests is an empty string"
   );
 
   // Make some URLs.
@@ -1070,19 +1070,19 @@ add_task(async function blockedSuggestionsAPI() {
     );
   }
 
-  // Check `_blockedDigests` and `quickSuggest.blockedDigests`.
+  // Check `_blockedDigests` and `quicksuggest.blockedDigests`.
   Assert.equal(
     UrlbarProviderQuickSuggest._blockedDigests.size,
     urls.length,
     "_blockedDigests has correct size"
   );
-  let array = JSON.parse(UrlbarPrefs.get("quickSuggest.blockedDigests"));
+  let array = JSON.parse(UrlbarPrefs.get("quicksuggest.blockedDigests"));
   Assert.ok(Array.isArray(array), "Parsed value of pref is an array");
   Assert.equal(array.length, urls.length, "Array has correct length");
 
-  // Write some junk to `quickSuggest.blockedDigests`. `_blockedDigests` should
+  // Write some junk to `quicksuggest.blockedDigests`. `_blockedDigests` should
   // not be changed and all previously blocked URLs should remain blocked.
-  UrlbarPrefs.set("quickSuggest.blockedDigests", "not a json array");
+  UrlbarPrefs.set("quicksuggest.blockedDigests", "not a json array");
   await UrlbarProviderQuickSuggest._blockTaskQueue.emptyPromise;
   for (let url of urls) {
     Assert.ok(
@@ -1112,16 +1112,16 @@ add_task(async function blockedSuggestionsAPI() {
     urls.length,
     "_blockedDigests has correct size"
   );
-  array = JSON.parse(UrlbarPrefs.get("quickSuggest.blockedDigests"));
+  array = JSON.parse(UrlbarPrefs.get("quicksuggest.blockedDigests"));
   Assert.ok(Array.isArray(array), "Parsed value of pref is an array");
   Assert.equal(array.length, urls.length, "Array has correct length");
 
   // Add a new URL digest directly to the JSON'ed array in the pref.
   newURL = "http://example.com/direct-to-pref";
   urls.push(newURL);
-  array = JSON.parse(UrlbarPrefs.get("quickSuggest.blockedDigests"));
+  array = JSON.parse(UrlbarPrefs.get("quicksuggest.blockedDigests"));
   array.push(await UrlbarProviderQuickSuggest._getDigest(newURL));
-  UrlbarPrefs.set("quickSuggest.blockedDigests", JSON.stringify(array));
+  UrlbarPrefs.set("quicksuggest.blockedDigests", JSON.stringify(array));
   await UrlbarProviderQuickSuggest._blockTaskQueue.emptyPromise;
 
   // All URLs should remain blocked and the new URL should be blocked.
@@ -1138,7 +1138,7 @@ add_task(async function blockedSuggestionsAPI() {
   );
 
   // Clear the pref. All URLs should be unblocked.
-  UrlbarPrefs.clear("quickSuggest.blockedDigests");
+  UrlbarPrefs.clear("quicksuggest.blockedDigests");
   await UrlbarProviderQuickSuggest._blockTaskQueue.emptyPromise;
   for (let url of urls) {
     Assert.ok(

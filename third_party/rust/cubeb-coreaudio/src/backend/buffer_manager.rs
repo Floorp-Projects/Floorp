@@ -86,15 +86,18 @@ fn process_data<T: Copy + std::ops::Add<Output = T>>(
     let input_slice = unsafe {
         slice::from_raw_parts_mut::<T>(data as *mut T, frame_count * input_channel_count)
     };
-    if input_channels_to_ignore == 0 {
+    if input_channel_count == output_channel_count {
+        assert_eq!(input_channels_to_ignore, 0);
         input_slice
     } else {
-        drop_first_n_channels_in_place(
-            input_channels_to_ignore,
-            input_slice,
-            frame_count,
-            input_channel_count,
-        );
+        if input_channels_to_ignore > 0 {
+            drop_first_n_channels_in_place(
+                input_channels_to_ignore,
+                input_slice,
+                frame_count,
+                input_channel_count,
+            );
+        }
         let new_count_remixed = remix_or_drop_channels(
             input_channel_count - input_channels_to_ignore,
             output_channel_count,
@@ -176,7 +179,7 @@ impl BufferManager {
             }
         }
     }
-    pub fn channel_count(&self) -> usize {
+    fn channel_count(&self) -> usize {
         self.output_channel_count
     }
     pub fn push_data(&mut self, data: *mut c_void, frame_count: usize) {
@@ -203,6 +206,7 @@ impl BufferManager {
                 p.push_slice(processed_input)
             }
         };
+        assert!(pushed <= to_push, "We don't support upmix");
         if pushed != to_push {
             cubeb_log!(
                 "Input ringbuffer full, could only push {} instead of {}",
@@ -235,39 +239,45 @@ impl BufferManager {
             }
         }
     }
-    pub fn get_linear_data(&mut self, nsamples: usize) -> *mut c_void {
+    pub fn get_linear_data(&mut self, frame_count: usize) -> *mut c_void {
+        let sample_count = frame_count * self.channel_count();
         let p = match &mut self.linear_buffer {
             LinearBuffer::IntegerLinearBuffer(b) => {
-                b.resize(nsamples, 0);
+                b.resize(sample_count, 0);
                 b.as_mut_ptr() as *mut c_void
             }
             LinearBuffer::FloatLinearBuffer(b) => {
-                b.resize(nsamples, 0.);
+                b.resize(sample_count, 0.);
                 b.as_mut_ptr() as *mut c_void
             }
         };
-        self.pull_data(p, nsamples);
+        self.pull_data(p, sample_count);
 
         p
     }
-    pub fn available_samples(&self) -> usize {
+    fn available_samples(&self) -> usize {
         match &self.consumer {
             IntegerRingBufferConsumer(p) => p.len(),
             FloatRingBufferConsumer(p) => p.len(),
         }
     }
-    pub fn trim(&mut self, final_size: usize) {
+    pub fn available_frames(&self) -> usize {
+        assert_ne!(self.channel_count(), 0);
+        self.available_samples() / self.channel_count()
+    }
+    pub fn trim(&mut self, final_frame_count: usize) {
+        let final_sample_count = final_frame_count * self.channel_count();
         match &mut self.consumer {
             IntegerRingBufferConsumer(c) => {
                 let available = c.len();
-                assert!(available >= final_size);
-                let to_pop = available - final_size;
+                assert!(available >= final_sample_count);
+                let to_pop = available - final_sample_count;
                 c.discard(to_pop);
             }
             FloatRingBufferConsumer(c) => {
                 let available = c.len();
-                assert!(available >= final_size);
-                let to_pop = available - final_size;
+                assert!(available >= final_sample_count);
+                let to_pop = available - final_sample_count;
                 c.discard(to_pop);
             }
         }

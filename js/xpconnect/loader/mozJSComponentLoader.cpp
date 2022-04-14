@@ -75,7 +75,8 @@ using namespace mozilla::loader;
 using namespace xpc;
 using namespace JS;
 
-#define JS_CACHE_PREFIX(aType) "jsloader/" aType
+#define JS_CACHE_PREFIX(aScopeType, aCompilationTarget) \
+  "jsloader/" aScopeType "/" aCompilationTarget
 
 /**
  * Buffer sizes for serialization and deserialization of scripts.
@@ -747,8 +748,9 @@ nsresult mozJSComponentLoader::ObjectForLocation(
 
   aInfo.EnsureResolvedURI();
 
-  nsAutoCString cachePath(JS_CACHE_PREFIX("non-syntactic"));
-  rv = PathifyURI(aInfo.ResolvedURI(), cachePath);
+  nsAutoCString cachePath;
+  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
+                  aInfo.ResolvedURI(), cachePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::DecodeOptions decodeOptions;

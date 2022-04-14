@@ -487,6 +487,10 @@ HomeOverlay.prototype = {
           topic: "must-reads"
         }]
       }), document.querySelector(`body`));
+
+      if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+        document.querySelector(`body`).classList.add(`theme_dark`);
+      }
     } else {
       // For English, we have a discover topics link.
       // For non English, we don't have a link yet for this.
@@ -662,6 +666,10 @@ var SignupOverlay = function (options) {
         utmContent: utmContent,
         locale: locale
       }), document.querySelector(`body`));
+
+      if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+        document.querySelector(`body`).classList.add(`theme_dark`);
+      }
     } else {
       const templateData = {
         pockethost,
@@ -1556,6 +1564,10 @@ SavedOverlay.prototype = {
         utmCampaign: utmCampaign,
         utmContent: utmContent
       }), document.querySelector(`body`));
+
+      if (window?.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+        document.querySelector(`body`).classList.add(`theme_dark`);
+      }
     } else {
       // set host
       const templateData = {

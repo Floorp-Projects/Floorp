@@ -13,7 +13,8 @@
 #include "mojo/core/ports/event.h"
 #include "mojo/core/ports/message_queue.h"
 #include "mojo/core/ports/user_data.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/PlatformMutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 
@@ -22,6 +23,43 @@ namespace core {
 namespace ports {
 
 class PortLocker;
+
+namespace detail {
+
+// Ports cannot use mozilla::Mutex, as the acquires-before relationships handled
+// by PortLocker can overload the debug-only deadlock detector.
+class CAPABILITY PortMutex : private ::mozilla::detail::MutexImpl {
+ public:
+  void AssertCurrentThreadOwns() const ASSERT_CAPABILITY(this) {
+#ifdef DEBUG
+    MOZ_ASSERT(mOwningThread == PR_GetCurrentThread());
+#endif
+  }
+
+ private:
+  // PortMutex should only be locked/unlocked via PortLocker
+  friend class ::mojo::core::ports::PortLocker;
+
+  void Lock() CAPABILITY_ACQUIRE() {
+    ::mozilla::detail::MutexImpl::lock();
+#ifdef DEBUG
+    mOwningThread = PR_GetCurrentThread();
+#endif
+  }
+  void Unlock() CAPABILITY_RELEASE() {
+#ifdef DEBUG
+    MOZ_ASSERT(mOwningThread == PR_GetCurrentThread());
+    mOwningThread = nullptr;
+#endif
+    ::mozilla::detail::MutexImpl::unlock();
+  }
+
+#ifdef DEBUG
+  mozilla::Atomic<PRThread*, mozilla::Relaxed> mOwningThread;
+#endif
+};
+
+}  // namespace detail
 
 // A Port is essentially a node in a circular list of addresses. For the sake of
 // this documentation such a list will henceforth be referred to as a "route."
@@ -191,7 +229,7 @@ class Port {
   // This lock guards all fields in Port, but is locked in a unique way which is
   // unfortunately somewhat difficult to get to work with the thread-safety
   // analysis.
-  mozilla::Mutex lock_ MOZ_ANNOTATED{"Port State"};
+  detail::PortMutex lock_ MOZ_ANNOTATED;
 };
 
 }  // namespace ports

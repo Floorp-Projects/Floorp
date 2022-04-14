@@ -4223,7 +4223,7 @@
 
 - name: dom.window.content.untrusted.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 - name: dom.window.clientinformation.enabled

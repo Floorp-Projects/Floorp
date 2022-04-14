@@ -1,3 +1,6 @@
+const { BrowserTestUtils } = ChromeUtils.import(
+  "resource://testing-common/BrowserTestUtils.jsm"
+);
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
@@ -12,6 +15,9 @@ const { ExperimentAPI } = ChromeUtils.import(
 );
 const { ExperimentFakes, ExperimentTestUtils } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
+);
+const { ExperimentManager } = ChromeUtils.import(
+  "resource://nimbus/lib/ExperimentManager.jsm"
 );
 const { TelemetryFeed } = ChromeUtils.import(
   "resource://activity-stream/lib/TelemetryFeed.jsm"
@@ -334,4 +340,42 @@ add_task(async function test_exposure_ping_legacy() {
 
   exposureSpy.restore();
   await cleanup();
+});
+
+add_task(async function test_forceEnrollUpdatesMessages() {
+  const experiment = await getCFRExperiment();
+
+  await setup(experiment);
+  await SpecialPowers.pushPrefEnv({
+    set: [["nimbus.debug", true]],
+  });
+  registerCleanupFunction(async () => {
+    await ExperimentManager.unenroll(`optin-${experiment.slug}`, "cleanup");
+    await SpecialPowers.popPrefEnv();
+    await cleanup();
+  });
+
+  Assert.equal(
+    ASRouter.state.messages.filter(m => m.id === "xman_test_message").length,
+    0,
+    "Experiment message should not be found until we opt in"
+  );
+
+  await RemoteSettingsExperimentLoader.optInToExperiment({
+    slug: experiment.slug,
+    branch: experiment.branches[0].slug,
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      !!ASRouter.state.messages.filter(m => m.id === "xman_test_message")
+        .length,
+    "waiting for ASRouter to update messages"
+  );
+
+  Assert.equal(
+    ASRouter.state.messages.filter(m => m.id === "xman_test_message").length,
+    1,
+    "Experiment message should be found after opt in"
+  );
 });

@@ -1458,12 +1458,7 @@ async function doDialogTest({
     "onboardingDialogChoice is correct in TelemetryEnvironment"
   );
 
-  // Even with the `clearEvents` call above, events related to remote settings
-  // can occur in TV tests during the callback, so pass a filter arg to make
-  // sure we get only the events we're interested in.
-  TelemetryTestUtils.assertEvents(telemetryEvents, {
-    category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
-  });
+  QuickSuggestTestUtils.assertEvents(telemetryEvents);
 
   Assert.ok(
     UrlbarPrefs.get("quicksuggest.showedOnboardingDialog"),

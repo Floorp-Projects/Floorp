@@ -350,6 +350,10 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIURI> mUnstrippedURI;
 };
 
+// This is exposed solely for testing purposes and should not be used outside of
+// LoadInfo
+already_AddRefed<nsIPrincipal> CreateTruncatedPrincipal(nsIPrincipal*);
+
 }  // namespace net
 }  // namespace mozilla
 
