@@ -14,6 +14,7 @@
 
 #include <vector>
 
+#include "api/array_view.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
@@ -32,16 +33,22 @@ class ScalabilityStructureWrapper {
   explicit ScalabilityStructureWrapper(ScalableVideoController& structure)
       : structure_controller_(structure) {}
 
-  std::vector<GenericFrameInfo> GenerateFrames(int num_tempral_units,
-                                               bool restart);
-
   std::vector<GenericFrameInfo> GenerateFrames(int num_temporal_units) {
-    return GenerateFrames(num_temporal_units, /*restart=*/false);
+    std::vector<GenericFrameInfo> frames;
+    GenerateFrames(num_temporal_units, frames);
+    return frames;
   }
+  void GenerateFrames(int num_temporal_units,
+                      std::vector<GenericFrameInfo>& frames);
+
+  // Returns false and ADD_FAILUREs for frames with invalid references.
+  // In particular validates no frame frame reference to frame before frames[0].
+  // In error messages frames are indexed starting with 0.
+  bool FrameReferencesAreValid(
+      rtc::ArrayView<const GenericFrameInfo> frames) const;
 
  private:
   ScalableVideoController& structure_controller_;
-  std::bitset<8> buffer_contains_frame_ = 0;
   FrameDependenciesCalculator frame_deps_calculator_;
   ChainDiffCalculator chain_diff_calculator_;
   int64_t frame_id_ = 0;

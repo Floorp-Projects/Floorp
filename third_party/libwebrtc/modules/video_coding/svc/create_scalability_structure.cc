@@ -12,13 +12,12 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
+#include "modules/video_coding/svc/scalability_structure_key_svc.h"
 #include "modules/video_coding/svc/scalability_structure_l1t2.h"
 #include "modules/video_coding/svc/scalability_structure_l1t3.h"
 #include "modules/video_coding/svc/scalability_structure_l2t1.h"
-#include "modules/video_coding/svc/scalability_structure_l2t1_key.h"
 #include "modules/video_coding/svc/scalability_structure_l2t1h.h"
 #include "modules/video_coding/svc/scalability_structure_l2t2.h"
-#include "modules/video_coding/svc/scalability_structure_l2t2_key.h"
 #include "modules/video_coding/svc/scalability_structure_l2t2_key_shift.h"
 #include "modules/video_coding/svc/scalability_structure_l3t1.h"
 #include "modules/video_coding/svc/scalability_structure_l3t3.h"
@@ -54,6 +53,7 @@ constexpr NamedStructureFactory kFactories[] = {
     {"L2T2_KEY_SHIFT", Create<ScalabilityStructureL2T2KeyShift>},
     {"L3T1", Create<ScalabilityStructureL3T1>},
     {"L3T3", Create<ScalabilityStructureL3T3>},
+    {"L3T3_KEY", Create<ScalabilityStructureL3T3Key>},
     {"S2T1", Create<ScalabilityStructureS2T1>},
 };
 
