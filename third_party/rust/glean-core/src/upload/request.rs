@@ -81,11 +81,6 @@ impl Builder {
             "Content-Type".to_string(),
             "application/json; charset=utf-8".to_string(),
         );
-        headers.insert("X-Client-Type".to_string(), "Glean".to_string());
-        headers.insert(
-            "X-Client-Version".to_string(),
-            crate::GLEAN_VERSION.to_string(),
-        );
 
         Self {
             document_id: None,
@@ -273,8 +268,6 @@ mod test {
         assert!(request.headers.contains_key("Date"));
         assert!(request.headers.contains_key("X-Telemetry-Agent"));
         assert!(request.headers.contains_key("Content-Type"));
-        assert!(request.headers.contains_key("X-Client-Type"));
-        assert!(request.headers.contains_key("X-Client-Version"));
         assert!(request.headers.contains_key("Content-Length"));
     }
 
