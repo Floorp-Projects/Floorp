@@ -6455,16 +6455,18 @@ void profiler_record_wakeup_count(const nsACString& aProcessType) {
   static uint64_t previousThreadWakeCount = 0;
 
   uint64_t newWakeups = gWakeCount - previousThreadWakeCount;
-  if (newWakeups < std::numeric_limits<int32_t>::max()) {
-    int32_t newWakeups32 = int32_t(newWakeups);
-    mozilla::glean::power::total_thread_wakeups.Add(newWakeups32);
-    mozilla::glean::power::wakeups_per_process_type.Get(aProcessType)
-        .Add(newWakeups32);
-    PROFILER_MARKER("Thread Wake-ups", OTHER, {}, WakeUpCountMarker,
-                    newWakeups32, aProcessType);
-  }
+  if (newWakeups > 0) {
+    if (newWakeups < std::numeric_limits<int32_t>::max()) {
+      int32_t newWakeups32 = int32_t(newWakeups);
+      mozilla::glean::power::total_thread_wakeups.Add(newWakeups32);
+      mozilla::glean::power::wakeups_per_process_type.Get(aProcessType)
+          .Add(newWakeups32);
+      PROFILER_MARKER("Thread Wake-ups", OTHER, {}, WakeUpCountMarker,
+                      newWakeups32, aProcessType);
+    }
 
-  previousThreadWakeCount += newWakeups;
+    previousThreadWakeCount += newWakeups;
+  }
 }
 
 void profiler_mark_thread_awake() {
