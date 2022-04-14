@@ -34,7 +34,6 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.mozilla.focus.fragment.BrowserFragment
-import org.mozilla.focus.utils.Features
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -109,7 +108,6 @@ class BrowserToolbarIntegrationTest {
     @Test
     fun `WHEN start method is called THEN observe erase tabs CFR changes`() {
         doNothing().`when`(browserToolbarIntegration).observeEraseCfr()
-        Features.IS_ERASE_CFR_ENABLED = true
 
         browserToolbarIntegration.start()
 

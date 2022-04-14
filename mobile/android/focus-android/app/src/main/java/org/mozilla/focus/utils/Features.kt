@@ -16,7 +16,7 @@ object Features {
     /**
      * Erase tabs CFR
      */
-    var IS_ERASE_CFR_ENABLED = AppConstants.isDevOrNightlyBuild
+    val IS_ERASE_CFR_ENABLED = AppConstants.isDevOrNightlyBuild
 
     /**
      * Replace the current [FirstrunFragment.kt] which has multiple cards with
