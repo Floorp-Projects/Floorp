@@ -3314,13 +3314,14 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 .flags
                 .contains(device_flags::DEV_SELECTED_DEFAULT)
         {
-            self.core_stream_data.output_device.id = get_default_device_id(DeviceType::OUTPUT).map_err(|e| {
-                cubeb_log!(
-                    "({:p}) Cannot get default output device. Error: {}. This can happen when last media device is unplugged",
-                    self.core_stream_data.stm_ptr, e
-                );
-                Error::error()
-            })?;
+            self.core_stream_data.output_device =
+                match create_device_info(kAudioObjectUnknown, DeviceType::OUTPUT) {
+                    None => {
+                        cubeb_log!("Fail to create device info for output");
+                        return Err(Error::error());
+                    }
+                    Some(d) => d,
+                };
         }
 
         // Likewise, for the input side
@@ -3331,13 +3332,14 @@ impl<'ctx> AudioUnitStream<'ctx> {
                 .flags
                 .contains(device_flags::DEV_SELECTED_DEFAULT)
         {
-            self.core_stream_data.input_device.id = get_default_device_id(DeviceType::INPUT).map_err(|e| {
-                cubeb_log!(
-                    "({:p}) Cannot get default input device. Error: {}. This can happen when last media device is unplugged",
-                    self.core_stream_data.stm_ptr, e
-                );
-                Error::error()
-            })?;
+            self.core_stream_data.input_device =
+                match create_device_info(kAudioObjectUnknown, DeviceType::INPUT) {
+                    None => {
+                        cubeb_log!("Fail to create device info for input");
+                        return Err(Error::error());
+                    }
+                    Some(d) => d,
+                }
         }
 
         self.core_stream_data.setup().map_err(|e| {
