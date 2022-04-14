@@ -1001,7 +1001,10 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
 
     // Execute the evaluation in the next event loop in order to immediately
     // reply with the resultID.
-    DevToolsUtils.executeSoon(async () => {
+    //
+    // The console input should be evaluated with micro task level != 0,
+    // so that microtask checkpoint isn't performed while evaluating it.
+    DevToolsUtils.executeSoonWithMicroTask(async () => {
       try {
         // Execute the script that may pause.
         let response = await this.evaluateJS(request);
