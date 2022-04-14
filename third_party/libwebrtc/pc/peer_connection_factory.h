@@ -20,6 +20,7 @@
 #include "api/scoped_refptr.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "pc/channel_manager.h"
+#include "pc/connection_context.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/thread.h"
 
@@ -72,22 +73,22 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   void StopAecDump() override;
 
   SctpTransportFactoryInterface* sctp_transport_factory() {
-    return sctp_factory_.get();
+    return context_->sctp_transport_factory();
   }
 
   virtual cricket::ChannelManager* channel_manager();
 
-  rtc::Thread* signaling_thread() {
+  rtc::Thread* signaling_thread() const {
     // This method can be called on a different thread when the factory is
     // created in CreatePeerConnectionFactory().
-    return signaling_thread_;
+    return context_->signaling_thread();
   }
-  rtc::Thread* worker_thread() { return worker_thread_; }
-  rtc::Thread* network_thread() { return network_thread_; }
+  rtc::Thread* worker_thread() const { return context_->worker_thread(); }
+  rtc::Thread* network_thread() const { return context_->network_thread(); }
 
-  const Options& options() const { return options_; }
+  const Options& options() const { return context_->options(); }
 
-  const WebRtcKeyValueConfig& trials() const { return *trials_.get(); }
+  const WebRtcKeyValueConfig& trials() const { return context_->trials(); }
 
  protected:
   // This structure allows simple management of all new dependencies being added
@@ -103,24 +104,15 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
 
  private:
   bool IsTrialEnabled(absl::string_view key) const;
+  const cricket::ChannelManager* channel_manager() const {
+    return context_->channel_manager();
+  }
 
   std::unique_ptr<RtcEventLog> CreateRtcEventLog_w();
   std::unique_ptr<Call> CreateCall_w(RtcEventLog* event_log);
 
-  bool wraps_current_thread_;
-  rtc::Thread* network_thread_;
-  rtc::Thread* worker_thread_;
-  rtc::Thread* signaling_thread_;
-  std::unique_ptr<rtc::Thread> owned_network_thread_;
-  std::unique_ptr<rtc::Thread> owned_worker_thread_;
-  const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
-  Options options_;
-  std::unique_ptr<cricket::ChannelManager> channel_manager_;
-  const std::unique_ptr<rtc::NetworkMonitorFactory> network_monitor_factory_;
-  std::unique_ptr<rtc::BasicNetworkManager> default_network_manager_;
-  std::unique_ptr<rtc::BasicPacketSocketFactory> default_socket_factory_;
-  std::unique_ptr<cricket::MediaEngineInterface> media_engine_;
-  std::unique_ptr<webrtc::CallFactoryInterface> call_factory_;
+  rtc::scoped_refptr<ConnectionContext> context_;
+  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory_;
   std::unique_ptr<FecControllerFactoryInterface> fec_controller_factory_;
   std::unique_ptr<NetworkStatePredictorFactoryInterface>
@@ -128,8 +120,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   std::unique_ptr<NetworkControllerFactoryInterface>
       injected_network_controller_factory_;
   std::unique_ptr<NetEqFactory> neteq_factory_;
-  std::unique_ptr<SctpTransportFactoryInterface> sctp_factory_;
-  const std::unique_ptr<WebRtcKeyValueConfig> trials_;
 };
 
 }  // namespace webrtc

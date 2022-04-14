@@ -335,10 +335,10 @@ bool PeerConnectionInterface::RTCConfiguration::operator!=(
   return !(*this == o);
 }
 
-PeerConnection::PeerConnection(PeerConnectionFactory* factory,
+PeerConnection::PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
                                std::unique_ptr<RtcEventLog> event_log,
                                std::unique_ptr<Call> call)
-    : factory_(factory),
+    : context_(context),
       event_log_(std::move(event_log)),
       event_log_ptr_(event_log_.get()),
       call_(std::move(call)),
@@ -464,7 +464,7 @@ bool PeerConnection::Initialize(
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.IPMetrics", address_family,
                             kPeerConnectionAddressFamilyCounter_Max);
 
-  const PeerConnectionFactoryInterface::Options& options = factory_->options();
+  const PeerConnectionFactoryInterface::Options& options = context_->options();
 
   // RFC 3264: The numeric value of the session id and version in the
   // o line MUST be representable with a "64 bit signed integer".
@@ -474,7 +474,7 @@ bool PeerConnection::Initialize(
   JsepTransportController::Config config;
   config.redetermine_role_on_ice_restart =
       configuration.redetermine_role_on_ice_restart;
-  config.ssl_max_version = factory_->options().ssl_max_version;
+  config.ssl_max_version = context_->options().ssl_max_version;
   config.disable_encryption = options.disable_encryption;
   config.bundle_policy = configuration.bundle_policy;
   config.rtcp_mux_policy = configuration.rtcp_mux_policy;
@@ -520,7 +520,7 @@ bool PeerConnection::Initialize(
     // DTLS has to be enabled to use SCTP.
     if (!options.disable_sctp_data_channels && dtls_enabled_) {
       data_channel_controller_.set_data_channel_type(cricket::DCT_SCTP);
-      config.sctp_factory = factory_->sctp_transport_factory();
+      config.sctp_factory = context_->sctp_transport_factory();
     }
   }
 
@@ -1650,7 +1650,7 @@ void PeerConnection::SetAudioPlayout(bool playout) {
     return;
   }
   auto audio_state =
-      factory_->channel_manager()->media_engine()->voice().GetAudioState();
+      context_->channel_manager()->media_engine()->voice().GetAudioState();
   audio_state->SetPlayout(playout);
 }
 
@@ -1662,7 +1662,7 @@ void PeerConnection::SetAudioRecording(bool recording) {
     return;
   }
   auto audio_state =
-      factory_->channel_manager()->media_engine()->voice().GetAudioState();
+      context_->channel_manager()->media_engine()->voice().GetAudioState();
   audio_state->SetRecording(recording);
 }
 
@@ -1723,7 +1723,7 @@ bool PeerConnection::StartRtcEventLog(std::unique_ptr<RtcEventLogOutput> output,
 bool PeerConnection::StartRtcEventLog(
     std::unique_ptr<RtcEventLogOutput> output) {
   int64_t output_period_ms = webrtc::RtcEventLog::kImmediateOutput;
-  if (absl::StartsWith(factory_->trials().Lookup("WebRTC-RtcEventLogNewFormat"),
+  if (absl::StartsWith(context_->trials().Lookup("WebRTC-RtcEventLogNewFormat"),
                        "Enabled")) {
     output_period_ms = 5000;
   }
@@ -2400,7 +2400,7 @@ PeerConnection::InitializePortAllocator_n(
   // by experiment.
   if (configuration.disable_ipv6) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
-  } else if (absl::StartsWith(factory_->trials().Lookup("WebRTC-IPv6Default"),
+  } else if (absl::StartsWith(context_->trials().Lookup("WebRTC-IPv6Default"),
                               "Disabled")) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
   }
@@ -2480,7 +2480,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
 }
 
 cricket::ChannelManager* PeerConnection::channel_manager() const {
-  return factory_->channel_manager();
+  return context_->channel_manager();
 }
 
 bool PeerConnection::StartRtcEventLog_w(
@@ -3196,7 +3196,7 @@ CryptoOptions PeerConnection::GetCryptoOptions() {
   // after it has been removed.
   return configuration_.crypto_options.has_value()
              ? *configuration_.crypto_options
-             : factory_->options().crypto_options;
+             : context_->options().crypto_options;
 }
 
 void PeerConnection::ClearStatsCache() {
