@@ -104,9 +104,6 @@ bool JSJitFrameIter::isFunctionFrame() const {
 
 JSScript* JSJitFrameIter::script() const {
   MOZ_ASSERT(isScripted());
-  if (isBaselineJS()) {
-    return baselineFrame()->script();
-  }
   JSScript* script = ScriptFromCalleeToken(calleeToken());
   MOZ_ASSERT(script);
   return script;
