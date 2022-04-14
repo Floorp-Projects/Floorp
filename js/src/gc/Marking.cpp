@@ -1752,7 +1752,7 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
             markUntilBudgetExhausted(unlimited, DontReportMarkTime));
       } else if (js::StringEqualsLiteral(str, "set-color-gray")) {
         queueMarkColor = mozilla::Some(MarkColor::Gray);
-        if (gcrt.state() != State::Sweep) {
+        if (gcrt.state() != State::Sweep || hasBlackEntries()) {
           // Cannot mark gray yet, so continue with the GC.
           queuePos--;
           return QueueSuspended;
@@ -1964,8 +1964,8 @@ scan_value_range:
 
     if (v.isString()) {
       markAndTraverseEdge(obj, v.toString());
-    } else if (v.isObject()) {
-      JSObject* obj2 = &v.toObject();
+    } else if (v.hasObjectPayload()) {
+      JSObject* obj2 = &v.getObjectPayload();
 #ifdef DEBUG
       if (!obj2) {
         fprintf(stderr,

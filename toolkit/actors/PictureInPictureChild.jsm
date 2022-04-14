@@ -100,6 +100,18 @@ XPCOMUtils.defineLazyGetter(this, "gSiteOverrides", () => {
   return PictureInPictureToggleChild.getSiteOverrides();
 });
 
+XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
+  return console.createInstance({
+    prefix: "PictureInPictureChild",
+    maxLogLevel: Services.prefs.getBoolPref(
+      "media.videocontrols.picture-in-picture.log",
+      false
+    )
+      ? "Debug"
+      : "Error",
+  });
+});
+
 /**
  * Creates and returns an instance of the PictureInPictureChildVideoWrapper class responsible
  * for applying site-specific wrapper methods around the original video.
@@ -892,6 +904,8 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     let state = this.docState;
     let event = state.lastMouseMoveEvent;
     let { clientX, clientY } = event;
+    logConsole.debug("Visible videos count:", state.visibleVideosCount);
+    logConsole.debug("Tracking videos:", state.isTrackingVideos);
     let winUtils = this.contentWindow.windowUtils;
     // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
     // since document.elementsFromPoint always flushes layout. The 1's in that
@@ -909,10 +923,22 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     );
 
     for (let element of elements) {
+      logConsole.debug("Element id under cursor:", element.id);
+      logConsole.debug(
+        "Node name of an element under cursor:",
+        element.nodeName
+      );
+      logConsole.debug(
+        "Supported <video> element:",
+        state.weakVisibleVideos.has(element)
+      );
+      logConsole.debug("PiP window is open:", element.isCloningElementVisually);
+
       if (
         state.weakVisibleVideos.has(element) &&
         !element.isCloningElementVisually
       ) {
+        logConsole.debug("Found supported element");
         this.onMouseOverVideo(element, event);
         return;
       }

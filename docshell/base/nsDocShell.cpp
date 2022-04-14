@@ -12860,7 +12860,8 @@ nsresult nsDocShell::OnLinkClick(
 
   bool noOpenerImplied = false;
   nsAutoString target(aTargetSpec);
-  if (ShouldOpenInBlankTarget(aTargetSpec, aURI, aContent)) {
+  if (aFileName.IsVoid() &&
+      ShouldOpenInBlankTarget(aTargetSpec, aURI, aContent, aIsUserTriggered)) {
     target = u"_blank";
     if (!aTargetSpec.Equals(target)) {
       noOpenerImplied = true;
@@ -12886,17 +12887,9 @@ nsresult nsDocShell::OnLinkClick(
 }
 
 bool nsDocShell::ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
-                                         nsIURI* aLinkURI,
-                                         nsIContent* aContent) {
-  // Don't modify non-default targets.
-  if (!aOriginalTarget.IsEmpty()) {
-    return false;
-  }
-
-  // Only check targets that are in extension panels or app tabs.
-  // (isAppTab will be false for app tab subframes).
-  nsString mmGroup = mBrowsingContext->Top()->GetMessageManagerGroup();
-  if (!mmGroup.EqualsLiteral("webext-browsers") && !mIsAppTab) {
+                                         nsIURI* aLinkURI, nsIContent* aContent,
+                                         bool aIsUserTriggered) {
+  if (net::SchemeIsJavascript(aLinkURI)) {
     return false;
   }
 
@@ -12906,6 +12899,29 @@ bool nsDocShell::ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,
   // get either host, just return false to use the original target.
   nsAutoCString linkHost;
   if (NS_FAILED(aLinkURI->GetHost(linkHost))) {
+    return false;
+  }
+
+  // The targetTopLevelLinkClicksToBlank property on BrowsingContext allows
+  // privileged code to change the default targeting behaviour. In particular,
+  // if a user-initiated link click for the (or targetting the) top-level frame
+  // is detected, we default the target to "_blank" to give it a new
+  // top-level BrowsingContext.
+  if (mBrowsingContext->TargetTopLevelLinkClicksToBlank() && aIsUserTriggered &&
+      ((aOriginalTarget.IsEmpty() && mBrowsingContext->IsTop()) ||
+       aOriginalTarget == u"_top"_ns)) {
+    return true;
+  }
+
+  // Don't modify non-default targets.
+  if (!aOriginalTarget.IsEmpty()) {
+    return false;
+  }
+
+  // Only check targets that are in extension panels or app tabs.
+  // (isAppTab will be false for app tab subframes).
+  nsString mmGroup = mBrowsingContext->Top()->GetMessageManagerGroup();
+  if (!mmGroup.EqualsLiteral("webext-browsers") && !mIsAppTab) {
     return false;
   }
 

@@ -39,6 +39,7 @@ class VendorManifest(MozbuildObject):
         manifest,
         revision,
         check_for_update,
+        force,
         add_to_exports,
         patch_mode,
     ):
@@ -69,7 +70,16 @@ class VendorManifest(MozbuildObject):
             "Latest {ref_type} is {ref} from {timestamp}",
         )
 
-        if self.manifest["origin"]["revision"] == ref:
+        # If we're only patching; do that
+        if "patches" in self.manifest["vendoring"] and patch_mode == "only":
+            self.import_local_patches(
+                self.manifest["vendoring"]["patches"],
+                self.manifest["vendoring"]["vendor-directory"],
+            )
+            return
+
+        if not force and self.manifest["origin"]["revision"] == ref:
+            # We're up to date, don't do anything
             self.log(
                 logging.INFO,
                 "vendor",
@@ -78,25 +88,9 @@ class VendorManifest(MozbuildObject):
             )
             return
         elif check_for_update:
+            # Only print the new revision to stdout
             print("%s %s" % (ref, timestamp))
             return
-
-        if "patches" in self.manifest["vendoring"]:
-            if patch_mode == "only":
-                self.import_local_patches(
-                    self.manifest["vendoring"]["patches"],
-                    self.manifest["vendoring"]["vendor-directory"],
-                )
-                return
-            else:
-                self.log(
-                    logging.INFO,
-                    "vendor",
-                    {},
-                    "Patches present in manifest please run "
-                    "'./mach vendor --patch-mode only' after commits from upstream "
-                    "have been vendored.",
-                )
 
         if self.should_perform_step("fetch"):
             self.fetch_and_unpack(ref)
@@ -147,6 +141,16 @@ class VendorManifest(MozbuildObject):
             {"revision": revision},
             "Update to version '{revision}' completed.",
         )
+
+        if "patches" in self.manifest["vendoring"]:
+            # Remind the user
+            self.log(
+                logging.CRITICAL,
+                "vendor",
+                {},
+                "Patches present in manifest!!! Please run "
+                "'./mach vendor --patch-mode only' after commiting changes.",
+            )
 
     def get_source_host(self):
         if self.manifest["vendoring"]["source-hosting"] == "gitlab":
@@ -261,17 +265,19 @@ class VendorManifest(MozbuildObject):
                 )
                 tar.extractall(tmpextractdir)
 
-                prefix = self.manifest["origin"]["name"] + "-" + revision
-                prefix = prefix.replace("@", "-")
-                prefix = prefix.replace("/", "-")
+                def get_first_dir(p):
+                    halves = os.path.split(p)
+                    return get_first_dir(halves[0]) if halves[0] else halves[1]
+
+                one_prefix = get_first_dir(tar.getnames()[0])
                 has_prefix = all(
-                    map(lambda name: name.startswith(prefix), tar.getnames())
+                    map(lambda name: name.startswith(one_prefix), tar.getnames())
                 )
                 tar.close()
 
                 # GitLab puts everything down a directory; move it up.
                 if has_prefix:
-                    tardir = mozpath.join(tmpextractdir, prefix)
+                    tardir = mozpath.join(tmpextractdir, one_prefix)
                     mozfile.copy_contents(tardir, tmpextractdir)
                     mozfile.remove(tardir)
 
@@ -315,7 +321,6 @@ class VendorManifest(MozbuildObject):
                     to_exclude = []
 
                 to_exclude = list(set(to_exclude) - set(to_include))
-
                 if to_exclude:
                     self.log(
                         logging.INFO,
@@ -326,6 +331,25 @@ class VendorManifest(MozbuildObject):
                     for exclusion in to_exclude:
                         mozfile.remove(exclusion)
 
+                # Clear out empty directories
+                # removeEmpty() won't remove directories containing only empty directories
+                #   so just keep callign it as long as it's doing something
+                def removeEmpty(tmpextractdir):
+                    removed = False
+                    folders = list(os.walk(tmpextractdir))[1:]
+                    for folder in folders:
+                        if not folder[2]:
+                            try:
+                                os.rmdir(folder[0])
+                                removed = True
+                            except Exception:
+                                pass
+                    return removed
+
+                while removeEmpty(tmpextractdir):
+                    pass
+
+                # Then copy over the directories
                 mozfile.copy_contents(tmpextractdir, vendor_dir)
 
     def update_yaml(self, yaml_file, revision, timestamp):

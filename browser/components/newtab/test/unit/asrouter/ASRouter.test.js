@@ -501,9 +501,9 @@ describe("ASRouter", () => {
       sandbox.spy(global.Services.obs, "addObserver");
       await createRouterAndInit();
 
-      assert.calledOnce(global.Services.obs.addObserver);
-      assert.equal(
-        global.Services.obs.addObserver.args[0][1],
+      assert.calledWithExactly(
+        global.Services.obs.addObserver,
+        Router._onLocaleChanged,
         "intl:app-locales-changed"
       );
     });
@@ -1415,9 +1415,9 @@ describe("ASRouter", () => {
       sandbox.spy(global.Services.obs, "removeObserver");
       Router.uninit();
 
-      assert.calledOnce(global.Services.obs.removeObserver);
-      assert.equal(
-        global.Services.obs.removeObserver.args[0][1],
+      assert.calledWithExactly(
+        global.Services.obs.removeObserver,
+        Router._onLocaleChanged,
         "intl:app-locales-changed"
       );
     });

@@ -34,6 +34,10 @@ urlbar:
     the event is recorded once per app session when the user first encounters
     the UI of the experiment in which they're enrolled.
   variables:
+    bestMatchBlockingEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.bestMatch.blockingEnabled
+      description: Whether best match Suggest suggestions can be blocked.
     bestMatchEnabled:
       type: boolean
       fallbackPref: browser.urlbar.bestMatch.enabled
@@ -67,6 +71,10 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
       description: Whether quick suggest results can be shown in position specified in the suggestions.
+    quickSuggestBlockingEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.blockingEnabled
+      description: Whether the usual non-best-match Suggest suggestions can be blocked.
     quickSuggestDataCollectionEnabled:
       type: boolean
       description: Whether data collection should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) data collection, if the user has already toggled that preference.

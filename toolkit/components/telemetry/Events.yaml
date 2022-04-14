@@ -766,7 +766,7 @@ urlbar:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
           "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
           "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
-          "tabtosearch", "none"
+          "tabtosearch", "quicksuggest", "none"
       provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]
@@ -3210,6 +3210,33 @@ contextservices.quicksuggest:
       - "firefox"
     record_in_processes: ["main"]
     bug_numbers: [1761058]
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
+    expiry_version: never
+  engagement:
+    description: >
+      This event is recorded when an engagement occurs in the address bar while
+      a Firefox Suggest suggestion is present. The event's objects are the
+      following possible values:
+      "block": The user dismissed ("blocked") the suggestion.
+      "click": The user picked the suggestion.
+      "help": The user picked the suggestion's help button.
+      "impression_only": The user picked some other row.
+    objects: ["block", "click", "help", "impression_only"]
+    extra_keys:
+      match_type: >
+        "best-match" if the suggestion was a best match or "firefox-suggest" if
+        it was a non-best-match suggestion.
+      position: >
+        The index of the suggestion in the list of results (1-based).
+      suggestion_type: >
+        The type of suggestion, one of: "sponsored", "nonsponsored"
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    bug_numbers: [1761059]
     notification_emails:
       - fx-search@mozilla.com
       - adw@mozilla.com

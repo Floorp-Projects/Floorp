@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom += [
     "FileSystemFileHandle.h",
     "FileSystemHandle.h",
     "FileSystemSyncAccessHandle.h",
+    "FileSystemWritableFileStream.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -18,15 +19,8 @@ UNIFIED_SOURCES += [
     "FileSystemFileHandle.cpp",
     "FileSystemHandle.cpp",
     "FileSystemSyncAccessHandle.cpp",
+    "FileSystemWritableFileStream.cpp",
 ]
-
-if CONFIG["MOZ_DOM_STREAMS"]:
-    EXPORTS.mozilla.dom += [
-        "FileSystemWritableFileStream.h",
-    ]
-    UNIFIED_SOURCES += [
-        "FileSystemWritableFileStream.cpp",
-    ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

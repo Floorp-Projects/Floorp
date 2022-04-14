@@ -189,7 +189,6 @@ class WebIDLCodegenManager(LoggingMixin):
         cache_dir=None,
         make_deps_path=None,
         make_deps_target=None,
-        use_builtin_readable_stream=True,
     ):
         """Create an instance that manages WebIDLs in the build system.
 
@@ -226,7 +225,6 @@ class WebIDLCodegenManager(LoggingMixin):
         self._cache_dir = cache_dir
         self._make_deps_path = make_deps_path
         self._make_deps_target = make_deps_target
-        self._use_builtin_readable_stream = use_builtin_readable_stream
 
         if (make_deps_path and not make_deps_target) or (
             not make_deps_path and make_deps_target
@@ -382,11 +380,7 @@ class WebIDLCodegenManager(LoggingMixin):
         )
 
         hashes = {}
-        parser = WebIDL.Parser(
-            self._cache_dir,
-            lexer=None,
-            use_builtin_readable_stream=self._use_builtin_readable_stream,
-        )
+        parser = WebIDL.Parser(self._cache_dir, lexer=None)
 
         for path in sorted(self._input_paths):
             with io.open(path, "r", encoding="utf-8") as fh:
@@ -650,22 +644,15 @@ class WebIDLCodegenManager(LoggingMixin):
             result[2].add(path)
 
 
-def create_build_system_manager(
-    topsrcdir=None, topobjdir=None, dist_dir=None, use_builtin_readable_stream=None
-):
+def create_build_system_manager(topsrcdir=None, topobjdir=None, dist_dir=None):
     """Create a WebIDLCodegenManager for use by the build system."""
     if topsrcdir is None:
-        assert (
-            topobjdir is None
-            and dist_dir is None
-            and use_builtin_readable_stream is None
-        )
+        assert topobjdir is None and dist_dir is None
         import buildconfig
 
         topsrcdir = buildconfig.topsrcdir
         topobjdir = buildconfig.topobjdir
         dist_dir = buildconfig.substs["DIST"]
-        use_builtin_readable_stream = not buildconfig.substs.get("MOZ_DOM_STREAMS")
 
     src_dir = os.path.join(topsrcdir, "dom", "bindings")
     obj_dir = os.path.join(topobjdir, "dom", "bindings")
@@ -699,5 +686,4 @@ def create_build_system_manager(
         # The make rules include a codegen.pp file containing dependencies.
         make_deps_path=os.path.join(obj_dir, "codegen.pp"),
         make_deps_target="webidl.stub",
-        use_builtin_readable_stream=use_builtin_readable_stream,
     )

@@ -37,7 +37,7 @@ using namespace mozilla::scache;
 using mozilla::intl::LocaleService;
 
 static const char kXULCacheInfoKey[] = "nsXULPrototypeCache.startupCache";
-static const char kXULCachePrefix[] = "xulcache";
+#define CACHE_PREFIX(aCompilationTarget) "xulcache/" aCompilationTarget
 
 static void DisableXULCacheChangedCallback(const char* aPref, void* aClosure) {
   if (nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance()) {
@@ -110,7 +110,7 @@ nsXULPrototypeDocument* nsXULPrototypeCache::GetPrototype(nsIURI* aURI) {
 
   // No prototype in XUL memory cache. Spin up the cache Service.
   nsCOMPtr<nsIObjectInputStream> ois;
-  rv = GetInputStream(aURI, getter_AddRefs(ois));
+  rv = GetPrototypeInputStream(aURI, getter_AddRefs(ois));
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -197,19 +197,31 @@ nsresult nsXULPrototypeCache::WritePrototype(
   nsCOMPtr<nsIURI> protoURI = aPrototypeDocument->GetURI();
 
   nsCOMPtr<nsIObjectOutputStream> oos;
-  rv = GetOutputStream(protoURI, getter_AddRefs(oos));
+  rv = GetPrototypeOutputStream(protoURI, getter_AddRefs(oos));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aPrototypeDocument->Write(oos);
   NS_ENSURE_SUCCESS(rv, rv);
-  FinishOutputStream(protoURI);
+  FinishPrototypeOutputStream(protoURI);
   return NS_FAILED(rv) ? rv : rv2;
 }
 
-nsresult nsXULPrototypeCache::GetInputStream(nsIURI* uri,
+static nsresult PathifyURIForType(nsXULPrototypeCache::CacheType cacheType,
+                                  nsIURI* in, nsACString& out) {
+  switch (cacheType) {
+    case nsXULPrototypeCache::CacheType::Prototype:
+      return PathifyURI(CACHE_PREFIX("proto"), in, out);
+    case nsXULPrototypeCache::CacheType::Script:
+      return PathifyURI(CACHE_PREFIX("script"), in, out);
+  }
+  MOZ_ASSERT_UNREACHABLE("unknown cache type?");
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult nsXULPrototypeCache::GetInputStream(CacheType cacheType, nsIURI* uri,
                                              nsIObjectInputStream** stream) {
-  nsAutoCString spec(kXULCachePrefix);
-  nsresult rv = PathifyURI(uri, spec);
+  nsAutoCString spec;
+  nsresult rv = PathifyURIForType(cacheType, uri, spec);
   if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
 
   const char* buf;
@@ -261,7 +273,8 @@ nsresult nsXULPrototypeCache::GetOutputStream(nsIURI* uri,
   return NS_OK;
 }
 
-nsresult nsXULPrototypeCache::FinishOutputStream(nsIURI* uri) {
+nsresult nsXULPrototypeCache::FinishOutputStream(CacheType cacheType,
+                                                 nsIURI* uri) {
   nsresult rv;
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc) return NS_ERROR_NOT_AVAILABLE;
@@ -278,8 +291,8 @@ nsresult nsXULPrototypeCache::FinishOutputStream(nsIURI* uri) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mStartupCacheURITable.GetEntry(uri)) {
-    nsAutoCString spec(kXULCachePrefix);
-    rv = PathifyURI(uri, spec);
+    nsAutoCString spec;
+    rv = PathifyURIForType(cacheType, uri, spec);
     if (NS_FAILED(rv)) return NS_ERROR_NOT_AVAILABLE;
     rv = sc->PutBuffer(spec.get(), std::move(buf), len);
     if (NS_SUCCEEDED(rv)) {
@@ -293,13 +306,14 @@ nsresult nsXULPrototypeCache::FinishOutputStream(nsIURI* uri) {
 
 // We have data if we're in the middle of writing it or we already
 // have it in the cache.
-nsresult nsXULPrototypeCache::HasData(nsIURI* uri, bool* exists) {
+nsresult nsXULPrototypeCache::HasData(CacheType cacheType, nsIURI* uri,
+                                      bool* exists) {
   if (mOutputStreamTable.Get(uri, nullptr)) {
     *exists = true;
     return NS_OK;
   }
-  nsAutoCString spec(kXULCachePrefix);
-  nsresult rv = PathifyURI(uri, spec);
+  nsAutoCString spec;
+  nsresult rv = PathifyURIForType(cacheType, uri, spec);
   if (NS_FAILED(rv)) {
     *exists = false;
     return NS_OK;
