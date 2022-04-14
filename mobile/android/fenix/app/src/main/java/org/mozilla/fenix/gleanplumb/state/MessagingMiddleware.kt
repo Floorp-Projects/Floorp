@@ -57,6 +57,10 @@ class MessagingMiddleware(
             is MessageDismissed -> onMessageDismissed(context, action.message)
 
             is MessageDisplayed -> onMessagedDisplayed(action.message, context)
+
+            else -> {
+                // no-op
+            }
         }
         next(action)
     }

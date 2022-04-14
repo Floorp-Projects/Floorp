@@ -108,6 +108,9 @@ class HistoryView(
                     context.getString(R.string.history_multi_select_title, mode.selectedItems.size)
                 )
             }
+            else -> {
+                // no-op
+            }
         }
     }
 

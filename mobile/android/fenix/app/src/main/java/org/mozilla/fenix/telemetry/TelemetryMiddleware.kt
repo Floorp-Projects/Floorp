@@ -61,6 +61,9 @@ class TelemetryMiddleware(
                 val tab = context.state.findTabOrCustomTab(action.tabId)
                 onEngineSessionKilled(context.state, tab)
             }
+            else -> {
+                // no-op
+            }
         }
 
         next(action)
@@ -80,6 +83,9 @@ class TelemetryMiddleware(
                 } else {
                     Metrics.hasOpenTabs.set(false)
                 }
+            }
+            else -> {
+                // no-op
             }
         }
     }

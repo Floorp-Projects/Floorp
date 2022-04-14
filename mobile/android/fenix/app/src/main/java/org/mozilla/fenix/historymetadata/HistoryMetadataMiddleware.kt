@@ -98,6 +98,9 @@ class HistoryMetadataMiddleware(
             is EngineAction.OptimizedLoadUrlTriggeredAction -> {
                 directLoadTriggeredSet.add(action.tabId)
             }
+            else -> {
+                // no-op
+            }
         }
 
         next(action)
@@ -125,6 +128,9 @@ class HistoryMetadataMiddleware(
                 context.state.findNormalTab(action.tabId)?.let { tab ->
                     createHistoryMetadata(context, tab)
                 }
+            }
+            else -> {
+                // no-op
             }
         }
     }

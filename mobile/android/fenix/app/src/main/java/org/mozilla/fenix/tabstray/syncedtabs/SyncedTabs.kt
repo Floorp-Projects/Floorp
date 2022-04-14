@@ -64,6 +64,7 @@ private const val EXPANDED_BY_DEFAULT = true
  * @param taskContinuityEnabled Indicates whether the Task Continuity enhancements should be visible for users.
  * @param onTabClick The lambda for handling clicks on synced tabs.
  */
+@SuppressWarnings("LongMethod")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SyncedTabsList(
@@ -118,6 +119,9 @@ fun SyncedTabsList(
                             )
                         }
                     }
+                    else -> {
+                        // no-op
+                    }
                 }
             }
         } else {
@@ -136,6 +140,9 @@ fun SyncedTabsList(
                         ) {
                             onTabClick(syncedTabItem.tab)
                         }
+                    }
+                    else -> {
+                        // no-op
                     }
                 }
             }
