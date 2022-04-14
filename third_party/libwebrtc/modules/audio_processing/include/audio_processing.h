@@ -273,6 +273,11 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     // HAL.
     // Recommended to be enabled on the client-side.
     struct GainController1 {
+      bool operator==(const GainController1& rhs) const;
+      bool operator!=(const GainController1& rhs) const {
+        return !(*this == rhs);
+      }
+
       bool enabled = false;
       enum Mode {
         // Adaptive mode intended for use if an analog volume control is
@@ -337,6 +342,11 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     // first applies a fixed gain. The adaptive digital AGC can be turned off by
     // setting |adaptive_digital_mode=false|.
     struct GainController2 {
+      bool operator==(const GainController2& rhs) const;
+      bool operator!=(const GainController2& rhs) const {
+        return !(*this == rhs);
+      }
+
       enum LevelEstimator { kRms, kPeak };
       bool enabled = false;
       struct {

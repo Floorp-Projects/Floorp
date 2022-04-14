@@ -16,6 +16,9 @@
 namespace webrtc {
 namespace {
 
+using Agc1Config = AudioProcessing::Config::GainController1;
+using Agc2Config = AudioProcessing::Config::GainController2;
+
 std::string NoiseSuppressionLevelToString(
     const AudioProcessing::Config::NoiseSuppression::Level& level) {
   switch (level) {
@@ -30,24 +33,23 @@ std::string NoiseSuppressionLevelToString(
   }
 }
 
-std::string GainController1ModeToString(
-    const AudioProcessing::Config::GainController1::Mode& mode) {
+std::string GainController1ModeToString(const Agc1Config::Mode& mode) {
   switch (mode) {
-    case AudioProcessing::Config::GainController1::Mode::kAdaptiveAnalog:
+    case Agc1Config::Mode::kAdaptiveAnalog:
       return "AdaptiveAnalog";
-    case AudioProcessing::Config::GainController1::Mode::kAdaptiveDigital:
+    case Agc1Config::Mode::kAdaptiveDigital:
       return "AdaptiveDigital";
-    case AudioProcessing::Config::GainController1::Mode::kFixedDigital:
+    case Agc1Config::Mode::kFixedDigital:
       return "FixedDigital";
   }
 }
 
 std::string GainController2LevelEstimatorToString(
-    const AudioProcessing::Config::GainController2::LevelEstimator& level) {
+    const Agc2Config::LevelEstimator& level) {
   switch (level) {
-    case AudioProcessing::Config::GainController2::LevelEstimator::kRms:
+    case Agc2Config::LevelEstimator::kRms:
       return "Rms";
-    case AudioProcessing::Config::GainController2::LevelEstimator::kPeak:
+    case Agc2Config::LevelEstimator::kPeak:
       return "Peak";
   }
 }
@@ -69,6 +71,50 @@ void CustomProcessing::SetRuntimeSetting(
 
 AudioProcessing::Config::Pipeline::Pipeline()
     : maximum_internal_processing_rate(GetDefaultMaxInternalRate()) {}
+
+bool Agc1Config::operator==(const Agc1Config& rhs) const {
+  const auto& analog_lhs = analog_gain_controller;
+  const auto& analog_rhs = rhs.analog_gain_controller;
+  return enabled == rhs.enabled && mode == rhs.mode &&
+         target_level_dbfs == rhs.target_level_dbfs &&
+         compression_gain_db == rhs.compression_gain_db &&
+         enable_limiter == rhs.enable_limiter &&
+         analog_level_minimum == rhs.analog_level_minimum &&
+         analog_level_maximum == rhs.analog_level_maximum &&
+         analog_lhs.enabled == analog_rhs.enabled &&
+         analog_lhs.startup_min_volume == analog_rhs.startup_min_volume &&
+         analog_lhs.clipped_level_min == analog_rhs.clipped_level_min &&
+         analog_lhs.enable_agc2_level_estimator ==
+             analog_rhs.enable_agc2_level_estimator &&
+         analog_lhs.enable_digital_adaptive ==
+             analog_rhs.enable_digital_adaptive;
+}
+
+bool Agc2Config::operator==(const Agc2Config& rhs) const {
+  const auto& adaptive_lhs = adaptive_digital;
+  const auto& adaptive_rhs = rhs.adaptive_digital;
+
+  return enabled == rhs.enabled &&
+         fixed_digital.gain_db == rhs.fixed_digital.gain_db &&
+         adaptive_lhs.enabled == adaptive_rhs.enabled &&
+         adaptive_lhs.vad_probability_attack ==
+             adaptive_rhs.vad_probability_attack &&
+         adaptive_lhs.level_estimator == adaptive_rhs.level_estimator &&
+         adaptive_lhs.level_estimator_adjacent_speech_frames_threshold ==
+             adaptive_rhs.level_estimator_adjacent_speech_frames_threshold &&
+         adaptive_lhs.use_saturation_protector ==
+             adaptive_rhs.use_saturation_protector &&
+         adaptive_lhs.initial_saturation_margin_db ==
+             adaptive_rhs.initial_saturation_margin_db &&
+         adaptive_lhs.extra_saturation_margin_db ==
+             adaptive_rhs.extra_saturation_margin_db &&
+         adaptive_lhs.gain_applier_adjacent_speech_frames_threshold ==
+             adaptive_rhs.gain_applier_adjacent_speech_frames_threshold &&
+         adaptive_lhs.max_gain_change_db_per_second ==
+             adaptive_rhs.max_gain_change_db_per_second &&
+         adaptive_lhs.max_output_noise_level_dbfs ==
+             adaptive_rhs.max_output_noise_level_dbfs;
+}
 
 std::string AudioProcessing::Config::ToString() const {
   char buf[2048];
