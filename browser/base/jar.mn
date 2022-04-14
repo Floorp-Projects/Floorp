@@ -102,8 +102,6 @@ browser.jar:
 % override chrome://global/content/license.html chrome://browser/content/license.html
         content/browser/blockedSite.xhtml               (content/blockedSite.xhtml)
         content/browser/blockedSite.js                  (content/blockedSite.js)
-        content/browser/upgradeDialog.html            (content/upgradeDialog.html)
-        content/browser/upgradeDialog.js              (content/upgradeDialog.js)
         content/browser/spotlight.html                (content/spotlight.html)
         content/browser/spotlight.js                  (content/spotlight.js)
 *       content/browser/default-bookmarks.html        (content/default-bookmarks.html)

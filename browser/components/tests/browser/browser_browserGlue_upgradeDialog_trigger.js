@@ -70,23 +70,16 @@ add_task(async function show_major_upgrade() {
   const orig = defaultPrefs.getBoolPref(pref, true);
   defaultPrefs.setBoolPref(pref, true);
 
-  const promise = waitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.close();
-  });
   await BROWSER_GLUE._maybeShowDefaultBrowserPrompt();
-  await promise;
+  const [win] = await TestUtils.topicObserved("subdialog-loaded");
+  win.close();
 
-  AssertEvents(
-    "Upgrade dialog opened and closed from major upgrade",
-    ["trigger", "reason", "satisfied"],
-    ["content", "show", "2-screens"],
-    ["content", "show", "random-1"],
-    ["content", "show", "upgrade-dialog-colorway-primary-button"],
-    ["content", "close", "external"]
-  );
+  AssertEvents("Upgrade dialog opened from major upgrade", [
+    "trigger",
+    "reason",
+    "satisfied",
+  ]);
 
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   defaultPrefs.setBoolPref(pref, orig);
 });
 

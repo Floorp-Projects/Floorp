@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * We follow the example of the upgrade dialog for font sizes, line heights,
- * etc. See: https://searchfox.org/mozilla-central/source/browser/themes/shared/upgradeDialog.css
+ * When making changes, follow the example of the AboutWelcome messaging surface for font sizes, line heights,
+ * etc. See: https://searchfox.org/mozilla-central/source/browser/components/newtab/content-src/aboutwelcome/aboutwelcome.scss
  */
 
 :root {

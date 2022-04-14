@@ -68,7 +68,7 @@ const ONBOARDING_MESSAGES = () => [
             },
             title_style: "fancy larger",
             background:
-              "url(chrome://activity-stream/content/data/content/assets/confetti.svg) top / 100% no-repeat var(--in-content-page-background)",
+              "url('chrome://activity-stream/content/data/content/assets/confetti.svg') top / 100% no-repeat var(--in-content-page-background)",
             subtitle: {
               string_id: "fx100-upgrade-thanks-keep-body",
             },

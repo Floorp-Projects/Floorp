@@ -24,22 +24,6 @@ function AssertEvents(message, ...events) {
 const BROWSER_GLUE = Cc["@mozilla.org/browser/browserglue;1"].getService()
   .wrappedJSObject;
 
-// Helpers for showing the upgrade dialog.
-
-function waitForDialog(callback = win => win.close()) {
-  return BrowserTestUtils.promiseAlertDialog(
-    null,
-    "chrome://browser/content/upgradeDialog.html",
-    { callback, isSubDialog: true }
-  );
-}
-
-function showAndWaitForDialog(callback) {
-  const promise = waitForDialog(callback);
-  BROWSER_GLUE._showUpgradeDialog();
-  return promise;
-}
-
 // Helpers for mocking various shell states.
 
 let didMockShell = false;

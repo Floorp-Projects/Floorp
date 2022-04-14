@@ -4165,7 +4165,6 @@ BrowserGlue.prototype = {
   },
 
   async _showUpgradeDialog() {
-    // TO DO Bug 1762666: Remove "chrome://browser/content/upgradeDialog.html"
     const msg = await OnboardingMessageProvider.getUpgradeMessage();
     const win = BrowserWindowTracker.getTopWindow();
     const browser = win.gBrowser.selectedBrowser;
