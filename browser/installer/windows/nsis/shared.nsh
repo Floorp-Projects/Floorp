@@ -982,12 +982,13 @@ ${RemoveDefaultBrowserAgentShortcut}
     ${EndIf}
   ${EndIf}
 
-  ${IsHandlerForInstallDir} "FirefoxPDF-$AppUserModelID" $R9
-  ${If} "$R9" == "true"
-    ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_PDF_ZERO_BASED}" \
-                                   "${AppRegName} PDF Document" ""
-    ; We've never supported bare "FirefoxPDF".
-  ${EndIf}
+  ; FirefoxPDF-* was added after FirefoxHTML and FirefoxURL, so we've never
+  ; supported bare "FirefoxPDF".  But we won't have it from the installer, so we
+  ; add/update it unconditionally.  `PostUpdate` is gated on `uninstall.log`
+  ; being present, so the invocation here will only happen for installed
+  ; directories, not unpackaged directories.
+  ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_PDF_ZERO_BASED}" \
+                                 "${AppRegName} PDF Document" ""
 
   ${IsHandlerForInstallDir} "FirefoxURL-$AppUserModelID" $R9
   ${If} "$R9" == "true"
