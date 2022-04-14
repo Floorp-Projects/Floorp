@@ -97,8 +97,6 @@ bool js::tuple_with(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<TupleType*> tuple(cx, &(*maybeTuple));
 
   /* Step 2. */
-  HeapSlotArray t = tuple->getDenseElements();
-
   uint64_t length = tuple->getDenseInitializedLength();
   TupleType* list = TupleType::createUninitialized(cx, length);
   if (!list) {
@@ -126,10 +124,11 @@ bool js::tuple_with(JSContext* cx, unsigned argc, Value* vp) {
   /* Step 7 */
   uint64_t before = index;
   uint64_t after = length - index - 1;
-  list->copyDenseElements(0, t, before);
+  list->copyDenseElements(0, tuple->getDenseElements(), before);
   list->setDenseInitializedLength(index + 1);
   list->initDenseElement(index, value);
-  list->copyDenseElements(index + 1, t + uint32_t(index + 1), after);
+  list->copyDenseElements(
+      index + 1, tuple->getDenseElements() + uint32_t(index + 1), after);
   list->setDenseInitializedLength(length);
   list->finishInitialization(cx);
   /* Step 8 */
