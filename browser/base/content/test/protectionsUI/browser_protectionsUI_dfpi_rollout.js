@@ -68,18 +68,22 @@ function testTelemetryState(optIn) {
 // Tests that the dFPI rollout pref updates the default cookieBehavior to 5,
 // sets the correct search prefs and records telemetry.
 add_task(async function testdFPIRolloutPref() {
-  defaultPrefs.setIntPref(
-    COOKIE_BEHAVIOR_PREF,
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+  // Keep track of the default cookie behavior value at the start of the test.
+  // Depending on the release channel, this may be 4 (Beta + Release) or 5
+  // (Nightly).
+  let cookieBehaviorInitialDefault = defaultPrefs.getIntPref(
+    COOKIE_BEHAVIOR_PREF
   );
 
   // Test the unset state of the pref.
   testTelemetryState(null);
 
   Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, false);
+  // Setting the PREF_DFPI_ENABLED_BY_DEFAULT pref to false should always revert
+  // to the initial default which can vary between the release channels.
   is(
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+    cookieBehaviorInitialDefault
   );
   testSearchPrefState(false);
   testTelemetryState(false);
@@ -95,7 +99,7 @@ add_task(async function testdFPIRolloutPref() {
   Services.prefs.setBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT, false);
   is(
     defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
-    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+    cookieBehaviorInitialDefault
   );
   testSearchPrefState(false);
   testTelemetryState(false);
