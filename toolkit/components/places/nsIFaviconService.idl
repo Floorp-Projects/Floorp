@@ -221,7 +221,8 @@ interface nsIFaviconService : nsISupports
    *        aMimeType will be an empty string, regardless of whether a favicon
    *        was found.
    * @param [optional] aPreferredWidth
-   *        The preferred icon width, 0 for the biggest available.
+   *        The preferred icon width, skip or pass 0 for the default value,
+   *        set through setDefaultIconURIPreferredSize.
    *
    * @note If a favicon specific to this page cannot be found, this will try to
    *       fallback to the /favicon.ico for the root domain.
@@ -248,7 +249,8 @@ interface nsIFaviconService : nsISupports
    *        URI, aDataLen will be 0, aData will be an empty array, and aMimeType
    *        will be an empty string.
    * @param [optional] aPreferredWidth
-   *        The preferred icon width, 0 for the biggest available.
+   *        The preferred icon width, skip or pass 0 for the default value,
+   *        set through setDefaultIconURIPreferredSize.
    * @note If a favicon specific to this page cannot be found, this will try to
    *       fallback to the /favicon.ico for the root domain.
    *
