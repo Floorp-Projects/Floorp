@@ -2610,7 +2610,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   static QuotaClient* sInstance;
 
   Mutex mShadowDatabaseMutex MOZ_UNANNOTATED;
-  bool mShutdownRequested;
 
  public:
   QuotaClient();
@@ -2627,12 +2626,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
     MOZ_ASSERT(IsOnIOThread() || IsOnGlobalConnectionThread());
 
     return mShadowDatabaseMutex;
-  }
-
-  bool IsShuttingDown() const {
-    AssertIsOnBackgroundThread();
-
-    return mShutdownRequested;
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::dom::QuotaClient, override)
@@ -8312,8 +8305,7 @@ void ArchivedOriginScope::RemoveMatches(
 QuotaClient* QuotaClient::sInstance = nullptr;
 
 QuotaClient::QuotaClient()
-    : mShadowDatabaseMutex("LocalStorage mShadowDatabaseMutex"),
-      mShutdownRequested(false) {
+    : mShadowDatabaseMutex("LocalStorage mShadowDatabaseMutex") {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
 
@@ -8768,9 +8760,6 @@ void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
 void QuotaClient::StopIdleMaintenance() { AssertIsOnBackgroundThread(); }
 
 void QuotaClient::InitiateShutdown() {
-  MOZ_ASSERT(!mShutdownRequested);
-  mShutdownRequested = true;
-
   // gPrepareDatastoreOps are short lived objects running a state machine.
   // The shutdown flag is checked between states, so we don't have to notify
   // all the objects here.
