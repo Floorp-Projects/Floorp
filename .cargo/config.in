@@ -33,9 +33,9 @@ replace-with = "vendored-sources"
 rev = "df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
 
 [source."https://github.com/mozilla/cubeb-coreaudio-rs"]
+branch = "firefox-100"
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "39f7e696c11ff45503b50a49a36cd9f39900c27b"
 
 [source."https://github.com/mozilla/audioipc-2"]
 git = "https://github.com/mozilla/audioipc-2"
