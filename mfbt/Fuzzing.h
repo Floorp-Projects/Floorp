@@ -39,9 +39,37 @@
       nyx_handle_event(aType, aFilename, aLine, aReason);                   \
     } while (false)
 
+#  define MOZ_FUZZING_NYX_PRINT(aMsg) \
+    do {                              \
+      if (nyx_puts) {                 \
+        nyx_puts(aMsg);               \
+      } else {                        \
+        fprintf(stderr, aMsg);        \
+      }                               \
+    } while (false)
+
+#  define MOZ_FUZZING_NYX_PRINTF(aFormat, ...)                     \
+    do {                                                           \
+      if (nyx_puts) {                                              \
+        char msgbuf[2048];                                         \
+        snprintf(msgbuf, sizeof(msgbuf), "" aFormat, __VA_ARGS__); \
+        nyx_puts(msgbuf);                                          \
+      } else {                                                     \
+        fprintf(stderr, aFormat, __VA_ARGS__);                     \
+      }                                                            \
+    } while (false)
+
+#  ifdef FUZZ_DEBUG
+#    define MOZ_FUZZING_NYX_DEBUG(x) MOZ_FUZZING_NYX_PRINT(x)
+#  else
+#    define MOZ_FUZZING_NYX_DEBUG(x)
+#  endif
 #else
 #  define MOZ_FUZZING_NYX_RELEASE(id)
 #  define MOZ_FUZZING_NYX_GUARD(id)
+#  define MOZ_FUZZING_NYX_PRINT(aMsg)
+#  define MOZ_FUZZING_NYX_PRINTF(aFormat, ...)
+#  define MOZ_FUZZING_NYX_DEBUG(aMsg)
 #  define MOZ_FUZZING_HANDLE_CRASH_EVENT2(aType, aReason) \
     do {                                                  \
     } while (false)
