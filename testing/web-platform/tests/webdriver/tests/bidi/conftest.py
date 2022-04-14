@@ -5,12 +5,16 @@ import pytest
 async def new_tab(bidi_session, current_session):
     # Open and focus a new tab to run the test in a foreground tab.
     context_id = current_session.new_window(type_hint="tab")
+    initial_window = current_session.window_handle
     current_session.window_handle = context_id
 
     # Retrieve the browsing context info for the new tab
     contexts = await bidi_session.browsing_context.get_tree(parent=context_id, max_depth=0)
     yield contexts[0]
 
+    # Restore the focus and current window for the WebDriver session before
+    # closing the tab.
+    current_session.window_handle = initial_window
     await bidi_session.browsing_context.close(context=contexts[0]["context"])
 
 
