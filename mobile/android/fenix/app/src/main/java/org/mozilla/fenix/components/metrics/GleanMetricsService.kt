@@ -8,11 +8,9 @@ import android.content.Context
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
-import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.ext.components
 
@@ -73,29 +71,6 @@ private val Event.wrapper: EventWrapper<*>?
             {
                 BrowserSearch.inContent[label].add(1)
             }
-        )
-
-        is Event.SyncedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
-            { SyncedTabs.syncedTabsSuggestionClicked.record(it) }
-        )
-
-        is Event.BookmarkSuggestionClicked -> EventWrapper<NoExtraKeys>(
-            { Awesomebar.bookmarkSuggestionClicked.record(it) }
-        )
-        is Event.ClipboardSuggestionClicked -> EventWrapper<NoExtraKeys>(
-            { Awesomebar.clipboardSuggestionClicked.record(it) }
-        )
-        is Event.HistorySuggestionClicked -> EventWrapper<NoExtraKeys>(
-            { Awesomebar.historySuggestionClicked.record(it) }
-        )
-        is Event.SearchActionClicked -> EventWrapper<NoExtraKeys>(
-            { Awesomebar.searchActionClicked.record(it) }
-        )
-        is Event.SearchSuggestionClicked -> EventWrapper<NoExtraKeys>(
-            { Awesomebar.searchSuggestionClicked.record(it) }
-        )
-        is Event.OpenedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
-            { Awesomebar.openedTabSuggestionClicked.record(it) }
         )
 
         is Event.Messaging.MessageShown -> EventWrapper<NoExtraKeys>(

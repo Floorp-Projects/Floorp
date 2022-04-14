@@ -38,11 +38,13 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
+import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
+import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -199,56 +201,6 @@ class MetricControllerTest {
     }
 
     @Test
-    fun `tracking synced tab event should be sent to enabled service`() {
-        val controller = ReleaseMetricController(
-            listOf(marketingService1),
-            isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true },
-            mockk()
-        )
-        every { marketingService1.shouldTrack(Event.SyncedTabSuggestionClicked) } returns true
-        controller.start(MetricServiceType.Marketing)
-
-        controller.track(Event.SyncedTabSuggestionClicked)
-        verify { marketingService1.track(Event.SyncedTabSuggestionClicked) }
-    }
-
-    @Test
-    fun `tracking awesomebar events should be sent to enabled service`() {
-        val controller = ReleaseMetricController(
-            listOf(marketingService1),
-            isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true },
-            mockk()
-        )
-        every { marketingService1.shouldTrack(Event.BookmarkSuggestionClicked) } returns true
-        every { marketingService1.shouldTrack(Event.ClipboardSuggestionClicked) } returns true
-        every { marketingService1.shouldTrack(Event.HistorySuggestionClicked) } returns true
-        every { marketingService1.shouldTrack(Event.SearchActionClicked) } returns true
-        every { marketingService1.shouldTrack(Event.SearchSuggestionClicked) } returns true
-        every { marketingService1.shouldTrack(Event.OpenedTabSuggestionClicked) } returns true
-        controller.start(MetricServiceType.Marketing)
-
-        controller.track(Event.BookmarkSuggestionClicked)
-        verify { marketingService1.track(Event.BookmarkSuggestionClicked) }
-
-        controller.track(Event.ClipboardSuggestionClicked)
-        verify { marketingService1.track(Event.ClipboardSuggestionClicked) }
-
-        controller.track(Event.HistorySuggestionClicked)
-        verify { marketingService1.track(Event.HistorySuggestionClicked) }
-
-        controller.track(Event.SearchActionClicked)
-        verify { marketingService1.track(Event.SearchActionClicked) }
-
-        controller.track(Event.SearchSuggestionClicked)
-        verify { marketingService1.track(Event.SearchSuggestionClicked) }
-
-        controller.track(Event.OpenedTabSuggestionClicked)
-        verify { marketingService1.track(Event.OpenedTabSuggestionClicked) }
-    }
-
-    @Test
     fun `web extension fact should set value in SharedPreference`() {
         val enabled = true
         val settings = Settings(testContext)
@@ -277,29 +229,6 @@ class MetricControllerTest {
         assertEquals(settings.installedAddonsList, "test1,test2,test3,test4")
         assertEquals(settings.enabledAddonsCount, 2)
         assertEquals(settings.enabledAddonsList, "test2,test4")
-    }
-
-    @Test
-    fun `WHEN changing Fact(component, item) without additional vals to events THEN it returns the right event`() {
-        // This naive test was added for a refactoring. It only covers the comparisons that were easy to add.
-        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
-
-        val simpleMappings = listOf(
-            // CreditCardAutofillDialogFacts.Items is already tested.
-            Triple(Component.FEATURE_SYNCEDTABS, SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED, Event.SyncedTabSuggestionClicked),
-            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED, Event.BookmarkSuggestionClicked),
-            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED, Event.ClipboardSuggestionClicked),
-            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED, Event.HistorySuggestionClicked),
-            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED, Event.SearchActionClicked),
-            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED, Event.SearchSuggestionClicked),
-            Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED, Event.OpenedTabSuggestionClicked),
-        )
-
-        simpleMappings.forEach { (component, item, expectedEvent) ->
-            val fact = Fact(component, Action.CANCEL, item)
-            val message = "$expectedEvent $component $item"
-            assertEquals(message, expectedEvent, controller.factToEvent(fact))
-        }
     }
 
     @Test
@@ -532,5 +461,70 @@ class MetricControllerTest {
         }
 
         assertTrue(ProgressiveWebApp.installTap.testHasValue())
+    }
+
+    @Test
+    fun `WHEN processing a suggestion fact THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+
+        // Verify synced tabs suggestion clicked
+        assertFalse(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
+        var fact = Fact(Component.FEATURE_SYNCEDTABS, Action.CANCEL, SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED)
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
+
+        // Verify bookmark suggestion clicked
+        assertFalse(Awesomebar.bookmarkSuggestionClicked.testHasValue())
+        fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED)
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(Awesomebar.bookmarkSuggestionClicked.testHasValue())
+
+        // Verify clipboard suggestion clicked
+        assertFalse(Awesomebar.clipboardSuggestionClicked.testHasValue())
+        fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED)
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(Awesomebar.clipboardSuggestionClicked.testHasValue())
+
+        // Verify history suggestion clicked
+        assertFalse(Awesomebar.historySuggestionClicked.testHasValue())
+        fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED)
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(Awesomebar.historySuggestionClicked.testHasValue())
+
+        // Verify search action clicked
+        assertFalse(Awesomebar.searchActionClicked.testHasValue())
+        fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED)
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(Awesomebar.searchActionClicked.testHasValue())
+
+        // Verify bookmark opened tab suggestion clicked
+        assertFalse(Awesomebar.openedTabSuggestionClicked.testHasValue())
+        fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED)
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(Awesomebar.openedTabSuggestionClicked.testHasValue())
     }
 }

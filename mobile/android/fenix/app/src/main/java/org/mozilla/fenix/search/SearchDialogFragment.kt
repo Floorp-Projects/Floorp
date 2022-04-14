@@ -65,6 +65,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -319,7 +320,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
 
         binding.fillLinkFromClipboard.setOnClickListener {
-            requireComponents.analytics.metrics.track(Event.ClipboardSuggestionClicked)
+            Awesomebar.clipboardSuggestionClicked.record(NoExtras())
             val clipboardUrl = requireContext().components.clipboardHandler.extractURL() ?: ""
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

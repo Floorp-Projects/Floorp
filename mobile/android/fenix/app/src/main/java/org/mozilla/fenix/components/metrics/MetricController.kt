@@ -38,6 +38,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
+import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
@@ -47,6 +48,7 @@ import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
+import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
 
@@ -206,6 +208,27 @@ internal class ReleaseMetricController(
                 AndroidAutofill.unlockCancelled.record(NoExtras())
             }
         }
+        Component.FEATURE_SYNCEDTABS to SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED -> {
+            SyncedTabs.syncedTabsSuggestionClicked.record(NoExtras())
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED -> {
+            Awesomebar.bookmarkSuggestionClicked.record(NoExtras())
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED -> {
+            Awesomebar.clipboardSuggestionClicked.record(NoExtras())
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED -> {
+            Awesomebar.historySuggestionClicked.record(NoExtras())
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED -> {
+            Awesomebar.searchActionClicked.record(NoExtras())
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED -> {
+            Awesomebar.searchSuggestionClicked.record(NoExtras())
+        }
+        Component.FEATURE_AWESOMEBAR to AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED -> {
+            Awesomebar.openedTabSuggestionClicked.record(NoExtras())
+        }
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.TEXT_SELECTION_OPTION -> {
             when (metadata?.get("textSelectionOption")?.toString()) {
                 CONTEXT_MENU_COPY -> ContextualMenu.copyTapped.record(NoExtras())
@@ -339,27 +362,6 @@ internal class ReleaseMetricController(
                 settings.topSitesSize = count
             }
             null
-        }
-        Component.FEATURE_SYNCEDTABS == component && SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED == item -> {
-            Event.SyncedTabSuggestionClicked
-        }
-        Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED == item -> {
-            Event.BookmarkSuggestionClicked
-        }
-        Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED == item -> {
-            Event.ClipboardSuggestionClicked
-        }
-        Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED == item -> {
-            Event.HistorySuggestionClicked
-        }
-        Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED == item -> {
-            Event.SearchActionClicked
-        }
-        Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.SEARCH_SUGGESTION_CLICKED == item -> {
-            Event.SearchSuggestionClicked
-        }
-        Component.FEATURE_AWESOMEBAR == component && AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED == item -> {
-            Event.OpenedTabSuggestionClicked
         }
         Component.FEATURE_SEARCH == component && AdsTelemetry.SERP_ADD_CLICKED == item -> {
             Event.SearchAdClicked(value!!)
