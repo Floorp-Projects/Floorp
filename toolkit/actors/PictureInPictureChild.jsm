@@ -66,6 +66,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
+const PIP_ENABLED_PREF = "media.videocontrols.picture-in-picture.enabled";
 const TOGGLE_TESTING_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.testing";
 const TOGGLE_VISIBILITY_THRESHOLD_PREF =
@@ -249,7 +250,9 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     // We keep the state stashed inside of this WeakMap, keyed on the document
     // itself.
     this.weakDocStates = new WeakMap();
-    this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
+    this.toggleEnabled =
+      Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF) &&
+      Services.prefs.getBoolPref(PIP_ENABLED_PREF);
     this.toggleTesting = Services.prefs.getBoolPref(TOGGLE_TESTING_PREF, false);
 
     // Bug 1570744 - JSWindowActorChild's cannot be used as nsIObserver's
@@ -259,12 +262,14 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       this.observe(subject, topic, data);
     };
     Services.prefs.addObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
+    Services.prefs.addObserver(PIP_ENABLED_PREF, this.observerFunction);
     Services.cpmm.sharedData.addEventListener("change", this);
   }
 
   didDestroy() {
     this.stopTrackingMouseOverVideos();
     Services.prefs.removeObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
+    Services.prefs.removeObserver(PIP_ENABLED_PREF, this.observerFunction);
     Services.cpmm.sharedData.removeEventListener("change", this);
 
     // remove the observer on the <video> element
@@ -286,7 +291,9 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       return;
     }
 
-    this.toggleEnabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF);
+    this.toggleEnabled =
+      Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF) &&
+      Services.prefs.getBoolPref(PIP_ENABLED_PREF);
 
     if (this.toggleEnabled) {
       // We have enabled the Picture-in-Picture toggle, so we need to make

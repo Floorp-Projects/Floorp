@@ -88,6 +88,7 @@ class UAWidgetsChild extends JSWindowActorChild {
         uri = "chrome://global/content/elements/videocontrols.js";
         widgetName = "VideoControlsWidget";
         prefKeys = [
+          "media.videocontrols.picture-in-picture.enabled",
           "media.videocontrols.picture-in-picture.video-toggle.enabled",
           "media.videocontrols.picture-in-picture.video-toggle.always-show",
           "media.videocontrols.picture-in-picture.video-toggle.min-video-secs",
