@@ -5603,11 +5603,14 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     // We need realized mShell at NativeMoveResize().
     gtk_widget_realize(mShell);
 
+    // With popup windows, we want to set their position.
+    // Place them immediately on X11 and save initial popup position
+    // on Wayland as we place Wayland popup on show.
     if (GdkIsX11Display()) {
-      // With popup windows, we want to control their position, so don't
-      // wait for the window manager to place them (which wouldn't
-      // happen with override-redirect windows anyway).
       NativeMoveResize(/* move */ true, /* resize */ false);
+    } else if (AreBoundsSane()) {
+      GdkRectangle rect = DevicePixelsToGdkRectRoundOut(mBounds);
+      mPopupPosition = {rect.x, rect.y};
     }
   } else {  // must be eWindowType_toplevel
     mGtkWindowRoleName = "Toplevel";
