@@ -11,6 +11,7 @@
 #ifndef PC_PEER_CONNECTION_H_
 #define PC_PEER_CONNECTION_H_
 
+#include <stdint.h>
 #include <functional>
 #include <map>
 #include <memory>
@@ -19,39 +20,83 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
+#include "api/adaptation/resource.h"
+#include "api/async_resolver_factory.h"
+#include "api/audio_options.h"
+#include "api/candidate.h"
+#include "api/crypto/crypto_options.h"
+#include "api/data_channel_interface.h"
+#include "api/dtls_transport_interface.h"
+#include "api/ice_transport_interface.h"
+#include "api/jsep.h"
+#include "api/media_stream_interface.h"
+#include "api/media_types.h"
+#include "api/packet_socket_factory.h"
 #include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtc_event_log/rtc_event_log.h"
+#include "api/rtc_event_log_output.h"
+#include "api/rtp_parameters.h"
+#include "api/rtp_receiver_interface.h"
+#include "api/rtp_sender_interface.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/sctp_transport_interface.h"
+#include "api/set_local_description_observer_interface.h"
+#include "api/set_remote_description_observer_interface.h"
+#include "api/stats/rtc_stats_collector_callback.h"
+#include "api/transport/bitrate_settings.h"
 #include "api/transport/data_channel_transport_interface.h"
+#include "api/transport/enums.h"
 #include "api/turn_customizer.h"
+#include "api/video/video_bitrate_allocator_factory.h"
+#include "call/call.h"
+#include "media/base/media_channel.h"
+#include "media/base/media_engine.h"
+#include "p2p/base/ice_transport_internal.h"
+#include "p2p/base/port.h"
+#include "p2p/base/port_allocator.h"
+#include "p2p/base/transport_description.h"
+#include "pc/channel.h"
+#include "pc/channel_interface.h"
+#include "pc/channel_manager.h"
 #include "pc/connection_context.h"
 #include "pc/data_channel_controller.h"
-#include "pc/ice_server_parsing.h"
+#include "pc/data_channel_utils.h"
+#include "pc/dtls_transport.h"
 #include "pc/jsep_transport_controller.h"
-#include "pc/peer_connection_factory.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtc_stats_collector.h"
+#include "pc/rtp_data_channel.h"
+#include "pc/rtp_receiver.h"
 #include "pc/rtp_sender.h"
 #include "pc/rtp_transceiver.h"
-#include "pc/sctp_transport.h"
+#include "pc/rtp_transport_internal.h"
+#include "pc/sctp_data_channel.h"
 #include "pc/sdp_offer_answer.h"
+#include "pc/session_description.h"
 #include "pc/stats_collector.h"
 #include "pc/stream_collection.h"
 #include "pc/transceiver_list.h"
+#include "pc/transport_stats.h"
 #include "pc/usage_pattern.h"
-#include "pc/webrtc_session_description_factory.h"
-#include "rtc_base/experiments/field_trial_parser.h"
-#include "rtc_base/operations_chain.h"
-#include "rtc_base/race_checker.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/deprecation.h"
+#include "rtc_base/network/sent_packet.h"
+#include "rtc_base/rtc_certificate.h"
+#include "rtc_base/ssl_certificate.h"
+#include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
-#include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
-
-class MediaStreamObserver;
-class VideoRtpReceiver;
-class RtcEventLog;
-class SdpOfferAnswerHandler;
 
 // PeerConnection is the implementation of the PeerConnection object as defined
 // by the PeerConnectionInterface API surface.

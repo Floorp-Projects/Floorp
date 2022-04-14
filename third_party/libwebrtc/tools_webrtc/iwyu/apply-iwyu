@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Run the include-what-you-use tool (iwyu) on a file in the webrtc source
+# directory.
+#
+# The script uses a subsequent grep pass to remove #include files from .cc
+# that are also in the .h file, or are problematic to include.
+#
+# To get iwyu on Debian/glinux, do "sudo apt-get install iwyu".
+
+set -e
+set -x
+FILE=$1
+
+if [ ! -f $FILE.h ]; then
+   echo "$FILE.h not found"
+   exit 1
+fi
+
+if [ ! -f $FILE.cc ]; then
+   echo "$FILE.cc not found"
+   exit 1
+fi 
+
+iwyu -Xiwyu --no_fwd_decls --no-default-mappings -D__X86_64__  -DWEBRTC_POSIX -I . -I third_party/abseil-cpp $FILE.cc |& fix_include || echo "Some files modified"
+
+grep ^#include $FILE.h | grep -v -f - $FILE.cc > $FILE.ccnew
+grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE.ccnew > $FILE.cc
+rm $FILE.ccnew
+grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE.h > $FILE.hnew
+mv $FILE.hnew $FILE.h
+
+echo "Finished. Check diff, compile and git cl format before uploading."
+
+
