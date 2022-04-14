@@ -90,7 +90,13 @@ def gecko_strings_setup(**lint_args):
         skip_clone = False
     if skip_clone:
         return
-    hg = mozversioncontrol.get_tool_path("hg")
+    try:
+        hg = mozversioncontrol.get_tool_path("hg")
+    except mozversioncontrol.MissingVCSTool:
+        if os.environ.get("MOZ_AUTOMATION"):
+            raise
+        print("warning: l10n linter requires Mercurial but was unable to find 'hg'")
+        return 1
     mozversioncontrol.repoupdate.update_mercurial_repo(
         hg, "https://hg.mozilla.org/l10n/gecko-strings", gs
     )
