@@ -7,23 +7,23 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef MODULES_VIDEO_CODING_CODECS_AV1_LIBAOM_AV1_ENCODER_H_
-#define MODULES_VIDEO_CODING_CODECS_AV1_LIBAOM_AV1_ENCODER_H_
+#ifndef MODULES_VIDEO_CODING_SVC_CREATE_SCALABILITY_STRUCTURE_H_
+#define MODULES_VIDEO_CODING_SVC_CREATE_SCALABILITY_STRUCTURE_H_
 
 #include <memory>
+#include <vector>
 
-#include "absl/base/attributes.h"
-#include "api/video_codecs/video_encoder.h"
+#include "absl/strings/string_view.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 
 namespace webrtc {
 
-ABSL_CONST_INIT extern const bool kIsLibaomAv1EncoderSupported;
-
-std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder();
-std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder(
-    std::unique_ptr<ScalableVideoController> controller);
+// Creates a structure by name according to
+// https://w3c.github.io/webrtc-svc/#scalabilitymodes*
+// Returns nullptr for unknown name.
+std::unique_ptr<ScalableVideoController> CreateScalabilityStructure(
+    absl::string_view name);
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_CODECS_AV1_LIBAOM_AV1_ENCODER_H_
+#endif  // MODULES_VIDEO_CODING_SVC_CREATE_SCALABILITY_STRUCTURE_H_

@@ -7,23 +7,21 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef MODULES_VIDEO_CODING_CODECS_AV1_LIBAOM_AV1_ENCODER_H_
-#define MODULES_VIDEO_CODING_CODECS_AV1_LIBAOM_AV1_ENCODER_H_
+#ifndef MODULES_VIDEO_CODING_SVC_SCALABILITY_STRUCTURE_L2T1H_H_
+#define MODULES_VIDEO_CODING_SVC_SCALABILITY_STRUCTURE_L2T1H_H_
 
-#include <memory>
-
-#include "absl/base/attributes.h"
-#include "api/video_codecs/video_encoder.h"
+#include "modules/video_coding/svc/scalability_structure_l2t1.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 
 namespace webrtc {
 
-ABSL_CONST_INIT extern const bool kIsLibaomAv1EncoderSupported;
+class ScalabilityStructureL2T1h : public ScalabilityStructureL2T1 {
+ public:
+  ~ScalabilityStructureL2T1h() override;
 
-std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder();
-std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder(
-    std::unique_ptr<ScalableVideoController> controller);
+  StreamLayersConfig StreamConfig() const override;
+};
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_CODECS_AV1_LIBAOM_AV1_ENCODER_H_
+#endif  // MODULES_VIDEO_CODING_SVC_SCALABILITY_STRUCTURE_L2T1H_H_
