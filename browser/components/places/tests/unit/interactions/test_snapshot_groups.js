@@ -5,6 +5,10 @@
  * Tests for snapshot groups addition, update, and removal.
  */
 
+const FAVICON_DATAURL1 =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+const FAVICON_DATAURL2 =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVBBBBCklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
 const TEST_URL1 = "https://example.com/";
 const TEST_IMAGE_URL1 = "https://example.com/preview1.png";
 const TEST_URL2 = "https://example.com/12345";
@@ -19,6 +23,26 @@ async function delete_all_groups() {
   for (let group of groups) {
     await SnapshotGroups.delete(group.id);
   }
+}
+
+async function setIcon(pageUrl, iconUrl, dataUrl) {
+  PlacesUtils.favicons.replaceFaviconDataFromDataURL(
+    Services.io.newURI(iconUrl),
+    dataUrl,
+    (Date.now() + 8640000) * 1000,
+    Services.scriptSecurityManager.getSystemPrincipal()
+  );
+
+  await new Promise(resolve => {
+    PlacesUtils.favicons.setAndFetchFaviconForPage(
+      Services.io.newURI(pageUrl),
+      Services.io.newURI(iconUrl),
+      false,
+      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+      resolve,
+      Services.scriptSecurityManager.getSystemPrincipal()
+    );
+  });
 }
 
 /**
@@ -83,6 +107,10 @@ add_task(async function test_add_and_query() {
     data.map(d => d.url)
   );
 
+  info("add a favicon for both urls");
+  await setIcon(TEST_URL1, TEST_URL1 + "favicon.ico", FAVICON_DATAURL1);
+  await setIcon(TEST_URL2, TEST_URL2 + "/favicon.ico", FAVICON_DATAURL2);
+
   let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
@@ -93,6 +121,7 @@ add_task(async function test_add_and_query() {
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: getPageThumbURL(TEST_URL1),
+    imagePageUrl: TEST_URL1,
   });
 
   info("add a featured image for second oldest snapshot");
@@ -110,6 +139,8 @@ add_task(async function test_add_and_query() {
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: previewImageURL,
+    faviconDataUrl: FAVICON_DATAURL2,
+    imagePageUrl: TEST_URL2,
   });
 
   info("add a featured image for the oldest snapshot");
@@ -127,6 +158,8 @@ add_task(async function test_add_and_query() {
     snapshotCount: data.length,
     lastAccessed: now - 10000,
     imageUrl: previewImageURL,
+    faviconDataUrl: FAVICON_DATAURL1,
+    imagePageUrl: TEST_URL1,
   });
 });
 
@@ -543,6 +576,7 @@ add_task(async function test_snapshot_image_with_hidden() {
   // The images were set on TEST_URL1/TEST_URL2 in an earlier test.
   assertSnapshotGroup(groups[0], {
     imageUrl: TEST_IMAGE_URL1,
+    imagePageUrl: TEST_URL1,
   });
 
   await SnapshotGroups.setUrlHidden(groups[0].id, TEST_URL1, true);
@@ -551,6 +585,7 @@ add_task(async function test_snapshot_image_with_hidden() {
   info("Should use the oldest non-hidden image");
   assertSnapshotGroup(groups[0], {
     imageUrl: TEST_IMAGE_URL2,
+    imagePageUrl: TEST_URL2,
   });
 });
 
