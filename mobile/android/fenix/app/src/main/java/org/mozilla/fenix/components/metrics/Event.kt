@@ -8,21 +8,6 @@ sealed class Event {
 
     // Interaction events with extras
 
-    data class SearchWithAds(val providerName: String) : Event() {
-        val label: String
-            get() = providerName
-    }
-
-    data class SearchAdClicked(val keyName: String) : Event() {
-        val label: String
-            get() = keyName
-    }
-
-    data class SearchInContent(val keyName: String) : Event() {
-        val label: String
-            get() = keyName
-    }
-
     sealed class Search
 
     internal open val extras: Map<*, String>?

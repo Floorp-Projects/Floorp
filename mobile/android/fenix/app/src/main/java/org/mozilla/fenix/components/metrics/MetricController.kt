@@ -39,6 +39,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.AndroidAutofill
 import org.mozilla.fenix.GleanMetrics.Awesomebar
+import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
@@ -247,6 +248,16 @@ internal class ReleaseMetricController(
             ProgressiveWebApp.installTap.record(NoExtras())
         }
 
+        Component.FEATURE_SEARCH to AdsTelemetry.SERP_ADD_CLICKED -> {
+            BrowserSearch.adClicks[value!!].add()
+        }
+        Component.FEATURE_SEARCH to AdsTelemetry.SERP_SHOWN_WITH_ADDS -> {
+            BrowserSearch.withAds[value!!].add()
+        }
+        Component.FEATURE_SEARCH to InContentTelemetry.IN_CONTENT_SEARCH -> {
+            BrowserSearch.inContent[value!!].add()
+        }
+
         else -> {
             this.toEvent()?.also {
                 track(it)
@@ -363,15 +374,7 @@ internal class ReleaseMetricController(
             }
             null
         }
-        Component.FEATURE_SEARCH == component && AdsTelemetry.SERP_ADD_CLICKED == item -> {
-            Event.SearchAdClicked(value!!)
-        }
-        Component.FEATURE_SEARCH == component && AdsTelemetry.SERP_SHOWN_WITH_ADDS == item -> {
-            Event.SearchWithAds(value!!)
-        }
-        Component.FEATURE_SEARCH == component && InContentTelemetry.IN_CONTENT_SEARCH == item -> {
-            Event.SearchInContent(value!!)
-        }
+
         else -> null
     }
 

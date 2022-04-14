@@ -6,9 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.components
 
@@ -54,23 +52,7 @@ private class EventWrapper<T : Enum<T>>(
 @Suppress("DEPRECATION")
 // FIXME(#19967): Migrate to non-deprecated API.
 private val Event.wrapper: EventWrapper<*>?
-    get() = when (this) {
-        is Event.SearchWithAds -> EventWrapper<NoExtraKeys>(
-            {
-                BrowserSearch.withAds[label].add(1)
-            }
-        )
-        is Event.SearchAdClicked -> EventWrapper<NoExtraKeys>(
-            {
-                BrowserSearch.adClicks[label].add(1)
-            }
-        )
-        is Event.SearchInContent -> EventWrapper<NoExtraKeys>(
-            {
-                BrowserSearch.inContent[label].add(1)
-            }
-        )
-    }
+    get() = null
 
 /**
  * Service responsible for sending the activation and installation pings.
