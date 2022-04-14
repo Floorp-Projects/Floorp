@@ -1498,9 +1498,34 @@ const DebugUtils = {
     // service worker).
     if (this.hasPersistentBackgroundScript(addonId) === false) {
       const policy = WebExtensionPolicy.getByID(addonId);
-      return policy.extension.terminateBackground();
+      // When the event page is being terminated through the Devtools
+      // action, we should terminate it even if there are DevTools
+      // toolboxes attached to the extension.
+      return policy.extension.terminateBackground({
+        ignoreDevToolsAttached: true,
+      });
     }
     throw Error(`Unable to terminate background script for ${addonId}`);
+  },
+
+  /**
+   * Determine whether a devtools toolbox attached to the extension.
+   *
+   * This method is called by the background page idle timeout handler,
+   * to inhibit terminating the event page when idle while the extension
+   * developer is debugging the extension through the Addon Debugging window
+   * (similarly to how service workers are kept alive while the devtools are
+   * attached).
+   *
+   * @param {string} id
+   *        The id of the extension.
+   *
+   * @returns {boolean}
+   *          true when a devtools toolbox is attached to an extension with
+   *          the given id, false otherwise.
+   */
+  hasDevToolsAttached(id) {
+    return this.debugBrowserPromises.has(id);
   },
 
   /**
