@@ -611,10 +611,8 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
 
   const bool config_ok = GainController2::Validate(config_.gain_controller2);
   if (!config_ok) {
-    RTC_LOG(LS_ERROR) << "AudioProcessing module config error\n"
-                         "Gain Controller 2: "
-                      << GainController2::ToString(config_.gain_controller2)
-                      << "\nReverting to default parameter set";
+    RTC_LOG(LS_ERROR)
+        << "Invalid Gain Controller 2 config; using the default config.";
     config_.gain_controller2 = AudioProcessing::Config::GainController2();
   }
 
