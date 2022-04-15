@@ -211,6 +211,16 @@ vendoring:
     - another/path
     - docs/LICENSE.*
 
+  # Files that are modified as part of the update process.
+  # To avoid creating updates that don't update anything, ./mach vendor will detect
+  # if any in-tree files have changed. If there are files that are always changed
+  # during an update process (e.g. version numbers or source revisions), list them
+  # here to avoid having them counted as substative changes.
+  # This field does NOT support directories or globbing
+  # optional
+  generated:
+    - '{yaml_dir}/vcs_version.h'
+
   # If neither "exclude" or "include" are set, all files will be vendored
   # Files/paths in "include" will always be vendored, even if excluded
   # eg. excluding "docs/" then including "docs/LICENSE" will vendor just the
@@ -421,6 +431,7 @@ def _schema_1():
                 "keep": Unique([str]),
                 "exclude": Unique([str]),
                 "include": Unique([str]),
+                "generated": Unique([str]),
                 "update-actions": All(
                     UpdateActions(),
                     [
