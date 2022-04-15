@@ -410,6 +410,7 @@ class SctpTransport::UsrSctpWrapper {
       RTC_LOG(LS_ERROR)
           << "OnSctpInboundPacket: Failed to get transport for socket " << sock
           << "; possibly was already destroyed.";
+      free(data);
       return 0;
     }
     // Sanity check that both methods of getting the SctpTransport pointer
