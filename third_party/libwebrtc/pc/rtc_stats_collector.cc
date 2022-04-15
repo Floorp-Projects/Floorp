@@ -305,7 +305,10 @@ void SetInboundRTPStreamStatsFromVoiceReceiverInfo(
       voice_receiver_info.inserted_samples_for_deceleration;
   inbound_audio->removed_samples_for_acceleration =
       voice_receiver_info.removed_samples_for_acceleration;
-  inbound_audio->audio_level = voice_receiver_info.audio_level;
+  if (voice_receiver_info.audio_level >= 0) {
+    inbound_audio->audio_level =
+        DoubleAudioLevelFromIntAudioLevel(voice_receiver_info.audio_level);
+  }
   inbound_audio->total_audio_energy = voice_receiver_info.total_output_energy;
   inbound_audio->total_samples_duration =
       voice_receiver_info.total_output_duration;
