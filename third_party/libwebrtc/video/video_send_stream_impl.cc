@@ -483,7 +483,7 @@ void VideoSendStreamImpl::OnVideoLayersAllocationUpdated(
     });
     return;
   }
-  // TODO(bugs.webrtc.org/12000): Implement
+  rtp_video_sender_->OnVideoLayersAllocationUpdated(allocation);
 }
 
 void VideoSendStreamImpl::SignalEncoderActive() {

@@ -592,6 +592,18 @@ void RtpVideoSender::OnBitrateAllocationUpdated(
     }
   }
 }
+void RtpVideoSender::OnVideoLayersAllocationUpdated(
+    const VideoLayersAllocation& allocation) {
+  MutexLock lock(&mutex_);
+  if (IsActiveLocked()) {
+    for (size_t i = 0; i < rtp_streams_.size(); ++i) {
+      VideoLayersAllocation stream_allocation = allocation;
+      stream_allocation.rtp_stream_index = i;
+      rtp_streams_[i].sender_video->SetVideoLayersAllocation(
+          std::move(stream_allocation));
+    }
+  }
+}
 
 bool RtpVideoSender::NackEnabled() const {
   const bool nack_enabled = rtp_config_.nack.rtp_history_ms > 0;

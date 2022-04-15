@@ -80,6 +80,10 @@ class MockRtpVideoSender : public RtpVideoSenderInterface {
               OnBitrateAllocationUpdated,
               (const VideoBitrateAllocation&),
               (override));
+  MOCK_METHOD(void,
+              OnVideoLayersAllocationUpdated,
+              (const VideoLayersAllocation&),
+              (override));
   MOCK_METHOD(EncodedImageCallback::Result,
               OnEncodedImage,
               (const EncodedImage&, const CodecSpecificInfo*),
