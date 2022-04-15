@@ -358,7 +358,7 @@ TEST(VideoCodecTestLibvpx, MAYBE_MultiresVP8) {
   std::vector<RateProfile> rate_profiles = {{1500, 30, 0}};
 #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64)
   std::vector<RateControlThresholds> rc_thresholds = {
-      {4.1, 1.04, 6, 0.18, 0.14, 0.08, 0, 1}};
+      {4.1, 1.04, 7, 0.18, 0.14, 0.08, 0, 1}};
 #else
   std::vector<RateControlThresholds> rc_thresholds = {
       {5, 1, 5, 1, 0.3, 0.1, 0, 1}};
