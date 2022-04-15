@@ -381,6 +381,23 @@ TEST_F(WebRtcVideoEngineTestWithDependencyDescriptor,
   ExpectRtpCapabilitySupport(RtpExtension::kDependencyDescriptorUri, true);
 }
 
+TEST_F(WebRtcVideoEngineTest, AdvertiseVideoLayersAllocation) {
+  ExpectRtpCapabilitySupport(RtpExtension::kVideoLayersAllocationUri, false);
+}
+
+class WebRtcVideoEngineTestWithVideoLayersAllocation
+    : public WebRtcVideoEngineTest {
+ public:
+  WebRtcVideoEngineTestWithVideoLayersAllocation()
+      : WebRtcVideoEngineTest(
+            "WebRTC-VideoLayersAllocationAdvertised/Enabled/") {}
+};
+
+TEST_F(WebRtcVideoEngineTestWithVideoLayersAllocation,
+       AdvertiseVideoLayersAllocation) {
+  ExpectRtpCapabilitySupport(RtpExtension::kVideoLayersAllocationUri, true);
+}
+
 TEST_F(WebRtcVideoEngineTest, CVOSetHeaderExtensionBeforeCapturer) {
   // Allocate the source first to prevent early destruction before channel's
   // dtor is called.
