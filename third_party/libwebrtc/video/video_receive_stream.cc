@@ -115,8 +115,6 @@ class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
 
 VideoCodec CreateDecoderVideoCodec(const VideoReceiveStream::Decoder& decoder) {
   VideoCodec codec;
-  memset(&codec, 0, sizeof(codec));
-
   codec.codecType = PayloadStringToCodecType(decoder.video_format.name);
 
   if (codec.codecType == kVideoCodecVP8) {

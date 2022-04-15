@@ -179,14 +179,13 @@ struct SvcTestParam {
 class LibaomAv1SvcTest : public ::testing::TestWithParam<SvcTestParam> {};
 
 TEST_P(LibaomAv1SvcTest, EncodeAndDecodeAllDecodeTargets) {
-  std::unique_ptr<ScalableVideoController> svc_controller =
-      CreateScalabilityStructure(GetParam().name);
-  size_t num_decode_targets =
-      svc_controller->DependencyStructure().num_decode_targets;
+  size_t num_decode_targets = CreateScalabilityStructure(GetParam().name)
+                                  ->DependencyStructure()
+                                  .num_decode_targets;
 
-  std::unique_ptr<VideoEncoder> encoder =
-      CreateLibaomAv1Encoder(std::move(svc_controller));
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode(GetParam().name);
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
   std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
