@@ -18,19 +18,21 @@
       /* exported performRequests */
       "use strict";
 
-      function post(address, message, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", address, true);
+      function post(address, message) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(message);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(message);
+        });
       }
 
-      function performRequests() {
+      async function performRequests() {
         const rawData = [
           "content-type: application/x-www-form-urlencoded\r",
           "custom-header: hello world!\r",
@@ -38,9 +40,7 @@
           "\r",
           "foo=bar&baz=123",
         ];
-        post("sjs_simple-test-server.sjs", rawData.join("\n"), function() {
-          // Done.
-        });
+        await post("sjs_simple-test-server.sjs", rawData.join("\n"));
       }
     </script>
   </body>
