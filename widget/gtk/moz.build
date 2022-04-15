@@ -176,6 +176,12 @@ if CONFIG["MOZ_WAYLAND"]:
     CXXFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
 
 if CONFIG["MOZ_ENABLE_DBUS"]:
+    EXPORTS.mozilla.widget += [
+        "AsyncDBus.h",
+    ]
+    UNIFIED_SOURCES += [
+        "AsyncDBus.cpp",
+    ]
     CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
 CXXFLAGS += ["-Werror=switch"]
 
