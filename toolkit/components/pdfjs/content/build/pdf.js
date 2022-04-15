@@ -29,7 +29,7 @@
 		exports["pdfjs-dist/build/pdf"] = factory();
 	else
 		root["pdfjs-dist/build/pdf"] = root.pdfjsLib = factory();
-})(this, function() {
+})(this, () => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -42,7 +42,7 @@ return /******/ (() => { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.IsLittleEndianCached = exports.IsEvalSupportedCached = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.StreamType = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FontType = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.arrayByteLength = arrayByteLength;
 exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
@@ -698,14 +698,6 @@ function isLittleEndian() {
   return view32[0] === 1;
 }
 
-const IsLittleEndianCached = {
-  get value() {
-    return shadow(this, "value", isLittleEndian());
-  }
-
-};
-exports.IsLittleEndianCached = IsLittleEndianCached;
-
 function isEvalSupported() {
   try {
     new Function("");
@@ -715,13 +707,22 @@ function isEvalSupported() {
   }
 }
 
-const IsEvalSupportedCached = {
-  get value() {
-    return shadow(this, "value", isEvalSupported());
+class FeatureTest {
+  static get isLittleEndian() {
+    return shadow(this, "isLittleEndian", isLittleEndian());
   }
 
-};
-exports.IsEvalSupportedCached = IsEvalSupportedCached;
+  static get isEvalSupported() {
+    return shadow(this, "isEvalSupported", isEvalSupported());
+  }
+
+  static get isOffscreenCanvasSupported() {
+    return shadow(this, "isOffscreenCanvasSupported", typeof OffscreenCanvas !== "undefined");
+  }
+
+}
+
+exports.FeatureTest = FeatureTest;
 const hexNumbers = [...Array(256).keys()].map(n => n.toString(16).padStart(2, "0"));
 
 class Util {
@@ -1059,19 +1060,19 @@ var _annotation_storage = __w_pdfjs_require__(9);
 
 var _canvas = __w_pdfjs_require__(10);
 
-var _worker_options = __w_pdfjs_require__(12);
+var _worker_options = __w_pdfjs_require__(13);
 
 var _is_node = __w_pdfjs_require__(3);
 
-var _message_handler = __w_pdfjs_require__(13);
+var _message_handler = __w_pdfjs_require__(14);
 
-var _metadata = __w_pdfjs_require__(14);
+var _metadata = __w_pdfjs_require__(15);
 
-var _optional_content_config = __w_pdfjs_require__(15);
+var _optional_content_config = __w_pdfjs_require__(16);
 
-var _transport_stream = __w_pdfjs_require__(16);
+var _transport_stream = __w_pdfjs_require__(17);
 
-var _xfa_text = __w_pdfjs_require__(17);
+var _xfa_text = __w_pdfjs_require__(18);
 
 const DEFAULT_RANGE_CHUNK_SIZE = 65536;
 const RENDERING_CANCELLED_TIMEOUT = 100;
@@ -1297,7 +1298,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.14.102',
+    apiVersion: '2.14.171',
     source: {
       data: source.data,
       url: source.url,
@@ -1584,6 +1585,7 @@ class PDFPageProxy {
     this._pdfBug = pdfBug;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
+    this._bitmaps = new Set();
     this.cleanupAfterRender = false;
     this.pendingCleanup = false;
     this._intentStates = new Map();
@@ -1899,6 +1901,12 @@ class PDFPageProxy {
 
     this.objs.clear();
 
+    for (const bitmap of this._bitmaps) {
+      bitmap.close();
+    }
+
+    this._bitmaps.clear();
+
     this._annotationPromises.clear();
 
     this._jsActionsPromise = null;
@@ -1938,6 +1946,12 @@ class PDFPageProxy {
     if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
     }
+
+    for (const bitmap of this._bitmaps) {
+      bitmap.close();
+    }
+
+    this._bitmaps.clear();
 
     this.pendingCleanup = false;
     return true;
@@ -2786,8 +2800,25 @@ class WorkerTransport {
           pageProxy.objs.resolve(id, imageData);
           const MAX_IMAGE_SIZE_TO_STORE = 8000000;
 
-          if (imageData?.data?.length > MAX_IMAGE_SIZE_TO_STORE) {
-            pageProxy.cleanupAfterRender = true;
+          if (imageData) {
+            let length;
+
+            if (imageData.bitmap) {
+              const {
+                bitmap,
+                width,
+                height
+              } = imageData;
+              length = width * height * 4;
+
+              pageProxy._bitmaps.add(bitmap);
+            } else {
+              length = imageData.data?.length || 0;
+            }
+
+            if (length > MAX_IMAGE_SIZE_TO_STORE) {
+              pageProxy.cleanupAfterRender = true;
+            }
           }
 
           break;
@@ -3287,9 +3318,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.14.102';
+const version = '2.14.171';
 exports.version = version;
-const build = 'db4f3adc5';
+const build = '3f5c31e20';
 exports.build = build;
 
 /***/ }),
@@ -4139,7 +4170,7 @@ class FontFaceObject {
       return this.compiledGlyphs[character] = function (c, size) {};
     }
 
-    if (this.isEvalSupported && _util.IsEvalSupportedCached.value) {
+    if (this.isEvalSupported && _util.FeatureTest.isEvalSupported) {
       const jsBuf = [];
 
       for (const current of cmds) {
@@ -4316,6 +4347,8 @@ exports.CanvasGraphics = void 0;
 var _util = __w_pdfjs_require__(1);
 
 var _pattern_helper = __w_pdfjs_require__(11);
+
+var _image_utils = __w_pdfjs_require__(12);
 
 var _display_utils = __w_pdfjs_require__(5);
 
@@ -4926,7 +4959,7 @@ function putBinaryImageData(ctx, imgData, transferMaps = null) {
     const dest32DataLength = dest32.length;
     const fullSrcDiff = width + 7 >> 3;
     let white = 0xffffffff;
-    let black = _util.IsLittleEndianCached.value ? 0xff000000 : 0x000000ff;
+    let black = _util.FeatureTest.isLittleEndian ? 0xff000000 : 0x000000ff;
 
     if (transferMapGray) {
       if (transferMapGray[0] === 0xff && transferMapGray[0xff] === 0) {
@@ -5070,6 +5103,11 @@ function putBinaryImageData(ctx, imgData, transferMaps = null) {
 }
 
 function putBinaryImageMask(ctx, imgData) {
+  if (imgData.bitmap) {
+    ctx.drawImage(imgData.bitmap, 0, 0);
+    return;
+  }
+
   const height = imgData.height,
         width = imgData.width;
   const partialChunkHeight = height % FULL_CHUNK_HEIGHT;
@@ -5082,24 +5120,15 @@ function putBinaryImageMask(ctx, imgData) {
 
   for (let i = 0; i < totalChunks; i++) {
     const thisChunkHeight = i < fullChunks ? FULL_CHUNK_HEIGHT : partialChunkHeight;
-    let destPos = 3;
-
-    for (let j = 0; j < thisChunkHeight; j++) {
-      let elem,
-          mask = 0;
-
-      for (let k = 0; k < width; k++) {
-        if (!mask) {
-          elem = src[srcPos++];
-          mask = 128;
-        }
-
-        dest[destPos] = elem & mask ? 0 : 255;
-        destPos += 4;
-        mask >>= 1;
-      }
-    }
-
+    ({
+      srcPos
+    } = (0, _image_utils.applyMaskImageData)({
+      src,
+      srcPos,
+      dest,
+      width,
+      height: thisChunkHeight
+    }));
     ctx.putImageData(chunkImgData, 0, i * FULL_CHUNK_HEIGHT);
   }
 }
@@ -5285,6 +5314,14 @@ class CanvasGraphics {
 
     this._cachedScaleForStroking = null;
     this._cachedGetSinglePixelWidth = null;
+  }
+
+  getObject(data, fallback = null) {
+    if (typeof data === "string") {
+      return data.startsWith("g_") ? this.commonObjs.get(data) : this.objs.get(data);
+    }
+
+    return fallback;
   }
 
   beginDrawing({
@@ -6616,8 +6653,9 @@ class CanvasGraphics {
           canvas,
           context
         } = this.annotationCanvas;
-        canvas.style.width = `calc(${width}px * var(--viewport-scale-factor))`;
-        canvas.style.height = `calc(${height}px * var(--viewport-scale-factor))`;
+        const viewportScaleFactorStr = `var(--zoom-factor) * ${_display_utils.PixelsPerInch.PDF_TO_CSS_UNITS}`;
+        canvas.style.width = `calc(${width}px * ${viewportScaleFactorStr})`;
+        canvas.style.height = `calc(${height}px * ${viewportScaleFactorStr})`;
         this.annotationCanvasMap.set(id, canvas);
         this.annotationCanvas.savedCtx = this.ctx;
         this.ctx = context;
@@ -6652,6 +6690,7 @@ class CanvasGraphics {
       return;
     }
 
+    img = this.getObject(img.data, img);
     const ctx = this.ctx;
     const width = img.width,
           height = img.height;
@@ -6684,17 +6723,18 @@ class CanvasGraphics {
     this.compose();
   }
 
-  paintImageMaskXObjectRepeat(imgData, scaleX, skewX = 0, skewY = 0, scaleY, positions) {
+  paintImageMaskXObjectRepeat(img, scaleX, skewX = 0, skewY = 0, scaleY, positions) {
     if (!this.contentVisible) {
       return;
     }
 
+    img = this.getObject(img.data, img);
     const ctx = this.ctx;
     ctx.save();
     const currentTransform = ctx.mozCurrentTransform;
     ctx.transform(scaleX, skewX, skewY, scaleY, 0, 0);
 
-    const mask = this._createMaskCanvas(imgData);
+    const mask = this._createMaskCanvas(img);
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -6746,7 +6786,7 @@ class CanvasGraphics {
       return;
     }
 
-    const imgData = objId.startsWith("g_") ? this.commonObjs.get(objId) : this.objs.get(objId);
+    const imgData = this.getObject(objId);
 
     if (!imgData) {
       (0, _util.warn)("Dependent image isn't ready yet");
@@ -6761,7 +6801,7 @@ class CanvasGraphics {
       return;
     }
 
-    const imgData = objId.startsWith("g_") ? this.commonObjs.get(objId) : this.objs.get(objId);
+    const imgData = this.getObject(objId);
 
     if (!imgData) {
       (0, _util.warn)("Dependent image isn't ready yet");
@@ -7609,6 +7649,65 @@ exports.TilingPattern = TilingPattern;
 
 /***/ }),
 /* 12 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.applyMaskImageData = applyMaskImageData;
+
+var _util = __w_pdfjs_require__(1);
+
+function applyMaskImageData({
+  src,
+  srcPos = 0,
+  dest,
+  destPos = 0,
+  width,
+  height,
+  inverseDecode = false
+}) {
+  const opaque = _util.FeatureTest.isLittleEndian ? 0xff000000 : 0x000000ff;
+  const [zeroMapping, oneMapping] = !inverseDecode ? [opaque, 0] : [0, opaque];
+  const widthInSource = width >> 3;
+  const widthRemainder = width & 7;
+  const srcLength = src.length;
+  dest = new Uint32Array(dest.buffer);
+
+  for (let i = 0; i < height; i++) {
+    for (const max = srcPos + widthInSource; srcPos < max; srcPos++) {
+      const elem = srcPos < srcLength ? src[srcPos] : 255;
+      dest[destPos++] = elem & 0b10000000 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b1000000 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b100000 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b10000 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b1000 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b100 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b10 ? oneMapping : zeroMapping;
+      dest[destPos++] = elem & 0b1 ? oneMapping : zeroMapping;
+    }
+
+    if (widthRemainder === 0) {
+      continue;
+    }
+
+    const elem = srcPos < srcLength ? src[srcPos++] : 255;
+
+    for (let j = 0; j < widthRemainder; j++) {
+      dest[destPos++] = elem & 1 << 7 - j ? oneMapping : zeroMapping;
+    }
+  }
+
+  return {
+    srcPos,
+    destPos
+  };
+}
+
+/***/ }),
+/* 13 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -7623,7 +7722,7 @@ GlobalWorkerOptions.workerPort = GlobalWorkerOptions.workerPort === undefined ? 
 GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? "" : GlobalWorkerOptions.workerSrc;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8109,7 +8208,7 @@ class MessageHandler {
 exports.MessageHandler = MessageHandler;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8154,7 +8253,7 @@ class Metadata {
 exports.Metadata = Metadata;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8375,7 +8474,7 @@ class OptionalContentConfig {
 exports.OptionalContentConfig = OptionalContentConfig;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8730,7 +8829,7 @@ class PDFDataTransportStreamRangeReader {
 }
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -8794,7 +8893,7 @@ class XfaText {
 exports.XfaText = XfaText;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -8810,9 +8909,9 @@ var _display_utils = __w_pdfjs_require__(5);
 
 var _annotation_storage = __w_pdfjs_require__(9);
 
-var _scripting_utils = __w_pdfjs_require__(19);
+var _scripting_utils = __w_pdfjs_require__(20);
 
-var _xfa_layer = __w_pdfjs_require__(20);
+var _xfa_layer = __w_pdfjs_require__(21);
 
 const DEFAULT_TAB_INDEX = 1000;
 const GetElementsByNameSet = new WeakSet();
@@ -10032,8 +10131,8 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     this.container.className = "choiceWidgetAnnotation";
     const storage = this.annotationStorage;
     const id = this.data.id;
-    storage.getValue(id, {
-      value: this.data.fieldValue.length > 0 ? this.data.fieldValue[0] : undefined
+    const storedData = storage.getValue(id, {
+      value: this.data.fieldValue
     });
     let {
       fontSize
@@ -10077,7 +10176,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
         optionElement.style.fontSize = fontSizeStyle;
       }
 
-      if (this.data.fieldValue.includes(option.exportValue)) {
+      if (storedData.value.includes(option.exportValue)) {
         optionElement.setAttribute("selected", true);
       }
 
@@ -10246,7 +10345,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     } else {
       selectElement.addEventListener("input", function (event) {
         storage.setValue(id, {
-          value: getValue(event)
+          value: getValue(event, true)
         });
       });
     }
@@ -11002,7 +11101,7 @@ class AnnotationLayer {
 exports.AnnotationLayer = AnnotationLayer;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -11070,7 +11169,7 @@ class ColorConverters {
 exports.ColorConverters = ColorConverters;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -11080,7 +11179,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 exports.XfaLayer = void 0;
 
-var _xfa_text = __w_pdfjs_require__(17);
+var _xfa_text = __w_pdfjs_require__(18);
 
 class XfaLayer {
   static setupStorage(html, id, element, storage, intent) {
@@ -11318,7 +11417,7 @@ class XfaLayer {
 exports.XfaLayer = XfaLayer;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -12100,7 +12199,7 @@ function renderTextLayer(renderParameters) {
 }
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
 
@@ -12367,20 +12466,20 @@ var _api = __w_pdfjs_require__(4);
 
 var _display_utils = __w_pdfjs_require__(5);
 
-var _annotation_layer = __w_pdfjs_require__(18);
+var _annotation_layer = __w_pdfjs_require__(19);
 
-var _worker_options = __w_pdfjs_require__(12);
+var _worker_options = __w_pdfjs_require__(13);
 
 var _is_node = __w_pdfjs_require__(3);
 
-var _text_layer = __w_pdfjs_require__(21);
+var _text_layer = __w_pdfjs_require__(22);
 
-var _svg = __w_pdfjs_require__(22);
+var _svg = __w_pdfjs_require__(23);
 
-var _xfa_layer = __w_pdfjs_require__(20);
+var _xfa_layer = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.14.102';
-const pdfjsBuild = 'db4f3adc5';
+const pdfjsVersion = '2.14.171';
+const pdfjsBuild = '3f5c31e20';
 ;
 })();
 
