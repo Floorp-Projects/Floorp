@@ -2002,9 +2002,13 @@ nsresult JsepSessionImpl::CreateGenericSDP(UniquePtr<Sdp>* sdpp) {
   //     local address in this field.  As mentioned in [RFC4566], the
   //     entire o= line needs to be unique, but selecting a random number
   //     for <sess-id> is sufficient to accomplish this.
-
-  auto origin = SdpOrigin("mozilla...THIS_IS_SDPARTA-" MOZ_APP_UA_VERSION,
-                          mSessionId, mSessionVersion, sdp::kIPv4, "0.0.0.0");
+  //
+  // Historical note: we used to report the actual version number here, after
+  // "SDPARTA-", but that becomes a problem starting with version 100, since
+  // some services parse 100 as "10" and give us legacy/broken behavior. So
+  // we're freezing the version number at 99.0 in this string.
+  auto origin = SdpOrigin("mozilla...THIS_IS_SDPARTA-99.0", mSessionId,
+                          mSessionVersion, sdp::kIPv4, "0.0.0.0");
 
   UniquePtr<Sdp> sdp = MakeUnique<SipccSdp>(origin);
 
