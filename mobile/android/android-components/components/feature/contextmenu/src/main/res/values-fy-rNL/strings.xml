@@ -13,7 +13,7 @@
     <!-- Text for context menu item to share the image with an other app. -->
     <string name="mozac_feature_contextmenu_share_image">Ofbylding diele</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_link">Keppeling kopierje</string>
+    <string name="mozac_feature_contextmenu_copy_link">Keppeling kopiearje</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_image_location">Ofbyldingslokaasje kopiearje</string>
     <!-- Text for context menu item to save / download the image. -->
