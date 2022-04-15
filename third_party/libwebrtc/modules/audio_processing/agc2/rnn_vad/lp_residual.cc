@@ -101,17 +101,17 @@ void ComputeAndPostProcessLpcCoefficients(
   ComputeInitialInverseFilterCoefficients(auto_corr, lpc_coeffs_pre);
   // LPC coefficients post-processing.
   // TODO(bugs.webrtc.org/9076): Consider removing these steps.
-  float c1 = 1.f;
-  for (size_t i = 0; i < kNumLpcCoefficients - 1; ++i) {
-    c1 *= 0.9f;
-    lpc_coeffs_pre[i] *= c1;
-  }
-  const float c2 = 0.8f;
-  lpc_coeffs[0] = lpc_coeffs_pre[0] + c2;
-  lpc_coeffs[1] = lpc_coeffs_pre[1] + c2 * lpc_coeffs_pre[0];
-  lpc_coeffs[2] = lpc_coeffs_pre[2] + c2 * lpc_coeffs_pre[1];
-  lpc_coeffs[3] = lpc_coeffs_pre[3] + c2 * lpc_coeffs_pre[2];
-  lpc_coeffs[4] = c2 * lpc_coeffs_pre[3];
+  lpc_coeffs_pre[0] *= 0.9f;
+  lpc_coeffs_pre[1] *= 0.9f * 0.9f;
+  lpc_coeffs_pre[2] *= 0.9f * 0.9f * 0.9f;
+  lpc_coeffs_pre[3] *= 0.9f * 0.9f * 0.9f * 0.9f;
+  constexpr float kC = 0.8f;
+  lpc_coeffs[0] = lpc_coeffs_pre[0] + kC;
+  lpc_coeffs[1] = lpc_coeffs_pre[1] + kC * lpc_coeffs_pre[0];
+  lpc_coeffs[2] = lpc_coeffs_pre[2] + kC * lpc_coeffs_pre[1];
+  lpc_coeffs[3] = lpc_coeffs_pre[3] + kC * lpc_coeffs_pre[2];
+  lpc_coeffs[4] = kC * lpc_coeffs_pre[3];
+  static_assert(kNumLpcCoefficients == 5, "Update `lpc_coeffs(_pre)`.");
 }
 
 void ComputeLpResidual(
