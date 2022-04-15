@@ -1551,7 +1551,7 @@ TEST_F(RTCStatsCollectorTest,
   cricket::VoiceReceiverInfo voice_receiver_info;
   voice_receiver_info.local_stats.push_back(cricket::SsrcReceiverInfo());
   voice_receiver_info.local_stats[0].ssrc = 3;
-  voice_receiver_info.audio_level = 16383;
+  voice_receiver_info.audio_level = 16383;  // [0,32767]
   voice_receiver_info.total_output_energy = 0.125;
   voice_receiver_info.total_samples_received = 4567;
   voice_receiver_info.total_output_duration = 0.25;
@@ -1596,7 +1596,7 @@ TEST_F(RTCStatsCollectorTest,
   expected_remote_audio_track.remote_source = true;
   expected_remote_audio_track.ended = false;
   expected_remote_audio_track.detached = false;
-  expected_remote_audio_track.audio_level = 16383.0 / 32767.0;
+  expected_remote_audio_track.audio_level = 16383.0 / 32767.0;  // [0,1]
   expected_remote_audio_track.total_audio_energy = 0.125;
   expected_remote_audio_track.total_samples_received = 4567;
   expected_remote_audio_track.total_samples_duration = 0.25;
@@ -1791,7 +1791,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   voice_media_info.receivers[0].concealment_events = 6;
   voice_media_info.receivers[0].inserted_samples_for_deceleration = 7;
   voice_media_info.receivers[0].removed_samples_for_acceleration = 8;
-  voice_media_info.receivers[0].audio_level = 9.0;
+  voice_media_info.receivers[0].audio_level = 14442;  // [0,32767]
   voice_media_info.receivers[0].total_output_energy = 10.0;
   voice_media_info.receivers[0].total_output_duration = 11.0;
 
@@ -1841,7 +1841,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   expected_audio.concealment_events = 6;
   expected_audio.inserted_samples_for_deceleration = 7;
   expected_audio.removed_samples_for_acceleration = 8;
-  expected_audio.audio_level = 9.0;
+  expected_audio.audio_level = 14442.0 / 32767.0;  // [0,1]
   expected_audio.total_audio_energy = 10.0;
   expected_audio.total_samples_duration = 11.0;
 
