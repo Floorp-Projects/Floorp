@@ -997,8 +997,16 @@ TEST_F(VideoSendStreamImplTest, ConfiguresBitratesForSvc) {
           const bool using_alr = test_config.alr || test_config.screenshare;
           // If ALR is used, pads only to min bitrate as rampup is handled by
           // probing. Otherwise target_bitrate contains the padding target.
+          const RateControlSettings trials =
+              RateControlSettings::ParseFromFieldTrials();
           int expected_padding =
-              using_alr ? stream.min_bitrate_bps : stream.target_bitrate_bps;
+              using_alr
+                  ? stream.min_bitrate_bps
+                  : static_cast<int>(stream.target_bitrate_bps *
+                                     trials.GetSimulcastHysteresisFactor(
+                                         test_config.screenshare
+                                             ? VideoCodecMode::kScreensharing
+                                             : VideoCodecMode::kRealtimeVideo));
           // Min padding bitrate may override padding target.
           expected_padding =
               std::max(expected_padding, test_config.min_padding_bitrate_bps);

@@ -1161,6 +1161,15 @@ void VideoStreamEncoder::SetEncoderRates(
   bool rate_control_changed =
       (!last_encoder_rate_settings_.has_value() ||
        last_encoder_rate_settings_->rate_control != rate_settings.rate_control);
+  // For layer allocation signal we care only about the target bitrate (not the
+  // adjusted one) and the target fps.
+  bool layer_allocation_changed =
+      !last_encoder_rate_settings_.has_value() ||
+      last_encoder_rate_settings_->rate_control.target_bitrate !=
+          rate_settings.rate_control.target_bitrate ||
+      last_encoder_rate_settings_->rate_control.framerate_fps !=
+          rate_settings.rate_control.framerate_fps;
+
   if (last_encoder_rate_settings_ != rate_settings) {
     last_encoder_rate_settings_ = rate_settings;
   }
@@ -1191,9 +1200,10 @@ void VideoStreamEncoder::SetEncoderRates(
         rate_settings.rate_control.bitrate,
         static_cast<uint32_t>(rate_settings.rate_control.framerate_fps + 0.5));
     stream_resource_manager_.SetEncoderRates(rate_settings.rate_control);
-    if (settings_.allocation_cb_type ==
-        VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-            kVideoLayersAllocation) {
+    if (layer_allocation_changed &&
+        settings_.allocation_cb_type ==
+            VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+                kVideoLayersAllocation) {
       sink_->OnVideoLayersAllocationUpdated(CreateVideoLayersAllocation(
           send_codec_, rate_settings.rate_control, encoder_->GetEncoderInfo()));
     }

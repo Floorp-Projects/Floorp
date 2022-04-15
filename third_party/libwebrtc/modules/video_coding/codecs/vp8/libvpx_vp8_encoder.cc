@@ -68,9 +68,6 @@ constexpr uint32_t kVp832ByteAlign = 32u;
 constexpr int kRtpTicksPerSecond = 90000;
 constexpr int kRtpTicksPerMs = kRtpTicksPerSecond / 1000;
 
-constexpr double kLowRateFactor = 1.0;
-constexpr double kHighRateFactor = 2.0;
-
 // VP8 denoiser states.
 enum denoiserState : uint32_t {
   kDenoiserOff,
@@ -82,15 +79,6 @@ enum denoiserState : uint32_t {
   kDenoiserOnAdaptive
 };
 
-// These settings correspond to the settings in vpx_codec_enc_cfg.
-struct Vp8RateSettings {
-  uint32_t rc_undershoot_pct;
-  uint32_t rc_overshoot_pct;
-  uint32_t rc_buf_sz;
-  uint32_t rc_buf_optimal_sz;
-  uint32_t rc_dropframe_thresh;
-};
-
 // Greatest common divisior
 int GCD(int a, int b) {
   int c = a % b;
@@ -100,56 +88,6 @@ int GCD(int a, int b) {
     c = a % b;
   }
   return b;
-}
-
-uint32_t Interpolate(uint32_t low,
-                     uint32_t high,
-                     double bandwidth_headroom_factor) {
-  RTC_DCHECK_GE(bandwidth_headroom_factor, kLowRateFactor);
-  RTC_DCHECK_LE(bandwidth_headroom_factor, kHighRateFactor);
-
-  // |factor| is between 0.0 and 1.0.
-  const double factor = bandwidth_headroom_factor - kLowRateFactor;
-
-  return static_cast<uint32_t>(((1.0 - factor) * low) + (factor * high) + 0.5);
-}
-
-Vp8RateSettings GetRateSettings(double bandwidth_headroom_factor) {
-  static const Vp8RateSettings low_settings{1000u, 0u, 100u, 30u, 40u};
-  static const Vp8RateSettings high_settings{100u, 15u, 1000u, 600u, 5u};
-
-  if (bandwidth_headroom_factor <= kLowRateFactor) {
-    return low_settings;
-  } else if (bandwidth_headroom_factor >= kHighRateFactor) {
-    return high_settings;
-  }
-
-  Vp8RateSettings settings;
-  settings.rc_undershoot_pct =
-      Interpolate(low_settings.rc_undershoot_pct,
-                  high_settings.rc_undershoot_pct, bandwidth_headroom_factor);
-  settings.rc_overshoot_pct =
-      Interpolate(low_settings.rc_overshoot_pct, high_settings.rc_overshoot_pct,
-                  bandwidth_headroom_factor);
-  settings.rc_buf_sz =
-      Interpolate(low_settings.rc_buf_sz, high_settings.rc_buf_sz,
-                  bandwidth_headroom_factor);
-  settings.rc_buf_optimal_sz =
-      Interpolate(low_settings.rc_buf_optimal_sz,
-                  high_settings.rc_buf_optimal_sz, bandwidth_headroom_factor);
-  settings.rc_dropframe_thresh =
-      Interpolate(low_settings.rc_dropframe_thresh,
-                  high_settings.rc_dropframe_thresh, bandwidth_headroom_factor);
-  return settings;
-}
-
-void UpdateRateSettings(vpx_codec_enc_cfg_t* config,
-                        const Vp8RateSettings& new_settings) {
-  config->rc_undershoot_pct = new_settings.rc_undershoot_pct;
-  config->rc_overshoot_pct = new_settings.rc_overshoot_pct;
-  config->rc_buf_sz = new_settings.rc_buf_sz;
-  config->rc_buf_optimal_sz = new_settings.rc_buf_optimal_sz;
-  config->rc_dropframe_thresh = new_settings.rc_dropframe_thresh;
 }
 
 static_assert(Vp8EncoderConfig::TemporalLayerConfig::kMaxPeriodicity ==
@@ -406,14 +344,6 @@ void LibvpxVp8Encoder::SetRates(const RateControlParameters& parameters) {
     }
 
     UpdateVpxConfiguration(stream_idx);
-
-    if (rate_control_settings_.Vp8DynamicRateSettings()) {
-      // Tweak rate control settings based on available network headroom.
-      UpdateRateSettings(
-          &vpx_configs_[i],
-          GetRateSettings(parameters.bandwidth_allocation.bps<double>() /
-                          parameters.bitrate.get_sum_bps()));
-    }
 
     vpx_codec_err_t err =
         libvpx_->codec_enc_config_set(&encoders_[i], &vpx_configs_[i]);

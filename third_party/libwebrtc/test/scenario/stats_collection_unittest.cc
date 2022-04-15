@@ -87,7 +87,7 @@ TEST(ScenarioAnalyzerTest, PsnrIsLowWhenNetworkIsBad) {
   EXPECT_NEAR(stats.call.stats().target_rate.Mean().kbps(), 75, 50);
   EXPECT_NEAR(stats.video_send.stats().media_bitrate.Mean().kbps(), 100, 50);
   EXPECT_NEAR(stats.video_receive.stats().resolution.Mean(), 180, 10);
-  EXPECT_NEAR(stats.audio_receive.stats().jitter_buffer.Mean().ms(), 200, 150);
+  EXPECT_NEAR(stats.audio_receive.stats().jitter_buffer.Mean().ms(), 250, 150);
 }
 
 TEST(ScenarioAnalyzerTest, CountsCapturedButNotRendered) {
