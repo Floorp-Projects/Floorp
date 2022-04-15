@@ -1450,7 +1450,7 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Identificazioni di cunnessione arregistrate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">L’identificazioni di cunnessione chì voi arregistrate o sincrunizate seranu affissate quì.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">L’identificazioni di cunnessione chì voi arregistrate o sincrunizate cù %s seranu affissate quì.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sapene di più nant’à Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
