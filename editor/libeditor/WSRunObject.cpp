@@ -3090,6 +3090,10 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           atPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(
                   atEndOfVisibleWhiteSpaces);
+          if (MOZ_UNLIKELY(NS_WARN_IF(
+                  !atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet()))) {
+            return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+          }
           atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(
                   atPreviousCharOfEndOfVisibleWhiteSpaces);

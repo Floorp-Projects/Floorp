@@ -373,14 +373,27 @@ class UrlbarInput {
       valid = true;
     }
 
+    const previousUntrimmedValue = this.untrimmedValue;
+    const previousSelectionStart = this.selectionStart;
+    const previousSelectionEnd = this.selectionEnd;
+
     let isDifferentValidValue = valid && value != this.untrimmedValue;
     this.value = value;
     this.valueIsTyped = !valid;
     this.removeAttribute("usertyping");
     if (isDifferentValidValue) {
-      // The selection is enforced only for new values, to avoid overriding the
-      // cursor position when the user switches windows while typing.
-      this.selectionStart = this.selectionEnd = 0;
+      // If the caret is at the end of the input or its position is beyond the
+      // end of the new value, keep it at the end. Otherwise keep its current
+      // position.
+      const isCaretPositionEnd =
+        previousUntrimmedValue.length === previousSelectionEnd ||
+        value.length <= previousSelectionEnd;
+      if (isCaretPositionEnd) {
+        this.selectionStart = this.selectionEnd = value.length;
+      } else {
+        this.selectionStart = previousSelectionStart;
+        this.selectionEnd = previousSelectionEnd;
+      }
     }
 
     // The proxystate must be set before setting search mode below because

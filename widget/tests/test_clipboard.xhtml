@@ -22,8 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
 
   /** Test for Bug 948065 **/
 
-  const kIsMac = navigator.platform.indexOf("Mac") == 0;
-
   function getLoadContext() {
     return window.docShell.QueryInterface(Ci.nsILoadContext);
   }
@@ -60,11 +58,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
     helper.copyString(data);
     is(paste(Services.clipboard), data, 'Data was successfully copied.');
 
-    // Test emptyClipboard, disabled for OSX because bug 666254
-    if (!kIsMac) {
-      Services.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
-      is(paste(Services.clipboard), '', 'Data was successfully cleared.');
-    }
+    Services.clipboard.emptyClipboard(Ci.nsIClipboard.kGlobalClipboard);
+    is(paste(Services.clipboard), '', 'Data was successfully cleared.');
   }
 
   ]]>

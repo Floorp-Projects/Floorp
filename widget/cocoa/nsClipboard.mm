@@ -60,8 +60,7 @@ mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 
 @end  // UTIHelper
 
-nsClipboard::nsClipboard()
-    : mCachedClipboard(-1), mChangeCount(0), mIgnoreEmptyNotification(false) {}
+nsClipboard::nsClipboard() : nsBaseClipboard(), mCachedClipboard(-1), mChangeCount(0) {}
 
 nsClipboard::~nsClipboard() {
   EmptyClipboard(kGlobalClipboard);
@@ -69,7 +68,7 @@ nsClipboard::~nsClipboard() {
   ClearSelectionCache();
 }
 
-NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS_INHERITED0(nsClipboard, nsBaseClipboard)
 
 // We separate this into its own function because after an @try, all local
 // variables within that function get marked as volatile, and our C++ type
@@ -347,7 +346,10 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
       }
     }
   } else {
+    // Remove transferable cache only. Don't clear system clipboard.
+    mEmptyingForSetData = true;
     EmptyClipboard(aWhichClipboard);
+    mEmptyingForSetData = false;
   }
 
   // at this point we can't satisfy the request from cache data so let's look
@@ -706,82 +708,32 @@ nsClipboard::SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
     return NS_ERROR_FAILURE;
   }
 
-  if (aTransferable == mTransferable && anOwner == mClipboardOwner) {
-    return NS_OK;
-  }
-  bool selectClipPresent;
-  SupportsSelectionClipboard(&selectClipPresent);
-  bool findClipPresent;
-  SupportsFindClipboard(&findClipPresent);
-  if (!selectClipPresent && !findClipPresent && aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_FAILURE;
-  }
-
-  EmptyClipboard(aWhichClipboard);
-
-  mClipboardOwner = anOwner;
-  mTransferable = aTransferable;
-
-  nsresult rv = NS_ERROR_FAILURE;
-  if (mTransferable) {
-    rv = SetNativeClipboardData(aWhichClipboard);
-  }
-
-  return rv;
-}
-
-/**
- * Gets the transferable object
- *
- */
-NS_IMETHODIMP
-nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
-  NS_ASSERTION(aTransferable, "clipboard given a null transferable");
-
-  bool selectClipPresent;
-  SupportsSelectionClipboard(&selectClipPresent);
-  bool findClipPresent;
-  SupportsFindClipboard(&findClipPresent);
-  if (!selectClipPresent && !findClipPresent && aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_FAILURE;
-
-  if (aTransferable) {
-    return GetNativeClipboardData(aTransferable, aWhichClipboard);
-  }
-
-  return NS_ERROR_FAILURE;
+  return nsBaseClipboard::SetData(aTransferable, anOwner, aWhichClipboard);
 }
 
 NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
   if (aWhichClipboard == kSelectionCache) {
     ClearSelectionCache();
     return NS_OK;
   }
 
-  bool selectClipPresent;
-  SupportsSelectionClipboard(&selectClipPresent);
-  bool findClipPresent;
-  SupportsFindClipboard(&findClipPresent);
-  if (!selectClipPresent && !findClipPresent && aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_FAILURE;
+  if (!mEmptyingForSetData) {
+    NSPasteboard* cocoaPasteboard = nullptr;
+    if (aWhichClipboard == kFindClipboard) {
+      cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    } else if (aWhichClipboard == kGlobalClipboard) {
+      cocoaPasteboard = [NSPasteboard generalPasteboard];
+    }
+    if (cocoaPasteboard) {
+      [cocoaPasteboard clearContents];
+      mChangeCount = [cocoaPasteboard changeCount];
+    }
   }
 
-  if (mIgnoreEmptyNotification) {
-    return NS_OK;
-  }
+  return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
 
-  if (mClipboardOwner) {
-    mClipboardOwner->LosingOwnership(mTransferable);
-    mClipboardOwner = nullptr;
-  }
-
-  mTransferable = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(bool* _retval) {
-  *_retval = false;  // we don't support the selection clipboard by default.
-  return NS_OK;
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
