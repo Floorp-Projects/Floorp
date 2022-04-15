@@ -335,7 +335,6 @@ class HomeFragment : Fragment() {
                     appStore = components.appStore,
                     messagingStorage = components.analytics.messagingStorage,
                     homeActivity = activity,
-                    metrics = components.analytics.metrics
                 ),
                 store = store,
                 tabCollectionStorage = components.core.tabCollectionStorage,
