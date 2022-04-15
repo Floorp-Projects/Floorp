@@ -26,5 +26,6 @@ native API header files.
  * Continuous build: http://build.chromium.org/p/client.webrtc
  * [Coding style guide](style-guide.md)
  * [Code of conduct](CODE_OF_CONDUCT.md)
+ * [Reporting bugs](docs/bug-reporting.md)
 
 [native-dev]: https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/index.md
