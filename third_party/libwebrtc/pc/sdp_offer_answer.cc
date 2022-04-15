@@ -15,6 +15,7 @@
 #include <map>
 #include <queue>
 #include <type_traits>
+#include <utility>
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
@@ -1021,6 +1022,10 @@ const TransceiverList* SdpOfferAnswerHandler::transceivers() const {
   return pc_->rtp_manager()->transceivers();
 }
 JsepTransportController* SdpOfferAnswerHandler::transport_controller() {
+  return pc_->transport_controller();
+}
+const JsepTransportController* SdpOfferAnswerHandler::transport_controller()
+    const {
   return pc_->transport_controller();
 }
 DataChannelController* SdpOfferAnswerHandler::data_channel_controller() {
@@ -2766,6 +2771,16 @@ bool SdpOfferAnswerHandler::IceRestartPending(
   RTC_DCHECK_RUN_ON(signaling_thread());
   return pending_ice_restarts_.find(content_name) !=
          pending_ice_restarts_.end();
+}
+
+bool SdpOfferAnswerHandler::NeedsIceRestart(
+    const std::string& content_name) const {
+  return transport_controller()->NeedsIceRestart(content_name);
+}
+
+absl::optional<rtc::SSLRole> SdpOfferAnswerHandler::GetDtlsRole(
+    const std::string& mid) const {
+  return transport_controller()->GetDtlsRole(mid);
 }
 
 void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {

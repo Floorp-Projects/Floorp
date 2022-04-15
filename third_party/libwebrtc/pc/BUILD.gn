@@ -219,6 +219,7 @@ rtc_library("peerconnection") {
     ":rtp_sender",
     ":rtp_transceiver",
     ":rtp_transmission_manager",
+    ":sdp_state_provider",
     ":stats_collector_interface",
     ":transceiver_list",
     ":usage_pattern",
@@ -558,6 +559,14 @@ rtc_source_set("jitter_buffer_delay_interface") {
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_source_set("sdp_state_provider") {
+  sources = [ "sdp_state_provider.h" ]
+  deps = [
+    ":rtc_pc_base",
+    "../api:libjingle_peerconnection_api",
   ]
 }
 

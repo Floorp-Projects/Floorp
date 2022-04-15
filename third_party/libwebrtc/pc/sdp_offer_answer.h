@@ -37,6 +37,7 @@
 #include "api/set_remote_description_observer_interface.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/turn_customizer.h"
+#include "api/video/video_bitrate_allocator_factory.h"
 #include "media/base/media_channel.h"
 #include "media/base/stream_params.h"
 #include "p2p/base/port_allocator.h"
@@ -56,6 +57,7 @@
 #include "pc/rtp_transceiver.h"
 #include "pc/rtp_transmission_manager.h"
 #include "pc/sctp_transport.h"
+#include "pc/sdp_state_provider.h"
 #include "pc/session_description.h"
 #include "pc/stats_collector.h"
 #include "pc/stream_collection.h"
@@ -65,21 +67,16 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/operations_chain.h"
 #include "rtc_base/race_checker.h"
+#include "rtc_base/rtc_certificate.h"
+#include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
 #include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
-
-class MediaStreamObserver;
-class PeerConnection;
-class VideoRtpReceiver;
-class RtcEventLog;
-class RtpTransmissionManager;
-class TransceiverList;
-class WebRtcSessionDescriptionFactory;
 
 // SdpOfferAnswerHandler is a component
 // of the PeerConnection object as defined
@@ -88,7 +85,8 @@ class WebRtcSessionDescriptionFactory;
 // - Parsing and interpreting SDP.
 // - Generating offers and answers based on the current state.
 // This class lives on the signaling thread.
-class SdpOfferAnswerHandler : public sigslot::has_slots<> {
+class SdpOfferAnswerHandler : public SdpStateProvider,
+                              public sigslot::has_slots<> {
  public:
   explicit SdpOfferAnswerHandler(PeerConnection* pc);
   ~SdpOfferAnswerHandler();
@@ -114,16 +112,22 @@ class SdpOfferAnswerHandler : public sigslot::has_slots<> {
   // Called as part of destroying the owning PeerConnection.
   void PrepareForShutdown();
 
-  PeerConnectionInterface::SignalingState signaling_state() const;
+  // Implementation of SdpStateProvider
+  PeerConnectionInterface::SignalingState signaling_state() const override;
 
-  const SessionDescriptionInterface* local_description() const;
-  const SessionDescriptionInterface* remote_description() const;
-  const SessionDescriptionInterface* current_local_description() const;
-  const SessionDescriptionInterface* current_remote_description() const;
-  const SessionDescriptionInterface* pending_local_description() const;
-  const SessionDescriptionInterface* pending_remote_description() const;
+  const SessionDescriptionInterface* local_description() const override;
+  const SessionDescriptionInterface* remote_description() const override;
+  const SessionDescriptionInterface* current_local_description() const override;
+  const SessionDescriptionInterface* current_remote_description()
+      const override;
+  const SessionDescriptionInterface* pending_local_description() const override;
+  const SessionDescriptionInterface* pending_remote_description()
+      const override;
 
-  JsepTransportController* transport_controller();
+  bool NeedsIceRestart(const std::string& content_name) const override;
+  bool IceRestartPending(const std::string& content_name) const override;
+  absl::optional<rtc::SSLRole> GetDtlsRole(
+      const std::string& mid) const override;
 
   void RestartIce();
 
@@ -168,7 +172,6 @@ class SdpOfferAnswerHandler : public sigslot::has_slots<> {
 
   absl::optional<bool> is_caller();
   bool HasNewIceCredentials();
-  bool IceRestartPending(const std::string& content_name) const;
   void UpdateNegotiationNeeded();
   void SetHavePendingRtpDataChannel() {
     RTC_DCHECK_RUN_ON(signaling_thread());
@@ -560,6 +563,8 @@ class SdpOfferAnswerHandler : public sigslot::has_slots<> {
   const cricket::PortAllocator* port_allocator() const;
   RtpTransmissionManager* rtp_manager();
   const RtpTransmissionManager* rtp_manager() const;
+  JsepTransportController* transport_controller();
+  const JsepTransportController* transport_controller() const;
   // ===================================================================
   const cricket::AudioOptions& audio_options() { return audio_options_; }
   const cricket::VideoOptions& video_options() { return video_options_; }
