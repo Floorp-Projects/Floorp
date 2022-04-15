@@ -35,9 +35,8 @@ PitchInfo PitchEstimator::Estimate(
   Decimate2x(pitch_buf, pitch_buf_decimated_view_);
   auto_corr_calculator_.ComputeOnPitchBuffer(pitch_buf_decimated_view_,
                                              auto_corr_view_);
-  CandidatePitchPeriods pitch_candidates_inverted_lags =
-      FindBestPitchPeriods(auto_corr_view_, pitch_buf_decimated_view_,
-                           static_cast<int>(kMaxPitch12kHz));
+  CandidatePitchPeriods pitch_candidates_inverted_lags = FindBestPitchPeriods(
+      auto_corr_view_, pitch_buf_decimated_view_, kMaxPitch12kHz);
   // Refine the pitch period estimation.
   // The refinement is done using the pitch buffer that contains 24 kHz samples.
   // Therefore, adapt the inverted lags in |pitch_candidates_inv_lags| from 12
@@ -47,10 +46,9 @@ PitchInfo PitchEstimator::Estimate(
   const int pitch_inv_lag_48kHz =
       RefinePitchPeriod48kHz(pitch_buf, pitch_candidates_inverted_lags);
   // Look for stronger harmonics to find the final pitch period and its gain.
-  RTC_DCHECK_LT(pitch_inv_lag_48kHz, static_cast<int>(kMaxPitch48kHz));
+  RTC_DCHECK_LT(pitch_inv_lag_48kHz, kMaxPitch48kHz);
   last_pitch_48kHz_ = CheckLowerPitchPeriodsAndComputePitchGain(
-      pitch_buf, static_cast<int>(kMaxPitch48kHz) - pitch_inv_lag_48kHz,
-      last_pitch_48kHz_);
+      pitch_buf, kMaxPitch48kHz - pitch_inv_lag_48kHz, last_pitch_48kHz_);
   return last_pitch_48kHz_;
 }
 

@@ -53,14 +53,14 @@ TEST(RnnVadTest, LpResidualPipelineBitExactness) {
   std::vector<float> expected_lp_residual(kBufSize24kHz);
 
   // Test length.
-  const size_t num_frames = std::min(pitch_buf_24kHz_reader.second,
-                                     static_cast<size_t>(300));  // Max 3 s.
+  const int num_frames =
+      std::min(pitch_buf_24kHz_reader.second, 300);  // Max 3 s.
   ASSERT_GE(lp_residual_reader.second, num_frames);
 
   {
     // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
     // FloatingPointExceptionObserver fpe_observer;
-    for (size_t i = 0; i < num_frames; ++i) {
+    for (int i = 0; i < num_frames; ++i) {
       // Read input.
       ASSERT_TRUE(pitch_buf_24kHz_reader.first->ReadChunk(pitch_buf_data));
       // Read expected output (ignore pitch gain and period).

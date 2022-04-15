@@ -34,11 +34,11 @@ constexpr float kTestPitchGainsHigh = 0.75f;
 class ComputePitchGainThresholdTest
     : public ::testing::Test,
       public ::testing::WithParamInterface<std::tuple<
-          /*candidate_pitch_period=*/size_t,
-          /*pitch_period_ratio=*/size_t,
-          /*initial_pitch_period=*/size_t,
+          /*candidate_pitch_period=*/int,
+          /*pitch_period_ratio=*/int,
+          /*initial_pitch_period=*/int,
           /*initial_pitch_gain=*/float,
-          /*prev_pitch_period=*/size_t,
+          /*prev_pitch_period=*/int,
           /*prev_pitch_gain=*/float,
           /*threshold=*/float>> {};
 
@@ -46,11 +46,11 @@ class ComputePitchGainThresholdTest
 // data.
 TEST_P(ComputePitchGainThresholdTest, WithinTolerance) {
   const auto params = GetParam();
-  const size_t candidate_pitch_period = std::get<0>(params);
-  const size_t pitch_period_ratio = std::get<1>(params);
-  const size_t initial_pitch_period = std::get<2>(params);
+  const int candidate_pitch_period = std::get<0>(params);
+  const int pitch_period_ratio = std::get<1>(params);
+  const int initial_pitch_period = std::get<2>(params);
   const float initial_pitch_gain = std::get<3>(params);
-  const size_t prev_pitch_period = std::get<4>(params);
+  const int prev_pitch_period = std::get<4>(params);
   const float prev_pitch_gain = std::get<5>(params);
   const float threshold = std::get<6>(params);
   {

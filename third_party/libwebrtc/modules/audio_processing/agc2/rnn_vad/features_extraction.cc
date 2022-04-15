@@ -69,7 +69,7 @@ bool FeaturesExtractor::CheckSilenceComputeFeatures(
   // into the output vector (normalization based on training data stats).
   pitch_info_48kHz_ = pitch_estimator_.Estimate(lp_residual_view_);
   feature_vector[kFeatureVectorSize - 2] =
-      0.01f * (static_cast<int>(pitch_info_48kHz_.period) - 300);
+      0.01f * (pitch_info_48kHz_.period - 300);
   // Extract lagged frames (according to the estimated pitch period).
   RTC_DCHECK_LE(pitch_info_48kHz_.period / 2, kMaxPitch24kHz);
   auto lagged_frame = pitch_buf_24kHz_view_.subview(

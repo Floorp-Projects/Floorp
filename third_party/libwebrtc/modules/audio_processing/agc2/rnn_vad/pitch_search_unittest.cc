@@ -28,22 +28,21 @@ namespace test {
 // pitch gain is within tolerance given test input data.
 TEST(RnnVadTest, PitchSearchWithinTolerance) {
   auto lp_residual_reader = CreateLpResidualAndPitchPeriodGainReader();
-  const size_t num_frames = std::min(lp_residual_reader.second,
-                                     static_cast<size_t>(300));  // Max 3 s.
+  const int num_frames = std::min(lp_residual_reader.second, 300);  // Max 3 s.
   std::vector<float> lp_residual(kBufSize24kHz);
   float expected_pitch_period, expected_pitch_gain;
   PitchEstimator pitch_estimator;
   {
     // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
     // FloatingPointExceptionObserver fpe_observer;
-    for (size_t i = 0; i < num_frames; ++i) {
+    for (int i = 0; i < num_frames; ++i) {
       SCOPED_TRACE(i);
       lp_residual_reader.first->ReadChunk(lp_residual);
       lp_residual_reader.first->ReadValue(&expected_pitch_period);
       lp_residual_reader.first->ReadValue(&expected_pitch_gain);
       PitchInfo pitch_info =
           pitch_estimator.Estimate({lp_residual.data(), kBufSize24kHz});
-      EXPECT_EQ(static_cast<int>(expected_pitch_period), pitch_info.period);
+      EXPECT_EQ(expected_pitch_period, pitch_info.period);
       EXPECT_NEAR(expected_pitch_gain, pitch_info.gain, 1e-5f);
     }
   }

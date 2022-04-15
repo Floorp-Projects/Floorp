@@ -48,8 +48,8 @@ void AutoCorrelationCalculator::ComputeOnPitchBuffer(
     rtc::ArrayView<float, kNumInvertedLags12kHz> auto_corr) {
   RTC_DCHECK_LT(auto_corr.size(), kMaxPitch12kHz);
   RTC_DCHECK_GT(pitch_buf.size(), kMaxPitch12kHz);
-  constexpr size_t kFftFrameSize = 1 << kAutoCorrelationFftOrder;
-  constexpr size_t kConvolutionLength = kBufSize12kHz - kMaxPitch12kHz;
+  constexpr int kFftFrameSize = 1 << kAutoCorrelationFftOrder;
+  constexpr int kConvolutionLength = kBufSize12kHz - kMaxPitch12kHz;
   static_assert(kConvolutionLength == kFrameSize20ms12kHz,
                 "Mismatch between pitch buffer size, frame size and maximum "
                 "pitch period.");
