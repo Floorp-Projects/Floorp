@@ -2991,7 +2991,8 @@ TEST_F(WebRtcSdpTest, DeserializeSdpWithSctpDataChannelsButWrongMediaType) {
   JsepSessionDescription jdesc_output(kDummyType);
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
 
-  EXPECT_EQ(0u, jdesc_output.description()->contents().size());
+  EXPECT_EQ(1u, jdesc_output.description()->contents().size());
+  EXPECT_TRUE(jdesc_output.description()->contents()[0].rejected);
 }
 
 // Helper function to set the max-message-size parameter in the
@@ -4725,21 +4726,32 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutCname) {
 }
 
 TEST_F(WebRtcSdpTest, DeserializeSdpWithUnsupportedMediaType) {
-  bool use_sctpmap = true;
-  AddSctpDataChannel(use_sctpmap);
-  JsepSessionDescription jdesc(kDummyType);
-  ASSERT_TRUE(jdesc.Initialize(desc_.Clone(), kSessionId, kSessionVersion));
-
   std::string sdp = kSdpSessionString;
   sdp +=
       "m=bogus 9 RTP/SAVPF 0 8\r\n"
-      "c=IN IP4 0.0.0.0\r\n";
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=mid:bogusmid\r\n";
   sdp +=
       "m=audio/something 9 RTP/SAVPF 0 8\r\n"
-      "c=IN IP4 0.0.0.0\r\n";
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=mid:somethingmid\r\n";
 
   JsepSessionDescription jdesc_output(kDummyType);
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
 
-  EXPECT_EQ(0u, jdesc_output.description()->contents().size());
+  ASSERT_EQ(2u, jdesc_output.description()->contents().size());
+  ASSERT_NE(nullptr, jdesc_output.description()
+                         ->contents()[0]
+                         .media_description()
+                         ->as_unsupported());
+  ASSERT_NE(nullptr, jdesc_output.description()
+                         ->contents()[1]
+                         .media_description()
+                         ->as_unsupported());
+
+  EXPECT_TRUE(jdesc_output.description()->contents()[0].rejected);
+  EXPECT_TRUE(jdesc_output.description()->contents()[1].rejected);
+
+  EXPECT_EQ(jdesc_output.description()->contents()[0].name, "bogusmid");
+  EXPECT_EQ(jdesc_output.description()->contents()[1].name, "somethingmid");
 }
