@@ -140,8 +140,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpSenderCapabilities(
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RtpCapabilities();
   }
-  // Not reached; avoids compile warning.
-  FATAL();
+  RTC_CHECK(false);
 }
 
 RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
@@ -167,8 +166,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RtpCapabilities();
   }
-  // Not reached; avoids compile warning.
-  FATAL();
+  RTC_CHECK(false);
 }
 
 rtc::scoped_refptr<AudioSourceInterface>

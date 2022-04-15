@@ -31,9 +31,7 @@ std::string MediaTypeToString(MediaType type) {
       RTC_NOTREACHED();
       return "";
   }
-  FATAL();
-  // Not reachable; avoids compile warning.
-  return "";
+  RTC_CHECK(false);
 }
 
 }  // namespace cricket
