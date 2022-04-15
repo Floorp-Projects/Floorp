@@ -602,17 +602,24 @@ LoginManager.prototype = {
       return false;
     }
 
-    let uri = Services.io.newURI(origin);
-    let principal = Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      {}
-    );
-    return (
-      Services.perms.testPermissionFromPrincipal(
-        principal,
-        PERMISSION_SAVE_LOGINS
-      ) != Services.perms.DENY_ACTION
-    );
+    try {
+      let uri = Services.io.newURI(origin);
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        {}
+      );
+      return (
+        Services.perms.testPermissionFromPrincipal(
+          principal,
+          PERMISSION_SAVE_LOGINS
+        ) != Services.perms.DENY_ACTION
+      );
+    } catch (ex) {
+      if (!origin.startsWith("chrome:")) {
+        Cu.reportError(ex);
+      }
+      return false;
+    }
   },
 
   /**

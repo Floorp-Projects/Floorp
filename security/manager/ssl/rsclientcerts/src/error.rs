@@ -19,6 +19,7 @@ macro_rules! error_here {
 
 /// Error type for identifying errors in this crate. Use the error_here! macro
 /// to instantiate.
+#[derive(Debug)]
 pub struct Error {
     typ: ErrorType,
     file: &'static str,
@@ -47,6 +48,25 @@ impl fmt::Display for Error {
     }
 }
 
+impl Clone for Error {
+    fn clone(&self) -> Self {
+        Error {
+            typ: self.typ,
+            file: self.file,
+            line: self.line,
+            info: self.info.as_ref().cloned(),
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        self.typ = source.typ;
+        self.file = source.file;
+        self.line = source.line;
+        self.info = source.info.as_ref().cloned();
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
 pub enum ErrorType {
     /// An error in an external library or resource.
     ExternalError,

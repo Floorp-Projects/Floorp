@@ -7,21 +7,10 @@ function test() {
 
     if (
       Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel",
+        "browser.download.always_ask_before_handling_new_types",
         false
       )
     ) {
-      // With no download modal, the download will begin on its own, so we need
-      // to wait to be notified by the downloads list when that happens.
-      let downloadView = {
-        onDownloadAdded() {
-          ok(true, "Download was started");
-          gBrowser.removeTab(gBrowser.selectedTab);
-          finish();
-        },
-      };
-      Downloads.getList(Downloads.ALL).then(list => list.addView(downloadView));
-    } else {
       // If the download modal is enabled, wait for it to open and declare the
       // download to have begun when we see it.
       let listener = {
@@ -50,6 +39,17 @@ function test() {
       };
 
       Services.wm.addListener(listener);
+    } else {
+      // With no download modal, the download will begin on its own, so we need
+      // to wait to be notified by the downloads list when that happens.
+      let downloadView = {
+        onDownloadAdded() {
+          ok(true, "Download was started");
+          gBrowser.removeTab(gBrowser.selectedTab);
+          finish();
+        },
+      };
+      Downloads.getList(Downloads.ALL).then(list => list.addView(downloadView));
     }
 
     info("Creating BlobURL and clicking on a HTMLAnchorElement...");

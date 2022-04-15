@@ -23,9 +23,6 @@ version = "0.9"
 [target."cfg(target_os = \"macos\")".dependencies.libloading]
 version = "0.5"
 
-[target."cfg(target_os = \"macos\")".dependencies.rental]
-version = "0.5"
-
 [target."cfg(target_os = \"windows\")".dependencies.winapi]
 version = "0.3"
 features = ["wincrypt"]

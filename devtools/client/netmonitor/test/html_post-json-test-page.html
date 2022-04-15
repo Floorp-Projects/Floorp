@@ -19,30 +19,28 @@
       "use strict";
 
       function post(address, message, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", address, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", address, true);
+          xhr.setRequestHeader("Content-Type", "application/json");
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(message);
-      }
-
-      function performRequests() {
-        post("sjs_simple-test-server.sjs", JSON.stringify({a: 1}), function() {
-          // Done.
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(message);
         });
       }
 
-      function performLargePostDataRequest() {
+      async function performRequests() {
+        await post("sjs_simple-test-server.sjs", JSON.stringify({a: 1}));
+      }
+
+      async function performLargePostDataRequest() {
         const limit = 1048576;
         const data = "x".repeat(2 * limit);
-        post("sjs_simple-test-server.sjs", JSON.stringify(data), function() {
-          // Done.
-        });
+        await post("sjs_simple-test-server.sjs", JSON.stringify(data));
       }
     </script>
   </body>

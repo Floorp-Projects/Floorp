@@ -175,8 +175,8 @@ async function test_download_from(initCoop, downloadCoop) {
     info(`test_download: Download page ready ${start}`);
     info(`Downloading ${downloadCoop}`);
 
-    let expectDialog = !Services.prefs.getBoolPref(
-      "browser.download.improvements_to_download_panel",
+    let expectDialog = Services.prefs.getBoolPref(
+      "browser.download.always_ask_before_handling_new_types",
       false
     );
     let resultPromise = expectDialog

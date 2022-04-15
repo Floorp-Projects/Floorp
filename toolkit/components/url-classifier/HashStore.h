@@ -13,7 +13,6 @@
 #include "nsIFile.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsClassHashtable.h"
 #include <string>
 
 namespace mozilla {
