@@ -21,7 +21,7 @@ namespace cricket {
 
 extern const int kVideoCodecClockrate;
 extern const int kDataCodecClockrate;
-extern const int kDataMaxBandwidth;  // bps
+extern const int kRtpDataMaxBandwidth;  // bps
 
 // Default CPU thresholds.
 extern const float kHighSystemCpuThreshold;

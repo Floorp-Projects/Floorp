@@ -958,7 +958,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateRtpDataOffer) {
   EXPECT_EQ(MEDIA_TYPE_DATA, dcd->type());
   EXPECT_EQ(f1_.rtp_data_codecs(), dcd->codecs());
   EXPECT_EQ(0U, dcd->first_ssrc());  // no sender is attached.
-  EXPECT_EQ(cricket::kDataMaxBandwidth,
+  EXPECT_EQ(cricket::kRtpDataMaxBandwidth,
             dcd->bandwidth());   // default bandwidth (auto)
   EXPECT_TRUE(dcd->rtcp_mux());  // rtcp-mux defaults on
   ASSERT_CRYPTO(dcd, 1U, kDefaultSrtpCryptoSuite);
@@ -2483,7 +2483,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateMultiStreamVideoOffer) {
   ASSERT_EQ(1U, data_streams[1].ssrcs.size());
   EXPECT_NE(0U, data_streams[1].ssrcs[0]);
 
-  EXPECT_EQ(cricket::kDataMaxBandwidth,
+  EXPECT_EQ(cricket::kRtpDataMaxBandwidth,
             dcd->bandwidth());   // default bandwidth (auto)
   EXPECT_TRUE(dcd->rtcp_mux());  // rtcp-mux defaults on
   ASSERT_CRYPTO(dcd, 1U, kDefaultSrtpCryptoSuite);
@@ -2843,7 +2843,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateMultiStreamVideoAnswer) {
   ASSERT_EQ(1U, data_streams[1].ssrcs.size());
   EXPECT_NE(0U, data_streams[1].ssrcs[0]);
 
-  EXPECT_EQ(cricket::kDataMaxBandwidth,
+  EXPECT_EQ(cricket::kRtpDataMaxBandwidth,
             dcd->bandwidth());   // default bandwidth (auto)
   EXPECT_TRUE(dcd->rtcp_mux());  // rtcp-mux defaults on
 

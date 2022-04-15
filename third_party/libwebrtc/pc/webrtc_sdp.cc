@@ -3044,11 +3044,11 @@ bool ParseContent(const std::string& message,
       // the first place and provides another way to get around the limitation.
       if (media_type == cricket::MEDIA_TYPE_DATA &&
           cricket::IsRtpProtocol(protocol) &&
-          (b > cricket::kDataMaxBandwidth / 1000 ||
+          (b > cricket::kRtpDataMaxBandwidth / 1000 ||
            bandwidth_type == kTransportSpecificBandwidth)) {
         rtc::StringBuilder description;
         description << "RTP-based data channels may not send more than "
-                    << cricket::kDataMaxBandwidth / 1000 << "kbps.";
+                    << cricket::kRtpDataMaxBandwidth / 1000 << "kbps.";
         return ParseFailed(line, description.str(), error);
       }
       // Convert values. Prevent integer overflow.
