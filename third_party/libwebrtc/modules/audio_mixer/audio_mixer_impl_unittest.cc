@@ -105,7 +105,8 @@ class MockMixerAudioSource : public ::testing::NiceMock<AudioMixer::Source> {
 class CustomRateCalculator : public OutputRateCalculator {
  public:
   explicit CustomRateCalculator(int rate) : rate_(rate) {}
-  int CalculateOutputRate(const std::vector<int>& preferred_rates) override {
+  int CalculateOutputRateFromRange(
+      rtc::ArrayView<const int> preferred_rates) override {
     return rate_;
   }
 
@@ -598,8 +599,8 @@ TEST(AudioMixer, MultipleChannelsManyParticipants) {
 class HighOutputRateCalculator : public OutputRateCalculator {
  public:
   static const int kDefaultFrequency = 76000;
-  int CalculateOutputRate(
-      const std::vector<int>& preferred_sample_rates) override {
+  int CalculateOutputRateFromRange(
+      rtc::ArrayView<const int> preferred_sample_rates) override {
     return kDefaultFrequency;
   }
   ~HighOutputRateCalculator() override {}
