@@ -2080,28 +2080,7 @@ nsLocalFile::Reveal() {
   if (!giovfs) {
     return NS_ERROR_FAILURE;
   }
-
-  bool isDirectory;
-  if (NS_FAILED(IsDirectory(&isDirectory))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (isDirectory) {
-    return giovfs->ShowURIForInput(mPath);
-  }
-  if (NS_SUCCEEDED(giovfs->OrgFreedesktopFileManager1ShowItems(mPath))) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIFile> parentDir;
-  nsAutoCString dirPath;
-  if (NS_FAILED(GetParent(getter_AddRefs(parentDir)))) {
-    return NS_ERROR_FAILURE;
-  }
-  if (NS_FAILED(parentDir->GetNativePath(dirPath))) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return giovfs->ShowURIForInput(dirPath);
+  return giovfs->RevealFile(this);
 #elif defined(MOZ_WIDGET_COCOA)
   CFURLRef url;
   if (NS_SUCCEEDED(GetCFURL(&url))) {
@@ -2127,7 +2106,7 @@ nsLocalFile::Launch() {
     return NS_ERROR_FAILURE;
   }
 
-  return giovfs->ShowURIForInput(mPath);
+  return giovfs->LaunchFile(mPath);
 #elif defined(MOZ_WIDGET_ANDROID)
   // Not supported on GeckoView
   return NS_ERROR_NOT_IMPLEMENTED;
