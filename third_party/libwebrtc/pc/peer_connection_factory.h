@@ -121,10 +121,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   explicit PeerConnectionFactory(
       PeerConnectionFactoryDependencies dependencies);
 
-  // Hook to let testing framework insert actions between
-  // "new RTCPeerConnection" and "pc.Initialize"
-  virtual void ActionsBeforeInitializeForTesting(PeerConnectionInterface*) {}
-
   virtual ~PeerConnectionFactory();
 
  private:

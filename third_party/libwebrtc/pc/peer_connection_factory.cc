@@ -251,11 +251,10 @@ PeerConnectionFactory::CreatePeerConnection(
       RTC_FROM_HERE,
       rtc::Bind(&PeerConnectionFactory::CreateCall_w, this, event_log.get()));
 
-  rtc::scoped_refptr<PeerConnection> pc(
-      new rtc::RefCountedObject<PeerConnection>(context_, std::move(event_log),
-                                                std::move(call)));
-  ActionsBeforeInitializeForTesting(pc);
-  if (!pc->Initialize(configuration, std::move(dependencies))) {
+  rtc::scoped_refptr<PeerConnection> pc =
+      PeerConnection::Create(context_, std::move(event_log), std::move(call),
+                             configuration, std::move(dependencies));
+  if (!pc) {
     return nullptr;
   }
   return PeerConnectionProxy::Create(signaling_thread(), pc);
