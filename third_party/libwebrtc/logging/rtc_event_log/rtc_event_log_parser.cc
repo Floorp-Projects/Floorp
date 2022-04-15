@@ -678,10 +678,8 @@ ParsedRtcEventLog::ParseStatus StoreRtcpPackets(
                               raw_packet_values[i])) {
       continue;
     }
-    const size_t data_size = raw_packet_values[i].size();
-    const uint8_t* data =
-        reinterpret_cast<const uint8_t*>(raw_packet_values[i].data());
-    rtcp_packets->emplace_back(1000 * timestamp_ms, data, data_size);
+    std::string data(raw_packet_values[i]);
+    rtcp_packets->emplace_back(1000 * timestamp_ms, data);
   }
   return ParsedRtcEventLog::ParseStatus::Success();
 }
@@ -1093,8 +1091,7 @@ void ParsedRtcEventLog::Clear() {
   video_recv_configs_.clear();
   video_send_configs_.clear();
 
-  memset(last_incoming_rtcp_packet_, 0, IP_PACKET_SIZE);
-  last_incoming_rtcp_packet_length_ = 0;
+  last_incoming_rtcp_packet_.clear();
 
   first_timestamp_ = std::numeric_limits<int64_t>::max();
   last_timestamp_ = std::numeric_limits<int64_t>::min();
@@ -1476,27 +1473,23 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreParsedLegacyEvent(
     }
     case rtclog::Event::RTCP_EVENT: {
       PacketDirection direction;
-      uint8_t packet[IP_PACKET_SIZE];
-      size_t total_length;
-      auto status = GetRtcpPacket(event, &direction, packet, &total_length);
+      std::vector<uint8_t> packet;
+      auto status = GetRtcpPacket(event, &direction, &packet);
       RTC_RETURN_IF_ERROR(status);
       RTC_PARSE_CHECK_OR_RETURN(event.has_timestamp_us());
       int64_t timestamp_us = event.timestamp_us();
-      RTC_PARSE_CHECK_OR_RETURN_LE(total_length, IP_PACKET_SIZE);
       if (direction == kIncomingPacket) {
         // Currently incoming RTCP packets are logged twice, both for audio and
         // video. Only act on one of them. Compare against the previous parsed
         // incoming RTCP packet.
-        if (total_length == last_incoming_rtcp_packet_length_ &&
-            memcmp(last_incoming_rtcp_packet_, packet, total_length) == 0)
+        if (packet == last_incoming_rtcp_packet_)
           break;
         incoming_rtcp_packets_.push_back(
-            LoggedRtcpPacketIncoming(timestamp_us, packet, total_length));
-        last_incoming_rtcp_packet_length_ = total_length;
-        memcpy(last_incoming_rtcp_packet_, packet, total_length);
+            LoggedRtcpPacketIncoming(timestamp_us, packet));
+        last_incoming_rtcp_packet_ = packet;
       } else {
         outgoing_rtcp_packets_.push_back(
-            LoggedRtcpPacketOutgoing(timestamp_us, packet, total_length));
+            LoggedRtcpPacketOutgoing(timestamp_us, packet));
       }
       break;
     }
@@ -1655,12 +1648,10 @@ const RtpHeaderExtensionMap* ParsedRtcEventLog::GetRtpHeaderExtensionMap(
   return nullptr;
 }
 
-// The packet must have space for at least IP_PACKET_SIZE bytes.
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::GetRtcpPacket(
     const rtclog::Event& event,
     PacketDirection* incoming,
-    uint8_t* packet,
-    size_t* length) const {
+    std::vector<uint8_t>* packet) const {
   RTC_PARSE_CHECK_OR_RETURN(event.has_type());
   RTC_PARSE_CHECK_OR_RETURN_EQ(event.type(), rtclog::Event::RTCP_EVENT);
   RTC_PARSE_CHECK_OR_RETURN(event.has_rtcp_packet());
@@ -1670,16 +1661,11 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::GetRtcpPacket(
   if (incoming != nullptr) {
     *incoming = rtcp_packet.incoming() ? kIncomingPacket : kOutgoingPacket;
   }
-  // Get packet length.
-  RTC_PARSE_CHECK_OR_RETURN(rtcp_packet.has_packet_data());
-  if (length != nullptr) {
-    *length = rtcp_packet.packet_data().size();
-  }
   // Get packet contents.
+  RTC_PARSE_CHECK_OR_RETURN(rtcp_packet.has_packet_data());
   if (packet != nullptr) {
-    RTC_PARSE_CHECK_OR_RETURN_LE(rtcp_packet.packet_data().size(),
-                                 static_cast<unsigned>(IP_PACKET_SIZE));
-    memcpy(packet, rtcp_packet.packet_data().data(),
+    packet->resize(rtcp_packet.packet_data().size());
+    memcpy(packet->data(), rtcp_packet.packet_data().data(),
            rtcp_packet.packet_data().size());
   }
   return ParseStatus::Success();
