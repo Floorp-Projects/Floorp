@@ -356,7 +356,7 @@ AudioEncoderOpusImpl::AudioEncoderOpusImpl(
     std::unique_ptr<SmoothingFilter> bitrate_smoother)
     : payload_type_(payload_type),
       send_side_bwe_with_overhead_(
-          webrtc::field_trial::IsEnabled("WebRTC-SendSideBwe-WithOverhead")),
+          !webrtc::field_trial::IsDisabled("WebRTC-SendSideBwe-WithOverhead")),
       use_stable_target_for_adaptation_(!webrtc::field_trial::IsDisabled(
           "WebRTC-Audio-StableTargetAdaptation")),
       adjust_bandwidth_(
