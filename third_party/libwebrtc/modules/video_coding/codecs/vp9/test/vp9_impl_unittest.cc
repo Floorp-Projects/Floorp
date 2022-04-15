@@ -669,6 +669,7 @@ TEST(Vp9ImplTest, DisableEnableBaseLayerWithSvcControllerTriggersKeyFrame) {
   ConfigureSvc(codec_settings, num_spatial_layers, num_temporal_layers);
   codec_settings.VP9()->frameDroppingOn = false;
   codec_settings.VP9()->flexibleMode = false;
+  codec_settings.VP9()->interLayerPred = InterLayerPredMode::kOnKeyPic;
   codec_settings.mode = VideoCodecMode::kRealtimeVideo;
 
   EXPECT_EQ(encoder->InitEncode(&codec_settings, kSettings),
