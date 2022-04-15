@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/audio_options.h"
 #include "api/candidate.h"
 #include "api/jsep.h"
 #include "api/jsep_ice_candidate.h"
@@ -36,6 +37,7 @@
 #include "api/set_remote_description_observer_interface.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/turn_customizer.h"
+#include "media/base/media_channel.h"
 #include "media/base/stream_params.h"
 #include "p2p/base/port_allocator.h"
 #include "pc/channel.h"
@@ -52,6 +54,7 @@
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_sender.h"
 #include "pc/rtp_transceiver.h"
+#include "pc/rtp_transmission_manager.h"
 #include "pc/sctp_transport.h"
 #include "pc/session_description.h"
 #include "pc/stats_collector.h"
@@ -85,16 +88,17 @@ class WebRtcSessionDescriptionFactory;
 // - Parsing and interpreting SDP.
 // - Generating offers and answers based on the current state.
 // This class lives on the signaling thread.
-class SdpOfferAnswerHandler {
+class SdpOfferAnswerHandler : public sigslot::has_slots<> {
  public:
   explicit SdpOfferAnswerHandler(PeerConnection* pc);
   ~SdpOfferAnswerHandler();
 
-  void SetSessionDescFactory(
-      std::unique_ptr<WebRtcSessionDescriptionFactory> factory) {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    webrtc_session_desc_factory_ = std::move(factory);
-  }
+  // Called from PeerConnection's Initialize() function. Can only be called
+  // once. Modifies dependencies.
+  void Initialize(
+      const PeerConnectionInterface::RTCConfiguration& configuration,
+      PeerConnectionDependencies* dependencies);
+
   void ResetSessionDescFactory() {
     RTC_DCHECK_RUN_ON(signaling_thread());
     webrtc_session_desc_factory_.reset();
@@ -254,6 +258,20 @@ class SdpOfferAnswerHandler {
                               const cricket::SessionDescription* description);
 
   bool IsUnifiedPlan() const RTC_RUN_ON(signaling_thread());
+
+  // Signals from MediaStreamObserver.
+  void OnAudioTrackAdded(AudioTrackInterface* track,
+                         MediaStreamInterface* stream)
+      RTC_RUN_ON(signaling_thread());
+  void OnAudioTrackRemoved(AudioTrackInterface* track,
+                           MediaStreamInterface* stream)
+      RTC_RUN_ON(signaling_thread());
+  void OnVideoTrackAdded(VideoTrackInterface* track,
+                         MediaStreamInterface* stream)
+      RTC_RUN_ON(signaling_thread());
+  void OnVideoTrackRemoved(VideoTrackInterface* track,
+                           MediaStreamInterface* stream)
+      RTC_RUN_ON(signaling_thread());
 
   // | desc_type | is the type of the description that caused the rollback.
   RTCError Rollback(SdpType desc_type);
@@ -526,6 +544,11 @@ class SdpOfferAnswerHandler {
   // payload type based demuxing in the affected channels.
   bool UpdatePayloadTypeDemuxingState(cricket::ContentSource source);
 
+  // Called when an RTCCertificate is generated or retrieved by
+  // WebRTCSessionDescriptionFactory. Should happen before setLocalDescription.
+  void OnCertificateReady(
+      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate);
+
   // ==================================================================
   // Access to pc_ variables
   cricket::ChannelManager* channel_manager() const;
@@ -538,6 +561,8 @@ class SdpOfferAnswerHandler {
   RtpTransmissionManager* rtp_manager();
   const RtpTransmissionManager* rtp_manager() const;
   // ===================================================================
+  const cricket::AudioOptions& audio_options() { return audio_options_; }
+  const cricket::VideoOptions& video_options() { return video_options_; }
 
   PeerConnection* const pc_;
 
@@ -615,6 +640,25 @@ class SdpOfferAnswerHandler {
   SessionError session_error_ RTC_GUARDED_BY(signaling_thread()) =
       SessionError::kNone;
   std::string session_error_desc_ RTC_GUARDED_BY(signaling_thread());
+
+  // Member variables for caching global options.
+  cricket::AudioOptions audio_options_ RTC_GUARDED_BY(signaling_thread());
+  cricket::VideoOptions video_options_ RTC_GUARDED_BY(signaling_thread());
+
+  // This object should be used to generate any SSRC that is not explicitly
+  // specified by the user (or by the remote party).
+  // The generator is not used directly, instead it is passed on to the
+  // channel manager and the session description factory.
+  rtc::UniqueRandomIdGenerator ssrc_generator_
+      RTC_GUARDED_BY(signaling_thread());
+
+  // A video bitrate allocator factory.
+  // This can be injected using the PeerConnectionDependencies,
+  // or else the CreateBuiltinVideoBitrateAllocatorFactory() will be called.
+  // Note that one can still choose to override this in a MediaEngine
+  // if one wants too.
+  std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
+      video_bitrate_allocator_factory_;
 
   rtc::WeakPtrFactory<SdpOfferAnswerHandler> weak_ptr_factory_
       RTC_GUARDED_BY(signaling_thread());
