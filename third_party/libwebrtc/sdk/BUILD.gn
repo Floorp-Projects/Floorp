@@ -584,16 +584,13 @@ if (is_ios || is_mac) {
       sources = [
         "objc/components/capturer/RTCCameraVideoCapturer.h",
         "objc/components/capturer/RTCCameraVideoCapturer.m",
+        "objc/components/capturer/RTCFileVideoCapturer.h",
+        "objc/components/capturer/RTCFileVideoCapturer.m",
       ]
-      if (is_ios) {
-        sources += [
-          "objc/components/capturer/RTCFileVideoCapturer.h",
-          "objc/components/capturer/RTCFileVideoCapturer.m",
-        ]
-      }
       frameworks = [
         "AVFoundation.framework",
         "CoreVideo.framework",
+        "QuartzCore.framework",
       ]
 
       configs += [ "..:common_objc" ]
