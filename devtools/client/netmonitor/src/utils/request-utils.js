@@ -53,7 +53,7 @@ async function getFormDataSections(
     const postDataLongString = postData.postData.text;
     const text = await getLongString(postDataLongString);
 
-    for (const section of text.split(/\r\n|\r|\n/)) {
+    for (const section of text.trim().split(/\r\n|\r|\n/)) {
       // Before displaying it, make sure this section of the POST data
       // isn't a line containing upload stream headers.
       if (payloadHeaders.every(header => !section.startsWith(header.name))) {
@@ -359,7 +359,7 @@ function parseQueryString(query) {
  */
 function parseFormData(sections) {
   if (!sections) {
-    return null;
+    return [];
   }
 
   return sections
