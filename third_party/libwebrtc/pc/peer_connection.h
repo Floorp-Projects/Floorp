@@ -154,20 +154,6 @@ class PeerConnection : public PeerConnectionInternal,
       cricket::MediaType media_type,
       const RtpTransceiverInit& init) override;
 
-  // Gets the DTLS SSL certificate associated with the audio transport on the
-  // remote side. This will become populated once the DTLS connection with the
-  // peer has been completed, as indicated by the ICE connection state
-  // transitioning to kIceConnectionCompleted.
-  // Deprecated - users should insted query the DTLS transpport for this info.
-  // See https://www.w3.org/TR/webrtc/#rtcdtlstransport-interface
-
-  RTC_DEPRECATED std::unique_ptr<rtc::SSLCertificate>
-  GetRemoteAudioSSLCertificate();
-
-  // Version of the above method that returns the full certificate chain.
-  RTC_DEPRECATED std::unique_ptr<rtc::SSLCertChain>
-  GetRemoteAudioSSLCertChain();
-
   rtc::scoped_refptr<RtpSenderInterface> CreateSender(
       const std::string& kind,
       const std::string& stream_id) override;
