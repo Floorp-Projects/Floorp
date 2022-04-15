@@ -43,8 +43,10 @@ class HitTestInfoManager {
   /**
    * Extracts the hit testing information from |aItem|, and if necessary, adds
    * a new WebRender hit test item using |aBuilder|.
+   *
+   * Returns true if a hit test item was pushed.
    */
-  void ProcessItem(nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
+  bool ProcessItem(nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
                    nsDisplayListBuilder* aDisplayListBuilder);
 
  private:
