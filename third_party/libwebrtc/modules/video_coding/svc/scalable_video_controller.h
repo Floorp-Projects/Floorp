@@ -84,9 +84,7 @@ class ScalableVideoController {
   // Notifies Controller with updated bitrates per layer. In particular notifies
   // when certain layers should be disabled.
   // Controller shouldn't produce LayerFrameConfig for disabled layers.
-  // TODO(bugs.webrtc.org/11404): Make pure virtual when implemented by all
-  // structures.
-  virtual void OnRatesUpdated(const VideoBitrateAllocation& bitrates) {}
+  virtual void OnRatesUpdated(const VideoBitrateAllocation& bitrates) = 0;
 
   // When `restart` is true, first `LayerFrameConfig` should have `is_keyframe`
   // set to true.

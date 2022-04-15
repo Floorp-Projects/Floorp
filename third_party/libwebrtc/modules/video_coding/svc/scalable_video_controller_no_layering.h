@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/video/video_bitrate_allocation.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 
@@ -27,6 +28,7 @@ class ScalableVideoControllerNoLayering : public ScalableVideoController {
 
   std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
   GenericFrameInfo OnEncodeDone(const LayerFrameConfig& config) override;
+  void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override {}
 
  private:
   bool start_ = true;
