@@ -1844,6 +1844,7 @@ bool PeerConnection::ReconfigurePortAllocator_n(
     webrtc::TurnCustomizer* turn_customizer,
     absl::optional<int> stun_candidate_keepalive_interval,
     bool have_local_description) {
+  RTC_DCHECK_RUN_ON(network_thread());
   port_allocator_->SetCandidateFilter(
       ConvertIceTransportTypeToCandidateFilter(type));
   // According to JSEP, after setLocalDescription, changing the candidate pool
