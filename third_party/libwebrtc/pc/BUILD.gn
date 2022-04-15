@@ -228,6 +228,7 @@ rtc_library("peerconnection") {
     "../api:array_view",
     "../api:audio_options_api",
     "../api:call_api",
+    "../api:callfactory_api",
     "../api:fec_controller_api",
     "../api:frame_transformer_interface",
     "../api:ice_transport_factory",
@@ -246,12 +247,15 @@ rtc_library("peerconnection") {
     "../api/adaptation:resource_adaptation_api",
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:options",
+    "../api/neteq:neteq_api",
     "../api/rtc_event_log",
     "../api/task_queue",
     "../api/transport:bitrate_settings",
     "../api/transport:datagram_transport_interface",
     "../api/transport:enums",
     "../api/transport:field_trial_based_config",
+    "../api/transport:network_control",
+    "../api/transport:sctp_transport_factory_interface",
     "../api/transport:webrtc_key_value_config",
     "../api/units:data_rate",
     "../api/video:builtin_video_bitrate_allocator_factory",
@@ -305,14 +309,19 @@ rtc_library("connection_context") {
   ]
   deps = [
     ":rtc_pc_base",
+    "../api:callfactory_api",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
     "../api:scoped_refptr",
+    "../api/neteq:neteq_api",
     "../api/transport:field_trial_based_config",
+    "../api/transport:sctp_transport_factory_interface",
+    "../api/transport:webrtc_key_value_config",
     "../media:rtc_data",
     "../media:rtc_media_base",
     "../p2p:rtc_p2p",
     "../rtc_base",
+    "../rtc_base:checks",
   ]
 }
 

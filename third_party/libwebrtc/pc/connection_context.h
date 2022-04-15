@@ -14,14 +14,24 @@
 #include <memory>
 #include <string>
 
+#include "api/call/call_factory_interface.h"
 #include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/transport/sctp_transport_factory_interface.h"
+#include "api/transport/webrtc_key_value_config.h"
+#include "media/base/media_engine.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "pc/channel_manager.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/network.h"
+#include "rtc_base/network_monitor_factory.h"
+#include "rtc_base/ref_count.h"
 #include "rtc_base/rtc_certificate_generator.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace rtc {
 class BasicNetworkManager;
@@ -36,16 +46,22 @@ class RtcEventLog;
 // objects. A reference to this object is passed to each PeerConnection. The
 // methods on this object are assumed not to change the state in any way that
 // interferes with the operation of other PeerConnections.
+//
+// This class must be created and destroyed on the signaling thread.
 class ConnectionContext : public rtc::RefCountInterface {
  public:
+  // Creates a ConnectionContext. May return null if initialization fails.
+  // The Dependencies class allows simple management of all new dependencies
+  // being added to the ConnectionContext.
+  static rtc::scoped_refptr<ConnectionContext> Create(
+      PeerConnectionFactoryDependencies* dependencies);
+
   // This class is not copyable or movable.
   ConnectionContext(const ConnectionContext&) = delete;
   ConnectionContext& operator=(const ConnectionContext&) = delete;
 
   // Functions called from PeerConnectionFactory
   void SetOptions(const PeerConnectionFactoryInterface::Options& options);
-
-  bool Initialize();
 
   // Functions called from PeerConnection and friends
   SctpTransportFactoryInterface* sctp_transport_factory() const {
@@ -83,9 +99,7 @@ class ConnectionContext : public rtc::RefCountInterface {
   }
 
  protected:
-  // The Dependencies class allows simple management of all new dependencies
-  // being added to the ConnectionContext.
-  explicit ConnectionContext(PeerConnectionFactoryDependencies& dependencies);
+  explicit ConnectionContext(PeerConnectionFactoryDependencies* dependencies);
 
   virtual ~ConnectionContext();
 
