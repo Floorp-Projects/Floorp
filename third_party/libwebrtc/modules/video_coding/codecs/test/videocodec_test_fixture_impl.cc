@@ -450,6 +450,8 @@ void VideoCodecTestFixtureImpl::ProcessAllFrames(
     }
   }
 
+  task_queue->PostTask([this] { processor_->Finalize(); });
+
   // Wait until we know that the last frame has been sent for encode.
   task_queue->SendTask([] {}, RTC_FROM_HERE);
 
