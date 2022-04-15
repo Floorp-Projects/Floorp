@@ -24,6 +24,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/videocodec_test_fixture.h"
 #include "api/video/encoded_image.h"
+#include "api/video/i420_buffer.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_bitrate_allocator.h"
 #include "api/video/video_frame.h"
@@ -58,6 +59,7 @@ class VideoProcessor {
   // TODO(brandtr): Consider changing FrameWriterList to be a FrameWriterMap,
   // to be able to save different TLs separately.
   using FrameWriterList = std::vector<std::unique_ptr<FrameWriter>>;
+  using FrameStatistics = VideoCodecTestStats::FrameStatistics;
 
   VideoProcessor(webrtc::VideoEncoder* encoder,
                  VideoDecoderList* decoders,
@@ -76,6 +78,11 @@ class VideoProcessor {
 
   // Updates the encoder with target rates. Must be called at least once.
   void SetRates(size_t bitrate_kbps, double framerate_fps);
+
+  // Signals processor to finalize frame processing and handle possible tail
+  // drops. If not called expelicitly, this will be called in dtor. It is
+  // unexpected to get ProcessFrame() or SetRates() calls after Finalize().
+  void Finalize();
 
  private:
   class VideoProcessorEncodeCompleteCallback
@@ -182,9 +189,20 @@ class VideoProcessor {
       size_t simulcast_svc_idx,
       bool inter_layer_predicted) RTC_RUN_ON(sequence_checker_);
 
-  // Test input/output.
-  VideoCodecTestFixture::Config config_ RTC_GUARDED_BY(sequence_checker_);
+  void CalcFrameQuality(const I420BufferInterface& decoded_frame,
+                        FrameStatistics* frame_stat);
+
+  void WriteDecodedFrame(const I420BufferInterface& decoded_frame,
+                         FrameWriter& frame_writer);
+
+  void HandleTailDrops();
+
+  // Test config.
+  const VideoCodecTestFixture::Config config_;
   const size_t num_simulcast_or_spatial_layers_;
+  const bool analyze_frame_quality_;
+
+  // Frame statistics.
   VideoCodecTestStatsImpl* const stats_;
 
   // Codecs.
@@ -240,13 +258,16 @@ class VideoProcessor {
   // simulcast_svc_idx -> frame_number.
   std::vector<size_t> last_decoded_frame_num_ RTC_GUARDED_BY(sequence_checker_);
   // simulcast_svc_idx -> buffer.
-  std::vector<rtc::Buffer> decoded_frame_buffer_
+  std::vector<rtc::scoped_refptr<I420Buffer>> last_decoded_frame_buffer_
       RTC_GUARDED_BY(sequence_checker_);
 
   // Time spent in frame encode callback. It is accumulated for layers and
   // reset when frame encode starts. When next layer is encoded post-encode time
   // is substracted from measured encode time. Thus we get pure encode time.
   int64_t post_encode_time_ns_ RTC_GUARDED_BY(sequence_checker_);
+
+  // Indicates whether Finalize() was called or not.
+  bool is_finalized_ RTC_GUARDED_BY(sequence_checker_);
 
   // This class must be operated on a TaskQueue.
   SequenceChecker sequence_checker_;
