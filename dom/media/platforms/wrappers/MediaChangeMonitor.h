@@ -70,8 +70,7 @@ class MediaChangeMonitor : public MediaDataDecoder,
   };
 
  private:
-  MediaChangeMonitor(PlatformDecoderModule* aPDM,
-                     UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
+  MediaChangeMonitor(UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
                      MediaDataDecoder* aDecoder,
                      const CreateDecoderParams& aParams);
   virtual ~MediaChangeMonitor();
@@ -98,7 +97,6 @@ class MediaChangeMonitor : public MediaDataDecoder,
   RefPtr<ShutdownPromise> ShutdownDecoder();
 
   UniquePtr<CodecChangeMonitor> mChangeMonitor;
-  RefPtr<PlatformDecoderModule> mPDM;
   VideoInfo mCurrentConfig;
   nsCOMPtr<nsISerialEventTarget> mThread;
   RefPtr<MediaDataDecoder> mDecoder;
