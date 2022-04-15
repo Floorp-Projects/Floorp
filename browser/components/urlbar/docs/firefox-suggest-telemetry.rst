@@ -893,36 +893,55 @@ Nimbus Exposure Event
 
 A `Nimbus exposure event`_ is recorded once per app session when the user first
 encounters the UI of an experiment in which they're enrolled. The timing of the
-event depends on the experiment.
+event depends on the experiment and branch.
 
-Listed below are the slugs of supported experiments along with details on when
-their exposure events are recorded.
+There are two Nimbus variables that determine the timing of the event:
+``experimentType`` and the deprecated ``isBestMatchExperiment``. To determine
+when the exposure event is recorded for a specific experiment and branch,
+examine the experiment's recipe and look for one of these variables.
 
-:firefox-suggest-best-match_:
+Listed below are the supported values of ``experimentType`` and
+``isBestMatchExperiment`` along with details on when their corresponding
+exposure events are recorded.
+
+:experimentType = "best-match":
   If the user is in a treatment branch and they did not disable best match, the
   event is recorded the first time they trigger a best match; if the user is in
   a treatment branch and they did disable best match, the event is not recorded
   at all. If the user is in the control branch, the event is recorded the first
   time they would have triggered a best match. (Users in the control branch
   cannot "disable" best match since the feature is totally hidden from them.)
+:experimentType = "modal":
+  If the user is in a treatment branch, the event is recorded when they are
+  shown an opt-in modal. If the user is in the control branch, the event is
+  recorded every time they would have been shown a modal, which is on every
+  startup where another non-Suggest modal does not appear.
+:isBestMatchExperiment = true:
+  This is a deprecated version of ``experimentType == "best-match"``.
 :All other experiments:
   For all other experiments not listed above, the event is recorded the first
   time the user triggers a Firefox Suggest suggestion.
 
 Changelog
   Firefox 92.0
-    Introduced. [Bug 1724076_, 1727392_]
+    Introduced. The event is always recorded the first time the user triggers
+    a Firefox Suggest suggestion regardless of the experiment they are enrolled
+    in. [Bug 1724076_, 1727392_]
 
   Firefox 99.0
-    Support for the firefox-suggest-best-match_ experiment is added. [Bug
-    1752953_]
+    The ``isBestMatchExperiment = true`` case is added. [Bug 1752953_]
+
+  Firefox 100.0
+    The ``experimentType = "modal"`` case is added.
+    ``isBestMatchExperiment = true`` is deprecated in favor of
+    ``experimentType = "best-match"``. [Bug 1760596_]
 
 .. _Nimbus exposure event: https://experimenter.info/jetstream/jetstream/#enrollment-vs-exposure
-.. _firefox-suggest-best-match: https://experimenter.services.mozilla.com/nimbus/firefox-suggest-best-match/
 
 .. _1724076: https://bugzilla.mozilla.org/show_bug.cgi?id=1724076
 .. _1727392: https://bugzilla.mozilla.org/show_bug.cgi?id=1727392
 .. _1752953: https://bugzilla.mozilla.org/show_bug.cgi?id=1752953
+.. _1760596: https://bugzilla.mozilla.org/show_bug.cgi?id=1760596
 
 Merino Search Queries
 ---------------------
