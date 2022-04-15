@@ -160,6 +160,7 @@ rtc_library("rtp_sender") {
     "../api/units:time_delta",
     "../api/units:timestamp",
     "../api/video:video_frame",
+    "../api/video:video_layers_allocation",
     "../api/video:video_rtp_headers",
     "../api/video_codecs:video_codecs_api",
     "../logging:rtc_event_bwe",
