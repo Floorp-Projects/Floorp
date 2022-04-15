@@ -104,6 +104,9 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
   MOZ_ASSERT(aChannels);
 
   if (mChannels != aChannels) {
+    if (mResampler) {
+      speex_resampler_destroy(mResampler);
+    }
     mResampler = speex_resampler_init(aChannels, mInRate, aOutRate,
                                       SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
     MOZ_ASSERT(mResampler);
