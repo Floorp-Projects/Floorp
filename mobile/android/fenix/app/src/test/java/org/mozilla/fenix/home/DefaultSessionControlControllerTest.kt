@@ -50,6 +50,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
@@ -63,7 +64,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -186,9 +186,11 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleCustomizeHomeTapped() {
-        createController().handleCustomizeHomeTapped()
-        verify { metrics.track(Event.HomeScreenCustomizedHomeClicked) }
+        assertFalse(HomeScreen.customizeHomeClicked.testHasValue())
 
+        createController().handleCustomizeHomeTapped()
+
+        assertTrue(HomeScreen.customizeHomeClicked.testHasValue())
         verify {
             navController.navigate(
                 match<NavDirections> {
@@ -1264,7 +1266,6 @@ class DefaultSessionControlControllerTest {
             activity = activity,
             settings = settings,
             engine = engine,
-            metrics = metrics,
             store = store,
             messageController = messageController,
             tabCollectionStorage = tabCollectionStorage,

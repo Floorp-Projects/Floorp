@@ -26,16 +26,6 @@ sealed class Event {
     object SearchSuggestionClicked : Event()
     object OpenedTabSuggestionClicked : Event()
 
-    // Home menu interaction
-    object HomeMenuSettingsItemClicked : Event()
-    object HomeScreenDisplayed : Event()
-    object HomeScreenViewCount : Event()
-    object HomeScreenCustomizedHomeClicked : Event()
-
-    // Start on Home
-    object StartOnHomeEnterHomeScreen : Event()
-    object StartOnHomeOpenTabsTray : Event()
-
     // Interaction events with extras
 
     data class SearchWithAds(val providerName: String) : Event() {

@@ -33,6 +33,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.Pocket
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
@@ -47,8 +48,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -215,12 +214,11 @@ interface SessionControlController {
     fun handleReportSessionMetrics(state: AppState)
 }
 
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 class DefaultSessionControlController(
     private val activity: HomeActivity,
     private val settings: Settings,
     private val engine: Engine,
-    private val metrics: MetricController,
     private val messageController: MessageController,
     private val store: BrowserStore,
     private val tabCollectionStorage: TabCollectionStorage,
@@ -511,7 +509,7 @@ class DefaultSessionControlController(
     override fun handleCustomizeHomeTapped() {
         val directions = HomeFragmentDirections.actionGlobalHomeSettingsFragment()
         navController.nav(navController.currentDestination?.id, directions)
-        metrics.track(Event.HomeScreenCustomizedHomeClicked)
+        HomeScreen.customizeHomeClicked.record(NoExtras())
     }
 
     override fun handleShowOnboardingDialog() {

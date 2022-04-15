@@ -26,7 +26,6 @@ import mozilla.components.browser.state.state.createTab as createTabState
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -35,7 +34,6 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class InactiveTabsControllerTest {
 
-    private val metrics: MetricController = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
     private val appStore = AppStore()
 

@@ -71,19 +71,18 @@ import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
@@ -248,7 +247,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         if (!shouldStartOnHome() && shouldNavigateToBrowserOnColdStart(savedInstanceState)) {
             navigateToBrowserOnColdStart()
         } else {
-            components.analytics.metrics.track(Event.StartOnHomeEnterHomeScreen)
+            StartOnHome.enterHomeScreen.record(NoExtras())
         }
 
         Performance.processIntentIfPerformanceTest(intent, this)
