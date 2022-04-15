@@ -5237,9 +5237,6 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "CompositionTransaction::SetIMESelection() failed, but ignored");
-      mComposition->OnUpdateCompositionInEditor(
-          mComposition->String(), *textNode,
-          mComposition->XPOffsetInTextNode());
     }
   }
 
