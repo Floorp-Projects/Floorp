@@ -998,7 +998,7 @@ void SdpOfferAnswerHandler::Initialize(
   webrtc_session_desc_factory_->SignalCertificateReady.connect(
       this, &SdpOfferAnswerHandler::OnCertificateReady);
 
-  if (pc_->context()->options().disable_encryption) {
+  if (pc_->options()->disable_encryption) {
     webrtc_session_desc_factory_->SetSdesPolicy(cricket::SEC_DISABLED);
   }
 

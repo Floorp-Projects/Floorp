@@ -60,9 +60,6 @@ class ConnectionContext : public rtc::RefCountInterface {
   ConnectionContext(const ConnectionContext&) = delete;
   ConnectionContext& operator=(const ConnectionContext&) = delete;
 
-  // Functions called from PeerConnectionFactory
-  void SetOptions(const PeerConnectionFactoryInterface::Options& options);
-
   // Functions called from PeerConnection and friends
   SctpTransportFactoryInterface* sctp_transport_factory() const {
     RTC_DCHECK_RUN_ON(signaling_thread_);
@@ -77,10 +74,6 @@ class ConnectionContext : public rtc::RefCountInterface {
   const rtc::Thread* worker_thread() const { return worker_thread_; }
   rtc::Thread* network_thread() { return network_thread_; }
   const rtc::Thread* network_thread() const { return network_thread_; }
-
-  const PeerConnectionFactoryInterface::Options& options() const {
-    return options_;
-  }
 
   const WebRtcKeyValueConfig& trials() const { return *trials_.get(); }
 
@@ -117,8 +110,6 @@ class ConnectionContext : public rtc::RefCountInterface {
   rtc::Thread* const network_thread_;
   rtc::Thread* const worker_thread_;
   rtc::Thread* const signaling_thread_;
-  PeerConnectionFactoryInterface::Options options_
-      RTC_GUARDED_BY(signaling_thread_);
   // channel_manager is accessed both on signaling thread and worker thread.
   std::unique_ptr<cricket::ChannelManager> channel_manager_;
   std::unique_ptr<rtc::NetworkMonitorFactory> const network_monitor_factory_

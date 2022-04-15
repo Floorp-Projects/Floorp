@@ -140,12 +140,6 @@ ConnectionContext::~ConnectionContext() {
     rtc::ThreadManager::Instance()->UnwrapCurrentThread();
 }
 
-void ConnectionContext::SetOptions(
-    const PeerConnectionFactoryInterface::Options& options) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  options_ = options;
-}
-
 cricket::ChannelManager* ConnectionContext::channel_manager() const {
   return channel_manager_.get();
 }
