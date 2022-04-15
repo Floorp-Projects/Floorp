@@ -250,11 +250,7 @@ TEST_P(ScalabilityStructureTest, NoFrameDependsThroughSwitchIndication) {
   }
 }
 
-// TODO(danilchap): Merge with ScalabilityStructureTest when SetRates
-// implemented for all tested structures.
-class ScalabilityStructureSetRatesTest : public ScalabilityStructureTest {};
-
-TEST_P(ScalabilityStructureSetRatesTest, ProduceNoFrameForDisabledLayers) {
+TEST_P(ScalabilityStructureTest, ProduceNoFrameForDisabledLayers) {
   std::unique_ptr<ScalableVideoController> svc_controller =
       CreateScalabilityStructure(GetParam().name);
   ScalableVideoController::StreamLayersConfig structure =
@@ -307,25 +303,6 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParam{"L2T2_KEY", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY_SHIFT", /*num_temporal_units=*/4},
            SvcTestParam{"L3T3_KEY", /*num_temporal_units=*/8}),
-    [](const testing::TestParamInfo<SvcTestParam>& info) {
-      return info.param.name;
-    });
-
-// TODO(danilchap): Merge with ScalabilityStructureTest when the functionality
-// is implemented for all tested structures.
-INSTANTIATE_TEST_SUITE_P(
-    Svc,
-    ScalabilityStructureSetRatesTest,
-    Values(SvcTestParam{"L1T2", /*num_temporal_units=*/4},
-           SvcTestParam{"L1T3", /*num_temporal_units=*/8},
-           SvcTestParam{"L2T1", /*num_temporal_units=*/3},
-           SvcTestParam{"L2T1_KEY", /*num_temporal_units=*/3},
-           SvcTestParam{"L2T2", /*num_temporal_units=*/4},
-           SvcTestParam{"L2T2_KEY", /*num_temporal_units=*/4},
-           SvcTestParam{"L3T1", /*num_temporal_units=*/3},
-           SvcTestParam{"L3T3", /*num_temporal_units=*/8},
-           SvcTestParam{"L3T3_KEY", /*num_temporal_units=*/8},
-           SvcTestParam{"S2T1", /*num_temporal_units=*/3}),
     [](const testing::TestParamInfo<SvcTestParam>& info) {
       return info.param.name;
     });

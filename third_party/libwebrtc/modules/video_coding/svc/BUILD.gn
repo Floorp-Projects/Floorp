@@ -73,6 +73,7 @@ if (rtc_include_tests) {
     testonly = true
     sources = [
       "scalability_structure_key_svc_unittest.cc",
+      "scalability_structure_l2t2_key_shift_unittest.cc",
       "scalability_structure_l3t3_unittest.cc",
       "scalability_structure_test_helpers.cc",
       "scalability_structure_test_helpers.h",

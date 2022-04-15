@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/video/video_bitrate_allocation.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 
@@ -35,6 +36,7 @@ class ScalabilityStructureL2T2KeyShift : public ScalableVideoController {
 
   std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
   GenericFrameInfo OnEncodeDone(const LayerFrameConfig& config) override;
+  void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
 
  private:
   enum FramePattern {
@@ -42,9 +44,19 @@ class ScalabilityStructureL2T2KeyShift : public ScalableVideoController {
     kDelta0,
     kDelta1,
   };
-  LayerFrameConfig KeyFrameConfig() const;
+
+  static constexpr int kNumSpatialLayers = 2;
+  static constexpr int kNumTemporalLayers = 2;
+
+  bool DecodeTargetIsActive(int sid, int tid) const {
+    return active_decode_targets_[sid * kNumTemporalLayers + tid];
+  }
+  void SetDecodeTargetIsActive(int sid, int tid, bool value) {
+    active_decode_targets_.set(sid * kNumTemporalLayers + tid, value);
+  }
 
   FramePattern next_pattern_ = kKey;
+  std::bitset<32> active_decode_targets_ = 0b1111;
 };
 
 }  // namespace webrtc
