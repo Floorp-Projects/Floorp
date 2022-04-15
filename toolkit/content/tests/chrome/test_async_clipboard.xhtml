@@ -42,12 +42,9 @@
   }
 
   async function testWrite() {
-    // See bug 666254.
-    if (AppConstants.platform != "macosx") {
-      await SimpleTest.promiseClipboardChange("", () => {
-        clearClipboard();
-      });
-    }
+    await SimpleTest.promiseClipboardChange("", () => {
+      clearClipboard();
+    });
 
     let expected = "x";
     // eslint-disable-next-line no-undef
@@ -67,12 +64,9 @@
   }
 
   async function testWriteText() {
-    // See bug 666254.
-    if (AppConstants.platform != "macosx") {
-      await SimpleTest.promiseClipboardChange("", () => {
-        clearClipboard();
-      });
-    }
+    await SimpleTest.promiseClipboardChange("", () => {
+      clearClipboard();
+    });
 
     let expected = "x";
     await navigator.clipboard.writeText(expected);
@@ -116,11 +110,8 @@
       await testWrite();
       await testWriteText();
 
-      // See bug 666254.
-      if (AppConstants.platform != "macosx") {
-        await testNoContentsRead();
-        await testNoContentsReadText();
-      }
+      await testNoContentsRead();
+      await testNoContentsReadText();
 
       SimpleTest.finish();
     })();
