@@ -16,6 +16,7 @@
 #include <numeric>
 
 #include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_compare.h"
 
 namespace webrtc {
 namespace rnn_vad {
@@ -117,19 +118,22 @@ void ComputeLpResidual(
     rtc::ArrayView<const float, kNumLpcCoefficients> lpc_coeffs,
     rtc::ArrayView<const float> x,
     rtc::ArrayView<float> y) {
-  RTC_DCHECK_LT(kNumLpcCoefficients, x.size());
+  RTC_DCHECK_GT(x.size(), kNumLpcCoefficients);
   RTC_DCHECK_EQ(x.size(), y.size());
-  std::array<float, kNumLpcCoefficients> input_chunk;
-  input_chunk.fill(0.f);
-  for (size_t i = 0; i < y.size(); ++i) {
-    const float sum = std::inner_product(input_chunk.begin(), input_chunk.end(),
-                                         lpc_coeffs.begin(), x[i]);
-    // Circular shift and add a new sample.
-    for (size_t j = kNumLpcCoefficients - 1; j > 0; --j)
-      input_chunk[j] = input_chunk[j - 1];
-    input_chunk[0] = x[i];
-    // Copy result.
-    y[i] = sum;
+  // The code below implements the following operation:
+  // y[i] = x[i] + dot_product({x[i], ..., x[i - kNumLpcCoefficients + 1]},
+  //                           lpc_coeffs)
+  // Edge case: i < kNumLpcCoefficients.
+  y[0] = x[0];
+  for (int i = 1; i < kNumLpcCoefficients; ++i) {
+    y[i] =
+        std::inner_product(x.crend() - i, x.crend(), lpc_coeffs.cbegin(), x[i]);
+  }
+  // Regular case.
+  auto last = x.crend();
+  for (int i = kNumLpcCoefficients; rtc::SafeLt(i, y.size()); ++i, --last) {
+    y[i] = std::inner_product(last - kNumLpcCoefficients, last,
+                              lpc_coeffs.cbegin(), x[i]);
   }
 }
 

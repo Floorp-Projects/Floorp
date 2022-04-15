@@ -75,6 +75,7 @@ rtc_library("rnn_vad_lp_residual") {
   deps = [
     "../../../../api:array_view",
     "../../../../rtc_base:checks",
+    "../../../../rtc_base:safe_compare",
   ]
 }
 
