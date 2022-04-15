@@ -12,7 +12,6 @@
 #define PC_WEBRTC_SESSION_DESCRIPTION_FACTORY_H_
 
 #include <stdint.h>
-
 #include <memory>
 #include <queue>
 #include <string>
@@ -22,17 +21,24 @@
 #include "api/scoped_refptr.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_description_factory.h"
+#include "pc/channel_manager.h"
 #include "pc/media_session.h"
-#include "pc/peer_connection_internal.h"
+#include "pc/sdp_offer_answer.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/thread_message.h"
 #include "rtc_base/unique_id_generator.h"
 
 namespace webrtc {
+
+// Forward declaration is necessary because there's a circular dependency
+// between this class and SdpOfferAnswerHandler.
+// TODO(https://bugs.webrtc.org/12060): Break the dependency.
+class SdpOfferAnswerHandler;
 
 // DTLS certificate request callback class.
 class WebRtcCertificateGeneratorCallback
@@ -80,8 +86,9 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler,
   WebRtcSessionDescriptionFactory(
       rtc::Thread* signaling_thread,
       cricket::ChannelManager* channel_manager,
-      PeerConnectionInternal* pc,
+      SdpOfferAnswerHandler* sdp_handler,
       const std::string& session_id,
+      bool dtls_enabled,
       std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
       const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
       rtc::UniqueRandomIdGenerator* ssrc_generator);
@@ -151,9 +158,7 @@ class WebRtcSessionDescriptionFactory : public rtc::MessageHandler,
   cricket::MediaSessionDescriptionFactory session_desc_factory_;
   uint64_t session_version_;
   const std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator_;
-  // TODO(jiayl): remove the dependency on peer connection once bug 2264 is
-  // fixed.
-  PeerConnectionInternal* const pc_;
+  SdpOfferAnswerHandler* sdp_handler_;
   const std::string session_id_;
   CertificateRequestState certificate_request_state_;
 

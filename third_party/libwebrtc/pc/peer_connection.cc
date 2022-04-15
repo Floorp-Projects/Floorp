@@ -581,21 +581,10 @@ bool PeerConnection::Initialize(
   audio_options_.audio_jitter_buffer_enable_rtx_handling =
       configuration.audio_jitter_buffer_enable_rtx_handling;
 
-  // Whether the certificate generator/certificate is null or not determines
-  // what PeerConnectionDescriptionFactory will do, so make sure that we give it
-  // the right instructions by clearing the variables if needed.
-  if (!dtls_enabled_) {
-    dependencies.cert_generator.reset();
-    certificate = nullptr;
-  } else if (certificate) {
-    // Favor generated certificate over the certificate generator.
-    dependencies.cert_generator.reset();
-  }
-
   auto webrtc_session_desc_factory =
       std::make_unique<WebRtcSessionDescriptionFactory>(
-          signaling_thread(), channel_manager(), this, session_id(),
-          std::move(dependencies.cert_generator), certificate,
+          signaling_thread(), channel_manager(), &sdp_handler_, session_id(),
+          dtls_enabled_, std::move(dependencies.cert_generator), certificate,
           &ssrc_generator_);
   webrtc_session_desc_factory->SignalCertificateReady.connect(
       this, &PeerConnection::OnCertificateReady);
