@@ -21,22 +21,17 @@ namespace webrtc {
 namespace rnn_vad {
 namespace {
 
-// Computes cross-correlation coefficients between |x| and |y| and writes them
-// in |x_corr|. The lag values are in {0, ..., max_lag - 1}, where max_lag
-// equals the size of |x_corr|.
-// The |x| and |y| sub-arrays used to compute a cross-correlation coefficients
-// for a lag l have both size "size of |x| - l" - i.e., the longest sub-array is
-// used. |x| and |y| must have the same size.
-void ComputeCrossCorrelation(
+// Computes auto-correlation coefficients for |x| and writes them in
+// |auto_corr|. The lag values are in {0, ..., max_lag - 1}, where max_lag
+// equals the size of |auto_corr|.
+void ComputeAutoCorrelation(
     rtc::ArrayView<const float> x,
-    rtc::ArrayView<const float> y,
-    rtc::ArrayView<float, kNumLpcCoefficients> x_corr) {
-  constexpr size_t max_lag = x_corr.size();
-  RTC_DCHECK_EQ(x.size(), y.size());
+    rtc::ArrayView<float, kNumLpcCoefficients> auto_corr) {
+  constexpr size_t max_lag = auto_corr.size();
   RTC_DCHECK_LT(max_lag, x.size());
   for (size_t lag = 0; lag < max_lag; ++lag) {
-    x_corr[lag] =
-        std::inner_product(x.begin(), x.end() - lag, y.begin() + lag, 0.f);
+    auto_corr[lag] =
+        std::inner_product(x.begin(), x.end() - lag, x.begin() + lag, 0.f);
   }
 }
 
@@ -91,12 +86,12 @@ void ComputeAndPostProcessLpcCoefficients(
     rtc::ArrayView<const float> x,
     rtc::ArrayView<float, kNumLpcCoefficients> lpc_coeffs) {
   std::array<float, kNumLpcCoefficients> auto_corr;
-  ComputeCrossCorrelation(x, x, {auto_corr.data(), auto_corr.size()});
+  ComputeAutoCorrelation(x, auto_corr);
   if (auto_corr[0] == 0.f) {  // Empty frame.
     std::fill(lpc_coeffs.begin(), lpc_coeffs.end(), 0);
     return;
   }
-  DenoiseAutoCorrelation({auto_corr.data(), auto_corr.size()});
+  DenoiseAutoCorrelation(auto_corr);
   std::array<float, kNumLpcCoefficients - 1> lpc_coeffs_pre{};
   ComputeInitialInverseFilterCoefficients(auto_corr, lpc_coeffs_pre);
   // LPC coefficients post-processing.
