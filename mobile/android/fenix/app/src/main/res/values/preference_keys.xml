@@ -173,15 +173,17 @@
     <string name="pref_key_logins_secure_warning_sync" translatable="false">pref_key_logins_secure_warning_sync</string>
     <string name="pref_key_secure_warning" translatable="false">pref_key_secure_warning</string>
 
-    <!-- Credit Cards Settings -->
+    <!-- Autofill Settings -->
     <!-- Key for the "Credit cards" preference in the "Settings" fragment -->
     <string name="pref_key_credit_cards" translatable="false">pref_key_credit_cards</string>
-    <!-- Key for the "Save and autofill cards" preference in the "Credit cards" fragment -->
+    <!-- Key for the "Save and autofill cards" preference in the "Autofill" fragment -->
     <string name="pref_key_credit_cards_save_and_autofill_cards" translatable="false">pref_key_credit_cards_save_and_autofill_cards</string>
-    <!-- Key for the "Sync cards across devices" preference in the "Credit cards" fragment -->
+    <!-- Key for the "Sync cards across devices" preference in the "Autofill" fragment -->
     <string name="pref_key_credit_cards_sync_cards_across_devices" translatable="false">pref_key_credit_cards_sync_cards_across_devices</string>
-    <!-- Key for the "Manage saved cards" preference in the "Credit cards" fragment -->
+    <!-- Key for the "Manage saved cards" preference in the "Autofill" fragment -->
     <string name="pref_key_credit_cards_manage_cards" translatable="false">pref_key_credit_cards_manage_cards</string>
+    <!-- Key for the "Manage addresses" preference in the "Autofill" fragment -->
+    <string name="pref_key_addresses_manage_addresses" translatable="false">pref_key_addresses_manage_addresses</string>
 
     <!-- Privacy Settings -->
     <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>

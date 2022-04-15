@@ -1483,6 +1483,8 @@
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">Autofill</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Addresses</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Credit cards</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1497,6 +1499,8 @@
     <string name="preferences_credit_cards_add_credit_card">Add credit card</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Manage saved cards</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Manage addresses</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Add card</string>
     <!-- Title of the "Edit card" screen -->

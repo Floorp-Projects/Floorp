@@ -82,7 +82,14 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.credit_cards_preferences, rootKey)
+        setPreferencesFromResource(
+            if (requireComponents.settings.addressFeature) {
+                R.xml.autofill_preferences
+            } else {
+                R.xml.credit_cards_preferences
+            },
+            rootKey
+        )
 
         requirePreference<SwitchPreference>(R.string.pref_key_credit_cards_save_and_autofill_cards).apply {
             isChecked = context.settings().shouldAutofillCreditCardDetails
