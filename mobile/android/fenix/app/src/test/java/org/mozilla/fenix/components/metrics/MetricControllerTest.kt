@@ -41,6 +41,7 @@ import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
+import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
@@ -285,8 +286,6 @@ class MetricControllerTest {
 
         val simpleMappings = listOf(
             // CreditCardAutofillDialogFacts.Items is already tested.
-            Triple(Component.FEATURE_PWA, ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP, Event.ProgressiveWebAppOpenFromHomescreenTap),
-            Triple(Component.FEATURE_PWA, ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT, Event.ProgressiveWebAppInstallAsShortcut),
             Triple(Component.FEATURE_SYNCEDTABS, SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED, Event.SyncedTabSuggestionClicked),
             Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED, Event.BookmarkSuggestionClicked),
             Triple(Component.FEATURE_AWESOMEBAR, AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED, Event.ClipboardSuggestionClicked),
@@ -499,5 +498,39 @@ class MetricControllerTest {
             assertEquals(1, event.testGetValue().size)
             assertEquals(null, event.testGetValue().single().extra)
         }
+    }
+
+    @Test
+    fun `GIVEN pwa facts WHEN they are processed THEN the right metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val action = mockk<Action>(relaxed = true)
+
+        // a PWA shortcut from homescreen was opened
+        val openPWA = Fact(
+            Component.FEATURE_PWA,
+            action,
+            ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP,
+        )
+
+        assertFalse(ProgressiveWebApp.homescreenTap.testHasValue())
+        controller.run {
+            openPWA.process()
+        }
+        assertTrue(ProgressiveWebApp.homescreenTap.testHasValue())
+
+        // a PWA shortcut was installed
+        val installPWA = Fact(
+            Component.FEATURE_PWA,
+            action,
+            ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT,
+        )
+
+        assertFalse(ProgressiveWebApp.installTap.testHasValue())
+
+        controller.run {
+            installPWA.process()
+        }
+
+        assertTrue(ProgressiveWebApp.installTap.testHasValue())
     }
 }

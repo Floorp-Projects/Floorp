@@ -324,8 +324,6 @@
     <ID>UndocumentedPublicClass:Event.kt$Event$PocketTopSiteClicked : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$PocketTopSiteRemoved : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$PreferenceToggled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ProgressiveWebAppInstallAsShortcut : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ProgressiveWebAppOpenFromHomescreenTap : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeAppearanceOpened : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeAvailable : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeClosed : Event</ID>

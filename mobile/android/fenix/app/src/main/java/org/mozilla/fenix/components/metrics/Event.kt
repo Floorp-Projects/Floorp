@@ -16,9 +16,6 @@ sealed class Event {
     object HistorySearchGroupOpened : Event()
     object SearchWidgetInstalled : Event()
 
-    object ProgressiveWebAppOpenFromHomescreenTap : Event()
-    object ProgressiveWebAppInstallAsShortcut : Event()
-
     object TabSettingsOpened : Event()
 
     object SyncedTabSuggestionClicked : Event()

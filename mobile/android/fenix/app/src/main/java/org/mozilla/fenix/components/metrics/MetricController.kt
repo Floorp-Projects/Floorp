@@ -46,6 +46,7 @@ import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
+import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
 
@@ -216,6 +217,13 @@ internal class ReleaseMetricController(
             }
         }
 
+        Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP -> {
+            ProgressiveWebApp.homescreenTap.record(NoExtras())
+        }
+        Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT -> {
+            ProgressiveWebApp.installTap.record(NoExtras())
+        }
+
         else -> {
             this.toEvent()?.also {
                 track(it)
@@ -318,12 +326,7 @@ internal class ReleaseMetricController(
             }
             null
         }
-        Component.FEATURE_PWA == component && ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP == item -> {
-            Event.ProgressiveWebAppOpenFromHomescreenTap
-        }
-        Component.FEATURE_PWA == component && ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT == item -> {
-            Event.ProgressiveWebAppInstallAsShortcut
-        }
+
         Component.FEATURE_TOP_SITES == component && TopSitesFacts.Items.COUNT == item -> {
             value?.let {
                 var count = 0

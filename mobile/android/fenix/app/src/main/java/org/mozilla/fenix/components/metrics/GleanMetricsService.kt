@@ -13,7 +13,6 @@ import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
-import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -78,13 +77,6 @@ private val Event.wrapper: EventWrapper<*>?
             {
                 BrowserSearch.inContent[label].add(1)
             }
-        )
-
-        is Event.ProgressiveWebAppOpenFromHomescreenTap -> EventWrapper<NoExtraKeys>(
-            { ProgressiveWebApp.homescreenTap.record(it) }
-        )
-        is Event.ProgressiveWebAppInstallAsShortcut -> EventWrapper<NoExtraKeys>(
-            { ProgressiveWebApp.installTap.record(it) }
         )
 
         is Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
