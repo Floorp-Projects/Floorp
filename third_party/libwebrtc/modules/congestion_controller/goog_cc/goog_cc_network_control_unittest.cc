@@ -568,22 +568,21 @@ DataRate AverageBitrateAfterCrossInducedLoss(std::string name) {
 }
 
 TEST_F(GoogCcNetworkControllerTest,
-       NoLossBasedRecoversSlowerAfterCrossInducedLoss) {
+       LossBasedRecoversFasterAfterCrossInducedLoss) {
   // This test acts as a reference for the test below, showing that without the
   // trial, we have worse behavior.
-  DataRate average_bitrate =
+  DataRate average_bitrate_without_loss_based =
       AverageBitrateAfterCrossInducedLoss("googcc_unit/no_cross_loss_based");
-  RTC_DCHECK_LE(average_bitrate, DataRate::KilobitsPerSec(625));
-}
 
-TEST_F(GoogCcNetworkControllerTest,
-       LossBasedRecoversFasterAfterCrossInducedLoss) {
   // We recover bitrate better when subject to loss spikes from cross traffic
   // when loss based controller is used.
   ScopedFieldTrials trial("WebRTC-Bwe-LossBasedControl/Enabled/");
-  DataRate average_bitrate =
+  SetUp();
+  DataRate average_bitrate_with_loss_based =
       AverageBitrateAfterCrossInducedLoss("googcc_unit/cross_loss_based");
-  RTC_DCHECK_GE(average_bitrate, DataRate::KilobitsPerSec(725));
+
+  EXPECT_GE(average_bitrate_with_loss_based,
+            average_bitrate_without_loss_based * 1.1);
 }
 
 TEST_F(GoogCcNetworkControllerTest, LossBasedEstimatorCapsRateAtModerateLoss) {
@@ -698,7 +697,7 @@ TEST_F(GoogCcNetworkControllerTest, DetectsHighRateInSafeResetTrial) {
       {s.CreateSimulationNode(NetworkSimulationConfig())});
   s.CreateVideoStream(route->forward(), VideoStreamConfig());
   // Allow the controller to stabilize.
-  s.RunFor(TimeDelta::Millis(1000));
+  s.RunFor(TimeDelta::Millis(2000));
   EXPECT_NEAR(client->send_bandwidth().kbps(), kInitialLinkCapacity.kbps(), 50);
   s.ChangeRoute(route->forward(), {new_net});
   // Allow new settings to propagate, but not probes to be received.

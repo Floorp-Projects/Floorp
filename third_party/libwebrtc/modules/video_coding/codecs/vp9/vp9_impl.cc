@@ -56,9 +56,6 @@ uint8_t kUpdBufIdx[4] = {0, 0, 1, 0};
 // Maximum allowed PID difference for differnet per-layer frame-rate case.
 const int kMaxAllowedPidDiff = 30;
 
-constexpr double kLowRateFactor = 1.0;
-constexpr double kHighRateFactor = 2.0;
-
 // TODO(ilink): Tune these thresholds further.
 // Selected using ConverenceMotion_1280_720_50.yuv clip.
 // No toggling observed on any link capacity from 100-2000kbps.
@@ -67,15 +64,6 @@ constexpr double kHighRateFactor = 2.0;
 // for 300kbps resolution converged to 270p instead of 360p.
 constexpr int kLowVp9QpThreshold = 149;
 constexpr int kHighVp9QpThreshold = 205;
-
-// These settings correspond to the settings in vpx_codec_enc_cfg.
-struct Vp9RateSettings {
-  uint32_t rc_undershoot_pct;
-  uint32_t rc_overshoot_pct;
-  uint32_t rc_buf_sz;
-  uint32_t rc_buf_optimal_sz;
-  uint32_t rc_dropframe_thresh;
-};
 
 // Only positive speeds, range for real-time coding currently is: 5 - 8.
 // Lower means slower/better quality, higher means fastest/lower quality.
@@ -166,56 +154,6 @@ std::pair<size_t, size_t> GetActiveLayers(
     }
   }
   return {0, 0};
-}
-
-uint32_t Interpolate(uint32_t low,
-                     uint32_t high,
-                     double bandwidth_headroom_factor) {
-  RTC_DCHECK_GE(bandwidth_headroom_factor, kLowRateFactor);
-  RTC_DCHECK_LE(bandwidth_headroom_factor, kHighRateFactor);
-
-  // |factor| is between 0.0 and 1.0.
-  const double factor = bandwidth_headroom_factor - kLowRateFactor;
-
-  return static_cast<uint32_t>(((1.0 - factor) * low) + (factor * high) + 0.5);
-}
-
-Vp9RateSettings GetRateSettings(double bandwidth_headroom_factor) {
-  static const Vp9RateSettings low_settings{100u, 0u, 100u, 33u, 40u};
-  static const Vp9RateSettings high_settings{50u, 50u, 1000u, 700u, 5u};
-
-  if (bandwidth_headroom_factor <= kLowRateFactor) {
-    return low_settings;
-  } else if (bandwidth_headroom_factor >= kHighRateFactor) {
-    return high_settings;
-  }
-
-  Vp9RateSettings settings;
-  settings.rc_undershoot_pct =
-      Interpolate(low_settings.rc_undershoot_pct,
-                  high_settings.rc_undershoot_pct, bandwidth_headroom_factor);
-  settings.rc_overshoot_pct =
-      Interpolate(low_settings.rc_overshoot_pct, high_settings.rc_overshoot_pct,
-                  bandwidth_headroom_factor);
-  settings.rc_buf_sz =
-      Interpolate(low_settings.rc_buf_sz, high_settings.rc_buf_sz,
-                  bandwidth_headroom_factor);
-  settings.rc_buf_optimal_sz =
-      Interpolate(low_settings.rc_buf_optimal_sz,
-                  high_settings.rc_buf_optimal_sz, bandwidth_headroom_factor);
-  settings.rc_dropframe_thresh =
-      Interpolate(low_settings.rc_dropframe_thresh,
-                  high_settings.rc_dropframe_thresh, bandwidth_headroom_factor);
-  return settings;
-}
-
-void UpdateRateSettings(vpx_codec_enc_cfg_t* config,
-                        const Vp9RateSettings& new_settings) {
-  config->rc_undershoot_pct = new_settings.rc_undershoot_pct;
-  config->rc_overshoot_pct = new_settings.rc_overshoot_pct;
-  config->rc_buf_sz = new_settings.rc_buf_sz;
-  config->rc_buf_optimal_sz = new_settings.rc_buf_optimal_sz;
-  config->rc_dropframe_thresh = new_settings.rc_dropframe_thresh;
 }
 
 std::unique_ptr<ScalableVideoController> CreateVp9ScalabilityStructure(
@@ -364,9 +302,6 @@ VP9EncoderImpl::VP9EncoderImpl(const cricket::VideoCodec& codec,
       trusted_rate_controller_(
           RateControlSettings::ParseFromKeyValueConfig(&trials)
               .LibvpxVp9TrustedRateController()),
-      dynamic_rate_settings_(
-          RateControlSettings::ParseFromKeyValueConfig(&trials)
-              .Vp9DynamicRateSettings()),
       layer_buffering_(false),
       full_superframe_drop_(true),
       first_frame_in_picture_(true),
@@ -586,13 +521,6 @@ void VP9EncoderImpl::SetRates(const RateControlParameters& parameters) {
   }
 
   codec_.maxFramerate = static_cast<uint32_t>(parameters.framerate_fps + 0.5);
-
-  if (dynamic_rate_settings_) {
-    // Tweak rate control settings based on available network headroom.
-    UpdateRateSettings(
-        config_, GetRateSettings(parameters.bandwidth_allocation.bps<double>() /
-                                 parameters.bitrate.get_sum_bps()));
-  }
 
   bool res = SetSvcRates(parameters.bitrate);
   RTC_DCHECK(res) << "Failed to set new bitrate allocation";

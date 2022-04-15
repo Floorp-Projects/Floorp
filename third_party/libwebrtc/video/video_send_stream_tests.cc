@@ -3847,7 +3847,7 @@ class ContentSwitchTest : public test::SendTest {
     auto internal_send_peer = test::VideoSendStreamPeer(send_stream_);
     float pacing_factor =
         internal_send_peer.GetPacingFactorOverride().value_or(0.0f);
-    float expected_pacing_factor = PacedSender::kDefaultPaceMultiplier;
+    float expected_pacing_factor = 1.1;  // Strict pacing factor.
     if (send_stream_->GetStats().content_type ==
         webrtc::VideoContentType::SCREENSHARE) {
       expected_pacing_factor = 1.0f;  // Currently used pacing factor in ALR.

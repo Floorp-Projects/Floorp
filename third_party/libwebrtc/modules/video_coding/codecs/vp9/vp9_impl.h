@@ -135,7 +135,6 @@ class VP9EncoderImpl : public VP9Encoder {
   InterLayerPredMode inter_layer_pred_;
   bool external_ref_control_;
   const bool trusted_rate_controller_;
-  const bool dynamic_rate_settings_;
   bool layer_buffering_;
   const bool full_superframe_drop_;
   vpx_svc_frame_drop_t svc_drop_frame_;

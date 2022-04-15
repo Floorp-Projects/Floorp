@@ -844,7 +844,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
 
     VideoEncoder::EncoderInfo GetEncoderInfo() const override {
       MutexLock lock(&local_mutex_);
-      EncoderInfo info;
+      EncoderInfo info = FakeEncoder::GetEncoderInfo();
       if (initialized_ == EncoderState::kInitialized) {
         if (quality_scaling_) {
           info.scaling_settings = VideoEncoder::ScalingSettings(
@@ -4017,10 +4017,8 @@ TEST_F(VideoStreamEncoderTest, ReportsVideoBitrateAllocation) {
   EXPECT_EQ(sink_.GetLastVideoBitrateAllocation(), expected_bitrate);
   EXPECT_EQ(sink_.number_of_bitrate_allocations(), 1);
 
-  VideoBitrateAllocation bitrate_allocation =
-      fake_encoder_.GetAndResetLastRateControlSettings()->bitrate;
   // Check that encoder has been updated too, not just allocation observer.
-  EXPECT_EQ(bitrate_allocation.get_sum_bps(), kLowTargetBitrateBps);
+  EXPECT_TRUE(fake_encoder_.GetAndResetLastRateControlSettings().has_value());
   AdvanceTime(TimeDelta::Seconds(1) / kDefaultFps);
 
   // VideoBitrateAllocation not updated on second frame.
@@ -4065,19 +4063,18 @@ TEST_F(VideoStreamEncoderTest, ReportsVideoLayersAllocationForV8Simulcast) {
   ASSERT_EQ(last_layer_allocation.active_spatial_layers.size(), 1u);
 
   VideoBitrateAllocation bitrate_allocation =
-      fake_encoder_.GetAndResetLastRateControlSettings()->bitrate;
+      fake_encoder_.GetAndResetLastRateControlSettings()->target_bitrate;
   // Check that encoder has been updated too, not just allocation observer.
   EXPECT_EQ(bitrate_allocation.get_sum_bps(), kLowTargetBitrateBps);
   AdvanceTime(TimeDelta::Seconds(1) / kDefaultFps);
 
-  // VideoLayersAllocation might be updated if frame rate change.
+  // VideoLayersAllocation might be updated if frame rate changes.
   int number_of_layers_allocation = 1;
   const int64_t start_time_ms = CurrentTimeMs();
   while (CurrentTimeMs() - start_time_ms < 10 * kProcessIntervalMs) {
     video_source_.IncomingCapturedFrame(
         CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
     WaitForEncodedFrame(CurrentTimeMs());
-    AdvanceTime(TimeDelta::Millis(1) / kDefaultFps);
     if (number_of_layers_allocation != sink_.number_of_layers_allocations()) {
       number_of_layers_allocation = sink_.number_of_layers_allocations();
       VideoLayersAllocation new_allocation =
@@ -5592,10 +5589,20 @@ TEST_F(VideoStreamEncoderTest, DropsFramesWhenEncoderOvershoots) {
   // of video, verify number of drops. Rate needs to be slightly changed in
   // order to force the rate to be reconfigured.
   double overshoot_factor = 2.0;
-  if (RateControlSettings::ParseFromFieldTrials().UseEncoderBitrateAdjuster()) {
+  const RateControlSettings trials =
+      RateControlSettings::ParseFromFieldTrials();
+  if (trials.UseEncoderBitrateAdjuster()) {
     // With bitrate adjuster, when need to overshoot even more to trigger
-    // frame dropping.
-    overshoot_factor *= 2;
+    // frame dropping since the adjuter will try to just lower the target
+    // bitrate rather than drop frames. If network headroom can be used, it
+    // doesn't push back as hard so we don't need quite as much overshoot.
+    // These numbers are unfortunately a bit magical but there's not trivial
+    // way to algebraically infer them.
+    if (trials.BitrateAdjusterCanUseNetworkHeadroom()) {
+      overshoot_factor = 2.4;
+    } else {
+      overshoot_factor = 4.0;
+    }
   }
   fake_encoder_.SimulateOvershoot(overshoot_factor);
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(

@@ -99,15 +99,15 @@ TEST(RateControlSettingsTest, DoesNotGetTooSmallLibvpxVp8MinPixelValue) {
 TEST(RateControlSettingsTest, LibvpxTrustedRateController) {
   const RateControlSettings settings_before =
       RateControlSettings::ParseFromFieldTrials();
-  EXPECT_FALSE(settings_before.LibvpxVp8TrustedRateController());
-  EXPECT_FALSE(settings_before.LibvpxVp9TrustedRateController());
+  EXPECT_TRUE(settings_before.LibvpxVp8TrustedRateController());
+  EXPECT_TRUE(settings_before.LibvpxVp9TrustedRateController());
 
   test::ScopedFieldTrials field_trials(
-      "WebRTC-VideoRateControl/trust_vp8:1,trust_vp9:1/");
+      "WebRTC-VideoRateControl/trust_vp8:0,trust_vp9:0/");
   const RateControlSettings settings_after =
       RateControlSettings::ParseFromFieldTrials();
-  EXPECT_TRUE(settings_after.LibvpxVp8TrustedRateController());
-  EXPECT_TRUE(settings_after.LibvpxVp9TrustedRateController());
+  EXPECT_FALSE(settings_after.LibvpxVp8TrustedRateController());
+  EXPECT_FALSE(settings_after.LibvpxVp9TrustedRateController());
 }
 
 TEST(RateControlSettingsTest, Vp8BaseHeavyTl3RateAllocationLegacyKey) {
@@ -154,10 +154,10 @@ TEST(RateControlSettingsTest, GetSimulcastHysteresisFactor) {
       RateControlSettings::ParseFromFieldTrials();
   EXPECT_DOUBLE_EQ(settings_before.GetSimulcastHysteresisFactor(
                        VideoCodecMode::kRealtimeVideo),
-                   1.0);
+                   1.2);
   EXPECT_DOUBLE_EQ(settings_before.GetSimulcastHysteresisFactor(
                        VideoEncoderConfig::ContentType::kRealtimeVideo),
-                   1.0);
+                   1.2);
   EXPECT_DOUBLE_EQ(settings_before.GetSimulcastHysteresisFactor(
                        VideoCodecMode::kScreensharing),
                    1.35);
@@ -167,16 +167,16 @@ TEST(RateControlSettingsTest, GetSimulcastHysteresisFactor) {
 
   test::ScopedFieldTrials field_trials(
       "WebRTC-VideoRateControl/"
-      "video_hysteresis:1.2,screenshare_hysteresis:1.4/");
+      "video_hysteresis:1.0,screenshare_hysteresis:1.4/");
   const RateControlSettings settings_after =
       RateControlSettings::ParseFromFieldTrials();
 
   EXPECT_DOUBLE_EQ(settings_after.GetSimulcastHysteresisFactor(
                        VideoCodecMode::kRealtimeVideo),
-                   1.2);
+                   1.0);
   EXPECT_DOUBLE_EQ(settings_after.GetSimulcastHysteresisFactor(
                        VideoEncoderConfig::ContentType::kRealtimeVideo),
-                   1.2);
+                   1.0);
   EXPECT_DOUBLE_EQ(settings_after.GetSimulcastHysteresisFactor(
                        VideoCodecMode::kScreensharing),
                    1.4);
@@ -196,16 +196,16 @@ TEST(RateControlSettingsTest, TriggerProbeOnMaxAllocatedBitrateChange) {
 }
 
 TEST(RateControlSettingsTest, UseEncoderBitrateAdjuster) {
-  // Should be off by default.
-  EXPECT_FALSE(
+  // Should be on by default.
+  EXPECT_TRUE(
       RateControlSettings::ParseFromFieldTrials().UseEncoderBitrateAdjuster());
 
   {
-    // Can be turned on via field trial.
+    // Can be turned off via field trial.
     test::ScopedFieldTrials field_trials(
-        "WebRTC-VideoRateControl/bitrate_adjuster:true/");
-    EXPECT_TRUE(RateControlSettings::ParseFromFieldTrials()
-                    .UseEncoderBitrateAdjuster());
+        "WebRTC-VideoRateControl/bitrate_adjuster:false/");
+    EXPECT_FALSE(RateControlSettings::ParseFromFieldTrials()
+                     .UseEncoderBitrateAdjuster());
   }
 }
 

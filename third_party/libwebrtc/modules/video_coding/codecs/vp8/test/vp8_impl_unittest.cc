@@ -190,68 +190,6 @@ TEST_F(TestVp8Impl, SetRates) {
       bitrate_allocation, static_cast<double>(codec_settings_.maxFramerate)));
 }
 
-TEST_F(TestVp8Impl, DynamicSetRates) {
-  test::ScopedFieldTrials field_trials(
-      "WebRTC-VideoRateControl/vp8_dynamic_rate:true/");
-  auto* const vpx = new NiceMock<MockLibvpxVp8Interface>();
-  LibvpxVp8Encoder encoder((std::unique_ptr<LibvpxInterface>(vpx)),
-                           VP8Encoder::Settings());
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
-            encoder.InitEncode(&codec_settings_,
-                               VideoEncoder::Settings(kCapabilities, 1, 1000)));
-
-  const uint32_t kBitrateBps = 300000;
-  VideoEncoder::RateControlParameters rate_settings;
-  rate_settings.bitrate.SetBitrate(0, 0, kBitrateBps);
-  rate_settings.framerate_fps =
-      static_cast<double>(codec_settings_.maxFramerate);
-
-  // Set rates with no headroom.
-  rate_settings.bandwidth_allocation = DataRate::BitsPerSec(kBitrateBps);
-  EXPECT_CALL(
-      *vpx,
-      codec_enc_config_set(
-          _, AllOf(Field(&vpx_codec_enc_cfg_t::rc_target_bitrate,
-                         kBitrateBps / 1000),
-                   Field(&vpx_codec_enc_cfg_t::rc_undershoot_pct, 1000u),
-                   Field(&vpx_codec_enc_cfg_t::rc_overshoot_pct, 0u),
-                   Field(&vpx_codec_enc_cfg_t::rc_buf_sz, 100u),
-                   Field(&vpx_codec_enc_cfg_t::rc_buf_optimal_sz, 30u),
-                   Field(&vpx_codec_enc_cfg_t::rc_dropframe_thresh, 40u))))
-      .WillOnce(Return(VPX_CODEC_OK));
-  encoder.SetRates(rate_settings);
-
-  // Set rates with max headroom.
-  rate_settings.bandwidth_allocation = DataRate::BitsPerSec(kBitrateBps * 2);
-  EXPECT_CALL(
-      *vpx, codec_enc_config_set(
-                _, AllOf(Field(&vpx_codec_enc_cfg_t::rc_target_bitrate,
-                               kBitrateBps / 1000),
-                         Field(&vpx_codec_enc_cfg_t::rc_undershoot_pct, 100u),
-                         Field(&vpx_codec_enc_cfg_t::rc_overshoot_pct, 15u),
-                         Field(&vpx_codec_enc_cfg_t::rc_buf_sz, 1000u),
-                         Field(&vpx_codec_enc_cfg_t::rc_buf_optimal_sz, 600u),
-                         Field(&vpx_codec_enc_cfg_t::rc_dropframe_thresh, 5u))))
-      .WillOnce(Return(VPX_CODEC_OK));
-  encoder.SetRates(rate_settings);
-
-  // Set rates with headroom half way.
-  rate_settings.bandwidth_allocation =
-      DataRate::BitsPerSec((3 * kBitrateBps) / 2);
-  EXPECT_CALL(
-      *vpx,
-      codec_enc_config_set(
-          _, AllOf(Field(&vpx_codec_enc_cfg_t::rc_target_bitrate,
-                         kBitrateBps / 1000),
-                   Field(&vpx_codec_enc_cfg_t::rc_undershoot_pct, 550u),
-                   Field(&vpx_codec_enc_cfg_t::rc_overshoot_pct, 8u),
-                   Field(&vpx_codec_enc_cfg_t::rc_buf_sz, 550u),
-                   Field(&vpx_codec_enc_cfg_t::rc_buf_optimal_sz, 315u),
-                   Field(&vpx_codec_enc_cfg_t::rc_dropframe_thresh, 23u))))
-      .WillOnce(Return(VPX_CODEC_OK));
-  encoder.SetRates(rate_settings);
-}
-
 TEST_F(TestVp8Impl, EncodeFrameAndRelease) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
