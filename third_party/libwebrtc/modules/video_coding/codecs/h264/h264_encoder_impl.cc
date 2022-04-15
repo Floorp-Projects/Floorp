@@ -545,6 +545,12 @@ SEncParamExt H264EncoderImpl::CreateEncoderParams(size_t i) const {
   // |uiIntraPeriod|    - multiple of GOP size
   // |keyFrameInterval| - number of frames
   encoder_params.uiIntraPeriod = configurations_[i].key_frame_interval;
+  // Reuse SPS id if possible. This helps to avoid reset of chromium HW decoder
+  // on each key-frame.
+  // Note that WebRTC resets encoder on resolution change which makes all
+  // EParameterSetStrategy modes except INCREASING_ID (default) essentially
+  // equivalent to CONSTANT_ID.
+  encoder_params.eSpsPpsIdStrategy = SPS_LISTING;
   encoder_params.uiMaxNalSize = 0;
   // Threading model: use auto.
   //  0: auto (dynamic imp. internal encoder)
