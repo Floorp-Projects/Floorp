@@ -101,7 +101,6 @@ public class HardwareVideoEncoderTest {
                            .setCaptureTimeNs(frame.captureTimeNs)
                            .setFrameType(frame.frameType)
                            .setRotation(frame.rotation)
-                           .setCompleteFrame(frame.completeFrame)
                            .setQp(frame.qp)
                            .createEncodedImage());
     }

@@ -233,7 +233,6 @@ public class HardwareVideoEncoderTest {
     assertThat(videoFrame.encodedHeight).isEqualTo(TEST_ENCODER_SETTINGS.height);
     assertThat(videoFrame.rotation).isEqualTo(0);
     assertThat(videoFrame.captureTimeNs).isEqualTo(42);
-    assertThat(videoFrame.completeFrame).isTrue();
     assertThat(videoFrame.frameType).isEqualTo(FrameType.VideoFrameKey);
     CodecTestHelper.assertEqualContents(
         outputData, videoFrame.buffer, /* offset= */ 0, videoFrame.buffer.capacity());

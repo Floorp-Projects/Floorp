@@ -165,6 +165,7 @@ class RTC_EXPORT EncodedImage {
   VideoFrameType _frameType = VideoFrameType::kVideoFrameDelta;
   VideoRotation rotation_ = kVideoRotation_0;
   VideoContentType content_type_ = VideoContentType::UNSPECIFIED;
+  // TODO(philipel): Remove when downstream has been updated.
   bool _completeFrame = false;
   int qp_ = -1;  // Quantizer value.
 

@@ -482,7 +482,6 @@ int32_t LibaomAv1Encoder::Encode(
 
     // Get encoded image data.
     EncodedImage encoded_image;
-    encoded_image._completeFrame = true;
     aom_codec_iter_t iter = nullptr;
     int data_pkt_count = 0;
     while (const aom_codec_cx_pkt_t* pkt =

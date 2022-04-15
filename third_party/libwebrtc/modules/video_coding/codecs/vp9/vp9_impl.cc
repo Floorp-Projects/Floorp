@@ -590,7 +590,6 @@ int VP9EncoderImpl::InitEncode(const VideoCodec* inst,
 
   is_svc_ = (num_spatial_layers_ > 1 || num_temporal_layers_ > 1);
 
-  encoded_image_._completeFrame = true;
   // Populate encoder configuration with default values.
   if (vpx_codec_enc_config_default(vpx_codec_vp9_cx(), config_, 0)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -2042,12 +2041,7 @@ int VP9DecoderImpl::Decode(const EncodedImage& input_image,
   if (key_frame_required_) {
     if (input_image._frameType != VideoFrameType::kVideoFrameKey)
       return WEBRTC_VIDEO_CODEC_ERROR;
-    // We have a key frame - is it complete?
-    if (input_image._completeFrame) {
-      key_frame_required_ = false;
-    } else {
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+    key_frame_required_ = false;
   }
   vpx_codec_iter_t iter = nullptr;
   vpx_image_t* img;
