@@ -89,7 +89,7 @@ async function setupFilePicker() {
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", false],
     ],
   });
@@ -116,7 +116,7 @@ add_setup(async function() {
 /**
  * Tests that selecting the context menu item `Save Link As…` on a txt file link
  * opens the file picker and only downloads the file without any launches when
- * browser.download.improvements_to_download_panelpref is enabled.
+ * browser.download.always_ask_before_handling_new_types is disabled.
  */
 add_task(async function test_txt_save_as_link() {
   let mimeInfo;
@@ -143,7 +143,7 @@ add_task(async function test_txt_save_as_link() {
 /**
  * Tests that selecting the context menu item `Save Link As…` on a txt file link
  * opens the file picker and only downloads the file without any launches when
- * browser.download.improvements_to_download_panelpref is enabled. For this
+ * browser.download.always_ask_before_handling_new_types is disabled. For this
  * particular test, set alwaysAskBeforeHandling to true.
  */
 add_task(async function test_txt_save_as_link_alwaysAskBeforeHandling() {

@@ -246,6 +246,9 @@ add_task(async function test_download_preferred_action() {
     Services.prefs.clearUserPref(
       "browser.download.improvements_to_download_panel"
     );
+    Services.prefs.clearUserPref(
+      "browser.download.always_ask_before_handling_new_types"
+    );
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:home");
     for (const index in FILE_TYPES_TO_TEST) {
       let file = FILE_TYPES_TO_TEST[index];
@@ -261,7 +264,10 @@ add_task(async function test_download_preferred_action() {
     }
   });
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
   });
   let launcherPath = FileTestUtils.getTempFile("app-launcher").path;
   let localHandlerApp = localHandlerAppFactory.createInstance(

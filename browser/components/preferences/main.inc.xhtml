@@ -449,6 +449,17 @@
   </listheader>
   <richlistbox id="handlersView"
                preference="pref.downloads.disable_button.edit_actions"/>
+  <description id="handleNewFileTypesDesc"
+               data-l10n-id="applications-handle-new-file-types-description"/>
+  <radiogroup id="handleNewFileTypes"
+              preference="browser.download.always_ask_before_handling_new_types">
+    <radio id="saveForNewTypes"
+           value="false"
+           data-l10n-id="applications-save-for-new-types"/>
+    <radio id="askBeforeHandling"
+           value="true"
+           data-l10n-id="applications-ask-before-handling"/>
+  </radiogroup>
 </groupbox>
 
 

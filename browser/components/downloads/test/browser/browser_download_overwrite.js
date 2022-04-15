@@ -25,6 +25,7 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", false],
     ],
   });
@@ -60,8 +61,6 @@ add_task(async function test_overwrite_does_not_delete_first() {
     }
   });
 
-  let dialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-
   // Now try and download a thing to the file:
   await BrowserTestUtils.withNewTab(
     {
@@ -71,23 +70,6 @@ add_task(async function test_overwrite_does_not_delete_first() {
       waitForStateStop: true,
     },
     async function() {
-      if (
-        !Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
-        )
-      ) {
-        let dialog = await dialogPromise;
-        info("Got dialog.");
-        let saveEl = dialog.document.getElementById("save");
-        dialog.document.getElementById("mode").selectedItem = saveEl;
-        // Allow accepting the dialog (to avoid the delay helper):
-        dialog.document
-          .getElementById("unknownContentType")
-          .getButton("accept").disabled = false;
-        // Then accept it:
-        dialog.document.querySelector("dialog").acceptDialog();
-      }
-
       ok(await transferCompletePromise, "download should succeed");
       ok(
         gTestTargetFile.exists(),
@@ -105,7 +87,6 @@ add_task(async function test_overwrite_does_not_delete_first() {
 // If we download a file and the user accepts overwriting an existing one,
 // we should successfully overwrite its contents.
 add_task(async function test_overwrite_works() {
-  let dialogPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   let publicDownloads = await Downloads.getList(Downloads.PUBLIC);
   // First ensure we catch the download finishing.
   let downloadFinishedPromise = new Promise(resolve => {
@@ -130,23 +111,6 @@ add_task(async function test_overwrite_works() {
       waitForStateStop: true,
     },
     async function() {
-      if (
-        !Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
-        )
-      ) {
-        let dialog = await dialogPromise;
-        info("Got dialog.");
-        let saveEl = dialog.document.getElementById("save");
-        dialog.document.getElementById("mode").selectedItem = saveEl;
-        // Allow accepting the dialog (to avoid the delay helper):
-        dialog.document
-          .getElementById("unknownContentType")
-          .getButton("accept").disabled = false;
-        // Then accept it:
-        dialog.document.querySelector("dialog").acceptDialog();
-      }
-
       info("wait for download to finish");
       let download = await downloadFinishedPromise;
       ok(download.succeeded, "Download should succeed");

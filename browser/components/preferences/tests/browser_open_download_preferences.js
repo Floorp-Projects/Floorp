@@ -86,6 +86,7 @@ add_task(async function alwaysAskPreferenceWorks() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", true],
     ],
   });
@@ -138,6 +139,7 @@ add_task(async function handleInternallyPreferenceWorks() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", true],
     ],
   });
@@ -182,6 +184,7 @@ add_task(async function saveToDiskPreferenceWorks() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", true],
     ],
   });
@@ -226,6 +229,7 @@ add_task(async function useSystemDefaultPreferenceWorks() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", true],
     ],
   });

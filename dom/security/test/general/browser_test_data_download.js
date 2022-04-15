@@ -41,24 +41,14 @@ function promisePanelOpened() {
   return BrowserTestUtils.waitForEvent(DownloadsPanel.panel, "popupshown");
 }
 
-// Note: remove task once browser.download.improvements_to_download_panel pref is deleted
 add_task(async function test_with_downloads_pref_disabled() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref(
-    "security.data_uri.block_toplevel_data_uri_navigations",
-    true
-  );
-  Services.prefs.setBoolPref(
-    "browser.download.improvements_to_download_panel",
-    false
-  );
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref(
-      "security.data_uri.block_toplevel_data_uri_navigations"
-    );
-    Services.prefs.clearUserPref(
-      "browser.download.improvements_to_download_panel"
-    );
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.data_uri.block_toplevel_data_uri_navigations", true],
+      ["browser.download.always_ask_before_handling_new_types", true],
+      ["browser.download.improvements_to_download_panel", false],
+    ],
   });
   let windowPromise = addWindowListener(
     "chrome://mozapps/content/downloads/unknownContentType.xhtml"
@@ -77,23 +67,14 @@ add_task(async function test_with_downloads_pref_disabled() {
   await mainWindowActivated;
 });
 
-add_task(async function test_with_downloads_pref_enabled() {
+add_task(async function test_with_always_ask_pref_disabled() {
   waitForExplicitFinish();
-  Services.prefs.setBoolPref(
-    "security.data_uri.block_toplevel_data_uri_navigations",
-    true
-  );
-  Services.prefs.setBoolPref(
-    "browser.download.improvements_to_download_panel",
-    true
-  );
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref(
-      "security.data_uri.block_toplevel_data_uri_navigations"
-    );
-    Services.prefs.clearUserPref(
-      "browser.download.improvements_to_download_panel"
-    );
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.data_uri.block_toplevel_data_uri_navigations", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+      ["browser.download.improvements_to_download_panel", true],
+    ],
   });
   let downloadsPanelPromise = promisePanelOpened();
   let downloadsPromise = Downloads.getList(Downloads.PUBLIC);

@@ -41,7 +41,8 @@ add_setup(async function() {
   );
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true], // To avoid the saving dialog being shown
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false], // To avoid the saving dialog being shown
       ["browser.download.enable_spam_prevention", true],
     ],
   });
