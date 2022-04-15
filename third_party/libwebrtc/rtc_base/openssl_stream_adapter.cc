@@ -278,7 +278,7 @@ void SetAllowLegacyTLSProtocols(const absl::optional<bool>& allow) {
 bool ShouldAllowLegacyTLSProtocols() {
   return g_use_legacy_tls_protocols_override.load()
              ? g_allow_legacy_tls_protocols.load()
-             : !webrtc::field_trial::IsDisabled("WebRTC-LegacyTlsProtocols");
+             : webrtc::field_trial::IsEnabled("WebRTC-LegacyTlsProtocols");
 }
 
 OpenSSLStreamAdapter::OpenSSLStreamAdapter(

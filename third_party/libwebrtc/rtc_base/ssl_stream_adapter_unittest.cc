@@ -1458,10 +1458,9 @@ TEST_P(SSLStreamAdapterTestDTLS, TestGetSslCipherSuiteDtls12Both) {
 }
 
 // Test getting the used DTLS ciphers.
-// DTLS 1.0 is max version for client and server, this will only work if
-// legacy is enabled.
+// DTLS 1.2 is max version for client and server.
 TEST_P(SSLStreamAdapterTestDTLS, TestGetSslCipherSuite) {
-  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
+  SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_12, rtc::SSL_PROTOCOL_DTLS_12);
   TestHandshake();
 
   int client_cipher;
@@ -1469,8 +1468,8 @@ TEST_P(SSLStreamAdapterTestDTLS, TestGetSslCipherSuite) {
   int server_cipher;
   ASSERT_TRUE(GetSslCipherSuite(false, &server_cipher));
 
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(true));
-  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_10, GetSslVersion(false));
+  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_12, GetSslVersion(true));
+  ASSERT_EQ(rtc::SSL_PROTOCOL_DTLS_12, GetSslVersion(false));
 
   ASSERT_EQ(client_cipher, server_cipher);
   ASSERT_TRUE(rtc::SSLStreamAdapter::IsAcceptableCipher(
@@ -1529,7 +1528,7 @@ class SSLStreamAdapterTestDTLSLegacyProtocols
   }
 
   void ConfigureServer(std::string experiment) {
-    // webrtc::test::ScopedFieldTrials trial(experiment);
+    webrtc::test::ScopedFieldTrials trial(experiment);
     server_stream_ =
         new SSLDummyStreamDTLS(this, "s2c", &server_buffer_, &client_buffer_);
     server_ssl_ =
@@ -1545,8 +1544,8 @@ class SSLStreamAdapterTestDTLSLegacyProtocols
 // Test getting the used DTLS ciphers.
 // DTLS 1.2 enabled for neither client nor server -> DTLS 1.0 will be used.
 TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols, TestGetSslCipherSuite) {
-  ConfigureClient("");
-  ConfigureServer("");
+  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
+  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
   TestHandshake();
 
@@ -1584,8 +1583,8 @@ TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
 // DTLS 1.2 enabled for client only -> DTLS 1.0 will be used.
 TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
        TestGetSslCipherSuiteDtls12Client) {
-  ConfigureClient("");
-  ConfigureServer("");
+  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
+  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_12);
   TestHandshake();
 
@@ -1603,8 +1602,8 @@ TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
 // DTLS 1.2 enabled for server only -> DTLS 1.0 will be used.
 TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
        TestGetSslCipherSuiteDtls12Server) {
-  ConfigureClient("");
-  ConfigureServer("");
+  ConfigureClient("WebRTC-LegacyTlsProtocols/Enabled/");
+  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_12, rtc::SSL_PROTOCOL_DTLS_10);
   TestHandshake();
 
@@ -1623,8 +1622,8 @@ TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
 // This is meant to cause a failure.
 TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
        TestGetSslVersionLegacyDisabledServer10) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Disabled/");
-  ConfigureServer("");
+  ConfigureClient("");
+  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_12);
   // Handshake should fail.
   TestHandshake(false);
@@ -1634,8 +1633,8 @@ TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
 // DTLS 1.2. This should work.
 TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
        TestGetSslVersionLegacyDisabledServer12) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Disabled/");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Disabled/");
+  ConfigureClient("");
+  ConfigureServer("");
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_12, rtc::SSL_PROTOCOL_DTLS_12);
   TestHandshake();
 }
@@ -1650,12 +1649,12 @@ TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
   TestHandshake();
 }
 
-// Legacy protocols are disabled, max TLS version is 1.0
+// Legacy protocols are disabled in the client, max TLS version is 1.0
 // This should be a configuration error, and handshake should fail.
 TEST_F(SSLStreamAdapterTestDTLSLegacyProtocols,
        TestGetSslVersionLegacyDisabledClient10Server10) {
-  ConfigureClient("WebRTC-LegacyTlsProtocols/Disabled/");
-  ConfigureServer("WebRTC-LegacyTlsProtocols/Disabled/");
+  ConfigureClient("");
+  ConfigureServer("WebRTC-LegacyTlsProtocols/Enabled/");
   SetupProtocolVersions(rtc::SSL_PROTOCOL_DTLS_10, rtc::SSL_PROTOCOL_DTLS_10);
   TestHandshake(false);
 }
