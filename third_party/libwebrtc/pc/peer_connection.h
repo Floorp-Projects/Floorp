@@ -73,8 +73,10 @@
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_sender.h"
 #include "pc/rtp_transceiver.h"
+#include "pc/rtp_transmission_manager.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/sctp_data_channel.h"
+#include "pc/sctp_transport.h"
 #include "pc/sdp_offer_answer.h"
 #include "pc/session_description.h"
 #include "pc/stats_collector.h"
@@ -114,7 +116,6 @@ namespace webrtc {
 // - Generating stats.
 class PeerConnection : public PeerConnectionInternal,
                        public JsepTransportController::Observer,
-                       public RtpSenderBase::SetStreamsObserver,
                        public sigslot::has_slots<> {
  public:
   explicit PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
@@ -291,7 +292,7 @@ class PeerConnection : public PeerConnectionInternal,
       rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
   GetTransceiversInternal() const override {
     RTC_DCHECK_RUN_ON(signaling_thread());
-    return transceivers_.List();
+    return rtp_manager()->transceivers()->List();
   }
 
   sigslot::signal1<RtpDataChannel*>& SignalRtpDataChannelCreated() override {
@@ -366,6 +367,11 @@ class PeerConnection : public PeerConnectionInternal,
     return &message_handler_;
   }
 
+  RtpTransmissionManager* rtp_manager() { return rtp_manager_.get(); }
+  const RtpTransmissionManager* rtp_manager() const {
+    return rtp_manager_.get();
+  }
+
   // Functions made public for testing.
   void ReturnHistogramVeryQuicklyForTesting() {
     RTC_DCHECK_RUN_ON(signaling_thread());
@@ -381,83 +387,6 @@ class PeerConnection : public PeerConnectionInternal,
   // TOOD(https://bugs.webrtc.org/11995): Remove friendship.
   friend class SdpOfferAnswerHandler;
 
-  struct RtpSenderInfo {
-    RtpSenderInfo() : first_ssrc(0) {}
-    RtpSenderInfo(const std::string& stream_id,
-                  const std::string sender_id,
-                  uint32_t ssrc)
-        : stream_id(stream_id), sender_id(sender_id), first_ssrc(ssrc) {}
-    bool operator==(const RtpSenderInfo& other) {
-      return this->stream_id == other.stream_id &&
-             this->sender_id == other.sender_id &&
-             this->first_ssrc == other.first_ssrc;
-    }
-    std::string stream_id;
-    std::string sender_id;
-    // An RtpSender can have many SSRCs. The first one is used as a sort of ID
-    // for communicating with the lower layers.
-    uint32_t first_ssrc;
-  };
-
-  // Plan B helpers for getting the voice/video media channels for the single
-  // audio/video transceiver, if it exists.
-  cricket::VoiceMediaChannel* voice_media_channel() const
-      RTC_RUN_ON(signaling_thread());
-  cricket::VideoMediaChannel* video_media_channel() const
-      RTC_RUN_ON(signaling_thread());
-
-  std::vector<rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>>>
-  GetSendersInternal() const;
-  std::vector<
-      rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>>
-  GetReceiversInternal() const RTC_RUN_ON(signaling_thread());
-
-  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-  GetAudioTransceiver() const;
-  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-  GetVideoTransceiver() const;
-
-  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-  GetFirstAudioTransceiver() const RTC_RUN_ON(signaling_thread());
-
-
-  void CreateAudioReceiver(MediaStreamInterface* stream,
-                           const RtpSenderInfo& remote_sender_info)
-      RTC_RUN_ON(signaling_thread());
-
-  void CreateVideoReceiver(MediaStreamInterface* stream,
-                           const RtpSenderInfo& remote_sender_info)
-      RTC_RUN_ON(signaling_thread());
-  rtc::scoped_refptr<RtpReceiverInterface> RemoveAndStopReceiver(
-      const RtpSenderInfo& remote_sender_info) RTC_RUN_ON(signaling_thread());
-
-  // May be called either by AddStream/RemoveStream, or when a track is
-  // added/removed from a stream previously added via AddStream.
-  void AddAudioTrack(AudioTrackInterface* track, MediaStreamInterface* stream);
-  void RemoveAudioTrack(AudioTrackInterface* track,
-                        MediaStreamInterface* stream);
-  void AddVideoTrack(VideoTrackInterface* track, MediaStreamInterface* stream);
-  void RemoveVideoTrack(VideoTrackInterface* track,
-                        MediaStreamInterface* stream);
-
-  // AddTrack implementation when Unified Plan is specified.
-  RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrackUnifiedPlan(
-      rtc::scoped_refptr<MediaStreamTrackInterface> track,
-      const std::vector<std::string>& stream_ids)
-      RTC_RUN_ON(signaling_thread());
-  // AddTrack implementation when Plan B is specified.
-  RTCErrorOr<rtc::scoped_refptr<RtpSenderInterface>> AddTrackPlanB(
-      rtc::scoped_refptr<MediaStreamTrackInterface> track,
-      const std::vector<std::string>& stream_ids)
-      RTC_RUN_ON(signaling_thread());
-
-  // Returns the first RtpTransceiver suitable for a newly added track, if such
-  // transceiver is available.
-  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-  FindFirstTransceiverForAddedTrack(
-      rtc::scoped_refptr<MediaStreamTrackInterface> track)
-      RTC_RUN_ON(signaling_thread());
-
   rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
   FindTransceiverBySender(rtc::scoped_refptr<RtpSenderInterface> sender)
       RTC_RUN_ON(signaling_thread());
@@ -469,24 +398,6 @@ class PeerConnection : public PeerConnectionInternal,
       rtc::scoped_refptr<MediaStreamTrackInterface> track,
       const RtpTransceiverInit& init,
       bool fire_callback = true);
-
-  rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>>
-  CreateSender(cricket::MediaType media_type,
-               const std::string& id,
-               rtc::scoped_refptr<MediaStreamTrackInterface> track,
-               const std::vector<std::string>& stream_ids,
-               const std::vector<RtpEncodingParameters>& send_encodings);
-
-  rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
-  CreateReceiver(cricket::MediaType media_type, const std::string& receiver_id);
-
-  // Create a new RtpTransceiver of the given type and add it to the list of
-  // transceivers.
-  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-  CreateAndAddTransceiver(
-      rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>> sender,
-      rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
-          receiver);
 
   void SetIceConnectionState(IceConnectionState new_state);
   void SetStandardizedIceConnectionState(
@@ -539,36 +450,6 @@ class PeerConnection : public PeerConnectionInternal,
   // channels are configured this will return nullopt.
   absl::optional<std::string> GetDataMid() const;
 
-  // Triggered when a remote sender has been seen for the first time in a remote
-  // session description. It creates a remote MediaStreamTrackInterface
-  // implementation and triggers CreateAudioReceiver or CreateVideoReceiver.
-  void OnRemoteSenderAdded(const RtpSenderInfo& sender_info,
-                           MediaStreamInterface* stream,
-                           cricket::MediaType media_type);
-
-  // Triggered when a remote sender has been removed from a remote session
-  // description. It removes the remote sender with id |sender_id| from a remote
-  // MediaStream and triggers DestroyAudioReceiver or DestroyVideoReceiver.
-  void OnRemoteSenderRemoved(const RtpSenderInfo& sender_info,
-                             MediaStreamInterface* stream,
-                             cricket::MediaType media_type);
-
-  // Triggered when a local sender has been seen for the first time in a local
-  // session description.
-  // This method triggers CreateAudioSender or CreateVideoSender if the rtp
-  // streams in the local SessionDescription can be mapped to a MediaStreamTrack
-  // in a MediaStream in |local_streams_|
-  void OnLocalSenderAdded(const RtpSenderInfo& sender_info,
-                          cricket::MediaType media_type);
-
-  // Triggered when a local sender has been removed from a local session
-  // description.
-  // This method triggers DestroyAudioSender or DestroyVideoSender if a stream
-  // has been removed from the local SessionDescription and the stream can be
-  // mapped to a MediaStreamTrack in a MediaStream in |local_streams_|.
-  void OnLocalSenderRemoved(const RtpSenderInfo& sender_info,
-                            cricket::MediaType media_type);
-
   // Returns true if the PeerConnection is configured to use Unified Plan
   // semantics for creating offers/answers and setting local/remote
   // descriptions. If this is true the RtpTransceiver API will also be available
@@ -579,29 +460,6 @@ class PeerConnection : public PeerConnectionInternal,
     RTC_DCHECK_RUN_ON(signaling_thread());
     return configuration_.sdp_semantics == SdpSemantics::kUnifiedPlan;
   }
-
-  // Return the RtpSender with the given track attached.
-  rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>>
-  FindSenderForTrack(MediaStreamTrackInterface* track) const
-      RTC_RUN_ON(signaling_thread());
-
-  // Return the RtpSender with the given id, or null if none exists.
-  rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>>
-  FindSenderById(const std::string& sender_id) const
-      RTC_RUN_ON(signaling_thread());
-
-  // Return the RtpReceiver with the given id, or null if none exists.
-  rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
-  FindReceiverById(const std::string& receiver_id) const
-      RTC_RUN_ON(signaling_thread());
-
-  std::vector<RtpSenderInfo>* GetRemoteSenderInfos(
-      cricket::MediaType media_type);
-  std::vector<RtpSenderInfo>* GetLocalSenderInfos(
-      cricket::MediaType media_type);
-  const RtpSenderInfo* FindSenderInfo(const std::vector<RtpSenderInfo>& infos,
-                                      const std::string& stream_id,
-                                      const std::string sender_id) const;
 
   // Returns the specified SCTP DataChannel in sctp_data_channels_,
   // or nullptr if not found.
@@ -739,9 +597,6 @@ class PeerConnection : public PeerConnectionInternal,
       rtc::scoped_refptr<DtlsTransport> dtls_transport,
       DataChannelTransportInterface* data_channel_transport) override;
 
-  // RtpSenderBase::SetStreamsObserver override.
-  void OnSetStreams() override;
-
   // Returns the CryptoOptions for this PeerConnection. This will always
   // return the RTCConfiguration.crypto_options if set and will only default
   // back to the PeerConnectionFactory settings if nothing was set.
@@ -806,16 +661,6 @@ class PeerConnection : public PeerConnectionInternal,
       tls_cert_verifier_;  // TODO(bugs.webrtc.org/9987): Accessed on both
                            // signaling and network thread.
 
-  // These lists store sender info seen in local/remote descriptions.
-  std::vector<RtpSenderInfo> remote_audio_sender_infos_
-      RTC_GUARDED_BY(signaling_thread());
-  std::vector<RtpSenderInfo> remote_video_sender_infos_
-      RTC_GUARDED_BY(signaling_thread());
-  std::vector<RtpSenderInfo> local_audio_sender_infos_
-      RTC_GUARDED_BY(signaling_thread());
-  std::vector<RtpSenderInfo> local_video_sender_infos_
-      RTC_GUARDED_BY(signaling_thread());
-
   // The unique_ptr belongs to the worker thread, but the Call object manages
   // its own thread safety.
   std::unique_ptr<Call> call_ RTC_GUARDED_BY(worker_thread());
@@ -832,7 +677,6 @@ class PeerConnection : public PeerConnectionInternal,
       RTC_GUARDED_BY(signaling_thread());  // A pointer is passed to senders_
   rtc::scoped_refptr<RTCStatsCollector> stats_collector_
       RTC_GUARDED_BY(signaling_thread());
-  TransceiverList transceivers_;
 
   std::string session_id_ RTC_GUARDED_BY(signaling_thread());
 
@@ -882,6 +726,10 @@ class PeerConnection : public PeerConnectionInternal,
 
   // Machinery for handling messages posted to oneself
   PeerConnectionMessageHandler message_handler_;
+
+  // Administration of senders, receivers and transceivers
+  // Accessed on both signaling and network thread. Const after Initialize().
+  std::unique_ptr<RtpTransmissionManager> rtp_manager_;
 };
 
 }  // namespace webrtc

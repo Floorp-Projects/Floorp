@@ -195,8 +195,6 @@ rtc_library("peerconnection") {
     "stream_collection.h",
     "track_media_info_map.cc",
     "track_media_info_map.h",
-    "transceiver_list.cc",
-    "transceiver_list.h",
     "webrtc_sdp.cc",
     "webrtc_sdp.h",
     "webrtc_session_description_factory.cc",
@@ -220,7 +218,9 @@ rtc_library("peerconnection") {
     ":rtp_receiver",
     ":rtp_sender",
     ":rtp_transceiver",
+    ":rtp_transmission_manager",
     ":stats_collector_interface",
+    ":transceiver_list",
     ":usage_pattern",
     ":video_rtp_receiver",
     ":video_track",
@@ -363,6 +363,47 @@ rtc_library("rtp_transceiver") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
+}
+
+rtc_library("rtp_transmission_manager") {
+  sources = [
+    "rtp_transmission_manager.cc",
+    "rtp_transmission_manager.h",
+  ]
+  deps = [
+    ":audio_rtp_receiver",
+    ":rtc_pc_base",
+    ":rtp_receiver",
+    ":rtp_sender",
+    ":rtp_transceiver",
+    ":stats_collector_interface",
+    ":transceiver_list",
+    ":usage_pattern",
+    ":video_rtp_receiver",
+    "../api:libjingle_peerconnection_api",
+    "../api:media_stream_interface",
+    "../api:rtc_error",
+    "../api:rtp_parameters",
+    "../api:rtp_transceiver_direction",
+    "../api:scoped_refptr",
+    "../media:rtc_media_base",
+    "../rtc_base",
+    "../rtc_base:checks",
+    "../rtc_base/third_party/sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("transceiver_list") {
+  sources = [
+    "transceiver_list.cc",
+    "transceiver_list.h",
+  ]
+  deps = [ ":rtp_transceiver" ]
 }
 
 rtc_library("rtp_receiver") {
