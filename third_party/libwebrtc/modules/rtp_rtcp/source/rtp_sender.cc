@@ -132,6 +132,7 @@ bool IsNonVolatile(RTPExtensionType type) {
       RTC_CHECK(false);
       return false;
   }
+  RTC_CHECK(false);
 }
 
 bool HasBweExtension(const RtpHeaderExtensionMap& extensions_map) {
