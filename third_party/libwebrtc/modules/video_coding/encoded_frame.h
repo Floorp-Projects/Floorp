@@ -34,6 +34,8 @@ class RTC_EXPORT VCMEncodedFrame : protected EncodedImage {
     _renderTimeMs = renderTimeMs;
   }
 
+  VideoPlayoutDelay PlayoutDelay() const { return playout_delay_; }
+
   void SetPlayoutDelay(VideoPlayoutDelay playout_delay) {
     playout_delay_ = playout_delay;
   }

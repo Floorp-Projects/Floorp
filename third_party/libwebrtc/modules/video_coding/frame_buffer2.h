@@ -88,6 +88,8 @@ class FrameBuffer {
   // Clears the FrameBuffer, removing all the buffered frames.
   void Clear();
 
+  int Size();
+
  private:
   struct FrameInfo {
     FrameInfo();
