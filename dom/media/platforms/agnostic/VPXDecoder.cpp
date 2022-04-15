@@ -353,9 +353,9 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
     uint16_t height = (aBuffer[8] | aBuffer[9] << 8) & 0x3fff;
 
     // aspect ratio isn't found in the VP8 frame header.
-    aInfo.mImage = gfx::IntSize(width, height);
-    aInfo.mDisplayAndImageDifferent = false;
-    aInfo.mDisplay = aInfo.mImage;
+    aInfo.mImage = aInfo.mDisplay = gfx::IntSize(width, height);
+    aInfo.mDisplayAspectRatio =
+        (float)(aInfo.mDisplay.Width()) / (float)(aInfo.mDisplay.Height());
     return true;
   }
 
@@ -445,15 +445,16 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
   };
 
   auto render_size = [&]() {
-    // render_and_frame_size_different
-    aInfo.mDisplayAndImageDifferent = br.ReadBits(1);
-    if (aInfo.mDisplayAndImageDifferent) {
+    bool render_and_frame_size_different = br.ReadBits(1);
+    if (render_and_frame_size_different) {
       int32_t width = static_cast<int32_t>(br.ReadBits(16)) + 1;
       int32_t height = static_cast<int32_t>(br.ReadBits(16)) + 1;
       aInfo.mDisplay = gfx::IntSize(width, height);
     } else {
       aInfo.mDisplay = aInfo.mImage;
     }
+    aInfo.mDisplayAspectRatio =
+        (float)(aInfo.mDisplay.Width()) / (float)(aInfo.mDisplay.Height());
   };
 
   if (aInfo.mKeyFrame) {
