@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <queue>
 #include <type_traits>
 
@@ -42,8 +43,11 @@
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_data_channel.h"
 #include "pc/rtp_media_utils.h"
+#include "pc/rtp_sender.h"
 #include "pc/rtp_transport_internal.h"
+#include "pc/sctp_transport.h"
 #include "pc/simulcast_description.h"
+#include "pc/stats_collector.h"
 #include "pc/usage_pattern.h"
 #include "rtc_base/bind.h"
 #include "rtc_base/helpers.h"
