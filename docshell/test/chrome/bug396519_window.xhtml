@@ -10,163 +10,123 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="onLoad();"
+        onload="runTest();"
         title="396519 test">
 
+  <script src="chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
     Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
-    const LISTEN_EVENTS = ["pageshow"];
 
-    var gBrowser;
     var gTestCount = 0;
-    var gTestsIterator;
-    var gExpected = [];
 
-    function ok(condition, message) {
-      window.arguments[0].SimpleTest.ok(condition, message);
-    }
-    function is(a, b, message) {
-      window.arguments[0].SimpleTest.is(a, b, message);
-    }
-    function finish() {
-      for (let eventType of LISTEN_EVENTS) {
-        gBrowser.removeEventListener(eventType, eventListener, true);
-      }
-
-      window.close();
-      window.arguments[0].SimpleTest.finish();
+    async function navigateAndTest(params, expected) {
+      await promisePageNavigation(params);
+      ++gTestCount;
+      await doTest(expected);
     }
 
-    function onLoad() {
-      gBrowser = document.getElementById("content");
-
-      for (let eventType of LISTEN_EVENTS) {
-        gBrowser.addEventListener(eventType, eventListener, true);
-      }
-
-      gTestsIterator = testsIterator();
-      nextTest();
-    }
-
-    function eventListener(event) {
-      // we're in pageshow, but we need to let that finish
-      // content eviction and saving happen during pageshow, so when doTest
-      // runs, we should should be in a testable state
-      setTimeout(doTest, 0);
-    }
-
-    function doTest() {
-      let history;
-      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-        history = gBrowser.browsingContext.sessionHistory;
-      } else {
-        history = gBrowser.webNavigation.sessionHistory.legacySHistory;
-      }
-
-      if (history.count == gExpected.length) {
-        for (let i = 0; i < history.count; i++) {
-          var shEntry = history.getEntryAtIndex(i).
-                          QueryInterface(Ci.nsISHEntry);
-          is(shEntry.isInBFCache, gExpected[i], `BFCache for shentry[${i}], test ${gTestCount}`);
+    async function doTest(expected) {
+      function check(testCount, expected) {
+        let history;
+        if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+          history = this.browsingContext.sessionHistory;
+        } else {
+          history = this.content.browsingContext.childSessionHistory.legacySHistory;
         }
+        if (history.count == expected.length) {
+          for (let i = 0; i < history.count; i++) {
+            var shEntry = history.getEntryAtIndex(i).
+                            QueryInterface(Ci.nsISHEntry);
+            is(shEntry.isInBFCache, expected[i], `BFCache for shentry[${i}], test ${testCount}`);
+          }
 
-        // Make sure none of the SHEntries share bfcache entries with one
-        // another.
-        for (let i = 0; i < history.count; i++) {
-          for (let j = 0; j < history.count; j++) {
-            if (j == i)
-              continue;
+          // Make sure none of the SHEntries share bfcache entries with one
+          // another.
+          for (let i = 0; i < history.count; i++) {
+            for (let j = 0; j < history.count; j++) {
+              if (j == i)
+                continue;
 
-            let shentry1 = history.getEntryAtIndex(i)
-                                  .QueryInterface(Ci.nsISHEntry);
-            let shentry2 = history.getEntryAtIndex(j)
-                                  .QueryInterface(Ci.nsISHEntry);
-            ok(!shentry1.sharesDocumentWith(shentry2),
-               'Test ' + gTestCount + ': shentry[' + i + "] shouldn't " +
-               "share document with shentry[" + j + ']');
+              let shentry1 = history.getEntryAtIndex(i)
+                                    .QueryInterface(Ci.nsISHEntry);
+              let shentry2 = history.getEntryAtIndex(j)
+                                    .QueryInterface(Ci.nsISHEntry);
+              ok(!shentry1.sharesDocumentWith(shentry2),
+                 'Test ' + testCount + ': shentry[' + i + "] shouldn't " +
+                 "share document with shentry[" + j + ']');
+            }
           }
         }
-      }
-      else {
-        is(history.count, gExpected.length, "Wrong history length in test "+gTestCount);
+        else {
+          is(history.count, expected.length, "Wrong history length in test "+testCount);
+        }
       }
 
-      setTimeout(nextTest, 0);
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+        check.call(TestWindow.getBrowser(), gTestCount, expected);
+      } else {
+        await SpecialPowers.spawn(TestWindow.getBrowser(), [gTestCount, expected], check);
+      }
     }
 
-    function nextTest() {
-      gTestsIterator.next();
-    }
-
-    function* testsIterator() {
+    async function runTest() {
       // Tests 1 + 2:
       //  Back/forward between two simple documents. Bfcache will be used.
 
       var test1Doc = "data:text/html,<html><head><title>test1</title></head>" +
                      "<body>test1</body></html>";
 
-      gTestCount++;
-      gExpected = [false];
-      BrowserTestUtils.loadURI(gBrowser, test1Doc);
-      yield undefined;
+      await navigateAndTest({
+        uri: test1Doc,
+      }, [false]);
 
-      gTestCount++;
-      gExpected = [true, false];
       var test2Doc = test1Doc.replace(/1/,"2");
-      BrowserTestUtils.loadURI(gBrowser, test2Doc);
-      yield undefined;
 
-      gTestCount++;
-      gExpected = [true, true, false];
-      BrowserTestUtils.loadURI(gBrowser, test1Doc);
-      yield undefined;
+      await navigateAndTest({
+        uri: test2Doc,
+      }, [true, false]);
 
-      gTestCount++;
-      gExpected = [true, true, true, false];
-      BrowserTestUtils.loadURI(gBrowser, test2Doc);
-      yield undefined;
+      await navigateAndTest({
+        uri: test1Doc,
+      }, [true, true, false]);
 
-      gTestCount++;
-      gExpected = [false, true, true, true, false];
-      BrowserTestUtils.loadURI(gBrowser, test1Doc);
-      yield undefined;
+      await navigateAndTest({
+        uri: test2Doc,
+      }, [true, true, true, false]);
 
-      gTestCount++;
-      gExpected = [false, false, true, true, true, false];
-      BrowserTestUtils.loadURI(gBrowser, test2Doc);
-      yield undefined;
+      await navigateAndTest({
+        uri: test1Doc,
+      }, [false, true, true, true, false]);
 
-      gTestCount++;
-      gExpected = [false, false, true, true, false, true];
-      gBrowser.goBack();
-      yield undefined;
+      await navigateAndTest({
+        uri: test2Doc,
+      }, [false, false, true, true, true, false]);
 
-      gTestCount++;
-      gExpected = [false, false, true, true, true, false];
-      gBrowser.goForward();
-      yield undefined;
+      await navigateAndTest({
+        back: true,
+      }, [false, false, true, true, false, true]);
 
-      gTestCount++;
-      gExpected = [false, false, true, true, true, false];
-      gBrowser.gotoIndex(1);
-      yield undefined;
+      await navigateAndTest({
+        forward: true,
+      }, [false, false, true, true, true, false]);
 
-      gTestCount++;
-      gExpected = [false, true, true, true, false, false];
-      gBrowser.goBack();
-      yield undefined;
+      await navigateAndTest({
+        gotoIndex: 1,
+      }, [false, false, true, true, true, false]);
 
-      gTestCount++;
-      gExpected = [false, false, true, true, false, false];
-      gBrowser.gotoIndex(5);
-      yield undefined;
+      await navigateAndTest({
+        back: true,
+      }, [false, true, true, true, false, false]);
+
+      await navigateAndTest({
+        gotoIndex: 5,
+      }, [false, false, true, true, false, false]);
 
       Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       finish();
     }
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" remote="true" />
 </window>

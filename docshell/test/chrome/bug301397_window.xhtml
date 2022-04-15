@@ -5,7 +5,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest, 0);"
+        onload="setTimeout(runTest, 0);"
         title="bug 301397 test">
 
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
@@ -13,51 +13,35 @@
   <script type="application/javascript"><![CDATA[
     Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
   
-    // Define the generator-iterator for the tests.
-    var tests = testIterator();
-
-    ////
-    // Execute the next test in the generator function.
-    //
-    function nextTest() {
-      tests.next();
-    }
-    
-    ////
-    // Return the document element with the specified id.
-    //
-    function $(id) { return TestWindow.getDocument().getElementById(id); }
-
     ////
     // Verifies that the given string exists in the innerHTML of the iframe
     // content.
     //
-    function verifyIframeInnerHtml(string) {
-      var iframeInnerHtml = $("iframe").contentDocument.body.innerHTML;
+    async function verifyIframeInnerHtml(string) {
+      var iframeInnerHtml = await SpecialPowers.spawn(document.getElementById("content"), [string], (string) =>
+          content.document.getElementById("iframe").contentDocument.body.innerHTML);
       ok(iframeInnerHtml.includes(string),
-        "iframe contains wrong document: " + iframeInnerHtml);    
+         "iframe contains wrong document: " + iframeInnerHtml);
     }
-    
+
     ////
-    // Generator function for test steps for bug 301397:  
+    // Generator function for test steps for bug 301397:
     // The correct page should be displayed in an iframe when
     // navigating back and forwards, when the parent page
     // occupies multiple spots in the session history.
     //
-    function* testIterator()
+    async function runTest()
     {
       // Make sure the bfcache is enabled.
       enableBFCache(8);
 
       // Load a dummy page.
-      doPageNavigation({
+      await promisePageNavigation({
         uri: getHttpUrl("generic.html"),
-        onNavComplete: nextTest
       });
-      yield undefined;
-      
+
       // Load a page containing an iframe.
-      doPageNavigation({
+      await promisePageNavigation({
         uri: getHttpUrl("bug301397_1.html"),
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -69,14 +53,12 @@
                           { type: "pageshow",
                             title: "iframe parent",
                             persisted: false } ], // false on initial load
-        onNavComplete: nextTest
       });
-      yield undefined;
-      
+
       // Click a link in the iframe to cause the iframe to navigate
       // to a new page, and wait until the related pagehide/pageshow
       // events have occurred.
-      waitForPageEvents({
+      let waitForLinkNavigation = promisePageEvents({
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
                             title: "iframe content #1",
@@ -84,20 +66,22 @@
                           { type: "pageshow",
                             title: "iframe content #2",
                             persisted: false } ], // false on initial load
-        onNavComplete: nextTest
       });
-      var link = $("iframe").contentDocument.getElementById("link");
-      var event = $("iframe").contentDocument.createEvent("MouseEvents");
-      event.initMouseEvent("click", true, true, $("iframe").contentWindow,
+      SpecialPowers.spawn(document.getElementById("content"), [], function() {
+        let iframe = content.document.getElementById("iframe");
+        let link = iframe.contentDocument.getElementById("link");
+        let event = iframe.contentDocument.createEvent("MouseEvents");
+        event.initMouseEvent("click", true, true, iframe.contentWindow,
           0, 0, 0, 0, 0,
           false, false, false, false,
           0, null);
-      link.dispatchEvent(event);
-      yield undefined;
-       
+        link.dispatchEvent(event);
+      });
+      await waitForLinkNavigation;
+
       // Load another dummy page.  Verify that both the outgoing parent and
       // iframe pages are stored in the bfcache.
-      doPageNavigation({
+      await promisePageNavigation({
         uri: getHttpUrl("bug301397_4.html"),
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -109,14 +93,12 @@
                           { type: "pageshow",
                             title: "dummy page, no iframe",
                             persisted: false } ],  // false on initial load
-        onNavComplete: nextTest
       });
-      yield undefined;
-      
-      // Go back.  The iframe should show the second page loaded in it. 
+
+      // Go back.  The iframe should show the second page loaded in it.
       // Both the parent and the iframe pages should be loaded from
       // the bfcache.
-      doPageNavigation({
+      await promisePageNavigation({
         back: true,
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -128,14 +110,12 @@
                           { type: "pageshow",
                             persisted: true,
                             title: "iframe parent" } ],
-        onNavComplete: nextTest
       });
-      yield undefined;
-      
+
       verifyIframeInnerHtml("You made it");
       
       // Go gack again.  The iframe should show the first page loaded in it.
-      doPageNavigation({
+      await promisePageNavigation({
         back: true,
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -146,16 +126,14 @@
                             // false since this page was never stored
                             // in the bfcache in the first place
                             persisted: false } ], 
-        onNavComplete: nextTest
       });
-      yield undefined;
-      
+
       verifyIframeInnerHtml("go to next page");
       
       // Go back to the generic page.  Now go forward to the last page,
       // again verifying that the iframe shows the first and second
       // pages in order.
-      doPageNavigation({
+      await promisePageNavigation({
         back: true,
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -167,11 +145,9 @@
                           { type: "pageshow",
                             title: "generic page",
                             persisted: true } ], 
-        onNavComplete: nextTest
       });
-      yield undefined;
 
-      doPageNavigation({
+      await promisePageNavigation({
         forward: true,
         eventsToListenFor: ["pageshow"],
         expectedEvents: [ {type: "pageshow",
@@ -180,13 +156,11 @@
                           {type: "pageshow",
                            title: "iframe parent",
                            persisted: true} ],
-        onNavComplete: nextTest
       });
-      yield undefined;
 
       verifyIframeInnerHtml("go to next page");
       
-      doPageNavigation({
+      await promisePageNavigation({
         forward: true,
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -197,13 +171,11 @@
                             // false because the page wasn't stored in 
                             // bfcache last time it was unloaded
                             persisted: false } ], 
-        onNavComplete: nextTest
       });
-      yield undefined;
 
       verifyIframeInnerHtml("You made it");
       
-      doPageNavigation({
+      await promisePageNavigation({
         forward: true,
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -215,13 +187,11 @@
                           { type: "pageshow",
                             title: "dummy page, no iframe",
                             persisted: true } ],
-        onNavComplete: nextTest
       });
-      yield undefined;
 
       // Go back once more, and again verify that the iframe shows the
       // second page loaded in it.
-      doPageNavigation({
+      await promisePageNavigation({
         back: true,
         eventsToListenFor: ["pageshow", "pagehide"],
         expectedEvents: [ { type: "pagehide",
@@ -233,10 +203,8 @@
                           { type: "pageshow",
                             persisted: true,
                             title: "iframe parent" } ],
-        onNavComplete: nextTest
       });
-      yield undefined;
-      
+
       verifyIframeInnerHtml("You made it");
       
       Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
@@ -246,5 +214,5 @@
     
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" messagemanagergroup="test" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" messagemanagergroup="test" remote="true" />
 </window>

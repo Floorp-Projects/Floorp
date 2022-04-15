@@ -46,6 +46,14 @@
       // of the pages are initially stored in the bfcache when
       // they're unloaded.
       for (var i = 0; i <= MAX_BFCACHE_PAGES + 1; i++) {
+        let eventsToListenFor = ["pageshow"];
+        let expectedEvents = [ { type: "pageshow",
+                                 title: "bug396649 page" + i } ];
+        if (i > 0) {
+          eventsToListenFor.push("pagehide");
+          expectedEvents.unshift({ type: "pagehide",
+                                   title: "bug396649 page" + (i-1) });
+        }
         doPageNavigation( {
            uri: "data:text/html,<!DOCTYPE html><html>" + 
                 "<head><title>bug396649 page" + i + 
@@ -53,18 +61,13 @@
                 "<body>" + 
                 "test page " + i +
                 "</body></html>",
-           eventsToListenFor: ["pageshow", "pagehide"],
-           expectedEvents: [ { type: "pagehide",
-                               title: i == 0 ? 
-                                 undefined : "bug396649 page" + (i-1),
-                               persisted: true },
-                             { type: "pageshow", 
-                               title: "bug396649 page" + i } ],
+           eventsToListenFor,
+           expectedEvents,
            onNavComplete: nextTest 
           } );
         yield undefined;
       }
-            
+
       // Go back to the first page, one page at a time.  The first 
       // MAX_BFCACHE_PAGES pages loaded via back should come from the bfcache, 
       // the last should not, since it should have been evicted during the 
@@ -112,5 +115,5 @@
     
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" remote="true" />
 </window>
