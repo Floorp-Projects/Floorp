@@ -14,7 +14,6 @@ import org.mozilla.fenix.GleanMetrics.HomeMenu
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
-import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
@@ -133,10 +132,6 @@ private val Event.wrapper: EventWrapper<*>?
 
         is Event.StartOnHomeOpenTabsTray -> EventWrapper<NoExtraKeys>(
             { StartOnHome.openTabsTray.record(it) }
-        )
-
-        is Event.RecentSearchesGroupDeleted -> EventWrapper<NoExtraKeys>(
-            { RecentSearches.groupDeleted.record(it) }
         )
 
         is Event.Messaging.MessageShown -> EventWrapper<NoExtraKeys>(

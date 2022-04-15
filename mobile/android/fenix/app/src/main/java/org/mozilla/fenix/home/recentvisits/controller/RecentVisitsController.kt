@@ -13,11 +13,11 @@ import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.RecentSearches
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
@@ -72,7 +72,6 @@ class DefaultRecentVisitsController(
     private val navController: NavController,
     private val storage: HistoryMetadataStorage,
     private val scope: CoroutineScope,
-    private val metrics: MetricController
 ) : RecentVisitsController {
 
     /**
@@ -115,7 +114,7 @@ class DefaultRecentVisitsController(
         scope.launch {
             storage.deleteHistoryMetadata(groupTitle)
         }
-        metrics.track(Event.RecentSearchesGroupDeleted)
+        RecentSearches.groupDeleted.record(NoExtras())
     }
 
     /**

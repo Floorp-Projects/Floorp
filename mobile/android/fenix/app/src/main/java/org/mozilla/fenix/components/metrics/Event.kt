@@ -39,9 +39,6 @@ sealed class Event {
     object StartOnHomeEnterHomeScreen : Event()
     object StartOnHomeOpenTabsTray : Event()
 
-    // Recently visited/Recent searches
-    object RecentSearchesGroupDeleted : Event()
-
     // Interaction events with extras
 
     data class SearchWithAds(val providerName: String) : Event() {
