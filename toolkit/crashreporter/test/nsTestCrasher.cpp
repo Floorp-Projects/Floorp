@@ -169,7 +169,7 @@ static int64_t recurse(int64_t aRandom) {
     return result;
   }
 
-  return recurse(result);
+  return recurse(result) + 1;
 }
 
 static void* overflow_stack(void* aInput) {
