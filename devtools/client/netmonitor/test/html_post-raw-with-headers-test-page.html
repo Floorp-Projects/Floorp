@@ -34,13 +34,32 @@
 
       async function performRequests() {
         const rawData = [
-          "content-type: application/x-www-form-urlencoded\r",
-          "custom-header: hello world!\r",
-          "\r",
-          "\r",
-          "foo=bar&baz=123",
+          // Only one header
+          [
+            "content-type: application/x-www-form-urlencoded\r",
+            "\r",
+            "\r",
+            "foo=bar&baz=123",
+          ],
+          // No form body content
+          [
+            "content-type: application/x-www-form-urlencoded\r",
+            "\r",
+            "\r",
+          ],
+          // Multiple headers
+          [
+            "content-type: application/x-www-form-urlencoded\r",
+            "custom-header: hello world!\r",
+            "\r",
+            "\r",
+            "foo=bar&baz=123",
+          ],
         ];
-        await post("sjs_simple-test-server.sjs", rawData.join("\n"));
+
+        for (const data of rawData) {
+          await post("sjs_simple-test-server.sjs", data.join("\n"));
+        }
       }
     </script>
   </body>
