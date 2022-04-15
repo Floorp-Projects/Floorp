@@ -216,6 +216,7 @@ const char* QualityLimitationReasonToRTCQualityLimitationReason(
     case QualityLimitationReason::kOther:
       return RTCQualityLimitationReason::kOther;
   }
+  RTC_CHECK(false);
 }
 
 double DoubleAudioLevelFromIntAudioLevel(int audio_level) {
