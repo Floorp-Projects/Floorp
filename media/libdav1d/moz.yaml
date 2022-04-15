@@ -35,8 +35,8 @@ origin:
   license-file: COPYING
 
 updatebot:
-    maintainer-phab: jbauman
-    maintainer-bz: jbauman@mozilla.com
+    maintainer-phab: chunmin
+    maintainer-bz: cchang@mozilla.com
     tasks:
       - type: vendoring
         enabled: true
