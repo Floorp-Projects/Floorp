@@ -19,6 +19,7 @@ macro_rules! error_here {
 
 /// Error type for identifying errors in this crate. Use the error_here! macro
 /// to instantiate.
+#[derive(Debug)]
 pub struct Error {
     typ: ErrorType,
     file: &'static str,
@@ -65,7 +66,7 @@ impl Clone for Error {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum ErrorType {
     /// An error in an external library or resource.
     ExternalError,
