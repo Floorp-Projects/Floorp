@@ -210,19 +210,19 @@ HRESULT ConvertMFTypeToDXVAType(IMFMediaType* pType, DXVA2_VideoDesc* pDesc) {
 
   UINT32 fpsNumerator = 0;
   UINT32 fpsDenominator = 0;
-  hr = MFGetAttributeRatio(pType, MF_MT_FRAME_RATE, &fpsNumerator,
-                           &fpsDenominator);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  pDesc->InputSampleFreq.Numerator = fpsNumerator;
-  pDesc->InputSampleFreq.Denominator = fpsDenominator;
+  if (SUCCEEDED(MFGetAttributeRatio(pType, MF_MT_FRAME_RATE, &fpsNumerator,
+                                    &fpsDenominator))) {
+    pDesc->InputSampleFreq.Numerator = fpsNumerator;
+    pDesc->InputSampleFreq.Denominator = fpsDenominator;
 
-  GetDXVA2ExtendedFormatFromMFMediaType(pType, &pDesc->SampleFormat);
-  pDesc->OutputFrameFreq = pDesc->InputSampleFreq;
-  if ((pDesc->SampleFormat.SampleFormat ==
-       DXVA2_SampleFieldInterleavedEvenFirst) ||
-      (pDesc->SampleFormat.SampleFormat ==
-       DXVA2_SampleFieldInterleavedOddFirst)) {
-    pDesc->OutputFrameFreq.Numerator *= 2;
+    GetDXVA2ExtendedFormatFromMFMediaType(pType, &pDesc->SampleFormat);
+    pDesc->OutputFrameFreq = pDesc->InputSampleFreq;
+    if ((pDesc->SampleFormat.SampleFormat ==
+         DXVA2_SampleFieldInterleavedEvenFirst) ||
+        (pDesc->SampleFormat.SampleFormat ==
+         DXVA2_SampleFieldInterleavedOddFirst)) {
+      pDesc->OutputFrameFreq.Numerator *= 2;
+    }
   }
 
   return S_OK;
@@ -275,9 +275,7 @@ bool D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aInputType,
   }
 
   DXVA2_VideoDesc desc;
-  // TODO Bug 1764823: ConvertMFTypeToDXVAType should accept the input type
-  // instead.
-  hr = ConvertMFTypeToDXVAType(aOutputType, &desc);
+  hr = ConvertMFTypeToDXVAType(aInputType, &desc);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
   return CanCreateDecoder(desc, aFramerate);
 }
