@@ -199,6 +199,7 @@ class TabsPanel extends TabsListBase {
         if (!this.listenersRegistered && event.target == this.view) {
           this.panelMultiView = this.view.panelMultiView;
           this._populate(event);
+          this.gBrowser.translateTabContextMenu();
         }
         break;
       case "command":

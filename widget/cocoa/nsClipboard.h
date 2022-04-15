@@ -6,6 +6,7 @@
 #ifndef nsClipboard_h_
 #define nsClipboard_h_
 
+#include "nsBaseClipboard.h"
 #include "nsCOMPtr.h"
 #include "nsIClipboard.h"
 #include "nsString.h"
@@ -20,12 +21,19 @@ class nsITransferable;
 + (NSString*)stringFromPboardType:(NSString*)aType;
 @end
 
-class nsClipboard : public nsIClipboard {
+class nsClipboard : public nsBaseClipboard {
  public:
   nsClipboard();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLIPBOARD
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIClipboard
+  NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
+                     int32_t aWhichClipboard) override;
+  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+                                    bool* _retval) override;
+  NS_IMETHOD SupportsFindClipboard(bool* _retval) override;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
 
   // On macOS, cache the transferable of the current selection (chrome/content)
   // in the parent process. This is needed for the services menu which
@@ -42,8 +50,9 @@ class nsClipboard : public nsIClipboard {
 
  protected:
   // impelement the native clipboard behavior
-  NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard);
-  NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhichClipboard);
+  NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard) override;
+  NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
+                                    int32_t aWhichClipboard) override;
   void ClearSelectionCache();
   void SetSelectionCache(nsITransferable* aTransferable);
 
@@ -54,10 +63,6 @@ class nsClipboard : public nsIClipboard {
 
   int32_t mCachedClipboard;
   int32_t mChangeCount;  // Set to the native change count after any modification of the clipboard.
-
-  bool mIgnoreEmptyNotification;
-  nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
-  nsCOMPtr<nsITransferable> mTransferable;
 };
 
 #endif  // nsClipboard_h_

@@ -80,6 +80,7 @@ mach:
     when:
         files-changed:
             - 'python/mach/**'
+            - 'python/sites/**'
 
 marionette-harness:
     description: testing/marionette/harness unit tests
