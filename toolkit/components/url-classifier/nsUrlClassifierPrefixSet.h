@@ -7,11 +7,11 @@
 #ifndef nsUrlClassifierPrefixSet_h_
 #define nsUrlClassifierPrefixSet_h_
 
-#include "nsISupportsUtils.h"
-#include "nsID.h"
 #include "nsIUrlClassifierPrefixSet.h"
-#include "nsTArray.h"
+#include "nsISupports.h"
 #include "nsToolkitCompsCID.h"
+#include "nsString.h"
+#include "nsTArray.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Poison.h"
