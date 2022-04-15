@@ -227,16 +227,21 @@ std::unique_ptr<ScalableVideoController> CreateVp9ScalabilityStructure(
     return std::make_unique<ScalableVideoControllerNoLayering>();
   }
 
-  if (codec.VP9().interLayerPred != InterLayerPredMode::kOn ||
-      codec.mode == VideoCodecMode::kScreensharing) {
-    // TODO(bugs.webrtc.org/11999): Return names of the structure when they are
-    // implemented and support frame skipping.
-    return nullptr;
-  }
-
   char name[20];
   rtc::SimpleStringBuilder ss(name);
-  ss << "L" << num_spatial_layers << "T" << num_temporal_layers;
+  if (codec.mode == VideoCodecMode::kScreensharing) {
+    // TODO(bugs.webrtc.org/11999): Compose names of the structures when they
+    // are implemented.
+    return nullptr;
+  } else if (codec.VP9().interLayerPred == InterLayerPredMode::kOn ||
+             num_spatial_layers == 1) {
+    ss << "L" << num_spatial_layers << "T" << num_temporal_layers;
+  } else if (codec.VP9().interLayerPred == InterLayerPredMode::kOnKeyPic) {
+    ss << "L" << num_spatial_layers << "T" << num_temporal_layers << "_KEY";
+  } else {
+    RTC_DCHECK_EQ(codec.VP9().interLayerPred, InterLayerPredMode::kOff);
+    ss << "S" << num_spatial_layers << "T" << num_temporal_layers;
+  }
 
   // Check spatial ratio.
   if (num_spatial_layers > 1 && codec.spatialLayers[0].targetBitrate > 0) {
