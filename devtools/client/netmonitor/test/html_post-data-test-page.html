@@ -30,49 +30,50 @@
       /* exported performRequests */
       "use strict";
 
-      function post(address, message, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", address, true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      function post(address, message) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", address, true);
+          xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-        let data = "";
-        for (const i in message) {
-          data += "&" + i + "=" + message[i];
-        }
-
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
+          let data = "";
+          for (const i in message) {
+            data += "&" + i + "=" + message[i];
           }
-        };
-        xhr.send(data);
+
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(data);
+        });
       }
 
-      function form(address, formName, callback) {
-        const formData = new FormData(document.forms.namedItem(formName));
-        formData.append("Custom field", "Extra data");
+      function form(address, formName) {
+        return new Promise(resolve => {
+          const formData = new FormData(document.forms.namedItem(formName));
+          formData.append("Custom field", "Extra data");
 
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", address, true);
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(formData);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(formData);
+        });
       }
 
-      function performRequests() {
+      async function performRequests() {
         const url = "sjs_simple-test-server.sjs";
         const url1 = url + "?foo=bar&baz=42&type=urlencoded";
         const url2 = url + "?foo=bar&baz=42&type=multipart";
 
-        post(url1, { foo: "bar", baz: 123 }, function() {
-          form(url2, "form-name", function() {
-            // Done.
-          });
-        });
+        await post(url1, { foo: "bar", baz: 123 });
+        await form(url2, "form-name");
       }
     </script>
   </body>

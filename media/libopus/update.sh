@@ -61,18 +61,9 @@ if test -d $1/.git; then
 else
   version="UNKNOWN"
 fi
-echo "copied from revision ${version}"
-# update README revision
-sed -e "s/^The git tag\/revision used was .*/The git tag\/revision used was ${version}./" \
-    ${TARGET}/README_MOZILLA > ${TARGET}/README_MOZILLA+ && \
-    mv ${TARGET}/README_MOZILLA+ ${TARGET}/README_MOZILLA
-# update compiled-in version string
-sed -e "s/DEFINES\['OPUS_VERSION'\][ \t]*=[ \t]*'\".*\"'/DEFINES['OPUS_VERSION'] = '\"${version}-mozilla\"'/" \
-    ${TARGET}/moz.build > ${TARGET}/moz.build+ && \
-    mv ${TARGET}/moz.build+ ${TARGET}/moz.build
 
-python gen-sources.py $1
+python3 gen-sources.py $1
 
 # apply outstanding local patches
-patch -p3 < nonunified.patch
-patch -p3 < nonunified2.patch
+patch -p3 --no-backup-if-mismatch < nonunified.patch
+patch -p3 --no-backup-if-mismatch < nonunified2.patch

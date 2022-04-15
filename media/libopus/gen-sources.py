@@ -64,7 +64,7 @@ def generate_sources_mozbuild(path):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print "Usage: %s /path/to/opus" % (sys.argv[0])
+        print("Usage: %s /path/to/opus" % (sys.argv[0]))
         sys.exit(1)
 
     generate_sources_mozbuild(sys.argv[1])

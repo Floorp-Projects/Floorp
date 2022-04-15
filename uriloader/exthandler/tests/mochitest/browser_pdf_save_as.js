@@ -64,7 +64,7 @@ async function testPdfFilePicker(mimeInfo) {
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", false],
     ],
   });
@@ -102,8 +102,8 @@ add_setup(async function() {
 
 /**
  * Tests that selecting the context menu item `Save Link As…` on a PDF link
- * opens the file picker when browser.download.improvements_to_download_panel
- * pref is enabled, regardless of preferredAction.
+ * opens the file picker when always_ask_before_handling_new_types is disabled,
+ * regardless of preferredAction.
  */
 add_task(async function test_pdf_save_as_link() {
   let mimeInfo;

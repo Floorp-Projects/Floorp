@@ -161,7 +161,10 @@ function ensureMIMEState({ preferredAction, alwaysAskBeforeHandling }) {
 add_task(async function test_check_saving_handler_choices() {
   let publicList = await Downloads.getList(Downloads.PUBLIC);
   SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", false]],
+    set: [
+      ["browser.download.improvements_to_download_panel", false],
+      ["browser.download.always_ask_before_handling_new_types", true],
+    ],
   });
   registerCleanupFunction(async () => {
     await publicList.removeFinished();
@@ -370,7 +373,10 @@ const kTestCasesPrefEnabled = [
 add_task(
   async function test_check_saving_handler_choices_with_downloads_pref_enabled() {
     SpecialPowers.pushPrefEnv({
-      set: [["browser.download.improvements_to_download_panel", true]],
+      set: [
+        ["browser.download.improvements_to_download_panel", true],
+        ["browser.download.always_ask_before_handling_new_types", false],
+      ],
     });
 
     let publicList = await Downloads.getList(Downloads.PUBLIC);

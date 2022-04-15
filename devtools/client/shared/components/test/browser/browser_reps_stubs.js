@@ -50,6 +50,30 @@ const EXPRESSIONS_BY_FILE = {
     ["False", `false`],
     ["NegZeroGrip", `1 / -Infinity`],
   ]),
+  "stylesheet.js": new Map([
+    [
+      "StyleSheet",
+      {
+        expression: `
+        (async function() {
+          const link = document.createElement("link");
+          link.setAttribute("rel", "stylesheet");
+          link.type = "text/css";
+          link.href = "https://example.com/styles.css";
+          const onStylesheetHandled = new Promise(res => {
+            // The file does not exist so we'll get an error event, but it will
+            // still be put in document.styleSheets with its src, which is what we want.
+            link.addEventListener("error", () => res(), { once: true});
+          })
+          document.head.appendChild(link);
+          await onStylesheetHandled;
+          return document.styleSheets[0];
+        })()
+  `,
+        async: true,
+      },
+    ],
+  ]),
   "symbol.js": new Map([
     ["Symbol", `Symbol("foo")`],
     ["SymbolWithoutIdentifier", `Symbol()`],
@@ -93,7 +117,6 @@ const EXPRESSIONS_BY_FILE = {
   // "object-with-url.js",
   // "promise.js",
   // "regexp.js",
-  // "stylesheet.js",
 };
 
 add_task(async function() {
@@ -154,8 +177,17 @@ add_task(async function() {
 async function generateStubs(commands, stubFile) {
   const stubs = new Map();
 
-  for (const [key, expression] of EXPRESSIONS_BY_FILE[stubFile]) {
-    const { result } = await commands.scriptCommand.execute(expression);
+  for (const [key, options] of EXPRESSIONS_BY_FILE[stubFile]) {
+    const expression =
+      typeof options == "string" ? options : options.expression;
+    const executeOptions = {};
+    if (options.async === true) {
+      executeOptions.mapped = { await: true };
+    }
+    const { result } = await commands.scriptCommand.execute(
+      expression,
+      executeOptions
+    );
     stubs.set(key, getCleanedPacket(stubFile, key, result));
   }
 

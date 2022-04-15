@@ -36,15 +36,15 @@ HelperAppLauncherDialog.prototype = {
   show(aLauncher, aWindowContext, aReason) {
     if (
       Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
+        "browser.download.always_ask_before_handling_new_types"
       )
     ) {
-      sendAsyncMessage("wrongAPICall", "show");
-    } else {
       let f = tmpDir.clone();
       f.append(aLauncher.suggestedFileName);
       aLauncher.saveDestinationAvailable(f);
       sendAsyncMessage("suggestedFileName", aLauncher.suggestedFileName);
+    } else {
+      sendAsyncMessage("wrongAPICall", "show");
     }
     aLauncher.cancel(Cr.NS_BINDING_ABORTED);
   },
@@ -57,15 +57,15 @@ HelperAppLauncherDialog.prototype = {
   ) {
     if (
       !Services.prefs.getBoolPref(
-        "browser.download.improvements_to_download_panel"
+        "browser.download.always_ask_before_handling_new_types"
       )
     ) {
-      sendAsyncMessage("wrongAPICall", "promptForSaveToFileAsync");
-    } else {
       let f = tmpDir.clone();
       f.append(filename);
       appLauncher.saveDestinationAvailable(f);
       sendAsyncMessage("suggestedFileName", filename);
+    } else {
+      sendAsyncMessage("wrongAPICall", "promptForSaveToFileAsync");
     }
     appLauncher.cancel(Cr.NS_BINDING_ABORTED);
   },

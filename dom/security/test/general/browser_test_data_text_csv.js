@@ -34,11 +34,11 @@ function promisePanelOpened() {
   return BrowserTestUtils.waitForEvent(DownloadsPanel.panel, "popupshown");
 }
 
-// Note: remove this test once browser.download.improvements_to_download_panel is removed.
-add_task(async function test_with_downloads_improvement_pref_disabled() {
+add_task(async function test_with_pref_enabled() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["security.data_uri.block_toplevel_data_uri_navigations", true],
+      ["browser.download.always_ask_before_handling_new_types", true],
       ["browser.download.improvements_to_download_panel", false],
     ],
   });
@@ -60,10 +60,11 @@ add_task(async function test_with_downloads_improvement_pref_disabled() {
   await mainWindowActivated;
 });
 
-add_task(async function test_with_downloads_improvement_pref_enabled() {
+add_task(async function test_with_pref_disabled() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["security.data_uri.block_toplevel_data_uri_navigations", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.improvements_to_download_panel", true],
     ],
   });

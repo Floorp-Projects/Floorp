@@ -91,7 +91,7 @@ pub fn read_rsa_modulus(public_key: &[u8]) -> Result<Vec<u8>, Error> {
 ///      parameters              ANY DEFINED BY algorithm OPTIONAL  }
 ///
 /// Digest ::= OCTET STRING
-pub fn read_digest_info<'a>(digest_info: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
+pub fn read_digest_info(digest_info: &[u8]) -> Result<(&[u8], &[u8]), Error> {
     let mut sequence = Sequence::new(digest_info)?;
     let mut algorithm = sequence.read_sequence()?;
     let oid = algorithm.read_oid()?;
@@ -112,7 +112,7 @@ pub fn read_digest_info<'a>(digest_info: &'a [u8]) -> Result<(&'a [u8], &'a [u8]
 ///        r     INTEGER,
 ///        s     INTEGER  }
 #[cfg(target_os = "macos")]
-pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
+pub fn read_ec_sig_point(signature: &[u8]) -> Result<(&[u8], &[u8]), Error> {
     let mut sequence = Sequence::new(signature)?;
     let r = sequence.read_unsigned_integer()?;
     let s = sequence.read_unsigned_integer()?;
@@ -149,6 +149,7 @@ pub fn read_ec_sig_point<'a>(signature: &'a [u8]) -> Result<(&'a [u8], &'a [u8])
 ///   Validity ::= SEQUENCE {
 ///        notBefore      Time,
 ///        notAfter       Time  }
+#[allow(clippy::type_complexity)]
 pub fn read_encoded_certificate_identifiers(
     certificate: &[u8],
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), Error> {
@@ -240,7 +241,7 @@ impl<'a> Sequence<'a> {
 
     fn read_null(&mut self) -> Result<(), Error> {
         let (_, _, bytes) = self.contents.read_tlv(NULL)?;
-        if bytes.len() == 0 {
+        if bytes.is_empty() {
             Ok(())
         } else {
             Err(error_here!(ErrorType::InvalidInput))
@@ -311,9 +312,9 @@ impl<'a> Der<'a> {
             }
             (length[0] as usize, rest)
         } else if length1[0] == 0x82 {
-            let (lengths, rest) = try_read_bytes!(rest, 2);
+            let (mut lengths, rest) = try_read_bytes!(rest, 2);
             accumulated_length_bytes.extend_from_slice(lengths);
-            let length = (&mut &lengths[..])
+            let length = lengths
                 .read_u16::<BigEndian>()
                 .map_err(|_| error_here!(ErrorType::LibraryFailure))?;
             if length < 256 {

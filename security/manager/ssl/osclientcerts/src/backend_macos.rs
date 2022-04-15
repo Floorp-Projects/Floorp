@@ -87,9 +87,13 @@ enum SecStringConstant {
     SecKeyAlgorithmRSASignatureDigestPSSSHA512,
 }
 
-// NB: This is not meant to be used outside of this module. It has to be made public because
-// `RentedSecurityFramework` must be public in the rental declaration.
-pub struct SecurityFrameworkFunctions<'a> {
+/// This implementation uses security framework functions and constants that
+/// are not provided by the version of the SDK we build with. To work around
+/// this, we attempt to open and dynamically load these functions and symbols
+/// at runtime. Unfortunately this does mean that if a user is not on a new
+/// enough version of macOS, they will not be able to use client certificates
+/// from their keychain in Firefox until they upgrade.
+struct SecurityFramework<'a> {
     sec_key_create_signature: Symbol<'a, SecKeyCreateSignatureType>,
     sec_key_copy_attributes: Symbol<'a, SecKeyCopyAttributesType>,
     sec_key_copy_external_representation: Symbol<'a, SecKeyCopyExternalRepresentationType>,
@@ -98,134 +102,129 @@ pub struct SecurityFrameworkFunctions<'a> {
     sec_string_constants: BTreeMap<SecStringConstant, String>,
 }
 
-rental! {
-    mod rent_libloading {
-        use super::*;
+lazy_static! {
+    static ref SECURITY_LIBRARY: std::io::Result<Library> =
+        Library::new("/System/Library/Frameworks/Security.framework/Security");
+}
 
-        #[rental]
-        pub struct RentedSecurityFramework {
-            library: Box<Library>, // Library needs to be StableDeref, hence the Box
-            functions: SecurityFrameworkFunctions<'library>,
+impl<'a> SecurityFramework<'a> {
+    fn new() -> Result<SecurityFramework<'a>, Error> {
+        let library = match &*SECURITY_LIBRARY {
+            Ok(library) => library,
+            Err(e) => return Err(error_here!(ErrorType::ExternalError, e.to_string())),
+        };
+        let sec_key_create_signature = unsafe {
+            library
+                .get::<SecKeyCreateSignatureType>(b"SecKeyCreateSignature\0")
+                .map_err(|e| error_here!(ErrorType::ExternalError, e.to_string()))?
+        };
+        let sec_key_copy_attributes = unsafe {
+            library
+                .get::<SecKeyCopyAttributesType>(b"SecKeyCopyAttributes\0")
+                .map_err(|e| error_here!(ErrorType::ExternalError, e.to_string()))?
+        };
+        let sec_key_copy_external_representation = unsafe {
+            library
+                .get::<SecKeyCopyExternalRepresentationType>(b"SecKeyCopyExternalRepresentation\0")
+                .map_err(|e| error_here!(ErrorType::ExternalError, e.to_string()))?
+        };
+        let sec_certificate_copy_key = unsafe {
+            library
+                .get::<SecCertificateCopyKeyType>(b"SecCertificateCopyKey\0")
+                .map_err(|e| error_here!(ErrorType::ExternalError, e.to_string()))?
+        };
+        let sec_trust_evaluate_with_error = unsafe {
+            library
+                .get::<SecTrustEvaluateWithErrorType>(b"SecTrustEvaluateWithError\0")
+                .map_err(|e| error_here!(ErrorType::ExternalError, e.to_string()))?
+        };
+        let mut sec_string_constants = BTreeMap::new();
+        let strings_to_load = vec![
+            (
+                b"kSecKeyAlgorithmECDSASignatureDigestX962SHA1\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA1,
+            ),
+            (
+                b"kSecKeyAlgorithmECDSASignatureDigestX962SHA256\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA256,
+            ),
+            (
+                b"kSecKeyAlgorithmECDSASignatureDigestX962SHA384\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA384,
+            ),
+            (
+                b"kSecKeyAlgorithmECDSASignatureDigestX962SHA512\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA512,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15Raw\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15Raw,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPSSSHA1\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA1,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPSSSHA256\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA256,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPSSSHA384\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA384,
+            ),
+            (
+                b"kSecKeyAlgorithmRSASignatureDigestPSSSHA512\0".as_ref(),
+                SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA512,
+            ),
+            (
+                b"kSecAttrKeyTypeECSECPrimeRandom\0".as_ref(),
+                SecStringConstant::SecAttrKeyTypeECSECPrimeRandom,
+            ),
+        ];
+        for (symbol_name, sec_string_constant) in strings_to_load {
+            let cfstring_symbol = unsafe {
+                library
+                    .get::<*const CFStringRef>(symbol_name)
+                    .map_err(|e| error_here!(ErrorType::ExternalError, e.to_string()))?
+            };
+            let cfstring = unsafe { CFString::wrap_under_create_rule(**cfstring_symbol) };
+            sec_string_constants.insert(sec_string_constant, cfstring.to_string());
         }
+        Ok(SecurityFramework {
+            sec_key_create_signature,
+            sec_key_copy_attributes,
+            sec_key_copy_external_representation,
+            sec_certificate_copy_key,
+            sec_trust_evaluate_with_error,
+            sec_string_constants,
+        })
     }
 }
 
-/// This implementation uses security framework functions and constants that
-/// are not provided by the version of the SDK we build with. To work around
-/// this, we attempt to open and dynamically load these functions and symbols
-/// at runtime. Unfortunately this does mean that if a user is not on a new
-/// enough version of macOS, they will not be able to use client certificates
-/// from their keychain in Firefox until they upgrade.
-struct SecurityFramework {
-    rental: Option<rent_libloading::RentedSecurityFramework>,
+struct SecurityFrameworkHolder<'a> {
+    framework: Result<SecurityFramework<'a>, Error>,
 }
 
-impl SecurityFramework {
-    fn new() -> SecurityFramework {
-        let library = match Library::new("/System/Library/Frameworks/Security.framework/Security") {
-            Ok(library) => library,
-            Err(_) => return SecurityFramework { rental: None },
-        };
-        match rent_libloading::RentedSecurityFramework::try_new::<_, ()>(
-            Box::new(library),
-            |library| unsafe {
-                let sec_key_create_signature = library
-                    .get::<SecKeyCreateSignatureType>(b"SecKeyCreateSignature\0")
-                    .map_err(|_| ())?;
-                let sec_key_copy_attributes = library
-                    .get::<SecKeyCopyAttributesType>(b"SecKeyCopyAttributes\0")
-                    .map_err(|_| ())?;
-                let sec_key_copy_external_representation = library
-                    .get::<SecKeyCopyExternalRepresentationType>(
-                        b"SecKeyCopyExternalRepresentation\0",
-                    )
-                    .map_err(|_| ())?;
-                let sec_certificate_copy_key = library
-                    .get::<SecCertificateCopyKeyType>(b"SecCertificateCopyKey\0")
-                    .map_err(|_| ())?;
-                let sec_trust_evaluate_with_error = library
-                    .get::<SecTrustEvaluateWithErrorType>(b"SecTrustEvaluateWithError\0")
-                    .map_err(|_| ())?;
-                let mut sec_string_constants = BTreeMap::new();
-                let strings_to_load = vec![
-                    (
-                        b"kSecKeyAlgorithmECDSASignatureDigestX962SHA1\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA1,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmECDSASignatureDigestX962SHA256\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA256,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmECDSASignatureDigestX962SHA384\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA384,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmECDSASignatureDigestX962SHA512\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmECDSASignatureDigestX962SHA512,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15Raw\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15Raw,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA256,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA384,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA512,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPKCS1v15SHA1,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPSSSHA1\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA1,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPSSSHA256\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA256,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPSSSHA384\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA384,
-                    ),
-                    (
-                        b"kSecKeyAlgorithmRSASignatureDigestPSSSHA512\0".as_ref(),
-                        SecStringConstant::SecKeyAlgorithmRSASignatureDigestPSSSHA512,
-                    ),
-                    (
-                        b"kSecAttrKeyTypeECSECPrimeRandom\0".as_ref(),
-                        SecStringConstant::SecAttrKeyTypeECSECPrimeRandom,
-                    ),
-                ];
-                for (symbol_name, sec_string_constant) in strings_to_load {
-                    let cfstring_symbol = library
-                        .get::<*const CFStringRef>(symbol_name)
-                        .map_err(|_| ())?;
-                    let cfstring = CFString::wrap_under_create_rule(**cfstring_symbol);
-                    sec_string_constants.insert(sec_string_constant, cfstring.to_string());
-                }
-                Ok(SecurityFrameworkFunctions {
-                    sec_key_create_signature,
-                    sec_key_copy_attributes,
-                    sec_key_copy_external_representation,
-                    sec_certificate_copy_key,
-                    sec_trust_evaluate_with_error,
-                    sec_string_constants,
-                })
-            },
-        ) {
-            Ok(rental) => SecurityFramework {
-                rental: Some(rental),
-            },
-            Err(_) => SecurityFramework { rental: None },
+impl<'a> SecurityFrameworkHolder<'a> {
+    fn new() -> SecurityFrameworkHolder<'a> {
+        SecurityFrameworkHolder {
+            framework: SecurityFramework::new(),
         }
     }
 
@@ -236,8 +235,8 @@ impl SecurityFramework {
         algorithm: SecKeyAlgorithm,
         data_to_sign: &CFData,
     ) -> Result<CFData, Error> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
+        match &self.framework {
+            Ok(framework) => unsafe {
                 let mut error = std::ptr::null_mut();
                 let result = (framework.sec_key_create_signature)(
                     key.as_concrete_TypeRef(),
@@ -253,29 +252,29 @@ impl SecurityFramework {
                     ));
                 }
                 Ok(CFData::wrap_under_create_rule(result))
-            }),
-            None => Err(error_here!(ErrorType::LibraryFailure)),
+            },
+            Err(e) => Err(e.clone()),
         }
     }
 
     /// SecKeyCopyAttributes is available in macOS 10.12
     fn sec_key_copy_attributes<T>(&self, key: &SecKey) -> Result<CFDictionary<CFString, T>, Error> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
+        match &self.framework {
+            Ok(framework) => unsafe {
                 let result = (framework.sec_key_copy_attributes)(key.as_concrete_TypeRef());
                 if result.is_null() {
                     return Err(error_here!(ErrorType::ExternalError));
                 }
                 Ok(CFDictionary::wrap_under_create_rule(result))
-            }),
-            None => Err(error_here!(ErrorType::LibraryFailure)),
+            },
+            Err(e) => Err(e.clone()),
         }
     }
 
     /// SecKeyCopyExternalRepresentation is available in macOS 10.12
     fn sec_key_copy_external_representation(&self, key: &SecKey) -> Result<CFData, Error> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
+        match &self.framework {
+            Ok(framework) => unsafe {
                 let mut error = std::ptr::null_mut();
                 let result = (framework.sec_key_copy_external_representation)(
                     key.as_concrete_TypeRef(),
@@ -289,36 +288,36 @@ impl SecurityFramework {
                     ));
                 }
                 Ok(CFData::wrap_under_create_rule(result))
-            }),
-            None => Err(error_here!(ErrorType::LibraryFailure)),
+            },
+            Err(e) => Err(e.clone()),
         }
     }
 
     /// SecCertificateCopyKey is available in macOS 10.14
     fn sec_certificate_copy_key(&self, certificate: &SecCertificate) -> Result<SecKey, Error> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
+        match &self.framework {
+            Ok(framework) => unsafe {
                 let result =
                     (framework.sec_certificate_copy_key)(certificate.as_concrete_TypeRef());
                 if result.is_null() {
                     return Err(error_here!(ErrorType::ExternalError));
                 }
                 Ok(SecKey::wrap_under_create_rule(result))
-            }),
-            None => Err(error_here!(ErrorType::LibraryFailure)),
+            },
+            Err(e) => Err(e.clone()),
         }
     }
 
     /// SecTrustEvaluateWithError is available in macOS 10.14
     fn sec_trust_evaluate_with_error(&self, trust: &SecTrust) -> Result<bool, Error> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| unsafe {
+        match &self.framework {
+            Ok(framework) => unsafe {
                 Ok((framework.sec_trust_evaluate_with_error)(
                     trust.as_concrete_TypeRef(),
                     std::ptr::null_mut(),
                 ))
-            }),
-            None => Err(error_here!(ErrorType::LibraryFailure)),
+            },
+            Err(e) => Err(e.clone()),
         }
     }
 
@@ -326,20 +325,19 @@ impl SecurityFramework {
         &self,
         sec_string_constant: SecStringConstant,
     ) -> Result<CFString, Error> {
-        match &self.rental {
-            Some(rental) => rental.rent(|framework| {
-                match framework.sec_string_constants.get(&sec_string_constant) {
-                    Some(string) => Ok(CFString::new(string)),
-                    None => Err(error_here!(ErrorType::ExternalError)),
-                }
-            }),
-            None => Err(error_here!(ErrorType::LibraryFailure)),
+        match &self.framework {
+            Ok(framework) => match framework.sec_string_constants.get(&sec_string_constant) {
+                Some(string) => Ok(CFString::new(string)),
+                None => Err(error_here!(ErrorType::ExternalError)),
+            },
+            Err(e) => Err(e.clone()),
         }
     }
 }
 
 lazy_static! {
-    static ref SECURITY_FRAMEWORK: SecurityFramework = SecurityFramework::new();
+    static ref SECURITY_FRAMEWORK: SecurityFrameworkHolder<'static> =
+        SecurityFrameworkHolder::new();
 }
 
 fn sec_identity_copy_certificate(identity: &SecIdentity) -> Result<SecCertificate, Error> {
@@ -498,12 +496,14 @@ impl CryptokiObject for Cert {
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug)]
 pub enum KeyType {
     EC(usize),
     RSA,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 enum SignParams<'a> {
     EC(CFString, &'a [u8]),
     RSA(CFString, &'a [u8]),
@@ -719,7 +719,7 @@ impl Key {
         let signing_algorithm = sign_params.get_algorithm();
         let data_to_sign = CFData::from_buffer(sign_params.get_data_to_sign());
         let signature =
-            SECURITY_FRAMEWORK.sec_key_create_signature(&key, signing_algorithm, &data_to_sign)?;
+            SECURITY_FRAMEWORK.sec_key_create_signature(key, signing_algorithm, &data_to_sign)?;
         let signature_value = match self.key_type_enum {
             KeyType::EC(coordinate_width) => {
                 // We need to convert the DER Ecdsa-Sig-Value to the
@@ -831,7 +831,7 @@ impl Sign for Key {
 }
 
 fn get_key_attribute<T: TCFType + Clone>(key: &SecKey, attr: CFStringRef) -> Result<T, Error> {
-    let attributes: CFDictionary<CFString, T> = SECURITY_FRAMEWORK.sec_key_copy_attributes(&key)?;
+    let attributes: CFDictionary<CFString, T> = SECURITY_FRAMEWORK.sec_key_copy_attributes(key)?;
     match attributes.find(attr as *const _) {
         Some(value) => Ok((*value).clone()),
         None => Err(error_here!(ErrorType::ExternalError)),
