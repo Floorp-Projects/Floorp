@@ -243,7 +243,9 @@ for bug in unique_updatebot_bugs:
         )
 
         try:
-            library, target_revision = RE_COMMITMSG.search(first_commit.desc).groups(0)
+            library, target_revision = RE_COMMITMSG.search(first_commit.desc).groups(0)[
+                0:2
+            ]
         except Exception:
             print(
                 "Could not parse the bug description with RE_COMMITMSG for the revision: %s"
