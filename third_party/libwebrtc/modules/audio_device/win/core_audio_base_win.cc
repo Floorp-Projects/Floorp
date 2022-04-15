@@ -19,6 +19,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/win/scoped_com_initializer.h"
 #include "rtc_base/win/windows_version.h"
 
 using Microsoft::WRL::ComPtr;
@@ -796,7 +797,7 @@ HRESULT CoreAudioBase::QueryInterface(REFIID iid, void** object) {
   if (iid == IID_IUnknown || iid == __uuidof(IAudioSessionEvents)) {
     *object = static_cast<IAudioSessionEvents*>(this);
     return S_OK;
-  };
+  }
   *object = nullptr;
   return E_NOINTERFACE;
 }

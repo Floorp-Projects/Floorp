@@ -38,8 +38,8 @@
 #ifdef WEBRTC_WIN
 #include "modules/audio_device/include/audio_device_factory.h"
 #include "modules/audio_device/win/core_audio_utility_win.h"
-
-#endif
+#include "rtc_base/win/scoped_com_initializer.h"
+#endif  // WEBRTC_WIN
 
 using ::testing::_;
 using ::testing::AtLeast;
@@ -596,8 +596,8 @@ class MAYBE_AudioDeviceTest
       // We must initialize the COM library on a thread before we calling any of
       // the library functions. All COM functions in the ADM will return
       // CO_E_NOTINITIALIZED otherwise.
-      com_initializer_ = std::make_unique<webrtc_win::ScopedCOMInitializer>(
-          webrtc_win::ScopedCOMInitializer::kMTA);
+      com_initializer_ =
+          std::make_unique<ScopedCOMInitializer>(ScopedCOMInitializer::kMTA);
       EXPECT_TRUE(com_initializer_->Succeeded());
       EXPECT_TRUE(webrtc_win::core_audio_utility::IsSupported());
       EXPECT_TRUE(webrtc_win::core_audio_utility::IsMMCSSSupported());
@@ -656,7 +656,7 @@ class MAYBE_AudioDeviceTest
  private:
 #ifdef WEBRTC_WIN
   // Windows Core Audio based ADM needs to run on a COM initialized thread.
-  std::unique_ptr<webrtc_win::ScopedCOMInitializer> com_initializer_;
+  std::unique_ptr<ScopedCOMInitializer> com_initializer_;
 #endif
   AudioDeviceModule::AudioLayer audio_layer_;
   std::unique_ptr<TaskQueueFactory> task_queue_factory_;
@@ -691,8 +691,7 @@ TEST(MAYBE_AudioDeviceTestWin, ConstructDestructWithFactory) {
   // CreateWindowsCoreAudioAudioDeviceModule() can be used on Windows and that
   // it sets the audio layer to kWindowsCoreAudio2 implicitly. Note that, the
   // new ADM for Windows must be created on a COM thread.
-  webrtc_win::ScopedCOMInitializer com_initializer(
-      webrtc_win::ScopedCOMInitializer::kMTA);
+  ScopedCOMInitializer com_initializer(ScopedCOMInitializer::kMTA);
   EXPECT_TRUE(com_initializer.Succeeded());
   audio_device =
       CreateWindowsCoreAudioAudioDeviceModule(task_queue_factory.get());
