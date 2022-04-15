@@ -428,11 +428,7 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
 class CroppingVideoStreamFactory
     : public VideoEncoderConfig::VideoStreamFactoryInterface {
  public:
-  explicit CroppingVideoStreamFactory(size_t num_temporal_layers, int framerate)
-      : num_temporal_layers_(num_temporal_layers), framerate_(framerate) {
-    EXPECT_GT(num_temporal_layers, 0u);
-    EXPECT_GT(framerate, 0);
-  }
+  CroppingVideoStreamFactory() {}
 
  private:
   std::vector<VideoStream> CreateEncoderStreams(
@@ -441,15 +437,8 @@ class CroppingVideoStreamFactory
       const VideoEncoderConfig& encoder_config) override {
     std::vector<VideoStream> streams = test::CreateVideoStreams(
         width - width % 4, height - height % 4, encoder_config);
-    for (VideoStream& stream : streams) {
-      stream.num_temporal_layers = num_temporal_layers_;
-      stream.max_framerate = framerate_;
-    }
     return streams;
   }
-
-  const size_t num_temporal_layers_;
-  const int framerate_;
 };
 
 class AdaptingFrameForwarder : public test::FrameForwarder {
@@ -1549,7 +1538,7 @@ TEST_F(VideoStreamEncoderTest, DropFrameWithFailedI420Conversion) {
 TEST_F(VideoStreamEncoderTest, DropFrameWithFailedI420ConversionWithCrop) {
   // Use the cropping factory.
   video_encoder_config_.video_stream_factory =
-      new rtc::RefCountedObject<CroppingVideoStreamFactory>(1, 30);
+      new rtc::RefCountedObject<CroppingVideoStreamFactory>();
   video_stream_encoder_->ConfigureEncoder(std::move(video_encoder_config_),
                                           kMaxPayloadLength);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
@@ -5385,11 +5374,11 @@ TEST_F(VideoStreamEncoderTest, AcceptsFullHdAdaptedDownSimulcastFrames) {
       DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
   // Trigger reconfigure encoder (without resetting the entire instance).
   VideoEncoderConfig video_encoder_config;
-  video_encoder_config.codec_type = kVideoCodecVP8;
+  test::FillEncoderConfiguration(kVideoCodecVP8, 1, &video_encoder_config);
+  video_encoder_config.simulcast_layers[0].max_framerate = kFramerate;
   video_encoder_config.max_bitrate_bps = kTargetBitrateBps;
-  video_encoder_config.number_of_streams = 1;
   video_encoder_config.video_stream_factory =
-      new rtc::RefCountedObject<CroppingVideoStreamFactory>(1, kFramerate);
+      new rtc::RefCountedObject<CroppingVideoStreamFactory>();
   video_stream_encoder_->ConfigureEncoder(std::move(video_encoder_config),
                                           kMaxPayloadLength);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
