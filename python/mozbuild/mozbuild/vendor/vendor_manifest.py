@@ -403,6 +403,15 @@ class VendorManifest(MozbuildObject):
                     contents = f.read()
                 with open(dst, "w") as f:
                     f.write(contents)
+            elif update["action"] == "move-file":
+                src = self.get_full_path(update["from"])
+                dst = self.get_full_path(update["to"])
+
+                self.logInfo(
+                    {"s": src, "d": dst}, "action: move-file src: {s} dst: {d}"
+                )
+
+                shutil.move(src, dst)
             elif update["action"] == "move-dir":
                 src = self.get_full_path(update["from"])
                 dst = self.get_full_path(update["to"])
