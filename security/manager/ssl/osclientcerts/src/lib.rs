@@ -17,9 +17,6 @@ extern crate libloading;
 #[macro_use]
 extern crate log;
 extern crate pkcs11;
-#[cfg(target_os = "macos")]
-#[macro_use]
-extern crate rental;
 #[macro_use]
 extern crate rsclientcerts;
 extern crate sha2;
@@ -279,9 +276,9 @@ extern "C" fn C_GetMechanismList(
             log_with_thread_id!(error, "C_GetMechanismList: CKR_ARGUMENTS_BAD");
             return CKR_ARGUMENTS_BAD;
         }
-        for i in 0..mechanisms.len() {
+        for (i, mechanism) in mechanisms.iter().enumerate() {
             unsafe {
-                *pMechanismList.offset(i as isize) = mechanisms[i];
+                *pMechanismList.add(i) = *mechanism;
             }
         }
     }
@@ -501,8 +498,8 @@ extern "C" fn C_GetAttributeValue(
         return CKR_ARGUMENTS_BAD;
     }
     let mut attr_types = Vec::with_capacity(ulCount as usize);
-    for i in 0..ulCount {
-        let attr = unsafe { &*pTemplate.offset(i as isize) };
+    for i in 0..ulCount as usize {
+        let attr = unsafe { &*pTemplate.add(i) };
         attr_types.push(attr.attrType);
     }
     let mut manager_guard = try_to_get_manager_guard!();
@@ -521,10 +518,9 @@ extern "C" fn C_GetAttributeValue(
         );
         return CKR_DEVICE_ERROR;
     }
-    for i in 0..ulCount as usize {
-        let mut attr = unsafe { &mut *pTemplate.offset(i as isize) };
-        // NB: the safety of this array access depends on the length check above
-        if let Some(attr_value) = &values[i] {
+    for (i, value) in values.iter().enumerate().take(ulCount as usize) {
+        let mut attr = unsafe { &mut *pTemplate.add(i) };
+        if let Some(attr_value) = value {
             if attr.pValue.is_null() {
                 attr.ulValueLen = attr_value.len() as CK_ULONG;
             } else {
@@ -597,9 +593,9 @@ extern "C" fn C_FindObjectsInit(
     }
     let mut attrs = Vec::new();
     log_with_thread_id!(trace, "C_FindObjectsInit:");
-    for i in 0..ulCount {
-        let attr = unsafe { &*pTemplate.offset(i as isize) };
-        trace_attr("  ", &attr);
+    for i in 0..ulCount as usize {
+        let attr = unsafe { &*pTemplate.add(i) };
+        trace_attr("  ", attr);
         let slice = unsafe {
             std::slice::from_raw_parts(attr.pValue as *const u8, attr.ulValueLen as usize)
         };
@@ -1204,16 +1200,17 @@ static mut FUNCTION_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     C_WaitForSlotEvent: Some(C_WaitForSlotEvent),
 };
 
+/// # Safety
+///
 /// This is the only function this module exposes. NSS calls it to obtain the list of functions
 /// comprising this module.
+/// ppFunctionList must be a valid pointer.
 #[no_mangle]
-pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
+pub unsafe extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
     if ppFunctionList.is_null() {
         return CKR_ARGUMENTS_BAD;
     }
-    unsafe {
-        *ppFunctionList = &mut FUNCTION_LIST;
-    }
+    *ppFunctionList = &mut FUNCTION_LIST;
     CKR_OK
 }
 

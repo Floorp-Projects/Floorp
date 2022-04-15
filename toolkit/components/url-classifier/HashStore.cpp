@@ -35,7 +35,6 @@
 #include "nsCheckSummedOutputStream.h"
 #include "prio.h"
 #include "mozilla/Logging.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "zlib.h"
 #include "Classifier.h"
 #include "nsUrlClassifierDBService.h"

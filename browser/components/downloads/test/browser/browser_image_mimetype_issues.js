@@ -59,6 +59,7 @@ add_task(async function test_save_link_webp_with_jpeg_extension() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.useDownloadDir", false],
     ],
   });

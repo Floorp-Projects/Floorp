@@ -18,29 +18,48 @@
       /* exported performRequests */
       "use strict";
 
-      function post(address, message, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", address, true);
+      function post(address, message) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(message);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(message);
+        });
       }
 
-      function performRequests() {
+      async function performRequests() {
         const rawData = [
-          "content-type: application/x-www-form-urlencoded\r",
-          "custom-header: hello world!\r",
-          "\r",
-          "\r",
-          "foo=bar&baz=123",
+          // Only one header
+          [
+            "content-type: application/x-www-form-urlencoded\r",
+            "\r",
+            "\r",
+            "foo=bar&baz=123",
+          ],
+          // No form body content
+          [
+            "content-type: application/x-www-form-urlencoded\r",
+            "\r",
+            "\r",
+          ],
+          // Multiple headers
+          [
+            "content-type: application/x-www-form-urlencoded\r",
+            "custom-header: hello world!\r",
+            "\r",
+            "\r",
+            "foo=bar&baz=123",
+          ],
         ];
-        post("sjs_simple-test-server.sjs", rawData.join("\n"), function() {
-          // Done.
-        });
+
+        for (const data of rawData) {
+          await post("sjs_simple-test-server.sjs", data.join("\n"));
+        }
       }
     </script>
   </body>

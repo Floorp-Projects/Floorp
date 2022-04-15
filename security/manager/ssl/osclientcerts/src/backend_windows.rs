@@ -98,7 +98,7 @@ impl Cert {
             unsafe { slice::from_raw_parts(cert.pbCertEncoded, cert.cbCertEncoded as usize) };
         let value = value.to_vec();
         let id = Sha256::digest(&value).to_vec();
-        let label = get_cert_subject_dn(&cert_info)?;
+        let label = get_cert_subject_dn(cert_info)?;
         let (serial_number, issuer, subject) = read_encoded_certificate_identifiers(&value)?;
         Ok(Cert {
             class: serialize_uint(CKO_CERTIFICATE)?,
@@ -515,15 +515,16 @@ impl SignParams {
     }
 
     fn flags(&self) -> u32 {
-        match self {
-            &SignParams::EC => 0,
-            &SignParams::RSA_PKCS1(_) => NCRYPT_PAD_PKCS1_FLAG,
-            &SignParams::RSA_PSS(_) => NCRYPT_PAD_PSS_FLAG,
+        match *self {
+            SignParams::EC => 0,
+            SignParams::RSA_PKCS1(_) => NCRYPT_PAD_PKCS1_FLAG,
+            SignParams::RSA_PSS(_) => NCRYPT_PAD_PSS_FLAG,
         }
     }
 }
 
 /// A helper enum to identify a private key's type. We support EC and RSA.
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug)]
 pub enum KeyType {
     EC,

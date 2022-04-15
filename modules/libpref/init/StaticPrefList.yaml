@@ -1153,6 +1153,12 @@
   value: true
   mirror: always
 
+# See bug 1747343
+- name: browser.download.always_ask_before_handling_new_types
+  type: bool
+  value: false
+  mirror: always
+
 # See bug 1731668
 - name: browser.download.enable_spam_prevention
   type: bool

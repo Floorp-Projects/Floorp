@@ -10,17 +10,10 @@
 #include "nsDebug.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsPrintfCString.h"
 #include "nsTArray.h"
 #include "nsString.h"
-#include "nsTArray.h"
-#include "nsThreadUtils.h"
-#include "nsNetUtil.h"
-#include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Unused.h"
-#include <algorithm>
+#include "mozilla/StaticPrefs_browser.h"
 
 using namespace mozilla;
 

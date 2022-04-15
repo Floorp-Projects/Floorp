@@ -24,16 +24,53 @@ const loadCounts = {};
 /**
  * Simple tests, asserting that we correctly display source text content in CodeMirror
  */
+const NAMED_EVAL_CONTENT = `function namedEval() {}; console.log('eval script'); //# sourceURL=named-eval.js`;
 const INDEX_PAGE_CONTENT = `<!DOCTYPE html>
     <html>
       <head>
         <script type="text/javascript" src="/normal-script.js"></script>
         <script type="text/javascript" src="/slow-loading-script.js"></script>
         <script type="text/javascript" src="/http-error-script.js"></script>
+        <script type="text/javascript" src="/same-url.js"></script>
         <script>
           console.log("inline script");
         </script>
+        <script>
+          console.log("second inline script");
+          this.evaled1 = eval("${NAMED_EVAL_CONTENT}");
+
+          // Load same-url.js in various different ways
+          this.evaled2 = eval("function sameUrlEval() {}; //# sourceURL=same-url.js");
+
+          const script = document.createElement("script");
+          script.src = "same-url.js";
+          document.documentElement.append(script);
+
+          // Ensure loading the same-url.js file *after*
+          // the iframe is done loading. So that we have a deterministic load order.
+          window.onload = () => {
+            this.worker = new Worker("same-url.js");
+            this.worker.postMessage("foo");
+          };
+        </script>
       </head>
+      <body>
+        <iframe src="iframe.html"></iframe>
+      </body>
+    </html>`;
+const IFRAME_CONTENT = `<!DOCTYPE html>
+    <html>
+      <head>
+        <script type="text/javascript" src="/same-url.js"></script>
+      </head>
+      <body>
+        <script>
+          console.log("First inline script");
+        </script>
+        <script>
+          console.log("Second inline script");
+        </script>
+      </body>
     </html>`;
 
 httpServer.registerPathHandler("/index.html", (request, response) => {
@@ -65,6 +102,20 @@ httpServer.registerPathHandler("/http-error-script.js", (request, response) => {
   response.setStatusLine(request.httpVersion, 404, "Not found");
   response.write(`console.log("http error")`);
 });
+httpServer.registerPathHandler("/same-url.js", (request, response) => {
+  loadCounts[request.path] = (loadCounts[request.path] || 0) + 1;
+  const sameUrlLoadCount = loadCounts[request.path];
+  // Prevents gecko from cache this request in order to force fetching
+  // a new, distinct content for each usage of this URL
+  response.setHeader("Cache-Control", "no-store");
+  response.setHeader("Content-Type", "application/javascript");
+  response.write(`console.log("same url #${sameUrlLoadCount}")`);
+});
+httpServer.registerPathHandler("/iframe.html", (request, response) => {
+  loadCounts[request.path] = (loadCounts[request.path] || 0) + 1;
+  response.setHeader("Content-Type", "text/html");
+  response.write(IFRAME_CONTENT);
+});
 add_task(async function testSourceTextContent() {
   const dbg = await initDebuggerWithAbsoluteURL("about:blank");
 
@@ -75,7 +126,8 @@ add_task(async function testSourceTextContent() {
     BASE_URL + "index.html",
     "index.html",
     "normal-script.js",
-    "slow-loading-script.js"
+    "slow-loading-script.js",
+    "same-url.js"
   );
 
   await selectSource(dbg, "normal-script.js");
@@ -86,6 +138,72 @@ add_task(async function testSourceTextContent() {
 
   await selectSource(dbg, "index.html");
   is(getCM(dbg).getValue(), INDEX_PAGE_CONTENT);
+
+  await selectSource(dbg, "named-eval.js");
+  is(getCM(dbg).getValue(), NAMED_EVAL_CONTENT);
+
+  const mainThreadSameUrlSource = findSourceInThread(
+    dbg,
+    "same-url.js",
+    "Main Thread"
+  );
+  await selectSource(dbg, mainThreadSameUrlSource);
+  is(
+    getCM(dbg).getValue(),
+    `console.log("same url #1")`,
+    "We get an arbitrary content for same-url, the first loaded one"
+  );
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
+    is(
+      dbg.selectors.getSourceActorsForSource(mainThreadSameUrlSource.id).length,
+      3,
+      "same-url.js is loaded 3 times in the main thread"
+    );
+
+    const iframeSameUrlSource = findSourceInThread(
+      dbg,
+      "same-url.js",
+      BASE_URL + "iframe.html"
+    );
+    await selectSource(dbg, iframeSameUrlSource);
+    is(
+      getCM(dbg).getValue(),
+      `console.log("same url #3")`,
+      "We get the expected content for same-url.js in the iframe"
+    );
+    is(
+      dbg.selectors.getSourceActorsForSource(iframeSameUrlSource.id).length,
+      1,
+      "same-url.js is loaded one time in the iframe thread"
+    );
+  } else {
+    // There is no iframe thread when fission is off
+    is(
+      dbg.selectors.getSourceActorsForSource(mainThreadSameUrlSource.id).length,
+      4,
+      "same-url.js is loaded 4 times in the main thread without fission"
+    );
+  }
+
+  const workerSameUrlSource = findSourceInThread(
+    dbg,
+    "same-url.js",
+    "same-url.js"
+  );
+  await selectSource(dbg, workerSameUrlSource);
+  is(
+    getCM(dbg).getValue(),
+    `console.log("same url #4")`,
+    "We get the expected content for same-url.js worker"
+  );
+  is(
+    dbg.selectors.getSourceActorsForSource(workerSameUrlSource.id).length,
+    1,
+    "same-url.js is loaded one time in the worker thread"
+  );
+
+  await selectSource(dbg, "iframe.html");
+  is(getCM(dbg).getValue(), IFRAME_CONTENT);
 
   ok(
     !sourceExists(dbg, "http-error-script.js"),
@@ -104,6 +222,11 @@ add_task(async function testSourceTextContent() {
     loadCounts["/slow-loading-script.js"],
     1,
     "We loaded slow-loading-script.js only once"
+  );
+  is(
+    loadCounts["/same-url.js"],
+    4,
+    "We loaded same-url.js in 4 distinct ways (the named eval doesn't count)"
   );
   // For some reason external to the debugger, we issue two requests to scripts having http error codes.
   // These two requests are done before opening the debugger.

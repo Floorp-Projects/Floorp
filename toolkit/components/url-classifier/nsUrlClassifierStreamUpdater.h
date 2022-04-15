@@ -6,8 +6,7 @@
 #ifndef nsUrlClassifierStreamUpdater_h_
 #define nsUrlClassifierStreamUpdater_h_
 
-#include <nsISupportsUtils.h>
-
+#include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsINamed.h"
 #include "nsIObserver.h"
@@ -16,7 +15,6 @@
 #include "nsIChannel.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
-#include "mozilla/Attributes.h"
 
 // Forward declare pointers
 class nsIURI;
