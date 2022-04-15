@@ -1722,7 +1722,7 @@ int NetEqImpl::DoAccelerate(int16_t* decoded_buffer,
     decoded_length = required_samples * num_channels;
   }
 
-  size_t samples_removed;
+  size_t samples_removed = 0;
   Accelerate::ReturnCodes return_code =
       accelerate_->Process(decoded_buffer, decoded_length, fast_accelerate,
                            algorithm_buffer_.get(), &samples_removed);
@@ -1800,7 +1800,7 @@ int NetEqImpl::DoPreemptiveExpand(int16_t* decoded_buffer,
     decoded_length = required_samples * num_channels;
   }
 
-  size_t samples_added;
+  size_t samples_added = 0;
   PreemptiveExpand::ReturnCodes return_code = preemptive_expand_->Process(
       decoded_buffer, decoded_length, old_borrowed_samples_per_channel,
       algorithm_buffer_.get(), &samples_added);
