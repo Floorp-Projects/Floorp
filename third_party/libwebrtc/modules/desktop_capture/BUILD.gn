@@ -411,7 +411,6 @@ rtc_library("desktop_capture_generic") {
     "../../rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
     "../../rtc_base:checks",
     "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/synchronization:rw_lock_wrapper",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:rtc_export",
     "../../system_wrappers",
