@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/video/video_bitrate_allocation.h"
 #include "common_video/generic_frame_descriptor/generic_frame_info.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 
@@ -30,9 +31,13 @@ class ScalabilityStructureS2T1 : public ScalableVideoController {
 
   std::vector<LayerFrameConfig> NextFrameConfig(bool restart) override;
   GenericFrameInfo OnEncodeDone(const LayerFrameConfig& config) override;
+  void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
 
  private:
-  bool keyframe_ = true;
+  static constexpr int kNumSpatialLayers = 2;
+
+  std::bitset<kNumSpatialLayers> can_reference_frame_for_spatial_id_;
+  std::bitset<32> active_decode_targets_ = 0b11;
 };
 
 }  // namespace webrtc

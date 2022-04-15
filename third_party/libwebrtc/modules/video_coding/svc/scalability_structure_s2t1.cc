@@ -18,24 +18,15 @@
 #include "rtc_base/logging.h"
 
 namespace webrtc {
-namespace {
 
-constexpr auto kNotPresent = DecodeTargetIndication::kNotPresent;
-constexpr auto kSwitch = DecodeTargetIndication::kSwitch;
-
-constexpr DecodeTargetIndication kDtis[2][2] = {
-    {kSwitch, kNotPresent},  // S0
-    {kNotPresent, kSwitch},  // S1
-};
-
-}  // namespace
+constexpr int ScalabilityStructureS2T1::kNumSpatialLayers;
 
 ScalabilityStructureS2T1::~ScalabilityStructureS2T1() = default;
 
 ScalableVideoController::StreamLayersConfig
 ScalabilityStructureS2T1::StreamConfig() const {
   StreamLayersConfig result;
-  result.num_spatial_layers = 2;
+  result.num_spatial_layers = kNumSpatialLayers;
   result.num_temporal_layers = 1;
   result.scaling_factor_num[0] = 1;
   result.scaling_factor_den[0] = 2;
@@ -44,8 +35,8 @@ ScalabilityStructureS2T1::StreamConfig() const {
 
 FrameDependencyStructure ScalabilityStructureS2T1::DependencyStructure() const {
   FrameDependencyStructure structure;
-  structure.num_decode_targets = 2;
-  structure.num_chains = 2;
+  structure.num_decode_targets = kNumSpatialLayers;
+  structure.num_chains = kNumSpatialLayers;
   structure.decode_target_protected_by_chain = {0, 1};
   structure.templates.resize(4);
   structure.templates[0].S(0).Dtis("S-").ChainDiffs({2, 1}).FrameDiffs({2});
@@ -57,35 +48,50 @@ FrameDependencyStructure ScalabilityStructureS2T1::DependencyStructure() const {
 
 std::vector<ScalableVideoController::LayerFrameConfig>
 ScalabilityStructureS2T1::NextFrameConfig(bool restart) {
-  std::vector<LayerFrameConfig> result(2);
-  // Buffer0 keeps latest S0T0 frame, Buffer1 keeps latest S1T0 frame.
-  if (restart || keyframe_) {
-    result[0].S(0).Keyframe().Update(0);
-    result[1].S(1).Keyframe().Update(1);
-    keyframe_ = false;
-  } else {
-    result[0].S(0).ReferenceAndUpdate(0);
-    result[1].S(1).ReferenceAndUpdate(1);
+  if (restart) {
+    can_reference_frame_for_spatial_id_.reset();
   }
-  return result;
+  std::vector<LayerFrameConfig> configs;
+  configs.reserve(kNumSpatialLayers);
+  for (int sid = 0; sid < kNumSpatialLayers; ++sid) {
+    if (!active_decode_targets_[sid]) {
+      can_reference_frame_for_spatial_id_.reset(sid);
+      continue;
+    }
+    configs.emplace_back();
+    LayerFrameConfig& config = configs.back().S(sid);
+    if (can_reference_frame_for_spatial_id_[sid]) {
+      config.ReferenceAndUpdate(sid);
+    } else {
+      config.Keyframe().Update(sid);
+      can_reference_frame_for_spatial_id_.set(sid);
+    }
+  }
+
+  return configs;
 }
 
 GenericFrameInfo ScalabilityStructureS2T1::OnEncodeDone(
     const LayerFrameConfig& config) {
   GenericFrameInfo frame_info;
-  if (config.SpatialId() < 0 ||
-      config.SpatialId() >= int{ABSL_ARRAYSIZE(kDtis)}) {
-    RTC_LOG(LS_ERROR) << "Unexpected spatial id " << config.SpatialId();
-    return frame_info;
-  }
   frame_info.spatial_id = config.SpatialId();
   frame_info.temporal_id = config.TemporalId();
-  frame_info.encoder_buffers = std::move(config.Buffers());
-  frame_info.decode_target_indications.assign(
-      std::begin(kDtis[config.SpatialId()]),
-      std::end(kDtis[config.SpatialId()]));
+  frame_info.encoder_buffers = config.Buffers();
+  frame_info.decode_target_indications = {
+      config.SpatialId() == 0 ? DecodeTargetIndication::kSwitch
+                              : DecodeTargetIndication::kNotPresent,
+      config.SpatialId() == 1 ? DecodeTargetIndication::kSwitch
+                              : DecodeTargetIndication::kNotPresent,
+  };
   frame_info.part_of_chain = {config.SpatialId() == 0, config.SpatialId() == 1};
+  frame_info.active_decode_targets = active_decode_targets_;
   return frame_info;
+}
+
+void ScalabilityStructureS2T1::OnRatesUpdated(
+    const VideoBitrateAllocation& bitrates) {
+  active_decode_targets_.set(0, bitrates.GetBitrate(/*sid=*/0, /*tid=*/0) > 0);
+  active_decode_targets_.set(1, bitrates.GetBitrate(/*sid=*/1, /*tid=*/0) > 0);
 }
 
 }  // namespace webrtc
