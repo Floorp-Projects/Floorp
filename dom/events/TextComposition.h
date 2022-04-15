@@ -21,8 +21,6 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Text.h"
 
-struct CharacterDataChangeInfo;
-
 namespace mozilla {
 
 class EditorBase;
@@ -233,8 +231,9 @@ class TextComposition final {
   };
 
   /**
-   * OnUpdateCompositionInEditor() is called when editor updates composition
-   * string in the DOM tree.
+   * OnCreateCompositionTransaction() is called by
+   * CompositionTransaction::Create() immediately after creating
+   * new CompositionTransaction instance.
    *
    * @param aStringToInsert     The string to insert the text node actually.
    *                            This may be different from the data of
@@ -244,12 +243,20 @@ class TextComposition final {
    * @param aTextNode           The text node which includes composition string.
    * @param aOffset             The offset of composition string in aTextNode.
    */
-  void OnUpdateCompositionInEditor(const nsAString& aStringToInsert,
-                                   Text& aTextNode, uint32_t aOffset) {
-    mContainerTextNode = &aTextNode;
-    mCompositionStartOffsetInTextNode = aOffset;
-    NS_WARNING_ASSERTION(mCompositionStartOffsetInTextNode != UINT32_MAX,
-                         "The text node is really too long.");
+  void OnCreateCompositionTransaction(const nsAString& aStringToInsert,
+                                      Text* aTextNode, uint32_t aOffset) {
+    if (!mContainerTextNode) {
+      mContainerTextNode = aTextNode;
+      mCompositionStartOffsetInTextNode = aOffset;
+      NS_WARNING_ASSERTION(mCompositionStartOffsetInTextNode != UINT32_MAX,
+                           "The text node is really too long.");
+    }
+#ifdef DEBUG
+    else {
+      MOZ_ASSERT(aTextNode == mContainerTextNode);
+      MOZ_ASSERT(aOffset == mCompositionStartOffsetInTextNode);
+    }
+#endif  // #ifdef DEBUG
     mCompositionLengthInTextNode = aStringToInsert.Length();
     NS_WARNING_ASSERTION(mCompositionLengthInTextNode != UINT32_MAX,
                          "The string to insert is really too long.");
@@ -266,13 +273,6 @@ class TextComposition final {
     // mCompositionLengthInTextNode because editor needs them to restore
     // composition in new text node.
   }
-
-  /**
-   * OnCharacterDataChanged() is called when IMEContentObserver receives
-   * character data change notifications.
-   */
-  void OnCharacterDataChanged(Text& aText,
-                              const CharacterDataChangeInfo& aInfo);
 
  private:
   // Private destructor, to discourage deletion outside of Release():
