@@ -14,8 +14,10 @@
 
 #include <algorithm>
 
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/time/timestamp_extrapolator.h"
 #include "system_wrappers/include/clock.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 
@@ -31,7 +33,10 @@ VCMTiming::VCMTiming(Clock* clock, VCMTiming* master_timing)
       current_delay_ms_(0),
       prev_frame_timestamp_(0),
       timing_frame_info_(),
-      num_decoded_frames_(0) {
+      num_decoded_frames_(0),
+      low_latency_renderer_enabled_("enabled", true) {
+  ParseFieldTrial({&low_latency_renderer_enabled_},
+                  field_trial::FindFullName("WebRTC-LowLatencyRenderer"));
   if (master_timing == NULL) {
     master_ = true;
     ts_extrapolator_ = new TimestampExtrapolator(clock_->TimeInMilliseconds());
@@ -177,8 +182,12 @@ int64_t VCMTiming::RenderTimeMs(uint32_t frame_timestamp,
 
 int64_t VCMTiming::RenderTimeMsInternal(uint32_t frame_timestamp,
                                         int64_t now_ms) const {
-  if (min_playout_delay_ms_ == 0 && max_playout_delay_ms_ == 0) {
-    // Render as soon as possible.
+  constexpr int kLowLatencyRendererMaxPlayoutDelayMs = 500;
+  if (min_playout_delay_ms_ == 0 &&
+      (max_playout_delay_ms_ == 0 ||
+       (low_latency_renderer_enabled_ &&
+        max_playout_delay_ms_ <= kLowLatencyRendererMaxPlayoutDelayMs))) {
+    // Render as soon as possible or with low-latency renderer algorithm.
     return 0;
   }
   int64_t estimated_complete_time_ms =
@@ -244,6 +253,17 @@ void VCMTiming::SetTimingFrameInfo(const TimingFrameInfo& info) {
 absl::optional<TimingFrameInfo> VCMTiming::GetTimingFrameInfo() {
   MutexLock lock(&mutex_);
   return timing_frame_info_;
+}
+
+void VCMTiming::SetMaxCompositionDelayInFrames(
+    absl::optional<int> max_composition_delay_in_frames) {
+  MutexLock lock(&mutex_);
+  max_composition_delay_in_frames_ = max_composition_delay_in_frames;
+}
+
+absl::optional<int> VCMTiming::MaxCompositionDelayInFrames() const {
+  MutexLock lock(&mutex_);
+  return max_composition_delay_in_frames_;
 }
 
 }  // namespace webrtc

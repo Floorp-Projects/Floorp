@@ -372,6 +372,11 @@ void FrameBuffer::Clear() {
   ClearFramesAndHistory();
 }
 
+int FrameBuffer::Size() {
+  MutexLock lock(&mutex_);
+  return frames_.size();
+}
+
 void FrameBuffer::UpdateRtt(int64_t rtt_ms) {
   MutexLock lock(&mutex_);
   jitter_estimator_.UpdateRtt(rtt_ms);
