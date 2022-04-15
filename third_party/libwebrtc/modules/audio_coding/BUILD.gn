@@ -1393,7 +1393,6 @@ if (rtc_include_tests) {
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/synchronization:rw_lock_wrapper",
-      "../../system_wrappers",
       "../../test:fileutils",
       "../../test:test_support",
     ]

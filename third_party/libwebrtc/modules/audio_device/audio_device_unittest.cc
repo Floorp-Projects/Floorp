@@ -33,7 +33,6 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
 #include "rtc_base/time_utils.h"
-#include "system_wrappers/include/sleep.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #ifdef WEBRTC_WIN

@@ -14,8 +14,6 @@
 #include "rtc_base/win/windows_version.h"
 #include "test/gtest.h"
 
-#include "system_wrappers/include/sleep.h"
-
 using Microsoft::WRL::ComPtr;
 using webrtc::AudioDeviceName;
 

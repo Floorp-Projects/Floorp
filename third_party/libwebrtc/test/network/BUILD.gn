@@ -78,7 +78,6 @@ rtc_library("network_emulation_unittest") {
     "../../rtc_base:logging",
     "../../rtc_base:rtc_event",
     "../../rtc_base/synchronization:mutex",
-    "../../system_wrappers:system_wrappers",
   ]
 }
 
