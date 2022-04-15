@@ -962,20 +962,20 @@ const TransceiverList* SdpOfferAnswerHandler::transceivers() const {
   return pc_->rtp_manager()->transceivers();
 }
 JsepTransportController* SdpOfferAnswerHandler::transport_controller() {
-  return pc_->transport_controller_.get();
+  return pc_->transport_controller();
 }
 DataChannelController* SdpOfferAnswerHandler::data_channel_controller() {
-  return &pc_->data_channel_controller_;
+  return pc_->data_channel_controller();
 }
 const DataChannelController* SdpOfferAnswerHandler::data_channel_controller()
     const {
-  return &pc_->data_channel_controller_;
+  return pc_->data_channel_controller();
 }
 cricket::PortAllocator* SdpOfferAnswerHandler::port_allocator() {
-  return pc_->port_allocator_.get();
+  return pc_->port_allocator();
 }
 const cricket::PortAllocator* SdpOfferAnswerHandler::port_allocator() const {
-  return pc_->port_allocator_.get();
+  return pc_->port_allocator();
 }
 RtpTransmissionManager* SdpOfferAnswerHandler::rtp_manager() {
   return pc_->rtp_manager();
@@ -4509,9 +4509,9 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   {
     RTC_DCHECK_RUN_ON(pc_->signaling_thread());
     voice_channel = channel_manager()->CreateVoiceChannel(
-        pc_->call_ptr_, pc_->configuration_.media_config, rtp_transport,
+        pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
         signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
-        &pc_->ssrc_generator_, pc_->audio_options_);
+        pc_->ssrc_generator(), pc_->audio_options());
   }
   if (!voice_channel) {
     return nullptr;
@@ -4536,10 +4536,10 @@ cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
   {
     RTC_DCHECK_RUN_ON(pc_->signaling_thread());
     video_channel = channel_manager()->CreateVideoChannel(
-        pc_->call_ptr_, pc_->configuration_.media_config, rtp_transport,
+        pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
         signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
-        &pc_->ssrc_generator_, pc_->video_options_,
-        pc_->video_bitrate_allocator_factory_.get());
+        pc_->ssrc_generator(), pc_->video_options(),
+        pc_->video_bitrate_allocator_factory());
   }
   if (!video_channel) {
     return nullptr;
@@ -4559,10 +4559,7 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
               RTC_FROM_HERE,
               rtc::Bind(&PeerConnection::SetupDataChannelTransport_n, pc_,
                         mid))) {
-        {
-          RTC_DCHECK_RUN_ON(pc_->signaling_thread());
-          pc_->sctp_mid_s_ = mid;
-        }
+        pc_->SetSctpDataMid(mid);
       } else {
         return false;
       }
@@ -4576,9 +4573,9 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
         RTC_DCHECK_RUN_ON(pc_->signaling_thread());
         data_channel_controller()->set_rtp_data_channel(
             channel_manager()->CreateRtpDataChannel(
-                pc_->configuration_.media_config, rtp_transport,
+                pc_->configuration()->media_config, rtp_transport,
                 signaling_thread(), mid, pc_->SrtpRequired(),
-                pc_->GetCryptoOptions(), &pc_->ssrc_generator_));
+                pc_->GetCryptoOptions(), pc_->ssrc_generator()));
       }
       if (!data_channel_controller()->rtp_data_channel()) {
         return false;
@@ -4626,7 +4623,7 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport() {
       RTC_DCHECK_RUN_ON(pc_->network_thread());
       pc_->TeardownDataChannelTransport_n();
     });
-    pc_->sctp_mid_s_.reset();
+    pc_->ResetSctpDataMid();
   }
 }
 
