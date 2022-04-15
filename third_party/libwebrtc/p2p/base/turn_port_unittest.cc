@@ -236,43 +236,43 @@ class TurnPortTest : public ::testing::Test,
     return &networks_.back();
   }
 
-  void CreateTurnPort(const std::string& username,
+  bool CreateTurnPort(const std::string& username,
                       const std::string& password,
                       const ProtocolAddress& server_address) {
-    CreateTurnPortWithAllParams(MakeNetwork(kLocalAddr1), username, password,
-                                server_address, std::string());
+    return CreateTurnPortWithAllParams(MakeNetwork(kLocalAddr1), username,
+                                       password, server_address, std::string());
   }
-  void CreateTurnPort(const rtc::SocketAddress& local_address,
+  bool CreateTurnPort(const rtc::SocketAddress& local_address,
                       const std::string& username,
                       const std::string& password,
                       const ProtocolAddress& server_address) {
-    CreateTurnPortWithAllParams(MakeNetwork(local_address), username, password,
-                                server_address, std::string());
+    return CreateTurnPortWithAllParams(MakeNetwork(local_address), username,
+                                       password, server_address, std::string());
   }
 
   // Should be identical to CreateTurnPort but specifies an origin value
   // when creating the instance of TurnPort.
-  void CreateTurnPortWithOrigin(const rtc::SocketAddress& local_address,
+  bool CreateTurnPortWithOrigin(const rtc::SocketAddress& local_address,
                                 const std::string& username,
                                 const std::string& password,
                                 const ProtocolAddress& server_address,
                                 const std::string& origin) {
-    CreateTurnPortWithAllParams(MakeNetwork(local_address), username, password,
-                                server_address, origin);
+    return CreateTurnPortWithAllParams(MakeNetwork(local_address), username,
+                                       password, server_address, origin);
   }
 
-  void CreateTurnPortWithNetwork(rtc::Network* network,
+  bool CreateTurnPortWithNetwork(rtc::Network* network,
                                  const std::string& username,
                                  const std::string& password,
                                  const ProtocolAddress& server_address) {
-    CreateTurnPortWithAllParams(network, username, password, server_address,
-                                std::string());
+    return CreateTurnPortWithAllParams(network, username, password,
+                                       server_address, std::string());
   }
 
   // Version of CreateTurnPort that takes all possible parameters; all other
   // helper methods call this, such that "SetIceRole" and "ConnectSignals" (and
   // possibly other things in the future) only happen in one place.
-  void CreateTurnPortWithAllParams(rtc::Network* network,
+  bool CreateTurnPortWithAllParams(rtc::Network* network,
                                    const std::string& username,
                                    const std::string& password,
                                    const ProtocolAddress& server_address,
@@ -281,6 +281,9 @@ class TurnPortTest : public ::testing::Test,
     turn_port_ = TurnPort::Create(
         &main_, &socket_factory_, network, 0, 0, kIceUfrag1, kIcePwd1,
         server_address, credentials, 0, origin, {}, {}, turn_customizer_.get());
+    if (!turn_port_) {
+      return false;
+    }
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
     ConnectSignals();
@@ -292,6 +295,7 @@ class TurnPortTest : public ::testing::Test,
       turn_port_->SetTlsCertPolicy(
           TlsCertPolicy::TLS_CERT_POLICY_INSECURE_NO_CHECK);
     }
+    return true;
   }
 
   void CreateSharedTurnPort(const std::string& username,
@@ -1772,6 +1776,13 @@ TEST_F(TurnPortTest, TestTurnCustomizerAddAttribute) {
 
   // Need to release TURN port before the customizer.
   turn_port_.reset(nullptr);
+}
+
+TEST_F(TurnPortTest, TestOverlongUsername) {
+  std::string overlong_username(513, 'x');
+  RelayCredentials credentials(overlong_username, kTurnPassword);
+  EXPECT_FALSE(
+      CreateTurnPort(overlong_username, kTurnPassword, kTurnTlsProtoAddr));
 }
 
 }  // namespace cricket
