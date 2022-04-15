@@ -323,6 +323,10 @@ struct RTC_EXPORT RtpExtension {
       "https://aomediacodec.github.io/av1-rtp-spec/"
       "#dependency-descriptor-rtp-header-extension";
 
+  // Experimental extension for signalling target bitrate per layer.
+  static constexpr char kVideoLayersAllocationUri[] =
+      "http://www.webrtc.org/experiments/rtp-hdrext/video-layers-allocation00";
+
   // Header extension for transport sequence number, see url for details:
   // http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions
   static constexpr char kTransportSequenceNumberUri[] =

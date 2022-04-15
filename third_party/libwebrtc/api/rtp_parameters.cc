@@ -122,6 +122,7 @@ constexpr char RtpExtension::kVideoContentTypeUri[];
 constexpr char RtpExtension::kVideoTimingUri[];
 constexpr char RtpExtension::kGenericFrameDescriptorUri00[];
 constexpr char RtpExtension::kDependencyDescriptorUri[];
+constexpr char RtpExtension::kVideoLayersAllocationUri[];
 constexpr char RtpExtension::kTransportSequenceNumberUri[];
 constexpr char RtpExtension::kTransportSequenceNumberV2Uri[];
 constexpr char RtpExtension::kPlayoutDelayUri[];
@@ -163,7 +164,8 @@ bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
          uri == webrtc::RtpExtension::kDependencyDescriptorUri ||
          uri == webrtc::RtpExtension::kColorSpaceUri ||
          uri == webrtc::RtpExtension::kRidUri ||
-         uri == webrtc::RtpExtension::kRepairedRidUri;
+         uri == webrtc::RtpExtension::kRepairedRidUri ||
+         uri == webrtc::RtpExtension::kVideoLayersAllocationUri;
 }
 
 bool RtpExtension::IsEncryptionSupported(absl::string_view uri) {
@@ -185,7 +187,8 @@ bool RtpExtension::IsEncryptionSupported(absl::string_view uri) {
          uri == webrtc::RtpExtension::kVideoContentTypeUri ||
          uri == webrtc::RtpExtension::kMidUri ||
          uri == webrtc::RtpExtension::kRidUri ||
-         uri == webrtc::RtpExtension::kRepairedRidUri;
+         uri == webrtc::RtpExtension::kRepairedRidUri ||
+         uri == webrtc::RtpExtension::kVideoLayersAllocationUri;
 }
 
 const RtpExtension* RtpExtension::FindHeaderExtensionByUri(
