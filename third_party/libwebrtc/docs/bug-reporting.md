@@ -102,6 +102,10 @@ Anyone with a [Google account][1] can file bugs in the Chrome and WebRTC tracker
     want to try [a bisect](https://www.chromium.org/developers/bisect-builds-py) to
     identify the commit that changed the behaviour.
 
+  * For **video problems**, e.g. artifacts or decoder failures, a rtpdump file
+    with the unencrypted RTP traffic. This can by replayed using the video_replay
+    tool from the rtc_tools directory.
+
 ### Filing a Security Bug
 
 The WebRTC team takes security very seriously. If you find a vulnerability in
