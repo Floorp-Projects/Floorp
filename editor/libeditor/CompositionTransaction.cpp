@@ -49,6 +49,11 @@ already_AddRefed<CompositionTransaction> CompositionTransaction::Create(
   }
   RefPtr<CompositionTransaction> transaction =
       new CompositionTransaction(aEditorBase, aStringToInsert, pointToInsert);
+  // XXX Now, it might be better to modify the text node information of
+  //     the TextComposition instance in DoTransaction() because updating
+  //     the information before changing actual DOM tree is pretty odd.
+  composition->OnCreateCompositionTransaction(
+      aStringToInsert, pointToInsert.ContainerAsText(), pointToInsert.Offset());
   return transaction.forget();
 }
 
@@ -170,12 +175,6 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "CompositionTransaction::SetSelectionForRanges() failed");
-
-  if (TextComposition* composition = editorBase->GetComposition()) {
-    composition->OnUpdateCompositionInEditor(mStringToInsert, textNode,
-                                             mOffset);
-  }
-
   return rv;
 }
 
