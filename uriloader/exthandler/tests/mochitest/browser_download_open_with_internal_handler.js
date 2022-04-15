@@ -53,8 +53,8 @@ async function waitForPdfJS(browser, url) {
 
 /**
  * This test covers which choices are presented for downloaded files and how
- * those choices are handled. When the download improvements are enabled
- * (browser.download.improvements_to_download_panel pref) the unknown content
+ * those choices are handled. Unless a pref is enabled
+ * (browser.download.always_ask_before_handling_new_types) the unknown content
  * dialog will be skipped altogether by default when downloading.
  * To retain coverage for the non-default scenario, each task sets `alwaysAskBeforeHandling`
  * to true for the relevant mime-type and extensions.
@@ -797,12 +797,13 @@ add_task(async function test_check_open_with_internal_handler_noask() {
     false
   );
 
-  for (let improvements of [false, true]) {
+  for (let expectDialog of [false, true]) {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["browser.helperApps.showOpenOptionForPdfJS", true],
         ["browser.helperApps.showOpenOptionForViewableInternally", true],
-        ["browser.download.improvements_to_download_panel", improvements],
+        ["browser.download.improvements_to_download_panel", !expectDialog],
+        ["browser.download.always_ask_before_handling_new_types", expectDialog],
       ],
     });
 
@@ -811,28 +812,12 @@ add_task(async function test_check_open_with_internal_handler_noask() {
       "file_pdf_binary_octet_stream.pdf",
     ]) {
       let openPDFDirectly =
-        improvements && file == "file_pdf_application_pdf.pdf";
+        !expectDialog && file == "file_pdf_application_pdf.pdf";
       await BrowserTestUtils.withNewTab(
         { gBrowser, url: "about:blank" },
         async browser => {
           let readyPromise;
-          if (improvements) {
-            if (openPDFDirectly) {
-              readyPromise = BrowserTestUtils.browserLoaded(
-                gBrowser.selectedBrowser
-              );
-            } else {
-              readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-            }
-
-            await SpecialPowers.spawn(
-              browser,
-              [TEST_PATH + file],
-              async contentUrl => {
-                content.location = contentUrl;
-              }
-            );
-          } else {
+          if (expectDialog) {
             let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
             await SpecialPowers.spawn(
               browser,
@@ -850,11 +835,27 @@ add_task(async function test_check_open_with_internal_handler_noask() {
             );
             dialog.getButton("accept").disabled = false;
             dialog.acceptDialog();
+          } else {
+            if (openPDFDirectly) {
+              readyPromise = BrowserTestUtils.browserLoaded(
+                gBrowser.selectedBrowser
+              );
+            } else {
+              readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+            }
+
+            await SpecialPowers.spawn(
+              browser,
+              [TEST_PATH + file],
+              async contentUrl => {
+                content.location = contentUrl;
+              }
+            );
           }
 
           await readyPromise;
 
-          let action = improvements ? "internal" : "ask";
+          let action = expectDialog ? "ask" : "internal";
           checkTelemetry(
             "open " + file + " internal",
             openPDFDirectly ? "none" : action,
