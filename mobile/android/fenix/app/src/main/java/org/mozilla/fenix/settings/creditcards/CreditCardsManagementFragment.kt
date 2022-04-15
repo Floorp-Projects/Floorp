@@ -30,7 +30,7 @@ import org.mozilla.fenix.settings.creditcards.view.CreditCardsManagementView
  */
 class CreditCardsManagementFragment : SecureFragment() {
 
-    private lateinit var creditCardsStore: CreditCardsFragmentStore
+    private lateinit var store: AutofillFragmentStore
     private lateinit var interactor: CreditCardsManagementInteractor
     private lateinit var creditCardsView: CreditCardsManagementView
 
@@ -41,8 +41,8 @@ class CreditCardsManagementFragment : SecureFragment() {
     ): View? {
         val view = inflater.inflate(CreditCardsManagementView.LAYOUT_ID, container, false)
 
-        creditCardsStore = StoreProvider.get(this) {
-            CreditCardsFragmentStore(CreditCardsListState(creditCards = emptyList()))
+        store = StoreProvider.get(this) {
+            AutofillFragmentStore(AutofillFragmentState(creditCards = emptyList()))
         }
 
         interactor = DefaultCreditCardsManagementInteractor(
@@ -60,7 +60,7 @@ class CreditCardsManagementFragment : SecureFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        consumeFrom(creditCardsStore) { state ->
+        consumeFrom(store) { state ->
             if (!state.isLoading && state.creditCards.isEmpty()) {
                 findNavController().popBackStack()
                 return@consumeFrom
@@ -91,14 +91,14 @@ class CreditCardsManagementFragment : SecureFragment() {
 
     /**
      * Fetches all the credit cards from the autofill storage and updates the
-     * [CreditCardsFragmentStore] with the list of credit cards.
+     * [AutofillFragmentStore] with the list of credit cards.
      */
     private fun loadCreditCards() {
         lifecycleScope.launch(Dispatchers.IO) {
             val creditCards = requireContext().components.core.autofillStorage.getAllCreditCards()
 
             lifecycleScope.launch(Dispatchers.Main) {
-                creditCardsStore.dispatch(CreditCardsAction.UpdateCreditCards(creditCards))
+                store.dispatch(AutofillAction.UpdateCreditCards(creditCards))
             }
         }
     }

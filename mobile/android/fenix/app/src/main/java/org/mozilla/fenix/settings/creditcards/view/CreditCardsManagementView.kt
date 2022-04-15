@@ -8,7 +8,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
-import org.mozilla.fenix.settings.creditcards.CreditCardsListState
+import org.mozilla.fenix.settings.creditcards.AutofillFragmentState
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 
 /**
@@ -31,9 +31,9 @@ class CreditCardsManagementView(
     }
 
     /**
-     * Updates the display of the credit cards based on the given [CreditCardsListState].
+     * Updates the display of the credit cards based on the given [AutofillFragmentState].
      */
-    fun update(state: CreditCardsListState) {
+    fun update(state: AutofillFragmentState) {
         binding.progressBar.isVisible = state.isLoading
         binding.creditCardsList.isVisible = state.creditCards.isNotEmpty()
 

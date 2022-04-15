@@ -41,14 +41,14 @@ class CreditCardsManagementViewTest {
 
     @Test
     fun testUpdate() {
-        creditCardsView.update(CreditCardsListState(creditCards = emptyList()))
+        creditCardsView.update(AutofillFragmentState(creditCards = emptyList()))
 
         assertTrue(componentCreditCardsBinding.progressBar.isVisible)
         assertFalse(componentCreditCardsBinding.creditCardsList.isVisible)
 
         val creditCards: List<CreditCard> = listOf(mockk(), mockk())
         creditCardsView.update(
-            CreditCardsListState(
+            AutofillFragmentState(
                 creditCards = creditCards,
                 isLoading = false
             )

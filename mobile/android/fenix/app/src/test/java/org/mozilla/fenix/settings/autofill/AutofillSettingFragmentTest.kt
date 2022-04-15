@@ -23,8 +23,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.settings.creditcards.CreditCardsFragmentStore
-import org.mozilla.fenix.settings.creditcards.CreditCardsListState
+import org.mozilla.fenix.settings.creditcards.AutofillFragmentStore
+import org.mozilla.fenix.settings.creditcards.AutofillFragmentState
 import org.robolectric.Robolectric
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -58,11 +58,11 @@ class AutofillSettingFragmentTest {
 
         val creditCards: List<CreditCard> = listOf(mockk(), mockk())
 
-        val creditCardsState = CreditCardsListState(creditCards = creditCards)
-        val creditCardsStore = CreditCardsFragmentStore(creditCardsState)
+        val state = AutofillFragmentState(creditCards = creditCards)
+        val store = AutofillFragmentStore(state)
 
         autofillSettingFragment.updateCardManagementPreference(
-            creditCardsStore.state.creditCards.isNotEmpty(),
+            store.state.creditCards.isNotEmpty(),
             navController
         )
 
@@ -82,11 +82,11 @@ class AutofillSettingFragmentTest {
             AutofillSettingFragmentDirections
                 .actionAutofillSettingFragmentToCreditCardEditorFragment()
 
-        val creditCardsState = CreditCardsListState(creditCards = emptyList())
-        val creditCardsStore = CreditCardsFragmentStore(creditCardsState)
+        val state = AutofillFragmentState(creditCards = emptyList())
+        val store = AutofillFragmentStore(state)
 
         autofillSettingFragment.updateCardManagementPreference(
-            creditCardsStore.state.creditCards.isNotEmpty(),
+            store.state.creditCards.isNotEmpty(),
             navController
         )
 

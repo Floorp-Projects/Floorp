@@ -10,11 +10,11 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 /**
- * The [Store] for holding the [CreditCardsListState] and applying [CreditCardsAction]s.
+ * The [Store] for holding the [AutofillFragmentState] and applying [AutofillAction]s.
  */
-class CreditCardsFragmentStore(initialState: CreditCardsListState) :
-    Store<CreditCardsListState, CreditCardsAction>(
-        initialState, ::creditCardsFragmentStateReducer
+class AutofillFragmentStore(initialState: AutofillFragmentState) :
+    Store<AutofillFragmentState, AutofillAction>(
+        initialState, ::autofillFragmentStateReducer
     )
 
 /**
@@ -24,37 +24,37 @@ class CreditCardsFragmentStore(initialState: CreditCardsListState) :
  * @property isLoading True if the credit cards are still being loaded from storage,
  * otherwise false.
  */
-data class CreditCardsListState(
+data class AutofillFragmentState(
     val creditCards: List<CreditCard>,
     val isLoading: Boolean = true
 ) : State
 
 /**
- * Actions to dispatch through the [CreditCardsFragmentStore] to modify the [CreditCardsListState]
- * through the [creditCardsFragmentStateReducer].
+ * Actions to dispatch through the [AutofillFragmentStore] to modify the [AutofillFragmentState]
+ * through the [autofillFragmentStateReducer].
  */
-sealed class CreditCardsAction : Action {
+sealed class AutofillAction : Action {
     /**
      * Updates the list of credit cards with the provided [creditCards].
      *
      * @param creditCards The list of [CreditCard]s to display in the credit card list.
      */
-    data class UpdateCreditCards(val creditCards: List<CreditCard>) : CreditCardsAction()
+    data class UpdateCreditCards(val creditCards: List<CreditCard>) : AutofillAction()
 }
 
 /**
- * Reduces the credit cards state from the current state with the provided [action] to be performed.
+ * Reduces the autofill state from the current state with the provided [action] to be performed.
  *
- * @param state The current credit cards state.
+ * @param state The current autofill state.
  * @param action The action to be performed on the state.
- * @return the new [CreditCardsListState] with the [action] executed.
+ * @return the new [AutofillFragmentState] with the [action] executed.
  */
-private fun creditCardsFragmentStateReducer(
-    state: CreditCardsListState,
-    action: CreditCardsAction
-): CreditCardsListState {
+private fun autofillFragmentStateReducer(
+    state: AutofillFragmentState,
+    action: AutofillAction
+): AutofillFragmentState {
     return when (action) {
-        is CreditCardsAction.UpdateCreditCards -> {
+        is AutofillAction.UpdateCreditCards -> {
             state.copy(
                 creditCards = action.creditCards,
                 isLoading = false
