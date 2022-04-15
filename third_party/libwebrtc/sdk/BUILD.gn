@@ -1102,7 +1102,7 @@ if (is_ios || is_mac) {
 
           # TODO(peterhanspers): Reenable these tests on simulator.
           # See bugs.webrtc.org/7812
-          if (!use_ios_simulator) {
+          if (target_environment != "simulator") {
             sources += [
               "objc/unittests/RTCAudioDeviceModule_xctest.mm",
               "objc/unittests/RTCAudioDevice_xctest.mm",
