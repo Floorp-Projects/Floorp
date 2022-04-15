@@ -26,6 +26,7 @@
 #include "api/voip/voip_dtmf.h"
 #include "api/voip/voip_engine.h"
 #include "api/voip/voip_network.h"
+#include "api/voip/voip_statistics.h"
 #include "audio/audio_transport_impl.h"
 #include "audio/voip/audio_channel.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -47,7 +48,8 @@ class VoipCore : public VoipEngine,
                  public VoipBase,
                  public VoipNetwork,
                  public VoipCodec,
-                 public VoipDtmf {
+                 public VoipDtmf,
+                 public VoipStatistics {
  public:
   ~VoipCore() override = default;
 
@@ -70,6 +72,7 @@ class VoipCore : public VoipEngine,
   VoipNetwork& Network() override { return *this; }
   VoipCodec& Codec() override { return *this; }
   VoipDtmf& Dtmf() override { return *this; }
+  VoipStatistics& Statistics() override { return *this; }
 
   // Implements VoipBase interfaces.
   absl::optional<ChannelId> CreateChannel(
@@ -102,6 +105,10 @@ class VoipCore : public VoipEngine,
   bool SendDtmfEvent(ChannelId channel,
                      DtmfEvent dtmf_event,
                      int duration_ms) override;
+
+  // Implements VoipStatistics interfaces.
+  absl::optional<NetEqLifetimeStatistics> GetNetEqStatistics(
+      ChannelId channel) override;
 
  private:
   // Fetches the corresponding AudioChannel assigned with given |channel|.

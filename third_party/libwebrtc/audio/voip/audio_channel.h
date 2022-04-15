@@ -18,6 +18,7 @@
 
 #include "api/task_queue/task_queue_factory.h"
 #include "api/voip/voip_base.h"
+#include "api/voip/voip_statistics.h"
 #include "audio/voip/audio_egress.h"
 #include "audio/voip/audio_ingress.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
@@ -81,6 +82,7 @@ class AudioChannel : public rtc::RefCountInterface {
   void SetReceiveCodecs(const std::map<int, SdpAudioFormat>& codecs) {
     ingress_->SetReceiveCodecs(codecs);
   }
+  NetEqLifetimeStatistics GetNetEqStatistics();
 
  private:
   // ChannelId that this audio channel belongs for logging purpose.

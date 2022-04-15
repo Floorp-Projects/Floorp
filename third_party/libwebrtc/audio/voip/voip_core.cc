@@ -382,4 +382,12 @@ bool VoipCore::SendDtmfEvent(ChannelId channel,
   return false;
 }
 
+absl::optional<NetEqLifetimeStatistics> VoipCore::GetNetEqStatistics(
+    ChannelId channel) {
+  if (auto audio_channel = GetChannel(channel)) {
+    return audio_channel->GetNetEqStatistics();
+  }
+  return absl::nullopt;
+}
+
 }  // namespace webrtc

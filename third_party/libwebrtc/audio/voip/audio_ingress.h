@@ -82,12 +82,8 @@ class AudioIngress : public AudioMixer::Source {
 
   NetworkStatistics GetNetworkStatistics() const {
     NetworkStatistics stats;
-    acm_receiver_.GetNetworkStatistics(&stats);
-    return stats;
-  }
-  AudioDecodingCallStats GetDecodingStatistics() const {
-    AudioDecodingCallStats stats;
-    acm_receiver_.GetDecodingCallStatistics(&stats);
+    acm_receiver_.GetNetworkStatistics(&stats,
+                                       /*get_and_clear_legacy_stats=*/false);
     return stats;
   }
 
