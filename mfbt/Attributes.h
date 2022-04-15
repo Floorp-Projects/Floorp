@@ -841,15 +841,28 @@
 
 #  define MOZ_RAII MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS
 
-// gcc has different rules governing attribute placement. Since none of these
-// attributes are actually used by the gcc-based static analysis, just
-// eliminate them rather than updating all of the code.
+// XGILL_PLUGIN is used for the GC rooting hazard analysis, which compiles with
+// gcc. gcc has different rules governing __attribute__((...)) placement, so
+// some attributes will error out when used in the source code where clang
+// expects them to be. Remove the problematic annotations when needed.
+//
+// The placement of c++11 [[...]] attributes is more flexible and defined by a
+// spec, so it would be nice to switch to those for the problematic
+// cases. Unfortunately, the official spec provides *no* way to annotate a
+// lambda function, which is one source of the difficulty here. It appears that
+// this will be fixed in c++23: https://github.com/cplusplus/papers/issues/882
 
 #  ifdef XGILL_PLUGIN
+
 #    undef MOZ_MUST_OVERRIDE
-#    define MOZ_MUST_OVERRIDE /* nothing */
 #    undef MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION
+#    undef MOZ_CAN_RUN_SCRIPT
+#    undef MOZ_CAN_RUN_SCRIPT_BOUNDARY
+#    define MOZ_MUST_OVERRIDE                 /* nothing */
 #    define MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION /* nothing */
+#    define MOZ_CAN_RUN_SCRIPT                /* nothing */
+#    define MOZ_CAN_RUN_SCRIPT_BOUNDARY       /* nothing */
+
 #  endif
 
 #endif /* __cplusplus */
