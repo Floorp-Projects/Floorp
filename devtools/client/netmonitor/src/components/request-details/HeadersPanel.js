@@ -386,9 +386,11 @@ class HeadersPanel extends Component {
 
       let rows;
       if (value) {
+        const match = value.match(/\n/g);
+        rows = match !== null ? match.length : 0;
         // Need to add 1 for the horizontal scrollbar
         // not to cover the last row of raw data
-        rows = value.match(/\n/g).length + 1;
+        rows = rows + 1;
       }
 
       return tr(

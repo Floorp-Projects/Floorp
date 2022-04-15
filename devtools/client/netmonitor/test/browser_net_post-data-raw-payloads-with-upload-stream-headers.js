@@ -21,103 +21,180 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
-  await performRequests(monitor, tab, 1);
+  await performRequests(monitor, tab, 3);
 
-  // Wait for all tree view updated by react
-  let wait = waitForDOM(document, "#headers-panel .accordion-item", 3);
+  const expectedRequestsContent = [
+    {
+      headersFromUploadSectionTitle:
+        "Request headers from upload stream (47 B)",
+      uploadSectionHeaders: [
+        { label: "content-type", value: "application/x-www-form-urlencoded" },
+      ],
+      uploadSectionRawText: "content-type: application/x-www-form-urlencoded",
+      requestPanelFormData: [
+        { label: "foo", value: '"bar"' },
+        { label: "baz", value: '"123"' },
+      ],
+      requestPanelPayload: [
+        "content-type: application/x-www-form-urlencoded",
+        "foo=bar&baz=123",
+      ],
+    },
+    {
+      headersFromUploadSectionTitle:
+        "Request headers from upload stream (47 B)",
+      uploadSectionHeaders: [
+        { label: "content-type", value: "application/x-www-form-urlencoded" },
+      ],
+      uploadSectionRawText: "content-type: application/x-www-form-urlencoded",
+      requestPanelPayload: ["content-type: application/x-www-form-urlencoded"],
+    },
+    {
+      headersFromUploadSectionTitle:
+        "Request headers from upload stream (74 B)",
+      uploadSectionHeaders: [
+        { label: "content-type", value: "application/x-www-form-urlencoded" },
+        { label: "custom-header", value: "hello world!" },
+      ],
+      uploadSectionRawText:
+        "content-type: application/x-www-form-urlencoded\r\ncustom-header: hello world!",
+      requestPanelFormData: [
+        { label: "foo", value: '"bar"' },
+        { label: "baz", value: '"123"' },
+      ],
+      requestPanelPayload: [
+        "content-type: application/x-www-form-urlencoded",
+        "custom-header: hello world!",
+        "foo=bar&baz=123",
+      ],
+    },
+  ];
+
+  const requests = document.querySelectorAll(".request-list-item");
   store.dispatch(Actions.toggleNetworkDetails());
-  clickOnSidebarTab(document, "headers");
-  await wait;
 
-  let tabpanel = document.querySelector("#headers-panel");
-  is(
-    tabpanel.querySelectorAll(".accordion-item").length,
-    3,
-    "There should be 3 header sections displayed in this tabpanel."
-  );
+  for (let i = 0; i < expectedRequestsContent.length; i++) {
+    EventUtils.sendMouseEvent({ type: "mousedown" }, requests[i]);
+    await assertRequestContentInHeaderAndRequestSidePanels(
+      expectedRequestsContent[i]
+    );
+  }
 
-  is(
-    tabpanel.querySelectorAll(".accordion-item .accordion-header-label")[2]
-      .textContent,
-    L10N.getStr("requestHeadersFromUpload") +
-      " (" +
-      L10N.getFormatStr("networkMenu.sizeB", 74) +
-      ")",
-    "The request headers from upload section doesn't have the correct title."
-  );
+  async function assertRequestContentInHeaderAndRequestSidePanels(expected) {
+    // Wait for all 3 headers sections to load (Response Headers, Request Headers, Request headers from upload stream)
+    let wait = waitForDOM(document, "#headers-panel .accordion-item", 3);
+    clickOnSidebarTab(document, "headers");
+    await wait;
 
-  let labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
-  let values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
+    let tabpanel = document.querySelector("#headers-panel");
+    is(
+      tabpanel.querySelectorAll(".accordion-item").length,
+      3,
+      "There should be 3 header sections displayed in this tabpanel."
+    );
 
-  is(
-    labels[labels.length - 2].textContent,
-    "content-type",
-    "The first request header name was incorrect."
-  );
-  is(
-    values[values.length - 2].textContent,
-    "application/x-www-form-urlencoded",
-    "The first request header value was incorrect."
-  );
-  is(
-    labels[labels.length - 1].textContent,
-    "custom-header",
-    "The second request header name was incorrect."
-  );
-  is(
-    values[values.length - 1].textContent,
-    "hello world!",
-    "The second request header value was incorrect."
-  );
+    info("Check that the Headers in the upload stream section are correct.");
+    is(
+      tabpanel.querySelectorAll(".accordion-item .accordion-header-label")[2]
+        .textContent,
+      expected.headersFromUploadSectionTitle,
+      "The request headers from upload section doesn't have the correct title."
+    );
 
-  // Wait for raw data toggle to be displayed
-  wait = waitForDOM(
-    document,
-    "#request-panel .raw-data-toggle-input .devtools-checkbox-toggle"
-  );
-  clickOnSidebarTab(document, "request");
-  await wait;
+    let labels = tabpanel.querySelectorAll(
+      ".accordion-item:last-child .accordion-content tr .treeLabelCell .treeLabel"
+    );
+    let values = tabpanel.querySelectorAll(
+      ".accordion-item:last-child .accordion-content tr .treeValueCell .objectBox"
+    );
 
-  tabpanel = document.querySelector("#request-panel");
+    for (let i = 0; i < labels.length; i++) {
+      is(
+        labels[i].textContent,
+        expected.uploadSectionHeaders[i].label,
+        "The request header name was incorrect."
+      );
+      is(
+        values[i].textContent,
+        expected.uploadSectionHeaders[i].value,
+        "The request header value was incorrect."
+      );
+    }
 
-  ok(
-    tabpanel.querySelector(".treeTable"),
-    "The params tree view should be displayed."
-  );
-  ok(
-    tabpanel.querySelector(".editor-mount") === null,
-    "The post data shouldn't be displayed."
-  );
+    info(
+      "Toggle to open the raw view for the request headers from upload stream"
+    );
 
-  is(
-    tabpanel.querySelector(".data-label").textContent,
-    L10N.getStr("paramsFormData"),
-    "The form data section doesn't have the correct title."
-  );
+    wait = waitForDOM(
+      tabpanel,
+      ".accordion-item:last-child .accordion-content .raw-headers-container"
+    );
+    tabpanel.querySelector("#raw-upload-checkbox").click();
+    await wait;
 
-  labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
-  values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
+    const rawTextArea = tabpanel.querySelector(
+      ".accordion-item:last-child .accordion-content .raw-headers"
+    );
+    is(
+      rawTextArea.textContent,
+      expected.uploadSectionRawText,
+      "The raw text for the request headers from upload section is correct"
+    );
 
-  is(
-    labels[0].textContent,
-    "foo",
-    "The first payload param name was incorrect."
-  );
-  is(
-    values[0].textContent,
-    `"bar"`,
-    "The first payload param value was incorrect."
-  );
-  is(
-    labels[1].textContent,
-    "baz",
-    "The second payload param name was incorrect."
-  );
-  is(
-    values[1].textContent,
-    `"123"`,
-    "The second payload param value was incorrect."
-  );
+    info("Switch to the Request panel");
+
+    wait = waitForDOM(document, "#request-panel .panel-container");
+    clickOnSidebarTab(document, "request");
+    await wait;
+
+    tabpanel = document.querySelector("#request-panel");
+    if (expected.requestPanelFormData) {
+      await waitUntil(
+        () =>
+          tabpanel.querySelector(".data-label").textContent ==
+          L10N.getStr("paramsFormData")
+      );
+
+      labels = tabpanel.querySelectorAll("tr .treeLabelCell .treeLabel");
+      values = tabpanel.querySelectorAll("tr .treeValueCell .objectBox");
+
+      for (let i = 0; i < labels.length; i++) {
+        is(
+          labels[i].textContent,
+          expected.requestPanelFormData[i].label,
+          "The form data param name was incorrect."
+        );
+        is(
+          values[i].textContent,
+          expected.requestPanelFormData[i].value,
+          "The form data param value was incorrect."
+        );
+      }
+
+      info("Toggle open the the request payload raw view");
+
+      tabpanel.querySelector("#raw-request-checkbox").click();
+    }
+    await waitUntil(
+      () =>
+        tabpanel.querySelector(".data-label").textContent ==
+          L10N.getStr("paramsPostPayload") &&
+        tabpanel.querySelector(
+          ".panel-container .editor-row-container .CodeMirror-code"
+        )
+    );
+
+    // Check that the expected header lines are included in the codemirror
+    // text.
+    const actualText = tabpanel.querySelector(
+      ".panel-container .editor-row-container .CodeMirror-code"
+    ).textContent;
+    const requestPayloadIsCorrect = expected.requestPanelPayload.every(
+      content => actualText.includes(content)
+    );
+
+    is(requestPayloadIsCorrect, true, "The request payload is not correct");
+  }
 
   return teardown(monitor);
 });
