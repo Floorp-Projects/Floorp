@@ -107,7 +107,7 @@ class VoipCore : public VoipEngine,
                      int duration_ms) override;
 
   // Implements VoipStatistics interfaces.
-  absl::optional<NetEqLifetimeStatistics> GetNetEqStatistics(
+  absl::optional<IngressStatistics> GetIngressStatistics(
       ChannelId channel) override;
 
  private:

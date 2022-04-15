@@ -82,7 +82,7 @@ class AudioChannel : public rtc::RefCountInterface {
   void SetReceiveCodecs(const std::map<int, SdpAudioFormat>& codecs) {
     ingress_->SetReceiveCodecs(codecs);
   }
-  NetEqLifetimeStatistics GetNetEqStatistics();
+  IngressStatistics GetIngressStatistics();
 
  private:
   // ChannelId that this audio channel belongs for logging purpose.
