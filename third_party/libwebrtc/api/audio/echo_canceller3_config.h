@@ -221,6 +221,7 @@ struct RTC_EXPORT EchoCanceller3Config {
     } high_bands_suppression;
 
     float floor_first_increase = 0.00001f;
+    bool conservative_hf_suppression = false;
   } suppressor;
 };
 }  // namespace webrtc
