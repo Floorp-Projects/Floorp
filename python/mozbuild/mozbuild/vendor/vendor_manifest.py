@@ -83,6 +83,7 @@ class VendorManifest(MozbuildObject):
         if "patches" in self.manifest["vendoring"] and patch_mode == "only":
             self.import_local_patches(
                 self.manifest["vendoring"]["patches"],
+                os.path.dirname(self.yaml_file),
                 self.manifest["vendoring"]["vendor-directory"],
             )
             return
@@ -571,9 +572,9 @@ class VendorManifest(MozbuildObject):
             # Exit with -1 to distinguish this from the Exception case of exiting with 1
             sys.exit(-1)
 
-    def import_local_patches(self, patches, vendor_dir):
-        self.logi({}, "Importing local patches.")
-        for patch in self.convert_patterns_to_paths(vendor_dir, patches):
+    def import_local_patches(self, patches, yaml_dir, vendor_dir):
+        self.logInfo({}, "Importing local patches...")
+        for patch in self.convert_patterns_to_paths(yaml_dir, patches):
             script = [
                 "patch",
                 "-p1",
