@@ -327,9 +327,9 @@ RtpVideoSender::RtpVideoSender(
     FrameEncryptorInterface* frame_encryptor,
     const CryptoOptions& crypto_options,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
-    : send_side_bwe_with_overhead_(!absl::StartsWith(
+    : send_side_bwe_with_overhead_(absl::StartsWith(
           field_trials_.Lookup("WebRTC-SendSideBwe-WithOverhead"),
-          "Disabled")),
+          "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
       active_(false),
       module_process_thread_(nullptr),
