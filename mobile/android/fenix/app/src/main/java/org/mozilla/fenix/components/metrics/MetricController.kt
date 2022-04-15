@@ -152,9 +152,9 @@ internal class ReleaseMetricController(
         }
 
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
-            metadata?.get("item")?.let {
-                contextMenuAllowList[item]?.let {
-                    ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(it))
+            metadata?.get("item")?.let { item ->
+                contextMenuAllowList[item]?.let { extraKey ->
+                    ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(extraKey))
                 }
             }
             Unit
