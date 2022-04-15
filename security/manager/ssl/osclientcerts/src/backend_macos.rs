@@ -496,12 +496,14 @@ impl CryptokiObject for Cert {
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug)]
 pub enum KeyType {
     EC(usize),
     RSA,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 enum SignParams<'a> {
     EC(CFString, &'a [u8]),
     RSA(CFString, &'a [u8]),
@@ -717,7 +719,7 @@ impl Key {
         let signing_algorithm = sign_params.get_algorithm();
         let data_to_sign = CFData::from_buffer(sign_params.get_data_to_sign());
         let signature =
-            SECURITY_FRAMEWORK.sec_key_create_signature(&key, signing_algorithm, &data_to_sign)?;
+            SECURITY_FRAMEWORK.sec_key_create_signature(key, signing_algorithm, &data_to_sign)?;
         let signature_value = match self.key_type_enum {
             KeyType::EC(coordinate_width) => {
                 // We need to convert the DER Ecdsa-Sig-Value to the
@@ -829,7 +831,7 @@ impl Sign for Key {
 }
 
 fn get_key_attribute<T: TCFType + Clone>(key: &SecKey, attr: CFStringRef) -> Result<T, Error> {
-    let attributes: CFDictionary<CFString, T> = SECURITY_FRAMEWORK.sec_key_copy_attributes(&key)?;
+    let attributes: CFDictionary<CFString, T> = SECURITY_FRAMEWORK.sec_key_copy_attributes(key)?;
     match attributes.find(attr as *const _) {
         Some(value) => Ok((*value).clone()),
         None => Err(error_here!(ErrorType::ExternalError)),
