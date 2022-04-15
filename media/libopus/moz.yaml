@@ -1,0 +1,67 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Core
+  component: "Audio/Video: Playback"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: opus
+
+  description: opus, an open, royalty-free, highly versatile audio codec
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://opus-codec.org/
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: 2654707e86cc94413998976d179b2ab4a2aa3114 (2022-04-01T14:32:38.000-04:00).
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 2654707e86cc94413998976d179b2ab4a2aa3114
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: BSD-2-Clause
+
+  license-file: COPYING
+
+updatebot:
+    maintainer-phab: kinetik
+    maintainer-bz: kinetik@flim.org
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: every
+
+vendoring:
+  url: https://gitlab.xiph.org/xiph/opus
+  source-hosting: gitlab
+  vendor-directory: media/libopus
+  skip-vendoring-steps: ['move-contents', 'update-moz-build']
+
+  keep:
+    - COPYING
+    - gen-sources.py
+    - "*.patch"
+    - README_MOZILLA
+    - sources.mozbuild
+    - update.sh
+
+  update-actions:
+    - action: run-script
+      script: 'update.sh'
+      cwd: '{yaml_dir}'
+      args: ['{tmpextractdir}']
+    - action: replace-in-file-regex
+      file: moz.build
+      pattern: 'DEFINES\["OPUS_VERSION"\] = "(.+)"'
+      with: 'DEFINES["OPUS_VERSION"] = "{revision}"'

@@ -161,10 +161,14 @@ vendoring:
   # The valid steps that can be skipped are listed below
   skip-vendoring-steps:
     - fetch
+    - keep
+    - include
     - exclude
-    - update-moz-yaml
+    - move-contents
     - update-actions
     - hg-add
+    - spurious-check
+    - update-moz-yaml
     - update-moz-build
 
   # List of patch files to apply after vendoring. Applied in the order
@@ -234,6 +238,7 @@ vendoring:
   #   - copy-file
   #   - move-dir
   #   - replace-in-file
+  #   - replace-in-file-regex
   #   - delete-path
   #   - run-script
   # Unless otherwise noted, all subfields of action are required.
@@ -242,7 +247,7 @@ vendoring:
   #   from is the source file
   #   to is the destination
   #
-  # If the action is replace-in-file:
+  # If the action is replace-in-file or replace-in-file-regex:
   #   pattern is what in the file to search for. It is an exact strng match.
   #   with is the string to replace it with. Accepts the special keyword
   #     '{revision}' for the commit we are updating to.
@@ -441,6 +446,7 @@ def _schema_1():
                                     "copy-file",
                                     "move-dir",
                                     "replace-in-file",
+                                    "replace-in-file-regex",
                                     "run-script",
                                     "delete-path",
                                 ],
@@ -563,7 +569,7 @@ class UpdateActions(object):
                         "%s action must (only) specify 'from' and 'to' keys"
                         % v["action"]
                     )
-            elif v["action"] == "replace-in-file":
+            elif v["action"] in ["replace-in-file", "replace-in-file-regex"]:
                 if (
                     "pattern" not in v
                     or "with" not in v
