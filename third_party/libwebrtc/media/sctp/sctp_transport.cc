@@ -58,6 +58,7 @@ static constexpr size_t kSctpMtu = 1200;
 
 // Set the initial value of the static SCTP Data Engines reference count.
 ABSL_CONST_INIT int g_usrsctp_usage_count = 0;
+ABSL_CONST_INIT bool g_usrsctp_initialized_ = false;
 ABSL_CONST_INIT webrtc::GlobalMutex g_usrsctp_lock_(absl::kConstInit);
 
 // DataMessageType is used for the SCTP "Payload Protocol Identifier", as
@@ -262,9 +263,19 @@ class SctpTransport::UsrSctpWrapper {
  public:
   static void InitializeUsrSctp() {
     RTC_LOG(LS_INFO) << __FUNCTION__;
-    // First argument is udp_encapsulation_port, which is not releveant for our
-    // AF_CONN use of sctp.
-    usrsctp_init(0, &UsrSctpWrapper::OnSctpOutboundPacket, &DebugSctpPrintf);
+    // UninitializeUsrSctp tries to call usrsctp_finish in a loop for three
+    // seconds; if that failed and we were left in a still-initialized state, we
+    // don't want to call usrsctp_init again as that will result in undefined
+    // behavior.
+    if (g_usrsctp_initialized_) {
+      RTC_LOG(LS_WARNING) << "Not reinitializing usrsctp since last attempt at "
+                             "usrsctp_finish failed.";
+    } else {
+      // First argument is udp_encapsulation_port, which is not releveant for
+      // our AF_CONN use of sctp.
+      usrsctp_init(0, &UsrSctpWrapper::OnSctpOutboundPacket, &DebugSctpPrintf);
+      g_usrsctp_initialized_ = true;
+    }
 
     // To turn on/off detailed SCTP debugging. You will also need to have the
     // SCTP_DEBUG cpp defines flag, which can be turned on in media/BUILD.gn.
@@ -317,6 +328,7 @@ class SctpTransport::UsrSctpWrapper {
     // closed. Wait and try again until it succeeds for up to 3 seconds.
     for (size_t i = 0; i < 300; ++i) {
       if (usrsctp_finish() == 0) {
+        g_usrsctp_initialized_ = false;
         delete g_transport_map_;
         g_transport_map_ = nullptr;
         return;
