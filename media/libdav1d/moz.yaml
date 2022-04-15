@@ -55,6 +55,10 @@ vendoring:
     - package
     - tools
 
+  generated:
+    - '{yaml_dir}/vcs_version.h'
+    - '{yaml_dir}/version.h'
+
   update-actions:
     - action: copy-file
       from: include/vcs_version.h.in
