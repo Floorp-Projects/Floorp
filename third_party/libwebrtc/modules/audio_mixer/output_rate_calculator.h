@@ -22,19 +22,7 @@ namespace webrtc {
 class OutputRateCalculator {
  public:
   virtual int CalculateOutputRateFromRange(
-      rtc::ArrayView<const int> preferred_sample_rates) {
-    // TODO(olka): Temporary workaround to reslove client dependencies.
-    std::vector<int> sample_rates(preferred_sample_rates.cbegin(),
-                                  preferred_sample_rates.cend());
-    return CalculateOutputRate(sample_rates);
-  }
-
-  // TODO(olka) to be removed as soon as the clients are switched to
-  // CalculateOutputRateFromRange()
-  virtual int CalculateOutputRate(
-      const std::vector<int>& preferred_sample_rates) {
-    return CalculateOutputRateFromRange(preferred_sample_rates);
-  }
+      rtc::ArrayView<const int> preferred_sample_rates) = 0;
 
   virtual ~OutputRateCalculator() {}
 };
