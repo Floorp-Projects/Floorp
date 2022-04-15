@@ -14,6 +14,7 @@
 
 #include "modules/audio_processing/agc2/rnn_vad/test_utils.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/numerics/safe_compare.h"
 // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
 // #include "test/fpe_observer.h"
 #include "test/gtest.h"
@@ -23,11 +24,11 @@ namespace rnn_vad {
 namespace test {
 namespace {
 
-constexpr size_t kTestFeatureVectorSize = kNumBands + 3 * kNumLowerBands + 1;
+constexpr int kTestFeatureVectorSize = kNumBands + 3 * kNumLowerBands + 1;
 
 // Writes non-zero sample values.
 void WriteTestData(rtc::ArrayView<float> samples) {
-  for (size_t i = 0; i < samples.size(); ++i) {
+  for (int i = 0; rtc::SafeLt(i, samples.size()); ++i) {
     samples[i] = i % 100;
   }
 }
@@ -124,7 +125,7 @@ TEST(RnnVadTest, CepstralFeaturesConstantAverageZeroDerivative) {
 
   // Fill the spectral features with test data.
   std::array<float, kTestFeatureVectorSize> feature_vector;
-  for (size_t i = 0; i < kCepstralCoeffsHistorySize; ++i) {
+  for (int i = 0; i < kCepstralCoeffsHistorySize; ++i) {
     is_silence = sfe.CheckSilenceComputeFeatures(
         samples_view, samples_view, GetHigherBandsSpectrum(&feature_vector),
         GetAverage(&feature_vector), GetFirstDerivative(&feature_vector),

@@ -28,10 +28,10 @@ namespace rnn_vad {
 namespace test {
 namespace {
 
-constexpr size_t kFrameSize10ms48kHz = 480;
+constexpr int kFrameSize10ms48kHz = 480;
 
-void DumpPerfStats(size_t num_samples,
-                   size_t sample_rate,
+void DumpPerfStats(int num_samples,
+                   int sample_rate,
                    double average_us,
                    double standard_deviation) {
   float audio_track_length_ms =
@@ -70,7 +70,7 @@ TEST(RnnVadTest, RnnVadProbabilityWithinTolerance) {
   auto expected_vad_prob_reader = CreateVadProbsReader();
 
   // Input length.
-  const size_t num_frames = samples_reader.second;
+  const int num_frames = samples_reader.second;
   ASSERT_GE(expected_vad_prob_reader.second, num_frames);
 
   // Init buffers.
@@ -85,7 +85,7 @@ TEST(RnnVadTest, RnnVadProbabilityWithinTolerance) {
 
   // Compute VAD probabilities on the downsampled input.
   float cumulative_error = 0.f;
-  for (size_t i = 0; i < num_frames; ++i) {
+  for (int i = 0; i < num_frames; ++i) {
     samples_reader.first->ReadChunk(samples_48k);
     decimator.Resample(samples_48k.data(), samples_48k.size(),
                        samples_24k.data(), samples_24k.size());
@@ -114,13 +114,13 @@ TEST(RnnVadTest, RnnVadProbabilityWithinTolerance) {
 TEST(RnnVadTest, DISABLED_RnnVadPerformance) {
   // PCM samples reader and buffers.
   auto samples_reader = CreatePcmSamplesReader(kFrameSize10ms48kHz);
-  const size_t num_frames = samples_reader.second;
+  const int num_frames = samples_reader.second;
   std::array<float, kFrameSize10ms48kHz> samples;
   // Pre-fetch and decimate samples.
   PushSincResampler decimator(kFrameSize10ms48kHz, kFrameSize10ms24kHz);
   std::vector<float> prefetched_decimated_samples;
   prefetched_decimated_samples.resize(num_frames * kFrameSize10ms24kHz);
-  for (size_t i = 0; i < num_frames; ++i) {
+  for (int i = 0; i < num_frames; ++i) {
     samples_reader.first->ReadChunk(samples);
     decimator.Resample(samples.data(), samples.size(),
                        &prefetched_decimated_samples[i * kFrameSize10ms24kHz],
@@ -130,14 +130,14 @@ TEST(RnnVadTest, DISABLED_RnnVadPerformance) {
   FeaturesExtractor features_extractor;
   std::array<float, kFeatureVectorSize> feature_vector;
   RnnBasedVad rnn_vad;
-  constexpr size_t number_of_tests = 100;
+  constexpr int number_of_tests = 100;
   ::webrtc::test::PerformanceTimer perf_timer(number_of_tests);
-  for (size_t k = 0; k < number_of_tests; ++k) {
+  for (int k = 0; k < number_of_tests; ++k) {
     features_extractor.Reset();
     rnn_vad.Reset();
     // Process frames.
     perf_timer.StartTimer();
-    for (size_t i = 0; i < num_frames; ++i) {
+    for (int i = 0; i < num_frames; ++i) {
       bool is_silence = features_extractor.CheckSilenceComputeFeatures(
           {&prefetched_decimated_samples[i * kFrameSize10ms24kHz],
            kFrameSize10ms24kHz},

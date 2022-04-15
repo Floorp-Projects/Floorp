@@ -18,6 +18,7 @@
 #include "modules/audio_processing/test/performance_timer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/system/arch.h"
 #include "test/gtest.h"
 #include "third_party/rnnoise/src/rnn_activations.h"
@@ -43,15 +44,16 @@ void TestGatedRecurrentLayer(
     rtc::ArrayView<const float> expected_output_sequence) {
   RTC_CHECK(gru);
   auto gru_output_view = gru->GetOutput();
-  const size_t input_sequence_length =
-      rtc::CheckedDivExact(input_sequence.size(), gru->input_size());
-  const size_t output_sequence_length =
-      rtc::CheckedDivExact(expected_output_sequence.size(), gru->output_size());
+  const int input_sequence_length = rtc::CheckedDivExact(
+      rtc::dchecked_cast<int>(input_sequence.size()), gru->input_size());
+  const int output_sequence_length = rtc::CheckedDivExact(
+      rtc::dchecked_cast<int>(expected_output_sequence.size()),
+      gru->output_size());
   ASSERT_EQ(input_sequence_length, output_sequence_length)
       << "The test data length is invalid.";
   // Feed the GRU layer and check the output at every step.
   gru->Reset();
-  for (size_t i = 0; i < input_sequence_length; ++i) {
+  for (int i = 0; i < input_sequence_length; ++i) {
     SCOPED_TRACE(i);
     gru->ComputeOutput(
         input_sequence.subview(i * gru->input_size(), gru->input_size()));
@@ -77,8 +79,8 @@ constexpr std::array<float, 24> kFullyConnectedExpectedOutput = {
     0.875092f,  0.999846f,  0.997707f,  -0.999382f, 0.973153f,  -0.966605f};
 
 // Gated recurrent units layer test data.
-constexpr size_t kGruInputSize = 5;
-constexpr size_t kGruOutputSize = 4;
+constexpr int kGruInputSize = 5;
+constexpr int kGruOutputSize = 4;
 constexpr std::array<int8_t, 12> kGruBias = {96,   -99, -81, -114, 49,  119,
                                              -118, 68,  -76, 91,   121, 125};
 constexpr std::array<int8_t, 60> kGruWeights = {
@@ -213,10 +215,10 @@ TEST(RnnVadTest, DISABLED_BenchmarkFullyConnectedLayer) {
   }
 
   std::vector<Result> results;
-  constexpr size_t number_of_tests = 10000;
+  constexpr int number_of_tests = 10000;
   for (auto& fc : implementations) {
     ::webrtc::test::PerformanceTimer perf_timer(number_of_tests);
-    for (size_t k = 0; k < number_of_tests; ++k) {
+    for (int k = 0; k < number_of_tests; ++k) {
       perf_timer.StartTimer();
       fc->ComputeOutput(kFullyConnectedInputVector);
       perf_timer.StopTimer();
@@ -240,17 +242,17 @@ TEST(RnnVadTest, DISABLED_BenchmarkGatedRecurrentLayer) {
 
   rtc::ArrayView<const float> input_sequence(kGruInputSequence);
   static_assert(kGruInputSequence.size() % kGruInputSize == 0, "");
-  constexpr size_t input_sequence_length =
+  constexpr int input_sequence_length =
       kGruInputSequence.size() / kGruInputSize;
 
   std::vector<Result> results;
-  constexpr size_t number_of_tests = 10000;
+  constexpr int number_of_tests = 10000;
   for (auto& gru : implementations) {
     ::webrtc::test::PerformanceTimer perf_timer(number_of_tests);
     gru->Reset();
-    for (size_t k = 0; k < number_of_tests; ++k) {
+    for (int k = 0; k < number_of_tests; ++k) {
       perf_timer.StartTimer();
-      for (size_t i = 0; i < input_sequence_length; ++i) {
+      for (int i = 0; i < input_sequence_length; ++i) {
         gru->ComputeOutput(
             input_sequence.subview(i * gru->input_size(), gru->input_size()));
       }

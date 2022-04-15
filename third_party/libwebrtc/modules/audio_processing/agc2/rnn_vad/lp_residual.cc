@@ -28,9 +28,9 @@ namespace {
 void ComputeAutoCorrelation(
     rtc::ArrayView<const float> x,
     rtc::ArrayView<float, kNumLpcCoefficients> auto_corr) {
-  constexpr size_t max_lag = auto_corr.size();
+  constexpr int max_lag = auto_corr.size();
   RTC_DCHECK_LT(max_lag, x.size());
-  for (size_t lag = 0; lag < max_lag; ++lag) {
+  for (int lag = 0; lag < max_lag; ++lag) {
     auto_corr[lag] =
         std::inner_product(x.begin(), x.end() - lag, x.begin() + lag, 0.f);
   }
@@ -56,9 +56,9 @@ void ComputeInitialInverseFilterCoefficients(
     rtc::ArrayView<const float, kNumLpcCoefficients> auto_corr,
     rtc::ArrayView<float, kNumLpcCoefficients - 1> lpc_coeffs) {
   float error = auto_corr[0];
-  for (size_t i = 0; i < kNumLpcCoefficients - 1; ++i) {
+  for (int i = 0; i < kNumLpcCoefficients - 1; ++i) {
     float reflection_coeff = 0.f;
-    for (size_t j = 0; j < i; ++j) {
+    for (int j = 0; j < i; ++j) {
       reflection_coeff += lpc_coeffs[j] * auto_corr[i - j];
     }
     reflection_coeff += auto_corr[i + 1];
@@ -72,7 +72,7 @@ void ComputeInitialInverseFilterCoefficients(
     reflection_coeff /= -error;
     // Update LPC coefficients and total error.
     lpc_coeffs[i] = reflection_coeff;
-    for (size_t j = 0; j<(i + 1)>> 1; ++j) {
+    for (int j = 0; j < ((i + 1) >> 1); ++j) {
       const float tmp1 = lpc_coeffs[j];
       const float tmp2 = lpc_coeffs[i - 1 - j];
       lpc_coeffs[j] = tmp1 + reflection_coeff * tmp2;

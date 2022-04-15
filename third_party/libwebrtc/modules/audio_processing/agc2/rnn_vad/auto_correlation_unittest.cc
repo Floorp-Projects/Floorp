@@ -54,7 +54,7 @@ TEST(RnnVadTest, CheckAutoCorrelationOnConstantPitchBuffer) {
   }
   // The expected output is a vector filled with the same expected
   // auto-correlation value. The latter equals the length of a 20 ms frame.
-  constexpr size_t kFrameSize20ms12kHz = kFrameSize20ms24kHz / 2;
+  constexpr int kFrameSize20ms12kHz = kFrameSize20ms24kHz / 2;
   std::array<float, kNumPitchBufAutoCorrCoeffs> expected_output;
   std::fill(expected_output.begin(), expected_output.end(),
             static_cast<float>(kFrameSize20ms12kHz));
