@@ -1481,26 +1481,6 @@ void PeerConnection::SetAudioRecording(bool recording) {
   audio_state->SetRecording(recording);
 }
 
-std::unique_ptr<rtc::SSLCertificate>
-PeerConnection::GetRemoteAudioSSLCertificate() {
-  std::unique_ptr<rtc::SSLCertChain> chain = GetRemoteAudioSSLCertChain();
-  if (!chain || !chain->GetSize()) {
-    return nullptr;
-  }
-  return chain->Get(0).Clone();
-}
-
-std::unique_ptr<rtc::SSLCertChain>
-PeerConnection::GetRemoteAudioSSLCertChain() {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  auto audio_transceiver = rtp_manager()->GetFirstAudioTransceiver();
-  if (!audio_transceiver || !audio_transceiver->internal()->channel()) {
-    return nullptr;
-  }
-  return transport_controller_->GetRemoteSSLCertChain(
-      audio_transceiver->internal()->channel()->transport_name());
-}
-
 void PeerConnection::AddAdaptationResource(
     rtc::scoped_refptr<Resource> resource) {
   if (!worker_thread()->IsCurrent()) {

@@ -136,10 +136,6 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver,
   rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
   GetVideoTransceiver() const;
 
-  // Gets the first audio transceiver.
-  rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-  GetFirstAudioTransceiver() const;
-
   // Add an audio track, reusing or creating the sender.
   void AddAudioTrack(AudioTrackInterface* track, MediaStreamInterface* stream);
   // Plan B: Remove an audio track, removing the sender.

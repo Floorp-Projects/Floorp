@@ -440,17 +440,6 @@ void RtpTransmissionManager::RemoveVideoTrack(VideoTrackInterface* track,
   GetVideoTransceiver()->internal()->RemoveSender(sender);
 }
 
-rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
-RtpTransmissionManager::GetFirstAudioTransceiver() const {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  for (auto transceiver : transceivers_.List()) {
-    if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
-      return transceiver;
-    }
-  }
-  return nullptr;
-}
-
 void RtpTransmissionManager::CreateAudioReceiver(
     MediaStreamInterface* stream,
     const RtpSenderInfo& remote_sender_info) {
