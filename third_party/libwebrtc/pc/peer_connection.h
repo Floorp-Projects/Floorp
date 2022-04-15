@@ -463,7 +463,8 @@ class PeerConnection : public PeerConnectionInternal,
   explicit PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
                           bool is_unified_plan,
                           std::unique_ptr<RtcEventLog> event_log,
-                          std::unique_ptr<Call> call);
+                          std::unique_ptr<Call> call,
+                          PeerConnectionDependencies& dependencies);
 
   ~PeerConnection() override;
 
@@ -634,18 +635,18 @@ class PeerConnection : public PeerConnectionInternal,
 
   // TODO(zstein): |async_resolver_factory_| can currently be nullptr if it
   // is not injected. It should be required once chromium supplies it.
-  std::unique_ptr<AsyncResolverFactory> async_resolver_factory_
+  const std::unique_ptr<AsyncResolverFactory> async_resolver_factory_
       RTC_GUARDED_BY(signaling_thread());
   std::unique_ptr<cricket::PortAllocator>
       port_allocator_;  // TODO(bugs.webrtc.org/9987): Accessed on both
                         // signaling and network thread.
-  std::unique_ptr<webrtc::IceTransportFactory>
+  const std::unique_ptr<webrtc::IceTransportFactory>
       ice_transport_factory_;  // TODO(bugs.webrtc.org/9987): Accessed on the
                                // signaling thread but the underlying raw
                                // pointer is given to
                                // |jsep_transport_controller_| and used on the
                                // network thread.
-  std::unique_ptr<rtc::SSLCertificateVerifier>
+  const std::unique_ptr<rtc::SSLCertificateVerifier>
       tls_cert_verifier_;  // TODO(bugs.webrtc.org/9987): Accessed on both
                            // signaling and network thread.
 
