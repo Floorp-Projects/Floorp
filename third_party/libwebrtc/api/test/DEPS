@@ -11,11 +11,6 @@ specific_include_rules = {
   "fake_constraints\.h": [
     "+rtc_base/string_encode.h",
   ],
-  "loopback_media_transport\.h": [
-    "+rtc_base/async_invoker.h",
-    "+rtc_base/thread.h",
-    "+rtc_base/thread_checker.h",
-  ],
   "neteq_factory_with_codecs\.h": [
     "+system_wrappers/include/clock.h",
   ],
