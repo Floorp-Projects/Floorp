@@ -76,6 +76,7 @@ class VideoRtpReceiver;
 class RtcEventLog;
 class RtpTransmissionManager;
 class TransceiverList;
+class WebRtcSessionDescriptionFactory;
 
 // SdpOfferAnswerHandler is a component
 // of the PeerConnection object as defined
@@ -117,6 +118,8 @@ class SdpOfferAnswerHandler {
   const SessionDescriptionInterface* current_remote_description() const;
   const SessionDescriptionInterface* pending_local_description() const;
   const SessionDescriptionInterface* pending_remote_description() const;
+
+  JsepTransportController* transport_controller();
 
   void RestartIce();
 
@@ -528,7 +531,6 @@ class SdpOfferAnswerHandler {
   cricket::ChannelManager* channel_manager() const;
   TransceiverList* transceivers();
   const TransceiverList* transceivers() const;
-  JsepTransportController* transport_controller();
   DataChannelController* data_channel_controller();
   const DataChannelController* data_channel_controller() const;
   cricket::PortAllocator* port_allocator();
