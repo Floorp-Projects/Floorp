@@ -488,9 +488,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
     downsampling_factors_[number_of_streams - 1].num = 1;
     downsampling_factors_[number_of_streams - 1].den = 1;
   }
-  for (int i = 0; i < number_of_streams; ++i) {
-    encoded_images_[i]._completeFrame = true;
-  }
+
   // populate encoder configuration with default values
   if (libvpx_->codec_enc_config_default(vpx_codec_vp8_cx(), &vpx_configs_[0],
                                         0)) {

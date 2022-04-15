@@ -275,7 +275,6 @@ int32_t H264EncoderImpl::InitEncode(const VideoCodec* inst,
         CalcBufferSize(VideoType::kI420, codec_.simulcastStream[idx].width,
                        codec_.simulcastStream[idx].height);
     encoded_images_[i].SetEncodedData(EncodedImageBuffer::Create(new_capacity));
-    encoded_images_[i]._completeFrame = true;
     encoded_images_[i]._encodedWidth = codec_.simulcastStream[idx].width;
     encoded_images_[i]._encodedHeight = codec_.simulcastStream[idx].height;
     encoded_images_[i].set_size(0);

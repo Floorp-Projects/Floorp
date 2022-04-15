@@ -794,7 +794,6 @@ NSUInteger GetMaxSampleRate(const webrtc::H264::ProfileLevelId &profile_level_id
                                          }];
   frame.encodedWidth = width;
   frame.encodedHeight = height;
-  frame.completeFrame = YES;
   frame.frameType = isKeyframe ? RTCFrameTypeVideoFrameKey : RTCFrameTypeVideoFrameDelta;
   frame.captureTimeMs = renderTimeMs;
   frame.timeStamp = timestamp;

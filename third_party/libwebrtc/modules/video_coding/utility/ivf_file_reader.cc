@@ -171,7 +171,6 @@ absl::optional<EncodedImage> IvfFileReader::NextFrame() {
   if (is_first_frame) {
     image._frameType = VideoFrameType::kVideoFrameKey;
   }
-  image._completeFrame = true;
 
   return image;
 }

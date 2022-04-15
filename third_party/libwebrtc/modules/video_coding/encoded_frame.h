@@ -93,10 +93,6 @@ class RTC_EXPORT VCMEncodedFrame : protected EncodedImage {
   EncodedImage::Timing video_timing() const { return timing_; }
   EncodedImage::Timing* video_timing_mutable() { return &timing_; }
   /**
-   *   True if this frame is complete, false otherwise
-   */
-  bool Complete() const { return _completeFrame; }
-  /**
    *   True if there's a frame missing before this frame
    */
   bool MissingFrame() const { return _missingFrame; }

@@ -376,36 +376,6 @@ TEST_F(TestVp8Impl, MAYBE_AlignedStrideEncodeDecode) {
   EXPECT_EQ(kInitialTimestampRtp, decoded_frame->timestamp());
 }
 
-#if defined(WEBRTC_ANDROID)
-#define MAYBE_DecodeWithACompleteKeyFrame DISABLED_DecodeWithACompleteKeyFrame
-#else
-#define MAYBE_DecodeWithACompleteKeyFrame DecodeWithACompleteKeyFrame
-#endif
-TEST_F(TestVp8Impl, MAYBE_DecodeWithACompleteKeyFrame) {
-  VideoFrame input_frame = NextInputFrame();
-  EncodedImage encoded_frame;
-  CodecSpecificInfo codec_specific_info;
-  EncodeAndWaitForFrame(input_frame, &encoded_frame, &codec_specific_info);
-
-  // Setting complete to false -> should return an error.
-  encoded_frame._completeFrame = false;
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_ERROR,
-            decoder_->Decode(encoded_frame, false, -1));
-  // Setting complete back to true. Forcing a delta frame.
-  encoded_frame._frameType = VideoFrameType::kVideoFrameDelta;
-  encoded_frame._completeFrame = true;
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_ERROR,
-            decoder_->Decode(encoded_frame, false, -1));
-  // Now setting a key frame.
-  encoded_frame._frameType = VideoFrameType::kVideoFrameKey;
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->Decode(encoded_frame, false, -1));
-  std::unique_ptr<VideoFrame> decoded_frame;
-  absl::optional<uint8_t> decoded_qp;
-  ASSERT_TRUE(WaitForDecodedFrame(&decoded_frame, &decoded_qp));
-  ASSERT_TRUE(decoded_frame);
-  EXPECT_GT(I420PSNR(&input_frame, decoded_frame.get()), 36);
-}
-
 TEST_F(TestVp8Impl, EncoderWith2TemporalLayers) {
   codec_settings_.VP8()->numberOfTemporalLayers = 2;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
