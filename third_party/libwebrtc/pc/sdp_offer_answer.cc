@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/crypto/crypto_options.h"
@@ -949,9 +950,19 @@ SdpOfferAnswerHandler::SdpOfferAnswerHandler(PeerConnection* pc)
 
 SdpOfferAnswerHandler::~SdpOfferAnswerHandler() {}
 
+// Static
+std::unique_ptr<SdpOfferAnswerHandler> SdpOfferAnswerHandler::Create(
+    PeerConnection* pc,
+    const PeerConnectionInterface::RTCConfiguration& configuration,
+    PeerConnectionDependencies& dependencies) {
+  auto handler = absl::WrapUnique(new SdpOfferAnswerHandler(pc));
+  handler->Initialize(configuration, dependencies);
+  return handler;
+}
+
 void SdpOfferAnswerHandler::Initialize(
     const PeerConnectionInterface::RTCConfiguration& configuration,
-    PeerConnectionDependencies* dependencies) {
+    PeerConnectionDependencies& dependencies) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   video_options_.screencast_min_bitrate_kbps =
       configuration.screencast_min_bitrate;
@@ -982,7 +993,7 @@ void SdpOfferAnswerHandler::Initialize(
   webrtc_session_desc_factory_ =
       std::make_unique<WebRtcSessionDescriptionFactory>(
           signaling_thread(), channel_manager(), this, pc_->session_id(),
-          pc_->dtls_enabled(), std::move(dependencies->cert_generator),
+          pc_->dtls_enabled(), std::move(dependencies.cert_generator),
           certificate, &ssrc_generator_);
   webrtc_session_desc_factory_->SignalCertificateReady.connect(
       this, &SdpOfferAnswerHandler::OnCertificateReady);
@@ -995,9 +1006,9 @@ void SdpOfferAnswerHandler::Initialize(
       pc_->GetCryptoOptions().srtp.enable_encrypted_rtp_header_extensions);
   webrtc_session_desc_factory_->set_is_unified_plan(IsUnifiedPlan());
 
-  if (dependencies->video_bitrate_allocator_factory) {
+  if (dependencies.video_bitrate_allocator_factory) {
     video_bitrate_allocator_factory_ =
-        std::move(dependencies->video_bitrate_allocator_factory);
+        std::move(dependencies.video_bitrate_allocator_factory);
   } else {
     video_bitrate_allocator_factory_ =
         CreateBuiltinVideoBitrateAllocatorFactory();

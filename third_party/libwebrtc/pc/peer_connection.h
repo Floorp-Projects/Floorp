@@ -337,7 +337,7 @@ class PeerConnection : public PeerConnectionInternal,
   PeerConnectionObserver* Observer() const;
   bool IsClosed() const {
     RTC_DCHECK_RUN_ON(signaling_thread());
-    return sdp_handler_.signaling_state() == PeerConnectionInterface::kClosed;
+    return sdp_handler_->signaling_state() == PeerConnectionInterface::kClosed;
   }
   // Get current SSL role used by SCTP's underlying transport.
   bool GetSctpSslRole(rtc::SSLRole* role);
@@ -683,8 +683,9 @@ class PeerConnection : public PeerConnectionInternal,
   absl::optional<std::string> sctp_mid_s_ RTC_GUARDED_BY(signaling_thread());
   absl::optional<std::string> sctp_mid_n_ RTC_GUARDED_BY(network_thread());
 
-  // The machinery for handling offers and answers.
-  SdpOfferAnswerHandler sdp_handler_ RTC_GUARDED_BY(signaling_thread());
+  // The machinery for handling offers and answers. Const after initialization.
+  std::unique_ptr<SdpOfferAnswerHandler> sdp_handler_
+      RTC_GUARDED_BY(signaling_thread());
 
   bool dtls_enabled_ RTC_GUARDED_BY(signaling_thread()) = false;
 
