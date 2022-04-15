@@ -370,7 +370,6 @@ class HardwareVideoEncoder implements VideoEncoder {
     int bufferSize = videoFrameBuffer.getHeight() * videoFrameBuffer.getWidth() * 3 / 2;
     EncodedImage.Builder builder = EncodedImage.builder()
                                        .setCaptureTimeNs(videoFrame.getTimestampNs())
-                                       .setCompleteFrame(true)
                                        .setEncodedWidth(videoFrame.getBuffer().getWidth())
                                        .setEncodedHeight(videoFrame.getBuffer().getHeight())
                                        .setRotation(videoFrame.getRotation());

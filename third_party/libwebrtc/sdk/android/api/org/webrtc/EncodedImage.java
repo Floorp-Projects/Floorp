@@ -54,8 +54,6 @@ public class EncodedImage implements RefCounted {
   public final long captureTimeNs;
   public final FrameType frameType;
   public final int rotation;
-  // TODO(philipel): Remove when downstream has been updated.
-  public final boolean completeFrame;
   public final @Nullable Integer qp;
 
   // TODO(bugs.webrtc.org/9378): Use retain and release from jni code.
@@ -80,7 +78,6 @@ public class EncodedImage implements RefCounted {
     this.captureTimeNs = captureTimeNs;
     this.frameType = frameType;
     this.rotation = rotation;
-    this.completeFrame = true;
     this.qp = qp;
     this.refCountDelegate = new RefCountDelegate(releaseCallback);
   }
@@ -170,11 +167,6 @@ public class EncodedImage implements RefCounted {
 
     public Builder setRotation(int rotation) {
       this.rotation = rotation;
-      return this;
-    }
-
-    // TODO(philipel): Remove when downstream has been updated.
-    public Builder setCompleteFrame(boolean completeFrame) {
       return this;
     }
 
