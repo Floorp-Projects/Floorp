@@ -382,10 +382,10 @@ bool VoipCore::SendDtmfEvent(ChannelId channel,
   return false;
 }
 
-absl::optional<NetEqLifetimeStatistics> VoipCore::GetNetEqStatistics(
+absl::optional<IngressStatistics> VoipCore::GetIngressStatistics(
     ChannelId channel) {
   if (auto audio_channel = GetChannel(channel)) {
-    return audio_channel->GetNetEqStatistics();
+    return audio_channel->GetIngressStatistics();
   }
   return absl::nullopt;
 }
