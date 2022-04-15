@@ -30,6 +30,10 @@ DEFAULT_KEEP_FILES = ["moz.build", "moz.yaml"]
 DEFAULT_INCLUDE_FILES = []
 
 
+def throwe():
+    raise Exception
+
+
 class VendorManifest(MozbuildObject):
     def should_perform_step(self, step):
         return step not in self.manifest["vendoring"].get("skip-vendoring-steps", [])
@@ -47,6 +51,7 @@ class VendorManifest(MozbuildObject):
     ):
         self.manifest = manifest
         self.yaml_file = yaml_file
+        self._extract_directory = throwe
         self.logInfo = functools.partial(self.log, logging.INFO, "vendor")
         if "vendor-directory" not in self.manifest["vendoring"]:
             self.manifest["vendoring"]["vendor-directory"] = os.path.dirname(
@@ -170,6 +175,9 @@ class VendorManifest(MozbuildObject):
     def get_full_path(self, path, support_cwd=False):
         if support_cwd and path[0:5] == "{cwd}":
             path = path.replace("{cwd}", ".")
+        elif "{tmpextractdir}" in path:
+            # _extract_directory() will throw an exception if it is invalid to use it
+            path = path.replace("{tmpextractdir}", self._extract_directory())
         elif "{yaml_dir}" in path:
             path = path.replace("{yaml_dir}", os.path.dirname(self.yaml_file))
         elif "{vendor_dir}" in path:
@@ -207,7 +215,8 @@ class VendorManifest(MozbuildObject):
         self.logInfo({"url": url}, "Fetching code archive from {url}")
 
         with mozfile.NamedTemporaryFile() as tmptarfile:
-            with tempfile.TemporaryDirectory() as tmpextractdir:
+            tmpextractdir = tempfile.TemporaryDirectory()
+            try:
                 req = requests.get(url, stream=True)
                 for data in req.iter_content(4096):
                     tmptarfile.write(data)
@@ -244,7 +253,7 @@ class VendorManifest(MozbuildObject):
                         mozfile.remove(file)
 
                 self.logInfo({"vd": vendor_dir}, "Unpacking upstream files for {vd}.")
-                tar.extractall(tmpextractdir)
+                tar.extractall(tmpextractdir.name)
 
                 def get_first_dir(p):
                     halves = os.path.split(p)
@@ -258,14 +267,14 @@ class VendorManifest(MozbuildObject):
 
                 # GitLab puts everything down a directory; move it up.
                 if has_prefix:
-                    tardir = mozpath.join(tmpextractdir, one_prefix)
-                    mozfile.copy_contents(tardir, tmpextractdir)
+                    tardir = mozpath.join(tmpextractdir.name, one_prefix)
+                    mozfile.copy_contents(tardir, tmpextractdir.name)
                     mozfile.remove(tardir)
 
                 if self.should_perform_step("include"):
                     self.logInfo({}, "Retaining wanted files from upstream changes.")
                     to_include = self.convert_patterns_to_paths(
-                        tmpextractdir,
+                        tmpextractdir.name,
                         self.manifest["vendoring"].get("include", [])
                         + DEFAULT_INCLUDE_FILES,
                     )
@@ -276,7 +285,7 @@ class VendorManifest(MozbuildObject):
                 if self.should_perform_step("exclude"):
                     self.logInfo({}, "Removing excluded files from upstream changes.")
                     to_exclude = self.convert_patterns_to_paths(
-                        tmpextractdir,
+                        tmpextractdir.name,
                         self.manifest["vendoring"].get("exclude", [])
                         + DEFAULT_EXCLUDE_FILES,
                     )
@@ -305,11 +314,19 @@ class VendorManifest(MozbuildObject):
                                 pass
                     return removed
 
-                while removeEmpty(tmpextractdir):
+                while removeEmpty(tmpextractdir.name):
                     pass
 
                 # Then copy over the directories
-                mozfile.copy_contents(tmpextractdir, vendor_dir)
+                if self.should_perform_step("move-contents"):
+                    self.logInfo({"d": vendor_dir}, "Copying to {d}.")
+                    mozfile.copy_contents(tmpextractdir.name, vendor_dir)
+                else:
+                    self.logInfo({}, "Skipping copying contents into tree.")
+                    self._extract_directory = lambda: tmpextractdir.name
+            except Exception as e:
+                tmpextractdir.cleanup()
+                raise e
 
     def update_yaml(self, revision, timestamp):
         with open(self.yaml_file) as f:
@@ -317,7 +334,7 @@ class VendorManifest(MozbuildObject):
 
         replaced = 0
         replacements = [
-            ["  release: commit", " %s (%s)." % (revision, timestamp)],
+            ["  release:", " %s (%s)." % (revision, timestamp)],
             ["  revision:", " %s" % (revision)],
         ]
 
@@ -417,7 +434,7 @@ class VendorManifest(MozbuildObject):
                 copy_tree(src, dst)
                 shutil.rmtree(src)
 
-            elif update["action"] == "replace-in-file":
+            elif update["action"] in ["replace-in-file", "replace-in-file-regex"]:
                 file = self.get_full_path(update["file"])
 
                 self.logInfo({"file": file}, "action: replace-in-file file: {file}")
@@ -426,7 +443,10 @@ class VendorManifest(MozbuildObject):
                     contents = f.read()
 
                 replacement = update["with"].replace("{revision}", revision)
-                contents = contents.replace(update["pattern"], replacement)
+                if update["action"] == "replace-in-file":
+                    contents = contents.replace(update["pattern"], replacement)
+                else:
+                    contents = re.sub(update["pattern"], replacement, contents)
 
                 with open(file, "w") as f:
                     f.write(contents)
@@ -442,7 +462,15 @@ class VendorManifest(MozbuildObject):
                 for a in update.get("args", []):
                     if a == "{revision}":
                         args.append(revision)
-                    elif any(s in a for s in ["{cwd}", "{vendor_dir}", "{yaml_dir}"]):
+                    elif any(
+                        s in a
+                        for s in [
+                            "{cwd}",
+                            "{vendor_dir}",
+                            "{yaml_dir}",
+                            "{tmpextractdir}",
+                        ]
+                    ):
                         args.append(self.get_full_path(a, support_cwd=True))
                     else:
                         args.append(a)
