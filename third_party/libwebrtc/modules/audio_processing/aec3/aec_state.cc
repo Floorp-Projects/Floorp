@@ -197,8 +197,10 @@ void AecState::Update(
 
   // Analyze the filter outputs and filters.
   bool any_filter_converged;
+  bool any_coarse_filter_converged;
   bool all_filters_diverged;
   subtractor_output_analyzer_.Update(subtractor_output, &any_filter_converged,
+                                     &any_coarse_filter_converged,
                                      &all_filters_diverged);
 
   bool any_filter_consistent;
@@ -272,10 +274,10 @@ void AecState::Update(
 
   // Detect whether the transparent mode should be activated.
   if (transparent_state_) {
-    transparent_state_->Update(delay_state_.MinDirectPathFilterDelay(),
-                               any_filter_consistent, any_filter_converged,
-                               all_filters_diverged, active_render,
-                               SaturatedCapture());
+    transparent_state_->Update(
+        delay_state_.MinDirectPathFilterDelay(), any_filter_consistent,
+        any_filter_converged, any_coarse_filter_converged, all_filters_diverged,
+        active_render, SaturatedCapture());
   }
 
   // Analyze the quality of the filter.
@@ -312,6 +314,8 @@ void AecState::Update(
   data_dumper_->DumpRaw("aec3_capture_saturation", SaturatedCapture());
   data_dumper_->DumpRaw("aec3_echo_saturation", SaturatedEcho());
   data_dumper_->DumpRaw("aec3_any_filter_converged", any_filter_converged);
+  data_dumper_->DumpRaw("aec3_any_coarse_filter_converged",
+                        any_coarse_filter_converged);
   data_dumper_->DumpRaw("aec3_all_filters_diverged", all_filters_diverged);
 
   data_dumper_->DumpRaw("aec3_external_delay_avaliable",
