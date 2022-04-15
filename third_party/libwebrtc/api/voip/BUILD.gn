@@ -16,10 +16,12 @@ rtc_source_set("voip_api") {
     "voip_dtmf.h",
     "voip_engine.h",
     "voip_network.h",
+    "voip_statistics.h",
   ]
   deps = [
     "..:array_view",
     "../audio_codecs:audio_codecs_api",
+    "../neteq:neteq_api",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

@@ -129,4 +129,29 @@ void AudioChannel::StopPlay() {
   }
 }
 
+NetEqLifetimeStatistics AudioChannel::GetNetEqStatistics() {
+  NetEqLifetimeStatistics neteq_stats;
+  NetworkStatistics stats = ingress_->GetNetworkStatistics();
+  neteq_stats.total_samples_received = stats.totalSamplesReceived;
+  neteq_stats.concealed_samples = stats.concealedSamples;
+  neteq_stats.concealment_events = stats.concealmentEvents;
+  neteq_stats.jitter_buffer_delay_ms = stats.jitterBufferDelayMs;
+  neteq_stats.jitter_buffer_emitted_count = stats.jitterBufferEmittedCount;
+  neteq_stats.jitter_buffer_target_delay_ms = stats.jitterBufferTargetDelayMs;
+  neteq_stats.inserted_samples_for_deceleration =
+      stats.insertedSamplesForDeceleration;
+  neteq_stats.removed_samples_for_acceleration =
+      stats.removedSamplesForAcceleration;
+  neteq_stats.silent_concealed_samples = stats.silentConcealedSamples;
+  neteq_stats.fec_packets_received = stats.fecPacketsReceived;
+  neteq_stats.fec_packets_discarded = stats.fecPacketsDiscarded;
+  neteq_stats.delayed_packet_outage_samples = stats.delayedPacketOutageSamples;
+  neteq_stats.relative_packet_arrival_delay_ms =
+      stats.relativePacketArrivalDelayMs;
+  neteq_stats.interruption_count = stats.interruptionCount;
+  neteq_stats.total_interruption_duration_ms =
+      stats.totalInterruptionDurationMs;
+  return neteq_stats;
+}
+
 }  // namespace webrtc

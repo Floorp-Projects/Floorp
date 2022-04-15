@@ -17,6 +17,7 @@ class VoipBase;
 class VoipCodec;
 class VoipNetwork;
 class VoipDtmf;
+class VoipStatistics;
 
 // VoipEngine is the main interface serving as the entry point for all VoIP
 // APIs. A single instance of VoipEngine should suffice the most of the need for
@@ -84,6 +85,10 @@ class VoipEngine {
 
   // VoipDtmf provides DTMF event APIs to register and send DTMF events.
   virtual VoipDtmf& Dtmf() = 0;
+
+  // VoipStatistics provides performance metrics around audio decoding module
+  // and jitter buffer (NetEq).
+  virtual VoipStatistics& Statistics() = 0;
 };
 
 }  // namespace webrtc
