@@ -35,7 +35,7 @@
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/ref_counted_object.h"
-#include "rtc_base/robo_caller.h"
+#include "rtc_base/callback_list.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace rtc {
@@ -198,7 +198,7 @@ class JsepTransportController : public sigslot::has_slots<> {
   // Else if all completed => completed,
   // Else if all connected => connected,
   // Else => connecting
-  RoboCaller<cricket::IceConnectionState> SignalIceConnectionState;
+  CallbackList<cricket::IceConnectionState> SignalIceConnectionState;
 
   sigslot::signal1<PeerConnectionInterface::PeerConnectionState>
       SignalConnectionState;

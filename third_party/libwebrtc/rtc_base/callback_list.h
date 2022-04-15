@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef RTC_BASE_ROBO_CALLER_H_
-#define RTC_BASE_ROBO_CALLER_H_
+#ifndef RTC_BASE_CALLBACK_LIST_H_
+#define RTC_BASE_CALLBACK_LIST_H_
 
 #include <utility>
 #include <vector>
@@ -20,16 +20,16 @@
 #include "rtc_base/untyped_function.h"
 
 namespace webrtc {
-namespace robo_caller_impl {
+namespace callback_list_impl {
 
-class RoboCallerReceivers {
+class CallbackListReceivers {
  public:
-  RoboCallerReceivers();
-  RoboCallerReceivers(const RoboCallerReceivers&) = delete;
-  RoboCallerReceivers& operator=(const RoboCallerReceivers&) = delete;
-  RoboCallerReceivers(RoboCallerReceivers&&) = delete;
-  RoboCallerReceivers& operator=(RoboCallerReceivers&&) = delete;
-  ~RoboCallerReceivers();
+  CallbackListReceivers();
+  CallbackListReceivers(const CallbackListReceivers&) = delete;
+  CallbackListReceivers& operator=(const CallbackListReceivers&) = delete;
+  CallbackListReceivers(CallbackListReceivers&&) = delete;
+  CallbackListReceivers& operator=(CallbackListReceivers&&) = delete;
+  ~CallbackListReceivers();
 
   template <typename UntypedFunctionArgsT>
   RTC_NO_INLINE void AddReceiver(UntypedFunctionArgsT args) {
@@ -42,20 +42,20 @@ class RoboCallerReceivers {
   std::vector<UntypedFunction> receivers_;
 };
 
-extern template void RoboCallerReceivers::AddReceiver(
+extern template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<1>);
-extern template void RoboCallerReceivers::AddReceiver(
+extern template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<2>);
-extern template void RoboCallerReceivers::AddReceiver(
+extern template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<3>);
-extern template void RoboCallerReceivers::AddReceiver(
+extern template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<4>);
-extern template void RoboCallerReceivers::AddReceiver(
+extern template void CallbackListReceivers::AddReceiver(
     UntypedFunction::NontrivialUntypedFunctionArgs);
-extern template void RoboCallerReceivers::AddReceiver(
+extern template void CallbackListReceivers::AddReceiver(
     UntypedFunction::FunctionPointerUntypedFunctionArgs);
 
-}  // namespace robo_caller_impl
+}  // namespace callback_list_impl
 
 // A collection of receivers (callable objects) that can be called all at once.
 // Optimized for minimal binary size.
@@ -68,13 +68,13 @@ extern template void RoboCallerReceivers::AddReceiver(
 // if they wish to stay in the CSC and another value if they wish to be removed.
 // It depends on what's convenient for the callers...
 template <typename... ArgT>
-class RoboCaller {
+class CallbackList {
  public:
-  RoboCaller() = default;
-  RoboCaller(const RoboCaller&) = delete;
-  RoboCaller& operator=(const RoboCaller&) = delete;
-  RoboCaller(RoboCaller&&) = delete;
-  RoboCaller& operator=(RoboCaller&&) = delete;
+  CallbackList() = default;
+  CallbackList(const CallbackList&) = delete;
+  CallbackList& operator=(const CallbackList&) = delete;
+  CallbackList(CallbackList&&) = delete;
+  CallbackList& operator=(CallbackList&&) = delete;
 
   // Adds a new receiver. The receiver (a callable object or a function pointer)
   // must be movable, but need not be copyable. Its call signature should be
@@ -94,9 +94,9 @@ class RoboCaller {
   }
 
  private:
-  robo_caller_impl::RoboCallerReceivers receivers_;
+  callback_list_impl::CallbackListReceivers receivers_;
 };
 
 }  // namespace webrtc
 
-#endif  // RTC_BASE_ROBO_CALLER_H_
+#endif  // RTC_BASE_CALLBACK_LIST_H_

@@ -8,33 +8,33 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "rtc_base/robo_caller.h"
+#include "rtc_base/callback_list.h"
 
 namespace webrtc {
-namespace robo_caller_impl {
+namespace callback_list_impl {
 
-RoboCallerReceivers::RoboCallerReceivers() = default;
-RoboCallerReceivers::~RoboCallerReceivers() = default;
+CallbackListReceivers::CallbackListReceivers() = default;
+CallbackListReceivers::~CallbackListReceivers() = default;
 
-void RoboCallerReceivers::Foreach(
+void CallbackListReceivers::Foreach(
     rtc::FunctionView<void(UntypedFunction&)> fv) {
   for (auto& r : receivers_) {
     fv(r);
   }
 }
 
-template void RoboCallerReceivers::AddReceiver(
+template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<1>);
-template void RoboCallerReceivers::AddReceiver(
+template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<2>);
-template void RoboCallerReceivers::AddReceiver(
+template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<3>);
-template void RoboCallerReceivers::AddReceiver(
+template void CallbackListReceivers::AddReceiver(
     UntypedFunction::TrivialUntypedFunctionArgs<4>);
-template void RoboCallerReceivers::AddReceiver(
+template void CallbackListReceivers::AddReceiver(
     UntypedFunction::NontrivialUntypedFunctionArgs);
-template void RoboCallerReceivers::AddReceiver(
+template void CallbackListReceivers::AddReceiver(
     UntypedFunction::FunctionPointerUntypedFunctionArgs);
 
-}  // namespace robo_caller_impl
+}  // namespace callback_list_impl
 }  // namespace webrtc

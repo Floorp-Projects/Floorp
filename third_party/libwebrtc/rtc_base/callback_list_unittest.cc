@@ -12,20 +12,20 @@
 
 #include "api/function_view.h"
 #include "rtc_base/bind.h"
-#include "rtc_base/robo_caller.h"
+#include "rtc_base/callback_list.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 namespace {
 
-TEST(RoboCaller, NoRecieverSingleMessageTest) {
-  RoboCaller<std::string> c;
+TEST(CallbackList, NoRecieverSingleMessageTest) {
+  CallbackList<std::string> c;
 
   c.Send("message");
 }
 
-TEST(RoboCaller, MultipleParameterMessageTest) {
-  RoboCaller<const std::string&, std::string, std::string&&, int, int*,
+TEST(CallbackList, MultipleParameterMessageTest) {
+  CallbackList<const std::string&, std::string, std::string&&, int, int*,
              std::string&>
       c;
   std::string str = "messege";
@@ -34,14 +34,14 @@ TEST(RoboCaller, MultipleParameterMessageTest) {
   c.Send(str, "message1", "message0", 123, &i, str);
 }
 
-TEST(RoboCaller, NoParameterMessageTest) {
-  RoboCaller<> c;
+TEST(CallbackList, NoParameterMessageTest) {
+  CallbackList<> c;
 
   c.Send();
 }
 
-TEST(RoboCaller, ReferenceTest) {
-  RoboCaller<int&> c;
+TEST(CallbackList, ReferenceTest) {
+  CallbackList<int&> c;
   int index = 1;
 
   c.AddReceiver([](int& index) { index++; });
@@ -55,8 +55,8 @@ enum State {
   kChecking,
 };
 
-TEST(RoboCaller, SingleEnumValueTest) {
-  RoboCaller<State> c;
+TEST(CallbackList, SingleEnumValueTest) {
+  CallbackList<State> c;
   State s1 = kNew;
   int index = 0;
 
@@ -66,8 +66,8 @@ TEST(RoboCaller, SingleEnumValueTest) {
   EXPECT_EQ(index, 1);
 }
 
-TEST(RoboCaller, SingleEnumReferenceTest) {
-  RoboCaller<State&> c;
+TEST(CallbackList, SingleEnumReferenceTest) {
+  CallbackList<State&> c;
   State s = kNew;
 
   c.AddReceiver([](State& s) { s = kChecking; });
@@ -76,8 +76,8 @@ TEST(RoboCaller, SingleEnumReferenceTest) {
   EXPECT_EQ(s, kChecking);
 }
 
-TEST(RoboCaller, ConstReferenceTest) {
-  RoboCaller<int&> c;
+TEST(CallbackList, ConstReferenceTest) {
+  CallbackList<int&> c;
   int i = 0;
   int index = 1;
 
@@ -87,8 +87,8 @@ TEST(RoboCaller, ConstReferenceTest) {
   EXPECT_EQ(i, 1);
 }
 
-TEST(RoboCaller, PointerTest) {
-  RoboCaller<int*> c;
+TEST(CallbackList, PointerTest) {
+  CallbackList<int*> c;
   int index = 1;
 
   c.AddReceiver([](int* index) { (*index)++; });
@@ -97,8 +97,8 @@ TEST(RoboCaller, PointerTest) {
   EXPECT_EQ(index, 2);
 }
 
-TEST(RoboCaller, CallByValue) {
-  RoboCaller<int> c;
+TEST(CallbackList, CallByValue) {
+  CallbackList<int> c;
   int x = 17;
 
   c.AddReceiver([&x](int n) { x += n; });
@@ -112,8 +112,8 @@ void PlusOne(int& a) {
   a++;
 }
 
-TEST(RoboCaller, FunctionPtrTest) {
-  RoboCaller<int&> c;
+TEST(CallbackList, FunctionPtrTest) {
+  CallbackList<int&> c;
   int index = 1;
 
   c.AddReceiver(PlusOne);
@@ -132,8 +132,8 @@ struct LargeNonTrivial {
   void operator()(int& a) { a = 1; }
 };
 
-TEST(RoboCaller, LargeNonTrivialTest) {
-  RoboCaller<int&> c;
+TEST(CallbackList, LargeNonTrivialTest) {
+  CallbackList<int&> c;
   int i = 0;
   static_assert(sizeof(LargeNonTrivial) > UntypedFunction::kInlineStorageSize,
                 "");
@@ -148,8 +148,8 @@ struct LargeTrivial {
   void operator()(int& x) { x = 1; }
 };
 
-TEST(RoboCaller, LargeTrivial) {
-  RoboCaller<int&> c;
+TEST(CallbackList, LargeTrivial) {
+  CallbackList<int&> c;
   LargeTrivial lt;
   int i = 0;
 
@@ -167,8 +167,8 @@ struct OnlyNonTriviallyConstructible {
   void operator()(int& a) { a = 1; }
 };
 
-TEST(RoboCaller, OnlyNonTriviallyMoveConstructible) {
-  RoboCaller<int&> c;
+TEST(CallbackList, OnlyNonTriviallyMoveConstructible) {
+  CallbackList<int&> c;
   int i = 0;
 
   c.AddReceiver(OnlyNonTriviallyConstructible());
@@ -177,8 +177,8 @@ TEST(RoboCaller, OnlyNonTriviallyMoveConstructible) {
   EXPECT_EQ(i, 1);
 }
 
-TEST(RoboCaller, MultipleReceiverSendTest) {
-  RoboCaller<int&> c;
+TEST(CallbackList, MultipleReceiverSendTest) {
+  CallbackList<int&> c;
   std::function<void(int&)> plus = PlusOne;
   int index = 1;
 
@@ -197,8 +197,8 @@ class A {
   void increment(int& i) const { i++; }
 };
 
-TEST(RoboCaller, MemberFunctionTest) {
-  RoboCaller<int&> c;
+TEST(CallbackList, MemberFunctionTest) {
+  CallbackList<int&> c;
   A a;
   int index = 1;
 

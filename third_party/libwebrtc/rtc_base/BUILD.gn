@@ -48,10 +48,10 @@ rtc_source_set("untyped_function") {
   deps = [ "system:assume" ]
 }
 
-rtc_source_set("robo_caller") {
+rtc_source_set("callback_list") {
   sources = [
-    "robo_caller.cc",
-    "robo_caller.h",
+    "callback_list.cc",
+    "callback_list.h",
   ]
   deps = [
     ":untyped_function",
@@ -1081,13 +1081,13 @@ rtc_library("testclient") {
   ]
 }
 
-rtc_library("robo_caller_unittests") {
+rtc_library("callback_list_unittests") {
   testonly = true
 
-  sources = [ "robo_caller_unittest.cc" ]
+  sources = [ "callback_list_unittest.cc" ]
   deps = [
+    ":callback_list",
     ":gunit_helpers",
-    ":robo_caller",
     ":rtc_base",
     "../api:function_view",
     "../test:test_support",
