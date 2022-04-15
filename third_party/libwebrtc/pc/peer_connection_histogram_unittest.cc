@@ -339,7 +339,6 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     rtc::scoped_refptr<PeerConnectionFactoryForUsageHistogramTest> pc_factory(
         new PeerConnectionFactoryForUsageHistogramTest());
     pc_factory->SetOptions(factory_options);
-    RTC_CHECK(pc_factory->Initialize());
     if (immediate_report) {
       pc_factory->ReturnHistogramVeryQuickly();
     }

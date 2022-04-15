@@ -10,10 +10,15 @@
 
 #include "pc/connection_context.h"
 
+#include <string>
+#include <type_traits>
 #include <utility>
 
 #include "api/transport/field_trial_based_config.h"
 #include "media/base/rtp_data_engine.h"
+#include "rtc_base/helpers.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/time_utils.h"
 
 namespace webrtc {
 
@@ -67,29 +72,59 @@ std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
 
 }  // namespace
 
+// Static
+rtc::scoped_refptr<ConnectionContext> ConnectionContext::Create(
+    PeerConnectionFactoryDependencies* dependencies) {
+  auto context = new rtc::RefCountedObject<ConnectionContext>(dependencies);
+  if (!context->channel_manager_->Init()) {
+    return nullptr;
+  }
+  return context;
+}
+
 ConnectionContext::ConnectionContext(
-    PeerConnectionFactoryDependencies& dependencies)
-    : network_thread_(MaybeStartThread(dependencies.network_thread,
+    PeerConnectionFactoryDependencies* dependencies)
+    : network_thread_(MaybeStartThread(dependencies->network_thread,
                                        "pc_network_thread",
                                        true,
                                        owned_network_thread_)),
-      worker_thread_(MaybeStartThread(dependencies.worker_thread,
+      worker_thread_(MaybeStartThread(dependencies->worker_thread,
                                       "pc_worker_thread",
                                       false,
                                       owned_worker_thread_)),
-      signaling_thread_(MaybeWrapThread(dependencies.signaling_thread,
+      signaling_thread_(MaybeWrapThread(dependencies->signaling_thread,
                                         wraps_current_thread_)),
-      network_monitor_factory_(std::move(dependencies.network_monitor_factory)),
-      call_factory_(std::move(dependencies.call_factory)),
-      media_engine_(std::move(dependencies.media_engine)),
-      sctp_factory_(MaybeCreateSctpFactory(std::move(dependencies.sctp_factory),
-                                           network_thread())),
-      trials_(dependencies.trials ? std::move(dependencies.trials)
-                                  : std::make_unique<FieldTrialBasedConfig>()) {
+      network_monitor_factory_(
+          std::move(dependencies->network_monitor_factory)),
+      call_factory_(std::move(dependencies->call_factory)),
+      media_engine_(std::move(dependencies->media_engine)),
+      sctp_factory_(
+          MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
+                                 network_thread())),
+      trials_(dependencies->trials
+                  ? std::move(dependencies->trials)
+                  : std::make_unique<FieldTrialBasedConfig>()) {
   signaling_thread_->AllowInvokesToThread(worker_thread_);
   signaling_thread_->AllowInvokesToThread(network_thread_);
   worker_thread_->AllowInvokesToThread(network_thread_);
   network_thread_->DisallowAllInvokes();
+
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  rtc::InitRandom(rtc::Time32());
+
+  // If network_monitor_factory_ is non-null, it will be used to create a
+  // network monitor while on the network thread.
+  default_network_manager_ = std::make_unique<rtc::BasicNetworkManager>(
+      network_monitor_factory_.get());
+
+  default_socket_factory_ =
+      std::make_unique<rtc::BasicPacketSocketFactory>(network_thread());
+
+  channel_manager_ = std::make_unique<cricket::ChannelManager>(
+      std::move(media_engine_), std::make_unique<cricket::RtpDataEngine>(),
+      worker_thread(), network_thread());
+
+  channel_manager_->SetVideoRtxEnabled(true);
 }
 
 ConnectionContext::~ConnectionContext() {
@@ -109,32 +144,6 @@ void ConnectionContext::SetOptions(
     const PeerConnectionFactoryInterface::Options& options) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   options_ = options;
-}
-
-bool ConnectionContext::Initialize() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  rtc::InitRandom(rtc::Time32());
-
-  // If network_monitor_factory_ is non-null, it will be used to create a
-  // network monitor while on the network thread.
-  default_network_manager_.reset(
-      new rtc::BasicNetworkManager(network_monitor_factory_.get()));
-  if (!default_network_manager_) {
-    return false;
-  }
-
-  default_socket_factory_.reset(
-      new rtc::BasicPacketSocketFactory(network_thread()));
-  if (!default_socket_factory_) {
-    return false;
-  }
-
-  channel_manager_ = std::make_unique<cricket::ChannelManager>(
-      std::move(media_engine_), std::make_unique<cricket::RtpDataEngine>(),
-      worker_thread(), network_thread());
-
-  channel_manager_->SetVideoRtxEnabled(true);
-  return channel_manager_->Init();
 }
 
 cricket::ChannelManager* ConnectionContext::channel_manager() const {

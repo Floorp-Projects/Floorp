@@ -699,7 +699,6 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
     ASSERT_TRUE(pc_factory_);
     pc_factory_for_test_ =
         PeerConnectionFactoryForTest::CreatePeerConnectionFactoryForTest();
-    pc_factory_for_test_->Initialize();
   }
 
   void CreatePeerConnection() {
@@ -3923,7 +3922,6 @@ class PeerConnectionMediaConfigTest : public ::testing::Test {
  protected:
   void SetUp() override {
     pcf_ = PeerConnectionFactoryForTest::CreatePeerConnectionFactoryForTest();
-    pcf_->Initialize();
   }
   const cricket::MediaConfig TestCreatePeerConnection(
       const RTCConfiguration& config) {

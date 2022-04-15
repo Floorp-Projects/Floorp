@@ -12,13 +12,30 @@
 #ifndef PC_PEER_CONNECTION_FACTORY_H_
 #define PC_PEER_CONNECTION_FACTORY_H_
 
+#include <stdint.h>
+#include <stdio.h>
 #include <memory>
 #include <string>
 
+#include "absl/strings/string_view.h"
+#include "api/audio_options.h"
+#include "api/fec_controller.h"
 #include "api/media_stream_interface.h"
+#include "api/media_types.h"
+#include "api/neteq/neteq_factory.h"
+#include "api/network_state_predictor.h"
 #include "api/peer_connection_interface.h"
+#include "api/rtc_event_log/rtc_event_log.h"
+#include "api/rtc_event_log/rtc_event_log_factory_interface.h"
+#include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
+#include "api/task_queue/task_queue_factory.h"
+#include "api/transport/network_control.h"
+#include "api/transport/sctp_transport_factory_interface.h"
+#include "api/transport/webrtc_key_value_config.h"
+#include "call/call.h"
 #include "media/sctp/sctp_transport_internal.h"
+#include "p2p/base/port_allocator.h"
 #include "pc/channel_manager.h"
 #include "pc/connection_context.h"
 #include "rtc_base/rtc_certificate_generator.h"
@@ -35,6 +52,14 @@ class RtcEventLog;
 
 class PeerConnectionFactory : public PeerConnectionFactoryInterface {
  public:
+  // Creates a PeerConnectionFactory. It returns nullptr on initialization
+  // error.
+  //
+  // The Dependencies structure allows simple management of all new
+  // dependencies being added to the PeerConnectionFactory.
+  static rtc::scoped_refptr<PeerConnectionFactory> Create(
+      PeerConnectionFactoryDependencies dependencies);
+
   void SetOptions(const Options& options) override;
 
   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
@@ -46,8 +71,6 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies dependencies) override;
-
-  bool Initialize();
 
   RtpCapabilities GetRtpSenderCapabilities(
       cricket::MediaType kind) const override;
@@ -83,16 +106,18 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
     // created in CreatePeerConnectionFactory().
     return context_->signaling_thread();
   }
-  rtc::Thread* worker_thread() const { return context_->worker_thread(); }
-  rtc::Thread* network_thread() const { return context_->network_thread(); }
 
   const Options& options() const { return context_->options(); }
 
   const WebRtcKeyValueConfig& trials() const { return context_->trials(); }
 
  protected:
-  // This structure allows simple management of all new dependencies being added
-  // to the PeerConnectionFactory.
+  // Constructor used by the static Create() method. Modifies the dependencies.
+  PeerConnectionFactory(rtc::scoped_refptr<ConnectionContext> context,
+                        PeerConnectionFactoryDependencies* dependencies);
+
+  // Constructor for use in testing. Ignores the possibility of initialization
+  // failure. The dependencies are passed in by std::move().
   explicit PeerConnectionFactory(
       PeerConnectionFactoryDependencies dependencies);
 
@@ -103,6 +128,9 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   virtual ~PeerConnectionFactory();
 
  private:
+  rtc::Thread* worker_thread() const { return context_->worker_thread(); }
+  rtc::Thread* network_thread() const { return context_->network_thread(); }
+
   bool IsTrialEnabled(absl::string_view key) const;
   const cricket::ChannelManager* channel_manager() const {
     return context_->channel_manager();
