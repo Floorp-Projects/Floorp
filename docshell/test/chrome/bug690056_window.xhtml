@@ -95,29 +95,18 @@
       });
       yield undefined;
 
-      function generateDetector(state, hidden, title, name) {
-        var detector = function (event) {
-          is(event.target.hidden, hidden,
-             name + " hidden value does not match");
-          is(event.target.visibilityState, state,
-             name + " state value does not match");
-          is(event.target.title, title,
-             name + " title value does not match");
-          document.getElementById("content")
-                  .removeEventListener("visibilitychange",
-                                       detector,
-                                       true);
-          nextTest();
-        }
+      waitForPageEvents({
+        eventsToListenFor: [ "visibilitychange" ],
+        expectedEvents: [ { type: "visibilitychange",
+                            title: "new load",
+                            visibilityState: "hidden",
+                            hidden: true },
+                        ],
+        onNavComplete: nextTest
+      });
 
-        document.getElementById("content")
-                .addEventListener("visibilitychange", detector, true);
-      }
-      
-      generateDetector("hidden", true, "new load", "Going hidden");
-        
       // Now flip our docshell to not active
-      document.getElementById("content").docShellIsActive = false;
+      TestWindow.getBrowser().docShellIsActive = false;
       yield undefined;
 
       // And navigate back; there should be no visibility state transitions
@@ -136,10 +125,18 @@
       });
       yield undefined;
 
-      generateDetector("visible", false, "initial load", "Going visible");
+      waitForPageEvents({
+        eventsToListenFor: [ "visibilitychange" ],
+        expectedEvents: [ { type: "visibilitychange",
+                            title: "initial load",
+                            visibilityState: "visible",
+                            hidden: false },
+                        ],
+        onNavComplete: nextTest
+      });
 
       // Now set the docshell active again
-      document.getElementById("content").docShellIsActive = true;
+      TestWindow.getBrowser().docShellIsActive = true;
       yield undefined;
 
       // And forward
@@ -170,5 +167,5 @@
     }
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" remote="true" />
 </window>

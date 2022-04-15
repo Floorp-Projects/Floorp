@@ -1,77 +1,80 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<window title="Mozilla Bug 449780" onload="doTheTest()"
+<window title="Mozilla Bug 449780" onload="setTimeout(doTheTest, 0);"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <hbox id="parent">
   </hbox>
 
   <!-- test code goes here -->
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-    /* globals SimpleTest, is, isnot */
-    var imports = [ "SimpleTest", "is", "isnot" ];
-    for (var name of imports) {
-      window[name] = window.arguments[0][name];
-    }
-
-    function $(id) {
-      return document.getElementById(id);
-    }
-
-    function addBrowser(parent, id, width, height) {
+    function addBrowser(parent, width, height) {
       var b =
         document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "browser");
       b.setAttribute("type", "content");
-      b.setAttribute("id", id);
+      b.setAttribute("id", "content");
       b.setAttribute("width", width);
       b.setAttribute("height", height);
-      $(parent).appendChild(b);
+      b.setAttribute("remote", SpecialPowers.Services.appinfo.sessionHistoryInParent);
+      document.getElementById("parent").appendChild(b);
+      return b;
     }
-    addBrowser("parent", "f1", 300, 200);
-    addBrowser("parent", "f2", 300, 200);
+
+    let f1 = addBrowser("parent", 300, 200);
 
     /** Test for Bug 449780 **/
     var doc1 = "data:text/html,<html><body>This is a test</body></html>";
     var doc2 = "data:text/html,<html><body>This is a second test</body></html>";
 
-    function getDOM(id) {
-      return $(id).contentDocument.documentElement.innerHTML;
-    }
+    async function doTheTest() {
+      await promisePageNavigation({
+        uri: doc1,
+      });
+      let { origDOM, modifiedDOM } = await SpecialPowers.spawn(f1, [], () => {
+        var origDOM = content.document.documentElement.innerHTML;
+        content.document.body.textContent = "Modified";
+        var modifiedDOM = content.document.documentElement.innerHTML;
+        isnot(origDOM, modifiedDOM, "DOM should be different");
+        return { origDOM, modifiedDOM };
+      });
 
-    var tester = (function*() {
-      var origDOM = getDOM("f1");
-      $("f1").contentDocument.body.textContent = "Modified";
-      var modifiedDOM = getDOM("f1");
-      isnot(origDOM, modifiedDOM, "DOM should be different");
-      $("f1").contentWindow.location.href = doc2;
-      yield undefined;
+      await promisePageNavigation({
+        uri: doc2,
+      });
 
-      $("f1").goBack();
-      yield undefined;
+      await promisePageNavigation({
+        back: true,
+      });
 
-      is(getDOM("f1"), modifiedDOM, "Should have been bfcached");
-      $("f1").goForward();
-      yield undefined;
+      await SpecialPowers.spawn(f1, [modifiedDOM], (modifiedDOM) => {
+        is(content.document.documentElement.innerHTML, modifiedDOM, "Should have been bfcached");
+      });
 
-      // Ignore the notifications during swap
-      $("f1").removeEventListener("pageshow", testDriver);
-      $("f1").swapDocShells($("f2"));
-      $("f2").addEventListener("pageshow", testDriver);
-      $("f2").goBack();
-      yield undefined;
+      await promisePageNavigation({
+        forward: true,
+      });
 
-      is(getDOM("f2"), origDOM, "Should have not have been bfcached");
-      window.close();
-      SimpleTest.finish();
-    })();
+      f1.removeAttribute("id");
+      let f2 = addBrowser("parent", 300, 200);
 
-    function testDriver() {
-      setTimeout(function() { tester.next() }, 0);
-    }
+      // Make sure there's a document or the swap will fail.
+      await promisePageNavigation({
+        uri: "about:blank",
+      });
 
-    function doTheTest() {
-      $("f1").addEventListener("pageshow", testDriver);
-      $("f1").setAttribute("src", doc1);
+      f1.swapDocShells(f2);
+
+      await promisePageNavigation({
+        back: true,
+      });
+
+      await SpecialPowers.spawn(f2, [origDOM], (origDOM) => {
+        is(content.document.documentElement.innerHTML, origDOM, "Should not have been bfcached");
+      });
+
+      finish();
     }
   ]]></script>
 </window>
