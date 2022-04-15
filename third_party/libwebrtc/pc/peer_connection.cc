@@ -209,6 +209,61 @@ bool NeedIceRestart(bool surface_ice_candidates_on_ice_transport_type_changed,
   return (current_filter & modified_filter) != current_filter;
 }
 
+cricket::IceConfig ParseIceConfig(
+    const PeerConnectionInterface::RTCConfiguration& config) {
+  cricket::ContinualGatheringPolicy gathering_policy;
+  switch (config.continual_gathering_policy) {
+    case PeerConnectionInterface::GATHER_ONCE:
+      gathering_policy = cricket::GATHER_ONCE;
+      break;
+    case PeerConnectionInterface::GATHER_CONTINUALLY:
+      gathering_policy = cricket::GATHER_CONTINUALLY;
+      break;
+    default:
+      RTC_NOTREACHED();
+      gathering_policy = cricket::GATHER_ONCE;
+  }
+
+  cricket::IceConfig ice_config;
+  ice_config.receiving_timeout = RTCConfigurationToIceConfigOptionalInt(
+      config.ice_connection_receiving_timeout);
+  ice_config.prioritize_most_likely_candidate_pairs =
+      config.prioritize_most_likely_ice_candidate_pairs;
+  ice_config.backup_connection_ping_interval =
+      RTCConfigurationToIceConfigOptionalInt(
+          config.ice_backup_candidate_pair_ping_interval);
+  ice_config.continual_gathering_policy = gathering_policy;
+  ice_config.presume_writable_when_fully_relayed =
+      config.presume_writable_when_fully_relayed;
+  ice_config.surface_ice_candidates_on_ice_transport_type_changed =
+      config.surface_ice_candidates_on_ice_transport_type_changed;
+  ice_config.ice_check_interval_strong_connectivity =
+      config.ice_check_interval_strong_connectivity;
+  ice_config.ice_check_interval_weak_connectivity =
+      config.ice_check_interval_weak_connectivity;
+  ice_config.ice_check_min_interval = config.ice_check_min_interval;
+  ice_config.ice_unwritable_timeout = config.ice_unwritable_timeout;
+  ice_config.ice_unwritable_min_checks = config.ice_unwritable_min_checks;
+  ice_config.ice_inactive_timeout = config.ice_inactive_timeout;
+  ice_config.stun_keepalive_interval = config.stun_candidate_keepalive_interval;
+  ice_config.network_preference = config.network_preference;
+  return ice_config;
+}
+
+// Ensures the configuration doesn't have any parameters with invalid values,
+// or values that conflict with other parameters.
+//
+// Returns RTCError::OK() if there are no issues.
+RTCError ValidateConfiguration(
+    const PeerConnectionInterface::RTCConfiguration& config) {
+  return cricket::P2PTransportChannel::ValidateIceConfig(
+      ParseIceConfig(config));
+}
+
+bool HasRtcpMuxEnabled(const cricket::ContentInfo* content) {
+  return content->media_description()->rtcp_mux();
+}
+
 }  // namespace
 
 bool PeerConnectionInterface::RTCConfiguration::operator==(
@@ -263,6 +318,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     std::string turn_logging_id;
     bool enable_implicit_rollback;
     absl::optional<bool> allow_codec_switching;
+    absl::optional<int> report_usage_pattern_delay_ms;
   };
   static_assert(sizeof(stuff_being_tested_for_equality) == sizeof(*this),
                 "Did you add something to RTCConfiguration and forget to "
@@ -322,7 +378,8 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          offer_extmap_allow_mixed == o.offer_extmap_allow_mixed &&
          turn_logging_id == o.turn_logging_id &&
          enable_implicit_rollback == o.enable_implicit_rollback &&
-         allow_codec_switching == o.allow_codec_switching;
+         allow_codec_switching == o.allow_codec_switching &&
+         report_usage_pattern_delay_ms == o.report_usage_pattern_delay_ms;
 }
 
 bool PeerConnectionInterface::RTCConfiguration::operator!=(
@@ -330,10 +387,50 @@ bool PeerConnectionInterface::RTCConfiguration::operator!=(
   return !(*this == o);
 }
 
+rtc::scoped_refptr<PeerConnection> PeerConnection::Create(
+    rtc::scoped_refptr<ConnectionContext> context,
+    std::unique_ptr<RtcEventLog> event_log,
+    std::unique_ptr<Call> call,
+    const PeerConnectionInterface::RTCConfiguration& configuration,
+    PeerConnectionDependencies dependencies) {
+  RTCError config_error = cricket::P2PTransportChannel::ValidateIceConfig(
+      ParseIceConfig(configuration));
+  if (!config_error.ok()) {
+    RTC_LOG(LS_ERROR) << "Invalid configuration: " << config_error.message();
+    return nullptr;
+  }
+
+  if (!dependencies.allocator) {
+    RTC_LOG(LS_ERROR)
+        << "PeerConnection initialized without a PortAllocator? "
+           "This shouldn't happen if using PeerConnectionFactory.";
+    return nullptr;
+  }
+
+  if (!dependencies.observer) {
+    // TODO(deadbeef): Why do we do this?
+    RTC_LOG(LS_ERROR) << "PeerConnection initialized without a "
+                         "PeerConnectionObserver";
+    return nullptr;
+  }
+
+  bool is_unified_plan =
+      configuration.sdp_semantics == SdpSemantics::kUnifiedPlan;
+  rtc::scoped_refptr<PeerConnection> pc(
+      new rtc::RefCountedObject<PeerConnection>(
+          context, is_unified_plan, std::move(event_log), std::move(call)));
+  if (!pc->Initialize(configuration, std::move(dependencies))) {
+    return nullptr;
+  }
+  return pc;
+}
+
 PeerConnection::PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
+                               bool is_unified_plan,
                                std::unique_ptr<RtcEventLog> event_log,
                                std::unique_ptr<Call> call)
     : context_(context),
+      is_unified_plan_(is_unified_plan),
       event_log_(std::move(event_log)),
       event_log_ptr_(event_log_.get()),
       call_(std::move(call)),
@@ -392,26 +489,6 @@ bool PeerConnection::Initialize(
     PeerConnectionDependencies dependencies) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::Initialize");
-
-  RTCError config_error = ValidateConfiguration(configuration);
-  if (!config_error.ok()) {
-    RTC_LOG(LS_ERROR) << "Invalid configuration: " << config_error.message();
-    return false;
-  }
-
-  if (!dependencies.allocator) {
-    RTC_LOG(LS_ERROR)
-        << "PeerConnection initialized without a PortAllocator? "
-           "This shouldn't happen if using PeerConnectionFactory.";
-    return false;
-  }
-
-  if (!dependencies.observer) {
-    // TODO(deadbeef): Why do we do this?
-    RTC_LOG(LS_ERROR) << "PeerConnection initialized without a "
-                         "PeerConnectionObserver";
-    return false;
-  }
 
   observer_ = dependencies.observer;
   async_resolver_factory_ = std::move(dependencies.async_resolver_factory);
@@ -487,20 +564,12 @@ bool PeerConnection::Initialize(
 #endif
   config.active_reset_srtp_params = configuration.active_reset_srtp_params;
 
-  // Obtain a certificate from RTCConfiguration if any were provided (optional).
-  rtc::scoped_refptr<rtc::RTCCertificate> certificate;
-  if (!configuration.certificates.empty()) {
-    // TODO(hbos,torbjorng): Decide on certificate-selection strategy instead of
-    // just picking the first one. The decision should be made based on the DTLS
-    // handshake. The DTLS negotiations need to know about all certificates.
-    certificate = configuration.certificates[0];
-  }
-
   if (options.disable_encryption) {
     dtls_enabled_ = false;
   } else {
     // Enable DTLS by default if we have an identity store or a certificate.
-    dtls_enabled_ = (dependencies.cert_generator || certificate);
+    dtls_enabled_ =
+        (dependencies.cert_generator || !configuration.certificates.empty());
     // |configuration| can override the default |dtls_enabled_| value.
     if (configuration.enable_dtls_srtp) {
       dtls_enabled_ = *(configuration.enable_dtls_srtp);
@@ -571,11 +640,11 @@ bool PeerConnection::Initialize(
         RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
             signaling_thread(), new RtpTransceiver(cricket::MEDIA_TYPE_VIDEO)));
   }
-  int delay_ms =
-      return_histogram_very_quickly_ ? 0 : REPORT_USAGE_PATTERN_DELAY_MS;
-
   sdp_handler_.Initialize(configuration, &dependencies);
 
+  int delay_ms = configuration.report_usage_pattern_delay_ms
+                     ? *configuration.report_usage_pattern_delay_ms
+                     : REPORT_USAGE_PATTERN_DELAY_MS;
   message_handler_.RequestUsagePatternReport(
       [this]() {
         RTC_DCHECK_RUN_ON(signaling_thread());
@@ -584,12 +653,6 @@ bool PeerConnection::Initialize(
       delay_ms);
 
   return true;
-}
-
-RTCError PeerConnection::ValidateConfiguration(
-    const RTCConfiguration& config) const {
-  return cricket::P2PTransportChannel::ValidateIceConfig(
-      ParseIceConfig(config));
 }
 
 rtc::scoped_refptr<StreamCollectionInterface> PeerConnection::local_streams() {
@@ -1912,47 +1975,6 @@ bool PeerConnection::GetTransportDescription(
   return true;
 }
 
-cricket::IceConfig PeerConnection::ParseIceConfig(
-    const PeerConnectionInterface::RTCConfiguration& config) const {
-  cricket::ContinualGatheringPolicy gathering_policy;
-  switch (config.continual_gathering_policy) {
-    case PeerConnectionInterface::GATHER_ONCE:
-      gathering_policy = cricket::GATHER_ONCE;
-      break;
-    case PeerConnectionInterface::GATHER_CONTINUALLY:
-      gathering_policy = cricket::GATHER_CONTINUALLY;
-      break;
-    default:
-      RTC_NOTREACHED();
-      gathering_policy = cricket::GATHER_ONCE;
-  }
-
-  cricket::IceConfig ice_config;
-  ice_config.receiving_timeout = RTCConfigurationToIceConfigOptionalInt(
-      config.ice_connection_receiving_timeout);
-  ice_config.prioritize_most_likely_candidate_pairs =
-      config.prioritize_most_likely_ice_candidate_pairs;
-  ice_config.backup_connection_ping_interval =
-      RTCConfigurationToIceConfigOptionalInt(
-          config.ice_backup_candidate_pair_ping_interval);
-  ice_config.continual_gathering_policy = gathering_policy;
-  ice_config.presume_writable_when_fully_relayed =
-      config.presume_writable_when_fully_relayed;
-  ice_config.surface_ice_candidates_on_ice_transport_type_changed =
-      config.surface_ice_candidates_on_ice_transport_type_changed;
-  ice_config.ice_check_interval_strong_connectivity =
-      config.ice_check_interval_strong_connectivity;
-  ice_config.ice_check_interval_weak_connectivity =
-      config.ice_check_interval_weak_connectivity;
-  ice_config.ice_check_min_interval = config.ice_check_min_interval;
-  ice_config.ice_unwritable_timeout = config.ice_unwritable_timeout;
-  ice_config.ice_unwritable_min_checks = config.ice_unwritable_min_checks;
-  ice_config.ice_inactive_timeout = config.ice_inactive_timeout;
-  ice_config.stun_keepalive_interval = config.stun_candidate_keepalive_interval;
-  ice_config.network_preference = config.network_preference;
-  return ice_config;
-}
-
 std::vector<DataChannelStats> PeerConnection::GetDataChannelStats() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   return data_channel_controller_.GetDataChannelStats();
@@ -2248,10 +2270,6 @@ bool PeerConnection::ValidateBundleSettings(const SessionDescription* desc) {
   }
   // RTCP-MUX is enabled in all the contents.
   return true;
-}
-
-bool PeerConnection::HasRtcpMuxEnabled(const cricket::ContentInfo* content) {
-  return content->media_description()->rtcp_mux();
 }
 
 void PeerConnection::ReportSdpFormatReceived(

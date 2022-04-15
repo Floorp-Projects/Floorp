@@ -85,18 +85,6 @@ class PeerConnectionFactoryForUsageHistogramTest
           dependencies.call_factory = CreateCallFactory();
           return dependencies;
         }()) {}
-
-  void ActionsBeforeInitializeForTesting(PeerConnectionInterface* pc) override {
-    PeerConnection* internal_pc = static_cast<PeerConnection*>(pc);
-    if (return_histogram_very_quickly_) {
-      internal_pc->ReturnHistogramVeryQuicklyForTesting();
-    }
-  }
-
-  void ReturnHistogramVeryQuickly() { return_histogram_very_quickly_ = true; }
-
- private:
-  bool return_histogram_very_quickly_ = false;
 };
 
 class PeerConnectionWrapperForUsageHistogramTest;
@@ -255,14 +243,13 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
   }
 
   WrapperPtr CreatePeerConnection() {
-    return CreatePeerConnection(RTCConfiguration(),
-                                PeerConnectionFactoryInterface::Options(),
-                                nullptr, false);
+    return CreatePeerConnection(
+        RTCConfiguration(), PeerConnectionFactoryInterface::Options(), nullptr);
   }
 
   WrapperPtr CreatePeerConnection(const RTCConfiguration& config) {
     return CreatePeerConnection(
-        config, PeerConnectionFactoryInterface::Options(), nullptr, false);
+        config, PeerConnectionFactoryInterface::Options(), nullptr);
   }
 
   WrapperPtr CreatePeerConnectionWithMdns(const RTCConfiguration& config) {
@@ -282,15 +269,15 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
     deps.async_resolver_factory = std::move(resolver_factory);
     deps.allocator = std::move(port_allocator);
 
-    return CreatePeerConnection(config,
-                                PeerConnectionFactoryInterface::Options(),
-                                std::move(deps), false);
+    return CreatePeerConnection(
+        config, PeerConnectionFactoryInterface::Options(), std::move(deps));
   }
 
   WrapperPtr CreatePeerConnectionWithImmediateReport() {
-    return CreatePeerConnection(RTCConfiguration(),
-                                PeerConnectionFactoryInterface::Options(),
-                                nullptr, true);
+    RTCConfiguration configuration;
+    configuration.report_usage_pattern_delay_ms = 0;
+    return CreatePeerConnection(
+        configuration, PeerConnectionFactoryInterface::Options(), nullptr);
   }
 
   WrapperPtr CreatePeerConnectionWithPrivateLocalAddresses() {
@@ -300,10 +287,9 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
 
     auto port_allocator =
         std::make_unique<cricket::BasicPortAllocator>(fake_network);
-
     return CreatePeerConnection(RTCConfiguration(),
                                 PeerConnectionFactoryInterface::Options(),
-                                std::move(port_allocator), false);
+                                std::move(port_allocator));
   }
 
   WrapperPtr CreatePeerConnectionWithPrivateIpv6LocalAddresses() {
@@ -316,32 +302,26 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
 
     return CreatePeerConnection(RTCConfiguration(),
                                 PeerConnectionFactoryInterface::Options(),
-                                std::move(port_allocator), false);
+                                std::move(port_allocator));
   }
 
   WrapperPtr CreatePeerConnection(
       const RTCConfiguration& config,
       const PeerConnectionFactoryInterface::Options factory_options,
-      std::unique_ptr<cricket::PortAllocator> allocator,
-      bool immediate_report) {
+      std::unique_ptr<cricket::PortAllocator> allocator) {
     PeerConnectionDependencies deps(nullptr);
     deps.allocator = std::move(allocator);
 
-    return CreatePeerConnection(config, factory_options, std::move(deps),
-                                immediate_report);
+    return CreatePeerConnection(config, factory_options, std::move(deps));
   }
 
   WrapperPtr CreatePeerConnection(
       const RTCConfiguration& config,
       const PeerConnectionFactoryInterface::Options factory_options,
-      PeerConnectionDependencies deps,
-      bool immediate_report) {
+      PeerConnectionDependencies deps) {
     rtc::scoped_refptr<PeerConnectionFactoryForUsageHistogramTest> pc_factory(
         new PeerConnectionFactoryForUsageHistogramTest());
     pc_factory->SetOptions(factory_options);
-    if (immediate_report) {
-      pc_factory->ReturnHistogramVeryQuickly();
-    }
 
     // If no allocator is provided, one will be created using a network manager
     // that uses the host network. This doesn't work on all trybots.
