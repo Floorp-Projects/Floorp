@@ -13,23 +13,22 @@
 #include <limits.h>
 #include <stddef.h>
 #include <algorithm>
-#include <limits>
 #include <memory>
-#include <queue>
 #include <set>
 #include <utility>
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
 #include "api/jsep_ice_candidate.h"
+#include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
 #include "api/task_queue/queued_task.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "api/uma_metrics.h"
-#include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/video_codec_constants.h"
 #include "call/audio_state.h"
 #include "call/packet_receiver.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_config.h"
 #include "media/base/rid_description.h"
 #include "media/base/stream_params.h"
@@ -40,11 +39,11 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel.h"
 #include "p2p/base/transport_info.h"
-#include "pc/audio_rtp_receiver.h"
 #include "pc/ice_server_parsing.h"
+#include "pc/rtp_receiver.h"
+#include "pc/rtp_sender.h"
 #include "pc/sctp_transport.h"
 #include "pc/simulcast_description.h"
-#include "pc/video_rtp_receiver.h"
 #include "pc/webrtc_session_description_factory.h"
 #include "rtc_base/bind.h"
 #include "rtc_base/helpers.h"
@@ -54,11 +53,11 @@
 #include "rtc_base/net_helper.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/robo_caller.h"
-#include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/trace_event.h"
+#include "rtc_base/unique_id_generator.h"
 #include "system_wrappers/include/metrics.h"
 
 using cricket::ContentInfo;
@@ -417,7 +416,6 @@ bool PeerConnection::Initialize(
   observer_ = dependencies.observer;
   async_resolver_factory_ = std::move(dependencies.async_resolver_factory);
   port_allocator_ = std::move(dependencies.allocator);
-  packet_socket_factory_ = std::move(dependencies.packet_socket_factory);
   ice_transport_factory_ = std::move(dependencies.ice_transport_factory);
   tls_cert_verifier_ = std::move(dependencies.tls_cert_verifier);
 
@@ -564,40 +562,6 @@ bool PeerConnection::Initialize(
         sdp_handler_.UpdateNegotiationNeeded();
       });
 
-  video_options_.screencast_min_bitrate_kbps =
-      configuration.screencast_min_bitrate;
-  audio_options_.combined_audio_video_bwe =
-      configuration.combined_audio_video_bwe;
-
-  audio_options_.audio_jitter_buffer_max_packets =
-      configuration.audio_jitter_buffer_max_packets;
-
-  audio_options_.audio_jitter_buffer_fast_accelerate =
-      configuration.audio_jitter_buffer_fast_accelerate;
-
-  audio_options_.audio_jitter_buffer_min_delay_ms =
-      configuration.audio_jitter_buffer_min_delay_ms;
-
-  audio_options_.audio_jitter_buffer_enable_rtx_handling =
-      configuration.audio_jitter_buffer_enable_rtx_handling;
-
-  auto webrtc_session_desc_factory =
-      std::make_unique<WebRtcSessionDescriptionFactory>(
-          signaling_thread(), channel_manager(), &sdp_handler_, session_id(),
-          dtls_enabled_, std::move(dependencies.cert_generator), certificate,
-          &ssrc_generator_);
-  webrtc_session_desc_factory->SignalCertificateReady.connect(
-      this, &PeerConnection::OnCertificateReady);
-
-  if (options.disable_encryption) {
-    webrtc_session_desc_factory->SetSdesPolicy(cricket::SEC_DISABLED);
-  }
-
-  webrtc_session_desc_factory->set_enable_encrypted_rtp_header_extensions(
-      GetCryptoOptions().srtp.enable_encrypted_rtp_header_extensions);
-  webrtc_session_desc_factory->set_is_unified_plan(IsUnifiedPlan());
-  sdp_handler_.SetSessionDescFactory(std::move(webrtc_session_desc_factory));
-
   // Add default audio/video transceivers for Plan B SDP.
   if (!IsUnifiedPlan()) {
     rtp_manager()->transceivers()->Add(
@@ -610,6 +574,8 @@ bool PeerConnection::Initialize(
   int delay_ms =
       return_histogram_very_quickly_ ? 0 : REPORT_USAGE_PATTERN_DELAY_MS;
 
+  sdp_handler_.Initialize(configuration, &dependencies);
+
   message_handler_.RequestUsagePatternReport(
       [this]() {
         RTC_DCHECK_RUN_ON(signaling_thread());
@@ -617,13 +583,6 @@ bool PeerConnection::Initialize(
       },
       delay_ms);
 
-  if (dependencies.video_bitrate_allocator_factory) {
-    video_bitrate_allocator_factory_ =
-        std::move(dependencies.video_bitrate_allocator_factory);
-  } else {
-    video_bitrate_allocator_factory_ =
-        CreateBuiltinVideoBitrateAllocatorFactory();
-  }
   return true;
 }
 
@@ -1734,42 +1693,6 @@ void PeerConnection::OnSelectedCandidatePairChanged(
   Observer()->OnIceSelectedCandidatePairChanged(event);
 }
 
-void PeerConnection::OnAudioTrackAdded(AudioTrackInterface* track,
-                                       MediaStreamInterface* stream) {
-  if (IsClosed()) {
-    return;
-  }
-  rtp_manager()->AddAudioTrack(track, stream);
-  sdp_handler_.UpdateNegotiationNeeded();
-}
-
-void PeerConnection::OnAudioTrackRemoved(AudioTrackInterface* track,
-                                         MediaStreamInterface* stream) {
-  if (IsClosed()) {
-    return;
-  }
-  rtp_manager()->RemoveAudioTrack(track, stream);
-  sdp_handler_.UpdateNegotiationNeeded();
-}
-
-void PeerConnection::OnVideoTrackAdded(VideoTrackInterface* track,
-                                       MediaStreamInterface* stream) {
-  if (IsClosed()) {
-    return;
-  }
-  rtp_manager()->AddVideoTrack(track, stream);
-  sdp_handler_.UpdateNegotiationNeeded();
-}
-
-void PeerConnection::OnVideoTrackRemoved(VideoTrackInterface* track,
-                                         MediaStreamInterface* stream) {
-  if (IsClosed()) {
-    return;
-  }
-  rtp_manager()->RemoveVideoTrack(track, stream);
-  sdp_handler_.UpdateNegotiationNeeded();
-}
-
 absl::optional<std::string> PeerConnection::GetDataMid() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   switch (data_channel_type()) {
@@ -2131,11 +2054,6 @@ bool PeerConnection::IceRestartPending(const std::string& content_name) const {
 
 bool PeerConnection::NeedsIceRestart(const std::string& content_name) const {
   return transport_controller_->NeedsIceRestart(content_name);
-}
-
-void PeerConnection::OnCertificateReady(
-    const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
-  transport_controller_->SetLocalCertificate(certificate);
 }
 
 void PeerConnection::OnTransportControllerConnectionState(
