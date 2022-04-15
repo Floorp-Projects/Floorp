@@ -16,19 +16,15 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsUrlClassifierStreamUpdater.h"
-#include "nsUrlClassifierUtils.h"
-#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ResultExtensions.h"
 #include "nsIInterfaceRequestor.h"
-#include "mozilla/LoadContext.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/StaticPrefs_urlclassifier.h"
 #include "nsContentUtils.h"
 #include "nsIURLFormatter.h"
 #include "Classifier.h"
 #include "UrlClassifierTelemetryUtils.h"
+#include "mozilla/StaticPrefs_urlclassifier.h"
 
 using namespace mozilla::safebrowsing;
 using namespace mozilla;
