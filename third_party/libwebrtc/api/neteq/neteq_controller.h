@@ -162,33 +162,12 @@ class NetEqController {
   // Returns the target buffer level in ms.
   virtual int TargetLevelMs() const = 0;
 
-  // Deprecated.
-  // TODO(ivoc): Remove when downstream is updated.
-  virtual absl::optional<int> PacketArrived(bool last_cng_or_dtmf,
-                                            size_t packet_length_samples,
-                                            bool should_update_stats,
-                                            uint16_t main_sequence_number,
-                                            uint32_t main_timestamp,
-                                            int fs_hz) {
-    PacketArrivedInfo info;
-    info.is_dtx = false;
-    info.is_cng_or_dtmf = last_cng_or_dtmf;
-    info.packet_length_samples = packet_length_samples;
-    info.main_sequence_number = main_sequence_number;
-    info.main_timestamp = main_timestamp;
-    return PacketArrived(fs_hz, should_update_stats, info);
-  }
-
   // Notify the NetEqController that a packet has arrived. Returns the relative
   // arrival delay, if it can be computed.
-  // TODO(ivoc): Make pure virtual when downstream is updated.
   virtual absl::optional<int> PacketArrived(int fs_hz,
                                             bool should_update_stats,
-                                            const PacketArrivedInfo& info) {
-    return PacketArrived(info.is_cng_or_dtmf, info.packet_length_samples,
-                         should_update_stats, info.main_sequence_number,
-                         info.main_timestamp, fs_hz);
-  }
+                                            const PacketArrivedInfo& info) = 0;
+
   // Notify the NetEqController that we are currently in muted state.
   // TODO(ivoc): Make pure virtual when downstream is updated.
   virtual void NotifyMutedState() {}
