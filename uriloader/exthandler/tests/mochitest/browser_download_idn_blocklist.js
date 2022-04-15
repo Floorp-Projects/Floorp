@@ -27,6 +27,7 @@ add_task(async function test_idn_blocklisted_char_not_escaped() {
     set: [
       // Enable downloads improvements
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
     ],
   });
 

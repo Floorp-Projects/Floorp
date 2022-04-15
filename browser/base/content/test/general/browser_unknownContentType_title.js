@@ -36,9 +36,9 @@ add_setup(async function() {
   Services.prefs.setCharPref("browser.download.dir", tmpDir);
 });
 
-add_task(async function unknownContentType_title_with_pref_disabled() {
+add_task(async function unknownContentType_title_with_pref_enabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", false]],
+    set: [["browser.download.always_ask_before_handling_new_types", true]],
   });
 
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
@@ -61,9 +61,9 @@ add_task(async function unknownContentType_title_with_pref_disabled() {
   gBrowser.removeCurrentTab();
 });
 
-add_task(async function unknownContentType_title_with_pref_enabled() {
+add_task(async function unknownContentType_title_with_pref_disabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [["browser.download.always_ask_before_handling_new_types", false]],
   });
 
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
@@ -73,7 +73,7 @@ add_task(async function unknownContentType_title_with_pref_enabled() {
   is(gBrowser.contentTitle, "Test Page", "Should have the right title.");
 
   BrowserTestUtils.loadURI(browser, unknown_url);
-  // If the pref is enabled, then the downloads panel should open right away
+  // If the pref is disabled, then the downloads panel should open right away
   // since there is no UCT window prompt to block it.
   let waitForPanelShown = BrowserTestUtils.waitForCondition(() => {
     return DownloadsPanel.isPanelShowing;

@@ -30,9 +30,9 @@ add_task(async function() {
   function wrongAPICallListener(msg) {
     ok(
       false,
-      `Called ${msg} when improvements pref was set to ${
+      `Called ${msg} when always ask pref was set to ${
         Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
+          "browser.download.always_ask_before_handling_new_types"
         )
       }, which shouldn't happen.`
     );
@@ -40,7 +40,9 @@ add_task(async function() {
   chromeScript.addMessageListener("wrongAPICall", wrongAPICallListener);
 
   for (let prefVal of [false, true]) {
-    await SpecialPowers.pushPrefEnv({set: [["browser.download.improvements_to_download_panel", prefVal]]});
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.download.always_ask_before_handling_new_types", prefVal]]
+    });
     // Run all the tests.
     for (let [name, expected] of tests) {
       let promiseName = promiseMessage("suggestedFileName");

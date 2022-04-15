@@ -105,8 +105,8 @@ function run_test() {
   Assert.equal(handlerInfo.possibleApplicationHandlers.length, 0);
   Assert.equal(
     handlerInfo.alwaysAskBeforeHandling,
-    !prefSvc.getBoolPref(
-      "browser.download.improvements_to_download_panel",
+    prefSvc.getBoolPref(
+      "browser.download.always_ask_before_handling_new_types",
       false
     )
   );

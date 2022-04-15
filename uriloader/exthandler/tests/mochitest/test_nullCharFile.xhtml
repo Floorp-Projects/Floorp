@@ -29,9 +29,9 @@ add_task(async function() {
   function wrongAPICallListener(msg) {
     ok(
       false,
-      `Called ${msg} when improvements pref was set to ${
+      `Called ${msg} when always ask pref was set to ${
         Services.prefs.getBoolPref(
-          "browser.download.improvements_to_download_panel"
+          "browser.download.always_ask_before_handling_new_types"
         )
       }, which shouldn't happen.`
     );
@@ -40,7 +40,9 @@ add_task(async function() {
 
   for (let prefVal of [false, true]) {
     info("Pushing pref");
-    await SpecialPowers.pushPrefEnv({set: [["browser.download.improvements_to_download_panel", prefVal]]});
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.download.always_ask_before_handling_new_types", prefVal]]
+    });
     for (let [name, expected] of tests) {
       let promiseName = promiseMessage("suggestedFileName");
       const a = document.createElement('a');

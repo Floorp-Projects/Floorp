@@ -6,7 +6,10 @@
  */
 add_task(async function test_downloads_panel_opens() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
   });
 
   info("waiting for panel to open");
@@ -26,7 +29,10 @@ add_task(async function test_downloads_panel_opens() {
 
 add_task(async function test_customizemode_doesnt_wreck_things() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
   });
 
   // Enter customize mode:
@@ -78,6 +84,7 @@ add_task(async function test_downloads_panel_opening_pref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
       ["browser.download.alwaysOpenPanel", false],
     ],
   });
@@ -128,7 +135,10 @@ add_task(async function test_downloads_panel_opening_pref() {
  */
 add_task(async function test_downloads_panel_remains_closed() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
   });
   await task_addDownloads([
     { state: DownloadsCommon.DOWNLOAD_DOWNLOADING },
@@ -186,7 +196,10 @@ add_task(async function test_downloads_panel_remains_closed() {
  */
 add_task(async function test_downloads_panel_inactive_window() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
   });
 
   let oldShowEventNotification = DownloadsIndicatorView.showEventNotification;
