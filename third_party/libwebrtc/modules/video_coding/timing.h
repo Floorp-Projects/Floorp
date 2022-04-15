@@ -19,6 +19,7 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/time/timestamp_extrapolator.h"
 
 namespace webrtc {
 
@@ -27,10 +28,8 @@ class TimestampExtrapolator;
 
 class VCMTiming {
  public:
-  // The primary timing component should be passed
-  // if this is the dual timing component.
-  explicit VCMTiming(Clock* clock, VCMTiming* master_timing = NULL);
-  virtual ~VCMTiming();
+  explicit VCMTiming(Clock* clock);
+  virtual ~VCMTiming() = default;
 
   // Resets the timing to the initial state.
   void Reset();
@@ -117,8 +116,7 @@ class VCMTiming {
  private:
   mutable Mutex mutex_;
   Clock* const clock_;
-  bool master_ RTC_GUARDED_BY(mutex_);
-  TimestampExtrapolator* ts_extrapolator_ RTC_GUARDED_BY(mutex_)
+  const std::unique_ptr<TimestampExtrapolator> ts_extrapolator_
       RTC_PT_GUARDED_BY(mutex_);
   std::unique_ptr<VCMCodecTimer> codec_timer_ RTC_GUARDED_BY(mutex_)
       RTC_PT_GUARDED_BY(mutex_);
