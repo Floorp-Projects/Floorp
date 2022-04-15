@@ -3003,13 +3003,11 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreGenericPacketSentEvent(
   RTC_PARSE_CHECK_OR_RETURN_EQ(overhead_length_values.size(), number_of_deltas);
 
   std::vector<absl::optional<uint64_t>> payload_length_values = DecodeDeltas(
-      proto.payload_length_deltas(), ToUnsigned(proto.payload_length()),
-      number_of_deltas);  // TODO(terelius): Remove ToUnsigned
+      proto.payload_length_deltas(), proto.payload_length(), number_of_deltas);
   RTC_PARSE_CHECK_OR_RETURN_EQ(payload_length_values.size(), number_of_deltas);
 
   std::vector<absl::optional<uint64_t>> padding_length_values = DecodeDeltas(
-      proto.padding_length_deltas(), ToUnsigned(proto.padding_length()),
-      number_of_deltas);  // TODO(terelius): Remove ToUnsigned
+      proto.padding_length_deltas(), proto.padding_length(), number_of_deltas);
   RTC_PARSE_CHECK_OR_RETURN_EQ(padding_length_values.size(), number_of_deltas);
 
   for (size_t i = 0; i < number_of_deltas; i++) {
@@ -3073,10 +3071,10 @@ ParsedRtcEventLog::StoreGenericPacketReceivedEvent(
     int64_t packet_number;
     RTC_PARSE_CHECK_OR_RETURN(
         ToSigned(packet_number_values[i].value(), &packet_number));
-    int32_t packet_length;
-    RTC_PARSE_CHECK_OR_RETURN(
-        ToSigned(packet_length_values[i].value(),
-                 &packet_length));  // TODO(terelius): Remove ToSigned
+    RTC_PARSE_CHECK_OR_RETURN_LE(packet_length_values[i].value(),
+                                 std::numeric_limits<int32_t>::max());
+    int32_t packet_length =
+        static_cast<int32_t>(packet_length_values[i].value());
     generic_packets_received_.push_back(
         {timestamp_ms * 1000, packet_number, packet_length});
   }
