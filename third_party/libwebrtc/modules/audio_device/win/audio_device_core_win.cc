@@ -38,6 +38,7 @@
 
 #include <iomanip>
 
+#include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/string_utils.h"
@@ -226,7 +227,7 @@ bool AudioDeviceWindowsCore::CoreAudioIsSupported() {
   // by a corresponding call to CoUninitialize.
   //
   ScopedCOMInitializer comInit(ScopedCOMInitializer::kMTA);
-  if (!comInit.succeeded()) {
+  if (!comInit.Succeeded()) {
     // Things will work even if an STA thread is calling this method but we
     // want to ensure that MTA is used and therefore return false here.
     return false;
@@ -395,7 +396,7 @@ AudioDeviceWindowsCore::AudioDeviceWindowsCore()
       _inputDeviceIndex(0),
       _outputDeviceIndex(0) {
   RTC_LOG(LS_INFO) << __FUNCTION__ << " created";
-  assert(_comInit.succeeded());
+  RTC_DCHECK(_comInit.Succeeded());
 
   // Try to load the Avrt DLL
   if (!_avrtLibrary) {
@@ -2364,7 +2365,6 @@ int32_t AudioDeviceWindowsCore::StartRecording() {
 
     // Set thread priority to highest possible
     SetThreadPriority(_hRecThread, THREAD_PRIORITY_TIME_CRITICAL);
-
   }  // critScoped
 
   DWORD ret = WaitForSingleObject(_hCaptureStartedEvent, 1000);
@@ -2652,7 +2652,7 @@ DWORD AudioDeviceWindowsCore::DoRenderThread() {
 
   // Initialize COM as MTA in this thread.
   ScopedCOMInitializer comInit(ScopedCOMInitializer::kMTA);
-  if (!comInit.succeeded()) {
+  if (!comInit.Succeeded()) {
     RTC_LOG(LS_ERROR) << "failed to initialize COM in render thread";
     return 1;
   }
@@ -2959,7 +2959,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThreadPollDMO() {
 
   // Initialize COM as MTA in this thread.
   ScopedCOMInitializer comInit(ScopedCOMInitializer::kMTA);
-  if (!comInit.succeeded()) {
+  if (!comInit.Succeeded()) {
     RTC_LOG(LS_ERROR) << "failed to initialize COM in polling DMO thread";
     return 1;
   }
@@ -3091,7 +3091,7 @@ DWORD AudioDeviceWindowsCore::DoCaptureThread() {
 
   // Initialize COM as MTA in this thread.
   ScopedCOMInitializer comInit(ScopedCOMInitializer::kMTA);
-  if (!comInit.succeeded()) {
+  if (!comInit.Succeeded()) {
     RTC_LOG(LS_ERROR) << "failed to initialize COM in capture thread";
     return 1;
   }
@@ -3427,7 +3427,7 @@ int AudioDeviceWindowsCore::SetDMOProperties() {
   // MFPKEY_WMAAECMA_FEATR_AGC - Digital AGC (disabled).
   // MFPKEY_WMAAECMA_FEATR_CENTER_CLIP - AEC center clipping (enabled).
   // MFPKEY_WMAAECMA_FEATR_ECHO_LENGTH - Filter length (256 ms).
-  //   TODO(andrew): investigate decresing the length to 128 ms.
+  // TODO(andrew): investigate decresing the length to 128 ms.
   // MFPKEY_WMAAECMA_FEATR_FRAME_SIZE - Frame size (0).
   //   0 is automatic; defaults to 160 samples (or 10 ms frames at the
   //   selected 16 kHz) as long as mic array processing is disabled.
