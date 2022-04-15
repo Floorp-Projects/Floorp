@@ -118,8 +118,10 @@ class VCMTiming {
   mutable Mutex mutex_;
   Clock* const clock_;
   bool master_ RTC_GUARDED_BY(mutex_);
-  TimestampExtrapolator* ts_extrapolator_ RTC_GUARDED_BY(mutex_);
-  std::unique_ptr<VCMCodecTimer> codec_timer_ RTC_GUARDED_BY(mutex_);
+  TimestampExtrapolator* ts_extrapolator_ RTC_GUARDED_BY(mutex_)
+      RTC_PT_GUARDED_BY(mutex_);
+  std::unique_ptr<VCMCodecTimer> codec_timer_ RTC_GUARDED_BY(mutex_)
+      RTC_PT_GUARDED_BY(mutex_);
   int render_delay_ms_ RTC_GUARDED_BY(mutex_);
   // Best-effort playout delay range for frames from capture to render.
   // The receiver tries to keep the delay between |min_playout_delay_ms_|
