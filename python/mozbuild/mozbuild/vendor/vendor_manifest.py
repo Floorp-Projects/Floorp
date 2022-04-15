@@ -38,14 +38,18 @@ class VendorManifest(MozbuildObject):
         yaml_file,
         manifest,
         revision,
+        ignore_modified,
         check_for_update,
         force,
         add_to_exports,
         patch_mode,
     ):
         self.manifest = manifest
+        self.yaml_file = yaml_file
         if "vendor-directory" not in self.manifest["vendoring"]:
-            self.manifest["vendoring"]["vendor-directory"] = os.path.dirname(yaml_file)
+            self.manifest["vendoring"]["vendor-directory"] = os.path.dirname(
+                self.yaml_file
+            )
 
         self.source_host = self.get_source_host()
 
@@ -97,15 +101,9 @@ class VendorManifest(MozbuildObject):
         else:
             self.log(logging.INFO, "vendor", {}, "Skipping fetching upstream source.")
 
-        if self.should_perform_step("update-moz-yaml"):
-            self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
-            self.update_yaml(yaml_file, ref, timestamp)
-        else:
-            self.log(logging.INFO, "vendor", {}, "Skipping updating the moz.yaml file.")
-
         if self.should_perform_step("update-actions"):
             self.log(logging.INFO, "vendor", {}, "Updating files")
-            self.update_files(ref, yaml_file)
+            self.update_files(ref)
         else:
             self.log(logging.INFO, "vendor", {}, "Skipping running the update actions.")
 
@@ -115,21 +113,28 @@ class VendorManifest(MozbuildObject):
             )
             self.repository.add_remove_files(
                 self.manifest["vendoring"]["vendor-directory"],
-                os.path.dirname(yaml_file),
+                os.path.dirname(self.yaml_file),
             )
         else:
-            self.log(
-                logging.INFO,
-                "vendor",
-                {},
-                "Skipping registering changes with version control.",
-            )
+            self.log(logging.INFO, "vendor", {}, "Skipping registering changes.")
+
+        if self.should_perform_step("spurious-check"):
+            self.log(logging.INFO, "vendor", {}, "Checking for a spurious update.")
+            self.spurious_check(revision, ignore_modified)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping the spurious update check.")
+
+        if self.should_perform_step("update-moz-yaml"):
+            self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
+            self.update_yaml(ref, timestamp)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping updating the moz.yaml file.")
 
         if self.should_perform_step("update-moz-build"):
             self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
             self.update_moz_build(
                 self.manifest["vendoring"]["vendor-directory"],
-                os.path.dirname(yaml_file),
+                os.path.dirname(self.yaml_file),
                 add_to_exports,
             )
         else:
@@ -139,7 +144,7 @@ class VendorManifest(MozbuildObject):
             logging.INFO,
             "done",
             {"revision": revision},
-            "Update to version '{revision}' completed.",
+            "Update to '{revision}' completed.",
         )
 
         if "patches" in self.manifest["vendoring"]:
@@ -173,6 +178,19 @@ class VendorManifest(MozbuildObject):
             raise Exception(
                 "Unknown source host: " + self.manifest["vendoring"]["source-hosting"]
             )
+
+    def get_full_path(self, path, support_cwd=False):
+        if support_cwd and path[0:5] == "{cwd}":
+            path = path.replace("{cwd}", ".")
+        elif "{yaml_dir}" in path:
+            path = path.replace("{yaml_dir}", os.path.dirname(self.yaml_file))
+        elif "{vendor_dir}" in path:
+            path = path.replace(
+                "{vendor_dir}", self.manifest["vendoring"]["vendor-directory"]
+            )
+        else:
+            path = mozpath.join(self.manifest["vendoring"]["vendor-directory"], path)
+        return os.path.abspath(path)
 
     def convert_patterns_to_paths(self, directory, patterns):
         # glob.iglob uses shell-style wildcards for path name completion.
@@ -352,8 +370,8 @@ class VendorManifest(MozbuildObject):
                 # Then copy over the directories
                 mozfile.copy_contents(tmpextractdir, vendor_dir)
 
-    def update_yaml(self, yaml_file, revision, timestamp):
-        with open(yaml_file) as f:
+    def update_yaml(self, revision, timestamp):
+        with open(self.yaml_file) as f:
             yaml = f.readlines()
 
         replaced = 0
@@ -373,32 +391,58 @@ class VendorManifest(MozbuildObject):
 
         assert len(replacements) == replaced
 
-        with open(yaml_file, "wb") as f:
+        with open(self.yaml_file, "wb") as f:
             f.write(("".join(yaml)).encode("utf-8"))
 
-    def update_files(self, revision, yaml_file):
-        def get_full_path(path, support_cwd=False):
-            if support_cwd and path[0:5] == "{cwd}":
-                path = path.replace("{cwd}", ".")
-            elif "{yaml_dir}" in path:
-                path = path.replace("{yaml_dir}", os.path.dirname(yaml_file))
-            elif "{vendor_dir}" in path:
-                path = path.replace(
-                    "{vendor_dir}", self.manifest["vendoring"]["vendor-directory"]
+    def spurious_check(self, revision, ignore_modified):
+        changed_files = set(
+            [os.path.abspath(f) for f in self.repository.get_changed_files()]
+        )
+        generated_files = set(
+            [
+                self.get_full_path(f)
+                for f in self.manifest["vendoring"].get("generated", [])
+            ]
+        )
+        changed_files = set(changed_files) - generated_files
+        if not changed_files:
+            self.log(
+                logging.INFO,
+                "done",
+                {"revision": revision},
+                "Upstream version '{revision}' has not modified any files locally.",
+            )
+            # We almost certainly won't be here if ignore_modified was passed, because a modified
+            # local file will show up as a changed_file, but we'll be safe anyway.
+            if not ignore_modified and generated_files:
+                for g in generated_files:
+                    self.repository.clean_directory(g)
+            elif generated_files:
+                self.log(
+                    logging.INFO,
+                    "vendor",
+                    {"files": generated_files},
+                    "Because you passed --ignore-modified we are not cleaning your"
+                    + " working directory, but the following files were probably"
+                    + " spuriously edited and can be reverted: {files}",
                 )
-            else:
-                path = mozpath.join(
-                    self.manifest["vendoring"]["vendor-directory"], path
-                )
-            return os.path.abspath(path)
+            sys.exit(-2)
 
+        self.log(
+            logging.INFO,
+            "done",
+            {"revision": revision, "num": len(changed_files)},
+            "Version '{revision}' has changed {num} files.",
+        )
+
+    def update_files(self, revision):
         if "update-actions" not in self.manifest["vendoring"]:
             return
 
         for update in self.manifest["vendoring"]["update-actions"]:
             if update["action"] == "copy-file":
-                src = get_full_path(update["from"])
-                dst = get_full_path(update["to"])
+                src = self.get_full_path(update["from"])
+                dst = self.get_full_path(update["to"])
 
                 self.log(
                     logging.INFO,
@@ -412,8 +456,8 @@ class VendorManifest(MozbuildObject):
                 with open(dst, "w") as f:
                     f.write(contents)
             elif update["action"] == "move-dir":
-                src = get_full_path(update["from"])
-                dst = get_full_path(update["to"])
+                src = self.get_full_path(update["from"])
+                dst = self.get_full_path(update["to"])
 
                 self.log(
                     logging.INFO,
@@ -446,7 +490,7 @@ class VendorManifest(MozbuildObject):
                 shutil.rmtree(src)
 
             elif update["action"] == "replace-in-file":
-                file = get_full_path(update["file"])
+                file = self.get_full_path(update["file"])
 
                 self.log(
                     logging.INFO,
@@ -464,7 +508,7 @@ class VendorManifest(MozbuildObject):
                 with open(file, "w") as f:
                     f.write(contents)
             elif update["action"] == "delete-path":
-                path = get_full_path(update["path"])
+                path = self.get_full_path(update["path"])
                 self.log(
                     logging.INFO,
                     "vendor",
@@ -473,15 +517,15 @@ class VendorManifest(MozbuildObject):
                 )
                 mozfile.remove(path)
             elif update["action"] == "run-script":
-                script = get_full_path(update["script"], support_cwd=True)
-                run_dir = get_full_path(update["cwd"], support_cwd=True)
+                script = self.get_full_path(update["script"], support_cwd=True)
+                run_dir = self.get_full_path(update["cwd"], support_cwd=True)
 
                 args = []
                 for a in update.get("args", []):
                     if a == "{revision}":
                         args.append(revision)
                     elif any(s in a for s in ["{cwd}", "{vendor_dir}", "{yaml_dir}"]):
-                        args.append(get_full_path(a, support_cwd=True))
+                        args.append(self.get_full_path(a, support_cwd=True))
                     else:
                         args.append(a)
 
