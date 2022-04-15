@@ -269,7 +269,6 @@ if (is_mac) {
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
-      "../../rtc_base/synchronization:rw_lock_wrapper",
       "../../rtc_base/system:rtc_export",
       "../../sdk:helpers_objc",
     ]

@@ -44,24 +44,6 @@ rtc_library("mutex") {
   }
 }
 
-rtc_library("rw_lock_wrapper") {
-  public = [ "rw_lock_wrapper.h" ]
-  sources = [ "rw_lock_wrapper.cc" ]
-  deps = [ "..:macromagic" ]
-  if (is_win) {
-    sources += [
-      "rw_lock_win.cc",
-      "rw_lock_win.h",
-    ]
-    deps += [ "..:logging" ]
-  } else {
-    sources += [
-      "rw_lock_posix.cc",
-      "rw_lock_posix.h",
-    ]
-  }
-}
-
 rtc_library("sequence_checker") {
   sources = [
     "sequence_checker.cc",
