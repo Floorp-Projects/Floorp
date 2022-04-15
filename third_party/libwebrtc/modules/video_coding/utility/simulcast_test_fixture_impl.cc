@@ -213,7 +213,7 @@ void SimulcastTestFixtureImpl::DefaultSettings(
     VideoCodecType codec_type,
     bool reverse_layer_order) {
   RTC_CHECK(settings);
-  memset(settings, 0, sizeof(VideoCodec));
+  *settings = {};
   settings->codecType = codec_type;
   settings->startBitrate = 300;
   settings->minBitrate = 30;

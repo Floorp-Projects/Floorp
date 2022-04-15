@@ -156,8 +156,6 @@ SimulcastEncoderAdapter::SimulcastEncoderAdapter(
   // The adapter is typically created on the worker thread, but operated on
   // the encoder task queue.
   encoder_queue_.Detach();
-
-  memset(&codec_, 0, sizeof(webrtc::VideoCodec));
 }
 
 SimulcastEncoderAdapter::~SimulcastEncoderAdapter() {

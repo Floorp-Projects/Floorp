@@ -27,6 +27,7 @@
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "modules/video_coding/svc/create_scalability_structure.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "rtc_base/checks.h"
@@ -93,7 +94,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   void SetSvcRefFrameConfig(
       const ScalableVideoController::LayerFrameConfig& layer_frame);
 
-  const std::unique_ptr<ScalableVideoController> svc_controller_;
+  std::unique_ptr<ScalableVideoController> svc_controller_;
   bool inited_;
   absl::optional<aom_svc_params_t> svc_params_;
   VideoCodec encoder_settings_;
@@ -163,6 +164,21 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     RTC_LOG(LS_WARNING) << "Incorrect codec settings provided to "
                            "LibaomAv1Encoder.";
     return result;
+  }
+  if (encoder_settings_.numberOfSimulcastStreams > 1) {
+    RTC_LOG(LS_WARNING) << "Simulcast is not implemented by LibaomAv1Encoder.";
+    return result;
+  }
+  absl::string_view scalability_mode = encoder_settings_.ScalabilityMode();
+  // When scalability_mode is not set, keep using svc_controller_ created
+  // at construction of the encoder.
+  if (!scalability_mode.empty()) {
+    svc_controller_ = CreateScalabilityStructure(scalability_mode);
+  }
+  if (svc_controller_ == nullptr) {
+    RTC_LOG(LS_WARNING) << "Failed to set scalability mode "
+                        << scalability_mode;
+    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
   if (!SetSvcParams(svc_controller_->StreamConfig())) {
