@@ -632,9 +632,8 @@ class PeerConnection : public PeerConnectionInternal,
                                // pointer is given to
                                // |jsep_transport_controller_| and used on the
                                // network thread.
-  const std::unique_ptr<rtc::SSLCertificateVerifier>
-      tls_cert_verifier_;  // TODO(bugs.webrtc.org/9987): Accessed on both
-                           // signaling and network thread.
+  const std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier_
+      RTC_GUARDED_BY(network_thread());
 
   // The unique_ptr belongs to the worker thread, but the Call object manages
   // its own thread safety.
