@@ -62,6 +62,9 @@ const NSString * const kRTCH264CodecName = @(cricket::kH264CodecName);
       case cricket::MEDIA_TYPE_DATA:
         RTC_NOTREACHED();
         break;
+      case cricket::MEDIA_TYPE_UNSUPPORTED:
+        RTC_NOTREACHED();
+        break;
     }
     if (nativeParameters.clock_rate) {
       _clockRate = [NSNumber numberWithInt:*nativeParameters.clock_rate];
