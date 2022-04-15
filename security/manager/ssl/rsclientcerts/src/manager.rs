@@ -45,6 +45,7 @@ pub trait ClientCertsBackend {
     type Cert: CryptokiObject;
     type Key: CryptokiObject + Sign;
 
+    #[allow(clippy::type_complexity)]
     fn find_objects(&self) -> Result<(Vec<Self::Cert>, Vec<Self::Key>), Error>;
 }
 
@@ -123,13 +124,7 @@ impl ManagerProxy {
             .name("osclientcert".into())
             .spawn(move || {
                 let mut real_manager = Manager::new(backend);
-                loop {
-                    let arguments = match manager_receiver.recv() {
-                        Ok(arguments) => arguments,
-                        Err(_) => {
-                            break;
-                        }
-                    };
+                while let Ok(arguments) = manager_receiver.recv() {
                     let results = match arguments {
                         ManagerArguments::OpenSession(slot_type) => {
                             ManagerReturnValue::OpenSession(real_manager.open_session(slot_type))
@@ -175,10 +170,7 @@ impl ManagerProxy {
                         }
                         ManagerArguments::Stop => ManagerReturnValue::Stop(Ok(())),
                     };
-                    let stop_after_send = match &results {
-                        &ManagerReturnValue::Stop(_) => true,
-                        _ => false,
-                    };
+                    let stop_after_send = matches!(&results, &ManagerReturnValue::Stop(_));
                     match manager_sender.send(results) {
                         Ok(()) => {}
                         Err(_) => {
@@ -342,7 +334,7 @@ fn search_is_for_all_certificates_or_keys(
     if attrs.len() != 2 {
         return Ok(false);
     }
-    let token_bytes = vec![1 as u8];
+    let token_bytes = vec![1_u8];
     let mut found_token = false;
     let cko_certificate_bytes = serialize_uint(CKO_CERTIFICATE)?;
     let cko_private_key_bytes = serialize_uint(CKO_PRIVATE_KEY)?;
@@ -397,7 +389,7 @@ impl<B: ClientCertsBackend> Object<B> {
 
     fn id(&self) -> Result<&[u8], Error> {
         self.get_attribute(CKA_ID)
-            .ok_or(error_here!(ErrorType::LibraryFailure))
+            .ok_or_else(|| error_here!(ErrorType::LibraryFailure))
     }
 
     fn get_signature_length(
@@ -514,7 +506,7 @@ impl<B: ClientCertsBackend> Manager<B> {
     pub fn close_session(&mut self, session: CK_SESSION_HANDLE) -> Result<(), Error> {
         self.sessions
             .remove(&session)
-            .ok_or(error_here!(ErrorType::InvalidInput))
+            .ok_or_else(|| error_here!(ErrorType::InvalidInput))
             .map(|_| ())
     }
 
@@ -622,10 +614,9 @@ impl<B: ClientCertsBackend> Manager<B> {
         };
         let mut results = Vec::with_capacity(attr_types.len());
         for attr_type in attr_types {
-            let result = match object.get_attribute(attr_type) {
-                Some(value) => Some(value.to_owned()),
-                None => None,
-            };
+            let result = object
+                .get_attribute(attr_type)
+                .map(|value| value.to_owned());
             results.push(result);
         }
         Ok(results)
@@ -657,7 +648,7 @@ impl<B: ClientCertsBackend> Manager<B> {
             Some((key_handle, params)) => (key_handle, params),
             None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
-        let key = match self.objects.get_mut(&key_handle) {
+        let key = match self.objects.get_mut(key_handle) {
             Some(key) => key,
             None => return Err(error_here!(ErrorType::InvalidArgument)),
         };
