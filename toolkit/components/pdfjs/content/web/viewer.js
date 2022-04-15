@@ -460,7 +460,6 @@ const PDFViewerApplication = {
   _docStats: null,
   _wheelUnusedTicks: 0,
   _idleCallbacks: new Set(),
-  _PDFBug: null,
 
   async initialize(appConfig) {
     this.preferences = this.externalServices.createPreferences();
@@ -946,7 +945,11 @@ const PDFViewerApplication = {
     this.findBar?.reset();
     this.toolbar.reset();
     this.secondaryToolbar.reset();
-    this._PDFBug?.cleanup();
+
+    if (typeof PDFBug !== "undefined") {
+      PDFBug.cleanup();
+    }
+
     await Promise.all(promises);
   },
 
@@ -2040,7 +2043,9 @@ const PDFViewerApplication = {
   },
 
   _unblockDocumentLoadEvent() {
-    document.blockUnblockOnload?.(false);
+    if (document.blockUnblockOnload) {
+      document.blockUnblockOnload(false);
+    }
 
     this._unblockDocumentLoadEvent = () => {};
   },
@@ -2069,7 +2074,10 @@ let validateFileURL;
 ;
 
 async function loadFakeWorker() {
-  _pdfjsLib.GlobalWorkerOptions.workerSrc ||= _app_options.AppOptions.get("workerSrc");
+  if (!_pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    _pdfjsLib.GlobalWorkerOptions.workerSrc = _app_options.AppOptions.get("workerSrc");
+  }
+
   await (0, _pdfjsLib.loadScript)(_pdfjsLib.PDFWorker.workerSrc);
 }
 
@@ -2078,31 +2086,31 @@ async function initPDFBug(enabledTabs) {
     debuggerScriptPath,
     mainContainer
   } = PDFViewerApplication.appConfig;
-  const {
-    PDFBug
-  } = await import(debuggerScriptPath);
+  await (0, _pdfjsLib.loadScript)(debuggerScriptPath);
   PDFBug.init({
     OPS: _pdfjsLib.OPS
   }, mainContainer, enabledTabs);
-  PDFViewerApplication._PDFBug = PDFBug;
 }
 
 function reportPageStatsPDFBug({
   pageNumber
 }) {
-  if (!globalThis.Stats?.enabled) {
+  if (typeof Stats === "undefined" || !Stats.enabled) {
     return;
   }
 
   const pageView = PDFViewerApplication.pdfViewer.getPageView(pageNumber - 1);
-  globalThis.Stats.add(pageNumber, pageView?.pdfPage?.stats);
+  const pageStats = pageView?.pdfPage?.stats;
+
+  if (!pageStats) {
+    return;
+  }
+
+  Stats.add(pageNumber, pageStats);
 }
 
 function webViewerInitialized() {
-  const {
-    appConfig,
-    eventBus
-  } = PDFViewerApplication;
+  const appConfig = PDFViewerApplication.appConfig;
   let file;
   file = window.location.href;
   appConfig.toolbar.openFile.hidden = true;
@@ -2132,7 +2140,7 @@ function webViewerInitialized() {
 
   appConfig.mainContainer.addEventListener("transitionend", function (evt) {
     if (evt.target === this) {
-      eventBus.dispatch("resize", {
+      PDFViewerApplication.eventBus.dispatch("resize", {
         source: this
       });
     }
@@ -4479,66 +4487,92 @@ Object.defineProperty(exports, "__esModule", ({
 exports.OverlayManager = void 0;
 
 class OverlayManager {
-  #overlays = new WeakMap();
+  #overlays = Object.create(null);
   #active = null;
+  #keyDownBound = null;
 
   get active() {
     return this.#active;
   }
 
-  async register(dialog, canForceClose = false) {
-    if (typeof dialog !== "object") {
+  async register(name, element, callerCloseMethod = null, canForceClose = false) {
+    let container;
+
+    if (!name || !element || !(container = element.parentNode)) {
       throw new Error("Not enough parameters.");
-    } else if (this.#overlays.has(dialog)) {
+    } else if (this.#overlays[name]) {
       throw new Error("The overlay is already registered.");
     }
 
-    this.#overlays.set(dialog, {
+    this.#overlays[name] = {
+      element,
+      container,
+      callerCloseMethod,
       canForceClose
-    });
-    dialog.addEventListener("cancel", evt => {
-      this.#active = null;
-    });
+    };
   }
 
-  async unregister(dialog) {
-    if (!this.#overlays.has(dialog)) {
+  async unregister(name) {
+    if (!this.#overlays[name]) {
       throw new Error("The overlay does not exist.");
-    } else if (this.#active === dialog) {
+    } else if (this.#active === name) {
       throw new Error("The overlay cannot be removed while it is active.");
     }
 
-    this.#overlays.delete(dialog);
+    delete this.#overlays[name];
   }
 
-  async open(dialog) {
-    if (!this.#overlays.has(dialog)) {
+  async open(name) {
+    if (!this.#overlays[name]) {
       throw new Error("The overlay does not exist.");
     } else if (this.#active) {
-      if (this.#active === dialog) {
+      if (this.#active === name) {
         throw new Error("The overlay is already active.");
-      } else if (this.#overlays.get(dialog).canForceClose) {
-        await this.close();
+      } else if (this.#overlays[name].canForceClose) {
+        this.#closeThroughCaller();
       } else {
         throw new Error("Another overlay is currently active.");
       }
     }
 
-    this.#active = dialog;
-    dialog.showModal();
+    this.#active = name;
+    this.#overlays[this.#active].element.classList.remove("hidden");
+    this.#overlays[this.#active].container.classList.remove("hidden");
+    this.#keyDownBound = this.#keyDown.bind(this);
+    window.addEventListener("keydown", this.#keyDownBound);
   }
 
-  async close(dialog = this.#active) {
-    if (!this.#overlays.has(dialog)) {
+  async close(name) {
+    if (!this.#overlays[name]) {
       throw new Error("The overlay does not exist.");
     } else if (!this.#active) {
       throw new Error("The overlay is currently not active.");
-    } else if (this.#active !== dialog) {
+    } else if (this.#active !== name) {
       throw new Error("Another overlay is currently active.");
     }
 
-    dialog.close();
+    this.#overlays[this.#active].container.classList.add("hidden");
+    this.#overlays[this.#active].element.classList.add("hidden");
     this.#active = null;
+    window.removeEventListener("keydown", this.#keyDownBound);
+    this.#keyDownBound = null;
+  }
+
+  #keyDown(evt) {
+    if (this.#active && evt.keyCode === 27) {
+      this.#closeThroughCaller();
+      evt.preventDefault();
+    }
+  }
+
+  #closeThroughCaller() {
+    if (this.#overlays[this.#active].callerCloseMethod) {
+      this.#overlays[this.#active].callerCloseMethod();
+    }
+
+    if (this.#active) {
+      this.close(this.#active);
+    }
   }
 
 }
@@ -4559,11 +4593,9 @@ exports.PasswordPrompt = void 0;
 var _pdfjsLib = __webpack_require__(5);
 
 class PasswordPrompt {
-  #updateCallback = null;
-  #reason = null;
-
   constructor(options, overlayManager, l10n, isViewerEmbedded = false) {
-    this.dialog = options.dialog;
+    this.overlayName = options.overlayName;
+    this.container = options.container;
     this.label = options.label;
     this.input = options.input;
     this.submitButton = options.submitButton;
@@ -4571,6 +4603,8 @@ class PasswordPrompt {
     this.overlayManager = overlayManager;
     this.l10n = l10n;
     this._isViewerEmbedded = isViewerEmbedded;
+    this.updateCallback = null;
+    this.reason = null;
     this.submitButton.addEventListener("click", this.#verify.bind(this));
     this.cancelButton.addEventListener("click", this.#cancel.bind(this));
     this.input.addEventListener("keydown", e => {
@@ -4578,13 +4612,12 @@ class PasswordPrompt {
         this.#verify();
       }
     });
-    this.overlayManager.register(this.dialog, true);
-    this.dialog.addEventListener("close", this.#cancel.bind(this));
+    this.overlayManager.register(this.overlayName, this.container, this.#cancel.bind(this), true);
   }
 
   async open() {
-    await this.overlayManager.open(this.dialog);
-    const passwordIncorrect = this.#reason === _pdfjsLib.PasswordResponses.INCORRECT_PASSWORD;
+    await this.overlayManager.open(this.overlayName);
+    const passwordIncorrect = this.reason === _pdfjsLib.PasswordResponses.INCORRECT_PASSWORD;
 
     if (!this._isViewerEmbedded || passwordIncorrect) {
       this.input.focus();
@@ -4594,37 +4627,27 @@ class PasswordPrompt {
   }
 
   async close() {
-    if (this.overlayManager.active === this.dialog) {
-      this.overlayManager.close(this.dialog);
-    }
+    await this.overlayManager.close(this.overlayName);
+    this.input.value = "";
   }
 
   #verify() {
     const password = this.input.value;
 
     if (password?.length > 0) {
-      this.#invokeCallback(password);
+      this.close();
+      this.updateCallback(password);
     }
   }
 
   #cancel() {
-    this.#invokeCallback(new Error("PasswordPrompt cancelled."));
-  }
-
-  #invokeCallback(password) {
-    if (!this.#updateCallback) {
-      return;
-    }
-
     this.close();
-    this.input.value = "";
-    this.#updateCallback(password);
-    this.#updateCallback = null;
+    this.updateCallback(new Error("PasswordPrompt cancelled."));
   }
 
   setUpdateCallback(updateCallback, reason) {
-    this.#updateCallback = updateCallback;
-    this.#reason = reason;
+    this.updateCallback = updateCallback;
+    this.reason = reason;
   }
 
 }
@@ -4956,17 +4979,19 @@ class PDFDocumentProperties {
   #fieldData = null;
 
   constructor({
-    dialog,
+    overlayName,
     fields,
+    container,
     closeButton
   }, overlayManager, eventBus, l10n) {
-    this.dialog = dialog;
+    this.overlayName = overlayName;
     this.fields = fields;
+    this.container = container;
     this.overlayManager = overlayManager;
     this.l10n = l10n;
     this.#reset();
     closeButton.addEventListener("click", this.close.bind(this));
-    this.overlayManager.register(this.dialog);
+    this.overlayManager.register(this.overlayName, this.container, this.close.bind(this));
 
     eventBus._on("pagechanging", evt => {
       this._currentPageNumber = evt.pageNumber;
@@ -4983,7 +5008,7 @@ class PDFDocumentProperties {
   }
 
   async open() {
-    await Promise.all([this.overlayManager.open(this.dialog), this._dataAvailableCapability.promise]);
+    await Promise.all([this.overlayManager.open(this.overlayName), this._dataAvailableCapability.promise]);
     const currentPageNumber = this._currentPageNumber;
     const pagesRotation = this._pagesRotation;
 
@@ -5033,8 +5058,8 @@ class PDFDocumentProperties {
     this.#updateUI();
   }
 
-  async close() {
-    this.overlayManager.close(this.dialog);
+  close() {
+    this.overlayManager.close(this.overlayName);
   }
 
   setDocument(pdfDocument, url = null) {
@@ -5071,7 +5096,7 @@ class PDFDocumentProperties {
       return;
     }
 
-    if (this.overlayManager.active !== this.dialog) {
+    if (this.overlayManager.active !== this.overlayName) {
       return;
     }
 
@@ -5290,7 +5315,6 @@ class PDFFindBar {
     }
 
     this.findField.setAttribute("data-status", status);
-    this.findField.setAttribute("aria-invalid", state === _pdf_find_controller.FindState.NOT_FOUND);
     findMsg.then(msg => {
       this.findMsg.textContent = msg;
       this.#adjustWidth();
@@ -6274,6 +6298,11 @@ class PDFHistory {
     this._fingerprint = "";
     this.reset();
     this._boundEvents = null;
+    this._isViewerInPresentationMode = false;
+
+    this.eventBus._on("presentationmodechanged", evt => {
+      this._isViewerInPresentationMode = evt.state !== _ui_utils.PresentationModeState.NORMAL;
+    });
 
     this.eventBus._on("pagesinit", () => {
       this._isPagesLoaded = false;
@@ -6658,7 +6687,7 @@ class PDFHistory {
     }
 
     this._position = {
-      hash: location.pdfOpenParams.substring(1),
+      hash: this._isViewerInPresentationMode ? `page=${location.pageNumber}` : location.pdfOpenParams.substring(1),
       page: this.linkService.page,
       first: location.pageNumber,
       rotation: location.rotation
@@ -7379,6 +7408,7 @@ exports.PDFPresentationMode = void 0;
 
 var _ui_utils = __webpack_require__(3);
 
+const DELAY_BEFORE_RESETTING_SWITCH_IN_PROGRESS = 1500;
 const DELAY_BEFORE_HIDING_CONTROLS = 3000;
 const ACTIVE_SELECTOR = "pdfPresentationMode";
 const CONTROLS_SELECTOR = "pdfPresentationModeControls";
@@ -7388,9 +7418,6 @@ const SWIPE_MIN_DISTANCE_THRESHOLD = 50;
 const SWIPE_ANGLE_THRESHOLD = Math.PI / 6;
 
 class PDFPresentationMode {
-  #state = _ui_utils.PresentationModeState.UNKNOWN;
-  #args = null;
-
   constructor({
     container,
     pdfViewer,
@@ -7399,45 +7426,30 @@ class PDFPresentationMode {
     this.container = container;
     this.pdfViewer = pdfViewer;
     this.eventBus = eventBus;
+    this.active = false;
+    this.args = null;
     this.contextMenuOpen = false;
     this.mouseScrollTimeStamp = 0;
     this.mouseScrollDelta = 0;
     this.touchSwipeState = null;
   }
 
-  async request() {
-    const {
-      container,
-      pdfViewer
-    } = this;
-
-    if (this.active || !pdfViewer.pagesCount || !container.requestFullscreen) {
+  request() {
+    if (this.switchInProgress || this.active || !this.pdfViewer.pagesCount || !this.container.requestFullscreen) {
       return false;
     }
 
     this.#addFullscreenChangeListeners();
-    this.#notifyStateChange(_ui_utils.PresentationModeState.CHANGING);
-    const promise = container.requestFullscreen();
-    this.#args = {
-      pageNumber: pdfViewer.currentPageNumber,
-      scaleValue: pdfViewer.currentScaleValue,
-      scrollMode: pdfViewer.scrollMode,
-      spreadMode: pdfViewer.spreadMode
+    this.#setSwitchInProgress();
+    this.#notifyStateChange();
+    this.container.requestFullscreen();
+    this.args = {
+      pageNumber: this.pdfViewer.currentPageNumber,
+      scaleValue: this.pdfViewer.currentScaleValue,
+      scrollMode: this.pdfViewer.scrollMode,
+      spreadMode: this.pdfViewer.spreadMode
     };
-
-    try {
-      await promise;
-      return true;
-    } catch (reason) {
-      this.#removeFullscreenChangeListeners();
-      this.#notifyStateChange(_ui_utils.PresentationModeState.NORMAL);
-    }
-
-    return false;
-  }
-
-  get active() {
-    return this.#state === _ui_utils.PresentationModeState.CHANGING || this.#state === _ui_utils.PresentationModeState.FULLSCREEN;
+    return true;
   }
 
   #mouseWheel(evt) {
@@ -7471,21 +7483,49 @@ class PDFPresentationMode {
     }
   }
 
-  #notifyStateChange(state) {
-    this.#state = state;
+  #notifyStateChange() {
+    let state = _ui_utils.PresentationModeState.NORMAL;
+
+    if (this.switchInProgress) {
+      state = _ui_utils.PresentationModeState.CHANGING;
+    } else if (this.active) {
+      state = _ui_utils.PresentationModeState.FULLSCREEN;
+    }
+
     this.eventBus.dispatch("presentationmodechanged", {
       source: this,
       state
     });
   }
 
+  #setSwitchInProgress() {
+    if (this.switchInProgress) {
+      clearTimeout(this.switchInProgress);
+    }
+
+    this.switchInProgress = setTimeout(() => {
+      this.#removeFullscreenChangeListeners();
+      delete this.switchInProgress;
+      this.#notifyStateChange();
+    }, DELAY_BEFORE_RESETTING_SWITCH_IN_PROGRESS);
+  }
+
+  #resetSwitchInProgress() {
+    if (this.switchInProgress) {
+      clearTimeout(this.switchInProgress);
+      delete this.switchInProgress;
+    }
+  }
+
   #enter() {
-    this.#notifyStateChange(_ui_utils.PresentationModeState.FULLSCREEN);
+    this.active = true;
+    this.#resetSwitchInProgress();
+    this.#notifyStateChange();
     this.container.classList.add(ACTIVE_SELECTOR);
     setTimeout(() => {
       this.pdfViewer.scrollMode = _ui_utils.ScrollMode.PAGE;
       this.pdfViewer.spreadMode = _ui_utils.SpreadMode.NONE;
-      this.pdfViewer.currentPageNumber = this.#args.pageNumber;
+      this.pdfViewer.currentPageNumber = this.args.pageNumber;
       this.pdfViewer.currentScaleValue = "page-fit";
     }, 0);
     this.#addWindowListeners();
@@ -7498,13 +7538,14 @@ class PDFPresentationMode {
     const pageNumber = this.pdfViewer.currentPageNumber;
     this.container.classList.remove(ACTIVE_SELECTOR);
     setTimeout(() => {
+      this.active = false;
       this.#removeFullscreenChangeListeners();
-      this.#notifyStateChange(_ui_utils.PresentationModeState.NORMAL);
-      this.pdfViewer.scrollMode = this.#args.scrollMode;
-      this.pdfViewer.spreadMode = this.#args.spreadMode;
-      this.pdfViewer.currentScaleValue = this.#args.scaleValue;
+      this.#notifyStateChange();
+      this.pdfViewer.scrollMode = this.args.scrollMode;
+      this.pdfViewer.spreadMode = this.args.spreadMode;
+      this.pdfViewer.currentScaleValue = this.args.scaleValue;
       this.pdfViewer.currentPageNumber = pageNumber;
-      this.#args = null;
+      this.args = null;
     }, 0);
     this.#removeWindowListeners();
     this.#hideControls();
@@ -8368,7 +8409,7 @@ class PDFSidebar {
     this.pdfViewer = pdfViewer;
     this.pdfThumbnailViewer = pdfThumbnailViewer;
     this.outerContainer = elements.outerContainer;
-    this.sidebarContainer = elements.sidebarContainer;
+    this.viewerContainer = elements.viewerContainer;
     this.toggleButton = elements.toggleButton;
     this.thumbnailButton = elements.thumbnailButton;
     this.outlineButton = elements.outlineButton;
@@ -8495,10 +8536,10 @@ class PDFSidebar {
     this.outlineButton.classList.toggle("toggled", isOutline);
     this.attachmentsButton.classList.toggle("toggled", isAttachments);
     this.layersButton.classList.toggle("toggled", isLayers);
-    this.thumbnailButton.setAttribute("aria-checked", isThumbs);
-    this.outlineButton.setAttribute("aria-checked", isOutline);
-    this.attachmentsButton.setAttribute("aria-checked", isAttachments);
-    this.layersButton.setAttribute("aria-checked", isLayers);
+    this.thumbnailButton.setAttribute("aria-checked", `${isThumbs}`);
+    this.outlineButton.setAttribute("aria-checked", `${isOutline}`);
+    this.attachmentsButton.setAttribute("aria-checked", `${isAttachments}`);
+    this.layersButton.setAttribute("aria-checked", `${isLayers}`);
     this.thumbnailView.classList.toggle("hidden", !isThumbs);
     this.outlineView.classList.toggle("hidden", !isOutline);
     this.attachmentsView.classList.toggle("hidden", !isAttachments);
@@ -8627,8 +8668,8 @@ class PDFSidebar {
   }
 
   _addEventListeners() {
-    this.sidebarContainer.addEventListener("transitionend", evt => {
-      if (evt.target === this.sidebarContainer) {
+    this.viewerContainer.addEventListener("transitionend", evt => {
+      if (evt.target === this.viewerContainer) {
         this.outerContainer.classList.remove("sidebarMoving");
       }
     });
@@ -9675,7 +9716,7 @@ class BaseViewer {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.14.171';
+    const viewerVersion = '2.14.102';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -10363,6 +10404,8 @@ class BaseViewer {
 
     this._doc.style.setProperty("--zoom-factor", newScale);
 
+    this._doc.style.setProperty("--viewport-scale-factor", newScale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS);
+
     const updateArgs = {
       scale: newScale
     };
@@ -10625,17 +10668,14 @@ class BaseViewer {
     const currentScaleValue = this._currentScaleValue;
     const normalizedScaleValue = parseFloat(currentScaleValue) === currentScale ? Math.round(currentScale * 10000) / 100 : currentScaleValue;
     const pageNumber = firstPage.id;
+    let pdfOpenParams = "#page=" + pageNumber;
+    pdfOpenParams += "&zoom=" + normalizedScaleValue;
     const currentPageView = this._pages[pageNumber - 1];
     const container = this.container;
     const topLeft = currentPageView.getPagePoint(container.scrollLeft - firstPage.x, container.scrollTop - firstPage.y);
     const intLeft = Math.round(topLeft[0]);
     const intTop = Math.round(topLeft[1]);
-    let pdfOpenParams = `#page=${pageNumber}`;
-
-    if (!this.isInPresentationMode) {
-      pdfOpenParams += `&zoom=${normalizedScaleValue},${intLeft},${intTop}`;
-    }
-
+    pdfOpenParams += "," + intLeft + "," + intTop;
     this._location = {
       pageNumber,
       scale: normalizedScaleValue,
@@ -10719,7 +10759,35 @@ class BaseViewer {
     return this.isInPresentationMode ? false : this.container.scrollHeight > this.container.clientHeight;
   }
 
+  _getCurrentVisiblePage() {
+    if (!this.pagesCount) {
+      return {
+        views: []
+      };
+    }
+
+    const pageView = this._pages[this._currentPageNumber - 1];
+    const element = pageView.div;
+    const view = {
+      id: pageView.id,
+      x: element.offsetLeft + element.clientLeft,
+      y: element.offsetTop + element.clientTop,
+      view: pageView
+    };
+    const ids = new Set([pageView.id]);
+    return {
+      first: view,
+      last: view,
+      views: [view],
+      ids
+    };
+  }
+
   _getVisiblePages() {
+    if (this.isInPresentationMode) {
+      return this._getCurrentVisiblePage();
+    }
+
     const views = this._scrollMode === _ui_utils.ScrollMode.PAGE ? this.#scrollModePageState.pages : this._pages,
           horizontal = this._scrollMode === _ui_utils.ScrollMode.HORIZONTAL,
           rtl = horizontal && this._isContainerRtl;
@@ -11766,8 +11834,9 @@ class PDFPageView {
     }
 
     const totalRotation = (this.rotation + this.pdfPageRotate) % 360;
+    const viewportScale = this.scale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS;
     this.viewport = this.viewport.clone({
-      scale: this.scale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS,
+      scale: viewportScale,
       rotation: totalRotation
     });
 
@@ -11776,6 +11845,7 @@ class PDFPageView {
         style
       } = document.documentElement;
       style.setProperty("--zoom-factor", this.scale);
+      style.setProperty("--viewport-scale-factor", viewportScale);
     }
 
     if (this.svg) {
@@ -13113,8 +13183,8 @@ class SecondaryToolbar {
             isHand = tool === _pdf_cursor_tools.CursorTool.HAND;
       cursorSelectToolButton.classList.toggle("toggled", isSelect);
       cursorHandToolButton.classList.toggle("toggled", isHand);
-      cursorSelectToolButton.setAttribute("aria-checked", isSelect);
-      cursorHandToolButton.setAttribute("aria-checked", isHand);
+      cursorSelectToolButton.setAttribute("aria-checked", `${isSelect}`);
+      cursorHandToolButton.setAttribute("aria-checked", `${isHand}`);
     });
   }
 
@@ -13138,10 +13208,10 @@ class SecondaryToolbar {
       scrollVerticalButton.classList.toggle("toggled", isVertical);
       scrollHorizontalButton.classList.toggle("toggled", isHorizontal);
       scrollWrappedButton.classList.toggle("toggled", isWrapped);
-      scrollPageButton.setAttribute("aria-checked", isPage);
-      scrollVerticalButton.setAttribute("aria-checked", isVertical);
-      scrollHorizontalButton.setAttribute("aria-checked", isHorizontal);
-      scrollWrappedButton.setAttribute("aria-checked", isWrapped);
+      scrollPageButton.setAttribute("aria-checked", `${isPage}`);
+      scrollVerticalButton.setAttribute("aria-checked", `${isVertical}`);
+      scrollHorizontalButton.setAttribute("aria-checked", `${isHorizontal}`);
+      scrollWrappedButton.setAttribute("aria-checked", `${isWrapped}`);
       const forceScrollModePage = this.pagesCount > _base_viewer.PagesCountLimit.FORCE_SCROLL_MODE_PAGE;
       scrollPageButton.disabled = forceScrollModePage;
       scrollVerticalButton.disabled = forceScrollModePage;
@@ -13177,9 +13247,9 @@ class SecondaryToolbar {
       spreadNoneButton.classList.toggle("toggled", isNone);
       spreadOddButton.classList.toggle("toggled", isOdd);
       spreadEvenButton.classList.toggle("toggled", isEven);
-      spreadNoneButton.setAttribute("aria-checked", isNone);
-      spreadOddButton.setAttribute("aria-checked", isOdd);
-      spreadEvenButton.setAttribute("aria-checked", isEven);
+      spreadNoneButton.setAttribute("aria-checked", `${isNone}`);
+      spreadOddButton.setAttribute("aria-checked", `${isOdd}`);
+      spreadEvenButton.setAttribute("aria-checked", `${isEven}`);
     }
 
     this.eventBus._on("spreadmodechanged", spreadModeChanged);
@@ -14513,8 +14583,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.14.171';
-const pdfjsBuild = '3f5c31e20';
+const pdfjsVersion = '2.14.102';
+const pdfjsBuild = 'db4f3adc5';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
@@ -14576,7 +14646,7 @@ function getViewerConfiguration() {
     },
     sidebar: {
       outerContainer: document.getElementById("outerContainer"),
-      sidebarContainer: document.getElementById("sidebarContainer"),
+      viewerContainer: document.getElementById("viewerContainer"),
       toggleButton: document.getElementById("sidebarToggle"),
       thumbnailButton: document.getElementById("viewThumbnail"),
       outlineButton: document.getElementById("viewOutline"),
@@ -14607,14 +14677,16 @@ function getViewerConfiguration() {
       findNextButton: document.getElementById("findNext")
     },
     passwordOverlay: {
-      dialog: document.getElementById("passwordDialog"),
+      overlayName: "passwordOverlay",
+      container: document.getElementById("passwordOverlay"),
       label: document.getElementById("passwordText"),
       input: document.getElementById("password"),
       submitButton: document.getElementById("passwordSubmit"),
       cancelButton: document.getElementById("passwordCancel")
     },
     documentProperties: {
-      dialog: document.getElementById("documentPropertiesDialog"),
+      overlayName: "documentPropertiesOverlay",
+      container: document.getElementById("documentPropertiesOverlay"),
       closeButton: document.getElementById("documentPropertiesClose"),
       fields: {
         fileName: document.getElementById("fileNameField"),
@@ -14635,7 +14707,7 @@ function getViewerConfiguration() {
     },
     errorWrapper,
     printContainer: document.getElementById("printContainer"),
-    openFileInput: null,
+    openFileInputName: "fileInput",
     debuggerScriptPath: "./debugger.js"
   };
 }
@@ -14646,7 +14718,9 @@ function webViewerLoad() {
   _app.PDFViewerApplication.run(config);
 }
 
-document.blockUnblockOnload?.(true);
+if (document.blockUnblockOnload) {
+  document.blockUnblockOnload(true);
+}
 
 if (document.readyState === "interactive" || document.readyState === "complete") {
   webViewerLoad();

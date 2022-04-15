@@ -29,7 +29,7 @@
 		exports["pdfjs-dist/build/pdf.scripting"] = factory();
 	else
 		root.pdfjsScripting = factory();
-})(this, () => {
+})(this, function() {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
@@ -641,12 +641,7 @@ class Field extends _pdf_object.PDFObject {
     if (this._isChoice) {
       if (this.multipleSelection) {
         const values = new Set(value);
-
-        if (Array.isArray(this._currentValueIndices)) {
-          this._currentValueIndices.length = 0;
-        } else {
-          this._currentValueIndices = [];
-        }
+        this._currentValueIndices.length = 0;
 
         this._items.forEach(({
           displayValue
@@ -2618,10 +2613,6 @@ class EventDispatcher {
 
   mergeChange(event) {
     let value = event.value;
-
-    if (Array.isArray(value)) {
-      return value;
-    }
 
     if (typeof value !== "string") {
       value = value.toString();
@@ -4956,8 +4947,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.14.171';
-const pdfjsBuild = '3f5c31e20';
+const pdfjsVersion = '2.14.102';
+const pdfjsBuild = 'db4f3adc5';
 })();
 
 /******/ 	return __webpack_exports__;

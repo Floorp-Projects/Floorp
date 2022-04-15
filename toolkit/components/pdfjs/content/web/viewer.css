@@ -24,7 +24,6 @@
   opacity: 0.2;
   line-height: 1;
   text-size-adjust: none;
-  forced-color-adjust: none;
 }
 
 .textLayer span,
@@ -639,6 +638,7 @@
   --page-border: 9px solid transparent;
   --spreadHorizontalWrapped-margin-LR: -3.5px;
   --zoom-factor: 1;
+  --viewport-scale-factor: 1;
 }
 
 @media screen and (forced-colors: active) {
@@ -776,7 +776,6 @@
 }
 
 :root {
-  --dir-factor: 1;
   --sidebar-width: 200px;
   --sidebar-transition-duration: 200ms;
   --sidebar-transition-timing-function: ease;
@@ -822,9 +821,9 @@
   --doorhanger-hover-color: rgba(12, 12, 13, 1);
   --doorhanger-hover-bg-color: rgba(237, 237, 237, 1);
   --doorhanger-separator-color: rgba(222, 222, 222, 1);
-  --dialog-button-border: 0 none;
-  --dialog-button-bg-color: rgba(12, 12, 13, 0.1);
-  --dialog-button-hover-bg-color: rgba(12, 12, 13, 0.3);
+  --overlay-button-border: 0 none;
+  --overlay-button-bg-color: rgba(12, 12, 13, 0.1);
+  --overlay-button-hover-bg-color: rgba(12, 12, 13, 0.3);
 
   --loading-icon: url(images/loading.svg);
   --treeitem-expanded-icon: url(images/treeitem-expanded.svg);
@@ -865,10 +864,6 @@
   --secondaryToolbarButton-documentProperties-icon: url(images/secondaryToolbarButton-documentProperties.svg);
 }
 
-:root:dir(rtl) {
-  --dir-factor: -1;
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --main-color: rgba(249, 249, 250, 1);
@@ -906,8 +901,8 @@
     --doorhanger-hover-color: rgba(249, 249, 250, 1);
     --doorhanger-hover-bg-color: rgba(93, 94, 98, 1);
     --doorhanger-separator-color: rgba(92, 92, 97, 1);
-    --dialog-button-bg-color: rgba(92, 92, 97, 1);
-    --dialog-button-hover-bg-color: rgba(115, 115, 115, 1);
+    --overlay-button-bg-color: rgba(92, 92, 97, 1);
+    --overlay-button-hover-bg-color: rgba(115, 115, 115, 1);
 
     /* This image is used in <input> elements, which unfortunately means that
      * the `mask-image` approach used with all of the other images doesn't work
@@ -928,9 +923,9 @@
     --doorhanger-hover-color: ButtonFace;
     --doorhanger-border-color-whcm: 1px solid ButtonText;
     --doorhanger-triangle-opacity-whcm: 0;
-    --dialog-button-border: 1px solid Highlight;
-    --dialog-button-hover-bg-color: Highlight;
-    --dialog-button-hover-color: ButtonFace;
+    --overlay-button-border: 1px solid Highlight;
+    --overlay-button-hover-bg-color: Highlight;
+    --overlay-button-hover-color: ButtonFace;
     --field-border-color: ButtonText;
   }
 }
@@ -1014,6 +1009,8 @@ select {
 #outerContainer.sidebarResizing #sidebarContainer {
   /* Improve responsiveness and avoid visual glitches when the sidebar is resized. */
   transition-duration: 0s;
+  /* Prevent e.g. the thumbnails being selected when the sidebar is resized. */
+  user-select: none;
 }
 
 #outerContainer.sidebarMoving #sidebarContainer,
@@ -1041,7 +1038,12 @@ select {
   position: absolute;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.1);
-  box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25);
+}
+html[dir="ltr"] #sidebarContent {
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25);
+}
+html[dir="rtl"] #sidebarContent {
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.25);
 }
 
 #viewerContainer {
@@ -1084,8 +1086,14 @@ select {
   width: 100%;
   height: 32px;
   background-color: var(--sidebar-toolbar-bg-color);
-  box-shadow: inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25),
-    0 1px 0 rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+}
+html[dir="ltr"] #toolbarSidebar {
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.15),
+    0 0 1px rgba(0, 0, 0, 0.1);
+}
+html[dir="rtl"] #toolbarSidebar {
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.15),
+    0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 #toolbarSidebar .toolbarButton {
@@ -1187,6 +1195,7 @@ select {
   position: absolute;
   z-index: 10000;
   height: auto;
+  min-width: 16px;
   padding: 0 4px;
   margin: 4px 2px;
   color: rgba(217, 217, 217, 1);
@@ -1204,11 +1213,10 @@ select {
 .findbar > div {
   height: 32px;
 }
-.findbar.wrapContainers > div,
-.findbar.wrapContainers > div#findbarMessageContainer > * {
+.findbar.wrapContainers > div {
   clear: both;
 }
-.findbar.wrapContainers > div#findbarMessageContainer {
+.findbar.wrapContainers > div.findbarMessageContainer {
   height: auto;
 }
 
@@ -1266,7 +1274,10 @@ select {
 #findInput[data-status="pending"] {
   background-image: var(--loading-icon);
   background-repeat: no-repeat;
-  background-position: calc(50% + 48% * var(--dir-factor));
+  background-position: 98%;
+}
+html[dir="rtl"] #findInput[data-status="pending"] {
+  background-position: 3px;
 }
 #findInput[data-status="notFound"] {
   background-color: rgba(255, 102, 102, 1);
@@ -1383,21 +1394,21 @@ select {
 
 .toolbarButton,
 .secondaryToolbarButton,
-.dialogButton {
+.overlayButton {
   border: 0 none;
   background: none;
   width: 28px;
   height: 28px;
 }
 
-.dialogButton:hover,
-.dialogButton:focus-visible {
-  background-color: var(--dialog-button-hover-bg-color);
+.overlayButton:hover,
+.overlayButton:focus-visible {
+  background-color: var(--overlay-button-hover-bg-color);
 }
 
-.dialogButton:hover > span,
-.dialogButton:focus-visible > span {
-  color: var(--dialog-button-hover-color);
+.overlayButton:hover > span,
+.overlayButton:focus-visible > span {
+  color: var(--overlay-button-hover-color);
 }
 
 .toolbarButton > span {
@@ -1409,7 +1420,7 @@ select {
 
 .toolbarButton[disabled],
 .secondaryToolbarButton[disabled],
-.dialogButton[disabled] {
+.overlayButton[disabled] {
   opacity: 0.5;
 }
 
@@ -1452,7 +1463,7 @@ select {
 .toolbarButton,
 .dropdownToolbarButton,
 .secondaryToolbarButton,
-.dialogButton {
+.overlayButton {
   min-width: 16px;
   margin: 2px 1px;
   padding: 2px 6px 0;
@@ -1541,6 +1552,14 @@ select {
   color: var(--main-color);
 }
 
+#customScaleOption {
+  display: none;
+}
+
+#pageWidthOption {
+  border-bottom: 1px rgba(255, 255, 255, 0.5) solid;
+}
+
 .toolbarButtonSpacer {
   width: 30px;
   display: inline-block;
@@ -1590,12 +1609,16 @@ select {
 
 .toolbarButton#sidebarToggle::before {
   mask-image: var(--toolbarButton-sidebarToggle-icon);
-  transform: scaleX(var(--dir-factor));
+}
+html[dir="rtl"] .toolbarButton#sidebarToggle::before {
+  transform: scaleX(-1);
 }
 
 .toolbarButton#secondaryToolbarToggle::before {
   mask-image: var(--toolbarButton-secondaryToolbarToggle-icon);
-  transform: scaleX(var(--dir-factor));
+}
+html[dir="rtl"] .toolbarButton#secondaryToolbarToggle::before {
+  transform: scaleX(-1);
 }
 
 .toolbarButton.findPrevious::before {
@@ -1663,7 +1686,9 @@ select {
 
 #viewOutline.toolbarButton::before {
   mask-image: var(--toolbarButton-viewOutline-icon);
-  transform: scaleX(var(--dir-factor));
+}
+html[dir="rtl"] #viewOutline.toolbarButton::before {
+  transform: scaleX(-1);
 }
 
 #viewAttachments.toolbarButton::before {
@@ -1676,7 +1701,9 @@ select {
 
 #currentOutlineItem.toolbarButton::before {
   mask-image: var(--toolbarButton-currentOutlineItem-icon);
-  transform: scaleX(var(--dir-factor));
+}
+html[dir="rtl"] #currentOutlineItem.toolbarButton::before {
+  transform: scaleX(-1);
 }
 
 #viewFind.toolbarButton::before {
@@ -1812,6 +1839,7 @@ select {
 
 .toolbarField.pageNumber {
   -moz-appearance: textfield; /* hides the spinner in moz */
+  min-width: 16px;
   text-align: right;
   width: 40px;
 }
@@ -1843,21 +1871,13 @@ select {
   padding-inline-start: 3px;
 }
 
-#thumbnailView,
-#outlineView,
-#attachmentsView,
-#layersView {
+#thumbnailView {
   position: absolute;
-  width: calc(100% - 8px);
+  width: calc(100% - 60px);
   top: 0;
   bottom: 0;
-  padding: 4px 4px 0;
-  overflow: auto;
-  user-select: none;
-}
-#thumbnailView {
-  width: calc(100% - 60px);
   padding: 10px 30px 0;
+  overflow: auto;
 }
 
 #thumbnailView > a:active,
@@ -1918,6 +1938,18 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   color: rgba(255, 255, 255, 1);
 }
 
+#outlineView,
+#attachmentsView,
+#layersView {
+  position: absolute;
+  width: calc(100% - 8px);
+  top: 0;
+  bottom: 0;
+  padding: 4px 4px 0;
+  overflow: auto;
+  user-select: none;
+}
+
 .treeWithDeepNesting > .treeItem,
 .treeItem > .treeItems {
   margin-inline-start: 20px;
@@ -1926,6 +1958,7 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 .treeItem > a {
   text-decoration: none;
   display: inline-block;
+  min-width: 95%;
   /* Subtract the right padding (left, in RTL mode) of the container: */
   min-width: calc(100% - 4px);
   height: auto;
@@ -1961,7 +1994,9 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 }
 .treeItemToggler.treeItemsHidden::before {
   mask-image: var(--treeitem-collapsed-icon);
-  transform: scaleX(var(--dir-factor));
+}
+html[dir="rtl"] .treeItemToggler.treeItemsHidden::before {
+  transform: scaleX(-1);
 }
 .treeItemToggler.treeItemsHidden ~ .treeItems {
   display: none;
@@ -1990,7 +2025,7 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 }
 
 #errorWrapper {
-  background-color: var(--errorWrapper-bg-color);
+  background: none repeat scroll 0 0 var(--errorWrapper-bg-color);
   color: var(--main-color);
   left: 0;
   position: absolute;
@@ -2015,17 +2050,32 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   width: 98%;
 }
 
-.dialogButton {
+.overlayButton {
   width: auto;
   margin: 3px 4px 2px !important;
   padding: 2px 11px;
   color: var(--main-color);
-  background-color: var(--dialog-button-bg-color);
-  border: var(--dialog-button-border) !important;
+  background-color: var(--overlay-button-bg-color);
+  border: var(--overlay-button-border) !important;
 }
 
-dialog {
-  margin: auto;
+#overlayContainer {
+  display: table;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 40000;
+}
+
+#overlayContainer > .container {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+#overlayContainer > .container > .dialog {
+  display: inline-block;
   padding: 15px;
   border-spacing: 4px;
   color: var(--main-color);
@@ -2036,23 +2086,20 @@ dialog {
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.2);
-}
 
-dialog > .row {
+.dialog > .row {
   display: table-row;
 }
 
-dialog > .row > * {
+.dialog > .row > * {
   display: table-cell;
 }
 
-dialog .toolbarField {
+.dialog .toolbarField {
   margin: 5px 0;
 }
 
-dialog .separator {
+.dialog .separator {
   display: block;
   margin: 4px 0;
   height: 1px;
@@ -2060,38 +2107,38 @@ dialog .separator {
   background-color: var(--separator-color);
 }
 
-dialog .buttonRow {
+.dialog .buttonRow {
   text-align: center;
   vertical-align: middle;
 }
 
-dialog :link {
+.dialog :link {
   color: rgba(255, 255, 255, 1);
 }
 
-#passwordDialog {
+#passwordOverlay > .dialog {
   text-align: center;
 }
-#passwordDialog .toolbarField {
+#passwordOverlay .toolbarField {
   width: 200px;
 }
 
-#documentPropertiesDialog {
+#documentPropertiesOverlay > .dialog {
   text-align: left;
 }
-#documentPropertiesDialog .row > * {
+#documentPropertiesOverlay .row > * {
   min-width: 100px;
   text-align: start;
 }
-#documentPropertiesDialog .row > span {
+#documentPropertiesOverlay .row > span {
   width: 125px;
   word-wrap: break-word;
 }
-#documentPropertiesDialog .row > p {
+#documentPropertiesOverlay .row > p {
   max-width: 225px;
   word-wrap: break-word;
 }
-#documentPropertiesDialog .buttonRow {
+#documentPropertiesOverlay .buttonRow {
   margin-top: 10px;
 }
 
@@ -2099,8 +2146,18 @@ dialog :link {
   clear: both;
 }
 
+.fileInput {
+  background: rgba(255, 255, 255, 1);
+  color: rgba(0, 0, 0, 1);
+  margin-top: 5px;
+  visibility: hidden;
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
 #PDFBug {
-  background-color: rgba(255, 255, 255, 1);
+  background: none repeat scroll 0 0 rgba(255, 255, 255, 1);
   border: 1px solid rgba(102, 102, 102, 1);
   position: fixed;
   top: 32px;
@@ -2129,9 +2186,12 @@ dialog :link {
 #PDFBug button.active {
   font-weight: bold;
 }
-.debuggerShowText,
+.debuggerShowText {
+  background: none repeat scroll 0 0 rgba(255, 255, 0, 1);
+  color: rgba(0, 0, 255, 1);
+}
 .debuggerHideText:hover {
-  background-color: rgba(255, 255, 0, 1);
+  background: none repeat scroll 0 0 rgba(255, 255, 0, 1);
 }
 #PDFBug .stats {
   font-family: courier;
@@ -2259,6 +2319,10 @@ dialog :link {
     display: block;
   }
 
+  .fileInput {
+    display: none;
+  }
+
   /* Rules for browsers that support PDF.js printing */
   body[data-pdfjsprinting] #outerContainer {
     display: none;
@@ -2327,8 +2391,18 @@ dialog :link {
   #sidebarContainer {
     background-color: var(--sidebar-narrow-bg-color);
   }
+
   #outerContainer.sidebarOpen #viewerContainer {
     inset-inline-start: 0 !important;
+  }
+
+  #outerContainer .hiddenLargeView,
+  #outerContainer .hiddenMediumView {
+    display: inherit;
+  }
+  #outerContainer .visibleLargeView,
+  #outerContainer .visibleMediumView {
+    display: none;
   }
 }
 
