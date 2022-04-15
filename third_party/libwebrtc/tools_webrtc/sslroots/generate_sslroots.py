@@ -36,7 +36,7 @@ _CERTIFICATE_ARRAY = 'certificate'
 _CERTIFICATE_VARIABLE = 'Certificate'
 _CERTIFICATE_SIZE_VARIABLE = 'CertificateSize'
 _INT_TYPE = 'size_t'
-_CHAR_TYPE = 'const unsigned char*'
+_CHAR_TYPE = 'unsigned char* const'
 _VERBOSE = 'verbose'
 
 
@@ -119,6 +119,7 @@ def _GenCFiles(root_dir, options):
   output_header_file.write(certificate_list)
   certificate_size_list += _CreateArraySectionFooter()
   output_header_file.write(certificate_size_list)
+  output_header_file.write(_CreateOutputFooter())
   output_header_file.close()
 
 
@@ -151,13 +152,34 @@ def _CreateCertSection(root_dir, source_file, label, options):
 
 
 def _CreateOutputHeader():
-  output = ('// This file is the root certificates in C form that are needed to'
+  output = ('/*\n'
+            ' *  Copyright 2004 The WebRTC Project Authors. All rights '
+            'reserved.\n'
+            ' *\n'
+            ' *  Use of this source code is governed by a BSD-style license\n'
+            ' *  that can be found in the LICENSE file in the root of the '
+            'source\n'
+            ' *  tree. An additional intellectual property rights grant can be '
+            'found\n'
+            ' *  in the file PATENTS.  All contributing project authors may\n'
+            ' *  be found in the AUTHORS file in the root of the source tree.\n'
+            ' */\n\n'
+            '#ifndef RTC_BASE_SSL_ROOTS_H_\n'
+            '#define RTC_BASE_SSL_ROOTS_H_\n\n'
+            '// This file is the root certificates in C form that are needed to'
             ' connect to\n// Google.\n\n'
             '// It was generated with the following command line:\n'
-            '// > python tools/certs/generate_sslroots.py'
-            '\n//    https://pki.google.com/roots.pem\n\n')
+            '// > python tools_webrtc/sslroots/generate_sslroots.py'
+            '\n//    https://pki.goog/roots.pem\n\n'
+            '// clang-format off\n'
+            '// Don\'t bother formatting generated code,\n'
+            '// also it would breaks subject/issuer lines.\n\n')
   return output
 
+def _CreateOutputFooter():
+  output = ('// clang-format on\n\n'
+            '#endif  // RTC_BASE_SSL_ROOTS_H_\n')
+  return output
 
 def _CreateArraySectionHeader(type_name, type_type, options):
   output = ('const %s kSSLCert%sList[] = {\n') %(type_type, type_name)
