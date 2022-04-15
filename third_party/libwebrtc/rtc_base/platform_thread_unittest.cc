@@ -10,7 +10,6 @@
 
 #include "rtc_base/platform_thread.h"
 
-#include "system_wrappers/include/sleep.h"
 #include "test/gtest.h"
 
 namespace rtc {
