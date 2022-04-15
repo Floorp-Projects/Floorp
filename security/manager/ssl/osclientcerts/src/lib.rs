@@ -17,9 +17,6 @@ extern crate libloading;
 #[macro_use]
 extern crate log;
 extern crate pkcs11;
-#[cfg(target_os = "macos")]
-#[macro_use]
-extern crate rental;
 #[macro_use]
 extern crate rsclientcerts;
 extern crate sha2;
