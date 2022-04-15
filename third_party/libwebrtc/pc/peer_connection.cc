@@ -389,6 +389,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator!=(
 
 rtc::scoped_refptr<PeerConnection> PeerConnection::Create(
     rtc::scoped_refptr<ConnectionContext> context,
+    const PeerConnectionFactoryInterface::Options& options,
     std::unique_ptr<RtcEventLog> event_log,
     std::unique_ptr<Call> call,
     const PeerConnectionInterface::RTCConfiguration& configuration,
@@ -418,21 +419,24 @@ rtc::scoped_refptr<PeerConnection> PeerConnection::Create(
       configuration.sdp_semantics == SdpSemantics::kUnifiedPlan;
   // The PeerConnection constructor consumes some, but not all, dependencies.
   rtc::scoped_refptr<PeerConnection> pc(
-      new rtc::RefCountedObject<PeerConnection>(context, is_unified_plan,
-                                                std::move(event_log),
-                                                std::move(call), dependencies));
+      new rtc::RefCountedObject<PeerConnection>(
+          context, options, is_unified_plan, std::move(event_log),
+          std::move(call), dependencies));
   if (!pc->Initialize(configuration, std::move(dependencies))) {
     return nullptr;
   }
   return pc;
 }
 
-PeerConnection::PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
-                               bool is_unified_plan,
-                               std::unique_ptr<RtcEventLog> event_log,
-                               std::unique_ptr<Call> call,
-                               PeerConnectionDependencies& dependencies)
+PeerConnection::PeerConnection(
+    rtc::scoped_refptr<ConnectionContext> context,
+    const PeerConnectionFactoryInterface::Options& options,
+    bool is_unified_plan,
+    std::unique_ptr<RtcEventLog> event_log,
+    std::unique_ptr<Call> call,
+    PeerConnectionDependencies& dependencies)
     : context_(context),
+      options_(options),
       observer_(dependencies.observer),
       is_unified_plan_(is_unified_plan),
       event_log_(std::move(event_log)),
@@ -541,8 +545,6 @@ bool PeerConnection::Initialize(
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.IPMetrics", address_family,
                             kPeerConnectionAddressFamilyCounter_Max);
 
-  const PeerConnectionFactoryInterface::Options& options = context_->options();
-
   // RFC 3264: The numeric value of the session id and version in the
   // o line MUST be representable with a "64 bit signed integer".
   // Due to this constraint session id |session_id_| is max limited to
@@ -551,15 +553,15 @@ bool PeerConnection::Initialize(
   JsepTransportController::Config config;
   config.redetermine_role_on_ice_restart =
       configuration.redetermine_role_on_ice_restart;
-  config.ssl_max_version = context_->options().ssl_max_version;
-  config.disable_encryption = options.disable_encryption;
+  config.ssl_max_version = options_.ssl_max_version;
+  config.disable_encryption = options_.disable_encryption;
   config.bundle_policy = configuration.bundle_policy;
   config.rtcp_mux_policy = configuration.rtcp_mux_policy;
-  // TODO(bugs.webrtc.org/9891) - Remove options.crypto_options then remove this
-  // stub.
+  // TODO(bugs.webrtc.org/9891) - Remove options_.crypto_options then remove
+  // this stub.
   config.crypto_options = configuration.crypto_options.has_value()
                               ? *configuration.crypto_options
-                              : options.crypto_options;
+                              : options_.crypto_options;
   config.transport_observer = this;
   config.rtcp_handler = InitializeRtcpCallback();
   config.event_log = event_log_ptr_;
@@ -568,7 +570,7 @@ bool PeerConnection::Initialize(
 #endif
   config.active_reset_srtp_params = configuration.active_reset_srtp_params;
 
-  if (options.disable_encryption) {
+  if (options_.disable_encryption) {
     dtls_enabled_ = false;
   } else {
     // Enable DTLS by default if we have an identity store or a certificate.
@@ -587,7 +589,7 @@ bool PeerConnection::Initialize(
     data_channel_controller_.set_data_channel_type(cricket::DCT_RTP);
   } else {
     // DTLS has to be enabled to use SCTP.
-    if (!options.disable_sctp_data_channels && dtls_enabled_) {
+    if (!options_.disable_sctp_data_channels && dtls_enabled_) {
       data_channel_controller_.set_data_channel_type(cricket::DCT_SCTP);
       config.sctp_factory = context_->sctp_transport_factory();
     }
@@ -2528,7 +2530,7 @@ CryptoOptions PeerConnection::GetCryptoOptions() {
   // after it has been removed.
   return configuration_.crypto_options.has_value()
              ? *configuration_.crypto_options
-             : context_->options().crypto_options;
+             : options_.crypto_options;
 }
 
 void PeerConnection::ClearStatsCache() {

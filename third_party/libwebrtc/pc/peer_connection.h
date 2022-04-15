@@ -126,6 +126,7 @@ class PeerConnection : public PeerConnectionInternal,
   // either use them or release them, whether it succeeds or fails.
   static rtc::scoped_refptr<PeerConnection> Create(
       rtc::scoped_refptr<ConnectionContext> context,
+      const PeerConnectionFactoryInterface::Options& options,
       std::unique_ptr<RtcEventLog> event_log,
       std::unique_ptr<Call> call,
       const PeerConnectionInterface::RTCConfiguration& configuration,
@@ -371,7 +372,9 @@ class PeerConnection : public PeerConnectionInternal,
   Call* call_ptr() { return call_ptr_; }
 
   ConnectionContext* context() { return context_.get(); }
-
+  const PeerConnectionFactoryInterface::Options* options() const {
+    return &options_;
+  }
   cricket::DataChannelType data_channel_type() const;
   void SetIceConnectionState(IceConnectionState new_state);
   void NoteUsageEvent(UsageEvent event);
@@ -446,11 +449,12 @@ class PeerConnection : public PeerConnectionInternal,
 
  protected:
   // Available for rtc::scoped_refptr creation
-  explicit PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
-                          bool is_unified_plan,
-                          std::unique_ptr<RtcEventLog> event_log,
-                          std::unique_ptr<Call> call,
-                          PeerConnectionDependencies& dependencies);
+  PeerConnection(rtc::scoped_refptr<ConnectionContext> context,
+                 const PeerConnectionFactoryInterface::Options& options,
+                 bool is_unified_plan,
+                 std::unique_ptr<RtcEventLog> event_log,
+                 std::unique_ptr<Call> call,
+                 PeerConnectionDependencies& dependencies);
 
   ~PeerConnection() override;
 
@@ -595,6 +599,7 @@ class PeerConnection : public PeerConnectionInternal,
   InitializeRtcpCallback();
 
   const rtc::scoped_refptr<ConnectionContext> context_;
+  const PeerConnectionFactoryInterface::Options options_;
   PeerConnectionObserver* observer_ RTC_GUARDED_BY(signaling_thread()) =
       nullptr;
 

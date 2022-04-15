@@ -114,7 +114,8 @@ PeerConnectionFactory::~PeerConnectionFactory() {
 }
 
 void PeerConnectionFactory::SetOptions(const Options& options) {
-  context_->SetOptions(options);
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  options_ = options;
 }
 
 RtpCapabilities PeerConnectionFactory::GetRtpSenderCapabilities(
@@ -205,7 +206,7 @@ rtc::scoped_refptr<PeerConnectionInterface>
 PeerConnectionFactory::CreatePeerConnection(
     const PeerConnectionInterface::RTCConfiguration& configuration,
     PeerConnectionDependencies dependencies) {
-  RTC_DCHECK(signaling_thread()->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(!(dependencies.allocator && dependencies.packet_socket_factory))
       << "You can't set both allocator and packet_socket_factory; "
          "the former is going away (see bugs.webrtc.org/7447";
@@ -249,9 +250,9 @@ PeerConnectionFactory::CreatePeerConnection(
       RTC_FROM_HERE,
       rtc::Bind(&PeerConnectionFactory::CreateCall_w, this, event_log.get()));
 
-  rtc::scoped_refptr<PeerConnection> pc =
-      PeerConnection::Create(context_, std::move(event_log), std::move(call),
-                             configuration, std::move(dependencies));
+  rtc::scoped_refptr<PeerConnection> pc = PeerConnection::Create(
+      context_, options_, std::move(event_log), std::move(call), configuration,
+      std::move(dependencies));
   if (!pc) {
     return nullptr;
   }
