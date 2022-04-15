@@ -708,15 +708,18 @@ AudioProcessingImpl::RuntimeSettingEnqueuer::~RuntimeSettingEnqueuer() =
 
 void AudioProcessingImpl::RuntimeSettingEnqueuer::Enqueue(
     RuntimeSetting setting) {
-  size_t remaining_attempts = 10;
+  int remaining_attempts = 10;
   while (!runtime_settings_.Insert(&setting) && remaining_attempts-- > 0) {
     RuntimeSetting setting_to_discard;
-    if (runtime_settings_.Remove(&setting_to_discard))
+    if (runtime_settings_.Remove(&setting_to_discard)) {
       RTC_LOG(LS_ERROR)
           << "The runtime settings queue is full. Oldest setting discarded.";
+    }
   }
-  if (remaining_attempts == 0)
+  if (remaining_attempts == 0) {
+    RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.ApmRuntimeSettingCannotEnqueue", 1);
     RTC_LOG(LS_ERROR) << "Cannot enqueue a new runtime setting.";
+  }
 }
 
 int AudioProcessingImpl::MaybeInitializeCapture(
