@@ -157,6 +157,7 @@ rtc_library("loss_based_controller") {
   deps = [
     "../../../api/rtc_event_log",
     "../../../api/transport:network_control",
+    "../../../api/transport:webrtc_key_value_config",
     "../../../api/units:data_rate",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
@@ -292,6 +293,7 @@ if (rtc_include_tests) {
       "../../../rtc_base:rtc_base_tests_utils",
       "../../../rtc_base/experiments:alr_experiment",
       "../../../system_wrappers",
+      "../../../test:explicit_key_value_config",
       "../../../test:field_trial",
       "../../../test:test_support",
       "../../../test/scenario",
