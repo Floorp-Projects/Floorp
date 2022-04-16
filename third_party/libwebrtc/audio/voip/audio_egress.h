@@ -130,6 +130,9 @@ class AudioEgress : public AudioSender, public AudioPacketizationCallback {
   // Synchronization is handled internally by AudioCodingModule.
   const std::unique_ptr<AudioCodingModule> audio_coding_;
 
+  // Synchronization is handled internally by voe::AudioLevel.
+  voe::AudioLevel input_audio_level_;
+
   // Struct that holds all variables used by encoder task queue.
   struct EncoderContext {
     // Offset used to mark rtp timestamp in sample rate unit in
@@ -148,9 +151,6 @@ class AudioEgress : public AudioSender, public AudioPacketizationCallback {
   // Defined last to ensure that there are no running tasks when the other
   // members are destroyed.
   rtc::TaskQueue encoder_queue_;
-
-  // Synchronizaton is handled internally by voe::AudioLevel.
-  voe::AudioLevel input_audio_level_;
 };
 
 }  // namespace webrtc
