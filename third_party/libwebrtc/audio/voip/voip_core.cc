@@ -161,8 +161,7 @@ void VoipCore::ReleaseChannel(ChannelId channel) {
   // Destroy channel outside of the lock.
   rtc::scoped_refptr<AudioChannel> audio_channel;
 
-  // Check if process thread is no longer needed.
-  bool stop_process_thread = false;
+  bool no_channels_after_release = false;
 
   {
     MutexLock lock(&lock_);
@@ -173,18 +172,24 @@ void VoipCore::ReleaseChannel(ChannelId channel) {
       channels_.erase(iter);
     }
 
-    // Check if this is the last channel we have.
-    stop_process_thread = channels_.empty();
+    no_channels_after_release = channels_.empty();
   }
 
   if (!audio_channel) {
     RTC_LOG(LS_WARNING) << "Channel " << channel << " not found";
   }
 
-  if (stop_process_thread) {
+  if (no_channels_after_release) {
     // Release audio channel first to have it DeRegisterModule first.
     audio_channel = nullptr;
     process_thread_->Stop();
+
+    // Make sure to stop playout on ADM if it is playing.
+    if (audio_device_module_->Playing()) {
+      if (audio_device_module_->StopPlayout() != 0) {
+        RTC_LOG(LS_WARNING) << "StopPlayout failed";
+      }
+    }
   }
 }
 
@@ -280,7 +285,15 @@ bool VoipCore::StopSend(ChannelId channel) {
 
 bool VoipCore::StartPlayout(ChannelId channel) {
   auto audio_channel = GetChannel(channel);
-  if (!audio_channel || !audio_channel->StartPlay()) {
+  if (!audio_channel) {
+    return false;
+  }
+
+  if (audio_channel->IsPlaying()) {
+    return true;
+  }
+
+  if (!audio_channel->StartPlay()) {
     return false;
   }
 
@@ -305,24 +318,6 @@ bool VoipCore::StopPlayout(ChannelId channel) {
 
   audio_channel->StopPlay();
 
-  bool stop_device = true;
-  {
-    MutexLock lock(&lock_);
-    for (auto kv : channels_) {
-      rtc::scoped_refptr<AudioChannel>& channel = kv.second;
-      if (channel->IsPlaying()) {
-        stop_device = false;
-        break;
-      }
-    }
-  }
-
-  if (stop_device && audio_device_module_->Playing()) {
-    if (audio_device_module_->StopPlayout() != 0) {
-      RTC_LOG(LS_ERROR) << "StopPlayout failed";
-      return false;
-    }
-  }
   return true;
 }
 
