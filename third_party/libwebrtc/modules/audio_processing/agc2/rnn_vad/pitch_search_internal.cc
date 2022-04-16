@@ -172,7 +172,7 @@ int ComputePitchPeriod24kHz(
       // Auto-correlation energy normalized by frame energy.
       const float numerator =
           auto_correlation[inverted_lag] * auto_correlation[inverted_lag];
-      const float denominator = y_energy[kMaxPitch24kHz - inverted_lag];
+      const float denominator = y_energy[inverted_lag];
       // Compare numerator/denominator ratios without using divisions.
       if (numerator * best_denominator > best_numerator * denominator) {
         best_inverted_lag = inverted_lag;
@@ -256,19 +256,19 @@ void Decimate2x(rtc::ArrayView<const float, kBufSize24kHz> src,
 
 void ComputeSlidingFrameSquareEnergies24kHz(
     rtc::ArrayView<const float, kBufSize24kHz> pitch_buffer,
-    rtc::ArrayView<float, kRefineNumLags24kHz> yy_values) {
-  float yy = ComputeAutoCorrelation(kMaxPitch24kHz, pitch_buffer);
-  yy_values[0] = yy;
-  static_assert(kMaxPitch24kHz - (kRefineNumLags24kHz - 1) >= 0, "");
+    rtc::ArrayView<float, kRefineNumLags24kHz> y_energy) {
+  float yy = std::inner_product(pitch_buffer.begin(),
+                                pitch_buffer.begin() + kFrameSize20ms24kHz,
+                                pitch_buffer.begin(), 0.f);
+  y_energy[0] = yy;
   static_assert(kMaxPitch24kHz - 1 + kFrameSize20ms24kHz < kBufSize24kHz, "");
-  for (int lag = 1; lag < kRefineNumLags24kHz; ++lag) {
-    const int inverted_lag = kMaxPitch24kHz - lag;
-    const float y_old = pitch_buffer[inverted_lag + kFrameSize20ms24kHz];
-    const float y_new = pitch_buffer[inverted_lag];
-    yy -= y_old * y_old;
-    yy += y_new * y_new;
-    yy = std::max(0.f, yy);
-    yy_values[lag] = yy;
+  static_assert(kMaxPitch24kHz < kRefineNumLags24kHz, "");
+  for (int inverted_lag = 0; inverted_lag < kMaxPitch24kHz; ++inverted_lag) {
+    yy -= pitch_buffer[inverted_lag] * pitch_buffer[inverted_lag];
+    yy += pitch_buffer[inverted_lag + kFrameSize20ms24kHz] *
+          pitch_buffer[inverted_lag + kFrameSize20ms24kHz];
+    yy = std::max(1.f, yy);
+    y_energy[inverted_lag + 1] = yy;
   }
 }
 
@@ -382,7 +382,7 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
     float y_energy;  // Energy of the sliding frame `y`.
   };
 
-  const float x_energy = y_energy[0];
+  const float x_energy = y_energy[kMaxPitch24kHz];
   const auto pitch_strength = [x_energy](float xy, float y_energy) {
     RTC_DCHECK_GE(x_energy * y_energy, 0.f);
     return xy / std::sqrt(1.f + x_energy * y_energy);
@@ -394,7 +394,7 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
       std::min(initial_pitch_period_48kHz / 2, kMaxPitch24kHz - 1);
   best_pitch.xy =
       ComputeAutoCorrelation(kMaxPitch24kHz - best_pitch.period, pitch_buffer);
-  best_pitch.y_energy = y_energy[best_pitch.period];
+  best_pitch.y_energy = y_energy[kMaxPitch24kHz - best_pitch.period];
   best_pitch.strength = pitch_strength(best_pitch.xy, best_pitch.y_energy);
   // Keep a copy of the initial pitch candidate.
   const PitchInfo initial_pitch{best_pitch.period, best_pitch.strength};
@@ -435,8 +435,9 @@ PitchInfo ComputeExtendedPitchPeriod48kHz(
     const float xy_secondary_period = ComputeAutoCorrelation(
         kMaxPitch24kHz - dual_alternative_period, pitch_buffer);
     const float xy = 0.5f * (xy_primary_period + xy_secondary_period);
-    const float yy = 0.5f * (y_energy[alternative_pitch.period] +
-                             y_energy[dual_alternative_period]);
+    const float yy =
+        0.5f * (y_energy[kMaxPitch24kHz - alternative_pitch.period] +
+                y_energy[kMaxPitch24kHz - dual_alternative_period]);
     alternative_pitch.strength = pitch_strength(xy, yy);
 
     // Maybe update best period.
