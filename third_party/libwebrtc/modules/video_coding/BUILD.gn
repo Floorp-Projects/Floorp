@@ -60,7 +60,6 @@ rtc_library("frame_dependencies_calculator") {
 
   deps = [
     "../../api:array_view",
-    "../../api/video:video_frame_type",
     "../../common_video/generic_frame_descriptor",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
