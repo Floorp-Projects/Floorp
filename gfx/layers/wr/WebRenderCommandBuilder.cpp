@@ -1367,24 +1367,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         auto spaceAndClipChain =
             mClipManager.SwitchItem(aDisplayListBuilder, item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
-        bool hasHitTest = mHitTestInfoManager.ProcessItem(item, aBuilder,
-                                                          aDisplayListBuilder);
-        // XXX - This is hacky. Some items have hit testing info on them but we
-        // also have dedicated hit testing items, the flags of which apply to
-        // the the group that contains them. We don't want layerization to
-        // affect that so if the item didn't emit any hit testing then we still
-        // push a hit test item if the previous group had some hit test flags
-        // set. This is obviously not great. Hit testing should be independent
-        // from how we layerize.
-        if (!hasHitTest &&
-            currentGroup->mHitInfo != gfx::CompositorHitTestInvisibleToHit) {
-          auto hitTestRect = item->GetBuildingRect();
-          if (!hitTestRect.IsEmpty()) {
-            currentGroup->PushHitTest(
-                aBuilder, LayoutDeviceRect::FromAppUnits(
-                              hitTestRect, currentGroup->mAppUnitsPerDevPixel));
-          }
-        }
+        mHitTestInfoManager.ProcessItem(item, aBuilder, aDisplayListBuilder);
 
         sIndent++;
         // Note: this call to CreateWebRenderCommands can recurse back into
