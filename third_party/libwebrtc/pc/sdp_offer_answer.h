@@ -554,11 +554,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // payload type based demuxing in the affected channels.
   bool UpdatePayloadTypeDemuxingState(cricket::ContentSource source);
 
-  // Called when an RTCCertificate is generated or retrieved by
-  // WebRTCSessionDescriptionFactory. Should happen before setLocalDescription.
-  void OnCertificateReady(
-      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate);
-
   // ==================================================================
   // Access to pc_ variables
   cricket::ChannelManager* channel_manager() const;
