@@ -347,8 +347,8 @@ void AndroidVoipClient::StopSession(JNIEnv* env) {
                                            /*isSuccessful=*/false);
     return;
   }
-  if (!voip_engine_->Base().StopSend(*channel_) ||
-      !voip_engine_->Base().StopPlayout(*channel_)) {
+  if (voip_engine_->Base().StopSend(*channel_) != webrtc::VoipResult::kOk ||
+      voip_engine_->Base().StopPlayout(*channel_) != webrtc::VoipResult::kOk) {
     Java_VoipClient_onStopSessionCompleted(env_, j_voip_client_,
                                            /*isSuccessful=*/false);
     return;
@@ -372,8 +372,9 @@ void AndroidVoipClient::StartSend(JNIEnv* env) {
                                          /*isSuccessful=*/false);
     return;
   }
-  Java_VoipClient_onStartSendCompleted(
-      env_, j_voip_client_, voip_engine_->Base().StartSend(*channel_));
+  bool sending_started =
+      (voip_engine_->Base().StartSend(*channel_) == webrtc::VoipResult::kOk);
+  Java_VoipClient_onStartSendCompleted(env_, j_voip_client_, sending_started);
 }
 
 void AndroidVoipClient::StopSend(JNIEnv* env) {
@@ -385,8 +386,9 @@ void AndroidVoipClient::StopSend(JNIEnv* env) {
                                         /*isSuccessful=*/false);
     return;
   }
-  Java_VoipClient_onStopSendCompleted(env_, j_voip_client_,
-                                      voip_engine_->Base().StopSend(*channel_));
+  bool sending_stopped =
+      (voip_engine_->Base().StopSend(*channel_) == webrtc::VoipResult::kOk);
+  Java_VoipClient_onStopSendCompleted(env_, j_voip_client_, sending_stopped);
 }
 
 void AndroidVoipClient::StartPlayout(JNIEnv* env) {
@@ -398,8 +400,10 @@ void AndroidVoipClient::StartPlayout(JNIEnv* env) {
                                             /*isSuccessful=*/false);
     return;
   }
-  Java_VoipClient_onStartPlayoutCompleted(
-      env_, j_voip_client_, voip_engine_->Base().StartPlayout(*channel_));
+  bool playout_started =
+      (voip_engine_->Base().StartPlayout(*channel_) == webrtc::VoipResult::kOk);
+  Java_VoipClient_onStartPlayoutCompleted(env_, j_voip_client_,
+                                          playout_started);
 }
 
 void AndroidVoipClient::StopPlayout(JNIEnv* env) {
@@ -411,8 +415,9 @@ void AndroidVoipClient::StopPlayout(JNIEnv* env) {
                                            /*isSuccessful=*/false);
     return;
   }
-  Java_VoipClient_onStopPlayoutCompleted(
-      env_, j_voip_client_, voip_engine_->Base().StopPlayout(*channel_));
+  bool playout_stopped =
+      (voip_engine_->Base().StopPlayout(*channel_) == webrtc::VoipResult::kOk);
+  Java_VoipClient_onStopPlayoutCompleted(env_, j_voip_client_, playout_stopped);
 }
 
 void AndroidVoipClient::Delete(JNIEnv* env) {
