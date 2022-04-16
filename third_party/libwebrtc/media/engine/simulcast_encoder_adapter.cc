@@ -240,10 +240,6 @@ int SimulcastEncoderAdapter::InitEncode(
   RTC_DCHECK_LT(lowest_resolution_stream_index, number_of_streams);
   RTC_DCHECK_LT(highest_resolution_stream_index, number_of_streams);
 
-  const SdpVideoFormat format(
-      codec_.codecType == webrtc::kVideoCodecVP8 ? "VP8" : "H264",
-      video_format_.parameters);
-
   for (int i = 0; i < number_of_streams; ++i) {
     // If an existing encoder instance exists, reuse it.
     // TODO(brandtr): Set initial RTP state (e.g., picture_id/tl0_pic_idx) here,
@@ -253,10 +249,10 @@ int SimulcastEncoderAdapter::InitEncode(
       encoder = std::move(stored_encoders_.top());
       stored_encoders_.pop();
     } else {
-      encoder = primary_encoder_factory_->CreateVideoEncoder(format);
+      encoder = primary_encoder_factory_->CreateVideoEncoder(video_format_);
       if (fallback_encoder_factory_ != nullptr) {
         encoder = CreateVideoEncoderSoftwareFallbackWrapper(
-            fallback_encoder_factory_->CreateVideoEncoder(format),
+            fallback_encoder_factory_->CreateVideoEncoder(video_format_),
             std::move(encoder),
             i == lowest_resolution_stream_index &&
                 prefer_temporal_support_on_base_layer_);
