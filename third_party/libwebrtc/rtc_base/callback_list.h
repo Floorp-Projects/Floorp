@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "api/function_view.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/system/assume.h"
 #include "rtc_base/system/inline.h"
 #include "rtc_base/untyped_function.h"
@@ -33,6 +34,7 @@ class CallbackListReceivers {
 
   template <typename UntypedFunctionArgsT>
   RTC_NO_INLINE void AddReceiver(UntypedFunctionArgsT args) {
+    RTC_CHECK(!send_in_progress_);
     receivers_.push_back(UntypedFunction::Create(args));
   }
 
@@ -40,6 +42,7 @@ class CallbackListReceivers {
 
  private:
   std::vector<UntypedFunction> receivers_;
+  bool send_in_progress_ = false;
 };
 
 extern template void CallbackListReceivers::AddReceiver(
@@ -145,7 +148,9 @@ class CallbackList {
         UntypedFunction::PrepareArgs<void(ArgT...)>(std::forward<F>(f)));
   }
 
-  // Calls all receivers with the given arguments.
+  // Calls all receivers with the given arguments. While the Send is in
+  // progress, no method calls are allowed; specifically, this means that the
+  // callbacks may not do anything with this CallbackList instance.
   template <typename... ArgU>
   void Send(ArgU&&... args) {
     receivers_.Foreach([&](UntypedFunction& f) {
