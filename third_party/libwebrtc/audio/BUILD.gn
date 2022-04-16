@@ -80,7 +80,6 @@ rtc_library("audio") {
     "../modules/audio_processing:audio_frame_proxies",
     "../modules/audio_processing:rms_level",
     "../modules/pacing",
-    "../modules/remote_bitrate_estimator",
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../modules/utility",
