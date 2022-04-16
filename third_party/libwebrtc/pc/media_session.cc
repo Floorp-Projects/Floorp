@@ -36,6 +36,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/third_party/base64/base64.h"
 #include "rtc_base/unique_id_generator.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace {
 
@@ -335,6 +336,12 @@ static StreamParams CreateStreamParamsForNewSenderWithSsrcs(
         << "Our FlexFEC implementation only supports protecting "
            "a single media streams. This session has multiple "
            "media streams however, so no FlexFEC SSRC will be generated.";
+  }
+  if (include_flexfec_stream &&
+      !webrtc::field_trial::IsEnabled("WebRTC-FlexFEC-03")) {
+    include_flexfec_stream = false;
+    RTC_LOG(LS_WARNING)
+        << "WebRTC-FlexFEC trial is not enabled, not sending FlexFEC";
   }
 
   result.GenerateSsrcs(sender.num_sim_layers, include_rtx_streams,
