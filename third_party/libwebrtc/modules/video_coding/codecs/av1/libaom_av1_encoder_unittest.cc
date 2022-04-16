@@ -83,5 +83,24 @@ TEST(LibaomAv1EncoderTest, NoBitrateOnTopLayerRefecltedInActiveDecodeTargets) {
             0b01);
 }
 
+TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  // Configure encoder with 3 spatial layers.
+  codec_settings.SetScalabilityMode("L3T1");
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
+      EncodedVideoFrameProducer(*encoder).SetNumInputFrames(2).Encode();
+  ASSERT_THAT(encoded_frames, SizeIs(6));
+  EXPECT_FALSE(encoded_frames[0].codec_specific_info.end_of_picture);
+  EXPECT_FALSE(encoded_frames[1].codec_specific_info.end_of_picture);
+  EXPECT_TRUE(encoded_frames[2].codec_specific_info.end_of_picture);
+  EXPECT_FALSE(encoded_frames[3].codec_specific_info.end_of_picture);
+  EXPECT_FALSE(encoded_frames[4].codec_specific_info.end_of_picture);
+  EXPECT_TRUE(encoded_frames[5].codec_specific_info.end_of_picture);
+}
+
 }  // namespace
 }  // namespace webrtc

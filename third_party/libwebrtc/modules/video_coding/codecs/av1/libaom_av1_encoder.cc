@@ -462,7 +462,10 @@ int32_t LibaomAv1Encoder::Encode(
   const uint32_t duration =
       kRtpTicksPerSecond / static_cast<float>(encoder_settings_.maxFramerate);
 
-  for (ScalableVideoController::LayerFrameConfig& layer_frame : layer_frames) {
+  for (size_t i = 0; i < layer_frames.size(); ++i) {
+    ScalableVideoController::LayerFrameConfig& layer_frame = layer_frames[i];
+    const bool end_of_picture = i == layer_frames.size() - 1;
+
     aom_enc_frame_flags_t flags =
         layer_frame.IsKeyframe() ? AOM_EFLAG_FORCE_KF : 0;
 
@@ -528,6 +531,7 @@ int32_t LibaomAv1Encoder::Encode(
     if (encoded_image.size() > 0) {
       CodecSpecificInfo codec_specific_info;
       codec_specific_info.codecType = kVideoCodecAV1;
+      codec_specific_info.end_of_picture = end_of_picture;
       bool is_keyframe = layer_frame.IsKeyframe();
       codec_specific_info.generic_frame_info =
           svc_controller_->OnEncodeDone(std::move(layer_frame));

@@ -85,7 +85,7 @@ void PopulateRtpWithCodecSpecifics(const CodecSpecificInfo& info,
       for (int i = 0; i < info.codecSpecific.VP9.num_ref_pics; ++i) {
         vp9_header.pid_diff[i] = info.codecSpecific.VP9.p_diff[i];
       }
-      vp9_header.end_of_picture = info.codecSpecific.VP9.end_of_picture;
+      vp9_header.end_of_picture = info.end_of_picture;
       return;
     }
     case kVideoCodecH264: {

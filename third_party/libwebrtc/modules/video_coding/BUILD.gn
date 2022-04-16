@@ -230,6 +230,7 @@ rtc_library("video_codec_interface") {
     "../../api/video_codecs:video_codecs_api",
     "../../common_video",
     "../../common_video/generic_frame_descriptor",
+    "../../rtc_base:deprecation",
     "../../rtc_base/system:rtc_export",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

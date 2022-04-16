@@ -347,7 +347,6 @@ CodecSpecificInfo VideoEncoderWrapper::ParseCodecSpecificInfo(
           static_cast<uint8_t>(gof_idx_++ % gof_.num_frames_in_gof);
       info.codecSpecific.VP9.num_spatial_layers = 1;
       info.codecSpecific.VP9.first_frame_in_picture = true;
-      info.codecSpecific.VP9.end_of_picture = true;
       info.codecSpecific.VP9.spatial_layer_resolution_present = false;
       if (info.codecSpecific.VP9.ss_data_available) {
         info.codecSpecific.VP9.spatial_layer_resolution_present = true;

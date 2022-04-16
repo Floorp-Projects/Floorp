@@ -1736,7 +1736,7 @@ void VP9EncoderImpl::DeliverBufferedFrame(bool end_of_picture) {
       }
     }
 
-    codec_specific_.codecSpecific.VP9.end_of_picture = end_of_picture;
+    codec_specific_.end_of_picture = end_of_picture;
 
     encoded_complete_callback_->OnEncodedImage(encoded_image_,
                                                &codec_specific_);
