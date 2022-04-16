@@ -132,7 +132,9 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
     bool dtls_enabled,
     std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator,
     const rtc::scoped_refptr<rtc::RTCCertificate>& certificate,
-    UniqueRandomIdGenerator* ssrc_generator)
+    UniqueRandomIdGenerator* ssrc_generator,
+    std::function<void(const rtc::scoped_refptr<rtc::RTCCertificate>&)>
+        on_certificate_ready)
     : signaling_thread_(signaling_thread),
       session_desc_factory_(channel_manager,
                             &transport_desc_factory_,
@@ -145,7 +147,8 @@ WebRtcSessionDescriptionFactory::WebRtcSessionDescriptionFactory(
       cert_generator_(dtls_enabled ? std::move(cert_generator) : nullptr),
       sdp_info_(sdp_info),
       session_id_(session_id),
-      certificate_request_state_(CERTIFICATE_NOT_NEEDED) {
+      certificate_request_state_(CERTIFICATE_NOT_NEEDED),
+      on_certificate_ready_(on_certificate_ready) {
   RTC_DCHECK(signaling_thread_);
 
   if (!dtls_enabled) {
@@ -487,7 +490,8 @@ void WebRtcSessionDescriptionFactory::SetCertificate(
   RTC_LOG(LS_VERBOSE) << "Setting new certificate.";
 
   certificate_request_state_ = CERTIFICATE_SUCCEEDED;
-  SignalCertificateReady(certificate);
+
+  on_certificate_ready_(certificate);
 
   transport_desc_factory_.set_certificate(certificate);
   transport_desc_factory_.set_secure(cricket::SEC_ENABLED);

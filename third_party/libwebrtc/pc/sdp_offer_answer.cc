@@ -994,9 +994,10 @@ void SdpOfferAnswerHandler::Initialize(
       std::make_unique<WebRtcSessionDescriptionFactory>(
           signaling_thread(), channel_manager(), this, pc_->session_id(),
           pc_->dtls_enabled(), std::move(dependencies.cert_generator),
-          certificate, &ssrc_generator_);
-  webrtc_session_desc_factory_->SignalCertificateReady.connect(
-      this, &SdpOfferAnswerHandler::OnCertificateReady);
+          certificate, &ssrc_generator_,
+          [this](const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
+            transport_controller()->SetLocalCertificate(certificate);
+          });
 
   if (pc_->options()->disable_encryption) {
     webrtc_session_desc_factory_->SetSdesPolicy(cricket::SEC_DISABLED);
@@ -1060,11 +1061,6 @@ const RtpTransmissionManager* SdpOfferAnswerHandler::rtp_manager() const {
 }
 
 // ===================================================================
-
-void SdpOfferAnswerHandler::OnCertificateReady(
-    const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
-  transport_controller()->SetLocalCertificate(certificate);
-}
 
 void SdpOfferAnswerHandler::PrepareForShutdown() {
   RTC_DCHECK_RUN_ON(signaling_thread());
