@@ -63,17 +63,12 @@ TEST(RnnVadTest, ComputePitchPeriod12kHzBitExactness) {
 // Checks that the refined pitch period is bit-exact given test input data.
 TEST(RnnVadTest, ComputePitchPeriod48kHzBitExactness) {
   PitchTestData test_data;
-  std::vector<float> y_energy(kMaxPitch24kHz + 1);
-  rtc::ArrayView<float, kMaxPitch24kHz + 1> y_energy_view(y_energy.data(),
-                                                          kMaxPitch24kHz + 1);
-  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
-                                         y_energy_view);
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
-  EXPECT_EQ(ComputePitchPeriod48kHz(test_data.GetPitchBufView(), y_energy_view,
+  EXPECT_EQ(ComputePitchPeriod48kHz(test_data.GetPitchBufView(),
                                     /*pitch_candidates=*/{280, 284}),
             560);
-  EXPECT_EQ(ComputePitchPeriod48kHz(test_data.GetPitchBufView(), y_energy_view,
+  EXPECT_EQ(ComputePitchPeriod48kHz(test_data.GetPitchBufView(),
                                     /*pitch_candidates=*/{260, 284}),
             568);
 }
@@ -95,15 +90,10 @@ class ComputeExtendedPitchPeriod48kHzTest
 TEST_P(ComputeExtendedPitchPeriod48kHzTest,
        PeriodBitExactnessGainWithinTolerance) {
   PitchTestData test_data;
-  std::vector<float> y_energy(kMaxPitch24kHz + 1);
-  rtc::ArrayView<float, kMaxPitch24kHz + 1> y_energy_view(y_energy.data(),
-                                                          kMaxPitch24kHz + 1);
-  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
-                                         y_energy_view);
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
   const auto computed_output = ComputeExtendedPitchPeriod48kHz(
-      test_data.GetPitchBufView(), y_energy_view, GetInitialPitchPeriod(),
+      test_data.GetPitchBufView(), GetInitialPitchPeriod(),
       {GetLastPitchPeriod(), GetLastPitchStrength()});
   EXPECT_EQ(GetExpectedPitchPeriod(), computed_output.period);
   EXPECT_NEAR(GetExpectedPitchStrength(), computed_output.strength, 1e-6f);
