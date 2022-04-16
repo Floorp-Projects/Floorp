@@ -2270,8 +2270,12 @@ setup_wasapi_stream_one_side(cubeb_stream * stm,
     if (wasapi_create_device(stm->context, device_info,
                              stm->device_enumerator.get(), device.get(),
                              &default_devices) == CUBEB_OK) {
+      if (device_info.latency_hi == 0) {
+        LOG("Input: could not query latency_hi to guess safe latency");
+        wasapi_destroy_device(&device_info);
+        return CUBEB_ERROR;
+      }
       // This multiplicator has been found empirically.
-      XASSERT(device_info.latency_hi > 0);
       uint32_t latency_frames = device_info.latency_hi * 8;
       LOG("Input: latency increased to %u frames from a default of %u",
           latency_frames, device_info.latency_hi);
