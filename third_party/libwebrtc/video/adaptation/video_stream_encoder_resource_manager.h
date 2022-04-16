@@ -184,6 +184,9 @@ class VideoStreamEncoderResourceManager
   VideoSourceRestrictions video_source_restrictions_
       RTC_GUARDED_BY(encoder_queue_);
 
+  VideoAdaptationCounters current_adaptation_counters_
+      RTC_GUARDED_BY(encoder_queue_);
+
   const BalancedDegradationSettings balanced_settings_;
   Clock* clock_ RTC_GUARDED_BY(encoder_queue_);
   const bool experiment_cpu_load_estimator_ RTC_GUARDED_BY(encoder_queue_);
