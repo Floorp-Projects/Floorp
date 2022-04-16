@@ -18,6 +18,7 @@ class VoipCodec;
 class VoipNetwork;
 class VoipDtmf;
 class VoipStatistics;
+class VoipVolumeControl;
 
 // VoipEngine is the main interface serving as the entry point for all VoIP
 // APIs. A single instance of VoipEngine should suffice the most of the need for
@@ -89,6 +90,9 @@ class VoipEngine {
   // VoipStatistics provides performance metrics around audio decoding module
   // and jitter buffer (NetEq).
   virtual VoipStatistics& Statistics() = 0;
+
+  // VoipVolumeControl provides various input/output volume control.
+  virtual VoipVolumeControl& VolumeControl() = 0;
 };
 
 }  // namespace webrtc

@@ -27,6 +27,7 @@
 #include "api/voip/voip_engine.h"
 #include "api/voip/voip_network.h"
 #include "api/voip/voip_statistics.h"
+#include "api/voip/voip_volume_control.h"
 #include "audio/audio_transport_impl.h"
 #include "audio/voip/audio_channel.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -49,7 +50,8 @@ class VoipCore : public VoipEngine,
                  public VoipNetwork,
                  public VoipCodec,
                  public VoipDtmf,
-                 public VoipStatistics {
+                 public VoipStatistics,
+                 public VoipVolumeControl {
  public:
   // Construct VoipCore with provided arguments.
   // ProcessThread implementation can be injected by |process_thread|
@@ -69,6 +71,7 @@ class VoipCore : public VoipEngine,
   VoipCodec& Codec() override { return *this; }
   VoipDtmf& Dtmf() override { return *this; }
   VoipStatistics& Statistics() override { return *this; }
+  VoipVolumeControl& VolumeControl() override { return *this; }
 
   // Implements VoipBase interfaces.
   absl::optional<ChannelId> CreateChannel(
@@ -105,6 +108,11 @@ class VoipCore : public VoipEngine,
   // Implements VoipStatistics interfaces.
   absl::optional<IngressStatistics> GetIngressStatistics(
       ChannelId channel_id) override;
+
+  // Implements VoipVolumeControl interfaces.
+  void SetInputMuted(ChannelId channel_id, bool enable) override;
+  absl::optional<VolumeInfo> GetInputVolumeInfo(ChannelId channel_id) override;
+  absl::optional<VolumeInfo> GetOutputVolumeInfo(ChannelId channel_id) override;
 
  private:
   // Initialize ADM and default audio device if needed.

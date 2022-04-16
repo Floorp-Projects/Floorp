@@ -155,7 +155,7 @@ IngressStatistics AudioChannel::GetIngressStatistics() {
   ingress_stats.neteq_stats.interruption_count = stats.interruptionCount;
   ingress_stats.neteq_stats.total_interruption_duration_ms =
       stats.totalInterruptionDurationMs;
-  ingress_stats.total_duration = ingress_->GetTotalDuration();
+  ingress_stats.total_duration = ingress_->GetOutputTotalDuration();
   return ingress_stats;
 }
 

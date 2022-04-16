@@ -17,6 +17,7 @@ rtc_source_set("voip_api") {
     "voip_engine.h",
     "voip_network.h",
     "voip_statistics.h",
+    "voip_volume_control.h",
   ]
   deps = [
     "..:array_view",
