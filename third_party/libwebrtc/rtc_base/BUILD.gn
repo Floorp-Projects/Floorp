@@ -76,6 +76,7 @@ rtc_library("rtc_base_approved") {
     "../api:scoped_refptr",
     "synchronization:mutex",
     "system:arch",
+    "system:no_unique_address",
     "system:rtc_export",
     "system:unused",
     "third_party/base64",
@@ -489,6 +490,7 @@ rtc_source_set("rtc_operations_chain") {
     ":refcount",
     "../api:scoped_refptr",
     "synchronization:sequence_checker",
+    "system:no_unique_address",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -592,6 +594,7 @@ rtc_library("weak_ptr") {
     ":refcount",
     "../api:scoped_refptr",
     "synchronization:sequence_checker",
+    "system:no_unique_address",
   ]
 }
 
@@ -842,6 +845,7 @@ rtc_library("rtc_base") {
     "synchronization:sequence_checker",
     "system:file_wrapper",
     "system:inline",
+    "system:no_unique_address",
     "system:rtc_export",
     "task_utils:pending_task_safety_flag",
     "task_utils:repeating_task",

@@ -43,6 +43,7 @@
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 #include "video/buffered_frame_decryptor.h"
 #include "video/rtp_video_stream_receiver_frame_transformer_delegate.h"
@@ -241,7 +242,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
       bool decodability_flag;
     };
 
-    SequenceChecker worker_task_checker_;
+    RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_task_checker_;
     KeyFrameRequestSender* const key_frame_request_sender_;
     NackSender* const nack_sender_;
     LossNotificationSender* const loss_notification_sender_;
@@ -294,7 +295,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   ReceiveStatistics* const rtp_receive_statistics_;
   std::unique_ptr<UlpfecReceiver> ulpfec_receiver_;
 
-  SequenceChecker worker_task_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker worker_task_checker_;
   bool receiving_ RTC_GUARDED_BY(worker_task_checker_);
   int64_t last_packet_log_ms_ RTC_GUARDED_BY(worker_task_checker_);
 
