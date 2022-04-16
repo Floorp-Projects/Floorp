@@ -20,7 +20,7 @@
           if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
             opener.is(shistory.legacySHistory.requestedIndex, -1, "check requestedIndex");
           } else {
-            let index = await opener.getSHRequestedIndex();
+            let index = await opener.getSHRequestedIndex(SpecialPowers.wrap(window).browsingContext.id);
             opener.is(index, -1, "check requestedIndex");
           }
 

@@ -44,11 +44,11 @@
     async function startTestWithBrowser(browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
-      gFindBar.browser = gBrowser;
       const url = "data:text/html,hello there";
       let promise = BrowserTestUtils.browserLoaded(gBrowser, false, url);
       BrowserTestUtils.loadURI(gBrowser, url);
       await promise;
+      gFindBar.browser = gBrowser;
       await onDocumentLoaded();
     }
 
