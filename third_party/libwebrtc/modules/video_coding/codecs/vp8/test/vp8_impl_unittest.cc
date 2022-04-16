@@ -33,6 +33,7 @@ namespace webrtc {
 
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
 using ::testing::Field;
 using ::testing::Invoke;
@@ -260,6 +261,17 @@ TEST_F(TestVp8Impl, OnEncodedImageReportsInfo) {
   EXPECT_EQ(kInitialTimestampRtp, encoded_frame.Timestamp());
   EXPECT_EQ(kWidth, static_cast<int>(encoded_frame._encodedWidth));
   EXPECT_EQ(kHeight, static_cast<int>(encoded_frame._encodedHeight));
+}
+
+TEST_F(TestVp8Impl,
+       EncoderFillsResolutionInCodecAgnosticSectionOfCodecSpecificInfo) {
+  EncodedImage encoded_frame;
+  CodecSpecificInfo codec_specific_info;
+  EncodeAndWaitForFrame(NextInputFrame(), &encoded_frame, &codec_specific_info);
+
+  ASSERT_TRUE(codec_specific_info.template_structure);
+  EXPECT_THAT(codec_specific_info.template_structure->resolutions,
+              ElementsAre(RenderResolution(kWidth, kHeight)));
 }
 
 TEST_F(TestVp8Impl, DecodedQpEqualsEncodedQp) {

@@ -1062,9 +1062,25 @@ void LibvpxVp8Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
 
   int qp = 0;
   vpx_codec_control(&encoders_[encoder_idx], VP8E_GET_LAST_QUANTIZER_64, &qp);
-  frame_buffer_controller_->OnEncodeDone(
-      stream_idx, timestamp, encoded_images_[encoder_idx].size(),
-      (pkt.data.frame.flags & VPX_FRAME_IS_KEY) != 0, qp, codec_specific);
+  bool is_keyframe = (pkt.data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+  frame_buffer_controller_->OnEncodeDone(stream_idx, timestamp,
+                                         encoded_images_[encoder_idx].size(),
+                                         is_keyframe, qp, codec_specific);
+  if (is_keyframe && codec_specific->template_structure != absl::nullopt) {
+    // Number of resolutions must match number of spatial layers, VP8 structures
+    // expected to use single spatial layer. Templates must be ordered by
+    // spatial_id, so assumption there is exactly one spatial layer is same as
+    // assumption last template uses spatial_id = 0.
+    // This check catches potential scenario where template_structure is shared
+    // across multiple vp8 streams and they are distinguished using spatial_id.
+    // Assigning single resolution doesn't support such scenario, i.e. assumes
+    // vp8 simulcast is sent using multiple ssrcs.
+    RTC_DCHECK(!codec_specific->template_structure->templates.empty());
+    RTC_DCHECK_EQ(
+        codec_specific->template_structure->templates.back().spatial_id, 0);
+    codec_specific->template_structure->resolutions = {
+        RenderResolution(pkt.data.frame.width[0], pkt.data.frame.height[0])};
+  }
 }
 
 int LibvpxVp8Encoder::GetEncodedPartitions(const VideoFrame& input_image,
