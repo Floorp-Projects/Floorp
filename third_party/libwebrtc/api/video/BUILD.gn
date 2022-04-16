@@ -343,7 +343,7 @@ rtc_library("builtin_video_bitrate_allocator_factory") {
     "../../api:scoped_refptr",
     "../../media:rtc_media_base",
     "../../modules/video_coding:video_coding_utility",
-    "../../modules/video_coding:webrtc_vp9_helpers",
+    "../../modules/video_coding/svc:svc_rate_allocator",
     "../video_codecs:video_codecs_api",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
