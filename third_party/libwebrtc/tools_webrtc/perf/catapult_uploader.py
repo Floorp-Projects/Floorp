@@ -10,6 +10,7 @@
 import datetime
 import httplib2
 import json
+import math
 import subprocess
 import time
 import zlib
@@ -170,7 +171,8 @@ def _CheckFullUploadInfo(url, upload_token,
 
 
 # TODO(https://crbug.com/1029452): HACKHACK
-# Remove once we have doubles in the proto and handle -infinity correctly.
+# Remove once we have doubles in the proto and handle -infinity and NaN
+# correctly.
 def _ApplyHacks(dicts):
     def _NoInf(value):
         if value == float('inf'):
@@ -181,8 +183,12 @@ def _ApplyHacks(dicts):
 
     for d in dicts:
         if 'running' in d:
-            d['running'] = [_NoInf(value) for value in d['running']]
+            d['running'] = [
+                _NoInf(value) for value in d['running']
+                if not math.isnan(value)]
         if 'sampleValues' in d:
+            # We always have a single sample value. If it's NaN - the upload
+            # should fail.
             d['sampleValues'] = [_NoInf(value) for value in d['sampleValues']]
 
     return dicts
