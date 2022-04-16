@@ -7878,6 +7878,59 @@ TEST_F(WebRtcVideoChannelTest, SetRtpSendParametersMultipleEncodingsActive) {
   EXPECT_TRUE(channel_->SetVideoSend(primary_ssrc, nullptr, nullptr));
 }
 
+// Tests that when some streams are disactivated then the lowest
+// stream min_bitrate would be reused for the first active stream.
+TEST_F(WebRtcVideoChannelTest,
+       SetRtpSendParametersSetsMinBitrateForFirstActiveStream) {
+  // Create the stream params with multiple ssrcs for simulcast.
+  const size_t kNumSimulcastStreams = 3;
+  std::vector<uint32_t> ssrcs = MAKE_VECTOR(kSsrcs3);
+  StreamParams stream_params = CreateSimStreamParams("cname", ssrcs);
+  FakeVideoSendStream* fake_video_send_stream = AddSendStream(stream_params);
+  uint32_t primary_ssrc = stream_params.first_ssrc();
+
+  // Using the FrameForwarder, we manually send a full size
+  // frame. This allows us to test that ReconfigureEncoder is called
+  // appropriately.
+  webrtc::test::FrameForwarder frame_forwarder;
+  VideoOptions options;
+  EXPECT_TRUE(channel_->SetVideoSend(primary_ssrc, &options, &frame_forwarder));
+  channel_->SetSend(true);
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame(
+      1920, 1080, webrtc::VideoRotation::kVideoRotation_0,
+      rtc::kNumMicrosecsPerSec / 30));
+
+  // Check that all encodings are initially active.
+  webrtc::RtpParameters parameters =
+      channel_->GetRtpSendParameters(primary_ssrc);
+  EXPECT_EQ(kNumSimulcastStreams, parameters.encodings.size());
+  EXPECT_TRUE(parameters.encodings[0].active);
+  EXPECT_TRUE(parameters.encodings[1].active);
+  EXPECT_TRUE(parameters.encodings[2].active);
+  EXPECT_TRUE(fake_video_send_stream->IsSending());
+
+  // Only turn on the highest stream.
+  parameters.encodings[0].active = false;
+  parameters.encodings[1].active = false;
+  parameters.encodings[2].active = true;
+  EXPECT_TRUE(channel_->SetRtpSendParameters(primary_ssrc, parameters).ok());
+
+  // Check that the VideoSendStream is updated appropriately. This means its
+  // send state was updated and it was reconfigured.
+  EXPECT_TRUE(fake_video_send_stream->IsSending());
+  std::vector<webrtc::VideoStream> simulcast_streams =
+      fake_video_send_stream->GetVideoStreams();
+  EXPECT_EQ(kNumSimulcastStreams, simulcast_streams.size());
+  EXPECT_FALSE(simulcast_streams[0].active);
+  EXPECT_FALSE(simulcast_streams[1].active);
+  EXPECT_TRUE(simulcast_streams[2].active);
+
+  EXPECT_EQ(simulcast_streams[2].min_bitrate_bps,
+            simulcast_streams[0].min_bitrate_bps);
+
+  EXPECT_TRUE(channel_->SetVideoSend(primary_ssrc, nullptr, nullptr));
+}
+
 // Test that if a stream is reconfigured (due to a codec change or other
 // change) while its encoding is still inactive, it doesn't start sending.
 TEST_F(WebRtcVideoChannelTest,

@@ -3625,6 +3625,32 @@ EncoderStreamFactory::CreateSimulcastOrConferenceModeScreenshareStreams(
     BoostMaxSimulcastLayer(
         webrtc::DataRate::BitsPerSec(encoder_config.max_bitrate_bps), &layers);
   }
+
+  // Sort the layers by max_bitrate_bps, they might not always be from
+  // smallest to biggest
+  std::vector<size_t> index(layers.size());
+  std::iota(index.begin(), index.end(), 0);
+  std::stable_sort(index.begin(), index.end(), [&layers](size_t a, size_t b) {
+    return layers[a].max_bitrate_bps < layers[b].max_bitrate_bps;
+  });
+
+  if (!layers[index[0]].active) {
+    // Adjust min bitrate of the first active layer to allow it to go as low as
+    // the lowest (now inactive) layer could.
+    // Otherwise, if e.g. a single HD stream is active, it would have 600kbps
+    // min bitrate, which would always be allocated to the stream.
+    // This would lead to congested network, dropped frames and overall bad
+    // experience.
+
+    const int min_configured_bitrate = layers[index[0]].min_bitrate_bps;
+    for (size_t i = 0; i < layers.size(); ++i) {
+      if (layers[index[i]].active) {
+        layers[index[i]].min_bitrate_bps = min_configured_bitrate;
+        break;
+      }
+    }
+  }
+
   return layers;
 }
 
