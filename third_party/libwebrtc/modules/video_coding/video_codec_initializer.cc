@@ -20,6 +20,7 @@
 #include "api/units/data_rate.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video_codecs/video_encoder.h"
+#include "modules/video_coding/codecs/av1/av1_svc_config.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "rtc_base/checks.h"
@@ -56,7 +57,6 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
   RTC_DCHECK_GE(config.min_transmit_bitrate_bps, 0);
 
   VideoCodec video_codec;
-  memset(&video_codec, 0, sizeof(video_codec));
   video_codec.codecType = config.codec_type;
 
   switch (config.content_type) {
@@ -255,6 +255,11 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
 
       break;
     }
+    case kVideoCodecAV1:
+      if (!SetAv1SvcConfig(video_codec)) {
+        RTC_LOG(LS_WARNING) << "Failed to configure svc bitrates for av1.";
+      }
+      break;
     case kVideoCodecH264: {
       if (!config.encoder_specific_settings)
         *video_codec.H264() = VideoEncoder::GetDefaultH264Settings();

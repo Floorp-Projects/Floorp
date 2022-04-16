@@ -9,6 +9,20 @@
 #import("//third_party/libaom/options.gni")
 import("../../../../webrtc.gni")
 
+rtc_library("av1_svc_config") {
+  sources = [
+    "av1_svc_config.cc",
+    "av1_svc_config.h",
+  ]
+  deps = [
+    "../../../../api/video_codecs:video_codecs_api",
+    "../../../../rtc_base:checks",
+    "../../../../rtc_base:logging",
+    "../../svc:scalability_structures",
+    "../../svc:scalable_video_controller",
+  ]
+}
+
 rtc_library("libaom_av1_decoder") {
   visibility = [ "*" ]
   poisonous = [ "software_video_codecs" ]
@@ -71,12 +85,18 @@ if (rtc_include_tests) {
   rtc_library("video_coding_codecs_av1_tests") {
     testonly = true
 
+    sources = [ "av1_svc_config_unittest.cc" ]
+    deps = [
+      ":av1_svc_config",
+      "../../../../api/video_codecs:video_codecs_api",
+    ]
+
     if (enable_libaom) {
-      sources = [
+      sources += [
         "libaom_av1_encoder_unittest.cc",
         "libaom_av1_unittest.cc",
       ]
-      deps = [
+      deps += [
         ":libaom_av1_decoder",
         ":libaom_av1_encoder",
         "../..:encoded_video_frame_producer",
@@ -85,7 +105,6 @@ if (rtc_include_tests) {
         "../../../../api/units:data_size",
         "../../../../api/units:time_delta",
         "../../../../api/video:video_frame",
-        "../../../../api/video_codecs:video_codecs_api",
         "../../../../test:test_support",
         "../../svc:scalability_structures",
         "../../svc:scalable_video_controller",
