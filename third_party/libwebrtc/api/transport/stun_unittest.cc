@@ -1903,4 +1903,16 @@ TEST_F(StunTest, IsStunMethod) {
       sizeof(kRfc5769SampleRequest)));
 }
 
+TEST_F(StunTest, SizeRestrictionOnAttributes) {
+  StunMessage msg;
+  msg.SetType(STUN_BINDING_REQUEST);
+  msg.SetTransactionID("ABCDEFGH");
+  auto long_username = StunAttribute::CreateByteString(STUN_ATTR_USERNAME);
+  std::string long_string(509, 'x');
+  long_username->CopyBytes(long_string.c_str(), long_string.size());
+  msg.AddAttribute(std::move(long_username));
+  rtc::ByteBufferWriter out;
+  ASSERT_FALSE(msg.Write(&out));
+}
+
 }  // namespace cricket

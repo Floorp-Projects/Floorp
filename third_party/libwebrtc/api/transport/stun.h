@@ -16,11 +16,13 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/socket_address.h"
@@ -133,7 +135,6 @@ class StunAddressAttribute;
 class StunAttribute;
 class StunByteStringAttribute;
 class StunErrorCodeAttribute;
-
 class StunUInt16ListAttribute;
 class StunUInt32Attribute;
 class StunUInt64Attribute;
