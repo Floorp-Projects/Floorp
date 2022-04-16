@@ -128,9 +128,9 @@ class ExtendedPitchPeriodSearchParametrizaion
 TEST_P(ExtendedPitchPeriodSearchParametrizaion,
        PeriodBitExactnessGainWithinTolerance) {
   PitchTestData test_data;
-  std::vector<float> y_energy(kMaxPitch24kHz + 1);
-  rtc::ArrayView<float, kMaxPitch24kHz + 1> y_energy_view(y_energy.data(),
-                                                          kMaxPitch24kHz + 1);
+  std::vector<float> y_energy(kRefineNumLags24kHz);
+  rtc::ArrayView<float, kRefineNumLags24kHz> y_energy_view(y_energy.data(),
+                                                           kRefineNumLags24kHz);
   ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
                                          y_energy_view);
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
