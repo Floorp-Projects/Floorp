@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<script>
+  window.addEventListener("click", event => {
+    let data = JSON.stringify({
+      type: "gotclick",
+      coords: {
+        offsetX: event.clientX,
+        offsetY: event.clientY
+      }
+    });
+    window.parent.postMessage(data, "*");
+  });
+</script>
