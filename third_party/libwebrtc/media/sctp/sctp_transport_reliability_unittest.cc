@@ -14,6 +14,7 @@
 #include <string>
 
 #include "media/sctp/sctp_transport_internal.h"
+#include "rtc_base/async_invoker.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/logging.h"
