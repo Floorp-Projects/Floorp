@@ -58,6 +58,20 @@ std::string ToString(VideoAdaptationReason reason) {
   RTC_CHECK_NOTREACHED();
 }
 
+absl::optional<uint32_t> GetSingleActiveStreamPixels(const VideoCodec& codec) {
+  int num_active = 0;
+  absl::optional<uint32_t> pixels;
+  for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
+    if (codec.simulcastStream[i].active) {
+      ++num_active;
+      pixels = codec.simulcastStream[i].width * codec.simulcastStream[i].height;
+    }
+    if (num_active > 1)
+      return absl::nullopt;
+  }
+  return pixels;
+}
+
 }  // namespace
 
 class VideoStreamEncoderResourceManager::InitialFrameDropper {
@@ -76,6 +90,10 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
   // Output signal.
   bool DropInitialFrames() const {
     return initial_framedrop_ < kMaxInitialFramedrop;
+  }
+
+  absl::optional<uint32_t> single_active_stream_pixels() const {
+    return single_active_stream_pixels_;
   }
 
   // Input signals.
@@ -104,6 +122,10 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
     }
   }
 
+  void OnEncoderSettingsUpdated(const VideoCodec& codec) {
+    single_active_stream_pixels_ = GetSingleActiveStreamPixels(codec);
+  }
+
   void OnFrameDroppedDueToSize() { ++initial_framedrop_; }
 
   void OnMaybeEncodeFrame() { initial_framedrop_ = kMaxInitialFramedrop; }
@@ -130,6 +152,7 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
   int64_t set_start_bitrate_time_ms_;
   // Counts how many frames we've dropped in the initial framedrop phase.
   int initial_framedrop_;
+  absl::optional<uint32_t> single_active_stream_pixels_;
 };
 
 VideoStreamEncoderResourceManager::VideoStreamEncoderResourceManager(
@@ -230,7 +253,7 @@ void VideoStreamEncoderResourceManager::AddResource(
   RTC_DCHECK(resource);
   bool inserted;
   std::tie(std::ignore, inserted) = resources_.emplace(resource, reason);
-  RTC_DCHECK(inserted) << "Resurce " << resource->Name()
+  RTC_DCHECK(inserted) << "Resource " << resource->Name()
                        << " already was inserted";
   adaptation_processor_->AddResource(resource);
 }
@@ -259,6 +282,8 @@ void VideoStreamEncoderResourceManager::SetEncoderSettings(
   RTC_DCHECK_RUN_ON(encoder_queue_);
   encoder_settings_ = std::move(encoder_settings);
   bitrate_constraint_->OnEncoderSettingsUpdated(encoder_settings_);
+  initial_frame_dropper_->OnEncoderSettingsUpdated(
+      encoder_settings_->video_codec());
   MaybeUpdateTargetFrameRate();
 }
 
@@ -337,6 +362,12 @@ void VideoStreamEncoderResourceManager::OnFrameDropped(
 bool VideoStreamEncoderResourceManager::DropInitialFrames() const {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   return initial_frame_dropper_->DropInitialFrames();
+}
+
+absl::optional<uint32_t>
+VideoStreamEncoderResourceManager::SingleActiveStreamPixels() const {
+  RTC_DCHECK_RUN_ON(encoder_queue_);
+  return initial_frame_dropper_->single_active_stream_pixels();
 }
 
 void VideoStreamEncoderResourceManager::OnMaybeEncodeFrame() {
