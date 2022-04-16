@@ -439,12 +439,20 @@ absl_define_config = "//third_party/abseil-cpp:absl_define_config"
 # that are testonly.
 absl_flags_config = webrtc_root + ":absl_flags_configs"
 
+# WebRTC wrapper of Chromium's test() template. This template just adds some
+# WebRTC only configuration in order to avoid to duplicate it for every WebRTC
+# target.
+# The parameter `is_xctest` is different from the one in the Chromium's test()
+# template (and it is not forwarded to it). In rtc_test(), the argument
+# `is_xctest` is used to avoid to take dependencies that are not needed
+# in case the test is a real XCTest (using the XCTest framework).
 template("rtc_test") {
   test(target_name) {
     forward_variables_from(invoker,
                            "*",
                            [
                              "configs",
+                             "is_xctest",
                              "public_configs",
                              "suppressed_configs",
                              "visibility",
@@ -471,6 +479,15 @@ template("rtc_test") {
       min_sdk_version = 21
       target_sdk_version = 23
       deps += [ webrtc_root + "test:native_test_java" ]
+    }
+
+    # When not targeting a simulator, building //base/test:google_test_runner
+    # fails, so it is added only when the test is not a real XCTest and when
+    # targeting a simulator.
+    if (is_ios && target_cpu == "x64") {
+      if (!defined(invoker.is_xctest) || !invoker.is_xctest) {
+        xctest_module_target = "//base/test:google_test_runner"
+      }
     }
   }
 }

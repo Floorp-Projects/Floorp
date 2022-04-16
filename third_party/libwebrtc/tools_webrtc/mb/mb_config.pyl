@@ -392,31 +392,35 @@
 
     # iOS
     'ios_debug_bot_arm': [
-      'ios', 'debug_bot', 'arm', 'no_ios_code_signing', 'ios_use_goma_rbe'
+      'ios', 'debug_bot', 'arm', 'no_ios_code_signing', 'ios_use_goma_rbe',
+      'xctest',
     ],
     'ios_release_bot_arm': [
-      'ios', 'release_bot', 'arm', 'no_ios_code_signing', 'ios_use_goma_rbe'
+      'ios', 'release_bot', 'arm', 'no_ios_code_signing', 'ios_use_goma_rbe',
+      'xctest',
     ],
     'ios_debug_bot_arm64': [
-      'ios', 'debug_bot', 'arm64', 'no_ios_code_signing', 'ios_use_goma_rbe'
+      'ios', 'debug_bot', 'arm64', 'no_ios_code_signing', 'ios_use_goma_rbe',
+      'xctest',
     ],
     'ios_release_bot_arm64': [
-      'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'ios_use_goma_rbe'
+      'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'ios_use_goma_rbe',
+      'xctest',
     ],
     'ios_internal_debug_bot_arm64': [
       'ios', 'debug_bot', 'arm64', 'ios_use_goma_rbe',
-      'ios_code_signing_identity_description',
+      'ios_code_signing_identity_description', 'xctest',
     ],
     'ios_internal_release_bot_arm64': [
       'ios', 'release_bot', 'arm64', 'ios_use_goma_rbe',
-      'ios_code_signing_identity_description',
+      'ios_code_signing_identity_description', 'xctest',
     ],
     'ios_internal_pure_release_bot_arm64': [
       'ios', 'pure_release_bot', 'arm64', 'ios_use_goma_rbe',
-      'ios_code_signing_identity_description',
+      'ios_code_signing_identity_description', 'xctest',
     ],
     'ios_debug_bot_x64': [
-      'ios', 'debug_bot', 'x64', 'ios_use_goma_rbe'
+      'ios', 'debug_bot', 'x64', 'ios_use_goma_rbe', 'xctest',
     ],
 
     # More configs
@@ -631,6 +635,9 @@
 
     'win_undef_unicode': {
       'gn_args': 'rtc_win_undef_unicode=true',
+    },
+    'xctest': {
+      'gn_args': 'enable_run_ios_unittests_with_xctest=true',
     },
   },
 }
