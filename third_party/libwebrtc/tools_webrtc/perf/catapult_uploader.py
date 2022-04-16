@@ -253,5 +253,6 @@ def UploadToDashboard(options):
                                                   str(resp_json)))
         return 1
 
-    print('Upload wasn\'t completed in a given time: %d.', options.wait_timeout)
+    print('Upload wasn\'t completed in a given time: %d seconds.',
+          options.wait_timeout_sec)
     return 1
