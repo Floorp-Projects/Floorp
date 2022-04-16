@@ -1,0 +1,52 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test that events are delivered with correct coordinates to an iframe inide a perspective transform</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    #container {
+      transform: translate3d(0px, 0px, -1000px) perspective(496.281px);
+      width: min-content;
+    }
+    iframe {
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <iframe src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
+  </div>
+  <script type="application/javascript">
+async function test() {
+  let clickCoordsInChild = {
+    offsetX: 0,
+    offsetY: 0
+  };
+  let childMessagePromise = new Promise(resolve => {
+    window.addEventListener("message", event => {
+      let data = JSON.parse(event.data);
+      if ("type" in data && data.type == "gotclick") {
+        clickCoordsInChild = data.coords;
+        resolve();
+      }
+    })
+  });
+  await synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: container,
+    offsetX: 100,
+    offsetY: 100
+  });
+  await childMessagePromise;
+  is(clickCoordsInChild.offsetX, 100, "x coordinate is correct");
+  is(clickCoordsInChild.offsetY, 100, "y coordinate is correct");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</body>
