@@ -5,41 +5,26 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest, 0);"
+        onload="setTimeout(runTest, 0);"
         title="bug 662200 test">
 
-  <script type="application/javascript"
-  src="docshell_helpers.js">
-  </script>
-  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
     Services.prefs.setBoolPref("browser.navigation.requireUserInteraction", false);
 
-    // Define the generator-iterator for the tests.
-    var tests = testIterator();
-
     ////
-    // Execute the next test in the generator function.
+    // Bug 662200
     //
-    function nextTest() {
-      tests.next();
-    }
-
-    ////
-    // Generator function for test steps for bug 662200:
-    // Description goes here.
-    //
-    function* testIterator()
+    async function runTest()
     {
       // Load the first test page
       var navData = {
         uri: getHttpUrl("662200a.html"),
         eventsToListenFor: ["pageshow"],
         expectedEvents: [ {type: "pageshow", title: "A"} ],
-        onNavComplete: nextTest
       };
-      doPageNavigation(navData);
-      yield undefined;
+      await promisePageNavigation(navData);
 
       // Load the second test page.
       navData = {
@@ -48,15 +33,16 @@
                            title: "A"},
                           {type: "pageshow",
                            title: "B"} ],
-        onNavComplete: nextTest
       }
-      waitForPageEvents(navData);
-      var link = TestWindow.getDocument().getElementById("link");
-      var event = TestWindow.getDocument().createEvent("MouseEvents");
-      event.initMouseEvent("click", true, true, TestWindow.getWindow(),
-                           0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      link.dispatchEvent(event);
-      yield undefined;
+      let clicked = promisePageEvents(navData);
+      SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+        var link = content.document.getElementById("link");
+        var event = content.document.createEvent("MouseEvents");
+        event.initMouseEvent("click", true, true, content,
+                             0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        link.dispatchEvent(event);
+      });
+      await clicked;
 
       // Load the third test page.
       navData = {
@@ -65,15 +51,16 @@
                            title: "B"},
                           {type: "pageshow",
                            title: "C"} ],
-        onNavComplete: nextTest
       };
-      waitForPageEvents(navData);
-      link = TestWindow.getDocument().getElementById("link");
-      event = TestWindow.getDocument().createEvent("MouseEvents");
-      event.initMouseEvent("click", true, true, TestWindow.getWindow(),
-                           0, 0, 0, 0, 0, false, false, false, false, 0, null);
-      link.dispatchEvent(event);
-      yield undefined;
+      clicked = promisePageEvents(navData);
+      SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+        var link = content.document.getElementById("link");
+        var event = content.document.createEvent("MouseEvents");
+        event.initMouseEvent("click", true, true, content,
+                             0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        link.dispatchEvent(event);
+      });
+      await clicked;
 
       // Go back.
       navData = {
@@ -83,18 +70,8 @@
                            title: "C"},
                           {type: "pageshow",
                            title: "B"} ],
-        onNavComplete: nextTest
       };
-      doPageNavigation(navData);
-      yield undefined;
-
-      var docshell = TestWindow.getWindow().docShell;
-      let shistory;
-      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-        shistory = docshell.browsingContext.sessionHistory;
-      } else {
-        shistory = docshell.sessionHistory.legacySHistory;
-      }
+      await promisePageNavigation(navData);
 
       // Reload.
       navData = {
@@ -103,20 +80,33 @@
                            title: "B"},
                           {type: "pageshow",
                            title: "B"} ],
-        onNavComplete: nextTest
       };
       // Asking the docshell harness to reload for us will call reload on
       // nsDocShell which has different behavior than the reload on nsSHistory
       // so we call reloadCurrentEntry() (which is equivalent to reload(0) and
       // visible from JS) explicitly here.
-      waitForPageEvents(navData);
-      shistory.reloadCurrentEntry();
-      yield undefined;
+      let reloaded = promisePageEvents(navData);
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+        TestWindow.getBrowser().browsingContext.sessionHistory.reloadCurrentEntry();
+      } else {
+        SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+          docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory.legacySHistory.reloadCurrentEntry();
+        });
+      }
+      await reloaded;
 
       // After this sequence of events, we should be able to go back and forward
       is(TestWindow.getBrowser().canGoBack, true, "Should be able to go back!");
       is(TestWindow.getBrowser().canGoForward, true, "Should be able to go forward!");
-      is(shistory.requestedIndex, -1, "Requested index should be cleared!");
+      let requestedIndex;
+      if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+        requestedIndex = TestWindow.getBrowser().browsingContext.sessionHistory.requestedIndex;
+      } else {
+        requestedIndex = await SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+          return docShell.sessionHistory.legacySHistory.requestedIndex;
+        })
+      }
+      is(requestedIndex, -1, "Requested index should be cleared!");
 
       Services.prefs.clearUserPref("browser.navigation.requireUserInteraction");
       // Tell the framework the test is finished.
@@ -125,5 +115,5 @@
 
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" remote="true" />
 </window>
