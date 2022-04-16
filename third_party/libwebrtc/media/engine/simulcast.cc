@@ -422,14 +422,6 @@ std::vector<webrtc::VideoStream> GetScreenshareLayers(
     layers[1].min_bitrate_bps = using_boosted_bitrate
                                     ? kScreenshareHighStreamMinBitrate.bps()
                                     : layers[0].target_bitrate_bps * 2;
-
-    // Cap max bitrate so it isn't overly high for the given resolution.
-    int resolution_limited_bitrate =
-        std::max<int>(FindSimulcastMaxBitrate(width, height).bps(),
-                      layers[1].min_bitrate_bps);
-    max_bitrate_bps =
-        std::min<int>(max_bitrate_bps, resolution_limited_bitrate);
-
     layers[1].target_bitrate_bps = max_bitrate_bps;
     layers[1].max_bitrate_bps = max_bitrate_bps;
   }

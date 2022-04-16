@@ -336,43 +336,6 @@ TEST(SimulcastTest, GetConfigForScreenshareSimulcastWithLimitedMaxLayers) {
   EXPECT_EQ(kMaxLayers, streams.size());
 }
 
-TEST(SimulcastTest, SimulcastScreenshareMaxBitrateAdjustedForResolution) {
-  constexpr int kScreenshareHighStreamMinBitrateBps = 600000;
-  constexpr int kScreenshareHighStreamMaxBitrateBps = 1250000;
-  constexpr int kMaxBitrate960_540 = 1200000;
-  FieldTrialBasedConfig trials;
-
-  // Normal case, max bitrate not limited by resolution.
-  const size_t kMinLayers = 1;
-  const size_t kMaxLayers = 2;
-  std::vector<VideoStream> streams = cricket::GetSimulcastConfig(
-      kMinLayers, kMaxLayers, 1920, 1080, kBitratePriority, kQpMax,
-      kScreenshare, true, trials);
-  EXPECT_EQ(kMaxLayers, streams.size());
-  EXPECT_EQ(streams[1].max_bitrate_bps, kScreenshareHighStreamMaxBitrateBps);
-  EXPECT_EQ(streams[1].min_bitrate_bps, kScreenshareHighStreamMinBitrateBps);
-  EXPECT_GE(streams[1].max_bitrate_bps, streams[1].min_bitrate_bps);
-
-  // At 960x540, the max bitrate is limited to 900kbps.
-  streams = cricket::GetSimulcastConfig(kMinLayers, kMaxLayers, 960, 540,
-                                        kBitratePriority, kQpMax, kScreenshare,
-                                        true, trials);
-  EXPECT_EQ(kMaxLayers, streams.size());
-  EXPECT_EQ(streams[1].max_bitrate_bps, kMaxBitrate960_540);
-  EXPECT_EQ(streams[1].min_bitrate_bps, kScreenshareHighStreamMinBitrateBps);
-  EXPECT_GE(streams[1].max_bitrate_bps, streams[1].min_bitrate_bps);
-
-  // At 480x270, the max bitrate is limited to 450kbps. This is lower than
-  // the min bitrate, so use that as a lower bound.
-  streams = cricket::GetSimulcastConfig(kMinLayers, kMaxLayers, 480, 270,
-                                        kBitratePriority, kQpMax, kScreenshare,
-                                        true, trials);
-  EXPECT_EQ(kMaxLayers, streams.size());
-  EXPECT_EQ(streams[1].max_bitrate_bps, kScreenshareHighStreamMinBitrateBps);
-  EXPECT_EQ(streams[1].min_bitrate_bps, kScreenshareHighStreamMinBitrateBps);
-  EXPECT_GE(streams[1].max_bitrate_bps, streams[1].min_bitrate_bps);
-}
-
 TEST(SimulcastTest, AveragesBitratesForNonStandardResolution) {
   FieldTrialBasedConfig trials;
   const size_t kMinLayers = 1;
