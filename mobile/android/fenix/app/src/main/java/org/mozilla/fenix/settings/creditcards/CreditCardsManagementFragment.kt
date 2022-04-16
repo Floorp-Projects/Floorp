@@ -20,6 +20,9 @@ import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.redirectToReAuth
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.settings.autofill.AutofillAction
+import org.mozilla.fenix.settings.autofill.AutofillFragmentState
+import org.mozilla.fenix.settings.autofill.AutofillFragmentStore
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardsManagementController
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 import org.mozilla.fenix.settings.creditcards.interactor.DefaultCreditCardsManagementInteractor

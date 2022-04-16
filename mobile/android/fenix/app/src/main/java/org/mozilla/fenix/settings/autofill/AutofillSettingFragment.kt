@@ -36,9 +36,6 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.SharedPreferenceUpdater
 import org.mozilla.fenix.settings.SyncPreferenceView
 import org.mozilla.fenix.settings.biometric.BiometricPromptPreferenceFragment
-import org.mozilla.fenix.settings.creditcards.AutofillAction
-import org.mozilla.fenix.settings.creditcards.AutofillFragmentStore
-import org.mozilla.fenix.settings.creditcards.AutofillFragmentState
 import org.mozilla.fenix.settings.requirePreference
 
 /**

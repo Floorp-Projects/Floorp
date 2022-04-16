@@ -23,8 +23,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.settings.creditcards.AutofillFragmentStore
-import org.mozilla.fenix.settings.creditcards.AutofillFragmentState
 import org.robolectric.Robolectric
 
 @RunWith(FenixRobolectricTestRunner::class)

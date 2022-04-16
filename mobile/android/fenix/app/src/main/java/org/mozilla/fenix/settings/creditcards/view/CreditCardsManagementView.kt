@@ -8,7 +8,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentCreditCardsBinding
-import org.mozilla.fenix.settings.creditcards.AutofillFragmentState
+import org.mozilla.fenix.settings.autofill.AutofillFragmentState
 import org.mozilla.fenix.settings.creditcards.interactor.CreditCardsManagementInteractor
 
 /**
