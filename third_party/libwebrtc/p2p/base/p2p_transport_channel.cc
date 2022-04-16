@@ -843,6 +843,13 @@ void P2PTransportChannel::MaybeStartGathering() {
                                 static_cast<int>(IceRestartState::MAX_VALUE));
     }
 
+    for (const auto& session : allocator_sessions_) {
+      if (session->IsStopped()) {
+        continue;
+      }
+      session->StopGettingPorts();
+    }
+
     // Time for a new allocator.
     std::unique_ptr<PortAllocatorSession> pooled_session =
         allocator_->TakePooledSession(transport_name(), component(),
