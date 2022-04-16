@@ -9,7 +9,6 @@
 import("../../webrtc.gni")
 
 rtc_library("remote_bitrate_estimator") {
-  visibility = [ "*" ]
   sources = [
     "aimd_rate_control.cc",
     "aimd_rate_control.h",
