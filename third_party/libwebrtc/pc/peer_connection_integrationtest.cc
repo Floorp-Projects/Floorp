@@ -2021,6 +2021,10 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithSendOnlyVideo) {
 // Tests that receive only works without the caller having an encoder factory
 // and the callee having a decoder factory.
 TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithReceiveOnlyVideo) {
+  // Disable advertising FlexFEC as receive codec to avoid running out of unique
+  // payload types. See bugs.webrtc.org/12194
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-FlexFEC-03-Advertised/Disabled/");
   ASSERT_TRUE(
       CreateOneDirectionalPeerConnectionWrappers(/*caller_to_callee=*/false));
   ConnectFakeSignaling();

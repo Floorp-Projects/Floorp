@@ -21,6 +21,7 @@
 #include "media/sctp/sctp_transport_internal.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/logging.h"
+#include "test/field_trial.h"
 
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -427,6 +428,11 @@ TEST_P(PeerConnectionEndToEndTest, CallWithCustomCodec) {
     const rtc::scoped_refptr<webrtc::AudioDecoderFactory> fact_;
     std::vector<webrtc::AudioCodecPairId>* const codec_ids_;
   };
+
+  // Disable advertising FlexFEC as receive codec to avoid running out of unique
+  // payload types. See bugs.webrtc.org/12194
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-FlexFEC-03-Advertised/Disabled/");
 
   std::vector<webrtc::AudioCodecPairId> encoder_id1, encoder_id2, decoder_id1,
       decoder_id2;
