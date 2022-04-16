@@ -49,4 +49,9 @@
 #define RTC_FWD_DECL_OBJC_CLASS(classname) typedef struct objc_object classname
 #endif
 
+// TODO(bugs.webrtc.org/6471): This define is a transition aid. It will be
+// deleted together with the RTCRtpFragmentationHeader argument to
+// RTCVideoEncoderCallback, see RTCVideoEncoder.h.
+#define RTC_OBJC_HAVE_LEGACY_RTC_RTP_FRAGMENTATION_HEADER 1
+
 #endif  // SDK_OBJC_BASE_RTCMACROS_H_
