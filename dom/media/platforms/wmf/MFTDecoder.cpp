@@ -424,4 +424,6 @@ MFTDecoder::GetOutputMediaType(RefPtr<IMFMediaType>& aMediaType) {
   return mDecoder->GetOutputCurrentType(0, getter_AddRefs(aMediaType));
 }
 
+#undef LOG
+
 }  // namespace mozilla

@@ -5,80 +5,70 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="nextTestAsync();"
+        onload="runTest();"
         title="bug 582176 test">
 
-  <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-    // Define the generator-iterator for the tests.
-    var tests = testIterator();
-
     ////
-    // Execute the next test in the generator function.
+    // Bug 582176.
     //
-    function nextTestAsync() {
-      SimpleTest.executeSoon(tests.next.bind(tests));
-    }
-
-    ////
-    // Generator function for test steps for bug 582176:
-    // Description goes here.
-    //
-    function* testIterator()
+    async function runTest()
     {
-      var browser = document.getElementById('content');
-      browser.addEventListener("pageshow", nextTestAsync, true);
-
       enableBFCache(true);
 
       var notificationCount = 0;
-      var observer = {
-        observe(aSubject, aTopic, aData) {
-          is(aSubject, browser.contentWindow,
-             "correct subject");
-          is(aTopic, "content-document-global-created",
-             "correct topic");
-          is(aData, "http://mochi.test:8888",
-             "correct data");
-          notificationCount++;
-        }
+
+      let onGlobalCreation = () => {
+        ++notificationCount;
       };
 
-      let os = SpecialPowers.Services.obs;
-      os.addObserver(observer, "content-document-global-created");
-
-      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html");
-      yield undefined;
-      is(browser.contentWindow.testVar, undefined,
+      await promisePageNavigation({
+        uri: "http://mochi.test:8888/chrome/docshell/test/chrome/582176_dummy.html",
+        onGlobalCreation,
+      });
+      is(await SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+           let testVar = content.testVar;
+           content.testVar = 1;
+           return testVar;
+         }), undefined,
          "variable unexpectedly there already");
-      browser.contentWindow.wrappedJSObject.testVar = 1;
       is(notificationCount, 1, "Should notify on first navigation");
 
-      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_dummy.html?2");
-      yield undefined;
-      is(browser.contentWindow.wrappedJSObject.testVar, undefined,
+      await promisePageNavigation({
+        uri: "http://mochi.test:8888/chrome/docshell/test/chrome/582176_dummy.html?2",
+        onGlobalCreation,
+      });
+      is(await SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+           return content.testVar;
+         }), undefined,
          "variable should no longer be there");
       is(notificationCount, 2, "Should notify on second navigation");
 
-      browser.goBack();
-      yield undefined;
-      is(browser.contentWindow.wrappedJSObject.testVar, 1,
+      await promisePageNavigation({
+        back: true,
+      });
+      is(await SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+           return content.testVar;
+         }), 1,
          "variable should still be there");
       is(notificationCount, 2, "Should not notify on back navigation");
 
-      BrowserTestUtils.loadURI(browser, "http://mochi.test:8888/tests/docshell/test/chrome/582176_xml.xml");
-      yield undefined;
-      is(browser.contentDocument.body.textContent, "xslt result",
+      await promisePageNavigation({
+        uri: "http://mochi.test:8888/chrome/docshell/test/chrome/582176_xml.xml",
+        onGlobalCreation,
+      });
+      is(await SpecialPowers.spawn(TestWindow.getBrowser(), [], () => {
+           return content.document.body.textContent;
+         }), "xslt result",
          "Transform performed successfully");
       is(notificationCount, 3, "Should notify only once on XSLT navigation");
-
-      os.removeObserver(observer, "content-document-global-created")
 
       // Tell the framework the test is finished.
       finish();
     }
 
   ]]></script>
-  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" remote="true" />
 </window>

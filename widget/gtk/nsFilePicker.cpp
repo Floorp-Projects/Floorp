@@ -649,3 +649,5 @@ void nsFilePicker::GtkFileChooserSetModal(void* file_chooser,
     }
   }
 }
+
+#undef LOG
