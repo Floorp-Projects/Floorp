@@ -1476,8 +1476,8 @@ bool AudioProcessingImpl::GetLinearAecOutput(
       rtc::ArrayView<const float> channel_view =
           rtc::ArrayView<const float>(linear_aec_buffer->channels_const()[ch],
                                       linear_aec_buffer->num_frames());
-      std::copy(channel_view.begin(), channel_view.end(),
-                linear_output[ch].begin());
+      FloatS16ToFloat(channel_view.data(), channel_view.size(),
+                      linear_output[ch].data());
     }
     return true;
   }

@@ -59,7 +59,6 @@ EchoCanceller3Config ReadAec3ConfigFromJsonFile(const std::string& filename) {
   return cfg;
 }
 
-
 std::string GetIndexedOutputWavFilename(const std::string& wav_name,
                                         int counter) {
   rtc::StringBuilder ss;
@@ -260,8 +259,8 @@ void AudioProcessingSimulator::ProcessStream(bool fixed_interface) {
     for (size_t k = 0; k < linear_aec_output_buf_[0].size(); ++k) {
       for (size_t ch = 0; ch < linear_aec_output_buf_.size(); ++ch) {
         RTC_CHECK_EQ(linear_aec_output_buf_[ch].size(), 160);
-        linear_aec_output_file_writer_->WriteSamples(
-            &linear_aec_output_buf_[ch][k], 1);
+        float sample = FloatToFloatS16(linear_aec_output_buf_[ch][k]);
+        linear_aec_output_file_writer_->WriteSamples(&sample, 1);
       }
     }
   }
