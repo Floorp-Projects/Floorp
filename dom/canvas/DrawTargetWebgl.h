@@ -135,14 +135,20 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     // Avoid spurious state changes by caching last used state.
     RefPtr<WebGLProgramJS> mLastProgram;
     RefPtr<WebGLTextureJS> mLastTexture;
+    bool mDirtyViewport = true;
+    bool mDirtyAA = true;
 
     // WebGL shader resources
     RefPtr<WebGLBufferJS> mVertexBuffer;
     RefPtr<WebGLVertexArrayJS> mVertexArray;
     RefPtr<WebGLProgramJS> mSolidProgram;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramAA;
     RefPtr<WebGLUniformLocationJS> mSolidProgramTransform;
     RefPtr<WebGLUniformLocationJS> mSolidProgramColor;
     RefPtr<WebGLProgramJS> mImageProgram;
+    RefPtr<WebGLUniformLocationJS> mImageProgramViewport;
+    RefPtr<WebGLUniformLocationJS> mImageProgramAA;
     RefPtr<WebGLUniformLocationJS> mImageProgramTransform;
     RefPtr<WebGLUniformLocationJS> mImageProgramTexMatrix;
     RefPtr<WebGLUniformLocationJS> mImageProgramTexBounds;
