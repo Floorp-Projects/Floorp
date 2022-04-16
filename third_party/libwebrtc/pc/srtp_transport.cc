@@ -268,7 +268,7 @@ void SrtpTransport::OnNetworkRouteChanged(
 
 void SrtpTransport::OnWritableState(
     rtc::PacketTransportInternal* packet_transport) {
-  SignalWritableState(IsWritable(/*rtcp=*/true) && IsWritable(/*rtcp=*/true));
+  SignalWritableState(IsWritable(/*rtcp=*/false) && IsWritable(/*rtcp=*/true));
 }
 
 bool SrtpTransport::SetRtpParams(int send_cs,
