@@ -225,16 +225,16 @@ def UploadToDashboard(options):
 
     response, content = _SendHistogramSet(options.dashboard_url, histograms)
 
+    if response.status != 200:
+        print('Upload failed with %d: %s\n\n%s' % (response.status,
+                                                   response.reason, content))
+        return 1
+
     upload_token = json.loads(content).get('token')
     if not options.wait_for_upload or not upload_token:
-        print 'Not waiting for upload status confirmation.'
-        if response.status == 200:
-            print 'Received 200 from dashboard.'
-            return 0
-        else:
-            print('Upload failed with %d: %s\n\n%s' % (response.status,
-                                                      response.reason, content))
-            return 1
+        print('Received 200 from dashboard. ',
+              'Not waiting for the upload status confirmation.')
+        return 0
 
     response, resp_json = _WaitForUploadConfirmation(
         options.dashboard_url,
@@ -253,6 +253,6 @@ def UploadToDashboard(options):
                                                   str(resp_json)))
         return 1
 
-    print('Upload wasn\'t completed in a given time: %d seconds.',
+    print('Upload wasn\'t completed in a given time: %d seconds.' %
           options.wait_timeout_sec)
     return 1
