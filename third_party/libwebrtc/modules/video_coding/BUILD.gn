@@ -522,7 +522,6 @@ rtc_library("webrtc_vp9_helpers") {
   sources = [
     "codecs/vp9/svc_config.cc",
     "codecs/vp9/svc_config.h",
-    "codecs/vp9/svc_rate_allocator.cc",
     "codecs/vp9/svc_rate_allocator.h",
   ]
 
@@ -537,6 +536,7 @@ rtc_library("webrtc_vp9_helpers") {
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base/experiments:stable_target_rate_experiment",
+    "svc:svc_rate_allocator",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
 }
@@ -922,7 +922,6 @@ if (rtc_include_tests) {
       "codecs/vp8/libvpx_vp8_simulcast_test.cc",
       "codecs/vp8/screenshare_layers_unittest.cc",
       "codecs/vp9/svc_config_unittest.cc",
-      "codecs/vp9/svc_rate_allocator_unittest.cc",
       "decoding_state_unittest.cc",
       "fec_controller_unittest.cc",
       "frame_buffer2_unittest.cc",
@@ -1031,6 +1030,7 @@ if (rtc_include_tests) {
       "codecs/av1:video_coding_codecs_av1_tests",
       "deprecated:nack_module",
       "svc:scalability_structure_tests",
+      "svc:svc_rate_allocator_tests",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/memory",

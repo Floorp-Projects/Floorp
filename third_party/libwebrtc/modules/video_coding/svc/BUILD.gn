@@ -68,8 +68,25 @@ rtc_source_set("scalability_structures") {
   ]
 }
 
+rtc_source_set("svc_rate_allocator") {
+  sources = [
+    "svc_rate_allocator.cc",
+    "svc_rate_allocator.h",
+  ]
+  deps = [
+    ":scalability_structures",
+    "../../../api/video:video_bitrate_allocation",
+    "../../../api/video:video_bitrate_allocator",
+    "../../../api/video:video_codec_constants",
+    "../../../api/video_codecs:video_codecs_api",
+    "../../../rtc_base:checks",
+    "../../../rtc_base/experiments:stable_target_rate_experiment",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/container:inlined_vector" ]
+}
+
 if (rtc_include_tests) {
-  rtc_library("scalability_structure_tests") {
+  rtc_source_set("scalability_structure_tests") {
     testonly = true
     sources = [
       "scalability_structure_key_svc_unittest.cc",
@@ -92,5 +109,17 @@ if (rtc_include_tests) {
       "../../../test:test_support",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
+  rtc_source_set("svc_rate_allocator_tests") {
+    testonly = true
+    sources = [ "svc_rate_allocator_unittest.cc" ]
+    deps = [
+      ":svc_rate_allocator",
+      "..:webrtc_vp9_helpers",
+      "../../../rtc_base:checks",
+      "../../../test:field_trial",
+      "../../../test:test_support",
+    ]
   }
 }

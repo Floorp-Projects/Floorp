@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/codecs/vp9/svc_rate_allocator.h"
+#include "modules/video_coding/svc/svc_rate_allocator.h"
 
 #include <algorithm>
 #include <vector>
@@ -268,6 +268,97 @@ TEST(SvcRateAllocatorTest, FindLayerTogglingThreshold) {
   ASSERT_EQ(layer_start_bitrates.size(), 3u);
   EXPECT_EQ(layer_start_bitrates[1], kTwoLayerMinRate);
   EXPECT_EQ(layer_start_bitrates[2], kThreeLayerMinRate);
+}
+
+TEST(SvcRateAllocatorTest, SupportsAv1) {
+  VideoCodec codec;
+  codec.width = 640;
+  codec.height = 360;
+  codec.codecType = kVideoCodecAV1;
+  codec.SetScalabilityMode("L3T3");
+  codec.spatialLayers[0].active = true;
+  codec.spatialLayers[0].minBitrate = 30;
+  codec.spatialLayers[0].targetBitrate = 51;
+  codec.spatialLayers[0].maxBitrate = 73;
+  codec.spatialLayers[1].active = true;
+  codec.spatialLayers[1].minBitrate = 49;
+  codec.spatialLayers[1].targetBitrate = 64;
+  codec.spatialLayers[1].maxBitrate = 97;
+  codec.spatialLayers[2].active = true;
+  codec.spatialLayers[2].minBitrate = 193;
+  codec.spatialLayers[2].targetBitrate = 305;
+  codec.spatialLayers[2].maxBitrate = 418;
+
+  SvcRateAllocator allocator(codec);
+
+  VideoBitrateAllocation allocation =
+      allocator.Allocate(VideoBitrateAllocationParameters(1'000'000, 30));
+
+  EXPECT_GT(allocation.GetSpatialLayerSum(0), 0u);
+  EXPECT_GT(allocation.GetSpatialLayerSum(1), 0u);
+  EXPECT_GT(allocation.GetSpatialLayerSum(2), 0u);
+}
+
+TEST(SvcRateAllocatorTest, SupportsAv1WithSkippedLayer) {
+  VideoCodec codec;
+  codec.width = 640;
+  codec.height = 360;
+  codec.codecType = kVideoCodecAV1;
+  codec.SetScalabilityMode("L3T3");
+  codec.spatialLayers[0].active = false;
+  codec.spatialLayers[0].minBitrate = 30;
+  codec.spatialLayers[0].targetBitrate = 51;
+  codec.spatialLayers[0].maxBitrate = 73;
+  codec.spatialLayers[1].active = true;
+  codec.spatialLayers[1].minBitrate = 49;
+  codec.spatialLayers[1].targetBitrate = 64;
+  codec.spatialLayers[1].maxBitrate = 97;
+  codec.spatialLayers[2].active = true;
+  codec.spatialLayers[2].minBitrate = 193;
+  codec.spatialLayers[2].targetBitrate = 305;
+  codec.spatialLayers[2].maxBitrate = 418;
+
+  SvcRateAllocator allocator(codec);
+
+  VideoBitrateAllocation allocation =
+      allocator.Allocate(VideoBitrateAllocationParameters(1'000'000, 30));
+
+  EXPECT_EQ(allocation.GetSpatialLayerSum(0), 0u);
+  EXPECT_GT(allocation.GetSpatialLayerSum(1), 0u);
+  EXPECT_GT(allocation.GetSpatialLayerSum(2), 0u);
+}
+
+TEST(SvcRateAllocatorTest, UsesScalabilityModeToGetNumberOfLayers) {
+  VideoCodec codec;
+  codec.width = 640;
+  codec.height = 360;
+  codec.codecType = kVideoCodecAV1;
+  codec.SetScalabilityMode("L2T2");
+  codec.spatialLayers[0].active = true;
+  codec.spatialLayers[0].minBitrate = 30;
+  codec.spatialLayers[0].targetBitrate = 51;
+  codec.spatialLayers[0].maxBitrate = 73;
+  codec.spatialLayers[1].active = true;
+  codec.spatialLayers[1].minBitrate = 49;
+  codec.spatialLayers[1].targetBitrate = 64;
+  codec.spatialLayers[1].maxBitrate = 97;
+  codec.spatialLayers[2].active = true;
+  codec.spatialLayers[2].minBitrate = 193;
+  codec.spatialLayers[2].targetBitrate = 305;
+  codec.spatialLayers[2].maxBitrate = 418;
+
+  SvcRateAllocator allocator(codec);
+  VideoBitrateAllocation allocation =
+      allocator.Allocate(VideoBitrateAllocationParameters(1'000'000, 30));
+
+  // Expect bitrates for 2 temporal layers.
+  EXPECT_TRUE(allocation.HasBitrate(1, /*temporal_index=*/0));
+  EXPECT_TRUE(allocation.HasBitrate(1, /*temporal_index=*/1));
+  EXPECT_FALSE(allocation.HasBitrate(1, /*temporal_index=*/2));
+
+  // expect codec.spatialLayers[2].active is ignored because scability mode uses
+  // just 2 spatial layers.
+  EXPECT_EQ(allocation.GetSpatialLayerSum(2), 0u);
 }
 
 class SvcRateAllocatorTestParametrizedContentType
