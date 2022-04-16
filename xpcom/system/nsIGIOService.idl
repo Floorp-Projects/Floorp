@@ -45,7 +45,7 @@ interface nsIGIOMimeApp : nsIHandlerApp
  */
 
 // prev id dea20bf0-4e4d-48c5-b932-dc3e116dc64b
-[builtinclass, uuid(eda22a30-84e1-4e16-9ca0-cd1553c2b34a)]
+[scriptable, builtinclass, uuid(eda22a30-84e1-4e16-9ca0-cd1553c2b34a)]
 interface nsIGIOService : nsISupports
 {
 
