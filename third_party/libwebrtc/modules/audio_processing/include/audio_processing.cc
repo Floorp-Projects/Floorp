@@ -153,7 +153,9 @@ std::string AudioProcessing::Config::ToString() const {
           << gain_controller2.fixed_digital.gain_db
           << "}, adaptive_digital: { enabled: "
           << gain_controller2.adaptive_digital.enabled
-          << ", level_estimator: { type: "
+          << ", level_estimator: { vad_probability_attack: "
+          << gain_controller2.adaptive_digital.vad_probability_attack
+          << ", type: "
           << GainController2LevelEstimatorToString(
                  gain_controller2.adaptive_digital.level_estimator)
           << ", adjacent_speech_frames_threshold: "

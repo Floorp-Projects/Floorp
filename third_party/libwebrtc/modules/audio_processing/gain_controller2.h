@@ -46,6 +46,7 @@ class GainController2 {
   GainApplier gain_applier_;
   std::unique_ptr<AdaptiveAgc> adaptive_agc_;
   Limiter limiter_;
+  int calls_since_last_limiter_log_;
   int analog_level_ = -1;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(GainController2);
