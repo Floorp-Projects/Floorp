@@ -321,7 +321,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
 
   // The processed RTT from RtcpRttStats.
   mutable Mutex mutex_rtt_;
-  int64_t rtt_ms_;
+  int64_t rtt_ms_ RTC_GUARDED_BY(mutex_rtt_);
 };
 
 }  // namespace webrtc
