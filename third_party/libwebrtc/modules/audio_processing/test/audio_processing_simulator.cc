@@ -40,7 +40,7 @@ EchoCanceller3Config ReadAec3ConfigFromJsonFile(const std::string& filename) {
   std::ifstream f(filename.c_str());
   if (f.fail()) {
     std::cout << "Failed to open the file " << filename << std::endl;
-    RTC_CHECK(false);
+    RTC_CHECK_NOTREACHED();
   }
   while (std::getline(f, s)) {
     json_string += s;
@@ -52,7 +52,7 @@ EchoCanceller3Config ReadAec3ConfigFromJsonFile(const std::string& filename) {
   if (!parsing_successful) {
     std::cout << "Parsing of json string failed: " << std::endl
               << json_string << std::endl;
-    RTC_CHECK(false);
+    RTC_CHECK_NOTREACHED();
   }
   RTC_CHECK(EchoCanceller3Config::Validate(&cfg));
 

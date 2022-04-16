@@ -269,8 +269,7 @@ void AecDumpBasedSimulator::HandleEvent(
       HandleMessage(event_msg.runtime_setting());
       break;
     case webrtc::audioproc::Event::UNKNOWN_EVENT:
-      RTC_CHECK(false);
-      break;
+      RTC_CHECK_NOTREACHED();
   }
 }
 

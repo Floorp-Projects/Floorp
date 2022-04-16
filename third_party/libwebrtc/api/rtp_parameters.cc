@@ -30,7 +30,7 @@ const char* DegradationPreferenceToString(
     case DegradationPreference::BALANCED:
       return "balanced";
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 const double kDefaultBitratePriority = 1.0;

@@ -2408,7 +2408,7 @@ void PeerConnection::ReportBestConnectionState(
                                   GetIceCandidatePairCounter(local, remote),
                                   kIceCandidatePairMax);
       } else {
-        RTC_CHECK(0);
+        RTC_CHECK_NOTREACHED();
       }
 
       // Increment the counter for IP type.

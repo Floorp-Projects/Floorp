@@ -141,7 +141,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpSenderCapabilities(
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RtpCapabilities();
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
@@ -167,7 +167,7 @@ RtpCapabilities PeerConnectionFactory::GetRtpReceiverCapabilities(
     case cricket::MEDIA_TYPE_UNSUPPORTED:
       return RtpCapabilities();
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 rtc::scoped_refptr<AudioSourceInterface>

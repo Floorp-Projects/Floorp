@@ -21,7 +21,7 @@ const char* NetworkPreferenceToString(NetworkPreference preference) {
     case NetworkPreference::NOT_PREFERRED:
       return "NOT_PREFERRED";
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 NetworkMonitorInterface::NetworkMonitorInterface() {}

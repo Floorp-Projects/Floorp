@@ -162,7 +162,7 @@ class VideoEncoderSoftwareFallbackWrapper final : public VideoEncoder {
       case EncoderState::kForcedFallback:
         return fallback_encoder_.get();
     }
-    RTC_CHECK(false);
+    RTC_CHECK_NOTREACHED();
   }
 
   // Updates encoder with last observed parameters, such as callbacks, rates,
@@ -341,7 +341,7 @@ int32_t VideoEncoderSoftwareFallbackWrapper::Encode(
     case EncoderState::kForcedFallback:
       return fallback_encoder_->Encode(frame, frame_types);
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 int32_t VideoEncoderSoftwareFallbackWrapper::EncodeWithMainEncoder(
