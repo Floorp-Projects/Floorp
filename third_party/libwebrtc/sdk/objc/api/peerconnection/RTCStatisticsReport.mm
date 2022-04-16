@@ -37,7 +37,7 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
       case RTCStatsMemberInterface::kSequenceBool: {
         std::vector<bool> sequence = *member->cast_to<RTCStatsMember<std::vector<bool>>>();
         NSMutableArray *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
+        for (auto item : sequence) {
           [array addObject:[NSNumber numberWithBool:item]];
         }
         return [array copy];
