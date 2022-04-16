@@ -83,7 +83,6 @@ rtc_library("rnn_vad_lp_residual") {
 
 rtc_library("rnn_vad_pitch") {
   sources = [
-    "pitch_info.h",
     "pitch_search.cc",
     "pitch_search.h",
     "pitch_search_internal.cc",
@@ -94,6 +93,7 @@ rtc_library("rnn_vad_pitch") {
     ":rnn_vad_common",
     "../../../../api:array_view",
     "../../../../rtc_base:checks",
+    "../../../../rtc_base:gtest_prod",
     "../../../../rtc_base:safe_compare",
     "../../../../rtc_base:safe_conversions",
   ]
