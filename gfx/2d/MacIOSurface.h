@@ -51,7 +51,6 @@ class MacIOSurface final
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::YUVColorSpace YUVColorSpace;
   typedef mozilla::gfx::ColorRange ColorRange;
-  typedef mozilla::gfx::ColorDepth ColorDepth;
 
   // The usage count of the IOSurface is increased by 1 during the lifetime
   // of the MacIOSurface instance.
@@ -59,10 +58,9 @@ class MacIOSurface final
 
   static already_AddRefed<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,
                                                         bool aHasAlpha = true);
-  static already_AddRefed<MacIOSurface> CreateNV12OrP010Surface(
+  static already_AddRefed<MacIOSurface> CreateNV12Surface(
       const IntSize& aYSize, const IntSize& aCbCrSize,
-      YUVColorSpace aColorSpace, ColorRange aColorRange,
-      ColorDepth aColorDepth);
+      YUVColorSpace aColorSpace, ColorRange aColorRange);
   static already_AddRefed<MacIOSurface> CreateYUV422Surface(
       const IntSize& aSize, YUVColorSpace aColorSpace, ColorRange aColorRange);
   static void ReleaseIOSurface(MacIOSurface* aIOSurface);

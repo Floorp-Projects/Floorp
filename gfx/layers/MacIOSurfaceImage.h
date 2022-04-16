@@ -57,8 +57,7 @@ class MacIOSurfaceRecycleAllocator {
   already_AddRefed<MacIOSurface> Allocate(const gfx::IntSize aYSize,
                                           const gfx::IntSize& aCbCrSize,
                                           gfx::YUVColorSpace aYUVColorSpace,
-                                          gfx::ColorRange aColorRange,
-                                          gfx::ColorDepth aColorDepth);
+                                          gfx::ColorRange aColorRange);
 
  private:
   ~MacIOSurfaceRecycleAllocator() = default;
