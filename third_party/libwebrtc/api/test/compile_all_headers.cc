@@ -31,6 +31,7 @@
 #include "api/test/fake_frame_decryptor.h"
 #include "api/test/fake_frame_encryptor.h"
 #include "api/test/mock_audio_mixer.h"
+#include "api/test/mock_data_channel.h"
 #include "api/test/mock_frame_decryptor.h"
 #include "api/test/mock_frame_encryptor.h"
 #include "api/test/mock_peer_connection_factory_interface.h"
