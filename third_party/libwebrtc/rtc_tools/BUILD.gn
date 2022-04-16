@@ -340,6 +340,7 @@ if (!build_with_chromium) {
       deps = [
         ":chart_proto",
         "../api:function_view",
+        "../api:network_state_predictor_api",
         "../rtc_base:deprecation",
         "../rtc_base:ignore_wundef",
 
