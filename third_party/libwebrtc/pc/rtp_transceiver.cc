@@ -119,12 +119,14 @@ RtpTransceiver::RtpTransceiver(
     rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
         receiver,
     cricket::ChannelManager* channel_manager,
-    std::vector<RtpHeaderExtensionCapability> header_extensions_offered)
+    std::vector<RtpHeaderExtensionCapability> header_extensions_offered,
+    std::function<void()> on_negotiation_needed)
     : thread_(GetCurrentTaskQueueOrThread()),
       unified_plan_(true),
       media_type_(sender->media_type()),
       channel_manager_(channel_manager),
-      header_extensions_to_offer_(std::move(header_extensions_offered)) {
+      header_extensions_to_offer_(std::move(header_extensions_offered)),
+      on_negotiation_needed_(std::move(on_negotiation_needed)) {
   RTC_DCHECK(media_type_ == cricket::MEDIA_TYPE_AUDIO ||
              media_type_ == cricket::MEDIA_TYPE_VIDEO);
   RTC_DCHECK_EQ(sender->media_type(), receiver->media_type());
@@ -314,7 +316,7 @@ RTCError RtpTransceiver::SetDirectionWithError(
   }
 
   direction_ = new_direction;
-  SignalNegotiationNeeded();
+  on_negotiation_needed_();
 
   return RTCError::OK();
 }
@@ -378,7 +380,7 @@ RTCError RtpTransceiver::StopStandard() {
   // 5. Stop sending and receiving given transceiver, and update the
   // negotiation-needed flag for connection.
   StopSendingAndReceiving();
-  SignalNegotiationNeeded();
+  on_negotiation_needed_();
 
   return RTCError::OK();
 }
