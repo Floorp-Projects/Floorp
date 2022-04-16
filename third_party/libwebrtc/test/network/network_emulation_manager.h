@@ -31,6 +31,7 @@
 #include "system_wrappers/include/clock.h"
 #include "test/network/cross_traffic.h"
 #include "test/network/emulated_network_manager.h"
+#include "test/network/emulated_turn_server.h"
 #include "test/network/fake_network_socket_server.h"
 #include "test/network/network_emulation.h"
 #include "test/network/traffic_route.h"
@@ -92,6 +93,9 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
 
   Timestamp Now() const;
 
+  EmulatedTURNServerInterface* CreateTURNServer(
+      EmulatedTURNServerConfig config) override;
+
  private:
   absl::optional<rtc::IPAddress> GetNextIPv4Address();
   const std::unique_ptr<TimeController> time_controller_;
@@ -114,6 +118,7 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
   std::list<std::unique_ptr<TcpMessageRouteImpl>> tcp_message_routes_;
   std::vector<std::unique_ptr<EndpointsContainer>> endpoints_containers_;
   std::vector<std::unique_ptr<EmulatedNetworkManager>> network_managers_;
+  std::vector<std::unique_ptr<EmulatedTURNServer>> turn_servers_;
 
   std::map<EmulatedEndpoint*, EmulatedNetworkManager*>
       endpoint_to_network_manager_;
