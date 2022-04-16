@@ -118,7 +118,7 @@ void WavBasedSimulator::Process() {
         }
         break;
       default:
-        RTC_CHECK(false);
+        RTC_CHECK_NOTREACHED();
     }
 
     call_chain_index = (call_chain_index + 1) % call_chain_.size();

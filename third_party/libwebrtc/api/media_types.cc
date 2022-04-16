@@ -31,7 +31,7 @@ std::string MediaTypeToString(MediaType type) {
       RTC_NOTREACHED();
       return "";
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 }  // namespace cricket

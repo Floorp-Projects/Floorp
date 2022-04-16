@@ -76,7 +76,7 @@ RTCErrorOr<cricket::FeedbackParam> ToCricketFeedbackParam(
       }
       return cricket::FeedbackParam(cricket::kRtcpFbParamTransportCc);
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 template <typename C>

@@ -37,7 +37,7 @@ std::unique_ptr<VideoRtpDepacketizer> CreateVideoRtpDepacketizer(
     case kVideoCodecMultiplex:
       return std::make_unique<VideoRtpDepacketizerGeneric>();
   }
-  RTC_CHECK(false);
+  RTC_CHECK_NOTREACHED();
 }
 
 }  // namespace webrtc
