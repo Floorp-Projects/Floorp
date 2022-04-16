@@ -153,12 +153,6 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
       continue;
     }
 
-    // Only ever return all parts of a superframe. Therefore skip this
-    // frame if it's not a beginning of a superframe.
-    if (frame->inter_layer_predicted) {
-      continue;
-    }
-
     // Gather all remaining frames for the same superframe.
     std::vector<FrameMap::iterator> current_superframe;
     current_superframe.push_back(frame_it);
