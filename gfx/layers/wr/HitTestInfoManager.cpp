@@ -63,7 +63,7 @@ void HitTestInfoManager::Reset() {
   HITTEST_INFO_LOG("* HitTestInfoManager::Reset\n");
 }
 
-bool HitTestInfoManager::ProcessItem(
+void HitTestInfoManager::ProcessItem(
     nsDisplayItem* aItem, wr::DisplayListBuilder& aBuilder,
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_ASSERT(aItem);
@@ -80,7 +80,7 @@ bool HitTestInfoManager::ProcessItem(
   }
 
   if (!aItem->HasHitTestInfo()) {
-    return false;
+    return;
   }
 
   const HitTestInfo& hitTestInfo = aItem->GetHitTestInfo();
@@ -88,7 +88,7 @@ bool HitTestInfoManager::ProcessItem(
   const gfx::CompositorHitTestInfo& flags = hitTestInfo.Info();
 
   if (flags == gfx::CompositorHitTestInvisibleToHit || area.IsEmpty()) {
-    return false;
+    return;
   }
 
   const auto viewId =
@@ -97,15 +97,13 @@ bool HitTestInfoManager::ProcessItem(
 
   if (!Update(area, flags, viewId, spaceAndClipChain)) {
     // The previous hit test information is still valid.
-    return false;
+    return;
   }
 
   HITTEST_INFO_LOG("+ [%d, %d, %d, %d]: flags: 0x%x, viewId: %lu\n", area.x,
                    area.y, area.width, area.height, flags.serialize(), viewId);
 
   CreateWebRenderCommands(aBuilder, aItem, area, flags, viewId);
-
-  return true;
 }
 
 /**
