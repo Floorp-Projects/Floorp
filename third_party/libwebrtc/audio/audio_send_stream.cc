@@ -143,7 +143,6 @@ AudioSendStream::AudioSendStream(
     std::unique_ptr<voe::ChannelSendInterface> channel_send)
     : clock_(clock),
       worker_queue_(rtp_transport->GetWorkerQueue()),
-      audio_send_side_bwe_(field_trial::IsEnabled("WebRTC-Audio-SendSideBwe")),
       allocate_audio_without_feedback_(
           field_trial::IsEnabled("WebRTC-Audio-ABWENoTWCC")),
       enable_audio_alr_probing_(
@@ -289,7 +288,7 @@ void AudioSendStream::ConfigureStream(
 
     RtcpBandwidthObserver* bandwidth_observer = nullptr;
 
-    if (audio_send_side_bwe_ && !allocate_audio_without_feedback_ &&
+    if (!allocate_audio_without_feedback_ &&
         new_ids.transport_sequence_number != 0) {
       rtp_rtcp_module_->RegisterRtpHeaderExtension(
           TransportSequenceNumber::kUri, new_ids.transport_sequence_number);
@@ -810,8 +809,7 @@ void AudioSendStream::ReconfigureBitrateObserver(
   if (config_.min_bitrate_bps == new_config.min_bitrate_bps &&
       config_.max_bitrate_bps == new_config.max_bitrate_bps &&
       config_.bitrate_priority == new_config.bitrate_priority &&
-      (TransportSeqNumId(config_) == TransportSeqNumId(new_config) ||
-       !audio_send_side_bwe_) &&
+      TransportSeqNumId(config_) == TransportSeqNumId(new_config) &&
       config_.audio_network_adaptor_config ==
           new_config.audio_network_adaptor_config) {
     return;

@@ -155,7 +155,6 @@ class AudioSendStream final : public webrtc::AudioSendStream,
   rtc::RaceChecker audio_capture_race_checker_;
   rtc::TaskQueue* worker_queue_;
 
-  const bool audio_send_side_bwe_;
   const bool allocate_audio_without_feedback_;
   const bool force_no_audio_feedback_ = allocate_audio_without_feedback_;
   const bool enable_audio_alr_probing_;

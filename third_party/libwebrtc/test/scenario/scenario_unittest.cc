@@ -146,7 +146,7 @@ TEST(ScenarioTest,
      RetransmitsVideoPacketsInAudioAndVideoCallWithSendSideBweAndLoss) {
   // Make sure audio packets are included in transport feedback.
   test::ScopedFieldTrials override_field_trials(
-      "WebRTC-Audio-SendSideBwe/Enabled/WebRTC-Audio-ABWENoTWCC/Disabled/");
+      "WebRTC-Audio-ABWENoTWCC/Disabled/");
 
   Scenario s;
   CallClientConfig call_client_config;
