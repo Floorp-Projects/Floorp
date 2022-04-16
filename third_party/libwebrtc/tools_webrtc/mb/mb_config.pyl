@@ -153,9 +153,9 @@
       'ios_compile_arm_rel': 'ios_release_bot_arm',
       'ios_compile_arm64_dbg': 'ios_debug_bot_arm64',
       'ios_compile_arm64_rel': 'ios_release_bot_arm64',
-      'ios_sim_x64_dbg_ios10': 'ios_debug_bot_x64',
-      'ios_sim_x64_dbg_ios11': 'ios_debug_bot_x64',
       'ios_sim_x64_dbg_ios12': 'ios_debug_bot_x64',
+      'ios_sim_x64_dbg_ios13': 'ios_debug_bot_x64',
+      'ios_sim_x64_dbg_ios14': 'ios_debug_bot_x64',
 
       # Mac
       'mac_compile_dbg': 'debug_bot_x64',
