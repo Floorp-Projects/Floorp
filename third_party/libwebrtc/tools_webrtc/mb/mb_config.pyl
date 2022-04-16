@@ -24,9 +24,9 @@
       'iOS32 Release': 'ios_release_bot_arm',
       'iOS64 Debug': 'ios_debug_bot_arm64',
       'iOS64 Release': 'ios_release_bot_arm64',
-      'iOS64 Sim Debug (iOS 10.0)': 'ios_debug_bot_x64',
-      'iOS64 Sim Debug (iOS 11)': 'ios_debug_bot_x64',
       'iOS64 Sim Debug (iOS 12)': 'ios_debug_bot_x64',
+      'iOS64 Sim Debug (iOS 13)': 'ios_debug_bot_x64',
+      'iOS64 Sim Debug (iOS 14.0)': 'ios_debug_bot_x64',
 
       # Mac
       'Mac64 Debug': 'debug_bot_x64',
