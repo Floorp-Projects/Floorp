@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include "absl/types/optional.h"
 #include "modules/audio_coding/neteq/histogram.h"
 #include "modules/audio_coding/neteq/mock/mock_histogram.h"
 #include "modules/audio_coding/neteq/mock/mock_statistics_calculator.h"
@@ -29,6 +30,7 @@ namespace webrtc {
 namespace {
 constexpr int kMaxNumberOfPackets = 240;
 constexpr int kMinDelayMs = 0;
+constexpr int kMaxHistoryMs = 2000;
 constexpr int kTimeStepMs = 10;
 constexpr int kFs = 8000;
 constexpr int kFrameSizeMs = 20;
@@ -53,6 +55,7 @@ class DelayManagerTest : public ::testing::Test {
   MockHistogram* mock_histogram_;
   uint32_t ts_;
   bool use_mock_histogram_ = false;
+  absl::optional<int> resample_interval_ms_;
 };
 
 DelayManagerTest::DelayManagerTest()
@@ -69,6 +72,7 @@ void DelayManagerTest::RecreateDelayManager() {
     std::unique_ptr<Histogram> histogram(mock_histogram_);
     dm_ = std::make_unique<DelayManager>(kMaxNumberOfPackets, kMinDelayMs,
                                          kDefaultHistogramQuantile,
+                                         resample_interval_ms_, kMaxHistoryMs,
                                          &tick_timer_, std::move(histogram));
   } else {
     dm_ = DelayManager::Create(kMaxNumberOfPackets, kMinDelayMs, &tick_timer_);
@@ -453,6 +457,33 @@ TEST_F(DelayManagerTest, RelativeArrivalDelayStatistic) {
   IncreaseTime(2 * kFrameSizeMs);
 
   EXPECT_EQ(20, InsertNextPacket());
+}
+
+TEST_F(DelayManagerTest, ResamplePacketDelays) {
+  use_mock_histogram_ = true;
+  resample_interval_ms_ = 500;
+  RecreateDelayManager();
+
+  // The histogram should be updated once with the maximum delay observed for
+  // the following sequence of packets.
+  EXPECT_CALL(*mock_histogram_, Add(5)).Times(1);
+
+  EXPECT_EQ(absl::nullopt, InsertNextPacket());
+
+  IncreaseTime(kFrameSizeMs);
+  EXPECT_EQ(0, InsertNextPacket());
+  IncreaseTime(3 * kFrameSizeMs);
+  EXPECT_EQ(2 * kFrameSizeMs, InsertNextPacket());
+  IncreaseTime(4 * kFrameSizeMs);
+  EXPECT_EQ(5 * kFrameSizeMs, InsertNextPacket());
+
+  for (int i = 4; i >= 0; --i) {
+    EXPECT_EQ(i * kFrameSizeMs, InsertNextPacket());
+  }
+  for (int i = 0; i < *resample_interval_ms_ / kFrameSizeMs; ++i) {
+    IncreaseTime(kFrameSizeMs);
+    EXPECT_EQ(0, InsertNextPacket());
+  }
 }
 
 }  // namespace webrtc

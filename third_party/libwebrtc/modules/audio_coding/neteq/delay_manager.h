@@ -28,6 +28,8 @@ class DelayManager {
   DelayManager(int max_packets_in_buffer,
                int base_minimum_delay_ms,
                int histogram_quantile,
+               absl::optional<int> resample_interval_ms,
+               int max_history_ms,
                const TickTimer* tick_timer,
                std::unique_ptr<Histogram> histogram);
 
@@ -105,6 +107,9 @@ class DelayManager {
   std::unique_ptr<Histogram> histogram_;
   const int histogram_quantile_;
   const TickTimer* tick_timer_;
+  const absl::optional<int> resample_interval_ms_;
+  const int max_history_ms_;
+
   int base_minimum_delay_ms_;
   int effective_minimum_delay_ms_;  // Used as lower bound for target delay.
   int minimum_delay_ms_;            // Externally set minimum delay.
@@ -116,6 +121,8 @@ class DelayManager {
   int target_level_ms_;       // Currently preferred buffer level.
   uint32_t last_timestamp_;   // Timestamp for the last received packet.
   int num_reordered_packets_ = 0;
+  int max_delay_in_interval_ms_ = 0;
+  std::unique_ptr<TickTimer::Stopwatch> resample_stopwatch_;
 
   struct PacketDelay {
     int iat_delay_ms;
