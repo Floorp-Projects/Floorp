@@ -874,6 +874,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   expected_inbound_audio_codec.clock_rate = 1337;
   expected_inbound_audio_codec.channels = 1;
   expected_inbound_audio_codec.sdp_fmtp_line = "minptime=10;useinbandfec=1";
+  expected_inbound_audio_codec.transport_id = "RTCTransport_TransportName_1";
 
   RTCCodecStats expected_outbound_audio_codec("RTCCodec_AudioMid_Outbound_2",
                                               report->timestamp_us());
@@ -881,6 +882,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   expected_outbound_audio_codec.mime_type = "audio/isac";
   expected_outbound_audio_codec.clock_rate = 1338;
   expected_outbound_audio_codec.channels = 2;
+  expected_outbound_audio_codec.transport_id = "RTCTransport_TransportName_1";
 
   RTCCodecStats expected_inbound_video_codec("RTCCodec_VideoMid_Inbound_3",
                                              report->timestamp_us());
@@ -889,12 +891,14 @@ TEST_F(RTCStatsCollectorTest, CollectRTCCodecStats) {
   expected_inbound_video_codec.clock_rate = 1339;
   expected_inbound_video_codec.sdp_fmtp_line =
       "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f";
+  expected_inbound_video_codec.transport_id = "RTCTransport_TransportName_1";
 
   RTCCodecStats expected_outbound_video_codec("RTCCodec_VideoMid_Outbound_4",
                                               report->timestamp_us());
   expected_outbound_video_codec.payload_type = 4;
   expected_outbound_video_codec.mime_type = "video/VP8";
   expected_outbound_video_codec.clock_rate = 1340;
+  expected_outbound_video_codec.transport_id = "RTCTransport_TransportName_1";
 
   ASSERT_TRUE(report->Get(expected_inbound_audio_codec.id()));
   EXPECT_EQ(
