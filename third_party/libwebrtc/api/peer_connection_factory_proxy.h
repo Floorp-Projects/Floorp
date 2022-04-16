@@ -36,6 +36,10 @@ PROXY_METHOD2(rtc::scoped_refptr<PeerConnectionInterface>,
               CreatePeerConnection,
               const PeerConnectionInterface::RTCConfiguration&,
               PeerConnectionDependencies)
+PROXY_METHOD2(RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>,
+              CreatePeerConnectionOrError,
+              const PeerConnectionInterface::RTCConfiguration&,
+              PeerConnectionDependencies)
 PROXY_CONSTMETHOD1(webrtc::RtpCapabilities,
                    GetRtpSenderCapabilities,
                    cricket::MediaType)
