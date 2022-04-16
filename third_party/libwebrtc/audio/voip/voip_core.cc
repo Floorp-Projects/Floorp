@@ -37,12 +37,12 @@ static constexpr int kMaxChannelId = 100000;
 
 }  // namespace
 
-bool VoipCore::Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
-                    rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
-                    std::unique_ptr<TaskQueueFactory> task_queue_factory,
-                    rtc::scoped_refptr<AudioDeviceModule> audio_device_module,
-                    rtc::scoped_refptr<AudioProcessing> audio_processing,
-                    std::unique_ptr<ProcessThread> process_thread) {
+VoipCore::VoipCore(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
+                   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
+                   std::unique_ptr<TaskQueueFactory> task_queue_factory,
+                   rtc::scoped_refptr<AudioDeviceModule> audio_device_module,
+                   rtc::scoped_refptr<AudioProcessing> audio_processing,
+                   std::unique_ptr<ProcessThread> process_thread) {
   encoder_factory_ = std::move(encoder_factory);
   decoder_factory_ = std::move(decoder_factory);
   task_queue_factory_ = std::move(task_queue_factory);
@@ -58,6 +58,18 @@ bool VoipCore::Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
   // AudioTransportImpl depends on audio mixer and audio processing instances.
   audio_transport_ = std::make_unique<AudioTransportImpl>(
       audio_mixer_.get(), audio_processing_.get(), nullptr);
+}
+
+bool VoipCore::InitializeIfNeeded() {
+  // |audio_device_module_| internally owns a lock and the whole logic here
+  // needs to be executed atomically once using another lock in VoipCore.
+  // Further changes in this method will need to make sure that no deadlock is
+  // introduced in the future.
+  MutexLock lock(&lock_);
+
+  if (initialized_) {
+    return true;
+  }
 
   // Initialize ADM.
   if (audio_device_module_->Init() != 0) {
@@ -70,7 +82,6 @@ bool VoipCore::Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
   // recording device functioning (e.g webinar where only speaker is available).
   // It's also possible that there are other audio devices available that may
   // work.
-  // TODO(natim@webrtc.org): consider moving this part out of initialization.
 
   // Initialize default speaker device.
   if (audio_device_module_->SetPlayoutDevice(kAudioDeviceId) != 0) {
@@ -110,6 +121,8 @@ bool VoipCore::Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
       0) {
     RTC_LOG(LS_WARNING) << "Unable to register audio callback.";
   }
+
+  initialized_ = true;
 
   return true;
 }
@@ -243,6 +256,11 @@ bool VoipCore::UpdateAudioTransportWithSenders() {
 
   // Depending on availability of senders, turn on or off ADM recording.
   if (!audio_senders.empty()) {
+    // Initialize audio device module and default device if needed.
+    if (!InitializeIfNeeded()) {
+      return false;
+    }
+
     if (!audio_device_module_->Recording()) {
       if (audio_device_module_->InitRecording() != 0) {
         RTC_LOG(LS_ERROR) << "InitRecording failed";
@@ -297,6 +315,11 @@ bool VoipCore::StartPlayout(ChannelId channel_id) {
   }
 
   if (!channel->StartPlay()) {
+    return false;
+  }
+
+  // Initialize audio device module and default device if needed.
+  if (!InitializeIfNeeded()) {
     return false;
   }
 
