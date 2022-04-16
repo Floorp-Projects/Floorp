@@ -37,8 +37,7 @@ namespace webrtc {
 
 // DTLS certificate request callback class.
 class WebRtcCertificateGeneratorCallback
-    : public rtc::RTCCertificateGeneratorCallback,
-      public sigslot::has_slots<> {
+    : public rtc::RTCCertificateGeneratorCallback {
  public:
   // |rtc::RTCCertificateGeneratorCallback| overrides.
   void OnSuccess(
