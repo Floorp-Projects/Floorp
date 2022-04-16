@@ -6728,7 +6728,11 @@ bool nsDisplayTransform::UpdateScrollData(
     return false;
   }
   if (aLayerData) {
-    aLayerData->SetTransform(GetTransform().GetMatrix());
+    auto matrix = GetTransform().GetMatrix();
+    if (!mFrame->Combines3DTransformWithAncestors()) {
+      matrix.ProjectTo2D();
+    }
+    aLayerData->SetTransform(matrix);
     aLayerData->SetTransformIsPerspective(true);
   }
   return true;
