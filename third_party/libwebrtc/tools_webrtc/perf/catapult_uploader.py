@@ -172,17 +172,18 @@ def _CheckFullUploadInfo(url, upload_token,
 # TODO(https://crbug.com/1029452): HACKHACK
 # Remove once we have doubles in the proto and handle -infinity correctly.
 def _ApplyHacks(dicts):
+    def _NoInf(value):
+        if value == float('inf'):
+            return histogram.JS_MAX_VALUE
+        if value == float('-inf'):
+            return -histogram.JS_MAX_VALUE
+        return value
+
     for d in dicts:
         if 'running' in d:
-
-            def _NoInf(value):
-                if value == float('inf'):
-                    return histogram.JS_MAX_VALUE
-                if value == float('-inf'):
-                    return -histogram.JS_MAX_VALUE
-                return value
-
             d['running'] = [_NoInf(value) for value in d['running']]
+        if 'sampleValues' in d:
+            d['sampleValues'] = [_NoInf(value) for value in d['sampleValues']]
 
     return dicts
 
