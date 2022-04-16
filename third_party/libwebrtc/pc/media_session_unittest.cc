@@ -34,6 +34,7 @@
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/unique_id_generator.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 
 #define ASSERT_CRYPTO(cd, s, cs)      \
@@ -3456,8 +3457,10 @@ TEST_F(MediaSessionDescriptionFactoryTest, SimSsrcsGenerateMultipleRtxSsrcs) {
 }
 
 // Test that, when the FlexFEC codec is added, a FlexFEC ssrc is created
-// together with a FEC-FR grouping.
+// together with a FEC-FR grouping. Guarded by WebRTC-FlexFEC-03 trial.
 TEST_F(MediaSessionDescriptionFactoryTest, GenerateFlexfecSsrc) {
+  webrtc::test::ScopedFieldTrials override_field_trials(
+      "WebRTC-FlexFEC-03/Enabled/");
   MediaSessionOptions opts;
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kSendRecv, kActive,
@@ -3499,6 +3502,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, GenerateFlexfecSsrc) {
 // TODO(brandtr): Remove this test when we support simulcast, either through
 // multiple FlexfecSenders, or through multistream protection.
 TEST_F(MediaSessionDescriptionFactoryTest, SimSsrcsGenerateNoFlexfecSsrcs) {
+  webrtc::test::ScopedFieldTrials override_field_trials(
+      "WebRTC-FlexFEC-03/Enabled/");
   MediaSessionOptions opts;
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kSendRecv, kActive,
