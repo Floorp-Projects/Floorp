@@ -93,15 +93,16 @@ def _WaitForUploadConfirmation(url, oauth_token, upload_token, wait_timeout,
             time.sleep((next_poll_time - current_time).total_seconds())
         next_poll_time = datetime.datetime.now() + wait_polling_period
 
-        response, content = http.request(url + '/uploads' + upload_token,
+        response, content = http.request(url + '/uploads/' + upload_token,
                                          method='GET', headers=headers)
 
         print 'Upload state polled. Response: %r.' % content
 
+        if response.status != 200:
+            break
+
         resp_json = json.loads(content)
-        if (response.status != 200 or
-            resp_json['state'] == 'COMPLETED' or
-            resp_json['state'] == 'FAILED'):
+        if resp_json['state'] == 'COMPLETED' or resp_json['state'] == 'FAILED':
             break
 
     return response, resp_json
