@@ -48,7 +48,8 @@ RtpTransmissionManager::RtpTransmissionManager(
       usage_pattern_(usage_pattern),
       observer_(observer),
       stats_(stats),
-      on_negotiation_needed_(on_negotiation_needed) {}
+      on_negotiation_needed_(on_negotiation_needed),
+      weak_ptr_factory_(this) {}
 
 void RtpTransmissionManager::Close() {
   closed_ = true;
@@ -269,10 +270,13 @@ RtpTransmissionManager::CreateAndAddTransceiver(
           sender, receiver, channel_manager(),
           sender->media_type() == cricket::MEDIA_TYPE_AUDIO
               ? channel_manager()->GetSupportedAudioRtpHeaderExtensions()
-              : channel_manager()->GetSupportedVideoRtpHeaderExtensions()));
+              : channel_manager()->GetSupportedVideoRtpHeaderExtensions(),
+          [this_weak_ptr = weak_ptr_factory_.GetWeakPtr()]() {
+            if (this_weak_ptr) {
+              this_weak_ptr->OnNegotiationNeeded();
+            }
+          }));
   transceivers()->Add(transceiver);
-  transceiver->internal()->SignalNegotiationNeeded.connect(
-      this, &RtpTransmissionManager::OnNegotiationNeeded);
   return transceiver;
 }
 

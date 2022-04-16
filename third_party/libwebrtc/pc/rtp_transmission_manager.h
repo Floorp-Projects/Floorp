@@ -66,8 +66,7 @@ struct RtpSenderInfo {
 // The RtpTransmissionManager class is responsible for managing the lifetime
 // and relationships between objects of type RtpSender, RtpReceiver and
 // RtpTransceiver.
-class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver,
-                               public sigslot::has_slots<> {
+class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
  public:
   RtpTransmissionManager(bool is_unified_plan,
                          rtc::Thread* signaling_thread,
@@ -259,6 +258,8 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver,
   PeerConnectionObserver* observer_;
   StatsCollectorInterface* const stats_;
   std::function<void()> on_negotiation_needed_;
+  rtc::WeakPtrFactory<RtpTransmissionManager> weak_ptr_factory_
+      RTC_GUARDED_BY(signaling_thread());
 };
 
 }  // namespace webrtc
