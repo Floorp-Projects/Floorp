@@ -338,6 +338,12 @@ void DrawTargetWebgl::SharedContext::SetBlendState(CompositionOp aOp) {
     return;
   }
   mLastCompositionOp = aOp;
+  // AA is not supported for all composition ops, so switching blend modes may
+  // cause a toggle in AA state. Certain ops such as OP_SOURCE require output
+  // alpha that is blended separately from AA coverage. This would require two
+  // stage blending which can incur a substantial performance penalty, so to
+  // work around this currently we just disable AA for those ops.
+  mDirtyAA = true;
 
   // Map the composition op to a WebGL blend mode, if possible.
   mWebgl->Enable(LOCAL_GL_BLEND);
@@ -373,6 +379,8 @@ bool DrawTargetWebgl::SharedContext::SetTarget(DrawTargetWebgl* aDT) {
       mWebgl->BindFramebuffer(LOCAL_GL_FRAMEBUFFER, aDT->mFramebuffer);
       mViewportSize = aDT->GetSize();
       mWebgl->Viewport(0, 0, mViewportSize.width, mViewportSize.height);
+      // Force the viewport to be reset.
+      mDirtyViewport = true;
     }
   }
   return true;
@@ -750,20 +758,39 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
     mWebgl->VertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0);
   }
   if (!mSolidProgram) {
+    // AA is computed by using the basis vectors of the transform to determine
+    // both the scale and orientation. The scale is then used to extrude the
+    // rectangle outward by 1 screen-space pixel to account for the AA region.
+    // The distance to the rectangle edges is passed to the fragment shader in
+    // an interpolant, biased by 0.5 so it represents the desired coverage. The
+    // minimum coverage is then chosen by the fragment shader to use as an AA
+    // coverage value to modulate the color.
     auto vsSource =
         u"attribute vec2 a_vertex;\n"
         "uniform vec2 u_transform[3];\n"
+        "uniform vec2 u_viewport;\n"
+        "uniform float u_aa;\n"
+        "varying vec4 v_dist;\n"
         "void main() {\n"
-        "   vec2 vertex = u_transform[0] * a_vertex.x +\n"
-        "                 u_transform[1] * a_vertex.y +\n"
+        "   vec2 scale = vec2(dot(u_transform[0], u_transform[0]),\n"
+        "                     dot(u_transform[1], u_transform[1]));\n"
+        "   vec2 invScale = u_aa * inversesqrt(scale + 1.0e-6);\n"
+        "   scale *= invScale;\n"
+        "   vec2 extrude = a_vertex + invScale * (2.0 * a_vertex - 1.0);\n"
+        "   vec2 vertex = u_transform[0] * extrude.x +\n"
+        "                 u_transform[1] * extrude.y +\n"
         "                 u_transform[2];\n"
-        "   gl_Position = vec4(vertex, 0.0, 1.0);\n"
+        "   gl_Position = vec4(vertex * 2.0 / u_viewport - 1.0, 0.0, 1.0);\n"
+        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy + 1.5 - u_aa;\n"
         "}\n"_ns;
     auto fsSource =
         u"precision mediump float;\n"
         "uniform vec4 u_color;\n"
+        "varying vec4 v_dist;\n"
         "void main() {\n"
-        "   gl_FragColor = u_color;\n"
+        "   vec2 dist = min(v_dist.xy, v_dist.zw);\n"
+        "   float aa = clamp(min(dist.x, dist.y), 0.0, 1.0);\n"
+        "   gl_FragColor = aa * u_color;\n"
         "}\n"_ns;
     RefPtr<WebGLShaderJS> vsId = mWebgl->CreateShader(LOCAL_GL_VERTEX_SHADER);
     mWebgl->ShaderSource(*vsId, vsSource);
@@ -785,11 +812,15 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
     if (!mWebgl->GetLinkResult(*mSolidProgram).success) {
       return false;
     }
+    mSolidProgramViewport =
+        mWebgl->GetUniformLocation(*mSolidProgram, u"u_viewport"_ns);
+    mSolidProgramAA = mWebgl->GetUniformLocation(*mSolidProgram, u"u_aa"_ns);
     mSolidProgramTransform =
         mWebgl->GetUniformLocation(*mSolidProgram, u"u_transform"_ns);
     mSolidProgramColor =
         mWebgl->GetUniformLocation(*mSolidProgram, u"u_color"_ns);
-    if (!mSolidProgramTransform || !mSolidProgramColor) {
+    if (!mSolidProgramViewport || !mSolidProgramAA || !mSolidProgramTransform ||
+        !mSolidProgramColor) {
       return false;
     }
   }
@@ -798,20 +829,30 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
     auto vsSource =
         u"attribute vec2 a_vertex;\n"
         "varying vec2 v_texcoord;\n"
+        "varying vec4 v_dist;\n"
+        "uniform vec2 u_viewport;\n"
+        "uniform float u_aa;\n"
         "uniform vec2 u_transform[3];\n"
         "uniform vec2 u_texmatrix[3];\n"
         "void main() {\n"
-        "   vec2 vertex = u_transform[0] * a_vertex.x +\n"
-        "                 u_transform[1] * a_vertex.y +\n"
+        "   vec2 scale = vec2(dot(u_transform[0], u_transform[0]),\n"
+        "                     dot(u_transform[1], u_transform[1]));\n"
+        "   vec2 invScale = u_aa * inversesqrt(scale + 1.0e-6);\n"
+        "   scale *= invScale;\n"
+        "   vec2 extrude = a_vertex + invScale * (2.0 * a_vertex - 1.0);\n"
+        "   vec2 vertex = u_transform[0] * extrude.x +\n"
+        "                 u_transform[1] * extrude.y +\n"
         "                 u_transform[2];\n"
-        "   gl_Position = vec4(vertex, 0.0, 1.0);\n"
-        "   v_texcoord = u_texmatrix[0] * a_vertex.x +\n"
-        "                u_texmatrix[1] * a_vertex.y +\n"
+        "   gl_Position = vec4(vertex * 2.0 / u_viewport - 1.0, 0.0, 1.0);\n"
+        "   v_texcoord = u_texmatrix[0] * extrude.x +\n"
+        "                u_texmatrix[1] * extrude.y +\n"
         "                u_texmatrix[2];\n"
+        "   v_dist = vec4(extrude, 1.0 - extrude) * scale.xyxy + 1.5 - u_aa;\n"
         "}\n"_ns;
     auto fsSource =
         u"precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
+        "varying vec4 v_dist;\n"
         "uniform vec4 u_texbounds;\n"
         "uniform vec4 u_color;\n"
         "uniform float u_swizzle;\n"
@@ -819,7 +860,9 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
         "void main() {\n"
         "   vec2 tc = clamp(v_texcoord, u_texbounds.xy, u_texbounds.zw);\n"
         "   vec4 image = texture2D(u_sampler, tc);\n"
-        "   gl_FragColor = u_color * mix(image, image.rrrr, u_swizzle);\n"
+        "   vec2 dist = min(v_dist.xy, v_dist.zw);\n"
+        "   float aa = clamp(min(dist.x, dist.y), 0.0, 1.0);\n"
+        "   gl_FragColor = aa * u_color * mix(image, image.rrrr, u_swizzle);\n"
         "}\n"_ns;
     RefPtr<WebGLShaderJS> vsId = mWebgl->CreateShader(LOCAL_GL_VERTEX_SHADER);
     mWebgl->ShaderSource(*vsId, vsSource);
@@ -841,6 +884,9 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
     if (!mWebgl->GetLinkResult(*mImageProgram).success) {
       return false;
     }
+    mImageProgramViewport =
+        mWebgl->GetUniformLocation(*mImageProgram, u"u_viewport"_ns);
+    mImageProgramAA = mWebgl->GetUniformLocation(*mImageProgram, u"u_aa"_ns);
     mImageProgramTransform =
         mWebgl->GetUniformLocation(*mImageProgram, u"u_transform"_ns);
     mImageProgramTexMatrix =
@@ -853,9 +899,9 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
         mWebgl->GetUniformLocation(*mImageProgram, u"u_color"_ns);
     mImageProgramSampler =
         mWebgl->GetUniformLocation(*mImageProgram, u"u_sampler"_ns);
-    if (!mImageProgramTransform || !mImageProgramTexMatrix ||
-        !mImageProgramTexBounds || !mImageProgramSwizzle ||
-        !mImageProgramColor || !mImageProgramSampler) {
+    if (!mImageProgramViewport || !mImageProgramAA || !mImageProgramTransform ||
+        !mImageProgramTexMatrix || !mImageProgramTexBounds ||
+        !mImageProgramSwizzle || !mImageProgramColor || !mImageProgramSampler) {
       return false;
     }
     mWebgl->UseProgram(mImageProgram);
@@ -1263,6 +1309,25 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       if (mLastProgram != mSolidProgram) {
         mWebgl->UseProgram(mSolidProgram);
         mLastProgram = mSolidProgram;
+        // Ensure viewport and AA state is current.
+        mDirtyViewport = true;
+        mDirtyAA = true;
+      }
+      if (mDirtyViewport) {
+        float viewportData[2] = {float(mViewportSize.width),
+                                 float(mViewportSize.height)};
+        mWebgl->UniformData(
+            LOCAL_GL_FLOAT_VEC2, mSolidProgramViewport, false,
+            {(const uint8_t*)viewportData, sizeof(viewportData)});
+        mDirtyViewport = false;
+      }
+      if (mDirtyAA) {
+        // AA is not supported for OP_SOURCE.
+        float aaData =
+            mLastCompositionOp == CompositionOp::OP_SOURCE ? 0.0f : 1.0f;
+        mWebgl->UniformData(LOCAL_GL_FLOAT, mSolidProgramAA, false,
+                            {(const uint8_t*)&aaData, sizeof(aaData)});
+        mDirtyAA = false;
       }
       float a = color.a * aOptions.mAlpha;
       float colorData[4] = {color.b * a, color.g * a, color.r * a, a};
@@ -1270,8 +1335,6 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       if (aTransformed) {
         xform *= currentTransform;
       }
-      xform *= Matrix(2.0f / float(mViewportSize.width), 0.0f, 0.0f,
-                      2.0f / float(mViewportSize.height), -1, -1);
       float xformData[6] = {xform._11, xform._12, xform._21,
                             xform._22, xform._31, xform._32};
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC2, mSolidProgramTransform, false,
@@ -1434,6 +1497,25 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       if (mLastProgram != mImageProgram) {
         mWebgl->UseProgram(mImageProgram);
         mLastProgram = mImageProgram;
+        // Ensure viewport and AA state is current.
+        mDirtyViewport = true;
+        mDirtyAA = true;
+      }
+      if (mDirtyViewport) {
+        float viewportData[2] = {float(mViewportSize.width),
+                                 float(mViewportSize.height)};
+        mWebgl->UniformData(
+            LOCAL_GL_FLOAT_VEC2, mImageProgramViewport, false,
+            {(const uint8_t*)viewportData, sizeof(viewportData)});
+        mDirtyViewport = false;
+      }
+      if (mDirtyAA) {
+        // AA is not supported for OP_SOURCE.
+        float aaData =
+            mLastCompositionOp == CompositionOp::OP_SOURCE ? 0.0f : 1.0f;
+        mWebgl->UniformData(LOCAL_GL_FLOAT, mImageProgramAA, false,
+                            {(const uint8_t*)&aaData, sizeof(aaData)});
+        mDirtyAA = false;
       }
       DeviceColor color = aMaskColor.valueOr(DeviceColor(1, 1, 1, 1));
       float a = color.a * aOptions.mAlpha;
@@ -1443,8 +1525,6 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       if (aTransformed) {
         xform *= currentTransform;
       }
-      xform *= Matrix(2.0f / float(mViewportSize.width), 0.0f, 0.0f,
-                      2.0f / float(mViewportSize.height), -1, -1);
       float xformData[6] = {xform._11, xform._12, xform._21,
                             xform._22, xform._31, xform._32};
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC2, mImageProgramTransform, false,
