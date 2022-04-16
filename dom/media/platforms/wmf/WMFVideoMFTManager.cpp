@@ -526,6 +526,12 @@ WMFVideoMFTManager::SetDecoderMediaTypes() {
                           mVideoInfo.ImageRect().height);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
+  UINT32 fpsDenominator = 1000;
+  UINT32 fpsNumerator = static_cast<uint32_t>(mFramerate * fpsDenominator);
+  hr = MFSetAttributeRatio(inputType, MF_MT_FRAME_RATE, fpsNumerator,
+                           fpsDenominator);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
   RefPtr<IMFMediaType> outputType;
   hr = wmf::MFCreateMediaType(getter_AddRefs(outputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -536,6 +542,10 @@ WMFVideoMFTManager::SetDecoderMediaTypes() {
   hr = MFSetAttributeSize(outputType, MF_MT_FRAME_SIZE,
                           mVideoInfo.ImageRect().width,
                           mVideoInfo.ImageRect().height);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  hr = MFSetAttributeRatio(outputType, MF_MT_FRAME_RATE, fpsNumerator,
+                           fpsDenominator);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   GUID outputSubType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
@@ -990,14 +1000,49 @@ bool WMFVideoMFTManager::IsHardwareAccelerated(
 nsCString WMFVideoMFTManager::GetDescriptionName() const {
   nsCString failureReason;
   bool hw = IsHardwareAccelerated(failureReason);
-  return nsPrintfCString("wmf %s codec %s video decoder - %s",
+
+  const char* formatName = [&]() {
+    if (!mDecoder) {
+      return "not initialized";
+    }
+    GUID format = mDecoder->GetOutputMediaSubType();
+    if (format == MFVideoFormat_NV12) {
+      if (!gfx::DeviceManagerDx::Get()->CanUseNV12()) {
+        return "nv12->argb32";
+      }
+      return "nv12";
+    }
+    if (format == MFVideoFormat_P010) {
+      if (!gfx::DeviceManagerDx::Get()->CanUseP010()) {
+        return "p010->argb32";
+      }
+      return "p010";
+    }
+    if (format == MFVideoFormat_P016) {
+      if (!gfx::DeviceManagerDx::Get()->CanUseP016()) {
+        return "p016->argb32";
+      }
+      return "p016";
+    }
+    if (format == MFVideoFormat_YV12) {
+      return "yv12";
+    }
+    return "unknown";
+  }();
+
+  const char* dxvaName = [&]() {
+    if (!mDXVA2Manager) {
+      return "no DXVA";
+    }
+    if (mDXVA2Manager->IsD3D11()) {
+      return "D3D11";
+    }
+    return "D3D9";
+  }();
+
+  return nsPrintfCString("wmf %s codec %s video decoder - %s, %s",
                          WMFDecoderModule::StreamTypeToString(mStreamType),
-                         hw ? "hardware" : "software",
-                         hw ? StaticPrefs::media_wmf_use_nv12_format() &&
-                                      gfx::DeviceManagerDx::Get()->CanUseNV12()
-                                  ? "nv12"
-                                  : "rgba32"
-                            : "yuv420");
+                         hw ? "hardware" : "software", dxvaName, formatName);
 }
 
 }  // namespace mozilla
