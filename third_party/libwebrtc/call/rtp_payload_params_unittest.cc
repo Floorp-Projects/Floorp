@@ -103,7 +103,7 @@ TEST(RtpPayloadParamsTest, InfoMappedToRtpVideoHeader_Vp9) {
   codec_info.codecSpecific.VP9.num_spatial_layers = 3;
   codec_info.codecSpecific.VP9.first_frame_in_picture = true;
   codec_info.codecSpecific.VP9.temporal_idx = 2;
-  codec_info.codecSpecific.VP9.end_of_picture = false;
+  codec_info.end_of_picture = false;
 
   RTPVideoHeader header =
       params.GetRtpVideoHeader(encoded_image, &codec_info, kDontCare);
@@ -120,12 +120,11 @@ TEST(RtpPayloadParamsTest, InfoMappedToRtpVideoHeader_Vp9) {
   EXPECT_EQ(vp9_header.spatial_idx, encoded_image.SpatialIndex());
   EXPECT_EQ(vp9_header.num_spatial_layers,
             codec_info.codecSpecific.VP9.num_spatial_layers);
-  EXPECT_EQ(vp9_header.end_of_picture,
-            codec_info.codecSpecific.VP9.end_of_picture);
+  EXPECT_EQ(vp9_header.end_of_picture, codec_info.end_of_picture);
 
   // Next spatial layer.
   codec_info.codecSpecific.VP9.first_frame_in_picture = false;
-  codec_info.codecSpecific.VP9.end_of_picture = true;
+  codec_info.end_of_picture = true;
 
   encoded_image.SetSpatialIndex(1);
   ColorSpace color_space(
@@ -144,8 +143,7 @@ TEST(RtpPayloadParamsTest, InfoMappedToRtpVideoHeader_Vp9) {
   EXPECT_EQ(vp9_header.spatial_idx, encoded_image.SpatialIndex());
   EXPECT_EQ(vp9_header.num_spatial_layers,
             codec_info.codecSpecific.VP9.num_spatial_layers);
-  EXPECT_EQ(vp9_header.end_of_picture,
-            codec_info.codecSpecific.VP9.end_of_picture);
+  EXPECT_EQ(vp9_header.end_of_picture, codec_info.end_of_picture);
 }
 
 TEST(RtpPayloadParamsTest, PictureIdIsSetForVp8) {

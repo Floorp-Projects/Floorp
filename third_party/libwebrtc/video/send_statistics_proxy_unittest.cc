@@ -2721,7 +2721,7 @@ TEST_F(SendStatisticsProxyTest, Vp9SvcLowSpatialLayerDoesNotUpdateResolution) {
   codec_info.codecType = kVideoCodecVP9;
 
   // For first picture, it is expected that low layer updates resolution.
-  codec_info.codecSpecific.VP9.end_of_picture = false;
+  codec_info.end_of_picture = false;
   statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
   VideoSendStream::Stats stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kEncodedWidth, stats.substreams[config_.rtp.ssrcs[0]].width);
@@ -2730,7 +2730,7 @@ TEST_F(SendStatisticsProxyTest, Vp9SvcLowSpatialLayerDoesNotUpdateResolution) {
   // Top layer updates resolution.
   encoded_image._encodedWidth = kEncodedWidth * 2;
   encoded_image._encodedHeight = kEncodedHeight * 2;
-  codec_info.codecSpecific.VP9.end_of_picture = true;
+  codec_info.end_of_picture = true;
   statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
   stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kEncodedWidth * 2, stats.substreams[config_.rtp.ssrcs[0]].width);
@@ -2739,7 +2739,7 @@ TEST_F(SendStatisticsProxyTest, Vp9SvcLowSpatialLayerDoesNotUpdateResolution) {
   // Low layer of next frame doesn't update resolution.
   encoded_image._encodedWidth = kEncodedWidth;
   encoded_image._encodedHeight = kEncodedHeight;
-  codec_info.codecSpecific.VP9.end_of_picture = false;
+  codec_info.end_of_picture = false;
   statistics_proxy_->OnSendEncodedImage(encoded_image, &codec_info);
   stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kEncodedWidth * 2, stats.substreams[config_.rtp.ssrcs[0]].width);

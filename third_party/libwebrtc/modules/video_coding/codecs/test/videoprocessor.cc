@@ -373,13 +373,11 @@ void VideoProcessor::FrameEncoded(
   frame_stat->max_nalu_size_bytes = GetMaxNaluSizeBytes(encoded_image, config_);
   frame_stat->qp = encoded_image.qp_;
 
-  bool end_of_picture = false;
   if (codec_type == kVideoCodecVP9) {
     const CodecSpecificInfoVP9& vp9_info = codec_specific.codecSpecific.VP9;
     frame_stat->inter_layer_predicted = vp9_info.inter_layer_predicted;
     frame_stat->non_ref_for_inter_layer_pred =
         vp9_info.non_ref_for_inter_layer_pred;
-    end_of_picture = vp9_info.end_of_picture;
   } else {
     frame_stat->inter_layer_predicted = false;
     frame_stat->non_ref_for_inter_layer_pred = true;
@@ -397,7 +395,7 @@ void VideoProcessor::FrameEncoded(
   if (config_.decode) {
     DecodeFrame(*encoded_image_for_decode, spatial_idx);
 
-    if (end_of_picture && num_spatial_layers > 1) {
+    if (codec_specific.end_of_picture && num_spatial_layers > 1) {
       // If inter-layer prediction is enabled and upper layer was dropped then
       // base layer should be passed to upper layer decoder. Otherwise decoder
       // won't be able to decode next superframe.
