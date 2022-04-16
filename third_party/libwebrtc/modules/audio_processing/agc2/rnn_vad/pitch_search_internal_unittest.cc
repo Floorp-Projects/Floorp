@@ -31,138 +31,77 @@ constexpr float kTestPitchGainsHigh = 0.75f;
 
 }  // namespace
 
-class ComputePitchGainThresholdTest
-    : public ::testing::Test,
-      public ::testing::WithParamInterface<std::tuple<
-          /*candidate_pitch_period=*/int,
-          /*pitch_period_ratio=*/int,
-          /*initial_pitch_period=*/int,
-          /*initial_pitch_gain=*/float,
-          /*prev_pitch_period=*/int,
-          /*prev_pitch_gain=*/float,
-          /*threshold=*/float>> {};
-
-// Checks that the computed pitch gain is within tolerance given test input
-// data.
-TEST_P(ComputePitchGainThresholdTest, WithinTolerance) {
-  const auto params = GetParam();
-  const int candidate_pitch_period = std::get<0>(params);
-  const int pitch_period_ratio = std::get<1>(params);
-  const int initial_pitch_period = std::get<2>(params);
-  const float initial_pitch_gain = std::get<3>(params);
-  const int prev_pitch_period = std::get<4>(params);
-  const float prev_pitch_gain = std::get<5>(params);
-  const float threshold = std::get<6>(params);
-  {
-    // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
-    // FloatingPointExceptionObserver fpe_observer;
-    EXPECT_NEAR(
-        threshold,
-        ComputePitchGainThreshold(candidate_pitch_period, pitch_period_ratio,
-                                  initial_pitch_period, initial_pitch_gain,
-                                  prev_pitch_period, prev_pitch_gain),
-        5e-7f);
-  }
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    RnnVadTest,
-    ComputePitchGainThresholdTest,
-    ::testing::Values(
-        std::make_tuple(31, 7, 219, 0.45649201f, 199, 0.604747f, 0.40000001f),
-        std::make_tuple(113,
-                        2,
-                        226,
-                        0.20967799f,
-                        219,
-                        0.40392199f,
-                        0.30000001f),
-        std::make_tuple(63, 2, 126, 0.210788f, 364, 0.098519f, 0.40000001f),
-        std::make_tuple(30, 5, 152, 0.82356697f, 149, 0.55535901f, 0.700032f),
-        std::make_tuple(76, 2, 151, 0.79522997f, 151, 0.82356697f, 0.675946f),
-        std::make_tuple(31, 5, 153, 0.85069299f, 150, 0.79073799f, 0.72308898f),
-        std::make_tuple(78, 2, 156, 0.72750503f, 153, 0.85069299f, 0.618379f)));
-
 // Checks that the frame-wise sliding square energy function produces output
 // within tolerance given test input data.
-TEST(RnnVadTest, ComputeSlidingFrameSquareEnergiesWithinTolerance) {
+TEST(RnnVadTest, ComputeSlidingFrameSquareEnergies24kHzWithinTolerance) {
   PitchTestData test_data;
   std::array<float, kNumPitchBufSquareEnergies> computed_output;
-  {
-    // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
-    // FloatingPointExceptionObserver fpe_observer;
-    ComputeSlidingFrameSquareEnergies(test_data.GetPitchBufView(),
-                                      computed_output);
-  }
+  // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
+  // FloatingPointExceptionObserver fpe_observer;
+  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
+                                         computed_output);
   auto square_energies_view = test_data.GetPitchBufSquareEnergiesView();
   ExpectNearAbsolute({square_energies_view.data(), square_energies_view.size()},
                      computed_output, 3e-2f);
 }
 
 // Checks that the estimated pitch period is bit-exact given test input data.
-TEST(RnnVadTest, FindBestPitchPeriodsBitExactness) {
+TEST(RnnVadTest, ComputePitchPeriod12kHzBitExactness) {
   PitchTestData test_data;
   std::array<float, kBufSize12kHz> pitch_buf_decimated;
   Decimate2x(test_data.GetPitchBufView(), pitch_buf_decimated);
   CandidatePitchPeriods pitch_candidates;
-  {
-    // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
-    // FloatingPointExceptionObserver fpe_observer;
-    auto auto_corr_view = test_data.GetPitchBufAutoCorrCoeffsView();
-    pitch_candidates = FindBestPitchPeriods(auto_corr_view, pitch_buf_decimated,
-                                            kMaxPitch12kHz);
-  }
+  // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
+  // FloatingPointExceptionObserver fpe_observer;
+  auto auto_corr_view = test_data.GetPitchBufAutoCorrCoeffsView();
+  pitch_candidates =
+      ComputePitchPeriod12kHz(pitch_buf_decimated, auto_corr_view);
   EXPECT_EQ(pitch_candidates.best, 140);
   EXPECT_EQ(pitch_candidates.second_best, 142);
 }
 
 // Checks that the refined pitch period is bit-exact given test input data.
-TEST(RnnVadTest, RefinePitchPeriod48kHzBitExactness) {
+TEST(RnnVadTest, ComputePitchPeriod48kHzBitExactness) {
   PitchTestData test_data;
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
-  EXPECT_EQ(RefinePitchPeriod48kHz(test_data.GetPitchBufView(),
-                                   /*pitch_candidates=*/{280, 284}),
+  EXPECT_EQ(ComputePitchPeriod48kHz(test_data.GetPitchBufView(),
+                                    /*pitch_candidates=*/{280, 284}),
             560);
-  EXPECT_EQ(RefinePitchPeriod48kHz(test_data.GetPitchBufView(),
-                                   /*pitch_candidates=*/{260, 284}),
+  EXPECT_EQ(ComputePitchPeriod48kHz(test_data.GetPitchBufView(),
+                                    /*pitch_candidates=*/{260, 284}),
             568);
 }
 
-class CheckLowerPitchPeriodsAndComputePitchGainTest
+class ComputeExtendedPitchPeriod48kHzTest
     : public ::testing::Test,
-      public ::testing::WithParamInterface<std::tuple<
-          /*initial_pitch_period=*/int,
-          /*prev_pitch_period=*/int,
-          /*prev_pitch_gain=*/float,
-          /*expected_pitch_period=*/int,
-          /*expected_pitch_gain=*/float>> {};
+      public ::testing::WithParamInterface<
+          std::tuple<int, int, float, int, float>> {
+ protected:
+  int GetInitialPitchPeriod() const { return std::get<0>(GetParam()); }
+  int GetLastPitchPeriod() const { return std::get<1>(GetParam()); }
+  float GetLastPitchStrength() const { return std::get<2>(GetParam()); }
+  int GetExpectedPitchPeriod() const { return std::get<3>(GetParam()); }
+  float GetExpectedPitchStrength() const { return std::get<4>(GetParam()); }
+};
 
 // Checks that the computed pitch period is bit-exact and that the computed
-// pitch gain is within tolerance given test input data.
-TEST_P(CheckLowerPitchPeriodsAndComputePitchGainTest,
+// pitch strength is within tolerance given test input data.
+TEST_P(ComputeExtendedPitchPeriod48kHzTest,
        PeriodBitExactnessGainWithinTolerance) {
-  const auto params = GetParam();
-  const int initial_pitch_period = std::get<0>(params);
-  const int prev_pitch_period = std::get<1>(params);
-  const float prev_pitch_gain = std::get<2>(params);
-  const int expected_pitch_period = std::get<3>(params);
-  const float expected_pitch_gain = std::get<4>(params);
   PitchTestData test_data;
-  {
-    // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
-    // FloatingPointExceptionObserver fpe_observer;
-    const auto computed_output = CheckLowerPitchPeriodsAndComputePitchGain(
-        test_data.GetPitchBufView(), initial_pitch_period,
-        {prev_pitch_period, prev_pitch_gain});
-    EXPECT_EQ(expected_pitch_period, computed_output.period);
-    EXPECT_NEAR(expected_pitch_gain, computed_output.gain, 1e-6f);
-  }
+  // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
+  // FloatingPointExceptionObserver fpe_observer;
+  const auto computed_output = ComputeExtendedPitchPeriod48kHz(
+      test_data.GetPitchBufView(), GetInitialPitchPeriod(),
+      {GetLastPitchPeriod(), GetLastPitchStrength()});
+  EXPECT_EQ(GetExpectedPitchPeriod(), computed_output.period);
+  EXPECT_NEAR(GetExpectedPitchStrength(), computed_output.strength, 1e-6f);
 }
 
 INSTANTIATE_TEST_SUITE_P(
     RnnVadTest,
-    CheckLowerPitchPeriodsAndComputePitchGainTest,
+    ComputeExtendedPitchPeriod48kHzTest,
     ::testing::Values(std::make_tuple(kTestPitchPeriodsLow,
                                       kTestPitchPeriodsLow,
                                       kTestPitchGainsLow,
