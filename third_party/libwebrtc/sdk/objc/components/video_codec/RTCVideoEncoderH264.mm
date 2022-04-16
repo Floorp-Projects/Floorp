@@ -807,9 +807,7 @@ NSUInteger GetMaxSampleRate(const webrtc::H264::ProfileLevelId &profile_level_id
   _h264BitstreamParser.GetLastSliceQp(&qp);
   frame.qp = @(qp);
 
-  RTC_OBJC_TYPE(RTCRtpFragmentationHeader) *header =
-      [[RTC_OBJC_TYPE(RTCRtpFragmentationHeader) alloc] init];
-  BOOL res = _callback(frame, codecSpecificInfo, header);
+  BOOL res = _callback(frame, codecSpecificInfo);
   if (!res) {
     RTC_LOG(LS_ERROR) << "Encode callback failed";
     return;
