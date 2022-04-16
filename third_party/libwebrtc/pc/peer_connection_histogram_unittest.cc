@@ -527,9 +527,9 @@ TEST_F(PeerConnectionUsageHistogramTest, FingerprintDataOnly) {
 TEST_F(PeerConnectionUsageHistogramTest, FingerprintStunTurn) {
   RTCConfiguration configuration;
   PeerConnection::IceServer server;
-  server.urls = {"stun:dummy.stun.server/"};
+  server.urls = {"stun:dummy.stun.server"};
   configuration.servers.push_back(server);
-  server.urls = {"turn:dummy.turn.server/"};
+  server.urls = {"turn:dummy.turn.server"};
   server.username = "username";
   server.password = "password";
   configuration.servers.push_back(server);
@@ -547,9 +547,9 @@ TEST_F(PeerConnectionUsageHistogramTest, FingerprintStunTurn) {
 TEST_F(PeerConnectionUsageHistogramTest, FingerprintStunTurnInReconfiguration) {
   RTCConfiguration configuration;
   PeerConnection::IceServer server;
-  server.urls = {"stun:dummy.stun.server/"};
+  server.urls = {"stun:dummy.stun.server"};
   configuration.servers.push_back(server);
-  server.urls = {"turn:dummy.turn.server/"};
+  server.urls = {"turn:dummy.turn.server"};
   server.username = "username";
   server.password = "password";
   configuration.servers.push_back(server);
