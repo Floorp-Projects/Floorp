@@ -58,15 +58,75 @@ extern template void CallbackListReceivers::AddReceiver(
 }  // namespace callback_list_impl
 
 // A collection of receivers (callable objects) that can be called all at once.
-// Optimized for minimal binary size.
+// Optimized for minimal binary size. The template arguments dictate what
+// signature the callbacks must have; for example, a CallbackList<int, float>
+// will require callbacks with signature void(int, float).
 //
-// Neither copyable nor movable. Could easily be made movable if necessary.
+// CallbackList is neither copyable nor movable (could easily be made movable if
+// necessary). Callbacks must be movable, but need not be copyable.
 //
-// TODO(kwiberg): Add support for removing receivers, if necessary. AddReceiver
-// would have to return some sort of ID that the caller could save and then pass
-// to RemoveReceiver. Alternatively, the callable objects could return one value
-// if they wish to stay in the CSC and another value if they wish to be removed.
-// It depends on what's convenient for the callers...
+// Usage example:
+//
+//   // Declaration (usually a member variable).
+//   CallbackList<int, float> foo_;
+//
+//   // Register callbacks. This can be done zero or more times. The
+//   // callbacks must accept the arguments types listed in the CallbackList's
+//   // template argument list, and must return void.
+//   foo_.AddReceiver([...](int a, float b) {...});  // Lambda.
+//   foo_.AddReceiver(SomeFunction);                 // Function pointer.
+//
+//   // Call the zero or more receivers, one after the other.
+//   foo_.Send(17, 3.14);
+//
+// Callback lifetime considerations
+// --------------------------------
+//
+// CallbackList::AddReceiver() takes ownership of the given callback by moving
+// it in place. The callback can be any callable object; in particular, it may
+// have a nontrivial destructor, which will be run when the CallbackList is
+// destroyed. The callback may thus access data via any type of smart pointer,
+// expressing e.g. unique, shared, or weak ownership. Of course, if the data is
+// guaranteed to outlive the callback, a plain raw pointer can be used.
+//
+// Take care when trying to have the callback own reference-counted data. The
+// CallbackList will keep the callback alive, and the callback will keep its
+// data alive, so as usual with reference-counted ownership, keep an eye out for
+// cycles!
+//
+// Thread safety
+// -------------
+//
+// Like most C++ types, CallbackList is thread compatible: it's not safe to
+// access it concurrently from multiple threads, but it can be made safe if it
+// is protected by a mutex, for example.
+//
+// Excercise some care when deciding what mutexes to hold when you call
+// CallbackList::Send(). In particular, do not hold mutexes that callbacks may
+// need to grab. If a larger object has a CallbackList member and a single mutex
+// that protects all of its data members, this may e.g. make it necessary to
+// protect its CallbackList with a separate mutex; otherwise, there will be a
+// deadlock if the callbacks try to access the object.
+//
+// CallbackList as a class data member
+// -----------------------------------
+//
+// CallbackList is a normal C++ data type, and should be private when it is a
+// data member of a class. For thread safety reasons (see above), it is likely
+// best to not have an accessor for the entire CallbackList, and instead only
+// allow callers to add callbacks:
+//
+//   template <typename F>
+//   void AddFooCallback(F&& callback) {
+//     // Maybe grab a mutex here?
+//     foo_callbacks_.AddReceiver(std::forward<F>(callback));
+//   }
+//
+// Removing callbacks
+// ------------------
+//
+// TODO(kwiberg): The current design doesn’t support removing callbacks, only
+// adding them, but removal support can easily be added.
 template <typename... ArgT>
 class CallbackList {
  public:
