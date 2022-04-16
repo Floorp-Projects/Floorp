@@ -62,10 +62,10 @@ void Decimate2x(rtc::ArrayView<const float, kBufSize24kHz> src,
 // corresponding pitch period.
 
 // Computes the sum of squared samples for every sliding frame `y` in the pitch
-// buffer. The indexes of `y_energy` are inverted lags.
+// buffer. The indexes of `yy_values` are lags.
 void ComputeSlidingFrameSquareEnergies24kHz(
     rtc::ArrayView<const float, kBufSize24kHz> pitch_buffer,
-    rtc::ArrayView<float, kRefineNumLags24kHz> y_energy);
+    rtc::ArrayView<float, kRefineNumLags24kHz> yy_values);
 
 // Top-2 pitch period candidates. Unit: number of samples - i.e., inverted lags.
 struct CandidatePitchPeriods {
