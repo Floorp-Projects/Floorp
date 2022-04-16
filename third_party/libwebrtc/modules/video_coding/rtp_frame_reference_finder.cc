@@ -11,12 +11,9 @@
 #include "modules/video_coding/rtp_frame_reference_finder.h"
 
 #include <algorithm>
-#include <limits>
 
 #include "absl/base/macros.h"
-#include "absl/types/variant.h"
 #include "modules/video_coding/frame_object.h"
-#include "modules/video_coding/packet_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
