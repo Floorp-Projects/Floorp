@@ -565,6 +565,7 @@ void VideoStreamEncoder::SetSink(EncoderSink* sink, bool rotation_applied) {
 void VideoStreamEncoder::SetStartBitrate(int start_bitrate_bps) {
   encoder_queue_.PostTask([this, start_bitrate_bps] {
     RTC_DCHECK_RUN_ON(&encoder_queue_);
+    RTC_LOG(LS_INFO) << "SetStartBitrate " << start_bitrate_bps;
     encoder_target_bitrate_bps_ =
         start_bitrate_bps != 0 ? absl::optional<uint32_t>(start_bitrate_bps)
                                : absl::nullopt;
@@ -1848,12 +1849,18 @@ bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
   bool simulcast_or_svc =
       (send_codec_.codecType == VideoCodecType::kVideoCodecVP9 &&
        send_codec_.VP9().numberOfSpatialLayers > 1) ||
-      send_codec_.numberOfSimulcastStreams > 1 ||
-      encoder_config_.simulcast_layers.size() > 1;
+      ((send_codec_.numberOfSimulcastStreams > 1 ||
+        encoder_config_.simulcast_layers.size() > 1) &&
+       !stream_resource_manager_.SingleActiveStreamPixels());
 
   if (simulcast_or_svc || !stream_resource_manager_.DropInitialFrames() ||
       !encoder_target_bitrate_bps_.has_value()) {
     return false;
+  }
+
+  if (send_codec_.numberOfSimulcastStreams > 1 &&
+      stream_resource_manager_.SingleActiveStreamPixels()) {
+    pixel_count = stream_resource_manager_.SingleActiveStreamPixels().value();
   }
 
   absl::optional<VideoEncoder::ResolutionBitrateLimits> encoder_bitrate_limits =
