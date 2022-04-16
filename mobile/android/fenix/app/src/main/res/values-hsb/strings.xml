@@ -343,6 +343,8 @@
     <string name="errorpage_httpsonly_title">Wěste sydło k dispoziciji njeje</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Najskerje websydło prosće HTTPS njepodpěruje.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Je pak tež móžno, zo so wo nadběh jedna. Jeli websydło najebać toho wopytujeće, wy njeměł sensibelne informacije zapodać. Jeli pokročujeće, so modus Jenož-HTTPS nachwilu za sydło znjemóžni.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Bjezbarjernosć</string>
     <!-- Preference to override the Firefox Account server -->
