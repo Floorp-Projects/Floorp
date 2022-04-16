@@ -11,6 +11,7 @@
 package org.webrtc.audio;
 
 import android.content.Context;
+import android.media.AudioAttributes;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.os.Build;
@@ -47,6 +48,7 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
     private boolean useHardwareNoiseSuppressor = isBuiltInNoiseSuppressorSupported();
     private boolean useStereoInput;
     private boolean useStereoOutput;
+    private AudioAttributes audioAttributes;
 
     private Builder(Context context) {
       this.context = context;
@@ -194,6 +196,14 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
     }
 
     /**
+     * Set custom {@link AudioAttributes} to use.
+     */
+    public Builder setAudioAttributes(AudioAttributes audioAttributes) {
+      this.audioAttributes = audioAttributes;
+      return this;
+    }
+
+    /**
      * Construct an AudioDeviceModule based on the supplied arguments. The caller takes ownership
      * and is responsible for calling release().
      */
@@ -223,7 +233,7 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
           audioSource, audioFormat, audioRecordErrorCallback, audioRecordStateCallback,
           samplesReadyCallback, useHardwareAcousticEchoCanceler, useHardwareNoiseSuppressor);
       final WebRtcAudioTrack audioOutput = new WebRtcAudioTrack(
-          context, audioManager, audioTrackErrorCallback, audioTrackStateCallback);
+          context, audioManager, audioAttributes, audioTrackErrorCallback, audioTrackStateCallback);
       return new JavaAudioDeviceModule(context, audioManager, audioInput, audioOutput,
           inputSampleRate, outputSampleRate, useStereoInput, useStereoOutput);
     }
