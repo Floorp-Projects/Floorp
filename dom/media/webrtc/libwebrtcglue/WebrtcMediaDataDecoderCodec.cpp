@@ -53,11 +53,7 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
     if (aInputImage._frameType != webrtc::VideoFrameType::kVideoFrameKey)
       return WEBRTC_VIDEO_CODEC_ERROR;
     // We have a key frame - is it complete?
-    if (aInputImage._completeFrame) {
-      mNeedKeyframe = false;
-    } else {
-      return WEBRTC_VIDEO_CODEC_ERROR;
-    }
+    mNeedKeyframe = false;
   }
 
   auto disabledHardwareAcceleration =
