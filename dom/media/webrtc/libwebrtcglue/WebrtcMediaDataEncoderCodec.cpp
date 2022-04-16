@@ -431,7 +431,6 @@ int32_t WebrtcMediaDataEncoder::Encode(
           image._frameType = frame->mKeyframe
                                  ? webrtc::VideoFrameType::kVideoFrameKey
                                  : webrtc::VideoFrameType::kVideoFrameDelta;
-          image._completeFrame = true;
           GetVPXQp(mCodecSpecific.codecType, image);
           UpdateCodecSpecificInfo(mCodecSpecific, displaySize,
                                   frame->mKeyframe);
