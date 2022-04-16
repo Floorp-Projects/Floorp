@@ -1847,21 +1847,23 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
 }
 
 bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
-  bool simulcast_or_svc =
-      (send_codec_.codecType == VideoCodecType::kVideoCodecVP9 &&
-       send_codec_.VP9().numberOfSpatialLayers > 1) ||
-      ((send_codec_.numberOfSimulcastStreams > 1 ||
-        encoder_config_.simulcast_layers.size() > 1) &&
-       !stream_resource_manager_.SingleActiveStreamPixels());
-
-  if (simulcast_or_svc || !stream_resource_manager_.DropInitialFrames() ||
+  if (!stream_resource_manager_.DropInitialFrames() ||
       !encoder_target_bitrate_bps_.has_value()) {
     return false;
   }
 
-  if (send_codec_.numberOfSimulcastStreams > 1 &&
-      stream_resource_manager_.SingleActiveStreamPixels()) {
-    pixel_count = stream_resource_manager_.SingleActiveStreamPixels().value();
+  bool simulcast_or_svc =
+      (send_codec_.codecType == VideoCodecType::kVideoCodecVP9 &&
+       send_codec_.VP9().numberOfSpatialLayers > 1) ||
+      (send_codec_.numberOfSimulcastStreams > 1 ||
+       encoder_config_.simulcast_layers.size() > 1);
+
+  if (simulcast_or_svc) {
+    if (stream_resource_manager_.SingleActiveStreamPixels()) {
+      pixel_count = stream_resource_manager_.SingleActiveStreamPixels().value();
+    } else {
+      return false;
+    }
   }
 
   absl::optional<VideoEncoder::ResolutionBitrateLimits> encoder_bitrate_limits =

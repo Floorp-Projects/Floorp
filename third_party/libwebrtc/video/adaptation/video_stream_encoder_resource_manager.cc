@@ -62,22 +62,39 @@ std::string ToString(VideoAdaptationReason reason) {
 absl::optional<uint32_t> GetSingleActiveStreamPixels(const VideoCodec& codec) {
   int num_active = 0;
   absl::optional<uint32_t> pixels;
-  for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-    if (codec.simulcastStream[i].active) {
-      ++num_active;
-      pixels = codec.simulcastStream[i].width * codec.simulcastStream[i].height;
+  if (codec.codecType == VideoCodecType::kVideoCodecVP9) {
+    for (int i = 0; i < codec.VP9().numberOfSpatialLayers; ++i) {
+      if (codec.spatialLayers[i].active) {
+        ++num_active;
+        pixels = codec.spatialLayers[i].width * codec.spatialLayers[i].height;
+      }
     }
-    if (num_active > 1)
-      return absl::nullopt;
+  } else {
+    for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
+      if (codec.simulcastStream[i].active) {
+        ++num_active;
+        pixels =
+            codec.simulcastStream[i].width * codec.simulcastStream[i].height;
+      }
+    }
   }
+  if (num_active > 1)
+    return absl::nullopt;
   return pixels;
 }
 
 std::vector<bool> GetActiveLayersFlags(const VideoCodec& codec) {
-  const int num_streams = codec.numberOfSimulcastStreams;
-  std::vector<bool> flags(num_streams);
-  for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-    flags[i] = codec.simulcastStream[i].active;
+  std::vector<bool> flags;
+  if (codec.codecType == VideoCodecType::kVideoCodecVP9) {
+    flags.resize(codec.VP9().numberOfSpatialLayers);
+    for (size_t i = 0; i < flags.size(); ++i) {
+      flags[i] = codec.spatialLayers[i].active;
+    }
+  } else {
+    flags.resize(codec.numberOfSimulcastStreams);
+    for (size_t i = 0; i < flags.size(); ++i) {
+      flags[i] = codec.simulcastStream[i].active;
+    }
   }
   return flags;
 }
