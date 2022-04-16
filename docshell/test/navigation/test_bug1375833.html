@@ -26,8 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
     let chromeScript = null;
     if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       chromeScript = SpecialPowers.loadChromeScript(() => {
-        const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
         function doSend(message, fn) {
           try {
             // eslint-disable-next-line no-undef
@@ -39,10 +37,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
         }
 
         // eslint-disable-next-line no-undef
-        addMessageListener("test1", index => {
+        addMessageListener("test1", id => {
           doSend("test1", () => {
-            let win = Services.wm.getMostRecentWindow("navigator:browser");
-            let sessionHistory = win.gBrowser.selectedBrowser.browsingContext.sessionHistory;
+            let sessionHistory = BrowsingContext.get(id).top.sessionHistory;
             let entry = sessionHistory.getEntryAtIndex(sessionHistory.index);
             let frameEntry = entry.GetChildAt(0);
             return String(frameEntry.docshellID);
@@ -83,7 +80,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
             is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");
           } else {
             let p = chromeScript.promiseOneMessage("test1");
-            chromeScript.sendAsyncMessage("test1", shistory.index);
+            chromeScript.sendAsyncMessage("test1", SpecialPowers.wrap(testWin).browsingContext.id);
             let result = await p;
             ok(result.success, "legacySHistory worked around ok");
             is(result.value, frameDocShellId, "check newly added shentry uses the same docshell ID");
