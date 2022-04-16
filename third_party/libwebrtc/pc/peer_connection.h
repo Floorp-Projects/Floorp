@@ -124,7 +124,7 @@ class PeerConnection : public PeerConnectionInternal,
   //
   // Note that the function takes ownership of dependencies, and will
   // either use them or release them, whether it succeeds or fails.
-  static rtc::scoped_refptr<PeerConnection> Create(
+  static RTCErrorOr<rtc::scoped_refptr<PeerConnection>> Create(
       rtc::scoped_refptr<ConnectionContext> context,
       const PeerConnectionFactoryInterface::Options& options,
       std::unique_ptr<RtcEventLog> event_log,
@@ -459,7 +459,7 @@ class PeerConnection : public PeerConnectionInternal,
   ~PeerConnection() override;
 
  private:
-  bool Initialize(
+  RTCError Initialize(
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies dependencies);
 

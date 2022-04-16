@@ -387,7 +387,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator!=(
   return !(*this == o);
 }
 
-rtc::scoped_refptr<PeerConnection> PeerConnection::Create(
+RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
     rtc::scoped_refptr<ConnectionContext> context,
     const PeerConnectionFactoryInterface::Options& options,
     std::unique_ptr<RtcEventLog> event_log,
@@ -397,22 +397,26 @@ rtc::scoped_refptr<PeerConnection> PeerConnection::Create(
   RTCError config_error = cricket::P2PTransportChannel::ValidateIceConfig(
       ParseIceConfig(configuration));
   if (!config_error.ok()) {
-    RTC_LOG(LS_ERROR) << "Invalid configuration: " << config_error.message();
-    return nullptr;
+    RTC_LOG(LS_ERROR) << "Invalid ICE configuration: "
+                      << config_error.message();
+    return config_error;
   }
 
   if (!dependencies.allocator) {
     RTC_LOG(LS_ERROR)
         << "PeerConnection initialized without a PortAllocator? "
            "This shouldn't happen if using PeerConnectionFactory.";
-    return nullptr;
+    return RTCError(
+        RTCErrorType::INVALID_PARAMETER,
+        "Attempt to create a PeerConnection without a PortAllocatorFactory");
   }
 
   if (!dependencies.observer) {
     // TODO(deadbeef): Why do we do this?
     RTC_LOG(LS_ERROR) << "PeerConnection initialized without a "
                          "PeerConnectionObserver";
-    return nullptr;
+    return RTCError(RTCErrorType::INVALID_PARAMETER,
+                    "Attempt to create a PeerConnection without an observer");
   }
 
   bool is_unified_plan =
@@ -422,8 +426,10 @@ rtc::scoped_refptr<PeerConnection> PeerConnection::Create(
       new rtc::RefCountedObject<PeerConnection>(
           context, options, is_unified_plan, std::move(event_log),
           std::move(call), dependencies));
-  if (!pc->Initialize(configuration, std::move(dependencies))) {
-    return nullptr;
+  RTCError init_error = pc->Initialize(configuration, std::move(dependencies));
+  if (!init_error.ok()) {
+    RTC_LOG(LS_ERROR) << "PeerConnection initialization failed";
+    return init_error;
   }
   return pc;
 }
@@ -499,7 +505,7 @@ PeerConnection::~PeerConnection() {
   });
 }
 
-bool PeerConnection::Initialize(
+RTCError PeerConnection::Initialize(
     const PeerConnectionInterface::RTCConfiguration& configuration,
     PeerConnectionDependencies dependencies) {
   RTC_DCHECK_RUN_ON(signaling_thread());
@@ -511,7 +517,7 @@ bool PeerConnection::Initialize(
   RTCErrorType parse_error =
       ParseIceServers(configuration.servers, &stun_servers, &turn_servers);
   if (parse_error != RTCErrorType::NONE) {
-    return false;
+    return RTCError(parse_error, "ICE server parse failed");
   }
 
   // Add the turn logging id to all turn servers
@@ -660,7 +666,7 @@ bool PeerConnection::Initialize(
       },
       delay_ms);
 
-  return true;
+  return RTCError::OK();
 }
 
 rtc::scoped_refptr<StreamCollectionInterface> PeerConnection::local_streams() {

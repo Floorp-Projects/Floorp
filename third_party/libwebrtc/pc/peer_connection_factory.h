@@ -25,6 +25,7 @@
 #include "api/neteq/neteq_factory.h"
 #include "api/network_state_predictor.h"
 #include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtc_event_log/rtc_event_log_factory_interface.h"
 #include "api/rtp_parameters.h"
@@ -69,6 +70,11 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
       PeerConnectionObserver* observer) override;
 
   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
+      const PeerConnectionInterface::RTCConfiguration& configuration,
+      PeerConnectionDependencies dependencies) override;
+
+  RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>
+  CreatePeerConnectionOrError(
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies dependencies) override;
 

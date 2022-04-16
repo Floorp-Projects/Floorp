@@ -1428,6 +1428,12 @@ class RTC_EXPORT PeerConnectionFactoryInterface
   // configuration and a PeerConnectionDependencies structure.
   // TODO(benwright): Make pure virtual once downstream mock PC factory classes
   // are updated.
+  virtual RTCErrorOr<rtc::scoped_refptr<PeerConnectionInterface>>
+  CreatePeerConnectionOrError(
+      const PeerConnectionInterface::RTCConfiguration& configuration,
+      PeerConnectionDependencies dependencies);
+  // Deprecated creator - does not return an error code on error.
+  // TODO(bugs.webrtc.org:12238): Deprecate and remove.
   virtual rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
       const PeerConnectionInterface::RTCConfiguration& configuration,
       PeerConnectionDependencies dependencies);
