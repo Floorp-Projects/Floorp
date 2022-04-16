@@ -41,9 +41,10 @@ class PitchEstimator {
 
   PitchInfo last_pitch_48kHz_{};
   AutoCorrelationCalculator auto_corr_calculator_;
-  std::vector<float> y_energy_24kHz_;
-  std::vector<float> pitch_buffer_12kHz_;
-  std::vector<float> auto_correlation_12kHz_;
+  std::vector<float> pitch_buf_decimated_;
+  rtc::ArrayView<float, kBufSize12kHz> pitch_buf_decimated_view_;
+  std::vector<float> auto_corr_;
+  rtc::ArrayView<float, kNumLags12kHz> auto_corr_view_;
 };
 
 }  // namespace rnn_vad
