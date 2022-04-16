@@ -8,6 +8,7 @@
 
 interface nsIUTF8StringEnumerator;
 interface nsIURI;
+interface nsIFile;
 interface nsIMutableArray;
 
 /* nsIGIOMimeApp holds information about an application that is looked up
@@ -44,7 +45,7 @@ interface nsIGIOMimeApp : nsIHandlerApp
  */
 
 // prev id dea20bf0-4e4d-48c5-b932-dc3e116dc64b
-[scriptable, uuid(eda22a30-84e1-4e16-9ca0-cd1553c2b34a)]
+[scriptable, builtinclass, uuid(eda22a30-84e1-4e16-9ca0-cd1553c2b34a)]
 interface nsIGIOService : nsISupports
 {
 
@@ -76,11 +77,9 @@ interface nsIGIOService : nsISupports
   /*** Misc. methods ***/
 
   /* Open the given URI in the default application */
-  void               showURI(in nsIURI uri);
-  [noscript] void    showURIForInput(in ACString uri);
-
-  /* Open path in file manager using org.freedesktop.FileManager1 interface */
-  [noscript] void    orgFreedesktopFileManager1ShowItems(in ACString path);
+  [noscript] void showURI(in nsIURI uri);
+  [noscript] void revealFile(in nsIFile file);
+  [noscript] void launchFile(in ACString path);
 };
 
 %{C++

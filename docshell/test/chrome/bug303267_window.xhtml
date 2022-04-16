@@ -5,42 +5,28 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest, 0);"
+        onload="setTimeout(runTests, 0);"
         title="bug 303267 test">
 
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />
   <script type="application/javascript" src="docshell_helpers.js" />
   <script type="application/javascript"><![CDATA[
-  
-    // Define the generator-iterator for the tests.
-    var tests = testIterator();
-
     ////
-    // Execute the next test in the generator function.
-    //
-    function nextTest() {
-      tests.next();
-    }
-
-    ////
-    // Generator function for test steps for bug 303267:  When a page is 
-    // displayed from the bfcache, the script globals should
+    // Bug 303267:  When a page is displayed from the bfcache, the script globals should
     // remain intact from the page's initial load.
     //
-    function* testIterator()
+    async function runTests()
     {
       // Load an initial test page which should be saved in the bfcache.
       var navData = {
         uri: getHttpUrl("bug303267.html"),
         eventsToListenFor: ["pageshow"],
         expectedEvents: [ {type: "pageshow", title: "bug303267.html"} ],
-        onNavComplete: nextTest
       };
-      doPageNavigation(navData);
-      yield undefined;
-      
+      await promisePageNavigation(navData);
+
       // Save the HTML of the test page for later comparison.
-      var originalHTML = getInnerHTMLById("div1");
+      var originalHTML = await getInnerHTMLById("div1");
 
       // Load a second test page.  The first test page's pagehide event should
       // have the .persisted property set to true, indicating that it was 
@@ -54,12 +40,10 @@
                            persisted: true},
                           {type: "pageshow", 
                            title: "page2"} ],
-        onNavComplete: nextTest
       };
-      doPageNavigation(navData);
-      yield undefined;
-      
-      // Go back.  Verify that the pageshow event for the original test page 
+      await promisePageNavigation(navData);
+
+      // Go back.  Verify that the pageshow event for the original test page
       // had a .persisted property of true, indicating that it came from the 
       // bfcache.
       navData = {
@@ -70,15 +54,13 @@
                           {type: "pageshow", 
                            title: "bug303267.html", 
                            persisted: true} ],
-        onNavComplete: nextTest
       };
-      doPageNavigation(navData);
-      yield undefined;
-      
+      await promisePageNavigation(navData);
+
       // After going back, if showpagecount() could access a global variable
       // and change the test div's innerHTML, then we pass.  Otherwise, it
       // threw an exception and the following test will fail.
-      var newHTML = getInnerHTMLById("div1");
+      var newHTML = await getInnerHTMLById("div1");
       isnot(originalHTML, 
         newHTML, "HTML not updated on pageshow; javascript broken?");
 
@@ -90,10 +72,12 @@
     // Return the innerHTML of a particular element in the content document.
     //
     function getInnerHTMLById(id) {
-      return TestWindow.getDocument().getElementById(id).innerHTML;
+      return SpecialPowers.spawn(TestWindow.getBrowser(), [id], (id) => {
+        return content.document.getElementById(id).innerHTML;
+      });
     }
     
   ]]></script>
 
-  <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
+  <browser type="content" primary="true" flex="1" id="content" remote="true" />
 </window>
