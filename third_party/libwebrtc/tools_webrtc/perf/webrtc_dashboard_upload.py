@@ -24,54 +24,54 @@ import sys
 
 def _CreateParser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--perf-dashboard-machine-group',
-                        required=True,
+    parser.add_argument('--perf-dashboard-machine-group', required=True,
                         help='The "master" the bots are grouped under. This '
                         'string is the group in the the perf dashboard path '
                         'group/bot/perf_id/metric/subtest.')
-    parser.add_argument('--bot',
-                        required=True,
+    parser.add_argument('--bot', required=True,
                         help='The bot running the test (e.g. '
-                        'webrtc-win-large-tests).')
-    parser.add_argument(
-        '--test-suite',
-        required=True,
-        help='The key for the test in the dashboard (i.e. what '
-        'you select in the top-level test suite selector in the '
-        'dashboard')
-    parser.add_argument('--webrtc-git-hash',
-                        required=True,
+                            'webrtc-win-large-tests).')
+    parser.add_argument('--test-suite', required=True,
+                        help='The key for the test in the dashboard (i.e. what '
+                        'you select in the top-level test suite selector in '
+                        'the dashboard')
+    parser.add_argument('--webrtc-git-hash', required=True,
                         help='webrtc.googlesource.com commit hash.')
-    parser.add_argument('--commit-position',
-                        type=int,
-                        required=True,
+    parser.add_argument('--commit-position', type=int, required=True,
                         help='Commit pos corresponding to the git hash.')
-    parser.add_argument('--build-page-url',
-                        required=True,
+    parser.add_argument('--build-page-url', required=True,
                         help='URL to the build page for this build.')
-    parser.add_argument('--dashboard-url',
-                        required=True,
+    parser.add_argument('--dashboard-url', required=True,
                         help='Which dashboard to use.')
-    parser.add_argument('--input-results-file',
-                        type=argparse.FileType(),
+    parser.add_argument('--input-results-file', type=argparse.FileType(),
                         required=True,
                         help='A JSON file with output from WebRTC tests.')
-    parser.add_argument('--output-json-file',
-                        type=argparse.FileType('w'),
+    parser.add_argument('--output-json-file', type=argparse.FileType('w'),
                         help='Where to write the output (for debugging).')
-    parser.add_argument(
-        '--outdir',
-        required=True,
-        help='Path to the local out/ dir (usually out/Default)')
+    parser.add_argument('--outdir', required=True,
+                        help='Path to the local out/ dir (usually out/Default)')
+    parser.add_argument('--wait-for-upload', action='store_true',
+                        help='If specified, script will wait untill Chrome '
+                        'perf dashboard confirms that the data was succesfully '
+                        'proccessed and uploaded')
+    parser.add_argument('--wait-timeout-sec', type=int, default=1200,
+                        help='Used only if wait-for-upload is True. Maximum '
+                        'amount of time in seconds that the script will wait '
+                        'for the confirmation.')
+    parser.add_argument('--wait-polling-period-sec', type=int, default=120,
+                        help='Used only if wait-for-upload is True. Status '
+                        'will be requested from the Dashboard every '
+                        'wait-polling-period-sec seconds.')
     return parser
 
 
 def _ConfigurePythonPath(options):
     # We just yank the python scripts we require into the PYTHONPATH. You could
-    # also imagine a solution where we use for instance protobuf:py_proto_runtime
-    # to copy catapult and protobuf code to out/. This is the convention in
-    # Chromium and WebRTC python scripts. We do need to build histogram_pb2
-    # however, so that's why we add out/ to sys.path below.
+    # also imagine a solution where we use for instance
+    # protobuf:py_proto_runtime to copy catapult and protobuf code to out/.
+    # This is the convention in Chromium and WebRTC python scripts. We do need
+    # to build histogram_pb2 however, so that's why we add out/ to sys.path
+    # below.
     #
     # It would be better if there was an equivalent to py_binary in GN, but
     # there's not.
@@ -84,8 +84,9 @@ def _ConfigurePythonPath(options):
     sys.path.insert(
         0, os.path.join(checkout_root, 'third_party', 'protobuf', 'python'))
 
-    # The webrtc_dashboard_upload gn rule will build the protobuf stub for python,
-    # so put it in the path for this script before we attempt to import it.
+    # The webrtc_dashboard_upload gn rule will build the protobuf stub for
+    # python, so put it in the path for this script before we attempt to import
+    # it.
     histogram_proto_path = os.path.join(options.outdir, 'pyproto', 'tracing',
                                         'tracing', 'proto')
     sys.path.insert(0, histogram_proto_path)
