@@ -409,6 +409,8 @@ rtc_library("rtc_data") {
     "../rtc_base",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/synchronization:mutex",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
     "../system_wrappers",
   ]
