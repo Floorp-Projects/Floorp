@@ -128,22 +128,6 @@ class RtpFrameReferenceFinder {
   // Unwrap |frame|s picture id and its references to 16 bits.
   void UnwrapPictureIds(RtpFrameObject* frame);
 
-  // Find references for H264 frames
-  FrameDecision ManageFrameH264(RtpFrameObject* frame);
-
-  // Update "last-picture-id-with-padding" sequence number for H264.
-  void UpdateLastPictureIdWithPaddingH264();
-
-  // Update H264 layer info state used to determine frame references.
-  void UpdateLayerInfoH264(RtpFrameObject* frame,
-                           int64_t unwrapped_tl0,
-                           uint8_t temporal_idx);
-
-  // Update H264 state for decodeable frames.
-  void UpdateDataH264(RtpFrameObject* frame,
-                      int64_t unwrapped_tl0,
-                      uint8_t temporal_idx);
-
   // For every group of pictures, hold two sequence numbers. The first being
   // the sequence number of the last packet of the last completed frame, and
   // the second being the sequence number of the last packet of the last
