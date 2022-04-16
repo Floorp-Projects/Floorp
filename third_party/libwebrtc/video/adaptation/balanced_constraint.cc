@@ -39,18 +39,20 @@ bool BalancedConstraint::IsAdaptationUpAllowed(
   // Don't adapt if BalancedDegradationSettings applies and determines this will
   // exceed bitrate constraints.
   if (degradation_preference_provider_->degradation_preference() ==
-          DegradationPreference::BALANCED &&
-      !balanced_settings_.CanAdaptUp(input_state.video_codec_type(),
-                                     input_state.frame_size_pixels().value(),
-                                     encoder_target_bitrate_bps_.value_or(0))) {
-    return false;
-  }
-  if (DidIncreaseResolution(restrictions_before, restrictions_after) &&
-      !balanced_settings_.CanAdaptUpResolution(
-          input_state.video_codec_type(),
-          input_state.frame_size_pixels().value(),
-          encoder_target_bitrate_bps_.value_or(0))) {
-    return false;
+      DegradationPreference::BALANCED) {
+    if (!balanced_settings_.CanAdaptUp(
+            input_state.video_codec_type(),
+            input_state.frame_size_pixels().value(),
+            encoder_target_bitrate_bps_.value_or(0))) {
+      return false;
+    }
+    if (DidIncreaseResolution(restrictions_before, restrictions_after) &&
+        !balanced_settings_.CanAdaptUpResolution(
+            input_state.video_codec_type(),
+            input_state.frame_size_pixels().value(),
+            encoder_target_bitrate_bps_.value_or(0))) {
+      return false;
+    }
   }
   return true;
 }
