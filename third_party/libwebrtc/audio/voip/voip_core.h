@@ -78,42 +78,42 @@ class VoipCore : public VoipEngine,
   absl::optional<ChannelId> CreateChannel(
       Transport* transport,
       absl::optional<uint32_t> local_ssrc) override;
-  void ReleaseChannel(ChannelId channel) override;
-  bool StartSend(ChannelId channel) override;
-  bool StopSend(ChannelId channel) override;
-  bool StartPlayout(ChannelId channel) override;
-  bool StopPlayout(ChannelId channel) override;
+  void ReleaseChannel(ChannelId channel_id) override;
+  bool StartSend(ChannelId channel_id) override;
+  bool StopSend(ChannelId channel_id) override;
+  bool StartPlayout(ChannelId channel_id) override;
+  bool StopPlayout(ChannelId channel_id) override;
 
   // Implements VoipNetwork interfaces.
-  void ReceivedRTPPacket(ChannelId channel,
+  void ReceivedRTPPacket(ChannelId channel_id,
                          rtc::ArrayView<const uint8_t> rtp_packet) override;
-  void ReceivedRTCPPacket(ChannelId channel,
+  void ReceivedRTCPPacket(ChannelId channel_id,
                           rtc::ArrayView<const uint8_t> rtcp_packet) override;
 
   // Implements VoipCodec interfaces.
-  void SetSendCodec(ChannelId channel,
+  void SetSendCodec(ChannelId channel_id,
                     int payload_type,
                     const SdpAudioFormat& encoder_format) override;
   void SetReceiveCodecs(
-      ChannelId channel,
+      ChannelId channel_id,
       const std::map<int, SdpAudioFormat>& decoder_specs) override;
 
   // Implements VoipDtmf interfaces.
-  void RegisterTelephoneEventType(ChannelId channel,
+  void RegisterTelephoneEventType(ChannelId channel_id,
                                   int rtp_payload_type,
                                   int sample_rate_hz) override;
-  bool SendDtmfEvent(ChannelId channel,
+  bool SendDtmfEvent(ChannelId channel_id,
                      DtmfEvent dtmf_event,
                      int duration_ms) override;
 
   // Implements VoipStatistics interfaces.
   absl::optional<IngressStatistics> GetIngressStatistics(
-      ChannelId channel) override;
+      ChannelId channel_id) override;
 
  private:
   // Fetches the corresponding AudioChannel assigned with given |channel|.
   // Returns nullptr if not found.
-  rtc::scoped_refptr<AudioChannel> GetChannel(ChannelId channel);
+  rtc::scoped_refptr<AudioChannel> GetChannel(ChannelId channel_id);
 
   // Updates AudioTransportImpl with a new set of actively sending AudioSender
   // (AudioEgress). This needs to be invoked whenever StartSend/StopSend is
