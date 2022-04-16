@@ -10,6 +10,7 @@
 
 #include "modules/audio_processing/agc2/rnn_vad/test_utils.h"
 
+#include <algorithm>
 #include <memory>
 
 #include "rtc_base/checks.h"
@@ -86,6 +87,10 @@ PitchTestData::PitchTestData() {
       ResourcePath("audio_processing/agc2/rnn_vad/pitch_search_int", "dat"),
       1396);
   test_data_reader.ReadChunk(test_data_);
+  // Reverse the order of the squared energy values.
+  // Required after the WebRTC CL 191703 which switched to forward computation.
+  std::reverse(test_data_.begin() + kBufSize24kHz,
+               test_data_.begin() + kBufSize24kHz + kNumPitchBufSquareEnergies);
 }
 
 PitchTestData::~PitchTestData() = default;
