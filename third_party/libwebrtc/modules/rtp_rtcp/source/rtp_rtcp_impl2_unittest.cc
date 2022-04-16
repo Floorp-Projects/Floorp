@@ -320,12 +320,6 @@ TEST_F(RtpRtcpImpl2Test, Rtt) {
   EXPECT_NEAR(2 * kOneWayNetworkDelayMs, sender_.impl_->rtt_ms(), 1);
 }
 
-TEST_F(RtpRtcpImpl2Test, SetRtcpXrRrtrStatus) {
-  EXPECT_FALSE(receiver_.impl_->RtcpXrRrtrStatus());
-  receiver_.impl_->SetRtcpXrRrtrStatus(true);
-  EXPECT_TRUE(receiver_.impl_->RtcpXrRrtrStatus());
-}
-
 TEST_F(RtpRtcpImpl2Test, RttForReceiverOnly) {
   receiver_.impl_->SetRtcpXrRrtrStatus(true);
 
