@@ -211,6 +211,7 @@ absl::optional<int> DecisionLogic::PacketArrived(
     int fs_hz,
     bool should_update_stats,
     const PacketArrivedInfo& info) {
+  buffer_flush_ = buffer_flush_ || info.buffer_flush;
   if (info.is_cng_or_dtmf) {
     last_pack_cng_or_dtmf_ = true;
     return absl::nullopt;
@@ -238,7 +239,12 @@ void DecisionLogic::FilterBufferLevel(size_t buffer_size_samples) {
     timescale_countdown_ = tick_timer_->GetNewCountdown(kMinTimescaleInterval);
   }
 
-  buffer_level_filter_->Update(buffer_size_samples, time_stretched_samples);
+  if (buffer_flush_) {
+    buffer_level_filter_->SetFilteredBufferLevel(buffer_size_samples);
+    buffer_flush_ = false;
+  } else {
+    buffer_level_filter_->Update(buffer_size_samples, time_stretched_samples);
+  }
   prev_time_scale_ = false;
   time_stretched_cn_samples_ = 0;
 }

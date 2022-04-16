@@ -499,7 +499,7 @@ absl::optional<NetEq::DecoderFormat> NetEqImpl::GetDecoderFormat(
 void NetEqImpl::FlushBuffers() {
   MutexLock lock(&mutex_);
   RTC_LOG(LS_VERBOSE) << "FlushBuffers";
-  packet_buffer_->Flush();
+  packet_buffer_->Flush(stats_.get());
   assert(sync_buffer_.get());
   assert(expand_.get());
   sync_buffer_->Flush();
@@ -607,7 +607,7 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
     // the packet has been successfully inserted into the packet buffer.
 
     // Flush the packet buffer and DTMF buffer.
-    packet_buffer_->Flush();
+    packet_buffer_->Flush(stats_.get());
     dtmf_buffer_->Flush();
 
     // Update audio buffer timestamp.
@@ -746,13 +746,23 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
   }
 
   // Insert packets in buffer.
+  const int target_level_ms = controller_->TargetLevelMs();
   const int ret = packet_buffer_->InsertPacketList(
       &parsed_packet_list, *decoder_database_, &current_rtp_payload_type_,
-      &current_cng_rtp_payload_type_, stats_.get());
+      &current_cng_rtp_payload_type_, stats_.get(), decoder_frame_length_,
+      last_output_sample_rate_hz_, target_level_ms);
+  bool buffer_flush_occured = false;
   if (ret == PacketBuffer::kFlushed) {
     // Reset DSP timestamp etc. if packet buffer flushed.
     new_codec_ = true;
     update_sample_rate_and_channels = true;
+    buffer_flush_occured = true;
+  } else if (ret == PacketBuffer::kPartialFlush) {
+    // Forward sync buffer timestamp
+    timestamp_ = packet_buffer_->PeekNextPacket()->timestamp;
+    sync_buffer_->IncreaseEndTimestamp(timestamp_ -
+                                       sync_buffer_->end_timestamp());
+    buffer_flush_occured = true;
   } else if (ret != PacketBuffer::kOK) {
     return kOtherError;
   }
@@ -810,6 +820,7 @@ int NetEqImpl::InsertPacketInternal(const RTPHeader& rtp_header,
   info.main_timestamp = main_timestamp;
   info.main_sequence_number = main_sequence_number;
   info.is_dtx = is_dtx;
+  info.buffer_flush = buffer_flush_occured;
   // Only update statistics if incoming packet is not older than last played
   // out packet or RTX handling is enabled, and if new codec flag is not
   // set.
