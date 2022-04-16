@@ -54,6 +54,7 @@ rtc_source_set("callback_list") {
     "callback_list.h",
   ]
   deps = [
+    ":checks",
     ":untyped_function",
     "../api:function_view",
     "system:assume",

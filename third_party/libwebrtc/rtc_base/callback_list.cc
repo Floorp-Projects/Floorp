@@ -10,17 +10,25 @@
 
 #include "rtc_base/callback_list.h"
 
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 namespace callback_list_impl {
 
 CallbackListReceivers::CallbackListReceivers() = default;
-CallbackListReceivers::~CallbackListReceivers() = default;
+
+CallbackListReceivers::~CallbackListReceivers() {
+  RTC_CHECK(!send_in_progress_);
+}
 
 void CallbackListReceivers::Foreach(
     rtc::FunctionView<void(UntypedFunction&)> fv) {
+  RTC_CHECK(!send_in_progress_);
+  send_in_progress_ = true;
   for (auto& r : receivers_) {
     fv(r);
   }
+  send_in_progress_ = false;
 }
 
 template void CallbackListReceivers::AddReceiver(
