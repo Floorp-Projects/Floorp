@@ -15,6 +15,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
@@ -58,7 +59,7 @@ class PendingTaskSafetyFlag : public rtc::RefCountInterface {
 
  private:
   bool alive_ = true;
-  SequenceChecker main_sequence_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker main_sequence_;
 };
 
 // Makes using PendingTaskSafetyFlag very simple. Automatic PTSF creation
