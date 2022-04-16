@@ -149,6 +149,11 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
       }
     }
   }
+
+  if (new_send_codec.ScalabilityMode() != prev_send_codec.ScalabilityMode()) {
+    return true;
+  }
+
   return false;
 }
 

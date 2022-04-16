@@ -470,6 +470,9 @@ struct RTC_EXPORT RtpEncodingParameters {
   // For video, scale the resolution down by this factor.
   absl::optional<double> scale_resolution_down_by;
 
+  // https://w3c.github.io/webrtc-svc/#rtcrtpencodingparameters
+  absl::optional<std::string> scalability_mode;
+
   // For an RtpSender, set to true to cause this encoding to be encoded and
   // sent, and false for it not to be encoded and sent. This allows control
   // across multiple encodings of a sender for turning simulcast layers on and
