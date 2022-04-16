@@ -228,6 +228,7 @@ double DoubleAudioLevelFromIntAudioLevel(int audio_level) {
 std::unique_ptr<RTCCodecStats> CodecStatsFromRtpCodecParameters(
     uint64_t timestamp_us,
     const std::string& mid,
+    const std::string& transport_id,
     bool inbound,
     const RtpCodecParameters& codec_params) {
   RTC_DCHECK_GE(codec_params.payload_type, 0);
@@ -250,6 +251,7 @@ std::unique_ptr<RTCCodecStats> CodecStatsFromRtpCodecParameters(
   if (WriteFmtpParameters(codec_params.parameters, &fmtp)) {
     codec_stats->sdp_fmtp_line = fmtp.Release();
   }
+  codec_stats->transport_id = transport_id;
   return codec_stats;
 }
 
@@ -1282,6 +1284,9 @@ void RTCStatsCollector::ProduceCodecStats_n(
     if (!stats.mid) {
       continue;
     }
+    std::string transport_id = RTCTransportStatsIDFromTransportChannel(
+        *stats.transport_name, cricket::ICE_CANDIDATE_COMPONENT_RTP);
+
     const cricket::VoiceMediaInfo* voice_media_info =
         stats.track_media_info_map->voice_media_info();
     const cricket::VideoMediaInfo* video_media_info =
@@ -1291,12 +1296,12 @@ void RTCStatsCollector::ProduceCodecStats_n(
       // Inbound
       for (const auto& pair : voice_media_info->receive_codecs) {
         report->AddStats(CodecStatsFromRtpCodecParameters(
-            timestamp_us, *stats.mid, true, pair.second));
+            timestamp_us, *stats.mid, transport_id, true, pair.second));
       }
       // Outbound
       for (const auto& pair : voice_media_info->send_codecs) {
         report->AddStats(CodecStatsFromRtpCodecParameters(
-            timestamp_us, *stats.mid, false, pair.second));
+            timestamp_us, *stats.mid, transport_id, false, pair.second));
       }
     }
     // Video
@@ -1304,12 +1309,12 @@ void RTCStatsCollector::ProduceCodecStats_n(
       // Inbound
       for (const auto& pair : video_media_info->receive_codecs) {
         report->AddStats(CodecStatsFromRtpCodecParameters(
-            timestamp_us, *stats.mid, true, pair.second));
+            timestamp_us, *stats.mid, transport_id, true, pair.second));
       }
       // Outbound
       for (const auto& pair : video_media_info->send_codecs) {
         report->AddStats(CodecStatsFromRtpCodecParameters(
-            timestamp_us, *stats.mid, false, pair.second));
+            timestamp_us, *stats.mid, transport_id, false, pair.second));
       }
     }
   }
