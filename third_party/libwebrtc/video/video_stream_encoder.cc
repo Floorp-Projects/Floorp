@@ -486,6 +486,7 @@ void VideoStreamEncoder::Stop() {
     }
     rate_allocator_ = nullptr;
     ReleaseEncoder();
+    encoder_ = nullptr;
     shutdown_event.Set();
   });
   shutdown_event.Wait(rtc::Event::kForever);
