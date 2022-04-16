@@ -158,27 +158,44 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
     current_superframe.push_back(frame_it);
     bool last_layer_completed = frame_it->second.frame->is_last_spatial_layer;
     FrameMap::iterator next_frame_it = frame_it;
-    while (true) {
+    while (!last_layer_completed) {
       ++next_frame_it;
-      if (next_frame_it == frames_.end() ||
-          next_frame_it->first.picture_id != frame->id.picture_id ||
+
+      if (next_frame_it == frames_.end() || !next_frame_it->second.frame) {
+        break;
+      }
+
+      if (next_frame_it->second.frame->Timestamp() != frame->Timestamp() ||
           !next_frame_it->second.continuous) {
         break;
       }
-      // Check if the next frame has some undecoded references other than
-      // the previous frame in the same superframe.
-      size_t num_allowed_undecoded_refs =
-          (next_frame_it->second.frame->inter_layer_predicted) ? 1 : 0;
-      if (next_frame_it->second.num_missing_decodable >
-          num_allowed_undecoded_refs) {
-        break;
+
+      if (next_frame_it->second.num_missing_decodable > 0) {
+        // For now VP9 uses the inter_layer_predicted to signal a dependency
+        // instead of adding it as a reference.
+        // TODO(webrtc:12206): Stop using inter_layer_predicted for VP9.
+        bool has_inter_layer_dependency =
+            next_frame_it->second.frame->inter_layer_predicted;
+        for (size_t i = 0; !has_inter_layer_dependency &&
+                           i < EncodedFrame::kMaxFrameReferences &&
+                           i < next_frame_it->second.frame->num_references;
+             ++i) {
+          if (next_frame_it->second.frame->references[i] >=
+              frame_it->first.picture_id) {
+            has_inter_layer_dependency = true;
+          }
+        }
+
+        // If the frame has an undecoded dependency that is not within the same
+        // temporal unit then this frame is not ready to be decoded yet. If it
+        // is within the same temporal unit then the not yet decoded dependency
+        // is just a lower spatial frame, which is ok.
+        if (!has_inter_layer_dependency ||
+            next_frame_it->second.num_missing_decodable > 1) {
+          break;
+        }
       }
-      // All frames in the superframe should have the same timestamp.
-      if (frame->Timestamp() != next_frame_it->second.frame->Timestamp()) {
-        RTC_LOG(LS_WARNING) << "Frames in a single superframe have different"
-                               " timestamps. Skipping undecodable superframe.";
-        break;
-      }
+
       current_superframe.push_back(next_frame_it);
       last_layer_completed = next_frame_it->second.frame->is_last_spatial_layer;
     }

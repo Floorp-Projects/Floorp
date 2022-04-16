@@ -179,7 +179,7 @@ RtpFrameReferenceFinder::ManageFrameGeneric(
     RtpFrameObject* frame,
     const RTPVideoHeader::GenericDescriptorInfo& descriptor) {
   frame->id.picture_id = descriptor.frame_id;
-  frame->id.spatial_layer = descriptor.spatial_index;
+  frame->SetSpatialIndex(descriptor.spatial_index);
 
   if (EncodedFrame::kMaxFrameReferences < descriptor.dependencies.size()) {
     RTC_LOG(LS_WARNING) << "Too many dependencies in generic descriptor.";
