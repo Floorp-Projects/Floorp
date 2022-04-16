@@ -45,10 +45,10 @@ class VoipCoreTest : public ::testing::Test {
     // Hold the pointer to use for testing.
     process_thread_ = process_thread.get();
 
-    voip_core_ = std::make_unique<VoipCore>();
-    voip_core_->Init(std::move(encoder_factory), std::move(decoder_factory),
-                     CreateDefaultTaskQueueFactory(), audio_device_,
-                     std::move(audio_processing), std::move(process_thread));
+    voip_core_ = std::make_unique<VoipCore>(
+        std::move(encoder_factory), std::move(decoder_factory),
+        CreateDefaultTaskQueueFactory(), audio_device_,
+        std::move(audio_processing), std::move(process_thread));
   }
 
   std::unique_ptr<VoipCore> voip_core_;

@@ -51,21 +51,17 @@ class VoipCore : public VoipEngine,
                  public VoipDtmf,
                  public VoipStatistics {
  public:
-  ~VoipCore() override = default;
-
-  // Initialize VoipCore components with provided arguments.
-  // Returns false only when |audio_device_module| fails to initialize which
-  // would presumably render further processing useless.
+  // Construct VoipCore with provided arguments.
   // ProcessThread implementation can be injected by |process_thread|
   // (mainly for testing purpose) and when set to nullptr, default
   // implementation will be used.
-  // TODO(natim@webrtc.org): Need to report audio device errors to user layer.
-  bool Init(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
-            rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
-            std::unique_ptr<TaskQueueFactory> task_queue_factory,
-            rtc::scoped_refptr<AudioDeviceModule> audio_device_module,
-            rtc::scoped_refptr<AudioProcessing> audio_processing,
-            std::unique_ptr<ProcessThread> process_thread = nullptr);
+  VoipCore(rtc::scoped_refptr<AudioEncoderFactory> encoder_factory,
+           rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
+           std::unique_ptr<TaskQueueFactory> task_queue_factory,
+           rtc::scoped_refptr<AudioDeviceModule> audio_device_module,
+           rtc::scoped_refptr<AudioProcessing> audio_processing,
+           std::unique_ptr<ProcessThread> process_thread = nullptr);
+  ~VoipCore() override = default;
 
   // Implements VoipEngine interfaces.
   VoipBase& Base() override { return *this; }
@@ -111,6 +107,16 @@ class VoipCore : public VoipEngine,
       ChannelId channel_id) override;
 
  private:
+  // Initialize ADM and default audio device if needed.
+  // Returns true if ADM is successfully initialized or already in such state
+  // (e.g called more than once). Returns false when ADM fails to initialize
+  // which would presumably render further processing useless. Note that such
+  // failure won't necessarily succeed in next initialization attempt as it
+  // would mean changing the ADM implementation. From Android N and onwards, the
+  // mobile app may not be able to gain microphone access when in background
+  // mode. Therefore it would be better to delay the logic as late as possible.
+  bool InitializeIfNeeded();
+
   // Fetches the corresponding AudioChannel assigned with given |channel|.
   // Returns nullptr if not found.
   rtc::scoped_refptr<AudioChannel> GetChannel(ChannelId channel_id);
@@ -126,7 +132,7 @@ class VoipCore : public VoipEngine,
   rtc::scoped_refptr<AudioDecoderFactory> decoder_factory_;
   std::unique_ptr<TaskQueueFactory> task_queue_factory_;
 
-  // Synchronization is handled internally by AudioProessing.
+  // Synchronization is handled internally by AudioProcessing.
   // Must be placed before |audio_device_module_| for proper destruction.
   rtc::scoped_refptr<AudioProcessing> audio_processing_;
 
@@ -154,6 +160,9 @@ class VoipCore : public VoipEngine,
   // ChannelId.
   std::unordered_map<ChannelId, rtc::scoped_refptr<AudioChannel>> channels_
       RTC_GUARDED_BY(lock_);
+
+  // Boolean flag to ensure initialization only occurs once.
+  bool initialized_ RTC_GUARDED_BY(lock_) = false;
 };
 
 }  // namespace webrtc
