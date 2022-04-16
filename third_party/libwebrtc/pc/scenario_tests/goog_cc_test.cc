@@ -32,10 +32,7 @@ TEST(GoogCcPeerScenarioTest, MAYBE_NoBweChangeFromVideoUnmute) {
   // packets sizes. This will create a change in propagation time which might be
   // detected as an overuse. Using separate overuse detectors for audio and
   // video avoids the issue.
-  std::string audio_twcc_trials(
-      "WebRTC-Audio-SendSideBwe/Enabled/"         //
-      "WebRTC-SendSideBwe-WithOverhead/Enabled/"  //
-      "WebRTC-Audio-AlrProbing/Disabled/");
+  std::string audio_twcc_trials("WebRTC-Audio-AlrProbing/Disabled/");
   std::string separate_audio_video(
       "WebRTC-Bwe-SeparateAudioPackets/"
       "enabled:true,packet_threshold:15,time_threshold:1000ms/");
