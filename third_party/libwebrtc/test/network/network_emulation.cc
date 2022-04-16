@@ -469,7 +469,11 @@ void EmulatedEndpointImpl::SendPacket(const rtc::SocketAddress& from,
         packet.arrival_time, clock_->CurrentTime(), packet.to.ipaddr(),
         DataSize::Bytes(packet.ip_packet_size()), stats_gathering_mode_);
 
-    router_.OnPacketReceived(std::move(packet));
+    if (packet.to.ipaddr() == peer_local_addr_) {
+      OnPacketReceived(std::move(packet));
+    } else {
+      router_.OnPacketReceived(std::move(packet));
+    }
   });
 }
 

@@ -554,5 +554,19 @@ TEST_F(NetworkEmulationManagerThreeNodesRoutingTest,
   SendPacketsAndValidateDelivery();
 }
 
+TEST(NetworkEmulationManagerTest, EndpointLoopback) {
+  NetworkEmulationManagerImpl network_manager(TimeMode::kSimulated);
+  auto endpoint = network_manager.CreateEndpoint(EmulatedEndpointConfig());
+
+  MockReceiver receiver;
+  EXPECT_CALL(receiver, OnPacketReceived(::testing::_)).Times(1);
+  ASSERT_EQ(endpoint->BindReceiver(80, &receiver), 80);
+
+  endpoint->SendPacket(rtc::SocketAddress(endpoint->GetPeerLocalAddress(), 80),
+                       rtc::SocketAddress(endpoint->GetPeerLocalAddress(), 80),
+                       "Hello");
+  network_manager.time_controller()->AdvanceTime(TimeDelta::Seconds(1));
+}
+
 }  // namespace test
 }  // namespace webrtc
