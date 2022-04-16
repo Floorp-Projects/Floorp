@@ -230,10 +230,10 @@ class NATSocket : public AsyncSocket, public sigslot::has_slots<> {
     return connected_ ? CS_CONNECTED : CS_CLOSED;
   }
   int GetOption(Option opt, int* value) override {
-    return socket_->GetOption(opt, value);
+    return socket_ ? socket_->GetOption(opt, value) : -1;
   }
   int SetOption(Option opt, int value) override {
-    return socket_->SetOption(opt, value);
+    return socket_ ? socket_->SetOption(opt, value) : -1;
   }
 
   void OnConnectEvent(AsyncSocket* socket) {

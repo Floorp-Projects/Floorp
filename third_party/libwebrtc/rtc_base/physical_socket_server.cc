@@ -338,10 +338,17 @@ int PhysicalSocket::SetOption(Option opt, int value) {
 #if defined(WEBRTC_POSIX)
   if (sopt == IPV6_TCLASS) {
     // Set the IPv4 option in all cases to support dual-stack sockets.
+    // Don't bother checking the return code, as this is expected to fail if
+    // it's not actually dual-stack.
     ::setsockopt(s_, IPPROTO_IP, IP_TOS, (SockOptArg)&value, sizeof(value));
   }
 #endif
-  return ::setsockopt(s_, slevel, sopt, (SockOptArg)&value, sizeof(value));
+  int result =
+      ::setsockopt(s_, slevel, sopt, (SockOptArg)&value, sizeof(value));
+  if (result != 0) {
+    UpdateLastError();
+  }
+  return result;
 }
 
 int PhysicalSocket::Send(const void* pv, size_t cb) {
