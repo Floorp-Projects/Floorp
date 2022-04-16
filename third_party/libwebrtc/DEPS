@@ -3167,6 +3167,15 @@ hooks = [
                '--bucket', 'chromium-webrtc-resources',
                'src/resources'],
   },
+  # Download and initialize "vpython" VirtualEnv environment packages.
+  {
+    'name': 'vpython_common',
+    'pattern': '.',
+    'action': [ 'vpython',
+                '-vpython-spec', 'src/.vpython',
+                '-vpython-tool', 'install',
+    ],
+  },
 ]
 
 recursedeps = []
