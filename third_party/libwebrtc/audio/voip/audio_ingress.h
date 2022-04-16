@@ -68,16 +68,13 @@ class AudioIngress : public AudioMixer::Source {
   void ReceivedRTPPacket(rtc::ArrayView<const uint8_t> rtp_packet);
   void ReceivedRTCPPacket(rtc::ArrayView<const uint8_t> rtcp_packet);
 
-  // Retrieve highest speech output level in last 100 ms.  Note that
-  // this isn't RMS but absolute raw audio level on int16_t sample unit.
-  // Therefore, the return value will vary between 0 ~ 0xFFFF. This type of
-  // value may be useful to be used for measuring active speaker gauge.
-  int GetSpeechOutputLevelFullRange() const {
+  // See comments on LevelFullRange, TotalEnergy, TotalDuration from
+  // audio/audio_level.h.
+  int GetOutputAudioLevel() const {
     return output_audio_level_.LevelFullRange();
   }
-  // Retrieves the total duration for all samples played so far as explained in
-  // audio/AudioLevel.h.
-  double GetTotalDuration() const {
+  double GetOutputTotalEnergy() { return output_audio_level_.TotalEnergy(); }
+  double GetOutputTotalDuration() {
     return output_audio_level_.TotalDuration();
   }
 
