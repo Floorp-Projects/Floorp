@@ -266,7 +266,8 @@ rtc::scoped_refptr<PlanarYuvBuffer> WrapYuvBuffer(
       return WrapI444Buffer(width, height, y_plane, y_stride, u_plane, u_stride,
                             v_plane, v_stride, no_longer_used);
     default:
-      RTC_CHECK_NOTREACHED();
+      FATAL() << "Unexpected frame buffer type.";
+      return nullptr;
   }
 }
 
