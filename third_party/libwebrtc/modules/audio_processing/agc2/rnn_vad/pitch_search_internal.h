@@ -80,10 +80,12 @@ CandidatePitchPeriods ComputePitchPeriod12kHz(
     rtc::ArrayView<const float, kBufSize12kHz> pitch_buffer,
     rtc::ArrayView<const float, kNumLags12kHz> auto_correlation);
 
-// Computes the pitch period at 48 kHz given a view on the 24 kHz pitch buffer
-// and the pitch period candidates at 24 kHz (encoded as inverted lag).
+// Computes the pitch period at 48 kHz given a view on the 24 kHz pitch buffer,
+// the energies for the sliding frames `y` at 24 kHz and the pitch period
+// candidates at 24 kHz (encoded as inverted lag).
 int ComputePitchPeriod48kHz(
     rtc::ArrayView<const float, kBufSize24kHz> pitch_buffer,
+    rtc::ArrayView<const float, kRefineNumLags24kHz> y_energy,
     CandidatePitchPeriods pitch_candidates_24kHz);
 
 struct PitchInfo {
@@ -92,10 +94,12 @@ struct PitchInfo {
 };
 
 // Computes the pitch period at 48 kHz searching in an extended pitch range
-// given a view on the 24 kHz pitch buffer, the initial 48 kHz estimation
-// (computed by `ComputePitchPeriod48kHz()`) and the last estimated pitch.
+// given a view on the 24 kHz pitch buffer, the energies for the sliding frames
+// `y` at 24 kHz, the initial 48 kHz estimation (computed by
+// `ComputePitchPeriod48kHz()`) and the last estimated pitch.
 PitchInfo ComputeExtendedPitchPeriod48kHz(
     rtc::ArrayView<const float, kBufSize24kHz> pitch_buffer,
+    rtc::ArrayView<const float, kRefineNumLags24kHz> y_energy,
     int initial_pitch_period_48kHz,
     PitchInfo last_pitch_48kHz);
 
