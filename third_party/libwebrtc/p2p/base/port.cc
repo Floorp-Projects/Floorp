@@ -188,6 +188,9 @@ void Port::Construct() {
 }
 
 Port::~Port() {
+  RTC_DCHECK_RUN_ON(thread_);
+  CancelPendingTasks();
+
   // Delete all of the remaining connections.  We copy the list up front
   // because each deletion will cause it to be modified.
 
@@ -609,6 +612,16 @@ rtc::DiffServCodePoint Port::StunDscpValue() const {
   return rtc::DSCP_NO_CHANGE;
 }
 
+void Port::set_timeout_delay(int delay) {
+  RTC_DCHECK_RUN_ON(thread_);
+  // Although this method is meant to only be used by tests, some downstream
+  // projects have started using it. Ideally we should update our tests to not
+  // require to modify this state and instead use a testing harness that allows
+  // adjusting the clock and then just use the kPortTimeoutDelay constant
+  // directly.
+  timeout_delay_ = delay;
+}
+
 bool Port::ParseStunUsername(const StunMessage* stun_msg,
                              std::string* local_ufrag,
                              std::string* remote_ufrag) const {
@@ -818,7 +831,14 @@ void Port::Prune() {
   thread_->Post(RTC_FROM_HERE, this, MSG_DESTROY_IF_DEAD);
 }
 
+// Call to stop any currently pending operations from running.
+void Port::CancelPendingTasks() {
+  RTC_DCHECK_RUN_ON(thread_);
+  thread_->Clear(this);
+}
+
 void Port::OnMessage(rtc::Message* pmsg) {
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(pmsg->message_id == MSG_DESTROY_IF_DEAD);
   bool dead =
       (state_ == State::INIT || state_ == State::PRUNED) &&
