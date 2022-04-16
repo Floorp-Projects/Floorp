@@ -568,5 +568,42 @@ TEST(NetworkEmulationManagerTest, EndpointLoopback) {
   network_manager.time_controller()->AdvanceTime(TimeDelta::Seconds(1));
 }
 
+TEST(NetworkEmulationManagerTURNTest, GetIceServerConfig) {
+  NetworkEmulationManagerImpl network_manager(TimeMode::kRealTime);
+  auto turn = network_manager.CreateTURNServer(EmulatedTURNServerConfig());
+
+  EXPECT_GT(turn->GetIceServerConfig().username.size(), 0u);
+  EXPECT_GT(turn->GetIceServerConfig().password.size(), 0u);
+  EXPECT_NE(turn->GetIceServerConfig().url.find(
+                turn->GetClientEndpoint()->GetPeerLocalAddress().ToString()),
+            std::string::npos);
+}
+
+TEST(NetworkEmulationManagerTURNTest, ClientTraffic) {
+  NetworkEmulationManagerImpl emulation(TimeMode::kSimulated);
+  auto* ep = emulation.CreateEndpoint(EmulatedEndpointConfig());
+  auto* turn = emulation.CreateTURNServer(EmulatedTURNServerConfig());
+  auto* node = CreateEmulatedNodeWithDefaultBuiltInConfig(&emulation);
+  emulation.CreateRoute(ep, {node}, turn->GetClientEndpoint());
+  emulation.CreateRoute(turn->GetClientEndpoint(), {node}, ep);
+
+  MockReceiver recv;
+  int port = ep->BindReceiver(0, &recv).value();
+
+  // Construct a STUN BINDING.
+  cricket::StunMessage ping;
+  ping.SetType(cricket::STUN_BINDING_REQUEST);
+  rtc::ByteBufferWriter buf;
+  ping.Write(&buf);
+  rtc::CopyOnWriteBuffer packet(buf.Data(), buf.Length());
+
+  // We expect to get a ping reply.
+  EXPECT_CALL(recv, OnPacketReceived(::testing::_)).Times(1);
+
+  ep->SendPacket(rtc::SocketAddress(ep->GetPeerLocalAddress(), port),
+                 turn->GetClientEndpointAddress(), packet);
+  emulation.time_controller()->AdvanceTime(TimeDelta::Seconds(1));
+}
+
 }  // namespace test
 }  // namespace webrtc
