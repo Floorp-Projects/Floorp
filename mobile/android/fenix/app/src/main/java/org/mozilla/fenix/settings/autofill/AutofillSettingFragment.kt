@@ -25,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.fxa.SyncEngine
+import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
@@ -46,7 +47,8 @@ import org.mozilla.fenix.settings.requirePreference
 class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
     private lateinit var store: AutofillFragmentStore
-    private var isCreditCardsListLoaded: Boolean = false
+
+    private var isAutofillStateLoaded: Boolean = false
 
     /**
      * List of preferences to be enabled or disabled during authentication.
@@ -73,9 +75,9 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store = StoreProvider.get(this) {
-            AutofillFragmentStore(AutofillFragmentState(creditCards = emptyList()))
+            AutofillFragmentStore(AutofillFragmentState())
         }
-        loadCreditCards()
+        loadAutofillState()
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -99,13 +101,17 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        loadCreditCards()
+        loadAutofillState()
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         consumeFrom(store) { state ->
+            if (requireComponents.settings.addressFeature) {
+                updateAddressPreference(state.addresses.isNotEmpty())
+            }
             updateCardManagementPreference(state.creditCards.isNotEmpty(), findNavController())
         }
 
@@ -114,7 +120,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
     override fun onPause() {
         super.onPause()
-        isCreditCardsListLoaded = false
+        isAutofillStateLoaded = false
     }
 
     override fun onResume() {
@@ -148,6 +154,25 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
         )
 
         togglePrefsEnabled(creditCardPreferences, true)
+    }
+
+    /**
+     * Updates preferences visibility depending on addresses being already saved or not.
+     */
+    @VisibleForTesting
+    internal fun updateAddressPreference(hasAddresses: Boolean) {
+        val manageAddressesPreference =
+            requirePreference<Preference>(R.string.pref_key_addresses_manage_addresses)
+
+        if (hasAddresses) {
+            manageAddressesPreference.icon = null
+            manageAddressesPreference.title =
+                getString(R.string.preferences_addresses_manage_addresses)
+        } else {
+            manageAddressesPreference.setIcon(R.drawable.ic_new)
+            manageAddressesPreference.title =
+                getString(R.string.preferences_addresses_add_address)
+        }
     }
 
     /**
@@ -185,22 +210,25 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
     }
 
     /**
-     * Fetches all the credit cards from autofillStorage and updates the [AutofillFragmentState]
-     * with the list of credit cards.
+     * Fetches all the addresses and credit cards from [AutofillCreditCardsAddressesStorage] and
+     * updates the [AutofillFragmentState].
      */
-    private fun loadCreditCards() {
-        if (isCreditCardsListLoaded) {
+    private fun loadAutofillState() {
+        if (isAutofillStateLoaded) {
             return
         }
 
         lifecycleScope.launch(Dispatchers.IO) {
+            val addresses = requireComponents.core.autofillStorage.getAllAddresses()
             val creditCards = requireComponents.core.autofillStorage.getAllCreditCards()
+
             lifecycleScope.launch(Dispatchers.Main) {
+                store.dispatch(AutofillAction.UpdateAddresses(addresses))
                 store.dispatch(AutofillAction.UpdateCreditCards(creditCards))
             }
         }
 
-        isCreditCardsListLoaded = true
+        isAutofillStateLoaded = true
     }
 
     /**

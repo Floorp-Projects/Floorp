@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.autofill
 
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
@@ -18,14 +19,16 @@ class AutofillFragmentStore(initialState: AutofillFragmentState) :
     )
 
 /**
- * The state for [CreditCardsManagementFragment].
+ * The state used for managing autofill data.
  *
+ * @property addresses The list of [Address]es to display in the address list.
  * @property creditCards The list of [CreditCard]s to display in the credit card list.
- * @property isLoading True if the credit cards are still being loaded from storage,
+ * @property isLoading True if the addresses or credit cards are still being loaded from storage,
  * otherwise false.
  */
 data class AutofillFragmentState(
-    val creditCards: List<CreditCard>,
+    val addresses: List<Address> = emptyList(),
+    val creditCards: List<CreditCard> = emptyList(),
     val isLoading: Boolean = true
 ) : State
 
@@ -34,6 +37,13 @@ data class AutofillFragmentState(
  * through the [autofillFragmentStateReducer].
  */
 sealed class AutofillAction : Action {
+    /**
+     * Updates the list of addresses with the provided [addresses].
+     *
+     * @param addresses The list of [Address]es to display in the address list.
+     */
+    data class UpdateAddresses(val addresses: List<Address>) : AutofillAction()
+
     /**
      * Updates the list of credit cards with the provided [creditCards].
      *
@@ -54,6 +64,12 @@ private fun autofillFragmentStateReducer(
     action: AutofillAction
 ): AutofillFragmentState {
     return when (action) {
+        is AutofillAction.UpdateAddresses -> {
+            state.copy(
+                addresses = action.addresses,
+                isLoading = false
+            )
+        }
         is AutofillAction.UpdateCreditCards -> {
             state.copy(
                 creditCards = action.creditCards,

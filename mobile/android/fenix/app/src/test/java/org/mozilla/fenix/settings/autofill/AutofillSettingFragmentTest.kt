@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -35,6 +36,8 @@ class AutofillSettingFragmentTest {
     @Before
     fun setUp() {
         every { testContext.components.settings } returns mockk(relaxed = true)
+        every { testContext.components.settings.addressFeature } returns true
+        every { testContext.components.settings.shouldAutofillCreditCardDetails } returns true
 
         autofillSettingFragment = AutofillSettingFragment()
 
@@ -80,7 +83,7 @@ class AutofillSettingFragmentTest {
             AutofillSettingFragmentDirections
                 .actionAutofillSettingFragmentToCreditCardEditorFragment()
 
-        val state = AutofillFragmentState(creditCards = emptyList())
+        val state = AutofillFragmentState()
         val store = AutofillFragmentStore(state)
 
         autofillSettingFragment.updateCardManagementPreference(
@@ -94,5 +97,45 @@ class AutofillSettingFragmentTest {
         manageCardsPreference?.performClick()
 
         verify { navController.navigate(directions) }
+    }
+
+    @Test
+    fun `GIVEN the list of addresses is not empty WHEN fragment is displayed THEN the manage addresses preference label is 'Manage addresses'`() {
+        val preferenceTitle =
+            testContext.getString(R.string.preferences_addresses_manage_addresses)
+        val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
+            autofillSettingFragment.getPreferenceKey(R.string.pref_key_addresses_manage_addresses)
+        )
+
+        val addresses: List<Address> = listOf(mockk(), mockk())
+
+        val state = AutofillFragmentState(addresses = addresses)
+        val store = AutofillFragmentStore(state)
+
+        autofillSettingFragment.updateAddressPreference(
+            store.state.addresses.isNotEmpty()
+        )
+
+        assertNull(manageCardsPreference?.icon)
+        assertEquals(preferenceTitle, manageCardsPreference?.title)
+    }
+
+    @Test
+    fun `GIVEN the list of addresses is empty WHEN fragment is displayed THEN the manage addresses preference label is 'Add address'`() {
+        val preferenceTitle =
+            testContext.getString(R.string.preferences_addresses_add_address)
+        val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
+            autofillSettingFragment.getPreferenceKey(R.string.pref_key_addresses_manage_addresses)
+        )
+
+        val state = AutofillFragmentState()
+        val store = AutofillFragmentStore(state)
+
+        autofillSettingFragment.updateAddressPreference(
+            store.state.addresses.isNotEmpty()
+        )
+
+        assertNotNull(manageCardsPreference?.icon)
+        assertEquals(preferenceTitle, manageCardsPreference?.title)
     }
 }

@@ -45,7 +45,7 @@ class CreditCardsManagementFragment : SecureFragment() {
         val view = inflater.inflate(CreditCardsManagementView.LAYOUT_ID, container, false)
 
         store = StoreProvider.get(this) {
-            AutofillFragmentStore(AutofillFragmentState(creditCards = emptyList()))
+            AutofillFragmentStore(AutofillFragmentState())
         }
 
         interactor = DefaultCreditCardsManagementInteractor(

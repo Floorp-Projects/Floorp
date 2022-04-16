@@ -42,7 +42,7 @@ class CreditCardsManagementViewTest {
 
     @Test
     fun testUpdate() {
-        creditCardsView.update(AutofillFragmentState(creditCards = emptyList()))
+        creditCardsView.update(AutofillFragmentState())
 
         assertTrue(componentCreditCardsBinding.progressBar.isVisible)
         assertFalse(componentCreditCardsBinding.creditCardsList.isVisible)
