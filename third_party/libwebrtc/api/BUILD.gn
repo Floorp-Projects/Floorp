@@ -875,6 +875,17 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_media_stream_interface") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_media_stream_interface.h" ]
+
+    deps = [
+      ":media_stream_interface",
+      "../test:test_support",
+    ]
+  }
+
   rtc_source_set("dummy_peer_connection") {
     visibility = [ "*" ]
     testonly = true
@@ -1061,6 +1072,7 @@ if (rtc_include_tests) {
       ":mock_data_channel",
       ":mock_frame_decryptor",
       ":mock_frame_encryptor",
+      ":mock_media_stream_interface",
       ":mock_peer_connection_factory_interface",
       ":mock_peerconnectioninterface",
       ":mock_rtp",
