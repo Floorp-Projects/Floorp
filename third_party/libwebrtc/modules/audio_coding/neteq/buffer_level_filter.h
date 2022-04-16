@@ -28,6 +28,11 @@ class BufferLevelFilter {
   // bypassing the filter operation).
   virtual void Update(size_t buffer_size_samples, int time_stretched_samples);
 
+  // Set the filtered buffer level to a particular value directly. This should
+  // only be used in case of large changes in buffer size, such as buffer
+  // flushes.
+  virtual void SetFilteredBufferLevel(int buffer_size_samples);
+
   // The target level is used to select the appropriate filter coefficient.
   virtual void SetTargetBufferLevel(int target_buffer_level_ms);
 

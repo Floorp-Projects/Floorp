@@ -328,8 +328,8 @@ TEST_F(NetEqImplTest, InsertPacket) {
   // Expectations for packet buffer.
   EXPECT_CALL(*mock_packet_buffer_, Empty())
       .WillOnce(Return(false));  // Called once after first packet is inserted.
-  EXPECT_CALL(*mock_packet_buffer_, Flush()).Times(1);
-  EXPECT_CALL(*mock_packet_buffer_, InsertPacketList(_, _, _, _, _))
+  EXPECT_CALL(*mock_packet_buffer_, Flush(_)).Times(1);
+  EXPECT_CALL(*mock_packet_buffer_, InsertPacketList(_, _, _, _, _, _, _, _))
       .Times(2)
       .WillRepeatedly(DoAll(SetArgPointee<2>(kPayloadType),
                             WithArg<0>(Invoke(DeletePacketsAndReturnOk))));

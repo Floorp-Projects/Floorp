@@ -45,6 +45,10 @@ void BufferLevelFilter::Update(size_t buffer_size_samples,
       filtered_current_level - (int64_t{time_stretched_samples} * (1 << 8))));
 }
 
+void BufferLevelFilter::SetFilteredBufferLevel(int buffer_size_samples) {
+  filtered_current_level_ = buffer_size_samples * 256;
+}
+
 void BufferLevelFilter::SetTargetBufferLevel(int target_buffer_level_ms) {
   if (target_buffer_level_ms <= 20) {
     level_factor_ = 251;
