@@ -703,7 +703,10 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
       "send_ping_on_nomination_ice_controlled",
       &field_trials_.send_ping_on_nomination_ice_controlled,
       // Allow connections to live untouched longer that 30s.
-      "dead_connection_timeout_ms", &field_trials_.dead_connection_timeout_ms)
+      "dead_connection_timeout_ms", &field_trials_.dead_connection_timeout_ms,
+      // Stop gathering on strongly connected.
+      "stop_gather_on_strongly_connected",
+      &field_trials_.stop_gather_on_strongly_connected)
       ->Parse(webrtc::field_trial::FindFullName("WebRTC-IceFieldTrials"));
 
   if (field_trials_.dead_connection_timeout_ms < 30000) {
@@ -2015,11 +2018,13 @@ void P2PTransportChannel::OnConnectionStateChange(Connection* connection) {
   // the connection is at the latest generation. It is not enough to check
   // that the connection becomes weakly connected because the connection may be
   // changing from (writable, receiving) to (writable, not receiving).
-  bool strongly_connected = !connection->weak();
-  bool latest_generation = connection->local_candidate().generation() >=
-                           allocator_session()->generation();
-  if (strongly_connected && latest_generation) {
-    MaybeStopPortAllocatorSessions();
+  if (field_trials_.stop_gather_on_strongly_connected) {
+    bool strongly_connected = !connection->weak();
+    bool latest_generation = connection->local_candidate().generation() >=
+                             allocator_session()->generation();
+    if (strongly_connected && latest_generation) {
+      MaybeStopPortAllocatorSessions();
+    }
   }
   // We have to unroll the stack before doing this because we may be changing
   // the state of connections while sorting.
