@@ -281,6 +281,8 @@ data class UpdatableCreditCardFields(
  * @property timeLastModified Time of last modified in milliseconds from the unix epoch.
  * @property timesUsed Number of times the address was used.
  */
+@SuppressLint("ParcelCreator")
+@Parcelize
 data class Address(
     val guid: String,
     val givenName: String,
@@ -299,7 +301,7 @@ data class Address(
     val timeLastUsed: Long?,
     val timeLastModified: Long,
     val timesUsed: Long
-)
+) : Parcelable
 
 /**
  * Information about a new address. This is what you pass to create or update an address.
