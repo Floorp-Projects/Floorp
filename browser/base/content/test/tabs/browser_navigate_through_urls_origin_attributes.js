@@ -154,7 +154,16 @@ async function loadURIAndCheckRemoteType(
   info(
     `XULFrameLoaderCreated was fired ${xulFrameLoaderCreatedCounter.numCalledSoFar} time(s) for ${aURI} ${aText}`
   );
-  var numExpected = expectedCurr == aPrevRemoteType ? 0 : 1;
+  var numExpected =
+    expectedCurr == aPrevRemoteType &&
+    // With BFCache in the parent we'll get a XULFrameLoaderCreated even if
+    // expectedCurr == aPrevRemoteType, because we store the old frameloader
+    // in the BFCache. We have to make an exception for loads in the parent
+    // process (which have a null aPrevRemoteType/expectedCurr) because
+    // BFCache in the parent disables caching for those loads.
+    (!SpecialPowers.Services.appinfo.sessionHistoryInParent || !expectedCurr)
+      ? 0
+      : 1;
   is(
     xulFrameLoaderCreatedCounter.numCalledSoFar,
     numExpected,

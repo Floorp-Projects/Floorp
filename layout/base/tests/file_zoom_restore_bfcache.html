@@ -50,17 +50,25 @@
         }
         case "case3sendData": {
           // We came back from bfcache
-          function waitUntilZoomLevelRestored() {
-            // Zoom level is updated asynchronously when bfcache lives in the
-            // parent process.
-            if (window.devicePixelRatio == 2) {
-              bc.postMessage({command: "case3data", devicePixelRatio: window.devicePixelRatio,
-              frameDevicePixelRatio: document.querySelector("iframe").contentWindow.devicePixelRatio});
-              return;
+          SpecialPowers.spawnChrome([], () => {
+            // We use FullZoom to set the zoom level in the parent, but if FullZoom is not
+            // available then that will fail. So we don't wait here for the devicePixelRatio
+            // to change if FullZoom is not available, and test_zoom_restore_bfcache.html
+            // will mark this test as todo.
+            return "FullZoom" in this.browsingContext.embedderElement.ownerGlobal;
+          }).then((hasFullZoom) => {
+            function waitUntilZoomLevelRestored() {
+              // Zoom level is updated asynchronously when bfcache lives in the
+              // parent process.
+              if (!hasFullZoom || window.devicePixelRatio == 2) {
+                bc.postMessage({command: "case3data", devicePixelRatio: window.devicePixelRatio,
+                frameDevicePixelRatio: document.querySelector("iframe").contentWindow.devicePixelRatio});
+                return;
+              }
+              window.requestAnimationFrame(waitUntilZoomLevelRestored);
             }
             window.requestAnimationFrame(waitUntilZoomLevelRestored);
-          }
-          window.requestAnimationFrame(waitUntilZoomLevelRestored);
+          });
           break;
         }
         case "close": {

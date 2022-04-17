@@ -24,15 +24,6 @@ namespace mozilla {
 //
 // The enumeration is purposefully designed such that more restrictive tainting
 // corresponds to a higher integral value.
-//
-// NOTE: Checking the tainting is not currently adequate.  You *must* still
-//       check the final URL and CORS mode on the channel.
-//
-// These values are currently only set on the channel LoadInfo when the request
-// was initiated through fetch() or when a service worker interception occurs.
-// In the future we should set the tainting value within necko so that it is
-// consistently applied.  Once that is done consumers can replace checks against
-// the final URL and CORS mode with checks against tainting.
 enum class LoadTainting : uint8_t { Basic = 0, CORS = 1, Opaque = 2 };
 
 }  // namespace mozilla
