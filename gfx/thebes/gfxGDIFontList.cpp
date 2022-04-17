@@ -119,7 +119,9 @@ GDIFontEntry::GDIFontEntry(const nsACString& aFaceName,
   mStyleRange = aStyle;
   mWeightRange = aWeight;
   mStretchRange = aStretch;
-  if (IsType1()) mForceGDI = true;
+  if (IsType1()) {
+    mForceGDI = true;
+  }
   mIsDataUserFont = aUserFontData != nullptr;
 
   InitLogFont(aFaceName, aFontType);
@@ -372,10 +374,8 @@ GDIFontEntry* GDIFontEntry::CreateFontEntry(const nsACString& aName,
                                             gfxUserFontData* aUserFontData) {
   // jtdfix - need to set charset, unicode ranges, pitch/family
 
-  GDIFontEntry* fe = new GDIFontEntry(aName, aFontType, aStyle, aWeight,
-                                      aStretch, aUserFontData);
-
-  return fe;
+  return new GDIFontEntry(aName, aFontType, aStyle, aWeight, aStretch,
+                          aUserFontData);
 }
 
 void GDIFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
@@ -454,9 +454,12 @@ int CALLBACK GDIFontFamily::FamilyAddStylesProc(
       SlantStyleRange(italicStyle),
       WeightRange(FontWeight(int32_t(logFont.lfWeight))),
       StretchRange(FontStretch::Normal()), nullptr);
-  if (!fe) return 1;
+  if (!fe) {
+    return 1;
+  }
 
-  ff->AddFontEntry(fe);
+  MOZ_ASSERT(ff->mLock.LockedForWritingByCurrentThread());
+  ff->AddFontEntryLocked(fe);
 
   if (nmetrics->ntmFontSig.fsUsb[0] != 0x00000000 &&
       nmetrics->ntmFontSig.fsUsb[1] != 0x00000000 &&
@@ -482,8 +485,10 @@ int CALLBACK GDIFontFamily::FamilyAddStylesProc(
   return 1;
 }
 
-void GDIFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
-  if (mHasStyles) return;
+void GDIFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
+  if (mHasStyles) {
+    return;
+  }
   mHasStyles = true;
 
   HDC hdc = GetDC(nullptr);
@@ -838,13 +843,11 @@ gfxFontEntry* gfxGDIFontList::MakePlatformFont(const nsACString& aFontName,
   return fe;
 }
 
-bool gfxGDIFontList::FindAndAddFamilies(nsPresContext* aPresContext,
-                                        StyleGenericFontFamily aGeneric,
-                                        const nsACString& aFamily,
-                                        nsTArray<FamilyAndGeneric>* aOutput,
-                                        FindFamiliesFlags aFlags,
-                                        gfxFontStyle* aStyle, nsAtom* aLanguage,
-                                        gfxFloat aDevToCssSize) {
+bool gfxGDIFontList::FindAndAddFamiliesLocked(
+    nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
+    const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
+    FindFamiliesFlags aFlags, gfxFontStyle* aStyle, nsAtom* aLanguage,
+    gfxFloat aDevToCssSize) {
   NS_ConvertUTF8toUTF16 key16(aFamily);
   BuildKeyNameFromFontName(key16);
   NS_ConvertUTF16toUTF8 keyName(key16);
@@ -861,7 +864,7 @@ bool gfxGDIFontList::FindAndAddFamilies(nsPresContext* aPresContext,
     return false;
   }
 
-  return gfxPlatformFontList::FindAndAddFamilies(
+  return gfxPlatformFontList::FindAndAddFamiliesLocked(
       aPresContext, aGeneric, aFamily, aOutput, aFlags, aStyle, aLanguage,
       aDevToCssSize);
 }
@@ -897,6 +900,9 @@ FontFamily gfxGDIFontList::GetDefaultFontForPlatform(
 void gfxGDIFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                             FontListSizes* aSizes) const {
   gfxPlatformFontList::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
+
+  AutoLock lock(mLock);
+
   aSizes->mFontListSize +=
       SizeOfFontFamilyTableExcludingThis(mFontSubstitutes, aMallocSizeOf);
   aSizes->mFontListSize +=
