@@ -110,7 +110,7 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
         consumeFrom(store) { state ->
             if (requireComponents.settings.addressFeature) {
-                updateAddressPreference(state.addresses.isNotEmpty())
+                updateAddressPreference(state.addresses.isNotEmpty(), findNavController())
             }
             updateCardManagementPreference(state.creditCards.isNotEmpty(), findNavController())
         }
@@ -160,7 +160,10 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
      * Updates preferences visibility depending on addresses being already saved or not.
      */
     @VisibleForTesting
-    internal fun updateAddressPreference(hasAddresses: Boolean) {
+    internal fun updateAddressPreference(
+        hasAddresses: Boolean,
+        navController: NavController,
+    ) {
         val manageAddressesPreference =
             requirePreference<Preference>(R.string.pref_key_addresses_manage_addresses)
 
@@ -172,6 +175,14 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
             manageAddressesPreference.setIcon(R.drawable.ic_new)
             manageAddressesPreference.title =
                 getString(R.string.preferences_addresses_add_address)
+        }
+
+        manageAddressesPreference.setOnPreferenceClickListener {
+            navController.navigate(
+                AutofillSettingFragmentDirections
+                    .actionAutofillSettingFragmentToAddressEditorFragment()
+            )
+            super.onPreferenceTreeClick(it)
         }
     }
 

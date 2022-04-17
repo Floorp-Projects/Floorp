@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp">
+
+        <!-- Full Name -->
+        <TextView
+            android:id="@+id/full_name_title"
+            android:layout_width="wrap_content"
+            android:layout_height="16dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_full_name"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/card_number_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/full_name_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:errorEnabled="true"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/full_name_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/full_name_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Street Address -->
+        <TextView
+            android:id="@+id/street_address_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_street_address"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/street_address_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/full_name_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/street_address_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/street_address_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/street_address_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- City -->
+        <TextView
+            android:id="@+id/city_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_city"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/city_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/street_address_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/city_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/city_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/city_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- State -->
+        <TextView
+            android:id="@+id/state_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_state"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/state_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/city_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/state_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:hintEnabled="false"
+            app:layout_constraintHorizontal_bias="0.8"
+            app:layout_constraintEnd_toStartOf="@+id/zip_layout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/state_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/state_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Zip -->
+        <TextView
+            android:id="@+id/zip_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_zip"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/zip_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="@+id/zip_layout"
+            app:layout_constraintTop_toBottomOf="@+id/city_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/zip_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:textColor="?attr/textPrimary"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/state_layout"
+            app:layout_constraintTop_toBottomOf="@+id/zip_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/zip_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Phone -->
+        <TextView
+            android:id="@+id/phone_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_phone"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/phone_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/state_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/phone_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/phone_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/phone_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Email -->
+        <TextView
+            android:id="@+id/email_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_email"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            android:labelFor="@id/city_input"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/phone_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/email_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/email_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/email_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/delete_button"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:letterSpacing="0"
+            android:padding="10dp"
+            android:text="@string/addressess_delete_address_button"
+            android:textAllCaps="false"
+            android:textColor="@color/fx_mobile_text_color_warning"
+            android:visibility="gone"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintTop_toBottomOf="@+id/email_layout"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancel_button"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:letterSpacing="0"
+            android:padding="10dp"
+            android:text="@string/addresses_cancel_button"
+            android:textAllCaps="false"
+            android:textColor="?attr/textPrimary"
+            android:textStyle="bold"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintTop_toBottomOf="@+id/email_layout"
+            app:layout_constraintEnd_toStartOf="@id/save_button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/save_button"
+            style="@style/NeutralButton"
+            android:layout_width="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/addresses_save_button"
+            app:layout_constraintTop_toTopOf="@+id/cancel_button"
+            app:layout_constraintBottom_toBottomOf="@+id/cancel_button"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

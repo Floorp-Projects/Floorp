@@ -1551,6 +1551,28 @@
     <string name="credit_cards_biometric_prompt_message_pin">Unlock your device</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Unlock to use stored credit card information</string>
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Add address</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Full Name</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Street Address</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">City</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">State</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Zip</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Phone</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Email</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Save</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Cancel</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Delete address</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Add search engine</string>

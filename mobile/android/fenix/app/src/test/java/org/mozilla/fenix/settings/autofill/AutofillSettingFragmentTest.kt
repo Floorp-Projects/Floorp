@@ -103,7 +103,7 @@ class AutofillSettingFragmentTest {
     fun `GIVEN the list of addresses is not empty WHEN fragment is displayed THEN the manage addresses preference label is 'Manage addresses'`() {
         val preferenceTitle =
             testContext.getString(R.string.preferences_addresses_manage_addresses)
-        val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
+        val manageAddressesPreference = autofillSettingFragment.findPreference<Preference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_addresses_manage_addresses)
         )
 
@@ -113,18 +113,28 @@ class AutofillSettingFragmentTest {
         val store = AutofillFragmentStore(state)
 
         autofillSettingFragment.updateAddressPreference(
-            store.state.addresses.isNotEmpty()
+            store.state.addresses.isNotEmpty(),
+            navController
         )
 
-        assertNull(manageCardsPreference?.icon)
-        assertEquals(preferenceTitle, manageCardsPreference?.title)
+        assertNull(manageAddressesPreference?.icon)
+        assertEquals(preferenceTitle, manageAddressesPreference?.title)
+
+        manageAddressesPreference?.performClick()
+
+        verify {
+            navController.navigate(
+                AutofillSettingFragmentDirections
+                    .actionAutofillSettingFragmentToAddressEditorFragment()
+            )
+        }
     }
 
     @Test
     fun `GIVEN the list of addresses is empty WHEN fragment is displayed THEN the manage addresses preference label is 'Add address'`() {
         val preferenceTitle =
             testContext.getString(R.string.preferences_addresses_add_address)
-        val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
+        val manageAddressesPreference = autofillSettingFragment.findPreference<Preference>(
             autofillSettingFragment.getPreferenceKey(R.string.pref_key_addresses_manage_addresses)
         )
 
@@ -132,10 +142,20 @@ class AutofillSettingFragmentTest {
         val store = AutofillFragmentStore(state)
 
         autofillSettingFragment.updateAddressPreference(
-            store.state.addresses.isNotEmpty()
+            store.state.addresses.isNotEmpty(),
+            navController
         )
 
-        assertNotNull(manageCardsPreference?.icon)
-        assertEquals(preferenceTitle, manageCardsPreference?.title)
+        assertNotNull(manageAddressesPreference?.icon)
+        assertEquals(preferenceTitle, manageAddressesPreference?.title)
+
+        manageAddressesPreference?.performClick()
+
+        verify {
+            navController.navigate(
+                AutofillSettingFragmentDirections
+                    .actionAutofillSettingFragmentToAddressEditorFragment()
+            )
+        }
     }
 }
