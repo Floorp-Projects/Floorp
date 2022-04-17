@@ -107,6 +107,19 @@ let expectedBackgroundApis = [
   "types.SettingScope",
 ];
 
+// APIs that are exposed to MV2 by default, but not to MV3.
+const mv2onlyBackgroundApis = new Set([
+  "extension.getURL",
+  "extension.lastError",
+  "contentScripts.register",
+  "tabs.executeScript",
+  "tabs.insertCSS",
+  "tabs.removeCSS",
+]);
+let expectedBackgroundApisMV3 = expectedBackgroundApis.filter(
+  path => !mv2onlyBackgroundApis.has(path)
+);
+
 function sendAllApis() {
   function isEvent(key, val) {
     if (!/^on[A-Z]/.test(key)) {
@@ -143,6 +156,12 @@ function sendAllApis() {
   browser.test.sendMessage("allApis", results.sort());
 }
 
+add_task(async function setup() {
+  // This test enumerates all APIs and may access a deprecated API. Just log a
+  // warning instead of throwing.
+  await ExtensionTestUtils.failOnSchemaWarnings(false);
+});
+
 add_task(async function test_enumerate_content_script_apis() {
   let extensionData = {
     manifest: {
@@ -158,8 +177,6 @@ add_task(async function test_enumerate_content_script_apis() {
       "contentscript.js": sendAllApis,
     },
   };
-  // Turn off warning as errors to pass for deprecated APIs
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
@@ -170,15 +187,12 @@ add_task(async function test_enumerate_content_script_apis() {
   isDeeply(actualApis, expectedApis, "content script APIs");
 
   await extension.unload();
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
 add_task(async function test_enumerate_background_script_apis() {
   let extensionData = {
     background: sendAllApis,
   };
-  // Turn off warning as errors to pass for deprecated APIs
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
@@ -187,5 +201,29 @@ add_task(async function test_enumerate_background_script_apis() {
   isDeeply(actualApis, expectedApis, "background script APIs");
 
   await extension.unload();
-  ExtensionTestUtils.failOnSchemaWarnings(true);
+});
+
+add_task(async function test_enumerate_background_script_apis_mv3() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+  let extensionData = {
+    background: sendAllApis,
+    manifest: {
+      manifest_version: 3,
+
+      // Features that expose APIs in MV2, but should not do anything with MV3.
+      browser_action: {},
+      user_scripts: {},
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+
+  let actualApis = await extension.awaitMessage("allApis");
+  let expectedApis = generateExpectations(expectedBackgroundApisMV3);
+  isDeeply(actualApis, expectedApis, "background script APIs in MV3");
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });
