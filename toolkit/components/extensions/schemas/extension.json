@@ -98,7 +98,6 @@
       {
         "name": "getBackgroundPage",
         "type": "function",
-        "max_manifest_version": 2,
         "description": "Returns the JavaScript 'window' object for the background page running inside the current extension. Returns null if the extension has no background page.",
         "parameters": [],
         "returns": {

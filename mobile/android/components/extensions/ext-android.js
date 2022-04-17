@@ -363,10 +363,6 @@ class Tab extends TabBase {
     return this.active;
   }
 
-  get selected() {
-    return this.nativeTab.getActive();
-  }
-
   get status() {
     if (this.browser.webProgress.isLoadingDocument) {
       return "loading";

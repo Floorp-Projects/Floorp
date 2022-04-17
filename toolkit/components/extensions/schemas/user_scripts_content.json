@@ -5,6 +5,7 @@
 [
   {
     "namespace": "userScripts",
+    "max_manifest_version": 2,
     "permissions": ["manifest:user_scripts"],
     "allowedContexts": ["content"],
     "events": [
