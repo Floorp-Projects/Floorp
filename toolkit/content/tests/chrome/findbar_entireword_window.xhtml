@@ -121,15 +121,11 @@
     async function startTestWithBrowser(testName, browserId) {
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
-      gFindBar.browser = gBrowser;
 
-      let promise = ContentTask.spawn(gBrowser, null, () =>
-        new Promise(resolve => {
-          addEventListener("DOMContentLoaded", () => resolve(), { once: true });
-        })
-      );
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
       BrowserTestUtils.loadURI(gBrowser, kBaseURL + "/sample_entireword_" + testName + ".html");
       await promise;
+      gFindBar.browser = gBrowser;
       await onDocumentLoaded(testName);
     }
 
