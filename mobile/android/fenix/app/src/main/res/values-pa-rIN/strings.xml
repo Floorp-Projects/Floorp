@@ -138,6 +138,10 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d ਸਾਈਟਾਂ</string>
 
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">ਸਾਰੀਆਂ ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ ਵੇਖੋ।</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">ਡਿਵਾਈਸ ਸਿੰਕ ਕੀਤਾ</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">ਹਟਾਓ</string>
@@ -327,6 +331,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">ਜੇ ਇਜਾਜ਼ਤ ਦਿੱਤੀ ਤਾਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਉਦੋਂ ਵੀ ਦਿਖਾਈ ਦੇਣਗੀਆਂ, ਜਦੋਂ ਕਈ ਐਪਾਂ ਖੁੱਲ੍ਹੀਆਂ ਹੁੰਦੀਆਂ ਹਨ</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਸ਼ਾਰਟਕੱਟ ਜੋੜੋ</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">ਸਿਰਫ਼-HTTPS ਢੰਗ</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">ਚਾਲੂ</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">ਬੰਦ</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">ਹੋਰ ਜਾਣੋ</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">ਸਾਰੀਆਂ ਟੈਬਾਂ ਵਿੱਚ ਸਮਰੱਥ ਕਰੋ</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">ਸਿਰਫ਼ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਵਿੱਚ ਸਮਰੱਥ ਕਰੋ</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">ਸੁਰੱਖਿਅਤ ਸਾਈਟ ਮੌਜੂਦ ਨਹੀਂ ਹੈ</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">ਬਹੁਤੀ ਸੰਭਾਵਨਾ ਹੈ ਕਿ ਵੈੱਬਸਾਈਟ ਸਿਰਫ਼ HTTPS ਲਈ ਸਹਾਇਕ ਹੀ ਨਹੀਂ ਹੈ।</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">ਪਰ ਇਹ ਵੀ ਸੰਭਵ ਹੈ ਕਿ ਹਮਲਾਵਰ ਸ਼ਾਮਲ ਹੋਵੇ। ਜੇ ਤੁਸੀਂ ਵੈੱਬਸਾਈਟ ਨਾਲ ਜਾਰੀ ਰੱਖਣਾ ਹੈ ਤਾਂ ਤੁਹਾਨੂੰ ਕੋਈ ਵੀ ਸੰਵੇਦਨਸ਼ੀਲ ਜਾਣਕਾਰੀ ਨਹੀਂ ਭਰਨੀ ਚਾਹੀਦੀ ਹੈ। ਜੇ ਤੁਸੀਂ ਜਾਰੀ ਰੱਖਣਾ ਹੈ ਤਾਂ ਇਸ ਸਾਈਟ ਲਈ ਸਿਰਫ਼-HTTPS ਮੋਡ ਨੂੰ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਬੰਦ ਕਰ ਦਿੱਤਾ ਜਾਵੇਗਾ।</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ਅਸੈਸਬਿਲਟੀ</string>
     <!-- Preference to override the Firefox Account server -->
@@ -814,6 +838,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">ਕੀ ਤੁਸੀਂ ਇਹ ਫੋਲਡਰ ਨੂੰ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ਚੁਣੀਆਂ ਚੀਜ਼ਾਂ ਨੂੰ ਹਟਾਏਗਾ।</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">ਰੱਦ ਕਰੋ</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ਫੋਲਡਰ ਜੋੜੋ</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -869,6 +895,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">UNDO</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">ਖੋਜ ਸ਼ਬਦ ਦਿਓ</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">ਸੈਟਿੰਗਾਂ ‘ਤੇ ਜਾਓ</string>
@@ -880,8 +909,16 @@
     <string name="phone_feature_recommended">ਸਿਫਾਰਸ਼ੀ</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">ਇਜਾਜ਼ਤਾਂ ਸਾਫ਼ ਕਰੋ</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">ਠੀਕ ਹੈ</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">ਰੱਦ ਕਰੋ</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">ਇਜਾਜ਼ਤਾਂ ਸਾਫ਼ ਕਰੋ</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">ਠੀਕ ਹੈ</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">ਰੱਦ ਕਰੋ</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">ਸਾਰੀਆਂ ਸਾਈਟਾਂ ‘ਤੇ ਇਜਾਜ਼ਤਾਂ ਸਾਫ਼ ਕਰੋ</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -983,6 +1020,11 @@
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">ਵੇਖੋ</string>
 
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">ਠੀਕ ਹੈ</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">ਰੱਦ ਕਰੋ</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">ਭੰਡਾਰ %d</string>
 
@@ -998,6 +1040,10 @@
     <string name="share_link_all_apps_subheader">ਸਾਰੀਆਂ ਕਾਰਵਾਈਆਂ</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">ਤਾਜ਼ਾ ਵਰਤੇ</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">ਕਲਿੱਪਬੋਰਡ \'ਚ ਕਾਪੀ ਕਰੋ</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">ਕਲਿੱਪਬੋਰਡ ਵਿੱਚ ਕਾਪੀ ਕੀਤਾ</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1051,6 +1097,8 @@
     <string name="snackbar_message_bookmarks_saved">ਬੁੱਕਮਾਰਕ ਸੰਭਾਲੇ ਗਏ!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">ਸ਼ਾਰਟਕੱਟਾਂ ਵਿੱਚ ਜੋੜਿਆ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਬੰਦ ਕੀਤੀ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1647,6 +1695,10 @@
     <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਵਿੱਚ ਜੋੜੋ</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
     <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">ਸਿਖਰਲੀਆਂ ਸਾਈਟਾਂ ਤੋਂ ਹਟਾਓ</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">ਸ਼ਾਰਟਕੱਟਾਂ ਵਿੱਚ ਜੋੜੋ</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">ਸ਼ਾਰਟਕੱਟ ਵਿੱਚੋਂ ਹਟਾਓ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ਤਸਦੀਕ ਕੀਤਾ: %1$s</string>
@@ -1659,6 +1711,8 @@
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">ਹਟਾਓ</string>
 
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">ਰੱਦ ਕਰੋ</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">ਲਾਗਇਨ ਚੋਣਾਂ</string>
     <!--  The editable text field for a login's web address. -->
@@ -1720,8 +1774,12 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ਸਿਖਰਲੀ ਸਾਈਟ ਦੀ ਲਿਮਟ ਅੱਪੜੀ</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">ਸ਼ਾਰਟਕੱਟ ਦੀ ਲਿਮਟ ਅੱਪੜੀ</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">ਨਵੀਂ ਸਿਖਰਲੀ ਸਾਈਟ ਜੋੜਨ ਲਈ ਪਹਿਲਾਂ ਇੱਕ ਨੂੰ ਹਟਾਓ। ਸਾਈਟ ਨੂੰ ਛੂਹ ਕੇ ਰੱਖੋ ਤੇ ਹਟਾਓ ਨੂੰ ਚੁਣੋ।</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">ਨਵਾਂ ਸ਼ਾਰਟਕੱਟ ਜੋੜਨ ਲਈ ਪਹਿਲਾਂ ਇੱਕ ਨੂੰ ਹਟਾਓ। ਸਾਈਟ ਨੂੰ ਛੂਹ ਕੇ ਰੱਖੋ ਤੇ ਹਟਾਓ ਨੂੰ ਚੁਣੋ।</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ਠੀਕ ਹੈ, ਸਮਝ ਗਏ</string>
 
@@ -1731,7 +1789,9 @@
 	<string name="top_sites_rename_dialog_title">ਨਾਂ</string>
 	<!-- Hint for renaming title of a top site -->
 	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ਸਿਰਖਲੀ ਸਾਈਟ ਦਾ ਨਾਂ</string>
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">ਸ਼ਾਰਟਕੱਟ ਨਾਂ</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ਠੀਕ ਹੈ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ਰੱਦ ਕਰੋ</string>
@@ -1808,4 +1868,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ਹੋਰ ਜਾਣੋ</string>
 
-    </resources>
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">ਡਾਟਾ ਭੇਜਣ ਲਈ ਟੈਲੀਮੈਂਟਰੀ ਨੂੰ ਸਮਰੱਥ ਕਰੋ।</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
+</resources>

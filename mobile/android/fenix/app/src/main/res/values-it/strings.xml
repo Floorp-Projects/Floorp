@@ -706,7 +706,7 @@
     <string name="studies_restart_dialog_cancel">Annulla</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Chiusura in corso per applicare le modifiche...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Chiusura in corso per applicare le modifiche…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

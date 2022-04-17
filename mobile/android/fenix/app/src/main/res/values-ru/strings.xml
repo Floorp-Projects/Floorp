@@ -353,6 +353,8 @@
     <string name="errorpage_httpsonly_title">Защищённый сайт недоступен</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Скорее всего, веб-сайт просто не поддерживает HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Однако возможно вмешательство злоумышленников. Если вы продолжите переход на веб-сайт, вам не следует вводить на нём какие-либо конфиденциальные данные. Если вы продолжите, режим «Только HTTPS» для этого сайта будет временно отключён.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Специальные возможности</string>
     <!-- Preference to override the Firefox Account server -->
