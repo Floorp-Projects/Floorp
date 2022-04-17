@@ -11,6 +11,7 @@
 #include "nsRect.h"
 
 class imgIContainer;
+class nsPresContext;
 
 namespace mozilla {
 class ComputedStyle;
@@ -24,6 +25,7 @@ class ComputedStyle;
 // Returns an autoreleased NSImage.
 + (NSImage*)iconImageFromImageContainer:(imgIContainer*)aImage
                                withSize:(NSSize)aSize
+                            presContext:(const nsPresContext*)aPresContext
                           computedStyle:(const mozilla::ComputedStyle*)aComputedStyle
                                 subrect:(const nsIntRect&)aSubRect
                             scaleFactor:(CGFloat)aScaleFactor;

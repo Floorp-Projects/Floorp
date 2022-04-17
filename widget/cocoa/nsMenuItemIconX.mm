@@ -23,6 +23,7 @@
 
 #include "MOZIconHelper.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsCocoaUtils.h"
 #include "nsComputedDOMStyle.h"
 #include "nsContentUtils.h"
@@ -150,6 +151,7 @@ already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI(nsIContent* aContent) {
     mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
   }
   mComputedStyle = std::move(sc);
+  mPresContext = document->GetPresContext();
 
   return iconURI.forget();
 }
@@ -168,10 +170,12 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
 
   mIconImage = [[MOZIconHelper iconImageFromImageContainer:aImage
                                                   withSize:NSMakeSize(kIconSize, kIconSize)
+                                               presContext:mPresContext
                                              computedStyle:mComputedStyle
                                                    subrect:mImageRegionRect
                                                scaleFactor:0.0f] retain];
   mComputedStyle = nullptr;
+  mPresContext = nullptr;
 
   if (mListener) {
     mListener->IconUpdated();
