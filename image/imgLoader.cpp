@@ -450,6 +450,11 @@ class imgMemoryReporter final : public nsIMemoryReporter {
           LossyAppendUTF16toASCII(aspect, surfacePathPrefix);
           surfacePathPrefix.AppendLiteral(") ");
         }
+        if (auto scheme = context.GetColorScheme()) {
+          surfacePathPrefix.AppendLiteral("colorScheme=");
+          surfacePathPrefix.AppendInt(int32_t(*scheme));
+          surfacePathPrefix.AppendLiteral(" ");
+        }
         if (context.GetContextPaint()) {
           const SVGEmbeddingContextPaint* paint = context.GetContextPaint();
           surfacePathPrefix.AppendLiteral("contextPaint=(");
