@@ -11,6 +11,7 @@
         "properties": {
           "user_scripts": {
             "type": "object",
+            "max_manifest_version": 2,
             "optional": true,
             "properties": {
               "api_script": {
@@ -26,6 +27,7 @@
   },
   {
     "namespace": "userScripts",
+    "max_manifest_version": 2,
     "permissions": ["manifest:user_scripts"],
     "types": [
       {

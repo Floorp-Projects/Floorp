@@ -88,7 +88,6 @@
           "index": {"type": "integer", "minimum": -1, "description": "The zero-based index of the tab within its window."},
           "windowId": {"type": "integer", "optional": true, "minimum": 0, "description": "The ID of the window the tab is contained within."},
           "openerTabId": {"unsupported": true, "type": "integer", "minimum": 0, "optional": true, "description": "The ID of the tab that opened this tab, if any. This property is only present if the opener tab still exists."},
-          "selected": {"type": "boolean", "description": "Whether the tab is selected.", "deprecated": "Please use $(ref:tabs.Tab.highlighted).", "unsupported": true},
           "highlighted": {"type": "boolean", "description": "Whether the tab is highlighted. Works as an alias of active."},
           "active": {"type": "boolean", "description": "Whether the tab is active in its window. (Does not necessarily mean the window is focused.)"},
           "pinned": {"type": "boolean", "description": "Whether the tab is pinned."},
@@ -259,36 +258,6 @@
         }
       },
       {
-        "name": "sendRequest",
-        "deprecated": "Please use $(ref:runtime.sendMessage).",
-        "unsupported": true,
-        "type": "function",
-        "description": "Sends a single request to the content script(s) in the specified tab, with an optional callback to run when a response is sent back.  The $(ref:extension.onRequest) event is fired in each content script running in the specified tab for the current extension.",
-        "parameters": [
-          {
-            "type": "integer",
-            "name": "tabId",
-            "minimum": 0
-          },
-          {
-            "type": "any",
-            "name": "request"
-          },
-          {
-            "type": "function",
-            "name": "responseCallback",
-            "optional": true,
-            "parameters": [
-              {
-                "name": "response",
-                "type": "any",
-                "description": "The JSON response object sent by the handler of the request. If an error occurs while connecting to the specified tab, the callback will be called with no arguments and $(ref:runtime.lastError) will be set to the error message."
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "sendMessage",
         "type": "function",
         "description": "Sends a single message to the content script(s) in the specified tab, with an optional callback to run when a response is sent back.  The $(ref:runtime.onMessage) event is fired in each content script running in the specified tab for the current extension.",
@@ -331,54 +300,6 @@
         ]
       },
       {
-        "name": "getSelected",
-        "deprecated": "Please use $(ref:tabs.query) <code>{active: true}</code>.",
-        "unsupported": true,
-        "type": "function",
-        "description": "Gets the tab that is selected in the specified window.",
-        "async": "callback",
-        "parameters": [
-          {
-            "type": "integer",
-            "name": "windowId",
-            "minimum": -2,
-            "optional": true,
-            "description": "Defaults to the $(topic:current-window)[current window]."
-          },
-          {
-            "type": "function",
-            "name": "callback",
-            "parameters": [
-              {"name": "tab", "$ref": "Tab"}
-            ]
-          }
-        ]
-      },
-      {
-        "name": "getAllInWindow",
-        "deprecated": "Please use $(ref:tabs.query) <code>{windowId: windowId}</code>.",
-        "unsupported": true,
-        "type": "function",
-        "description": "Gets details about all tabs in the specified window.",
-        "async": "callback",
-        "parameters": [
-          {
-            "type": "integer",
-            "name": "windowId",
-            "minimum": -2,
-            "optional": true,
-            "description": "Defaults to the $(topic:current-window)[current window]."
-            },
-          {
-            "type": "function",
-            "name": "callback",
-            "parameters": [
-              {"name": "tabs", "type": "array", "items": { "$ref": "Tab" } }
-            ]
-          }
-        ]
-      },
-      {
         "name": "create",
         "type": "function",
         "description": "Creates a new tab.",
@@ -409,13 +330,6 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "Whether the tab should become the active tab in the window. Does not affect whether the window is focused (see $(ref:windows.update)). Defaults to <var>true</var>."
-              },
-              "selected": {
-                "deprecated": "Please use <em>active</em>.",
-                "unsupported": true,
-                "type": "boolean",
-                "optional": true,
-                "description": "Whether the tab should become the selected tab in the window. Defaults to <var>true</var>"
               },
               "pinned": {
                 "type": "boolean",
@@ -667,13 +581,6 @@
                 "optional": true,
                 "description": "Adds or removes the tab from the current selection."
               },
-              "selected": {
-                "unsupported": true,
-                "deprecated": "Please use <em>highlighted</em>.",
-                "type": "boolean",
-                "optional": true,
-                "description": "Whether the tab should be selected."
-              },
               "pinned": {
                 "type": "boolean",
                 "unsupported": true,
@@ -897,6 +804,7 @@
       {
         "name": "executeScript",
         "type": "function",
+        "max_manifest_version": 2,
         "description": "Injects JavaScript code into a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
         "async": "callback",
         "parameters": [
@@ -932,6 +840,7 @@
       {
         "name": "insertCSS",
         "type": "function",
+        "max_manifest_version": 2,
         "description": "Injects CSS into a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
         "async": "callback",
         "parameters": [
@@ -959,6 +868,7 @@
       {
         "name": "removeCSS",
         "type": "function",
+        "max_manifest_version": 2,
         "description": "Removes injected CSS from a page. For details, see the $(topic:content_scripts)[programmatic injection] section of the content scripts doc.",
         "async": "callback",
         "parameters": [
@@ -1224,58 +1134,6 @@
         ]
       },
       {
-        "name": "onSelectionChanged",
-        "deprecated": "Please use $(ref:tabs.onActivated).",
-        "unsupported": true,
-        "type": "function",
-        "description": "Fires when the selected tab in a window changes.",
-        "parameters": [
-          {
-            "type": "integer",
-            "name": "tabId",
-            "minimum": 0,
-            "description": "The ID of the tab that has become active."
-          },
-          {
-            "type": "object",
-            "name": "selectInfo",
-            "properties": {
-              "windowId": {
-                "type": "integer",
-                "minimum": 0,
-                "description": "The ID of the window the selected tab changed inside of."
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "onActiveChanged",
-        "deprecated": "Please use $(ref:tabs.onActivated).",
-        "unsupported": true,
-        "type": "function",
-        "description": "Fires when the selected tab in a window changes. Note that the tab's URL may not be set at the time this event fired, but you can listen to $(ref:tabs.onUpdated) events to be notified when a URL is set.",
-        "parameters": [
-          {
-            "type": "integer",
-            "name": "tabId",
-            "minimum": 0,
-            "description": "The ID of the tab that has become active."
-          },
-          {
-            "type": "object",
-            "name": "selectInfo",
-            "properties": {
-              "windowId": {
-                "type": "integer",
-                "minimum": 0,
-                "description": "The ID of the window the selected tab changed inside of."
-              }
-            }
-          }
-        ]
-      },
-      {
         "name": "onActivated",
         "type": "function",
         "description": "Fires when the active tab in a window changes. Note that the tab's URL may not be set at the time this event fired, but you can listen to onUpdated events to be notified when a URL is set.",
@@ -1299,31 +1157,6 @@
                 "type": "integer",
                 "minimum": 0,
                 "description": "The ID of the window the active tab changed inside of."
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "onHighlightChanged",
-        "deprecated": "Please use $(ref:tabs.onHighlighted).",
-        "unsupported": true,
-        "type": "function",
-        "description": "Fired when the highlighted or selected tabs in a window changes.",
-        "parameters": [
-          {
-            "type": "object",
-            "name": "selectInfo",
-            "properties": {
-              "windowId": {
-                "type": "integer",
-                "minimum": 0,
-                "description": "The window whose tabs changed."
-              },
-              "tabIds": {
-                "type": "array",
-                "items": {"type": "integer", "minimum": 0},
-                "description": "All highlighted tabs in the window."
               }
             }
           }
