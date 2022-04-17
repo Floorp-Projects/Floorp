@@ -2013,12 +2013,21 @@ class ObjectType extends Type {
           `Property "${prop}" is unsupported in Manifest Version ${context.manifestVersion}`,
           `not contain an unsupported "${prop}" property`
         );
-        if (context.manifestVersion === 2) {
-          // Existing MV2 extensions might have some of the new MV3 properties.
-          // Since we've ignored them till now, we should just warn and bail.
-          this.logWarning(context, forceString(error.error));
-          return;
+
+        this.logWarning(context, forceString(error.error));
+        if (this.additionalProperties) {
+          // When `additionalProperties` is set to UnrecognizedProperty, the
+          // caller (i.e. ObjectType's normalize method) assigns the original
+          // value to `result[prop]`. Erase the property now to prevent
+          // `result[prop]` from becoming anything other than `undefined.
+          //
+          // A warning was already logged above, so we do not need to also log
+          // "An unexpected property was found in the WebExtension manifest."
+          remainingProps.delete(prop);
         }
+        // When `additionalProperties` is not set, ObjectType's normalize method
+        // will return an error because prop is still in remainingProps.
+        return;
       }
     } else if (unsupported) {
       if (prop in properties) {
