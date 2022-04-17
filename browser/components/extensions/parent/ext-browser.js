@@ -839,10 +839,6 @@ class Tab extends TabBase {
     return selected || multiselected;
   }
 
-  get selected() {
-    return this.nativeTab.selected;
-  }
-
   get status() {
     if (this.nativeTab.getAttribute("busy") === "true") {
       return "loading";

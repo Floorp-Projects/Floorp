@@ -166,7 +166,7 @@ ExtensionTestUtils.loadExtension = function(ext) {
 
 ExtensionTestUtils.failOnSchemaWarnings = (warningsAsErrors = true) => {
   let prefName = "extensions.webextensions.warnings-as-errors";
-  SpecialPowers.setBoolPref(prefName, warningsAsErrors);
+  let prefPromise = SpecialPowers.setBoolPref(prefName, warningsAsErrors);
   if (!warningsAsErrors) {
     let registerCleanup;
     if (typeof registerCleanupFunction != "undefined") {
@@ -176,4 +176,6 @@ ExtensionTestUtils.failOnSchemaWarnings = (warningsAsErrors = true) => {
     }
     registerCleanup(() => SpecialPowers.setBoolPref(prefName, true));
   }
+  // In mochitests, setBoolPref is async.
+  return prefPromise.then(() => {});
 };
