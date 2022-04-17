@@ -790,10 +790,8 @@ class gfxFontEntry {
   };
 
   using FontTableCache = nsTHashtable<FontTableHashEntry>;
-  mozilla::Atomic<FontTableCache*> mFontTableCache GUARDED_BY(mLock);
-  FontTableCache* GetFontTableCache() const NO_THREAD_SAFETY_ANALYSIS {
-    return mFontTableCache;
-  }
+  mozilla::Atomic<FontTableCache*> mFontTableCache;
+  FontTableCache* GetFontTableCache() const { return mFontTableCache; }
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontEntry::RangeFlags)
@@ -851,17 +849,12 @@ class gfxFontFamily {
 
   gfxFontFamily(const nsACString& aName, FontVisibility aVisibility)
       : mName(aName),
+        mLock("gfxFontFamily lock"),
         mVisibility(aVisibility),
-        mOtherFamilyNamesInitialized(false),
-        mHasOtherFamilyNames(false),
-        mFaceNamesInitialized(false),
-        mHasStyles(false),
         mIsSimpleFamily(false),
         mIsBadUnderlineFamily(false),
-        mFamilyCharacterMapInitialized(false),
         mSkipDefaultFeatureSpaceCheck(false),
-        mCheckForFallbackFaces(false),
-        mCheckedForLegacyFamilyNames(false) {}
+        mCheckForFallbackFaces(false) {}
 
   const nsCString& Name() const { return mName; }
 
@@ -874,11 +867,20 @@ class gfxFontFamily {
   // faces in a large family into separate "styled families" because of
   // GDI's 4-faces-per-family limitation). If found, the styled family
   // name will be added to the font list's "other family names" table.
+  // Note that the caller must already hold the gfxPlatformFontList lock.
   bool CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList);
 
-  nsTArray<RefPtr<gfxFontEntry>>& GetFontList() { return mAvailableFonts; }
+  nsTArray<RefPtr<gfxFontEntry>>& GetFontList() {
+    mozilla::AutoReadLock lock(mLock);
+    return mAvailableFonts;
+  }
 
   void AddFontEntry(RefPtr<gfxFontEntry> aFontEntry) {
+    mozilla::AutoWriteLock lock(mLock);
+    AddFontEntryLocked(aFontEntry);
+  }
+
+  void AddFontEntryLocked(RefPtr<gfxFontEntry> aFontEntry) REQUIRES(mLock) {
     // bug 589682 - set the IgnoreGDEF flag on entries for Italic faces
     // of Times New Roman, because of buggy table in those fonts
     if (aFontEntry->IsItalic() && !aFontEntry->IsUserFont() &&
@@ -916,8 +918,10 @@ class gfxFontFamily {
                                     nsTArray<gfxFontEntry*>& aFontEntryList,
                                     bool aIgnoreSizeTolerance = false);
 
-  // checks for a matching font within the family
-  // used as part of the font fallback process
+  // Checks for a matching font within the family; used as part of the font
+  // fallback process.
+  // Note that when this is called, the caller must already be holding the
+  // gfxPlatformFontList lock.
   void FindFontForChar(GlobalFontMatch* aMatchData);
 
   // checks all fonts for a matching font within the family
@@ -929,36 +933,51 @@ class gfxFontFamily {
   // set when other family names have been read in
   void SetOtherFamilyNamesInitialized() { mOtherFamilyNamesInitialized = true; }
 
-  // read in other localized family names, fullnames and Postscript names
-  // for all faces and append to lookup tables
+  // Read in other localized family names, fullnames and Postscript names
+  // for all faces and append to lookup tables.
+  // Note that when this is called, the caller must already be holding the
+  // gfxPlatformFontList lock.
   virtual void ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
                              bool aNeedFullnamePostscriptNames,
                              FontInfoData* aFontInfoData = nullptr);
 
-  // find faces belonging to this family (platform implementations override
-  // this; should be made pure virtual once all subclasses have been updated)
-  virtual void FindStyleVariations(FontInfoData* aFontInfoData = nullptr) {}
+  // Find faces belonging to this family (platform implementations override).
+  // This is a no-op in cases where the family is explicitly populated by other
+  // means, rather than being asked to find its faces via system API.
+  virtual void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
+      REQUIRES(mLock){};
+  void FindStyleVariations(FontInfoData* aFontInfoData = nullptr) {
+    if (mHasStyles) {
+      return;
+    }
+    mozilla::AutoWriteLock lock(mLock);
+    FindStyleVariationsLocked(aFontInfoData);
+  }
 
   // search for a specific face using the Postscript name
   gfxFontEntry* FindFont(const nsACString& aPostscriptName);
 
-  // read in cmaps for all the faces
+  // Read in cmaps for all the faces.
+  // Note that when this is called, the caller must already be holding the
+  // gfxPlatformFontList lock.
   void ReadAllCMAPs(FontInfoData* aFontInfoData = nullptr);
 
   bool TestCharacterMap(uint32_t aCh) {
     if (!mFamilyCharacterMapInitialized) {
       ReadAllCMAPs();
     }
+    mozilla::AutoReadLock lock(mLock);
     return mFamilyCharacterMap.test(aCh);
   }
 
-  void ResetCharacterMap() {
+  void ResetCharacterMap() REQUIRES(mLock) {
     mFamilyCharacterMap.reset();
     mFamilyCharacterMapInitialized = false;
   }
 
   // mark this family as being in the "bad" underline offset blocklist
   void SetBadUnderlineFamily() {
+    mozilla::AutoWriteLock lock(mLock);
     mIsBadUnderlineFamily = true;
     if (mHasStyles) {
       SetBadUnderlineFonts();
@@ -971,12 +990,12 @@ class gfxFontFamily {
   bool CheckForFallbackFaces() const { return mCheckForFallbackFaces; }
 
   // sort available fonts to put preferred (standard) faces towards the end
-  void SortAvailableFonts();
+  void SortAvailableFonts() REQUIRES(mLock);
 
   // check whether the family fits into the simple 4-face model,
   // so we can use simplified style-matching;
   // if so set the mIsSimpleFamily flag (defaults to False before we've checked)
-  void CheckForSimpleFamily();
+  void CheckForSimpleFamily() REQUIRES(mLock);
 
   // For memory reporter
   virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -1019,31 +1038,33 @@ class gfxFontFamily {
                                    bool useFullName = false);
 
   // set whether this font family is in "bad" underline offset blocklist.
-  void SetBadUnderlineFonts() {
-    uint32_t i, numFonts = mAvailableFonts.Length();
-    for (i = 0; i < numFonts; i++) {
-      if (mAvailableFonts[i]) {
-        mAvailableFonts[i]->mIsBadUnderlineFont = true;
+  void SetBadUnderlineFonts() REQUIRES(mLock) {
+    for (auto& f : mAvailableFonts) {
+      if (f) {
+        f->mIsBadUnderlineFont = true;
       }
     }
   }
 
   nsCString mName;
-  nsTArray<RefPtr<gfxFontEntry>> mAvailableFonts;
-  gfxSparseBitSet mFamilyCharacterMap;
+  nsTArray<RefPtr<gfxFontEntry>> mAvailableFonts GUARDED_BY(mLock);
+  gfxSparseBitSet mFamilyCharacterMap GUARDED_BY(mLock);
+
+  mutable mozilla::RWLock mLock;
 
   FontVisibility mVisibility;
 
-  bool mOtherFamilyNamesInitialized : 1;
-  bool mHasOtherFamilyNames : 1;
-  bool mFaceNamesInitialized : 1;
-  bool mHasStyles : 1;
-  bool mIsSimpleFamily : 1;
+  mozilla::Atomic<bool> mOtherFamilyNamesInitialized;
+  mozilla::Atomic<bool> mFaceNamesInitialized;
+  mozilla::Atomic<bool> mHasStyles;
+  mozilla::Atomic<bool> mFamilyCharacterMapInitialized;
+  mozilla::Atomic<bool> mCheckedForLegacyFamilyNames;
+  mozilla::Atomic<bool> mHasOtherFamilyNames;
+
+  bool mIsSimpleFamily : 1 GUARDED_BY(mLock);
   bool mIsBadUnderlineFamily : 1;
-  bool mFamilyCharacterMapInitialized : 1;
   bool mSkipDefaultFeatureSpaceCheck : 1;
   bool mCheckForFallbackFaces : 1;  // check other faces for character
-  bool mCheckedForLegacyFamilyNames : 1;
 
   enum {
     // for "simple" families, the faces are stored in mAvailableFonts

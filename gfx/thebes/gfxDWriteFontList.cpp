@@ -132,11 +132,13 @@ static HRESULT GetDirectWriteFaceName(IDWriteFont* aFont,
   return S_OK;
 }
 
-void gfxDWriteFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
+void gfxDWriteFontFamily::FindStyleVariationsLocked(
+    FontInfoData* aFontInfoData) {
   HRESULT hr;
   if (mHasStyles) {
     return;
   }
+
   mHasStyles = true;
 
   gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
@@ -188,7 +190,7 @@ void gfxDWriteFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
 
     fe->SetupVariationRanges();
 
-    AddFontEntry(fe);
+    AddFontEntryLocked(fe);
 
     // postscript/fullname if needed
     nsAutoCString psname, fullname;
@@ -1839,7 +1841,7 @@ void gfxDWriteFontList::GetFontsFromCollection(
       // if this fails/doesn't exist, we'll have used name index 0,
       // so that's the one we'll want to skip here
       names->FindLocaleName(L"en-us", &englishIdx, &exists);
-
+      AutoTArray<nsCString, 4> otherFamilyNames;
       for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
         UINT32 nameLen;
         AutoTArray<WCHAR, 32> localizedName;
@@ -1866,8 +1868,11 @@ void gfxDWriteFontList::GetFontsFromCollection(
         NS_ConvertUTF16toUTF8 locName(localizedName.Elements());
 
         if (!familyName.Equals(locName)) {
-          AddOtherFamilyName(fam, locName);
+          otherFamilyNames.AppendElement(locName);
         }
+      }
+      if (!otherFamilyNames.IsEmpty()) {
+        AddOtherFamilyNames(fam, otherFamilyNames);
       }
     }
 
@@ -2010,7 +2015,7 @@ void gfxDWriteFontList::GetDirectWriteSubstitutes() {
   }
 }
 
-bool gfxDWriteFontList::FindAndAddFamilies(
+bool gfxDWriteFontList::FindAndAddFamiliesLocked(
     nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
     const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
     FindFamiliesFlags aFlags, gfxFontStyle* aStyle, nsAtom* aLanguage,
@@ -2037,7 +2042,7 @@ bool gfxDWriteFontList::FindAndAddFamilies(
     return false;
   }
 
-  return gfxPlatformFontList::FindAndAddFamilies(
+  return gfxPlatformFontList::FindAndAddFamiliesLocked(
       aPresContext, aGeneric, keyName, aOutput, aFlags, aStyle, aLanguage,
       aDevToCssSize);
 }
@@ -2045,6 +2050,8 @@ bool gfxDWriteFontList::FindAndAddFamilies(
 void gfxDWriteFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                FontListSizes* aSizes) const {
   gfxPlatformFontList::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
+
+  AutoLock lock(mLock);
 
   // We are a singleton, so include the font loader singleton's memory.
   MOZ_ASSERT(static_cast<const gfxPlatformFontList*>(this) ==
