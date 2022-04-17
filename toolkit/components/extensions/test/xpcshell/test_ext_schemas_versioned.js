@@ -68,6 +68,35 @@ let json = [
               },
             ],
           },
+          accepting_unrecognized_props: {
+            optional: true,
+            type: "object",
+            properties: {
+              mv2_only_prop: {
+                type: "string",
+                optional: true,
+                max_manifest_version: 2,
+              },
+              mv3_only_prop: {
+                type: "string",
+                optional: true,
+                min_manifest_version: 3,
+              },
+              mv2_only_prop_with_default: {
+                type: "string",
+                optional: true,
+                default: "only in MV2",
+                max_manifest_version: 2,
+              },
+              mv3_only_prop_with_default: {
+                type: "string",
+                optional: true,
+                default: "only in MV3",
+                min_manifest_version: 3,
+              },
+            },
+            additionalProperties: { $ref: "UnrecognizedProperty" },
+          },
         },
       },
       {
@@ -250,12 +279,12 @@ add_task(async function setup() {
   let url = "data:," + JSON.stringify(json);
   Schemas._rootSchema = null;
   await Schemas.load(url);
+
+  // We want the actual errors thrown here, and not warnings recast as errors.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
 });
 
 add_task(async function test_inject_V2() {
-  // We want the actual errors thrown here, and not warnings recast as errors.
-  ExtensionTestUtils.failOnSchemaWarnings(false);
-
   // Test injecting into a V2 context.
   let wrapper = getContextWrapper(2);
 
@@ -336,14 +365,15 @@ add_task(async function test_inject_V2() {
     /Incorrect argument types for mixed.fun_no_valid_param/,
     "fun_no_valid_param should throw for versioned type"
   );
-
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
 function normalizeTest(manifest, test, wrapper) {
   let normalized = Schemas.normalize(manifest, "mixed.manifestTest", wrapper);
   test(normalized);
-  return normalized;
+  // The test function should call wrapper.checkErrors if it expected errors.
+  // Here we call checkErrors again to ensure that there are not any unexpected
+  // errors left.
+  wrapper.checkErrors([]);
 }
 
 add_task(async function test_normalize_V2() {
@@ -436,6 +466,33 @@ add_task(async function test_normalize_V2() {
     },
     wrapper
   );
+
+  // Tests that object definitions including additionalProperties can
+  // successfully accept objects from another manifest version, while ignoring
+  // the actual value from the non-matching manifest value.
+  normalizeTest(
+    {
+      accepting_unrecognized_props: {
+        mv2_only_prop: "mv2 here",
+        mv3_only_prop: "mv3 here",
+      },
+    },
+    normalized => {
+      equal(normalized.error, undefined, "no normalization error");
+      Assert.deepEqual(
+        normalized.value.accepting_unrecognized_props,
+        {
+          mv2_only_prop: "mv2 here",
+          mv2_only_prop_with_default: "only in MV2",
+        },
+        "Normalized object for MV2, without MV3-specific props"
+      );
+      wrapper.checkErrors([
+        `Property "mv3_only_prop" is unsupported in Manifest Version 2`,
+      ]);
+    },
+    wrapper
+  );
 });
 
 add_task(async function test_inject_V3() {
@@ -507,9 +564,12 @@ add_task(async function test_inject_V3() {
   wrapper.verify("call", "mixed", "fun_param_change", [propObj]);
   Assert.throws(
     () => root.mixed.fun_param_change({ prop_mv2: "prop_mv2", ...propObj }),
-    /Property "prop_mv2" is unsupported in Manifest Version 3/,
+    /Unexpected property "prop_mv2"/,
     "should throw for versioned type"
   );
+  wrapper.checkErrors([
+    `Property "prop_mv2" is unsupported in Manifest Version 3`,
+  ]);
 
   root.mixed.PROP_mv3.sub_foo();
   wrapper.verify("call", "mixed.PROP_mv3", "sub_foo", []);
@@ -529,12 +589,14 @@ add_task(async function test_normalize_V3() {
       versioned_extend: "test",
     },
     normalized => {
-      Assert.ok(
-        normalized.error.startsWith(
-          `Property "versioned_extend" is unsupported in Manifest Version 3`
-        ),
-        "manifest error"
+      Assert.equal(
+        normalized.error,
+        `Unexpected property "versioned_extend"`,
+        "expected manifest error"
       );
+      wrapper.checkErrors([
+        `Property "versioned_extend" is unsupported in Manifest Version 3`,
+      ]);
     },
     wrapper
   );
@@ -619,6 +681,33 @@ add_task(async function test_normalize_V3() {
     {},
     normalized => {
       ok(!normalized.error, "manifest normalized");
+    },
+    wrapper
+  );
+
+  // Tests that object definitions including additionalProperties can
+  // successfully accept objects from another manifest version, while ignoring
+  // the actual value from the non-matching manifest value.
+  normalizeTest(
+    {
+      accepting_unrecognized_props: {
+        mv2_only_prop: "mv2 here",
+        mv3_only_prop: "mv3 here",
+      },
+    },
+    normalized => {
+      equal(normalized.error, undefined, "no normalization error");
+      Assert.deepEqual(
+        normalized.value.accepting_unrecognized_props,
+        {
+          mv3_only_prop: "mv3 here",
+          mv3_only_prop_with_default: "only in MV3",
+        },
+        "Normalized object for MV3, without MV2-specific props"
+      );
+      wrapper.checkErrors([
+        `Property "mv2_only_prop" is unsupported in Manifest Version 3`,
+      ]);
     },
     wrapper
   );
