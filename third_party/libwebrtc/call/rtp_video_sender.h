@@ -169,9 +169,14 @@ class RtpVideoSender : public RtpVideoSenderInterface,
   void ConfigureRids();
   bool NackEnabled() const;
   uint32_t GetPacketizationOverheadRate() const;
+  DataRate CalculateOverheadRate(DataRate data_rate,
+                                 DataSize packet_size,
+                                 DataSize overhead_per_packet,
+                                 Frequency framerate) const;
 
   const FieldTrialBasedConfig field_trials_;
   const bool send_side_bwe_with_overhead_;
+  const bool use_frame_rate_for_overhead_;
   const bool has_packet_feedback_;
 
   // TODO(holmer): Remove mutex_ once RtpVideoSender runs on the
