@@ -5,6 +5,7 @@
 [
   {
     "namespace": "contentScripts",
+    "max_manifest_version": 2,
     "types": [
       {
         "id": "RegisteredContentScriptOptions",
