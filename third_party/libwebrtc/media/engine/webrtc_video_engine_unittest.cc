@@ -692,7 +692,7 @@ void WebRtcVideoEngineTest::AssignDefaultCodec() {
   bool codec_set = false;
   for (const cricket::VideoCodec& codec : engine_codecs) {
     if (!codec_set && codec.name != "rtx" && codec.name != "red" &&
-        codec.name != "ulpfec") {
+        codec.name != "ulpfec" && codec.name != "flexfec-03") {
       default_codec_ = codec;
       codec_set = true;
     }
