@@ -106,6 +106,9 @@ Anyone with a [Google account][1] can file bugs in the Chrome and WebRTC tracker
     with the unencrypted RTP traffic. This can by replayed using the video_replay
     tool from the rtc_tools directory.
 
+  * For problem with the webcam, a dump or screenshot of the "Video Capture" tab
+    in chrome://media-internals.
+
 ### Filing a Security Bug
 
 The WebRTC team takes security very seriously. If you find a vulnerability in
