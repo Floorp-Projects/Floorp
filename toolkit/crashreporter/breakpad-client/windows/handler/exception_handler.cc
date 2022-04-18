@@ -307,14 +307,6 @@ void ExceptionHandler::Initialize(
 }
 
 ExceptionHandler::~ExceptionHandler() {
-  if (dbghelp_module_) {
-    FreeLibrary(dbghelp_module_);
-  }
-
-  if (rpcrt4_module_) {
-    FreeLibrary(rpcrt4_module_);
-  }
-
   if (handler_types_ != HANDLER_NONE) {
     EnterCriticalSection(&handler_stack_critical_section_);
 
@@ -391,6 +383,17 @@ ExceptionHandler::~ExceptionHandler() {
   // is a race condition nonetheless.
   if (InterlockedDecrement(&instance_count_) == 0) {
     DeleteCriticalSection(&handler_stack_critical_section_);
+  }
+
+  // The exception handler is not set anymore and the handler thread which
+  // could call MiniDumpWriteDump() has been shut down; it is now safe to
+  // unload these modules.
+  if (dbghelp_module_) {
+    FreeLibrary(dbghelp_module_);
+  }
+
+  if (rpcrt4_module_) {
+    FreeLibrary(rpcrt4_module_);
   }
 }
 
