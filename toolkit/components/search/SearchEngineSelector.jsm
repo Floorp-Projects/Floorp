@@ -276,17 +276,9 @@ class SearchEngineSelector {
             const engine = { ...baseConfig };
             engine.webExtension = { ...baseConfig.webExtension };
             delete engine.webExtension.locales;
-            switch (webExtensionLocale) {
-              case USER_LOCALE:
-                engine.webExtension.locale = locale;
-                break;
-              case USER_REGION:
-                engine.webExtension.locale = lcRegion;
-                break;
-              default:
-                engine.webExtension.locale = webExtensionLocale;
-                break;
-            }
+            engine.webExtension.locale = webExtensionLocale
+              .replace(USER_LOCALE, locale)
+              .replace(USER_REGION, lcRegion);
             engines.push(engine);
           }
         } else {
