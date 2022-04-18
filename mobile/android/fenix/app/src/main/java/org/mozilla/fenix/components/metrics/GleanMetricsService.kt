@@ -13,7 +13,6 @@ import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
-import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.GleanMetrics.Messaging
 import org.mozilla.fenix.ext.components
 
@@ -76,9 +75,6 @@ private val Event.wrapper: EventWrapper<*>?
             }
         )
 
-        is Event.TabSettingsOpened -> EventWrapper<NoExtraKeys>(
-            { Tabs.settingOpened.record(it) }
-        )
         is Event.SyncedTabSuggestionClicked -> EventWrapper<NoExtraKeys>(
             { SyncedTabs.syncedTabsSuggestionClicked.record(it) }
         )

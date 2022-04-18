@@ -16,8 +16,6 @@ sealed class Event {
     object HistorySearchGroupOpened : Event()
     object SearchWidgetInstalled : Event()
 
-    object TabSettingsOpened : Event()
-
     object SyncedTabSuggestionClicked : Event()
     object BookmarkSuggestionClicked : Event()
     object ClipboardSuggestionClicked : Event()

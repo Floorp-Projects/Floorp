@@ -9,11 +9,11 @@ import android.view.View
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Tabs
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.view.addToRadioGroup
@@ -38,7 +38,7 @@ class TabsSettingsFragment : PreferenceFragmentCompat() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        view.context.components.analytics.metrics.track(Event.TabSettingsOpened)
+        Tabs.settingOpened.record(NoExtras())
     }
 
     override fun onResume() {
