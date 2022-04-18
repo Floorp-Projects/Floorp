@@ -511,7 +511,7 @@ task("generateSDKBindings", type: JavaExec) {
     // We only want to generate bindings for the main framework JAR,
     // but not any of the additional android.test libraries.
     args android.bootClasspath.findAll { it.getName().startsWith('android.jar') }
-    args 16
+    args 29
     args "${topobjdir}/widget/android/bindings"
 
     // Configure the arguments at evaluation-time, not at configuration-time.

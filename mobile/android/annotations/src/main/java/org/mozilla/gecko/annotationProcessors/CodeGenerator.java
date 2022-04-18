@@ -716,7 +716,7 @@ public class CodeGenerator {
     // Unpack the tuple and extract some useful fields from the Method..
     final Constructor<?> method = annotatedConstructor.getConstructor();
     final AnnotationInfo info = annotatedConstructor.mAnnotationInfo;
-    final String wrapperName = "New";
+    final String wrapperName = info.wrapperName.equals("<init>") ? "New" : info.wrapperName;
     final String uniqueName = getUniqueMethodName(wrapperName);
     final Class<?>[] argTypes = method.getParameterTypes();
     final Class<?> returnType = cls;
