@@ -241,18 +241,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvGroupPosition(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollTo(
-    const uint64_t& aID, const uint32_t& aScrollType) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
-    nsCOMPtr<nsIContent> content = acc->GetContent();
-    nsCoreUtils::ScrollTo(presShell, content, aScrollType);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollToPoint(
     const uint64_t& aID, const uint32_t& aScrollType, const int32_t& aX,
     const int32_t& aY) {

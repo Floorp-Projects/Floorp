@@ -203,18 +203,12 @@ ia2Accessible::role(long* aRole) {
 // XXX Use MOZ_CAN_RUN_SCRIPT_BOUNDARY for now due to bug 1543294.
 MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP
 ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
-  if (!Acc()) {
+  Accessible* acc = Acc();
+  if (!acc) {
     return CO_E_OBJNOTCONNECTED;
   }
-  AccessibleWrap* acc = LocalAcc();
-  if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
-  RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
-  nsCOMPtr<nsIContent> content = acc->GetContent();
-  nsCoreUtils::ScrollTo(presShell, content, aScrollType);
-
+  acc->ScrollTo(aScrollType);
   return S_OK;
 }
 

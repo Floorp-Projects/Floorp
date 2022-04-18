@@ -155,10 +155,6 @@ GroupPos RemoteAccessible::GroupPosition() {
   return groupPos;
 }
 
-void RemoteAccessible::ScrollTo(uint32_t aScrollType) {
-  Unused << mDoc->SendScrollTo(mID, aScrollType);
-}
-
 void RemoteAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX,
                                      int32_t aY) {
   Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);

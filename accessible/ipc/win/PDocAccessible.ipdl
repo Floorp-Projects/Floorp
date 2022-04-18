@@ -132,6 +132,7 @@ child:
   async TakeFocus(uint64_t aID);
   async TakeSelection(uint64_t aID);
   async SetSelected(uint64_t aID, bool aSelected);
+  async ScrollTo(uint64_t aID, uint32_t aScrollType);
 
   /*
    * Verify the cache. Used for testing purposes.
