@@ -412,16 +412,18 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 };
 
 MediaChangeMonitor::MediaChangeMonitor(
+    PDMFactory* aPDMFactory,
     UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
     MediaDataDecoder* aDecoder, const CreateDecoderParams& aParams)
     : mChangeMonitor(std::move(aCodecChangeMonitor)),
+      mPDMFactory(aPDMFactory),
       mCurrentConfig(aParams.VideoConfig()),
       mDecoder(aDecoder),
       mParams(aParams) {}
 
 /* static */
 RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
-    PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams) {
+    PDMFactory* aPDMFactory, const CreateDecoderParams& aParams) {
   UniquePtr<CodecChangeMonitor> changeMonitor;
   const VideoInfo& currentConfig = aParams.VideoConfig();
   if (VPXDecoder::IsVPX(currentConfig.mMimeType)) {
@@ -441,31 +443,26 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
   // other params for aParams and use that going forward.
   const CreateDecoderParams updatedParams{changeMonitor->Config(), aParams};
 
-  if (!changeMonitor->CanBeInstantiated()) {
-    // nothing found yet, will try again later
-    return PlatformDecoderModule::CreateDecoderPromise::CreateAndResolve(
-        new MediaChangeMonitor(std::move(changeMonitor), nullptr,
-                               updatedParams),
-        __func__);
+  RefPtr<MediaChangeMonitor> instance = new MediaChangeMonitor(
+      aPDMFactory, std::move(changeMonitor), nullptr, updatedParams);
+
+  if (instance->mChangeMonitor->CanBeInstantiated()) {
+    RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
+        instance->CreateDecoder()->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [instance = RefPtr{instance}] {
+              return PlatformDecoderModule::CreateDecoderPromise::
+                  CreateAndResolve(instance, __func__);
+            },
+            [](const MediaResult& aError) {
+              return PlatformDecoderModule::CreateDecoderPromise::
+                  CreateAndReject(aError, __func__);
+            });
+    return p;
   }
 
-  RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
-      aPDM->AsyncCreateDecoder(updatedParams)
-          ->Then(
-              GetCurrentSerialEventTarget(), __func__,
-              [params = CreateDecoderParamsForAsync(updatedParams),
-               pdm = RefPtr{aPDM}, changeMonitor = std::move(changeMonitor)](
-                  RefPtr<MediaDataDecoder>&& aDecoder) mutable {
-                RefPtr<MediaDataDecoder> decoder = new MediaChangeMonitor(
-                    std::move(changeMonitor), aDecoder, params);
-                return PlatformDecoderModule::CreateDecoderPromise::
-                    CreateAndResolve(decoder, __func__);
-              },
-              [](MediaResult aError) {
-                return PlatformDecoderModule::CreateDecoderPromise::
-                    CreateAndReject(aError, __func__);
-              });
-  return p;
+  return PlatformDecoderModule::CreateDecoderPromise::CreateAndResolve(
+      instance, __func__);
 }
 
 MediaChangeMonitor::~MediaChangeMonitor() = default;
@@ -659,12 +656,9 @@ void MediaChangeMonitor::SetSeekThreshold(const media::TimeUnit& aTime) {
 
 RefPtr<MediaChangeMonitor::CreateDecoderPromise>
 MediaChangeMonitor::CreateDecoder() {
-  MOZ_ASSERT(mThread && mThread->IsOnCurrentThread());
-
   mCurrentConfig = *mChangeMonitor->Config().GetAsVideoInfo();
-  RefPtr<PDMFactory> factory = new PDMFactory();
   RefPtr<CreateDecoderPromise> p =
-      factory
+      mPDMFactory
           ->CreateDecoder(
               {mCurrentConfig, mParams, CreateDecoderParams::NoWrapper(true)})
           ->Then(
@@ -685,6 +679,8 @@ MediaChangeMonitor::CreateDecoder() {
 }
 
 MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
+  MOZ_ASSERT(mThread && mThread->IsOnCurrentThread());
+
   MediaResult rv = mChangeMonitor->CheckForChange(aSample);
   if (!NS_SUCCEEDED(rv) && rv != NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
     return rv;

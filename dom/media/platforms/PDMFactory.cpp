@@ -424,7 +424,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
        VPXDecoder::IsVPX(config.mMimeType) ||
        AOMDecoder::IsAV1(config.mMimeType)) &&
       !aParams.mUseNullDecoder.mUse && !aParams.mNoWrapper.mDontUseWrapper) {
-    return MediaChangeMonitor::Create(aPDM, aParams);
+    return MediaChangeMonitor::Create(this, aParams);
   }
   return aPDM->AsyncCreateDecoder(aParams);
 }
