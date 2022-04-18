@@ -79,18 +79,21 @@ struct SetPassThrough : public ControlMessage {
 };
 
 struct SetRequestedInputChannelCount : public ControlMessage {
+  const CubebUtils::AudioDeviceID mDeviceId;
   const RefPtr<AudioInputProcessing> mInputProcessing;
   const uint32_t mChannelCount;
 
   SetRequestedInputChannelCount(MediaTrack* aTrack,
+                                CubebUtils::AudioDeviceID aDeviceId,
                                 AudioInputProcessing* aInputProcessing,
                                 uint32_t aChannelCount)
       : ControlMessage(aTrack),
+        mDeviceId(aDeviceId),
         mInputProcessing(aInputProcessing),
         mChannelCount(aChannelCount) {}
   void Run() override {
     mInputProcessing->SetRequestedInputChannelCount(mTrack->GraphImpl(),
-                                                    mChannelCount);
+                                                    mDeviceId, mChannelCount);
   }
 };
 #endif  // MOZ_WEBRTC
@@ -505,6 +508,628 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackErrorCallback)
   RefPtr<SmartMockCubebStream> destroyedStream =
       WaitFor(cubeb->StreamDestroyEvent());
   EXPECT_EQ(destroyedStream.get(), driverStream.get());
+}
+
+class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
+ public:
+  static TestDeviceInputConsumerTrack* Create(MediaTrackGraph* aGraph) {
+    MOZ_ASSERT(NS_IsMainThread());
+    TestDeviceInputConsumerTrack* track =
+        new TestDeviceInputConsumerTrack(aGraph->GraphRate());
+    aGraph->AddTrack(track);
+    return track;
+  }
+
+  void Destroy() {
+    MOZ_ASSERT(NS_IsMainThread());
+    DisconnectDeviceInput();
+    DeviceInputConsumerTrack::Destroy();
+  }
+
+  void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override {
+    if (aFrom >= aTo) {
+      return;
+    }
+
+    if (mInputs.IsEmpty()) {
+      GetData<AudioSegment>()->AppendNullData(aTo - aFrom);
+    } else {
+      MOZ_ASSERT(mInputs.Length() == 1);
+      AudioSegment data;
+      DeviceInputConsumerTrack::GetInputSourceData(data, mInputs[0], aFrom,
+                                                   aTo);
+      GetData<AudioSegment>()->AppendFrom(&data);
+    }
+  };
+
+  uint32_t NumberOfChannels() const override {
+    if (mInputs.IsEmpty()) {
+      return 0;
+    }
+    DeviceInputTrack* t = mInputs[0]->GetSource()->AsDeviceInputTrack();
+    MOZ_ASSERT(t);
+    return t->NumberOfChannels();
+  }
+
+ private:
+  explicit TestDeviceInputConsumerTrack(TrackRate aSampleRate)
+      : DeviceInputConsumerTrack(aSampleRate) {}
+};
+
+TEST(TestAudioTrackGraph, DeviceChangedCallback)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraphImpl* graphImpl = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
+      GetMainThreadSerialEventTarget());
+
+  class TestAudioDataListener : public AudioDataListener {
+   public:
+    TestAudioDataListener(uint32_t aChannelCount, bool aIsVoice)
+        : mChannelCount(aChannelCount),
+          mIsVoice(aIsVoice),
+          mDeviceChangedCount(0) {}
+
+    uint32_t RequestedInputChannelCount(MediaTrackGraphImpl* aGraph) override {
+      return mChannelCount;
+    }
+    bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
+      return mIsVoice;
+    };
+    void DeviceChanged(MediaTrackGraphImpl* aGraph) override {
+      ++mDeviceChangedCount;
+    }
+    void Disconnect(MediaTrackGraphImpl* aGraph) override{/* Ignored */};
+    uint32_t DeviceChangedCount() { return mDeviceChangedCount; }
+
+   private:
+    ~TestAudioDataListener() = default;
+    const uint32_t mChannelCount;
+    const bool mIsVoice;
+    std::atomic<uint32_t> mDeviceChangedCount;
+  };
+
+  // Create a full-duplex AudioCallbackDriver by creating a NativeInputTrack.
+  const CubebUtils::AudioDeviceID device1 = (CubebUtils::AudioDeviceID)1;
+  RefPtr<TestAudioDataListener> listener1 = new TestAudioDataListener(1, false);
+  RefPtr<TestDeviceInputConsumerTrack> track1 =
+      TestDeviceInputConsumerTrack::Create(graphImpl);
+  track1->ConnectDeviceInput(device1, listener1.get(), PRINCIPAL_HANDLE_NONE);
+
+  EXPECT_TRUE(track1->ConnectToNativeDevice());
+  EXPECT_FALSE(track1->ConnectToNonNativeDevice());
+  auto started =
+      Invoke([&] { return graphImpl->NotifyWhenDeviceStarted(track1); });
+  RefPtr<SmartMockCubebStream> stream1 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream1->mHasInput);
+  EXPECT_TRUE(stream1->mHasOutput);
+  EXPECT_EQ(stream1->GetInputDeviceID(), device1);
+  Unused << WaitFor(started);
+
+  // Create a NonNativeInputTrack, and make sure its DeviceChangeCallback works.
+  const CubebUtils::AudioDeviceID device2 = (CubebUtils::AudioDeviceID)2;
+  RefPtr<TestAudioDataListener> listener2 = new TestAudioDataListener(2, true);
+  RefPtr<TestDeviceInputConsumerTrack> track2 =
+      TestDeviceInputConsumerTrack::Create(graphImpl);
+  track2->ConnectDeviceInput(device2, listener2.get(), PRINCIPAL_HANDLE_NONE);
+
+  EXPECT_FALSE(track2->ConnectToNativeDevice());
+  EXPECT_TRUE(track2->ConnectToNonNativeDevice());
+  RefPtr<SmartMockCubebStream> stream2 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_FALSE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+
+  // Produce a device-changed event for the NonNativeInputTrack.
+  DispatchFunction([&] { stream2->ForceDeviceChanged(); });
+  WaitFor(stream2->DeviceChangeForcedEvent());
+
+  // Produce a device-changed event for the NativeInputTrack.
+  DispatchFunction([&] { stream1->ForceDeviceChanged(); });
+  WaitFor(stream1->DeviceChangeForcedEvent());
+
+  // Destroy the NonNativeInputTrack.
+  DispatchFunction([&] {
+    track2->DisconnectDeviceInput();
+    track2->Destroy();
+  });
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), stream2.get());
+
+  // Make sure we only have one device-changed event for the NativeInputTrack.
+  EXPECT_EQ(listener2->DeviceChangedCount(), 1U);
+
+  // Destroy the NativeInputTrack.
+  DispatchFunction([&] {
+    track1->DisconnectDeviceInput();
+    track1->Destroy();
+  });
+  destroyedStream = WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), stream1.get());
+
+  // Make sure we only have one device-changed event for the NativeInputTrack.
+  EXPECT_EQ(listener1->DeviceChangedCount(), 1U);
+}
+
+// The native audio stream (a.k.a. GraphDriver) and the non-native audio stream
+// should always be the same as the max requested input channel of its paired
+// DeviceInputTracks. This test checks if the audio stream paired with the
+// DeviceInputTrack will follow the max requested input channel or not.
+//
+// The main focus for this test is to make sure DeviceInputTrack::OpenAudio and
+// ::CloseAudio works as what we expect. Besides, This test also confirms
+// MediaTrackGraphImpl::ReevaluateInputDevice works correctly by using a
+// test-only AudioDataListener.
+//
+// This test is pretty similar to RestartAudioIfProcessingMaxChannelCountChanged
+// below, which tests the same thing but using AudioProcessingTrack.
+// AudioProcessingTrack is the consumer of the  DeviceInputTrack used in wild.
+// It has its own customized AudioDataListener. However, it only tests when
+// MOZ_WEBRTC is defined.
+TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+  auto unforcer = WaitFor(cubeb->ForceAudioThread()).unwrap();
+  Unused << unforcer;
+
+  MediaTrackGraphImpl* graphImpl = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
+      GetMainThreadSerialEventTarget());
+
+  // A test-only AudioDataListener that simulates AudioInputProcessing's setter
+  // and getter for the input channel count.
+  class TestAudioDataListener : public AudioDataListener {
+   public:
+    TestAudioDataListener(uint32_t aChannelCount, bool aIsVoice)
+        : mChannelCount(aChannelCount), mIsVoice(aIsVoice) {}
+    // Main thread API
+    void SetInputChannelCount(MediaTrackGraphImpl* aGraph,
+                              CubebUtils::AudioDeviceID aDevice,
+                              uint32_t aChannelCount) {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      struct Message : public ControlMessage {
+        MediaTrackGraphImpl* mGraph;
+        TestAudioDataListener* mListener;
+        CubebUtils::AudioDeviceID mDevice;
+        uint32_t mChannelCount;
+
+        Message(MediaTrackGraphImpl* aGraph, TestAudioDataListener* aListener,
+                CubebUtils::AudioDeviceID aDevice, uint32_t aChannelCount)
+            : ControlMessage(nullptr),
+              mGraph(aGraph),
+              mListener(aListener),
+              mDevice(aDevice),
+              mChannelCount(aChannelCount) {}
+        void Run() override {
+          mListener->mChannelCount = mChannelCount;
+          mGraph->ReevaluateInputDevice(mDevice);
+        }
+      };
+
+      aGraph->AppendMessage(
+          MakeUnique<Message>(aGraph, this, aDevice, aChannelCount));
+    }
+    // Graph thread APIs: AudioDataListenerInterface implementations.
+    uint32_t RequestedInputChannelCount(MediaTrackGraphImpl* aGraph) override {
+      MOZ_ASSERT(aGraph->OnGraphThread());
+      return mChannelCount;
+    }
+    bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
+      return mIsVoice;
+    };
+    void DeviceChanged(MediaTrackGraphImpl* aGraph) override { /* Ignored */
+    }
+    void Disconnect(MediaTrackGraphImpl* aGraph) override{/* Ignored */};
+
+   private:
+    ~TestAudioDataListener() = default;
+
+    // Graph thread-only.
+    uint32_t mChannelCount;
+    // Any thread.
+    const bool mIsVoice;
+  };
+
+  // Request a new input channel count and expect to have a new stream.
+  auto setNewChannelCount = [&](const RefPtr<TestAudioDataListener>& aListener,
+                                RefPtr<SmartMockCubebStream>& aStream,
+                                uint32_t aChannelCount) {
+    ASSERT_TRUE(!!aListener);
+    ASSERT_TRUE(!!aStream);
+    ASSERT_TRUE(aStream->mHasInput);
+    ASSERT_NE(aChannelCount, 0U);
+
+    const CubebUtils::AudioDeviceID device = aStream->GetInputDeviceID();
+
+    bool destroyed = false;
+    MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
+        AbstractThread::GetCurrent(),
+        [&](const RefPtr<SmartMockCubebStream>& aDestroyed) {
+          destroyed = aDestroyed.get() == aStream.get();
+        });
+
+    RefPtr<SmartMockCubebStream> newStream;
+    MediaEventListener restartListener = cubeb->StreamInitEvent().Connect(
+        AbstractThread::GetCurrent(),
+        [&](const RefPtr<SmartMockCubebStream>& aCreated) {
+          newStream = aCreated;
+        });
+
+    DispatchFunction([&] {
+      aListener->SetInputChannelCount(graphImpl, device, aChannelCount);
+    });
+
+    SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+        "TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged) #1"_ns,
+        [&] { return destroyed && newStream; });
+
+    destroyListener.Disconnect();
+    restartListener.Disconnect();
+
+    aStream = newStream;
+  };
+
+  // Open a new track and expect to have a new stream.
+  auto openTrack = [&](RefPtr<SmartMockCubebStream>& aCurrentStream,
+                       RefPtr<TestDeviceInputConsumerTrack>& aTrack,
+                       const RefPtr<TestAudioDataListener>& aListener,
+                       CubebUtils::AudioDeviceID aDevice) {
+    ASSERT_TRUE(!!aCurrentStream);
+    ASSERT_TRUE(aCurrentStream->mHasInput);
+    ASSERT_TRUE(!aTrack);
+    ASSERT_TRUE(!!aListener);
+
+    bool destroyed = false;
+    MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
+        AbstractThread::GetCurrent(),
+        [&](const RefPtr<SmartMockCubebStream>& aDestroyed) {
+          destroyed = aDestroyed.get() == aCurrentStream.get();
+        });
+
+    RefPtr<SmartMockCubebStream> newStream;
+    MediaEventListener restartListener = cubeb->StreamInitEvent().Connect(
+        AbstractThread::GetCurrent(),
+        [&](const RefPtr<SmartMockCubebStream>& aCreated) {
+          newStream = aCreated;
+        });
+
+    aTrack = TestDeviceInputConsumerTrack::Create(graphImpl);
+    aTrack->ConnectDeviceInput(aDevice, aListener.get(), PRINCIPAL_HANDLE_NONE);
+
+    SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+        "TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged) #2"_ns,
+        [&] { return destroyed && newStream; });
+
+    destroyListener.Disconnect();
+    restartListener.Disconnect();
+
+    aCurrentStream = newStream;
+  };
+
+  // Test for the native input device first then non-native device. The
+  // non-native device will be destroyed before the native device in case of
+  // causing a driver switching.
+
+  // Test for the native device.
+  const CubebUtils::AudioDeviceID nativeDevice = (CubebUtils::AudioDeviceID)1;
+  RefPtr<TestDeviceInputConsumerTrack> track1;
+  RefPtr<TestAudioDataListener> listener1;
+  RefPtr<SmartMockCubebStream> nativeStream;
+  RefPtr<TestDeviceInputConsumerTrack> track2;
+  RefPtr<TestAudioDataListener> listener2;
+  {
+    // Open a 1-channel NativeInputTrack.
+    listener1 = new TestAudioDataListener(1, false);
+    track1 = TestDeviceInputConsumerTrack::Create(graphImpl);
+    track1->ConnectDeviceInput(nativeDevice, listener1.get(),
+                               PRINCIPAL_HANDLE_NONE);
+
+    EXPECT_TRUE(track1->ConnectToNativeDevice());
+    EXPECT_FALSE(track1->ConnectToNonNativeDevice());
+    auto started =
+        Invoke([&] { return graphImpl->NotifyWhenDeviceStarted(track1); });
+    nativeStream = WaitFor(cubeb->StreamInitEvent());
+    EXPECT_TRUE(nativeStream->mHasInput);
+    EXPECT_TRUE(nativeStream->mHasOutput);
+    EXPECT_EQ(nativeStream->GetInputDeviceID(), nativeDevice);
+    Unused << WaitFor(started);
+
+    // Open a 2-channel NativeInputTrack and wait for a new driver since the
+    // max-channel for the native device becomes 2 now.
+    listener2 = new TestAudioDataListener(2, false);
+    openTrack(nativeStream, track2, listener2, nativeDevice);
+    EXPECT_EQ(nativeStream->InputChannels(), 2U);
+
+    // Set the second NativeInputTrack to 1-channel and wait for a new driver
+    // since the max-channel for the native device becomes 1 now.
+    setNewChannelCount(listener2, nativeStream, 1);
+    EXPECT_EQ(nativeStream->InputChannels(), 1U);
+
+    // Set the first NativeInputTrack to 2-channel and wait for a new driver
+    // since the max input channel for the native device becomes 2 now.
+    setNewChannelCount(listener1, nativeStream, 2);
+    EXPECT_EQ(nativeStream->InputChannels(), 2U);
+  }
+
+  // Test for the non-native device.
+  {
+    const CubebUtils::AudioDeviceID nonNativeDevice =
+        (CubebUtils::AudioDeviceID)2;
+
+    // Open a 1-channel NonNativeInputTrack.
+    RefPtr<TestAudioDataListener> listener3 =
+        new TestAudioDataListener(1, false);
+    RefPtr<TestDeviceInputConsumerTrack> track3 =
+        TestDeviceInputConsumerTrack::Create(graphImpl);
+    track3->ConnectDeviceInput(nonNativeDevice, listener3.get(),
+                               PRINCIPAL_HANDLE_NONE);
+    EXPECT_FALSE(track3->ConnectToNativeDevice());
+    EXPECT_TRUE(track3->ConnectToNonNativeDevice());
+
+    RefPtr<SmartMockCubebStream> nonNativeStream =
+        WaitFor(cubeb->StreamInitEvent());
+    EXPECT_TRUE(nonNativeStream->mHasInput);
+    EXPECT_FALSE(nonNativeStream->mHasOutput);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), nonNativeDevice);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 1U);
+
+    // Open a 2-channel NonNativeInputTrack and wait for a new stream since
+    // the max-channel for the non-native device becomes 2 now.
+    RefPtr<TestAudioDataListener> listener4 =
+        new TestAudioDataListener(2, false);
+    RefPtr<TestDeviceInputConsumerTrack> track4;
+    openTrack(nonNativeStream, track4, listener4, nonNativeDevice);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 2U);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), nonNativeDevice);
+
+    // Set the second NonNativeInputTrack to 1-channel and wait for a new
+    // driver since the max-channel for the non-native device becomes 1 now.
+    setNewChannelCount(listener4, nonNativeStream, 1);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 1U);
+
+    // Set the first NonNativeInputTrack to 2-channel and wait for a new
+    // driver since the max input channel for the non-native device becomes 2
+    // now.
+    setNewChannelCount(listener3, nonNativeStream, 2);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 2U);
+
+    // Close the second NonNativeInputTrack (1-channel) then the first one
+    // (2-channel) so we won't result in another stream creation.
+    DispatchFunction([&] {
+      track4->DisconnectDeviceInput();
+      track4->Destroy();
+    });
+    DispatchFunction([&] {
+      track3->DisconnectDeviceInput();
+      track3->Destroy();
+    });
+    RefPtr<SmartMockCubebStream> destroyedStream =
+        WaitFor(cubeb->StreamDestroyEvent());
+    EXPECT_EQ(destroyedStream.get(), nonNativeStream.get());
+  }
+
+  // Tear down for the native device.
+  {
+    // Close the second NativeInputTrack (1-channel) then the first one
+    // (2-channel) so we won't have driver switching.
+    DispatchFunction([&] {
+      track2->DisconnectDeviceInput();
+      track2->Destroy();
+    });
+    DispatchFunction([&] {
+      track1->DisconnectDeviceInput();
+      track1->Destroy();
+    });
+    RefPtr<SmartMockCubebStream> destroyedStream =
+        WaitFor(cubeb->StreamDestroyEvent());
+    EXPECT_EQ(destroyedStream.get(), nativeStream.get());
+  }
+}
+
+// This test is pretty similar to SwitchNativeAudioProcessingTrack below, which
+// tests the same thing but using AudioProcessingTrack. AudioProcessingTrack is
+// the consumer of the  DeviceInputTrack used in wild. It has its own customized
+// AudioDataListener. However, it only tests when MOZ_WEBRTC is defined.
+TEST(TestAudioTrackGraph, SwitchNativeInputDevice)
+{
+  class TestAudioDataListener : public AudioDataListener {
+   public:
+    TestAudioDataListener(uint32_t aChannelCount, bool aIsVoice)
+        : mChannelCount(aChannelCount),
+          mIsVoice(aIsVoice),
+          mDeviceChangedCount(0) {}
+
+    uint32_t RequestedInputChannelCount(MediaTrackGraphImpl* aGraph) override {
+      return mChannelCount;
+    }
+    bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
+      return mIsVoice;
+    };
+    void DeviceChanged(MediaTrackGraphImpl* aGraph) override {
+      ++mDeviceChangedCount;
+    }
+    void Disconnect(MediaTrackGraphImpl* aGraph) override{/* Ignored */};
+    uint32_t DeviceChangedCount() { return mDeviceChangedCount; }
+
+   private:
+    ~TestAudioDataListener() = default;
+    const uint32_t mChannelCount;
+    const bool mIsVoice;
+    std::atomic<uint32_t> mDeviceChangedCount;
+  };
+
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraphImpl* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
+      GetMainThreadSerialEventTarget());
+
+  auto switchNativeDevice =
+      [&](RefPtr<SmartMockCubebStream>&& aCurrentNativeStream,
+          RefPtr<TestDeviceInputConsumerTrack>& aCurrentNativeTrack,
+          RefPtr<SmartMockCubebStream>& aNextNativeStream,
+          RefPtr<TestDeviceInputConsumerTrack>& aNextNativeTrack) {
+        ASSERT_TRUE(aCurrentNativeStream->mHasInput);
+        ASSERT_TRUE(aCurrentNativeStream->mHasOutput);
+        ASSERT_TRUE(aNextNativeStream->mHasInput);
+        ASSERT_FALSE(aNextNativeStream->mHasOutput);
+
+        std::cerr << "Switching native input from device "
+                  << aCurrentNativeStream->GetInputDeviceID() << " to "
+                  << aNextNativeStream->GetInputDeviceID() << std::endl;
+
+        uint32_t destroyed = 0;
+        MediaEventListener destroyListener =
+            cubeb->StreamDestroyEvent().Connect(
+                AbstractThread::GetCurrent(),
+                [&](const RefPtr<SmartMockCubebStream>& aDestroyed) {
+                  if (aDestroyed.get() == aCurrentNativeStream.get() ||
+                      aDestroyed.get() == aNextNativeStream.get()) {
+                    std::cerr << "cubeb stream " << aDestroyed.get()
+                              << " (device " << aDestroyed->GetInputDeviceID()
+                              << ") has been destroyed" << std::endl;
+                    destroyed += 1;
+                  }
+                });
+
+        RefPtr<SmartMockCubebStream> newStream;
+        MediaEventListener restartListener = cubeb->StreamInitEvent().Connect(
+            AbstractThread::GetCurrent(),
+            [&](const RefPtr<SmartMockCubebStream>& aCreated) {
+              // Make sure new stream has input, to prevent from getting a
+              // temporary output-only AudioCallbackDriver after closing current
+              // native device but before setting a new native input.
+              if (aCreated->mHasInput) {
+                ASSERT_TRUE(aCreated->mHasOutput);
+                newStream = aCreated;
+              }
+            });
+
+        std::cerr << "Close device " << aCurrentNativeStream->GetInputDeviceID()
+                  << std::endl;
+        DispatchFunction([&] {
+          aCurrentNativeTrack->DisconnectDeviceInput();
+          aCurrentNativeTrack->Destroy();
+        });
+
+        std::cerr << "Wait for the switching" << std::endl;
+        SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+            "TEST(TestAudioTrackGraph, SwitchNativeInputDevice)"_ns,
+            [&] { return destroyed >= 2 && newStream; });
+
+        destroyListener.Disconnect();
+        restartListener.Disconnect();
+
+        aCurrentNativeStream = nullptr;
+        aNextNativeStream = newStream;
+
+        std::cerr << "Now the native input is device "
+                  << aNextNativeStream->GetInputDeviceID() << std::endl;
+      };
+
+  // Open a DeviceInputConsumerTrack for device 1.
+  const CubebUtils::AudioDeviceID device1 = (CubebUtils::AudioDeviceID)1;
+  RefPtr<TestDeviceInputConsumerTrack> track1 =
+      TestDeviceInputConsumerTrack::Create(graph);
+  RefPtr<TestAudioDataListener> listener1 = new TestAudioDataListener(1, false);
+  track1->ConnectDeviceInput(device1, listener1, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track1->DeviceId().value(), device1);
+
+  auto started = Invoke([&] { return graph->NotifyWhenDeviceStarted(track1); });
+
+  RefPtr<SmartMockCubebStream> stream1 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream1->mHasInput);
+  EXPECT_TRUE(stream1->mHasOutput);
+  EXPECT_EQ(stream1->InputChannels(), 1U);
+  EXPECT_EQ(stream1->GetInputDeviceID(), device1);
+  Unused << WaitFor(started);
+  std::cerr << "Device " << device1 << " is opened (stream " << stream1.get()
+            << ")" << std::endl;
+
+  // Open a DeviceInputConsumerTrack for device 2.
+  const CubebUtils::AudioDeviceID device2 = (CubebUtils::AudioDeviceID)2;
+  RefPtr<TestDeviceInputConsumerTrack> track2 =
+      TestDeviceInputConsumerTrack::Create(graph);
+  RefPtr<TestAudioDataListener> listener2 = new TestAudioDataListener(2, false);
+  track2->ConnectDeviceInput(device2, listener2, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track2->DeviceId().value(), device2);
+
+  RefPtr<SmartMockCubebStream> stream2 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_FALSE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->InputChannels(), 2U);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+  std::cerr << "Device " << device2 << " is opened (stream " << stream2.get()
+            << ")" << std::endl;
+
+  // Open a DeviceInputConsumerTrack for device 3.
+  const CubebUtils::AudioDeviceID device3 = (CubebUtils::AudioDeviceID)3;
+  RefPtr<TestDeviceInputConsumerTrack> track3 =
+      TestDeviceInputConsumerTrack::Create(graph);
+  RefPtr<TestAudioDataListener> listener3 = new TestAudioDataListener(1, false);
+  track3->ConnectDeviceInput(device3, listener3, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track3->DeviceId().value(), device3);
+
+  RefPtr<SmartMockCubebStream> stream3 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream3->mHasInput);
+  EXPECT_FALSE(stream3->mHasOutput);
+  EXPECT_EQ(stream3->InputChannels(), 1U);
+  EXPECT_EQ(stream3->GetInputDeviceID(), device3);
+  std::cerr << "Device " << device3 << " is opened (stream " << stream3.get()
+            << ")" << std::endl;
+
+  // Close device 1, so the native input device is switched from device 1 to
+  // device 2.
+  switchNativeDevice(std::move(stream1), track1, stream2, track2);
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_TRUE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->InputChannels(), 2U);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+  {
+    NativeInputTrack* native =
+        track2->GraphImpl()->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!!native);
+    EXPECT_EQ(native->mDeviceId, device2);
+  }
+
+  // Close device 2, so the native input device is switched from device 2 to
+  // device 3.
+  switchNativeDevice(std::move(stream2), track2, stream3, track3);
+  EXPECT_TRUE(stream3->mHasInput);
+  EXPECT_TRUE(stream3->mHasOutput);
+  EXPECT_EQ(stream3->InputChannels(), 1U);
+  EXPECT_EQ(stream3->GetInputDeviceID(), device3);
+  {
+    NativeInputTrack* native =
+        track3->GraphImpl()->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!!native);
+    EXPECT_EQ(native->mDeviceId, device3);
+  }
+
+  // Clean up.
+  std::cerr << "Close device " << device3 << std::endl;
+  DispatchFunction([&] {
+    track3->DisconnectDeviceInput();
+    track3->Destroy();
+  });
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), stream3.get());
+  {
+    auto* graphImpl = static_cast<MediaTrackGraphImpl*>(graph);
+    NativeInputTrack* native = graphImpl->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!native);
+  }
+  std::cerr << "No native input now" << std::endl;
 }
 
 #ifdef MOZ_WEBRTC
@@ -943,34 +1568,56 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
       MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
       GetMainThreadSerialEventTarget());
 
-  // Open a 2-channel input stream.
-  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
-  RefPtr<AudioProcessingTrack> track = AudioProcessingTrack::Create(graph);
-  RefPtr<AudioInputProcessing> listener = new AudioInputProcessing(2);
-  track->SetInputProcessing(listener);
-  track->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track, listener, true));
-  track->GraphImpl()->AppendMessage(
-      MakeUnique<StartInputProcessing>(track, listener));
-  track->ConnectDeviceInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
-  EXPECT_EQ(track->DeviceId().value(), deviceId);
+  // Open a 2-channel native input stream.
+  const CubebUtils::AudioDeviceID device1 = (CubebUtils::AudioDeviceID)1;
+  RefPtr<AudioProcessingTrack> track1 = AudioProcessingTrack::Create(graph);
+  RefPtr<AudioInputProcessing> listener1 = new AudioInputProcessing(2);
+  track1->SetInputProcessing(listener1);
+  track1->GraphImpl()->AppendMessage(
+      MakeUnique<SetPassThrough>(track1, listener1, true));
+  track1->GraphImpl()->AppendMessage(
+      MakeUnique<StartInputProcessing>(track1, listener1));
+  track1->ConnectDeviceInput(device1, listener1, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track1->DeviceId().value(), device1);
 
-  auto started = Invoke([&] { return graph->NotifyWhenDeviceStarted(track); });
+  auto started = Invoke([&] { return graph->NotifyWhenDeviceStarted(track1); });
 
-  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
-  EXPECT_TRUE(stream->mHasInput);
-  EXPECT_TRUE(stream->mHasOutput);
-  EXPECT_EQ(stream->InputChannels(), 2U);
+  RefPtr<SmartMockCubebStream> stream1 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream1->mHasInput);
+  EXPECT_TRUE(stream1->mHasOutput);
+  EXPECT_EQ(stream1->InputChannels(), 2U);
+  EXPECT_EQ(stream1->GetInputDeviceID(), device1);
   Unused << WaitFor(started);
 
-  // Request an input channel count of 1. This should re-create the input stream
+  // Open a 1-channel non-native input stream.
+  const CubebUtils::AudioDeviceID device2 = (CubebUtils::AudioDeviceID)2;
+  RefPtr<AudioProcessingTrack> track2 = AudioProcessingTrack::Create(graph);
+  RefPtr<AudioInputProcessing> listener2 = new AudioInputProcessing(1);
+  track2->SetInputProcessing(listener2);
+  track2->GraphImpl()->AppendMessage(
+      MakeUnique<SetPassThrough>(track2, listener2, true));
+  track2->GraphImpl()->AppendMessage(
+      MakeUnique<StartInputProcessing>(track2, listener2));
+  track2->ConnectDeviceInput(device2, listener2, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track2->DeviceId().value(), device2);
+
+  RefPtr<SmartMockCubebStream> stream2 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_FALSE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->InputChannels(), 1U);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+
+  // Request a new input channel count. This should re-create new input stream
   // accordingly.
-  {
+  auto setNewChannelCount = [&](const RefPtr<AudioProcessingTrack> aTrack,
+                                const RefPtr<AudioInputProcessing>& aListener,
+                                RefPtr<SmartMockCubebStream>& aStream,
+                                uint32_t aChannelCount) {
     bool destroyed = false;
     MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
         AbstractThread::GetCurrent(),
         [&](const RefPtr<SmartMockCubebStream>& aDestroyed) {
-          destroyed = aDestroyed.get() == stream.get();
+          destroyed = aDestroyed.get() == aStream.get();
         });
 
     RefPtr<SmartMockCubebStream> newStream;
@@ -981,8 +1628,9 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
         });
 
     DispatchFunction([&] {
-      track->GraphImpl()->AppendMessage(
-          MakeUnique<SetRequestedInputChannelCount>(track, listener, 1));
+      aTrack->GraphImpl()->AppendMessage(
+          MakeUnique<SetRequestedInputChannelCount>(aTrack, *aTrack->DeviceId(),
+                                                    aListener, aChannelCount));
     });
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
@@ -992,28 +1640,54 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
     destroyListener.Disconnect();
     restartListener.Disconnect();
 
-    stream = newStream;
+    aStream = newStream;
+  };
 
-    EXPECT_TRUE(stream->mHasInput);
-    EXPECT_EQ(stream->InputChannels(), 1U);
-  }
+  // Set the native input stream's input channel count to 1.
+  setNewChannelCount(track1, listener1, stream1, 1);
+  EXPECT_TRUE(stream1->mHasInput);
+  EXPECT_TRUE(stream1->mHasOutput);
+  EXPECT_EQ(stream1->InputChannels(), 1U);
+  EXPECT_EQ(stream1->GetInputDeviceID(), device1);
 
-  // Clean up.
+  // Set the non-native input stream's input channel count to 2.
+  setNewChannelCount(track2, listener2, stream2, 2);
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_FALSE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->InputChannels(), 2U);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+
+  // Close the non-native input stream.
   DispatchFunction([&] {
-    track->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(track, listener));
-    track->DisconnectDeviceInput();
-    track->Destroy();
+    track2->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(track2, listener2));
+    track2->DisconnectDeviceInput();
+    track2->Destroy();
   });
   RefPtr<SmartMockCubebStream> destroyed = WaitFor(cubeb->StreamDestroyEvent());
-  EXPECT_EQ(destroyed.get(), stream.get());
+  EXPECT_EQ(destroyed.get(), stream2.get());
+
+  // Close the native input stream.
+  DispatchFunction([&] {
+    track1->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(track1, listener1));
+    track1->DisconnectDeviceInput();
+    track1->Destroy();
+  });
+  destroyed = WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyed.get(), stream1.get());
 }
 
-// The GraphDriver's input channel count is always the same as the max input
-// channel among the GraphDriver's AudioProcessingTracks. This test checks if
-// the GraphDriver is switched when the max input channel among the
-// AudioProcessingTracks change.
-TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
+// The native audio stream (a.k.a. GraphDriver) and the non-native audio stream
+// should always be the same as the max requested input channel of its paired
+// AudioProcessingTracks. This test checks if the audio stream paired with the
+// AudioProcessingTrack will follow the max requested input channel or not.
+//
+// This test is pretty similar to RestartAudioIfMaxChannelCountChanged above,
+// which makes sure the related DeviceInputTrack operations for the test here
+// works correctly. Instead of using a test-only AudioDataListener, we use
+// AudioInputProcessing here to simulate the real world use case.
+TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged)
 {
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
@@ -1036,6 +1710,8 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     ASSERT_TRUE(aStream->mHasInput);
     ASSERT_NE(aChannelCount, 0U);
 
+    const CubebUtils::AudioDeviceID device = *aTrack->DeviceId();
+
     bool destroyed = false;
     MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
         AbstractThread::GetCurrent(),
@@ -1052,12 +1728,12 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
 
     DispatchFunction([&] {
       aTrack->GraphImpl()->AppendMessage(
-          MakeUnique<SetRequestedInputChannelCount>(aTrack, aListener,
+          MakeUnique<SetRequestedInputChannelCount>(aTrack, device, aListener,
                                                     aChannelCount));
     });
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged) #1"_ns,
+        "TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged) #1"_ns,
         [&] { return destroyed && newStream; });
 
     destroyListener.Disconnect();
@@ -1105,7 +1781,7 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     });
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-        "TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged) #2"_ns,
+        "TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged) #2"_ns,
         [&] { return destroyed && newStream; });
 
     destroyListener.Disconnect();
@@ -1114,61 +1790,144 @@ TEST(TestAudioTrackGraph, SwitchingDriverIfMaxChannelCountChanged)
     aCurrentStream = newStream;
   };
 
-  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
+  // Test for the native input device first then non-native device. The
+  // non-native device will be destroyed before the native device in case of
+  // causing a native-device-switching.
 
-  // Open a 1-channel AudioProcessingTrack.
-  RefPtr<AudioProcessingTrack> track1 = AudioProcessingTrack::Create(graph);
-  RefPtr<AudioInputProcessing> listener1 = new AudioInputProcessing(1);
-  track1->SetInputProcessing(listener1);
-  track1->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track1, listener1, true));
-  track1->GraphImpl()->AppendMessage(
-      MakeUnique<StartInputProcessing>(track1, listener1));
-  track1->ConnectDeviceInput(deviceId, listener1, PRINCIPAL_HANDLE_NONE);
-  EXPECT_EQ(track1->DeviceId().value(), deviceId);
-
-  auto started = Invoke([&] { return graph->NotifyWhenDeviceStarted(track1); });
-
-  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
-  EXPECT_TRUE(stream->mHasInput);
-  EXPECT_TRUE(stream->mHasOutput);
-  EXPECT_EQ(stream->InputChannels(), 1U);
-  Unused << WaitFor(started);
-
-  // Open a 2-channel AudioProcessingTrack and wait for a new driver since the
-  // max-channel becomes 2 now.
+  // Test for the native device.
+  const CubebUtils::AudioDeviceID nativeDevice = (CubebUtils::AudioDeviceID)1;
+  RefPtr<AudioProcessingTrack> track1;
+  RefPtr<AudioInputProcessing> listener1;
+  RefPtr<SmartMockCubebStream> nativeStream;
   RefPtr<AudioProcessingTrack> track2;
   RefPtr<AudioInputProcessing> listener2;
-  openTrack(stream, track2, listener2, deviceId, 2);
-  EXPECT_EQ(stream->InputChannels(), 2U);
-
-  // Set the second AudioProcessingTrack to 1-channel and wait for a new driver
-  // since the max-channel becomes 1 now.
-  setNewChannelCount(track2, listener2, stream, 1);
-  EXPECT_EQ(stream->InputChannels(), 1U);
-
-  // Set the first AudioProcessingTrack to 2-channel and wait for a new driver
-  // since the max input channel becomes 2 now.
-  setNewChannelCount(track1, listener1, stream, 2);
-  EXPECT_EQ(stream->InputChannels(), 2U);
-
-  // Close the second AudioProcessingTrack (1-channel) then the first one
-  // (2-channel) so we won't have driver switching.
-  DispatchFunction([&] {
-    track2->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(track2, listener2));
-    track2->DisconnectDeviceInput();
-    track2->Destroy();
-  });
-  DispatchFunction([&] {
+  {
+    // Open a 1-channel AudioProcessingTrack for the native device.
+    track1 = AudioProcessingTrack::Create(graph);
+    listener1 = new AudioInputProcessing(1);
+    track1->SetInputProcessing(listener1);
     track1->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(track1, listener1));
-    track1->DisconnectDeviceInput();
-    track1->Destroy();
-  });
-  RefPtr<SmartMockCubebStream> destroyedStream =
-      WaitFor(cubeb->StreamDestroyEvent());
-  EXPECT_EQ(destroyedStream.get(), stream.get());
+        MakeUnique<SetPassThrough>(track1, listener1, true));
+    track1->GraphImpl()->AppendMessage(
+        MakeUnique<StartInputProcessing>(track1, listener1));
+    track1->ConnectDeviceInput(nativeDevice, listener1, PRINCIPAL_HANDLE_NONE);
+    EXPECT_EQ(track1->DeviceId().value(), nativeDevice);
+
+    auto started =
+        Invoke([&] { return graph->NotifyWhenDeviceStarted(track1); });
+
+    nativeStream = WaitFor(cubeb->StreamInitEvent());
+    EXPECT_TRUE(nativeStream->mHasInput);
+    EXPECT_TRUE(nativeStream->mHasOutput);
+    EXPECT_EQ(nativeStream->InputChannels(), 1U);
+    EXPECT_EQ(nativeStream->GetInputDeviceID(), nativeDevice);
+    Unused << WaitFor(started);
+
+    // Open a 2-channel AudioProcessingTrack for the native device and wait for
+    // a new driver since the max-channel for the native device becomes 2 now.
+    openTrack(nativeStream, track2, listener2, nativeDevice, 2);
+    EXPECT_EQ(nativeStream->InputChannels(), 2U);
+
+    // Set the second AudioProcessingTrack for the native device to 1-channel
+    // and wait for a new driver since the max-channel for the native device
+    // becomes 1 now.
+    setNewChannelCount(track2, listener2, nativeStream, 1);
+    EXPECT_EQ(nativeStream->InputChannels(), 1U);
+
+    // Set the first AudioProcessingTrack for the native device to 2-channel and
+    // wait for a new driver since the max input channel for the native device
+    // becomes 2 now.
+    setNewChannelCount(track1, listener1, nativeStream, 2);
+    EXPECT_EQ(nativeStream->InputChannels(), 2U);
+  }
+
+  // Test for the non-native device.
+  {
+    const CubebUtils::AudioDeviceID nonNativeDevice =
+        (CubebUtils::AudioDeviceID)2;
+
+    // Open a 1-channel AudioProcessingTrack for the non-native device.
+    RefPtr<AudioProcessingTrack> track3 = AudioProcessingTrack::Create(graph);
+    RefPtr<AudioInputProcessing> listener3 = new AudioInputProcessing(1);
+    track3->SetInputProcessing(listener3);
+    track3->GraphImpl()->AppendMessage(
+        MakeUnique<SetPassThrough>(track3, listener3, true));
+    track3->GraphImpl()->AppendMessage(
+        MakeUnique<StartInputProcessing>(track3, listener3));
+    track3->ConnectDeviceInput(nonNativeDevice, listener3,
+                               PRINCIPAL_HANDLE_NONE);
+    EXPECT_EQ(track3->DeviceId().value(), nonNativeDevice);
+
+    RefPtr<SmartMockCubebStream> nonNativeStream =
+        WaitFor(cubeb->StreamInitEvent());
+    EXPECT_TRUE(nonNativeStream->mHasInput);
+    EXPECT_FALSE(nonNativeStream->mHasOutput);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 1U);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), nonNativeDevice);
+
+    // Open a 2-channel AudioProcessingTrack for the non-native device and wait
+    // for a new stream since the max-channel for the non-native device becomes
+    // 2 now.
+    RefPtr<AudioProcessingTrack> track4;
+    RefPtr<AudioInputProcessing> listener4;
+    openTrack(nonNativeStream, track4, listener4, nonNativeDevice, 2);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 2U);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), nonNativeDevice);
+
+    // Set the second AudioProcessingTrack for the non-native to 1-channel and
+    // wait for a new driver since the max-channel for the non-native device
+    // becomes 1 now.
+    setNewChannelCount(track4, listener4, nonNativeStream, 1);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 1U);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), nonNativeDevice);
+
+    // Set the first AudioProcessingTrack for the non-native device to 2-channel
+    // and wait for a new driver since the max input channel for the non-native
+    // device becomes 2 now.
+    setNewChannelCount(track3, listener3, nonNativeStream, 2);
+    EXPECT_EQ(nonNativeStream->InputChannels(), 2U);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), nonNativeDevice);
+
+    // Close the second AudioProcessingTrack (1-channel) for the non-native
+    // device then the first one (2-channel) so we won't result in another
+    // stream creation.
+    DispatchFunction([&] {
+      track4->GraphImpl()->AppendMessage(
+          MakeUnique<StopInputProcessing>(track4, listener4));
+      track4->DisconnectDeviceInput();
+      track4->Destroy();
+    });
+    DispatchFunction([&] {
+      track3->GraphImpl()->AppendMessage(
+          MakeUnique<StopInputProcessing>(track3, listener3));
+      track3->DisconnectDeviceInput();
+      track3->Destroy();
+    });
+    RefPtr<SmartMockCubebStream> destroyedStream =
+        WaitFor(cubeb->StreamDestroyEvent());
+    EXPECT_EQ(destroyedStream.get(), nonNativeStream.get());
+  }
+
+  // Tear down for the native device.
+  {
+    // Close the second AudioProcessingTrack (1-channel) for the native device
+    // then the first one (2-channel) so we won't have driver switching.
+    DispatchFunction([&] {
+      track2->GraphImpl()->AppendMessage(
+          MakeUnique<StopInputProcessing>(track2, listener2));
+      track2->DisconnectDeviceInput();
+      track2->Destroy();
+    });
+    DispatchFunction([&] {
+      track1->GraphImpl()->AppendMessage(
+          MakeUnique<StopInputProcessing>(track1, listener1));
+      track1->DisconnectDeviceInput();
+      track1->Destroy();
+    });
+    RefPtr<SmartMockCubebStream> destroyedStream =
+        WaitFor(cubeb->StreamDestroyEvent());
+    EXPECT_EQ(destroyedStream.get(), nativeStream.get());
+  }
 }
 
 TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)
@@ -1185,6 +1944,7 @@ TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)
   // MediaTrackGraph to re-evaluate input device, when the MediaTrackGraph is
   // driven by the SystemClockDriver.
 
+  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
   RefPtr<AudioProcessingTrack> track;
   RefPtr<AudioInputProcessing> listener;
   {
@@ -1213,7 +1973,8 @@ TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)
           MakeUnique<SetPassThrough>(track, listener, true));
       track->SetInputProcessing(listener);
       track->GraphImpl()->AppendMessage(
-          MakeUnique<SetRequestedInputChannelCount>(track, listener, 1));
+          MakeUnique<SetRequestedInputChannelCount>(track, deviceId, listener,
+                                                    1));
       track->GraphImpl()->AppendMessage(
           MakeUnique<GuardMessage>(track, std::move(h)));
     });
@@ -1223,7 +1984,6 @@ TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)
 
   // Open a full-duplex AudioCallbackDriver.
 
-  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
   RefPtr<MediaInputPort> port;
   DispatchFunction([&] {
     track->GraphImpl()->AppendMessage(
@@ -1395,6 +2155,197 @@ TEST(TestAudioTrackGraph, StopAudioProcessingBeforeStoppingAudioDevice)
     track->Destroy();
   });
   Unused << WaitFor(cubeb->StreamDestroyEvent());
+}
+
+// This test is pretty similar to SwitchNativeInputDevice above, which makes
+// sure the related DeviceInputTrack operations for the test here works
+// correctly. Instead of using a test-only DeviceInputTrack consumer, we use
+// AudioProcessingTrack here to simulate the real world use case.
+TEST(TestAudioTrackGraph, SwitchNativeAudioProcessingTrack)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
+      GetMainThreadSerialEventTarget());
+
+  auto switchNativeDevice =
+      [&](RefPtr<SmartMockCubebStream>&& aCurrentNativeStream,
+          RefPtr<AudioProcessingTrack>& aCurrentNativeTrack,
+          RefPtr<AudioInputProcessing>& aCurrentNativeListener,
+          RefPtr<SmartMockCubebStream>& aNextNativeStream,
+          RefPtr<AudioProcessingTrack>& aNextNativeTrack) {
+        ASSERT_TRUE(aCurrentNativeStream->mHasInput);
+        ASSERT_TRUE(aCurrentNativeStream->mHasOutput);
+        ASSERT_TRUE(aNextNativeStream->mHasInput);
+        ASSERT_FALSE(aNextNativeStream->mHasOutput);
+
+        std::cerr << "Switching native input from device "
+                  << aCurrentNativeStream->GetInputDeviceID() << " to "
+                  << aNextNativeStream->GetInputDeviceID() << std::endl;
+
+        uint32_t destroyed = 0;
+        MediaEventListener destroyListener =
+            cubeb->StreamDestroyEvent().Connect(
+                AbstractThread::GetCurrent(),
+                [&](const RefPtr<SmartMockCubebStream>& aDestroyed) {
+                  if (aDestroyed.get() == aCurrentNativeStream.get() ||
+                      aDestroyed.get() == aNextNativeStream.get()) {
+                    std::cerr << "cubeb stream " << aDestroyed.get()
+                              << " (device " << aDestroyed->GetInputDeviceID()
+                              << ") has been destroyed" << std::endl;
+                    destroyed += 1;
+                  }
+                });
+
+        RefPtr<SmartMockCubebStream> newStream;
+        MediaEventListener restartListener = cubeb->StreamInitEvent().Connect(
+            AbstractThread::GetCurrent(),
+            [&](const RefPtr<SmartMockCubebStream>& aCreated) {
+              // Make sure new stream has input, to prevent from getting a
+              // temporary output-only AudioCallbackDriver after closing current
+              // native device but before setting a new native input.
+              if (aCreated->mHasInput) {
+                ASSERT_TRUE(aCreated->mHasOutput);
+                newStream = aCreated;
+              }
+            });
+
+        std::cerr << "Close device " << aCurrentNativeStream->GetInputDeviceID()
+                  << std::endl;
+        DispatchFunction([&] {
+          aCurrentNativeTrack->GraphImpl()->AppendMessage(
+              MakeUnique<StopInputProcessing>(aCurrentNativeTrack,
+                                              aCurrentNativeListener));
+          aCurrentNativeTrack->DisconnectDeviceInput();
+          aCurrentNativeTrack->Destroy();
+        });
+
+        std::cerr << "Wait for the switching" << std::endl;
+        SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+            "TEST(TestAudioTrackGraph, SwitchNativeAudioProcessingTrack)"_ns,
+            [&] { return destroyed >= 2 && newStream; });
+
+        destroyListener.Disconnect();
+        restartListener.Disconnect();
+
+        aCurrentNativeStream = nullptr;
+        aNextNativeStream = newStream;
+
+        std::cerr << "Now the native input is device "
+                  << aNextNativeStream->GetInputDeviceID() << std::endl;
+      };
+
+  // Open a AudioProcessingTrack for device 1.
+  const CubebUtils::AudioDeviceID device1 = (CubebUtils::AudioDeviceID)1;
+  RefPtr<AudioProcessingTrack> track1 = AudioProcessingTrack::Create(graph);
+  RefPtr<AudioInputProcessing> listener1 = new AudioInputProcessing(1);
+  track1->SetInputProcessing(listener1);
+  track1->GraphImpl()->AppendMessage(
+      MakeUnique<SetPassThrough>(track1, listener1, true));
+  track1->GraphImpl()->AppendMessage(
+      MakeUnique<StartInputProcessing>(track1, listener1));
+  track1->ConnectDeviceInput(device1, listener1, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track1->DeviceId().value(), device1);
+
+  auto started = Invoke([&] { return graph->NotifyWhenDeviceStarted(track1); });
+
+  RefPtr<SmartMockCubebStream> stream1 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream1->mHasInput);
+  EXPECT_TRUE(stream1->mHasOutput);
+  EXPECT_EQ(stream1->InputChannels(), 1U);
+  EXPECT_EQ(stream1->GetInputDeviceID(), device1);
+  Unused << WaitFor(started);
+  std::cerr << "Device " << device1 << " is opened (stream " << stream1.get()
+            << ")" << std::endl;
+
+  // Open a AudioProcessingTrack for device 2.
+  const CubebUtils::AudioDeviceID device2 = (CubebUtils::AudioDeviceID)2;
+  RefPtr<AudioProcessingTrack> track2 = AudioProcessingTrack::Create(graph);
+  RefPtr<AudioInputProcessing> listener2 = new AudioInputProcessing(2);
+  track2->SetInputProcessing(listener2);
+  track2->GraphImpl()->AppendMessage(
+      MakeUnique<SetPassThrough>(track2, listener2, true));
+  track2->GraphImpl()->AppendMessage(
+      MakeUnique<StartInputProcessing>(track2, listener2));
+  track2->ConnectDeviceInput(device2, listener2, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track2->DeviceId().value(), device2);
+
+  RefPtr<SmartMockCubebStream> stream2 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_FALSE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->InputChannels(), 2U);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+  std::cerr << "Device " << device2 << " is opened (stream " << stream2.get()
+            << ")" << std::endl;
+
+  // Open a AudioProcessingTrack for device 3.
+  const CubebUtils::AudioDeviceID device3 = (CubebUtils::AudioDeviceID)3;
+  RefPtr<AudioProcessingTrack> track3 = AudioProcessingTrack::Create(graph);
+  RefPtr<AudioInputProcessing> listener3 = new AudioInputProcessing(1);
+  track3->SetInputProcessing(listener3);
+  track3->GraphImpl()->AppendMessage(
+      MakeUnique<SetPassThrough>(track3, listener3, true));
+  track3->GraphImpl()->AppendMessage(
+      MakeUnique<StartInputProcessing>(track3, listener3));
+  track3->ConnectDeviceInput(device3, listener3, PRINCIPAL_HANDLE_NONE);
+  EXPECT_EQ(track3->DeviceId().value(), device3);
+
+  RefPtr<SmartMockCubebStream> stream3 = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_TRUE(stream3->mHasInput);
+  EXPECT_FALSE(stream3->mHasOutput);
+  EXPECT_EQ(stream3->InputChannels(), 1U);
+  EXPECT_EQ(stream3->GetInputDeviceID(), device3);
+  std::cerr << "Device " << device3 << " is opened (stream " << stream3.get()
+            << ")" << std::endl;
+
+  // Close device 1, so the native input device is switched from device 1 to
+  // device 2.
+  switchNativeDevice(std::move(stream1), track1, listener1, stream2, track2);
+  EXPECT_TRUE(stream2->mHasInput);
+  EXPECT_TRUE(stream2->mHasOutput);
+  EXPECT_EQ(stream2->InputChannels(), 2U);
+  EXPECT_EQ(stream2->GetInputDeviceID(), device2);
+  {
+    NativeInputTrack* native =
+        track2->GraphImpl()->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!!native);
+    EXPECT_EQ(native->mDeviceId, device2);
+  }
+
+  // Close device 2, so the native input device is switched from device 2 to
+  // device 3.
+  switchNativeDevice(std::move(stream2), track2, listener2, stream3, track3);
+  EXPECT_TRUE(stream3->mHasInput);
+  EXPECT_TRUE(stream3->mHasOutput);
+  EXPECT_EQ(stream3->InputChannels(), 1U);
+  EXPECT_EQ(stream3->GetInputDeviceID(), device3);
+  {
+    NativeInputTrack* native =
+        track3->GraphImpl()->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!!native);
+    EXPECT_EQ(native->mDeviceId, device3);
+  }
+
+  // Clean up.
+  std::cerr << "Close device " << device3 << std::endl;
+  DispatchFunction([&] {
+    track3->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(track3, listener3));
+    track3->DisconnectDeviceInput();
+    track3->Destroy();
+  });
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), stream3.get());
+  {
+    auto* graphImpl = static_cast<MediaTrackGraphImpl*>(graph);
+    NativeInputTrack* native = graphImpl->GetNativeInputTrackMainThread();
+    ASSERT_TRUE(!native);
+  }
+  std::cerr << "No native input now" << std::endl;
 }
 
 void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,

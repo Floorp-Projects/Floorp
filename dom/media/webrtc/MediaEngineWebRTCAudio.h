@@ -141,6 +141,7 @@ class AudioInputProcessing : public AudioDataListener {
   void SetPassThrough(MediaTrackGraphImpl* aGraph, bool aPassThrough);
   uint32_t GetRequestedInputChannelCount();
   void SetRequestedInputChannelCount(MediaTrackGraphImpl* aGraph,
+                                     CubebUtils::AudioDeviceID aDeviceId,
                                      uint32_t aRequestedInputChannelCount);
   // This is true when all processing is disabled, we can skip
   // packetization, resampling and other processing passes.
@@ -218,43 +219,17 @@ class AudioInputProcessing : public AudioDataListener {
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
-class AudioProcessingTrack : public ProcessedMediaTrack {
+class AudioProcessingTrack : public DeviceInputConsumerTrack {
   // Only accessed on the graph thread.
   RefPtr<AudioInputProcessing> mInputProcessing;
 
-  // Only accessed on the main thread. Link to the track producing raw audio
-  // input data. Graph thread should use mInputs to get the source
-  RefPtr<MediaInputPort> mPort;
-
-  // Only accessed on the main thread. This is the track producing raw audio
-  // input data. Graph thread should MediaInputPort::GetSource() to get this
-  RefPtr<DeviceInputTrack> mDeviceInputTrack;
-
-  // Only accessed on the main thread. Used for bookkeeping on main thread, such
-  // that DisconnectDeviceInput can be idempotent.
-  // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
-  // copyable (opaque pointers)
-  RefPtr<AudioDataListener> mInputListener;
-
-  // Only accessed on the main thread.
-  Maybe<CubebUtils::AudioDeviceID> mDeviceId;
-
   explicit AudioProcessingTrack(TrackRate aSampleRate)
-      : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
-                            new AudioSegment()) {}
+      : DeviceInputConsumerTrack(aSampleRate) {}
 
   ~AudioProcessingTrack() = default;
 
  public:
   // Main Thread API
-  // Users of audio inputs go through the track so it can track when the
-  // last track referencing an input goes away, so it can close the cubeb
-  // input. Main thread only.
-  nsresult ConnectDeviceInput(CubebUtils::AudioDeviceID aId,
-                              AudioDataListener* aListener,
-                              const PrincipalHandle& aPrincipal);
-  void DisconnectDeviceInput();
-  Maybe<CubebUtils::AudioDeviceID> DeviceId() const;
   void Destroy() override;
   void SetInputProcessing(RefPtr<AudioInputProcessing> aInputProcessing);
   static AudioProcessingTrack* Create(MediaTrackGraph* aGraph);
@@ -268,10 +243,6 @@ class AudioProcessingTrack : public ProcessedMediaTrack {
         "Must set mInputProcessing before exposing to content");
     return mInputProcessing->GetRequestedInputChannelCount();
   }
-  // Get the data in [aFrom, aTo) from aPort->GetSource() to aOutput. aOutput
-  // needs to be empty.
-  void GetInputSourceData(AudioSegment& aOutput, const MediaInputPort* aPort,
-                          GraphTime aFrom, GraphTime aTo) const;
   // Pass the graph's mixed audio output to mInputProcessing for processing as
   // the reverse stream.
   void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
