@@ -766,17 +766,7 @@ NS_IMETHODIMP
 xpcAccessible::ScrollTo(uint32_t aHow) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    proxy->ScrollTo(aHow);
-#endif
-  } else {
-    RefPtr<LocalAccessible> intl = Intl();
-    intl->ScrollTo(aHow);
-  }
-
+  IntlGeneric()->ScrollTo(aHow);
   return NS_OK;
 }
 

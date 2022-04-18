@@ -45,14 +45,8 @@ static gboolean grabFocusCB(AtkComponent* aComponent) {
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 static gboolean scrollToCB(AtkComponent* aComponent, AtkScrollType type) {
   AtkObject* atkObject = ATK_OBJECT(aComponent);
-  if (RefPtr<AccessibleWrap> accWrap = GetAccessibleWrap(atkObject)) {
-    accWrap->ScrollTo(type);
-    return TRUE;
-  }
-
-  RemoteAccessible* proxy = GetProxy(atkObject);
-  if (proxy) {
-    proxy->ScrollTo(type);
+  if (Accessible* acc = GetInternalObj(atkObject)) {
+    acc->ScrollTo(type);
     return TRUE;
   }
 

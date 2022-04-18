@@ -59,6 +59,10 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
 
   virtual mozilla::ipc::IPCResult RecvTakeFocus(const uint64_t& aID) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual mozilla::ipc::IPCResult RecvScrollTo(
+      const uint64_t& aID, const uint32_t& aScrollType) override;
+
   virtual mozilla::ipc::IPCResult RecvTakeSelection(
       const uint64_t& aID) override;
   virtual mozilla::ipc::IPCResult RecvSetSelected(const uint64_t& aID,
