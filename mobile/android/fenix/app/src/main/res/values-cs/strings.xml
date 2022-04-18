@@ -347,6 +347,8 @@
     <string name="errorpage_httpsonly_title">Nelze navázat zabezpečené spojení</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Tento web nejspíš HTTPS prostě nepodporuje.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Je také možné, že v tom má prsty útočník. Pokud se rozhodnete tuto stránku navštívit, doporučujeme na ní nezadávat žádné citlivé informace. Pokud se rozhodnete pokračovat, bude pro tento server režim „pouze HTTPS“ dočasně vypnut.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Přístupnost</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1866,6 +1868,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Zjistit více</string>
 
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Pro odesílání dat povolte telemetrii.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Přejít do nastavení</string>
 </resources>
