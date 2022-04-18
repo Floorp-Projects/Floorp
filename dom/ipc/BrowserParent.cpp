@@ -3062,8 +3062,7 @@ bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
   if (!textInputHandlingWidget) {
     return true;
   }
-  if (NS_WARN_IF(!mContentCache.HandleQueryContentEvent(
-          aEvent, textInputHandlingWidget)) ||
+  if (!mContentCache.HandleQueryContentEvent(aEvent, textInputHandlingWidget) ||
       NS_WARN_IF(aEvent.Failed())) {
     return true;
   }

@@ -3693,9 +3693,6 @@ pref("network.psl.onUpdate_notify", false);
   pref("widget.disable-workspace-management", false);
   pref("widget.titlebar-x11-use-shape-mask", false);
 #endif
-#ifdef MOZ_WAYLAND
-  pref("widget.wayland.use-move-to-rect", true);
-#endif
 
 // All the Geolocation preferences are here.
 //

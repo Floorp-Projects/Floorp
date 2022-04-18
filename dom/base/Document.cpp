@@ -205,6 +205,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ResizeObserverController.h"
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptLoader.h"
