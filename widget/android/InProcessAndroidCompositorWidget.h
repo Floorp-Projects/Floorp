@@ -28,11 +28,10 @@ class InProcessAndroidCompositorWidget final
   nsIWidget* RealWidget() override;
   CompositorWidgetDelegate* AsDelegate() override { return this; }
 
+ private:
   // AndroidCompositorWidget overrides
-
   void OnCompositorSurfaceChanged() override;
 
- private:
   nsWindow* mWindow;
 };
 

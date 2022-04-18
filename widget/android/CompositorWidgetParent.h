@@ -26,11 +26,10 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   void ObserveVsync(VsyncObserver* aObserver) override;
   RefPtr<VsyncObserver> GetVsyncObserver() const override;
 
+ private:
   // AndroidCompositorWidget overrides
-
   void OnCompositorSurfaceChanged() override;
 
- private:
   RefPtr<VsyncObserver> mVsyncObserver;
 };
 

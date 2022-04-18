@@ -25,6 +25,7 @@ import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.*
+import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 
 
@@ -191,7 +192,7 @@ class ContentDelegateTest : BaseSessionTest() {
         val texture = SurfaceTexture(0)
         texture.setDefaultBufferSize(100, 100)
         val surface = Surface(texture)
-        display.surfaceChanged(surface, 100, 100)
+        display.surfaceChanged(SurfaceInfo.Builder(surface).size(100, 100).build())
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitUntilCalled(object : ContentDelegate {
             @AssertCalled(count = 1)
@@ -199,7 +200,7 @@ class ContentDelegateTest : BaseSessionTest() {
             }
         })
         display.surfaceDestroyed()
-        display.surfaceChanged(surface, 100, 100)
+        display.surfaceChanged(SurfaceInfo.Builder(surface).size(100, 100).build())
         sessionRule.waitUntilCalled(object : ContentDelegate {
             @AssertCalled(count = 1)
             override fun onFirstComposite(session: GeckoSession) {

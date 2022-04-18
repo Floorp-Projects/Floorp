@@ -70,8 +70,9 @@ class UiCompositorControllerChild final
   // Note that this function does not actually use the PUiCompositorController
   // IPDL protocol, and instead uses Android's binder IPC mechanism via
   // mCompositorSurfaceManager. It can be called from any thread.
-  void OnCompositorSurfaceChanged(int32_t aWidgetId,
-                                  java::sdk::Surface::Param aSurface);
+  void OnCompositorSurfaceChanged(
+      int32_t aWidgetId, java::sdk::Surface::Param aSurface,
+      java::sdk::SurfaceControl::Param aSurfaceControl);
 #endif
 
  protected:
