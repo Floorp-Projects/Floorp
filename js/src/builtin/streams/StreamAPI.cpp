@@ -601,8 +601,3 @@ JS_PUBLIC_API JSObject* JS::ReadableStreamDefaultReaderRead(
 
   return js::ReadableStreamDefaultReaderRead(cx, unwrappedReader);
 }
-
-void JS::InitPipeToHandling(const JSClass* abortSignalClass,
-                            AbortSignalIsAborted isAborted, JSContext* cx) {
-  cx->runtime()->initPipeToHandling(abortSignalClass, isAborted);
-}
