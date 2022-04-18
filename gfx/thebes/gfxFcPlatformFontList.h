@@ -175,8 +175,7 @@ class gfxFontconfigFontFamily final : public gfxFontFamily {
   template <typename Func>
   void AddFacesToFontList(Func aAddPatternFunc);
 
-  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
-      REQUIRES(mLock) override;
+  void FindStyleVariations(FontInfoData* aFontInfoData = nullptr) override;
 
   // Families are constructed initially with just references to patterns.
   // When necessary, these are enumerated within FindStyleVariations.
@@ -245,8 +244,8 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
   }
 
   // initialize font lists
-  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
-  void InitSharedFontListForPlatform() REQUIRES(mLock) override;
+  nsresult InitFontListForPlatform() override;
+  void InitSharedFontListForPlatform() override;
 
   void GetFontList(nsAtom* aLangGroup, const nsACString& aGenericFamily,
                    nsTArray<nsString>& aListOfFonts) override;
@@ -270,12 +269,11 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
                                  const uint8_t* aFontData,
                                  uint32_t aLength) override;
 
-  bool FindAndAddFamiliesLocked(
+  bool FindAndAddFamilies(
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
-      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0)
-      REQUIRES(mLock) override;
+      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0) override;
 
   bool GetStandardFamilyName(const nsCString& aFontName,
                              nsACString& aFamilyName) override;
@@ -287,16 +285,10 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
                        mozilla::StyleGenericFontFamily, nsAtom* aLanguage,
                        nsTArray<FamilyAndGeneric>& aFamilyList) override;
 
-  void ClearLangGroupPrefFontsLocked() REQUIRES(mLock) override;
+  void ClearLangGroupPrefFonts() override;
 
   // clear out cached generic-lang ==> family-list mappings
-  void ClearGenericMappings() {
-    AutoLock lock(mLock);
-    ClearGenericMappingsLocked();
-  }
-  void ClearGenericMappingsLocked() REQUIRES(mLock) {
-    mGenericMappings.Clear();
-  }
+  void ClearGenericMappings() { mGenericMappings.Clear(); }
 
   // map lang group ==> lang string
   // When aForFontEnumerationThread is true, this method will avoid using
@@ -318,29 +310,28 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
   // Add all the font families found in a font set.
   // aAppFonts indicates whether this is the system or application fontset.
   void AddFontSetFamilies(FcFontSet* aFontSet, const SandboxPolicy* aPolicy,
-                          bool aAppFonts) REQUIRES(mLock);
+                          bool aAppFonts);
 
   // Helper for above, to add a single font pattern.
   void AddPatternToFontList(FcPattern* aFont, FcChar8*& aLastFamilyName,
                             nsACString& aFamilyName,
                             RefPtr<gfxFontconfigFontFamily>& aFontFamily,
-                            bool aAppFonts) REQUIRES(mLock);
+                            bool aAppFonts);
 
   // figure out which families fontconfig maps a generic to
   // (aGeneric assumed already lowercase)
   PrefFontList* FindGenericFamilies(nsPresContext* aPresContext,
                                     const nsCString& aGeneric,
-                                    nsAtom* aLanguage) REQUIRES(mLock);
+                                    nsAtom* aLanguage);
 
   // are all pref font settings set to use fontconfig generics?
-  bool PrefFontListsUseOnlyGenerics() REQUIRES(mLock);
+  bool PrefFontListsUseOnlyGenerics();
 
   static void CheckFontUpdates(nsITimer* aTimer, void* aThis);
 
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
-                                       nsAtom* aLanguage = nullptr)
-      REQUIRES(mLock) override;
+                                       nsAtom* aLanguage = nullptr) override;
 
   enum class DistroID : int8_t {
     Unknown = 0,
