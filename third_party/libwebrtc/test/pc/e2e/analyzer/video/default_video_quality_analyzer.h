@@ -237,6 +237,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // obtained by calling GetKnownVideoStreams()
   std::map<StatsKey, StreamStats> GetStats() const;
   AnalyzerStats GetAnalyzerStats() const;
+  double GetCpuUsagePercent();
 
  private:
   struct FrameStats {
@@ -500,7 +501,6 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   void StopMeasuringCpuProcessTime();
   void StartExcludingCpuThreadTime();
   void StopExcludingCpuThreadTime();
-  double GetCpuUsagePercent();
 
   // TODO(titovartem) restore const when old constructor will be removed.
   DefaultVideoQualityAnalyzerOptions options_;
