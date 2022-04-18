@@ -30,6 +30,7 @@ import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -231,24 +232,55 @@ class MetricControllerTest {
     @Test
     fun `WHEN processing a fact with FEATURE_PROMPTS component THEN the right metric is recorded with no extras`() {
         val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
-        val action = mockk<Action>(relaxed = true)
-        val itemsToEvents = listOf(
-            LoginDialogFacts.Items.DISPLAY to LoginDialog.displayed,
-            LoginDialogFacts.Items.CANCEL to LoginDialog.cancelled,
-            LoginDialogFacts.Items.NEVER_SAVE to LoginDialog.neverSave,
-            LoginDialogFacts.Items.SAVE to LoginDialog.saved,
-        )
+        val action = mockk<Action>()
 
-        itemsToEvents.forEach { (item, event) ->
-            val fact = Fact(Component.FEATURE_PROMPTS, action, item)
-            controller.run {
-                fact.process()
-            }
+        // Verify display interaction
+        assertFalse(LoginDialog.displayed.testHasValue())
+        var fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.DISPLAY)
 
-            assertEquals(true, event.testHasValue())
-            assertEquals(1, event.testGetValue().size)
-            assertEquals(null, event.testGetValue().single().extra)
+        controller.run {
+            fact.process()
         }
+
+        assertTrue(LoginDialog.displayed.testHasValue())
+        assertEquals(1, LoginDialog.displayed.testGetValue().size)
+        assertNull(LoginDialog.displayed.testGetValue().single().extra)
+
+        // Verify cancel interaction
+        assertFalse(LoginDialog.cancelled.testHasValue())
+        fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.CANCEL)
+
+        controller.run {
+            fact.process()
+        }
+
+        assertTrue(LoginDialog.cancelled.testHasValue())
+        assertEquals(1, LoginDialog.cancelled.testGetValue().size)
+        assertNull(LoginDialog.cancelled.testGetValue().single().extra)
+
+        // Verify never save interaction
+        assertFalse(LoginDialog.neverSave.testHasValue())
+        fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.NEVER_SAVE)
+
+        controller.run {
+            fact.process()
+        }
+
+        assertTrue(LoginDialog.neverSave.testHasValue())
+        assertEquals(1, LoginDialog.neverSave.testGetValue().size)
+        assertNull(LoginDialog.neverSave.testGetValue().single().extra)
+
+        // Verify save interaction
+        assertFalse(LoginDialog.saved.testHasValue())
+        fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.SAVE)
+
+        controller.run {
+            fact.process()
+        }
+
+        assertTrue(LoginDialog.saved.testHasValue())
+        assertEquals(1, LoginDialog.saved.testGetValue().size)
+        assertNull(LoginDialog.saved.testGetValue().single().extra)
     }
 
     @Test
