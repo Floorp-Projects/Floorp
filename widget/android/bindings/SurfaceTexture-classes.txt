@@ -1,2 +1,5 @@
 [android.graphics.SurfaceTexture = exceptionMode:nsresult]
 [android.view.Surface = exceptionMode:nsresult]
+<init>(Landroid/view/SurfaceControl;)V = stubName:FromSurfaceControl, exceptionMode:abort
+[android.view.SurfaceControl = exceptionMode:nsresult]
+[android.view.SurfaceControl$Transaction = exceptionMode:abort]
