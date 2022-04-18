@@ -7,6 +7,8 @@
 #include <iostream>
 #include "gtest/gtest.h"
 
+#include "AudioGenerator.h"
+
 using namespace mozilla;
 
 namespace audio_segment {
@@ -439,6 +441,30 @@ TEST(AudioSegment, CombineChunksInAppendAndConsumeChunk)
 
     checkChunks(s, {2, 4});
   }
+}
+
+TEST(AudioSegment, ConvertFromAndToInterleaved)
+{
+  const uint32_t channels = 2;
+  const uint32_t rate = 44100;
+  AudioGenerator<AudioDataValue> generator(channels, rate);
+
+  const size_t frames = 10;
+  const size_t bufferSize = frames * channels;
+  nsTArray<AudioDataValue> buffer(bufferSize);
+  buffer.AppendElements(bufferSize);
+
+  generator.GenerateInterleaved(buffer.Elements(), frames);
+
+  AudioSegment data;
+  data.AppendFromInterleavedBuffer(buffer.Elements(), frames, channels,
+                                   PRINCIPAL_HANDLE_NONE);
+
+  nsTArray<AudioDataValue> interleaved;
+  size_t sampleCount = data.WriteToInterleavedBuffer(interleaved, channels);
+
+  EXPECT_EQ(sampleCount, bufferSize);
+  EXPECT_EQ(interleaved, buffer);
 }
 
 }  // namespace audio_segment
