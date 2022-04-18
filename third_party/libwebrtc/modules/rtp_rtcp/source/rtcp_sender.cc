@@ -174,7 +174,8 @@ RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
       packet_oh_send_(0),
       max_packet_size_(IP_PACKET_SIZE - 28),  // IPv4 + UDP by default.
 
-      xr_send_receiver_reference_time_enabled_(false),
+      xr_send_receiver_reference_time_enabled_(
+          config.non_sender_rtt_measurement),
       packet_type_counter_observer_(config.rtcp_packet_type_counter_observer),
       send_video_bitrate_allocation_(false),
       last_payload_type_(-1) {
@@ -895,16 +896,6 @@ void RTCPSender::SetCsrcs(const std::vector<uint32_t>& csrcs) {
   RTC_DCHECK_LE(csrcs.size(), kRtpCsrcSize);
   MutexLock lock(&mutex_rtcp_sender_);
   csrcs_ = csrcs;
-}
-
-void RTCPSender::SendRtcpXrReceiverReferenceTime(bool enable) {
-  MutexLock lock(&mutex_rtcp_sender_);
-  xr_send_receiver_reference_time_enabled_ = enable;
-}
-
-bool RTCPSender::RtcpXrReceiverReferenceTime() const {
-  MutexLock lock(&mutex_rtcp_sender_);
-  return xr_send_receiver_reference_time_enabled_;
 }
 
 void RTCPSender::SetTmmbn(std::vector<rtcp::TmmbItem> bounding_set) {

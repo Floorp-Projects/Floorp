@@ -550,15 +550,6 @@ int32_t ModuleRtpRtcpImpl::SetRTCPApplicationSpecificData(
   return -1;
 }
 
-void ModuleRtpRtcpImpl::SetRtcpXrRrtrStatus(bool enable) {
-  rtcp_receiver_.SetRtcpXrRrtrStatus(enable);
-  rtcp_sender_.SendRtcpXrReceiverReferenceTime(enable);
-}
-
-bool ModuleRtpRtcpImpl::RtcpXrRrtrStatus() const {
-  return rtcp_sender_.RtcpXrReceiverReferenceTime();
-}
-
 // TODO(asapersson): Replace this method with the one below.
 int32_t ModuleRtpRtcpImpl::DataCountersRTP(size_t* bytes_sent,
                                            uint32_t* packets_sent) const {

@@ -240,9 +240,6 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   void SendCombinedRtcpPacket(
       std::vector<std::unique_ptr<rtcp::RtcpPacket>> rtcp_packets) override;
 
-  // (XR) Receiver reference time report.
-  void SetRtcpXrRrtrStatus(bool enable) override;
-
   // Video part.
   int32_t SendLossNotification(uint16_t last_decoded_seq_num,
                                uint16_t last_received_seq_num,
@@ -292,9 +289,6 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
 
   // Returns true if the module is configured to store packets.
   bool StorePackets() const;
-
-  // Returns current Receiver Reference Time Report (RTTR) status.
-  bool RtcpXrRrtrStatus() const;
 
   TaskQueueBase* const worker_queue_;
   RTC_NO_UNIQUE_ADDRESS SequenceChecker process_thread_checker_;

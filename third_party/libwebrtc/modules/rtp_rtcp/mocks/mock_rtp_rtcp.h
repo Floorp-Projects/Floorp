@@ -153,7 +153,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
               GetSenderReportStats,
               (),
               (const, override));
-  MOCK_METHOD(void, SetRtcpXrRrtrStatus, (bool enable), (override));
   MOCK_METHOD(void,
               SetRemb,
               (int64_t bitrate, std::vector<uint32_t> ssrcs),

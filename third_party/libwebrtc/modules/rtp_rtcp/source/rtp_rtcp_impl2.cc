@@ -493,15 +493,6 @@ int32_t ModuleRtpRtcpImpl2::SendRTCP(RTCPPacketType packet_type) {
   return rtcp_sender_.SendRTCP(GetFeedbackState(), packet_type);
 }
 
-void ModuleRtpRtcpImpl2::SetRtcpXrRrtrStatus(bool enable) {
-  rtcp_receiver_.SetRtcpXrRrtrStatus(enable);
-  rtcp_sender_.SendRtcpXrReceiverReferenceTime(enable);
-}
-
-bool ModuleRtpRtcpImpl2::RtcpXrRrtrStatus() const {
-  return rtcp_sender_.RtcpXrReceiverReferenceTime();
-}
-
 void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
     StreamDataCounters* rtp_counters,
     StreamDataCounters* rtx_counters) const {

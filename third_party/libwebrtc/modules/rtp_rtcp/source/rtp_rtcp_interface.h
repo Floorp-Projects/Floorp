@@ -147,6 +147,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // overhead.
     bool enable_rtx_padding_prioritization = true;
 
+    // Estimate RTT as non-sender as described in
+    // https://tools.ietf.org/html/rfc3611#section-4.4 and #section-4.5
+    bool non_sender_rtt_measurement = false;
+
    private:
     RTC_DISALLOW_COPY_AND_ASSIGN(Configuration);
   };
@@ -400,9 +404,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   virtual std::vector<ReportBlockData> GetLatestReportBlockData() const = 0;
   // Returns stats based on the received RTCP SRs.
   virtual absl::optional<SenderReportStats> GetSenderReportStats() const = 0;
-
-  // (XR) Sets Receiver Reference Time Report (RTTR) status.
-  virtual void SetRtcpXrRrtrStatus(bool enable) = 0;
 
   // (REMB) Receiver Estimated Max Bitrate.
   // Schedules sending REMB on next and following sender/receiver reports.
