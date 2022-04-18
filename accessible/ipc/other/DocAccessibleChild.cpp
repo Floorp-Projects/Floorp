@@ -1613,7 +1613,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvExtents(
     if (!screenRect.IsEmpty()) {
       if (aNeedsScreenCoords) {
         LayoutDeviceIntPoint winCoords =
-            nsCoreUtils::GetScreenCoordsForWindow(acc->GetNode());
+            nsAccUtils::GetScreenCoordsForWindow(acc);
         screenRect.x -= winCoords.x;
         screenRect.y -= winCoords.y;
       }
