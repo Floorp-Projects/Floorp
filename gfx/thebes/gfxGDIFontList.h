@@ -193,8 +193,7 @@ class GDIFontFamily final : public gfxFontFamily {
         mWindowsPitch(0),
         mCharset() {}
 
-  void FindStyleVariationsLocked(
-      FontInfoData* aFontInfoData = nullptr) override;
+  virtual void FindStyleVariations(FontInfoData* aFontInfoData = nullptr);
 
   bool FilterForFontList(nsAtom* aLangGroup,
                          const nsACString& aGeneric) const final {
@@ -305,7 +304,7 @@ class gfxGDIFontList final : public gfxPlatformFontList {
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
                                   FontVisibility aVisibility) const override;
 
-  bool FindAndAddFamiliesLocked(
+  bool FindAndAddFamilies(
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,

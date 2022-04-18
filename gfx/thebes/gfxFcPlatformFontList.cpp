@@ -1015,8 +1015,7 @@ nsresult gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
   return gfxFT2FontEntryBase::CopyFaceTable(GetFTFace(), aTableTag, aBuffer);
 }
 
-void gfxFontconfigFontFamily::FindStyleVariationsLocked(
-    FontInfoData* aFontInfoData) {
+void gfxFontconfigFontFamily::FindStyleVariations(FontInfoData* aFontInfoData) {
   if (mHasStyles) {
     return;
   }
@@ -1040,7 +1039,7 @@ void gfxFontconfigFontFamily::FindStyleVariationsLocked(
       fontEntry->SetupVariationRanges();
     }
 
-    AddFontEntryLocked(fontEntry);
+    AddFontEntry(fontEntry);
 
     if (fontEntry->IsNormalStyle()) {
       numRegularFaces++;
@@ -1227,7 +1226,6 @@ bool gfxFontconfigFontFamily::SupportsLangGroup(nsAtom* aLangGroup) const {
   // will contain the font entries, each of which holds a reference to its
   // pattern.  We only check the first pattern in each list, because support
   // for langs is considered to be consistent across all faces in a family.
-  AutoReadLock lock(mLock);
   FcPattern* fontPattern;
   if (mFontPatterns.Length()) {
     fontPattern = mFontPatterns[0];
@@ -1250,7 +1248,6 @@ gfxFontconfigFontFamily::~gfxFontconfigFontFamily() {
 
 template <typename Func>
 void gfxFontconfigFontFamily::AddFacesToFontList(Func aAddPatternFunc) {
-  AutoReadLock lock(mLock);
   if (HasStyles()) {
     for (auto& fe : mAvailableFonts) {
       if (!fe) {
@@ -1434,16 +1431,13 @@ void gfxFcPlatformFontList::AddPatternToFontList(
   // will usually not match
   FcChar8* otherName;
   int n = (cIndex == 0 ? 1 : 0);
-  AutoTArray<nsCString, 4> otherFamilyNames;
   while (FcPatternGetString(aFont, FC_FAMILY, n, &otherName) == FcResultMatch) {
-    otherFamilyNames.AppendElement(nsCString(ToCharPtr(otherName)));
+    nsAutoCString otherFamilyName(ToCharPtr(otherName));
+    AddOtherFamilyName(aFontFamily, otherFamilyName);
     n++;
     if (n == int(cIndex)) {
       n++;  // skip over canonical name
     }
-  }
-  if (!otherFamilyNames.IsEmpty()) {
-    AddOtherFamilyNames(aFontFamily, otherFamilyNames);
   }
 
   const bool singleName = n == 1;
@@ -1582,8 +1576,6 @@ nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
 }
 
 void gfxFcPlatformFontList::ReadSystemFontList(dom::SystemFontList* retValue) {
-  AutoLock lock(mLock);
-
   // Fontconfig versions below 2.9 drop the FC_FILE element in FcNameUnparse
   // (see https://bugs.freedesktop.org/show_bug.cgi?id=26718), so when using
   // an older version, we manually append it to the unparsed pattern.
@@ -2047,8 +2039,6 @@ gfxFontEntry* gfxFcPlatformFontList::LookupLocalFont(
     nsPresContext* aPresContext, const nsACString& aFontName,
     WeightRange aWeightForEntry, StretchRange aStretchForEntry,
     SlantStyleRange aStyleForEntry) {
-  AutoLock lock(mLock);
-
   nsAutoCString keyName(aFontName);
   ToLowerCase(keyName);
 
@@ -2081,7 +2071,7 @@ gfxFontEntry* gfxFcPlatformFontList::MakePlatformFont(
                                     std::move(face));
 }
 
-bool gfxFcPlatformFontList::FindAndAddFamiliesLocked(
+bool gfxFcPlatformFontList::FindAndAddFamilies(
     nsPresContext* aPresContext, StyleGenericFontFamily aGeneric,
     const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
     FindFamiliesFlags aFlags, gfxFontStyle* aStyle, nsAtom* aLanguage,
@@ -2194,7 +2184,7 @@ bool gfxFcPlatformFontList::FindAndAddFamiliesLocked(
     if (terminator && FcStrCmp(substName, terminator) == 0) {
       break;
     }
-    gfxPlatformFontList::FindAndAddFamiliesLocked(
+    gfxPlatformFontList::FindAndAddFamilies(
         aPresContext, aGeneric, nsDependentCString(ToCharPtr(substName)),
         &cachedFamilies, aFlags, aStyle, aLanguage);
   }
@@ -2350,7 +2340,6 @@ void gfxFcPlatformFontList::AddGenericFonts(
     }
   }
 
-  AutoLock lock(mLock);
   PrefFontList* prefFonts =
       FindGenericFamilies(aPresContext, genericToLookup, aLanguage);
   NS_ASSERTION(prefFonts, "null generic font list");
@@ -2360,9 +2349,9 @@ void gfxFcPlatformFontList::AddGenericFonts(
   }
 }
 
-void gfxFcPlatformFontList::ClearLangGroupPrefFontsLocked() {
-  ClearGenericMappingsLocked();
-  gfxPlatformFontList::ClearLangGroupPrefFontsLocked();
+void gfxFcPlatformFontList::ClearLangGroupPrefFonts() {
+  ClearGenericMappings();
+  gfxPlatformFontList::ClearLangGroupPrefFonts();
   mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
 }
 
@@ -2422,10 +2411,9 @@ gfxPlatformFontList::PrefFontList* gfxFcPlatformFontList::FindGenericFamilies(
 
             FcPatternGetString(font, FC_FAMILY, 0, &mappedGeneric);
             if (mappedGeneric) {
-              mLock.AssertCurrentThreadIn();
               nsAutoCString mappedGenericName(ToCharPtr(mappedGeneric));
               AutoTArray<FamilyAndGeneric, 1> genericFamilies;
-              if (gfxPlatformFontList::FindAndAddFamiliesLocked(
+              if (gfxPlatformFontList::FindAndAddFamilies(
                       aPresContext, StyleGenericFontFamily::None,
                       mappedGenericName, &genericFamilies,
                       FindFamiliesFlags(0))) {
