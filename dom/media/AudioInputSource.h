@@ -54,11 +54,11 @@ class AudioInputSource : public CubebInputStream::Listener {
   // The following functions should always be called in the same thread: They
   // are always run on MediaTrackGraph's graph thread.
   // Starts producing audio data.
-  virtual void Start();
+  void Start();
   // Stops producing audio data.
-  virtual void Stop();
+  void Stop();
   // Returns the AudioSegment with aDuration of data inside.
-  virtual AudioSegment GetAudioSegment(TrackTime aDuration);
+  AudioSegment GetAudioSegment(TrackTime aDuration);
 
   // CubebInputStream::Listener interface: These are used only for the
   // underlying audio stream. No user should call these APIs.
