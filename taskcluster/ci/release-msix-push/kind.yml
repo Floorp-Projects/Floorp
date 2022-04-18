@@ -16,7 +16,7 @@ kind-dependencies:
 job-defaults:
     description: Pushes msix archives to Microsoft Store
     run-on-projects: []  # to make sure this never runs as part of CI
-    run-on-releases: []  # disabled until uploads fully working
+    run-on-releases: [beta]
     shipping-phase: ship
     treeherder:
         platform: win32-shippable/opt
