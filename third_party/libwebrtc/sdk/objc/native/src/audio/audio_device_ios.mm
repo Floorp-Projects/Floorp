@@ -100,8 +100,9 @@ static void LogDeviceInfo() {
 }
 #endif  // !defined(NDEBUG)
 
-AudioDeviceIOS::AudioDeviceIOS()
-    : audio_device_buffer_(nullptr),
+AudioDeviceIOS::AudioDeviceIOS(bool bypass_voice_processing)
+    : bypass_voice_processing_(bypass_voice_processing),
+      audio_device_buffer_(nullptr),
       audio_unit_(nullptr),
       recording_(0),
       playing_(0),
@@ -113,7 +114,8 @@ AudioDeviceIOS::AudioDeviceIOS()
       last_playout_time_(0),
       num_playout_callbacks_(0),
       last_output_volume_change_time_(0) {
-  LOGI() << "ctor" << ios::GetCurrentThreadDescription();
+  LOGI() << "ctor" << ios::GetCurrentThreadDescription()
+         << ",bypass_voice_processing=" << bypass_voice_processing_;
   io_thread_checker_.Detach();
   thread_checker_.Detach();
   thread_ = rtc::Thread::Current();
@@ -731,7 +733,7 @@ void AudioDeviceIOS::SetupAudioBuffersForActiveAudioSession() {
 bool AudioDeviceIOS::CreateAudioUnit() {
   RTC_DCHECK(!audio_unit_);
 
-  audio_unit_.reset(new VoiceProcessingAudioUnit(this));
+  audio_unit_.reset(new VoiceProcessingAudioUnit(bypass_voice_processing_, this));
   if (!audio_unit_->Init()) {
     audio_unit_.reset();
     return false;

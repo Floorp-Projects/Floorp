@@ -48,7 +48,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
                        public VoiceProcessingAudioUnitObserver,
                        public rtc::MessageHandler {
  public:
-  AudioDeviceIOS();
+  explicit AudioDeviceIOS(bool bypass_voice_processing);
   ~AudioDeviceIOS() override;
 
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override;
@@ -204,6 +204,9 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
 
   // Resets thread-checkers before a call is restarted.
   void PrepareForNewStart();
+
+  // Determines whether voice processing should be enabled or disabled.
+  const bool bypass_voice_processing_;
 
   // Ensures that methods are called from the same thread as this object is
   // created on.

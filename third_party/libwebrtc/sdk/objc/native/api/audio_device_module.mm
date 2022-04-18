@@ -17,10 +17,10 @@
 
 namespace webrtc {
 
-rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceModule() {
+rtc::scoped_refptr<AudioDeviceModule> CreateAudioDeviceModule(bool bypass_voice_processing) {
   RTC_LOG(INFO) << __FUNCTION__;
 #if defined(WEBRTC_IOS)
-  return new rtc::RefCountedObject<ios_adm::AudioDeviceModuleIOS>();
+  return new rtc::RefCountedObject<ios_adm::AudioDeviceModuleIOS>(bypass_voice_processing);
 #else
   RTC_LOG(LERROR)
       << "current platform is not supported => this module will self destruct!";
