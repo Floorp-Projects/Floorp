@@ -887,6 +887,22 @@ Maybe<ColorScheme> nsPresContext::GetOverriddenOrEmbedderColorScheme() const {
   return Nothing();
 }
 
+void nsPresContext::SetColorSchemeOverride(
+    PrefersColorSchemeOverride aOverride) {
+  auto oldScheme = mDocument->PreferredColorScheme();
+
+  mOverriddenOrEmbedderColorScheme = aOverride;
+
+  if (mDocument->PreferredColorScheme() != oldScheme) {
+    // We need to restyle because not only media queries have changed, system
+    // colors may as well via the prefers-color-scheme meta tag / effective
+    // color-scheme property value.
+    MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(), nsChangeHint(0),
+                               MediaFeatureChangeReason::SystemMetricsChange},
+                              MediaFeatureChangePropagation::JustThisDocument);
+  }
+}
+
 void nsPresContext::RecomputeBrowsingContextDependentData() {
   MOZ_ASSERT(mDocument);
   dom::Document* doc = mDocument;
@@ -905,9 +921,8 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   SetTextZoom(browsingContext->TextZoom());
   SetOverrideDPPX(browsingContext->OverrideDPPX());
 
-  auto oldScheme = mDocument->PreferredColorScheme();
   auto* top = browsingContext->Top();
-  mOverriddenOrEmbedderColorScheme = [&] {
+  SetColorSchemeOverride([&] {
     auto overriden = top->PrefersColorSchemeOverride();
     if (overriden != PrefersColorSchemeOverride::None) {
       return overriden;
@@ -919,16 +934,7 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
       }
     }
     return PrefersColorSchemeOverride::None;
-  }();
-
-  if (mDocument->PreferredColorScheme() != oldScheme) {
-    // We need to restyle because not only media queries have changed, system
-    // colors may as well via the prefers-color-scheme meta tag / effective
-    // color-scheme property value.
-    MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(), nsChangeHint(0),
-                               MediaFeatureChangeReason::SystemMetricsChange},
-                              MediaFeatureChangePropagation::JustThisDocument);
-  }
+  }());
 
   if (doc == mDocument) {
     // Medium doesn't apply to resource documents, etc.

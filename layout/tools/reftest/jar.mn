@@ -12,6 +12,7 @@ reftest.jar:
   content/forms/placeholder (../../reftests/forms/placeholder/*)
   content/forms/textbox (../../reftests/forms/textbox/*)
   content/image-region (../../reftests/image-region/*)
+  content/color-scheme (../../reftests/color-scheme/*)
   content/invalidation (../../reftests/invalidation/*)
   content/native-theme (../../reftests/native-theme/*)
   content/reftest-sanity (../../reftests/reftest-sanity/*)

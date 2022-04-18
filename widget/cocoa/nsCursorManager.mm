@@ -262,7 +262,7 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 
   NSImage* cursorImage;
   nsresult rv = nsCocoaUtils::CreateNSImageFromImageContainer(
-      aCursor.mContainer, imgIContainer::FRAME_FIRST, nullptr, &cursorImage, scaleFactor);
+      aCursor.mContainer, imgIContainer::FRAME_FIRST, nullptr, nullptr, &cursorImage, scaleFactor);
   if (NS_FAILED(rv) || !cursorImage) {
     return NS_ERROR_FAILURE;
   }
