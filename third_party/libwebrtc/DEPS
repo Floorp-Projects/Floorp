@@ -338,17 +338,6 @@ deps = {
       'dep_type': 'cipd',
   },
 
-  'src/third_party/guava': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/guava',
-              'version': 'y8Zx7cKTiOunLhOrfC4hOt5kDQrLJ_Rq7ISDmXkPdYsC',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
-
   'src/third_party/hamcrest': {
       'packages': [
           {
