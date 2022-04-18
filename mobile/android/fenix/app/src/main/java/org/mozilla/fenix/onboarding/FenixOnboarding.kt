@@ -10,7 +10,6 @@ import android.os.StrictMode
 import androidx.annotation.VisibleForTesting
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.intPreference
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 
 class FenixOnboarding(context: Context) : PreferencesHolder {
@@ -28,7 +27,6 @@ class FenixOnboarding(context: Context) : PreferencesHolder {
 
     fun finish() {
         onboardedVersion = CURRENT_ONBOARDING_VERSION
-        metrics.track(Event.DismissedOnboarding)
     }
 
     fun userHasBeenOnboarded(): Boolean {

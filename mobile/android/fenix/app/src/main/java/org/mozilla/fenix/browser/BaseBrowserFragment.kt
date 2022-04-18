@@ -100,7 +100,6 @@ import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
-import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
@@ -1275,8 +1274,6 @@ abstract class BaseBrowserFragment :
                 )
 
                 withContext(Main) {
-                    requireComponents.analytics.metrics.track(Event.AddBookmark)
-
                     view?.let {
                         FenixSnackbar.make(
                             view = binding.browserLayout,
@@ -1298,7 +1295,6 @@ abstract class BaseBrowserFragment :
                 }
             } catch (e: PlacesException.UrlParseFailed) {
                 withContext(Main) {
-                    requireComponents.analytics.metrics.track(Event.AddBookmark)
 
                     view?.let {
                         FenixSnackbar.make(

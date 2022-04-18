@@ -24,8 +24,6 @@ import androidx.core.graphics.drawable.toBitmap
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import org.mozilla.fenix.utils.IntentUtils
@@ -40,7 +38,6 @@ class SearchWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
         context.settings().addSearchWidgetInstalled(1)
-        context.metrics.track(Event.SearchWidgetInstalled)
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {

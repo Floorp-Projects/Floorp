@@ -79,9 +79,6 @@ class MetricControllerTest {
 
         controller.stop(MetricServiceType.Data)
         verify { logger.debug("DebugMetricController: stop") }
-
-        controller.track(Event.OpenedAppFirstRun)
-        verify { logger.debug("DebugMetricController: track event: ${Event.OpenedAppFirstRun}") }
     }
 
     @Test

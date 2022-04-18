@@ -126,14 +126,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HistorySearchGroupOpened -> EventWrapper<NoExtraKeys>(
             { RecentlyVisitedHomepage.searchGroupOpened.record() }
         )
-
-        // Don't record other events in Glean:
-        is Event.AddBookmark -> null
-        is Event.OpenedAppFirstRun -> null
-        is Event.InteractWithSearchURLArea -> null
-        is Event.ClearedPrivateData -> null
-        is Event.DismissedOnboarding -> null
-        is Event.SearchWidgetInstalled -> null
     }
 
 /**
