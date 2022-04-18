@@ -467,8 +467,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   WebGLTexture* GetActiveTex(const GLenum texTarget) const;
 
-  Maybe<ICRData> InitializeCanvasRenderer(layers::LayersBackend backend);
-
   gl::GLContext* GL() const { return gl; }
 
   bool IsPremultAlpha() const { return mOptions.premultipliedAlpha; }
