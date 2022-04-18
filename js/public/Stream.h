@@ -486,56 +486,6 @@ extern JS_PUBLIC_API bool ReadableStreamReaderReleaseLock(JSContext* cx,
 extern JS_PUBLIC_API JSObject* ReadableStreamDefaultReaderRead(
     JSContext* cx, HandleObject reader);
 
-class JS_PUBLIC_API WritableStreamUnderlyingSink {
- public:
-  virtual ~WritableStreamUnderlyingSink() = default;
-
-  /**
-   * Invoked when the associated WritableStream object is finalized. The
-   * stream object is not passed as an argument, as it might not be in a
-   * valid state anymore.
-   *
-   * Note: Finalization can happen on a background thread, so the embedding
-   * must be prepared for `finalize()` to be invoked from any thread.
-   */
-  virtual void finalize() = 0;
-};
-
-// ReadableStream.prototype.pipeTo SUPPORT
-
-/**
- * The signature of a function that, when passed an |AbortSignal| instance, will
- * return the value of its "aborted" flag.
- *
- * This function will be called while |signal|'s realm has been entered.
- */
-using AbortSignalIsAborted = bool (*)(JSObject* signal);
-
-/**
- * Dictate embedder-specific details necessary to implement certain aspects of
- * the |ReadableStream.prototype.pipeTo| function.  This should be performed
- * exactly once, for a single context associated with a |JSRuntime|.
- *
- * The |ReadableStream.prototype.pipeTo| function accepts a |signal| argument
- * that may be used to abort the piping operation.  This argument must be either
- * |undefined| (in other words, the piping operation can't be aborted) or an
- * |AbortSignal| instance (that may be aborted using the signal's associated
- * |AbortController|).  |AbortSignal| is defined by WebIDL and the DOM in the
- * web embedding.  Therefore, embedders must use this function to specify how
- * such objects can be recognized and how to perform various essential actions
- * upon them.
- *
- * The provided |isAborted| function will be called with an unwrapped
- * |AbortSignal| instance, while that instance's realm has been entered.
- *
- * If this function isn't called, and a situation arises where an "is this an
- * |AbortSignal|?" question must be asked, that question will simply be answered
- * "no".
- */
-extern JS_PUBLIC_API void InitPipeToHandling(const JSClass* abortSignalClass,
-                                             AbortSignalIsAborted isAborted,
-                                             JSContext* cx);
-
 }  // namespace JS
 
 #endif  // js_Stream_h
