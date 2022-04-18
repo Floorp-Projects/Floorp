@@ -24,6 +24,11 @@ class PictureInPictureVideoWrapper {
       video.muted = shouldMute;
     }
   }
+
+  shouldHideToggle() {
+    let video = document.getElementById("mock-video-controls");
+    return !!video.classList.contains("mock-preview-video");
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;
