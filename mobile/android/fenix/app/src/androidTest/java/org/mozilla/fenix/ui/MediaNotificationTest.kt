@@ -15,6 +15,7 @@ import org.junit.Test
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -36,6 +37,10 @@ class MediaNotificationTest {
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
     private lateinit var browserStore: BrowserStore
+
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
@@ -88,15 +93,15 @@ class MediaNotificationTest {
         mDevice.pressBack()
     }
 
-    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/23716")
     @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
 
-        homeScreen { }.togglePrivateBrowsingMode()
-
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(audioTestPage.url) {
+        }.openTabTray {
+        }.toggleToPrivateTabs {
+        }.openNewTab {
+        }.submitQuery(audioTestPage.url.toString()) {
             mDevice.waitForIdle()
             clickMediaPlayerPlayButton()
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
