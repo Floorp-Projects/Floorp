@@ -85,11 +85,9 @@ class VideoQualityAnalyzerInterface : public StatsObserverInterface {
   // Will be called when frame was generated from the input stream.
   // |peer_name| is name of the peer on which side frame was captured.
   // Returns frame id, that will be set by framework to the frame.
-  // absl::nullopt is returned if analyzer has ignored the frame.
-  virtual absl::optional<uint16_t> OnFrameCaptured(
-      absl::string_view peer_name,
-      const std::string& stream_label,
-      const VideoFrame& frame) = 0;
+  virtual uint16_t OnFrameCaptured(absl::string_view peer_name,
+                                   const std::string& stream_label,
+                                   const VideoFrame& frame) = 0;
   // Will be called before calling the encoder.
   // |peer_name| is name of the peer on which side frame came to encoder.
   virtual void OnFramePreEncode(absl::string_view peer_name,

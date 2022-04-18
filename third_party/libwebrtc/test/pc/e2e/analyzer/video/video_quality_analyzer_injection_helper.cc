@@ -15,7 +15,6 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
@@ -59,11 +58,9 @@ class AnalyzingFramePreprocessor
   VideoFrame Preprocess(const VideoFrame& source_frame) override {
     // Copy VideoFrame to be able to set id on it.
     VideoFrame frame = source_frame;
-    absl::optional<uint16_t> frame_id =
+    uint16_t frame_id =
         analyzer_->OnFrameCaptured(peer_name_, stream_label_, frame);
-    if (frame_id.has_value()) {
-      frame.set_id(frame_id.value());
-    }
+    frame.set_id(frame_id);
 
     for (auto& sink : sinks_) {
       sink->OnFrame(frame);

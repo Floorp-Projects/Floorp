@@ -116,7 +116,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   for (int i = 0; i < kMaxFramesInFlightPerStream * 2; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     frames_order.push_back(frame.id());
     captured_frames.insert({frame.id(), frame});
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
@@ -168,7 +168,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     frames_order.push_back(frame.id());
     captured_frames.insert({frame.id(), frame});
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
@@ -196,7 +196,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   for (int i = 0; i < 2 * kMaxFramesInFlightPerStream; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     frames_order.push_back(frame.id());
     captured_frames.insert({frame.id(), frame});
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
@@ -248,7 +248,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   for (int i = 0; i < kMaxFramesInFlightPerStream * 2; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     frames_order.push_back(frame.id());
     captured_frames.insert({frame.id(), frame});
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
@@ -298,7 +298,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario) {
   for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     frames_order.push_back(frame.id());
     captured_frames.insert({frame.id(), frame});
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
@@ -353,8 +353,7 @@ TEST(DefaultVideoQualityAnalyzerTest, OneFrameReceivedTwice) {
 
   VideoFrame captured_frame = NextFrame(frame_generator.get(), 0);
   captured_frame.set_id(
-      analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, captured_frame)
-          .value());
+      analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, captured_frame));
   analyzer.OnFramePreEncode(kSenderPeerName, captured_frame);
   analyzer.OnFrameEncoded(kSenderPeerName, captured_frame.id(),
                           FakeEncode(captured_frame),
@@ -411,7 +410,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
   std::vector<uint16_t> frames_order;
   for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
-    frame.set_id(analyzer.OnFrameCaptured(kAlice, kStreamLabel, frame).value());
+    frame.set_id(analyzer.OnFrameCaptured(kAlice, kStreamLabel, frame));
     frames_order.push_back(frame.id());
     captured_frames.insert({frame.id(), frame});
     analyzer.OnFramePreEncode(kAlice, frame);
@@ -527,7 +526,7 @@ TEST(DefaultVideoQualityAnalyzerTest, OneFrameReceivedTwiceWith2Receivers) {
 
   VideoFrame captured_frame = NextFrame(frame_generator.get(), 0);
   captured_frame.set_id(
-      analyzer.OnFrameCaptured(kAlice, kStreamLabel, captured_frame).value());
+      analyzer.OnFrameCaptured(kAlice, kStreamLabel, captured_frame));
   analyzer.OnFramePreEncode(kAlice, captured_frame);
   analyzer.OnFrameEncoded(kAlice, captured_frame.id(),
                           FakeEncode(captured_frame),
@@ -565,92 +564,6 @@ TEST(DefaultVideoQualityAnalyzerTest, OneFrameReceivedTwiceWith2Receivers) {
   EXPECT_EQ(frame_counters.dropped, 0);
 }
 
-TEST(DefaultVideoQualityAnalyzerTest, FramesComingAfterStop) {
-  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
-      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
-                                       /*type=*/absl::nullopt,
-                                       /*num_squares=*/absl::nullopt);
-
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
-                                       AnalyzerOptionsForTest());
-  analyzer.Start("test_case",
-                 std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
-                 kAnalyzerMaxThreadsCount);
-
-  std::map<uint16_t, VideoFrame> captured_frames;
-  std::vector<uint16_t> frames_order;
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
-    VideoFrame frame = NextFrame(frame_generator.get(), i);
-    frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
-    frames_order.push_back(frame.id());
-    captured_frames.insert({frame.id(), frame});
-    analyzer.OnFramePreEncode(kSenderPeerName, frame);
-    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats());
-  }
-
-  for (size_t i = 1; i < frames_order.size(); i += 2) {
-    uint16_t frame_id = frames_order.at(i);
-    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
-    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
-                              FakeEncode(received_frame));
-    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
-                            VideoQualityAnalyzerInterface::DecoderStats());
-    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
-  }
-
-  // Give analyzer some time to process frames on async thread. The computations
-  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
-  // means we have an issue!
-  SleepMs(100);
-  analyzer.Stop();
-
-  captured_frames.clear();
-  frames_order.clear();
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
-    VideoFrame frame = NextFrame(frame_generator.get(), i);
-    ASSERT_FALSE(analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame)
-                     .has_value());
-    frame.set_id(i + 1);
-    frames_order.push_back(frame.id());
-    captured_frames.insert({frame.id(), frame});
-    analyzer.OnFramePreEncode(kSenderPeerName, frame);
-    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats());
-  }
-
-  for (size_t i = 1; i < frames_order.size(); i += 2) {
-    uint16_t frame_id = frames_order.at(i);
-    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
-    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
-                              FakeEncode(received_frame));
-    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
-                            VideoQualityAnalyzerInterface::DecoderStats());
-    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
-  }
-
-  SleepMs(100);
-
-  // We expect the results to be same as in NormalScenario. All frames after
-  // Stop should be ignored.
-  AnalyzerStats stats = analyzer.GetAnalyzerStats();
-  EXPECT_EQ(stats.memory_overloaded_comparisons_done, 0);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream);
-
-  std::vector<StatsSample> frames_in_flight_sizes =
-      GetSortedSamples(stats.frames_in_flight_left_count);
-  EXPECT_EQ(frames_in_flight_sizes.back().value, 0)
-      << ToString(frames_in_flight_sizes);
-
-  FrameCounters frame_counters = analyzer.GetGlobalCounters();
-  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.received, kMaxFramesInFlightPerStream / 2);
-  EXPECT_EQ(frame_counters.decoded, kMaxFramesInFlightPerStream / 2);
-  EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream / 2);
-  EXPECT_EQ(frame_counters.dropped, kMaxFramesInFlightPerStream / 2);
-}
-
 TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
   std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
       test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
@@ -671,7 +584,7 @@ TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
   for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
     analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
                             VideoQualityAnalyzerInterface::EncoderStats());
@@ -730,7 +643,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame).value());
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
     analyzer.OnFramePreEncode(kSenderPeerName, frame);
     analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
                             VideoQualityAnalyzerInterface::EncoderStats());

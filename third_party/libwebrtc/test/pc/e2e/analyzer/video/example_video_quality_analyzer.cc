@@ -10,7 +10,6 @@
 
 #include "test/pc/e2e/analyzer/video/example_video_quality_analyzer.h"
 
-#include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "rtc_base/logging.h"
 
@@ -25,7 +24,7 @@ void ExampleVideoQualityAnalyzer::Start(
     rtc::ArrayView<const std::string> peer_names,
     int max_threads_count) {}
 
-absl::optional<uint16_t> ExampleVideoQualityAnalyzer::OnFrameCaptured(
+uint16_t ExampleVideoQualityAnalyzer::OnFrameCaptured(
     absl::string_view peer_name,
     const std::string& stream_label,
     const webrtc::VideoFrame& frame) {
