@@ -115,7 +115,6 @@ class VP9EncoderImpl : public VP9Encoder {
   const VP9Profile profile_;
   bool inited_;
   int64_t timestamp_;
-  int cpu_speed_;
   uint32_t rc_max_intra_target_;
   vpx_codec_ctx_t* encoder_;
   vpx_codec_enc_cfg_t* config_;
@@ -198,11 +197,28 @@ class VP9EncoderImpl : public VP9Encoder {
       const WebRtcKeyValueConfig& trials);
   const bool external_ref_ctrl_;
 
-  const struct SpeedSettings {
-    bool enabled;
-    int layers[kMaxSpatialLayers];
-  } per_layer_speed_;
-  static SpeedSettings ParsePerLayerSpeed(const WebRtcKeyValueConfig& trials);
+  // Flags that can affect speed vs quality tradeoff, and are configureable per
+  // resolution ranges.
+  struct PerformanceFlags {
+    // Min number of pixels needed for this config to be valid.
+    int min_pixel_count = 0;
+
+    int base_layer_speed = -1;  // Speed setting for TL0.
+    int high_layer_speed = -1;  // Speed setting for TL1-TL3.
+    //  0 = deblock all temporal layers (TL)
+    //  1 = disable deblock for top-most TL
+    //  2 = disable deblock for all TLs
+    int deblock_mode = 0;
+  };
+  // Performance flags, ordered by |min_pixel_count|.
+  const std::vector<PerformanceFlags> performance_flags_;
+  // Caching of of |speed_configs_|, where index i maps to the resolution as
+  // specified in |codec_.spatialLayer[i]|.
+  std::vector<PerformanceFlags> performance_flags_by_spatial_index_;
+  void UpdatePerformanceFlags();
+  static std::vector<PerformanceFlags> ParsePerformanceFlagsFromTrials(
+      const WebRtcKeyValueConfig& trials);
+  static std::vector<PerformanceFlags> GetDefaultPerformanceFlags();
 
   int num_steady_state_frames_;
   // Only set config when this flag is set.
