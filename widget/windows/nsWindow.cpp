@@ -650,7 +650,25 @@ static bool IsMouseVanishKey(WPARAM aVirtKey) {
     case VK_RMENU:
     case VK_LWIN:
     case VK_RWIN:
+    case VK_INSERT:
+    case VK_DELETE:
+    case VK_HOME:
+    case VK_END:
+    case VK_ESCAPE:
+    case VK_PRINT:
+    case VK_UP:
+    case VK_DOWN:
+    case VK_LEFT:
+    case VK_RIGHT:
+    case VK_PRIOR:  // PgUp
+    case VK_NEXT:   // PgDn
       return false;
+    case 'A':
+    case 'C':
+    case 'V':
+    case 'X':
+      // Ignore Ctrl-A, Ctrl-C, Ctrl-V, Ctrl-X
+      return (GetKeyState(VK_CONTROL) & 0x8000) != 0x8000;
     default:
       return true;
   }
