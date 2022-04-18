@@ -10,12 +10,14 @@
 #include "gtest/gtest.h"
 
 #include "CrossGraphPort.h"
+#include "DeviceInputTrack.h"
 #ifdef MOZ_WEBRTC
 #  include "MediaEngineWebRTCAudio.h"
 #endif  // MOZ_WEBRTC
 #include "MockCubeb.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "WaitFor.h"
 #include "WavDumper.h"
 
@@ -100,6 +102,26 @@ class GoFaster : public ControlMessage {
   explicit GoFaster(MockCubeb* aCubeb)
       : ControlMessage(nullptr), mCubeb(aCubeb) {}
   void Run() override { mCubeb->GoFaster(); }
+};
+
+struct StartNonNativeInput : public ControlMessage {
+  const RefPtr<NonNativeInputTrack> mInputTrack;
+  RefPtr<AudioInputSource> mInputSource;
+
+  StartNonNativeInput(NonNativeInputTrack* aInputTrack,
+                      RefPtr<AudioInputSource>&& aInputSource)
+      : ControlMessage(aInputTrack),
+        mInputTrack(aInputTrack),
+        mInputSource(std::move(aInputSource)) {}
+  void Run() override { mInputTrack->StartAudio(std::move(mInputSource)); }
+};
+
+struct StopNonNativeInput : public ControlMessage {
+  const RefPtr<NonNativeInputTrack> mInputTrack;
+
+  explicit StopNonNativeInput(NonNativeInputTrack* aInputTrack)
+      : ControlMessage(aInputTrack), mInputTrack(aInputTrack) {}
+  void Run() override { mInputTrack->StopAudio(); }
 };
 
 }  // namespace
@@ -227,6 +249,262 @@ TEST(TestAudioTrackGraph, NotifyDeviceStarted)
   // Test has finished, destroy the track to shutdown the MTG.
   DispatchMethod(dummySource, &SourceMediaTrack::Destroy);
   WaitFor(cubeb->StreamDestroyEvent());
+}
+
+TEST(TestAudioTrackGraph, NonNativeInputTrackStartAndStop)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
+      GetMainThreadSerialEventTarget());
+
+  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
+
+  // Add a NonNativeInputTrack to graph, making graph create an output-only
+  // AudioCallbackDriver since NonNativeInputTrack is an audio-type MediaTrack.
+  RefPtr<NonNativeInputTrack> track;
+  auto started = Invoke([&] {
+    track = new NonNativeInputTrack(graph->GraphRate(), deviceId,
+                                    PRINCIPAL_HANDLE_NONE);
+    graph->AddTrack(track);
+    return graph->NotifyWhenDeviceStarted(track);
+  });
+
+  RefPtr<SmartMockCubebStream> driverStream = WaitFor(cubeb->StreamInitEvent());
+  Result<bool, nsresult> rv = WaitFor(started);
+  EXPECT_TRUE(rv.unwrapOr(false));
+  EXPECT_FALSE(driverStream->mHasInput);
+  EXPECT_TRUE(driverStream->mHasOutput);
+
+  // Main test below:
+  {
+    const AudioInputSource::Id sourceId = 1;
+    const uint32_t channels = 2;
+    const TrackRate rate = 48000;
+    const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+
+    // Start and stop the audio in NonNativeInputTrack.
+    {
+      struct DeviceInfo {
+        uint32_t mChannelCount;
+        AudioInputType mType;
+      };
+      using DeviceQueryPromise =
+          MozPromise<DeviceInfo, nsresult, /* IsExclusive = */ true>;
+
+      struct DeviceQueryMessage : public ControlMessage {
+        const NonNativeInputTrack* mInputTrack;
+        MozPromiseHolder<DeviceQueryPromise> mHolder;
+
+        DeviceQueryMessage(NonNativeInputTrack* aInputTrack,
+                           MozPromiseHolder<DeviceQueryPromise>&& aHolder)
+            : ControlMessage(aInputTrack),
+              mInputTrack(aInputTrack),
+              mHolder(std::move(aHolder)) {}
+        void Run() override {
+          DeviceInfo info = {mInputTrack->NumberOfChannels(),
+                             mInputTrack->DevicePreference()};
+          // mHolder.Resolve(info, __func__);
+          mTrack->GraphImpl()->Dispatch(NS_NewRunnableFunction(
+              "TestAudioTrackGraph::DeviceQueryMessage",
+              [holder = std::move(mHolder), devInfo = info]() mutable {
+                holder.Resolve(devInfo, __func__);
+              }));
+        }
+      };
+
+      // No input channels and device preference before start.
+      {
+        MozPromiseHolder<DeviceQueryPromise> h;
+        RefPtr<DeviceQueryPromise> p = h.Ensure(__func__);
+        DispatchFunction([&] {
+          track->GraphImpl()->AppendMessage(
+              MakeUnique<DeviceQueryMessage>(track.get(), std::move(h)));
+        });
+        Result<DeviceInfo, nsresult> r = WaitFor(p);
+        ASSERT_TRUE(r.isOk());
+        DeviceInfo info = r.unwrap();
+
+        EXPECT_EQ(info.mChannelCount, 0U);
+        EXPECT_EQ(info.mType, AudioInputType::Unknown);
+      }
+
+      DispatchFunction([&] {
+        track->GraphImpl()->AppendMessage(MakeUnique<StartNonNativeInput>(
+            track.get(),
+            MakeRefPtr<AudioInputSource>(
+                MakeRefPtr<AudioInputSourceListener>(track.get()), sourceId,
+                deviceId, channels, true /* voice */, PRINCIPAL_HANDLE_NONE,
+                rate, graph->GraphRate(), bufferingMs)));
+      });
+      RefPtr<SmartMockCubebStream> nonNativeStream =
+          WaitFor(cubeb->StreamInitEvent());
+      EXPECT_TRUE(nonNativeStream->mHasInput);
+      EXPECT_FALSE(nonNativeStream->mHasOutput);
+      EXPECT_EQ(nonNativeStream->GetInputDeviceID(), deviceId);
+      EXPECT_EQ(nonNativeStream->InputChannels(), channels);
+      EXPECT_EQ(nonNativeStream->InputSampleRate(),
+                static_cast<uint32_t>(rate));
+
+      // Input channels and device preference should be set after start.
+      {
+        MozPromiseHolder<DeviceQueryPromise> h;
+        RefPtr<DeviceQueryPromise> p = h.Ensure(__func__);
+        DispatchFunction([&] {
+          track->GraphImpl()->AppendMessage(
+              MakeUnique<DeviceQueryMessage>(track.get(), std::move(h)));
+        });
+        Result<DeviceInfo, nsresult> r = WaitFor(p);
+        ASSERT_TRUE(r.isOk());
+        DeviceInfo info = r.unwrap();
+
+        EXPECT_EQ(info.mChannelCount, channels);
+        EXPECT_EQ(info.mType, AudioInputType::Voice);
+      }
+
+      Unused << WaitFor(nonNativeStream->FramesProcessedEvent());
+
+      DispatchFunction([&] {
+        track->GraphImpl()->AppendMessage(
+            MakeUnique<StopNonNativeInput>(track.get()));
+      });
+      RefPtr<SmartMockCubebStream> destroyedStream =
+          WaitFor(cubeb->StreamDestroyEvent());
+      EXPECT_EQ(destroyedStream.get(), nonNativeStream.get());
+
+      // No input channels and device preference after stop.
+      {
+        MozPromiseHolder<DeviceQueryPromise> h;
+        RefPtr<DeviceQueryPromise> p = h.Ensure(__func__);
+        DispatchFunction([&] {
+          track->GraphImpl()->AppendMessage(
+              MakeUnique<DeviceQueryMessage>(track.get(), std::move(h)));
+        });
+        Result<DeviceInfo, nsresult> r = WaitFor(p);
+        ASSERT_TRUE(r.isOk());
+        DeviceInfo info = r.unwrap();
+
+        EXPECT_EQ(info.mChannelCount, 0U);
+        EXPECT_EQ(info.mType, AudioInputType::Unknown);
+      }
+    }
+
+    // Make sure the NonNativeInputTrack can restart and stop its audio.
+    {
+      DispatchFunction([&] {
+        track->GraphImpl()->AppendMessage(MakeUnique<StartNonNativeInput>(
+            track.get(),
+            MakeRefPtr<AudioInputSource>(
+                MakeRefPtr<AudioInputSourceListener>(track.get()), sourceId,
+                deviceId, channels, true, PRINCIPAL_HANDLE_NONE, rate,
+                graph->GraphRate(), bufferingMs)));
+      });
+      RefPtr<SmartMockCubebStream> nonNativeStream =
+          WaitFor(cubeb->StreamInitEvent());
+      EXPECT_TRUE(nonNativeStream->mHasInput);
+      EXPECT_FALSE(nonNativeStream->mHasOutput);
+      EXPECT_EQ(nonNativeStream->GetInputDeviceID(), deviceId);
+      EXPECT_EQ(nonNativeStream->InputChannels(), channels);
+      EXPECT_EQ(nonNativeStream->InputSampleRate(),
+                static_cast<uint32_t>(rate));
+
+      Unused << WaitFor(nonNativeStream->FramesProcessedEvent());
+
+      DispatchFunction([&] {
+        track->GraphImpl()->AppendMessage(
+            MakeUnique<StopNonNativeInput>(track.get()));
+      });
+      RefPtr<SmartMockCubebStream> destroyedStream =
+          WaitFor(cubeb->StreamDestroyEvent());
+      EXPECT_EQ(destroyedStream.get(), nonNativeStream.get());
+    }
+  }
+
+  // Clean up.
+  DispatchFunction([&] { track->Destroy(); });
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), driverStream.get());
+}
+
+TEST(TestAudioTrackGraph, NonNativeInputTrackErrorCallback)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  MediaTrackGraph* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE, nullptr,
+      GetMainThreadSerialEventTarget());
+
+  const CubebUtils::AudioDeviceID deviceId = (CubebUtils::AudioDeviceID)1;
+
+  // Add a NonNativeInputTrack to graph, making graph create an output-only
+  // AudioCallbackDriver since NonNativeInputTrack is an audio-type MediaTrack.
+  RefPtr<NonNativeInputTrack> track;
+  auto started = Invoke([&] {
+    track = new NonNativeInputTrack(graph->GraphRate(), deviceId,
+                                    PRINCIPAL_HANDLE_NONE);
+    graph->AddTrack(track);
+    return graph->NotifyWhenDeviceStarted(track);
+  });
+
+  RefPtr<SmartMockCubebStream> driverStream = WaitFor(cubeb->StreamInitEvent());
+  Result<bool, nsresult> rv = WaitFor(started);
+  EXPECT_TRUE(rv.unwrapOr(false));
+  EXPECT_FALSE(driverStream->mHasInput);
+  EXPECT_TRUE(driverStream->mHasOutput);
+
+  // Main test below:
+  {
+    const AudioInputSource::Id sourceId = 1;
+    const uint32_t channels = 2;
+    const TrackRate rate = 48000;
+    const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+
+    // Launch and start the non-native audio stream.
+    DispatchFunction([&] {
+      track->GraphImpl()->AppendMessage(MakeUnique<StartNonNativeInput>(
+          track.get(),
+          MakeRefPtr<AudioInputSource>(
+              MakeRefPtr<AudioInputSourceListener>(track.get()), sourceId,
+              deviceId, channels, true, PRINCIPAL_HANDLE_NONE, rate,
+              graph->GraphRate(), bufferingMs)));
+    });
+    RefPtr<SmartMockCubebStream> nonNativeStream =
+        WaitFor(cubeb->StreamInitEvent());
+    EXPECT_TRUE(nonNativeStream->mHasInput);
+    EXPECT_FALSE(nonNativeStream->mHasOutput);
+    EXPECT_EQ(nonNativeStream->GetInputDeviceID(), deviceId);
+    EXPECT_EQ(nonNativeStream->InputChannels(), channels);
+    EXPECT_EQ(nonNativeStream->InputSampleRate(), static_cast<uint32_t>(rate));
+
+    // Make sure the audio stream is running.
+    Unused << WaitFor(nonNativeStream->FramesProcessedEvent());
+
+    // Force an error. This results in the audio stream destroying.
+    DispatchFunction([&] { nonNativeStream->ForceError(); });
+    WaitFor(nonNativeStream->ErrorForcedEvent());
+
+    RefPtr<SmartMockCubebStream> destroyedStream =
+        WaitFor(cubeb->StreamDestroyEvent());
+    EXPECT_EQ(destroyedStream.get(), nonNativeStream.get());
+  }
+
+  // Make sure it's ok to call audio stop again.
+  DispatchFunction([&] {
+    track->GraphImpl()->AppendMessage(
+        MakeUnique<StopNonNativeInput>(track.get()));
+  });
+
+  // Clean up.
+  DispatchFunction([&] { track->Destroy(); });
+  RefPtr<SmartMockCubebStream> destroyedStream =
+      WaitFor(cubeb->StreamDestroyEvent());
+  EXPECT_EQ(destroyedStream.get(), driverStream.get());
 }
 
 #ifdef MOZ_WEBRTC
