@@ -6,10 +6,6 @@ package org.mozilla.fenix.components.metrics
 
 sealed class Event {
 
-    // Interaction Events
-    object HistoryHighlightOpened : Event()
-    object HistorySearchGroupOpened : Event()
-
     // Interaction events with extras
 
     data class SearchWithAds(val providerName: String) : Event() {

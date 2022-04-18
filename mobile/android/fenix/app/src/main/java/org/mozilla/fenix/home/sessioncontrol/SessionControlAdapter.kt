@@ -252,7 +252,6 @@ class SessionControlAdapter(
                 composeView = ComposeView(parent.context),
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor,
-                metrics = components.analytics.metrics
             )
             RecentVisitsHeaderViewHolder.LAYOUT_ID -> return RecentVisitsHeaderViewHolder(
                 composeView = ComposeView(parent.context),

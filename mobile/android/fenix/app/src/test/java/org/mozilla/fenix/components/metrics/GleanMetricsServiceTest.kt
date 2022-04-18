@@ -12,7 +12,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -27,14 +26,4 @@ class GleanMetricsServiceTest {
         gleanService = GleanMetricsService(testContext)
     }
 
-    @Test
-    fun `Home screen recently visited events are correctly recorded`() {
-        assertFalse(RecentlyVisitedHomepage.historyHighlightOpened.testHasValue())
-        gleanService.track(Event.HistoryHighlightOpened)
-        assertTrue(RecentlyVisitedHomepage.historyHighlightOpened.testHasValue())
-
-        assertFalse(RecentlyVisitedHomepage.searchGroupOpened.testHasValue())
-        gleanService.track(Event.HistorySearchGroupOpened)
-        assertTrue(RecentlyVisitedHomepage.searchGroupOpened.testHasValue())
-    }
 }

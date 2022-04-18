@@ -10,11 +10,11 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.History
+import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
@@ -26,13 +26,11 @@ import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @property interactor [RecentVisitsInteractor] which will have delegated to all user interactions.
- * @property metrics [MetricController] that handles telemetry events.
  */
 class RecentlyVisitedViewHolder(
     composeView: ComposeView,
     viewLifecycleOwner: LifecycleOwner,
     private val interactor: RecentVisitsInteractor,
-    private val metrics: MetricController
 ) : ComposeViewHolder(composeView, viewLifecycleOwner) {
 
     init {
@@ -64,11 +62,11 @@ class RecentlyVisitedViewHolder(
             onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
                 when (recentlyVisitedItem) {
                     is RecentHistoryHighlight -> {
-                        metrics.track(Event.HistoryHighlightOpened)
+                        RecentlyVisitedHomepage.historyHighlightOpened.record(NoExtras())
                         interactor.onRecentHistoryHighlightClicked(recentlyVisitedItem)
                     }
                     is RecentHistoryGroup -> {
-                        metrics.track(Event.HistorySearchGroupOpened)
+                        RecentlyVisitedHomepage.searchGroupOpened.record(NoExtras())
                         History.recentSearchesTapped.record(
                             History.RecentSearchesTappedExtra(
                                 pageNumber.toString()

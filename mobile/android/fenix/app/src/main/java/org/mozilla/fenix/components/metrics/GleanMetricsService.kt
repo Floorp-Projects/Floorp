@@ -10,7 +10,6 @@ import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Pings
-import org.mozilla.fenix.GleanMetrics.RecentlyVisitedHomepage
 import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
@@ -70,13 +69,6 @@ private val Event.wrapper: EventWrapper<*>?
             {
                 BrowserSearch.inContent[label].add(1)
             }
-        )
-
-        is Event.HistoryHighlightOpened -> EventWrapper<NoExtraKeys>(
-            { RecentlyVisitedHomepage.historyHighlightOpened.record() }
-        )
-        is Event.HistorySearchGroupOpened -> EventWrapper<NoExtraKeys>(
-            { RecentlyVisitedHomepage.searchGroupOpened.record() }
         )
     }
 
