@@ -1491,5 +1491,17 @@ TEST_F(TestRtpFrameReferenceFinder, H264SequenceNumberWrapMulti) {
   CheckReferencesH264(sn + 7, sn + 3);
 }
 
+TEST_F(TestRtpFrameReferenceFinder, Av1FrameNoDependencyDescriptor) {
+  uint16_t sn = 0xFFFF;
+  std::unique_ptr<RtpFrameObject> frame =
+      CreateFrame(/*seq_num_start=*/sn, /*seq_num_end=*/sn, /*keyframe=*/true,
+                  kVideoCodecAV1, RTPVideoTypeHeader());
+
+  reference_finder_->ManageFrame(std::move(frame));
+
+  ASSERT_EQ(1UL, frames_from_callback_.size());
+  CheckReferencesGeneric(sn);
+}
+
 }  // namespace video_coding
 }  // namespace webrtc

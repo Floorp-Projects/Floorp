@@ -88,10 +88,6 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
 
       return GetRefFinderAs<RtpVp9RefFinder>().ManageFrame(std::move(frame));
     }
-    case kVideoCodecH264: {
-      return GetRefFinderAs<RtpSeqNumOnlyRefFinder>().ManageFrame(
-          std::move(frame));
-    }
     case kVideoCodecGeneric: {
       if (auto* generic_header = absl::get_if<RTPVideoHeaderLegacyGeneric>(
               &video_header.video_type_header)) {
@@ -103,7 +99,8 @@ RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
           std::move(frame));
     }
     default: {
-      RTC_CHECK_NOTREACHED();
+      return GetRefFinderAs<RtpSeqNumOnlyRefFinder>().ManageFrame(
+          std::move(frame));
     }
   }
 }
