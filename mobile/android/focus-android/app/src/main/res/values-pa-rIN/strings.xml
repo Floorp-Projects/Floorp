@@ -504,7 +504,9 @@
     <string name="onboarding_history_title">ਇੰਝ ਬਰਾਊਜ਼ ਕਰੋ, ਜਿਵੇਂ ਕਦੇ ਕੀਤੀ ਹੀ ਨਾ ਹੋਵੇ</string>
 
     <!-- Onboarding: History Description -->
-    <string name="onboarding_history_description">ਆਪਣੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਤੇ ਕੂਕੀਜ਼ ਨੂੰ ਇੱਕ ਛੋਹ ਨਾਲ ਮਿਟਾਓ — ਤੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਰਹੇ ਇਸ਼ਤਿਹਾਰਾਂ ਨੂੰ ਰੋਕ ਦਿੰਦੀ ਹੈ।</string>
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">ਆਪਣੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਤੇ ਕੂਕੀਜ਼ ਨੂੰ ਇੱਕ ਛੋਹ ਨਾਲ ਮਿਟਾਓ — ਤੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਰਹੇ ਇਸ਼ਤਿਹਾਰਾਂ ਨੂੰ ਰੋਕ ਦਿੰਦੀ ਹੈ।</string>
+
+    <string name="onboarding_history_description2">ਆਪਣੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਤੇ ਕੂਕੀਜ਼ ਨੂੰ ਇੱਕ ਛੋਹ ਨਾਲ ਮਿਟਾਓ — ਤੇ ਇਹ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਰਹੇ ਇਸ਼ਤਿਹਾਰਾਂ ਨੂੰ ਰੋਕ ਦਿੰਦੀ ਹੈ।</string>
 
     <!-- Onboarding: Protection Title -->
     <string name="onboarding_protection_title">ਕਿਸੇ ਵੀ ਹਾਲਤ ਵਿੱਚ ਫਿੱਟ ਆਉਣ ਵਾਲੀ ਪਰਦੇਦਾਦਰੀ</string>
@@ -669,6 +671,48 @@
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">ਆਪੇ-ਚਲਾਓ</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ਇਸਨੂੰ ਸਹਿਮਤੀ ਦੇਣ ਲਈ:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>ਇਜਾਜ਼ਤਾਂ</b> ਨੂੰ ਛੂਹੋ]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ਨੂੰ ਚਾਲੂ ਲਈ ਬਦਲੋ]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">ਕੈਮਰਾ</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ਮਾਈਕਰੋਫ਼ੋਨ</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ਟਿਕਾਣਾ</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">ਸੂਚਨਾਵਾਂ</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-ਕੰਟਰੋਲ ਕੀਤੀ ਸਮੱਗਰੀ</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ਮਨਜ਼ੂਰੀ ਲਈ ਪੁੱਛੋ</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">ਪਾਬੰਦੀ ਲਗਾਈ</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ਇਜਾਜ਼ਤ ਦਿੱਤੇ</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Android ਵਲੋਂ ਪਾਬੰਦੀ ਲਗਾਈ</string>
 
     <!-- Preference for allow autoplay audio and video-->
     <string name="preference_allow_audio_video_autoplay">ਆਡੀਓ ਅਤੇ ਵੀਡਿਓ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ</string>
