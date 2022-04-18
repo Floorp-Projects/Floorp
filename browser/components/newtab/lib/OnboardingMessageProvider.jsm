@@ -201,7 +201,7 @@ const ONBOARDING_MESSAGES = () => [
       ],
       lifetime: 3,
     },
-    targeting: "!(region == 'DE' && localeLanguageCode == 'en')",
+    targeting: "!(region in [ 'DE', 'AT', 'CH'] && localeLanguageCode == 'en')",
   },
   {
     id: "PB_NEWTAB_KLAR_PROMO",
@@ -305,7 +305,7 @@ const ONBOARDING_MESSAGES = () => [
       ],
       lifetime: 3,
     },
-    targeting: "region == 'DE' && localeLanguageCode == 'en'",
+    targeting: "region in [ 'DE', 'AT', 'CH'] && localeLanguageCode == 'en'",
   },
   {
     id: "PB_NEWTAB_INFO_SECTION",
