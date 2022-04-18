@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 
 namespace webrtc {
@@ -36,7 +37,8 @@ class VadLevelAnalyzer {
 
   // Ctor. Uses the default VAD.
   VadLevelAnalyzer();
-  explicit VadLevelAnalyzer(float vad_probability_attack);
+  VadLevelAnalyzer(float vad_probability_attack,
+                   const AvailableCpuFeatures& cpu_features);
   // Ctor. Uses a custom `vad`.
   VadLevelAnalyzer(float vad_probability_attack,
                    std::unique_ptr<VoiceActivityDetector> vad);

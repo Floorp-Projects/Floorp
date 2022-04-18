@@ -13,6 +13,7 @@
 #include <cmath>
 #include <vector>
 
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/rnn_vad/test_utils.h"
 #include "rtc_base/numerics/safe_compare.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -77,7 +78,8 @@ TEST(RnnVadTest, FeatureExtractionLowHighPitch) {
   ASSERT_TRUE(PitchIsValid(low_pitch_hz));
   ASSERT_TRUE(PitchIsValid(high_pitch_hz));
 
-  FeaturesExtractor features_extractor;
+  const AvailableCpuFeatures cpu_features = GetAvailableCpuFeatures();
+  FeaturesExtractor features_extractor(cpu_features);
   std::vector<float> samples(kNumTestDataSize);
   std::vector<float> feature_vector(kFeatureVectorSize);
   ASSERT_EQ(kFeatureVectorSize, rtc::dchecked_cast<int>(feature_vector.size()));

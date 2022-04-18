@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/rnn_vad/test_utils.h"
 #include "modules/audio_processing/test/performance_timer.h"
 #include "rtc_base/checks.h"
@@ -27,7 +28,6 @@
 namespace webrtc {
 namespace rnn_vad {
 namespace test {
-
 namespace {
 
 void TestFullyConnectedLayer(FullyConnectedLayer* fc,
@@ -39,26 +39,25 @@ void TestFullyConnectedLayer(FullyConnectedLayer* fc,
 }
 
 void TestGatedRecurrentLayer(
-    GatedRecurrentLayer* gru,
+    GatedRecurrentLayer& gru,
     rtc::ArrayView<const float> input_sequence,
     rtc::ArrayView<const float> expected_output_sequence) {
-  RTC_CHECK(gru);
-  auto gru_output_view = gru->GetOutput();
+  auto gru_output_view = gru.GetOutput();
   const int input_sequence_length = rtc::CheckedDivExact(
-      rtc::dchecked_cast<int>(input_sequence.size()), gru->input_size());
+      rtc::dchecked_cast<int>(input_sequence.size()), gru.input_size());
   const int output_sequence_length = rtc::CheckedDivExact(
       rtc::dchecked_cast<int>(expected_output_sequence.size()),
-      gru->output_size());
+      gru.output_size());
   ASSERT_EQ(input_sequence_length, output_sequence_length)
       << "The test data length is invalid.";
   // Feed the GRU layer and check the output at every step.
-  gru->Reset();
+  gru.Reset();
   for (int i = 0; i < input_sequence_length; ++i) {
     SCOPED_TRACE(i);
-    gru->ComputeOutput(
-        input_sequence.subview(i * gru->input_size(), gru->input_size()));
+    gru.ComputeOutput(
+        input_sequence.subview(i * gru.input_size(), gru.input_size()));
     const auto expected_output = expected_output_sequence.subview(
-        i * gru->output_size(), gru->output_size());
+        i * gru.output_size(), gru.output_size());
     ExpectNearAbsolute(expected_output, gru_output_view, 3e-6f);
   }
 }
@@ -134,141 +133,94 @@ constexpr std::array<float, 16> kGruExpectedOutputSequence = {
     0.00781069f, 0.75267816f, 0.f,         0.02579715f,
     0.00471378f, 0.59162533f, 0.11087593f, 0.01334511f};
 
-std::string GetOptimizationName(Optimization optimization) {
-  switch (optimization) {
-    case Optimization::kSse2:
-      return "SSE2";
-    case Optimization::kNeon:
-      return "NEON";
-    case Optimization::kNone:
-      return "none";
-  }
-}
-
-struct Result {
-  Optimization optimization;
-  double average_us;
-  double std_dev_us;
-};
-
-}  // namespace
-
-// Checks that the output of a fully connected layer is within tolerance given
-// test input data.
-TEST(RnnVadTest, CheckFullyConnectedLayerOutput) {
-  FullyConnectedLayer fc(rnnoise::kInputLayerInputSize,
-                         rnnoise::kInputLayerOutputSize,
-                         rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
-                         rnnoise::TansigApproximated, Optimization::kNone);
-  TestFullyConnectedLayer(&fc, kFullyConnectedInputVector,
-                          kFullyConnectedExpectedOutput);
-}
-
 // Checks that the output of a GRU layer is within tolerance given test input
 // data.
 TEST(RnnVadTest, CheckGatedRecurrentLayer) {
   GatedRecurrentLayer gru(kGruInputSize, kGruOutputSize, kGruBias, kGruWeights,
-                          kGruRecurrentWeights, Optimization::kNone);
-  TestGatedRecurrentLayer(&gru, kGruInputSequence, kGruExpectedOutputSequence);
-}
-
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-
-// Like CheckFullyConnectedLayerOutput, but testing the SSE2 implementation.
-TEST(RnnVadTest, CheckFullyConnectedLayerOutputSse2) {
-  if (!IsOptimizationAvailable(Optimization::kSse2)) {
-    return;
-  }
-
-  FullyConnectedLayer fc(rnnoise::kInputLayerInputSize,
-                         rnnoise::kInputLayerOutputSize,
-                         rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
-                         rnnoise::TansigApproximated, Optimization::kSse2);
-  TestFullyConnectedLayer(&fc, kFullyConnectedInputVector,
-                          kFullyConnectedExpectedOutput);
-}
-
-// Like CheckGatedRecurrentLayer, but testing the SSE2 implementation.
-TEST(RnnVadTest, CheckGatedRecurrentLayerSse2) {
-  if (!IsOptimizationAvailable(Optimization::kSse2)) {
-    return;
-  }
-
-  GatedRecurrentLayer gru(kGruInputSize, kGruOutputSize, kGruBias, kGruWeights,
-                          kGruRecurrentWeights, Optimization::kSse2);
-  TestGatedRecurrentLayer(&gru, kGruInputSequence, kGruExpectedOutputSequence);
-}
-
-#endif  // WEBRTC_ARCH_X86_FAMILY
-
-TEST(RnnVadTest, DISABLED_BenchmarkFullyConnectedLayer) {
-  std::vector<std::unique_ptr<FullyConnectedLayer>> implementations;
-  implementations.emplace_back(std::make_unique<FullyConnectedLayer>(
-      rnnoise::kInputLayerInputSize, rnnoise::kInputLayerOutputSize,
-      rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
-      rnnoise::TansigApproximated, Optimization::kNone));
-  if (IsOptimizationAvailable(Optimization::kSse2)) {
-    implementations.emplace_back(std::make_unique<FullyConnectedLayer>(
-        rnnoise::kInputLayerInputSize, rnnoise::kInputLayerOutputSize,
-        rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
-        rnnoise::TansigApproximated, Optimization::kSse2));
-  }
-
-  std::vector<Result> results;
-  constexpr int number_of_tests = 10000;
-  for (auto& fc : implementations) {
-    ::webrtc::test::PerformanceTimer perf_timer(number_of_tests);
-    for (int k = 0; k < number_of_tests; ++k) {
-      perf_timer.StartTimer();
-      fc->ComputeOutput(kFullyConnectedInputVector);
-      perf_timer.StopTimer();
-    }
-    results.push_back({fc->optimization(), perf_timer.GetDurationAverage(),
-                       perf_timer.GetDurationStandardDeviation()});
-  }
-
-  for (const auto& result : results) {
-    RTC_LOG(LS_INFO) << GetOptimizationName(result.optimization) << ": "
-                     << (result.average_us / 1e3) << " +/- "
-                     << (result.std_dev_us / 1e3) << " ms";
-  }
+                          kGruRecurrentWeights);
+  TestGatedRecurrentLayer(gru, kGruInputSequence, kGruExpectedOutputSequence);
 }
 
 TEST(RnnVadTest, DISABLED_BenchmarkGatedRecurrentLayer) {
-  std::vector<std::unique_ptr<GatedRecurrentLayer>> implementations;
-  implementations.emplace_back(std::make_unique<GatedRecurrentLayer>(
-      kGruInputSize, kGruOutputSize, kGruBias, kGruWeights,
-      kGruRecurrentWeights, Optimization::kNone));
+  GatedRecurrentLayer gru(kGruInputSize, kGruOutputSize, kGruBias, kGruWeights,
+                          kGruRecurrentWeights);
 
   rtc::ArrayView<const float> input_sequence(kGruInputSequence);
   static_assert(kGruInputSequence.size() % kGruInputSize == 0, "");
   constexpr int input_sequence_length =
       kGruInputSequence.size() / kGruInputSize;
 
-  std::vector<Result> results;
-  constexpr int number_of_tests = 10000;
-  for (auto& gru : implementations) {
-    ::webrtc::test::PerformanceTimer perf_timer(number_of_tests);
-    gru->Reset();
-    for (int k = 0; k < number_of_tests; ++k) {
-      perf_timer.StartTimer();
-      for (int i = 0; i < input_sequence_length; ++i) {
-        gru->ComputeOutput(
-            input_sequence.subview(i * gru->input_size(), gru->input_size()));
-      }
-      perf_timer.StopTimer();
+  constexpr int kNumTests = 10000;
+  ::webrtc::test::PerformanceTimer perf_timer(kNumTests);
+  for (int k = 0; k < kNumTests; ++k) {
+    perf_timer.StartTimer();
+    for (int i = 0; i < input_sequence_length; ++i) {
+      gru.ComputeOutput(
+          input_sequence.subview(i * gru.input_size(), gru.input_size()));
     }
-    results.push_back({gru->optimization(), perf_timer.GetDurationAverage(),
-                       perf_timer.GetDurationStandardDeviation()});
+    perf_timer.StopTimer();
   }
-
-  for (const auto& result : results) {
-    RTC_LOG(LS_INFO) << GetOptimizationName(result.optimization) << ": "
-                     << (result.average_us / 1e3) << " +/- "
-                     << (result.std_dev_us / 1e3) << " ms";
-  }
+  RTC_LOG(LS_INFO) << (perf_timer.GetDurationAverage() / 1000) << " +/- "
+                   << (perf_timer.GetDurationStandardDeviation() / 1000)
+                   << " ms";
 }
 
+class RnnParametrization
+    : public ::testing::TestWithParam<AvailableCpuFeatures> {};
+
+// Checks that the output of a fully connected layer is within tolerance given
+// test input data.
+TEST_P(RnnParametrization, CheckFullyConnectedLayerOutput) {
+  FullyConnectedLayer fc(
+      rnnoise::kInputLayerInputSize, rnnoise::kInputLayerOutputSize,
+      rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
+      rnnoise::TansigApproximated, /*cpu_features=*/GetParam());
+  TestFullyConnectedLayer(&fc, kFullyConnectedInputVector,
+                          kFullyConnectedExpectedOutput);
+}
+
+TEST_P(RnnParametrization, DISABLED_BenchmarkFullyConnectedLayer) {
+  const AvailableCpuFeatures cpu_features = GetParam();
+  FullyConnectedLayer fc(rnnoise::kInputLayerInputSize,
+                         rnnoise::kInputLayerOutputSize,
+                         rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
+                         rnnoise::TansigApproximated, cpu_features);
+
+  constexpr int kNumTests = 10000;
+  ::webrtc::test::PerformanceTimer perf_timer(kNumTests);
+  for (int k = 0; k < kNumTests; ++k) {
+    perf_timer.StartTimer();
+    fc.ComputeOutput(kFullyConnectedInputVector);
+    perf_timer.StopTimer();
+  }
+  RTC_LOG(LS_INFO) << "CPU features: " << cpu_features.ToString() << " | "
+                   << (perf_timer.GetDurationAverage() / 1000) << " +/- "
+                   << (perf_timer.GetDurationStandardDeviation() / 1000)
+                   << " ms";
+}
+
+// Finds the relevant CPU features combinations to test.
+std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
+  std::vector<AvailableCpuFeatures> v;
+  v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
+  AvailableCpuFeatures available = GetAvailableCpuFeatures();
+  if (available.sse2) {
+    AvailableCpuFeatures features(
+        {/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
+    v.push_back(features);
+  }
+  return v;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RnnVadTest,
+    RnnParametrization,
+    ::testing::ValuesIn(GetCpuFeaturesToTest()),
+    [](const ::testing::TestParamInfo<AvailableCpuFeatures>& info) {
+      return info.param.ToString();
+    });
+
+}  // namespace
 }  // namespace test
 }  // namespace rnn_vad
 }  // namespace webrtc

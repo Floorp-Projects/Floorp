@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/rnn_vad/pitch_search_internal.h"
 #include "modules/audio_processing/agc2/rnn_vad/test_utils.h"
 // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
@@ -29,7 +30,8 @@ TEST(RnnVadTest, PitchSearchWithinTolerance) {
   const int num_frames = std::min(lp_residual_reader.second, 300);  // Max 3 s.
   std::vector<float> lp_residual(kBufSize24kHz);
   float expected_pitch_period, expected_pitch_strength;
-  PitchEstimator pitch_estimator;
+  const AvailableCpuFeatures cpu_features = GetAvailableCpuFeatures();
+  PitchEstimator pitch_estimator(cpu_features);
   {
     // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
     // FloatingPointExceptionObserver fpe_observer;
