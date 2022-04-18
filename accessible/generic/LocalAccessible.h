@@ -442,11 +442,8 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void TakeFocus() const override;
 
-  /**
-   * Scroll the accessible into view.
-   */
   MOZ_CAN_RUN_SCRIPT
-  virtual void ScrollTo(uint32_t aHow) const;
+  virtual void ScrollTo(uint32_t aHow) const override;
 
   /**
    * Scroll the accessible to the given point.

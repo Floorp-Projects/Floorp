@@ -837,6 +837,11 @@ void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }
 
+template <class Derived>
+void RemoteAccessibleBase<Derived>::ScrollTo(uint32_t aHow) const {
+  Unused << mDoc->SendScrollTo(mID, aHow);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // SelectAccessible
 

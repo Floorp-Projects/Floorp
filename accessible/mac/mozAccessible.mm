@@ -887,15 +887,7 @@ struct RoleDescrComparator {
 
 - (void)moxPerformScrollToVisible {
   MOZ_ASSERT(mGeckoAccessible);
-
-  if (mGeckoAccessible->IsLocal()) {
-    // Need strong ref because of MOZ_CAN_RUN_SCRIPT
-    RefPtr<LocalAccessible> acc = mGeckoAccessible->AsLocal();
-    acc->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
-  } else {
-    mGeckoAccessible->AsRemote()->ScrollTo(
-        nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
-  }
+  mGeckoAccessible->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
 }
 
 - (void)moxPerformShowMenu {

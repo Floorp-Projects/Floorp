@@ -64,7 +64,6 @@ bool IsSearchbox() const;
 nsStaticAtom* ARIARoleAtom() const;
 
 virtual mozilla::a11y::GroupPos GroupPosition() override;
-void ScrollTo(uint32_t aScrollType);
 void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 
 void Announce(const nsString& aAnnouncement, uint16_t aPriority);

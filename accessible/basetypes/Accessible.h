@@ -241,6 +241,12 @@ class Accessible {
   virtual void TakeFocus() const = 0;
 
   /**
+   * Scroll the accessible into view.
+   */
+  MOZ_CAN_RUN_SCRIPT
+  virtual void ScrollTo(uint32_t aHow) const = 0;
+
+  /**
    * Return tag name of associated DOM node.
    */
   virtual nsAtom* TagName() const = 0;

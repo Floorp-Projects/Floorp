@@ -114,6 +114,18 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvTakeFocus(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvScrollTo(
+    const uint64_t& aID, const uint32_t& aScrollType) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
+    nsCOMPtr<nsIContent> content = acc->GetContent();
+    nsCoreUtils::ScrollTo(presShell, content, aScrollType);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleChildBase::RecvTakeSelection(
     const uint64_t& aID) {
   LocalAccessible* acc = IdToAccessible(aID);
