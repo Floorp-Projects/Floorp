@@ -78,6 +78,35 @@ rtc_library("rnn_vad_lp_residual") {
   ]
 }
 
+rtc_source_set("vector_math") {
+  sources = [ "vector_math.h" ]
+  deps = [
+    "..:cpu_features",
+    "../../../../api:array_view",
+    "../../../../rtc_base:checks",
+    "../../../../rtc_base/system:arch",
+  ]
+}
+
+if (current_cpu == "x86" || current_cpu == "x64") {
+  rtc_library("vector_math_avx2") {
+    sources = [ "vector_math_avx2.cc" ]
+    if (is_win) {
+      cflags = [ "/arch:AVX2" ]
+    } else {
+      cflags = [
+        "-mavx2",
+        "-mfma",
+      ]
+    }
+    deps = [
+      ":vector_math",
+      "../../../../api:array_view",
+      "../../../../rtc_base:checks",
+    ]
+  }
+}
+
 rtc_library("rnn_vad_pitch") {
   sources = [
     "pitch_search.cc",
@@ -88,6 +117,7 @@ rtc_library("rnn_vad_pitch") {
   deps = [
     ":rnn_vad_auto_correlation",
     ":rnn_vad_common",
+    ":vector_math",
     "..:cpu_features",
     "../../../../api:array_view",
     "../../../../rtc_base:checks",
@@ -95,6 +125,9 @@ rtc_library("rnn_vad_pitch") {
     "../../../../rtc_base:safe_compare",
     "../../../../rtc_base:safe_conversions",
   ]
+  if (current_cpu == "x86" || current_cpu == "x64") {
+    deps += [ ":vector_math_avx2" ]
+  }
 }
 
 rtc_source_set("rnn_vad_ring_buffer") {
@@ -191,6 +224,7 @@ if (rtc_include_tests) {
       "spectral_features_internal_unittest.cc",
       "spectral_features_unittest.cc",
       "symmetric_matrix_buffer_unittest.cc",
+      "vector_math_unittest.cc",
     ]
     deps = [
       ":rnn_vad",
@@ -203,6 +237,7 @@ if (rtc_include_tests) {
       ":rnn_vad_spectral_features",
       ":rnn_vad_symmetric_matrix_buffer",
       ":test_utils",
+      ":vector_math",
       "..:cpu_features",
       "../..:audioproc_test_utils",
       "../../../../api:array_view",
@@ -216,6 +251,9 @@ if (rtc_include_tests) {
       "../../utility:pffft_wrapper",
       "//third_party/rnnoise:rnn_vad",
     ]
+    if (current_cpu == "x86" || current_cpu == "x64") {
+      deps += [ ":vector_math_avx2" ]
+    }
     absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
     data = unittest_resources
     if (is_ios) {
