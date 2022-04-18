@@ -7,6 +7,7 @@
 #ifndef mozilla_H264Converter_h
 #define mozilla_H264Converter_h
 
+#include "PDMFactory.h"
 #include "PlatformDecoderModule.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
@@ -28,7 +29,7 @@ class MediaChangeMonitor : public MediaDataDecoder,
                            public DecoderDoctorLifeLogger<MediaChangeMonitor> {
  public:
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> Create(
-      PlatformDecoderModule* aPDM, const CreateDecoderParams& aParams);
+      PDMFactory* aPDMFactory, const CreateDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -70,7 +71,8 @@ class MediaChangeMonitor : public MediaDataDecoder,
   };
 
  private:
-  MediaChangeMonitor(UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
+  MediaChangeMonitor(PDMFactory* aPDMFactory,
+                     UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
                      MediaDataDecoder* aDecoder,
                      const CreateDecoderParams& aParams);
   virtual ~MediaChangeMonitor();
@@ -97,6 +99,7 @@ class MediaChangeMonitor : public MediaDataDecoder,
   RefPtr<ShutdownPromise> ShutdownDecoder();
 
   UniquePtr<CodecChangeMonitor> mChangeMonitor;
+  RefPtr<PDMFactory> mPDMFactory;
   VideoInfo mCurrentConfig;
   nsCOMPtr<nsISerialEventTarget> mThread;
   RefPtr<MediaDataDecoder> mDecoder;
