@@ -412,11 +412,9 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 };
 
 MediaChangeMonitor::MediaChangeMonitor(
-    PlatformDecoderModule* aPDM,
     UniquePtr<CodecChangeMonitor>&& aCodecChangeMonitor,
     MediaDataDecoder* aDecoder, const CreateDecoderParams& aParams)
     : mChangeMonitor(std::move(aCodecChangeMonitor)),
-      mPDM(aPDM),
       mCurrentConfig(aParams.VideoConfig()),
       mDecoder(aDecoder),
       mParams(aParams) {}
@@ -446,7 +444,7 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
   if (!changeMonitor->CanBeInstantiated()) {
     // nothing found yet, will try again later
     return PlatformDecoderModule::CreateDecoderPromise::CreateAndResolve(
-        new MediaChangeMonitor(aPDM, std::move(changeMonitor), nullptr,
+        new MediaChangeMonitor(std::move(changeMonitor), nullptr,
                                updatedParams),
         __func__);
   }
@@ -459,7 +457,7 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
                pdm = RefPtr{aPDM}, changeMonitor = std::move(changeMonitor)](
                   RefPtr<MediaDataDecoder>&& aDecoder) mutable {
                 RefPtr<MediaDataDecoder> decoder = new MediaChangeMonitor(
-                    pdm, std::move(changeMonitor), aDecoder, params);
+                    std::move(changeMonitor), aDecoder, params);
                 return PlatformDecoderModule::CreateDecoderPromise::
                     CreateAndResolve(decoder, __func__);
               },
@@ -664,9 +662,11 @@ MediaChangeMonitor::CreateDecoder() {
   MOZ_ASSERT(mThread && mThread->IsOnCurrentThread());
 
   mCurrentConfig = *mChangeMonitor->Config().GetAsVideoInfo();
-
+  RefPtr<PDMFactory> factory = new PDMFactory();
   RefPtr<CreateDecoderPromise> p =
-      mPDM->AsyncCreateDecoder({mCurrentConfig, mParams})
+      factory
+          ->CreateDecoder(
+              {mCurrentConfig, mParams, CreateDecoderParams::NoWrapper(true)})
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [self = RefPtr{this}, this](RefPtr<MediaDataDecoder>&& aDecoder) {
@@ -674,27 +674,8 @@ MediaChangeMonitor::CreateDecoder() {
                 DDLINKCHILD("decoder", mDecoder.get());
                 return CreateDecoderPromise::CreateAndResolve(true, __func__);
               },
-              [self = RefPtr{this}, this](const MediaResult& aError) {
-                // We failed to create a decoder with the existing PDM; attempt
-                // once again with a PDMFactory.
-                RefPtr<PDMFactory> factory = new PDMFactory();
-                RefPtr<CreateDecoderPromise> p =
-                    factory
-                        ->CreateDecoder({mCurrentConfig, mParams,
-                                         CreateDecoderParams::NoWrapper(true)})
-                        ->Then(
-                            GetCurrentSerialEventTarget(), __func__,
-                            [self, this](RefPtr<MediaDataDecoder>&& aDecoder) {
-                              mDecoder = std::move(aDecoder);
-                              DDLINKCHILD("decoder", mDecoder.get());
-                              return CreateDecoderPromise::CreateAndResolve(
-                                  true, __func__);
-                            },
-                            [self](const MediaResult& aError) {
-                              return CreateDecoderPromise::CreateAndReject(
-                                  aError, __func__);
-                            });
-                return p;
+              [self = RefPtr{this}](const MediaResult& aError) {
+                return CreateDecoderPromise::CreateAndReject(aError, __func__);
               });
 
   mDecoderInitialized = false;
