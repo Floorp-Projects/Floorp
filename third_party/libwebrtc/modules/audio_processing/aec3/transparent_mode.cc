@@ -24,7 +24,9 @@ bool DeactivateTransparentMode() {
 }
 
 bool DeactivateTransparentModeHmm() {
-  return field_trial::IsEnabled("WebRTC-Aec3TransparentModeHmmKillSwitch");
+  // HMM based classifier is temporarily disabled (https://crbug.com/1155071).
+  return true;
+  // return field_trial::IsEnabled("WebRTC-Aec3TransparentModeHmmKillSwitch");
 }
 
 }  // namespace
