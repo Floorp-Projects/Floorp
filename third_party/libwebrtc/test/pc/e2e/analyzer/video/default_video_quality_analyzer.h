@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/test/video_quality_analyzer_interface.h"
@@ -196,9 +197,9 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   void Start(std::string test_case_name,
              rtc::ArrayView<const std::string> peer_names,
              int max_threads_count) override;
-  uint16_t OnFrameCaptured(absl::string_view peer_name,
-                           const std::string& stream_label,
-                           const VideoFrame& frame) override;
+  absl::optional<uint16_t> OnFrameCaptured(absl::string_view peer_name,
+                                           const std::string& stream_label,
+                                           const VideoFrame& frame) override;
   void OnFramePreEncode(absl::string_view peer_name,
                         const VideoFrame& frame) override;
   void OnFrameEncoded(absl::string_view peer_name,
