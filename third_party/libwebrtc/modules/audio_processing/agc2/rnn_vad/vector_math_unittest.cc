@@ -47,9 +47,10 @@ std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
   AvailableCpuFeatures available = GetAvailableCpuFeatures();
   if (available.avx2) {
-    AvailableCpuFeatures features(
-        {/*sse2=*/false, /*avx2=*/true, /*neon=*/false});
-    v.push_back(features);
+    v.push_back({/*sse2=*/false, /*avx2=*/true, /*neon=*/false});
+  }
+  if (available.sse2) {
+    v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
   }
   return v;
 }
