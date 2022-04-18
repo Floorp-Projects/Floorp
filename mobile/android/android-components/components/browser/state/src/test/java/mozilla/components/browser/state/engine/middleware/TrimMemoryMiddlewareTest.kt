@@ -5,8 +5,6 @@
 package mozilla.components.browser.state.engine.middleware
 
 import android.content.ComponentCallbacks2
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findTab
@@ -20,14 +18,21 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class TrimMemoryMiddlewareTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
+
     private lateinit var engineSessionReddit: EngineSession
     private lateinit var engineSessionTheVerge: EngineSession
     private lateinit var engineSessionTwitch: EngineSession
@@ -37,8 +42,6 @@ class TrimMemoryMiddlewareTest {
     private lateinit var engineSessionFacebook: EngineSession
 
     private lateinit var store: BrowserStore
-    private val dispatcher = TestCoroutineDispatcher()
-    private val scope = CoroutineScope(dispatcher)
 
     private lateinit var engineSessionStateReddit: EngineSessionState
     private lateinit var engineSessionStateTheVerge: EngineSessionState
@@ -132,7 +135,7 @@ class TrimMemoryMiddlewareTest {
         ).joinBlocking()
 
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         store.state.findTab("theverge")!!.engineState.apply {
             assertNotNull(engineSession)
@@ -196,7 +199,7 @@ class TrimMemoryMiddlewareTest {
         ).joinBlocking()
 
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         store.state.findTab("theverge")!!.engineState.apply {
             assertNull(engineSession)

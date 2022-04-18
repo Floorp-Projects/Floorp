@@ -9,11 +9,6 @@ import android.graphics.Bitmap
 import android.widget.FrameLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
@@ -26,10 +21,11 @@ import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -39,8 +35,9 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class SwipeRefreshFeatureTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
-    private val testDispatcher = TestCoroutineDispatcher()
     private lateinit var store: BrowserStore
     private lateinit var refreshFeature: SwipeRefreshFeature
     private val mockLayout = mock<SwipeRefreshLayout>()
@@ -48,7 +45,6 @@ class SwipeRefreshFeatureTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -60,13 +56,6 @@ class SwipeRefreshFeatureTest {
         )
 
         refreshFeature = SwipeRefreshFeature(store, useCase, mockLayout)
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -103,7 +92,6 @@ class SwipeRefreshFeatureTest {
         val selectedTab = store.state.findCustomTabOrSelectedTab()!!
 
         store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(selectedTab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertFalse(selectedTab.content.refreshCanceled)
@@ -112,7 +100,6 @@ class SwipeRefreshFeatureTest {
     @Test
     fun `feature clears the swipeRefreshLayout#isRefreshing when tab fishes loading or a refreshCanceled`() {
         refreshFeature.start()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         val selectedTab = store.state.findCustomTabOrSelectedTab()!!
@@ -121,7 +108,6 @@ class SwipeRefreshFeatureTest {
         reset(mockLayout)
 
         store.dispatch(ContentAction.UpdateRefreshCanceledStateAction(selectedTab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(mockLayout, times(2)).isRefreshing = false
@@ -130,7 +116,6 @@ class SwipeRefreshFeatureTest {
         // As if we dispatch with loading = false, none event will be trigger.
         store.dispatch(ContentAction.UpdateLoadingStateAction(selectedTab.id, true)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(selectedTab.id, false)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         verify(mockLayout, times(3)).isRefreshing = false
     }

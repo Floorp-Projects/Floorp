@@ -15,7 +15,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
@@ -35,6 +35,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.openMocks
+import kotlin.coroutines.CoroutineContext
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -42,7 +43,7 @@ class CrashReporterActivityTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
+    private val scope = coroutinesTestRule.scope
 
     @Mock
     lateinit var service: CrashReporterService
@@ -62,7 +63,7 @@ class CrashReporterActivityTest {
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
-        val scenario = launchActivityWith(crash)
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
 
         scenario.onActivity { activity ->
             // When
@@ -86,7 +87,7 @@ class CrashReporterActivityTest {
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
-        val scenario = launchActivityWith(crash)
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
 
         scenario.onActivity { activity ->
             // When
@@ -113,7 +114,7 @@ class CrashReporterActivityTest {
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
-        val scenario = launchActivityWith(crash)
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
 
         scenario.onActivity { activity ->
             // Then
@@ -131,7 +132,7 @@ class CrashReporterActivityTest {
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
-        val scenario = launchActivityWith(crash)
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
 
         scenario.onActivity { activity ->
             // When
@@ -165,7 +166,7 @@ class CrashReporterActivityTest {
             Crash.NativeCodeCrash.PROCESS_TYPE_MAIN,
             arrayListOf()
         )
-        val scenario = launchActivityWith(crash)
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
 
         scenario.onActivity { activity ->
             assertEquals(activity.restartButton.visibility, View.VISIBLE)
@@ -189,7 +190,7 @@ class CrashReporterActivityTest {
             Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
             arrayListOf()
         )
-        val scenario = launchActivityWith(crash)
+        val scenario = coroutineContext.launchActivityWithCrash(crash)
 
         scenario.onActivity { activity ->
             assertEquals(activity.restartButton.visibility, View.GONE)
@@ -201,7 +202,7 @@ class CrashReporterActivityTest {
  * Launch activity scenario for certain [crash].
  */
 @ExperimentalCoroutinesApi
-private fun TestCoroutineScope.launchActivityWith(
+private fun CoroutineContext.launchActivityWithCrash(
     crash: Crash
 ): ActivityScenario<CrashReporterActivity> = run {
     val intent = Intent(testContext, CrashReporterActivity::class.java)
@@ -209,7 +210,7 @@ private fun TestCoroutineScope.launchActivityWith(
 
     launch<CrashReporterActivity>(intent).apply {
         onActivity { activity ->
-            activity.reporterCoroutineContext = coroutineContext
+            activity.reporterCoroutineContext = this@run
         }
     }
 }

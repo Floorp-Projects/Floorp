@@ -8,7 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
@@ -33,7 +34,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
     private lateinit var storage: AutofillCreditCardsAddressesStorage
     private lateinit var securePrefs: SecureAbove22Preferences
     private lateinit var delegate: GeckoCreditCardsAddressesStorageDelegate
-    private lateinit var scope: TestCoroutineScope
+    private lateinit var scope: TestScope
 
     init {
         testContext.getDatabasePath(AUTOFILL_DB_NAME)!!.parentFile!!.mkdirs()
@@ -41,7 +42,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
 
     @Before
     fun before() = runBlocking {
-        scope = TestCoroutineScope()
+        scope = TestScope(UnconfinedTestDispatcher())
         // forceInsecure is set in the tests because a keystore wouldn't be configured in the test environment.
         securePrefs = SecureAbove22Preferences(testContext, "autofill", forceInsecure = true)
         storage = AutofillCreditCardsAddressesStorage(testContext, lazy { securePrefs })

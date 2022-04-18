@@ -17,11 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -61,13 +57,14 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -84,7 +81,8 @@ import java.util.Date
 @RunWith(AndroidJUnit4::class)
 class PromptFeatureTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     private lateinit var store: BrowserStore
     private lateinit var fragmentManager: FragmentManager
@@ -99,7 +97,6 @@ class PromptFeatureTest {
     @Before
     @ExperimentalCoroutinesApi
     fun setUp() {
-        Dispatchers.setMain(testDispatcher)
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -116,13 +113,6 @@ class PromptFeatureTest {
         fragmentManager = mockFragmentManager()
     }
 
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
-
     @Test
     fun `PromptFeature acts on the selected session by default`() {
         val feature = spy(
@@ -136,7 +126,6 @@ class PromptFeatureTest {
 
         val promptRequest = SingleChoice(arrayOf(), {}, {})
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         verify(feature).onPromptRequested(store.state.tabs.first())
     }
 
@@ -155,7 +144,6 @@ class PromptFeatureTest {
         val promptRequest = SingleChoice(arrayOf(), {}, {})
         store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", promptRequest))
             .joinBlocking()
-        testDispatcher.advanceUntilIdle()
         verify(feature).onPromptRequested(store.state.customTabs.first())
     }
 
@@ -172,7 +160,6 @@ class PromptFeatureTest {
 
         val promptRequest = SingleChoice(arrayOf(), {}, {})
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         feature.start()
         verify(feature).onPromptRequested(store.state.tabs.first())
     }
@@ -1449,7 +1436,6 @@ class PromptFeatureTest {
         val promptRequest = PromptRequest.Share(ShareData("Title", "Text", null), {}, {}, {})
         store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", promptRequest))
             .joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         verify(feature).onPromptRequested(store.state.customTabs.first())
         verify(delegate).showShareSheet(
@@ -1477,7 +1463,6 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", selectCreditCardRequest))
             .joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         verify(feature).onPromptRequested(store.state.customTabs.first())
         verify(creditCardPicker).handleSelectCreditCardRequest(selectCreditCardRequest)
@@ -1500,7 +1485,6 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", selectCreditCardRequest))
             .joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         verify(feature).onPromptRequested(store.state.customTabs.first())
         verify(creditCardPicker, never()).handleSelectCreditCardRequest(selectCreditCardRequest)
@@ -1523,7 +1507,6 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", selectCreditCardRequest))
             .joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         verify(feature).onPromptRequested(store.state.customTabs.first())
         verify(creditCardPicker, never()).handleSelectCreditCardRequest(selectCreditCardRequest)

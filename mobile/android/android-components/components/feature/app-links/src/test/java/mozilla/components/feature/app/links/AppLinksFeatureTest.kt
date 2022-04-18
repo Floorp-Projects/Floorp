@@ -45,7 +45,6 @@ class AppLinksFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var store: BrowserStore
     private lateinit var mockContext: Context
@@ -120,7 +119,6 @@ class AppLinksFeatureTest {
         val tabWithPendingAppIntent = store.state.findTab(tab.id)!!
         assertNotNull(tabWithPendingAppIntent.content.appIntent)
 
-        testDispatcher.advanceUntilIdle()
         verify(feature).handleAppIntent(tabWithPendingAppIntent, intentUrl, intent)
 
         store.waitUntilIdle()
@@ -139,7 +137,7 @@ class AppLinksFeatureTest {
         val intent: Intent = mock()
         val appIntent = AppIntentState(intentUrl, intent)
         store.dispatch(ContentAction.UpdateAppIntentAction(tab.id, appIntent)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+
         verify(feature, never()).handleAppIntent(any(), any(), any())
     }
 

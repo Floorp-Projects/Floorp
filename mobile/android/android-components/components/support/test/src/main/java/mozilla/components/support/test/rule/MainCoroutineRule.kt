@@ -5,13 +5,14 @@
 package mozilla.components.support.test.rule
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.support.base.utils.NamedThreadFactory
 import org.junit.rules.TestWatcher
@@ -21,45 +22,35 @@ import java.util.concurrent.Executors
 /**
  * Create single threaded dispatcher for test environment.
  */
-@Deprecated("Use `TestCoroutineDispatcher()` from the kotlinx-coroutines-test library", ReplaceWith("TestCoroutineDispatcher()"))
+@Deprecated("Use a `TestDispatcher` from the kotlinx-coroutines-test library", ReplaceWith("UnconfinedTestDispatcher()"))
 fun createTestCoroutinesDispatcher(): CoroutineDispatcher = Executors.newSingleThreadExecutor(
     NamedThreadFactory("TestCoroutinesDispatcher")
 ).asCoroutineDispatcher()
 
 /**
  * JUnit rule to change Dispatchers.Main in coroutines.
+ * This assumes no other calls to `Dispatchers.setMain` are made to override the main dispatcher.
+ *
+ * @param testDispatcher [TestDispatcher] for handling all coroutines execution.
+ * Defaults to [UnconfinedTestDispatcher] which will eagerly enter `launch` or `async` blocks.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class MainCoroutineRule(val testDispatcher: TestCoroutineDispatcher = TestCoroutineDispatcher()) : TestWatcher() {
-    override fun starting(description: Description?) {
+class MainCoroutineRule(val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()) : TestWatcher() {
+    /**
+     * Get a [TestScope] that integrates with `runTest` and can be passed as an argument
+     * to the code under test when a [CoroutineScope] is required.
+     *
+     * This will rely on [testDispatcher] for controlling entering `launch` or `async` blocks.
+     */
+    val scope by lazy { TestScope(testDispatcher) }
+
+    override fun starting(description: Description) {
         super.starting(description)
         Dispatchers.setMain(testDispatcher)
     }
 
-    override fun finished(description: Description?) {
+    override fun finished(description: Description) {
         super.finished(description)
         Dispatchers.resetMain()
-
-        testDispatcher.cleanupTestCoroutines()
-    }
-
-    /**
-     * Convenience function to access [testDispatcher]'s [TestCoroutineDispatcher.runBlockingTest],
-     * e.g. instead of:
-     * ```
-     * fun testCode() = mainCoroutineRule.testDispatcher.runBlockingTest { ... }
-     * ```
-     *
-     * you can run:
-     * ```
-     * fun testCode() = mainCoroutineRule.runBlockingTest { ... }
-     * ```
-     *
-     * Note: using [TestCoroutineDispatcher.runBlockingTest] is preferred over using the global
-     * [runBlockingTest] because new coroutines created inside it will automatically be reparented
-     * to the test coroutine context.
-     */
-    fun runBlockingTest(testBlock: suspend TestCoroutineScope.() -> Unit) {
-        testDispatcher.runBlockingTest(testBlock)
     }
 }

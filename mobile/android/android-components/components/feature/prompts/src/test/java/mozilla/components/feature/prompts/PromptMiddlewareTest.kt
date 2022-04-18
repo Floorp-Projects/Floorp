@@ -28,7 +28,6 @@ class PromptMiddlewareTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var store: BrowserStore
 
@@ -56,14 +55,12 @@ class PromptMiddlewareTest {
         val onDeny = spy { }
         val popupPrompt1 = PromptRequest.Popup("https://firefox.com", onAllow = { }, onDeny = onDeny)
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, popupPrompt1)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(1, tab()!!.content.promptRequests.size)
         assertEquals(popupPrompt1, tab()!!.content.promptRequests[0])
         verify(onDeny, never()).invoke()
 
         val popupPrompt2 = PromptRequest.Popup("https://firefox.com", onAllow = { }, onDeny = onDeny)
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, popupPrompt2)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(1, tab()!!.content.promptRequests.size)
         assertEquals(popupPrompt1, tab()!!.content.promptRequests[0])
         verify(onDeny).invoke()
@@ -74,14 +71,12 @@ class PromptMiddlewareTest {
         val onDeny = spy { }
         val popupPrompt = PromptRequest.Popup("https://firefox.com", onAllow = { }, onDeny = onDeny)
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, popupPrompt)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(1, tab()!!.content.promptRequests.size)
         assertEquals(popupPrompt, tab()!!.content.promptRequests[0])
         verify(onDeny, never()).invoke()
 
         val alert = PromptRequest.Alert("title", "message", false, { }, { })
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, alert)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(2, tab()!!.content.promptRequests.size)
         assertEquals(popupPrompt, tab()!!.content.promptRequests[0])
         assertEquals(alert, tab()!!.content.promptRequests[1])
@@ -91,14 +86,12 @@ class PromptMiddlewareTest {
     fun `Process popup after other prompt request`() {
         val alert = PromptRequest.Alert("title", "message", false, { }, { })
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, alert)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(1, tab()!!.content.promptRequests.size)
         assertEquals(alert, tab()!!.content.promptRequests[0])
 
         val onDeny = spy { }
         val popupPrompt = PromptRequest.Popup("https://firefox.com", onAllow = { }, onDeny = onDeny)
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, popupPrompt)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(2, tab()!!.content.promptRequests.size)
         assertEquals(alert, tab()!!.content.promptRequests[0])
         assertEquals(popupPrompt, tab()!!.content.promptRequests[1])
@@ -109,13 +102,11 @@ class PromptMiddlewareTest {
     fun `Process other prompt requests`() {
         val alert = PromptRequest.Alert("title", "message", false, { }, { })
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, alert)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(1, tab()!!.content.promptRequests.size)
         assertEquals(alert, tab()!!.content.promptRequests[0])
 
         val beforeUnloadPrompt = PromptRequest.BeforeUnload("title", onLeave = { }, onStay = { })
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, beforeUnloadPrompt)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(2, tab()!!.content.promptRequests.size)
         assertEquals(alert, tab()!!.content.promptRequests[0])
         assertEquals(beforeUnloadPrompt, tab()!!.content.promptRequests[1])

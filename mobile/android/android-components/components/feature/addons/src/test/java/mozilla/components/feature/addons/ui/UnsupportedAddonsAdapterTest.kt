@@ -31,7 +31,6 @@ class UnsupportedAddonsAdapterTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `removing successfully notifies the adapter item changed`() {
@@ -50,19 +49,16 @@ class UnsupportedAddonsAdapterTest {
         )
 
         adapter.removeUninstalledAddon(addonOne)
-        testDispatcher.advanceUntilIdle()
         verify(unsupportedAddonsAdapterDelegate, times(1)).onUninstallSuccess()
         verify(adapter, times(1)).notifyDataSetChanged()
         assertEquals(1, adapter.itemCount)
 
         adapter.removeUninstalledAddon(addonTwo)
-        testDispatcher.advanceUntilIdle()
         verify(unsupportedAddonsAdapterDelegate, times(2)).onUninstallSuccess()
         verify(adapter, times(2)).notifyDataSetChanged()
         assertEquals(0, adapter.itemCount)
 
         adapter.removeUninstalledAddon(addonTwo)
-        testDispatcher.advanceUntilIdle()
         verify(unsupportedAddonsAdapterDelegate, times(2)).onUninstallSuccess()
         verify(adapter, times(2)).notifyDataSetChanged()
     }
@@ -116,7 +112,6 @@ class UnsupportedAddonsAdapterTest {
         assertFalse(removeButtonOne.isEnabled)
         assertFalse(removeButtonTwo.isEnabled)
 
-        testDispatcher.advanceUntilIdle()
         verify(addonManager).uninstallAddon(any(), onSuccessCaptor.capture(), any())
         onSuccessCaptor.value.invoke()
         assertFalse(adapter.pendingUninstall)

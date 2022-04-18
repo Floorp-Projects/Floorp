@@ -4,8 +4,6 @@
 
 package mozilla.components.browser.state.engine.middleware
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
@@ -18,8 +16,10 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.doReturn
@@ -28,14 +28,16 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class EngineDelegateMiddlewareTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
+
     @Test
     fun `LoadUrlAction for tab without engine session`() {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -55,7 +57,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -68,9 +70,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession(private = true)
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab", private = true)
         val store = BrowserStore(
@@ -90,7 +89,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = true, contextId = null)
@@ -103,9 +102,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession(contextId = "test-container")
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab", contextId = "test-container")
         val store = BrowserStore(
@@ -125,7 +121,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = "test-container")
@@ -137,9 +133,6 @@ class EngineDelegateMiddlewareTest {
     fun `LoadUrlAction for tab with engine session`() {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -162,7 +155,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine, never()).createSession(ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyString())
@@ -174,9 +167,6 @@ class EngineDelegateMiddlewareTest {
     fun `LoadUrlAction for private tab with engine session`() {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -199,7 +189,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine, never()).createSession(ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyString())
@@ -211,9 +201,6 @@ class EngineDelegateMiddlewareTest {
     fun `LoadUrlAction for container tab with engine session`() {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -236,7 +223,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine, never()).createSession(ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyString())
@@ -251,9 +238,6 @@ class EngineDelegateMiddlewareTest {
         doReturn(engineSession).`when`(engine).createSession()
 
         val parentEngineSession: EngineSession = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val parent = createTab("https://getpocket.com", id = "parent-tab").copy(
             engineState = EngineState(parentEngineSession)
@@ -277,7 +261,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -291,9 +275,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val parent = createTab("https://getpocket.com", id = "parent-tab")
         val tab = createTab("https://www.mozilla.org", id = "test-tab", parent = parent)
@@ -315,7 +296,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine, times(1)).createSession(private = false, contextId = null)
@@ -326,9 +307,6 @@ class EngineDelegateMiddlewareTest {
     @Test
     fun `LoadUrlAction with flags and additional headers`() {
         val engineSession: EngineSession = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -356,7 +334,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engineSession, times(1)).loadUrl(
@@ -375,9 +353,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
 
@@ -398,7 +373,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -410,9 +385,6 @@ class EngineDelegateMiddlewareTest {
     @Test
     fun `LoadUrlAction for not existing tab`() {
         val engine: Engine = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -433,7 +405,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine, never()).createSession(ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyString())
@@ -445,9 +417,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -469,7 +438,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -486,9 +455,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -508,7 +474,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -523,9 +489,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -544,7 +507,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -557,9 +520,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -578,7 +538,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -591,9 +551,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -613,7 +570,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -626,9 +583,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -648,7 +602,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -661,9 +615,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -683,7 +634,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -696,9 +647,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -717,7 +665,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -730,9 +678,6 @@ class EngineDelegateMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val tab = createTab("https://www.mozilla.org", id = "test-tab")
         val store = BrowserStore(
@@ -752,7 +697,7 @@ class EngineDelegateMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine).createSession(private = false, contextId = null)
@@ -764,9 +709,6 @@ class EngineDelegateMiddlewareTest {
     fun `PurgeHistoryAction - calls purgeHistory on engine session instances`() {
         val engineSession1: EngineSession = mock()
         val engineSession2: EngineSession = mock()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -795,7 +737,7 @@ class EngineDelegateMiddlewareTest {
 
         store.dispatch(EngineAction.PurgeHistoryAction).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(engineSession1).purgeHistory()
         verify(engineSession2).purgeHistory()

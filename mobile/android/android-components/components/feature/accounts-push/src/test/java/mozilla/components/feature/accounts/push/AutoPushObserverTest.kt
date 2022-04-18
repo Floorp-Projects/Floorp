@@ -4,11 +4,8 @@
 
 package mozilla.components.feature.accounts.push
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceConstellation
@@ -19,6 +16,8 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
+import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
@@ -27,6 +26,9 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.stubbing.OngoingStubbing
 
 class AutoPushObserverTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private val manager: FxaAccountManager = mock()
     private val account: OAuthAccount = mock()
     private val constellation: DeviceConstellation = mock()
@@ -35,7 +37,6 @@ class AutoPushObserverTest {
     @ExperimentalCoroutinesApi
     @Test
     fun `messages are forwarded to account manager`() = runBlocking {
-        Dispatchers.setMain(TestCoroutineDispatcher())
         val observer = AutoPushObserver(manager, mock(), "test")
 
         `when`(manager.authenticatedAccount()).thenReturn(account)
@@ -71,7 +72,6 @@ class AutoPushObserverTest {
     @ExperimentalCoroutinesApi
     @Test
     fun `subscription changes are forwarded to account manager`() = runBlocking {
-        Dispatchers.setMain(TestCoroutineDispatcher())
         val observer = AutoPushObserver(manager, pushFeature, "test")
 
         whenSubscribe()

@@ -14,7 +14,7 @@ import android.widget.ImageButton
 import androidx.core.view.forEach
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -857,7 +857,7 @@ class CustomTabsToolbarFeatureTest {
 
     @Test
     fun `show title only if not empty`() {
-        val dispatcher = TestCoroutineDispatcher()
+        val dispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(dispatcher)
 
         val tab = createCustomTab(
@@ -898,8 +898,6 @@ class CustomTabsToolbarFeatureTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
-
         assertEquals("Internet for people, not profit - Mozilla", toolbar.title)
 
         Dispatchers.resetMain()
@@ -907,7 +905,7 @@ class CustomTabsToolbarFeatureTest {
 
     @Test
     fun `Will use URL as title if title was shown once and is now empty`() {
-        val dispatcher = TestCoroutineDispatcher()
+        val dispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(dispatcher)
 
         val tab = createCustomTab(
@@ -947,15 +945,11 @@ class CustomTabsToolbarFeatureTest {
             ContentAction.UpdateUrlAction("mozilla", "https://www.mozilla.org/en-US/firefox/")
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
-
         assertEquals("", toolbar.title)
 
         store.dispatch(
             ContentAction.UpdateTitleAction("mozilla", "Firefox - Protect your life online with privacy-first products")
         ).joinBlocking()
-
-        dispatcher.advanceUntilIdle()
 
         assertEquals("Firefox - Protect your life online with privacy-first products", toolbar.title)
 
@@ -963,15 +957,11 @@ class CustomTabsToolbarFeatureTest {
             ContentAction.UpdateUrlAction("mozilla", "https://github.com/mozilla-mobile/android-components")
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
-
         assertEquals("https://github.com/mozilla-mobile/android-components", toolbar.title)
 
         store.dispatch(
             ContentAction.UpdateTitleAction("mozilla", "Le GitHub")
         ).joinBlocking()
-
-        dispatcher.advanceUntilIdle()
 
         assertEquals("Le GitHub", toolbar.title)
 
@@ -979,15 +969,11 @@ class CustomTabsToolbarFeatureTest {
             ContentAction.UpdateUrlAction("mozilla", "https://github.com/mozilla-mobile/fenix")
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
-
         assertEquals("https://github.com/mozilla-mobile/fenix", toolbar.title)
 
         store.dispatch(
             ContentAction.UpdateTitleAction("mozilla", "")
         ).joinBlocking()
-
-        dispatcher.advanceUntilIdle()
 
         assertEquals("https://github.com/mozilla-mobile/fenix", toolbar.title)
 
@@ -995,15 +981,11 @@ class CustomTabsToolbarFeatureTest {
             ContentAction.UpdateTitleAction("mozilla", "A collection of Android libraries to build browsers or browser-like applications.")
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
-
         assertEquals("A collection of Android libraries to build browsers or browser-like applications.", toolbar.title)
 
         store.dispatch(
             ContentAction.UpdateTitleAction("mozilla", "")
         ).joinBlocking()
-
-        dispatcher.advanceUntilIdle()
 
         assertEquals("https://github.com/mozilla-mobile/fenix", toolbar.title)
     }

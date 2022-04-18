@@ -5,11 +5,6 @@
 package mozilla.components.feature.tabs.tabstray
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabPartition
@@ -18,13 +13,13 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.support.test.ext.joinBlocking
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -32,19 +27,9 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 
 @RunWith(AndroidJUnit4::class)
 class TabsTrayPresenterTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `initial set of sessions will be passed to tabs tray`() {
@@ -71,7 +56,7 @@ class TabsTrayPresenterTest {
 
         presenter.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNotNull(tabsTray.updateTabs)
 
@@ -106,7 +91,7 @@ class TabsTrayPresenterTest {
 
         presenter.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, tabsTray.updateTabs!!.size)
 
@@ -144,17 +129,17 @@ class TabsTrayPresenterTest {
 
         presenter.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveTabAction("b")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.size)
 
@@ -184,12 +169,12 @@ class TabsTrayPresenterTest {
 
         presenter.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(2, tabsTray.updateTabs!!.size)
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(0, tabsTray.updateTabs!!.size)
 
@@ -221,13 +206,13 @@ class TabsTrayPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(5, tabsTray.updateTabs!!.size)
         assertEquals("a", tabsTray.selectedTabId)
 
         store.dispatch(TabListAction.SelectTabAction("d")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         println("Selection: " + store.state.selectedTabId)
         assertEquals("d", tabsTray.selectedTabId)
@@ -255,7 +240,7 @@ class TabsTrayPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(tabsTray.updateTabs?.size == 1)
     }
@@ -287,12 +272,12 @@ class TabsTrayPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(closed)
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(closed)
 
@@ -323,17 +308,17 @@ class TabsTrayPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(closed)
 
         store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(closed)
 
         store.dispatch(TabListAction.RemoveTabAction("b")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(closed)
 
@@ -360,7 +345,7 @@ class TabsTrayPresenterTest {
         )
 
         presenter.start()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(invoked)
     }

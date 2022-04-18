@@ -46,7 +46,6 @@ class WebExtensionBrowserMenuTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {
@@ -83,8 +82,6 @@ class WebExtensionBrowserMenuTest {
 
         val adapter = BrowserMenuAdapter(testContext, items)
         val menu = WebExtensionBrowserMenu(adapter, store)
-
-        testDispatcher.advanceUntilIdle()
 
         val anchor = Button(testContext)
         val popup = menu.show(anchor)
@@ -434,7 +431,6 @@ class WebExtensionBrowserMenuTest {
         val menu: WebExtensionBrowserMenu = mock()
 
         menuItem.bind(menu, view)
-        testDispatcher.advanceUntilIdle()
 
         CollectionProcessor.withFactCollection { facts ->
             container.performClick()

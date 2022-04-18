@@ -60,7 +60,6 @@ class ReaderViewFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {
@@ -194,7 +193,6 @@ class ReaderViewFeatureTest {
 
         store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(tab.id, true)).joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
         val tabCaptor = argumentCaptor<TabSessionState>()
         verify(readerViewFeature).checkReaderState(tabCaptor.capture())
         assertEquals(tab.id, tabCaptor.value.id)
@@ -209,7 +207,6 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
 
         store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         val tabCaptor = argumentCaptor<TabSessionState>()
         verify(readerViewFeature).connectReaderViewContentScript(tabCaptor.capture())
         assertEquals(tab.id, tabCaptor.value.id)
@@ -232,27 +229,22 @@ class ReaderViewFeatureTest {
 
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
         store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(1, readerViewStatusChanges.size)
         assertEquals(Pair(true, false), readerViewStatusChanges[0])
 
         store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(2, readerViewStatusChanges.size)
         assertEquals(Pair(true, true), readerViewStatusChanges[1])
 
         store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         // No change -> No notification should have been sent
         assertEquals(2, readerViewStatusChanges.size)
 
         store.dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, false)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(3, readerViewStatusChanges.size)
         assertEquals(Pair(true, false), readerViewStatusChanges[2])
 
         store.dispatch(ReaderAction.UpdateReaderableAction(tab.id, false)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         assertEquals(4, readerViewStatusChanges.size)
         assertEquals(Pair(false, false), readerViewStatusChanges[3])
     }
@@ -317,7 +309,6 @@ class ReaderViewFeatureTest {
         store.dispatch(EngineAction.LinkEngineSessionAction(tab.id, engineSession)).joinBlocking()
         store.dispatch(TabListAction.SelectTabAction(tab.id)).joinBlocking()
         store.dispatch(ContentAction.UpdateBackNavigationStateAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
 
         readerViewFeature.hideReaderView()
         verify(engineSession).goBack(false)
@@ -496,7 +487,6 @@ class ReaderViewFeatureTest {
         val message = argumentCaptor<JSONObject>()
         readerViewFeature.start()
         store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         verify(controller).registerContentMessageHandler(
             eq(engineSession), messageHandler.capture(), eq(READER_VIEW_ACTIVE_CONTENT_PORT)
         )
@@ -551,7 +541,6 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
 
         store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(tab.id, true)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         verify(controller).registerContentMessageHandler(
             eq(engineSession), messageHandler.capture(), eq(READER_VIEW_ACTIVE_CONTENT_PORT)
         )

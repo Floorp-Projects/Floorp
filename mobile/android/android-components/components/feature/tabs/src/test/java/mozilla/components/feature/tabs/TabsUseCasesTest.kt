@@ -165,11 +165,11 @@ class TabsUseCasesTest {
 
         // Wait for CreateEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Wait for LinkEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
@@ -180,11 +180,13 @@ class TabsUseCasesTest {
     fun `AddNewTabUseCase forwards load flags to engine`() {
         tabsUseCases.addTab.invoke("https://www.mozilla.org", flags = LoadUrlFlags.external(), startLoading = true)
 
+        // Wait for CreateEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
+        // Wait for LinkEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
@@ -265,11 +267,11 @@ class TabsUseCasesTest {
 
         // Wait for CreateEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Wait for LinkEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
@@ -281,11 +283,13 @@ class TabsUseCasesTest {
     fun `AddNewPrivateTabUseCase forwards load flags to engine`() {
         tabsUseCases.addPrivateTab.invoke("https://www.mozilla.org", flags = LoadUrlFlags.external(), startLoading = true)
 
+        // Wait for CreateEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
+        // Wait for LinkEngineSessionAction and middleware
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, store.state.tabs.size)
         assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)

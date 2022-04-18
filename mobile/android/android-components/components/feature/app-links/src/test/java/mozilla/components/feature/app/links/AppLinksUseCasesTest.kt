@@ -12,11 +12,9 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageInfo
 import android.content.pm.ResolveInfo
 import android.net.Uri
+import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -35,7 +33,7 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
 import java.io.File
-import java.lang.NullPointerException
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -245,7 +243,10 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A URL that matches only general packages is not an app link`() {
-        val context = createContext(Triple(appUrl, browserPackage, ""), Triple(browserUrl, browserPackage, ""))
+        val context = createContext(
+            Triple(appUrl, browserPackage, ""),
+            Triple(browserUrl, browserPackage, "")
+        )
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -257,7 +258,11 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A URL that also matches both specialized and general packages is an app link`() {
-        val context = createContext(Triple(appUrl, appPackage, ""), Triple(appUrl, browserPackage, ""), Triple(browserUrl, browserPackage, ""))
+        val context = createContext(
+            Triple(appUrl, appPackage, ""),
+            Triple(appUrl, browserPackage, ""),
+            Triple(browserUrl, browserPackage, "")
+        )
         val subject = AppLinksUseCases(context, { true })
 
         val redirect = subject.interceptedAppLinkRedirect(appUrl)
@@ -343,7 +348,8 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `A intent scheme uri with a fallback without an installed app is not an app link`() {
-        val uri = "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=http%3A%2F%2Fzxing.org;end"
+        val uri =
+            "intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=http%3A%2F%2Fzxing.org;end"
         val context = createContext()
         val subject = AppLinksUseCases(context, { true })
 
@@ -428,27 +434,24 @@ class AppLinksUseCasesTest {
 
     @Test
     fun `AppLinksUsecases uses cache`() {
-        val testDispatcher = TestCoroutineDispatcher()
-        TestCoroutineScope(testDispatcher).launch {
-            val context = createContext(Triple(appUrl, appPackage, ""))
+        val context = createContext(Triple(appUrl, appPackage, ""))
 
-            var subject = AppLinksUseCases(context, { true })
-            var redirect = subject.interceptedAppLinkRedirect(appUrl)
-            assertTrue(redirect.isRedirect())
-            val timestamp = AppLinksUseCases.redirectCache?.cacheTimeStamp
+        var subject = AppLinksUseCases(context, { true })
+        var redirect = subject.interceptedAppLinkRedirect(appUrl)
+        assertTrue(redirect.isRedirect())
+        val timestamp = AppLinksUseCases.redirectCache?.cacheTimeStamp
 
-            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2)
-            subject = AppLinksUseCases(context, { true })
-            redirect = subject.interceptedAppLinkRedirect(appUrl)
-            assertTrue(redirect.isRedirect())
-            assert(timestamp == AppLinksUseCases.redirectCache?.cacheTimeStamp)
+        shadowOf(getMainLooper()).idleFor(APP_LINKS_CACHE_INTERVAL / 2, MILLISECONDS)
+        subject = AppLinksUseCases(context, { true })
+        redirect = subject.interceptedAppLinkRedirect(appUrl)
+        assertTrue(redirect.isRedirect())
+        assert(timestamp == AppLinksUseCases.redirectCache?.cacheTimeStamp)
 
-            testDispatcher.advanceTimeBy(APP_LINKS_CACHE_INTERVAL / 2 + 1)
-            subject = AppLinksUseCases(context, { true })
-            redirect = subject.interceptedAppLinkRedirect(appUrl)
-            assertTrue(redirect.isRedirect())
-            assert(timestamp != AppLinksUseCases.redirectCache?.cacheTimeStamp)
-        }
+        shadowOf(getMainLooper()).idleFor(APP_LINKS_CACHE_INTERVAL / 2 + 1, MILLISECONDS)
+        subject = AppLinksUseCases(context, { true })
+        redirect = subject.interceptedAppLinkRedirect(appUrl)
+        assertTrue(redirect.isRedirect())
+        assert(timestamp != AppLinksUseCases.redirectCache?.cacheTimeStamp)
     }
 
     @Test
@@ -591,7 +594,8 @@ class AppLinksUseCasesTest {
 
         assertNull(result)
 
-        uri = "intent://blank#Intent;package=test;i.android.support.customtabs.extra.TOOLBAR_COLOR=2239095040;end"
+        uri =
+            "intent://blank#Intent;package=test;i.android.support.customtabs.extra.TOOLBAR_COLOR=2239095040;end"
         result = subject.safeParseUri(uri, 0)
 
         assertNull(result)

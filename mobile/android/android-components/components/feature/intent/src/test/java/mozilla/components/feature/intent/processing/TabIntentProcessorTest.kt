@@ -9,7 +9,6 @@ import android.content.Intent
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
@@ -51,7 +50,7 @@ class TabIntentProcessorTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
+    private val scope = coroutinesTestRule.scope
 
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
 

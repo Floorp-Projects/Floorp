@@ -29,7 +29,6 @@ class WindowFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var store: BrowserStore
     private lateinit var engineSession: EngineSession
@@ -70,7 +69,7 @@ class WindowFeatureTest {
         whenever(windowRequest.url).thenReturn("https://www.firefox.com")
 
         store.dispatch(ContentAction.UpdateWindowRequestAction(tabId, windowRequest)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+
         verify(addTabUseCase).invoke(url = "about:blank", selectTab = true, parentId = tabId)
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(tabId))
     }
@@ -86,7 +85,7 @@ class WindowFeatureTest {
 
         store.dispatch(TabListAction.SelectTabAction(privateTabId)).joinBlocking()
         store.dispatch(ContentAction.UpdateWindowRequestAction(privateTabId, windowRequest)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+
         verify(addTabUseCase).invoke(url = "about:blank", selectTab = true, parentId = privateTabId, private = true)
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(privateTabId))
     }
@@ -101,7 +100,7 @@ class WindowFeatureTest {
         whenever(windowRequest.prepare()).thenReturn(engineSession)
 
         store.dispatch(ContentAction.UpdateWindowRequestAction(tabId, windowRequest)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+
         verify(removeTabUseCase).invoke(tabId)
         verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(tabId))
     }
@@ -116,7 +115,7 @@ class WindowFeatureTest {
         whenever(windowRequest.type).thenReturn(WindowRequest.Type.CLOSE)
 
         store.dispatch(ContentAction.UpdateWindowRequestAction(tabId, windowRequest)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+
         verify(removeTabUseCase, never()).invoke(tabId)
         verify(store, never()).dispatch(ContentAction.ConsumeWindowRequestAction(tabId))
     }

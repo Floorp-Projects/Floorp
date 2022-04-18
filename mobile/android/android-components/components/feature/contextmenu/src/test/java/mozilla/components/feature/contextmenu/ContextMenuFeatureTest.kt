@@ -9,10 +9,6 @@ import android.view.View
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
@@ -29,13 +25,14 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -45,14 +42,14 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class ContextMenuFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var store: BrowserStore
 
     @Before
     fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-
         store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -61,12 +58,6 @@ class ContextMenuFeatureTest {
                 selectedTabId = "test-tab"
             )
         )
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -92,7 +83,7 @@ class ContextMenuFeatureTest {
             )
         ).joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(fragmentManager).beginTransaction()
         verify(view).performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -122,7 +113,7 @@ class ContextMenuFeatureTest {
             )
         ).joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(fragmentManager, never()).beginTransaction()
         verify(view, never()).performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -155,7 +146,7 @@ class ContextMenuFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(fragment).feature = feature
         verify(view, never()).performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
@@ -185,7 +176,7 @@ class ContextMenuFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(fragmentManager).beginTransaction()
         verify(transaction).remove(fragment)
@@ -219,7 +210,7 @@ class ContextMenuFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(fragmentManager).beginTransaction()
         verify(transaction).remove(fragment)
@@ -289,7 +280,7 @@ class ContextMenuFeatureTest {
         feature.onMenuCancelled("test-tab")
 
         store.waitUntilIdle()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab("test-tab")!!.content.hitResult)
     }
@@ -330,7 +321,7 @@ class ContextMenuFeatureTest {
         )
 
         store.waitUntilIdle()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNotNull(store.state.findTab("test-tab")!!.content.hitResult)
         assertFalse(actionInvoked)
@@ -338,7 +329,7 @@ class ContextMenuFeatureTest {
         feature.onMenuItemSelected("test-tab", "test-id")
 
         store.waitUntilIdle()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab("test-tab")!!.content.hitResult)
         assertTrue(actionInvoked)

@@ -9,7 +9,7 @@ import android.webkit.MimeTypeMap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.TestScope
 import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
@@ -60,7 +60,7 @@ class ShareDownloadFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setup() {
@@ -106,7 +106,7 @@ class ShareDownloadFeatureTest {
         shareFeature.start()
 
         store.dispatch(action).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(shareFeature).startSharing(download)
         verify(store).dispatch(ShareInternetResourceAction.ConsumeShareAction("123"))
@@ -136,7 +136,7 @@ class ShareDownloadFeatureTest {
         val shareState = ShareInternetResourceState(url = "testUrl", contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = TestCoroutineScope()
+        shareFeature.scope = TestScope(coroutineContext)
 
         shareFeature.startSharing(shareState)
 
@@ -153,7 +153,7 @@ class ShareDownloadFeatureTest {
         val shareState = ShareInternetResourceState(url = tooLongUrl, contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = TestCoroutineScope()
+        shareFeature.scope = TestScope()
 
         shareFeature.startSharing(shareState)
 
@@ -168,7 +168,7 @@ class ShareDownloadFeatureTest {
         val shareState = ShareInternetResourceState(url = "data:image/png;base64,longstring", contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = TestCoroutineScope()
+        shareFeature.scope = TestScope()
 
         shareFeature.startSharing(shareState)
 

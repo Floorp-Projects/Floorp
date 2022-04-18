@@ -5,11 +5,6 @@
 package mozilla.components.feature.session
 
 import android.view.WindowManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -18,13 +13,13 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.doReturn
@@ -32,20 +27,9 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
 class FullScreenFeatureTest {
-    private val testDispatcher = TestCoroutineDispatcher()
 
-    @Before
-    @ExperimentalCoroutinesApi
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Test
     fun `Starting without tabs`() {
@@ -62,8 +46,6 @@ class FullScreenFeatureTest {
         )
 
         feature.start()
-
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertNull(viewPort)
@@ -91,8 +73,6 @@ class FullScreenFeatureTest {
         )
 
         feature.start()
-
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertNull(viewPort)
@@ -134,8 +114,6 @@ class FullScreenFeatureTest {
         )
 
         feature.start()
-
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertEquals(42, viewPort)

@@ -4,12 +4,6 @@
 
 package mozilla.components.browser.state.engine
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.engine.middleware.TrimMemoryMiddleware
 import mozilla.components.browser.state.state.BrowserState
@@ -19,32 +13,18 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 
 class EngineMiddlewareTest {
-    private lateinit var dispatcher: TestCoroutineDispatcher
-    private lateinit var scope: CoroutineScope
-
-    @Before
-    fun setUp() {
-        dispatcher = TestCoroutineDispatcher()
-        scope = CoroutineScope(dispatcher)
-
-        Dispatchers.setMain(dispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
-        scope.cancel()
-
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
 
     @Test
     fun `Dispatching CreateEngineSessionAction multiple times should only create one engine session`() {
@@ -69,7 +49,7 @@ class EngineMiddlewareTest {
             EngineAction.CreateEngineSessionAction("mozilla")
         )
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(engine, Mockito.times(1)).createSession(false, null)

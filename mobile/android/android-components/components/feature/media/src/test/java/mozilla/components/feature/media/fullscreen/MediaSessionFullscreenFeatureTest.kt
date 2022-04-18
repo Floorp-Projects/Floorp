@@ -26,7 +26,6 @@ class MediaSessionFullscreenFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `screen orientation is updated correctly`() {
@@ -63,7 +62,6 @@ class MediaSessionFullscreenFeatureTest {
         )
 
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
 
         verify(mockActivity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT)
     }

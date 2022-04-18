@@ -16,10 +16,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
@@ -39,14 +36,15 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
@@ -63,14 +61,14 @@ import org.robolectric.shadows.ShadowToast
 @RunWith(AndroidJUnit4::class)
 class DownloadsFeatureTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var store: BrowserStore
 
     @Before
-    @ExperimentalCoroutinesApi
     fun setUp() {
-        Dispatchers.setMain(testDispatcher)
 
         store = BrowserStore(
             BrowserState(
@@ -78,13 +76,6 @@ class DownloadsFeatureTest {
                 selectedTabId = "test-tab"
             )
         )
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -110,7 +101,7 @@ class DownloadsFeatureTest {
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(requestedPermissions)
         verify(fragmentManager, never()).beginTransaction()
@@ -137,7 +128,7 @@ class DownloadsFeatureTest {
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(fragmentManager).beginTransaction()
     }
@@ -188,7 +179,7 @@ class DownloadsFeatureTest {
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(downloadManager).download(eq(download), anyString())
     }
@@ -227,7 +218,7 @@ class DownloadsFeatureTest {
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(fragmentManager, never()).beginTransaction()
@@ -471,7 +462,7 @@ class DownloadsFeatureTest {
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(downloadManager).download(eq(download), anyString())
         verify(feature).showDownloadNotSupportedError()

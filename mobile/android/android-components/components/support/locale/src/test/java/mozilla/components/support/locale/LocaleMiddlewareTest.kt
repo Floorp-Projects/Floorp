@@ -5,25 +5,20 @@
 package mozilla.components.support.locale
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -34,25 +29,13 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 class LocaleMiddlewareTest {
 
-    private lateinit var dispatcher: TestCoroutineDispatcher
-    private lateinit var scope: CoroutineScope
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     fun setUp() {
-        dispatcher = TestCoroutineDispatcher()
-        scope = CoroutineScope(dispatcher)
-
-        Dispatchers.setMain(dispatcher)
-
         LocaleManager.clear(testContext)
-    }
-
-    @After
-    fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
-        scope.cancel()
-
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -80,7 +63,7 @@ class LocaleMiddlewareTest {
 
         store.dispatch(LocaleAction.RestoreLocaleStateAction).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(store.state.locale, currentLocale)
     }
@@ -109,7 +92,7 @@ class LocaleMiddlewareTest {
 
         val newLocale = "es".toLocale()
         store.dispatch(LocaleAction.UpdateLocaleAction(newLocale)).joinBlocking()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(localeManager).setNewLocale(testContext, locale = newLocale)
     }

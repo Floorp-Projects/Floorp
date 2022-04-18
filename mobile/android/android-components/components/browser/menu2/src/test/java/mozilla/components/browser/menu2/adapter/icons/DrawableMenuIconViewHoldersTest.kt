@@ -40,7 +40,6 @@ class DrawableMenuIconViewHoldersTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     private lateinit var parent: ConstraintLayout
     private lateinit var layoutInflater: LayoutInflater
@@ -85,7 +84,7 @@ class DrawableMenuIconViewHoldersTest {
     }
 
     @Test
-    fun `async view holder sets icon on view`() = testDispatcher.runBlockingTest {
+    fun `async view holder sets icon on view`() = runBlockingTest {
         val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.END)
 
         val drawable = mock<Drawable>()
@@ -95,7 +94,7 @@ class DrawableMenuIconViewHoldersTest {
     }
 
     @Test
-    fun `async view holder uses loading icon and fallback icon`() = testDispatcher.runBlockingTest {
+    fun `async view holder uses loading icon and fallback icon`() = runBlockingTest {
         val logger = mock<Logger>()
         val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.END, logger)
 

@@ -61,7 +61,7 @@ class WebExtensionToolbarTest {
         val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
         action.bind(view)
         action.iconJob?.joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         val iconCaptor = argumentCaptor<BitmapDrawable>()
         verify(imageView).setImageDrawable(iconCaptor.capture())
@@ -95,7 +95,7 @@ class WebExtensionToolbarTest {
         val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
         action.bind(view)
         action.iconJob?.joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(imageView).setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
     }
@@ -170,7 +170,7 @@ class WebExtensionToolbarTest {
         assertFalse(action.iconJob?.isCancelled!!)
 
         attachListenerCaptor.value.onViewDetachedFromWindow(parent)
-        testDispatcher.advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
         assertTrue(action.iconJob?.isCancelled!!)
     }
 }

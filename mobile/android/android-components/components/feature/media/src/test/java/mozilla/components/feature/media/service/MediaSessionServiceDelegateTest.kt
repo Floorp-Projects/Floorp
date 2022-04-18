@@ -34,7 +34,6 @@ class MediaSessionServiceDelegateTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `media session state starts service in foreground`() {
@@ -113,7 +112,6 @@ class MediaSessionServiceDelegateTest {
         store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction(store.state.customTabs[0].id))
 
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
 
         verify(service).stopSelf()
         verify(delegate).shutdown()

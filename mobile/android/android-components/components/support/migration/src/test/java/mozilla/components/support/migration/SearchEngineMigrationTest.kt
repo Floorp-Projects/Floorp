@@ -8,7 +8,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -208,7 +208,7 @@ private fun migrate(
 }
 
 private fun storeFor(language: String, country: String, region: String): BrowserStore {
-    val dispatcher = TestCoroutineDispatcher()
+    val dispatcher = UnconfinedTestDispatcher()
 
     Locale.setDefault(Locale(language, country))
 
@@ -228,7 +228,7 @@ private fun storeFor(language: String, country: String, region: String): Browser
     store.waitUntilIdle()
 
     // Now we wait for the Middleware that may need to asynchronously process an action the test dispatched
-    dispatcher.advanceUntilIdle()
+    dispatcher.scheduler.advanceUntilIdle()
 
     // Since the Middleware may have dispatched an action, we now wait for the store again.
     store.waitUntilIdle()

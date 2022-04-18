@@ -10,10 +10,7 @@
 
 package mozilla.components.feature.syncedtabs.storage
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.TabListAction
@@ -36,9 +33,11 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -48,6 +47,9 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 class SyncedTabsStorageTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private lateinit var store: BrowserStore
     private lateinit var tabsStorage: RemoteTabsStorage
     private lateinit var accountManager: FxaAccountManager
@@ -68,8 +70,6 @@ class SyncedTabsStorageTest {
         )
         tabsStorage = mock()
         accountManager = mock()
-
-        Dispatchers.setMain(TestCoroutineDispatcher())
     }
 
     @Test

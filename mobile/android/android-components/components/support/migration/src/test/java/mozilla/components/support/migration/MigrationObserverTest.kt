@@ -27,7 +27,7 @@ class MigrationObserverTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `listener is invoked on state observation`() {
@@ -42,7 +42,7 @@ class MigrationObserverTest {
         verify(listener).onMigrationCompleted(any())
 
         store.dispatch(MigrationAction.Started).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(listener).onMigrationStateChanged(eq(MigrationProgress.MIGRATING), any())
     }
@@ -59,7 +59,7 @@ class MigrationObserverTest {
         observer.stop()
 
         store.dispatch(MigrationAction.Started).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(listener, never()).onMigrationStateChanged(any(), any())
     }

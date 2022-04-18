@@ -7,10 +7,8 @@ package mozilla.components.lib.crash.handler
 import android.content.ComponentName
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -36,7 +34,7 @@ class CrashHandlerServiceTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val scope: CoroutineScope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
+    private val scope = coroutinesTestRule.scope
 
     @Before
     fun setUp() {
@@ -83,7 +81,7 @@ class CrashHandlerServiceTest {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
         intent.putExtra("processType", "MAIN")
-        service!!.handleCrashIntent(intent, scope)
+        service!!.handleCrashIntent(intent, coroutinesTestRule.scope)
         verify(reporter)!!.onCrash(any(), any())
         verify(reporter)!!.sendCrashReport(any(), any())
         verify(reporter, never())!!.sendNonFatalCrashIntent(any(), any())
@@ -94,7 +92,7 @@ class CrashHandlerServiceTest {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
         intent.putExtra("processType", "FOREGROUND_CHILD")
-        service!!.handleCrashIntent(intent, scope)
+        service!!.handleCrashIntent(intent, coroutinesTestRule.scope)
         verify(reporter)!!.onCrash(any(), any())
         verify(reporter)!!.sendNonFatalCrashIntent(any(), any())
         verify(reporter, never())!!.sendCrashReport(any(), any())
@@ -105,7 +103,7 @@ class CrashHandlerServiceTest {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
         intent.putExtra("processType", "BACKGROUND_CHILD")
-        service!!.handleCrashIntent(intent, scope)
+        service!!.handleCrashIntent(intent, coroutinesTestRule.scope)
         verify(reporter)!!.onCrash(any(), any())
         verify(reporter)!!.sendCrashReport(any(), any())
         verify(reporter, never())!!.sendNonFatalCrashIntent(any(), any())

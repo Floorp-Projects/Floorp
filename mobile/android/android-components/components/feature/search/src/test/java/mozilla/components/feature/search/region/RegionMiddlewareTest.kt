@@ -5,7 +5,6 @@
 package mozilla.components.feature.search.region
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -15,14 +14,19 @@ import mozilla.components.support.test.fakes.FakeClock
 import mozilla.components.support.test.fakes.android.FakeContext
 import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class RegionMiddlewareTest {
-    private lateinit var dispatcher: TestCoroutineDispatcher
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+
     private lateinit var locationService: FakeLocationService
     private lateinit var clock: FakeClock
     private lateinit var regionManager: RegionManager
@@ -30,7 +34,6 @@ class RegionMiddlewareTest {
     @Before
     fun setUp() {
         clock = FakeClock()
-        dispatcher = TestCoroutineDispatcher()
         locationService = FakeLocationService()
         regionManager = RegionManager(
             context = FakeContext(),
@@ -38,11 +41,6 @@ class RegionMiddlewareTest {
             currentTime = clock::time,
             preferences = lazy { FakeSharedPreferences() }
         )
-    }
-
-    @After
-    fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -76,7 +74,7 @@ class RegionMiddlewareTest {
 
         store.dispatch(InitAction).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertEquals(RegionState.Default, store.state.search.region)

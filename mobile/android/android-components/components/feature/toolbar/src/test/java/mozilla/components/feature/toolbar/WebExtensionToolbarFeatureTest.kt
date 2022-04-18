@@ -41,7 +41,7 @@ class WebExtensionToolbarFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `render web extension actions from browser state`() {
@@ -75,7 +75,7 @@ class WebExtensionToolbarFeatureTest {
             )
         )
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(store).observeManually(any())
         verify(webExtToolbarFeature).renderWebExtensionActions(any(), any())
@@ -125,7 +125,7 @@ class WebExtensionToolbarFeatureTest {
             )
         )
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(store).observeManually(any())
         verify(webExtToolbarFeature, times(1)).renderWebExtensionActions(any(), any())
@@ -403,7 +403,7 @@ class WebExtensionToolbarFeatureTest {
             )
         )
         val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(store).observeManually(any())
         verify(webExtToolbarFeature).renderWebExtensionActions(any(), any())

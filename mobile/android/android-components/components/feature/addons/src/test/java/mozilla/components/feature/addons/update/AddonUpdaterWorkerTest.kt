@@ -10,7 +10,6 @@ import androidx.work.await
 import androidx.work.testing.TestListenableWorkerBuilder
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -38,7 +37,6 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class AddonUpdaterWorkerTest {
 
-    @ExperimentalCoroutinesApi
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
 

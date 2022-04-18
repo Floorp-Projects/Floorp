@@ -12,11 +12,7 @@ import android.content.SharedPreferences
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -26,10 +22,11 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
@@ -44,27 +41,21 @@ import java.util.Locale
 @RunWith(AndroidJUnit4::class)
 class AbstractPrivateNotificationServiceTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+
     private lateinit var preferences: SharedPreferences
     private lateinit var notificationManager: NotificationManager
-    private val testDispatcher = TestCoroutineDispatcher()
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
-
         preferences = mock()
         notificationManager = mock()
         val editor = mock<SharedPreferences.Editor>()
 
         whenever(preferences.edit()).thenReturn(editor)
         whenever(editor.putLong(anyString(), anyLong())).thenReturn(editor)
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -113,7 +104,7 @@ class AbstractPrivateNotificationServiceTest {
 
         val mockLocale = Locale("English")
         service.store.dispatch(LocaleAction.UpdateLocaleAction(mockLocale)).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         verify(service).notifyLocaleChanged()
     }

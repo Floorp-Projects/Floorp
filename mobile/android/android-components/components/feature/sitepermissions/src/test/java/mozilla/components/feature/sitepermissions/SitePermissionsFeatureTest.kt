@@ -9,14 +9,8 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayAudibleBlockingAction
@@ -63,13 +57,14 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -98,8 +93,9 @@ class SitePermissionsFeatureTest {
     private lateinit var mockSitePermissionRules: SitePermissionsRules
     private lateinit var selectedTab: TabSessionState
 
-    private val testCoroutineDispatcher = TestCoroutineDispatcher()
-    private val testScope = CoroutineScope(testCoroutineDispatcher)
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
 
     companion object {
         const val SESSION_ID = "testSessionId"
@@ -109,7 +105,6 @@ class SitePermissionsFeatureTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testCoroutineDispatcher)
         mockOnNeedToRequestPermissions = mock()
         mockStorage = mock()
         mockFragmentManager = mockFragmentManager()
@@ -135,13 +130,6 @@ class SitePermissionsFeatureTest {
                 sessionId = SESSION_ID
             )
         )
-    }
-
-    @After
-    @ExperimentalCoroutinesApi
-    fun tearDown() {
-        Dispatchers.resetMain()
-        testCoroutineDispatcher.cleanupTestCoroutines()
     }
 
     @Test
@@ -399,7 +387,7 @@ class SitePermissionsFeatureTest {
             mockContentState,
             mockPermissionRequest,
             ALLOWED,
-            testScope
+            scope
         )
 
         // then
@@ -429,7 +417,7 @@ class SitePermissionsFeatureTest {
             mockContentState,
             mockPermissionRequest,
             ALLOWED,
-            testScope
+            scope
         )
 
         // then
@@ -443,7 +431,7 @@ class SitePermissionsFeatureTest {
             selectedTab.content.copy(private = true),
             mockPermissionRequest,
             ALLOWED,
-            testScope
+            scope
         )
 
         // when
@@ -539,7 +527,7 @@ class SitePermissionsFeatureTest {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
-                testScope
+                scope
             )
         }
 
@@ -566,7 +554,7 @@ class SitePermissionsFeatureTest {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
-                testScope
+                scope
             )
         }
 
@@ -594,7 +582,7 @@ class SitePermissionsFeatureTest {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
-                testScope
+                scope
             )
         }
 

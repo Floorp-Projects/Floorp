@@ -5,10 +5,8 @@
 package mozilla.components.feature.search.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
@@ -24,12 +22,14 @@ import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -40,21 +40,19 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class SearchMiddlewareTest {
-    private lateinit var dispatcher: TestCoroutineDispatcher
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+
     private lateinit var originalLocale: Locale
-    private lateinit var scope: CoroutineScope
 
     @Before
     fun setUp() {
-        dispatcher = TestCoroutineDispatcher()
-        scope = CoroutineScope(dispatcher)
         originalLocale = Locale.getDefault()
     }
 
     @After
     fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
-        scope.cancel()
 
         if (Locale.getDefault() != originalLocale) {
             Locale.setDefault(originalLocale)
@@ -1584,12 +1582,12 @@ class SearchMiddlewareTest {
     }
 }
 
-private fun wait(store: BrowserStore, dispatcher: TestCoroutineDispatcher) {
+private fun wait(store: BrowserStore, dispatcher: TestDispatcher) {
     // First we wait for the InitAction that may still need to be processed.
     store.waitUntilIdle()
 
     // Now we wait for the Middleware that may need to asynchronously process an action the test dispatched
-    dispatcher.advanceUntilIdle()
+    dispatcher.scheduler.advanceUntilIdle()
 
     // Since the Middleware may have dispatched an action, we now wait for the store again.
     store.waitUntilIdle()

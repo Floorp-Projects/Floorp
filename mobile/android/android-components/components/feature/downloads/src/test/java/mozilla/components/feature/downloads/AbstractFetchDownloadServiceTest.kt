@@ -22,15 +22,11 @@ import androidx.core.net.toUri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
@@ -61,7 +57,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -99,7 +95,6 @@ import org.robolectric.shadows.ShadowNotificationManager
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
@@ -108,17 +103,19 @@ class AbstractFetchDownloadServiceTest {
     @Rule @JvmField
     val folder = TemporaryFolder()
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
+
     @Mock private lateinit var client: Client
     private lateinit var browserStore: BrowserStore
     @Mock private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var service: AbstractFetchDownloadService
 
-    private val testDispatcher = TestCoroutineDispatcher()
     private lateinit var shadowNotificationService: ShadowNotificationManager
 
     @Before
     fun setup() {
-        Dispatchers.setMain(testDispatcher)
         openMocks(this)
         browserStore = BrowserStore()
         service = spy(object : AbstractFetchDownloadService() {
@@ -132,11 +129,6 @@ class AbstractFetchDownloadServiceTest {
 
         shadowNotificationService =
             shadowOf(testContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-    }
-
-    @After
-    fun afterEach() {
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -691,7 +683,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, DOWNLOADING)
         assertEquals(DOWNLOADING, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         // The additional notification is the summary one (the notification group).
         assertEquals(2, shadowNotificationService.size())
@@ -1074,7 +1066,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, DownloadState.Status.PAUSED)
         assertEquals(DownloadState.Status.PAUSED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         // one of the notifications it is the group notification only for devices the support it
         assertEquals(2, shadowNotificationService.size())
@@ -1106,7 +1098,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, DownloadState.Status.COMPLETED)
         assertEquals(DownloadState.Status.COMPLETED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         assertEquals(2, shadowNotificationService.size())
     }
@@ -1137,7 +1129,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, FAILED)
         assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         // one of the notifications it is the group notification only for devices the support it
         assertEquals(2, shadowNotificationService.size())
@@ -1169,7 +1161,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(downloadJobState, DownloadState.Status.CANCELLED)
         assertEquals(DownloadState.Status.CANCELLED, service.getDownloadJobStatus(downloadJobState))
 
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
 
         // The additional notification is the summary one (the notification group).
         assertEquals(1, shadowNotificationService.size())
@@ -1297,7 +1289,7 @@ class AbstractFetchDownloadServiceTest {
         verify(service).performDownload(providedDownload.capture(), anyBoolean())
 
         // Advance the clock so that the puller posts a notification.
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         // One of the notifications it is the group notification only for devices the support it
         assertEquals(2, shadowNotificationService.size())
 
@@ -1360,7 +1352,7 @@ class AbstractFetchDownloadServiceTest {
         service.setDownloadJobStatus(service.downloadJobs[download.id]!!, DownloadState.Status.PAUSED)
 
         // Advance the clock so that the poller posts a notification.
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         assertEquals(2, shadowNotificationService.size())
 
         // Now simulate onTaskRemoved.
@@ -1701,7 +1693,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.setDownloadJobStatus(cancelledDownloadJobState, DownloadState.Status.CANCELLED)
         assertEquals(DownloadState.Status.CANCELLED, service.getDownloadJobStatus(cancelledDownloadJobState))
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         // The additional notification is the summary one (the notification group).
         assertEquals(1, shadowNotificationService.size())
 
@@ -1720,7 +1712,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.setDownloadJobStatus(downloadJobState, DownloadState.Status.COMPLETED)
         assertEquals(DownloadState.Status.COMPLETED, service.getDownloadJobStatus(downloadJobState))
-        testDispatcher.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
+        testDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         // one of the notifications it is the group notification only for devices the support it
         assertEquals(2, shadowNotificationService.size())
     }

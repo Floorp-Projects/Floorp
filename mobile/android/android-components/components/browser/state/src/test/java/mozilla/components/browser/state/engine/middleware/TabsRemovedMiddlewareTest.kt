@@ -5,9 +5,7 @@
 package mozilla.components.browser.state.engine.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
@@ -25,9 +23,10 @@ import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -35,14 +34,10 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class TabsRemovedMiddlewareTest {
-
-    private val dispatcher = TestCoroutineDispatcher()
-    private val scope = CoroutineScope(dispatcher)
-
-    @After
-    fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
 
     @Test
     fun `closes and unlinks engine session when tab is removed`() = runBlocking {
@@ -57,7 +52,7 @@ class TabsRemovedMiddlewareTest {
         val engineSession = linkEngineSession(store, tab.id)
         store.dispatch(TabListAction.RemoveTabAction(tab.id)).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
         verify(engineSession).close()
@@ -82,7 +77,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf(tab1.id, tab2.id))).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -110,7 +105,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -138,7 +133,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveAllPrivateTabsAction).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -166,7 +161,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findTab(tab2.id)?.engineState?.engineSession)
@@ -189,7 +184,7 @@ class TabsRemovedMiddlewareTest {
         val engineSession = linkEngineSession(store, tab.id)
         store.dispatch(CustomTabListAction.RemoveCustomTabAction(tab.id)).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findTab(tab.id)?.engineState?.engineSession)
         verify(engineSession).close()
@@ -213,7 +208,7 @@ class TabsRemovedMiddlewareTest {
 
         store.dispatch(CustomTabListAction.RemoveAllCustomTabsAction).joinBlocking()
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertNull(store.state.findCustomTab(tab1.id)?.engineState?.engineSession)
         assertNull(store.state.findCustomTab(tab2.id)?.engineState?.engineSession)

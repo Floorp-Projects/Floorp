@@ -4,8 +4,6 @@
 
 package mozilla.components.browser.state.engine.middleware
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
@@ -16,12 +14,19 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doReturn
 
 class CrashMiddlewareTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
+
     @Test
     fun `Crash and restore scenario`() {
         val engineSession1: EngineSession = mock()
@@ -29,8 +34,6 @@ class CrashMiddlewareTest {
         val engineSession3: EngineSession = mock()
 
         val engine: Engine = mock()
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -75,7 +78,7 @@ class CrashMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(store.state.tabs[0].engineState.crashed)
         assertFalse(store.state.tabs[1].engineState.crashed)
@@ -88,7 +91,7 @@ class CrashMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         // Restoring unknown session
         store.dispatch(
@@ -97,7 +100,7 @@ class CrashMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(store.state.tabs[0].engineState.crashed)
         assertFalse(store.state.tabs[1].engineState.crashed)
@@ -109,9 +112,6 @@ class CrashMiddlewareTest {
         val engineSession: EngineSession = mock()
         val engine: Engine = mock()
         doReturn(engineSession).`when`(engine).createSession()
-
-        val dispatcher = TestCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
 
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
@@ -131,7 +131,7 @@ class CrashMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(store.state.tabs[0].engineState.crashed)
 
@@ -141,7 +141,7 @@ class CrashMiddlewareTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(store.state.tabs[0].engineState.crashed)
     }

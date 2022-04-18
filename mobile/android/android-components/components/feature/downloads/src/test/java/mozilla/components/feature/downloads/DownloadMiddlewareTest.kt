@@ -8,13 +8,7 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.content.Context
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
@@ -32,11 +26,11 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -48,24 +42,9 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class DownloadMiddlewareTest {
 
-    private lateinit var dispatcher: TestCoroutineDispatcher
-    private lateinit var scope: CoroutineScope
-
-    @Before
-    fun setUp() {
-        dispatcher = TestCoroutineDispatcher()
-        scope = CoroutineScope(dispatcher)
-
-        Dispatchers.setMain(dispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
-        scope.cancel()
-
-        Dispatchers.resetMain()
-    }
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `service is started when download is queued`() = runBlockingTest {
@@ -266,7 +245,6 @@ class DownloadMiddlewareTest {
     fun `RestoreDownloadsState MUST populate the store with items in the storage`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
-        val dispatcher = TestCoroutineDispatcher()
         val downloadMiddleware = DownloadMiddleware(
             applicationContext,
             AbstractFetchDownloadService::class.java,
@@ -285,7 +263,7 @@ class DownloadMiddlewareTest {
 
         store.dispatch(DownloadAction.RestoreDownloadsStateAction).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertEquals(download, store.state.downloads.values.first())
@@ -295,7 +273,6 @@ class DownloadMiddlewareTest {
     fun `private downloads MUST NOT be restored`() = runBlockingTest {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
-        val dispatcher = TestCoroutineDispatcher()
         val downloadMiddleware = DownloadMiddleware(
             applicationContext,
             AbstractFetchDownloadService::class.java,
@@ -314,7 +291,7 @@ class DownloadMiddlewareTest {
 
         store.dispatch(DownloadAction.RestoreDownloadsStateAction).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertTrue(store.state.downloads.isEmpty())
@@ -369,7 +346,7 @@ class DownloadMiddlewareTest {
         actions.forEach {
             store.dispatch(it).joinBlocking()
 
-            dispatcher.advanceUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
             store.waitUntilIdle()
 
             verify(downloadMiddleware, times(1)).removePrivateNotifications(any())
@@ -401,7 +378,7 @@ class DownloadMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf("test-tab1", "test-tab3"))).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(downloadMiddleware, times(1)).removePrivateNotifications(any())
@@ -432,7 +409,7 @@ class DownloadMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveTabsAction(listOf("test-tab1", "test-tab2"))).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(downloadMiddleware, times(0)).removePrivateNotifications(any())
@@ -463,7 +440,7 @@ class DownloadMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveTabAction("test-tab3")).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(downloadMiddleware, times(1)).removePrivateNotifications(any())
@@ -493,7 +470,7 @@ class DownloadMiddlewareTest {
 
         store.dispatch(TabListAction.RemoveTabAction("test-tab3")).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(downloadMiddleware, times(0)).removePrivateNotifications(any())
@@ -594,7 +571,7 @@ class DownloadMiddlewareTest {
         store.dispatch(ContentAction.UpdateDownloadAction(tab.id, download = download)).joinBlocking()
         store.dispatch(ContentAction.CancelDownloadAction(tab.id, download.id)).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
+        dispatcher.scheduler.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(downloadMiddleware, times(1)).closeDownloadResponse(any(), any())

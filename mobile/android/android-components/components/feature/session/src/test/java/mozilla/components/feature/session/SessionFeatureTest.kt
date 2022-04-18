@@ -5,7 +5,6 @@
 package mozilla.components.feature.session
 
 import android.view.View
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
@@ -42,8 +41,7 @@ class SessionFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val scope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
-    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
 
     @Test
     fun `start renders selected session`() {
@@ -60,7 +58,6 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.advanceUntilIdle()
 
         store.waitUntilIdle()
         verify(view).render(engineSession)
@@ -82,7 +79,6 @@ class SessionFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(view).render(engineSession)
@@ -103,7 +99,6 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(view).render(engineSession)
@@ -126,12 +121,10 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
         verify(view).render(engineSessionB)
 
         store.dispatch(TabListAction.SelectTabAction("A")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
         verify(view).render(engineSessionA)
     }
@@ -147,7 +140,6 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
         verify(store).dispatch(EngineAction.CreateEngineSessionAction("B"))
     }
@@ -169,14 +161,12 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
 
         feature.start()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
         verify(view).render(engineSessionB)
 
         feature.stop()
 
         store.dispatch(TabListAction.SelectTabAction("A")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
         verify(view, never()).render(engineSessionA)
     }
@@ -195,7 +185,6 @@ class SessionFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(view).render(engineSession)
@@ -221,7 +210,6 @@ class SessionFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(view).render(engineSession)
@@ -250,7 +238,6 @@ class SessionFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(view).render(engineSession)
@@ -340,7 +327,6 @@ class SessionFeatureTest {
         verify(view, never()).render(any())
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(view).render(engineSession)
@@ -366,7 +352,6 @@ class SessionFeatureTest {
         feature.start()
 
         store.dispatch(CrashAction.SessionCrashedAction("A")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
         verify(view, atLeastOnce()).release()
         middleware.assertNotDispatched(EngineAction.CreateEngineSessionAction::class)
@@ -388,7 +373,6 @@ class SessionFeatureTest {
 
         assertEquals(0L, store.state.findTab("B")?.lastAccess)
         feature.start()
-        testDispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         assertNotEquals(0L, store.state.findTab("B")?.lastAccess)

@@ -29,7 +29,6 @@ class MediaSessionFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `feature triggers foreground service when there's is media session state`() {
@@ -103,7 +102,6 @@ class MediaSessionFeatureTest {
 
         store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, never()).startForegroundService(any())
 
         store.dispatch(
@@ -113,7 +111,6 @@ class MediaSessionFeatureTest {
             )
         )
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
     }
 
     @Test
@@ -143,7 +140,6 @@ class MediaSessionFeatureTest {
 
         store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, never()).startForegroundService(any())
 
         store.dispatch(
@@ -153,7 +149,6 @@ class MediaSessionFeatureTest {
             )
         )
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
         store.dispatch(
@@ -163,17 +158,14 @@ class MediaSessionFeatureTest {
             )
         )
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
         store.dispatch(MediaSessionAction.DeactivatedMediaSessionAction(store.state.tabs[0].id))
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
         store.dispatch(MediaSessionAction.ActivatedMediaSessionAction(store.state.tabs[0].id, mock()))
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
         store.dispatch(
@@ -183,7 +175,6 @@ class MediaSessionFeatureTest {
             )
         )
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(1)).startForegroundService(any())
 
         store.dispatch(
@@ -193,7 +184,6 @@ class MediaSessionFeatureTest {
             )
         )
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(2)).startForegroundService(any())
 
         store.dispatch(
@@ -203,7 +193,6 @@ class MediaSessionFeatureTest {
             )
         )
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
         verify(mockApplicationContext, times(2)).startForegroundService(any())
     }
 }

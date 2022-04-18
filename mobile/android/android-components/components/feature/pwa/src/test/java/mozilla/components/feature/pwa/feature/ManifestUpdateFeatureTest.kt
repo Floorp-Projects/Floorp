@@ -5,12 +5,8 @@
 package mozilla.components.feature.pwa.feature
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createCustomTab
@@ -23,8 +19,9 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -33,10 +30,12 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class ManifestUpdateFeatureTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private lateinit var shortcutManager: WebAppShortcutManager
     private lateinit var storage: ManifestStorage
     private lateinit var store: BrowserStore
-    private lateinit var dispatcher: TestCoroutineDispatcher
 
     private val sessionId = "external-app-session-id"
     private val baseManifest = WebAppManifest(
@@ -50,9 +49,6 @@ class ManifestUpdateFeatureTest {
         storage = mock()
         shortcutManager = mock()
 
-        dispatcher = TestCoroutineDispatcher()
-        Dispatchers.setMain(dispatcher)
-
         store = BrowserStore(
             BrowserState(
                 customTabs = listOf(
@@ -60,13 +56,6 @@ class ManifestUpdateFeatureTest {
                 )
             )
         )
-    }
-
-    @After
-    fun tearDown() {
-        dispatcher.cleanupTestCoroutines()
-
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -83,7 +72,6 @@ class ManifestUpdateFeatureTest {
         feature.start()
 
         store.waitUntilIdle()
-        dispatcher.advanceUntilIdle()
 
         feature.stop()
 
@@ -150,7 +138,6 @@ class ManifestUpdateFeatureTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
         feature.updateJob!!.joinBlocking()
 
         runBlocking {
@@ -179,7 +166,6 @@ class ManifestUpdateFeatureTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
         feature.updateJob?.joinBlocking()
 
         runBlocking {
@@ -215,7 +201,6 @@ class ManifestUpdateFeatureTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
         feature.updateJob?.joinBlocking()
 
         runBlocking {
@@ -252,7 +237,6 @@ class ManifestUpdateFeatureTest {
             )
         ).joinBlocking()
 
-        dispatcher.advanceUntilIdle()
         feature.updateJob?.joinBlocking()
 
         runBlocking {

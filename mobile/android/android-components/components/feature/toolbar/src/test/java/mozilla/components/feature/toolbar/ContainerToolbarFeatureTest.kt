@@ -33,7 +33,6 @@ class ContainerToolbarFeatureTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Test
     fun `render a container action from browser state`() {
@@ -80,7 +79,7 @@ class ContainerToolbarFeatureTest {
         )
         val containerToolbarFeature = getContainerToolbarFeature(toolbar, store)
         store.dispatch(TabListAction.SelectTabAction("tab2")).joinBlocking()
-        testDispatcher.advanceUntilIdle()
+        coroutinesTestRule.testDispatcher.scheduler.advanceUntilIdle()
 
         verify(store).observeManually(any())
         verify(containerToolbarFeature, times(2)).renderContainerAction(any(), any())
