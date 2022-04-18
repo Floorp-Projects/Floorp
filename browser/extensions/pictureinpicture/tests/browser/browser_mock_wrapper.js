@@ -3,11 +3,24 @@
 
 "use strict";
 
+/* import-globals-from ../../../../../toolkit/components/pictureinpicture/tests/head.js */
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "TOGGLE_POLICIES",
+  "resource://gre/modules/PictureInPictureControls.jsm"
+);
+
 const TEST_URL =
   getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
     "https://mochitest.youtube.com:443"
   ) + "test-mock-wrapper.html";
+const TEST_URL_TOGGLE_VISIBILITY =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://mochitest.youtube.com:443"
+  ) + "test-toggle-visibility.html";
 
 /**
  * Tests the mock-wrapper.js video wrapper script selects the expected element
@@ -174,3 +187,23 @@ async function setupVideoListeners(browser) {
     });
   });
 }
+
+/**
+ * Tests that the mock-wrapper.js video wrapper hides the pip toggle when shouldHideToggle()
+ * returns true.
+ */
+add_task(async function test_mock_should_hide_toggle() {
+  await testToggle(TEST_URL_TOGGLE_VISIBILITY, {
+    "mock-video-controls": { canToggle: false, policy: TOGGLE_POLICIES.HIDDEN },
+  });
+});
+
+/**
+ * Tests that the mock-wrapper.js video wrapper does not hide the pip toggle when shouldHideToggle()
+ * returns false.
+ */
+add_task(async function test_mock_should_not_hide_toggle() {
+  await testToggle(TEST_URL, {
+    "mock-video-controls": { canToggle: true },
+  });
+});
