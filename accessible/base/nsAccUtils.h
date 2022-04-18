@@ -140,9 +140,9 @@ class nsAccUtils {
    *                         relative it.
    * @return converted coordinates
    */
-  static LayoutDeviceIntPoint ConvertToScreenCoords(int32_t aX, int32_t aY,
-                                                    uint32_t aCoordinateType,
-                                                    Accessible* aAccessible);
+  static LayoutDeviceIntPoint ConvertToScreenCoords(
+      int32_t aX, int32_t aY, uint32_t aCoordinateType,
+      LocalAccessible* aAccessible);
 
   /**
    * Converts the given coordinates relative screen to another coordinate
@@ -157,7 +157,7 @@ class nsAccUtils {
    */
   static void ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
                                     uint32_t aCoordinateType,
-                                    Accessible* aAccessible);
+                                    LocalAccessible* aAccessible);
 
   /**
    * Returns screen-relative coordinates (in dev pixels) for the parent of the
@@ -165,16 +165,8 @@ class nsAccUtils {
    *
    * @param [in] aAccessible  the accessible
    */
-  static LayoutDeviceIntPoint GetScreenCoordsForParent(Accessible* aAccessible);
-
-  /**
-   * Returns coordinates in device pixels relative screen for the top level
-   * window.
-   *
-   * @param aAccessible the acc hosted in the window.
-   */
-  static mozilla::LayoutDeviceIntPoint GetScreenCoordsForWindow(
-      mozilla::a11y::Accessible* aAccessible);
+  static LayoutDeviceIntPoint GetScreenCoordsForParent(
+      LocalAccessible* aAccessible);
 
   /**
    * Get the 'live' or 'container-live' object attribute value from the given

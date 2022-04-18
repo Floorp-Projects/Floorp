@@ -7,6 +7,7 @@
 
 #include "nsIAccessibleTypes.h"
 
+#include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "mozilla/dom/Document.h"
 #include "nsRange.h"
@@ -319,6 +320,23 @@ void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
   }
   *aVertical = ScrollAxis(whereY, whenY);
   *aHorizontal = ScrollAxis(whereX, whenX);
+}
+
+LayoutDeviceIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode* aNode) {
+  LayoutDeviceIntPoint coords(0, 0);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellFor(aNode));
+  if (!treeItem) return coords;
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) return coords;
+
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(treeOwner);
+  if (baseWindow) {
+    baseWindow->GetPosition(&coords.x, &coords.y);  // in device pixels
+  }
+
+  return coords;
 }
 
 already_AddRefed<nsIDocShell> nsCoreUtils::GetDocShellFor(nsINode* aNode) {
