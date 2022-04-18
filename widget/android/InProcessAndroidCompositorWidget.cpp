@@ -44,8 +44,15 @@ void InProcessAndroidCompositorWidget::ObserveVsync(VsyncObserver* aObserver) {
 nsIWidget* InProcessAndroidCompositorWidget::RealWidget() { return mWindow; }
 
 void InProcessAndroidCompositorWidget::OnCompositorSurfaceChanged() {
-  mSurface = java::sdk::Surface::Ref::From(
-      static_cast<jobject>(mWindow->GetNativeData(NS_JAVA_SURFACE)));
+  java::sdk::SurfaceControl::LocalRef surfaceControl =
+      java::sdk::SurfaceControl::Ref::From(static_cast<jobject>(
+          mWindow->GetNativeData(NS_JAVA_SURFACE_CONTROL)));
+  if (surfaceControl) {
+    mSurface = java::sdk::Surface::FromSurfaceControl(surfaceControl);
+  } else {
+    mSurface = java::sdk::Surface::Ref::From(
+        static_cast<jobject>(mWindow->GetNativeData(NS_JAVA_SURFACE)));
+  }
 }
 
 }  // namespace widget

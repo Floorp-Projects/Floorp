@@ -30,6 +30,7 @@ import android.graphics.Bitmap
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assume.assumeThat
 import org.junit.Assume.assumeTrue
+import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo
 import java.lang.IllegalStateException
 
 private const val SCREEN_HEIGHT = 800
@@ -138,7 +139,7 @@ class ScreenshotTest : BaseSessionTest() {
             val texture = SurfaceTexture(0)
             texture.setDefaultBufferSize(SCREEN_WIDTH, SCREEN_HEIGHT)
             val surface = Surface(texture)
-            it.surfaceChanged(surface, SCREEN_WIDTH, SCREEN_HEIGHT)
+            it.surfaceChanged(SurfaceInfo.Builder(surface).size(SCREEN_WIDTH, SCREEN_HEIGHT).build())
             sessionRule.waitForResult(result)
         }
     }
@@ -164,7 +165,7 @@ class ScreenshotTest : BaseSessionTest() {
             val texture = SurfaceTexture(0)
             texture.setDefaultBufferSize(SCREEN_WIDTH, SCREEN_HEIGHT)
             val surface = Surface(texture)
-            it.surfaceChanged(surface, SCREEN_WIDTH, SCREEN_HEIGHT)
+            it.surfaceChanged(SurfaceInfo.Builder(surface).size(SCREEN_WIDTH, SCREEN_HEIGHT).build())
 
             for (i in 0..100) {
                 screenshots.add(it.capturePixels())
@@ -176,7 +177,7 @@ class ScreenshotTest : BaseSessionTest() {
                 val newTexture = SurfaceTexture(0)
                 newTexture.setDefaultBufferSize(SCREEN_WIDTH, SCREEN_HEIGHT)
                 val newSurface = Surface(newTexture)
-                it.surfaceChanged(newSurface, SCREEN_WIDTH, SCREEN_HEIGHT)
+                it.surfaceChanged(SurfaceInfo.Builder(newSurface).size(SCREEN_WIDTH, SCREEN_HEIGHT).build())
             }
 
             try {

@@ -7,6 +7,7 @@ package org.mozilla.gecko.gfx;
 
 import android.os.RemoteException;
 import android.view.Surface;
+import android.view.SurfaceControl;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 public final class CompositorSurfaceManager {
@@ -19,8 +20,9 @@ public final class CompositorSurfaceManager {
   }
 
   @WrapForJNI(exceptionMode = "nsresult")
-  public synchronized void onSurfaceChanged(final int widgetId, final Surface surface)
+  public synchronized void onSurfaceChanged(
+      final int widgetId, final Surface surface, final SurfaceControl surfaceControl)
       throws RemoteException {
-    mManager.onSurfaceChanged(widgetId, surface);
+    mManager.onSurfaceChanged(widgetId, surface, surfaceControl);
   }
 }
