@@ -182,14 +182,6 @@ class nsCoreUtils {
                                           mozilla::ScrollAxis* aHorizontal);
 
   /**
-   * Returns coordinates in device pixels relative screen for the top level
-   * window.
-   *
-   * @param aNode  the DOM node hosted in the window.
-   */
-  static mozilla::LayoutDeviceIntPoint GetScreenCoordsForWindow(nsINode* aNode);
-
-  /**
    * Return document shell for the given DOM node.
    */
   static already_AddRefed<nsIDocShell> GetDocShellFor(nsINode* aNode);
