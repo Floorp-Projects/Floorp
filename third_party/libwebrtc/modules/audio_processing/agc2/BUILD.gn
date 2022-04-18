@@ -56,6 +56,7 @@ rtc_library("adaptive_digital") {
 
   deps = [
     ":common",
+    ":cpu_features",
     ":gain_applier",
     ":noise_level_estimator",
     ":rnn_vad_with_level",
@@ -163,12 +164,26 @@ rtc_library("rnn_vad_with_level") {
   ]
   deps = [
     ":common",
+    ":cpu_features",
     "..:audio_frame_view",
     "../../../api:array_view",
     "../../../common_audio",
     "../../../rtc_base:checks",
     "rnn_vad",
     "rnn_vad:rnn_vad_common",
+  ]
+}
+
+rtc_library("cpu_features") {
+  sources = [
+    "cpu_features.cc",
+    "cpu_features.h",
+  ]
+  visibility = [ "./*" ]
+  deps = [
+    "../../../rtc_base:stringutils",
+    "../../../rtc_base/system:arch",
+    "../../../system_wrappers",
   ]
 }
 

@@ -32,7 +32,8 @@ using VoiceActivityDetector = VadLevelAnalyzer::VoiceActivityDetector;
 // Computes the speech probability on the first channel.
 class Vad : public VoiceActivityDetector {
  public:
-  Vad() = default;
+  explicit Vad(const AvailableCpuFeatures& cpu_features)
+      : features_extractor_(cpu_features), rnn_vad_(cpu_features) {}
   Vad(const Vad&) = delete;
   Vad& operator=(const Vad&) = delete;
   ~Vad() = default;
@@ -80,10 +81,12 @@ float SmoothedVadProbability(float p_old, float p_new, float attack) {
 
 VadLevelAnalyzer::VadLevelAnalyzer()
     : VadLevelAnalyzer(kDefaultSmoothedVadProbabilityAttack,
-                       std::make_unique<Vad>()) {}
+                       GetAvailableCpuFeatures()) {}
 
-VadLevelAnalyzer::VadLevelAnalyzer(float vad_probability_attack)
-    : VadLevelAnalyzer(vad_probability_attack, std::make_unique<Vad>()) {}
+VadLevelAnalyzer::VadLevelAnalyzer(float vad_probability_attack,
+                                   const AvailableCpuFeatures& cpu_features)
+    : VadLevelAnalyzer(vad_probability_attack,
+                       std::make_unique<Vad>(cpu_features)) {}
 
 VadLevelAnalyzer::VadLevelAnalyzer(float vad_probability_attack,
                                    std::unique_ptr<VoiceActivityDetector> vad)

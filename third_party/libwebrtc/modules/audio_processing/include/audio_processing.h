@@ -349,10 +349,10 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
 
       enum LevelEstimator { kRms, kPeak };
       bool enabled = false;
-      struct {
+      struct FixedDigital {
         float gain_db = 0.f;
       } fixed_digital;
-      struct {
+      struct AdaptiveDigital {
         bool enabled = false;
         float vad_probability_attack = 1.f;
         LevelEstimator level_estimator = kRms;
@@ -364,6 +364,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         int gain_applier_adjacent_speech_frames_threshold = 1;
         float max_gain_change_db_per_second = 3.f;
         float max_output_noise_level_dbfs = -50.f;
+        bool avx2_allowed = true;
       } adaptive_digital;
     } gain_controller2;
 

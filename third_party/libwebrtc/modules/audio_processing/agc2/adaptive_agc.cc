@@ -11,6 +11,7 @@
 #include "modules/audio_processing/agc2/adaptive_agc.h"
 
 #include "common_audio/include/audio_util.h"
+#include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/vad_with_level.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/checks.h"
@@ -31,6 +32,15 @@ void DumpDebugData(const AdaptiveDigitalGainApplier::FrameInfo& info,
 constexpr int kGainApplierAdjacentSpeechFramesThreshold = 1;
 constexpr float kMaxGainChangePerSecondDb = 3.f;
 constexpr float kMaxOutputNoiseLevelDbfs = -50.f;
+
+// Detects the available CPU features and applies a kill-switch to AVX2.
+AvailableCpuFeatures GetAllowedCpuFeatures(bool avx2_allowed) {
+  AvailableCpuFeatures features = GetAvailableCpuFeatures();
+  if (!avx2_allowed) {
+    features.avx2 = false;
+  }
+  return features;
+}
 
 }  // namespace
 
@@ -54,7 +64,8 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
               .level_estimator_adjacent_speech_frames_threshold,
           config.adaptive_digital.initial_saturation_margin_db,
           config.adaptive_digital.extra_saturation_margin_db),
-      vad_(config.adaptive_digital.vad_probability_attack),
+      vad_(config.adaptive_digital.vad_probability_attack,
+           GetAllowedCpuFeatures(config.adaptive_digital.avx2_allowed)),
       gain_applier_(
           apm_data_dumper,
           config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold,

@@ -18,8 +18,9 @@
 namespace webrtc {
 namespace rnn_vad {
 
-PitchEstimator::PitchEstimator()
-    : y_energy_24kHz_(kRefineNumLags24kHz, 0.f),
+PitchEstimator::PitchEstimator(const AvailableCpuFeatures& cpu_features)
+    : cpu_features_(cpu_features),
+      y_energy_24kHz_(kRefineNumLags24kHz, 0.f),
       pitch_buffer_12kHz_(kBufSize12kHz),
       auto_correlation_12kHz_(kNumLags12kHz) {}
 
@@ -35,6 +36,7 @@ int PitchEstimator::Estimate(
   RTC_DCHECK_EQ(auto_correlation_12kHz_.size(),
                 auto_correlation_12kHz_view.size());
 
+  // TODO(bugs.chromium.org/10480): Use `cpu_features_` to estimate pitch.
   // Perform the initial pitch search at 12 kHz.
   Decimate2x(pitch_buffer, pitch_buffer_12kHz_view);
   auto_corr_calculator_.ComputeOnPitchBuffer(pitch_buffer_12kHz_view,

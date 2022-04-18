@@ -29,10 +29,10 @@ rtc_library("rnn_vad") {
     ":rnn_vad_sequence_buffer",
     ":rnn_vad_spectral_features",
     "..:biquad_filter",
+    "..:cpu_features",
     "../../../../api:array_view",
     "../../../../api:function_view",
     "../../../../rtc_base:checks",
-    "../../../../rtc_base:logging",
     "../../../../rtc_base:safe_compare",
     "../../../../rtc_base:safe_conversions",
     "../../../../rtc_base/system:arch",
@@ -53,16 +53,13 @@ rtc_library("rnn_vad_auto_correlation") {
   ]
 }
 
-rtc_library("rnn_vad_common") {
+rtc_source_set("rnn_vad_common") {
   # TODO(alessiob): Make this target visibility private.
   visibility = [
     ":*",
     "..:rnn_vad_with_level",
   ]
-  sources = [
-    "common.cc",
-    "common.h",
-  ]
+  sources = [ "common.h" ]
   deps = [
     "../../../../rtc_base/system:arch",
     "../../../../system_wrappers",
@@ -91,6 +88,7 @@ rtc_library("rnn_vad_pitch") {
   deps = [
     ":rnn_vad_auto_correlation",
     ":rnn_vad_common",
+    "..:cpu_features",
     "../../../../api:array_view",
     "../../../../rtc_base:checks",
     "../../../../rtc_base:gtest_prod",
@@ -156,8 +154,6 @@ if (rtc_include_tests) {
       "../../../../api:scoped_refptr",
       "../../../../rtc_base:checks",
       "../../../../rtc_base:safe_compare",
-      "../../../../rtc_base/system:arch",
-      "../../../../system_wrappers",
       "../../../../test:fileutils",
       "../../../../test:test_support",
     ]
@@ -207,6 +203,7 @@ if (rtc_include_tests) {
       ":rnn_vad_spectral_features",
       ":rnn_vad_symmetric_matrix_buffer",
       ":test_utils",
+      "..:cpu_features",
       "../..:audioproc_test_utils",
       "../../../../api:array_view",
       "../../../../common_audio/",
@@ -232,6 +229,7 @@ if (rtc_include_tests) {
     deps = [
       ":rnn_vad",
       ":rnn_vad_common",
+      "..:cpu_features",
       "../../../../api:array_view",
       "../../../../common_audio",
       "../../../../rtc_base:rtc_base_approved",

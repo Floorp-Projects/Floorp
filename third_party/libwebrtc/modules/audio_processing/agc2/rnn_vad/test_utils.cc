@@ -15,8 +15,6 @@
 
 #include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_compare.h"
-#include "rtc_base/system/arch.h"
-#include "system_wrappers/include/cpu_features_wrapper.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
 
@@ -109,25 +107,6 @@ rtc::ArrayView<const float, kNumPitchBufAutoCorrCoeffs>
 PitchTestData::GetPitchBufAutoCorrCoeffsView() const {
   return {test_data_.data() + kBufSize24kHz + kNumPitchBufSquareEnergies,
           kNumPitchBufAutoCorrCoeffs};
-}
-
-bool IsOptimizationAvailable(Optimization optimization) {
-  switch (optimization) {
-    case Optimization::kSse2:
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-      return GetCPUInfo(kSSE2) != 0;
-#else
-      return false;
-#endif
-    case Optimization::kNeon:
-#if defined(WEBRTC_HAS_NEON)
-      return true;
-#else
-      return false;
-#endif
-    case Optimization::kNone:
-      return true;
-  }
 }
 
 }  // namespace test
