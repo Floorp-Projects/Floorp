@@ -150,8 +150,7 @@ typedef void* nsNativeWidget;
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #  define NS_JAVA_SURFACE 100
-#  define NS_PRESENTATION_WINDOW 101
-#  define NS_PRESENTATION_SURFACE 102
+#  define NS_JAVA_SURFACE_CONTROL 101
 #endif
 
 #define MOZ_WIDGET_MAX_SIZE 16384

@@ -13,6 +13,19 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v101
+- Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
+  This allows the caller to provide a [`SurfaceControl`][101.3] object, which must be set on SDK level 29 and
+  above when rendering in to a `SurfaceView`.
+  ([bug 1762424]({{bugzilla}}1762424))
+- ⚠️ Deprecated old `GeckoDisplay.surfaceChanged` functions [[1]][101.4] [[2]][101.5].
+
+[101.1]: {{javadoc_uri}}/GeckoDisplay.html#surfaceChanged(org.mozilla.geckoview.GeckoDisplay.SurfaceInfo)
+[101.2]: {{javadoc_uri}}/GeckoDisplay.SurfaceInfo.html
+[101.3]: https://developer.android.com/reference/android/view/SurfaceControl
+[101.4]: {{javadoc_uri}}/GeckoDisplay.html#surfaceChanged(android.view.Surface,int,int)
+[101.5]: {{javadoc_uri}}/GeckoDisplay.html#surfaceChanged(android.view.Surface,int,int,int,int)
+
 ## v100
 - ⚠️ Changed [`GeckoSession.isOpen`][100.1] to `@UiThread`.
 - [`WebNotification`][100.2] now implements [`Parcelable`][100.3] to support
@@ -1151,4 +1164,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: c9f91f7e909c6c71adca2ea333f92af6ff3af054
+[api-version]: f05b7e0bc1dbbfe6f8aa189c552cd871d512e0f9

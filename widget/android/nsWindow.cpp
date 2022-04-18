@@ -889,6 +889,7 @@ class LayerViewSupport final
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   java::sdk::Surface::GlobalRef mSurface;
+  java::sdk::SurfaceControl::GlobalRef mSurfaceControl;
   // Used to communicate with the gecko compositor from the UI thread.
   // Set in NotifyCompositorCreated and cleared in NotifyCompositorSessionLost.
   RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
@@ -1013,7 +1014,7 @@ class LayerViewSupport final
       nsWindow* gkWindow = window->GetNsWindow();
       if (gkWindow) {
         mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-            gkWindow->mWidgetId, mSurface);
+            gkWindow->mWidgetId, mSurface, mSurfaceControl);
       }
     }
 
@@ -1047,6 +1048,9 @@ class LayerViewSupport final
   }
 
   java::sdk::Surface::Param GetSurface() { return mSurface; }
+  java::sdk::SurfaceControl::Param GetSurfaceControl() {
+    return mSurfaceControl;
+  }
 
  private:
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
@@ -1193,10 +1197,20 @@ class LayerViewSupport final
 
   void SyncResumeResizeCompositor(
       const GeckoSession::Compositor::LocalRef& aObj, int32_t aX, int32_t aY,
-      int32_t aWidth, int32_t aHeight, jni::Object::Param aSurface) {
+      int32_t aWidth, int32_t aHeight, jni::Object::Param aSurface,
+      jni::Object::Param aSurfaceControl) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
     mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
+    mSurfaceControl =
+        java::sdk::SurfaceControl::GlobalRef::From(aSurfaceControl);
+    if (mSurfaceControl) {
+      // Setting the SurfaceControl's buffer size here ensures child Surfaces
+      // created by the compositor have the correct size.
+      java::sdk::SurfaceControl::Transaction::LocalRef transaction =
+          java::sdk::SurfaceControl::Transaction::New();
+      transaction->SetBufferSize(mSurfaceControl, aWidth, aHeight)->Apply();
+    }
 
     if (mUiCompositorControllerChild) {
       if (auto window = mWindow.Access()) {
@@ -1204,7 +1218,7 @@ class LayerViewSupport final
         if (gkWindow) {
           // Send new Surface to GPU process, if one exists.
           mUiCompositorControllerChild->OnCompositorSurfaceChanged(
-              gkWindow->mWidgetId, mSurface);
+              gkWindow->mWidgetId, mSurface, mSurfaceControl);
         }
       }
 
@@ -2384,6 +2398,13 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       if (::mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
               mLayerViewSupport.Access()}) {
         return lvs->GetSurface().Get();
+      }
+      return nullptr;
+
+    case NS_JAVA_SURFACE_CONTROL:
+      if (::mozilla::jni::NativeWeakPtr<LayerViewSupport>::Accessor lvs{
+              mLayerViewSupport.Access()}) {
+        return lvs->GetSurfaceControl().Get();
       }
       return nullptr;
   }
