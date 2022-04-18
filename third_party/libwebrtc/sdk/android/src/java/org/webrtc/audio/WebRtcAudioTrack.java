@@ -411,8 +411,11 @@ class WebRtcAudioTrack {
         attributesBuilder.setContentType(overrideAttributes.getContentType());
       }
 
-      attributesBuilder.setAllowedCapturePolicy(overrideAttributes.getAllowedCapturePolicy())
-          .setFlags(overrideAttributes.getFlags());
+      attributesBuilder.setFlags(overrideAttributes.getFlags());
+
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        attributesBuilder = applyAttributesOnQOrHigher(attributesBuilder, overrideAttributes);
+      }
     }
 
     // Create an audio track where the audio usage is for VoIP and the content type is speech.
@@ -423,6 +426,12 @@ class WebRtcAudioTrack {
             .setChannelMask(channelConfig)
             .build(),
         bufferSizeInBytes, AudioTrack.MODE_STREAM, AudioManager.AUDIO_SESSION_ID_GENERATE);
+  }
+
+  @TargetApi(Build.VERSION_CODES.Q)
+  private static AudioAttributes.Builder applyAttributesOnQOrHigher(
+      AudioAttributes.Builder builder, AudioAttributes overrideAttributes) {
+    return builder.setAllowedCapturePolicy(overrideAttributes.getAllowedCapturePolicy());
   }
 
   @SuppressWarnings("deprecation") // Deprecated in API level 25.
