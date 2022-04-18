@@ -753,13 +753,6 @@ struct VertAttribPointerCalculated final {
 
 }  // namespace webgl
 
-// return value for the InitializeCanvasRenderer message
-struct ICRData {
-  gfx::IntSize size;
-  bool hasAlpha;
-  bool isPremultAlpha;
-};
-
 /**
  * Represents a block of memory that it may or may not own.  The
  * inner data type must be trivially copyable by memcpy.
