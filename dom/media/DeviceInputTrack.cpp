@@ -49,6 +49,12 @@ namespace mozilla {
 #define TRACK_GRAPH_LOGV(msg, ...) \
   TRACK_GRAPH_LOG_INTERNAL(Verbose, msg, ##__VA_ARGS__)
 
+#ifdef TRACK_GRAPH_LOGE
+#  undef TRACK_GRAPH_LOGE
+#endif  // TRACK_GRAPH_LOGE
+#define TRACK_GRAPH_LOGE(msg, ...) \
+  TRACK_GRAPH_LOG_INTERNAL(Error, msg, ##__VA_ARGS__)
+
 /* static */
 Result<RefPtr<DeviceInputTrack>, nsresult> DeviceInputTrack::OpenAudio(
     MediaTrackGraphImpl* aGraph, CubebUtils::AudioDeviceID aDeviceId,
@@ -291,11 +297,117 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                            mPrincipalHandle);
 }
 
+NonNativeInputTrack::NonNativeInputTrack(
+    TrackRate aSampleRate, CubebUtils::AudioDeviceID aDeviceId,
+    const PrincipalHandle& aPrincipalHandle)
+    : DeviceInputTrack(aSampleRate, aDeviceId, aPrincipalHandle),
+      mAudioSource(nullptr) {}
+
+void NonNativeInputTrack::DestroyImpl() {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  if (mAudioSource) {
+    mAudioSource->Stop();
+    mAudioSource = nullptr;
+  }
+  ProcessedMediaTrack::DestroyImpl();
+}
+
+void NonNativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
+                                       uint32_t aFlags) {
+  MOZ_ASSERT(mGraph->OnGraphThread());
+  TRACE_COMMENT("NonNativeInputTrack::ProcessInput", "%p", this);
+
+  TRACK_GRAPH_LOGV("(NonNative) ProcessInput from %" PRId64 " to %" PRId64
+                   ", needs %" PRId64 " frames",
+                   aFrom, aTo, aTo - aFrom);
+
+  TrackTime from = GraphTimeToTrackTime(aFrom);
+  TrackTime to = GraphTimeToTrackTime(aTo);
+  if (from >= to) {
+    return;
+  }
+
+  TrackTime delta = to - from;
+  if (!mAudioSource) {
+    GetData<AudioSegment>()->AppendNullData(delta);
+    return;
+  }
+
+  AudioSegment data = mAudioSource->GetAudioSegment(delta);
+  MOZ_ASSERT(data.GetDuration() == delta);
+  GetData<AudioSegment>()->AppendFrom(&data);
+}
+
+uint32_t NonNativeInputTrack::NumberOfChannels() const {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  return mAudioSource ? mAudioSource->mChannelCount : 0;
+}
+
+void NonNativeInputTrack::StartAudio(
+    RefPtr<AudioInputSource>&& aAudioInputSource) {
+  MOZ_ASSERT(mGraph->OnGraphThread());
+  MOZ_ASSERT(aAudioInputSource->mPrincipalHandle == mPrincipalHandle);
+  MOZ_ASSERT(aAudioInputSource->mDeviceId == mDeviceId);
+
+  TRACK_GRAPH_LOG("StartAudio with source %p", aAudioInputSource.get());
+  mAudioSource = std::move(aAudioInputSource);
+  mAudioSource->Start();
+}
+
+void NonNativeInputTrack::StopAudio() {
+  MOZ_ASSERT(mGraph->OnGraphThread());
+
+  TRACK_GRAPH_LOG("StopAudio from source %p", mAudioSource.get());
+  if (!mAudioSource) {
+    return;
+  }
+  mAudioSource->Stop();
+  mAudioSource = nullptr;
+}
+
+AudioInputType NonNativeInputTrack::DevicePreference() const {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  return mAudioSource && mAudioSource->mIsVoice ? AudioInputType::Voice
+                                                : AudioInputType::Unknown;
+}
+
+void NonNativeInputTrack::NotifyDeviceChanged(uint32_t aSourceId) {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+
+  // No need to forward the notification if the audio input has been stopped or
+  // restarted by it users.
+  if (!mAudioSource || mAudioSource->mId != aSourceId) {
+    TRACK_GRAPH_LOG("(NonNative) NotifyDeviceChanged: No need to forward");
+    return;
+  }
+
+  TRACK_GRAPH_LOG("(NonNative) NotifyDeviceChanged");
+  // Forward the notification.
+  DeviceInputTrack::DeviceChanged(mGraph);
+}
+
+void NonNativeInputTrack::NotifyInputStopped(uint32_t aSourceId) {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+
+  // No need to forward the notification if the audio input has been stopped or
+  // restarted by it users.
+  if (!mAudioSource || mAudioSource->mId != aSourceId) {
+    TRACK_GRAPH_LOG("(NonNative) NotifyInputStopped: No need to forward");
+    return;
+  }
+
+  TRACK_GRAPH_LOGE(
+      "(NonNative) NotifyInputStopped: audio unexpectedly stopped");
+  // Destory the underlying audio stream if it's stopped unexpectedly.
+  mAudioSource->Stop();
+}
+
 #undef LOG_INTERNAL
 #undef LOG
 #undef LOGE
 #undef TRACK_GRAPH_LOG_INTERNAL
 #undef TRACK_GRAPH_LOG
 #undef TRACK_GRAPH_LOGV
+#undef TRACK_GRAPH_LOGE
 
 }  // namespace mozilla
