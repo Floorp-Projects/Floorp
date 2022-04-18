@@ -749,16 +749,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   nsTArray<nsCOMPtr<nsIRunnable>> mPendingUpdateRunnables;
 
   /**
-   * Devices to use for cubeb input & output, or nullptr for default device.
+   * Devices to use for cubeb output, or nullptr for default device.
    * A MediaTrackGraph always has an output (even if silent).
-   * If `mNativeInputTrackGraphThread` is not NULL, this MediaTrackGraph wants
-   * audio input.
    *
-   * All mInputDeviceID access is on the graph thread.
+   * All mOutputDeviceID access is on the graph thread.
    */
-  // TODO: Use mDeviceInputTrackManagerGraphThread to get the input device id
-  // instead.
-  CubebUtils::AudioDeviceID mInputDeviceID;
   CubebUtils::AudioDeviceID mOutputDeviceID;
 
   /**

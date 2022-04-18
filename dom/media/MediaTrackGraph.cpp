@@ -400,6 +400,7 @@ void MediaTrackGraphImpl::CheckDriver() {
 
   NativeInputTrack* native =
       mDeviceInputTrackManagerGraphThread.GetNativeInputTrack();
+  CubebUtils::AudioDeviceID inputDevice = native ? native->mDeviceId : nullptr;
   uint32_t inputChannelCount =
       native ? AudioInputChannelCount(native->mDeviceId) : 0;
   AudioInputType inputPreference =
@@ -411,7 +412,7 @@ void MediaTrackGraphImpl::CheckDriver() {
     if (graphOutputChannelCount > 0) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(
           this, CurrentDriver(), mSampleRate, graphOutputChannelCount,
-          inputChannelCount, mOutputDeviceID, mInputDeviceID, inputPreference);
+          inputChannelCount, mOutputDeviceID, inputDevice, inputPreference);
       SwitchAtNextIteration(driver);
     }
     return;
@@ -426,7 +427,7 @@ void MediaTrackGraphImpl::CheckDriver() {
   if (graphOutputChannelCount != audioCallbackDriver->OutputChannelCount()) {
     AudioCallbackDriver* driver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, graphOutputChannelCount,
-        inputChannelCount, mOutputDeviceID, mInputDeviceID, inputPreference);
+        inputChannelCount, mOutputDeviceID, inputDevice, inputPreference);
     SwitchAtNextIteration(driver);
   }
 }
@@ -734,12 +735,11 @@ void MediaTrackGraphImpl::OpenAudioInputImpl(DeviceInputTrack* aTrack) {
   mDeviceInputTrackManagerGraphThread.Add(aTrack);
 
   if (aTrack->AsNativeInputTrack()) {
-    mInputDeviceID = aTrack->mDeviceId;
     // Switch Drivers since we're adding input (to input-only or full-duplex)
     AudioCallbackDriver* driver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, AudioOutputChannelCount(),
         AudioInputChannelCount(aTrack->mDeviceId), mOutputDeviceID,
-        mInputDeviceID, AudioInputDevicePreference(aTrack->mDeviceId));
+        aTrack->mDeviceId, AudioInputDevicePreference(aTrack->mDeviceId));
     LOG(LogLevel::Debug,
         ("%p OpenAudioInputImpl: starting new AudioCallbackDriver(input) %p",
          this, driver));
@@ -798,7 +798,6 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(DeviceInputTrack* aTrack) {
   MOZ_ASSERT(aTrack->AsNativeInputTrack());
 
   mDeviceInputTrackManagerGraphThread.Remove(aTrack);
-  mInputDeviceID = nullptr;  // reset to default
 
   // Switch Drivers since we're adding or removing an input (to nothing/system
   // or output only)
@@ -812,8 +811,8 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(DeviceInputTrack* aTrack) {
 
     driver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, AudioOutputChannelCount(),
-        AudioInputChannelCount(aTrack->mDeviceId), mOutputDeviceID,
-        mInputDeviceID, AudioInputDevicePreference(aTrack->mDeviceId));
+        AudioInputChannelCount(aTrack->mDeviceId), mOutputDeviceID, nullptr,
+        AudioInputDevicePreference(aTrack->mDeviceId));
     SwitchAtNextIteration(driver);
   } else if (CurrentDriver()->AsAudioCallbackDriver()) {
     LOG(LogLevel::Debug,
@@ -835,6 +834,8 @@ void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
   if (!CurrentDriver()->AsAudioCallbackDriver() && !Switching()) {
     NativeInputTrack* native =
         mDeviceInputTrackManagerGraphThread.GetNativeInputTrack();
+    CubebUtils::AudioDeviceID inputDevice =
+        native ? native->mDeviceId : nullptr;
     uint32_t inputChannelCount =
         native ? AudioInputChannelCount(native->mDeviceId) : 0;
     AudioInputType inputPreference =
@@ -843,7 +844,7 @@ void MediaTrackGraphImpl::RegisterAudioOutput(MediaTrack* aTrack, void* aKey) {
 
     AudioCallbackDriver* driver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, AudioOutputChannelCount(),
-        inputChannelCount, mOutputDeviceID, mInputDeviceID, inputPreference);
+        inputChannelCount, mOutputDeviceID, inputDevice, inputPreference);
     SwitchAtNextIteration(driver);
   }
 }
@@ -903,12 +904,9 @@ void MediaTrackGraphImpl::CloseAudioInput(DeviceInputTrack* aTrack) {
 void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
                                            size_t aFrames, TrackRate aRate,
                                            uint32_t aChannels) {
-  NativeInputTrack* native =
-      mDeviceInputTrackManagerGraphThread.GetNativeInputTrack();
-  if (!native) {
+  if (!mDeviceInputTrackManagerGraphThread.GetNativeInputTrack()) {
     return;
   }
-  MOZ_ASSERT(native->mDeviceId == mInputDeviceID);
 
 #if defined(MOZ_WEBRTC)
   for (const auto& track : mTracks) {
@@ -925,7 +923,6 @@ void MediaTrackGraphImpl::NotifyInputStopped() {
   if (!native) {
     return;
   }
-  MOZ_ASSERT(native->mDeviceId == mInputDeviceID);
   native->NotifyInputStopped(this);
 }
 
@@ -942,7 +939,6 @@ void MediaTrackGraphImpl::NotifyInputData(const AudioDataValue* aBuffer,
   if (!native) {
     return;
   }
-  MOZ_ASSERT(native->mDeviceId == mInputDeviceID);
   native->NotifyInputData(this, aBuffer, aFrames, aRate, aChannels,
                           aAlreadyBuffered);
 }
@@ -954,7 +950,6 @@ void MediaTrackGraphImpl::DeviceChangedImpl() {
   if (!native) {
     return;
   }
-  MOZ_ASSERT(native->mDeviceId == mInputDeviceID);
   native->DeviceChanged(this);
 }
 
@@ -1121,7 +1116,7 @@ void MediaTrackGraphImpl::ReevaluateInputDevice(CubebUtils::AudioDeviceID aID) {
   if (needToSwitch) {
     AudioCallbackDriver* newDriver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, AudioOutputChannelCount(),
-        AudioInputChannelCount(aID), mOutputDeviceID, mInputDeviceID,
+        AudioInputChannelCount(aID), mOutputDeviceID, aID,
         AudioInputDevicePreference(aID));
     SwitchAtNextIteration(newDriver);
   }
@@ -3251,7 +3246,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
       ,
       mEndTime(aDriverRequested == OFFLINE_THREAD_DRIVER ? 0 : GRAPH_TIME_MAX),
       mPortCount(0),
-      mInputDeviceID(nullptr),
       mOutputDeviceID(aOutputDeviceID),
       mMonitor("MediaTrackGraphImpl"),
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
@@ -3293,9 +3287,9 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
       // Always start with zero input channels, and no particular preferences
       // for the input channel.
-      mDriver = new AudioCallbackDriver(
-          this, nullptr, mSampleRate, aChannelCount, 0, mOutputDeviceID,
-          mInputDeviceID, AudioInputType::Unknown);
+      mDriver = new AudioCallbackDriver(this, nullptr, mSampleRate,
+                                        aChannelCount, 0, mOutputDeviceID,
+                                        nullptr, AudioInputType::Unknown);
     } else {
       mDriver = new SystemClockDriver(this, nullptr, mSampleRate);
     }
