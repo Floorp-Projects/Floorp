@@ -1332,12 +1332,13 @@ nsresult AudioProcessingTrack::ConnectDeviceInput(
   mInputListener = aListener;
   mDeviceId.emplace(aId);
 
-  auto r = NativeInputTrack::OpenAudio(GraphImpl(), aId, aPrincipal,
+  auto r = DeviceInputTrack::OpenAudio(GraphImpl(), aId, aPrincipal,
                                        mInputListener.get());
   if (r.isErr()) {
     NS_WARNING("Failed to open audio device.");
     return r.unwrapErr();
   }
+
   mDeviceInputTrack = r.unwrap();
   MOZ_ASSERT(mDeviceInputTrack);
   LOG("Open device %p (InputTrack=%p) for Mic source %p", aId,
@@ -1354,10 +1355,11 @@ void AudioProcessingTrack::DisconnectDeviceInput() {
   }
   MOZ_ASSERT(mPort);
   MOZ_ASSERT(mDeviceId.isSome());
+  MOZ_ASSERT(mDeviceInputTrack);
   LOG("Close device %p (InputTrack=%p) for Mic source %p ", *mDeviceId,
       mDeviceInputTrack.get(), this);
   mPort->Destroy();
-  NativeInputTrack::CloseAudio(std::move(mDeviceInputTrack),
+  DeviceInputTrack::CloseAudio(std::move(mDeviceInputTrack),
                                mInputListener.get());
   mInputListener = nullptr;
   mDeviceId = Nothing();
