@@ -84,10 +84,12 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
-  auto r = NativeInputTrack::OpenAudio(mGraph.get(), deviceId, testPrincipal,
-                                       nullptr);
-  ASSERT_TRUE(r.isOk());
-  RefPtr<NativeInputTrack> track = r.unwrap();
+  // Setup: Create a NativeInputTrack and add it to mGraph
+  RefPtr<NativeInputTrack> track =
+      new NativeInputTrack(mGraph->GraphRate(), deviceId, testPrincipal);
+  mGraph->AddTrack(track);
+
+  // Main test below:
 
   generator.GenerateInterleaved(buffer.Elements(), nrFrames);
   track->NotifyInputData(mGraph.get(), buffer.Elements(), nrFrames, mRate,
@@ -123,7 +125,9 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
     EXPECT_EQ(chunk.mPrincipalHandle, testPrincipal);
   }
 
-  NativeInputTrack::CloseAudio(std::move(track), nullptr);
+  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
+  track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
 }
 
 TEST_F(TestDeviceInputTrack, OpenTwiceWithoutCloseFirst) {
@@ -136,7 +140,8 @@ TEST_F(TestDeviceInputTrack, OpenTwiceWithoutCloseFirst) {
   auto r1 = NativeInputTrack::OpenAudio(mGraph.get(), deviceId1, testPrincipal,
                                         nullptr);
   ASSERT_TRUE(r1.isOk());
-  RefPtr<NativeInputTrack> track1 = r1.unwrap();
+  RefPtr<NativeInputTrack> track1 = r1.unwrap()->AsNativeInputTrack();
+  ASSERT_TRUE(track1);
 
   auto r2 = NativeInputTrack::OpenAudio(mGraph.get(), deviceId2, testPrincipal,
                                         nullptr);

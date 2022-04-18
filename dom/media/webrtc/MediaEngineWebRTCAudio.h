@@ -228,7 +228,7 @@ class AudioProcessingTrack : public ProcessedMediaTrack {
 
   // Only accessed on the main thread. This is the track producing raw audio
   // input data. Graph thread should MediaInputPort::GetSource() to get this
-  RefPtr<NativeInputTrack> mDeviceInputTrack;
+  RefPtr<DeviceInputTrack> mDeviceInputTrack;
 
   // Only accessed on the main thread. Used for bookkeeping on main thread, such
   // that DisconnectDeviceInput can be idempotent.

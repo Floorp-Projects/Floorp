@@ -411,7 +411,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   void OpenAudioInputImpl(NativeInputTrack* aTrack);
   /* Called on the main thread when something requests audio from an input
    * audio device aID. */
-  virtual void OpenAudioInput(NativeInputTrack* aTrack) override;
+  virtual void OpenAudioInput(DeviceInputTrack* aTrack) override;
 
   /* Runs off a message on the graph when input audio from aID is not needed
    * anymore, for a particular track. It can be that other tracks still need
@@ -420,7 +420,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /* Called on the main thread when input audio from aID is not needed
    * anymore, for a particular track. It can be that other tracks still need
    * audio from this audio input device. */
-  virtual void CloseAudioInput(NativeInputTrack* aTrack) override;
+  virtual void CloseAudioInput(DeviceInputTrack* aTrack) override;
 
   /* Add or remove an audio output for this track. All tracks that have an
    * audio output are mixed and written to a single audio output stream. */
