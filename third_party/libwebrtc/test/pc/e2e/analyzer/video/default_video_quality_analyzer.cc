@@ -14,6 +14,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/units/time_delta.h"
@@ -159,10 +160,16 @@ void DefaultVideoQualityAnalyzer::Start(
   StartMeasuringCpuProcessTime();
 }
 
-uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
+absl::optional<uint16_t> DefaultVideoQualityAnalyzer::OnFrameCaptured(
     absl::string_view peer_name,
     const std::string& stream_label,
     const webrtc::VideoFrame& frame) {
+  {
+    MutexLock lock(&lock_);
+    if (state_ == State::kStopped) {
+      return absl::nullopt;
+    }
+  }
   // |next_frame_id| is atomic, so we needn't lock here.
   uint16_t frame_id = next_frame_id_++;
   Timestamp start_time = Timestamp::MinusInfinity();
@@ -280,6 +287,9 @@ void DefaultVideoQualityAnalyzer::OnFramePreEncode(
     absl::string_view peer_name,
     const webrtc::VideoFrame& frame) {
   MutexLock lock(&lock_);
+  if (state_ == State::kStopped) {
+    return;
+  }
   auto it = captured_frames_in_flight_.find(frame.id());
   RTC_DCHECK(it != captured_frames_in_flight_.end())
       << "Frame id=" << frame.id() << " not found";
@@ -300,6 +310,9 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     const webrtc::EncodedImage& encoded_image,
     const EncoderStats& stats) {
   MutexLock lock(&lock_);
+  if (state_ == State::kStopped) {
+    return;
+  }
   auto it = captured_frames_in_flight_.find(frame_id);
   RTC_DCHECK(it != captured_frames_in_flight_.end());
   // For SVC we can receive multiple encoded images for one frame, so to cover
@@ -330,6 +343,9 @@ void DefaultVideoQualityAnalyzer::OnFramePreDecode(
     uint16_t frame_id,
     const webrtc::EncodedImage& input_image) {
   MutexLock lock(&lock_);
+  if (state_ == State::kStopped) {
+    return;
+  }
   size_t peer_index = peers_->index(peer_name);
 
   auto it = captured_frames_in_flight_.find(frame_id);
@@ -367,6 +383,9 @@ void DefaultVideoQualityAnalyzer::OnFrameDecoded(
     const webrtc::VideoFrame& frame,
     const DecoderStats& stats) {
   MutexLock lock(&lock_);
+  if (state_ == State::kStopped) {
+    return;
+  }
   size_t peer_index = peers_->index(peer_name);
 
   auto it = captured_frames_in_flight_.find(frame.id());
@@ -390,6 +409,9 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
     absl::string_view peer_name,
     const webrtc::VideoFrame& frame) {
   MutexLock lock(&lock_);
+  if (state_ == State::kStopped) {
+    return;
+  }
   size_t peer_index = peers_->index(peer_name);
 
   auto frame_it = captured_frames_in_flight_.find(frame.id());
@@ -484,6 +506,12 @@ void DefaultVideoQualityAnalyzer::OnEncoderError(
     absl::string_view peer_name,
     const webrtc::VideoFrame& frame,
     int32_t error_code) {
+  {
+    MutexLock lock(&lock_);
+    if (state_ == State::kStopped) {
+      return;
+    }
+  }
   RTC_LOG(LS_ERROR) << "Encoder error for frame.id=" << frame.id()
                     << ", code=" << error_code;
 }
@@ -491,6 +519,12 @@ void DefaultVideoQualityAnalyzer::OnEncoderError(
 void DefaultVideoQualityAnalyzer::OnDecoderError(absl::string_view peer_name,
                                                  uint16_t frame_id,
                                                  int32_t error_code) {
+  {
+    MutexLock lock(&lock_);
+    if (state_ == State::kStopped) {
+      return;
+    }
+  }
   RTC_LOG(LS_ERROR) << "Decoder error for frame_id=" << frame_id
                     << ", code=" << error_code;
 }
