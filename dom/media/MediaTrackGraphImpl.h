@@ -36,6 +36,28 @@ template <typename T>
 class LinkedList;
 class GraphRunner;
 
+class DeviceInputTrackManager {
+ public:
+  DeviceInputTrackManager() = default;
+
+  // Returns the current NativeInputTrack.
+  NativeInputTrack* GetNativeInputTrack();
+  // Returns the DeviceInputTrack paired with the device of aID if it exists.
+  // Otherwise, returns nullptr.
+  DeviceInputTrack* GetDeviceInputTrack(CubebUtils::AudioDeviceID aID);
+  // Returns the first added NonNativeInputTrack if any. Otherwise, returns
+  // nullptr.
+  NonNativeInputTrack* GetFirstNonNativeInputTrack();
+  // Adds DeviceInputTrack to the managing list.
+  void Add(DeviceInputTrack* aTrack);
+  // Removes DeviceInputTrack from the managing list.
+  void Remove(DeviceInputTrack* aTrack);
+
+ private:
+  RefPtr<NativeInputTrack> mNativeInputTrack;
+  nsTArray<RefPtr<NonNativeInputTrack>> mNonNativeInputTracks;
+};
+
 /**
  * A per-track update message passed from the media graph thread to the
  * main thread.
@@ -734,13 +756,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    *
    * All mInputDeviceID access is on the graph thread.
    */
+  // TODO: Use mDeviceInputTrackManagerGraphThread to get the input device id
+  // instead.
   CubebUtils::AudioDeviceID mInputDeviceID;
   CubebUtils::AudioDeviceID mOutputDeviceID;
-
-  // Track the native and non-native input device in graph. Graph thread only.
-  // TODO: Replace mInputDeviceID by mNativeInputTrackGraphThread->mDeviceId.
-  RefPtr<NativeInputTrack> mNativeInputTrackGraphThread;
-  nsTArray<RefPtr<NonNativeInputTrack>> mNonNativeInputTracksGraphThread;
 
   /**
    * List of resume operations waiting for a switch to an AudioCallbackDriver.
@@ -951,11 +970,6 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
  private:
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-  // Returns the DeviceInputTrack paired with the device of aID if it exists in
-  // the graph. Otherwise, return nullptr. Graph thread only.
-  DeviceInputTrack* GetDeviceInputTrackGraphThread(
-      CubebUtils::AudioDeviceID aID);
-
   // Set a new native iput device when the current native input device is close.
   // Main thread only.
   void SetNewNativeInput();
@@ -1022,11 +1036,15 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   uint32_t mMaxOutputChannelCount;
 
-  /*
-   * Hold the NativeInputTrack or NonNativeInputTrack for a certain device.
+  /**
+   * Manage the native or non-native input device in graph. Main thread only.
    */
-  RefPtr<NativeInputTrack> mNativeInputTrackMainThread;
-  nsTArray<RefPtr<NonNativeInputTrack>> mNonNativeInputTracksMainThread;
+  DeviceInputTrackManager mDeviceInputTrackManagerMainThread;
+
+  /**
+   * Manage the native or non-native input device in graph. Graph thread only.
+   */
+  DeviceInputTrackManager mDeviceInputTrackManagerGraphThread;
 };
 
 }  // namespace mozilla
