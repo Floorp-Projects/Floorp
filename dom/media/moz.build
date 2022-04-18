@@ -246,6 +246,7 @@ UNIFIED_SOURCES += [
     "AudioConfig.cpp",
     "AudioConverter.cpp",
     "AudioDeviceInfo.cpp",
+    "AudioInputSource.cpp",
     "AudioRingBuffer.cpp",
     "AudioSegment.cpp",
     "AudioStream.cpp",
