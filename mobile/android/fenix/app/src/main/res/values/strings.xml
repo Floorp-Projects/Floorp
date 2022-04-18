@@ -1553,6 +1553,8 @@
     <string name="credit_cards_biometric_prompt_unlock_message">Unlock to use stored credit card information</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Add address</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Manage addresses</string>
     <!-- The header for the full name of an address -->
     <string name="addresses_full_name">Full Name</string>
     <!-- The header for the street address of an address -->

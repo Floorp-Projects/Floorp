@@ -179,9 +179,15 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
         manageAddressesPreference.setOnPreferenceClickListener {
             navController.navigate(
-                AutofillSettingFragmentDirections
-                    .actionAutofillSettingFragmentToAddressEditorFragment()
+                if (hasAddresses) {
+                    AutofillSettingFragmentDirections
+                        .actionAutofillSettingFragmentToAddressManagementFragment()
+                } else {
+                    AutofillSettingFragmentDirections
+                        .actionAutofillSettingFragmentToAddressEditorFragment()
+                }
             )
+
             super.onPreferenceTreeClick(it)
         }
     }

@@ -39,6 +39,7 @@ private val ICON_SIZE = 24.dp
  * an optional, interactable icon at the end.
  *
  * @param label The label in the list item.
+ * @param modifier [Modifier] to be applied to the layout.
  * @param description An optional description text below the label.
  * @param onClick Called when the user clicks on the item.
  * @param iconPainter [Painter] used to display a [ListItemIcon] after the list item.
@@ -48,6 +49,7 @@ private val ICON_SIZE = 24.dp
 @Composable
 fun TextListItem(
     label: String,
+    modifier: Modifier = Modifier,
     description: String? = null,
     onClick: (() -> Unit)? = null,
     iconPainter: Painter? = null,
@@ -56,6 +58,7 @@ fun TextListItem(
 ) {
     ListItem(
         label = label,
+        modifier = modifier,
         description = description,
         onClick = onClick,
         afterListAction = {
@@ -167,6 +170,7 @@ fun IconListItem(
  * the flexibility to add custom UI to either end of the item.
  *
  * @param label The label in the list item.
+ * @param modifier [Modifier] to be applied to the layout.
  * @param description An optional description text below the label.
  * @param onClick Called when the user clicks on the item.
  * @param beforeListAction Optional Composable for adding UI before the list item.
@@ -175,6 +179,7 @@ fun IconListItem(
 @Composable
 private fun ListItem(
     label: String,
+    modifier: Modifier = Modifier,
     description: String? = null,
     onClick: (() -> Unit)? = null,
     beforeListAction: @Composable RowScope.() -> Unit = {},
@@ -192,7 +197,7 @@ private fun ListItem(
         beforeListAction()
 
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(horizontal = 16.dp, vertical = 6.dp)
                 .weight(1f),
         ) {

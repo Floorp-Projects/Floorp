@@ -125,7 +125,7 @@ class AutofillSettingFragmentTest {
         verify {
             navController.navigate(
                 AutofillSettingFragmentDirections
-                    .actionAutofillSettingFragmentToAddressEditorFragment()
+                    .actionAutofillSettingFragmentToAddressManagementFragment()
             )
         }
     }

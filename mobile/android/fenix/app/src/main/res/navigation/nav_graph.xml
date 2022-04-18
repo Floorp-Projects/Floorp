@@ -1213,6 +1213,13 @@
                 app:exitAnim="@anim/slide_out_left"
                 app:popEnterAnim="@anim/slide_in_left"
                 app:popExitAnim="@anim/slide_out_right" />
+            <action
+                android:id="@+id/action_autofillSettingFragment_to_addressManagementFragment"
+                app:destination="@id/addressManagementFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right" />
         </fragment>
         <fragment
             android:id="@+id/creditCardEditorFragment"
@@ -1240,5 +1247,17 @@
             android:id="@+id/addressEditorFragment"
             android:name="org.mozilla.fenix.settings.address.AddressEditorFragment"
             android:label="@string/addresses_add_address" />
+        <fragment
+            android:id="@+id/addressManagementFragment"
+            android:name="org.mozilla.fenix.settings.address.AddressManagementFragment"
+            android:label="@string/addresses_manage_addresses">
+            <action
+                android:id="@+id/action_addressManagementFragment_to_addressEditorFragment"
+                app:destination="@id/addressEditorFragment"
+                app:enterAnim="@anim/slide_in_right"
+                app:exitAnim="@anim/slide_out_left"
+                app:popEnterAnim="@anim/slide_in_left"
+                app:popExitAnim="@anim/slide_out_right" />
+        </fragment>
     </navigation>
 </navigation>
