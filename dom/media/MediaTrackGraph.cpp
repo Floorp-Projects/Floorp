@@ -682,11 +682,12 @@ void MediaTrackGraphImpl::OpenAudioInputImpl(NativeInputTrack* aTrack) {
   SwitchAtNextIteration(driver);
 }
 
-void MediaTrackGraphImpl::OpenAudioInput(NativeInputTrack* aTrack) {
+void MediaTrackGraphImpl::OpenAudioInput(DeviceInputTrack* aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aTrack);
+  MOZ_ASSERT(aTrack->AsNativeInputTrack());
 
-  LOG(LogLevel::Debug, ("%p OpenInput: NativeInputTrack %p for device %p", this,
+  LOG(LogLevel::Debug, ("%p OpenInput: DeviceInputTrack %p for device %p", this,
                         aTrack, aTrack->mDeviceId));
 
   class Message : public ControlMessage {
@@ -702,10 +703,10 @@ void MediaTrackGraphImpl::OpenAudioInput(NativeInputTrack* aTrack) {
   };
 
   MOZ_ASSERT(!mNativeInputTrackOnMain);
-  mNativeInputTrackOnMain = aTrack;
+  mNativeInputTrackOnMain = aTrack->AsNativeInputTrack();
 
   // XXX Check not destroyed!
-  this->AppendMessage(MakeUnique<Message>(this, aTrack));
+  this->AppendMessage(MakeUnique<Message>(this, aTrack->AsNativeInputTrack()));
 }
 
 void MediaTrackGraphImpl::CloseAudioInputImpl(CubebUtils::AudioDeviceID aID) {
@@ -782,8 +783,11 @@ void MediaTrackGraphImpl::UnregisterAudioOutput(MediaTrack* aTrack,
       });
 }
 
-void MediaTrackGraphImpl::CloseAudioInput(NativeInputTrack* aTrack) {
+void MediaTrackGraphImpl::CloseAudioInput(DeviceInputTrack* aTrack) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTrack);
+  MOZ_ASSERT(aTrack->AsNativeInputTrack());
+
   class Message : public ControlMessage {
    public:
     Message(MediaTrackGraphImpl* aGraph, CubebUtils::AudioDeviceID aID)
