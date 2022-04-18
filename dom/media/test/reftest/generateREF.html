@@ -22,8 +22,9 @@ window.onload = function() { setTimeout(function(){dumpNthFrame(15);}, 0); };
 const videoSrc = '';
 
 // STEP3. Ensure the pref `media.seekToNextFrame.enabled` is on
-// STEP4. Run this script on browser
-// STEP5. Copy the base64 image url to your xxx-ref.html
+// STEP4. In a terminal, navigate to the containing folder and start a server with "python -m SimpleHTTPServer 8000"
+// STEP5. Open "http://localhost:8000/generateREF.html" in the browser
+// STEP6. Copy the base64 image url to your xxx-ref.html
 
 function drawVideoToInnerHTML(v) {
   // This allows to dump content via canvas when the source is cross-origin.
