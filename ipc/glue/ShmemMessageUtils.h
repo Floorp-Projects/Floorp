@@ -11,24 +11,20 @@
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"
 
-namespace mozilla {
-namespace ipc {
+namespace IPC {
 
 template <>
-struct IPDLParamTraits<Shmem> {
-  typedef Shmem paramType;
+struct ParamTraits<mozilla::ipc::Shmem> {
+  typedef mozilla::ipc::Shmem paramType;
 
-  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                    paramType&& aParam);
-  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
-                   paramType* aResult);
+  static void Write(IPC::MessageWriter* aWriter, paramType&& aParam);
+  static bool Read(IPC::MessageReader* aReader, paramType* aResult);
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
     aLog->append(L"(shmem segment)");
   }
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace IPC
 
 #endif  // ifndef mozilla_ipc_ShmemMessageUtils_h
