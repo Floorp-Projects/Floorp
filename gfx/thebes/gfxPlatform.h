@@ -781,9 +781,13 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static const char* WebRenderResourcePathOverride();
 
   // Returns true if we would like to keep the GPU process if possible.
+  // If aCrashAfterFinalFallback is true then crash if we have already
+  // exhausted all of our fallback options. Otherwise we remain on the final
+  // fallback configuration.
   static bool FallbackFromAcceleration(mozilla::gfx::FeatureStatus aStatus,
                                        const char* aMessage,
-                                       const nsACString& aFailureId);
+                                       const nsACString& aFailureId,
+                                       bool aCrashAfterFinalFallback = false);
 
   void NotifyFrameStats(nsTArray<mozilla::layers::FrameStats>&& aFrameStats);
 
