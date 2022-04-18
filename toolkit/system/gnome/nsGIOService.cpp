@@ -213,6 +213,17 @@ nsGIOMimeApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval) {
   return NS_OK;
 }
 
+static RefPtr<GAppLaunchContext> GetLaunchContext() {
+  RefPtr<GAppLaunchContext> context = dont_AddRef(g_app_launch_context_new());
+  // Unset this before launching third-party MIME handlers. Otherwise, if
+  // Thunderbird sets this in its startup script (as it does in Debian and
+  // Fedora), and Firefox does not set this in its startup script (it doesn't in
+  // Debian), then Firefox will think it is part of Thunderbird and try to make
+  // Thunderbird the default browser. See bug 1494436.
+  g_app_launch_context_unsetenv(context, "MOZ_APP_LAUNCHER");
+  return context;
+}
+
 NS_IMETHODIMP
 nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
                             mozilla::dom::BrowsingContext* aBrowsingContext) {
@@ -223,9 +234,8 @@ nsGIOMimeApp::LaunchWithURI(nsIURI* aUri,
   uris.data = const_cast<char*>(spec.get());
 
   GUniquePtr<GError> error;
-  gboolean result =
-      g_app_info_launch_uris(mApp, &uris, nullptr, getter_Transfers(error));
-
+  gboolean result = g_app_info_launch_uris(
+      mApp, &uris, GetLaunchContext().get(), getter_Transfers(error));
   if (!result) {
     g_warning("Cannot launch application: %s", error->message);
     return NS_ERROR_FAILURE;
@@ -525,7 +535,7 @@ nsresult nsGIOService::ShowURI(nsIURI* aURI) {
   nsAutoCString spec;
   MOZ_TRY(aURI->GetSpec(spec));
   GUniquePtr<GError> error;
-  if (!g_app_info_launch_default_for_uri(spec.get(), nullptr,
+  if (!g_app_info_launch_default_for_uri(spec.get(), GetLaunchContext().get(),
                                          getter_Transfers(error))) {
     g_warning("Could not launch default application for URI: %s",
               error->message);
@@ -539,7 +549,7 @@ static nsresult LaunchPath(const nsACString& aPath) {
       g_file_new_for_commandline_arg(PromiseFlatCString(aPath).get()));
   GUniquePtr<char> spec(g_file_get_uri(file));
   GUniquePtr<GError> error;
-  g_app_info_launch_default_for_uri(spec.get(), nullptr,
+  g_app_info_launch_default_for_uri(spec.get(), GetLaunchContext().get(),
                                     getter_Transfers(error));
   if (error) {
     g_warning("Cannot launch default application: %s", error->message);
