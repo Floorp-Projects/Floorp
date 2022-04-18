@@ -19,91 +19,62 @@
 #include "mozilla/Range.h"
 #include "mozilla/UniquePtr.h"
 
-/**
- * |Shmem| is one agent in the IPDL shared memory scheme.  The way it
-    works is essentially
- *
- *  (1) C++ code calls, say, |parentActor->AllocShmem(size)|
+namespace IPC {
+template <typename T>
+struct ParamTraits;
+}
 
- *  (2) IPDL-generated code creates a |mozilla::ipc::SharedMemory|
- *  wrapping the bare OS shmem primitives.  The code then adds the new
- *  SharedMemory to the set of shmem segments being managed by IPDL.
- *
- *  (3) IPDL-generated code "shares" the new SharedMemory to the child
- *  process, and then sends a special asynchronous IPC message to the
- *  child notifying it of the creation of the segment.  (What this
- *  means is OS specific.)
- *
- *  (4a) The child receives the special IPC message, and using the
- *  |SharedMemory{Basic}::Handle| it was passed, creates a
- *  |mozilla::ipc::SharedMemory| in the child
- *  process.
- *
- *  (4b) After sending the "shmem-created" IPC message, IPDL-generated
- *  code in the parent returns a |mozilla::ipc::Shmem| back to the C++
- *  caller of |parentActor->AllocShmem()|.  The |Shmem| is a "weak
- *  reference" to the underlying |SharedMemory|, which is managed by
- *  IPDL-generated code.  C++ consumers of |Shmem| can't get at the
- *  underlying |SharedMemory|.
- *
- * If parent code wants to give access rights to the Shmem to the
- * child, it does so by sending its |Shmem| to the child, in an IPDL
- * message.  The parent's |Shmem| then "dies", i.e. becomes
- * inaccessible.  This process could be compared to passing a
- * "shmem-access baton" between parent and child.
- */
+namespace mozilla::ipc {
 
-namespace mozilla {
-namespace layers {
-class ShadowLayerForwarder;
-}  // namespace layers
-
-namespace ipc {
-
-template <typename P>
-struct IPDLParamTraits;
-
+// A `Shmem` is a wrapper around OS-level shared memory. It comes in two major
+// modes: safe and unsafe.
+//
+// Access to the memory within a "safe" shmem is conceptually transferred to the
+// remote process when the shmem is transferred by marking the mapped memory in
+// the sending process as inaccessable (debug-mode only). Code should not
+// attempt to access the shmem after it has been transferred, though it will
+// remain mapped until all other Shmem references have been dropped.
+//
+// Access to the memory within an "unsafe" shmem is not protected in the same
+// way, and can be shared between multiple processes.
+//
+// For now, the primary way to create a `Shmem` is to call the
+// `IProtocol::AllocShmem` or `IProtocol::AllocUnsafeShmem` methods on an IPDL
+// actor, however this requirement may be relaxed in the future.
 class Shmem final {
-  friend struct IPDLParamTraits<mozilla::ipc::Shmem>;
-#ifdef DEBUG
-  // For ShadowLayerForwarder::CheckSurfaceDescriptor
-  friend class mozilla::layers::ShadowLayerForwarder;
-#endif
+  friend struct IPC::ParamTraits<mozilla::ipc::Shmem>;
 
  public:
-  typedef int32_t id_t;
   // Low-level wrapper around platform shmem primitives.
   typedef mozilla::ipc::SharedMemory SharedMemory;
   typedef SharedMemory::SharedMemoryType SharedMemoryType;
-  // Shmem objects should only be constructed directly from SharedMemory
-  // objects by the Shmem implementation itself, or by a select few functions
-  // in ProtocolUtils.{h,cpp}.  You should not need to add new instances of
-  // this token.
-  struct PrivateIPDLCaller {};
 
-  Shmem() : mSegment(nullptr), mData(nullptr), mSize(0), mId(0) {}
+  Shmem() = default;
 
+  // Allocates a brand new shared memory region with sufficient size for
+  // `aNBytes` bytes. This region may be transferred to other processes by being
+  // sent over an IPDL actor.
+  Shmem(size_t aNBytes, SharedMemoryType aType, bool aUnsafe);
+
+  // Create a reference to an existing shared memory region. The segment must be
+  // large enough for `aNBytes`.
+  Shmem(RefPtr<SharedMemory> aSegment, size_t aNBytes, bool aUnsafe);
+
+  // NOTE: Some callers are broken if a move constructor is provided here.
   Shmem(const Shmem& aOther) = default;
-
-  Shmem(PrivateIPDLCaller, SharedMemory* aSegment, id_t aId);
-
-  ~Shmem() {
-    // Shmem only holds a "weak ref" to the actual segment, which is
-    // owned by IPDL. So there's nothing interesting to be done here
-    forget(PrivateIPDLCaller());
-  }
-
   Shmem& operator=(const Shmem& aRhs) = default;
 
   bool operator==(const Shmem& aRhs) const { return mSegment == aRhs.mSegment; }
+  bool operator!=(const Shmem& aRhs) const { return mSegment != aRhs.mSegment; }
 
-  // Returns whether this Shmem is writable by you, and thus whether you can
-  // transfer writability to another actor.
-  bool IsWritable() const { return mSegment != nullptr; }
+  // Returns whether this Shmem is valid, and contains a reference to internal
+  // state.
+  bool IsValid() const { return mSegment != nullptr; }
 
-  // Returns whether this Shmem is readable by you, and thus whether you can
-  // transfer readability to another actor.
-  bool IsReadable() const { return mSegment != nullptr; }
+  // Legacy names for `IsValid()` - do _NOT_ actually confirm whether or not you
+  // should be able to write to or read from this type.
+  bool IsWritable() const { return IsValid(); }
+  bool IsReadable() const { return IsValid(); }
 
   // Return a pointer to the user-visible data segment.
   template <typename T>
@@ -131,80 +102,36 @@ class Shmem final {
     return {get<T>(), Size<T>()};
   }
 
-  // These shouldn't be used directly, use the IPDL interface instead.
-  id_t Id(PrivateIPDLCaller) const { return mId; }
-
-  SharedMemory* Segment(PrivateIPDLCaller) const { return mSegment; }
-
+  // For safe shmems in debug mode, immediately revoke all access rights to the
+  // memory when deallocating it.
+  // Also resets this particular `Shmem` instance to an invalid state.
 #ifndef DEBUG
-  void RevokeRights(PrivateIPDLCaller) {}
+  void RevokeRights() { *this = Shmem(); }
 #else
-  void RevokeRights(PrivateIPDLCaller);
+  void RevokeRights();
 #endif
-
-  void forget(PrivateIPDLCaller) {
-    mSegment = nullptr;
-    mData = nullptr;
-    mSize = 0;
-    mId = 0;
-  }
-
-  static already_AddRefed<Shmem::SharedMemory> Alloc(PrivateIPDLCaller,
-                                                     size_t aNBytes,
-                                                     SharedMemoryType aType,
-                                                     bool aUnsafe,
-                                                     bool aProtect = false);
-
-  // Prepare this to be shared with another process. Return an IPC message that
-  // contains enough information for the other process to map this segment in
-  // OpenExisting() below.  Return a new message if successful (owned by the
-  // caller), nullptr if not.
-  UniquePtr<IPC::Message> MkCreatedMessage(PrivateIPDLCaller,
-                                           int32_t routingId);
-
-  // Stop sharing this with another process. Return an IPC message that
-  // contains enough information for the other process to unmap this
-  // segment.  Return a new message if successful (owned by the
-  // caller), nullptr if not.
-  UniquePtr<IPC::Message> MkDestroyedMessage(PrivateIPDLCaller,
-                                             int32_t routingId);
-
-  // Return a SharedMemory instance in this process using the descriptor shared
-  // to us by the process that created the underlying OS shmem resource.  The
-  // contents of the descriptor depend on the type of SharedMemory that was
-  // passed to us.
-  static already_AddRefed<SharedMemory> OpenExisting(
-      PrivateIPDLCaller, const IPC::Message& aDescriptor, id_t* aId,
-      bool aProtect = false);
-
-  static void Dealloc(PrivateIPDLCaller, SharedMemory* aSegment);
 
  private:
   template <typename T>
   void AssertAligned() const {
-    if (0 != (mSize % sizeof(T))) MOZ_CRASH("shmem is not T-aligned");
+    MOZ_RELEASE_ASSERT(0 == (mSize % sizeof(T)),
+                       "shmem size is not a multiple of sizeof(T)");
   }
 
-#if !defined(DEBUG)
+#ifndef DEBUG
   void AssertInvariants() const {}
-
-  static uint32_t* PtrToSize(SharedMemory* aSegment) {
-    char* endOfSegment =
-        reinterpret_cast<char*>(aSegment->memory()) + aSegment->Size();
-    return reinterpret_cast<uint32_t*>(endOfSegment - sizeof(uint32_t));
-  }
-
 #else
   void AssertInvariants() const;
 #endif
 
   RefPtr<SharedMemory> mSegment;
-  void* mData;
-  size_t mSize;
-  id_t mId;
+  void* mData = nullptr;
+  size_t mSize = 0;
+#ifdef DEBUG
+  bool mUnsafe = false;
+#endif
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 #endif  // ifndef mozilla_ipc_Shmem_h

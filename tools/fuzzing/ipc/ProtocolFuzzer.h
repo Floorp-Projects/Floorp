@@ -22,18 +22,6 @@ class ProtocolFuzzerHelper {
       const nsACString& aRemoteType);
 
   static void CompositorBridgeParentSetup();
-
-  static void AddShmemToProtocol(IToplevelProtocol* aProtocol,
-                                 Shmem::SharedMemory* aSegment, int32_t aId) {
-    MOZ_ASSERT(!aProtocol->mShmemMap.Contains(aId),
-               "Don't insert with an existing ID");
-    aProtocol->mShmemMap.InsertOrUpdate(aId, aSegment);
-  }
-
-  static void RemoveShmemFromProtocol(IToplevelProtocol* aProtocol,
-                                      int32_t aId) {
-    aProtocol->mShmemMap.Remove(aId);
-  }
 };
 
 template <typename T>
@@ -55,39 +43,6 @@ void FuzzProtocol(T* aProtocol, const uint8_t* aData, size_t aSize,
       continue;
     }
 
-    uint8_t num_shmems = 0;
-    if (aSize) {
-      num_shmems = *aData;
-      aData++;
-      aSize--;
-
-      for (uint32_t i = 0; i < num_shmems; i++) {
-        if (aSize < sizeof(uint16_t)) {
-          break;
-        }
-        size_t shmem_size = *reinterpret_cast<const uint16_t*>(aData);
-        aData += sizeof(uint16_t);
-        aSize -= sizeof(uint16_t);
-
-        if (shmem_size > aSize) {
-          break;
-        }
-        RefPtr<Shmem::SharedMemory> segment(
-            Shmem::Alloc(Shmem::PrivateIPDLCaller(), shmem_size,
-                         SharedMemory::TYPE_BASIC, false));
-        if (!segment) {
-          break;
-        }
-
-        Shmem shmem(Shmem::PrivateIPDLCaller(), segment.get(), i + 1);
-        memcpy(shmem.get<uint8_t>(), aData, shmem_size);
-        ProtocolFuzzerHelper::AddShmemToProtocol(
-            aProtocol, segment.forget().take(), i + 1);
-
-        aData += shmem_size;
-        aSize -= shmem_size;
-      }
-    }
     // TODO: attach |m.header().num_fds| file descriptors to |m|. MVP can be
     // empty files, next implementation maybe read a length header from |data|
     // and then that many bytes.
@@ -97,11 +52,6 @@ void FuzzProtocol(T* aProtocol, const uint8_t* aData, size_t aSize,
       aProtocol->OnMessageReceived(m, *getter_Transfers(reply));
     } else {
       aProtocol->OnMessageReceived(m);
-    }
-    for (uint32_t i = 0; i < num_shmems; i++) {
-      Shmem::SharedMemory* segment = aProtocol->LookupSharedMemory(i + 1);
-      Shmem::Dealloc(Shmem::PrivateIPDLCaller(), segment);
-      ProtocolFuzzerHelper::RemoveShmemFromProtocol(aProtocol, i + 1);
     }
   }
 }

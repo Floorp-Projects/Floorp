@@ -4227,7 +4227,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 """
                 DestroySubtree(NormalShutdown);
                 ClearSubtree();
-                DeallocShmems();
                 if (GetLifecycleProxy()) {
                     GetLifecycleProxy()->Release();
                 }
@@ -4243,7 +4242,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 """
                 DestroySubtree(AbnormalShutdown);
                 ClearSubtree();
-                DeallocShmems();
                 if (GetLifecycleProxy()) {
                     GetLifecycleProxy()->Release();
                 }
@@ -4373,32 +4371,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         methods = []
 
-        if p.decl.type.isToplevel():
-
-            # "private" message that passes shmem mappings from one process
-            # to the other
-            if p.subtreeUsesShmem():
-                self.asyncSwitch.addcase(
-                    CaseLabel("SHMEM_CREATED_MESSAGE_TYPE"),
-                    self.genShmemCreatedHandler(),
-                )
-                self.asyncSwitch.addcase(
-                    CaseLabel("SHMEM_DESTROYED_MESSAGE_TYPE"),
-                    self.genShmemDestroyedHandler(),
-                )
-            else:
-                abort = StmtBlock()
-                abort.addstmts(
-                    [
-                        _fatalError("this protocol tree does not use shmem"),
-                        StmtReturn(_Result.NotKnown),
-                    ]
-                )
-                self.asyncSwitch.addcase(CaseLabel("SHMEM_CREATED_MESSAGE_TYPE"), abort)
-                self.asyncSwitch.addcase(
-                    CaseLabel("SHMEM_DESTROYED_MESSAGE_TYPE"), abort
-                )
-
         # Keep track of types created with an INOUT ctor. We need to call
         # Register() or RegisterID() for them depending on the side the managee
         # is created.
@@ -4516,36 +4488,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             deallocmanagee.addstmt(switchontype)
 
         return methods + [removemanagee, deallocmanagee, Whitespace.NL]
-
-    def genShmemCreatedHandler(self):
-        assert self.protocol.decl.type.isToplevel()
-
-        return StmtCode(
-            """
-            {
-                if (!ShmemCreated(${msgvar})) {
-                    return MsgPayloadError;
-                }
-                return MsgProcessed;
-            }
-            """,
-            msgvar=self.msgvar,
-        )
-
-    def genShmemDestroyedHandler(self):
-        assert self.protocol.decl.type.isToplevel()
-
-        return StmtCode(
-            """
-            {
-                if (!ShmemDestroyed(${msgvar})) {
-                    return MsgPayloadError;
-                }
-                return MsgProcessed;
-            }
-            """,
-            msgvar=self.msgvar,
-        )
 
     # -------------------------------------------------------------------------
     # The next few functions are the crux of the IPDL code generator.
