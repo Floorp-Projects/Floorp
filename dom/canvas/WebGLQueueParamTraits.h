@@ -51,9 +51,6 @@ struct IsTriviallySerializable<mozilla::webgl::PixelUnpackStateWebgl>
     : std::true_type {};
 
 template <>
-struct IsTriviallySerializable<ICRData> : std::true_type {};
-
-template <>
 struct IsTriviallySerializable<gfx::IntSize> : std::true_type {};
 
 template <typename T>
