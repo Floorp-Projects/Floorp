@@ -149,3 +149,123 @@ TEST_F(TestDeviceInputTrack, OpenTwiceWithoutCloseFirst) {
 
   NativeInputTrack::CloseAudio(std::move(track1), nullptr);
 }
+
+TEST_F(TestDeviceInputTrack, NonNativeInputTrackData) {
+  // Graph settings
+  const uint32_t flags = 0;
+  const GraphTime frames = 440;
+
+  // Non native input settings
+  const uint32_t channelCount = 2;
+  const TrackRate rate = 48000;
+
+  // Declare Buffer here to make sure it lives longer than the TestAudioSource
+  // we are going to use below.
+  AudioSegment buffer;
+
+  const CubebUtils::AudioDeviceID deviceId = (void*)1;
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
+  // Setup: Create a NonNativeInputTrack and add it to mGraph
+  RefPtr<NonNativeInputTrack> track =
+      new NonNativeInputTrack(mGraph->GraphRate(), deviceId, testPrincipal);
+  mGraph->AddTrack(track);
+
+  // Main test below:
+
+  // Make sure we get null data if the track is not started yet.
+  GraphTime current = 0;
+  GraphTime next = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(frames);
+  ASSERT_NE(current, next);  // Make sure we have data produced in ProcessInput.
+
+  track->ProcessInput(current, next, flags);
+  {
+    AudioSegment data;
+    data.AppendSegment(track->GetData<AudioSegment>());
+    EXPECT_TRUE(data.IsNull());
+  }
+
+  // Make sure we get the AudioInputSource's data once we start the track.
+  current = next;
+  next = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(2 * frames);
+  ASSERT_NE(current, next);  // Make sure we have data produced in ProcessInput.
+
+  class TestAudioSource final : public AudioInputSource {
+   public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestAudioSource, override);
+
+    TestAudioSource(uint32_t aSourceId, CubebUtils::AudioDeviceID aDeviceId,
+                    uint32_t aChannelCount, TrackRate aRate, bool aIsVoice,
+                    const PrincipalHandle& aPrincipalHandle,
+                    AudioSegment& aCurrentData)
+        : AudioInputSource(aSourceId, aDeviceId, aChannelCount, aRate, aIsVoice,
+                           aPrincipalHandle),
+          mGenerator(mChannelCount, mRate),
+          mCurrentData(aCurrentData) {}
+
+    void Start() override {}
+    void Stop() override {}
+    AudioSegment GetAudioSegment(TrackTime aDuration) override {
+      mCurrentData.Clear();
+      mGenerator.Generate(mCurrentData, static_cast<uint32_t>(aDuration));
+      AudioSegment data;
+      data.AppendSegment(&mCurrentData);
+      return data;
+    }
+    const AudioSegment& GetCurrentData() { return mCurrentData; }
+
+   private:
+    ~TestAudioSource() = default;
+
+    AudioGenerator<AudioDataValue> mGenerator;
+    AudioSegment& mCurrentData;
+  };
+
+  // We need to make sure the buffer lives longer than the TestAudioSource here
+  // since TestAudioSource will access buffer by reference.
+  track->StartAudio(
+      MakeRefPtr<TestAudioSource>(1 /* Ignored */, deviceId, channelCount, rate,
+                                  true /* Ignored*/, testPrincipal, buffer));
+  track->ProcessInput(current, next, flags);
+  {
+    AudioSegment data;
+    data.AppendSlice(*track->GetData<AudioSegment>(), current, next);
+
+    TrackTime duration = next - current;
+    EXPECT_EQ(data.GetDuration(), duration);
+    EXPECT_EQ(data.GetDuration(), buffer.GetDuration());
+
+    // The data we get here should be same as the data in buffer. We don't
+    // implement == operator for AudioSegment so we convert the data into
+    // interleaved one in nsTArray, which implements the == operator, to do the
+    // comparison.
+    nsTArray<AudioDataValue> actual;
+    size_t actualSampleCount =
+        data.WriteToInterleavedBuffer(actual, channelCount);
+    nsTArray<AudioDataValue> expected;
+    size_t expectedSampleCount =
+        buffer.WriteToInterleavedBuffer(expected, channelCount);
+    EXPECT_EQ(actualSampleCount, expectedSampleCount);
+    EXPECT_EQ(actualSampleCount, static_cast<size_t>(duration) *
+                                     static_cast<size_t>(channelCount));
+    EXPECT_EQ(actual, expected);
+  }
+
+  // Stop the track and make sure it produces null data again.
+  current = next;
+  next = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(3 * frames);
+  ASSERT_NE(current, next);  // Make sure we have data produced in ProcessInput.
+
+  track->StopAudio();
+  track->ProcessInput(current, next, flags);
+  {
+    AudioSegment data;
+    data.AppendSlice(*track->GetData<AudioSegment>(), current, next);
+    EXPECT_TRUE(data.IsNull());
+  }
+
+  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
+  track->Destroy();
+  mGraph->RemoveTrackGraphThread(track);
+}
