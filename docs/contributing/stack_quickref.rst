@@ -52,6 +52,17 @@ created on Phabricator. For this, merge the patches locally:
 Then, push to Phabricator and abandon the old change.
 
 
+Submitting the first patch on the stack
+---------------------------------------
+
+There are times when you are working on multiple patches and
+just want to submit the first one. For this, you can use:
+
+.. code-block:: shell
+
+    $ moz-phab submit .
+
+
 Reorder the stack
 -----------------
 

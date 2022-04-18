@@ -20,6 +20,7 @@ class nsIContent;
 class nsIPrincipal;
 class imgRequestProxy;
 class nsMenuParentX;
+class nsPresContext;
 
 namespace mozilla {
 class ComputedStyle;
@@ -58,10 +59,10 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   // GetIconURI returns null if the item should not have any icon.
   already_AddRefed<nsIURI> GetIconURI(nsIContent* aContent);
 
-  nsCOMPtr<nsIContent> mContent;  // always non-null
   Listener* mListener;            // [weak]
   nsIntRect mImageRegionRect;
   RefPtr<mozilla::ComputedStyle> mComputedStyle;
+  RefPtr<nsPresContext> mPresContext;
   NSImage* mIconImage = nil;  // [strong]
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
 };

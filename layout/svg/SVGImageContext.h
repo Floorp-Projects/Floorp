@@ -16,11 +16,12 @@ class nsIFrame;
 
 namespace mozilla {
 
+enum class ColorScheme : uint8_t;
 class ComputedStyle;
 
 // SVG image-specific rendering context. For imgIContainer::Draw.
 // Used to pass information such as
-//  - viewport information from CSS, and
+//  - viewport and color-scheme information from CSS, and
 //  - overridden attributes from an SVG <image> element
 // to the image's internal SVG document when it's drawn.
 class SVGImageContext {
@@ -45,22 +46,30 @@ class SVGImageContext {
    */
   explicit SVGImageContext(
       const Maybe<CSSIntSize>& aViewportSize,
-      const Maybe<SVGPreserveAspectRatio>& aPreserveAspectRatio = Nothing())
+      const Maybe<SVGPreserveAspectRatio>& aPreserveAspectRatio = Nothing(),
+      const Maybe<ColorScheme>& aColorScheme = Nothing())
       : mViewportSize(aViewportSize),
-        mPreserveAspectRatio(aPreserveAspectRatio) {}
+        mPreserveAspectRatio(aPreserveAspectRatio),
+        mColorScheme(aColorScheme) {}
 
   static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
                                      nsIFrame* aFromFrame,
                                      imgIContainer* aImgContainer);
 
   static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
-                                     const ComputedStyle* aFromComputedStyle,
-                                     imgIContainer* aImgContainer);
+                                     const nsPresContext&, const ComputedStyle&,
+                                     imgIContainer*);
 
   const Maybe<CSSIntSize>& GetViewportSize() const { return mViewportSize; }
 
   void SetViewportSize(const Maybe<CSSIntSize>& aSize) {
     mViewportSize = aSize;
+  }
+
+  const Maybe<ColorScheme>& GetColorScheme() const { return mColorScheme; }
+
+  void SetColorScheme(const Maybe<ColorScheme>& aScheme) {
+    mColorScheme = aScheme;
   }
 
   const Maybe<SVGPreserveAspectRatio>& GetPreserveAspectRatio() const {
@@ -86,7 +95,8 @@ class SVGImageContext {
          *mContextPaint == *aOther.mContextPaint);
 
     return contextPaintIsEqual && mViewportSize == aOther.mViewportSize &&
-           mPreserveAspectRatio == aOther.mPreserveAspectRatio;
+           mPreserveAspectRatio == aOther.mPreserveAspectRatio &&
+           mColorScheme == aOther.mColorScheme;
   }
 
   bool operator!=(const SVGImageContext& aOther) const {
@@ -99,7 +109,8 @@ class SVGImageContext {
       hash = HashGeneric(hash, mContextPaint->Hash());
     }
     return HashGeneric(hash, mViewportSize.map(HashSize).valueOr(0),
-                       mPreserveAspectRatio.map(HashPAR).valueOr(0));
+                       mPreserveAspectRatio.map(HashPAR).valueOr(0),
+                       mColorScheme.map(HashColorScheme).valueOr(0));
   }
 
  private:
@@ -109,11 +120,15 @@ class SVGImageContext {
   static PLDHashNumber HashPAR(const SVGPreserveAspectRatio& aPAR) {
     return aPAR.Hash();
   }
+  static PLDHashNumber HashColorScheme(ColorScheme aScheme) {
+    return HashGeneric(uint8_t(aScheme));
+  }
 
   // NOTE: When adding new member-vars, remember to update Hash() & operator==.
   RefPtr<SVGEmbeddingContextPaint> mContextPaint;
   Maybe<CSSIntSize> mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
+  Maybe<ColorScheme> mColorScheme;
 };
 
 }  // namespace mozilla
