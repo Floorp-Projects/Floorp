@@ -22,9 +22,9 @@
 #include "api/transport/network_types.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "modules/congestion_controller/goog_cc/delay_increase_detector_interface.h"
+#include "modules/congestion_controller/goog_cc/inter_arrival_delta.h"
 #include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "modules/remote_bitrate_estimator/aimd_rate_control.h"
-#include "modules/remote_bitrate_estimator/inter_arrival.h"
 #include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/race_checker.h"
 
@@ -133,9 +133,9 @@ class DelayBasedBwe {
   Timestamp last_video_packet_recv_time_;
 
   NetworkStatePredictor* network_state_predictor_;
-  std::unique_ptr<InterArrival> video_inter_arrival_;
+  std::unique_ptr<InterArrivalDelta> video_inter_arrival_;
   std::unique_ptr<DelayIncreaseDetectorInterface> video_delay_detector_;
-  std::unique_ptr<InterArrival> audio_inter_arrival_;
+  std::unique_ptr<InterArrivalDelta> audio_inter_arrival_;
   std::unique_ptr<DelayIncreaseDetectorInterface> audio_delay_detector_;
   DelayIncreaseDetectorInterface* active_delay_detector_;
 
