@@ -124,6 +124,7 @@ rtc_library("rnn_vad_pitch") {
     "../../../../rtc_base:gtest_prod",
     "../../../../rtc_base:safe_compare",
     "../../../../rtc_base:safe_conversions",
+    "../../../../rtc_base/system:arch",
   ]
   if (current_cpu == "x86" || current_cpu == "x64") {
     deps += [ ":vector_math_avx2" ]
@@ -246,6 +247,7 @@ if (rtc_include_tests) {
       "../../../../rtc_base:logging",
       "../../../../rtc_base:safe_compare",
       "../../../../rtc_base:safe_conversions",
+      "../../../../rtc_base:stringutils",
       "../../../../rtc_base/system:arch",
       "../../../../test:test_support",
       "../../utility:pffft_wrapper",
