@@ -264,6 +264,41 @@ struct AudioChunk {
     return static_cast<T*>(const_cast<void*>(mChannelData[aChannel]));
   }
 
+  template <typename T>
+  static AudioChunk FromInterleavedBuffer(
+      const T* aBuffer, size_t aFrames, uint32_t aChannels,
+      const PrincipalHandle& aPrincipalHandle) {
+    MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
+
+    CheckedInt<size_t> bufferSize(sizeof(T));
+    bufferSize *= aFrames;
+    bufferSize *= aChannels;
+    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
+
+    AutoTArray<T*, 8> deinterleaved;
+    if (aChannels == 1) {
+      PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
+      deinterleaved.AppendElement(static_cast<T*>(buffer->Data()));
+    } else {
+      deinterleaved.SetLength(aChannels);
+      T* samples = static_cast<T*>(buffer->Data());
+
+      size_t offset = 0;
+      for (uint32_t i = 0; i < aChannels; ++i) {
+        deinterleaved[i] = samples + offset;
+        offset += aFrames;
+      }
+
+      DeinterleaveAndConvertBuffer(aBuffer, static_cast<uint32_t>(aFrames),
+                                   aChannels, deinterleaved.Elements());
+    }
+
+    AutoTArray<const T*, GUESS_AUDIO_CHANNELS> channelData;
+    channelData.AppendElements(deinterleaved);
+    return AudioChunk(buffer.forget(), channelData,
+                      static_cast<TrackTime>(aFrames), aPrincipalHandle);
+  }
+
   const PrincipalHandle& GetPrincipalHandle() const { return mPrincipalHandle; }
 
   TrackTime mDuration = 0;             // in frames within the buffer
@@ -389,34 +424,8 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
   void AppendFromInterleavedBuffer(const T* aBuffer, size_t aFrames,
                                    uint32_t aChannels,
                                    const PrincipalHandle& aPrincipalHandle) {
-    MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
-
-    CheckedInt<size_t> bufferSize(sizeof(T));
-    bufferSize *= aFrames;
-    bufferSize *= aChannels;
-    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(bufferSize);
-    AutoTArray<const T*, 8> channels;
-    if (aChannels == 1) {
-      PodCopy(static_cast<T*>(buffer->Data()), aBuffer, aFrames);
-      channels.AppendElement(static_cast<T*>(buffer->Data()));
-    } else {
-      channels.SetLength(aChannels);
-      AutoTArray<T*, 8> writeChannels;
-      writeChannels.SetLength(aChannels);
-      T* samples = static_cast<T*>(buffer->Data());
-
-      size_t offset = 0;
-      for (uint32_t i = 0; i < aChannels; ++i) {
-        channels[i] = writeChannels[i] = samples + offset;
-        offset += aFrames;
-      }
-
-      DeinterleaveAndConvertBuffer(aBuffer, aFrames, aChannels,
-                                   writeChannels.Elements());
-    }
-
-    MOZ_ASSERT(aChannels == channels.Length());
-    AppendFrames(buffer.forget(), channels, aFrames, aPrincipalHandle);
+    AppendAndConsumeChunk(AudioChunk::FromInterleavedBuffer<T>(
+        aBuffer, aFrames, aChannels, aPrincipalHandle));
   }
   // Write the segement data into an interleaved buffer. Do mixing if the
   // AudioChunk's channel count in the segment is different from aChannels.
