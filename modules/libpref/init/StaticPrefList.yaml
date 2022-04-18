@@ -8489,7 +8489,7 @@
 
 # ClockDrift desired buffering in milliseconds
 - name: media.clockdrift.buffering
-  type: uint32_t
+  type: RelaxedAtomicUint32
   mirror: always
   value: 50
 

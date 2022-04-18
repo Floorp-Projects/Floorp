@@ -127,7 +127,8 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
 
   // It's ok to call GetAudioSegment before starting
   {
-    AudioSegment data = ais->GetAudioSegment(requestFrames);
+    AudioSegment data =
+        ais->GetAudioSegment(requestFrames, AudioInputSource::Consumer::Same);
     EXPECT_EQ(data.GetDuration(), requestFrames);
     EXPECT_TRUE(data.IsNull());
   }
@@ -161,7 +162,8 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
     size_t expectedSamples =
         expectedSegment.WriteToInterleavedBuffer(expected, channels);
 
-    AudioSegment actualSegment = ais->GetAudioSegment(requestFrames);
+    AudioSegment actualSegment =
+        ais->GetAudioSegment(requestFrames, AudioInputSource::Consumer::Same);
     EXPECT_EQ(actualSegment.GetDuration(), requestFrames);
     nsTArray<AudioDataValue> actual;
     size_t actualSamples =
