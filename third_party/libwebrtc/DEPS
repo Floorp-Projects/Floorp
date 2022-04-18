@@ -7,16 +7,16 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '1dccbc81bdcedc3c1bacb3a4ef2781b583839fa2',
+  'chromium_revision': 'a4b950c23db47a0fdd63549cccf9ac8acd8e2c41',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@185d864db487b7661273a7124cb72ef698933877',
+    'https://chromium.googlesource.com/chromium/src/base@9af91c9dfd27f46dd7f46765f4da9624fa491b71',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@4fd0dec37b78efe519e20bb4bdbf0e503339579d',
+    'https://chromium.googlesource.com/chromium/src/build@f77495615a8cf07884515c52deac422e0d365f55',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@6302c1175607a436e18947a5abe9df2209e845fc',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@a89e8fe7b6b50b2fd3940d756bf455790ae9f8f0',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@a840aed7b96521c51aee756a2071e33134055ef3',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@52b00527215e5d5e6784be37d521eedeeeac0fe2',
+    'https://chromium.googlesource.com/chromium/src/testing@660c09e212837772e168b910616284b76756e9ee',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@7323d17ead993580335aae426321cb37d5961149',
+    'https://chromium.googlesource.com/chromium/src/third_party@53a984ed6540181fc297e16e52c48c44348fb632',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -129,7 +129,7 @@ deps = {
   'src/third_party/colorama/src':
     'https://chromium.googlesource.com/external/colorama.git@799604a1041e9b3bc5d2789ecbd7e8db2e18e6b8',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@6d2a0fef93155cb26724fbc0430f7a6f1d1aaed1',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@684460d29eb48bb46cb139dde4c6f6e39c3266be',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@6d9096c9e3f7f5d4e6528104ed77987ec9327315',
   'src/third_party/findbugs': {
@@ -142,7 +142,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@56c610b145212b7acfb24a17e86fc0ba15aa3052',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@8cc4d0dc32a1f8734e77266bb6abdd11f18a631c',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@53806e5b83cee0e275eac038d0780f95ac56588c',
   'src/third_party/google_benchmark/src': {
@@ -200,7 +200,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@05e6cccec4351c20459256bab83bd8f79fa7ff55',
+    'https://android.googlesource.com/platform/external/perfetto.git@6d300e3738dbcfd8c6f69c5bf7006d107fce871d',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@b5d77a48d740e211a130c8e45d9353ef8c154a47',
   'src/third_party/libyuv':
@@ -257,7 +257,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@8f4606b16cbd861881cb95194ae31c565842a3cd',
+    'https://chromium.googlesource.com/chromium/src/tools@a49dfb87b0c7ea696a40630658576e96cdb2d589',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@d46ea7635f2911208268170512cb611412488fd8',
 
