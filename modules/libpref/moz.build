@@ -61,6 +61,7 @@ pref_groups = [
     "media",
     "midi",
     "mousewheel",
+    "mozilla",
     "network",
     "nglayout",
     "page_load",

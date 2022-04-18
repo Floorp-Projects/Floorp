@@ -9835,6 +9835,15 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "mozilla."
+#---------------------------------------------------------------------------
+
+- name: mozilla.widget.raise-on-setfocus
+  type: bool
+  value: true
+  mirror: once
+
+#---------------------------------------------------------------------------
 # Prefs starting with "network."
 #---------------------------------------------------------------------------
 
@@ -13122,6 +13131,11 @@
   value: true
   mirror: once
 
+- name: widget.wayland.use-move-to-rect
+  type: bool
+  value: true
+  mirror: once
+
 # Use frame callback based vsync
 - name: widget.wayland.vsync.enabled
   type: bool
@@ -13262,6 +13276,11 @@
   value: 550.0f
 #endif
   mirror: always
+
+- name: widget.transparent-windows
+  type: bool
+  value: true
+  mirror: once
 
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
