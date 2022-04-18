@@ -219,16 +219,6 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
   return NS_OK;
 }
 
-template <AudioSampleFormat N>
-struct ToCubebFormat {
-  static const cubeb_sample_format value = CUBEB_SAMPLE_FLOAT32NE;
-};
-
-template <>
-struct ToCubebFormat<AUDIO_FORMAT_S16> {
-  static const cubeb_sample_format value = CUBEB_SAMPLE_S16NE;
-};
-
 template <typename Function, typename... Args>
 int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   mMonitor.AssertCurrentThreadOwns();
@@ -248,7 +238,7 @@ nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) NO_THREAD_SAFETY_ANALYSIS
   params.rate = mAudioClock.GetInputRate();
   params.channels = mOutChannels;
   params.layout = static_cast<uint32_t>(mChannelMap);
-  params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
+  params.format = CubebUtils::ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   params.prefs = CubebUtils::GetDefaultStreamPrefs(CUBEB_DEVICE_TYPE_OUTPUT);
 
   // This is noop if MOZ_DUMP_AUDIO is not set.

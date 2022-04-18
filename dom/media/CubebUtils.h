@@ -8,6 +8,8 @@
 #  define CubebUtils_h_
 
 #  include "cubeb/cubeb.h"
+
+#  include "AudioSampleFormat.h"
 #  include "nsString.h"
 #  include "mozilla/RefPtr.h"
 
@@ -22,6 +24,16 @@ class AudioThreadRegistry;
 namespace CubebUtils {
 
 typedef cubeb_devid AudioDeviceID;
+
+template <AudioSampleFormat N>
+struct ToCubebFormat {
+  static const cubeb_sample_format value = CUBEB_SAMPLE_FLOAT32NE;
+};
+
+template <>
+struct ToCubebFormat<AUDIO_FORMAT_S16> {
+  static const cubeb_sample_format value = CUBEB_SAMPLE_S16NE;
+};
 
 // Initialize Audio Library. Some Audio backends require initializing the
 // library before using it.

@@ -210,6 +210,15 @@ int MockCubebStream::Stop() {
   return rv;
 }
 
+int MockCubebStream::RegisterDeviceChangedCallback(
+    cubeb_device_changed_callback aDeviceChangedCallback) {
+  if (mDeviceChangedCallback && aDeviceChangedCallback) {
+    return CUBEB_ERROR_INVALID_PARAMETER;
+  }
+  mDeviceChangedCallback = aDeviceChangedCallback;
+  return CUBEB_OK;
+}
+
 cubeb_stream* MockCubebStream::AsCubebStream() {
   return reinterpret_cast<cubeb_stream*>(this);
 }
@@ -244,11 +253,17 @@ nsTArray<AudioDataValue>&& MockCubebStream::TakeRecordedOutput() {
   return std::move(mRecordedOutput);
 }
 
+nsTArray<AudioDataValue>&& MockCubebStream::TakeRecordedInput() {
+  return std::move(mRecordedInput);
+}
+
 void MockCubebStream::SetDriftFactor(float aDriftFactor) {
   mDriftFactor = aDriftFactor;
 }
 
 void MockCubebStream::ForceError() { mForceErrorState = true; }
+
+void MockCubebStream::ForceDeviceChanged() { mForceDeviceChanged = true; };
 
 void MockCubebStream::Thaw() {
   MonitorAutoLock l(mFrozenStartMonitor);
@@ -258,6 +273,10 @@ void MockCubebStream::Thaw() {
 
 void MockCubebStream::SetOutputRecordingEnabled(bool aEnabled) {
   mOutputRecordingEnabled = aEnabled;
+}
+
+void MockCubebStream::SetInputRecordingEnabled(bool aEnabled) {
+  mInputRecordingEnabled = aEnabled;
 }
 
 MediaEventSource<cubeb_state>& MockCubebStream::StateEvent() {
@@ -281,6 +300,10 @@ MediaEventSource<void>& MockCubebStream::ErrorForcedEvent() {
   return mErrorForcedEvent;
 }
 
+MediaEventSource<void>& MockCubebStream::DeviceChangeForcedEvent() {
+  return mDeviceChangedForcedEvent;
+}
+
 void MockCubebStream::Process10Ms() {
   if (mStreamStop) {
     return;
@@ -298,6 +321,9 @@ void MockCubebStream::Process10Ms() {
       mDataCallback(stream, mUserPtr, mHasInput ? mInputBuffer : nullptr,
                     mHasOutput ? mOutputBuffer : nullptr, nrFrames);
 
+  if (mInputRecordingEnabled && mHasInput) {
+    mRecordedInput.AppendElements(mInputBuffer, outframes * InputChannels());
+  }
   if (mOutputRecordingEnabled && mHasOutput) {
     mRecordedOutput.AppendElements(mOutputBuffer, outframes * OutputChannels());
   }
@@ -325,6 +351,18 @@ void MockCubebStream::Process10Ms() {
     mErrorForcedEvent.Notify();
     mStreamStop = true;
     return;
+  }
+  if (mForceDeviceChanged) {
+    mForceDeviceChanged = false;
+    // The device-changed callback is not necessary to be run in the
+    // audio-callback thread. It's up to the platform APIs. We don't have any
+    // control over them. Fire the device-changed callback in another thread to
+    // simulate this.
+    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+        __func__, [this, self = RefPtr<SmartMockCubebStream>(mSelf)] {
+          mDeviceChangedCallback(this->mUserPtr);
+          mDeviceChangedForcedEvent.Notify();
+        }));
   }
 }
 
