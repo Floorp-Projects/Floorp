@@ -165,6 +165,23 @@ class NonNativeInputTrack final : public DeviceInputTrack {
   RefPtr<AudioInputSource> mAudioSource;
 };
 
+class AudioInputSourceListener : public AudioInputSource::EventListener {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioInputSourceListener, override);
+
+  explicit AudioInputSourceListener(NonNativeInputTrack* aOwner);
+
+  // Main thread APIs:
+  void AudioDeviceChanged(AudioInputSource::Id aSourceId) override;
+  void AudioStateCallback(
+      AudioInputSource::Id aSourceId,
+      AudioInputSource::EventListener::State aState) override;
+
+ private:
+  ~AudioInputSourceListener() = default;
+  const RefPtr<NonNativeInputTrack> mOwner;
+};
+
 }  // namespace mozilla
 
 #endif  // DOM_MEDIA_DEVICEINPUTTRACK_H_

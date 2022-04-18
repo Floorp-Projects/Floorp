@@ -402,6 +402,92 @@ void NonNativeInputTrack::NotifyInputStopped(uint32_t aSourceId) {
   mAudioSource->Stop();
 }
 
+AudioInputSourceListener::AudioInputSourceListener(NonNativeInputTrack* aOwner)
+    : mOwner(aOwner) {}
+
+void AudioInputSourceListener::AudioDeviceChanged(
+    AudioInputSource::Id aSourceId) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mOwner);
+
+  if (mOwner->IsDestroyed()) {
+    LOG("NonNativeInputTrack %p has been destroyed. No need to forward the "
+        "audio device-changed notification",
+        mOwner.get());
+    return;
+  }
+
+  class DeviceChangedMessage : public ControlMessage {
+   public:
+    DeviceChangedMessage(NonNativeInputTrack* aInputTrack,
+                         AudioInputSource::Id aSourceId)
+        : ControlMessage(nullptr),
+          mInputTrack(aInputTrack),
+          mSourceId(aSourceId) {
+      MOZ_ASSERT(mInputTrack);
+    }
+    void Run() override {
+      TRACE("NonNativeInputTrack::AudioDeviceChanged ControlMessage");
+      mInputTrack->NotifyDeviceChanged(mSourceId);
+    }
+    RefPtr<NonNativeInputTrack> mInputTrack;
+    AudioInputSource::Id mSourceId;
+  };
+
+  MOZ_DIAGNOSTIC_ASSERT(mOwner->GraphImpl());
+  mOwner->GraphImpl()->AppendMessage(
+      MakeUnique<DeviceChangedMessage>(mOwner.get(), aSourceId));
+}
+
+void AudioInputSourceListener::AudioStateCallback(
+    AudioInputSource::Id aSourceId,
+    AudioInputSource::EventListener::State aState) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mOwner);
+
+  const char* state =
+      aState == AudioInputSource::EventListener::State::Started   ? "started"
+      : aState == AudioInputSource::EventListener::State::Stopped ? "stopped"
+      : aState == AudioInputSource::EventListener::State::Drained ? "drained"
+                                                                  : "error";
+
+  if (mOwner->IsDestroyed()) {
+    LOG("NonNativeInputTrack %p has been destroyed. No need to forward the "
+        "audio state-changed(%s) notification",
+        mOwner.get(), state);
+    return;
+  }
+
+  if (aState == AudioInputSource::EventListener::State::Started) {
+    LOG("We can ignore %s notification for NonNativeInputTrack %p", state,
+        mOwner.get());
+    return;
+  }
+
+  LOG("Notify audio stopped due to entering %s state", state);
+
+  class InputStoppedMessage : public ControlMessage {
+   public:
+    InputStoppedMessage(NonNativeInputTrack* aInputTrack,
+                        AudioInputSource::Id aSourceId)
+        : ControlMessage(nullptr),
+          mInputTrack(aInputTrack),
+          mSourceId(aSourceId) {
+      MOZ_ASSERT(mInputTrack);
+    }
+    void Run() override {
+      TRACE("NonNativeInputTrack::AudioStateCallback ControlMessage");
+      mInputTrack->NotifyInputStopped(mSourceId);
+    }
+    RefPtr<NonNativeInputTrack> mInputTrack;
+    AudioInputSource::Id mSourceId;
+  };
+
+  MOZ_DIAGNOSTIC_ASSERT(mOwner->GraphImpl());
+  mOwner->GraphImpl()->AppendMessage(
+      MakeUnique<InputStoppedMessage>(mOwner.get(), aSourceId));
+}
+
 #undef LOG_INTERNAL
 #undef LOG
 #undef LOGE
