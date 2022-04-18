@@ -63,7 +63,13 @@ function Article(props) {
       >
         <>
           {thumbnail ? (
-            <img className="stp_article_list_thumb" src={thumbnail} alt={alt} />
+            <img
+              className="stp_article_list_thumb"
+              src={thumbnail}
+              alt={alt}
+              width="40"
+              height="40"
+            />
           ) : (
             <div className="stp_article_list_thumb_placeholder" />
           )}
