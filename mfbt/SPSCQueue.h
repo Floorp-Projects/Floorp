@@ -266,8 +266,19 @@ class SPSCRingBufferBase {
    * asserts are disabled.
    */
   void ResetThreadIds() {
+    ResetProducerThreadId();
+    ResetConsumerThreadId();
+  }
+
+  void ResetConsumerThreadId() {
 #ifdef DEBUG
-    mConsumerId = mProducerId = std::thread::id();
+    mConsumerId = std::thread::id();
+#endif
+  }
+
+  void ResetProducerThreadId() {
+#ifdef DEBUG
+    mProducerId = std::thread::id();
 #endif
   }
 
