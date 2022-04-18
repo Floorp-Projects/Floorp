@@ -496,7 +496,6 @@ void DefaultVideoQualityAnalyzer::OnDecoderError(absl::string_view peer_name,
 }
 
 void DefaultVideoQualityAnalyzer::Stop() {
-  StopMeasuringCpuProcessTime();
   {
     MutexLock lock(&lock_);
     if (state_ == State::kStopped) {
@@ -504,6 +503,7 @@ void DefaultVideoQualityAnalyzer::Stop() {
     }
     state_ = State::kStopped;
   }
+  StopMeasuringCpuProcessTime();
   comparison_available_event_.Set();
   for (auto& thread : thread_pool_) {
     thread->Stop();
