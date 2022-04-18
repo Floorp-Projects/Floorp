@@ -63,7 +63,7 @@ class gfxDWriteFontFamily final : public gfxFontFamily {
         mForceGDIClassic(false) {}
   virtual ~gfxDWriteFontFamily();
 
-  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr) final;
+  void FindStyleVariations(FontInfoData* aFontInfoData = nullptr) final;
 
   void LocalizedName(nsACString& aLocalizedName) final;
 
@@ -194,7 +194,7 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
 
   hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
-  nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr) override;
+  nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr);
 
   bool IsCJKFont();
 
@@ -387,8 +387,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
       const mozilla::fontlist::Family* aFamily) override;
 
   void ReadFaceNamesForFamily(mozilla::fontlist::Family* aFamily,
-                              bool aNeedFullnamePostscriptNames)
-      REQUIRES(mLock) override;
+                              bool aNeedFullnamePostscriptNames) override;
 
   bool ReadFaceNames(mozilla::fontlist::Family* aFamily,
                      mozilla::fontlist::Face* aFace, nsCString& aPSName,
@@ -415,7 +414,7 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
   IDWriteGdiInterop* GetGDIInterop() { return mGDIInterop; }
   bool UseGDIFontTableAccess() const;
 
-  bool FindAndAddFamiliesLocked(
+  bool FindAndAddFamilies(
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,

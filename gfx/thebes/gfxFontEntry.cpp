@@ -56,8 +56,9 @@ using namespace mozilla::unicode;
 using mozilla::services::GetObserverService;
 
 void gfxCharacterMap::NotifyReleased() {
+  gfxPlatformFontList* fontlist = gfxPlatformFontList::PlatformFontList();
   if (mShared) {
-    gfxPlatformFontList::PlatformFontList()->RemoveCmap(this);
+    fontlist->RemoveCmap(this);
   }
   delete this;
 }
@@ -1540,14 +1541,12 @@ class FontEntryStandardFaceComparator {
 };
 
 void gfxFontFamily::SortAvailableFonts() {
-  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
   mAvailableFonts.Sort(FontEntryStandardFaceComparator());
 }
 
 bool gfxFontFamily::HasOtherFamilyNames() {
   // need to read in other family names to determine this
   if (!mOtherFamilyNamesInitialized) {
-    AutoWriteLock lock(mLock);
     ReadOtherFamilyNames(
         gfxPlatformFontList::PlatformFontList());  // sets mHasOtherFamilyNames
   }
@@ -1589,11 +1588,8 @@ void gfxFontFamily::FindAllFontsForStyle(
     const gfxFontStyle& aFontStyle, nsTArray<gfxFontEntry*>& aFontEntryList,
     bool aIgnoreSizeTolerance) {
   if (!mHasStyles) {
-    FindStyleVariations();  // collect faces for the family, if not already
-                            // done
+    FindStyleVariations();  // collect faces for the family, if not already done
   }
-
-  AutoReadLock lock(mLock);
 
   NS_ASSERTION(mAvailableFonts.Length() > 0, "font family with no faces!");
   NS_ASSERTION(aFontEntryList.IsEmpty(), "non-empty fontlist passed in");
@@ -1700,7 +1696,6 @@ void gfxFontFamily::FindAllFontsForStyle(
 }
 
 void gfxFontFamily::CheckForSimpleFamily() {
-  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
   // already checked this family
   if (mIsSimpleFamily) {
     return;
@@ -1754,8 +1749,6 @@ void gfxFontFamily::CheckForSimpleFamily() {
 
 #ifdef DEBUG
 bool gfxFontFamily::ContainsFace(gfxFontEntry* aFontEntry) {
-  AutoReadLock lock(mLock);
-
   uint32_t i, numFonts = mAvailableFonts.Length();
   for (i = 0; i < numFonts; i++) {
     if (mAvailableFonts[i] == aFontEntry) {
@@ -1780,15 +1773,10 @@ void gfxFontFamily::LocalizedName(nsACString& aLocalizedName) {
 }
 
 void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
-  gfxPlatformFontList::PlatformFontList()->mLock.AssertCurrentThreadIn();
-
-  {
-    AutoReadLock lock(mLock);
-    if (mFamilyCharacterMapInitialized && !TestCharacterMap(aMatchData->mCh)) {
-      // none of the faces in the family support the required char,
-      // so bail out immediately
-      return;
-    }
+  if (mFamilyCharacterMapInitialized && !TestCharacterMap(aMatchData->mCh)) {
+    // none of the faces in the family support the required char,
+    // so bail out immediately
+    return;
   }
 
   nsCString charAndName;
@@ -1878,7 +1866,6 @@ void gfxFontFamily::SearchAllFontsForChar(GlobalFontMatch* aMatchData) {
   if (!mFamilyCharacterMapInitialized) {
     ReadAllCMAPs();
   }
-  AutoReadLock lock(mLock);
   if (!mFamilyCharacterMap.test(aMatchData->mCh)) {
     return;
   }
@@ -1927,27 +1914,20 @@ bool gfxFontFamily::ReadOtherFamilyNamesForFace(
   gfxFontUtils::ReadOtherFamilyNamesForFace(mName, nameData, dataLength,
                                             otherFamilyNames, useFullName);
 
-  if (!otherFamilyNames.IsEmpty()) {
-    aPlatformFontList->AddOtherFamilyNames(this, otherFamilyNames);
+  uint32_t n = otherFamilyNames.Length();
+  for (uint32_t i = 0; i < n; i++) {
+    aPlatformFontList->AddOtherFamilyName(this, otherFamilyNames[i]);
   }
 
-  return !otherFamilyNames.IsEmpty();
+  return n != 0;
 }
 
 void gfxFontFamily::ReadOtherFamilyNames(
     gfxPlatformFontList* aPlatformFontList) {
-  if (mOtherFamilyNamesInitialized) {
-    return;
-  }
-
-  AutoWriteLock lock(mLock);
-  if (mOtherFamilyNamesInitialized) {
-    return;
-  }
-
+  if (mOtherFamilyNamesInitialized) return;
   mOtherFamilyNamesInitialized = true;
 
-  FindStyleVariationsLocked();
+  FindStyleVariations();
 
   // read in other family names for the first face in the list
   uint32_t i, numFonts = mAvailableFonts.Length();
@@ -1970,9 +1950,7 @@ void gfxFontFamily::ReadOtherFamilyNames(
   // read in other names for the first face in the list with the assumption
   // that if extra names don't exist in that face then they don't exist in
   // other faces for the same font
-  if (!mHasOtherFamilyNames) {
-    return;
-  }
+  if (!mHasOtherFamilyNames) return;
 
   // read in names for all faces, needed to catch cases where fonts have
   // family names for individual weights (e.g. Hiragino Kaku Gothic Pro W6)
@@ -2034,8 +2012,6 @@ bool gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList) {
     // we already did this, so there's nothing more to add
     return false;
   }
-  aFontList->mLock.AssertCurrentThreadIn();
-  AutoWriteLock lock(mLock);
   mCheckedForLegacyFamilyNames = true;
   bool added = false;
   const uint32_t kNAME = TRUETYPE_TAG('n', 'a', 'm', 'e');
@@ -2065,23 +2041,22 @@ bool gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList) {
 void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
                                   bool aNeedFullnamePostscriptNames,
                                   FontInfoData* aFontInfoData) {
-  aPlatformFontList->mLock.AssertCurrentThreadIn();
-
   // if all needed names have already been read, skip
   if (mOtherFamilyNamesInitialized &&
       (mFaceNamesInitialized || !aNeedFullnamePostscriptNames)) {
     return;
   }
 
-  AutoWriteLock lock(mLock);
-
   bool asyncFontLoaderDisabled = false;
 
   if (!mOtherFamilyNamesInitialized && aFontInfoData &&
       aFontInfoData->mLoadOtherNames && !asyncFontLoaderDisabled) {
     const auto* otherFamilyNames = aFontInfoData->GetOtherFamilyNames(mName);
-    if (otherFamilyNames && otherFamilyNames->Length()) {
-      aPlatformFontList->AddOtherFamilyNames(this, *otherFamilyNames);
+    if (otherFamilyNames) {
+      uint32_t i, n = otherFamilyNames->Length();
+      for (i = 0; i < n; i++) {
+        aPlatformFontList->AddOtherFamilyName(this, (*otherFamilyNames)[i]);
+      }
     }
     mOtherFamilyNamesInitialized = true;
   }
@@ -2092,7 +2067,7 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
     return;
   }
 
-  FindStyleVariationsLocked(aFontInfoData);
+  FindStyleVariations(aFontInfoData);
 
   // check again, as style enumeration code may have loaded names
   if (mOtherFamilyNamesInitialized &&
@@ -2116,10 +2091,10 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
         aFontInfoData && aFontInfoData->mLoadFaceNames) {
       aFontInfoData->GetFaceNames(fe->Name(), fullname, psname);
       if (!fullname.IsEmpty()) {
-        aPlatformFontList->AddFullnameLocked(fe, fullname);
+        aPlatformFontList->AddFullname(fe, fullname);
       }
       if (!psname.IsEmpty()) {
-        aPlatformFontList->AddPostscriptNameLocked(fe, psname);
+        aPlatformFontList->AddPostscriptName(fe, psname);
       }
       foundFaceNames = true;
 
@@ -2138,12 +2113,12 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
     if (aNeedFullnamePostscriptNames && !foundFaceNames) {
       if (gfxFontUtils::ReadCanonicalName(nameTable, gfxFontUtils::NAME_ID_FULL,
                                           fullname) == NS_OK) {
-        aPlatformFontList->AddFullnameLocked(fe, fullname);
+        aPlatformFontList->AddFullname(fe, fullname);
       }
 
       if (gfxFontUtils::ReadCanonicalName(
               nameTable, gfxFontUtils::NAME_ID_POSTSCRIPT, psname) == NS_OK) {
-        aPlatformFontList->AddPostscriptNameLocked(fe, psname);
+        aPlatformFontList->AddPostscriptName(fe, psname);
       }
     }
 
@@ -2172,20 +2147,16 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
 
 gfxFontEntry* gfxFontFamily::FindFont(const nsACString& aPostscriptName) {
   // find the font using a simple linear search
-  AutoReadLock lock(mLock);
   uint32_t numFonts = mAvailableFonts.Length();
   for (uint32_t i = 0; i < numFonts; i++) {
     gfxFontEntry* fe = mAvailableFonts[i].get();
-    if (fe && fe->Name() == aPostscriptName) {
-      return fe;
-    }
+    if (fe && fe->Name() == aPostscriptName) return fe;
   }
   return nullptr;
 }
 
 void gfxFontFamily::ReadAllCMAPs(FontInfoData* aFontInfoData) {
-  AutoWriteLock lock(mLock);
-  FindStyleVariationsLocked(aFontInfoData);
+  FindStyleVariations(aFontInfoData);
 
   uint32_t i, numFonts = mAvailableFonts.Length();
   for (i = 0; i < numFonts; i++) {
@@ -2203,7 +2174,6 @@ void gfxFontFamily::ReadAllCMAPs(FontInfoData* aFontInfoData) {
 
 void gfxFontFamily::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                            FontListSizes* aSizes) const {
-  AutoReadLock lock(mLock);
   aSizes->mFontListSize += mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   aSizes->mCharMapsSize +=
       mFamilyCharacterMap.SizeOfExcludingThis(aMallocSizeOf);

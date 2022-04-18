@@ -128,8 +128,6 @@ class FT2FontFamily final : public gfxFontFamily {
 
   // Append this family's faces to the IPC fontlist
   void AddFacesToFontList(nsTArray<FontListEntry>* aFontList);
-
-  void FinalizeMemberList(bool aSortFaces);
 };
 
 class gfxFT2FontList final : public gfxPlatformFontList {
@@ -174,26 +172,23 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   typedef enum { kUnknown, kStandard } StandardFile;
 
   // initialize font lists
-  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
+  nsresult InitFontListForPlatform() override;
 
   void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
-                                   StandardFile aStdFile) REQUIRES(mLock);
+                                   StandardFile aStdFile);
 
   void AppendFacesFromBlob(const nsCString& aFileName, StandardFile aStdFile,
                            hb_blob_t* aBlob, FontNameCache* aCache,
-                           uint32_t aTimestamp, uint32_t aFilesize)
-      REQUIRES(mLock);
+                           uint32_t aTimestamp, uint32_t aFilesize);
 
   void AppendFacesFromFontFile(const nsCString& aFileName,
-                               FontNameCache* aCache, StandardFile aStdFile)
-      REQUIRES(mLock);
+                               FontNameCache* aCache, StandardFile aStdFile);
 
   void AppendFacesFromOmnijarEntry(nsZipArchive* aReader,
                                    const nsCString& aEntryName,
-                                   FontNameCache* aCache, bool aJarChanged)
-      REQUIRES(mLock);
+                                   FontNameCache* aCache, bool aJarChanged);
 
-  void InitSharedFontListForPlatform() REQUIRES(mLock) override;
+  void InitSharedFontListForPlatform() override;
   void CollectInitData(const FontListEntry& aFLE, const nsCString& aPSName,
                        const nsCString& aFullName, StandardFile aStdFile);
 
@@ -217,23 +212,21 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   bool AppendFacesFromCachedFaceList(CollectFunc aCollectFace,
                                      const nsCString& aFileName,
                                      const nsCString& aFaceList,
-                                     StandardFile aStdFile) REQUIRES(mLock);
+                                     StandardFile aStdFile);
 
   void AddFaceToList(const nsCString& aEntryName, uint32_t aIndex,
                      StandardFile aStdFile, hb_face_t* aFace,
-                     nsCString& aFaceList) REQUIRES(mLock);
+                     nsCString& aFaceList);
 
-  void FindFonts() REQUIRES(mLock);
+  void FindFonts();
 
-  void FindFontsInOmnijar(FontNameCache* aCache) REQUIRES(mLock);
+  void FindFontsInOmnijar(FontNameCache* aCache);
 
-  void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC)
-      REQUIRES(mLock);
+  void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC);
 
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
-                                       nsAtom* aLanguage = nullptr)
-      REQUIRES(mLock) override;
+                                       nsAtom* aLanguage = nullptr) override;
 
   nsTHashSet<nsCString> mSkipSpaceLookupCheckFamilies;
 
