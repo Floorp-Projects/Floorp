@@ -84,6 +84,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
     RtcpRttStats* rtt_stats,
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
+    bool non_sender_rtt_measurement,
     uint32_t local_ssrc,
     RtcpEventObserver* rtcp_event_observer) {
   RtpRtcpInterface::Configuration configuration;
@@ -98,6 +99,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
   configuration.rtcp_cname_callback = rtcp_cname_callback;
   configuration.local_media_ssrc = local_ssrc;
   configuration.rtcp_event_observer = rtcp_event_observer;
+  configuration.non_sender_rtt_measurement = non_sender_rtt_measurement;
 
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp =
       ModuleRtpRtcpImpl2::Create(configuration);
@@ -232,14 +234,16 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
                                               config->rtp.extensions)),
       receiving_(false),
       last_packet_log_ms_(-1),
-      rtp_rtcp_(CreateRtpRtcpModule(clock,
-                                    rtp_receive_statistics_,
-                                    transport,
-                                    rtt_stats,
-                                    rtcp_packet_type_counter_observer,
-                                    rtcp_cname_callback,
-                                    config_.rtp.local_ssrc,
-                                    config_.rtp.rtcp_event_observer)),
+      rtp_rtcp_(CreateRtpRtcpModule(
+          clock,
+          rtp_receive_statistics_,
+          transport,
+          rtt_stats,
+          rtcp_packet_type_counter_observer,
+          rtcp_cname_callback,
+          config_.rtp.rtcp_xr.receiver_reference_time_report,
+          config_.rtp.local_ssrc,
+          config_.rtp.rtcp_event_observer)),
       complete_frame_callback_(complete_frame_callback),
       keyframe_request_sender_(keyframe_request_sender),
       keyframe_request_method_(config_.rtp.keyframe_method),
@@ -283,8 +287,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     rtp_receive_statistics_->SetMaxReorderingThreshold(
         config_.rtp.rtx_ssrc, max_reordering_threshold);
   }
-  if (config_.rtp.rtcp_xr.receiver_reference_time_report)
-    rtp_rtcp_->SetRtcpXrRrtrStatus(true);
 
   ParseFieldTrial(
       {&forced_playout_delay_max_ms_, &forced_playout_delay_min_ms_},

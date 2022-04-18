@@ -142,12 +142,6 @@ class RTCPSender final {
   void SetTmmbn(std::vector<rtcp::TmmbItem> bounding_set)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
-  void SendRtcpXrReceiverReferenceTime(bool enable)
-      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-
-  bool RtcpXrReceiverReferenceTime() const
-      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-
   void SetCsrcs(const std::vector<uint32_t>& csrcs)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
@@ -267,8 +261,7 @@ class RTCPSender final {
   size_t max_packet_size_ RTC_GUARDED_BY(mutex_rtcp_sender_);
 
   // True if sending of XR Receiver reference time report is enabled.
-  bool xr_send_receiver_reference_time_enabled_
-      RTC_GUARDED_BY(mutex_rtcp_sender_);
+  const bool xr_send_receiver_reference_time_enabled_;
 
   RtcpPacketTypeCounterObserver* const packet_type_counter_observer_;
   RtcpPacketTypeCounter packet_type_counter_ RTC_GUARDED_BY(mutex_rtcp_sender_);
