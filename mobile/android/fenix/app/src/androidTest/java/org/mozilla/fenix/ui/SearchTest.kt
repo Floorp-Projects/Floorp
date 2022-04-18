@@ -88,6 +88,7 @@ class SearchTest {
     }
 
     @Test
+    @Ignore("Flaky. See https://github.com/mozilla-mobile/fenix/issues/20973")
     fun shortcutButtonTest() {
         homeScreen {
         }.openThreeDotMenu {
