@@ -30,7 +30,7 @@ class AudioDeviceModuleIOS : public AudioDeviceModule {
  public:
   int32_t AttachAudioBuffer();
 
-  AudioDeviceModuleIOS();
+  explicit AudioDeviceModuleIOS(bool bypass_voice_processing);
   ~AudioDeviceModuleIOS() override;
 
   // Retrieve the currently utilized audio layer
@@ -131,6 +131,7 @@ class AudioDeviceModuleIOS : public AudioDeviceModule {
   int GetRecordAudioParameters(AudioParameters* params) const override;
 #endif  // WEBRTC_IOS
  private:
+  const bool bypass_voice_processing_;
   bool initialized_ = false;
   const std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   std::unique_ptr<AudioDeviceIOS> audio_device_;

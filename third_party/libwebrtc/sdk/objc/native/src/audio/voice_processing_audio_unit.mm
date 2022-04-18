@@ -72,9 +72,12 @@ static OSStatus GetAGCState(AudioUnit audio_unit, UInt32* enabled) {
   return result;
 }
 
-VoiceProcessingAudioUnit::VoiceProcessingAudioUnit(
-    VoiceProcessingAudioUnitObserver* observer)
-    : observer_(observer), vpio_unit_(nullptr), state_(kInitRequired) {
+VoiceProcessingAudioUnit::VoiceProcessingAudioUnit(bool bypass_voice_processing,
+                                                   VoiceProcessingAudioUnitObserver* observer)
+    : bypass_voice_processing_(bypass_voice_processing),
+      observer_(observer),
+      vpio_unit_(nullptr),
+      state_(kInitRequired) {
   RTC_DCHECK(observer);
 }
 
@@ -248,6 +251,24 @@ bool VoiceProcessingAudioUnit::Initialize(Float64 sample_rate) {
   }
   if (result == noErr) {
     RTCLog(@"Voice Processing I/O unit is now initialized.");
+  }
+
+  if (bypass_voice_processing_) {
+    // Attempt to disable builtin voice processing.
+    UInt32 toggle = 1;
+    result = AudioUnitSetProperty(vpio_unit_,
+                                  kAUVoiceIOProperty_BypassVoiceProcessing,
+                                  kAudioUnitScope_Global,
+                                  kInputBus,
+                                  &toggle,
+                                  sizeof(toggle));
+    if (result == noErr) {
+      RTCLog(@"Successfully bypassed voice processing.");
+    } else {
+      RTCLogError(@"Failed to bypass voice processing. Error=%ld.", (long)result);
+    }
+    state_ = kInitialized;
+    return true;
   }
 
   // AGC should be enabled by default for Voice Processing I/O units but it is

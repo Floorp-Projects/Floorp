@@ -33,7 +33,7 @@
   [super setUp];
 
   _audioDeviceModule = webrtc::CreateAudioDeviceModule();
-  _audio_device.reset(new webrtc::ios_adm::AudioDeviceIOS());
+  _audio_device.reset(new webrtc::ios_adm::AudioDeviceIOS(/*bypass_voice_processing=*/false));
   self.audioSession = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
 
   NSError *error = nil;
