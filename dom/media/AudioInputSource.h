@@ -58,7 +58,11 @@ class AudioInputSource : public CubebInputStream::Listener {
   // Stops producing audio data.
   void Stop();
   // Returns the AudioSegment with aDuration of data inside.
-  AudioSegment GetAudioSegment(TrackTime aDuration);
+  // The graph thread can change behind the scene, e.g., cubeb stream reinit due
+  // to default output device changed). When this happens, we need to notify
+  // mSPSCQueue to change its data consumer.
+  enum class Consumer { Same, Changed };
+  AudioSegment GetAudioSegment(TrackTime aDuration, Consumer aConsumer);
 
   // CubebInputStream::Listener interface: These are used only for the
   // underlying audio stream. No user should call these APIs.

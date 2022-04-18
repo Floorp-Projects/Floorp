@@ -79,6 +79,91 @@ class TestDeviceInputTrack : public testing::Test {
   RefPtr<MockGraphImpl> mGraph;
 };
 
+TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
+  class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
+   public:
+    static TestDeviceInputConsumerTrack* Create(MediaTrackGraph* aGraph) {
+      MOZ_ASSERT(NS_IsMainThread());
+      TestDeviceInputConsumerTrack* track =
+          new TestDeviceInputConsumerTrack(aGraph->GraphRate());
+      aGraph->AddTrack(track);
+      return track;
+    }
+
+    void Destroy() {
+      MOZ_ASSERT(NS_IsMainThread());
+      DisconnectDeviceInput();
+      DeviceInputConsumerTrack::Destroy();
+    }
+
+    void ProcessInput(GraphTime aFrom, GraphTime aTo,
+                      uint32_t aFlags) override{/* Ignored */};
+
+    uint32_t NumberOfChannels() const override {
+      if (mInputs.IsEmpty()) {
+        return 0;
+      }
+      DeviceInputTrack* t = mInputs[0]->GetSource()->AsDeviceInputTrack();
+      MOZ_ASSERT(t);
+      return t->NumberOfChannels();
+    }
+
+   private:
+    explicit TestDeviceInputConsumerTrack(TrackRate aSampleRate)
+        : DeviceInputConsumerTrack(aSampleRate) {}
+  };
+
+  class TestAudioDataListener : public AudioDataListener {
+   public:
+    TestAudioDataListener(uint32_t aChannelCount, bool aIsVoice)
+        : mChannelCount(aChannelCount), mIsVoice(aIsVoice) {}
+    // Graph thread APIs: AudioDataListenerInterface implementations.
+    uint32_t RequestedInputChannelCount(MediaTrackGraphImpl* aGraph) override {
+      MOZ_ASSERT(aGraph->OnGraphThread());
+      return mChannelCount;
+    }
+    bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
+      return mIsVoice;
+    };
+    void DeviceChanged(MediaTrackGraphImpl* aGraph) override { /* Ignored */
+    }
+    void Disconnect(MediaTrackGraphImpl* aGraph) override{/* Ignored */};
+
+   private:
+    ~TestAudioDataListener() = default;
+
+    // Graph thread-only.
+    uint32_t mChannelCount;
+    // Any thread.
+    const bool mIsVoice;
+  };
+
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
+  const CubebUtils::AudioDeviceID device1 = (void*)1;
+  RefPtr<TestAudioDataListener> listener1 = new TestAudioDataListener(1, false);
+  RefPtr<TestDeviceInputConsumerTrack> track1 =
+      TestDeviceInputConsumerTrack::Create(mGraph);
+  track1->ConnectDeviceInput(device1, listener1.get(), testPrincipal);
+  EXPECT_TRUE(track1->ConnectToNativeDevice());
+  EXPECT_FALSE(track1->ConnectToNonNativeDevice());
+
+  const CubebUtils::AudioDeviceID device2 = (void*)2;
+  RefPtr<TestAudioDataListener> listener2 = new TestAudioDataListener(2, false);
+  RefPtr<TestDeviceInputConsumerTrack> track2 =
+      TestDeviceInputConsumerTrack::Create(mGraph);
+  track2->ConnectDeviceInput(device2, listener2.get(), testPrincipal);
+  EXPECT_FALSE(track2->ConnectToNativeDevice());
+  EXPECT_TRUE(track2->ConnectToNonNativeDevice());
+
+  track2->Destroy();
+  mGraph->RemoveTrackGraphThread(track2);
+
+  track1->Destroy();
+  mGraph->RemoveTrackGraphThread(track1);
+}
+
 TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
   const uint32_t flags = 0;
   const CubebUtils::AudioDeviceID deviceId = (void*)1;
@@ -136,26 +221,6 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
   // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
   track->Destroy();
   mGraph->RemoveTrackGraphThread(track);
-}
-
-TEST_F(TestDeviceInputTrack, OpenTwiceWithoutCloseFirst) {
-  const CubebUtils::AudioDeviceID deviceId1 = (void*)1;
-  const CubebUtils::AudioDeviceID deviceId2 = (void*)2;
-
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-
-  auto r1 = NativeInputTrack::OpenAudio(mGraph.get(), deviceId1, testPrincipal,
-                                        nullptr);
-  ASSERT_TRUE(r1.isOk());
-  RefPtr<NativeInputTrack> track1 = r1.unwrap()->AsNativeInputTrack();
-  ASSERT_TRUE(track1);
-
-  auto r2 = NativeInputTrack::OpenAudio(mGraph.get(), deviceId2, testPrincipal,
-                                        nullptr);
-  EXPECT_TRUE(r2.isErr());
-
-  NativeInputTrack::CloseAudio(std::move(track1), nullptr);
 }
 
 class MockEventListener : public AudioInputSource::EventListener {
