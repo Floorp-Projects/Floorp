@@ -35,6 +35,7 @@ UNIFIED_SOURCES += [
     "TestBitWriter.cpp",
     "TestBlankVideoDataCreator.cpp",
     "TestBufferReader.cpp",
+    "TestCubebInputStream.cpp",
     "TestDataMutex.cpp",
     "TestDecoderBenchmark.cpp",
     "TestDeviceInputTrack.cpp",
