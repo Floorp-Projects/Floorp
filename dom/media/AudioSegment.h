@@ -268,8 +268,6 @@ struct AudioChunk {
   static AudioChunk FromInterleavedBuffer(
       const T* aBuffer, size_t aFrames, uint32_t aChannels,
       const PrincipalHandle& aPrincipalHandle) {
-    MOZ_ASSERT(aChannels >= 1 && aChannels <= 8, "Support up to 8 channels");
-
     CheckedInt<size_t> bufferSize(sizeof(T));
     bufferSize *= aFrames;
     bufferSize *= aChannels;
