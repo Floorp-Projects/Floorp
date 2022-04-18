@@ -7,12 +7,16 @@
 #ifndef DOM_MEDIA_DEVICEINPUTTRACK_H_
 #define DOM_MEDIA_DEVICEINPUTTRACK_H_
 
+#include "AudioDriftCorrection.h"
 #include "AudioSegment.h"
+#include "AudioInputSource.h"
 #include "MediaTrackGraph.h"
+#include "GraphDriver.h"
 
 namespace mozilla {
 
 class NativeInputTrack;
+class NonNativeInputTrack;
 
 class DeviceInputTrack : public ProcessedMediaTrack {
  public:
@@ -71,6 +75,7 @@ class DeviceInputTrack : public ProcessedMediaTrack {
   // Any thread:
   DeviceInputTrack* AsDeviceInputTrack() override { return this; }
   virtual NativeInputTrack* AsNativeInputTrack() { return nullptr; }
+  virtual NonNativeInputTrack* AsNonNativeInputTrack() { return nullptr; }
 
   // Any thread:
   const CubebUtils::AudioDeviceID mDeviceId;
@@ -128,6 +133,36 @@ class NativeInputTrack final : public DeviceInputTrack {
   AudioSegment mPendingData;
   // The input channel count for the audio data.
   uint32_t mInputChannels = 0;
+};
+
+class NonNativeInputTrack final : public DeviceInputTrack {
+ public:
+  // Do not call this directly. This can only be called in DeviceInputTrack or
+  // tests.
+  NonNativeInputTrack(TrackRate aSampleRate,
+                      CubebUtils::AudioDeviceID aDeviceId,
+                      const PrincipalHandle& aPrincipalHandle);
+
+  // Graph Thread APIs, for ProcessedMediaTrack
+  void DestroyImpl() override;
+  void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
+  uint32_t NumberOfChannels() const override;
+
+  // Any thread
+  NonNativeInputTrack* AsNonNativeInputTrack() override { return this; }
+
+  // Graph thread APIs:
+  void StartAudio(RefPtr<AudioInputSource>&& aAudioInputSource);
+  void StopAudio();
+  AudioInputType DevicePreference() const;
+  void NotifyDeviceChanged(AudioInputSource::Id aSourceId);
+  void NotifyInputStopped(AudioInputSource::Id aSourceId);
+
+ private:
+  ~NonNativeInputTrack() = default;
+
+  // Graph thread only.
+  RefPtr<AudioInputSource> mAudioSource;
 };
 
 }  // namespace mozilla
