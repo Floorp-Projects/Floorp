@@ -177,7 +177,7 @@ MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
 MockCubebStream::~MockCubebStream() = default;
 
 int MockCubebStream::Start() {
-  mStateCallback(AsCubebStream(), mUserPtr, CUBEB_STATE_STARTED);
+  NotifyStateChanged(CUBEB_STATE_STARTED);
   mStreamStop = false;
   MonitorAutoLock lock(mFrozenStartMonitor);
   if (mFrozenStart) {
@@ -205,7 +205,7 @@ int MockCubebStream::Stop() {
   int rv = MockCubeb::AsMock(context)->StopStream(this);
   mStreamStop = true;
   if (rv == CUBEB_OK) {
-    mStateCallback(AsCubebStream(), mUserPtr, CUBEB_STATE_STOPPED);
+    NotifyStateChanged(CUBEB_STATE_STOPPED);
   }
   return rv;
 }
@@ -260,6 +260,10 @@ void MockCubebStream::SetOutputRecordingEnabled(bool aEnabled) {
   mOutputRecordingEnabled = aEnabled;
 }
 
+MediaEventSource<cubeb_state>& MockCubebStream::StateEvent() {
+  return mStateEvent;
+}
+
 MediaEventSource<uint32_t>& MockCubebStream::FramesProcessedEvent() {
   return mFramesProcessedEvent;
 }
@@ -306,7 +310,7 @@ void MockCubebStream::Process10Ms() {
   }
 
   if (outframes < nrFrames) {
-    mStateCallback(stream, mUserPtr, CUBEB_STATE_DRAINED);
+    NotifyStateChanged(CUBEB_STATE_DRAINED);
     mStreamStop = true;
     return;
   }
@@ -317,11 +321,16 @@ void MockCubebStream::Process10Ms() {
     NS_DispatchBackgroundTask(
         NS_NewRunnableFunction(__func__, [cubeb = MockCubeb::AsMock(context),
                                           this] { cubeb->StopStream(this); }));
-    mStateCallback(stream, mUserPtr, CUBEB_STATE_ERROR);
+    NotifyStateChanged(CUBEB_STATE_ERROR);
     mErrorForcedEvent.Notify();
     mStreamStop = true;
     return;
   }
+}
+
+void MockCubebStream::NotifyStateChanged(cubeb_state aState) {
+  mStateCallback(AsCubebStream(), mUserPtr, aState);
+  mStateEvent.Notify(aState);
 }
 
 MockCubeb::MockCubeb() : ops(&mock_ops) {}
