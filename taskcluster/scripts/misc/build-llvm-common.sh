@@ -18,7 +18,7 @@ aarch64-apple-darwin)
   arch=arm64
   export MACOSX_DEPLOYMENT_TARGET=11.0
   compiler_wrapper() {
-    echo exec \$MOZ_FETCHES_DIR/clang/bin/$1 -mcpu=apple-a12 \"\$@\" > $1
+    echo exec \$MOZ_FETCHES_DIR/clang/bin/$1 -mcpu=apple-m1 \"\$@\" > $1
     chmod +x $1
   }
   compiler_wrapper clang
