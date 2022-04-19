@@ -1650,7 +1650,9 @@ toolbar#nav-bar {
                 del test["disabled"]
 
             pathAbs = os.path.abspath(test["path"])
-            assert pathAbs.startswith(self.testRootAbs)
+            assert os.path.normcase(pathAbs).startswith(
+                os.path.normcase(self.testRootAbs)
+            )
             tp = pathAbs[len(self.testRootAbs) :].replace("\\", "/").strip("/")
 
             if not self.isTest(options, tp):
