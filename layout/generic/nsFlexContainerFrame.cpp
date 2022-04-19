@@ -4313,9 +4313,9 @@ nscoord nsFlexContainerFrame::ComputeMainSize(
     return aTentativeContentBoxMainSize;
   }
 
-  // Column-oriented case, with size-containment:
+  // Column-oriented case, with size-containment in block axis:
   // Behave as if we had no content and just use our MinBSize.
-  if (aReflowInput.mStyleDisplay->IsContainSize()) {
+  if (aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
     return aReflowInput.ComputedMinBSize();
   }
 
@@ -4360,9 +4360,9 @@ nscoord nsFlexContainerFrame::ComputeCrossSize(
     return computedBSize;
   }
 
-  // Row-oriented case, with size-containment:
+  // Row-oriented case, with size-containment in block axis:
   // Behave as if we had no content and just use our MinBSize.
-  if (aReflowInput.mStyleDisplay->IsContainSize()) {
+  if (aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
     *aIsDefinite = true;
     return aReflowInput.ComputedMinBSize();
   }
@@ -5770,7 +5770,7 @@ nscoord nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext) {
   DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedMinISize =
-        StyleDisplay()->IsContainSize()
+        StyleDisplay()->GetContainSizeAxes().mIContained
             ? 0
             : IntrinsicISize(aRenderingContext, IntrinsicISizeType::MinISize);
   }
@@ -5783,7 +5783,7 @@ nscoord nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext) {
   DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
     mCachedPrefISize =
-        StyleDisplay()->IsContainSize()
+        StyleDisplay()->GetContainSizeAxes().mIContained
             ? 0
             : IntrinsicISize(aRenderingContext, IntrinsicISizeType::PrefISize);
   }

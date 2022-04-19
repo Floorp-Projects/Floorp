@@ -3525,3 +3525,40 @@ nscoord StyleCalcNode::Resolve(nscoord aBasis,
                                CoordPercentageRounder aRounder) const {
   return ResolveInternal(aBasis, aRounder);
 }
+
+nsSize ContainSizeAxes::ContainSize(const nsSize& aUncontainedSize,
+                                    const WritingMode& aWM) const {
+  if (!IsAny()) {
+    return aUncontainedSize;
+  }
+  if (IsBoth()) {
+    return nsSize();
+  }
+  // At this point, we know that precisely one of our dimensions is contained.
+  const bool zeroWidth =
+      (!aWM.IsVertical() && mIContained) || (aWM.IsVertical() && mBContained);
+  if (zeroWidth) {
+    return nsSize(0, aUncontainedSize.Height());
+  }
+  return nsSize(aUncontainedSize.Width(), 0);
+}
+
+IntrinsicSize ContainSizeAxes::ContainIntrinsicSize(
+    const IntrinsicSize& aUncontainedSize, const WritingMode& aWM) const {
+  if (!IsAny()) {
+    return aUncontainedSize;
+  }
+  if (IsBoth()) {
+    return IntrinsicSize(0, 0);
+  }
+  // At this point, we know that precisely one of our dimensions is contained.
+  const bool zeroWidth =
+      (!aWM.IsVertical() && mIContained) || (aWM.IsVertical() && mBContained);
+  IntrinsicSize result(aUncontainedSize);
+  if (zeroWidth) {
+    result.width = Some(0);
+  } else {
+    result.height = Some(0);
+  }
+  return result;
+}

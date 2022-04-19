@@ -322,7 +322,8 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
                                                   IntrinsicISizeType aType) {
   nscoord displayISize = mDisplayFrame->IntrinsicISizeOffsets().padding;
 
-  if (!StyleDisplay()->IsContainSize() && !StyleContent()->mContent.IsNone()) {
+  if (!StyleDisplay()->GetContainSizeAxes().mIContained &&
+      !StyleContent()->mContent.IsNone()) {
     // Compute the width of each option's (potentially text-transformed) text,
     // and use the widest one as part of our intrinsic size.
     nscoord maxOptionSize = 0;

@@ -5937,6 +5937,7 @@ exports.CSS_PROPERTIES = {
       "content",
       "inherit",
       "initial",
+      "inline-size",
       "layout",
       "none",
       "paint",
