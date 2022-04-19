@@ -362,8 +362,8 @@ GetStructuredCloneReadInfoFromBlob(const uint8_t* aBlobData,
                                             &uncompressedLength)),
          Err(NS_ERROR_FILE_CORRUPTED));
 
-  // data (JSStructuredCloneData) currently uses 4k buffer internally.
-  // For performance reasons, it's better to align uncompressed with that.
+  // `data` (JSStructuredCloneData) currently uses 4k buffer internally.
+  // For performance reasons, it's better to align `uncompressed` with that.
   AutoTArray<uint8_t, 4096> uncompressed;
   QM_TRY(OkIf(uncompressed.SetLength(uncompressedLength, fallible)),
          Err(NS_ERROR_OUT_OF_MEMORY));
