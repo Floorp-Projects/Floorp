@@ -5,21 +5,22 @@ DAMP (DevTools At Maximum Performance) is our test suite to track performance.
 ## How to run it locally?
 
 ```bash
-./mach talos-test --activeTests damp
+./mach talos-test --suite damp
 ```
 Note that the first run is slower as it pulls a large tarball with various website copies.
 This will run all DAMP tests, you can filter by test name with:
 ```bash
-./mach talos-test --activeTests damp --subtests console
+./mach talos-test --suite damp --subtests console
 ```
 This command will run all tests which contains "console" in their name.
 
+Note that in continuous integration, DAMP tests are split in smaller tests suites: `damp-inspector`, `damp-other` and `damp-webconsole`. Actually `--suite damp` is only used locally because it contains all possible tests and makes it easier to use. But if needed you can substitute `damp` with any of the other test suites if you want to only run tests associated to a given test suite. You can find the mapping between tests and test suites in [damp-tests.js](https://searchfox.org/mozilla-central/source/testing/talos/talos/tests/devtools/addon/content/damp-tests.js).
 ### Command line options
 
 #### Running tests only once
 
 ```bash
-./mach talos-test --activeTests damp --cycles 1 --tppagecycles 1
+./mach talos-test --suite damp --cycles 1 --tppagecycles 1
 ```
 `--cycles` will limit the number of Firefox restart to only one, while
 `--tppagecycles` will limit the number of test re-run in each firefox start to one.
@@ -28,7 +29,7 @@ This is often helpful when debugging one particular subtest.
 #### Taking screenshots
 
 ```bash
-DEBUG_DEVTOOLS_SCREENSHOTS=1 ./mach talos-test --activeTests damp
+DEBUG_DEVTOOLS_SCREENSHOTS=1 ./mach talos-test --suite damp
 ```
 When passing `DEBUG_DEVTOOLS_SCREENSHOTS` env variable, screenshots will be taken after each subtest
 was run. The screenshot will be opened in new tabs and their title
@@ -37,12 +38,12 @@ includes the subtest label. Firefox won't automatically close so that you can vi
 #### Recording a profile
 
 ```bash
-./mach talos-test --activeTests damp --gecko-profile --gecko-profile-entries 100000000
+./mach talos-test --suite damp --gecko-profile --gecko-profile-entries 100000000
 ```
 This will automatically record the tests and open the profile. You may use the following command in order
 to focus on just one subtest run:
 ```bash
-./mach talos-test --activeTests damp --subtests custom.webconsole --cycles 1 --tppagecycles 1 --gecko-profile --gecko-profile-entries 100000000
+./mach talos-test --suite damp --subtests custom.webconsole --cycles 1 --tppagecycles 1 --gecko-profile --gecko-profile-entries 100000000
 ```
 
 ## How to run it on try?
