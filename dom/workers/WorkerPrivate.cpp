@@ -4735,7 +4735,10 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
   newInfo->mOnChromeWorker = mIsChromeWorker;
   newInfo->mIsInterval = aIsInterval;
   newInfo->mId = timerId;
-  newInfo->AccumulateNestingLevel(data->mCurrentTimerNestingLevel);
+  if (newInfo->mReason == Timeout::Reason::eTimeoutOrInterval ||
+      newInfo->mReason == Timeout::Reason::eIdleCallbackTimeout) {
+    newInfo->AccumulateNestingLevel(data->mCurrentTimerNestingLevel);
+  }
 
   if (MOZ_UNLIKELY(timerId == INT32_MAX)) {
     NS_WARNING("Timeout ids overflowed!");
