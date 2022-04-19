@@ -1714,9 +1714,7 @@ static MOZ_ALWAYS_INLINE bool ValueToAtomOrSymbolPure(JSContext* cx,
   } else if (idVal.isSymbol()) {
     *id = PropertyKey::Symbol(idVal.toSymbol());
   } else {
-    if (!ValueToIdPure(idVal, id)) {
-      return false;
-    }
+    return false;
   }
 
   // Watch out for ids that may be stored in dense elements.
