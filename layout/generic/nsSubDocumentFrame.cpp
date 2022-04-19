@@ -267,17 +267,6 @@ mozilla::PresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
   return presShell;
 }
 
-nsRect nsSubDocumentFrame::GetDestRect() {
-  nsRect rect = GetContent()->IsHTMLElement(nsGkAtoms::frame)
-                    ? GetRectRelativeToSelf()
-                    : GetContentRectRelativeToSelf();
-
-  // Adjust subdocument size, according to 'object-fit' and the subdocument's
-  // intrinsic size and ratio.
-  return nsLayoutUtils::ComputeObjectDestRect(
-      rect, GetIntrinsicSize(), GetIntrinsicRatio(), StylePosition());
-}
-
 ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     if (RefPtr<nsFrameLoader> frameloader = FrameLoader()) {
@@ -296,10 +285,24 @@ ScreenIntSize nsSubDocumentFrame::GetSubdocumentSize() {
     return ScreenIntSize(10, 10);
   }
 
-  nsSize docSizeAppUnits = GetDestRect().Size();
-  nsPresContext* pc = PresContext();
-  return ScreenIntSize(pc->AppUnitsToDevPixels(docSizeAppUnits.width),
-                       pc->AppUnitsToDevPixels(docSizeAppUnits.height));
+  nsSize docSizeAppUnits;
+  nsPresContext* presContext = PresContext();
+  if (GetContent()->IsHTMLElement(nsGkAtoms::frame)) {
+    docSizeAppUnits = GetSize();
+  } else {
+    docSizeAppUnits = GetContentRect().Size();
+  }
+
+  // Adjust subdocument size, according to 'object-fit' and the subdocument's
+  // intrinsic size and ratio.
+  docSizeAppUnits = nsLayoutUtils::ComputeObjectDestRect(
+                        nsRect(nsPoint(), docSizeAppUnits), GetIntrinsicSize(),
+                        GetIntrinsicRatio(), StylePosition())
+                        .Size();
+
+  return ScreenIntSize(
+      presContext->AppUnitsToDevPixels(docSizeAppUnits.width),
+      presContext->AppUnitsToDevPixels(docSizeAppUnits.height));
 }
 
 static void WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
@@ -1264,6 +1267,24 @@ void nsSubDocumentFrame::SubdocumentIntrinsicSizeOrRatioChanged() {
   }
 }
 
+/**
+ * Gets the layer-pixel offset of aContainerFrame's content rect top-left
+ * from the nearest display item reference frame (which we assume will be
+ * inducing a ContainerLayer).
+ */
+static nsPoint GetContentRectLayerOffset(nsIFrame* aContainerFrame,
+                                         nsDisplayListBuilder* aBuilder) {
+  // Offset to the content rect in case we have borders or padding
+  // Note that aContainerFrame could be a reference frame itself, so
+  // we need to be careful here to ensure that we call ToReferenceFrame
+  // on aContainerFrame and not its parent.
+  nsPoint frameOffset =
+      aBuilder->ToReferenceFrame(aContainerFrame) +
+      aContainerFrame->GetContentRectRelativeToSelf().TopLeft();
+
+  return frameOffset;
+}
+
 // Return true iff |aManager| is a "temporary layer manager".  They're
 // used for small software rendering tasks, like drawWindow.  That's
 // currently implemented by a BasicLayerManager without a backing
@@ -1343,9 +1364,6 @@ bool nsDisplayRemote::CreateWebRenderCommands(
 
   nsPresContext* pc = mFrame->PresContext();
   nsFrameLoader* fl = GetFrameLoader();
-
-  auto* subDocFrame = static_cast<nsSubDocumentFrame*>(mFrame);
-  nsRect destRect = subDocFrame->GetDestRect();
   if (RefPtr<RemoteBrowser> remoteBrowser = fl->GetRemoteBrowser()) {
     if (pc->GetPrintSettings()) {
       // HACK(emilio): Usually we update sizing/positioning from
@@ -1356,14 +1374,15 @@ bool nsDisplayRemote::CreateWebRenderCommands(
       //
       // UpdatePositionAndSize() can cause havoc for non-remote frames but
       // luckily we don't care about those, so this is fine.
-      fl->UpdatePositionAndSize(subDocFrame);
+      fl->UpdatePositionAndSize(static_cast<nsSubDocumentFrame*>(mFrame));
     }
 
     // Adjust mItemVisibleRect, which is relative to the reference frame, to be
     // relative to this frame
     nsRect visibleRect = GetBuildingRect() - ToReferenceFrame();
-    visibleRect.IntersectRect(visibleRect, destRect);
-    visibleRect -= destRect.TopLeft();
+    nsRect contentRect = Frame()->GetContentRectRelativeToSelf();
+    visibleRect.IntersectRect(visibleRect, contentRect);
+    visibleRect -= contentRect.TopLeft();
 
     // Generate an effects update notifying the browser it is visible
     gfx::Size scale = aSc.GetInheritedScale();
@@ -1390,11 +1409,13 @@ bool nsDisplayRemote::CreateWebRenderCommands(
   }
 
   nscoord auPerDevPixel = pc->AppUnitsPerDevPixel();
-  nsPoint layerOffset = ToReferenceFrame() + destRect.TopLeft();
+  nsPoint layerOffset = GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
   mOffset = LayoutDevicePoint::FromAppUnits(layerOffset, auPerDevPixel);
 
-  destRect.MoveTo(0, 0);
-  auto rect = LayoutDeviceRect::FromAppUnits(destRect, auPerDevPixel);
+  nsRect contentRect = mFrame->GetContentRectRelativeToSelf();
+  contentRect.MoveTo(0, 0);
+  LayoutDeviceRect rect =
+      LayoutDeviceRect::FromAppUnits(contentRect, auPerDevPixel);
   rect += mOffset;
 
   aBuilder.PushIFrame(mozilla::wr::ToLayoutRect(rect), !BackfaceIsHidden(),
