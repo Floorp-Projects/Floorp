@@ -109,6 +109,11 @@ if CONFIG["ENABLE_CLANG_PLUGIN_ALPHA"]:
 # variable to limit ourselves to what we need to build the clang plugin.
 if CONFIG["HOST_OS_ARCH"] == "WINNT":
     extra_cxxflags = ["-GR-", "-EHsc"]
+    # Clang 14 headers enforce a requirement upon Visual Studio 2019 headers,
+    # for support of newer C++ versions, which is necessary for clang itself,
+    # but as of writing, it's not necessary for the plugin code, so enable
+    # the escape hatch, at least until we generally upgrade to VS 2019.
+    HOST_DEFINES["LLVM_FORCE_USE_OLD_TOOLCHAIN"] = True
 else:
     extra_cxxflags = ["-fno-rtti", "-fno-exceptions"]
 

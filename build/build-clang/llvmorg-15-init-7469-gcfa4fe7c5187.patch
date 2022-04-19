@@ -1,0 +1,67 @@
+From cfa4fe7c51870fe6b480d541938f556cf0736fa2 Mon Sep 17 00:00:00 2001
+From: Ahmed Bougacha <ahmed@bougacha.org>
+Date: Tue, 12 Apr 2022 09:23:11 -0700
+Subject: [PATCH] [AArch64][LOH] Don't ignore regmasks in bundles by iterating
+ over instrs.
+
+The LOH pass iterates over instructions to build its custom register
+state machine, but it uses the top-level bundle iterator.
+This should be okay, because when the wrapper BUNDLE MI is built,
+it aggregates the register defs/uses in its instructions into MOs.
+
+However, that doesn't apply to regmasks, and accumulating regmasks
+across multiple instructions would be messy business.
+There are a couple AnalyzePhysRegInBundle (/Virt) helpers that
+do look at regmasks, but those don't fit in very well here.
+
+AArch64 has started to use a few bundle instructions, specifically
+as glorified pseudos for variant call instructions, which have regmasks.
+So the LOH pass ends up ignoring regmasks.
+
+Concretely, this has been wrong for a while, but, on aarch64, the
+most common bundle (rv_marker call) was always followed by the
+attached call instruction, a plain BL with a regmask.  Which
+was properly detected by the pass.
+
+However, we recently started keeping the attached call in the bundle,
+so the regmask is now ignored.  And the pass happily combines ADRPs, of
+say, x8, across the bundle, resulting in corrupt pointers later.
+---
+ llvm/lib/Target/AArch64/AArch64CollectLOH.cpp | 2 +-
+ llvm/test/CodeGen/AArch64/loh.mir             | 9 +++++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/llvm/lib/Target/AArch64/AArch64CollectLOH.cpp b/llvm/lib/Target/AArch64/AArch64CollectLOH.cpp
+index ac243347b24d..b31b709c0c0a 100644
+--- a/llvm/lib/Target/AArch64/AArch64CollectLOH.cpp
++++ b/llvm/lib/Target/AArch64/AArch64CollectLOH.cpp
+@@ -559,7 +559,7 @@ bool AArch64CollectLOH::runOnMachineFunction(MachineFunction &MF) {
+     // Walk the basic block backwards and update the per register state machine
+     // in the process.
+     for (const MachineInstr &MI :
+-         instructionsWithoutDebug(MBB.rbegin(), MBB.rend())) {
++         instructionsWithoutDebug(MBB.instr_rbegin(), MBB.instr_rend())) {
+       unsigned Opcode = MI.getOpcode();
+       switch (Opcode) {
+       case AArch64::ADDXri:
+diff --git a/llvm/test/CodeGen/AArch64/loh.mir b/llvm/test/CodeGen/AArch64/loh.mir
+index 8c482fa27b1d..c816a5344bdb 100644
+--- a/llvm/test/CodeGen/AArch64/loh.mir
++++ b/llvm/test/CodeGen/AArch64/loh.mir
+@@ -190,4 +190,13 @@ body: |
+   bb.14:
+     liveins: $x10
+     $x12 = ADDXri $x10, target-flags(aarch64-pageoff) @g0, 0
++
++  bb.15:
++    ; Should not produce a LOH when reg is clobbered by bundled regmask
++    ; CHECK-NOT: MCLOH_AdrpAdrp
++    $x8 = ADRP target-flags(aarch64-page) @g0
++    BUNDLE {
++      BL @extfunc, csr_aarch64_aapcs
++    }
++    $x8 = ADRP target-flags(aarch64-page) @g1
+ ...
+-- 
+2.35.0.1.g829a698654
+
