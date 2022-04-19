@@ -445,6 +445,13 @@ android-hw-aarch64-raptor-cpu-memory-power:
 android-hw-browsertime-power:
     - browsertime-power
 
+android-hw-browsertime-a51:
+    - browsertime-tp6m-essential
+    - browsertime-speedometer-mobile
+    - browsertime-youtube-playback-mobile
+    - browsertime-unity-webgl-mobile
+    # not live, or tp6 proper
+
 android-hw-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-essential

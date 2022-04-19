@@ -15,7 +15,7 @@ async def test_null(bidi_session, current_session, top_context, test_page, type_
     other_top_level_context_id = current_session.new_window(type_hint=type_hint)
 
     # Retrieve all top-level browsing contexts
-    contexts = await bidi_session.browsing_context.get_tree(parent=None)
+    contexts = await bidi_session.browsing_context.get_tree(root=None)
 
     assert len(contexts) == 2
     if contexts[0]["context"] == current_top_level_context_id:
@@ -52,7 +52,7 @@ async def test_top_level_context(
 
     # Retrieve all browsing contexts of the newly opened tab/window
     other_top_level_context_id = current_session.new_window(type_hint=type_hint)
-    contexts = await bidi_session.browsing_context.get_tree(parent=other_top_level_context_id)
+    contexts = await bidi_session.browsing_context.get_tree(root=other_top_level_context_id)
 
     assert len(contexts) == 1
     assert_browsing_context(
@@ -77,19 +77,19 @@ async def test_child_context(
 
     # First retrieve all browsing contexts for current tab
     top_level_context_id = current_session.window_handle
-    all_contexts = await bidi_session.browsing_context.get_tree(parent=top_level_context_id)
+    all_contexts = await bidi_session.browsing_context.get_tree(root=top_level_context_id)
 
     assert len(all_contexts) == 1
-    parent_info = all_contexts[0]
+    root_info = all_contexts[0]
     assert_browsing_context(
-        parent_info,
+        root_info,
         top_level_context_id,
         children=1,
         parent=None,
         url=test_page_nested_frames,
     )
 
-    child1_info = parent_info["children"][0]
+    child1_info = root_info["children"][0]
     assert_browsing_context(
         child1_info,
         context=None,
@@ -100,14 +100,14 @@ async def test_child_context(
     )
 
     # Now retrieve all browsing contexts for the first browsing context child
-    child_contexts = await bidi_session.browsing_context.get_tree(parent=child1_info["context"])
+    child_contexts = await bidi_session.browsing_context.get_tree(root=child1_info["context"])
 
     assert len(child_contexts) == 1
     assert_browsing_context(
         child_contexts[0],
-        parent_info["children"][0]["context"],
+        root_info["children"][0]["context"],
         children=1,
-        parent=parent_info["context"],
+        parent=root_info["context"],
         url=test_page_same_origin_frame,
     )
 

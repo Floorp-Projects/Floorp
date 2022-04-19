@@ -26,7 +26,7 @@ async def test_interactive_simultaneous_navigation(bidi_session, inline, new_tab
         context=new_tab["context"], url=url, wait="complete"
     )
     assert result["url"] == url
-    contexts = await bidi_session.browsing_context.get_tree(parent=new_tab["context"])
+    contexts = await bidi_session.browsing_context.get_tree(root=new_tab["context"])
     assert len(contexts) == 1
     assert contexts[0]["url"] == url
     assert len(contexts[0]["children"]) == 2
@@ -68,7 +68,7 @@ async def test_interactive_simultaneous_navigation(bidi_session, inline, new_tab
     frame1_result = frame1_task.result()
     assert frame1_result["url"] == frame1_url
 
-    contexts = await bidi_session.browsing_context.get_tree(parent=new_tab["context"])
+    contexts = await bidi_session.browsing_context.get_tree(root=new_tab["context"])
     assert contexts[0]["children"][0]["url"] == frame1_url
     assert contexts[0]["children"][1]["url"] == frame2_url
 
@@ -84,7 +84,7 @@ async def test_relative_url(bidi_session, new_tab, url):
         context=new_tab["context"], url=url_before, wait="interactive"
     )
     contexts = await bidi_session.browsing_context.get_tree(
-        parent=new_tab["context"], max_depth=0
+        root=new_tab["context"], max_depth=0
     )
     assert contexts[0]["url"] == url_before
 
@@ -93,7 +93,7 @@ async def test_relative_url(bidi_session, new_tab, url):
         context=new_tab["context"], url="other.html", wait="interactive"
     )
     contexts = await bidi_session.browsing_context.get_tree(
-        parent=new_tab["context"], max_depth=0
+        root=new_tab["context"], max_depth=0
     )
     assert contexts[0]["url"] == url_after
     assert result["url"] == url_after

@@ -69,10 +69,8 @@
 #include "mozilla/dom/PBrowser.h"
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "mozilla/dom/PointerEventHandler.h"
-#include "mozilla/dom/SessionStoreChangeListener.h"
-#include "mozilla/dom/SessionStoreDataCollector.h"
-#include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/dom/SessionStoreUtils.h"
+#include "mozilla/dom/SessionStoreChild.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
@@ -522,12 +520,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   mIPCOpen = true;
 
   if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
-    mSessionStoreListener = new TabListener(docShell, nullptr);
-    rv = mSessionStoreListener->Init();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mSessionStoreChangeListener =
-        SessionStoreChangeListener::Create(mBrowsingContext);
+    mSessionStoreChild = SessionStoreChild::GetOrCreate(mBrowsingContext);
   }
 
   // We've all set up, make sure our visibility state is consistent. This is
@@ -545,8 +538,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowserChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mStatusFilter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebNav)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStoreListener)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStoreChangeListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessionStoreChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -555,8 +547,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowserChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStatusFilter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebNav)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStoreListener)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStoreChangeListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessionStoreChild)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(BrowserChild)
@@ -849,14 +840,9 @@ void BrowserChild::DestroyWindow() {
     mCoalescedTouchMoveEventFlusher = nullptr;
   }
 
-  if (mSessionStoreListener) {
-    mSessionStoreListener->RemoveListeners();
-    mSessionStoreListener = nullptr;
-  }
-
-  if (mSessionStoreChangeListener) {
-    mSessionStoreChangeListener->Stop();
-    mSessionStoreChangeListener = nullptr;
+  if (mSessionStoreChild) {
+    mSessionStoreChild->Stop();
+    mSessionStoreChild = nullptr;
   }
 
   // In case we don't have chance to process all entries, clean all data in
@@ -2060,16 +2046,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvNativeSynthesisResponse(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvUpdateEpoch(const uint32_t& aEpoch) {
-  if (mSessionStoreListener) {
-    mSessionStoreListener->SetEpoch(aEpoch);
-  }
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateSHistory() {
-  if (mSessionStoreListener) {
-    mSessionStoreListener->UpdateSHistoryChanges();
+  if (mSessionStoreChild) {
+    mSessionStoreChild->UpdateSHistoryChanges();
   }
   return IPC_OK();
 }
@@ -3809,26 +3788,10 @@ nsresult BrowserChild::PrepareProgressListenerData(
   return PrepareRequestData(aRequest, aRequestData);
 }
 
-bool BrowserChild::UpdateSessionStore() {
-  if (!mSessionStoreListener) {
-    return false;
+void BrowserChild::UpdateSessionStore() {
+  if (mSessionStoreChild) {
+    mSessionStoreChild->UpdateSessionStore();
   }
-  RefPtr<ContentSessionStore> store = mSessionStoreListener->GetSessionStore();
-
-  Maybe<nsCString> docShellCaps;
-  if (store->IsDocCapChanged()) {
-    docShellCaps.emplace(store->GetDocShellCaps());
-  }
-
-  Maybe<bool> privatedMode;
-  if (store->IsPrivateChanged()) {
-    privatedMode.emplace(store->GetPrivateModeEnabled());
-  }
-
-  Unused << SendSessionStoreUpdate(docShellCaps, privatedMode,
-                                   store->GetAndClearSHistoryChanged(),
-                                   mSessionStoreListener->GetEpoch());
-  return true;
 }
 
 #ifdef XP_WIN

@@ -6,6 +6,7 @@
 #define mozilla_dom_SessionStoreMessageUtils_h
 
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "SessionStoreData.h"
 #include "SessionStoreUtils.h"
 #include "SessionStoreRestoreData.h"

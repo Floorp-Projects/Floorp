@@ -78,7 +78,7 @@
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/SessionStoreChangeListener.h"
-#include "mozilla/dom/SessionStoreDataCollector.h"
+#include "mozilla/dom/SessionStoreChild.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -1325,7 +1325,10 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
           // performance.navigation.type is 2.
           // Traditionally this type change has been done to the top level page
           // only.
-          inner->GetPerformance()->GetDOMTiming()->NotifyRestoreStart();
+          Performance* performance = inner->GetPerformance();
+          if (performance) {
+            performance->GetDOMTiming()->NotifyRestoreStart();
+          }
         }
       }
 
@@ -5813,7 +5816,12 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
 
       if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
         if (IsForceReloadType(mLoadType)) {
-          SessionStoreUtils::ResetSessionStore(mBrowsingContext);
+          if (WindowContext* windowContext =
+                  mBrowsingContext->GetCurrentWindowContext()) {
+            SessionStoreChild::From(windowContext->GetWindowGlobalChild())
+                ->SendResetSessionStore(
+                    mBrowsingContext, mBrowsingContext->GetSessionStoreEpoch());
+          }
         }
       }
     }
@@ -6554,13 +6562,13 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     return NS_OK;
   }
   if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
-    if (Document* document = GetDocument()) {
-      if (WindowGlobalChild* windowChild = document->GetWindowGlobalChild()) {
-        RefPtr<SessionStoreDataCollector> collector =
-            SessionStoreDataCollector::CollectSessionStoreData(windowChild);
-        collector->RecordInputChange();
-        collector->RecordScrollChange();
-      }
+    if (WindowContext* windowContext =
+            mBrowsingContext->GetCurrentWindowContext()) {
+      // TODO(farre): File bug: From a user perspective this would probably be
+      // just fine to run off the change listener timer. Turns out that a flush
+      // is needed. Several tests depend on this behaviour. Could potentially be
+      // an optimization for later. See Bug 1756995.
+      SessionStoreChangeListener::FlushAllSessionStoreData(windowContext);
     }
   }
 
@@ -7755,7 +7763,10 @@ nsresult nsDocShell::RestoreFromHistory() {
   // Now that we have found the inner window of the page restored
   // from the history, we have to  make sure that
   // performance.navigation.type is 2.
-  privWinInner->GetPerformance()->GetDOMTiming()->NotifyRestoreStart();
+  Performance* performance = privWinInner->GetPerformance();
+  if (performance) {
+    performance->GetDOMTiming()->NotifyRestoreStart();
+  }
 
   // Restore the refresh URI list.  The refresh timers will be restarted
   // when EndPageLoad() is called.
@@ -11175,27 +11186,35 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   return onLocationChangeNeeded;
 }
 
-void nsDocShell::CollectWireframe() {
-  if (mozilla::SessionHistoryInParent() &&
+bool nsDocShell::CollectWireframe() {
+  const bool collectWireFrame =
+      mozilla::SessionHistoryInParent() &&
       StaticPrefs::browser_history_collectWireframes() &&
-      mBrowsingContext->IsTopContent() && mActiveEntry) {
-    RefPtr<Document> doc = mContentViewer->GetDocument();
-    Nullable<Wireframe> wireframe;
-    doc->GetWireframeWithoutFlushing(false, wireframe);
-    if (!wireframe.IsNull()) {
-      if (XRE_IsParentProcess()) {
-        SessionHistoryEntry* entry =
-            mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
-        if (entry) {
-          entry->SetWireframe(Some(wireframe.Value()));
-        }
-      } else {
-        mozilla::Unused
-            << ContentChild::GetSingleton()->SendSessionHistoryEntryWireframe(
-                   mBrowsingContext, wireframe.Value());
-      }
-    }
+      mBrowsingContext->IsTopContent() && mActiveEntry;
+
+  if (!collectWireFrame) {
+    return false;
   }
+
+  RefPtr<Document> doc = mContentViewer->GetDocument();
+  Nullable<Wireframe> wireframe;
+  doc->GetWireframeWithoutFlushing(false, wireframe);
+  if (wireframe.IsNull()) {
+    return false;
+  }
+  if (XRE_IsParentProcess()) {
+    SessionHistoryEntry* entry =
+        mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+    if (entry) {
+      entry->SetWireframe(Some(wireframe.Value()));
+    }
+  } else {
+    mozilla::Unused
+        << ContentChild::GetSingleton()->SendSessionHistoryEntryWireframe(
+               mBrowsingContext, wireframe.Value());
+  }
+
+  return true;
 }
 
 //*****************************************************************************

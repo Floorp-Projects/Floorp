@@ -149,6 +149,9 @@ add_task(async function test_bookmark_contextmenu_contents() {
     return contextMenu;
   }, optionItems);
 
+  let tab;
+  let contextMenuOnContent;
+
   await checkContextMenu(async function() {
     info("Check context menu after opening context menu on content");
     const toolbarBookmark = await PlacesUtils.bookmarks.insert({
@@ -158,13 +161,8 @@ add_task(async function test_bookmark_contextmenu_contents() {
     });
 
     info("Open context menu on about:config");
-    const tab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      "about:config"
-    );
-    const contextMenuOnContent = document.getElementById(
-      "contentAreaContextMenu"
-    );
+    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config");
+    contextMenuOnContent = document.getElementById("contentAreaContextMenu");
     const popupShownPromiseOnContent = BrowserTestUtils.waitForEvent(
       contextMenuOnContent,
       "popupshown"
@@ -189,10 +187,15 @@ add_task(async function test_bookmark_contextmenu_contents() {
     });
     await popupShownPromise;
 
-    BrowserTestUtils.removeTab(tab);
-
     return contextMenu;
   }, optionItems);
+
+  // We need to do a thorough cleanup to avoid leaking the window of
+  // 'about:config'.
+  const tabClosed = BrowserTestUtils.waitForTabClosing(tab);
+  contextMenuOnContent.hidePopup();
+  BrowserTestUtils.removeTab(tab);
+  await tabClosed;
 });
 
 add_task(async function test_empty_contextmenu_contents() {

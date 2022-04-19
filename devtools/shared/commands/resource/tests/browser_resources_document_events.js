@@ -11,6 +11,7 @@ add_task(async function() {
   await testDomCompleteWithOverloadedConsole();
   await testIframeNavigation();
   await testBfCacheNavigation();
+  await testDomCompleteWithWindowStop();
 
   // Enable server side target switching for next test
   // as the regression it tracks only occurs with server side target switching enabled
@@ -535,6 +536,47 @@ async function testDomCompleteWithOverloadedConsole() {
     false,
     "the console object is reported to be overloaded"
   );
+
+  targetCommand.destroy();
+  await client.close();
+}
+
+async function testDomCompleteWithWindowStop() {
+  info("Test dom-complete with a page calling window.stop()");
+
+  const tab = await addTab("data:text/html,foo");
+
+  const {
+    commands,
+    client,
+    resourceCommand,
+    targetCommand,
+  } = await initResourceCommand(tab);
+
+  info("Check that all DOCUMENT_EVENTS are fired for the already loaded page");
+  let documentEvents = [];
+  await resourceCommand.watchResources([resourceCommand.TYPES.DOCUMENT_EVENT], {
+    onAvailable: resources => documentEvents.push(...resources),
+  });
+  is(documentEvents.length, 3, "Existing document events are fired");
+  documentEvents = [];
+
+  const html = `<!DOCTYPE html><html>
+  <head>
+    <title>stopped page</title>
+    <script>window.stop();</script>
+  </head>
+  <body>Page content that shouldn't be displayed</body>
+</html>`;
+  const secondLocation = "data:text/html," + encodeURIComponent(html);
+  const targetBeforeNavigation = commands.targetCommand.targetFront;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, secondLocation);
+  info(
+    "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
+  );
+  await waitFor(() => documentEvents.length === 4);
+
+  assertEvents({ commands, targetBeforeNavigation, documentEvents });
 
   targetCommand.destroy();
   await client.close();

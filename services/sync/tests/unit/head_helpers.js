@@ -92,9 +92,10 @@ XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingValidator", function() {
-  let { Ajv } = ChromeUtils.import("resource://testing-common/ajv-6.12.6.js");
-  let ajv = new Ajv({ async: "co*" });
-  return ajv.compile(SyncPingSchema);
+  const { JsonSchema } = ChromeUtils.import(
+    "resource://gre/modules/JsonSchema.jsm"
+  );
+  return new JsonSchema.Validator(SyncPingSchema);
 });
 
 // This is needed for loadAddonTestFunctions().
@@ -283,13 +284,18 @@ function get_sync_test_telemetry() {
 }
 
 function assert_valid_ping(record) {
+  // Our JSON validator does not like `undefined` values, even though they will
+  // be skipped when we serialize to JSON.
+  record = JSON.parse(JSON.stringify(record));
+
   // This is called as the test harness tears down due to shutdown. This
   // will typically have no recorded syncs, and the validator complains about
   // it. So ignore such records (but only ignore when *both* shutdown and
   // no Syncs - either of them not being true might be an actual problem)
   if (record && (record.why != "shutdown" || record.syncs.length != 0)) {
-    if (!SyncPingValidator(record)) {
-      if (SyncPingValidator.errors.length) {
+    const result = SyncPingValidator.validate(record);
+    if (!result.valid) {
+      if (result.errors.length) {
         // validation failed - using a simple |deepEqual([], errors)| tends to
         // truncate the validation errors in the output and doesn't show that
         // the ping actually was - so be helpful.
@@ -297,7 +303,7 @@ function assert_valid_ping(record) {
         info("the ping data is: " + JSON.stringify(record, undefined, 2));
         info(
           "the validation failures: " +
-            JSON.stringify(SyncPingValidator.errors, undefined, 2)
+            JSON.stringify(result.errors, undefined, 2)
         );
         ok(
           false,

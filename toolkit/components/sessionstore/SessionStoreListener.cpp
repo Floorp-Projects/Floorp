@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/BrowserSessionStoreBinding.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/dom/SessionStoreUtils.h"
@@ -384,20 +385,21 @@ nsresult TabListener::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_UNEXPECTED;
 }
 
-bool TabListener::ForceFlushFromParent() {
+void TabListener::ForceFlushFromParent() {
   if (!XRE_IsParentProcess()) {
-    return false;
+    return;
   }
   if (!mSessionStore) {
-    return false;
+    return;
   }
-  return UpdateSessionStore(true);
+
+  UpdateSessionStore(true);
 }
 
-bool TabListener::UpdateSessionStore(bool aIsFlush) {
+void TabListener::UpdateSessionStore(bool aIsFlush) {
   if (!aIsFlush) {
     if (!mSessionStore || !mSessionStore->UpdateNeeded()) {
-      return false;
+      return;
     }
   }
 
@@ -405,33 +407,33 @@ bool TabListener::UpdateSessionStore(bool aIsFlush) {
     BrowserChild* browserChild = BrowserChild::GetFrom(mDocShell);
     if (browserChild) {
       StopTimerForUpdate();
-      return browserChild->UpdateSessionStore();
+      browserChild->UpdateSessionStore();
     }
-    return false;
+    return;
   }
 
   BrowsingContext* context = mDocShell->GetBrowsingContext();
   if (!context) {
-    return false;
+    return;
   }
 
   uint32_t chromeFlags = 0;
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   mDocShell->GetTreeOwner(getter_AddRefs(treeOwner));
   if (!treeOwner) {
-    return false;
+    return;
   }
   nsCOMPtr<nsIAppWindow> window(do_GetInterface(treeOwner));
   if (!window) {
-    return false;
+    return;
   }
   if (window && NS_FAILED(window->GetChromeFlags(&chromeFlags))) {
-    return false;
+    return;
   }
 
   UpdateSessionStoreData data;
   if (mSessionStore->IsDocCapChanged()) {
-    data.mDocShellCaps.Construct() = mSessionStore->GetDocShellCaps();
+    data.mDisallow.Construct() = mSessionStore->GetDocShellCaps();
   }
   if (mSessionStore->IsPrivateChanged()) {
     data.mIsPrivate.Construct() = mSessionStore->GetPrivateModeEnabled();
@@ -440,16 +442,18 @@ bool TabListener::UpdateSessionStore(bool aIsFlush) {
   nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
       "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
   nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
-  NS_ENSURE_TRUE(wrapped, false);
+  if (!wrapped) {
+    return;
+  }
 
   AutoJSAPI jsapi;
   if (!jsapi.Init(wrapped->GetJSObjectGlobal())) {
-    return false;
+    return;
   }
 
   JS::Rooted<JS::Value> update(jsapi.cx());
   if (!ToJSValue(jsapi.cx(), data, &update)) {
-    return false;
+    return;
   }
 
   JS::RootedValue key(jsapi.cx(), context->Canonical()->Top()->PermanentKey());
@@ -458,11 +462,10 @@ bool TabListener::UpdateSessionStore(bool aIsFlush) {
       mOwnerContent, context, key, mEpoch,
       mSessionStore->GetAndClearSHistoryChanged(), update);
   if (NS_FAILED(rv)) {
-    return false;
+    return;
   }
 
   StopTimerForUpdate();
-  return true;
 }
 
 void TabListener::RemoveListeners() {

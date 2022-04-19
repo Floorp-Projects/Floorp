@@ -162,6 +162,7 @@ async function MockFxAccounts(credentials, device = {}) {
     },
     device: {
       DEVICE_REGISTRATION_VERSION,
+      _checkRemoteCommandsUpdateNeeded: async () => false,
     },
     VERIFICATION_POLL_TIMEOUT_INITIAL: 1,
   });
@@ -817,6 +818,7 @@ add_task(async function test_refreshDeviceList() {
     fxaPushService: null,
   };
   let device = new FxAccountsDevice(fxai);
+  device._checkRemoteCommandsUpdateNeeded = async () => false;
 
   Assert.equal(
     device.recentDeviceList,
@@ -905,6 +907,56 @@ add_task(async function test_refreshDeviceList() {
   Assert.ok(
     await device.refreshDeviceList(),
     "Should fetch new list after resetting"
+  );
+});
+
+add_task(async function test_checking_remote_availableCommands_mismatch() {
+  const credentials = getTestUser("baz");
+  credentials.verified = true;
+  const fxa = await MockFxAccounts(credentials);
+  fxa.device._checkRemoteCommandsUpdateNeeded =
+    FxAccountsDevice.prototype._checkRemoteCommandsUpdateNeeded;
+  fxa.commands.availableCommands = async () => {
+    return {
+      "https://identity.mozilla.com/cmd/open-uri": "local-keys",
+    };
+  };
+
+  const ourDevice = {
+    isCurrentDevice: true,
+    availableCommands: {
+      "https://identity.mozilla.com/cmd/open-uri": "remote-keys",
+    },
+  };
+  Assert.ok(
+    await fxa.device._checkRemoteCommandsUpdateNeeded(
+      ourDevice.availableCommands
+    )
+  );
+});
+
+add_task(async function test_checking_remote_availableCommands_match() {
+  const credentials = getTestUser("baz");
+  credentials.verified = true;
+  const fxa = await MockFxAccounts(credentials);
+  fxa.device._checkRemoteCommandsUpdateNeeded =
+    FxAccountsDevice.prototype._checkRemoteCommandsUpdateNeeded;
+  fxa.commands.availableCommands = async () => {
+    return {
+      "https://identity.mozilla.com/cmd/open-uri": "local-keys",
+    };
+  };
+
+  const ourDevice = {
+    isCurrentDevice: true,
+    availableCommands: {
+      "https://identity.mozilla.com/cmd/open-uri": "local-keys",
+    },
+  };
+  Assert.ok(
+    !(await fxa.device._checkRemoteCommandsUpdateNeeded(
+      ourDevice.availableCommands
+    ))
   );
 });
 

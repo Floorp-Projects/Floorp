@@ -28,7 +28,6 @@ class WindowGlobalParent;
 class JSWindowActorChild;
 class JSActorMessageMeta;
 class BrowserChild;
-class SessionStoreDataCollector;
 
 /**
  * Actor for a single nsGlobalWindowInner. This actor is used to communicate
@@ -133,9 +132,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
     return mContainerFeaturePolicy;
   }
 
-  void SetSessionStoreDataCollector(SessionStoreDataCollector* aCollector);
-  SessionStoreDataCollector* GetSessionStoreDataCollector() const;
-
   void UnblockBFCacheFor(BFCacheStatus aStatus);
   void BlockBFCacheFor(BFCacheStatus aStatus);
 
@@ -205,7 +201,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
   RefPtr<dom::FeaturePolicy> mContainerFeaturePolicy;
   nsCOMPtr<nsIURI> mDocumentURI;
-  RefPtr<SessionStoreDataCollector> mSessionStoreDataCollector;
   int64_t mBeforeUnloadListeners = 0;
 };
 
