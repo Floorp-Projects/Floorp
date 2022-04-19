@@ -487,7 +487,8 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
   Label entryFrame;
   Label catch_;
   Label finally;
-  Label return_;
+  Label returnBaseline;
+  Label returnIon;
   Label bailout;
   Label wasm;
   Label wasmCatch;
@@ -500,7 +501,10 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
   asMasm().branch32(Assembler::Equal, rax, Imm32(ExceptionResumeKind::Finally),
                     &finally);
   asMasm().branch32(Assembler::Equal, rax,
-                    Imm32(ExceptionResumeKind::ForcedReturn), &return_);
+                    Imm32(ExceptionResumeKind::ForcedReturnBaseline),
+                    &returnBaseline);
+  asMasm().branch32(Assembler::Equal, rax,
+                    Imm32(ExceptionResumeKind::ForcedReturnIon), &returnIon);
   asMasm().branch32(Assembler::Equal, rax, Imm32(ExceptionResumeKind::Bailout),
                     &bailout);
   asMasm().branch32(Assembler::Equal, rax, Imm32(ExceptionResumeKind::Wasm),
@@ -539,17 +543,28 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail) {
   pushValue(BooleanValue(true));
   jmp(Operand(rax));
 
-  // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
-  bind(&return_);
+  // Return BaselineFrame->returnValue() to the caller.
+  // Used in debug mode and for GeneratorReturn.
+  Label profilingInstrumentation;
+  bind(&returnBaseline);
   loadPtr(Address(rsp, ResumeFromException::offsetOfFramePointer()), rbp);
   loadPtr(Address(rsp, ResumeFromException::offsetOfStackPointer()), rsp);
   loadValue(Address(rbp, BaselineFrame::reverseOffsetOfReturnValue()),
             JSReturnOperand);
   movq(rbp, rsp);
   pop(rbp);
+  jmp(&profilingInstrumentation);
+
+  // Return the given value to the caller.
+  bind(&returnIon);
+  loadValue(Address(rsp, ResumeFromException::offsetOfException()),
+            JSReturnOperand);
+  loadPtr(Address(rsp, ResumeFromException::offsetOfFramePointer()), rsp);
 
   // If profiling is enabled, then update the lastProfilingFrame to refer to
-  // caller frame before returning.
+  // caller frame before returning. This code is shared by ForcedReturnIon
+  // and ForcedReturnBaseline.
+  bind(&profilingInstrumentation);
   {
     Label skipProfilingInstrumentation;
     AbsoluteAddress addressOfEnabled(

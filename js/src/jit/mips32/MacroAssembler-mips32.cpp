@@ -1772,7 +1772,8 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   Label entryFrame;
   Label catch_;
   Label finally;
-  Label return_;
+  Label returnBaseline;
+  Label returnIon;
   Label bailout;
   Label wasm;
   Label wasmCatch;
@@ -1785,8 +1786,11 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
                     &catch_);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Finally),
                     &finally);
-  asMasm().branch32(Assembler::Equal, a0,
-                    Imm32(ExceptionResumeKind::ForcedReturn), &return_);
+  asMasm().branch32(Assembler::Equal, r0,
+                    Imm32(ExceptionResumeKind::ForcedReturnBaseline),
+                    &returnBaseline);
+  asMasm().branch32(Assembler::Equal, r0,
+                    Imm32(ExceptionResumeKind::ForcedReturnIon), &returnIon);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Bailout),
                     &bailout);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Wasm),
@@ -1833,9 +1837,10 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   pushValue(BooleanValue(true));
   jump(a0);
 
-  // Only used in debug mode. Return BaselineFrame->returnValue() to the
-  // caller.
-  bind(&return_);
+  // Return BaselineFrame->returnValue() to the caller.
+  // Used in debug mode and for GeneratorReturn.
+  Label profilingInstrumentation;
+  bind(&returnBaseline);
   loadPtr(Address(StackPointer, ResumeFromException::offsetOfFramePointer()),
           BaselineFrameReg);
   loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
@@ -1845,9 +1850,19 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
       JSReturnOperand);
   ma_move(StackPointer, BaselineFrameReg);
   pop(BaselineFrameReg);
+  jump(&profilingInstrumentation);
+
+  // Return the given value to the caller.
+  bind(&returnIon);
+  loadValue(Address(StackPointer, ResumeFromException::offsetOfException()),
+            JSReturnOperand);
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfFramePointer()),
+          StackPointer);
 
   // If profiling is enabled, then update the lastProfilingFrame to refer to
-  // caller frame before returning.
+  // caller frame before returning. This code is shared by ForcedReturnIon
+  // and ForcedReturnBaseline.
+  bind(&profilingInstrumentation);
   {
     Label skipProfilingInstrumentation;
     // Test if profiler enabled.
