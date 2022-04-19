@@ -1686,6 +1686,7 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
     data.mSize = {mWidth, mHeight};
     data.mIsOpaque = mOpaque;
     data.mIsAlphaPremult = true;
+    data.mDoPaintCallbacks = true;
     mOffscreenCanvas->UpdateDisplayData(data);
   }
 
