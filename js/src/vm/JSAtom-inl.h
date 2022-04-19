@@ -51,27 +51,6 @@ MOZ_ALWAYS_INLINE bool ValueToIntId(const Value& v, jsid* id) {
   return true;
 }
 
-inline bool ValueToIdPure(const Value& v, jsid* id) {
-  if (v.isString()) {
-    if (v.toString()->isAtom()) {
-      *id = AtomToId(&v.toString()->asAtom());
-      return true;
-    }
-    return false;
-  }
-
-  if (ValueToIntId(v, id)) {
-    return true;
-  }
-
-  if (v.isSymbol()) {
-    *id = PropertyKey::Symbol(v.toSymbol());
-    return true;
-  }
-
-  return false;
-}
-
 template <AllowGC allowGC>
 extern bool PrimitiveValueToIdSlow(
     JSContext* cx, typename MaybeRooted<JS::Value, allowGC>::HandleType v,
