@@ -70,11 +70,17 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
     return true;
   }
 
-  InliningRoot* root =
-      isRecursive ? icScript->inliningRoot()
-                  : script->jitScript()->getOrCreateInliningRoot(cx, script);
-  if (!root) {
-    return false;
+  InliningRoot* root = isRecursive ? icScript->inliningRoot()
+                                   : script->jitScript()->inliningRoot();
+  if (JitSpewEnabled(JitSpew_WarpTrialInlining)) {
+    // Eagerly create the inlining root when it's used in the spew output.
+    if (!root) {
+      MOZ_ASSERT(!isRecursive);
+      root = script->jitScript()->getOrCreateInliningRoot(cx, script);
+      if (!root) {
+        return false;
+      }
+    }
   }
 
   JitSpew(JitSpew_WarpTrialInlining,
@@ -83,7 +89,7 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
           script->lineno(), script->column(), frame->script(), root);
   JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
 
-  TrialInliner inliner(cx, script, icScript, root);
+  TrialInliner inliner(cx, script, icScript);
   return inliner.tryInlining();
 }
 
@@ -527,7 +533,8 @@ bool TrialInliner::shouldInline(JSFunction* target, ICCacheIRStub* stub,
   }
 
   // Ensure the total bytecode size does not exceed ionMaxScriptSize.
-  size_t newTotalSize = root_->totalBytecodeSize() + targetScript->length();
+  size_t newTotalSize =
+      inliningRootTotalBytecodeSize() + targetScript->length();
   if (newTotalSize > JitOptions.ionMaxScriptSize) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: total size too big");
     return false;
@@ -561,6 +568,11 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   MOZ_ASSERT(target->hasJitEntry());
   MOZ_ASSERT(target->hasJitScript());
 
+  InliningRoot* root = getOrCreateInliningRoot();
+  if (!root) {
+    return nullptr;
+  }
+
   JSScript* targetScript = target->baseScript()->asJSScript();
 
   // We don't have to check for overflow here because we have already
@@ -582,7 +594,7 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
 
   uint32_t depth = icScript_->depth() + 1;
   UniquePtr<ICScript> inlinedICScript(new (raw) ICScript(
-      initialWarmUpCount, fallbackStubsOffset, allocSize, depth, root_));
+      initialWarmUpCount, fallbackStubsOffset, allocSize, depth, root));
 
   inlinedICScript->initICEntries(cx(), targetScript);
 
@@ -593,7 +605,7 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   }
   MOZ_ASSERT(result->numICEntries() == targetScript->numICEntries());
 
-  root_->addToTotalBytecodeSize(targetScript->length());
+  root->addToTotalBytecodeSize(targetScript->length());
 
   JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
   JitSpew(JitSpew_WarpTrialInlining,
@@ -771,6 +783,29 @@ bool TrialInliner::tryInlining() {
   }
 
   return true;
+}
+
+InliningRoot* TrialInliner::maybeGetInliningRoot() const {
+  if (auto* root = icScript_->inliningRoot()) {
+    return root;
+  }
+
+  MOZ_ASSERT(!icScript_->isInlined());
+  return script_->jitScript()->inliningRoot();
+}
+
+InliningRoot* TrialInliner::getOrCreateInliningRoot() {
+  if (auto* root = maybeGetInliningRoot()) {
+    return root;
+  }
+  return script_->jitScript()->getOrCreateInliningRoot(cx(), script_);
+}
+
+size_t TrialInliner::inliningRootTotalBytecodeSize() const {
+  if (auto* root = maybeGetInliningRoot()) {
+    return root->totalBytecodeSize();
+  }
+  return script_->length();
 }
 
 bool InliningRoot::addInlinedScript(UniquePtr<ICScript> icScript) {

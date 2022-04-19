@@ -143,9 +143,8 @@ mozilla::Maybe<InlinableSetterData> FindInlinableSetterData(
 
 class MOZ_RAII TrialInliner {
  public:
-  TrialInliner(JSContext* cx, HandleScript script, ICScript* icScript,
-               InliningRoot* root)
-      : cx_(cx), script_(script), icScript_(icScript), root_(root) {}
+  TrialInliner(JSContext* cx, HandleScript script, ICScript* icScript)
+      : cx_(cx), script_(script), icScript_(icScript) {}
 
   JSContext* cx() { return cx_; }
 
@@ -171,10 +170,13 @@ class MOZ_RAII TrialInliner {
   bool shouldInline(JSFunction* target, ICCacheIRStub* stub,
                     BytecodeLocation loc);
 
+  InliningRoot* getOrCreateInliningRoot();
+  InliningRoot* maybeGetInliningRoot() const;
+  size_t inliningRootTotalBytecodeSize() const;
+
   JSContext* cx_;
   HandleScript script_;
   ICScript* icScript_;
-  InliningRoot* root_;
 };
 
 bool DoTrialInlining(JSContext* cx, BaselineFrame* frame);
