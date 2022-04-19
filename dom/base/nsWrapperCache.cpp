@@ -29,7 +29,7 @@ void nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
                                    JS::Zone* aWrapperZone) {
   cyclecollector::HoldJSObjectsImpl(aScriptObjectHolder, aTracer, aWrapperZone);
   if (mWrapper && !JS::ObjectIsTenured(mWrapper)) {
-    CycleCollectedJSRuntime::Get()->NurseryWrapperPreserved(mWrapper);
+    JS::HeapObjectPostWriteBarrier(&mWrapper, nullptr, mWrapper);
   }
 }
 
@@ -48,6 +48,7 @@ void nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder) {
   if (PreservingWrapper()) {
     SetPreservingWrapper(false);
     cyclecollector::DropJSObjectsImpl(aScriptObjectHolder);
+    JS::HeapObjectPostWriteBarrier(&mWrapper, mWrapper, nullptr);
   }
 }
 
