@@ -184,7 +184,7 @@ class nsHtml5TreeOpExecutor final
 
   void CommitToInternalEncoding();
 
-  [[nodiscard]] bool TakeOpsFromStage();
+  void TakeOpsFromStage();
 
   void MaybeSuspend();
 
@@ -220,8 +220,7 @@ class nsHtml5TreeOpExecutor final
    * Flush the operations from the tree operations from the argument
    * queue unconditionally. (This is for the main thread case.)
    */
-  [[nodiscard]] virtual bool MoveOpsFrom(
-      nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
+  virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
 
   void ClearOpQueue();
 

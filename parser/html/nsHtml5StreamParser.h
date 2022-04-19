@@ -412,13 +412,13 @@ class nsHtml5StreamParser final : public nsISupports {
    * to UTF-8 as the non-speculative encoding and start processing
    * the decoded data.
    */
-  [[nodiscard]] nsresult CommitLocalFileToEncoding();
+  void CommitLocalFileToEncoding();
 
   /**
    * When speculatively decoding from file: URL as UTF-8, redecode
    * using fallback and then continue normally with the fallback.
    */
-  [[nodiscard]] nsresult ReDecodeLocalFile() REQUIRES(mTokenizerMutex);
+  void ReDecodeLocalFile() REQUIRES(mTokenizerMutex);
 
   /**
    * Potentially guess the encoding using mozilla::EncodingDetector.
