@@ -19,6 +19,9 @@
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/ErrorResult.h"
 
+#include "js/TypeDecls.h"
+#include "js/StructuredClone.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -182,6 +185,12 @@ Exception::Exception(const nsACString& aMessage, nsresult aResult,
   }
 }
 
+Exception::Exception(nsCString&& aMessage, nsresult aResult, nsCString&& aName)
+    : mMessage(std::move(aMessage)),
+      mResult(aResult),
+      mName(std::move(aName)),
+      mHoldingJSVal(false) {}
+
 Exception::~Exception() {
   if (mHoldingJSVal) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -324,6 +333,9 @@ DOMException::DOMException(nsresult aRv, const nsACString& aMessage,
                            const nsACString& aName, uint16_t aCode,
                            nsIStackFrame* aLocation)
     : Exception(aMessage, aRv, aName, aLocation, nullptr), mCode(aCode) {}
+DOMException::DOMException(nsresult aRv, nsCString&& aMessage,
+                           nsCString&& aName, uint16_t aCode)
+    : Exception(std::move(aMessage), aRv, std::move(aName)), mCode(aCode) {}
 
 void DOMException::ToString(JSContext* aCx, nsACString& aReturn) {
   aReturn.Truncate();
@@ -398,5 +410,55 @@ already_AddRefed<DOMException> DOMException::Create(
   RefPtr<DOMException> inst = new DOMException(aRv, aMessage, name, code);
   return inst.forget();
 }
+
+static bool ReadAsCString(JSContext* aCx, JSStructuredCloneReader* aReader,
+                          nsCString& aString) {
+  JS::Rooted<JSString*> jsMessage(aCx);
+  if (!JS_ReadString(aReader, &jsMessage)) {
+    return false;
+  }
+  return AssignJSString(aCx, aString, jsMessage);
+}
+
+already_AddRefed<DOMException> DOMException::ReadStructuredClone(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    JSStructuredCloneReader* aReader) {
+  uint32_t reserved;
+  nsresult rv;
+  nsCString message;
+  nsCString name;
+  uint16_t code;
+
+  if (!JS_ReadBytes(aReader, &reserved, 4) || !JS_ReadBytes(aReader, &rv, 4) ||
+      !ReadAsCString(aCx, aReader, message) ||
+      !ReadAsCString(aCx, aReader, name) || !JS_ReadBytes(aReader, &code, 2)) {
+    return nullptr;
+  };
+
+  return do_AddRef(
+      new DOMException(rv, std::move(message), std::move(name), code));
+}
+
+bool DOMException::WriteStructuredClone(
+    JSContext* aCx, JSStructuredCloneWriter* aWriter) const {
+  JS::Rooted<JS::Value> messageValue(aCx);
+  JS::Rooted<JS::Value> nameValue(aCx);
+  if (!NonVoidByteStringToJsval(aCx, mMessage, &messageValue) ||
+      !NonVoidByteStringToJsval(aCx, mName, &nameValue)) {
+    return false;
+  }
+
+  JS::Rooted<JSString*> message(aCx, messageValue.toString());
+  JS::Rooted<JSString*> name(aCx, nameValue.toString());
+
+  static_assert(sizeof(nsresult) == 4);
+
+  // A reserved field. Use this to indicate stack serialization support etc.
+  uint32_t reserved = 0;
+  return JS_WriteBytes(aWriter, &reserved, 4) &&
+         JS_WriteBytes(aWriter, &mResult, 4) &&
+         JS_WriteString(aWriter, message) && JS_WriteString(aWriter, name) &&
+         JS_WriteBytes(aWriter, &mCode, 2);
+};
 
 }  // namespace mozilla::dom
