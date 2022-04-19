@@ -96,7 +96,7 @@ enum StructuredCloneTags {
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.
-  EMPTY_SLOT_8,
+  SCTAG_DOM_DOMEXCEPTION,
 
   // IMPORTANT: Don't change the order of these enum values. You could break
   // IDB.

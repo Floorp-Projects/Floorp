@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dom.spec.whatwg.org/#exception-domexception
+ * https://webidl.spec.whatwg.org/#idl-DOMException
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -31,7 +31,7 @@ interface mixin ExceptionMembers
   readonly attribute DOMString               filename;
   // Valid line numbers begin at '1'. '0' indicates unknown.
   readonly attribute unsigned long           lineNumber;
-  // Valid column numbers begin at 0. 
+  // Valid column numbers begin at 0.
   // We don't have an unambiguous indicator for unknown.
   readonly attribute unsigned long           columnNumber;
 
@@ -65,7 +65,8 @@ Exception includes ExceptionMembers;
 // XXXkhuey this is an 'exception', not an interface, but we don't have any
 // parser or codegen mechanisms for dealing with exceptions.
 [ExceptionClass,
- Exposed=(Window, Worker)]
+ Exposed=(Window, Worker),
+ Serializable]
 interface DOMException {
   constructor(optional DOMString message = "", optional DOMString name);
 
