@@ -35,7 +35,6 @@ class Timeout final : protected LinkedListElement<RefPtr<Timeout>> {
     eTimeoutOrInterval,
     eIdleCallbackTimeout,
     eAbortSignalTimeout,
-    eDelayedWebTaskTimeout,
   };
 
   struct TimeoutIdAndReason {

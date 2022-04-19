@@ -76,8 +76,6 @@ class WorkerLocation;
 class WorkerNavigator;
 class WorkerPrivate;
 class VsyncWorkerChild;
-class WebTaskScheduler;
-class WebTaskSchedulerWorker;
 struct RequestInit;
 
 namespace cache {
@@ -313,9 +311,6 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
 
   already_AddRefed<cache::CacheStorage> GetCaches(ErrorResult& aRv);
 
-  WebTaskScheduler* Scheduler();
-  WebTaskScheduler* GetExistingScheduler() const;
-
   bool WindowInteractionAllowed() const;
 
   void AllowWindowInteraction();
@@ -351,7 +346,6 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
   RefPtr<IDBFactory> mIndexedDB;
   RefPtr<cache::CacheStorage> mCacheStorage;
   RefPtr<DebuggerNotificationManager> mDebuggerNotificationManager;
-  RefPtr<WebTaskSchedulerWorker> mWebTaskScheduler;
   uint32_t mWindowInteractionsAllowed = 0;
 };
 

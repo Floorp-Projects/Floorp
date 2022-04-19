@@ -79,9 +79,3 @@ partial interface mixin WindowOrWorkerGlobalScope {
   [Throws, Pref="dom.caches.enabled", SameObject]
   readonly attribute CacheStorage caches;
 };
-
-// https://wicg.github.io/scheduling-apis/#ref-for-windoworworkerglobalscope-scheduler
-partial interface mixin WindowOrWorkerGlobalScope {
-  [Pref="dom.enable_web_task_scheduling", SameObject]
-  readonly attribute Scheduler scheduler;
-};
