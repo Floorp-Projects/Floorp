@@ -524,7 +524,7 @@ bool ReferrerInfo::IsCrossSiteRequest(nsIHttpChannel* aChannel) {
 
   bool isCrossSite = true;
   rv = loadInfo->TriggeringPrincipal()->IsThirdPartyURI(uri, &isCrossSite);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return true;
   }
 
