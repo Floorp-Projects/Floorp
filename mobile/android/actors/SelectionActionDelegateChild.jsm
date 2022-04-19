@@ -226,9 +226,9 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
     return offset;
   }
 
-  _handleMagnifier(aEvent, aReason) {
-    if (["presscaret", "dragcaret"].includes(aReason)) {
-      debug`_handleMagnifier: ${aReason}`;
+  _handleMagnifier(aEvent) {
+    if (["presscaret", "dragcaret"].includes(aEvent.reason)) {
+      debug`_handleMagnifier: ${aEvent.reason}`;
       const offset = this._getFrameOffset(aEvent);
       this.eventDispatcher.sendRequest({
         type: "GeckoView:ShowMagnifier",
@@ -237,8 +237,8 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
           y: aEvent.clientY + offset.top - this._accessiblecaretHeight,
         },
       });
-    } else if (aReason == "releasecaret") {
-      debug`_handleMagnifier: ${aReason}`;
+    } else if (aEvent.reason == "releasecaret") {
+      debug`_handleMagnifier: ${aEvent.reason}`;
       this.eventDispatcher.sendRequest({
         type: "GeckoView:HideMagnifier",
       });
@@ -288,7 +288,7 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
     debug`handleEvent: ${reason}`;
 
     if (this._magnifierEnabled) {
-      this._handleMagnifier(aEvent, reason);
+      this._handleMagnifier(aEvent);
     }
 
     if (
