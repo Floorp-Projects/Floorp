@@ -409,7 +409,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
 
     private fun updatePendingBookmarksToDelete(selected: Set<BookmarkNode>) {
         pendingBookmarksToDelete.addAll(selected)
-        val bookmarkTree = sharedViewModel.selectedFolder!! - pendingBookmarksToDelete
+        val selectedFolder = sharedViewModel.selectedFolder ?: return
+        val bookmarkTree = selectedFolder - pendingBookmarksToDelete
         bookmarkInteractor.onBookmarksChanged(bookmarkTree)
     }
 
