@@ -60,8 +60,10 @@ Finally we add an entry in [damp-tests.js](https://searchfox.org/mozilla-central
   },
 ```
 
+Since this is an inspector test, we add it under `TEST_SUITES.INSPECTOR`, which contains all the tests which will run with the `damp-inspector` test suite in continuous integration. The test is still part of the overall `damp` suite by default, there is no action needed to ensure that.
+
 Then we can run our test with:
 ```
-./mach talos-test --activeTests damp --subtest inspector.click
+./mach talos-test --suite damp --subtest inspector.click
 ```
 

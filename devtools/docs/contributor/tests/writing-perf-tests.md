@@ -113,24 +113,26 @@ For the example, it would be `inspector.click`.
 
 In general, the test name should try to match the path of the test file. As you can see in damp-tests.js this naming convention is not consistently followed. We have discrepancies for simple/complicated/custom tests, as well as for webconsole tests. This is largely for historical reasons.
 
+You will see that tests are split across different subsuites: damp-inspector, damp-other and damp-webconsole. The goal of this split is to run DAMP tests in parallel in CI, so we aim to keep them balanced in terms of number of tests, and mostly running time. Add your test in the suite which makes the most sense. We can add more suites and rearrange tests in the future if needed.
+
 
 # How to run your new test?
 
 You can run any performance test with this command:
 ```
-./mach talos-test --activeTests damp --subtest ${your-test-name}
+./mach talos-test --suite damp --subtest ${your-test-name}
 ```
 
 By default, it will run the test 25 times. In order to run it just once, do:
 ```
-./mach talos-test --activeTests damp --subtest ${your-test-name} --cycles 1 --tppagecycles 1
+./mach talos-test --suite damp --subtest ${your-test-name} --cycles 1 --tppagecycles 1
 ```
 `--cycles` controls the number of times Firefox is restarted
 `--tppagecycles` defines the number of times we repeat the test after each Firefox start
 
 Also, you can record a profile while running the test. To do that, execute:
 ```
-./mach talos-test --activeTests damp --subtest ${your-test-name} --cycles 1 --tppagecycles 1 --gecko-profile --gecko-profile-entries 100000000
+./mach talos-test --suite damp --subtest ${your-test-name} --cycles 1 --tppagecycles 1 --gecko-profile --gecko-profile-entries 100000000
 ```
 `--gecko-profile` enables the profiler
 `--gecko-profile-entries` defines the profiler buffer size, which needs to be large while recording performance tests

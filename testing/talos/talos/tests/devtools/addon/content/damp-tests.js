@@ -7,6 +7,8 @@
 const Services = require("Services");
 const isWindows = Services.appinfo.OS === "WINNT";
 
+// DAMP is split in sub-suites to run the tests faster on continuous integration.
+// See the initial patches in Bug 1749928 if we need to add more suites.
 const TEST_SUITES = {
   INSPECTOR: "inspector",
   WEBCONSOLE: "webconsole",
@@ -14,8 +16,10 @@ const TEST_SUITES = {
 };
 
 /**
- * This is the registry for all DAMP tests. Tests will be run in the order specified by
- * the DAMP_TESTS array.
+ * This is the registry for all DAMP tests. The registry is an object containing
+ * one property for each DAMP sub-suite used in continuous integration. And each
+ * property contains the array of tests which correspond to this suite.
+ * Tests will be run in the order specified by the array.
  *
  * A test is defined with the following properties:
  * - {String} name: the name of the test (should match the path when possible)
