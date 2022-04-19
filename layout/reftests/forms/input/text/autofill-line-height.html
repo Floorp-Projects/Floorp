@@ -1,0 +1,9 @@
+<!doctype html>
+<style>
+  input { height: 4em; color: GrayText; font-family: system-ui }
+</style>
+<input value="Autofill">
+<script>
+  let input = SpecialPowers.wrap(document.querySelector("input"));
+  SpecialPowers.wrap(window).windowUtils.addManuallyManagedState(input, "autofill");
+</script>
