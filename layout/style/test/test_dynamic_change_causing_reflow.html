@@ -20,6 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   <div id="elemWithAbsPosChild"><div style="position:absolute"></div></div>
   <div id="elemWithFixedPosChild"><div style="position:fixed"></div></div>
   <div id="elemWithScrollbars"></div>
+  <div id="elemWithoutScrollbars"></div>
   <select id="selectElem">
     <option>A</option>
     <option>B</option>
@@ -39,6 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
 const elemWithAbsPosChild = document.getElementById("elemWithAbsPosChild");
 const elemWithFixedPosChild = document.getElementById("elemWithFixedPosChild");
 const elemWithScrollbars = document.getElementById("elemWithScrollbars");
+const elemWithoutScrollbars = document.getElementById("elemWithoutScrollbars");
 const selectElem = document.getElementById("selectElem");
 const buttonElem = document.getElementById("buttonElem");
 const buttonElemWithAbsPosChild = document.getElementById("buttonElemWithAbsPosChild");
@@ -258,10 +260,55 @@ const gTestcases = [
     expectConstruction: false,
     expectReflow: true,
   },
+
+  {
+    elem: elemWithoutScrollbars,
+    beforeStyle: "scrollbar-width: auto",
+    afterStyle:  "scrollbar-width: none",
+    expectConstruction: false,
+    expectReflow: false,
+  },
   {
     elem: elemWithScrollbars,
-    beforeStyle: "overflow: hidden",
-    afterStyle:  "overflow: scroll",
+    beforeStyle: "scrollbar-width: auto",
+    afterStyle:  "scrollbar-width: none",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    // Not the scrolling element, so nothing should happen.
+    elem: document.body,
+    beforeStyle: "scrollbar-width: none",
+    afterStyle:  "scrollbar-width: auto",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    // Not the scrolling element, so nothing should happen.
+    elem: document.body,
+    beforeStyle: "scrollbar-width: auto",
+    afterStyle:  "scrollbar-width: none",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "scrollbar-width: none;",
+    afterStyle:  "scrollbar-width: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "overflow: scroll; scrollbar-width: none;",
+    afterStyle:  "overflow: scroll; scrollbar-width: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: document.documentElement,
+    beforeStyle: "overflow: scroll; scrollbar-width: auto;",
+    afterStyle:  "overflow: scroll; scrollbar-width: none",
     expectConstruction: false,
     expectReflow: true,
   },
