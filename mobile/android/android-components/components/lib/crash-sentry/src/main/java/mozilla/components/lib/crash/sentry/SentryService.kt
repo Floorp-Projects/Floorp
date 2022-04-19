@@ -120,7 +120,15 @@ class SentryService(
     @VisibleForTesting
     internal fun initSentry() {
         SentryAndroid.init(applicationContext) { options ->
+            // Disable uncaught non-native exceptions from being reported.
+            // We already have our own uncaught exception handler [ExceptionHandler],
+            // so we don't need Sentry's default one.
             options.enableUncaughtExceptionHandler = false
+            // Disable uncaught native exceptions from being reported.
+            // Sentry don't have a way to disable uncaught native exceptions from being reported.
+            // As a fallback we had to disable all native integrations.
+            // More info can be found https://github.com/getsentry/sentry-java/issues/1993
+            options.isEnableNdk = false
             options.dsn = dsn
             options.environment = environment
         }
