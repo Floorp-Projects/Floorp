@@ -409,29 +409,74 @@ class MetricControllerTest {
     @Test
     fun `WHEN processing a ContextualMenu fact THEN the right metric is recorded`() {
         val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
-
-        val longPressItemsToEvents = listOf(
-            Companion.CONTEXT_MENU_COPY to ContextualMenu.copyTapped,
-            Companion.CONTEXT_MENU_SEARCH to ContextualMenu.searchTapped,
-            Companion.CONTEXT_MENU_SELECT_ALL to ContextualMenu.selectAllTapped,
-            Companion.CONTEXT_MENU_SHARE to ContextualMenu.shareTapped,
+        val action = mockk<Action>()
+        // Verify copy button interaction
+        var fact = Fact(
+            Component.FEATURE_CONTEXTMENU,
+            action,
+            ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_COPY)
         )
+        assertFalse(ContextualMenu.copyTapped.testHasValue())
 
-        longPressItemsToEvents.forEach { (item, event) ->
-            val fact = Fact(
-                Component.FEATURE_CONTEXTMENU,
-                mockk(),
-                ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
-                metadata = mapOf("textSelectionOption" to item)
-            )
-            with(controller) {
-                fact.process()
-            }
-
-            assertEquals(true, event.testHasValue())
-            assertEquals(1, event.testGetValue().size)
-            assertEquals(null, event.testGetValue().single().extra)
+        with(controller) {
+            fact.process()
         }
+
+        assertTrue(ContextualMenu.copyTapped.testHasValue())
+        assertEquals(1, ContextualMenu.copyTapped.testGetValue().size)
+        assertNull(ContextualMenu.copyTapped.testGetValue().single().extra)
+
+        // Verify search button interaction
+        fact = Fact(
+            Component.FEATURE_CONTEXTMENU,
+            action,
+            ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SEARCH)
+        )
+        assertFalse(ContextualMenu.searchTapped.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(ContextualMenu.searchTapped.testHasValue())
+        assertEquals(1, ContextualMenu.searchTapped.testGetValue().size)
+        assertNull(ContextualMenu.searchTapped.testGetValue().single().extra)
+
+        // Verify select all button interaction
+        fact = Fact(
+            Component.FEATURE_CONTEXTMENU,
+            action,
+            ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SELECT_ALL)
+        )
+        assertFalse(ContextualMenu.selectAllTapped.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(ContextualMenu.selectAllTapped.testHasValue())
+        assertEquals(1, ContextualMenu.selectAllTapped.testGetValue().size)
+        assertNull(ContextualMenu.selectAllTapped.testGetValue().single().extra)
+
+        // Verify share button interaction
+        fact = Fact(
+            Component.FEATURE_CONTEXTMENU,
+            action,
+            ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
+            metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SHARE)
+        )
+        assertFalse(ContextualMenu.shareTapped.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(ContextualMenu.shareTapped.testHasValue())
+        assertEquals(1, ContextualMenu.shareTapped.testGetValue().size)
+        assertNull(ContextualMenu.shareTapped.testGetValue().single().extra)
     }
 
     @Test
