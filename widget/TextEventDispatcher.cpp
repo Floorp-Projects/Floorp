@@ -240,6 +240,16 @@ Maybe<WritingMode> TextEventDispatcher::MaybeQueryWritingModeAtSelection()
     return Nothing();
   }
 
+  // If a remote content has focus and IME does not have focus, it's going to
+  // fail eQuerySelectedText in ContentCacheParent.  For avoiding to waste
+  // unnecessary runtime cost and to prevent unnecessary warnings, we should
+  // not dispatch the event in the case.
+  const InputContext inputContext = mWidget->GetInputContext();
+  if (XRE_IsE10sParentProcess() && inputContext.IsOriginContentProcess() &&
+      !inputContext.mIMEState.IsEditable()) {
+    return Nothing();
+  }
+
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
                                                  mWidget);
   nsEventStatus status = nsEventStatus_eIgnore;
