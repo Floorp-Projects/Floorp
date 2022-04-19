@@ -77,6 +77,10 @@ extern mozilla::LazyLogModule gWidgetVsync;
 
 #endif /* MOZ_LOGGING */
 
+#if defined(MOZ_WAYLAND) && !defined(MOZ_X11)
+typedef uintptr_t Window;
+#endif
+
 class gfxPattern;
 class nsIFrame;
 #if !GTK_CHECK_VERSION(3, 18, 0)
@@ -102,7 +106,9 @@ namespace mozilla {
 enum class NativeKeyBindingsType : uint8_t;
 
 class TimeStamp;
+#ifdef MOZ_X11
 class CurrentX11TimeGetter;
+#endif
 }  // namespace mozilla
 
 class nsWindow final : public nsBaseWidget {
@@ -280,7 +286,9 @@ class nsWindow final : public nsBaseWidget {
 
   WidgetEventTime GetWidgetEventTime(guint32 aEventTime);
   mozilla::TimeStamp GetEventTimeStamp(guint32 aEventTime);
+#ifdef MOZ_X11
   mozilla::CurrentX11TimeGetter* GetCurrentTimeGetter();
+#endif
 
   void SetInputContext(const InputContext& aContext,
                        const InputContextAction& aAction) override;
@@ -842,7 +850,9 @@ class nsWindow final : public nsBaseWidget {
    */
   RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
+#ifdef MOZ_X11
   mozilla::UniquePtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
+#endif
   static GtkWindowDecoration sGtkWindowDecoration;
 
   static bool sTransparentMainWindow;
