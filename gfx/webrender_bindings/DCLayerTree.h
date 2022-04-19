@@ -289,7 +289,7 @@ class DCSurfaceVideo : public DCSurface {
   RefPtr<IDXGIResource> mDecodeResource;
   RefPtr<IDXGISwapChain1> mVideoSwapChain;
   RefPtr<IDXGIDecodeSwapChain> mDecodeSwapChain;
-  HANDLE mSwapChainSurfaceHandle;
+  HANDLE mSwapChainSurfaceHandle = 0;
   gfx::IntSize mVideoSize;
   gfx::IntSize mSwapChainSize;
   DXGI_FORMAT mSwapChainFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
