@@ -201,14 +201,45 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12OrP010Surface(
     return nullptr;
   }
 
-  // Setup the correct YCbCr conversion matrix on the IOSurface, in case we pass
-  // this directly to CoreAnimation.
+  // Setup the correct YCbCr conversion matrix, color primaries, and transfer
+  // functions on the IOSurface, in case we pass this directly to CoreAnimation.
+  // For keys and values, we'd like to use values specified by the API, but
+  // those are only defined for CVImageBuffers. Luckily, when an image buffer is
+  // converted into an IOSurface, the keys are transformed but the values are
+  // the same. Since we are creating the IOSurface directly, we use hard-coded
+  // keys derived from inspecting the extracted IOSurfaces in the copying case,
+  // but we use the API-defined values from CVImageBuffer.
+
+  // TODO: Check the actual color primaries and transfer functions of the source
+  // data and use the corresponding values, instead of just guessing good-enough
+  // values based on the color space.
+#if !defined(MAC_OS_VERSION_10_13) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+  CFStringRef kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ =
+      CFSTR("SMPTE_ST_2084_PQ");
+#endif
+
   if (aColorSpace == YUVColorSpace::BT601) {
     IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
-                      CFSTR("ITU_R_601_4"));
-  } else {
+                      kCVImageBufferYCbCrMatrix_ITU_R_601_4);
+  } else if (aColorSpace == YUVColorSpace::BT709) {
     IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
-                      CFSTR("ITU_R_709_2"));
+                      kCVImageBufferYCbCrMatrix_ITU_R_709_2);
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorPrimaries"),
+                      kCVImageBufferColorPrimaries_ITU_R_709_2);
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceTransferFunction"),
+                      kCVImageBufferTransferFunction_ITU_R_709_2);
+  } else {
+    // TODO Bug 1764618: we shouldn't guess these color primaries and transfer
+    // functions -- we should respect what the video specifies.
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceYCbCrMatrix"),
+                      kCVImageBufferYCbCrMatrix_ITU_R_2020);
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorPrimaries"),
+                      kCVImageBufferColorPrimaries_ITU_R_2020);
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceTransferFunction"),
+                      kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ);
+    NS_WARNING(
+        "Rec2020 transfer function is ambiguous, guessing PQ instead of HLG.");
   }
   // Override the color space to be the same as the main display, so that
   // CoreAnimation won't try to do any color correction (from the IOSurface
