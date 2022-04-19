@@ -317,10 +317,6 @@ class BrowserParent final : public PBrowserParent,
   already_AddRefed<CanonicalBrowsingContext> BrowsingContextForWebProgress(
       const WebProgressData& aWebProgressData);
 
-  mozilla::ipc::IPCResult RecvSessionStoreUpdate(
-      const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-      const bool aNeedCollectSHistory, const uint32_t& aEpoch);
-
   mozilla::ipc::IPCResult RecvIntrinsicSizeOrRatioChanged(
       const Maybe<IntrinsicSize>& aIntrinsicSize,
       const Maybe<AspectRatio>& aIntrinsicRatio);
@@ -444,6 +440,8 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aParentID, const uint32_t& aMsaaID,
       const IAccessibleHolder& aDocCOMProxy) override;
 #endif
+
+  already_AddRefed<PSessionStoreParent> AllocPSessionStoreParent();
 
   mozilla::ipc::IPCResult RecvNewWindowGlobal(
       ManagedEndpoint<PWindowGlobalParent>&& aEndpoint,

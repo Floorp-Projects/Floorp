@@ -17,11 +17,11 @@ async def test_params_max_depth_invalid_value(bidi_session, value):
 
 
 @pytest.mark.parametrize("value", [False, 42, {}, []])
-async def test_params_parent_invalid_type(bidi_session, value):
+async def test_params_root_invalid_type(bidi_session, value):
     with pytest.raises(error.InvalidArgumentException):
-        await bidi_session.browsing_context.get_tree(parent=value)
+        await bidi_session.browsing_context.get_tree(root=value)
 
 
-async def test_params_parent_invalid_value(bidi_session):
+async def test_params_root_invalid_value(bidi_session):
     with pytest.raises(error.NoSuchFrameException):
-        await bidi_session.browsing_context.get_tree(parent="foo")
+        await bidi_session.browsing_context.get_tree(root="foo")

@@ -13,7 +13,7 @@ async def test_expected_url(bidi_session, inline, new_tab, value):
     assert result["url"] == url
     if value != "none":
         contexts = await bidi_session.browsing_context.get_tree(
-            parent=new_tab["context"], max_depth=0
+            root=new_tab["context"], max_depth=0
         )
         assert contexts[0]["url"] == url
 
@@ -47,7 +47,7 @@ async def test_slow_image(bidi_session, inline, new_tab, wait, expect_timeout):
 
     if wait != "none":
         contexts = await bidi_session.browsing_context.get_tree(
-            parent=new_tab["context"], max_depth=0
+            root=new_tab["context"], max_depth=0
         )
         assert contexts[0]["url"] == url
 
@@ -109,6 +109,6 @@ async def test_slow_script(bidi_session, inline, new_tab, wait, expect_timeout):
 
     if wait != "none":
         contexts = await bidi_session.browsing_context.get_tree(
-            parent=new_tab["context"], max_depth=0
+            root=new_tab["context"], max_depth=0
         )
         assert contexts[0]["url"] == url

@@ -26,9 +26,6 @@
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/dom/sessionstore/SessionStoreTypes.h"
-#include "mozilla/dom/SessionStoreUtils.h"
-#include "mozilla/dom/SessionStoreUtilsBinding.h"
 #include "mozilla/Components.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ServoCSSParser.h"
@@ -533,16 +530,6 @@ const nsACString& WindowGlobalParent::GetRemoteType() {
   }
 
   return NOT_REMOTE_TYPE;
-}
-
-static nsCString PointToString(const nsPoint& aPoint) {
-  int scrollX = nsPresContext::AppUnitsToIntCSSPixels(aPoint.x);
-  int scrollY = nsPresContext::AppUnitsToIntCSSPixels(aPoint.y);
-  if ((scrollX != 0) || (scrollY != 0)) {
-    return nsPrintfCString("%d,%d", scrollX, scrollY);
-  }
-
-  return ""_ns;
 }
 
 void WindowGlobalParent::NotifyContentBlockingEvent(
@@ -1166,44 +1153,6 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
   mPageUseCounters = nullptr;
 }
 
-static void GetFormData(JSContext* aCx, const sessionstore::FormData& aFormData,
-                        nsIURI* aDocumentURI, SessionStoreFormData& aUpdate) {
-  if (!aFormData.hasData()) {
-    return;
-  }
-
-  bool parseSessionData = false;
-  if (aDocumentURI) {
-    nsCString& url = aUpdate.mUrl.Construct();
-    aDocumentURI->GetSpecIgnoringRef(url);
-    // We want to avoid saving data for about:sessionrestore as a string.
-    // Since it's stored in the form as stringified JSON, stringifying
-    // further causes an explosion of escape characters. cf. bug 467409
-    parseSessionData =
-        url == "about:sessionrestore"_ns || url == "about:welcomeback"_ns;
-  }
-
-  if (!aFormData.innerHTML().IsEmpty()) {
-    aUpdate.mInnerHTML.Construct(aFormData.innerHTML());
-  }
-
-  if (!aFormData.id().IsEmpty()) {
-    auto& id = aUpdate.mId.Construct();
-    if (NS_FAILED(SessionStoreUtils::ConstructFormDataValues(
-            aCx, aFormData.id(), id.Entries(), parseSessionData))) {
-      return;
-    }
-  }
-
-  if (!aFormData.xpath().IsEmpty()) {
-    auto& xpath = aUpdate.mXpath.Construct();
-    if (NS_FAILED(SessionStoreUtils::ConstructFormDataValues(
-            aCx, aFormData.xpath(), xpath.Entries()))) {
-      return;
-    }
-  }
-}
-
 Element* WindowGlobalParent::GetRootOwnerElement() {
   WindowGlobalParent* top = TopWindowContext();
   if (!top) {
@@ -1221,104 +1170,6 @@ Element* WindowGlobalParent::GetRootOwnerElement() {
   return nullptr;
 }
 
-nsresult WindowGlobalParent::WriteFormDataAndScrollToSessionStore(
-    const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
-    uint32_t aEpoch) {
-  if (!aFormData && !aScrollPosition) {
-    return NS_OK;
-  }
-
-  RefPtr<CanonicalBrowsingContext> context = BrowsingContext();
-  if (!context) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
-      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
-  if (!funcs) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(wrapped->GetJSObjectGlobal())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RootedDictionary<SessionStoreWindowStateChange> windowState(jsapi.cx());
-
-  if (aFormData) {
-    GetFormData(jsapi.cx(), *aFormData, mDocumentURI,
-                windowState.mFormdata.Construct());
-  }
-
-  if (aScrollPosition) {
-    auto& update = windowState.mScroll.Construct();
-    if (*aScrollPosition != nsPoint(0, 0)) {
-      update.mScroll.Construct() = PointToString(*aScrollPosition);
-    }
-  }
-
-  nsTArray<uint32_t> path;
-  if (!context->GetOffsetPath(path)) {
-    return NS_OK;
-  }
-
-  windowState.mPath = std::move(path);
-  windowState.mHasChildren.Construct() = !context->Children().IsEmpty();
-
-  JS::RootedValue update(jsapi.cx());
-  if (!ToJSValue(jsapi.cx(), windowState, &update)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::RootedValue key(jsapi.cx(), context->Top()->PermanentKey());
-
-  return funcs->UpdateSessionStoreForWindow(GetRootOwnerElement(), context, key,
-                                            aEpoch, update);
-}
-
-nsresult WindowGlobalParent::ResetSessionStore(uint32_t aEpoch) {
-  RefPtr<CanonicalBrowsingContext> context = BrowsingContext();
-  if (!context) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISessionStoreFunctions> funcs = do_ImportModule(
-      "resource://gre/modules/SessionStoreFunctions.jsm", fallible);
-  if (!funcs) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(wrapped->GetJSObjectGlobal())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RootedDictionary<SessionStoreWindowStateChange> windowState(jsapi.cx());
-
-  nsTArray<uint32_t> path;
-  if (!context->GetOffsetPath(path)) {
-    return NS_OK;
-  }
-
-  windowState.mPath = std::move(path);
-  windowState.mHasChildren.Construct() = false;
-  windowState.mFormdata.Construct();
-  windowState.mScroll.Construct();
-
-  JS::RootedValue update(jsapi.cx());
-  if (!ToJSValue(jsapi.cx(), windowState, &update)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::RootedValue key(jsapi.cx(), context->Top()->PermanentKey());
-
-  return funcs->UpdateSessionStoreForWindow(GetRootOwnerElement(), context, key,
-                                            aEpoch, update);
-}
-
 void WindowGlobalParent::NotifySessionStoreUpdatesComplete(Element* aEmbedder) {
   if (!aEmbedder) {
     aEmbedder = GetRootOwnerElement();
@@ -1329,27 +1180,6 @@ void WindowGlobalParent::NotifySessionStoreUpdatesComplete(Element* aEmbedder) {
                                 "browser-shutdown-tabstate-updated", nullptr);
     }
   }
-}
-
-mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateSessionStore(
-    const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
-    uint32_t aEpoch) {
-  if (NS_FAILED(WriteFormDataAndScrollToSessionStore(aFormData, aScrollPosition,
-                                                     aEpoch))) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Failed to update session store entry."));
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult WindowGlobalParent::RecvResetSessionStore(
-    uint32_t aEpoch) {
-  if (NS_FAILED(ResetSessionStore(aEpoch))) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Failed to reset session store entry."));
-  }
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvRequestRestoreTabContent() {

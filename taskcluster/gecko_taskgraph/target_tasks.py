@@ -1165,42 +1165,6 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
-@_target_task("perftest_s7")
-def target_tasks_perftest_s7(full_task_graph, parameters, graph_config):
-    """
-    Select tasks required for running raptor page-load tests on geckoview against S7
-    """
-
-    def filter(task):
-        build_platform = task.attributes.get("build_platform", "")
-        test_platform = task.attributes.get("test_platform", "")
-        attributes = task.attributes
-        vismet = attributes.get("kind") == "visual-metrics-dep"
-        try_name = attributes.get("raptor_try_name")
-
-        if vismet:
-            # Visual metric tasks are configured a bit differently
-            test_platform = task.task.get("extra").get("treeherder-platform")
-            try_name = task.label
-
-        if build_platform and "android" not in build_platform:
-            return False
-        if attributes.get("unittest_suite") != "raptor" and not vismet:
-            return False
-        if "s7" in test_platform and "-qr" in test_platform:
-            if "geckoview" in try_name and (
-                "unity-webgl" in try_name
-                or "speedometer" in try_name
-                or "tp6m-essential" in try_name
-            ):
-                if "power" in try_name:
-                    return False
-                else:
-                    return True
-
-    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
-
-
 @_target_task("condprof")
 def target_tasks_condprof(full_task_graph, parameters, graph_config):
     """

@@ -119,7 +119,7 @@ if (typeof detachArrayBuffer === "function") {
         }
     }
 
-    // Test a TypeError is thrown when the typed array is detached and
+    // Test no TypeError is thrown when the typed array is detached and
     // srcLength > 0.
     for (let {typedArray, buffer} of createTypedArrays()) {
         let source = {
@@ -130,8 +130,11 @@ if (typeof detachArrayBuffer === "function") {
                 }
             }
         };
-        let err = typedArray.length === 0 ? RangeError : TypeError;
-        assertThrowsInstanceOf(() => typedArray.set(source), err);
+        if (typedArray.length === 0) {
+            assertThrowsInstanceOf(() => typedArray.set(source), RangeError);
+        } else {
+            typedArray.set(source);
+        }
     }
 
     // Same as above, but with side-effect when executing Get(src, "0").
@@ -182,13 +185,17 @@ if (typeof detachArrayBuffer === "function") {
                 }
             }
         });
-        let err = typedArray.length === 0 ? RangeError : TypeError;
-        assertThrowsInstanceOf(() => typedArray.set(source), err);
+        if (typedArray.length === 0) {
+            assertThrowsInstanceOf(() => typedArray.set(source), RangeError);
+        } else {
+            typedArray.set(source);
+        }
     }
 
     // Side-effects when getting the source elements detach the buffer. Also
-    // ensure other elements aren't accessed.
+    // ensure other elements are accessed.
     for (let {typedArray, buffer} of createTypedArrays()) {
+        let accessed = false;
         let source = Object.defineProperties([], {
             0: {
                 get() {
@@ -198,12 +205,19 @@ if (typeof detachArrayBuffer === "function") {
             },
             1: {
                 get() {
-                    throw new Error("Unexpected access");
+                    assertEq(accessed, false);
+                    accessed = true;
+                    return 2;
                 }
             }
         });
-        let err = typedArray.length <= 1 ? RangeError : TypeError;
-        assertThrowsInstanceOf(() => typedArray.set(source), err);
+        if (typedArray.length <= 1) {
+            assertThrowsInstanceOf(() => typedArray.set(source), RangeError);
+        } else {
+            assertEq(accessed, false);
+            typedArray.set(source);
+            assertEq(accessed, true);
+        }
     }
 
     // Side-effects when converting the source elements detach the buffer.
@@ -214,13 +228,17 @@ if (typeof detachArrayBuffer === "function") {
                 return 1;
             }
         }];
-        let err = typedArray.length === 0 ? RangeError : TypeError;
-        assertThrowsInstanceOf(() => typedArray.set(source), err);
+        if (typedArray.length === 0) {
+            assertThrowsInstanceOf(() => typedArray.set(source), RangeError);
+        } else {
+            typedArray.set(source);
+        }
     }
 
     // Side-effects when converting the source elements detach the buffer. Also
-    // ensure other elements aren't accessed.
+    // ensure other elements are accessed.
     for (let {typedArray, buffer} of createTypedArrays()) {
+        let accessed = false;
         let source = [{
             valueOf() {
                 detachArrayBuffer(buffer);
@@ -228,11 +246,18 @@ if (typeof detachArrayBuffer === "function") {
             }
         }, {
             valueOf() {
-                throw new Error("Unexpected access");
+                assertEq(accessed, false);
+                accessed = true;
+                return 2;
             }
         }];
-        let err = typedArray.length <= 1 ? RangeError : TypeError;
-        assertThrowsInstanceOf(() => typedArray.set(source), err);
+        if (typedArray.length <= 1) {
+            assertThrowsInstanceOf(() => typedArray.set(source), RangeError);
+        } else {
+            assertEq(accessed, false);
+            typedArray.set(source);
+            assertEq(accessed, true);
+        }
     }
 }
 

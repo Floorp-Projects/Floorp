@@ -129,11 +129,11 @@ async def test_navigate_creates_iframes(
     assert len(events) == 2
 
     # Get all browsing contexts from the current tab
-    contexts = await bidi_session.browsing_context.get_tree(parent=current_session.window_handle)
+    contexts = await bidi_session.browsing_context.get_tree(root=current_session.window_handle)
 
     assert len(contexts) == 1
-    parent_info = contexts[0]
-    children_info = parent_info["children"]
+    root_info = contexts[0]
+    children_info = root_info["children"]
     assert len(children_info) == 2
 
     assert_browsing_context(
@@ -141,7 +141,7 @@ async def test_navigate_creates_iframes(
         children_info[0]["context"],
         children=None,
         url=children_info[0]["url"],
-        parent=parent_info["context"],
+        parent=root_info["context"],
     )
 
     assert_browsing_context(
@@ -149,7 +149,7 @@ async def test_navigate_creates_iframes(
         children_info[1]["context"],
         children=None,
         url=children_info[1]["url"],
-        parent=parent_info["context"],
+        parent=root_info["context"],
     )
 
     remove_listener()
@@ -181,12 +181,12 @@ async def test_navigate_creates_nested_iframes(
     assert len(events) == 2
 
     # Get all browsing contexts from the current tab
-    contexts = await bidi_session.browsing_context.get_tree(parent=current_session.window_handle)
+    contexts = await bidi_session.browsing_context.get_tree(root=current_session.window_handle)
 
     assert len(contexts) == 1
-    parent_info = contexts[0]
-    assert len(parent_info["children"]) == 1
-    child1_info = parent_info["children"][0]
+    root_info = contexts[0]
+    assert len(root_info["children"]) == 1
+    child1_info = root_info["children"][0]
     assert len(child1_info["children"]) == 1
     child2_info = child1_info["children"][0]
 
@@ -195,7 +195,7 @@ async def test_navigate_creates_nested_iframes(
         child1_info["context"],
         children=None,
         url=child1_info["url"],
-        parent=parent_info["context"],
+        parent=root_info["context"],
     )
 
     assert_browsing_context(

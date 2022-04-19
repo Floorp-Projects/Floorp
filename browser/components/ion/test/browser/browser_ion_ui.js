@@ -4,10 +4,8 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Ajv",
-  "resource://testing-common/ajv-6.12.6.js"
+const { JsonSchema } = ChromeUtils.import(
+  "resource://gre/modules/JsonSchema.jsm"
 );
 
 const { TelemetryArchive } = ChromeUtils.import(
@@ -312,13 +310,12 @@ add_task(async function testMockSchema() {
       throw new Error(`Failed to load ${schemaName}`);
     }
 
-    const ajv = new Ajv({ allErrors: true });
-    const validate = ajv.compile(schema);
+    const validator = new JsonSchema.Validator(schema, { shortCircuit: false });
 
     for (const entry of values) {
-      const valid = validate(entry);
-      if (!valid) {
-        throw new Error(JSON.stringify(validate.errors));
+      const result = validator.validate(entry);
+      if (!result.valid) {
+        throw new Error(JSON.stringify(result.errors));
       }
     }
   }

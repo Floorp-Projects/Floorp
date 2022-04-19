@@ -9,25 +9,39 @@
 
 #include "ErrorList.h"
 
+#include "PLDHashTable.h"
+#include "mozilla/EnumSet.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsHashKeys.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
+#include "nsISupports.h"
+#include "nsITimer.h"
+#include "nsINamed.h"
+#include "nsHashtablesFwd.h"
 
-#include "nsCycleCollectionParticipant.h"
-
+#include "mozilla/EnumSet.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
 
+#include "mozilla/dom/WindowGlobalChild.h"
+
 namespace mozilla::dom {
 
+class BrowsingContext;
 class Element;
 class EventTarget;
-class SessionStoreDataCollector;
-class BrowsingContext;
+class SessionStoreChild;
+class WindowContext;
 
-class SessionStoreChangeListener final : public nsIObserver,
+class SessionStoreChangeListener final : public nsINamed,
+                                         public nsIObserver,
+                                         public nsITimerCallback,
                                          public nsIDOMEventListener {
  public:
+  NS_DECL_NSINAMED
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(SessionStoreChangeListener,
@@ -40,7 +54,29 @@ class SessionStoreChangeListener final : public nsIObserver,
 
   void UpdateEventTargets();
 
-  void Flush();
+  void FlushSessionStore();
+
+  enum class Change { None, Input, Scroll };
+
+  static SessionStoreChangeListener* CollectSessionStoreData(
+      WindowContext* aWindowContext, const EnumSet<Change>& aChanges);
+
+  static void FlushAllSessionStoreData(WindowContext* aWindowContext);
+
+  void SetActor(SessionStoreChild* aSessionStoreChild);
+
+  void SetEpoch(uint32_t aEpoch) { mEpoch = aEpoch; }
+
+  uint32_t GetEpoch() const { return mEpoch; }
+
+  void CollectWireframe();
+
+ private:
+  void RecordChange(WindowContext* aWindowContext, EnumSet<Change> aChanges);
+
+ public:
+  using SessionStoreChangeTable =
+      nsTHashMap<RefPtr<WindowContext>, EnumSet<Change>>;
 
  private:
   explicit SessionStoreChangeListener(BrowsingContext* aBrowsingContext);
@@ -53,8 +89,17 @@ class SessionStoreChangeListener final : public nsIObserver,
   void AddEventListeners();
   void RemoveEventListeners();
 
+  void EnsureTimer();
+
   RefPtr<BrowsingContext> mBrowsingContext;
   RefPtr<EventTarget> mCurrentEventTarget;
+
+  uint32_t mEpoch;
+  nsCOMPtr<nsITimer> mTimer;
+  RefPtr<SessionStoreChild> mSessionStoreChild;
+  SessionStoreChangeTable mSessionStoreChanges;
+
+  bool mCollectSessionHistory = false;
 };
 
 }  // namespace mozilla::dom
