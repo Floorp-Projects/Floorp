@@ -35,22 +35,6 @@ MOZ_ALWAYS_INLINE jsid AtomToId(JSAtom* atom) {
 // Use the NameToId method instead!
 inline jsid AtomToId(PropertyName* name) = delete;
 
-MOZ_ALWAYS_INLINE bool ValueToIntId(const Value& v, jsid* id) {
-  int32_t i;
-  if (v.isInt32()) {
-    i = v.toInt32();
-  } else if (!v.isDouble() || !mozilla::NumberEqualsInt32(v.toDouble(), &i)) {
-    return false;
-  }
-
-  if (!PropertyKey::fitsInInt(i)) {
-    return false;
-  }
-
-  *id = PropertyKey::Int(i);
-  return true;
-}
-
 template <AllowGC allowGC>
 extern bool PrimitiveValueToIdSlow(
     JSContext* cx, typename MaybeRooted<JS::Value, allowGC>::HandleType v,
@@ -80,11 +64,12 @@ inline bool PrimitiveValueToId(
     return true;
   }
 
-  if (ValueToIntId(v, idp.address())) {
-    return true;
-  }
-
-  if (v.isSymbol()) {
+  if (v.isInt32()) {
+    if (PropertyKey::fitsInInt(v.toInt32())) {
+      idp.set(PropertyKey::Int(v.toInt32()));
+      return true;
+    }
+  } else if (v.isSymbol()) {
     idp.set(PropertyKey::Symbol(v.toSymbol()));
     return true;
   }
