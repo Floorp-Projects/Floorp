@@ -23,7 +23,6 @@
 #include "prthread.h"
 #include <dlfcn.h>
 #include <gtk/gtk.h>
-#include <gdk/gdkx.h>
 #include "nsCRT.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Services.h"
