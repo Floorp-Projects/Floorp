@@ -8,6 +8,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutWelcomeTelemetry:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
@@ -32,12 +34,18 @@ const Spotlight = {
    * @param dispatchCFRAction   A function to dispatch resulting actions
    * @return                    boolean value capturing if spotlight was displayed
    */
-  async showSpotlightDialog(browser, message, dispatchCFRAction = () => {}) {
+  async showSpotlightDialog(browser, message, dispatch) {
     const win = browser.ownerGlobal;
     if (win.gDialogBox.isOpen) {
       return false;
     }
     const spotlight_url = "chrome://browser/content/spotlight.html";
+
+    const dispatchCFRAction =
+      // This also blocks CFR impressions, which is fine for current use cases.
+      message.content?.metrics === "block"
+        ? () => {}
+        : dispatch ?? (msg => new AboutWelcomeTelemetry().sendTelemetry(msg));
     let params = { primaryBtn: false, secondaryBtn: false };
 
     // There are two events named `IMPRESSION` the first one refers to telemetry
@@ -48,7 +56,7 @@ const Spotlight = {
     const unload = await RemoteImages.patchMessage(message.content.logo);
 
     if (message.content?.modal === "tab") {
-      await win.gBrowser.getTabDialogBox(browser).open(
+      let { closedPromise } = win.gBrowser.getTabDialogBox(browser).open(
         spotlight_url,
         {
           features: "resizable=no",
@@ -56,6 +64,7 @@ const Spotlight = {
         },
         [message.content, params]
       );
+      await closedPromise;
     } else {
       await win.gDialogBox.open(spotlight_url, [message.content, params]);
     }
