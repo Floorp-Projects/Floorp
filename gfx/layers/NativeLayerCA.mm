@@ -787,9 +787,8 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
     return false;
   }
 
-  if (!StaticPrefs::gfx_core_animation_specialize_video() ||
-      !nsCocoaFeatures::OnHighSierraOrLater()) {
-    // Pref must be set and we must be on a modern-enough macOS.
+  if (!nsCocoaFeatures::OnHighSierraOrLater()) {
+    // We must be on a modern-enough macOS.
     return false;
   }
 
@@ -814,6 +813,11 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
 
   // Beyond this point, we return true if-and-only-if we think we can achieve
   // the power-saving "detached mode" of the macOS compositor.
+
+  if (!StaticPrefs::gfx_core_animation_specialize_video()) {
+    // Pref must be set.
+    return false;
+  }
 
   if (pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange &&
       pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
