@@ -73,6 +73,11 @@ inline bool ValueToIdPure(const Value& v, jsid* id) {
 }
 
 template <AllowGC allowGC>
+extern bool PrimitiveValueToIdSlow(
+    JSContext* cx, typename MaybeRooted<JS::Value, allowGC>::HandleType v,
+    typename MaybeRooted<jsid, allowGC>::MutableHandleType idp);
+
+template <AllowGC allowGC>
 inline bool PrimitiveValueToId(
     JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
     typename MaybeRooted<jsid, allowGC>::MutableHandleType idp) {
@@ -105,13 +110,7 @@ inline bool PrimitiveValueToId(
     return true;
   }
 
-  JSAtom* atom = ToAtom<allowGC>(cx, v);
-  if (!atom) {
-    return false;
-  }
-
-  idp.set(AtomToId(atom));
-  return true;
+  return PrimitiveValueToIdSlow<allowGC>(cx, v, idp);
 }
 
 /*
