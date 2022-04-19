@@ -6,6 +6,17 @@
 const TEST_URL = "about:buildconfig";
 
 add_setup(async function() {
+  // The following initialization code is necessary to avoid a frequent
+  // intermittent failure in verify-fission where, due to timings, we may or
+  // may not import default bookmarks.
+  info("Ensure Places init is complete");
+  let placesInitCompleteObserved = TestUtils.topicObserved(
+    "places-browser-init-complete"
+  );
+  Cc["@mozilla.org/browser/browserglue;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "browser-glue-test", "places-browser-init-complete");
+  await placesInitCompleteObserved;
   // Clean before and after so we don't have anything in the folders.
   await PlacesUtils.bookmarks.eraseEverything();
 
