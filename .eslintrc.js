@@ -185,7 +185,6 @@ module.exports = {
         "caps/tests/unit/test_origin.js",
         "extensions/permissions/**",
         "image/test/unit/**",
-        "intl/uconv/tests/unit/test_bug317216.js",
         "intl/uconv/tests/unit/test_bug340714.js",
         "modules/libjar/test/unit/test_empty_jar_telemetry.js",
         "modules/libjar/zipwriter/test/unit/test_alignment.js",

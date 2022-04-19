@@ -86,16 +86,11 @@ const test = [
   ],
 ];
 
-const IOService = Components.Constructor(
-  "@mozilla.org/network/io-service;1",
-  "nsIIOService"
-);
 const ConverterInputStream = Components.Constructor(
   "@mozilla.org/intl/converter-input-stream;1",
   "nsIConverterInputStream",
   "init"
 );
-const ios = new IOService();
 
 function testCase(testText, expectedText, bufferLength, charset) {
   var dataURI = "data:text/plain;charset=" + charset + "," + testText;
