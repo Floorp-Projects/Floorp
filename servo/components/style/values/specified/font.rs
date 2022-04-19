@@ -15,7 +15,7 @@ use crate::values::generics::font::{
     self as generics, FeatureTagValue, FontSettings, FontTag, GenericFontSizeAdjust,
 };
 use crate::values::generics::NonNegative;
-use crate::values::specified::length::{FontBaseSize, AU_PER_PT, AU_PER_PX};
+use crate::values::specified::length::{FontBaseSize, PX_PER_PT};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
 use crate::values::specified::{NoCalcLength, NonNegativeNumber, NonNegativePercentage, Number};
 use crate::values::CustomIdent;
@@ -2376,7 +2376,7 @@ impl MozScriptMinSize {
     #[inline]
     /// Calculate initial value of -moz-script-min-size.
     pub fn get_initial_value() -> Length {
-        Length::new(DEFAULT_SCRIPT_MIN_SIZE_PT as f32 * (AU_PER_PT / AU_PER_PX))
+        Length::new(DEFAULT_SCRIPT_MIN_SIZE_PT as f32 * PX_PER_PT)
     }
 }
 
