@@ -75,9 +75,11 @@
 #include "mozilla/dom/DOMRect.h"
 #include <algorithm>
 
-#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK)
 #  include <gdk/gdk.h>
-#  include <gdk/gdkx.h>
+#  if defined(MOZ_X11)
+#    include <gdk/gdkx.h>
+#  endif
 #endif
 
 #include "Layers.h"
