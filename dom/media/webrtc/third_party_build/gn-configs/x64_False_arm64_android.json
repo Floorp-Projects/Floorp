@@ -9,6 +9,7 @@
         "CPU_ARCH": "aarch64",
         "HOST_CPU_ARCH": "x86_64",
         "MOZ_DEBUG": null,
+        "MOZ_X11": null,
         "OS_TARGET": "Android"
     },
     "sandbox_vars": {
