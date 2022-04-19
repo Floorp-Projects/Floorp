@@ -742,8 +742,8 @@ class nsDocShell final : public nsDocLoader,
  public:
   // If wireframe collection is enabled, will attempt to gather the
   // wireframe for the document and stash it inside of the active history
-  // entry.
-  void CollectWireframe();
+  // entry. Returns true if wireframes were collected.
+  bool CollectWireframe();
 
   // Helper method that is called when a new document (including any
   // sub-documents - ie. frames) has been completely loaded.
