@@ -83,9 +83,12 @@ else
   rustup target add aarch64-unknown-linux-gnu
   rustup target add i686-unknown-linux-gnu
 
-  CONFIGS="x64_False_x64_linux x64_True_x64_linux"
-  CONFIGS="$CONFIGS x64_False_x86_linux x64_True_x86_linux"
-  CONFIGS="$CONFIGS x64_False_arm64_linux x64_True_arm64_linux"
+  CONFIGS="x64_False_x64_linux_False x64_True_x64_linux_False"
+  CONFIGS="$CONFIGS x64_False_x64_linux_True x64_True_x64_linux_True"
+  CONFIGS="$CONFIGS x64_False_x86_linux_False x64_True_x86_linux_False"
+  CONFIGS="$CONFIGS x64_False_x86_linux_True x64_True_x86_linux_True"
+  CONFIGS="$CONFIGS x64_False_arm64_linux_False x64_True_arm64_linux_False"
+  CONFIGS="$CONFIGS x64_False_arm64_linux_True x64_True_arm64_linux_True"
   CONFIGS="$CONFIGS x64_False_arm_android x64_True_arm_android"
   CONFIGS="$CONFIGS x64_False_x64_android x64_True_x64_android"
   CONFIGS="$CONFIGS x64_False_x86_android x64_True_x86_android"
