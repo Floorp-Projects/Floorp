@@ -211,7 +211,7 @@ toolbarseparator + .panel-subview-body,
 
 #wrapper-edit-controls:is([place="palette"],[place="menu-panel"]) > #edit-controls,
 #wrapper-zoom-controls:is([place="palette"],[place="menu-panel"]) > #zoom-controls,
-.toolbaritem-combined-buttons:is([cui-areatype="menu-panel"], [overflowedItem=true]) {
+:is(panelview, #widget-overflow-fixed-list) .toolbaritem-combined-buttons {
   margin: var(--arrowpanel-menuitem-margin);
 }
 
@@ -385,7 +385,10 @@ panelview[id^=PanelUI-webext-] {
   min-width: calc(var(--menu-panel-width) + 32px);
 }
 
-.toolbaritem-combined-buttons:is([cui-areatype="menu-panel"], [overflowedItem=true]) > toolbarbutton > .toolbarbutton-icon {
+.toolbaritem-combined-buttons:is(
+  :not([cui-areatype="toolbar"]),
+  [overflowedItem=true]
+) > toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -1225,8 +1228,10 @@ panelview .toolbarbutton-1 {
   panelview .toolbarbutton-1,
   toolbarbutton.subviewbutton,
   .widget-overflow-list .toolbarbutton-1,
-  .toolbaritem-combined-buttons[cui-areatype="menu-panel"] > toolbarbutton,
-  .toolbaritem-combined-buttons[overflowedItem=true] > toolbarbutton
+  .toolbaritem-combined-buttons:is(
+    :not([cui-areatype="toolbar"]),
+    [overflowedItem=true]
+  ) > toolbarbutton
 ):focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
@@ -1237,8 +1242,10 @@ panelview .toolbarbutton-1 {
   panelview .toolbarbutton-1,
   toolbarbutton.subviewbutton,
   .widget-overflow-list .toolbarbutton-1,
-  .toolbaritem-combined-buttons[cui-areatype="menu-panel"] > toolbarbutton,
-  .toolbaritem-combined-buttons[overflowedItem=true] > toolbarbutton
+  .toolbaritem-combined-buttons:is(
+    :not([cui-areatype="toolbar"]),
+    [overflowedItem=true]
+  ) > toolbarbutton
 ):not([disabled]):hover {
   color: inherit;
   background-color: var(--panel-item-hover-bgcolor);
@@ -1249,8 +1256,10 @@ panelview .toolbarbutton-1 {
   panelview .toolbarbutton-1,
   toolbarbutton.subviewbutton,
   .widget-overflow-list .toolbarbutton-1,
-  .toolbaritem-combined-buttons[cui-areatype="menu-panel"] > toolbarbutton,
-  .toolbaritem-combined-buttons[overflowedItem=true] > toolbarbutton
+  .toolbaritem-combined-buttons:is(
+    :not([cui-areatype="toolbar"]),
+    [overflowedItem=true]
+  ) > toolbarbutton
 ):not([disabled]):hover:active {
   color: inherit;
   background-color: var(--panel-item-active-bgcolor);
@@ -1389,7 +1398,10 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-height: 37px;
 }
 
-.toolbaritem-combined-buttons:is([cui-areatype="menu-panel"], [overflowedItem=true]) > toolbarbutton {
+.toolbaritem-combined-buttons:is(
+  :not([cui-areatype="toolbar"]),
+  [overflowedItem=true]
+) > toolbarbutton {
   border: 0;
   margin: 0;
   -moz-box-flex: 1;
@@ -1407,7 +1419,10 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   display: none;
 }
 
-.toolbaritem-combined-buttons:is([cui-areatype="menu-panel"], [overflowedItem=true]) > toolbarbutton:not(.toolbarbutton-1)[disabled] {
+.toolbaritem-combined-buttons:is(
+  :not([cui-areatype="toolbar"]),
+  [overflowedItem=true]
+) > toolbarbutton:not(.toolbarbutton-1)[disabled] {
   opacity: 0.4;
   /* Override toolbarbutton.css which sets the color to GrayText */
   color: inherit;
@@ -1418,7 +1433,10 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   min-width: calc(5ch + var(--toolbarbutton-inner-padding) * 2);
 }
 
-.toolbaritem-combined-buttons:is([cui-areatype="menu-panel"], [overflowedItem=true]) > separator {
+.toolbaritem-combined-buttons:is(
+  :not([cui-areatype="toolbar"]),
+  [overflowedItem=true]
+) > separator {
   appearance: none;
   -moz-box-align: stretch;
   margin: .5em 0;
@@ -1430,7 +1448,10 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
   transition-timing-function: ease;
 }
 
-.toolbaritem-combined-buttons:is([cui-areatype="menu-panel"], [overflowedItem=true]):hover > separator {
+.toolbaritem-combined-buttons:is(
+  :not([cui-areatype="toolbar"]),
+  [overflowedItem=true]
+):hover > separator {
   margin: 0;
 }
 
