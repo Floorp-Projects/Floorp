@@ -153,7 +153,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ProxyHandlerUtils.h"
 #include "mozilla/dom/RootedDictionary.h"
-#include "mozilla/dom/WebTaskSchedulerMainThread.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorker.h"
@@ -1292,11 +1291,6 @@ void nsGlobalWindowInner::FreeInnerObjects() {
 
   mContentMediaController = nullptr;
 
-  if (mWebTaskScheduler) {
-    mWebTaskScheduler->Disconnect();
-    mWebTaskScheduler = nullptr;
-  }
-
   mSharedWorkers.Clear();
 
 #ifdef MOZ_WEBSPEECH
@@ -1391,8 +1385,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
-
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebTaskScheduler)
 
 #ifdef MOZ_WEBSPEECH
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechSynthesis)
@@ -1491,11 +1483,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
-
-  if (tmp->mWebTaskScheduler) {
-    tmp->mWebTaskScheduler->Disconnect();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebTaskScheduler)
-  }
 
 #ifdef MOZ_WEBSPEECH
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSpeechSynthesis)
@@ -1765,10 +1752,6 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
   mPerformance = nullptr;
-  if (mWebTaskScheduler) {
-    mWebTaskScheduler->Disconnect();
-    mWebTaskScheduler = nullptr;
-  }
 
   // This must be called after nullifying the internal objects because here we
   // could recreate them, calling the getter methods, and store them into the JS
@@ -4243,14 +4226,6 @@ Selection* nsGlobalWindowInner::GetSelection(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetSelectionOuter, (), aError, nullptr);
 }
 
-WebTaskScheduler* nsGlobalWindowInner::Scheduler() {
-  if (!mWebTaskScheduler) {
-    mWebTaskScheduler = WebTaskScheduler::CreateForMainThread(this);
-  }
-  MOZ_ASSERT(mWebTaskScheduler);
-  return mWebTaskScheduler;
-}
-
 bool nsGlobalWindowInner::Find(const nsAString& aString, bool aCaseSensitive,
                                bool aBackwards, bool aWrapAround,
                                bool aWholeWord, bool aSearchInFrames,
@@ -6357,11 +6332,6 @@ static const char* GetTimeoutReasonString(Timeout* aTimeout) {
       return "setIdleCallback handler (timed out)";
     case Timeout::Reason::eAbortSignalTimeout:
       return "AbortSignal timeout";
-    case Timeout::Reason::eDelayedWebTaskTimeout:
-      return "delayedWebTaskCallback handler (timed out)";
-    default:
-      MOZ_CRASH("Unexpected enum value");
-      return "";
   }
   MOZ_CRASH("Unexpected enum value");
   return "";
