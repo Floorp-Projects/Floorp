@@ -10,22 +10,26 @@ nsHtml5TreeOpStage::nsHtml5TreeOpStage() : mMutex("nsHtml5TreeOpStage mutex") {}
 
 nsHtml5TreeOpStage::~nsHtml5TreeOpStage() {}
 
-void nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) {
+bool nsHtml5TreeOpStage::MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) {
   mozilla::MutexAutoLock autoLock(mMutex);
-  mOpQueue.AppendElements(std::move(aOpQueue));
+  return !!mOpQueue.AppendElements(std::move(aOpQueue), mozilla::fallible_t());
 }
 
-void nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(
+[[nodiscard]] bool nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(
     nsTArray<nsHtml5TreeOperation>& aOpQueue,
     nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue) {
   mozilla::MutexAutoLock autoLock(mMutex);
-  aOpQueue.AppendElements(std::move(mOpQueue));
+  if (!aOpQueue.AppendElements(std::move(mOpQueue), mozilla::fallible_t())) {
+    return false;
+  };
   aSpeculativeLoadQueue.AppendElements(std::move(mSpeculativeLoadQueue));
+  return true;
 }
 
-void nsHtml5TreeOpStage::MoveOpsTo(nsTArray<nsHtml5TreeOperation>& aOpQueue) {
+[[nodiscard]] bool nsHtml5TreeOpStage::MoveOpsTo(
+    nsTArray<nsHtml5TreeOperation>& aOpQueue) {
   mozilla::MutexAutoLock autoLock(mMutex);
-  aOpQueue.AppendElements(std::move(mOpQueue));
+  return !!aOpQueue.AppendElements(std::move(mOpQueue), mozilla::fallible_t());
 }
 
 void nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(

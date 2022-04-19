@@ -62,8 +62,10 @@ class nsHtml5Highlighter {
 
   /**
    * Report end of file.
+   *
+   * Returns `true` normally and `false` on OOM.
    */
-  void End();
+  [[nodiscard]] bool End();
 
   /**
    * Set the current buffer being tokenized
@@ -78,11 +80,20 @@ class nsHtml5Highlighter {
   void DropBuffer(int32_t aPos);
 
   /**
+   * Query whether there are some many ops in the queue
+   * that they should be flushed now.
+   *
+   * @return true if FlushOps() should be called now
+   */
+  bool ShouldFlushOps();
+
+  /**
    * Flush the tree ops into the sink.
    *
-   * @return true if there were ops to flush
+   * @return Ok(true) if there were ops to flush, Ok(false)
+   *         if there were no ops to flush and Err() on OOM.
    */
-  bool FlushOps();
+  mozilla::Result<bool, nsresult> FlushOps();
 
   /**
    * Linkify the current attribute value if the attribute name is one of
