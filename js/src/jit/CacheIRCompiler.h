@@ -1220,27 +1220,25 @@ class MOZ_RAII AutoAvailableFloatRegister {
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description
 // of this class.
 class CacheIRStubInfo {
-  // These fields don't require 8 bits, but GCC complains if these fields are
-  // smaller than the size of the enums.
-  CacheKind kind_ : 8;
-  ICStubEngine engine_ : 8;
-  bool makesGCCalls_ : 1;
-  uint8_t stubDataOffset_;
-
   const uint8_t* code_;
-  uint32_t length_;
   const uint8_t* fieldTypes_;
+  uint32_t length_;
+
+  CacheKind kind_;
+  ICStubEngine engine_;
+  uint8_t stubDataOffset_;
+  bool makesGCCalls_;
 
   CacheIRStubInfo(CacheKind kind, ICStubEngine engine, bool makesGCCalls,
                   uint32_t stubDataOffset, const uint8_t* code,
                   uint32_t codeLength, const uint8_t* fieldTypes)
-      : kind_(kind),
-        engine_(engine),
-        makesGCCalls_(makesGCCalls),
-        stubDataOffset_(stubDataOffset),
-        code_(code),
+      : code_(code),
+        fieldTypes_(fieldTypes),
         length_(codeLength),
-        fieldTypes_(fieldTypes) {
+        kind_(kind),
+        engine_(engine),
+        stubDataOffset_(stubDataOffset),
+        makesGCCalls_(makesGCCalls) {
     MOZ_ASSERT(kind_ == kind, "Kind must fit in bitfield");
     MOZ_ASSERT(engine_ == engine, "Engine must fit in bitfield");
     MOZ_ASSERT(stubDataOffset_ == stubDataOffset,
