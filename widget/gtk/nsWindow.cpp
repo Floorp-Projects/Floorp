@@ -1183,11 +1183,15 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
     mWaitingForMoveToRectCallback = false;
   }
 
-  // Clear rendering transactions of closed window and disable rendering to it
-  // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1717451#c27
-  // for details).
   if (mPopupClosed) {
+    // Clear rendering transactions of closed window and disable rendering to it
+    // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1717451#c27 for
+    // details).
     RevokeTransactionIdAllocator();
+
+    // Also clear the move to rect size so it doesn't affect further showing of
+    // the popup.
+    mMoveToRectPopupSize = {};
   }
 }
 
