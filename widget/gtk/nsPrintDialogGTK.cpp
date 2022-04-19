@@ -28,7 +28,10 @@
 #include "nsIObserverService.h"
 
 // for gdk_x11_window_get_xid
-#include <gdk/gdkx.h>
+#include <gdk/gdk.h>
+#ifdef MOZ_X11
+#  include <gdk/gdkx.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
