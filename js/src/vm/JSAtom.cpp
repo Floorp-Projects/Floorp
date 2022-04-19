@@ -959,47 +959,54 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSAtom* PrimitiveToAtom(JSContext* cx,
                                                  const Value& v) {
   MOZ_ASSERT(v.isPrimitive());
-  if (v.isString()) {
-    JSAtom* atom = AtomizeString(cx, v.toString());
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
+  switch (v.type()) {
+    case ValueType::String: {
+      JSAtom* atom = AtomizeString(cx, v.toString());
+      if (!allowGC && !atom) {
+        cx->recoverFromOutOfMemory();
+      }
+      return atom;
     }
-    return atom;
-  }
-  if (v.isInt32()) {
-    JSAtom* atom = Int32ToAtom(cx, v.toInt32());
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
+    case ValueType::Int32: {
+      JSAtom* atom = Int32ToAtom(cx, v.toInt32());
+      if (!allowGC && !atom) {
+        cx->recoverFromOutOfMemory();
+      }
+      return atom;
     }
-    return atom;
-  }
-  if (v.isDouble()) {
-    JSAtom* atom = NumberToAtom(cx, v.toDouble());
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
+    case ValueType::Double: {
+      JSAtom* atom = NumberToAtom(cx, v.toDouble());
+      if (!allowGC && !atom) {
+        cx->recoverFromOutOfMemory();
+      }
+      return atom;
     }
-    return atom;
-  }
-  if (v.isBoolean()) {
-    return v.toBoolean() ? cx->names().true_ : cx->names().false_;
-  }
-  if (v.isNull()) {
-    return cx->names().null;
-  }
-  if (v.isSymbol()) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
-    if (allowGC) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_SYMBOL_TO_STRING);
+    case ValueType::Boolean:
+      return v.toBoolean() ? cx->names().true_ : cx->names().false_;
+    case ValueType::Null:
+      return cx->names().null;
+    case ValueType::Undefined:
+      return cx->names().undefined;
+    case ValueType::Symbol:
+      MOZ_ASSERT(!cx->isHelperThreadContext());
+      if constexpr (allowGC) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_SYMBOL_TO_STRING);
+      }
+      return nullptr;
+    case ValueType::BigInt: {
+      RootedBigInt i(cx, v.toBigInt());
+      return BigIntToAtom<allowGC>(cx, i);
     }
-    return nullptr;
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+#endif
+    case ValueType::Object:
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+      break;
   }
-  if (v.isBigInt()) {
-    RootedBigInt i(cx, v.toBigInt());
-    return BigIntToAtom<allowGC>(cx, i);
-  }
-  MOZ_ASSERT(v.isUndefined());
-  return cx->names().undefined;
+  MOZ_CRASH("Unexpected type");
 }
 
 template <AllowGC allowGC>
