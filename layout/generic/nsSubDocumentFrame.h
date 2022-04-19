@@ -162,6 +162,9 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   }
 
   nscoord GetIntrinsicISize() {
+    if (StyleDisplay()->GetContainSizeAxes().mIContained) {
+      return 0;
+    }
     auto size = GetIntrinsicSize();
     Maybe<nscoord> iSize =
         GetWritingMode().IsVertical() ? size.height : size.width;

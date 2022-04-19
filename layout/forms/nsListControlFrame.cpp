@@ -220,10 +220,11 @@ nscoord nsListControlFrame::CalcBSizeOfARow() {
   // either of which may be visible or invisible, may use different
   // fonts, etc.
   nscoord rowBSize(0);
-  if (StyleDisplay()->IsContainSize() ||
+  if (StyleDisplay()->GetContainSizeAxes().mBContained ||
       !GetMaxRowBSize(GetOptionsContainer(), GetWritingMode(), &rowBSize)) {
     // We don't have any <option>s or <optgroup> labels with a frame.
-    // (Or we're size-contained, which has the same outcome for our sizing.)
+    // (Or we're size-contained in block axis, which has the same outcome for
+    // our sizing.)
     float inflation = nsLayoutUtils::FontSizeInflationFor(this);
     rowBSize = CalcFallbackRowBSize(inflation);
   }
@@ -239,7 +240,7 @@ nscoord nsListControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // dropdown, and standalone listboxes are overflow:scroll so they need
   // it too.
   WritingMode wm = GetWritingMode();
-  result = StyleDisplay()->IsContainSize()
+  result = StyleDisplay()->GetContainSizeAxes().mIContained
                ? 0
                : GetScrolledFrame()->GetPrefISize(aRenderingContext);
   LogicalMargin scrollbarSize(
@@ -257,7 +258,7 @@ nscoord nsListControlFrame::GetMinISize(gfxContext* aRenderingContext) {
   // dropdown, and standalone listboxes are overflow:scroll so they need
   // it too.
   WritingMode wm = GetWritingMode();
-  result = StyleDisplay()->IsContainSize()
+  result = StyleDisplay()->GetContainSizeAxes().mIContained
                ? 0
                : GetScrolledFrame()->GetMinISize(aRenderingContext);
   LogicalMargin scrollbarSize(

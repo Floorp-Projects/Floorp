@@ -403,7 +403,7 @@ nscoord nsHTMLCanvasFrame::GetMinISize(gfxContext* aRenderingContext) {
   // min-height, and max-height properties.
   bool vertical = GetWritingMode().IsVertical();
   nscoord result;
-  if (StyleDisplay()->IsContainSize()) {
+  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
     result = 0;
   } else {
     result = nsPresContext::CSSPixelsToAppUnits(
@@ -419,7 +419,7 @@ nscoord nsHTMLCanvasFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // min-height, and max-height properties.
   bool vertical = GetWritingMode().IsVertical();
   nscoord result;
-  if (StyleDisplay()->IsContainSize()) {
+  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
     result = 0;
   } else {
     result = nsPresContext::CSSPixelsToAppUnits(
@@ -431,15 +431,17 @@ nscoord nsHTMLCanvasFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
 /* virtual */
 IntrinsicSize nsHTMLCanvasFrame::GetIntrinsicSize() {
-  if (StyleDisplay()->IsContainSize()) {
+  const auto containAxes = StyleDisplay()->GetContainSizeAxes();
+  if (containAxes.IsBoth()) {
     return IntrinsicSize(0, 0);
   }
-  return IntrinsicSizeFromCanvasSize(GetCanvasSize());
+  return containAxes.ContainIntrinsicSize(
+      IntrinsicSizeFromCanvasSize(GetCanvasSize()), GetWritingMode());
 }
 
 /* virtual */
 AspectRatio nsHTMLCanvasFrame::GetIntrinsicRatio() const {
-  if (StyleDisplay()->IsContainSize()) {
+  if (StyleDisplay()->GetContainSizeAxes().IsAny()) {
     return AspectRatio();
   }
 

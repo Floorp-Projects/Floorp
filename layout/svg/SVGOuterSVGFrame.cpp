@@ -90,9 +90,12 @@ SVGOuterSVGFrame::SVGOuterSVGFrame(ComputedStyle* aStyle,
 // they're not really "replaced", and there's no outer context to contain sizes
 // from leaking into). Hence, we check for a parent element before we bother
 // testing for 'contain:size'.
-static inline bool IsReplacedAndContainSize(const SVGOuterSVGFrame* aFrame) {
-  return aFrame->GetContent()->GetParent() &&
-         aFrame->StyleDisplay()->IsContainSize();
+static inline ContainSizeAxes ContainSizeAxesIfApplicable(
+    const SVGOuterSVGFrame* aFrame) {
+  if (!aFrame->GetContent()->GetParent()) {
+    return ContainSizeAxes(false, false);
+  }
+  return aFrame->StyleDisplay()->GetContainSizeAxes();
 }
 
 void SVGOuterSVGFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -171,7 +174,7 @@ nscoord SVGOuterSVGFrame::GetPrefISize(gfxContext* aRenderingContext) {
       wm.IsVertical() ? svg->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT]
                       : svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
 
-  if (IsReplacedAndContainSize(this)) {
+  if (ContainSizeAxesIfApplicable(this).mIContained) {
     result = nscoord(0);
   } else if (isize.IsPercentage()) {
     // It looks like our containing block's isize may depend on our isize. In
@@ -208,7 +211,8 @@ IntrinsicSize SVGOuterSVGFrame::GetIntrinsicSize() {
   // XXXjwatt Note that here we want to return the CSS width/height if they're
   // specified and we're embedded inside an nsIObjectLoadingContent.
 
-  if (IsReplacedAndContainSize(this)) {
+  const auto containAxes = ContainSizeAxesIfApplicable(this);
+  if (containAxes.IsBoth()) {
     // Intrinsic size of 'contain:size' replaced elements is 0,0.
     return IntrinsicSize(0, 0);
   }
@@ -233,12 +237,12 @@ IntrinsicSize SVGOuterSVGFrame::GetIntrinsicSize() {
     intrinsicSize.height.emplace(std::max(val, 0));
   }
 
-  return intrinsicSize;
+  return containAxes.ContainIntrinsicSize(intrinsicSize, GetWritingMode());
 }
 
 /* virtual */
 AspectRatio SVGOuterSVGFrame::GetIntrinsicRatio() const {
-  if (IsReplacedAndContainSize(this)) {
+  if (ContainSizeAxesIfApplicable(this).IsAny()) {
     return AspectRatio();
   }
 
