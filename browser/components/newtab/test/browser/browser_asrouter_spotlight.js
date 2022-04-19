@@ -98,6 +98,22 @@ add_task(async function test_telemetry() {
   );
 });
 
+add_task(async function test_telemetry_blocking() {
+  let message = (await PanelTestProvider.getMessages()).find(
+    m => m.id === "SPOTLIGHT_MESSAGE_93"
+  );
+  message.content.metrics = "block";
+
+  let dispatchStub = sinon.stub();
+  let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    win.document.getElementById("secondary").click();
+  });
+
+  Assert.equal(dispatchStub.callCount, 0, "No telemetry");
+});
+
 add_task(async function test_primaryButton() {
   let message = (await PanelTestProvider.getMessages()).find(
     m => m.id === "SPOTLIGHT_MESSAGE_93"
