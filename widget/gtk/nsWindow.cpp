@@ -61,7 +61,9 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WritingModes.h"
-#include "mozilla/X11Util.h"
+#ifdef MOZ_X11
+#  include "mozilla/X11Util.h"
+#endif
 #include "mozilla/XREAppData.h"
 #include "NativeKeyBindings.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -93,7 +95,6 @@
 #include "ScreenHelperGTK.h"
 #include "SystemTimeConverter.h"
 #include "WidgetUtilsGtk.h"
-#include "mozilla/X11Util.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/LocalAccessible.h"
@@ -113,6 +114,7 @@
 #  include "WindowSurfaceX11SHM.h"
 #endif
 #ifdef MOZ_WAYLAND
+#  include <gdk/gdkkeysyms-compat.h>
 #  include "nsIClipboard.h"
 #  include "nsView.h"
 #endif
@@ -121,8 +123,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+#ifdef MOZ_X11
 using mozilla::gl::GLContextEGL;
 using mozilla::gl::GLContextGLX;
+#endif
 
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
@@ -265,6 +269,7 @@ bool nsWindow::sTransparentMainWindow = false;
 
 namespace mozilla {
 
+#ifdef MOZ_X11
 class CurrentX11TimeGetter {
  public:
   explicit CurrentX11TimeGetter(GdkWindow* aWindow)
@@ -312,6 +317,7 @@ class CurrentX11TimeGetter {
   GdkWindow* mWindow;
   TimeStamp mAsyncUpdateStart;
 };
+#endif
 
 }  // namespace mozilla
 
@@ -2496,6 +2502,7 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
     return false;
   }
 
+#ifdef MOZ_X11
   Display* xdisplay = gdk_x11_get_default_xdisplay();
   GdkScreen* screen = gdk_window_get_screen(gdk_window);
   Window root_win = GDK_WINDOW_XID(gdk_screen_get_root_window(screen));
@@ -2559,6 +2566,7 @@ static bool GetWindowManagerName(GdkWindow* gdk_window, nsACString& wmName) {
 
   wmName = reinterpret_cast<const char*>(prop_return);
   return true;
+#endif
 }
 
 #define kDesktopMutterSchema "org.gnome.mutter"
@@ -2616,6 +2624,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
     return;
   }
 
+#ifdef MOZ_X11
   LOG("nsWindow::GetWorkspaceID()\n");
 
   // Get the gdk window for this widget.
@@ -2650,6 +2659,7 @@ void nsWindow::GetWorkspaceID(nsAString& workspaceID) {
   LOG("  got workspace ID %d", (int32_t)wm_desktop[0]);
   workspaceID.AppendInt((int32_t)wm_desktop[0]);
   g_free(wm_desktop);
+#endif
 }
 
 void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
@@ -2662,6 +2672,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
     return;
   }
 
+#ifdef MOZ_X11
   // Get the gdk window for this widget.
   GdkWindow* gdk_window = gtk_widget_get_window(mShell);
   if (!gdk_window) {
@@ -2697,6 +2708,7 @@ void nsWindow::MoveToWorkspace(const nsAString& workspaceIDStr) {
 
   XFlush(xdisplay);
   LOG("  moved to workspace");
+#endif
 }
 
 using SetUserTimeFunc = void (*)(GdkWindow*, guint32);
@@ -2736,10 +2748,14 @@ guint32 nsWindow::GetLastUserInputTime() {
   // WM_DELETE_WINDOW delete events, but not usually mouse motion nor
   // button and key releases.  Therefore use the most recent of
   // gdk_x11_display_get_user_time and the last time that we have seen.
+#ifdef MOZ_X11
   GdkDisplay* gdkDisplay = gdk_display_get_default();
   guint32 timestamp = GdkIsX11Display(gdkDisplay)
                           ? gdk_x11_display_get_user_time(gdkDisplay)
                           : gtk_get_current_event_time();
+#else
+  guint32 timestamp = gtk_get_current_event_time();
+#endif
 
   if (sLastUserInputTime != GDK_CURRENT_TIME &&
       TimestampIsNewerThan(sLastUserInputTime, timestamp)) {
@@ -2996,6 +3012,7 @@ void nsWindow::UpdateClientOffsetFromFrameExtents() {
     return;
   }
 
+#ifdef MOZ_X11
   GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
 
   GdkAtom type_returned;
@@ -3029,6 +3046,7 @@ void nsWindow::UpdateClientOffsetFromFrameExtents() {
 
   LOG("nsWindow::UpdateClientOffsetFromFrameExtents %d,%d\n", mClientOffset.x,
       mClientOffset.y);
+#endif
 }
 
 LayoutDeviceIntPoint nsWindow::GetClientOffset() {
@@ -3046,9 +3064,11 @@ gboolean nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget,
   if (!mGdkWindow) {
     return FALSE;
   }
+#ifdef MOZ_X11
   if (GetCurrentTimeGetter()->PropertyNotifyHandler(aWidget, aEvent)) {
     return TRUE;
   }
+#endif
   return FALSE;
 }
 
@@ -3183,9 +3203,11 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       return GetToplevelWidget();
 
     case NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID:
+#ifdef MOZ_X11
       if (GdkIsX11Display()) {
         return (void*)GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
       }
+#endif
       NS_WARNING(
           "nsWindow::GetNativeData(): NS_NATIVE_WINDOW_WEBRTC_DEVICE_ID is not "
           "handled on Wayland!");
@@ -3206,11 +3228,13 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       return nullptr;
     case NS_NATIVE_EGL_WINDOW: {
       void* eglWindow = nullptr;
+#ifdef MOZ_X11
       if (GdkIsX11Display()) {
         eglWindow = mGdkWindow ? (void*)GDK_WINDOW_XID(mGdkWindow) : nullptr;
       }
+#endif
 #ifdef MOZ_WAYLAND
-      else {
+      if (GdkIsWaylandDisplay()) {
         eglWindow = moz_container_wayland_get_egl_window(
             mContainer, FractionalScaleFactor());
       }
@@ -3501,7 +3525,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   if (!listener) return FALSE;
 
   LOG("received expose event %p 0x%lx (rects follow):\n", mGdkWindow,
-      GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : 0);
+      GetX11Window());
   LayoutDeviceIntRegion exposeRegion;
   if (!ExtractExposeRegion(exposeRegion, cr)) {
     return FALSE;
@@ -4048,6 +4072,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
     MOZ_ASSERT(gdk_window, "gdk_window_get_toplevel should not return null");
 
     bool canDrag = true;
+#ifdef MOZ_X11
     if (GdkIsX11Display()) {
       // Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=789054
       // To avoid crashes disable double-click on WM without _NET_WM_MOVERESIZE.
@@ -4058,6 +4083,7 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
         canDrag = false;
       }
     }
+#endif
 
     if (canDrag) {
       gdk_window_begin_move_drag(gdk_window, 1, aEvent->x_root, aEvent->y_root,
@@ -4510,15 +4536,18 @@ TimeStamp nsWindow::GetEventTimeStamp(guint32 aEventTime) {
         BaseTimeDurationPlatformUtils::TicksFromMilliseconds(timestampTime);
     eventTimeStamp = TimeStamp::FromSystemTime(tick);
   } else {
+#ifdef MOZ_X11
     CurrentX11TimeGetter* getCurrentTime = GetCurrentTimeGetter();
     MOZ_ASSERT(getCurrentTime,
                "Null current time getter despite having a window");
     eventTimeStamp =
         TimeConverter().GetTimeStampFromSystemTime(aEventTime, *getCurrentTime);
+#endif
   }
   return eventTimeStamp;
 }
 
+#ifdef MOZ_X11
 mozilla::CurrentX11TimeGetter* nsWindow::GetCurrentTimeGetter() {
   MOZ_ASSERT(mGdkWindow, "Expected mGdkWindow to be set");
   if (MOZ_UNLIKELY(!mCurrentTimeGetter)) {
@@ -4526,6 +4555,7 @@ mozilla::CurrentX11TimeGetter* nsWindow::GetCurrentTimeGetter() {
   }
   return mCurrentTimeGetter.get();
 }
+#endif
 
 gboolean nsWindow::OnKeyPressEvent(GdkEventKey* aEvent) {
   LOG("OnKeyPressEvent");
@@ -4706,6 +4736,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   //
   // This may be fixed in Gtk 3.24+ but some DE still have this issue
   // (Bug 1624199) so let's remove it for Wayland only.
+#ifdef MOZ_X11
   if (GdkIsX11Display()) {
     if (!mIsShown) {
       aEvent->changed_mask = static_cast<GdkWindowState>(
@@ -4716,6 +4747,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
           aEvent->changed_mask | GDK_WINDOW_STATE_MAXIMIZED);
     }
   }
+#endif
 
   // This is a workaround for https://gitlab.gnome.org/GNOME/gtk/issues/1395
   // Gtk+ controls window active appearance by window-state-event signal.
@@ -5230,8 +5262,16 @@ void nsWindow::DisableRenderingToWindow() {
 }
 
 Window nsWindow::GetX11Window() {
-  return GdkIsX11Display() && mGdkWindow ? gdk_x11_window_get_xid(mGdkWindow)
-                                         : X11None;
+#ifdef MOZ_X11
+  if (GdkIsX11Display()) {
+    return mGdkWindow ? gdk_x11_window_get_xid(mGdkWindow) : X11None;
+  }
+#endif
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay()) {
+    return (Window) nullptr;
+  }
+#endif
 }
 
 void nsWindow::EnsureGdkWindow() {
@@ -5318,8 +5358,7 @@ void nsWindow::ConfigureGdkWindow() {
     EnsureGrabs();
   }
 
-  LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow,
-      GdkIsX11Display() ? gdk_x11_window_get_xid(mGdkWindow) : 0);
+  LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow, GetX11Window());
 }
 
 void nsWindow::ReleaseGdkWindow() {
@@ -5862,9 +5901,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   LOG("  nsWindow type %d %s\n", mWindowType, mIsPIPWindow ? "PIP window" : "");
   LOG("  mShell %p mContainer %p mGdkWindow %p XID 0x%lx\n", mShell, mContainer,
-      mGdkWindow,
-      (GdkIsX11Display() && mGdkWindow) ? gdk_x11_window_get_xid(mGdkWindow)
-                                        : 0);
+      mGdkWindow, GetX11Window());
 
   // Set default application name when it's empty.
   if (mGtkWindowAppName.IsEmpty()) {
@@ -6564,18 +6601,6 @@ void nsWindow::ApplyTransparencyBitmap() {
   XShapeCombineMask(xDisplay, xDrawable, ShapeBounding, 0, 0, maskPixmap,
                     ShapeSet);
   XFreePixmap(xDisplay, maskPixmap);
-#else
-  cairo_surface_t* maskBitmap;
-  maskBitmap = cairo_image_surface_create_for_data(
-      (unsigned char*)mTransparencyBitmap, CAIRO_FORMAT_A1,
-      mTransparencyBitmapWidth, mTransparencyBitmapHeight,
-      GetBitmapStride(mTransparencyBitmapWidth));
-  if (!maskBitmap) return;
-
-  cairo_region_t* maskRegion = gdk_cairo_region_create_from_surface(maskBitmap);
-  gtk_widget_shape_combine_region(mShell, maskRegion);
-  cairo_region_destroy(maskRegion);
-  cairo_surface_destroy(maskBitmap);
 #endif  // MOZ_X11
 }
 
@@ -6705,6 +6730,7 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
     cairo_surface_destroy(surface);
   }
 
+#ifdef MOZ_X11
   if (!mNeedsShow) {
     Display* xDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
     Window xDrawable = GDK_WINDOW_XID(mGdkWindow);
@@ -6725,6 +6751,7 @@ void nsWindow::UpdateTitlebarTransparencyBitmap() {
 
     XFreePixmap(xDisplay, maskPixmap);
   }
+#endif
 }
 
 void nsWindow::GrabPointer(guint32 aTime) {
@@ -6750,6 +6777,7 @@ void nsWindow::GrabPointer(guint32 aTime) {
     return;
   }
 
+#ifdef MOZ_X11
   gint retval;
   // Note that we need GDK_TOUCH_MASK below to work around a GDK/X11 bug that
   // causes touch events that would normally be received by this client on
@@ -6776,6 +6804,7 @@ void nsWindow::GrabPointer(guint32 aTime) {
                           &nsWindow::CheckForRollupDuringGrab);
     NS_DispatchToCurrentThread(event.forget());
   }
+#endif
 }
 
 void nsWindow::ReleaseGrabs(void) {
@@ -6789,7 +6818,9 @@ void nsWindow::ReleaseGrabs(void) {
     return;
   }
 
+#ifdef MOZ_X11
   gdk_pointer_ungrab(GDK_CURRENT_TIME);
+#endif
 }
 
 GtkWidget* nsWindow::GetToplevelWidget() { return mShell; }
@@ -7000,7 +7031,7 @@ static bool IsFullscreenSupported(GtkWidget* aShell) {
   GdkScreen* screen = gtk_widget_get_screen(aShell);
   GdkAtom atom = gdk_atom_intern("_NET_WM_STATE_FULLSCREEN", FALSE);
   return gdk_x11_screen_supports_net_wm_hint(screen, atom);
-#elif
+#else
   return true;
 #endif
 }
@@ -8281,6 +8312,7 @@ bool nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
     return false;
   }
 
+#ifdef MOZ_X11
   if (GdkIsX11Display()) {
     // Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=789054
     // To avoid crashes disable double-click on WM without _NET_WM_MOVERESIZE.
@@ -8296,6 +8328,7 @@ bool nsWindow::GetDragInfo(WidgetMouseEvent* aMouseEvent, GdkWindow** aWindow,
       }
     }
   }
+#endif
 
   // FIXME: It would be nice to have the widget position at the time
   // of the event, but it's relatively unlikely that the widget has
