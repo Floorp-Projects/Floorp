@@ -1312,7 +1312,9 @@ static inline void TryToDealWithScrollbarChange(nsChangeHint& aHint,
 
   MOZ_ASSERT(aFrame, "If we're not reframing, we ought to have a frame");
 
-  // Only bother with this if we're html/body, since:
+  const bool isRoot = aContent->IsInUncomposedDoc() && !aContent->GetParent();
+
+  // Only bother with this if we're the root or the body element, since:
   //  (a) It'd be *expensive* to reframe these particular nodes.  They're
   //      at the root, so reframing would mean rebuilding the world.
   //  (b) It's often *unnecessary* to reframe for "overflow" changes on
@@ -1322,22 +1324,28 @@ static inline void TryToDealWithScrollbarChange(nsChangeHint& aHint,
   //      need their own scrollframe/scrollbars because they coopt the ones
   //      on the viewport (which always exist). So depending on whether
   //      that's happening, we can skip the reframe for these nodes.
-  if (aContent->IsAnyOfHTMLElements(nsGkAtoms::body, nsGkAtoms::html)) {
+  if (isRoot || aContent->IsHTMLElement(nsGkAtoms::body)) {
     // If the restyled element provided/provides the scrollbar styles for
     // the viewport before and/or after this restyle, AND it's not coopting
     // that responsibility from some other element (which would need
     // reconstruction to make its own scrollframe now), THEN: we don't need
     // to reconstruct - we can just reflow, because no scrollframe is being
     // added/removed.
-    nsIContent* prevOverrideNode =
-        aPc->GetViewportScrollStylesOverrideElement();
-    nsIContent* newOverrideNode = aPc->UpdateViewportScrollStylesOverride();
+    Element* prevOverride = aPc->GetViewportScrollStylesOverrideElement();
+    Element* newOverride = aPc->UpdateViewportScrollStylesOverride();
 
-    if (aContent == prevOverrideNode || aContent == newOverrideNode) {
+    const auto ProvidesScrollbarStyles = [&](nsIContent* aOverride) {
+      if (aOverride) {
+        return aOverride == aContent;
+      }
+      return isRoot;
+    };
+
+    if (ProvidesScrollbarStyles(prevOverride) ||
+        ProvidesScrollbarStyles(newOverride)) {
       // If we get here, the restyled element provided the scrollbar styles
       // for viewport before this restyle, OR it will provide them after.
-      if (!prevOverrideNode || !newOverrideNode ||
-          prevOverrideNode == newOverrideNode) {
+      if (!prevOverride || !newOverride || prevOverride == newOverride) {
         // If we get here, the restyled element is NOT replacing (or being
         // replaced by) some other element as the viewport's
         // scrollbar-styles provider. (If it were, we'd potentially need to
@@ -1354,20 +1362,28 @@ static inline void TryToDealWithScrollbarChange(nsChangeHint& aHint,
           sf->MarkScrollbarsDirtyForReflow();
         }
         aHint |= nsChangeHint_ReflowHintsForScrollbarChange;
-        return;
+      } else {
+        // If we changed the override element, we need to reconstruct as the old
+        // override element might start / stop being scrollable.
+        aHint |= nsChangeHint_ReconstructFrame;
       }
+      return;
     }
   }
 
+  const bool scrollable = aFrame->StyleDisplay()->IsScrollableOverflow();
   if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
-    if (aFrame->StyleDisplay()->IsScrollableOverflow() &&
-        sf->HasAllNeededScrollbars()) {
+    if (scrollable && sf->HasAllNeededScrollbars()) {
       sf->MarkScrollbarsDirtyForReflow();
       // Once we've created scrollbars for a frame, don't bother reconstructing
       // it just to remove them if we still need a scroll frame.
       aHint |= nsChangeHint_ReflowHintsForScrollbarChange;
       return;
     }
+  } else if (!scrollable) {
+    // Something changed, but we don't have nor will have a scroll frame,
+    // there's nothing to do here.
+    return;
   }
 
   // Oh well, we couldn't optimize it out, just reconstruct frames for the
