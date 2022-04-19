@@ -51,34 +51,6 @@
 namespace mozilla {
 namespace dom {
 
-JSObject* SourceElementCallback(JSContext* aCx, JS::HandleValue aPrivateValue) {
-  // NOTE: The result of this is only used by DevTools for matching sources, so
-  // it is safe to silently ignore any errors and return nullptr for them.
-
-  JS::loader::LoadedScript* script =
-      static_cast<JS::loader::LoadedScript*>(aPrivateValue.toPrivate());
-
-  JS::Rooted<JS::Value> elementValue(aCx);
-  {
-    nsCOMPtr<Element> domElement = script->GetScriptElement();
-    if (!domElement) {
-      return nullptr;
-    }
-
-    JSObject* globalObject =
-        domElement->OwnerDoc()->GetScopeObject()->GetGlobalJSObject();
-    JSAutoRealm ar(aCx, globalObject);
-
-    nsresult rv = nsContentUtils::WrapNative(aCx, domElement, &elementValue,
-                                             /* aAllowWrapping = */ true);
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-  }
-
-  return &elementValue.toObject();
-}
-
 static MOZ_THREAD_LOCAL(ScriptSettingsStackEntry*) sScriptSettingsTLS;
 
 class ScriptSettingsStack {
@@ -340,7 +312,6 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   mOldWarningReporter.emplace(JS::GetWarningReporter(aCx));
 
   JS::SetWarningReporter(aCx, WarningOnlyErrorReporter);
-  JS::SetSourceElementCallback(aCx, SourceElementCallback);
 
 #ifdef DEBUG
   if (haveException) {
