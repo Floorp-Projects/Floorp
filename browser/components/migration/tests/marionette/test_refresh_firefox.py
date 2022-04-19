@@ -439,13 +439,11 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let resolve = arguments[arguments.length - 1]
           let mm = gBrowser.selectedBrowser.messageManager;
 
-          let {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
-          window.addEventListener("SSWindowStateReady", function testSSPostReset() {
-            window.removeEventListener("SSWindowStateReady", testSSPostReset, false);
-            Promise.all(gBrowser.browsers.map(b => TabStateFlusher.flush(b))).then(function() {
-              resolve([... gBrowser.browsers].map(b => b.currentURI && b.currentURI.spec));
-            });
-          }, false);
+          window.addEventListener("SSWindowStateReady", function() {
+            window.addEventListener("SSTabRestored", function() {
+              resolve(Array.from(gBrowser.browsers, b => b.currentURI?.spec));
+            }, { capture: false, once: true });
+          }, { capture: false, once: true });
 
           let fs = function() {
             if (content.document.readyState === "complete") {
