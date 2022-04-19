@@ -295,7 +295,7 @@ if CONFIG["MOZ_INSTRUMENT_EVENT_LOOP"]:
 
 EXPORTS.ipc = ["nsGUIEventIPC.h"]
 
-if CONFIG["MOZ_X11"]:
+if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     DIRS += ["x11"]
 
 if toolkit in ("cocoa", "windows"):
@@ -342,7 +342,7 @@ if toolkit == "windows":
         "windows/PCompositorWidget.ipdl",
         "windows/PlatformWidgetTypes.ipdlh",
     ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" and CONFIG["MOZ_X11"]:
+elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     IPDL_SOURCES = [
         "gtk/PCompositorWidget.ipdl",
         "gtk/PlatformWidgetTypes.ipdlh",
