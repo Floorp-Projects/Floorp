@@ -169,7 +169,8 @@ enum class ExceptionResumeKind : int32_t {
   // We are forcing an early return with a specific return value.
   // This is used by the debugger and when closing generators.
   // Immediately return from the current frame with the given value.
-  ForcedReturn,
+  ForcedReturnBaseline,
+  ForcedReturnIon,
 
   // This frame is currently executing in Ion, but we must bail out
   // to baseline before handling the exception.

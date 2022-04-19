@@ -161,9 +161,9 @@ static bool ShouldBailoutForDebugger(JSContext* cx,
     return false;
   }
 
-  // Bail out if we're propagating a forced return, even if the realm is no
-  // longer a debuggee.
-  if (cx->isPropagatingForcedReturn()) {
+  // Bail out if we're propagating a forced return from an inlined frame,
+  // even if the realm is no longer a debuggee.
+  if (cx->isPropagatingForcedReturn() && frame.more()) {
     return true;
   }
 
@@ -183,6 +183,36 @@ static bool ShouldBailoutForDebugger(JSContext* cx,
   RematerializedFrame* rematFrame =
       act->lookupRematerializedFrame(frame.frame().fp(), frame.frameNo());
   return rematFrame && rematFrame->isDebuggee();
+}
+
+static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
+                            ResumeFromException* rfe) {
+  bool returnFromThisFrame =
+      cx->isPropagatingForcedReturn() || cx->isClosingGenerator();
+  if (!returnFromThisFrame) {
+    return;
+  }
+
+  JitActivation* act = cx->activation()->asJit();
+  RematerializedFrame* rematFrame =
+      act->getRematerializedFrame(cx, frame.frame(), frame.frameNo());
+  MOZ_ASSERT(!frame.more());
+
+  if (cx->isClosingGenerator()) {
+    HandleClosingGeneratorReturn(cx, rematFrame, /*frameOk=*/true);
+  } else {
+    cx->clearPropagatingForcedReturn();
+  }
+
+  Value& rval = rematFrame->returnValue();
+  MOZ_RELEASE_ASSERT(!rval.isMagic());
+
+  rfe->kind = ExceptionResumeKind::ForcedReturnIon;
+  rfe->framePointer = frame.frame().fp();
+  rfe->exception = rval;
+
+  act->removeIonFrameRecovery(frame.frame().jsFrame());
+  act->removeRematerializedFrame(frame.frame().fp());
 }
 
 static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
@@ -296,14 +326,17 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
         MOZ_CRASH("Unexpected try note");
     }
   }
+
+  OnLeaveIonFrame(cx, frame, rfe);
 }
 
 static void OnLeaveBaselineFrame(JSContext* cx, const JSJitFrameIter& frame,
                                  jsbytecode* pc, ResumeFromException* rfe,
                                  bool frameOk) {
   BaselineFrame* baselineFrame = frame.baselineFrame();
-  if (jit::DebugEpilogue(cx, baselineFrame, pc, frameOk)) {
-    rfe->kind = ExceptionResumeKind::ForcedReturn;
+  bool returnFromThisFrame = jit::DebugEpilogue(cx, baselineFrame, pc, frameOk);
+  if (returnFromThisFrame) {
+    rfe->kind = ExceptionResumeKind::ForcedReturnBaseline;
     rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
     rfe->stackPointer = reinterpret_cast<uint8_t*>(baselineFrame);
   }
@@ -581,8 +614,12 @@ static void* GetLastProfilingFrame(ResumeFromException* rfe) {
     // The following all return into baseline frames.
     case ExceptionResumeKind::Catch:
     case ExceptionResumeKind::Finally:
-    case ExceptionResumeKind::ForcedReturn:
+    case ExceptionResumeKind::ForcedReturnBaseline:
       return rfe->framePointer + BaselineFrame::FramePointerOffset;
+
+    // The frame pointer in Ion points directly to the frame header.
+    case ExceptionResumeKind::ForcedReturnIon:
+      return rfe->framePointer;
 
     // When resuming into a bailed-out ion frame, use the bailout info to
     // find the frame we are resuming into.
@@ -685,7 +722,8 @@ void HandleException(ResumeFromException* rfe) {
       for (;;) {
         HandleExceptionIon(cx, frames, rfe, &hitBailoutException);
 
-        if (rfe->kind == ExceptionResumeKind::Bailout) {
+        if (rfe->kind == ExceptionResumeKind::Bailout ||
+            rfe->kind == ExceptionResumeKind::ForcedReturnIon) {
           if (invalidated) {
             ionScript->decrementInvalidationCount(cx->gcContext());
           }
@@ -723,7 +761,7 @@ void HandleException(ResumeFromException* rfe) {
       HandleExceptionBaseline(cx, frame, prevJitFrame, rfe);
 
       if (rfe->kind != ExceptionResumeKind::EntryFrame &&
-          rfe->kind != ExceptionResumeKind::ForcedReturn) {
+          rfe->kind != ExceptionResumeKind::ForcedReturnBaseline) {
         return;
       }
 
@@ -735,7 +773,7 @@ void HandleException(ResumeFromException* rfe) {
       probes::ExitScript(cx, script, script->function(),
                          /* popProfilerFrame = */ false);
 
-      if (rfe->kind == ExceptionResumeKind::ForcedReturn) {
+      if (rfe->kind == ExceptionResumeKind::ForcedReturnBaseline) {
         return;
       }
     }
