@@ -9,7 +9,7 @@ async def new_tab(bidi_session, current_session):
     current_session.window_handle = context_id
 
     # Retrieve the browsing context info for the new tab
-    contexts = await bidi_session.browsing_context.get_tree(parent=context_id, max_depth=0)
+    contexts = await bidi_session.browsing_context.get_tree(root=context_id, max_depth=0)
     yield contexts[0]
 
     # Restore the focus and current window for the WebDriver session before
