@@ -222,7 +222,8 @@ void SessionStoreChangeListener::FlushSessionStore() {
 
   mSessionStoreChanges.Clear();
 
-  mSessionStoreChild->UpdateSessionStore();
+  mSessionStoreChild->UpdateSessionStore(mCollectSessionHistory);
+  mCollectSessionHistory = false;
 }
 
 /* static */
@@ -260,6 +261,14 @@ void SessionStoreChangeListener::FlushAllSessionStoreData(
 void SessionStoreChangeListener::SetActor(
     SessionStoreChild* aSessionStoreChild) {
   mSessionStoreChild = aSessionStoreChild;
+}
+
+void SessionStoreChangeListener::CollectWireframe() {
+  if (auto* docShell = nsDocShell::Cast(mBrowsingContext->GetDocShell())) {
+    if (docShell->CollectWireframe()) {
+      mCollectSessionHistory = true;
+    }
+  }
 }
 
 void SessionStoreChangeListener::RecordChange(WindowContext* aWindowContext,
