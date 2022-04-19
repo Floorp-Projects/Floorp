@@ -153,20 +153,44 @@ class FrameSizeClass {
 
 struct BaselineBailoutInfo;
 
+enum class ExceptionResumeKind : int32_t {
+  // There is no exception handler in this activation.
+  // Return from the entry frame.
+  EntryFrame,
+
+  // The exception was caught in baseline.
+  // Restore state and jump to the catch block.
+  Catch,
+
+  // A finally block must be executed in baseline.
+  // Stash the exception on the stack and jump to the finally block.
+  Finally,
+
+  // We are forcing an early return with a specific return value.
+  // This is used by the debugger and when closing generators.
+  // Immediately return from the current frame with the given value.
+  ForcedReturn,
+
+  // This frame is currently executing in Ion, but we must bail out
+  // to baseline before handling the exception.
+  // Jump to the bailout tail stub.
+  Bailout,
+
+  // The innermost frame was a wasm frame.
+  // Return to the wasm entry frame.
+  Wasm,
+
+  // The exception was caught by a wasm catch handler.
+  // Restore state and jump to it.
+  WasmCatch
+};
+
 // Data needed to recover from an exception.
 struct ResumeFromException {
-  static const uint32_t RESUME_ENTRY_FRAME = 0;
-  static const uint32_t RESUME_CATCH = 1;
-  static const uint32_t RESUME_FINALLY = 2;
-  static const uint32_t RESUME_FORCED_RETURN = 3;
-  static const uint32_t RESUME_BAILOUT = 4;
-  static const uint32_t RESUME_WASM = 5;
-  static const uint32_t RESUME_WASM_CATCH = 6;
-
   uint8_t* framePointer;
   uint8_t* stackPointer;
   uint8_t* target;
-  uint32_t kind;
+  ExceptionResumeKind kind;
   wasm::Instance* tlsData;
 
   // Value to push when resuming into a |finally| block.

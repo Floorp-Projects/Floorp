@@ -242,7 +242,7 @@ bool jit::ExceptionHandlerBailout(JSContext* cx,
       bailoutInfo->bailoutKind = mozilla::Some(BailoutKind::Finally);
     }
 
-    rfe->kind = ResumeFromException::RESUME_BAILOUT;
+    rfe->kind = ExceptionResumeKind::Bailout;
     rfe->target = cx->runtime()->jitRuntime()->getBailoutTail().value;
     rfe->bailoutInfo = bailoutInfo;
   } else {

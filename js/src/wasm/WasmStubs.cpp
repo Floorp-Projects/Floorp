@@ -2915,10 +2915,9 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
               scratch1);
 
   masm.branch32(Assembler::Equal, scratch1,
-                Imm32(jit::ResumeFromException::RESUME_WASM_CATCH),
-                &resumeCatch);
+                Imm32(jit::ExceptionResumeKind::WasmCatch), &resumeCatch);
   masm.branch32(Assembler::Equal, scratch1,
-                Imm32(jit::ResumeFromException::RESUME_WASM), &leaveWasm);
+                Imm32(jit::ExceptionResumeKind::Wasm), &leaveWasm);
 
   masm.breakpoint();
 
