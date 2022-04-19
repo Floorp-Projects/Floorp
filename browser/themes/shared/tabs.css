@@ -91,9 +91,8 @@
   background-color: transparent;
   border-radius: 0;
   border-width: 0;
-  margin: 0 !important /* override tabbox.css */;
-  padding: 0 !important /* override tabbox.css */;
-  padding-inline: 2px !important;
+  margin: 0;
+  padding: 0 2px;
   -moz-box-align: stretch;
   /* Needed so that overflowing content overflows towards the end rather than
      getting centered. That prevents tab opening animation from looking off at
@@ -543,10 +542,6 @@
 .tab-background {
   border-radius: var(--tab-border-radius);
   margin-block: var(--tab-block-margin);
-}
-
-:root[sizemode=maximized] .tabbrowser-tab {
-  margin-top: 0 !important;
 }
 
 /* Selected tab and tab hover */

@@ -27,19 +27,19 @@ tab {
   color: -moz-DialogText;
 }
 
-.tab-text {
-  margin: 0 !important;
-}
-
-tab[visuallyselected="true"] {
+tab:where([visuallyselected="true"]) {
   margin-top: 0;
   padding: 1px 6px 4px;
 }
 
-tab:-moz-focusring > .tab-middle {
-  outline: var(--default-focusring);
+tab:where(:first-of-type[visuallyselected="true"]) {
+  padding-inline: 5px;
 }
 
-tab:first-of-type[visuallyselected="true"] {
-  padding-inline: 5px;
+.tab-text {
+  margin: 0 !important;
+}
+
+tab:-moz-focusring > .tab-middle {
+  outline: var(--default-focusring);
 }
