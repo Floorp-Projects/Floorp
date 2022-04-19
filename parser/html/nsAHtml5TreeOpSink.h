@@ -19,8 +19,11 @@ class nsAHtml5TreeOpSink {
   /**
    * Flush the operations from the tree operations from the argument
    * queue into this sink unconditionally.
+   *
+   * Returns `true` on success and `false` on OOM.
    */
-  virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) = 0;
+  [[nodiscard]] virtual bool MoveOpsFrom(
+      nsTArray<nsHtml5TreeOperation>& aOpQueue) = 0;
 };
 
 #endif /* nsAHtml5TreeOpSink_h */

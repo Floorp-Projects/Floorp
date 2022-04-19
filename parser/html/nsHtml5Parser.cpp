@@ -332,7 +332,10 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
       }
 
       if (mTreeBuilder->HasScript()) {
-        mTreeBuilder->Flush();                // Move ops to the executor
+        auto r = mTreeBuilder->Flush();  // Move ops to the executor
+        if (r.isErr()) {
+          return executor->MarkAsBroken(r.unwrapErr());
+        }
         rv = executor->FlushDocumentWrite();  // run the ops
         NS_ENSURE_SUCCESS(rv, rv);
         // Flushing tree ops can cause all sorts of things.
@@ -392,7 +395,10 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
     NS_ASSERTION(!stackBuffer.hasMore(),
                  "Buffer wasn't tokenized to completion?");
     // Scripting semantics require a forced tree builder flush here
-    mTreeBuilder->Flush();                // Move ops to the executor
+    auto r = mTreeBuilder->Flush();  // Move ops to the executor
+    if (r.isErr()) {
+      return executor->MarkAsBroken(r.unwrapErr());
+    }
     rv = executor->FlushDocumentWrite();  // run the ops
     NS_ENSURE_SUCCESS(rv, rv);
   } else if (stackBuffer.hasMore()) {
@@ -442,7 +448,10 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
       }
     }
 
-    mDocWriteSpeculativeTreeBuilder->Flush();
+    auto r = mDocWriteSpeculativeTreeBuilder->Flush();
+    if (r.isErr()) {
+      return executor->MarkAsBroken(r.unwrapErr());
+    }
     mDocWriteSpeculativeTreeBuilder->DropHandles();
     executor->FlushSpeculativeLoads();
   }
@@ -548,7 +557,10 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
               mTreeBuilder->StreamEnded();
             }
           }
-          mTreeBuilder->Flush();
+          auto r = mTreeBuilder->Flush();
+          if (r.isErr()) {
+            return mExecutor->MarkAsBroken(r.unwrapErr());
+          }
           mExecutor->FlushDocumentWrite();
           // The below call does memory cleanup, so call it even if the
           // parser has been marked as broken.
@@ -561,14 +573,20 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
         if (GetStreamParser()) {
           if (mReturnToStreamParserPermitted &&
               !mExecutor->IsScriptExecuting()) {
-            mTreeBuilder->Flush();
+            auto r = mTreeBuilder->Flush();
+            if (r.isErr()) {
+              return mExecutor->MarkAsBroken(r.unwrapErr());
+            }
             mReturnToStreamParserPermitted = false;
             GetStreamParser()->ContinueAfterScriptsOrEncodingCommitment(
                 mTokenizer.get(), mTreeBuilder.get(), mLastWasCR);
           }
         } else {
           // Script-created parser
-          mTreeBuilder->Flush();
+          auto r = mTreeBuilder->Flush();
+          if (r.isErr()) {
+            return mExecutor->MarkAsBroken(r.unwrapErr());
+          }
           // No need to flush the executor, because the executor is already
           // in a flush
           NS_ASSERTION(mExecutor->IsInFlushLoop(),
@@ -604,7 +622,10 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
         mRootContextLineNumber = mTokenizer->getLineNumber();
       }
       if (mTreeBuilder->HasScript()) {
-        mTreeBuilder->Flush();
+        auto r = mTreeBuilder->Flush();
+        if (r.isErr()) {
+          return mExecutor->MarkAsBroken(r.unwrapErr());
+        }
         rv = mExecutor->FlushDocumentWrite();
         NS_ENSURE_SUCCESS(rv, rv);
       }
