@@ -477,6 +477,8 @@ struct JSStructuredCloneReader {
   // Any value passed to JS_ReadStructuredClone.
   void* closure;
 
+  friend bool JS_ReadString(JSStructuredCloneReader* r,
+                            JS::MutableHandleString str);
   friend bool JS_ReadTypedArray(JSStructuredCloneReader* r,
                                 MutableHandleValue vp);
 };
@@ -3559,6 +3561,23 @@ JS_PUBLIC_API bool JS_ReadUint32Pair(JSStructuredCloneReader* r, uint32_t* p1,
 JS_PUBLIC_API bool JS_ReadBytes(JSStructuredCloneReader* r, void* p,
                                 size_t len) {
   return r->input().readBytes(p, len);
+}
+
+JS_PUBLIC_API bool JS_ReadString(JSStructuredCloneReader* r,
+                                 MutableHandleString str) {
+  uint32_t tag, data;
+  if (!r->input().readPair(&tag, &data)) {
+    return false;
+  }
+
+  if (tag == SCTAG_STRING) {
+    str.set(r->readString(data));
+    return true;
+  }
+
+  JS_ReportErrorNumberASCII(r->context(), GetErrorMessage, nullptr,
+                            JSMSG_SC_BAD_SERIALIZED_DATA, "expected string");
+  return false;
 }
 
 JS_PUBLIC_API bool JS_ReadDouble(JSStructuredCloneReader* r, double* v) {

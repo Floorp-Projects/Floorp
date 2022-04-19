@@ -729,6 +729,9 @@ JS_PUBLIC_API bool JS_ReadUint32Pair(JSStructuredCloneReader* r, uint32_t* p1,
 JS_PUBLIC_API bool JS_ReadBytes(JSStructuredCloneReader* r, void* p,
                                 size_t len);
 
+JS_PUBLIC_API bool JS_ReadString(JSStructuredCloneReader* r,
+                                 JS::MutableHandleString str);
+
 JS_PUBLIC_API bool JS_ReadDouble(JSStructuredCloneReader* r, double* v);
 
 JS_PUBLIC_API bool JS_ReadTypedArray(JSStructuredCloneReader* r,
