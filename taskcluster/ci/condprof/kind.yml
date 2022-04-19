@@ -5,10 +5,11 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 kind-dependencies:
-    - toolchain
     - build
+    - toolchain
 
 transforms:
+    - gecko_taskgraph.transforms.condprof:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -18,6 +19,8 @@ job-defaults:
     treeherder:
         kind: other
         tier: 2
+    scenarios:
+        - settled
     run:
         using: run-task
         cwd: fetches/condprofile
@@ -40,6 +43,9 @@ jobs:
             job-name: condprof-win64
         dependencies:
             build: build-win64-shippable/opt
+        scenarios:
+            - settled
+            - full
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
@@ -49,10 +55,10 @@ jobs:
         run:
             command: >-
                 python3.exe condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox.exe
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             artifacts:
@@ -70,6 +76,9 @@ jobs:
             job-name: condprof-linux64
         dependencies:
             build: build-linux64-shippable/opt
+        scenarios:
+            - settled
+            - full
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
@@ -80,10 +89,10 @@ jobs:
             command: >-
                 python3.7 virtualenv/virtualenv.py . &&
                 bin/python3.7 condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/firefox/firefox-bin
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             docker-image: {in-tree: condprof}
@@ -113,10 +122,10 @@ jobs:
             command: >-
                 python3 -m venv . &&
                 bin/python3 condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --firefox ${MOZ_FETCHES_DIR}/target.dmg
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             artifacts:
@@ -147,11 +156,11 @@ jobs:
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.geckoview_example
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             artifacts:
@@ -182,11 +191,11 @@ jobs:
                 rm -rf target.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name g5
                 --firefox org.mozilla.fenix
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             artifacts:
@@ -289,11 +298,11 @@ jobs:
                 rm -rf target.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.fenix
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             artifacts:
@@ -324,11 +333,11 @@ jobs:
                 adb install -r $MOZ_FETCHES_DIR/geckoview_example.apk &&
                 python3 virtualenv/virtualenv.py . &&
                 bin/python3 condprof/main.py
-                --force-new
+                ${EXTRA_ARGS}
                 --geckodriver ${MOZ_FETCHES_DIR}/geckodriver
                 --device-name p2_aarch64
                 --firefox org.mozilla.geckoview_example
-                --scenario settled
+                --scenario ${SCENARIO}
                 ../../archive
         worker:
             artifacts:
