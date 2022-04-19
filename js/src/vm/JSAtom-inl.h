@@ -15,6 +15,7 @@
 #include "jsnum.h"
 
 #include "gc/MaybeRooted.h"
+#include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 
@@ -79,19 +80,29 @@ inline bool PrimitiveValueToId(
   MOZ_ASSERT(v.isPrimitive());
 
   if (v.isString()) {
+    JSAtom* atom;
     if (v.toString()->isAtom()) {
-      idp.set(AtomToId(&v.toString()->asAtom()));
-      return true;
+      atom = &v.toString()->asAtom();
+    } else {
+      atom = AtomizeString(cx, v.toString());
+      if (!atom) {
+        if constexpr (!allowGC) {
+          cx->recoverFromOutOfMemory();
+        }
+        return false;
+      }
     }
-  } else {
-    if (ValueToIntId(v, idp.address())) {
-      return true;
-    }
+    idp.set(AtomToId(atom));
+    return true;
+  }
 
-    if (v.isSymbol()) {
-      idp.set(PropertyKey::Symbol(v.toSymbol()));
-      return true;
-    }
+  if (ValueToIntId(v, idp.address())) {
+    return true;
+  }
+
+  if (v.isSymbol()) {
+    idp.set(PropertyKey::Symbol(v.toSymbol()));
+    return true;
   }
 
   JSAtom* atom = ToAtom<allowGC>(cx, v);
