@@ -33,6 +33,7 @@ TaskbarProgress::~TaskbarProgress() {
 NS_IMETHODIMP
 TaskbarProgress::SetProgressState(nsTaskbarProgressState aState,
                                   uint64_t aCurrentValue, uint64_t aMaxValue) {
+#ifdef MOZ_X11
   NS_ENSURE_ARG_RANGE(aState, 0, STATE_PAUSED);
 
   if (aState == STATE_NO_PROGRESS || aState == STATE_INDETERMINATE) {
@@ -71,6 +72,7 @@ TaskbarProgress::SetProgressState(nsTaskbarProgressState aState,
           ("GtkTaskbarProgress::SetProgressState progress: %lu", progress));
 
   mPrimaryWindow->SetProgress(progress);
+#endif
 
   return NS_OK;
 }

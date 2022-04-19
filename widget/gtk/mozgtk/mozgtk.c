@@ -6,8 +6,7 @@
 
 #include "mozilla/Types.h"
 
-#ifdef MOZ_X11
-#  include <X11/Xlib.h>
+#include <X11/Xlib.h>
 // Bug 1271100
 // We need to trick system Cairo into not using the XShm extension due to
 // a race condition in it that results in frequent BadAccess errors. Cairo
@@ -20,4 +19,3 @@
 // ever can remove this workaround for system Cairo, we'll need something
 // to replace it for that purpose.
 MOZ_EXPORT Bool XShmQueryExtension(Display* aDisplay) { return False; }
-#endif

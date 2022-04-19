@@ -20,7 +20,9 @@
 #include "nsHTMLFormatConverter.h"
 #include "HeadlessClipboard.h"
 #include "IMContextWrapper.h"
-#include "nsClipboard.h"
+#ifdef MOZ_X11
+#  include "nsClipboard.h"
+#endif
 #include "TaskbarProgress.h"
 #include "nsFilePicker.h"
 #include "nsSound.h"
@@ -34,6 +36,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+#ifdef MOZ_X11
 NS_IMPL_COMPONENT_FACTORY(nsIClipboard) {
   nsCOMPtr<nsIClipboard> inst;
   if (gfxPlatform::IsHeadless()) {
@@ -48,6 +51,7 @@ NS_IMPL_COMPONENT_FACTORY(nsIClipboard) {
 
   return inst.forget().downcast<nsISupports>();
 }
+#endif
 
 nsresult nsWidgetGtk2ModuleCtor() { return nsAppShellInit(); }
 
