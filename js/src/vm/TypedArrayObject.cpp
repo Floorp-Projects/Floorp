@@ -1729,27 +1729,6 @@ static bool SetTypedArrayFromArrayLike(JSContext* cx,
 
   // Steps 8-9.
   if (srcLength > 0) {
-    // GetLengthProperty in step 16 can lead to the execution of user code
-    // which may detach the buffer. Handle this case here to ensure
-    // SetFromNonTypedArray is never called with a detached buffer. We still
-    // need to execute steps 21.a-b for their possible side-effects.
-    if (target->hasDetachedBuffer()) {
-      // Steps 21.a-b.
-      RootedValue v(cx);
-      if (!GetElement(cx, src, src, 0, &v)) {
-        return false;
-      }
-
-      if (!target->convertForSideEffect(cx, v)) {
-        return false;
-      }
-
-      // Step 21.c.
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_DETACHED);
-      return false;
-    }
-
     switch (target->type()) {
 #define SET_FROM_NON_TYPED_ARRAY(_, T, N)                             \
   case Scalar::N:                                                     \
@@ -1760,15 +1739,6 @@ static bool SetTypedArrayFromArrayLike(JSContext* cx,
 #undef SET_FROM_NON_TYPED_ARRAY
       default:
         MOZ_CRASH("Unsupported TypedArray type");
-    }
-
-    // Step 21.c.
-    // SetFromNonTypedArray doesn't throw when the array buffer gets
-    // detached.
-    if (target->hasDetachedBuffer()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TYPED_ARRAY_DETACHED);
-      return false;
     }
   }
 
