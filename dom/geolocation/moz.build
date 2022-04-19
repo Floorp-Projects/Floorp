@@ -55,3 +55,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
             "/dom/system/linux",
         ]
         DEFINES["MOZ_GPSD"] = True
+    if CONFIG["MOZ_ENABLE_DBUS"]:
+        LOCAL_INCLUDES += ["/dom/system/linux"]
+        CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+        CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
