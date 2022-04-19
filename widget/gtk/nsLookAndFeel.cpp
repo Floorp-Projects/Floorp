@@ -44,9 +44,11 @@
 #include "mozilla/gfx/2D.h"
 
 #include <cairo-gobject.h>
+#include <dlfcn.h>
 #include "WidgetStyleCache.h"
 #include "prenv.h"
 #include "nsCSSColorUtils.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

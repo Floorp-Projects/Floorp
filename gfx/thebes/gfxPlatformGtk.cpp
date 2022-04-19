@@ -41,7 +41,9 @@
 #include "nsMathUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
+#include "prenv.h"
 #include "VsyncSource.h"
+#include "mozilla/WidgetUtilsGtk.h"
 
 #ifdef MOZ_X11
 #  include "mozilla/gfx/XlibDisplay.h"

@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <prenv.h>
 
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
