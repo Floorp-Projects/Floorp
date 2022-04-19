@@ -1,6 +1,2 @@
 vendored:third_party/python/glean_parser
-# Until bug 1724273 lands, testing code that has custom dependencies is not possible. Work around
-# this by addressing the only use case (so far) affected by this: the testing of vendored
-# dependencies.
-packages.txt:python/sites/vendor.txt
 pypi:pytest==7.0.1

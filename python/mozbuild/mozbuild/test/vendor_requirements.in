@@ -1,0 +1,5 @@
+# Until bug 1724273 lands, python-testing code that uses a site is not possible. Work around
+# this by representing the "vendor" site's dependency as a separate "requirements.txt" file,
+# which can be used by python-test's "requirements" feature.
+poetry==1.2.0a2
+poetry-core==1.1.0a6
