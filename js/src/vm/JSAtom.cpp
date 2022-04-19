@@ -1048,6 +1048,13 @@ bool js::PrimitiveValueToIdSlow(
   MOZ_ASSERT(!v.isSymbol());
   MOZ_ASSERT_IF(v.isInt32(), !PropertyKey::fitsInInt(v.toInt32()));
 
+  int32_t i;
+  if (v.isDouble() && mozilla::NumberEqualsInt32(v.toDouble(), &i) &&
+      PropertyKey::fitsInInt(i)) {
+    idp.set(PropertyKey::Int(i));
+    return true;
+  }
+
   JSAtom* atom = ToAtom<allowGC>(cx, v);
   if (!atom) {
     return false;
