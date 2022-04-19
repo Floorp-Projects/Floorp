@@ -108,12 +108,12 @@ const ONBOARDING_MESSAGES = () => [
       infoTitleEnabled: false,
       promoEnabled: true,
       promoType: "FOCUS",
-      promoHeader: "fluent:about-private-browsing-focus-promo-header",
+      promoHeader: "fluent:about-private-browsing-focus-promo-header-c",
       promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
       promoLinkText: "fluent:about-private-browsing-focus-promo-cta",
       promoLinkType: "button",
       promoSectionStyle: "below-search",
-      promoTitle: "fluent:about-private-browsing-focus-promo-text",
+      promoTitle: "fluent:about-private-browsing-focus-promo-text-c",
       promoTitleEnabled: true,
       promoButton: {
         action: {
@@ -218,12 +218,13 @@ const ONBOARDING_MESSAGES = () => [
       infoTitleEnabled: false,
       promoEnabled: true,
       promoType: "FOCUS",
-      promoHeader: "Firefox Klar: Private browsing on-the-go",
+      promoHeader: "fluent:about-private-browsing-focus-promo-header-c",
       promoImageLarge: "chrome://browser/content/assets/focus-promo.png",
       promoLinkText: "Download Firefox Klar",
       promoLinkType: "button",
       promoSectionStyle: "below-search",
-      promoTitle: "fluent:about-private-browsing-focus-promo-text",
+      promoTitle:
+        "Firefox Klar clears your history every time while blocking ads and trackers.",
       promoTitleEnabled: true,
       promoButton: {
         action: {

@@ -58,6 +58,7 @@ add_task(async function test_experiment_messaging_system() {
     content: {
       promoEnabled: true,
       infoEnabled: true,
+      promoHeader: "fluent:about-private-browsing-focus-promo-header-c",
       infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
       infoLinkUrl: "http://foo.example.com/%LOCALE%",
@@ -75,11 +76,17 @@ add_task(async function test_experiment_messaging_system() {
 
   await SpecialPowers.spawn(tab, [LOCALE], async function(locale) {
     const infoBody = content.document.getElementById("info-body");
+    const promoHeader = content.document.getElementById("promo-header");
     const promoLink = content.document.getElementById(
       "private-browsing-vpn-link"
     );
 
     // Check experiment values are rendered
+    is(
+      promoHeader.textContent,
+      "Next-level privacy on mobile",
+      "should render promo header with fluent"
+    );
     is(
       infoBody.textContent,
       "You’re in a Private Window",
