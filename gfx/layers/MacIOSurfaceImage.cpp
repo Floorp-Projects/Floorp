@@ -13,6 +13,7 @@
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Unused.h"
 #include "YCbCrUtils.h"
 
 using namespace mozilla::layers;
@@ -33,16 +34,26 @@ already_AddRefed<SourceSurface> MacIOSurfaceImage::GetAsSourceSurface() {
   return CreateSourceSurfaceFromMacIOSurface(mSurface);
 }
 
+static inline uint16_t safeShift10BitBy6(const uint16_t& a10BitLSB) {
+  // a10BitLSB is a 10-bit value packed into the least significant bits of
+  // a 16 bit value. This function asserts that the 6 MSBs are zero, then
+  // shifts the 10 LSBs by 6 to become the MSBs.
+  MOZ_ASSERT((a10BitLSB & 0b1111'1100'0000'0000) == 0);
+  return a10BitLSB << 6;
+}
+
 bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
                                 const PlanarYCbCrData& aData) {
   MOZ_ASSERT(!mSurface);
 
   if (aData.mYSkip != 0 || aData.mCbSkip != 0 || aData.mCrSkip != 0 ||
       !(aData.mYUVColorSpace == YUVColorSpace::BT601 ||
-        aData.mYUVColorSpace == YUVColorSpace::BT709) ||
+        aData.mYUVColorSpace == YUVColorSpace::BT709 ||
+        aData.mYUVColorSpace == YUVColorSpace::BT2020) ||
       !(aData.mColorRange == ColorRange::FULL ||
         aData.mColorRange == ColorRange::LIMITED) ||
-      aData.mColorDepth != ColorDepth::COLOR_8) {
+      !(aData.mColorDepth == ColorDepth::COLOR_8 ||
+        aData.mColorDepth == ColorDepth::COLOR_10)) {
     return false;
   }
 
@@ -60,8 +71,9 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
 
   auto ySize = aData.YDataSize();
   auto cbcrSize = aData.CbCrDataSize();
-  RefPtr<MacIOSurface> surf = allocator->Allocate(
-      ySize, cbcrSize, aData.mYUVColorSpace, aData.mColorRange);
+  RefPtr<MacIOSurface> surf =
+      allocator->Allocate(ySize, cbcrSize, aData.mYUVColorSpace,
+                          aData.mColorRange, aData.mColorDepth);
 
   surf->Lock(false);
 
@@ -137,6 +149,47 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
         rowCrSrc++;
       }
     }
+  } else if (surf->GetFormat() == SurfaceFormat::P010) {
+    MOZ_ASSERT(ySize.height > 0);
+    auto dst = reinterpret_cast<uint16_t*>(surf->GetBaseAddressOfPlane(0));
+    size_t stride = surf->GetBytesPerRow(0) / 2;
+    for (size_t i = 0; i < (size_t)ySize.height; i++) {
+      auto rowSrc = reinterpret_cast<const uint16_t*>(aData.mYChannel +
+                                                      aData.mYStride * i);
+      auto rowDst = dst + stride * i;
+
+      for (const auto j : IntegerRange(ySize.width)) {
+        Unused << j;
+
+        *rowDst = safeShift10BitBy6(*rowSrc);
+        rowDst++;
+        rowSrc++;
+      }
+    }
+
+    // Copy and interleave the Cb and Cr channels.
+    MOZ_ASSERT(cbcrSize.height > 0);
+    dst = (uint16_t*)surf->GetBaseAddressOfPlane(1);
+    stride = surf->GetBytesPerRow(1) / 2;
+    for (size_t i = 0; i < (size_t)cbcrSize.height; i++) {
+      uint16_t* rowCbSrc =
+          (uint16_t*)(aData.mCbChannel + aData.mCbCrStride * i);
+      uint16_t* rowCrSrc =
+          (uint16_t*)(aData.mCrChannel + aData.mCbCrStride * i);
+      uint16_t* rowDst = dst + stride * i;
+
+      for (const auto j : IntegerRange(cbcrSize.width)) {
+        Unused << j;
+
+        *rowDst = safeShift10BitBy6(*rowCbSrc);
+        rowDst++;
+        rowCbSrc++;
+
+        *rowDst = safeShift10BitBy6(*rowCrSrc);
+        rowDst++;
+        rowCrSrc++;
+      }
+    }
   }
 
   surf->Unlock(false);
@@ -147,7 +200,8 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
 
 already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
     const gfx::IntSize aYSize, const gfx::IntSize& aCbCrSize,
-    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange) {
+    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+    gfx::ColorDepth aColorDepth) {
   nsTArray<CFTypeRefPtr<IOSurfaceRef>> surfaces = std::move(mSurfaces);
   RefPtr<MacIOSurface> result;
   for (auto& surf : surfaces) {
@@ -169,8 +223,8 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
 
   if (!result) {
     if (StaticPrefs::layers_iosurfaceimage_use_nv12_AtStartup()) {
-      result = MacIOSurface::CreateNV12Surface(aYSize, aCbCrSize,
-                                               aYUVColorSpace, aColorRange);
+      result = MacIOSurface::CreateNV12OrP010Surface(
+          aYSize, aCbCrSize, aYUVColorSpace, aColorRange, aColorDepth);
     } else {
       result = MacIOSurface::CreateYUV422Surface(aYSize, aYUVColorSpace,
                                                  aColorRange);
