@@ -70,6 +70,7 @@ import org.mozilla.focus.contextmenu.ContextMenuCandidates
 import org.mozilla.focus.databinding.FragmentBrowserBinding
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
+import org.mozilla.focus.ext.FEATURE_TABS
 import org.mozilla.focus.ext.accessibilityManager
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.disableDynamicBehavior
@@ -750,6 +751,7 @@ class BrowserFragment :
 
         if (requireComponents.experiments.isMultiTabsEnabled) {
             requireComponents.customTabsUseCases.migrate(tab.id)
+            requireComponents.experiments.recordExposureEvent(FEATURE_TABS)
         } else {
             // A Middleware will take care of either opening a new tab for this URL or reusing an
             // already existing tab.

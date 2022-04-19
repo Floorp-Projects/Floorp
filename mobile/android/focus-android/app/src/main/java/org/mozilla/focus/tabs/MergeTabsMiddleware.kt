@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import org.mozilla.focus.ext.FEATURE_TABS
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.isMultiTabsEnabled
 
@@ -33,6 +34,7 @@ class MergeTabsMiddleware(
         if (this.context.components.experiments.isMultiTabsEnabled || action !is TabListAction.AddTabAction) {
             // If the feature flag for tabs is enabled then we can just let the reducer create a
             // new tab.
+            this.context.components.experiments.recordExposureEvent(FEATURE_TABS)
             next(action)
             return
         }

@@ -9,7 +9,7 @@ import mozilla.components.service.nimbus.NimbusApi
 /**
  * Nimbus feature name intended to control the multiple tabs feature in the app.
  */
-private const val FEATURE_TABS = "tabs"
+const val FEATURE_TABS = "tabs"
 
 /**
  * Nimbus variable of [FEATURE_TABS] allowing outside control of whether the multiple tabs feature
@@ -19,7 +19,8 @@ private const val VARIABLE_IS_MULTI_TAB = "is_multi_tab"
 
 /**
  * Whether the multiple tabs feature support is enabled or not.
- * Defaults to `true`. May be overriden by a Nimbus experiment.
+ * Defaults to `true`. May be overridden by a Nimbus experiment.
  */
 val NimbusApi.isMultiTabsEnabled
-    get() = getVariables(FEATURE_TABS).getBool(VARIABLE_IS_MULTI_TAB) ?: true
+    get() = getVariables(featureId = FEATURE_TABS, recordExposureEvent = false)
+        .getBool(VARIABLE_IS_MULTI_TAB) ?: true
