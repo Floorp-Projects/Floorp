@@ -17,10 +17,6 @@ interface nsISessionStoreFunctions : nsISupports {
     in jsval aPermanentKey, in uint32_t aEpoch, in boolean aCollectSHistory,
     in jsval aData);
 
-  void UpdateSessionStoreForWindow(
-    in Element aBrowser, in BrowsingContext aBrowsingContext,
-    in jsval aPermanentKey, in uint32_t aEpoch, in jsval aData);
-
   void UpdateSessionStoreForStorage(
     in Element aBrowser, in BrowsingContext aBrowsingContext,
     in jsval aPermanentKey, in uint32_t aEpoch, in jsval aData);

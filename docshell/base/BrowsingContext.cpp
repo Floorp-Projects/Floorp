@@ -36,11 +36,12 @@
 #include "mozilla/dom/MediaDevices.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/SessionStoreChild.h"
 #include "mozilla/dom/SessionStorageManager.h"
-#include "mozilla/dom/SessionStoreDataCollector.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowProxyHolder.h"
@@ -2277,44 +2278,6 @@ void BrowsingContext::IncrementHistoryEntryCountForBrowsingContext() {
   Unused << SetHistoryEntryCount(GetHistoryEntryCount() + 1);
 }
 
-void BrowsingContext::FlushSessionStore() {
-  nsTArray<RefPtr<BrowserChild>> nestedBrowserChilds;
-
-  PreOrderWalk([&](BrowsingContext* aContext) {
-    BrowserChild* browserChild = BrowserChild::GetFrom(aContext->GetDocShell());
-    if (browserChild && browserChild->GetBrowsingContext() == aContext) {
-      nestedBrowserChilds.AppendElement(browserChild);
-    }
-
-    if (aContext->CreatedDynamically()) {
-      return WalkFlag::Skip;
-    }
-
-    WindowContext* windowContext = aContext->GetCurrentWindowContext();
-    if (!windowContext) {
-      return WalkFlag::Skip;
-    }
-
-    WindowGlobalChild* windowChild = windowContext->GetWindowGlobalChild();
-    if (!windowChild) {
-      return WalkFlag::Next;
-    }
-
-    RefPtr<SessionStoreDataCollector> collector =
-        windowChild->GetSessionStoreDataCollector();
-    if (!collector) {
-      return WalkFlag::Next;
-    }
-
-    collector->Flush();
-    return WalkFlag::Next;
-  });
-
-  for (auto& child : nestedBrowserChilds) {
-    child->UpdateSessionStore();
-  }
-}
-
 std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
@@ -2633,6 +2596,20 @@ nsresult BrowsingContext::ResetGVAutoplayRequestStatus() {
   txn.SetGVAudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
   txn.SetGVInaudibleAutoplayRequestStatus(GVAutoplayRequestStatus::eUNKNOWN);
   return txn.Commit(this);
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_SessionStoreEpoch>,
+                             uint32_t aOldValue) {
+  if (!mCurrentWindowContext) {
+    return;
+  }
+  SessionStoreChild* sessionStoreChild =
+      SessionStoreChild::From(mCurrentWindowContext->GetWindowGlobalChild());
+  if (!sessionStoreChild) {
+    return;
+  }
+
+  sessionStoreChild->SetEpoch(GetSessionStoreEpoch());
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_GVAudibleAutoplayRequestStatus>) {
@@ -3405,6 +3382,17 @@ void BrowsingContext::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
   NS_DispatchToCurrentThreadQueue(
       runner.forget(), StaticPrefs::page_load_deprioritization_period(),
       EventQueuePriority::Idle);
+}
+
+bool BrowsingContext::IsDynamic() const {
+  const BrowsingContext* current = this;
+  do {
+    if (current->CreatedDynamically()) {
+      return true;
+    }
+  } while ((current = current->GetParent()));
+
+  return false;
 }
 
 bool BrowsingContext::GetOffsetPath(nsTArray<uint32_t>& aPath) const {

@@ -78,7 +78,7 @@
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/SessionStoreChangeListener.h"
-#include "mozilla/dom/SessionStoreDataCollector.h"
+#include "mozilla/dom/SessionStoreChild.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -5816,7 +5816,12 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
 
       if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
         if (IsForceReloadType(mLoadType)) {
-          SessionStoreUtils::ResetSessionStore(mBrowsingContext);
+          if (WindowContext* windowContext =
+                  mBrowsingContext->GetCurrentWindowContext()) {
+            SessionStoreChild::From(windowContext->GetWindowGlobalChild())
+                ->SendResetSessionStore(
+                    mBrowsingContext, mBrowsingContext->GetSessionStoreEpoch());
+          }
         }
       }
     }
@@ -6557,13 +6562,13 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     return NS_OK;
   }
   if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
-    if (Document* document = GetDocument()) {
-      if (WindowGlobalChild* windowChild = document->GetWindowGlobalChild()) {
-        RefPtr<SessionStoreDataCollector> collector =
-            SessionStoreDataCollector::CollectSessionStoreData(windowChild);
-        collector->RecordInputChange();
-        collector->RecordScrollChange();
-      }
+    if (WindowContext* windowContext =
+            mBrowsingContext->GetCurrentWindowContext()) {
+      // TODO(farre): File bug: From a user perspective this would probably be
+      // just fine to run off the change listener timer. Turns out that a flush
+      // is needed. Several tests depend on this behaviour. Could potentially be
+      // an optimization for later. See Bug 1756995.
+      SessionStoreChangeListener::FlushAllSessionStoreData(windowContext);
     }
   }
 

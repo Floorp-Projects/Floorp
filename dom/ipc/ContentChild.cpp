@@ -4524,25 +4524,6 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
   }
 }
 
-mozilla::ipc::IPCResult ContentChild::RecvFlushTabState(
-    const MaybeDiscarded<BrowsingContext>& aContext,
-    FlushTabStateResolver&& aResolver) {
-  if (aContext.IsNullOrDiscarded()) {
-    aResolver(false);
-    return IPC_OK();
-  }
-
-  if (auto* docShell = nsDocShell::Cast(aContext->GetDocShell())) {
-    docShell->CollectWireframe();
-  }
-
-  aContext->FlushSessionStore();
-
-  aResolver(true);
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentChild::RecvGoBack(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<int32_t>& aCancelContentJSEpoch, bool aRequireUserInteraction,

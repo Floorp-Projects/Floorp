@@ -52,6 +52,7 @@ struct FormData {
   FormEntry[] id;
   FormEntry[] xpath;
   nsString innerHTML;
+  nsCString uri;
 };
 
 struct DocShellRestoreState {
