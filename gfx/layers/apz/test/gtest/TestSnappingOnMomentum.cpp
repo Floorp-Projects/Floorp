@@ -17,8 +17,8 @@ class APZCSnappingOnMomentumTesterMock : public APZCTreeManagerTester {
 
 TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
   const char* treeShape = "x";
-  nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
+  LayerIntRegion layerVisibleRegion[] = {
+      LayerIntRect(0, 0, 100, 100),
   };
   CreateScrollData(treeShape, layerVisibleRegion);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,

@@ -15,8 +15,8 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
 
   void CreateScrollHandoffLayerTree1() {
     const char* treeShape = "x(x)";
-    nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
-                                        nsIntRegion(IntRect(0, 50, 100, 50))};
+    LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
+                                           LayerIntRect(0, 50, 100, 50)};
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
@@ -33,9 +33,9 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
 
   void CreateScrollHandoffLayerTree2() {
     const char* treeShape = "x(x(x))";
-    nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
-                                        nsIntRegion(IntRect(0, 0, 100, 100)),
-                                        nsIntRegion(IntRect(0, 50, 100, 50))};
+    LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
+                                           LayerIntRect(0, 0, 100, 100),
+                                           LayerIntRect(0, 50, 100, 50)};
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 200));
@@ -56,12 +56,12 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
 
   void CreateScrollHandoffLayerTree3() {
     const char* treeShape = "x(x(x)x(x))";
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),  // root
-        nsIntRegion(IntRect(0, 0, 100, 50)),   // scrolling parent 1
-        nsIntRegion(IntRect(0, 0, 100, 50)),   // scrolling child 1
-        nsIntRegion(IntRect(0, 50, 100, 50)),  // scrolling parent 2
-        nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child 2
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 100, 100),  // root
+        LayerIntRect(0, 0, 100, 50),   // scrolling parent 1
+        LayerIntRect(0, 0, 100, 50),   // scrolling child 1
+        LayerIntRect(0, 50, 100, 50),  // scrolling parent 2
+        LayerIntRect(0, 50, 100, 50)   // scrolling child 2
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
@@ -90,8 +90,8 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
   // horizontally, and a child layer that is only scrollable vertically.
   void CreateScrollHandoffLayerTree4() {
     const char* treeShape = "x(x)";
-    nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
-                                        nsIntRegion(IntRect(0, 0, 100, 100))};
+    LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
+                                           LayerIntRect(0, 0, 100, 100)};
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 200, 100));
@@ -108,9 +108,9 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
   // child layer that is only scrollable vertically.
   void CreateScrollHandoffLayerTree5() {
     const char* treeShape = "x(x)";
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),  // scrolling parent
-        nsIntRegion(IntRect(0, 50, 100, 50))   // scrolling child
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 100, 100),  // scrolling parent
+        LayerIntRect(0, 50, 100, 50)   // scrolling child
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
@@ -126,9 +126,9 @@ class APZScrollHandoffTester : public APZCTreeManagerTester {
 
   void CreateScrollgrabLayerTree(bool makeParentScrollable = true) {
     const char* treeShape = "x(x)";
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),  // scroll-grabbing parent
-        nsIntRegion(IntRect(0, 20, 100, 80))   // child
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 100, 100),  // scroll-grabbing parent
+        LayerIntRect(0, 20, 100, 80)   // child
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     float parentHeight = makeParentScrollable ? 120 : 100;

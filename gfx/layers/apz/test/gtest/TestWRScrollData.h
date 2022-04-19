@@ -41,10 +41,10 @@ class TestWRScrollData : public WebRenderScrollData {
    * for the nodes. If provided, the array should contain one element
    * for each node, in the same order as in |aTreeShape|.
    */
-  static TestWRScrollData Create(const char* aTreeShape,
-                                 const APZUpdater& aUpdater,
-                                 const nsIntRegion* aVisibleRegions = nullptr,
-                                 const gfx::Matrix4x4* aTransforms = nullptr);
+  static TestWRScrollData Create(
+      const char* aTreeShape, const APZUpdater& aUpdater,
+      const LayerIntRegion* aVisibleRegions = nullptr,
+      const gfx::Matrix4x4* aTransforms = nullptr);
 
   // These methods allow accessing and manipulating layers based on an index
   // representing the order in which they appear in |aTreeShape|.
