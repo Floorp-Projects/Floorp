@@ -52,7 +52,6 @@
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/WorkerScope.h"
-#include "mozilla/dom/WebTaskScheduler.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerLoaded,WorkerDestroyed}Runnable
@@ -4592,13 +4591,8 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
 
   // If the worker script never ran, or failed to compile, we don't need to do
   // anything else.
-  WorkerGlobalScope* global = GlobalScope();
-  if (!global) {
+  if (!GlobalScope()) {
     return true;
-  }
-
-  if (WebTaskScheduler* scheduler = global->GetExistingScheduler()) {
-    scheduler->Disconnect();
   }
 
   // Don't abort the script now, but we dispatch a runnable to do it when the
@@ -4735,10 +4729,7 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
   newInfo->mOnChromeWorker = mIsChromeWorker;
   newInfo->mIsInterval = aIsInterval;
   newInfo->mId = timerId;
-  if (newInfo->mReason == Timeout::Reason::eTimeoutOrInterval ||
-      newInfo->mReason == Timeout::Reason::eIdleCallbackTimeout) {
-    newInfo->AccumulateNestingLevel(data->mCurrentTimerNestingLevel);
-  }
+  newInfo->AccumulateNestingLevel(data->mCurrentTimerNestingLevel);
 
   if (MOZ_UNLIKELY(timerId == INT32_MAX)) {
     NS_WARNING("Timeout ids overflowed!");
@@ -4881,25 +4872,14 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
     // break out of the loop.
 
     RefPtr<TimeoutHandler> handler(info->mHandler);
+    if (info->mReason == Timeout::Reason::eTimeoutOrInterval) {
+      const char* reason;
+      if (info->mIsInterval) {
+        reason = "setInterval handler";
+      } else {
+        reason = "setTimeout handler";
+      }
 
-    const char* reason;
-    switch (info->mReason) {
-      case Timeout::Reason::eTimeoutOrInterval:
-        if (info->mIsInterval) {
-          reason = "setInterval handler";
-        } else {
-          reason = "setTimeout handler";
-        }
-        break;
-      case Timeout::Reason::eDelayedWebTaskTimeout:
-        reason = "delayedWebTask handler";
-        break;
-      default:
-        MOZ_ASSERT(info->mReason == Timeout::Reason::eAbortSignalTimeout);
-        reason = "AbortSignal Timeout";
-    }
-    if (info->mReason == Timeout::Reason::eTimeoutOrInterval ||
-        info->mReason == Timeout::Reason::eDelayedWebTaskTimeout) {
       RefPtr<WorkerGlobalScope> scope(this->GlobalScope());
       CallbackDebuggerNotificationGuard guard(
           scope, info->mIsInterval
@@ -4912,7 +4892,7 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
       }
     } else {
       MOZ_ASSERT(info->mReason == Timeout::Reason::eAbortSignalTimeout);
-      MOZ_ALWAYS_TRUE(handler->Call(reason));
+      MOZ_ALWAYS_TRUE(handler->Call("AbortSignal timeout"));
     }
 
     NS_ASSERTION(data->mRunningExpiredTimeouts, "Someone changed this!");
