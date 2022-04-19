@@ -2177,18 +2177,7 @@ public class GeckoSession {
       searchString = bundle.getString("searchString");
       flags = SessionFinder.getFlagsFromBundle(bundle.getBundle("flags"));
       linkUri = bundle.getString("linkURL");
-
-      final GeckoBundle rectBundle = bundle.getBundle("clientRect");
-      if (rectBundle == null) {
-        clientRect = null;
-      } else {
-        clientRect =
-            new RectF(
-                (float) rectBundle.getDouble("left"),
-                (float) rectBundle.getDouble("top"),
-                (float) rectBundle.getDouble("right"),
-                (float) rectBundle.getDouble("bottom"));
-      }
+      clientRect = bundle.getRectF("clientRect");
     }
 
     /** Empty constructor for tests */
@@ -3403,19 +3392,7 @@ public class GeckoSession {
                 | (bundle.getBoolean("editable") ? SelectionActionDelegate.FLAG_IS_EDITABLE : 0)
                 | (bundle.getBoolean("password") ? SelectionActionDelegate.FLAG_IS_PASSWORD : 0);
         text = bundle.getString("selection");
-
-        final GeckoBundle rectBundle = bundle.getBundle("clientRect");
-        if (rectBundle == null) {
-          clientRect = null;
-        } else {
-          clientRect =
-              new RectF(
-                  (float) rectBundle.getDouble("left"),
-                  (float) rectBundle.getDouble("top"),
-                  (float) rectBundle.getDouble("right"),
-                  (float) rectBundle.getDouble("bottom"));
-        }
-
+        clientRect = bundle.getRectF("clientRect");
         availableActions = actions;
         mSeqNo = bundle.getInt("seqNo");
         mEventCallback = callback;
