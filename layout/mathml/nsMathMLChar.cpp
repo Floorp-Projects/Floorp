@@ -1493,12 +1493,14 @@ nsresult nsMathMLChar::StretchInternal(
     AutoTArray<nsCString, 16> mathFallbacks;
     nsAutoCString value;
     gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+    pfl->Lock();
     if (pfl->GetFontPrefs()->LookupName("serif.x-math"_ns, value)) {
       gfxFontUtils::ParseFontList(value, mathFallbacks);
     }
     if (pfl->GetFontPrefs()->LookupNameList("serif.x-math"_ns, value)) {
       gfxFontUtils::ParseFontList(value, mathFallbacks);
     }
+    pfl->Unlock();
     InsertMathFallbacks(font.family.families, mathFallbacks);
 
 #ifdef NOISY_SEARCH
