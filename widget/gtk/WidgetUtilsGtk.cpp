@@ -136,8 +136,6 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
       case PortalKind::Settings:
         autoBehavior = true;
         return StaticPrefs::widget_use_xdg_desktop_portal_settings();
-      case PortalKind::Location:
-        return StaticPrefs::widget_use_xdg_desktop_portal_location();
     }
     return 2;
   }();
