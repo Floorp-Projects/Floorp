@@ -286,21 +286,29 @@ class MetricControllerTest {
     @Test
     fun `WHEN processing a FEATURE_MEDIA NOTIFICATION fact THEN the right metric is recorded`() {
         val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
-        val itemsToEvents = listOf(
-            Action.PLAY to MediaNotification.play,
-            Action.PAUSE to MediaNotification.pause,
-        )
+        // Verify the play action
+        var fact = Fact(Component.FEATURE_MEDIA, Action.PLAY, MediaFacts.Items.NOTIFICATION)
+        assertFalse(MediaNotification.play.testHasValue())
 
-        itemsToEvents.forEach { (action, event) ->
-            val fact = Fact(Component.FEATURE_MEDIA, action, MediaFacts.Items.NOTIFICATION)
-            controller.run {
-                fact.process()
-            }
-
-            assertEquals(true, event.testHasValue())
-            assertEquals(1, event.testGetValue().size)
-            assertEquals(null, event.testGetValue().single().extra)
+        controller.run {
+            fact.process()
         }
+
+        assertTrue(MediaNotification.play.testHasValue())
+        assertEquals(1, MediaNotification.play.testGetValue().size)
+        assertNull(MediaNotification.play.testGetValue().single().extra)
+
+        // Verify the pause action
+        fact = Fact(Component.FEATURE_MEDIA, Action.PAUSE, MediaFacts.Items.NOTIFICATION)
+        assertFalse(MediaNotification.pause.testHasValue())
+
+        controller.run {
+            fact.process()
+        }
+
+        assertTrue(MediaNotification.pause.testHasValue())
+        assertEquals(1, MediaNotification.pause.testGetValue().size)
+        assertNull(MediaNotification.pause.testGetValue().single().extra)
     }
 
     @Test
