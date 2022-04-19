@@ -18,8 +18,8 @@ class APZCSnappingTesterMock : public APZCTreeManagerTester {
 
 TEST_F(APZCSnappingTesterMock, Bug1265510) {
   const char* treeShape = "x(x)";
-  nsIntRegion layerVisibleRegion[] = {nsIntRegion(IntRect(0, 0, 100, 100)),
-                                      nsIntRegion(IntRect(0, 100, 100, 100))};
+  LayerIntRegion layerVisibleRegion[] = {LayerIntRect(0, 0, 100, 100),
+                                         LayerIntRect(0, 100, 100, 100)};
   CreateScrollData(treeShape, layerVisibleRegion);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
@@ -89,8 +89,8 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
 
 TEST_F(APZCSnappingTesterMock, Snap_After_Pinch) {
   const char* treeShape = "x";
-  nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
+  LayerIntRegion layerVisibleRegion[] = {
+      LayerIntRect(0, 0, 100, 100),
   };
   CreateScrollData(treeShape, layerVisibleRegion);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
@@ -141,8 +141,8 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithZeroVelocity) {
   SCOPED_GFX_PREF_INT("apz.velocity_relevance_time_ms", 100);
 
   const char* treeShape = "x";
-  nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
+  LayerIntRegion layerVisibleRegion[] = {
+      LayerIntRect(0, 0, 100, 100),
   };
   CreateScrollData(treeShape, layerVisibleRegion);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
@@ -210,8 +210,8 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithPositiveVelocity) {
   SCOPED_GFX_PREF_INT("apz.velocity_relevance_time_ms", 100);
 
   const char* treeShape = "x";
-  nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
+  LayerIntRegion layerVisibleRegion[] = {
+      LayerIntRect(0, 0, 100, 100),
   };
   CreateScrollData(treeShape, layerVisibleRegion);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,

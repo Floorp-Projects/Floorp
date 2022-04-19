@@ -21,16 +21,30 @@ const TEST_CONFIG = [
       {
         included: { regions: ["us"] },
         webExtension: {
-          locales: ["$USER_LOCALE"],
+          locales: ["baz-$USER_LOCALE"],
         },
         telemetryId: "foo-$USER_LOCALE",
       },
       {
         included: { regions: ["fr"] },
         webExtension: {
-          locales: ["$USER_REGION"],
+          locales: ["region-$USER_REGION"],
         },
         telemetryId: "bar-$USER_REGION",
+      },
+      {
+        included: { regions: ["be"] },
+        webExtension: {
+          locales: ["$USER_LOCALE"],
+        },
+        telemetryId: "$USER_LOCALE",
+      },
+      {
+        included: { regions: ["au"] },
+        webExtension: {
+          locales: ["$USER_REGION"],
+        },
+        telemetryId: "$USER_REGION",
       },
     ],
   },
@@ -101,7 +115,7 @@ add_task(async function test_engine_selector() {
   Assert.deepEqual(names, ["lycos", "altavista", "aol"], "Correct order");
   Assert.equal(
     engines[2].webExtension.locale,
-    "en-US",
+    "baz-en-US",
     "Subsequent matches in applies to can override default"
   );
 
@@ -154,7 +168,7 @@ add_task(async function test_locale_region_replacement() {
   let engine = engines.find(e => e.engineName == "aol");
   Assert.equal(
     engine.webExtension.locale,
-    "en-US",
+    "baz-en-US",
     "The locale is correctly inserted into the locale field"
   );
   Assert.equal(
@@ -171,7 +185,7 @@ add_task(async function test_locale_region_replacement() {
 
   Assert.equal(
     engines.find(e => e.engineName == "aol").webExtension.locale,
-    "it",
+    "baz-it",
     "The locale is correctly inserted into the locale field"
   );
   Assert.equal(
@@ -185,15 +199,45 @@ add_task(async function test_locale_region_replacement() {
     region: "fr",
   }));
   engine = engines.find(e => e.engineName == "aol");
-
   Assert.equal(
-    engines.find(e => e.engineName == "aol").webExtension.locale,
-    "fr",
+    engine.webExtension.locale,
+    "region-fr",
     "The region is correctly inserted into the locale field"
   );
   Assert.equal(
     engine.telemetryId,
     "bar-fr",
+    "The region is correctly inserted into the telemetryId"
+  );
+
+  ({ engines } = await engineSelector.fetchEngineConfiguration({
+    locale: "fy-NL",
+    region: "be",
+  }));
+  engine = engines.find(e => e.engineName == "aol");
+  Assert.equal(
+    engine.webExtension.locale,
+    "fy-NL",
+    "The locale is correctly inserted into the locale field"
+  );
+  Assert.equal(
+    engine.telemetryId,
+    "fy-NL",
+    "The locale is correctly inserted into the telemetryId"
+  );
+  ({ engines } = await engineSelector.fetchEngineConfiguration({
+    locale: "en-US",
+    region: "au",
+  }));
+  engine = engines.find(e => e.engineName == "aol");
+  Assert.equal(
+    engine.webExtension.locale,
+    "au",
+    "The region is correctly inserted into the locale field"
+  );
+  Assert.equal(
+    engine.telemetryId,
+    "au",
     "The region is correctly inserted into the telemetryId"
   );
 });

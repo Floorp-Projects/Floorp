@@ -142,7 +142,7 @@ gfx::SurfaceFormat RenderMacIOSurfaceTextureHost::GetFormat() const {
 }
 
 gfx::ColorDepth RenderMacIOSurfaceTextureHost::GetColorDepth() const {
-  return gfx::ColorDepth::COLOR_8;
+  return mSurface->GetColorDepth();
 }
 
 gfx::YUVRangedColorSpace RenderMacIOSurfaceTextureHost::GetYUVColorSpace()
