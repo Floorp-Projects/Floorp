@@ -467,6 +467,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Flaky. See https://github.com/mozilla-mobile/fenix/issues/23136")
     @Test
     // Verifies changing the default engine from the Search Shortcut menu
     fun selectSearchEnginesShortcutTest() {
