@@ -20,6 +20,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/WidgetUtilsGtk.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
@@ -41,6 +42,10 @@ class nsIPrincipal;
 
 #ifdef MOZ_GPSD
 #  include "GpsdLocationProvider.h"
+#endif
+
+#ifdef MOZ_ENABLE_DBUS
+#  include "PortalLocationProvider.h"
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
@@ -492,6 +497,11 @@ nsresult nsGeolocationService::Init() {
 #  ifdef MOZ_GPSD
   if (Preferences::GetBool("geo.provider.use_gpsd", false)) {
     mProvider = new GpsdLocationProvider();
+  }
+#  endif
+#  ifdef MOZ_ENABLE_DBUS
+  if (!mProvider && widget::ShouldUsePortal(widget::PortalKind::Location)) {
+    mProvider = new PortalLocationProvider();
   }
 #  endif
 #endif
