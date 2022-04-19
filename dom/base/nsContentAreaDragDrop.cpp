@@ -80,7 +80,6 @@ class MOZ_STACK_CLASS DragDataProducer {
                                             nsIContent* inRealTargetNode,
                                             nsIContent** outImageOrLinkNode,
                                             bool* outDragSelectedText);
-  static already_AddRefed<nsIContent> FindParentLinkNode(nsIContent* inNode);
   [[nodiscard]] static nsresult GetAnchorURL(nsIContent* inNode,
                                              nsAString& outURL);
   static void GetNodeString(nsIContent* inNode, nsAString& outNodeString);
@@ -350,12 +349,11 @@ DragDataProducer::DragDataProducer(nsPIDOMWindowOuter* aWindow,
 // it gets up to the root without finding it, we stop looking and
 // return null.
 //
-already_AddRefed<nsIContent> DragDataProducer::FindParentLinkNode(
-    nsIContent* aContent) {
+static nsIContent* FindParentLinkNode(nsIContent* aContent) {
   for (nsIContent* content = aContent; content;
        content = content->GetFlattenedTreeParent()) {
     if (nsContentUtils::IsDraggableLink(content)) {
-      return do_AddRef(content);
+      return content;
     }
   }
   return nullptr;
@@ -593,6 +591,13 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
       }
 
       draggedNode = mTarget;
+      if (auto* el = nsGenericHTMLElement::FromNodeOrNull(draggedNode)) {
+        if (el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                            nsGkAtoms::_false, eIgnoreCase)) {
+          *aCanDrag = false;
+          return NS_OK;
+        }
+      }
     }
 
     nsCOMPtr<nsIImageLoadingContent> image;
