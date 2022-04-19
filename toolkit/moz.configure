@@ -407,7 +407,12 @@ def toolkit_choices(target):
     elif target.os == "Android":
         return ("cairo-android",)
     else:
-        return ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
+        return (
+            "cairo-gtk3",
+            "cairo-gtk3-wayland",
+            "cairo-gtk3-wayland-only",
+            "cairo-gtk3-x11-wayland",
+        )
 
 
 @depends(toolkit_choices)
@@ -1377,7 +1382,9 @@ x11_headers = pkg_check_modules(
     "MOZ_X11",
     x11_libs,
     allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3-wayland"),
-    when=toolkit_gtk,
+    when=depends(full_toolkit)(
+        lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
+    ),
 )
 
 
@@ -1389,7 +1396,9 @@ pkg_check_modules(
     ["ice", "sm"],
     cflags_only=True,
     allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3-wayland"),
-    when=toolkit_gtk,
+    when=depends(full_toolkit)(
+        lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
+    ),
 )
 
 
