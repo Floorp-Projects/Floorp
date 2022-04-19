@@ -1037,8 +1037,30 @@ JSAtom* js::ToAtom(JSContext* cx,
 }
 
 template JSAtom* js::ToAtom<CanGC>(JSContext* cx, HandleValue v);
-
 template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
+
+template <AllowGC allowGC>
+bool js::PrimitiveValueToIdSlow(
+    JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
+    typename MaybeRooted<jsid, allowGC>::MutableHandleType idp) {
+  MOZ_ASSERT(v.isPrimitive());
+  MOZ_ASSERT(!v.isString());
+  MOZ_ASSERT(!v.isSymbol());
+  MOZ_ASSERT_IF(v.isInt32(), !PropertyKey::fitsInInt(v.toInt32()));
+
+  JSAtom* atom = ToAtom<allowGC>(cx, v);
+  if (!atom) {
+    return false;
+  }
+
+  idp.set(AtomToId(atom));
+  return true;
+}
+
+template bool js::PrimitiveValueToIdSlow<CanGC>(JSContext* cx, HandleValue v,
+                                                MutableHandleId idp);
+template bool js::PrimitiveValueToIdSlow<NoGC>(JSContext* cx, const Value& v,
+                                               FakeMutableHandle<jsid> idp);
 
 #ifdef ENABLE_RECORD_TUPLE
 bool js::EnsureAtomized(JSContext* cx, MutableHandleValue v, bool* updated) {
