@@ -214,20 +214,19 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
 
   loadPtr(Address(PseudoStackPointer, offsetof(ResumeFromException, kind)), r0);
   asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_ENTRY_FRAME),
-                    &entryFrame);
+                    Imm32(ExceptionResumeKind::EntryFrame), &entryFrame);
+  asMasm().branch32(Assembler::Equal, r0, Imm32(ExceptionResumeKind::Catch),
+                    &catch_);
+  asMasm().branch32(Assembler::Equal, r0, Imm32(ExceptionResumeKind::Finally),
+                    &finally);
   asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_CATCH), &catch_);
-  asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_FINALLY), &finally);
-  asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
-  asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
-  asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_WASM), &wasm);
-  asMasm().branch32(Assembler::Equal, r0,
-                    Imm32(ResumeFromException::RESUME_WASM_CATCH), &wasmCatch);
+                    Imm32(ExceptionResumeKind::ForcedReturn), &return_);
+  asMasm().branch32(Assembler::Equal, r0, Imm32(ExceptionResumeKind::Bailout),
+                    &bailout);
+  asMasm().branch32(Assembler::Equal, r0, Imm32(ExceptionResumeKind::Wasm),
+                    &wasm);
+  asMasm().branch32(Assembler::Equal, r0, Imm32(ExceptionResumeKind::WasmCatch),
+                    &wasmCatch);
 
   breakpoint();  // Invalid kind.
 
