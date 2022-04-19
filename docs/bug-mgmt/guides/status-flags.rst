@@ -8,7 +8,7 @@ The flag ``status_firefoxNN`` has many values, here’s a cheat sheet.
 == ========== ========== ============ =================
 ?  unaffected            wontfix      verified
 \  affected              fix-optional disabled
-\                        fixed        verified-disabled
+\                        fixed        verified disabled
 == ========== ========== ============ =================
 
 The headers of the table are values of the status flag. Each column are
