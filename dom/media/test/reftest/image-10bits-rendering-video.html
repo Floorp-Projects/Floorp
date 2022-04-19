@@ -10,10 +10,13 @@ function doTest() {
     document.documentElement.removeAttribute('class');
   });
 }
-window.addEventListener("MozReftestInvalidate", doTest);
+//window.addEventListener("MozReftestInvalidate", doTest);
 </script>
 </head>
 <body>
 <video id="v1" style="position:absolute; left:0; top:0"></video>
+<script>
+doTest();
+</script>
 </body>
 </html>
