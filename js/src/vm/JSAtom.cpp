@@ -956,23 +956,9 @@ bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
 }
 
 template <AllowGC allowGC>
-static JSAtom* ToAtomSlow(
-    JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType arg) {
-  MOZ_ASSERT(!arg.isString());
-
-  Value v = arg;
-  if (!v.isPrimitive()) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
-    if (!allowGC) {
-      return nullptr;
-    }
-    RootedValue v2(cx, v);
-    if (!ToPrimitive(cx, JSTYPE_STRING, &v2)) {
-      return nullptr;
-    }
-    v = v2;
-  }
-
+static MOZ_ALWAYS_INLINE JSAtom* PrimitiveToAtom(JSContext* cx,
+                                                 const Value& v) {
+  MOZ_ASSERT(v.isPrimitive());
   if (v.isString()) {
     JSAtom* atom = AtomizeString(cx, v.toString());
     if (!allowGC && !atom) {
@@ -1017,6 +1003,27 @@ static JSAtom* ToAtomSlow(
 }
 
 template <AllowGC allowGC>
+static JSAtom* ToAtomSlow(
+    JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType arg) {
+  MOZ_ASSERT(!arg.isString());
+
+  Value v = arg;
+  if (!v.isPrimitive()) {
+    MOZ_ASSERT(!cx->isHelperThreadContext());
+    if (!allowGC) {
+      return nullptr;
+    }
+    RootedValue v2(cx, v);
+    if (!ToPrimitive(cx, JSTYPE_STRING, &v2)) {
+      return nullptr;
+    }
+    v = v2;
+  }
+
+  return PrimitiveToAtom<allowGC>(cx, v);
+}
+
+template <AllowGC allowGC>
 JSAtom* js::ToAtom(JSContext* cx,
                    typename MaybeRooted<Value, allowGC>::HandleType v) {
   if (!v.isString()) {
@@ -1055,7 +1062,7 @@ bool js::PrimitiveValueToIdSlow(
     return true;
   }
 
-  JSAtom* atom = ToAtom<allowGC>(cx, v);
+  JSAtom* atom = PrimitiveToAtom<allowGC>(cx, v);
   if (!atom) {
     return false;
   }
