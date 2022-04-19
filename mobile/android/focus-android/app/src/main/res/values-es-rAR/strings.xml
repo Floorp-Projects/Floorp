@@ -73,7 +73,7 @@
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">Bloqueo de contenido</string>
     <!-- This is the subtitle content blocking toggle -->
-    <string name="menu_content_blocking_subtitle">Desactive para arreglar algunos sitios</string>
+    <string name="menu_content_blocking_subtitle">Desactivar para corregir algunos sitios</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -275,7 +275,7 @@
 
     <string name="preference_category_privacy">Privacidad</string>
     <string name="preference_privacy_block_ads">Bloquear rastreadores de publicidad</string>
-    <string name="preference_privacy_block_ads_summary">Algunas publicidades rastrean visitas a los sitios aunque no se haga clic en los anuncios</string>
+    <string name="preference_privacy_block_ads_summary">Algunas publicidades rastrean visitas a los sitios aunque no haga clic en los anuncios</string>
     <string name="preference_privacy_block_analytics">Bloquear rastreadores analíticos</string>
     <string name="preference_privacy_block_analytics_summary">Se usan para recolectar, analizar y medir actividades como tocar y desplazar</string>
     <string name="preference_privacy_block_social">Bloquear rastreadores sociales</string>
@@ -525,12 +525,12 @@
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
     <!-- First run tour (Default browser): Text. -->
-    <string name="firstrun_defaultbrowser_text2">Lleve la navegación privada al siguiente nivel. Bloquee publicidades y otro contenido que puede rastrearlo en todos los sitios y lentificar los tiempos de carga de las páginas.</string>
+    <string name="firstrun_defaultbrowser_text2">Lleva la navegación privada al siguiente nivel. Bloquéa publicidades y otro contenido que puede rastrearte en todos los sitios y lentificar los tiempos de carga de las páginas.</string>
 
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Tu búsqueda, a tu manera</string>
     <!-- First run tour (Search): Text -->
-    <string name="firstrun_search_text">¿Busca algo diferente? Elija otro buscador predeterminado en la configuración.</string>
+    <string name="firstrun_search_text">¿Buscás algo diferente? Elegí otro buscador predeterminado en la configuración.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">Agregar accesos directos a la pantalla principal</string>

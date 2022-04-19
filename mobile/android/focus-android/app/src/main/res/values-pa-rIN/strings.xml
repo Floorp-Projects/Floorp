@@ -950,9 +950,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
-    <string name="preferences_theme"></string>
+    <string name="preferences_theme">ਥੀਮ</string>
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme"></string>
+    <string name="preference_light_theme">ਹਲਕਾ</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">ਗੂੜ੍ਹਾ</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->

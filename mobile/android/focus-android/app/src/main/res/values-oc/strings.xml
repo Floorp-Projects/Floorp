@@ -597,6 +597,11 @@
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Cap de drech o licéncia vos es pas cedit sus las marcas depausadas de la Fondacion Mozilla o de tèrces, inclús sul nom e lo lògo de Mozilla, Firefox o de %1$s. Podètz consultar d’informacions complementàrias <a href="%2$s">aquí</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
     <string name="your_rights_content4"><![CDATA[Còdis font complementaris per %1$s son disponibles jos diferentas <a href="%2$s">licéncias</a> liuras e open source.]]></string>
 
