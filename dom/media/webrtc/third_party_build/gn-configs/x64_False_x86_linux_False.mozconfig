@@ -1,6 +1,0 @@
-ac_add_options --target=i686
-ac_add_options --enable-bootstrap
-ac_add_options --enable-default-toolkit=cairo-gtk3-wayland-only
-
-mk_add_options MOZ_OBJDIR=obj-x64_False_x86_linux_False
-

@@ -13,10 +13,10 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
     gl_provider = "EAGL"
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    if CONFIG["MOZ_X11"]:
-        gl_provider = "GLX"
-    else:
+    if CONFIG["MOZ_EGL_XRENDER_COMPOSITE"]:
         gl_provider = "EGL"
+    else:
+        gl_provider = "GLX"
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     gl_provider = "EGL"
 
@@ -117,10 +117,7 @@ elif gl_provider == "GLX":
     EXPORTS += ["GLContextGLX.h", "GLXLibrary.h"]
 
 if CONFIG["MOZ_WAYLAND"]:
-    SOURCES += ["SharedSurfaceDMABUF.cpp"]
-
-if CONFIG["MOZ_WAYLAND"] and CONFIG["MOZ_X11"]:
-    SOURCES += ["GLContextProviderWayland.cpp"]
+    SOURCES += ["GLContextProviderWayland.cpp", "SharedSurfaceDMABUF.cpp"]
 
 UNIFIED_SOURCES += [
     "AndroidSurfaceTexture.cpp",

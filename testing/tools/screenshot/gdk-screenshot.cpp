@@ -35,9 +35,7 @@
  *  be written to stdout.
  */
 #include <gdk/gdk.h>
-#ifdef MOZ_WAYLAND
-#  include <gdk/gdkwayland.h>
-#endif
+#include <gdk/gdkx.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -112,9 +110,9 @@ int main(int argc, char** argv) {
 
   GdkPixbuf* screenshot = nullptr;
 
-#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
+#if defined(MOZ_ENABLE_DBUS)
   GdkDisplay* display = gdk_display_get_default();
-  if (display && GDK_IS_WAYLAND_DISPLAY(display)) {
+  if (display && !GDK_IS_X11_DISPLAY(display)) {
     screenshot = get_screenshot_dbus();
   }
 #endif
