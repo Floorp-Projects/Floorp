@@ -2,13 +2,13 @@
 <head>
   <title>Tests for the dragstart event</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
 
 <!--
  This test checks the dragstart event and the DataTransfer object
   -->
- 
+
 <script>
 
 SimpleTest.waitForExplicitFinish();
@@ -77,18 +77,26 @@ function afterDragTests()
   sendMouseEventsForDrag("dragtrue");
   gDragInfo = { target: $("dragtrue"), testid: "draggable true child" };
   sendMouseEventsForDrag("spantrue");
+
   gDragInfo = { target: $("dragfalse").firstChild, testid: "draggable false node" };
   sendMouseEventsForDrag("dragfalse");
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
   gDragInfo = { target: $("spanfalse").firstChild, testid: "draggable false child" };
   sendMouseEventsForDrag("spanfalse");
-
   synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+  gDragInfo = { target: $("userselectnone").firstChild, testid: "user select none inside draggable false node" };
+  sendMouseEventsForDrag("userselectnone");
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
   if (gExtraDragTests == 6)
     SimpleTest.finish();
 }
 
 function sendMouseEventsForDrag(nodeid)
 {
+  info("Sending events for " + nodeid);
   var draggable = $(nodeid);
   synthesizeMouse(draggable, 3, 3, { type: "mousedown" });
   synthesizeMouse(draggable, 10, 10, { type: "mousemove" });
@@ -592,6 +600,10 @@ function checkURL(dt, url, fullurllist, index, testid)
   is(dt.mozGetDataAt("URL", 0), fullurllist, testid + " URL");
 }
 
+function onDragOverDraggableFalse(event) {
+  ok(false, "Triggered dragstart on draggable=false node " + event.target.id);
+}
+
 function expectError(fn, eid, testid)
 {
   var error = "";
@@ -639,7 +651,7 @@ function expectError(fn, eid, testid)
 <div draggable="true" id="shadow_host_containing_draggable"></div>
 
 <script>
-shadow_host_containing_draggable.attachShadow({ mode: 'open' }).innerHTML = 
+shadow_host_containing_draggable.attachShadow({ mode: 'open' }).innerHTML =
 `<span>Inside shadow root</span>`;
 shadow_host_containing_draggable.addEventListener("dragstart", doDragStartInShadowRoot);
 </script>
@@ -649,8 +661,14 @@ shadow_host_containing_draggable.addEventListener("dragstart", doDragStartInShad
 </a>
 
 <script>
-shadow_host_containing_image.attachShadow({ mode: 'open' }).innerHTML = 
+shadow_host_containing_image.attachShadow({ mode: 'open' }).innerHTML =
 `<img src="${$("image").src}" alt="Alt Text"></img>`;
 </script>
+
+<a href="http://example.org" id="link_user_select_none_child" draggable="false" ondragstart="onDragOverDraggableFalse(event)">
+  <span id="userselectnone" style="user-select: none">
+    This is an unselectable, undraggable area.
+  </span>
+</a>
 </body>
 </html>

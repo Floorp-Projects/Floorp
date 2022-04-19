@@ -15,24 +15,28 @@
 <span id="elem3" draggable="">Three</span>
 <span id="elem4" draggable="false">Four</span>
 <span id="elem5" draggable="other">Five</span>
+<span id="elem6" draggable="false"><span style="user-select: none">Six</span></span>
 
 <img id="img1" src="../happy.png">
 <img id="img2" src="../happy.png" draggable="true">
 <img id="img3" src="../happy.png" draggable="">
 <img id="img4" src="../happy.png" draggable="false">
 <img id="img5" src="../happy.png" draggable="other">
+<img id="img6" src="../happy.png" draggable="false">
 
 <a id="a1">One</a>
 <a id="a2" draggable="true">Two</a>
 <a id="a3" draggable="">Three</a>
 <a id="a4" draggable="false">Four</a>
 <a id="a5" draggable="other">Five</a>
+<a id="a6" draggable="false"><span style="user-select: none">Six</span></a>
 
 <a id="ahref1" href="http://www.mozilla.org">One</a>
 <a id="ahref2" href="http://www.mozilla.org" draggable="true">Two</a>
 <a id="ahref3" href="http://www.mozilla.org" draggable="">Three</a>
 <a id="ahref4" href="http://www.mozilla.org" draggable="false">Four</a>
 <a id="ahref5" href="http://www.mozilla.org" draggable="other">Five</a>
+<a id="ahref6" href="http://www.mozilla.org" draggable="false"><span style="user-select: none">Six</span></a>
 
 <script>
 function check()
@@ -43,8 +47,8 @@ function check()
     checkElements(3, false, true, false, true);
     checkElements(4, false, false, false, false);
     checkElements(5, false, true, false, true);
-  }
-  catch (ex) {
+    checkElements(6, false, false, false, false);
+  } catch (ex) {
     is("script error", ex, "fail");
   }
 }
