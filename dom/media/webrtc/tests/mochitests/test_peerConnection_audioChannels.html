@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+
+createHTML({
+  bug: "1765005",
+  title: "Verify audio channel limits for each negotiated audio codec",
+});
+
+const matchesChannels = (sdp, codec, channels) =>
+  !!sdp.match(new RegExp(`a=rtpmap:\\d* ${codec}\/\\d*\/${channels}\r\n`, "g")) ||
+  (channels <= 1 &&
+   !!sdp.match(new RegExp(`a=rtpmap:\\d* ${codec}\/\\d*\r\n`, "g")));
+
+async function testAudioChannels(track, codec, channels, accepted, expectedChannels) {
+  const pc1 = new RTCPeerConnection();
+  const pc2 = new RTCPeerConnection();
+  try {
+    pc1.addTrack(track);
+    pc1.onicecandidate = e => pc2.addIceCandidate(e.candidate);
+    pc2.onicecandidate = e => pc1.addIceCandidate(e.candidate);
+    await pc1.setLocalDescription();
+    await pc2.setRemoteDescription(pc1.localDescription);
+    let {type, sdp} = await pc2.createAnswer();
+    sdp = sdp.replace(new RegExp(`a=rtpmap:(\\d*) ${codec}\/(\\d*)\/?\\d*\r\n`, "g"),
+                                 `a=rtpmap:$1 ${codec}/$2/${channels}\r\n`);
+    const payloadType = Number(sdputils.findCodecId(sdp, codec));
+    sdp = sdputils.removeAllButPayloadType(sdp, payloadType);
+    ok(matchesChannels(sdp, codec, channels), "control");
+    await pc2.setLocalDescription({type, sdp});
+    is(matchesChannels(pc2.localDescription.sdp, codec, channels),
+       accepted,
+       `test pc2.localDescription`);
+    await pc1.setRemoteDescription(pc2.localDescription);
+
+    const [receiver] = pc2.getReceivers();
+    if (!expectedChannels) {
+      let unmuted = false;
+      receiver.track.onunmute = () => unmuted = true;
+      await new Promise(r => setTimeout(r, 200));
+      ok(!unmuted, "track should never unmute");
+      return;
+    }
+    await new Promise(r => receiver.track.onunmute = r);
+    let stats = await receiver.getStats();
+    let inboundStat = [...stats.values()].find(({type}) => type == "inbound-rtp");
+    if (!inboundStat) {
+      info("work around bug 1765215"); // TODO bug 1765215
+      await new Promise(r => setTimeout(r, 200));
+      stats = await receiver.getStats();
+      inboundStat = [...stats.values()].find(({type}) => type == "inbound-rtp");
+    }
+    ok(inboundStat, "has inbound-rtp stats after track unmute (w/workaround)");
+    const codecStat = stats.get(inboundStat.codecId);
+    ok(codecStat.mimeType.includes(codec), "correct codec");
+    is(codecStat.payloadType, payloadType, "correct payloadType");
+    is(codecStat.channels, expectedChannels, "expected channels");
+  } finally {
+    pc1.close();
+    pc2.close();
+  }
+}
+
+runNetworkTest(async () => {
+  const [track] = (await navigator.mediaDevices.getUserMedia({audio: true}))
+      .getAudioTracks();
+  try {
+    for (let [codec, channels, accepted, expectedChannels] of [
+      ["opus", 2, true, 2],
+      ["opus", 1, true, 0],
+      ["opus", 1000, true, 0],
+      ["G722", 1, true, 1],
+      ["G722", 2, true, 0],
+      ["G722", 1000, true, 0],
+      ["PCMU", 1, true, 1],
+      ["PCMU", 2, false, 1],
+      ["PCMU", 1000, false, 1],
+      ["PCMA", 1, true, 1],
+      ["PCMA", 2, false, 1],
+      ["PCMA", 1000, false, 1]
+    ]) {
+      const testName = `${codec} with ${channels} channel(s) is ` +
+          `${accepted? "accepted" : "ignored"} and produces ` +
+          `${expectedChannels || "no"} channels`;
+      try {
+        info(`Testing that ${testName}`);
+        await testAudioChannels(track, codec, channels, accepted, expectedChannels);
+      } catch (e) {
+        ok(false, `Error testing that ${testName}: ${e}\n${e.stack}`);
+      }
+    }
+  } finally {
+    track.stop();
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>
