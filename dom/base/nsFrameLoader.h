@@ -63,7 +63,6 @@ class ChromeMessageSender;
 class ContentParent;
 class Document;
 class Element;
-class TabListener;
 class InProcessBrowserChildMessageManager;
 class MessageSender;
 class ProcessMessageManager;
@@ -73,7 +72,8 @@ class BrowserBridgeChild;
 class RemoteBrowser;
 struct RemotenessOptions;
 struct NavigationIsolationOptions;
-class SessionStoreChangeListener;
+class SessionStoreChild;
+class SessionStoreParent;
 
 namespace ipc {
 class StructuredCloneData;
@@ -411,6 +411,12 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void FireErrorEvent();
 
+  mozilla::dom::SessionStoreChild* GetSessionStoreChild() {
+    return mSessionStoreChild;
+  }
+
+  mozilla::dom::SessionStoreParent* GetSessionStoreParent();
+
  private:
   nsFrameLoader(mozilla::dom::Element* aOwner,
                 mozilla::dom::BrowsingContext* aBrowsingContext, bool aIsRemote,
@@ -520,9 +526,10 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
 
-  RefPtr<mozilla::dom::TabListener> mSessionStoreListener;
-
-  RefPtr<mozilla::dom::SessionStoreChangeListener> mSessionStoreChangeListener;
+  // Actor for collecting session store data from content children. This will be
+  // cleared and set to null eagerly when taking down the frameloader to break
+  // refcounted cycles early.
+  RefPtr<mozilla::dom::SessionStoreChild> mSessionStoreChild;
 
   nsCString mRemoteType;
 

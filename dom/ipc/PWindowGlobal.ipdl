@@ -180,11 +180,6 @@ parent:
 
   async RequestRestoreTabContent();
 
-  async UpdateSessionStore(FormData? aFormData, nsPoint? aScrollPosition,
-                           uint32_t aEpoch);
-
-  async ResetSessionStore(uint32_t aEpoch);
-
   // Add the flags in aOnFlags to the current BFCache status and remove the
   // flags in aOffFlags from the current BFCache status. See the BFCacheStatus
   // enum for the valid flags.

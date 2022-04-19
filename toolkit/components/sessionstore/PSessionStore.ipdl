@@ -1,0 +1,60 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+include protocol PInProcess;
+include SessionStoreTypes;
+
+using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * The PSessionStore actor handles collection of session store data from content
+ * type documents. It can be used both in a content process and in the parent
+ * process. In particular it solves the problem of handling incremental updates
+ * to the session store, since we're collecting from potentially several content
+ * processes.
+ */
+async protocol PSessionStore
+{
+  manager PBrowser or PInProcess;
+
+parent:
+  /**
+   * Sends data to be stored and instructions to the session store to
+   * potentially collect data in the parent. This is data that is not
+   * collected incrementally.
+   */
+  async SessionStoreUpdate(
+    nsCString? aDocShellCaps, bool? aPrivateMode, bool aNeedCollectSHistory,
+    uint32_t aEpoch);
+
+  /**
+   * Sends data to be stored to the session store. The collected data
+   * is all the collected changed data from all the in-process documents
+   * in the process in which the SessionStoreChild actor lives.
+   */
+  async IncrementalSessionStoreUpdate(
+    MaybeDiscardedBrowsingContext aBrowsingContext, FormData? aFormData,
+    nsPoint? aScrollPosition, uint32_t aEpoch);
+
+  /**
+   * Drop all the collected data associated with the provided browsing
+   * context.
+   */
+  async ResetSessionStore(
+    MaybeDiscardedBrowsingContext aBrowsingContext, uint32_t aEpoch);
+
+child:
+  async FlushTabState() returns(bool aHadContext);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

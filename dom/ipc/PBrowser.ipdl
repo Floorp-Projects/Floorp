@@ -17,6 +17,7 @@ include protocol PParentToChildStream;
 include protocol PFileDescriptorSet;
 include protocol PRemoteLazyInputStream;
 include protocol PPaymentRequest;
+include protocol PSessionStore;
 include protocol PWindowGlobal;
 include protocol PBrowserBridge;
 include protocol PVsync;
@@ -190,6 +191,7 @@ struct PrintPreviewResultInfo
 
     manages PFilePicker;
     manages PPaymentRequest;
+    manages PSessionStore;
     manages PWindowGlobal;
     manages PBrowserBridge;
     manages PVsync;
@@ -575,9 +577,6 @@ parent:
 
     async NavigationFinished();
 
-    async SessionStoreUpdate(nsCString? aDocShellCaps, bool? aPrivatedMode,
-                             bool aNeedCollectSHistory, uint32_t aEpoch);
-
     async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
                                       AspectRatio? aIntrinsicRatio);
 
@@ -595,7 +594,6 @@ parent:
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
-    async UpdateEpoch(uint32_t aEpoch);
     async UpdateSHistory();
     async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc, PrintData aPrintData) returns(bool aSuccess);
     async UpdateRemotePrintSettings(PrintData aPrintData);
@@ -1015,6 +1013,9 @@ parent:
 
     /** Fetches the visited status for an array of URIs (Android-only). */
     async QueryVisitedState(nsIURI[] aURIs);
+
+    /** Create a session store for a browser child. */
+    async PSessionStore();
 
     /**
      * Construct a new WindowGlobal for an existing global in the content process

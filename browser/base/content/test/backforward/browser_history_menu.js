@@ -150,6 +150,11 @@ add_task(async function test_preferences_page() {
   openPreferences("search");
   let popupEvent = await openHistoryMenu(true);
 
+  // Wait for the session data to be flushed before continuing the test
+  await new Promise(resolve =>
+    SessionStore.getSessionHistory(gBrowser.selectedTab, resolve)
+  );
+
   is(popupEvent.target.children.length, 2, "Correct number of history items");
 
   let popupHiddenPromise = BrowserTestUtils.waitForEvent(
