@@ -209,11 +209,6 @@ def set_worker_type(config, tasks):
                 task["worker-type"] = "t-bitbar-gw-unit-p2"
             else:
                 task["worker-type"] = "t-bitbar-gw-perf-p2"
-        elif test_platform.startswith("android-hw-s7"):
-            if task["suite"] != "raptor":
-                task["worker-type"] = "t-bitbar-gw-unit-s7"
-            else:
-                task["worker-type"] = "t-bitbar-gw-perf-s7"
         elif test_platform.startswith("android-hw-a51"):
             if task["suite"] != "raptor":
                 task["worker-type"] = "t-bitbar-gw-unit-a51"
