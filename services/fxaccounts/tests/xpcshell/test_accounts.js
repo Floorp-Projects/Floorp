@@ -211,6 +211,7 @@ function MockFxAccounts(credentials = null) {
     observerPreloads: [],
     device: {
       _registerOrUpdateDevice() {},
+      _checkRemoteCommandsUpdateNeeded: async () => false,
     },
     profile: {
       getProfile() {
@@ -245,10 +246,12 @@ async function MakeFxAccounts({ internal = {}, credentials } = {}) {
   if (internal.device) {
     if (!internal.device._registerOrUpdateDevice) {
       internal.device._registerOrUpdateDevice = () => Promise.resolve();
+      internal.device._checkRemoteCommandsUpdateNeeded = async () => false;
     }
   } else {
     internal.device = {
       _registerOrUpdateDevice() {},
+      _checkRemoteCommandsUpdateNeeded: async () => false,
     };
   }
   if (!internal.observerPreloads) {

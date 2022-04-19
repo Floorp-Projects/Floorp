@@ -13,6 +13,8 @@ const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
 
 _("Misc tests for FxAccounts.device");
 
+fxAccounts.device._checkRemoteCommandsUpdateNeeded = async () => false;
+
 add_test(function test_default_device_name() {
   // Note that head_helpers overrides getDefaultLocalName - this test is
   // really just to ensure the actual implementation is sane - we can't
