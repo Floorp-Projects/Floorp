@@ -292,7 +292,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     } // Send telemetry before waiting on actions
 
 
-    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, event.currentTarget.value);
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, event.currentTarget.value, event.name);
     let {
       action
     } = targetContent;
@@ -460,9 +460,9 @@ const AboutWelcomeUtils = {
     });
   },
 
-  sendActionTelemetry(messageId, elementId) {
+  sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
     const ping = {
-      event: "CLICK_BUTTON",
+      event: eventName,
       event_context: {
         source: elementId,
         page: "about:welcome"
@@ -606,7 +606,8 @@ const MultiStageProtonScreen = props => {
         handleAction({
           currentTarget: {
             value: autoAdvance
-          }
+          },
+          name: "AUTO_ADVANCE"
         });
       }, 20000);
       return () => clearTimeout(timer);

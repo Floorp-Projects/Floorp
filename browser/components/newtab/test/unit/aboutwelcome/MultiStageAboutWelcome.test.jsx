@@ -108,9 +108,10 @@ describe("MultiStageAboutWelcome module", () => {
         welcomeScreenWrapper.props().messageId
       );
       assert.equal(stub.firstCall.args[1], "primary_button");
+      stub.restore();
     });
 
-    it("should autoAdvance on last screen", () => {
+    it("should autoAdvance on last screen and send appropriate telemetry", () => {
       let clock = sinon.useFakeTimers();
       const screens = [
         {
@@ -136,11 +137,20 @@ describe("MultiStageAboutWelcome module", () => {
       };
       const wrapper = mount(<MultiStageAboutWelcome {...AUTO_ADVANCE_PROPS} />);
       wrapper.update();
-      const stub = sandbox.stub(global, "AWFinish");
-      assert.notCalled(stub);
+      const finishStub = sandbox.stub(global, "AWFinish");
+      const telemetryStub = sinon.stub(
+        AboutWelcomeUtils,
+        "sendActionTelemetry"
+      );
+
+      assert.notCalled(finishStub);
       clock.tick(20001);
-      assert.calledOnce(stub);
+      assert.calledOnce(finishStub);
+      assert.calledOnce(telemetryStub);
+      assert.equal(telemetryStub.lastCall.args[2], "AUTO_ADVANCE");
       clock.restore();
+      finishStub.restore();
+      telemetryStub.restore();
     });
   });
 
