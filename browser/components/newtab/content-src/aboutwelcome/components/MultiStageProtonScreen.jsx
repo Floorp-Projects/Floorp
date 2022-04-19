@@ -19,6 +19,7 @@ export const MultiStageProtonScreen = props => {
           currentTarget: {
             value: autoAdvance,
           },
+          name: "AUTO_ADVANCE",
         });
       }, 20000);
       return () => clearTimeout(timer);
