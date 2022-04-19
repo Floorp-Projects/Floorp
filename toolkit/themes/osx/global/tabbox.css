@@ -39,11 +39,11 @@ tab:-moz-focusring {
   position: relative;
 }
 
-tab:first-of-type {
+tab:where(:first-of-type) {
   padding-inline-start: 2px;
 }
 
-tab:last-of-type {
+tab:where(:last-of-type) {
   padding-inline-end: 2px;
 }
 
