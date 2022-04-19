@@ -2210,6 +2210,11 @@ pref("extensions.blocklist.addonItemURL", "https://addons.mozilla.org/%LOCALE%/%
 // Controls what level the blocklist switches from warning about items to forcibly
 // blocking them.
 pref("extensions.blocklist.level", 2);
+// Whether event pages should be enabled for "manifest_version: 2" extensions.
+pref("extensions.eventPages.enabled", false);
+// Whether "manifest_version: 3" extensions should be allowed to install successfully.
+pref("extensions.manifestV3.enabled", false);
+
 // Blocklist via settings server (Kinto)
 pref("services.blocklist.bucket", "blocklists");
 pref("services.blocklist.addons.collection", "addons");
