@@ -608,21 +608,6 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
-  {
-    id: "bug1761930",
-    platform: "all",
-    domain: "instagram.com",
-    bug: "1761930",
-    contentScripts: {
-      matches: ["*://www.instagram.com/*"],
-      js: [
-        {
-          file:
-            "injections/js/bug1761930-instagram.com-readablestream-pipeto.js",
-        },
-      ],
-    },
-  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
