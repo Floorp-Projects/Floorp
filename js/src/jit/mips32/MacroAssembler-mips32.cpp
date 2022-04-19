@@ -1778,7 +1778,7 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   Label wasmCatch;
 
   // Already clobbered a0, so use it...
-  load32(Address(StackPointer, offsetof(ResumeFromException, kind)), a0);
+  load32(Address(StackPointer, ResumeFromException::offsetOfKind()), a0);
   asMasm().branch32(Assembler::Equal, a0,
                     Imm32(ExceptionResumeKind::EntryFrame), &entryFrame);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Catch),
@@ -1800,7 +1800,7 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   // and return from the entry frame.
   bind(&entryFrame);
   asMasm().moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, stackPointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
           StackPointer);
 
   // We're going to be returning by the ion calling convention
@@ -1811,10 +1811,10 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   // If we found a catch handler, this must be a baseline frame. Restore
   // state and jump to the catch block.
   bind(&catch_);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, target)), a0);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, framePointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfTarget()), a0);
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfFramePointer()),
           BaselineFrameReg);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, stackPointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
           StackPointer);
   jump(a0);
 
@@ -1822,12 +1822,12 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   // values expected by JSOp::Retsub: the exception and BooleanValue(true).
   bind(&finally);
   ValueOperand exception = ValueOperand(a1, a2);
-  loadValue(Address(sp, offsetof(ResumeFromException, exception)), exception);
+  loadValue(Address(sp, ResumeFromException::offsetOfException()), exception);
 
-  loadPtr(Address(sp, offsetof(ResumeFromException, target)), a0);
-  loadPtr(Address(sp, offsetof(ResumeFromException, framePointer)),
+  loadPtr(Address(sp, ResumeFromException::offsetOfTarget()), a0);
+  loadPtr(Address(sp, ResumeFromException::offsetOfFramePointer()),
           BaselineFrameReg);
-  loadPtr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp);
+  loadPtr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp);
 
   pushValue(exception);
   pushValue(BooleanValue(true));
@@ -1836,9 +1836,9 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   // Only used in debug mode. Return BaselineFrame->returnValue() to the
   // caller.
   bind(&return_);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, framePointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfFramePointer()),
           BaselineFrameReg);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, stackPointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
           StackPointer);
   loadValue(
       Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfReturnValue()),
@@ -1864,27 +1864,27 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   // If we are bailing out to baseline to handle an exception, jump to
   // the bailout tail stub. Load 1 (true) in ReturnReg to indicate success.
   bind(&bailout);
-  loadPtr(Address(sp, offsetof(ResumeFromException, bailoutInfo)), a2);
+  loadPtr(Address(sp, ResumeFromException::offsetOfBailoutInfo()), a2);
   ma_li(ReturnReg, Imm32(1));
-  loadPtr(Address(sp, offsetof(ResumeFromException, target)), a1);
+  loadPtr(Address(sp, ResumeFromException::offsetOfTarget()), a1);
   jump(a1);
 
   // If we are throwing and the innermost frame was a wasm frame, reset SP and
   // FP; SP is pointing to the unwound return address to the wasm entry, so
   // we can just ret().
   bind(&wasm);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, framePointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfFramePointer()),
           FramePointer);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, stackPointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
           StackPointer);
   ret();
 
   // Found a wasm catch handler, restore state and jump to it.
   bind(&wasmCatch);
-  loadPtr(Address(sp, offsetof(ResumeFromException, target)), a1);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, framePointer)),
+  loadPtr(Address(sp, ResumeFromException::offsetOfTarget()), a1);
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfFramePointer()),
           FramePointer);
-  loadPtr(Address(StackPointer, offsetof(ResumeFromException, stackPointer)),
+  loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
           StackPointer);
   jump(a1);
 }

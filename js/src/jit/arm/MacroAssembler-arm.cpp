@@ -3341,7 +3341,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
 
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, kind)), r0, scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfKind()), r0, scratch);
   }
 
   asMasm().branch32(Assembler::Equal, r0,
@@ -3367,7 +3367,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   asMasm().moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
 
@@ -3380,10 +3380,10 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   bind(&catch_);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r0, scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfTarget()), r0, scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), r11,
            scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
   jump(r0);
@@ -3392,13 +3392,13 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   // values expected by JSOp::Retsub: the exception and BooleanValue(true).
   bind(&finally);
   ValueOperand exception = ValueOperand(r1, r2);
-  loadValue(Operand(sp, offsetof(ResumeFromException, exception)), exception);
+  loadValue(Operand(sp, ResumeFromException::offsetOfException()), exception);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r0, scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfTarget()), r0, scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), r11,
            scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
 
@@ -3411,9 +3411,9 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   bind(&return_);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), r11,
            scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
   loadValue(Address(r11, BaselineFrame::reverseOffsetOfReturnValue()),
@@ -3441,10 +3441,10 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   bind(&bailout);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, bailoutInfo)), r2,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfBailoutInfo()), r2,
            scratch);
     ma_mov(Imm32(1), ReturnReg);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r1, scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfTarget()), r1, scratch);
   }
   jump(r1);
 
@@ -3454,9 +3454,9 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   bind(&wasm);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), r11,
            scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
   as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
@@ -3465,10 +3465,10 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   bind(&wasmCatch);
   {
     ScratchRegisterScope scratch(asMasm());
-    ma_ldr(Address(sp, offsetof(ResumeFromException, target)), r1, scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, framePointer)), r11,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfTarget()), r1, scratch);
+    ma_ldr(Address(sp, ResumeFromException::offsetOfFramePointer()), r11,
            scratch);
-    ma_ldr(Address(sp, offsetof(ResumeFromException, stackPointer)), sp,
+    ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
   }
   jump(r1);
