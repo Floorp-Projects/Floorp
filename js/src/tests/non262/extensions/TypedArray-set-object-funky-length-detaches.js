@@ -44,17 +44,7 @@ ctors.forEach(function(TypedArray) {
         }
       };
 
-      var passed = false;
-      try
-      {
-        ta.set(arraylike, 0x1234);
-      }
-      catch (e)
-      {
-        passed = true;
-      }
-
-      assertEq(passed, true);
+      ta.set(arraylike, 0x1234);
 });
 
 /******************************************************************************/

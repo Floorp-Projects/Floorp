@@ -2367,7 +2367,7 @@ void CanonicalBrowsingContext::UpdateSessionStoreSessionStorage(
   using DataPromise = BackgroundSessionStorageManager::DataPromise;
   BackgroundSessionStorageManager::GetData(
       this, StaticPrefs::browser_sessionstore_dom_storage_limit(),
-      /* aCancelSessionStoreTiemr = */ true)
+      /* aClearSessionStoreTimer = */ true)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}, aDone, epoch = GetSessionStoreEpoch()](
                  const DataPromise::ResolveOrRejectValue& valueList) {

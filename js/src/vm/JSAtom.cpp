@@ -956,6 +956,60 @@ bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
 }
 
 template <AllowGC allowGC>
+static MOZ_ALWAYS_INLINE JSAtom* PrimitiveToAtom(JSContext* cx,
+                                                 const Value& v) {
+  MOZ_ASSERT(v.isPrimitive());
+  switch (v.type()) {
+    case ValueType::String: {
+      JSAtom* atom = AtomizeString(cx, v.toString());
+      if (!allowGC && !atom) {
+        cx->recoverFromOutOfMemory();
+      }
+      return atom;
+    }
+    case ValueType::Int32: {
+      JSAtom* atom = Int32ToAtom(cx, v.toInt32());
+      if (!allowGC && !atom) {
+        cx->recoverFromOutOfMemory();
+      }
+      return atom;
+    }
+    case ValueType::Double: {
+      JSAtom* atom = NumberToAtom(cx, v.toDouble());
+      if (!allowGC && !atom) {
+        cx->recoverFromOutOfMemory();
+      }
+      return atom;
+    }
+    case ValueType::Boolean:
+      return v.toBoolean() ? cx->names().true_ : cx->names().false_;
+    case ValueType::Null:
+      return cx->names().null;
+    case ValueType::Undefined:
+      return cx->names().undefined;
+    case ValueType::Symbol:
+      MOZ_ASSERT(!cx->isHelperThreadContext());
+      if constexpr (allowGC) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_SYMBOL_TO_STRING);
+      }
+      return nullptr;
+    case ValueType::BigInt: {
+      RootedBigInt i(cx, v.toBigInt());
+      return BigIntToAtom<allowGC>(cx, i);
+    }
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+#endif
+    case ValueType::Object:
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+      break;
+  }
+  MOZ_CRASH("Unexpected type");
+}
+
+template <AllowGC allowGC>
 static JSAtom* ToAtomSlow(
     JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType arg) {
   MOZ_ASSERT(!arg.isString());
@@ -973,47 +1027,7 @@ static JSAtom* ToAtomSlow(
     v = v2;
   }
 
-  if (v.isString()) {
-    JSAtom* atom = AtomizeString(cx, v.toString());
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
-    }
-    return atom;
-  }
-  if (v.isInt32()) {
-    JSAtom* atom = Int32ToAtom(cx, v.toInt32());
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
-    }
-    return atom;
-  }
-  if (v.isDouble()) {
-    JSAtom* atom = NumberToAtom(cx, v.toDouble());
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
-    }
-    return atom;
-  }
-  if (v.isBoolean()) {
-    return v.toBoolean() ? cx->names().true_ : cx->names().false_;
-  }
-  if (v.isNull()) {
-    return cx->names().null;
-  }
-  if (v.isSymbol()) {
-    MOZ_ASSERT(!cx->isHelperThreadContext());
-    if (allowGC) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_SYMBOL_TO_STRING);
-    }
-    return nullptr;
-  }
-  if (v.isBigInt()) {
-    RootedBigInt i(cx, v.toBigInt());
-    return BigIntToAtom<allowGC>(cx, i);
-  }
-  MOZ_ASSERT(v.isUndefined());
-  return cx->names().undefined;
+  return PrimitiveToAtom<allowGC>(cx, v);
 }
 
 template <AllowGC allowGC>
@@ -1037,8 +1051,37 @@ JSAtom* js::ToAtom(JSContext* cx,
 }
 
 template JSAtom* js::ToAtom<CanGC>(JSContext* cx, HandleValue v);
-
 template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
+
+template <AllowGC allowGC>
+bool js::PrimitiveValueToIdSlow(
+    JSContext* cx, typename MaybeRooted<Value, allowGC>::HandleType v,
+    typename MaybeRooted<jsid, allowGC>::MutableHandleType idp) {
+  MOZ_ASSERT(v.isPrimitive());
+  MOZ_ASSERT(!v.isString());
+  MOZ_ASSERT(!v.isSymbol());
+  MOZ_ASSERT_IF(v.isInt32(), !PropertyKey::fitsInInt(v.toInt32()));
+
+  int32_t i;
+  if (v.isDouble() && mozilla::NumberEqualsInt32(v.toDouble(), &i) &&
+      PropertyKey::fitsInInt(i)) {
+    idp.set(PropertyKey::Int(i));
+    return true;
+  }
+
+  JSAtom* atom = PrimitiveToAtom<allowGC>(cx, v);
+  if (!atom) {
+    return false;
+  }
+
+  idp.set(AtomToId(atom));
+  return true;
+}
+
+template bool js::PrimitiveValueToIdSlow<CanGC>(JSContext* cx, HandleValue v,
+                                                MutableHandleId idp);
+template bool js::PrimitiveValueToIdSlow<NoGC>(JSContext* cx, const Value& v,
+                                               FakeMutableHandle<jsid> idp);
 
 #ifdef ENABLE_RECORD_TUPLE
 bool js::EnsureAtomized(JSContext* cx, MutableHandleValue v, bool* updated) {

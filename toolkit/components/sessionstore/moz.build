@@ -5,21 +5,29 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    "BrowserSessionStore.h",
     "SessionStoreChangeListener.h",
+    "SessionStoreChild.h",
     "SessionStoreData.h",
-    "SessionStoreDataCollector.h",
+    "SessionStoreFormData.h",
     "SessionStoreListener.h",
     "SessionStoreMessageUtils.h",
+    "SessionStoreParent.h",
     "SessionStoreRestoreData.h",
+    "SessionStoreScrollData.h",
     "SessionStoreUtils.h",
 ]
 
 UNIFIED_SOURCES += [
+    "BrowserSessionStore.cpp",
     "RestoreTabContentObserver.cpp",
     "SessionStoreChangeListener.cpp",
-    "SessionStoreDataCollector.cpp",
+    "SessionStoreChild.cpp",
+    "SessionStoreFormData.cpp",
     "SessionStoreListener.cpp",
+    "SessionStoreParent.cpp",
     "SessionStoreRestoreData.cpp",
+    "SessionStoreScrollData.cpp",
     "SessionStoreUtils.cpp",
 ]
 
@@ -35,6 +43,7 @@ XPIDL_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    "PSessionStore.ipdl",
     "SessionStoreTypes.ipdlh",
 ]
 

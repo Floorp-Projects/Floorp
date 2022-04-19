@@ -28,22 +28,6 @@ function UpdateSessionStore(
   );
 }
 
-function UpdateSessionStoreForWindow(
-  aBrowser,
-  aBrowsingContext,
-  aPermanentKey,
-  aEpoch,
-  aData
-) {
-  return SessionStoreFuncInternal.updateSessionStoreForWindow(
-    aBrowser,
-    aBrowsingContext,
-    aPermanentKey,
-    aEpoch,
-    aData
-  );
-}
-
 function UpdateSessionStoreForStorage(
   aBrowser,
   aBrowsingContext,
@@ -60,11 +44,7 @@ function UpdateSessionStoreForStorage(
   );
 }
 
-var EXPORTED_SYMBOLS = [
-  "UpdateSessionStore",
-  "UpdateSessionStoreForWindow",
-  "UpdateSessionStoreForStorage",
-];
+var EXPORTED_SYMBOLS = ["UpdateSessionStore", "UpdateSessionStoreForStorage"];
 
 var SessionStoreFuncInternal = {
   updateSessionStore: function SSF_updateSessionStore(
@@ -75,12 +55,14 @@ var SessionStoreFuncInternal = {
     aCollectSHistory,
     aData
   ) {
-    let currentData = {};
-    if (aData.docShellCaps != undefined) {
-      currentData.disallow = aData.docShellCaps ? aData.docShellCaps : null;
+    let { formdata, scroll } = aData;
+
+    if (formdata) {
+      aData.formdata = formdata.toJSON();
     }
-    if (aData.isPrivate != undefined) {
-      currentData.isPrivate = aData.isPrivate;
+
+    if (scroll) {
+      aData.scroll = scroll.toJSON();
     }
 
     SessionStore.updateSessionStoreFromTablistener(
@@ -88,25 +70,10 @@ var SessionStoreFuncInternal = {
       aBrowsingContext,
       aPermanentKey,
       {
-        data: currentData,
+        data: aData,
         epoch: aEpoch,
         sHistoryNeeded: aCollectSHistory,
       }
-    );
-  },
-
-  updateSessionStoreForWindow: function SSF_updateSessionStoreForWindow(
-    aBrowser,
-    aBrowsingContext,
-    aPermanentKey,
-    aEpoch,
-    aData
-  ) {
-    SessionStore.updateSessionStoreFromTablistener(
-      aBrowser,
-      aBrowsingContext,
-      aPermanentKey,
-      { data: { windowstatechange: aData }, epoch: aEpoch }
     );
   },
 

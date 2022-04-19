@@ -35,7 +35,7 @@ Object.defineProperty(src, 4, {
   }
 });
 
-assertThrowsInstanceOf(() => a.set(src), TypeError);
+a.set(src);
 
 /******************************************************************************/
 

@@ -348,7 +348,7 @@ class gfxFontCache final
   // into the expiration queues and removed.
   void Flush() {
     {
-      mozilla::AutoWriteLock lock(mCacheLock);
+      mozilla::MutexAutoLock lock(mMutex);
       mFonts.Clear();
     }
     AgeAllGenerations();
@@ -361,7 +361,7 @@ class gfxFontCache final
 
   void RunWordCacheExpirationTimer() {
     if (!mTimerRunning) {
-      mozilla::AutoWriteLock lock(mCacheLock);
+      mozilla::MutexAutoLock lock(mMutex);
       if (!mTimerRunning && mWordCacheExpirationTimer) {
         mWordCacheExpirationTimer->InitWithNamedFuncCallback(
             WordCacheExpirationTimerCallback, this,
@@ -373,7 +373,7 @@ class gfxFontCache final
   }
   void PauseWordCacheExpirationTimer() {
     if (mTimerRunning) {
-      mozilla::AutoWriteLock lock(mCacheLock);
+      mozilla::MutexAutoLock lock(mMutex);
       if (mTimerRunning && mWordCacheExpirationTimer) {
         mWordCacheExpirationTimer->Cancel();
         mTimerRunning = false;
@@ -396,13 +396,7 @@ class gfxFontCache final
     RemoveObjectLocked(aFont, lock);
   }
 
-  mozilla::RWLock& GetCacheLock() { return mCacheLock; }
-
  protected:
-  // Guards the global font hashtable, separately from the expiration-tracker
-  // records.
-  mutable mozilla::RWLock mCacheLock = mozilla::RWLock("fontCacheLock");
-
   class MemoryReporter final : public nsIMemoryReporter {
     ~MemoryReporter() = default;
 
@@ -427,10 +421,12 @@ class gfxFontCache final
 
   // This gets called when the timeout has expired on a zero-refcount
   // font; we just delete it.
-  void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&) override;
+  void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&)
+      REQUIRES(mMutex) override;
   void NotifyExpired(gfxFont* aFont);
 
   void DestroyFont(gfxFont* aFont);
+  void DestroyFontLocked(gfxFont* aFont) REQUIRES(mMutex);
 
   static gfxFontCache* gGlobalCache;
 
@@ -469,11 +465,11 @@ class gfxFontCache final
     gfxFont* MOZ_UNSAFE_REF("tracking for deferred deletion") mFont;
   };
 
-  nsTHashtable<HashEntry> mFonts GUARDED_BY(mCacheLock);
+  nsTHashtable<HashEntry> mFonts GUARDED_BY(mMutex);
 
   static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
 
-  nsCOMPtr<nsITimer> mWordCacheExpirationTimer GUARDED_BY(mCacheLock);
+  nsCOMPtr<nsITimer> mWordCacheExpirationTimer GUARDED_BY(mMutex);
   std::atomic<bool> mTimerRunning = false;
 };
 

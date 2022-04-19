@@ -54,10 +54,10 @@
       <div class="overlay">
         <div class="container" role="dialog" aria-labelledby="title" aria-describedby="message">
           <button class="dismiss-button ghost-button" data-l10n-id="confirmation-dialog-dismiss-button">
-            <img class="dismiss-icon" src="chrome://global/skin/icons/close.svg"/>
+            <img class="dismiss-icon" src="chrome://global/skin/icons/close.svg" draggable="false"/>
           </button>
           <div class="content">
-            <img class="warning-icon" src="chrome://global/skin/icons/warning.svg"/>
+            <img class="warning-icon" src="chrome://global/skin/icons/warning.svg" draggable="false"/>
             <h1 class="title" id="title"></h1>
             <p class="message" id="message"></p>
           </div>
@@ -119,7 +119,7 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/import-error-dialog.css">
       <generic-dialog>
         <span slot="dialog-title" data-l10n-id="about-logins-import-dialog-error-title"></span>
-        <img slot="dialog-icon" part="dialog-icon" class="warning-icon" src="chrome://global/skin/icons/warning.svg"/>
+        <img slot="dialog-icon" part="dialog-icon" class="warning-icon" src="chrome://global/skin/icons/warning.svg"/ draggable="false">
         <div slot="content" class="content">
           <span class="error-title" data-l10n-id="about-logins-import-dialog-error-unable-to-read-title"></span>
           <span class="error-description" data-l10n-id="about-logins-import-dialog-error-unable-to-read-description"></span>

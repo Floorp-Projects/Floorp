@@ -1406,11 +1406,10 @@ const windowGlobalTargetPrototype = {
    * DebuggerProgressListener.
    */
   _windowReady(window, { isFrameSwitching, isBFCache } = {}) {
-    const isTopLevel = window == this.window;
-
-    if (this.ignoreSubFrames && !this.isTopLevel) {
+    if (this.ignoreSubFrames) {
       return;
     }
+    const isTopLevel = window == this.window;
 
     // We just reset iframe list on WillNavigate, so we now list all existing
     // frames when we load a new document in the original window
@@ -1440,11 +1439,10 @@ const windowGlobalTargetPrototype = {
     window,
     { id = null, isFrozen = false, isFrameSwitching = false }
   ) {
-    const isTopLevel = window == this.window;
-
-    if (this.ignoreSubFrames && !this.isTopLevel) {
+    if (this.ignoreSubFrames) {
       return;
     }
+    const isTopLevel = window == this.window;
 
     // If this follows WindowGlobal lifecycle, this target will be destroyed, alongside its top level document.
     // Only notify about in-process iframes.
@@ -1474,11 +1472,10 @@ const windowGlobalTargetPrototype = {
     isFrameSwitching = false,
     navigationStart,
   }) {
-    let isTopLevel = window == this.window;
-
-    if (this.ignoreSubFrames && !this.isTopLevel) {
+    if (this.ignoreSubFrames) {
       return;
     }
+    let isTopLevel = window == this.window;
 
     let reset = false;
     if (window == this._originalWindow && !isFrameSwitching) {
@@ -1533,11 +1530,10 @@ const windowGlobalTargetPrototype = {
    * targeted window global.
    */
   _navigate(window, isFrameSwitching = false) {
-    const isTopLevel = window == this.window;
-
-    if (this.ignoreSubFrames && !this.isTopLevel) {
+    if (this.ignoreSubFrames) {
       return;
     }
+    const isTopLevel = window == this.window;
 
     // navigate event needs to be dispatched synchronously,
     // by calling the listeners in the order or registration.

@@ -372,17 +372,11 @@ class SendTab {
   }
 
   async _decrypt(ciphertext) {
-    let sendTabKeys = await this._getPersistedSendTabKeys();
-    if (!sendTabKeys) {
-      // If we lost the user's send tab keys for any reason,
-      // `generateAndPersistEncryptedSendTabKeys` will regenerate the send tab keys,
-      // persist them, then persist an encrypted bundle of the keys.
-      // It should be impossible for us to hit this for new devices
-      // this was added to recover users who hit Bug 1752609
-      await this._generateAndPersistEncryptedSendTabKey();
-      sendTabKeys = await this._getPersistedSendTabKeys();
-    }
-    let { privateKey, publicKey, authSecret } = sendTabKeys;
+    let {
+      privateKey,
+      publicKey,
+      authSecret,
+    } = await this._getPersistedSendTabKeys();
     publicKey = urlsafeBase64Decode(publicKey);
     authSecret = urlsafeBase64Decode(authSecret);
     ciphertext = new Uint8Array(urlsafeBase64Decode(ciphertext));
@@ -468,7 +462,8 @@ class SendTab {
 
   async getEncryptedSendTabKeys() {
     let encryptedSendTabKeys = await this._getPersistedEncryptedSendTabKey();
-    if (!encryptedSendTabKeys) {
+    const sendTabKeys = await this._getPersistedSendTabKeys();
+    if (!encryptedSendTabKeys || !sendTabKeys) {
       log.info("Generating and persisting encrypted sendtab keys");
       // `_generateAndPersistEncryptedKeys` requires the sync key
       // which cannot be accessed if the login manager is locked

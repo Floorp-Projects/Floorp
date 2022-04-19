@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PExtensions;
+include protocol PSessionStore;
 include protocol PWindowGlobal;
 
 include DOMTypes;
@@ -23,6 +24,7 @@ namespace dom {
 async protocol PInProcess
 {
   manages PExtensions;
+  manages PSessionStore;
   manages PWindowGlobal;
 };
 

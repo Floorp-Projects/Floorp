@@ -102,13 +102,6 @@ input {
   }
 }
 
-input::-moz-text-control-editing-root,
-input::placeholder {
-  word-wrap: normal;
-  /* Make the line-height equal to the available height */
-  line-height: -moz-block-height !important;
-}
-
 textarea {
   display: inline-block;
   appearance: auto;
@@ -161,41 +154,6 @@ textarea > scrollbar {
   visibility: hidden;
 }
 
-::-moz-text-control-preview {
-  overflow: hidden;
-  font-family: system-ui;
-}
-
-:not(:-moz-autofill-preview)::-moz-text-control-editing-root,
-:placeholder-shown:not(:autofill)::placeholder,
-:autofill::-moz-text-control-preview {
-  visibility: inherit;
-}
-
-input::-moz-text-control-editing-root,
-input::placeholder,
-input::-moz-text-control-preview {
-  white-space: pre;
-}
-
-input[type=password]::-moz-text-control-editing-root,
-input[type=password]::-moz-text-control-preview {
-  /*
-   * In password fields, any character should be put same direction.  Otherwise,
-   * caret position at typing tells everybody whether the character is an RTL
-   * or an LTR character.  Unfortunately, this makes odd rendering when bidi
-   * text is unmasked.
-   */
-  unicode-bidi: bidi-override;
-}
-
-textarea::-moz-text-control-editing-root {
-  scroll-behavior: inherit;
-  overscroll-behavior: inherit;
-  /* StyleAdjuster makes sure that the overflow value ends up being scrollable */
-  overflow: inherit;
-}
-
 ::placeholder,
 ::-moz-text-control-preview {
   /*
@@ -219,8 +177,45 @@ textarea::-moz-text-control-editing-root {
   user-select: none;
 }
 
+::-moz-text-control-preview {
+  font-family: system-ui;
+}
+
 ::placeholder {
   opacity: 0.54;
+}
+
+:not(:-moz-autofill-preview)::-moz-text-control-editing-root,
+:placeholder-shown:not(:autofill)::placeholder,
+:autofill::-moz-text-control-preview {
+  visibility: inherit;
+}
+
+input::placeholder,
+input::-moz-text-control-editing-root,
+input::-moz-text-control-preview {
+  word-wrap: normal;
+  white-space: pre;
+  /* Make the line-height equal to the available height */
+  line-height: -moz-block-height !important;
+}
+
+input[type=password]::-moz-text-control-editing-root,
+input[type=password]::-moz-text-control-preview {
+  /*
+   * In password fields, any character should be put same direction.  Otherwise,
+   * caret position at typing tells everybody whether the character is an RTL
+   * or an LTR character.  Unfortunately, this makes odd rendering when bidi
+   * text is unmasked.
+   */
+  unicode-bidi: bidi-override;
+}
+
+textarea::-moz-text-control-editing-root {
+  scroll-behavior: inherit;
+  overscroll-behavior: inherit;
+  /* StyleAdjuster makes sure that the overflow value ends up being scrollable */
+  overflow: inherit;
 }
 
 input:read-write,
