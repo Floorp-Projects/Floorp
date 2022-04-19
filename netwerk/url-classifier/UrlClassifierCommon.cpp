@@ -402,7 +402,9 @@ nsresult UrlClassifierCommon::CreatePairwiseEntityListURI(nsIChannel* aChannel,
 
   nsCOMPtr<nsIURI> entitylistURI;
   rv = NS_NewURI(getter_AddRefs(entitylistURI), entitylistEntry);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   entitylistURI.forget(aURI);
   return NS_OK;

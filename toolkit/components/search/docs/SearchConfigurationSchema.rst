@@ -83,6 +83,51 @@ In this case users identified as being in the US region would use the WebExtensi
 with identifier ``web-us@ext``. GB region users would get
 ``web-gb@ext``, and all other users would get ``web@ext``.
 
+To direct search engines to pull ``_locale`` data from a specific locale
+directory, you can use ``webExtension.locales``.
+
+For example, in this code block:
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [
+        {
+          "included": {
+            "locales": "en-US"
+          },
+          "webExtension": {
+            "locales": [
+              "us"
+            ]
+          }
+        }, {
+          "included": {
+            "locales": "en-GB"
+          },
+          "webExtension": {
+            "locales": [
+              "uk"
+            ]
+          }
+        }
+      ]
+    }
+
+There should exist a ``us`` and ``uk`` folder in the ``locales`` directory
+of the extension, ``web``.
+
+If a locale is not provided, ``webExtension.locales`` is set to
+``SearchUtils.DEFAULT_TAG``.
+
+`Search Extensions directory <https://searchfox.org/mozilla-central/source/browser/components/search/extensions>`__
+
+`Example of a locales directory <https://searchfox.org/mozilla-central/source/browser/components/search/extensions/wikipedia/_locales>`__
+
+
 Special Attributes
 ==================
 
@@ -102,17 +147,30 @@ configuration object with the users locale. For example:
       "appliesTo": [{
         "included": {
           "locales": {
-            "matches": ["us", "gb"]
-          },
-          "webExtension": {
-            "locales": ["$USER_LOCALE"],
+            "matches": [
+              "en-US",
+              "en-GB"
+            ]
           }
+        },
+        "webExtension": {
+          "locales": ["$USER_LOCALE"]
         }
       }]
     }
 
-Will report either ``[us]`` or ``[gb]`` as the ``webExtension.locales``
-depending on the user's locale.
+Will report either ``[en-US]`` or ``[en-GB]`` as the ``webExtension.locales``
+property depending on the user's locale.
+
+Since the special string is replaced, custom folder names can be searched for
+by adding the keyword in between a consistent prefix/suffix.
+
+For example, if ``webExtension.locales`` was ``["example-$USER_LOCALE"]``,
+the locale generator will generate locale names in the form of ``example-en-US``
+and ``example-en-GB``.
+
+Note: Prior to Firefox 100.0, $USER_LOCALE used an exact match.
+In Firefox 100.0 the replacement was updated to use a standard string replacement.
 
 From Firefox 98.0.1 and 97.7.1esr, ``"$USER_LOCALE"`` may also be used in the
 ``telemetryId`` field.
@@ -120,9 +178,31 @@ From Firefox 98.0.1 and 97.7.1esr, ``"$USER_LOCALE"`` may also be used in the
 $USER_REGION
 ------------
 
-This can be used in the same situations as ``"$USER_LOCALE"``.
+This can be used in the same situations as ``"$USER_LOCALE"``, instead
+replacing ``webExtension.locale`` with a string that uses the users region.
 
-It was added in the Firefox 98.0.1 and 97.7.1esr releases.
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+        },
+        "webExtension": {
+          "locales": ["foo-$USER_REGION"]
+        }
+      }]
+    }
+
+In this example, if the user's region is ``fr``, the ``webExtension.locale``
+will be ``foo-fr``, and the code will look for the ``messages.json`` in
+the ``foo-fr`` folder of the ``_locales`` folder for this extension.
+
+Note: ``"$USER_REGION"`` was added in Firefox 98.0.1 and 97.7.1esr and used an exact match.
+In Firefox 100.0 the replacement was updated to use a standard string replacement.
 
 "default"
 ---------

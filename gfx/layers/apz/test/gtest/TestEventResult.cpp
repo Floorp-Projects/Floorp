@@ -41,8 +41,8 @@ class APZEventResultTester : public APZCTreeManagerTester {
 
   void CreateScrollableRootLayer() {
     const char* treeShape = "x";
-    nsIntRegion layerVisibleRegions[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
+    LayerIntRegion layerVisibleRegions[] = {
+        LayerIntRect(0, 0, 100, 100),
     };
     CreateScrollData(treeShape, layerVisibleRegions);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
@@ -355,8 +355,8 @@ TEST_F(APZEventResultTesterMock, HandledByRootApzcFlag) {
   // Create simple layer tree containing a dispatch-to-content region
   // that covers part but not all of its area.
   const char* treeShape = "x";
-  nsIntRegion layerVisibleRegions[] = {
-      nsIntRegion(IntRect(0, 0, 100, 100)),
+  LayerIntRegion layerVisibleRegions[] = {
+      LayerIntRect(0, 0, 100, 100),
   };
   CreateScrollData(treeShape, layerVisibleRegions);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
