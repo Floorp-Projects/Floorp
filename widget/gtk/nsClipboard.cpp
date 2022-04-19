@@ -9,9 +9,7 @@
 
 #include "nsArrayUtils.h"
 #include "nsClipboard.h"
-#if defined(MOZ_X11)
-#  include "nsClipboardX11.h"
-#endif
+#include "nsClipboardX11.h"
 #if defined(MOZ_WAYLAND)
 #  include "nsClipboardWayland.h"
 #endif
@@ -204,16 +202,16 @@ nsClipboard::~nsClipboard() {
 NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
-#if defined(MOZ_X11)
   if (widget::GdkIsX11Display()) {
     mContext = new nsRetrievalContextX11();
-  }
-#endif
 #if defined(MOZ_WAYLAND)
-  if (widget::GdkIsWaylandDisplay()) {
+  } else if (widget::GdkIsWaylandDisplay()) {
     mContext = new nsRetrievalContextWayland();
-  }
 #endif
+  } else {
+    NS_WARNING("Missing nsRetrievalContext for nsClipboard!");
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {

@@ -55,10 +55,8 @@
 #define CAIRO_HAS_PDF_SURFACE 1
 #endif
 
-#if defined(MOZ_X11) || defined(MOZ_WAYLAND)
-#define CAIRO_HAS_PS_SURFACE 1
-#endif
 #ifdef MOZ_X11
+#define CAIRO_HAS_PS_SURFACE 1
 #define CAIRO_HAS_XLIB_XRENDER_SURFACE 0
 #define CAIRO_HAS_XLIB_SURFACE 1
 #endif
