@@ -225,3 +225,31 @@ add_task(async function test_terminateBackground_after_extension_hasShutdown() {
 
   await extension.unload();
 });
+
+add_task(async function test_wakeupBackground_after_extension_hasShutdown() {
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      background: { persistent: false },
+    },
+    async background() {
+      browser.test.sendMessage("bg-ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("bg-ready");
+  await extension.terminateBackground();
+
+  // Fake suspending event page on idle while the extension was being shutdown by manually
+  // setting the hasShutdown flag to true on the Extension class instance object.
+  extension.extension.hasShutdown = true;
+  await Assert.rejects(
+    extension.wakeupBackground(),
+    /wakeupBackground called while the extension was already shutting down/,
+    "Got the expected rejection when wakeupBackground is called after extension shutdown"
+  );
+  extension.extension.hasShutdown = false;
+
+  await extension.unload();
+});
