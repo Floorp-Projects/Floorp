@@ -80,7 +80,7 @@ class WindowGlobalParent final : public WindowContext,
   WindowGlobalParent* TopWindowContext() {
     return static_cast<WindowGlobalParent*>(WindowContext::TopWindowContext());
   }
-  CanonicalBrowsingContext* GetBrowsingContext() {
+  CanonicalBrowsingContext* GetBrowsingContext() const {
     return CanonicalBrowsingContext::Cast(WindowContext::GetBrowsingContext());
   }
 
@@ -214,10 +214,6 @@ class WindowGlobalParent final : public WindowContext,
 
   const nsACString& GetRemoteType() override;
 
-  nsresult WriteFormDataAndScrollToSessionStore(
-      const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
-      uint32_t aEpoch);
-
   void NotifySessionStoreUpdatesComplete(Element* aEmbedder);
 
   Maybe<uint64_t> GetSingleChannelId() { return mSingleChannelId; }
@@ -288,12 +284,6 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvRequestRestoreTabContent();
 
-  mozilla::ipc::IPCResult RecvUpdateSessionStore(
-      const Maybe<FormData>& aFormData, const Maybe<nsPoint>& aScrollPosition,
-      uint32_t aEpoch);
-
-  mozilla::ipc::IPCResult RecvResetSessionStore(uint32_t aEpoch);
-
   mozilla::ipc::IPCResult RecvUpdateBFCacheStatus(const uint32_t& aOnFlags,
                                                   const uint32_t& aOffFlags);
 
@@ -319,8 +309,6 @@ class WindowGlobalParent final : public WindowContext,
 
   bool ShouldTrackSiteOriginTelemetry();
   void FinishAccumulatingPageUseCounters();
-
-  nsresult ResetSessionStore(uint32_t aEpoch);
 
   // Returns failure if the new storage principal cannot be validated
   // against the current document principle.
