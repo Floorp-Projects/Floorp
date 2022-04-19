@@ -85,7 +85,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   }
 
   void CreateScrollData(const char* aTreeShape,
-                        const nsIntRegion* aVisibleRegions = nullptr,
+                        const LayerIntRegion* aVisibleRegions = nullptr,
                         const gfx::Matrix4x4* aTransforms = nullptr) {
     layers = TestWRScrollData::Create(aTreeShape, *updater, aVisibleRegions,
                                       aTransforms);
@@ -209,8 +209,8 @@ class APZCTreeManagerTester : public APZCTesterBase {
 
   void CreateSimpleScrollingLayer() {
     const char* treeShape = "x";
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 200, 200)),
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 200, 200),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,

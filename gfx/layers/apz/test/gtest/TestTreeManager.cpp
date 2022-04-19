@@ -12,8 +12,8 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
  protected:
   void CreateSimpleScrollingLayer() {
     const char* treeShape = "x";
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 200, 200)),
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 200, 200),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
@@ -23,10 +23,10 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
   void CreateSimpleMultiLayerTree() {
     const char* treeShape = "x(xx)";
     // LayerID               0 12
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 50)),
-        nsIntRegion(IntRect(0, 50, 100, 50)),
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 100, 100),
+        LayerIntRect(0, 0, 100, 50),
+        LayerIntRect(0, 50, 100, 50),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
   }
@@ -49,9 +49,9 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
   void CreateTwoLayerTree(int32_t aRootContentLayerIndex) {
     const char* treeShape = "x(x)";
     // LayerID               0 1
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 100, 100),
+        LayerIntRect(0, 0, 100, 100),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID);
