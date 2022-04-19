@@ -53,10 +53,8 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_UDEV"] = True
-    DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_X11"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_GNU_SOURCE"] = True
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -66,15 +64,7 @@ if CONFIG["OS_TARGET"] == "Linux":
 
     OS_LIBS += [
         "dl",
-        "rt",
-        "X11",
-        "Xcomposite",
-        "Xdamage",
-        "Xext",
-        "Xfixes",
-        "Xrandr",
-        "Xrender",
-        "Xtst"
+        "rt"
     ]
 
 if CONFIG["OS_TARGET"] == "OpenBSD":
@@ -167,6 +157,22 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_USE_X11"] = True
+
+    OS_LIBS += [
+        "X11",
+        "Xcomposite",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xrandr",
+        "Xrender",
+        "Xtst"
+    ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
