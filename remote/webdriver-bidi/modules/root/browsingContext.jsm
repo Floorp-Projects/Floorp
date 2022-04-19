@@ -145,14 +145,14 @@ class BrowsingContextModule extends Module {
 
   /**
    * Returns a tree of all browsing contexts that are descendents of the
-   * given context, or all top-level contexts when no parent is provided.
+   * given context, or all top-level contexts when no root is provided.
    *
    * @param {Object=} options
    * @param {number=} maxDepth
    *     Depth of the browsing context tree to traverse. If not specified
    *     the whole tree is returned.
-   * @param {string=} parent
-   *     Id of the parent browsing context.
+   * @param {string=} root
+   *     Id of the root browsing context.
    *
    * @returns {BrowsingContextGetTreeResult}
    *     Tree of browsing context information.
@@ -160,7 +160,7 @@ class BrowsingContextModule extends Module {
    *     If the browsing context cannot be found.
    */
   getTree(options = {}) {
-    const { maxDepth = null, parent: parentId = null } = options;
+    const { maxDepth = null, root: rootId = null } = options;
 
     if (maxDepth !== null) {
       assert.positiveInteger(
@@ -170,16 +170,11 @@ class BrowsingContextModule extends Module {
     }
 
     let contexts;
-    if (parentId !== null) {
-      // With a parent id specified return the context info for itself
+    if (rootId !== null) {
+      // With a root id specified return the context info for itself
       // and the full tree.
-
-      assert.string(
-        parentId,
-        `Expected "parent" to be a string, got ${parentId}`
-      );
-
-      contexts = [this.#getBrowsingContext(parentId)];
+      assert.string(rootId, `Expected "root" to be a string, got ${rootId}`);
+      contexts = [this.#getBrowsingContext(rootId)];
     } else {
       // Return all top-level browsing contexts.
       contexts = TabManager.browsers.map(browser => browser.browsingContext);
