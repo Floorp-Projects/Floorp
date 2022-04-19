@@ -242,8 +242,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateTopLevel(
 
 already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  RefPtr<ScriptLoadContext> newContext =
-      new ScriptLoadContext(aParent->GetLoadContext()->mElement);
+  RefPtr<ScriptLoadContext> newContext = new ScriptLoadContext();
   newContext->mIsInline = false;
   // Propagated Parent values. TODO: allow child modules to use root module's
   // script mode.
@@ -265,15 +264,13 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
   MOZ_ASSERT(aSpecifier);
   MOZ_ASSERT(aPromise);
 
-  RefPtr<ScriptFetchOptions> options;
+  RefPtr<ScriptFetchOptions> options = nullptr;
   nsIURI* baseURL = nullptr;
-  RefPtr<ScriptLoadContext> context;
+  RefPtr<ScriptLoadContext> context = new ScriptLoadContext();
 
   if (aMaybeActiveScript) {
     options = aMaybeActiveScript->GetFetchOptions();
     baseURL = aMaybeActiveScript->BaseURL();
-    nsCOMPtr<Element> element = aMaybeActiveScript->GetScriptElement();
-    context = new ScriptLoadContext(element);
   } else {
     // We don't have a referencing script so fall back on using
     // options from the document. This can happen when the user
@@ -286,10 +283,9 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateDynamicImport(
                   BasePrincipal::Cast(principal)->ContentScriptAddonPolicy());
     MOZ_ASSERT_IF(GetKind() == Normal, principal == document->NodePrincipal());
 
-    options = new ScriptFetchOptions(mozilla::CORS_NONE,
-                                     document->GetReferrerPolicy(), principal);
+    options = new ScriptFetchOptions(
+        mozilla::CORS_NONE, document->GetReferrerPolicy(), principal, nullptr);
     baseURL = document->GetDocBaseURI();
-    context = new ScriptLoadContext(nullptr);
   }
 
   context->mIsInline = false;
