@@ -5,7 +5,6 @@
 package mozilla.components.feature.syncedtabs.controller
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.DeviceConstellation
@@ -18,6 +17,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,7 +36,7 @@ class DefaultControllerTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `update view only when no account available`() = runBlockingTest {
+    fun `update view only when no account available`() = runTestOnMain {
         val controller = DefaultController(
             storage,
             accountManager,
@@ -52,7 +52,7 @@ class DefaultControllerTest {
     }
 
     @Test
-    fun `notify if there are no other devices synced`() = runBlockingTest {
+    fun `notify if there are no other devices synced`() = runTestOnMain {
         val controller = DefaultController(
             storage,
             accountManager,
@@ -76,7 +76,7 @@ class DefaultControllerTest {
     }
 
     @Test
-    fun `notify if there are no tabs from other devices to sync`() = runBlockingTest {
+    fun `notify if there are no tabs from other devices to sync`() = runTestOnMain {
         val controller = DefaultController(
             storage,
             accountManager,
@@ -101,7 +101,7 @@ class DefaultControllerTest {
     }
 
     @Test
-    fun `display synced tabs`() = runBlockingTest {
+    fun `display synced tabs`() = runTestOnMain {
         val controller = DefaultController(
             storage,
             accountManager,
@@ -129,7 +129,7 @@ class DefaultControllerTest {
     }
 
     @Test
-    fun `WHEN syncAccount is called THEN view is loading, devices are refreshed, and sync started`() = runBlockingTest {
+    fun `WHEN syncAccount is called THEN view is loading, devices are refreshed, and sync started`() = runTestOnMain {
         val controller = DefaultController(
             storage,
             accountManager,

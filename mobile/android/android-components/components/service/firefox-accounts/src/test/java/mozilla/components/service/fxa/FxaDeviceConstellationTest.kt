@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
-import kotlinx.coroutines.runBlocking
 import mozilla.appservices.fxaclient.FxaException
 import mozilla.appservices.fxaclient.IncomingDeviceCommand
 import mozilla.appservices.fxaclient.SendTabPayload
@@ -34,6 +33,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -75,7 +75,7 @@ class FxaDeviceConstellationTest {
     }
 
     @Test
-    fun `finalize device`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `finalize device`() = runTestOnMain {
         fun expectedFinalizeAction(authType: AuthType): FxaDeviceConstellation.DeviceFinalizeAction = when (authType) {
             AuthType.Existing -> FxaDeviceConstellation.DeviceFinalizeAction.EnsureCapabilities
             AuthType.Signin -> FxaDeviceConstellation.DeviceFinalizeAction.Initialize
@@ -117,7 +117,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `updating device name`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `updating device name`() = runTestOnMain {
         val currentDevice = testDevice("currentTestDevice", true)
         `when`(account.getDevices()).thenReturn(arrayOf(currentDevice))
 
@@ -158,7 +158,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `set device push subscription`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `set device push subscription`() = runTestOnMain {
         val subscription = DevicePushSubscription("http://endpoint.com", "pk", "auth key")
         constellation.setDevicePushSubscription(subscription)
 
@@ -167,7 +167,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `process raw device command`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `process raw device command`() = runTestOnMain {
         // No commands, no observer.
         `when`(account.handlePushMessage("raw events payload")).thenReturn(emptyArray())
         assertTrue(constellation.processRawEvent("raw events payload"))
@@ -205,7 +205,7 @@ class FxaDeviceConstellationTest {
     }
 
     @Test
-    fun `send command to device`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `send command to device`() = runTestOnMain {
         `when`(account.gatherTelemetry()).thenReturn("{}")
         assertTrue(
             constellation.sendCommandToDevice(
@@ -217,7 +217,7 @@ class FxaDeviceConstellationTest {
     }
 
     @Test
-    fun `send command to device will report exceptions`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `send command to device will report exceptions`() = runTestOnMain {
         val exception = FxaException.Other("")
         val exceptionCaptor = argumentCaptor<SendCommandException>()
         doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
@@ -232,7 +232,7 @@ class FxaDeviceConstellationTest {
     }
 
     @Test
-    fun `send command to device won't report network exceptions`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `send command to device won't report network exceptions`() = runTestOnMain {
         val exception = FxaException.Network("timeout!")
         doAnswer { throw exception }.`when`(account).sendSingleTab(any(), any(), any())
 
@@ -247,7 +247,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `refreshing constellation`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `refreshing constellation`() = runTestOnMain {
         // No devices, no observers.
         `when`(account.getDevices()).thenReturn(emptyArray())
 
@@ -332,7 +332,7 @@ class FxaDeviceConstellationTest {
 
     @Test
     @ExperimentalCoroutinesApi
-    fun `polling for commands triggers observers`() = runBlocking(coroutinesTestRule.testDispatcher) {
+    fun `polling for commands triggers observers`() = runTestOnMain {
         // No commands, no observers.
         `when`(account.gatherTelemetry()).thenReturn("{}")
         `when`(account.pollDeviceCommands()).thenReturn(emptyArray())

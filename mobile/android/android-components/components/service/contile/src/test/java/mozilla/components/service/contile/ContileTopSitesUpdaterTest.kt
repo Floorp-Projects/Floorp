@@ -10,7 +10,8 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.await
 import androidx.work.testing.WorkManagerTestInitHelper
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.contile.ContileTopSitesUpdater.Companion.PERIODIC_WORK_TAG
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -23,6 +24,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class ContileTopSitesUpdaterTest {
 
@@ -40,7 +42,7 @@ class ContileTopSitesUpdaterTest {
     }
 
     @Test
-    fun `WHEN periodic work is started THEN work is queued`() = runBlocking {
+    fun `WHEN periodic work is started THEN work is queued`() = runTest {
         val updater = ContileTopSitesUpdater(testContext, provider = mock())
         val workManager = WorkManager.getInstance(testContext)
         var workInfo = workManager.getWorkInfosForUniqueWork(PERIODIC_WORK_TAG).await()
@@ -62,7 +64,7 @@ class ContileTopSitesUpdaterTest {
     }
 
     @Test
-    fun `GIVEN periodic work is started WHEN period work is stopped THEN no work is queued`() = runBlocking {
+    fun `GIVEN periodic work is started WHEN period work is stopped THEN no work is queued`() = runTest {
         val updater = ContileTopSitesUpdater(testContext, provider = mock())
         val workManager = WorkManager.getInstance(testContext)
         var workInfo = workManager.getWorkInfosForUniqueWork(PERIODIC_WORK_TAG).await()

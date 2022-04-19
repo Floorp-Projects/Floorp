@@ -5,7 +5,8 @@
 package mozilla.components.browser.storage.sync
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.appservices.places.uniffi.PlacesException
@@ -23,6 +24,8 @@ import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -32,28 +35,33 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 
+@ExperimentalCoroutinesApi // for runTestOnMain
 @RunWith(AndroidJUnit4::class)
 class PlacesHistoryStorageTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private lateinit var history: PlacesHistoryStorage
 
     @Before
-    fun setup() = runBlocking {
+    fun setup() = runTestOnMain {
         history = PlacesHistoryStorage(testContext)
         // There's a database on disk which needs to be cleaned up between tests.
         history.deleteEverything()
     }
 
     @After
-    fun cleanup() = runBlocking {
+    fun cleanup() = runTestOnMain {
         history.cleanup()
     }
 
     @Test
-    fun `storage allows recording and querying visits of different types`() = runBlocking {
+    fun `storage allows recording and querying visits of different types`() = runTestOnMain {
         history.recordVisit("http://www.firefox.com/1", PageVisit(VisitType.LINK))
         history.recordVisit("http://www.firefox.com/2", PageVisit(VisitType.RELOAD))
         history.recordVisit("http://www.firefox.com/3", PageVisit(VisitType.TYPED))
@@ -141,7 +149,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `storage passes through recordObservation calls`() = runBlocking {
+    fun `storage passes through recordObservation calls`() = runTestOnMain {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK))
         history.recordObservation("http://www.mozilla.org", PageObservation(title = "Mozilla"))
 
@@ -159,7 +167,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to query top frecent site information`() = runBlocking {
+    fun `store can be used to query top frecent site information`() = runTestOnMain {
         val toAdd = listOf(
             "https://www.example.com/123",
             "https://www.example.com/123",
@@ -223,7 +231,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to query detailed visit information`() = runBlocking {
+    fun `store can be used to query detailed visit information`() = runTestOnMain {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.RELOAD))
         history.recordObservation(
@@ -254,7 +262,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to record and retrieve history via webview-style callbacks`() = runBlocking {
+    fun `store can be used to record and retrieve history via webview-style callbacks`() = runTestOnMain {
         // Empty.
         assertEquals(0, history.getVisited().size)
 
@@ -281,7 +289,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to record and retrieve history via gecko-style callbacks`() = runBlocking {
+    fun `store can be used to record and retrieve history via gecko-style callbacks`() = runTestOnMain {
         assertEquals(0, history.getVisited(listOf()).size)
 
         // Regular visits are tracked
@@ -304,7 +312,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can be used to track page meta information - title and previewImageUrl changes`() = runBlocking {
+    fun `store can be used to track page meta information - title and previewImageUrl changes`() = runTestOnMain {
         // Title and previewImageUrl changes are recorded.
         history.recordVisit("https://www.wikipedia.org", PageVisit(VisitType.TYPED))
         history.recordObservation(
@@ -338,7 +346,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can provide suggestions`() = runBlocking {
+    fun `store can provide suggestions`() = runTestOnMain {
         assertEquals(0, history.getSuggestions("Mozilla", 100).size)
 
         history.recordVisit("http://www.firefox.com", PageVisit(VisitType.LINK))
@@ -388,7 +396,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can provide autocomplete suggestions`() = runBlocking {
+    fun `store can provide autocomplete suggestions`() = runTestOnMain {
         assertNull(history.getAutocompleteSuggestion("moz"))
 
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK))
@@ -445,7 +453,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store ignores url parse exceptions during record operations`() = runBlocking {
+    fun `store ignores url parse exceptions during record operations`() = runTestOnMain {
         // These aren't valid URIs, and if we're not explicitly ignoring exceptions from the underlying
         // storage layer, these calls will throw.
         history.recordVisit("mozilla.org", PageVisit(VisitType.LINK))
@@ -453,7 +461,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can delete everything`() = runBlocking {
+    fun `store can delete everything`() = runTestOnMain {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.TYPED))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.DOWNLOAD))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.BOOKMARK))
@@ -473,7 +481,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can delete by url`() = runBlocking {
+    fun `store can delete by url`() = runTestOnMain {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.TYPED))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.DOWNLOAD))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.BOOKMARK))
@@ -497,7 +505,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can delete by 'since'`() = runBlocking {
+    fun `store can delete by 'since'`() = runTestOnMain {
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.TYPED))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.DOWNLOAD))
         history.recordVisit("http://www.mozilla.org", PageVisit(VisitType.BOOKMARK))
@@ -508,28 +516,21 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can delete by 'range'`() {
-        runBlocking {
-            history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
-            Thread.sleep(10)
-            history.recordVisit("http://www.mozilla.org/2", PageVisit(VisitType.DOWNLOAD))
-            Thread.sleep(10)
-            history.recordVisit("http://www.mozilla.org/3", PageVisit(VisitType.BOOKMARK))
-        }
+    fun `store can delete by 'range'`() = runTestOnMain {
+        history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
+        advanceUntilIdle()
+        history.recordVisit("http://www.mozilla.org/2", PageVisit(VisitType.DOWNLOAD))
+        advanceUntilIdle()
+        history.recordVisit("http://www.mozilla.org/3", PageVisit(VisitType.BOOKMARK))
 
-        val ts = runBlocking {
-            val visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(3, visits.size)
+        val ts = visits[1].visitTime
 
-            assertEquals(3, visits.size)
-            visits[1].visitTime
-        }
+        history.deleteVisitsBetween(ts - 1, ts + 1)
 
-        runBlocking {
-            history.deleteVisitsBetween(ts - 1, ts + 1)
-        }
-        val visits = runBlocking {
-            history.getDetailedVisits(0, Long.MAX_VALUE)
-        }
+        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+
         assertEquals(2, visits.size)
 
         assertEquals("http://www.mozilla.org/1", visits[0].url)
@@ -537,41 +538,28 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `store can delete visit by 'url' and 'timestamp'`() {
-        runBlocking {
-            history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
-            Thread.sleep(10)
-            history.recordVisit("http://www.mozilla.org/2", PageVisit(VisitType.DOWNLOAD))
-            Thread.sleep(10)
-            history.recordVisit("http://www.mozilla.org/3", PageVisit(VisitType.BOOKMARK))
-        }
+    fun `store can delete visit by 'url' and 'timestamp'`() = runTestOnMain {
+        history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
+        Thread.sleep(10)
+        history.recordVisit("http://www.mozilla.org/2", PageVisit(VisitType.DOWNLOAD))
+        Thread.sleep(10)
+        history.recordVisit("http://www.mozilla.org/3", PageVisit(VisitType.BOOKMARK))
 
-        val ts = runBlocking {
-            val visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(3, visits.size)
+        val ts = visits[1].visitTime
 
-            assertEquals(3, visits.size)
-            visits[1].visitTime
-        }
+        history.deleteVisit("http://www.mozilla.org/4", 111)
+        // There are no visits for this url, delete is a no-op.
+        assertEquals(3, history.getDetailedVisits(0, Long.MAX_VALUE).size)
 
-        runBlocking {
-            history.deleteVisit("http://www.mozilla.org/4", 111)
-            // There are no visits for this url, delete is a no-op.
-            assertEquals(3, history.getDetailedVisits(0, Long.MAX_VALUE).size)
-        }
+        history.deleteVisit("http://www.mozilla.org/1", ts)
+        // There is no such visit for this url, delete is a no-op.
+        assertEquals(3, history.getDetailedVisits(0, Long.MAX_VALUE).size)
 
-        runBlocking {
-            history.deleteVisit("http://www.mozilla.org/1", ts)
-            // There is no such visit for this url, delete is a no-op.
-            assertEquals(3, history.getDetailedVisits(0, Long.MAX_VALUE).size)
-        }
+        history.deleteVisit("http://www.mozilla.org/2", ts)
 
-        runBlocking {
-            history.deleteVisit("http://www.mozilla.org/2", ts)
-        }
-
-        val visits = runBlocking {
-            history.getDetailedVisits(0, Long.MAX_VALUE)
-        }
+        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(2, visits.size)
 
         assertEquals("http://www.mozilla.org/1", visits[0].url)
@@ -579,12 +567,12 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `can run maintanence on the store`() = runBlocking {
+    fun `can run maintanence on the store`() = runTestOnMain {
         history.runMaintenance()
     }
 
     @Test
-    fun `can run prune on the store`() = runBlocking {
+    fun `can run prune on the store`() = runTestOnMain {
         // Empty.
         history.prune()
         history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
@@ -602,7 +590,7 @@ class PlacesHistoryStorageTest {
     internal class MockingPlacesHistoryStorage(override val places: Connection) : PlacesHistoryStorage(testContext)
 
     @Test
-    fun `storage passes through sync calls`() = runBlocking {
+    fun `storage passes through sync calls`() = runTestOnMain {
         var passedAuthInfo: SyncAuthInfo? = null
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
@@ -659,7 +647,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `storage passes through sync OK results`() = runBlocking {
+    fun `storage passes through sync OK results`() = runTestOnMain {
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
                 fail()
@@ -705,7 +693,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `storage passes through sync exceptions`() = runBlocking {
+    fun `storage passes through sync exceptions`() = runTestOnMain {
         // Can be any PlacesException
         val exception = PlacesException.UrlParseFailed("test error")
         val conn = object : Connection {
@@ -761,7 +749,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test(expected = PlacesException::class)
-    fun `storage re-throws sync panics`() = runBlocking {
+    fun `storage re-throws sync panics`() = runTestOnMain {
         val exception = PlacesException.UnexpectedPlacesException("test panic")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
@@ -837,7 +825,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `history import v38 populated`() = runBlocking {
+    fun `history import v38 populated`() = runTestOnMain {
         val path = getTestPath("databases/populated-v38.db").absolutePath
         var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(0, visits.size)
@@ -868,7 +856,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `history import v39 populated`() = runBlocking {
+    fun `history import v39 populated`() = runTestOnMain {
         val path = getTestPath("databases/populated-v39.db").absolutePath
         var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(0, visits.size)
@@ -931,7 +919,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `history import v34 populated`() = runBlocking {
+    fun `history import v34 populated`() = runTestOnMain {
         val path = getTestPath("databases/history-v34.db").absolutePath
         var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
         assertEquals(0, visits.size)
@@ -992,7 +980,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `record and get latest history metadata by url`() = runBlocking {
+    fun `record and get latest history metadata by url`() = runTestOnMain {
         val metaKey = HistoryMetadataKey(
             url = "https://doc.rust-lang.org/std/macro.assert_eq.html",
             searchTerm = "rust assert_eq",
@@ -1009,7 +997,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `get history query`() = runBlocking {
+    fun `get history query`() = runTestOnMain {
         assertEquals(0, history.queryHistoryMetadata("keystore", 1).size)
 
         val metaKey1 = HistoryMetadataKey(
@@ -1087,7 +1075,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `get history metadata between`() = runBlocking {
+    fun `get history metadata between`() = runTestOnMain {
         assertEquals(0, history.getHistoryMetadataBetween(-1, 0).size)
         assertEquals(0, history.getHistoryMetadataBetween(0, Long.MAX_VALUE).size)
         assertEquals(0, history.getHistoryMetadataBetween(Long.MAX_VALUE, Long.MIN_VALUE).size)
@@ -1140,7 +1128,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `get history metadata since`() = runBlocking {
+    fun `get history metadata since`() = runTestOnMain {
         val beginning = System.currentTimeMillis()
 
         assertEquals(0, history.getHistoryMetadataSince(-1).size)
@@ -1198,7 +1186,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `delete history metadata by search term`() = runBlocking {
+    fun `delete history metadata by search term`() = runTestOnMain {
         // Able to operate against an empty db
         history.deleteHistoryMetadata("test")
         history.deleteHistoryMetadata("")
@@ -1312,7 +1300,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `safe read from places`() = runBlocking {
+    fun `safe read from places`() = runTestOnMain {
         val result = history.handlePlacesExceptions("test", default = emptyList<HistoryMetadata>()) {
             // Can be any PlacesException error
             throw PlacesException.PlacesConnectionBusy("test")
@@ -1344,7 +1332,7 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
-    fun `delete history metadata by url`() = runBlocking {
+    fun `delete history metadata by url`() = runTestOnMain {
         // Able to operate against an empty db
         history.deleteHistoryMetadataForUrl("https://mozilla.org")
         history.deleteHistoryMetadataForUrl("")

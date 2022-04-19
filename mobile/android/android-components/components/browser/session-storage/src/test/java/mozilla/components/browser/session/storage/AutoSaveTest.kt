@@ -9,7 +9,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -22,6 +21,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -47,7 +47,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when going to background`() {
-        runBlocking {
+        runTestOnMain {
             // Keep the "owner" in scope to avoid it getting garbage collected and therefore lifecycle events
             // not getting propagated (See #1428).
             val owner = mock(LifecycleOwner::class.java)
@@ -82,7 +82,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when tab gets added`() {
-        runBlocking {
+        runTestOnMain {
             val state = BrowserState()
             val store = BrowserStore(state)
 
@@ -115,7 +115,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when tab gets removed`() {
-        runBlocking {
+        runTestOnMain {
             val sessionStorage: SessionStorage = mock()
 
             val store = BrowserStore(
@@ -151,7 +151,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when all tabs get removed`() {
-        runBlocking {
+        runTestOnMain {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(
@@ -187,7 +187,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when no tabs are left`() {
-        runBlocking {
+        runTestOnMain {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(createTab("https://www.firefox.com", id = "firefox")),
@@ -219,7 +219,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when tab gets selected`() {
-        runBlocking {
+        runTestOnMain {
             val store = BrowserStore(
                 BrowserState(
                     tabs = listOf(
@@ -255,7 +255,7 @@ class AutoSaveTest {
 
     @Test
     fun `AutoSave - when tab loading state changes`() {
-        runBlocking {
+        runTestOnMain {
             val sessionStorage: SessionStorage = mock()
 
             val store = BrowserStore(

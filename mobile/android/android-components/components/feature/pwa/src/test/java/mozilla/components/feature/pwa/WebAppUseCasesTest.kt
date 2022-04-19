@@ -6,7 +6,7 @@ package mozilla.components.feature.pwa
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
@@ -109,7 +109,7 @@ class WebAppUseCasesTest {
     }
 
     @Test
-    fun `getInstallState returns Installed if manifest exists`() = runBlockingTest {
+    fun `getInstallState returns Installed if manifest exists`() = runTest {
         val httpClient: Client = mock()
         val storage: ManifestStorage = mock()
         val shortcutManager = WebAppShortcutManager(testContext, httpClient, storage)

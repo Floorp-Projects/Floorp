@@ -5,7 +5,7 @@
 package mozilla.components.feature.search.storage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -18,7 +18,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CustomSearchEngineStorageTest {
     @Test
-    fun `saveSearchEngine successfully saves`() = runBlockingTest {
+    fun `saveSearchEngine successfully saves`() = runTest {
         val searchEngine = SearchEngine(
             id = "id1",
             name = "example",
@@ -33,7 +33,7 @@ class CustomSearchEngineStorageTest {
     }
 
     @Test
-    fun `loadSearchEngine successfully loads after saving`() = runBlockingTest {
+    fun `loadSearchEngine successfully loads after saving`() = runTest {
         val searchEngine = SearchEngine(
             id = "id1",
             name = "example",
@@ -54,7 +54,7 @@ class CustomSearchEngineStorageTest {
 
     @Test
     @Ignore("https://github.com/mozilla-mobile/android-components/issues/8124")
-    fun `loadSearchEngineList successfully loads after saving`() = runBlockingTest {
+    fun `loadSearchEngineList successfully loads after saving`() = runTest {
         val searchEngine = SearchEngine(
             id = "id1",
             name = "example",
@@ -87,7 +87,7 @@ class CustomSearchEngineStorageTest {
     }
 
     @Test
-    fun `removeSearchEngine successfully deletes`() = runBlockingTest {
+    fun `removeSearchEngine successfully deletes`() = runTest {
         val searchEngine = SearchEngine(
             id = "id1",
             name = "example",

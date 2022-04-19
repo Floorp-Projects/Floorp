@@ -8,7 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
 import androidx.work.await
 import androidx.work.testing.TestListenableWorkerBuilder
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -20,6 +21,7 @@ import org.mockito.Mockito.anyBoolean
 import org.mockito.Mockito.spy
 import java.io.IOException
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class ContileTopSitesUpdaterWorkerTest {
 
@@ -29,7 +31,7 @@ class ContileTopSitesUpdaterWorkerTest {
     }
 
     @Test
-    fun `WHEN worker does successful work THEN return a success result`() = runBlocking {
+    fun `WHEN worker does successful work THEN return a success result`() = runTest {
         val provider: ContileTopSitesProvider = mock()
         val worker = spy(
             TestListenableWorkerBuilder<ContileTopSitesUpdaterWorker>(testContext)
@@ -46,7 +48,7 @@ class ContileTopSitesUpdaterWorkerTest {
     }
 
     @Test
-    fun `WHEN worker does unsuccessful work THEN return a failure result`() = runBlocking {
+    fun `WHEN worker does unsuccessful work THEN return a failure result`() = runTest {
         val provider: ContileTopSitesProvider = mock()
         val worker = spy(
             TestListenableWorkerBuilder<ContileTopSitesUpdaterWorker>(testContext)

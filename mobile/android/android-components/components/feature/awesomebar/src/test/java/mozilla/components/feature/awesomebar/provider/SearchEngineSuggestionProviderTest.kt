@@ -6,7 +6,8 @@ package mozilla.components.feature.awesomebar.provider
 
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -16,6 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class SearchEngineSuggestionProviderTest {
     private lateinit var defaultProvider: SearchEngineSuggestionProvider
@@ -43,21 +45,21 @@ class SearchEngineSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns empty list when text is empty`() = runBlocking {
+    fun `Provider returns empty list when text is empty`() = runTest {
         val suggestions = defaultProvider.onInputChanged("")
 
         assertTrue(suggestions.isEmpty())
     }
 
     @Test
-    fun `Provider returns empty list when text is blank`() = runBlocking {
+    fun `Provider returns empty list when text is blank`() = runTest {
         val suggestions = defaultProvider.onInputChanged("  ")
 
         assertTrue(suggestions.isEmpty())
     }
 
     @Test
-    fun `Provider returns empty list when text is shorter than charactersThreshold`() = runBlocking {
+    fun `Provider returns empty list when text is shorter than charactersThreshold`() = runTest {
         val provider = SearchEngineSuggestionProvider(
             testContext, engineList, mock(), 1, "description", mock(), charactersThreshold = 3
         )
@@ -68,7 +70,7 @@ class SearchEngineSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns empty list when list does not contain engines with typed text`() = runBlocking {
+    fun `Provider returns empty list when list does not contain engines with typed text`() = runTest {
 
         val suggestions = defaultProvider.onInputChanged("x")
 
@@ -76,7 +78,7 @@ class SearchEngineSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns a match when list contains the typed engine`() = runBlocking {
+    fun `Provider returns a match when list contains the typed engine`() = runTest {
 
         val suggestions = defaultProvider.onInputChanged("am")
 
@@ -84,7 +86,7 @@ class SearchEngineSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns empty list when the engine list is empty`() = runBlocking {
+    fun `Provider returns empty list when the engine list is empty`() = runTest {
         val providerEmpty = SearchEngineSuggestionProvider(
             testContext, emptyList(), mock(), 1, "description", mock()
         )
@@ -95,7 +97,7 @@ class SearchEngineSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider limits number of returned suggestions to maxSuggestions`() = runBlocking {
+    fun `Provider limits number of returned suggestions to maxSuggestions`() = runTest {
         // this should match to both engines in list
         val suggestions = defaultProvider.onInputChanged("n")
 

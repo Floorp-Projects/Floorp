@@ -6,7 +6,7 @@ package mozilla.components.feature.syncedtabs
 
 import android.graphics.drawable.Drawable
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
@@ -38,7 +38,7 @@ class SyncedTabsStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `matches remote tabs`() = runBlocking {
+    fun `matches remote tabs`() = runTest {
         val provider = SyncedTabsStorageSuggestionProvider(syncedTabs, mock(), mock(), indicatorIcon)
         val deviceTabs1 = SyncedDeviceTabs(
             Device(

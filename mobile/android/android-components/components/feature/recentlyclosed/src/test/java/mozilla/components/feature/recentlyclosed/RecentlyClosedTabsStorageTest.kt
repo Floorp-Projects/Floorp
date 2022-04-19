@@ -6,9 +6,8 @@ package mozilla.components.feature.recentlyclosed
 
 import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.concept.base.crash.CrashReporting
@@ -18,19 +17,24 @@ import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import java.io.IOException
-import java.lang.Exception
-import java.lang.IllegalStateException
 
+@ExperimentalCoroutinesApi // for runTestOnMain
 @RunWith(AndroidJUnit4::class)
 class RecentlyClosedTabsStorageTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private lateinit var storage: RecentlyClosedTabsStorage
     private lateinit var engineStateStorage: TestEngineSessionStateStorage
     private lateinit var database: RecentlyClosedTabsDatabase
@@ -68,6 +72,7 @@ class RecentlyClosedTabsStorageTest {
         crashReporting = mock()
         database = Room
             .inMemoryDatabaseBuilder(testContext, RecentlyClosedTabsDatabase::class.java)
+            .allowMainThreadQueries()
             .build()
 
         engineStateStorage = TestEngineSessionStateStorage()
@@ -87,7 +92,7 @@ class RecentlyClosedTabsStorageTest {
     }
 
     @Test
-    fun testAddingTabsWithMax() {
+    fun testAddingTabsWithMax() = runTestOnMain {
         // Test tab
         val t1 = System.currentTimeMillis()
         val closedTab = RecoverableTab(
@@ -112,10 +117,8 @@ class RecentlyClosedTabsStorageTest {
             )
         )
 
-        val tabs = runBlocking(Dispatchers.IO) {
-            storage.addTabsToCollectionWithMax(listOf(closedTab, secondClosedTab), 1)
-            storage.getTabs().first()
-        }
+        storage.addTabsToCollectionWithMax(listOf(closedTab, secondClosedTab), 1)
+        val tabs = storage.getTabs().first()
 
         assertEquals(1, engineStateStorage.data.size)
         assertEquals(engineState2, engineStateStorage.data["second-tab"])
@@ -137,10 +140,8 @@ class RecentlyClosedTabsStorageTest {
             )
         )
 
-        val newTabs = runBlocking(Dispatchers.IO) {
-            storage.addTabsToCollectionWithMax(listOf(thirdClosedTab), 1)
-            storage.getTabs().first()
-        }
+        storage.addTabsToCollectionWithMax(listOf(thirdClosedTab), 1)
+        val newTabs = storage.getTabs().first()
 
         assertEquals(1, engineStateStorage.data.size)
         assertEquals(engineState3, engineStateStorage.data["third-tab"])
@@ -152,7 +153,7 @@ class RecentlyClosedTabsStorageTest {
     }
 
     @Test
-    fun testAllowAddingSameTabTwice() {
+    fun testAllowAddingSameTabTwice() = runTestOnMain {
         // Test tab
         val engineState: EngineSessionState = mock()
         val closedTab = RecoverableTab(
@@ -166,11 +167,9 @@ class RecentlyClosedTabsStorageTest {
         )
 
         val updatedTab = closedTab.copy(state = closedTab.state.copy(title = "updated"))
-        val tabs = runBlocking(Dispatchers.IO) {
-            storage.addTabsToCollectionWithMax(listOf(closedTab), 2)
-            storage.addTabsToCollectionWithMax(listOf(updatedTab), 2)
-            storage.getTabs().first()
-        }
+        storage.addTabsToCollectionWithMax(listOf(closedTab), 2)
+        storage.addTabsToCollectionWithMax(listOf(updatedTab), 2)
+        val tabs = storage.getTabs().first()
 
         assertEquals(1, engineStateStorage.data.size)
         assertEquals(engineState, engineStateStorage.data["first-tab"])
@@ -182,7 +181,7 @@ class RecentlyClosedTabsStorageTest {
     }
 
     @Test
-    fun testRemovingAllTabs() {
+    fun testRemovingAllTabs() = runTestOnMain {
         // Test tab
         val t1 = System.currentTimeMillis()
         val closedTab = RecoverableTab(
@@ -206,10 +205,8 @@ class RecentlyClosedTabsStorageTest {
             )
         )
 
-        val tabs = runBlocking(Dispatchers.IO) {
-            storage.addTabsToCollectionWithMax(listOf(closedTab, secondClosedTab), 2)
-            storage.getTabs().first()
-        }
+        storage.addTabsToCollectionWithMax(listOf(closedTab, secondClosedTab), 2)
+        val tabs = storage.getTabs().first()
 
         assertEquals(2, engineStateStorage.data.size)
         assertEquals(2, tabs.size)
@@ -220,17 +217,15 @@ class RecentlyClosedTabsStorageTest {
         assertEquals(secondClosedTab.state.title, tabs[1].title)
         assertEquals(secondClosedTab.state.lastAccess, tabs[1].lastAccess)
 
-        val newTabs = runBlocking(Dispatchers.IO) {
-            storage.removeAllTabs()
-            storage.getTabs().first()
-        }
+        storage.removeAllTabs()
+        val newTabs = storage.getTabs().first()
 
         assertEquals(0, engineStateStorage.data.size)
         assertEquals(0, newTabs.size)
     }
 
     @Test
-    fun testRemovingOneTab() {
+    fun testRemovingOneTab() = runTestOnMain {
         // Test tab
         val engineState1: EngineSessionState = mock()
         val t1 = System.currentTimeMillis()
@@ -256,11 +251,9 @@ class RecentlyClosedTabsStorageTest {
             )
         )
 
-        val tabs = runBlocking(Dispatchers.IO) {
-            storage.addTabState(closedTab)
-            storage.addTabState(secondClosedTab)
-            storage.getTabs().first()
-        }
+        storage.addTabState(closedTab)
+        storage.addTabState(secondClosedTab)
+        val tabs = storage.getTabs().first()
 
         assertEquals(2, engineStateStorage.data.size)
         assertEquals(2, tabs.size)
@@ -271,10 +264,8 @@ class RecentlyClosedTabsStorageTest {
         assertEquals(secondClosedTab.state.title, tabs[1].title)
         assertEquals(secondClosedTab.state.lastAccess, tabs[1].lastAccess)
 
-        val newTabs = runBlocking(Dispatchers.IO) {
-            storage.removeTab(tabs[0])
-            storage.getTabs().first()
-        }
+        storage.removeTab(tabs[0])
+        val newTabs = storage.getTabs().first()
 
         assertEquals(1, engineStateStorage.data.size)
         assertEquals(engineState2, engineStateStorage.data["second-tab"])
@@ -285,7 +276,7 @@ class RecentlyClosedTabsStorageTest {
     }
 
     @Test
-    fun testAddingTabWithEngineStateStorageFailure() {
+    fun testAddingTabWithEngineStateStorageFailure() = runTestOnMain {
         // 'fail' in tab's id will cause test engine session storage to fail on writing engineSessionState.
         val closedTab = RecoverableTab(
             engineSessionState = mock(),
@@ -297,10 +288,8 @@ class RecentlyClosedTabsStorageTest {
             )
         )
 
-        val tabs = runBlocking(Dispatchers.IO) {
-            storage.addTabState(closedTab)
-            storage.getTabs().first()
-        }
+        storage.addTabState(closedTab)
+        val tabs = storage.getTabs().first()
         // if it's empty, we know state write failed
         assertEquals(0, engineStateStorage.data.size)
         // but the tab was still written into the database.
@@ -313,7 +302,7 @@ class RecentlyClosedTabsStorageTest {
     }
 
     @Test
-    fun testStorageFailuresAreCaught() {
+    fun testStorageFailuresAreCaught() = runTestOnMain {
         val engineState: EngineSessionState = mock()
         val closedTab = RecoverableTab(
             engineSessionState = engineState,
@@ -324,13 +313,11 @@ class RecentlyClosedTabsStorageTest {
                 lastAccess = System.currentTimeMillis()
             )
         )
-        runBlocking(Dispatchers.IO) {
-            try {
-                storage.addTabsToCollectionWithMax(listOf(closedTab), 2)
-                verify(crashReporting).submitCaughtException(any())
-            } catch (e: Exception) {
-                fail("Thrown exception was not caught")
-            }
+        try {
+            storage.addTabsToCollectionWithMax(listOf(closedTab), 2)
+            verify(crashReporting).submitCaughtException(any())
+        } catch (e: Exception) {
+            fail("Thrown exception was not caught")
         }
     }
 }

@@ -5,7 +5,8 @@
 package mozilla.components.service.pocket
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.pocket.helpers.assertConstructorsVisibility
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -43,8 +44,9 @@ class PocketStoriesServiceTest {
         verify(service.scheduler).stopPeriodicRefreshes(any())
     }
 
+    @ExperimentalCoroutinesApi
     @Test
-    fun `GIVEN PocketStoriesService WHEN getStories THEN getStoriesUsecase should return`() = runBlocking {
+    fun `GIVEN PocketStoriesService WHEN getStories THEN getStoriesUsecase should return`() = runTest {
         val stories = listOf(mock<PocketRecommendedStory>())
         whenever(service.getStoriesUsecase.invoke()).thenReturn(stories)
 

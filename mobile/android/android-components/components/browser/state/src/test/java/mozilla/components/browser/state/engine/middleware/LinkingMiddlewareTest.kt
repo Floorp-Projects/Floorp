@@ -5,7 +5,6 @@
 package mozilla.components.browser.state.engine.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
@@ -18,6 +17,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -137,7 +137,7 @@ class LinkingMiddlewareTest {
     }
 
     @Test
-    fun `registers engine observer after linking`() = runBlocking {
+    fun `registers engine observer after linking`() = runTestOnMain {
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2")
 
@@ -167,7 +167,7 @@ class LinkingMiddlewareTest {
     }
 
     @Test
-    fun `unregisters engine observer before unlinking`() = runBlocking {
+    fun `unregisters engine observer before unlinking`() = runTestOnMain {
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2")
 
@@ -192,7 +192,7 @@ class LinkingMiddlewareTest {
     }
 
     @Test
-    fun `registers engine observer when tab is added with engine session`() = runBlocking {
+    fun `registers engine observer when tab is added with engine session`() = runTestOnMain {
         val engineSession: EngineSession = mock()
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2", engineSession = engineSession)

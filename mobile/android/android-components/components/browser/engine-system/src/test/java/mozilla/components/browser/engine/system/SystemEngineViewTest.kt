@@ -30,7 +30,8 @@ import android.webkit.WebViewClient
 import android.webkit.WebViewDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -77,6 +78,7 @@ import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import java.io.StringReader
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class SystemEngineViewTest {
 
@@ -285,7 +287,7 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of url visits`() = runBlocking {
+    fun `WebView client notifies configured history delegate of url visits`() = runTest {
         val engineSession = SystemEngineSession(testContext)
 
         val engineView = SystemEngineView(testContext)
@@ -308,7 +310,7 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `WebView client checks with the delegate if the URI visit should be recorded`() = runBlocking {
+    fun `WebView client checks with the delegate if the URI visit should be recorded`() = runTest {
         val engineSession = SystemEngineSession(testContext)
         val engineView = SystemEngineView(testContext)
         val webView: WebView = mock()
@@ -332,7 +334,7 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `WebView client requests history from configured history delegate`() {
+    fun `WebView client requests history from configured history delegate`() = runTest {
         val engineSession = SystemEngineSession(testContext)
 
         val engineView = SystemEngineView(testContext)
@@ -371,14 +373,12 @@ class SystemEngineViewTest {
         engineSession.settings.historyTrackingDelegate = historyDelegate
 
         val historyValueCallback: ValueCallback<Array<String>> = mock()
-        runBlocking {
-            engineSession.webView.webChromeClient!!.getVisitedHistory(historyValueCallback)
-        }
+        engineSession.webView.webChromeClient!!.getVisitedHistory(historyValueCallback)
         verify(historyValueCallback).onReceiveValue(arrayOf("https://www.mozilla.com"))
     }
 
     @Test
-    fun `WebView client notifies configured history delegate of title changes`() = runBlocking {
+    fun `WebView client notifies configured history delegate of title changes`() = runTest {
         val engineSession = SystemEngineSession(testContext)
 
         val engineView = SystemEngineView(testContext)

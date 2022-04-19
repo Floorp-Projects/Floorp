@@ -10,7 +10,7 @@ import androidx.room.DatabaseConfiguration
 import androidx.room.InvalidationTracker
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.DataCleanable
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.permission.SitePermissions
@@ -60,7 +60,7 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
-    fun `save a new SitePermission`() = runBlockingTest {
+    fun `save a new SitePermission`() = runTest {
         val sitePermissions = createNewSitePermission()
 
         storage.save(sitePermissions)
@@ -69,7 +69,7 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
-    fun `update a SitePermission`() = runBlockingTest {
+    fun `update a SitePermission`() = runTest {
         val sitePermissions = createNewSitePermission()
 
         storage.update(sitePermissions)
@@ -80,14 +80,14 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
-    fun `find a SitePermissions by origin`() = runBlockingTest {
+    fun `find a SitePermissions by origin`() = runTest {
         storage.findSitePermissionsBy("mozilla.org")
 
         verify(mockDAO).getSitePermissionsBy("mozilla.org")
     }
 
     @Test
-    fun `find all sitePermissions grouped by permission`() = runBlockingTest {
+    fun `find all sitePermissions grouped by permission`() = runTest {
         doReturn(dummySitePermissionEntitiesList())
             .`when`(mockDAO).getSitePermissions()
 
@@ -106,7 +106,7 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
-    fun `remove a SitePermissions`() = runBlockingTest {
+    fun `remove a SitePermissions`() = runTest {
         val sitePermissions = createNewSitePermission()
 
         storage.remove(sitePermissions)
@@ -118,7 +118,7 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
-    fun `remove all SitePermissions`() = runBlockingTest {
+    fun `remove all SitePermissions`() = runTest {
         storage.removeAll()
         shadowOf(getMainLooper()).idle()
 
@@ -127,7 +127,7 @@ class OnDiskSitePermissionsStorageTest {
     }
 
     @Test
-    fun `get all SitePermissions paged`() = runBlockingTest {
+    fun `get all SitePermissions paged`() = runTest {
         val mockDataSource: DataSource<Int, SitePermissionsEntity> = mock()
 
         doReturn(object : DataSource.Factory<Int, SitePermissionsEntity>() {

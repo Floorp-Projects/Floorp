@@ -9,7 +9,6 @@ import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
@@ -17,6 +16,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -52,7 +52,7 @@ class URLRendererTest {
 
     @Test
     fun `Render with configuration`() {
-        runBlocking {
+        runTestOnMain {
             val configuration = ToolbarFeature.UrlRenderConfiguration(
                 publicSuffixList = PublicSuffixList(testContext, Dispatchers.Unconfined),
                 registrableDomainColor = Color.RED,

@@ -5,7 +5,8 @@
 package mozilla.components.feature.awesomebar.provider
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
@@ -30,6 +31,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class HistoryStorageSuggestionProviderTest {
 
@@ -39,7 +41,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns empty list when text is empty`() = runBlocking {
+    fun `Provider returns empty list when text is empty`() = runTest {
         val provider = HistoryStorageSuggestionProvider(mock(), mock())
 
         val suggestions = provider.onInputChanged("")
@@ -47,7 +49,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns suggestions from configured history storage`() = runBlocking {
+    fun `Provider returns suggestions from configured history storage`() = runTest {
         val history: HistoryStorage = mock()
         Mockito.doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10))).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
         val provider = HistoryStorageSuggestionProvider(history, mock())
@@ -58,7 +60,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runTest {
         val history: HistoryStorage = mock()
         Mockito.doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10))).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
         val provider = HistoryStorageSuggestionProvider(history, mock(), showEditSuggestion = false)
@@ -70,7 +72,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider limits number of returned suggestions to a max of 20 by default`() = runBlocking {
+    fun `Provider limits number of returned suggestions to a max of 20 by default`() = runTest {
         val history: HistoryStorage = mock()
         Mockito.doReturn(
             (1..100).map {
@@ -84,7 +86,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider allows lowering the number of returned suggestions beneath the default`() = runBlocking {
+    fun `Provider allows lowering the number of returned suggestions beneath the default`() = runTest {
         val history: HistoryStorage = mock()
         Mockito.doReturn(
             (1..50).map {
@@ -101,7 +103,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider allows increasing the number of returned suggestions above the default`() = runBlocking {
+    fun `Provider allows increasing the number of returned suggestions above the default`() = runTest {
         val history: HistoryStorage = mock()
         Mockito.doReturn(
             (1..50).map {
@@ -118,7 +120,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider dedupes suggestions`() = runBlocking {
+    fun `Provider dedupes suggestions`() = runTest {
         val storage: HistoryStorage = mock()
 
         val provider = HistoryStorageSuggestionProvider(storage, mock())
@@ -157,7 +159,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `provider calls speculative connect for URL of highest scored suggestion`() = runBlocking {
+    fun `provider calls speculative connect for URL of highest scored suggestion`() = runTest {
         val history: HistoryStorage = mock()
         val engine: Engine = mock()
         val provider = HistoryStorageSuggestionProvider(history, mock(), engine = engine)
@@ -175,7 +177,7 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `fact is emitted when suggestion is clicked`() = runBlocking {
+    fun `fact is emitted when suggestion is clicked`() = runTest {
         val history: HistoryStorage = mock()
         val engine: Engine = mock()
         val provider = HistoryStorageSuggestionProvider(history, mock(), engine = engine)

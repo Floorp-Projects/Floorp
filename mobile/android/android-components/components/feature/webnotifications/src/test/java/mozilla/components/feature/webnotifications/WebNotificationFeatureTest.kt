@@ -8,7 +8,6 @@ import android.app.NotificationManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.Icon.Source
@@ -21,7 +20,10 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -34,6 +36,10 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class WebNotificationFeatureTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private val context = spy(testContext)
     private val browserIcons: BrowserIcons = mock()
     private val icon: Icon = mock()
@@ -84,7 +90,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `engine notifies to show notification`() = runBlockingTest {
+    fun `engine notifies to show notification`() = runTestOnMain {
         val notification = testNotification.copy(sourceUrl = "https://mozilla.org:443")
         val feature = WebNotificationFeature(
             context,
@@ -105,7 +111,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `notification ignored if permissions are not allowed`() = runBlockingTest {
+    fun `notification ignored if permissions are not allowed`() = runTestOnMain {
         val notification = testNotification.copy(sourceUrl = "https://mozilla.org:443")
         val feature = WebNotificationFeature(
             context,
@@ -134,7 +140,7 @@ class WebNotificationFeatureTest {
     }
 
     @Test
-    fun `notifications always allowed for web extensions`() = runBlockingTest {
+    fun `notifications always allowed for web extensions`() = runTestOnMain {
         val webExtensionNotification = WebNotification(
             "Mozilla",
             "mozilla.org",

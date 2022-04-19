@@ -10,7 +10,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.appservices.push.PushException.GeneralException
 import mozilla.appservices.push.PushException.MissingRegistrationTokenException
 import mozilla.components.concept.base.crash.CrashReporting
@@ -25,6 +24,8 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.nullable
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -33,19 +34,21 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class AutoPushFeatureTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     private var lastVerified: Long
         get() = preference(testContext).getLong(LAST_VERIFIED, System.currentTimeMillis())
@@ -77,14 +80,14 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `updateToken not called if no token in prefs`() = runBlockingTest {
+    fun `updateToken not called if no token in prefs`() = runTestOnMain {
         AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
 
         verify(connection, never()).updateToken(anyString())
     }
 
     @Test
-    fun `updateToken called if token is in prefs`() = runBlockingTest {
+    fun `updateToken called if token is in prefs`() = runTestOnMain {
         preference(testContext).edit().putString(PREF_TOKEN, "token").apply()
 
         val feature = AutoPushFeature(
@@ -97,7 +100,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `shutdown stops service and unsubscribes all`() = runBlockingTest {
+    fun `shutdown stops service and unsubscribes all`() = runTestOnMain {
         val service: PushService = mock()
         whenever(connection.isInitialized()).thenReturn(true)
 
@@ -109,7 +112,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `onNewToken updates connection and saves pref`() = runBlockingTest {
+    fun `onNewToken updates connection and saves pref`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
 
         whenever(connection.subscribe(anyString(), nullable())).thenReturn(mock())
@@ -124,7 +127,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `onMessageReceived decrypts message and notifies observers`() = runBlockingTest {
+    fun `onMessageReceived decrypts message and notifies observers`() = runTestOnMain {
         val encryptedMessage: EncryptedPushMessage = mock()
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
@@ -150,7 +153,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `subscribe calls native layer and notifies observers`() = runBlockingTest {
+    fun `subscribe calls native layer and notifies observers`() = runTestOnMain {
         val connection: PushConnection = mock()
         val subscription: AutoPushSubscription = mock()
         var invoked = false
@@ -174,7 +177,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `subscribe invokes error callback`() = runBlockingTest {
+    fun `subscribe invokes error callback`() = runTestOnMain {
         val connection: PushConnection = mock()
         val subscription: AutoPushSubscription = mock()
         var invoked = false
@@ -213,7 +216,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `unsubscribe calls native layer and notifies observers`() = runBlockingTest {
+    fun `unsubscribe calls native layer and notifies observers`() = runTestOnMain {
         val connection: PushConnection = mock()
         var invoked = false
         var errorInvoked = false
@@ -266,7 +269,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `unsubscribe invokes error callback on native exception`() = runBlockingTest {
+    fun `unsubscribe invokes error callback on native exception`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
         var invoked = false
         var errorInvoked = false
@@ -288,7 +291,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `getSubscription returns null when there is no subscription`() = runBlockingTest {
+    fun `getSubscription returns null when there is no subscription`() = runTestOnMain {
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
         var invoked = false
 
@@ -305,7 +308,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `getSubscription invokes subscribe when there is a subscription`() = runBlockingTest {
+    fun `getSubscription invokes subscribe when there is a subscription`() = runTestOnMain {
         val connection = TestPushConnection(true)
         val feature = AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection)
         var invoked = false
@@ -321,7 +324,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `forceRegistrationRenewal deletes pref and calls service`() = runBlockingTest {
+    fun `forceRegistrationRenewal deletes pref and calls service`() = runTestOnMain {
         val service: PushService = mock()
         val feature = AutoPushFeature(testContext, service, mock(), coroutineContext, mock())
 
@@ -335,7 +338,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `verifyActiveSubscriptions notifies observers`() = runBlockingTest {
+    fun `verifyActiveSubscriptions notifies observers`() = runTestOnMain {
         val connection: PushConnection = spy(TestPushConnection(true))
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
@@ -365,7 +368,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `initialize executes verifyActiveSubscriptions after interval`() = runBlockingTest {
+    fun `initialize executes verifyActiveSubscriptions after interval`() = runTestOnMain {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -388,7 +391,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `initialize does not execute verifyActiveSubscription before interval`() = runBlockingTest {
+    fun `initialize does not execute verifyActiveSubscription before interval`() = runTestOnMain {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -413,7 +416,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `new FCM token executes verifyActiveSubscription`() = runBlockingTest {
+    fun `new FCM token executes verifyActiveSubscription`() = runTestOnMain {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -435,7 +438,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `verification doesn't happen until we've got the token`() = runBlockingTest {
+    fun `verification doesn't happen until we've got the token`() = runTestOnMain {
         val feature = spy(
             AutoPushFeature(
                 context = testContext,
@@ -452,7 +455,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `crash reporter is notified of errors`() = runBlockingTest {
+    fun `crash reporter is notified of errors`() = runTestOnMain {
         val native: PushConnection = TestPushConnection(true)
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
@@ -470,7 +473,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `non-fatal errors are ignored`() = runBlockingTest {
+    fun `non-fatal errors are ignored`() = runTestOnMain {
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
             context = testContext,
@@ -489,7 +492,7 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `only fatal errors are reported`() = runBlockingTest {
+    fun `only fatal errors are reported`() = runTestOnMain {
         val crashReporter: CrashReporting = mock()
         val feature = AutoPushFeature(
             context = testContext,

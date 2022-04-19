@@ -2,7 +2,7 @@ package mozilla.components.feature.media.ext
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.test.mock
@@ -19,39 +19,33 @@ class SessionStateKtTest {
     private val getArtworkNull: (suspend () -> Bitmap?) = { null }
 
     @Test
-    fun `getNonPrivateIcon returns null when in private mode`() {
+    fun `getNonPrivateIcon returns null when in private mode`() = runTest {
         val sessionState: SessionState = mock()
         val contentState: ContentState = mock()
 
         whenever(sessionState.content).thenReturn(contentState)
         whenever(contentState.private).thenReturn(true)
 
-        var result: Bitmap?
-        runBlocking {
-            result = sessionState.getNonPrivateIcon(getArtwork)
-        }
+        val result = sessionState.getNonPrivateIcon(getArtwork)
 
         assertEquals(result, null)
     }
 
     @Test
-    fun `getNonPrivateIcon returns bitmap when not in private mode`() {
+    fun `getNonPrivateIcon returns bitmap when not in private mode`() = runTest {
         val sessionState: SessionState = mock()
         val contentState: ContentState = mock()
 
         whenever(sessionState.content).thenReturn(contentState)
         whenever(contentState.private).thenReturn(false)
 
-        var result: Bitmap?
-        runBlocking {
-            result = sessionState.getNonPrivateIcon(getArtwork)
-        }
+        val result = sessionState.getNonPrivateIcon(getArtwork)
 
         assertEquals(result, bitmap)
     }
 
     @Test
-    fun `getNonPrivateIcon returns content icon when not in private mode`() {
+    fun `getNonPrivateIcon returns content icon when not in private mode`() = runTest {
         val sessionState: SessionState = mock()
         val contentState: ContentState = mock()
         val icon: Bitmap = mock()
@@ -60,16 +54,13 @@ class SessionStateKtTest {
         whenever(contentState.private).thenReturn(false)
         whenever(contentState.icon).thenReturn(icon)
 
-        var result: Bitmap?
-        runBlocking {
-            result = sessionState.getNonPrivateIcon(null)
-        }
+        val result = sessionState.getNonPrivateIcon(null)
 
         assertEquals(result, icon)
     }
 
     @Test
-    fun `getNonPrivateIcon returns content icon when getArtwork return null`() {
+    fun `getNonPrivateIcon returns content icon when getArtwork return null`() = runTest {
         val sessionState: SessionState = mock()
         val contentState: ContentState = mock()
         val icon: Bitmap = mock()
@@ -78,10 +69,7 @@ class SessionStateKtTest {
         whenever(contentState.private).thenReturn(false)
         whenever(contentState.icon).thenReturn(icon)
 
-        var result: Bitmap?
-        runBlocking {
-            result = sessionState.getNonPrivateIcon(getArtworkNull)
-        }
+        val result = sessionState.getNonPrivateIcon(getArtworkNull)
 
         assertEquals(result, icon)
     }

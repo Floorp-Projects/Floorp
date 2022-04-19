@@ -14,7 +14,7 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.SessionState
@@ -78,7 +78,7 @@ class WebAppShortcutManagerTest {
     fun teardown() = setSdkInt(0)
 
     @Test
-    fun `requestPinShortcut no-op if pinning unsupported`() = runBlockingTest {
+    fun `requestPinShortcut no-op if pinning unsupported`() = runTest {
         val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
             icons = listOf(
@@ -103,7 +103,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `requestPinShortcut won't make a PWA icon if the session is not installable`() = runBlockingTest {
+    fun `requestPinShortcut won't make a PWA icon if the session is not installable`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
         val manifest = baseManifest.copy(
             display = WebAppManifest.DisplayMode.STANDALONE,
@@ -120,7 +120,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `requestPinShortcut pins PWA shortcut`() = runBlockingTest {
+    fun `requestPinShortcut pins PWA shortcut`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val manifest = baseManifest.copy(
@@ -145,7 +145,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `requestPinShortcut pins basic shortcut`() = runBlockingTest {
+    fun `requestPinShortcut pins basic shortcut`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val session = buildInstallableSession()
@@ -160,7 +160,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildBasicShortcut uses manifest short name as label by default`() = runBlockingTest {
+    fun `buildBasicShortcut uses manifest short name as label by default`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val session = createTab("https://www.mozilla.org", title = "Internet for people, not profit — Mozilla").let {
@@ -181,7 +181,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildBasicShortcut uses manifest name as label by default`() = runBlockingTest {
+    fun `buildBasicShortcut uses manifest name as label by default`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val session = createTab("https://www.mozilla.org", title = "Internet for people, not profit — Mozilla").let {
@@ -201,7 +201,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildBasicShortcut uses session title as label if there is no manifest`() = runBlockingTest {
+    fun `buildBasicShortcut uses session title as label if there is no manifest`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val expectedTitle = "Internet for people, not profit — Mozilla"
@@ -214,7 +214,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildBasicShortcut can create a shortcut with a custom name`() = runBlockingTest {
+    fun `buildBasicShortcut can create a shortcut with a custom name`() = runTest {
         setSdkInt(Build.VERSION_CODES.O)
 
         val title = "Internet for people, not profit — Mozilla"
@@ -228,7 +228,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `updateShortcuts no-op`() = runBlockingTest {
+    fun `updateShortcuts no-op`() = runTest {
         val manifests = listOf(baseManifest)
         doReturn(null).`when`(manager).buildWebAppShortcut(context, manifests[0])
 
@@ -242,7 +242,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `updateShortcuts updates list of existing shortcuts`() = runBlockingTest {
+    fun `updateShortcuts updates list of existing shortcuts`() = runTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
         val manifests = listOf(baseManifest)
         val shortcutCompat: ShortcutInfoCompat = mock()
@@ -255,7 +255,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildWebAppShortcut builds shortcut and saves manifest`() = runBlockingTest {
+    fun `buildWebAppShortcut builds shortcut and saves manifest`() = runTest {
         doReturn(mock<IconCompat>()).`when`(manager).buildIconFromManifest(baseManifest)
 
         val shortcut = manager.buildWebAppShortcut(context, baseManifest)!!
@@ -271,7 +271,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildWebAppShortcut builds shortcut with short name`() = runBlockingTest {
+    fun `buildWebAppShortcut builds shortcut with short name`() = runTest {
         val manifest = WebAppManifest(name = "Demo Demo", shortName = "DD", startUrl = "https://example.com")
         doReturn(mock<IconCompat>()).`when`(manager).buildIconFromManifest(manifest)
 
@@ -303,7 +303,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `checking unknown url returns uninstalled state`() = runBlockingTest {
+    fun `checking unknown url returns uninstalled state`() = runTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
 
         val url = "https://mozilla.org"
@@ -318,7 +318,7 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `checking a known url returns installed state`() = runBlockingTest {
+    fun `checking a known url returns installed state`() = runTest {
         setSdkInt(Build.VERSION_CODES.N_MR1)
 
         val url = "https://mozilla.org/pwa/"

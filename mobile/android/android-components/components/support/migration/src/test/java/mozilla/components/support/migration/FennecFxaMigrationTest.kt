@@ -5,7 +5,7 @@
 package mozilla.components.support.migration
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.MigrationResult
 import mozilla.components.service.fxa.sharing.ShareableAccount
@@ -29,7 +29,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class FennecFxaMigrationTest {
     @Test
-    fun `no state`() = runBlocking {
+    fun `no state`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "no-file.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -41,7 +41,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `separated fxa state v4`() = runBlocking {
+    fun `separated fxa state v4`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "separated-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -59,7 +59,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `doghouse fxa state v4`() = runBlocking {
+    fun `doghouse fxa state v4`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "doghouse-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -77,7 +77,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `married fxa state v4 successfull sign-in`() = runBlocking {
+    fun `married fxa state v4 successfull sign-in`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "married-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -99,7 +99,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `cohabiting fxa state v4 successful sign-in`() = runBlocking {
+    fun `cohabiting fxa state v4 successful sign-in`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -121,7 +121,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `cohabiting fxa state v4 will retry sign-in`() = runBlocking {
+    fun `cohabiting fxa state v4 will retry sign-in`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -143,7 +143,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `married fxa state v4 failed sign-in`() = runBlocking {
+    fun `married fxa state v4 failed sign-in`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "married-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -167,7 +167,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `custom token server`() = runBlocking {
+    fun `custom token server`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "custom-sync-config-token.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -181,7 +181,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `custom idp server`() = runBlocking {
+    fun `custom idp server`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "custom-sync-config-idp.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -195,7 +195,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `custom idp and token servers`() = runBlocking {
+    fun `custom idp and token servers`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "custom-sync-config-idp-token.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -209,7 +209,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `china idp and token servers`() = runBlocking {
+    fun `china idp and token servers`() = runTest {
         customServerAssertAllowed("china-sync-config-idp-token.json")
     }
 
@@ -235,7 +235,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `custom idp and token servers - allowed, but failed sign-in`() = runBlocking {
+    fun `custom idp and token servers - allowed, but failed sign-in`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "china-sync-config-idp-token.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -259,7 +259,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `cohabiting fxa state v4 failed sign-in`() = runBlocking {
+    fun `cohabiting fxa state v4 failed sign-in`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "cohabiting-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -283,7 +283,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `corrupt married fxa state v4`() = runBlocking {
+    fun `corrupt married fxa state v4`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "corrupt-married-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -305,7 +305,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `corrupt missing versions fxa state v4`() = runBlocking {
+    fun `corrupt missing versions fxa state v4`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "corrupt-separated-missing-versions-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -327,7 +327,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `corrupt bad fxa state`() = runBlocking {
+    fun `corrupt bad fxa state`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "separated-bad-state.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -349,7 +349,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `separated - bad account version`() = runBlocking {
+    fun `separated - bad account version`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "separated-bad-account-version-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -374,7 +374,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `separated - bad pickle version`() = runBlocking {
+    fun `separated - bad pickle version`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "separated-bad-pickle-version-v4.json")
         val accountManager: FxaAccountManager = mock()
 
@@ -399,7 +399,7 @@ class FennecFxaMigrationTest {
     }
 
     @Test
-    fun `separated - bad state version`() = runBlocking {
+    fun `separated - bad state version`() = runTest {
         val fxaPath = File(getTestPath("fxa"), "separated-bad-state-version-v10.json")
         val accountManager: FxaAccountManager = mock()
 

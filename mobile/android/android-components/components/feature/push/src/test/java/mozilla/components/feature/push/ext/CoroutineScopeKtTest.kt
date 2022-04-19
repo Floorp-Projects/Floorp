@@ -8,7 +8,7 @@ package mozilla.components.feature.push.ext
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.appservices.push.InternalException
 import mozilla.appservices.push.PushException.AlreadyRegisteredException
 import mozilla.appservices.push.PushException.CommunicationException
@@ -28,7 +28,7 @@ import org.junit.Test
 class CoroutineScopeKtTest {
 
     @Test(expected = InternalException::class)
-    fun `launchAndTry throws on unrecoverable Rust exceptions`() = runBlockingTest {
+    fun `launchAndTry throws on unrecoverable Rust exceptions`() = runTest {
         CoroutineScope(coroutineContext).launchAndTry(
             errorBlock = { throw InternalException("unit test") },
             block = { throw MissingRegistrationTokenException("") }
@@ -36,7 +36,7 @@ class CoroutineScopeKtTest {
     }
 
     @Test(expected = ArithmeticException::class)
-    fun `launchAndTry throws original exception`() = runBlockingTest {
+    fun `launchAndTry throws original exception`() = runTest {
         CoroutineScope(coroutineContext).launchAndTry(
             errorBlock = { throw InternalException("unit test") },
             block = { throw ArithmeticException() }
@@ -44,7 +44,7 @@ class CoroutineScopeKtTest {
     }
 
     @Test
-    fun `launchAndTry should NOT throw on recoverable Rust exceptions`() = runBlockingTest {
+    fun `launchAndTry should NOT throw on recoverable Rust exceptions`() = runTest {
         CoroutineScope(coroutineContext).launchAndTry(
             { throw CryptoException("should not fail test") },
             { assert(true) }

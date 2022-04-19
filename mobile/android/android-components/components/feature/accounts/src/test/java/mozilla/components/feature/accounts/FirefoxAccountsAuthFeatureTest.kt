@@ -8,7 +8,7 @@ import android.content.Context
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AuthFlowUrl
@@ -76,7 +76,7 @@ class FirefoxAccountsAuthFeatureTest {
 
     @Config(sdk = [22])
     @Test
-    fun `begin authentication`() = runBlocking {
+    fun `begin authentication`() = runTest {
         val manager = prepareAccountManagerForSuccessfulAuthentication(
             this.coroutineContext
         )
@@ -95,7 +95,7 @@ class FirefoxAccountsAuthFeatureTest {
 
     @Config(sdk = [22])
     @Test
-    fun `begin pairing authentication`() = runBlocking {
+    fun `begin pairing authentication`() = runTest {
         val manager = prepareAccountManagerForSuccessfulAuthentication(
             this.coroutineContext
         )
@@ -114,7 +114,7 @@ class FirefoxAccountsAuthFeatureTest {
 
     @Config(sdk = [22])
     @Test
-    fun `begin authentication with errors`() = runBlocking {
+    fun `begin authentication with errors`() = runTest {
         val manager = prepareAccountManagerForFailedAuthentication(
             this.coroutineContext
         )
@@ -135,7 +135,7 @@ class FirefoxAccountsAuthFeatureTest {
 
     @Config(sdk = [22])
     @Test
-    fun `begin pairing authentication with errors`() = runBlocking {
+    fun `begin pairing authentication with errors`() = runTest {
         val manager = prepareAccountManagerForFailedAuthentication(
             this.coroutineContext
         )
@@ -155,7 +155,7 @@ class FirefoxAccountsAuthFeatureTest {
     }
 
     @Test
-    fun `auth interceptor`() = runBlocking {
+    fun `auth interceptor`() = runTest {
         val manager = mock<FxaAccountManager>()
         val redirectUrl = "https://accounts.firefox.com/oauth/success/123"
         val feature = FirefoxAccountsAuthFeature(

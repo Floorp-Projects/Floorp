@@ -5,7 +5,7 @@
 package mozilla.components.browser.session.storage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.fakes.engine.FakeEngine
 import mozilla.components.support.test.fakes.engine.FakeEngineSessionState
 import mozilla.components.support.test.robolectric.testContext
@@ -18,11 +18,11 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class FileEngineSessionStateStorageTest {
     @Test
-    fun `able to read and write engine session states`() = runBlocking {
+    fun `able to read and write engine session states`() = runTest {
         val storage = FileEngineSessionStateStorage(testContext, FakeEngine())
 
         // reading non-existing tab
-        assertNull(runBlocking { storage.read("test-tab") })
+        assertNull(storage.read("test-tab"))
 
         storage.write("test-tab", FakeEngineSessionState("some-engine-state"))
         val state = storage.read("test-tab")
@@ -33,7 +33,7 @@ class FileEngineSessionStateStorageTest {
     }
 
     @Test
-    fun `able to delete specific engine session states`() = runBlocking {
+    fun `able to delete specific engine session states`() = runTest {
         val storage = FileEngineSessionStateStorage(testContext, FakeEngine())
         storage.write("test-tab-1", FakeEngineSessionState("some-engine-state-1"))
         storage.write("test-tab-2", FakeEngineSessionState("some-engine-state-2"))
@@ -63,7 +63,7 @@ class FileEngineSessionStateStorageTest {
     }
 
     @Test
-    fun `able to delete all engine states`() = runBlocking {
+    fun `able to delete all engine states`() = runTest {
         val storage = FileEngineSessionStateStorage(testContext, FakeEngine())
 
         // already empty storage

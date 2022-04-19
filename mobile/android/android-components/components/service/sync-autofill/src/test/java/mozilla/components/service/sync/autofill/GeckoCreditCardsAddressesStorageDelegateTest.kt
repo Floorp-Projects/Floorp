@@ -7,9 +7,6 @@ package mozilla.components.service.sync.autofill
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
@@ -19,8 +16,11 @@ import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.ktx.kotlin.last4Digits
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
@@ -31,18 +31,20 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class GeckoCreditCardsAddressesStorageDelegateTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     private lateinit var storage: AutofillCreditCardsAddressesStorage
     private lateinit var securePrefs: SecureAbove22Preferences
     private lateinit var delegate: GeckoCreditCardsAddressesStorageDelegate
-    private lateinit var scope: TestScope
 
     init {
         testContext.getDatabasePath(AUTOFILL_DB_NAME)!!.parentFile!!.mkdirs()
     }
 
     @Before
-    fun before() = runBlocking {
-        scope = TestScope(UnconfinedTestDispatcher())
+    fun before() {
         // forceInsecure is set in the tests because a keystore wouldn't be configured in the test environment.
         securePrefs = SecureAbove22Preferences(testContext, "autofill", forceInsecure = true)
         storage = AutofillCreditCardsAddressesStorage(testContext, lazy { securePrefs })
@@ -51,7 +53,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
 
     @Test
     fun `GIVEN a newly added credit card WHEN decrypt is called THEN it returns the plain credit card number`() =
-        runBlocking {
+        runTestOnMain {
             val plaintextNumber = CreditCardNumber.Plaintext("4111111111111111")
             val creditCardFields = NewCreditCardFields(
                 billingName = "Jon Doe",

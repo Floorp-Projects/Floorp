@@ -5,7 +5,7 @@
 package mozilla.components.feature.accounts.push
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -21,7 +21,7 @@ import org.mockito.Mockito.verify
 @ExperimentalCoroutinesApi
 class SendTabFeatureKtTest {
     @Test
-    fun `feature register all observers`() = runBlockingTest {
+    fun `feature register all observers`() = runTest {
         val accountManager: FxaAccountManager = mock()
 
         SendTabFeature(

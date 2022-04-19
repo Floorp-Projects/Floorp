@@ -7,17 +7,18 @@ package mozilla.components.browser.thumbnails.storage
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -26,7 +27,9 @@ import org.mockito.Mockito.spy
 @RunWith(AndroidJUnit4::class)
 class ThumbnailStorageTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
 
     @Before
     @After
@@ -35,7 +38,7 @@ class ThumbnailStorageTest {
     }
 
     @Test
-    fun `clearThumbnails`() = runBlocking {
+    fun `clearThumbnails`() = runTestOnMain {
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
 
@@ -54,7 +57,7 @@ class ThumbnailStorageTest {
     }
 
     @Test
-    fun `deleteThumbnail`() = runBlocking {
+    fun `deleteThumbnail`() = runTestOnMain {
         val request = "test-tab1"
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))
@@ -69,7 +72,7 @@ class ThumbnailStorageTest {
     }
 
     @Test
-    fun `saveThumbnail`() = runBlocking {
+    fun `saveThumbnail`() = runTestOnMain {
         val request = ImageLoadRequest("test-tab1", 100)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext))
@@ -83,7 +86,7 @@ class ThumbnailStorageTest {
     }
 
     @Test
-    fun `loadThumbnail`() = runBlocking {
+    fun `loadThumbnail`() = runTestOnMain {
         val request = ImageLoadRequest("test-tab1", 100)
         val bitmap: Bitmap = mock()
         val thumbnailStorage = spy(ThumbnailStorage(testContext, testDispatcher))

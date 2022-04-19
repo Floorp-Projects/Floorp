@@ -36,6 +36,7 @@ dependencies {
     testImplementation Dependencies.androidx_work_testing
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
 
     testImplementation project(':support-test')
 }

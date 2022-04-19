@@ -10,7 +10,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
 import androidx.work.await
 import androidx.work.testing.TestListenableWorkerBuilder
-import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
@@ -27,6 +26,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -57,7 +57,7 @@ class SupportedAddonsWorkerTest {
     }
 
     @Test
-    fun `doWork - will return Result_success and create a notification when a new supported add-on is found`() {
+    fun `doWork - will return Result_success and create a notification when a new supported add-on is found`() = runTestOnMain {
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<SupportedAddonsWorker>(testContext).build()
         var throwable: Throwable? = null
@@ -74,23 +74,21 @@ class SupportedAddonsWorkerTest {
         GlobalAddonDependencyProvider.initialize(addonManager, mock(), onCrash)
         val onErrorCaptor = argumentCaptor<((Throwable) -> Unit)>()
 
-        runBlocking {
-            whenever(addonManager.getAddons()).thenReturn(listOf(unsupportedAddon))
-            val result = worker.startWork().await()
+        whenever(addonManager.getAddons()).thenReturn(listOf(unsupportedAddon))
+        val result = worker.startWork().await()
 
-            assertEquals(ListenableWorker.Result.success(), result)
+        assertEquals(ListenableWorker.Result.success(), result)
 
-            val notificationId = SharedIdsHelper.getIdForTag(testContext, NOTIFICATION_TAG)
-            assertTrue(isNotificationVisible(notificationId))
-            verify(addonManager).enableAddon(eq(unsupportedAddon), source = eq(EnableSource.APP_SUPPORT), onSuccess = any(), onError = onErrorCaptor.capture())
+        val notificationId = SharedIdsHelper.getIdForTag(testContext, NOTIFICATION_TAG)
+        assertTrue(isNotificationVisible(notificationId))
+        verify(addonManager).enableAddon(eq(unsupportedAddon), source = eq(EnableSource.APP_SUPPORT), onSuccess = any(), onError = onErrorCaptor.capture())
 
-            onErrorCaptor.value.invoke(Exception())
-            assertNotNull(throwable!!)
-        }
+        onErrorCaptor.value.invoke(Exception())
+        assertNotNull(throwable!!)
     }
 
     @Test
-    fun `doWork - will try pass any exceptions to the crashReporter`() {
+    fun `doWork - will try pass any exceptions to the crashReporter`() = runTestOnMain {
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<SupportedAddonsWorker>(testContext).build()
         var crashWasReported = false
@@ -101,16 +99,14 @@ class SupportedAddonsWorkerTest {
         GlobalAddonDependencyProvider.initialize(addonManager, mock(), crashReporter)
         GlobalAddonDependencyProvider.addonManager = null
 
-        runBlocking {
-            val result = worker.startWork().await()
+        val result = worker.startWork().await()
 
-            assertEquals(ListenableWorker.Result.success(), result)
-            assertTrue(crashWasReported)
-        }
+        assertEquals(ListenableWorker.Result.success(), result)
+        assertTrue(crashWasReported)
     }
 
     @Test
-    fun `doWork - will NOT pass any IOExceptions to the crashReporter`() {
+    fun `doWork - will NOT pass any IOExceptions to the crashReporter`() = runTestOnMain {
         val addonManager = mock<AddonManager>()
         val worker = TestListenableWorkerBuilder<SupportedAddonsWorker>(testContext).build()
         var crashWasReported = false
@@ -120,13 +116,11 @@ class SupportedAddonsWorkerTest {
 
         GlobalAddonDependencyProvider.initialize(addonManager, mock(), crashReporter)
 
-        runBlocking {
-            whenever(addonManager.getAddons()).thenThrow(AddonManagerException(IOException()))
-            val result = worker.startWork().await()
+        whenever(addonManager.getAddons()).thenThrow(AddonManagerException(IOException()))
+        val result = worker.startWork().await()
 
-            assertEquals(ListenableWorker.Result.success(), result)
-            assertFalse(crashWasReported)
-        }
+        assertEquals(ListenableWorker.Result.success(), result)
+        assertFalse(crashWasReported)
     }
 
     @Test

@@ -5,7 +5,6 @@
 package mozilla.components.browser.state.engine.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.EngineAction
@@ -24,6 +23,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -40,7 +40,7 @@ class TabsRemovedMiddlewareTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `closes and unlinks engine session when tab is removed`() = runBlocking {
+    fun `closes and unlinks engine session when tab is removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab = createTab("https://www.mozilla.org", id = "1")
@@ -59,7 +59,7 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
-    fun `closes and unlinks engine session when list of tabs are removed`() = runBlocking {
+    fun `closes and unlinks engine session when list of tabs are removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = false)
@@ -88,7 +88,7 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
-    fun `closes and unlinks engine session when all normal tabs are removed`() = runBlocking {
+    fun `closes and unlinks engine session when all normal tabs are removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = false)
@@ -116,7 +116,7 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
-    fun `closes and unlinks engine session when all private tabs are removed`() = runBlocking {
+    fun `closes and unlinks engine session when all private tabs are removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = true)
@@ -144,7 +144,7 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
-    fun `closes and unlinks engine session when all tabs are removed`() = runBlocking {
+    fun `closes and unlinks engine session when all tabs are removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createTab("https://www.mozilla.org", id = "1", private = true)
@@ -172,7 +172,7 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
-    fun `closes and unlinks engine session when custom tab is removed`() = runBlocking {
+    fun `closes and unlinks engine session when custom tab is removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab = createCustomTab("https://www.mozilla.org", id = "1")
@@ -191,7 +191,7 @@ class TabsRemovedMiddlewareTest {
     }
 
     @Test
-    fun `closes and unlinks engine session when all custom tabs are removed`() = runBlocking {
+    fun `closes and unlinks engine session when all custom tabs are removed`() = runTestOnMain {
         val middleware = TabsRemovedMiddleware(scope)
 
         val tab1 = createCustomTab("https://www.mozilla.org", id = "1")

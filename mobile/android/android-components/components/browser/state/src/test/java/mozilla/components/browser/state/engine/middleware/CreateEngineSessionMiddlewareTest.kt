@@ -5,7 +5,6 @@
 package mozilla.components.browser.state.engine.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findCustomTab
@@ -22,6 +21,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -43,7 +43,7 @@ class CreateEngineSessionMiddlewareTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `creates engine session if needed`() = runBlocking {
+    fun `creates engine session if needed`() = runTestOnMain {
         val engine: Engine = mock()
         val engineSession: EngineSession = mock()
         whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
@@ -70,7 +70,7 @@ class CreateEngineSessionMiddlewareTest {
     }
 
     @Test
-    fun `restores engine session state if available`() = runBlocking {
+    fun `restores engine session state if available`() = runTestOnMain {
         val engine: Engine = mock()
         val engineSession: EngineSession = mock()
         whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
@@ -94,7 +94,7 @@ class CreateEngineSessionMiddlewareTest {
     }
 
     @Test
-    fun `creates no engine session if tab does not exist`() = runBlocking {
+    fun `creates no engine session if tab does not exist`() = runTestOnMain {
         val engine: Engine = mock()
         `when`(engine.createSession(anyBoolean(), anyString())).thenReturn(mock())
 
@@ -113,7 +113,7 @@ class CreateEngineSessionMiddlewareTest {
     }
 
     @Test
-    fun `creates no engine session if session does not exist`() = runBlocking {
+    fun `creates no engine session if session does not exist`() = runTestOnMain {
         val engine: Engine = mock()
         `when`(engine.createSession(anyBoolean(), anyString())).thenReturn(mock())
 
@@ -137,7 +137,7 @@ class CreateEngineSessionMiddlewareTest {
     }
 
     @Test
-    fun `dispatches follow-up action after engine session is created`() = runBlocking {
+    fun `dispatches follow-up action after engine session is created`() = runTestOnMain {
         val engine: Engine = mock()
         val engineSession: EngineSession = mock()
         whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)
@@ -162,7 +162,7 @@ class CreateEngineSessionMiddlewareTest {
     }
 
     @Test
-    fun `dispatches follow-up action once engine session is created by pending action`() = runBlocking {
+    fun `dispatches follow-up action once engine session is created by pending action`() = runTestOnMain {
         val engine: Engine = mock()
         val engineSession: EngineSession = mock()
         whenever(engine.createSession(anyBoolean(), any())).thenReturn(engineSession)

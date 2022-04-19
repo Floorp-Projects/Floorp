@@ -5,7 +5,6 @@
 package mozilla.components.feature.search.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestDispatcher
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.RegionState
@@ -23,6 +22,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -750,9 +750,9 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads additional search engine and honors user choice`() {
+    fun `Loads additional search engine and honors user choice`() = runTestOnMain {
         val metadataStorage = SearchMetadataStorage(testContext, lazy { FakeSharedPreferences() })
-        runBlocking { metadataStorage.setAdditionalSearchEngines(listOf("reddit")) }
+        metadataStorage.setAdditionalSearchEngines(listOf("reddit"))
 
         val searchMiddleware = SearchMiddleware(
             testContext,
@@ -799,7 +799,7 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads custom search engines`() {
+    fun `Loads custom search engines`() = runTestOnMain {
         val searchEngine = SearchEngine(
             id = "test-search",
             name = "Test Engine",
@@ -810,7 +810,7 @@ class SearchMiddlewareTest {
         )
 
         val storage = CustomSearchEngineStorage(testContext, dispatcher)
-        runBlocking { storage.saveSearchEngine(searchEngine) }
+        storage.saveSearchEngine(searchEngine)
 
         val store = BrowserStore(
             middleware = listOf(
@@ -833,9 +833,9 @@ class SearchMiddlewareTest {
     }
 
     @Test
-    fun `Loads default search engine ID`() {
+    fun `Loads default search engine ID`() = runTestOnMain {
         val storage = SearchMetadataStorage(testContext)
-        runBlocking { storage.setUserSelectedSearchEngine("test-id", null) }
+        storage.setUserSelectedSearchEngine("test-id", null)
 
         val middleware = SearchMiddleware(
             testContext,
@@ -1071,7 +1071,7 @@ class SearchMiddlewareTest {
 
     @Test
     fun `Custom search engines - Create, Update, Delete`() {
-        runBlocking {
+        runTestOnMain {
             val storage: SearchMiddleware.CustomStorage = mock()
             doReturn(emptyList<SearchEngine>()).`when`(storage).loadSearchEngineList()
 

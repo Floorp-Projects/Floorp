@@ -5,7 +5,6 @@
 package mozilla.components.browser.state.engine.middleware
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
@@ -17,6 +16,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -35,7 +35,7 @@ class SuspendMiddlewareTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `suspends engine session`() = runBlocking {
+    fun `suspends engine session`() = runTestOnMain {
         val middleware = SuspendMiddleware(scope)
 
         val tab = createTab("https://www.mozilla.org", id = "1")

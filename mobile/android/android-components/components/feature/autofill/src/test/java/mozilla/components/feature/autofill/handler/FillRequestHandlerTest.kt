@@ -4,7 +4,8 @@
 
 package mozilla.components.feature.autofill.handler
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.feature.autofill.AutofillConfiguration
@@ -34,6 +35,7 @@ import org.mockito.Mockito.doReturn
 import org.robolectric.RobolectricTestRunner
 import java.util.UUID
 
+@ExperimentalCoroutinesApi // for createTestCase
 @RunWith(RobolectricTestRunner::class)
 internal class FillRequestHandlerTest {
     @Test
@@ -182,13 +184,14 @@ internal class FillRequestHandlerTest {
     }
 }
 
+@ExperimentalCoroutinesApi
 private fun <B : FillResponseBuilder> FillRequestHandlerTest.createTestCase(
     filename: String,
     packageName: String,
     logins: Map<String, Login>,
     assertThat: (B?) -> Unit,
     canVerifyRelationship: Boolean = true
-) = runBlocking {
+) = runTest {
     val structure = createMockStructure(filename, packageName)
 
     val storage: LoginsStorage = mock()

@@ -6,7 +6,7 @@ package mozilla.components.browser.engine.gecko.permission
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status.ALLOWED
@@ -66,7 +66,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a location permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a location permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(location = ALLOWED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_GEOLOCATION)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_GEOLOCATION, geckoPermissions, mock())
@@ -83,7 +83,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a notification permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a notification permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(notification = BLOCKED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_DESKTOP_NOTIFICATION)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_DESKTOP_NOTIFICATION, geckoPermissions, mock())
@@ -100,7 +100,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a localStorage permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a localStorage permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(localStorage = BLOCKED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_PERSISTENT_STORAGE)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_PERSISTENT_STORAGE, geckoPermissions, mock())
@@ -117,7 +117,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a crossOriginStorageAccess permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a crossOriginStorageAccess permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(crossOriginStorageAccess = BLOCKED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_STORAGE_ACCESS)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_STORAGE_ACCESS, geckoPermissions, mock())
@@ -134,7 +134,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a mediaKeySystemAccess permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a mediaKeySystemAccess permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(mediaKeySystemAccess = ALLOWED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_MEDIA_KEY_SYSTEM_ACCESS)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_MEDIA_KEY_SYSTEM_ACCESS, geckoPermissions, mock())
@@ -151,7 +151,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a autoplayInaudible permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a autoplayInaudible permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(autoplayInaudible = AutoplayStatus.ALLOWED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_AUTOPLAY_INAUDIBLE)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_AUTOPLAY_INAUDIBLE, geckoPermissions, mock())
@@ -168,7 +168,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a autoplayAudible permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a autoplayAudible permission WHEN saving THEN the permission is saved in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(autoplayAudible = AutoplayStatus.ALLOWED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE, geckoPermissions, mock())
@@ -185,7 +185,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN saving a site permission THEN the permission is saved in the gecko storage and in disk storage`() = runBlockingTest {
+    fun `WHEN saving a site permission THEN the permission is saved in the gecko storage and in disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(autoplayAudible = AutoplayStatus.ALLOWED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE, geckoPermissions, mock())
@@ -199,7 +199,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a temporary permission WHEN saving THEN the permission is saved in memory`() = runBlockingTest {
+    fun `GIVEN a temporary permission WHEN saving THEN the permission is saved in memory`() = runTest {
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE, geckoPermissions, mock())
 
@@ -209,7 +209,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN media type temporary permission WHEN saving THEN the permission is NOT saved in memory`() = runBlockingTest {
+    fun `GIVEN media type temporary permission WHEN saving THEN the permission is NOT saved in memory`() = runTest {
         val geckoRequest = GeckoPermissionRequest.Media("mozilla.org", emptyList(), emptyList(), mock())
 
         assertTrue(geckoStorage.geckoTemporaryPermissions.isEmpty())
@@ -220,7 +220,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN multiple saved temporary permissions WHEN clearing all temporary permission THEN all permissions are cleared`() = runBlockingTest {
+    fun `GIVEN multiple saved temporary permissions WHEN clearing all temporary permission THEN all permissions are cleared`() = runTest {
         val geckoAutoPlayPermissions = geckoContentPermission("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE)
         val geckoPersistentStoragePermissions = geckoContentPermission("mozilla.org", PERMISSION_PERSISTENT_STORAGE)
         val geckoStorageAccessPermissions = geckoContentPermission("mozilla.org", PERMISSION_STORAGE_ACCESS)
@@ -250,7 +250,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a localStorage permission WHEN updating THEN the permission is updated in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `GIVEN a localStorage permission WHEN updating THEN the permission is updated in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(location = ALLOWED)
         val geckoPermissions = geckoContentPermission("mozilla.org", PERMISSION_GEOLOCATION)
         val geckoRequest = GeckoPermissionRequest.Content("mozilla.org", PERMISSION_AUTOPLAY_AUDIBLE, geckoPermissions, mock())
@@ -264,7 +264,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN updating a permission THEN the permission is updated in the gecko storage and on the disk storage`() = runBlockingTest {
+    fun `WHEN updating a permission THEN the permission is updated in the gecko storage and on the disk storage`() = runTest {
         val sitePermissions = createNewSitePermission().copy(location = ALLOWED)
 
         doReturn(sitePermissions).`when`(geckoStorage).updateGeckoPermissionIfNeeded(sitePermissions)
@@ -276,7 +276,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN updating THEN the permission is updated in the gecko storage and set to the default value on the disk storage`() = runBlockingTest {
+    fun `WHEN updating THEN the permission is updated in the gecko storage and set to the default value on the disk storage`() = runTest {
         val sitePermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
@@ -323,7 +323,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN querying the store by origin THEN the gecko and the on disk storage are queried and results are combined`() = runBlockingTest {
+    fun `WHEN querying the store by origin THEN the gecko and the on disk storage are queried and results are combined`() = runTest {
         val sitePermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
@@ -365,7 +365,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN a gecko and on disk permissions WHEN merging values THEN both should be combined into one`() = runBlockingTest {
+    fun `GIVEN a gecko and on disk permissions WHEN merging values THEN both should be combined into one`() = runTest {
         val onDiskPermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
@@ -404,7 +404,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `GIVEN permissions that are not present on the gecko storage WHEN merging THEN favor the values on disk permissions`() = runBlockingTest {
+    fun `GIVEN permissions that are not present on the gecko storage WHEN merging THEN favor the values on disk permissions`() = runTest {
         val onDiskPermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
@@ -471,7 +471,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN removing a site permissions THEN permissions should be removed from the on disk and gecko storage`() = runBlockingTest {
+    fun `WHEN removing a site permissions THEN permissions should be removed from the on disk and gecko storage`() = runTest {
         val onDiskPermissions = createNewSitePermission()
 
         doReturn(Unit).`when`(geckoStorage).removeGeckoContentPermissionBy(onDiskPermissions.origin)
@@ -483,7 +483,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN removing gecko permissions THEN permissions should be set to the default values in the gecko storage`() = runBlockingTest {
+    fun `WHEN removing gecko permissions THEN permissions should be set to the default values in the gecko storage`() = runTest {
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION),
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION),
@@ -511,7 +511,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN removing a temporary permissions THEN the permissions should be remove from memory`() = runBlockingTest {
+    fun `WHEN removing a temporary permissions THEN the permissions should be remove from memory`() = runTest {
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION),
             geckoContentPermission(type = PERMISSION_GEOLOCATION),
@@ -539,7 +539,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN removing all THEN all permissions should be removed from the on disk and gecko storage`() = runBlockingTest {
+    fun `WHEN removing all THEN all permissions should be removed from the on disk and gecko storage`() = runTest {
 
         doReturn(Unit).`when`(geckoStorage).removeGeckoAllContentPermissions()
 
@@ -550,7 +550,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN removing all gecko permissions THEN remove all permissions on gecko and clear the site permissions info`() = runBlockingTest {
+    fun `WHEN removing all gecko permissions THEN remove all permissions on gecko and clear the site permissions info`() = runTest {
         val geckoPermissions = listOf(
             geckoContentPermission(type = PERMISSION_GEOLOCATION),
             geckoContentPermission(type = PERMISSION_DESKTOP_NOTIFICATION),
@@ -574,7 +574,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN querying all permission THEN the gecko and the on disk storage are queried and results are combined`() = runBlockingTest {
+    fun `WHEN querying all permission THEN the gecko and the on disk storage are queried and results are combined`() = runTest {
         val onDiskPermissions = SitePermissions(
             origin = "mozilla.dev",
             localStorage = ALLOWED,
@@ -616,7 +616,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN filtering temporary permissions THEN all temporary permissions should be removed`() = runBlockingTest {
+    fun `WHEN filtering temporary permissions THEN all temporary permissions should be removed`() = runTest {
         val temporary = listOf(geckoContentPermission(type = PERMISSION_GEOLOCATION))
 
         val geckoPermissions = listOf(
@@ -637,7 +637,7 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN compering two gecko ContentPermissions THEN they are the same when host and permissions are the same`() = runBlockingTest {
+    fun `WHEN compering two gecko ContentPermissions THEN they are the same when host and permissions are the same`() = runTest {
         val location1 = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_GEOLOCATION)
         val location2 = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_GEOLOCATION)
         val notification = geckoContentPermission(uri = "mozilla.dev", type = PERMISSION_DESKTOP_NOTIFICATION)
@@ -647,28 +647,28 @@ class GeckoSitePermissionsStorageTest {
     }
 
     @Test
-    fun `WHEN converting from gecko status to sitePermissions status THEN they get converted to the equivalent one`() = runBlockingTest {
+    fun `WHEN converting from gecko status to sitePermissions status THEN they get converted to the equivalent one`() = runTest {
         assertEquals(NO_DECISION, VALUE_PROMPT.toStatus())
         assertEquals(BLOCKED, VALUE_DENY.toStatus())
         assertEquals(ALLOWED, VALUE_ALLOW.toStatus())
     }
 
     @Test
-    fun `WHEN converting from gecko status to autoplay sitePermissions status THEN they get converted to the equivalent one`() = runBlockingTest {
+    fun `WHEN converting from gecko status to autoplay sitePermissions status THEN they get converted to the equivalent one`() = runTest {
         assertEquals(AutoplayStatus.BLOCKED, VALUE_PROMPT.toAutoPlayStatus())
         assertEquals(AutoplayStatus.BLOCKED, VALUE_DENY.toAutoPlayStatus())
         assertEquals(AutoplayStatus.ALLOWED, VALUE_ALLOW.toAutoPlayStatus())
     }
 
     @Test
-    fun `WHEN converting a sitePermissions status to gecko status THEN they get converted to the equivalent one`() = runBlockingTest {
+    fun `WHEN converting a sitePermissions status to gecko status THEN they get converted to the equivalent one`() = runTest {
         assertEquals(VALUE_PROMPT, NO_DECISION.toGeckoStatus())
         assertEquals(VALUE_DENY, BLOCKED.toGeckoStatus())
         assertEquals(VALUE_ALLOW, ALLOWED.toGeckoStatus())
     }
 
     @Test
-    fun `WHEN converting from autoplay sitePermissions to gecko status THEN they get converted to the equivalent one`() = runBlockingTest {
+    fun `WHEN converting from autoplay sitePermissions to gecko status THEN they get converted to the equivalent one`() = runTest {
         assertEquals(VALUE_DENY, AutoplayStatus.BLOCKED.toGeckoStatus())
         assertEquals(VALUE_ALLOW, AutoplayStatus.ALLOWED.toGeckoStatus())
     }

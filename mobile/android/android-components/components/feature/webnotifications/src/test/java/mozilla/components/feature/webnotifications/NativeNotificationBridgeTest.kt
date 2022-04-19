@@ -5,14 +5,18 @@
 package mozilla.components.feature.webnotifications
 
 import android.app.Notification
+import android.app.Notification.BigTextStyle
 import android.app.Notification.EXTRA_SUB_TEXT
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
+import mozilla.components.browser.icons.IconRequest.Resource
+import mozilla.components.browser.icons.IconRequest.Resource.Type.MANIFEST_ICON
+import mozilla.components.browser.icons.IconRequest.Size.DEFAULT
 import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
@@ -34,8 +38,8 @@ private const val TEST_TEXT = "test text"
 private const val TEST_URL = "mozilla.org"
 private const val TEST_CHANNEL = "testChannel"
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
-@ExperimentalCoroutinesApi
 class NativeNotificationBridgeTest {
     private val blankNotification = WebNotification(
         TEST_TITLE, TEST_TAG, TEST_TEXT, TEST_URL, null, null,
@@ -55,7 +59,7 @@ class NativeNotificationBridgeTest {
     }
 
     @Test
-    fun `create blank notification`() = runBlockingTest {
+    fun `create blank notification`() = runTest {
         val notification = bridge.convertToAndroidNotification(
             blankNotification,
             testContext,
@@ -73,7 +77,7 @@ class NativeNotificationBridgeTest {
     }
 
     @Test
-    fun `set when`() = runBlockingTest {
+    fun `set when`() = runTest {
         val notification = bridge.convertToAndroidNotification(
             blankNotification.copy(timestamp = 1234567890),
             testContext,
@@ -86,7 +90,7 @@ class NativeNotificationBridgeTest {
     }
 
     @Test
-    fun `icon is loaded from BrowserIcons`() = runBlockingTest {
+    fun `icon is loaded from BrowserIcons`() = runTest {
         bridge.convertToAndroidNotification(
             blankNotification.copy(sourceUrl = "https://example.com", iconUrl = "https://example.com/large.png"),
             testContext,
@@ -98,11 +102,11 @@ class NativeNotificationBridgeTest {
         verify(icons).loadIcon(
             IconRequest(
                 url = "https://example.com",
-                size = IconRequest.Size.DEFAULT,
+                size = DEFAULT,
                 resources = listOf(
-                    IconRequest.Resource(
+                    Resource(
                         url = "https://example.com/large.png",
-                        type = IconRequest.Resource.Type.MANIFEST_ICON
+                        type = MANIFEST_ICON
                     )
                 ),
                 isPrivate = true
@@ -111,7 +115,7 @@ class NativeNotificationBridgeTest {
     }
 
     @Test
-    fun `android notification sets BigTextStyle`() = runBlockingTest {
+    fun `android notification sets BigTextStyle`() = runTest {
         val notification = bridge.convertToAndroidNotification(
             blankNotification.copy(iconUrl = "https://example.com/large.png"),
             testContext,
@@ -120,7 +124,7 @@ class NativeNotificationBridgeTest {
             0
         )
 
-        val expectedStyle = Notification.BigTextStyle().javaClass.name
+        val expectedStyle = BigTextStyle().javaClass.name
         assertEquals(expectedStyle, notification.extras.getString(Notification.EXTRA_TEMPLATE))
 
         val noBodyNotification = bridge.convertToAndroidNotification(

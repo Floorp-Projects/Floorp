@@ -5,7 +5,8 @@
 package mozilla.components.lib.publicsuffixlist
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class PublicSuffixListTest {
 
@@ -21,7 +23,7 @@ class PublicSuffixListTest {
         get() = PublicSuffixList(testContext)
 
     @Test
-    fun `Verify getPublicSuffixPlusOne for known domains`() = runBlocking {
+    fun `Verify getPublicSuffixPlusOne for known domains`() = runTest {
         assertEquals(
             "mozilla.org",
             publicSuffixList.getPublicSuffixPlusOne("www.mozilla.org").await()
@@ -69,7 +71,7 @@ class PublicSuffixListTest {
     }
 
     @Test
-    fun `Verify getPublicSuffix for known domains`() = runBlocking {
+    fun `Verify getPublicSuffix for known domains`() = runTest {
         assertEquals(
             "org",
             publicSuffixList.getPublicSuffix("www.mozilla.org").await()
@@ -117,7 +119,7 @@ class PublicSuffixListTest {
     }
 
     @Test
-    fun `Verify stripPublicSuffix for known domains`() = runBlocking {
+    fun `Verify stripPublicSuffix for known domains`() = runTest {
         assertEquals(
             "www.mozilla",
             publicSuffixList.stripPublicSuffix("www.mozilla.org").await()
@@ -169,7 +171,7 @@ class PublicSuffixListTest {
      * https://raw.githubusercontent.com/publicsuffix/list/master/tests/test_psl.txt
      */
     @Test
-    fun `Verify getPublicSuffixPlusOne against official test data`() = runBlocking {
+    fun `Verify getPublicSuffixPlusOne against official test data`() = runTest {
         // empty input
         assertNull(publicSuffixList.getPublicSuffixPlusOne("").await())
 
@@ -410,7 +412,7 @@ class PublicSuffixListTest {
     }
 
     @Test
-    fun `Accessing with and without prefetch`() = runBlocking {
+    fun `Accessing with and without prefetch`() = runTest {
         run {
             val publicSuffixList = PublicSuffixList(testContext)
             assertEquals("org", publicSuffixList.getPublicSuffix("mozilla.org").await())
@@ -425,7 +427,7 @@ class PublicSuffixListTest {
     }
 
     @Test
-    fun `Verify isPublicSuffix with known and unknown suffixes`() = runBlocking {
+    fun `Verify isPublicSuffix with known and unknown suffixes`() = runTest {
         assertTrue(publicSuffixList.isPublicSuffix("org").await())
         assertTrue(publicSuffixList.isPublicSuffix("com").await())
         assertTrue(publicSuffixList.isPublicSuffix("us").await())
@@ -454,7 +456,7 @@ class PublicSuffixListTest {
      * https://github.com/google/guava/blob/master/guava-tests/test/com/google/common/net/InternetDomainNameTest.java
      */
     @Test
-    fun `Verify getPublicSuffix can handle obscure and invalid input`() = runBlocking {
+    fun `Verify getPublicSuffix can handle obscure and invalid input`() = runTest {
         assertEquals("cOM", publicSuffixList.getPublicSuffix("f-_-o.cOM").await())
         assertEquals("com", publicSuffixList.getPublicSuffix("f11-1.com").await())
         assertNull(publicSuffixList.getPublicSuffix("www").await())

@@ -5,7 +5,8 @@
 package mozilla.components.feature.awesomebar.provider
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -22,6 +23,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class CombinedHistorySuggestionProviderTest {
 
@@ -36,7 +38,7 @@ class CombinedHistorySuggestionProviderTest {
     )
 
     @Test
-    fun `GIVEN history items exists WHEN onInputChanged is called with empty text THEN return empty suggestions list`() = runBlocking {
+    fun `GIVEN history items exists WHEN onInputChanged is called with empty text THEN return empty suggestions list`() = runTest {
         val metadata: HistoryMetadataStorage = mock()
         doReturn(listOf(historyEntry)).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
         val history: HistoryStorage = mock()
@@ -48,7 +50,7 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
-    fun `GIVEN more suggestions asked than metadata items exist WHEN user changes input THEN return a combined list of suggestions`() = runBlocking {
+    fun `GIVEN more suggestions asked than metadata items exist WHEN user changes input THEN return a combined list of suggestions`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
         val history: HistoryStorage = mock()
@@ -63,7 +65,7 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
-    fun `GIVEN fewer suggestions asked than metadata items exist WHEN user changes input THEN return suggestions only based on metadata items`() = runBlocking {
+    fun `GIVEN fewer suggestions asked than metadata items exist WHEN user changes input THEN return suggestions only based on metadata items`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
         val history: HistoryStorage = mock()
@@ -77,7 +79,7 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
-    fun `GIVEN only storage history items exist WHEN user changes input THEN return suggestions only based on storage items`() = runBlocking {
+    fun `GIVEN only storage history items exist WHEN user changes input THEN return suggestions only based on storage items`() = runTest {
         val metadata: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
         val history: HistoryStorage = mock()
@@ -91,7 +93,7 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
-    fun `GIVEN duplicated metadata and storage entries WHEN user changes input THEN return distinct suggestions`() = runBlocking {
+    fun `GIVEN duplicated metadata and storage entries WHEN user changes input THEN return distinct suggestions`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(listOf(historyEntry)).`when`(storage).queryHistoryMetadata(eq("moz"), anyInt())
         val history: HistoryStorage = mock()
@@ -105,7 +107,7 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
-    fun `GIVEN a combined list of suggestions WHEN history results exist THEN urls are deduped and scores are adjusted`() = runBlocking {
+    fun `GIVEN a combined list of suggestions WHEN history results exist THEN urls are deduped and scores are adjusted`() = runTest {
         val metadataEntry1 = HistoryMetadata(
             key = HistoryMetadataKey("https://www.mozilla.com", null, null),
             title = "mozilla",
@@ -161,7 +163,7 @@ class CombinedHistorySuggestionProviderTest {
     }
 
     @Test
-    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runTest {
         val metadata: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
         val history: HistoryStorage = mock()

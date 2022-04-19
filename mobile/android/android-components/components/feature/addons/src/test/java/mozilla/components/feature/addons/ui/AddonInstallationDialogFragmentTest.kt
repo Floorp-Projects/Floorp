@@ -15,7 +15,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
@@ -141,39 +141,35 @@ class AddonInstallationDialogFragmentTest {
     }
 
     @Test
-    fun `fetching the add-on icon successfully`() {
+    fun `fetching the add-on icon successfully`() = runTest {
         val addon = mock<Addon>()
         val bitmap = mock<Bitmap>()
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
 
-        runBlocking {
-            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
-            assertNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
-            fragment.fetchIcon(addon, mockedImageView, scope).join()
-            assertNotNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
-            verify(mockedImageView).setImageDrawable(Mockito.any())
-        }
+        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
+        assertNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
+        fragment.fetchIcon(addon, mockedImageView, scope).join()
+        assertNotNull(fragment.arguments?.getParcelable<Bitmap>(KEY_ICON))
+        verify(mockedImageView).setImageDrawable(Mockito.any())
     }
 
     @Test
-    fun `handle errors while fetching the add-on icon`() {
+    fun `handle errors while fetching the add-on icon`() = runTest {
         val addon = mock<Addon>()
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
 
-        runBlocking {
-            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).then {
-                throw IOException("Request failed")
-            }
-            try {
-                fragment.fetchIcon(addon, mockedImageView, scope).join()
-                verify(mockedImageView).setColorFilter(Mockito.anyInt())
-            } catch (e: IOException) {
-                fail("The exception must be handle in the adapter")
-            }
+        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).then {
+            throw IOException("Request failed")
+        }
+        try {
+            fragment.fetchIcon(addon, mockedImageView, scope).join()
+            verify(mockedImageView).setColorFilter(Mockito.anyInt())
+        } catch (e: IOException) {
+            fail("The exception must be handle in the adapter")
         }
     }
 

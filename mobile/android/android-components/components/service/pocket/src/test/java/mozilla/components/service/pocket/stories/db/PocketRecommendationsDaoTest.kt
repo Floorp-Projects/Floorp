@@ -10,8 +10,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -52,7 +51,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN an empty table WHEN a story is inserted and then queried THEN return the same story`() = runBlockingTest {
+    fun `GIVEN an empty table WHEN a story is inserted and then queried THEN return the same story`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
 
         dao.insertPocketStories(listOf(story))
@@ -62,7 +61,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story already persisted WHEN another story with identical url is tried to be inserted THEN add that to the table`() = runBlockingTest {
+    fun `GIVEN a story already persisted WHEN another story with identical url is tried to be inserted THEN add that to the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val newStory = story.copy(
             url = "updated" + story.url
@@ -76,7 +75,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story with the same url exists WHEN another story with updated title is tried to be inserted THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN a story with the same url exists WHEN another story with updated title is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
             title = "updated" + story.title
@@ -91,7 +90,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story with the same url exists WHEN another story with updated imageUrl is tried to be inserted THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN a story with the same url exists WHEN another story with updated imageUrl is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
             imageUrl = "updated" + story.imageUrl
@@ -105,7 +104,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story with the same url exists WHEN another story with updated publisher is tried to be inserted THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN a story with the same url exists WHEN another story with updated publisher is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
             publisher = "updated" + story.publisher
@@ -119,7 +118,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story with the same url exists WHEN another story with updated category is tried to be inserted THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN a story with the same url exists WHEN another story with updated category is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
             category = "updated" + story.category
@@ -133,7 +132,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story with the same url exists WHEN another story with updated timeToRead is tried to be inserted THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN a story with the same url exists WHEN another story with updated timeToRead is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
             timesShown = story.timesShown * 2
@@ -147,7 +146,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN a story with the same url exists WHEN another story with updated timesShown is tried to be inserted THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN a story with the same url exists WHEN another story with updated timesShown is tried to be inserted THEN don't update the table`() = runTest {
         val story = PocketTestResources.dbExpectedPocketStory
         val updatedStory = story.copy(
             timesShown = story.timesShown * 2
@@ -161,7 +160,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to delete some THEN remove them from the table`() = runBlockingTest {
+    fun `GIVEN stories already persisted WHEN asked to delete some THEN remove them from the table`() = runTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val story3 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "3")
@@ -175,7 +174,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to delete one not present in the table THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN stories already persisted WHEN asked to delete one not present in the table THEN don't update the table`() = runTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
         val story3 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "3")
@@ -189,7 +188,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to update timesShown for one THEN update only that story`() = runBlockingTest {
+    fun `GIVEN stories already persisted WHEN asked to update timesShown for one THEN update only that story`() = runTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "2",
@@ -222,7 +221,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to update timesShown for one not present in the table THEN don't update the table`() = runBlockingTest {
+    fun `GIVEN stories already persisted WHEN asked to update timesShown for one not present in the table THEN don't update the table`() = runTest {
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(
             url = story1.url + "2",
@@ -246,7 +245,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN remove from table all stories not found in the new list`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN remove from table all stories not found in the new list`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -261,7 +260,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN update stories with new urls`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN update stories with new urls`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -278,7 +277,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN update stories with new image urls`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN update stories with new image urls`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -294,7 +293,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only title changed`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only title changed`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -310,7 +309,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only publisher changed`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only publisher changed`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -326,7 +325,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only category changed`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only category changed`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -342,7 +341,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only timeToRead changed`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only timeToRead changed`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -358,7 +357,7 @@ class PocketRecommendationsDaoTest {
     }
 
     @Test
-    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only timesShown changed`() = runBlocking {
+    fun `GIVEN stories already persisted WHEN asked to clean and insert new ones THEN don't update story if only timesShown changed`() = runTest {
         setupDatabseForTransactions()
         val story1 = PocketTestResources.dbExpectedPocketStory
         val story2 = PocketTestResources.dbExpectedPocketStory.copy(url = story1.url + "2")
@@ -375,7 +374,7 @@ class PocketRecommendationsDaoTest {
 
     /**
      * Sets an executor to be used for database transactions.
-     * Needs to be used along with "runBlockingTest" to ensure waiting for transactions to finish but not hang tests.
+     * Needs to be used along with "runTest" to ensure waiting for transactions to finish but not hang tests.
      */
     private fun setupDatabseForTransactions() {
         database = Room

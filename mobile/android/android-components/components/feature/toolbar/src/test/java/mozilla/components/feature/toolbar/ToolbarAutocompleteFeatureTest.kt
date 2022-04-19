@@ -5,7 +5,7 @@
 package mozilla.components.feature.toolbar
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.domains.Domain
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.DomainList
@@ -142,7 +142,7 @@ class ToolbarAutocompleteFeatureTest {
     }
 
     @Test
-    fun `feature can be used without providers`() {
+    fun `feature can be used without providers`() = runTest {
         val toolbar = TestToolbar()
 
         ToolbarAutocompleteFeature(toolbar)
@@ -150,9 +150,8 @@ class ToolbarAutocompleteFeatureTest {
         assertNotNull(toolbar.autocompleteFilter)
 
         val autocompleteDelegate: AutocompleteDelegate = mock()
-        runBlocking {
-            toolbar.autocompleteFilter!!("moz", autocompleteDelegate)
-        }
+        toolbar.autocompleteFilter!!("moz", autocompleteDelegate)
+
         verify(autocompleteDelegate, never()).applyAutocompleteResult(any(), any())
         verify(autocompleteDelegate, times(1)).noAutocompleteResult("moz")
     }
@@ -282,7 +281,7 @@ class ToolbarAutocompleteFeatureTest {
     }
 
     @Test
-    fun `feature triggers speculative connect for results if engine provided`() {
+    fun `feature triggers speculative connect for results if engine provided`() = runTest {
         val toolbar = TestToolbar()
         val engine: Engine = mock()
         var feature = ToolbarAutocompleteFeature(toolbar, engine)
@@ -296,9 +295,7 @@ class ToolbarAutocompleteFeatureTest {
         domains.testDomains(listOf(Domain.create("https://www.mozilla.org")))
         feature.addDomainProvider(domains)
 
-        runBlocking {
-            toolbar.autocompleteFilter!!.invoke("mo", autocompleteDelegate)
-        }
+        toolbar.autocompleteFilter!!.invoke("mo", autocompleteDelegate)
 
         val callbackCaptor = argumentCaptor<() -> Unit>()
         verify(autocompleteDelegate, times(1)).applyAutocompleteResult(any(), callbackCaptor.capture())
@@ -308,19 +305,17 @@ class ToolbarAutocompleteFeatureTest {
     }
 
     @Suppress("SameParameterValue")
-    private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) {
-        runBlocking {
-            toolbar.autocompleteFilter!!(query, autocompleteDelegate)
-        }
+    private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) = runTest {
+        toolbar.autocompleteFilter!!(query, autocompleteDelegate)
+
         verify(autocompleteDelegate, never()).applyAutocompleteResult(any(), any())
         verify(autocompleteDelegate, times(1)).noAutocompleteResult(query)
         reset(autocompleteDelegate)
     }
 
-    private fun verifyAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String, result: AutocompleteResult) {
-        runBlocking {
-            toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
-        }
+    private fun verifyAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String, result: AutocompleteResult) = runTest {
+        toolbar.autocompleteFilter!!.invoke(query, autocompleteDelegate)
+
         verify(autocompleteDelegate, times(1)).applyAutocompleteResult(eq(result), any())
         verify(autocompleteDelegate, never()).noAutocompleteResult(query)
         reset(autocompleteDelegate)

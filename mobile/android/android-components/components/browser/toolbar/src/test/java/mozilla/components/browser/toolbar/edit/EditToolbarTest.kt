@@ -7,7 +7,8 @@ package mozilla.components.browser.toolbar.edit
 import android.view.KeyEvent
 import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.AutocompleteDelegate
@@ -27,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.CountDownLatch
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class EditToolbarTest {
     private fun createEditToolbar(): Pair<BrowserToolbar, EditToolbar> {
@@ -39,7 +41,7 @@ class EditToolbarTest {
     }
 
     @Test
-    fun `entered text is forwarded to async autocomplete filter`() {
+    fun `entered text is forwarded to async autocomplete filter`() = runTest {
         val toolbar = BrowserToolbar(testContext)
 
         toolbar.edit.views.url.onAttachedToWindow()
@@ -55,9 +57,7 @@ class EditToolbarTest {
 
         // Autocomplete filter will be invoked on a worker thread.
         // Serialize here for the sake of tests.
-        runBlocking {
-            latch.await()
-        }
+        latch.await()
 
         assertEquals("Hello", invokedWithParams!![0])
         assertTrue(invokedWithParams!![1] is AutocompleteDelegate)

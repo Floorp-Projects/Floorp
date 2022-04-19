@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.syncedtabs.interactor
 
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
 import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
@@ -21,7 +21,7 @@ class DefaultInteractorTest {
     private val controller: SyncedTabsController = mock()
 
     @Test
-    fun start() = runBlockingTest {
+    fun start() = runTest {
         val view =
             TestSyncedTabsView()
         val feature = DefaultInteractor(
@@ -37,7 +37,7 @@ class DefaultInteractorTest {
     }
 
     @Test
-    fun stop() = runBlockingTest {
+    fun stop() = runTest {
         val view =
             TestSyncedTabsView()
         val feature = DefaultInteractor(
@@ -57,7 +57,7 @@ class DefaultInteractorTest {
     }
 
     @Test
-    fun `onTabClicked invokes callback`() = runBlockingTest {
+    fun `onTabClicked invokes callback`() = runTest {
         var invoked = false
         val feature = DefaultInteractor(
             controller,
@@ -72,7 +72,7 @@ class DefaultInteractorTest {
     }
 
     @Test
-    fun `onRefresh does not update devices when there is no constellation`() = runBlockingTest {
+    fun `onRefresh does not update devices when there is no constellation`() = runTest {
         val feature = DefaultInteractor(
             controller,
             view
@@ -84,7 +84,7 @@ class DefaultInteractorTest {
     }
 
     @Test
-    fun `onRefresh updates devices when there is a constellation`() = runBlockingTest {
+    fun `onRefresh updates devices when there is a constellation`() = runTest {
         val feature = DefaultInteractor(
             controller,
             view

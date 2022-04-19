@@ -16,13 +16,13 @@ import androidx.work.testing.WorkManagerTestInitHelper
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.Companion.CHECKER_UNIQUE_PERIODIC_WORK_NAME
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker.Companion.WORK_TAG_PERIODIC
 import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -57,51 +57,47 @@ class DefaultSupportedAddonCheckerTest {
     }
 
     @Test
-    fun `registerForChecks - schedule work for future checks`() {
+    fun `registerForChecks - schedule work for future checks`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
         val intent = Intent()
         val checker = DefaultSupportedAddonsChecker(context, frequency, intent)
 
         val workId = CHECKER_UNIQUE_PERIODIC_WORK_NAME
 
-        runBlocking {
-            val workManger = WorkManager.getInstance(testContext)
-            val workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        val workManger = WorkManager.getInstance(testContext)
+        val workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertTrue(workData.isEmpty())
+        assertTrue(workData.isEmpty())
 
-            checker.registerForChecks()
+        checker.registerForChecks()
 
-            assertExtensionIsRegisteredForChecks()
-            assertEquals(intent, SupportedAddonsWorker.onNotificationClickIntent)
-            // Cleaning work manager
-            workManger.cancelUniqueWork(workId)
-        }
+        assertExtensionIsRegisteredForChecks()
+        assertEquals(intent, SupportedAddonsWorker.onNotificationClickIntent)
+        // Cleaning work manager
+        workManger.cancelUniqueWork(workId)
     }
 
     @Test
-    fun `unregisterForChecks - will remove scheduled work for future checks`() {
+    fun `unregisterForChecks - will remove scheduled work for future checks`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
         val checker = DefaultSupportedAddonsChecker(context, frequency)
 
         val workId = CHECKER_UNIQUE_PERIODIC_WORK_NAME
 
-        runBlocking {
-            val workManger = WorkManager.getInstance(testContext)
-            var workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        val workManger = WorkManager.getInstance(testContext)
+        var workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertTrue(workData.isEmpty())
+        assertTrue(workData.isEmpty())
 
-            checker.registerForChecks()
+        checker.registerForChecks()
 
-            assertExtensionIsRegisteredForChecks()
+        assertExtensionIsRegisteredForChecks()
 
-            checker.unregisterForChecks()
+        checker.unregisterForChecks()
 
-            workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertEquals(WorkInfo.State.CANCELLED, workData.first().state)
-        }
+        assertEquals(WorkInfo.State.CANCELLED, workData.first().state)
     }
 
     private suspend fun assertExtensionIsRegisteredForChecks() {

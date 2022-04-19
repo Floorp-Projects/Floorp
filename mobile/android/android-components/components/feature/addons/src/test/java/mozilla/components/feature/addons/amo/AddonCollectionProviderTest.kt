@@ -6,7 +6,7 @@ package mozilla.components.feature.addons.amo
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 class AddonCollectionProviderTest {
 
     @Test
-    fun `getAvailableAddons - with a successful status response must contain add-ons`() = runBlocking {
+    fun `getAvailableAddons - with a successful status response must contain add-ons`() = runTest {
         val mockedClient = prepareClient(loadResourceAsString("/collection.json"))
         val provider = AddonCollectionProvider(testContext, client = mockedClient)
         val addons = provider.getAvailableAddons()
@@ -96,7 +96,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - with a successful status response must handle empty values`() = runBlocking {
+    fun `getAvailableAddons - with a successful status response must handle empty values`() = runTest {
         val client = prepareClient()
         val provider = AddonCollectionProvider(testContext, client = client)
 
@@ -135,7 +135,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - with a language`() = runBlocking {
+    fun `getAvailableAddons - with a language`() = runTest {
         val client = prepareClient(loadResourceAsString("/localized_collection.json"))
         val provider = AddonCollectionProvider(testContext, client = client)
 
@@ -208,7 +208,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - read timeout can be configured`() = runBlocking {
+    fun `getAvailableAddons - read timeout can be configured`() = runTest {
         val mockedClient = prepareClient()
 
         val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
@@ -224,7 +224,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test(expected = IOException::class)
-    fun `getAvailableAddons - with unexpected status will throw exception`() = runBlocking {
+    fun `getAvailableAddons - with unexpected status will throw exception`() = runTest {
         val mockedClient = prepareClient(status = 500)
         val provider = AddonCollectionProvider(testContext, client = mockedClient)
         provider.getAvailableAddons()
@@ -232,7 +232,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - returns cached result if allowed and not expired`() = runBlocking {
+    fun `getAvailableAddons - returns cached result if allowed and not expired`() = runTest {
         val mockedClient = prepareClient(loadResourceAsString("/collection.json"))
 
         val provider = spy(AddonCollectionProvider(testContext, client = mockedClient))
@@ -250,7 +250,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - returns cached result if allowed and fetch failed`() = runBlocking {
+    fun `getAvailableAddons - returns cached result if allowed and fetch failed`() = runTest {
         val mockedClient: Client = mock()
         val exception = IOException("test")
         val cachedAddons: List<Addon> = emptyList()
@@ -296,7 +296,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - writes response to cache if configured`() = runBlocking {
+    fun `getAvailableAddons - writes response to cache if configured`() = runTest {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = prepareClient(jsonResponse)
 
@@ -311,7 +311,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAvailableAddons - deletes unused cache files`() = runBlocking {
+    fun `getAvailableAddons - deletes unused cache files`() = runTest {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = prepareClient(jsonResponse)
 
@@ -414,7 +414,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAddonIconBitmap - with a successful status will return a bitmap`() = runBlocking {
+    fun `getAddonIconBitmap - with a successful status will return a bitmap`() = runTest {
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
         val stream: InputStream = javaClass.getResourceAsStream("/png/mozac.png")!!.buffered()
@@ -441,7 +441,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `getAddonIconBitmap - with an unsuccessful status will return null`() = runBlocking {
+    fun `getAddonIconBitmap - with an unsuccessful status will return null`() = runTest {
         val mockedClient = prepareClient(status = 500)
         val provider = AddonCollectionProvider(testContext, client = mockedClient)
         val addon = Addon(
@@ -460,7 +460,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `collection name can be configured`() = runBlocking {
+    fun `collection name can be configured`() = runTest {
         val mockedClient = prepareClient()
 
         val collectionName = "collection123"
@@ -483,7 +483,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `collection sort option can be specified`() = runBlocking {
+    fun `collection sort option can be specified`() = runTest {
         val mockedClient = prepareClient()
 
         val collectionName = "collection123"
@@ -593,7 +593,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `collection user can be configured`() = runBlocking {
+    fun `collection user can be configured`() = runTest {
         val mockedClient = prepareClient()
         val collectionUser = "user123"
         val collectionName = "collection123"
@@ -622,7 +622,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `default collection is used if not configured`() = runBlocking {
+    fun `default collection is used if not configured`() = runTest {
         val mockedClient = prepareClient()
 
         val provider = AddonCollectionProvider(
@@ -645,7 +645,7 @@ class AddonCollectionProviderTest {
     }
 
     @Test
-    fun `cache file name is sanitized`() = runBlocking {
+    fun `cache file name is sanitized`() = runTest {
         val mockedClient = prepareClient()
         val collectionUser = "../../user"
         val collectionName = "../collection"

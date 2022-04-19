@@ -6,7 +6,6 @@ package mozilla.components.browser.icons.generator
 
 import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -43,7 +42,7 @@ class DefaultIconGeneratorTest {
     }
 
     @Test
-    fun generate() = runBlocking {
+    fun generate() {
         val generator = DefaultIconGenerator()
 
         val icon = generator.generate(

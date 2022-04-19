@@ -5,7 +5,8 @@
 package mozilla.components.feature.push
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.appservices.push.DispatchInfo
 import mozilla.appservices.push.KeyInfo
 import mozilla.appservices.push.PushManager
@@ -30,48 +31,43 @@ import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class RustPushConnectionTest {
 
     @Ignore("Requires push-forUnitTests; seems unnecessary to introduce it for this one test.")
     @Test
-    fun `new token initializes API`() {
+    fun `new token initializes API`() = runTest {
         val connection = createConnection()
 
         assertNull(connection.api)
 
-        runBlocking {
-            connection.updateToken("token")
-        }
+        connection.updateToken("token")
 
         assertNotNull(connection.api)
     }
 
     @Test
-    fun `new token calls update if API is already initialized`() {
+    fun `new token calls update if API is already initialized`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         connection.api = api
 
-        runBlocking {
-            connection.updateToken("123")
-        }
+        connection.updateToken("123")
 
         verify(api, never()).subscribe(any(), any(), any())
         verify(api).update(anyString())
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `subscribe throws if API is not initialized first`() {
+    fun `subscribe throws if API is not initialized first`() = runTest {
         val connection = createConnection()
 
-        runBlocking {
-            connection.subscribe("123")
-        }
+        connection.subscribe("123")
     }
 
     @Test
-    fun `subscribe calls Rust API`() {
+    fun `subscribe calls Rust API`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         val response = SubscriptionResponse(
@@ -89,64 +85,54 @@ class RustPushConnectionTest {
 
         `when`(api.subscribe(anyString(), anyString(), nullable())).thenReturn(response)
 
-        runBlocking {
-            val sub = connection.subscribe("123")
+        val sub = connection.subscribe("123")
 
-            assertEquals("123", sub.scope)
-            assertEquals("auth", sub.authKey)
-            assertEquals("p256dh", sub.publicKey)
-            assertEquals("https://foo", sub.endpoint)
-        }
+        assertEquals("123", sub.scope)
+        assertEquals("auth", sub.authKey)
+        assertEquals("p256dh", sub.publicKey)
+        assertEquals("https://foo", sub.endpoint)
 
         verify(api).subscribe(anyString(), anyString(), nullable())
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `unsubscribe throws if API is not initialized first`() {
+    fun `unsubscribe throws if API is not initialized first`() = runTest {
         val connection = createConnection()
 
-        runBlocking {
-            connection.unsubscribe("123")
-        }
+        connection.unsubscribe("123")
     }
 
     @Test
-    fun `unsubscribe calls Rust API`() {
+    fun `unsubscribe calls Rust API`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         connection.api = api
 
-        runBlocking {
-            connection.unsubscribe("123")
-        }
+        connection.unsubscribe("123")
 
         verify(api).unsubscribe(anyString())
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `unsubscribeAll throws if API is not initialized first`() {
+    fun `unsubscribeAll throws if API is not initialized first`() = runTest {
         val connection = createConnection()
 
-        runBlocking {
-            connection.unsubscribeAll()
-        }
+        connection.unsubscribeAll()
     }
 
     @Test
-    fun `unsubscribeAll calls Rust API`() {
+    fun `unsubscribeAll calls Rust API`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         connection.api = api
 
-        runBlocking {
-            connection.unsubscribeAll()
-        }
+        connection.unsubscribeAll()
 
         verify(api).unsubscribeAll()
     }
 
     @Test
-    fun `containsSubscription returns true if a subscription exists`() {
+    fun `containsSubscription returns true if a subscription exists`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         connection.api = api
@@ -155,122 +141,99 @@ class RustPushConnectionTest {
             .thenReturn(mock())
             .thenReturn(null)
 
-        runBlocking {
-            assertTrue(connection.containsSubscription("validSubscription"))
-
-            assertFalse(connection.containsSubscription("invalidSubscription"))
-        }
+        assertTrue(connection.containsSubscription("validSubscription"))
+        assertFalse(connection.containsSubscription("invalidSubscription"))
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `verifyConnection throws if API is not initialized first`() {
+    fun `verifyConnection throws if API is not initialized first`() = runTest {
         val connection = createConnection()
 
-        runBlocking {
-            connection.verifyConnection()
-        }
+        connection.verifyConnection()
     }
 
     @Test
-    fun `verifyConnection calls Rust API`() {
+    fun `verifyConnection calls Rust API`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         connection.api = api
 
-        runBlocking {
-            connection.verifyConnection()
-        }
+        connection.verifyConnection()
 
         verify(api).verifyConnection()
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `decrypt throws if API is not initialized first`() {
+    fun `decrypt throws if API is not initialized first`() = runTest {
         val connection = createConnection()
 
-        runBlocking {
-            connection.decryptMessage("123", "plain text")
-        }
+        connection.decryptMessage("123", "plain text")
     }
 
     @Test
-    fun `decrypt calls Rust API`() {
+    fun `decrypt calls Rust API`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         val dispatchInfo: DispatchInfo = mock()
         connection.api = api
 
-        runBlocking {
-            connection.decryptMessage("123", "body")
-        }
+        connection.decryptMessage("123", "body")
 
         verify(api, never()).decrypt(anyString(), anyString(), eq(""), eq(""), eq(""))
 
         `when`(api.dispatchInfoForChid(anyString())).thenReturn(dispatchInfo)
         `when`(dispatchInfo.scope).thenReturn("test")
 
-        runBlocking {
-            connection.decryptMessage("123", "body")
-        }
+        connection.decryptMessage("123", "body")
 
         verify(api).decrypt(anyString(), anyString(), eq(""), eq(""), eq(""))
 
-        runBlocking {
-            connection.decryptMessage("123", "body", "enc", "salt", "key")
-        }
+        connection.decryptMessage("123", "body", "enc", "salt", "key")
 
         verify(api).decrypt(anyString(), anyString(), eq("enc"), eq("salt"), eq("key"))
     }
 
     @Test
-    fun `empty body decrypts nothing`() {
+    fun `empty body decrypts nothing`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         val dispatchInfo: DispatchInfo = mock()
         connection.api = api
 
-        runBlocking {
-            connection.decryptMessage("123", null)
-        }
+        connection.decryptMessage("123", null)
 
         verify(api, never()).decrypt(anyString(), anyString(), eq(""), eq(""), eq(""))
 
         `when`(api.dispatchInfoForChid(anyString())).thenReturn(dispatchInfo)
         `when`(dispatchInfo.scope).thenReturn("test")
 
-        runBlocking {
-            val (scope, message) = connection.decryptMessage("123", null)!!
-            assertEquals("test", scope)
-            assertNull(message)
-        }
+        val (scope, message) = connection.decryptMessage("123", null)!!
+        assertEquals("test", scope)
+        assertNull(message)
 
         verify(api, never()).decrypt(anyString(), nullable(), eq(""), eq(""), eq(""))
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `close throws if API is not initialized first`() {
+    fun `close throws if API is not initialized first`() = runTest {
         val connection = createConnection()
 
-        runBlocking {
-            connection.close()
-        }
+        connection.close()
     }
 
     @Test
-    fun `close calls Rust API`() {
+    fun `close calls Rust API`() = runTest {
         val connection = createConnection()
         val api: PushManager = mock()
         connection.api = api
 
-        runBlocking {
-            connection.close()
-        }
+        connection.close()
 
         verify(api).close()
     }
 
     @Test
-    fun `initialized is true when api is not null`() {
+    fun `initialized is true when api is not null`() = runTest {
         val connection = createConnection()
 
         assertFalse(connection.isInitialized())

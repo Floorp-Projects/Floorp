@@ -5,7 +5,8 @@
 package mozilla.components.feature.awesomebar.provider
 
 import android.content.res.Resources
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -20,9 +21,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 class SessionSuggestionProviderTest {
     @Test
-    fun `Provider returns empty list when text is empty`() = runBlocking {
+    fun `Provider returns empty list when text is empty`() = runTest {
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
 
@@ -33,7 +35,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns Sessions with matching URLs`() = runBlocking {
+    fun `Provider returns Sessions with matching URLs`() = runTest {
         val store = BrowserStore()
 
         val tab1 = createTab("https://www.mozilla.org")
@@ -77,7 +79,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns Sessions with matching titles`() = runBlocking {
+    fun `Provider returns Sessions with matching titles`() = runTest {
         val tab1 = createTab("https://allizom.org", title = "Internet for people, not profit — Mozilla")
         val tab2 = createTab("https://getpocket.com", title = "Pocket: My List")
         val tab3 = createTab("https://firefox.com", title = "Download Firefox — Free Web Browser")
@@ -113,7 +115,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider only returns non-private Sessions`() = runBlocking {
+    fun `Provider only returns non-private Sessions`() = runTest {
         val tab = createTab("https://www.mozilla.org")
         val privateTab1 = createTab("https://mozilla.org/firefox", private = true)
         val privateTab2 = createTab("https://mozilla.org/projects", private = true)
@@ -136,7 +138,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `Clicking suggestion invokes SelectTabUseCase`() = runBlocking {
+    fun `Clicking suggestion invokes SelectTabUseCase`() = runTest {
         val resources: Resources = mock()
         `when`(resources.getString(anyInt())).thenReturn("Switch to tab")
 
@@ -164,7 +166,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `When excludeSelectedSession is true provider should not include the selected session`() = runBlocking {
+    fun `When excludeSelectedSession is true provider should not include the selected session`() = runTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -189,7 +191,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `When excludeSelectedSession is false provider should include the selected session`() = runBlocking {
+    fun `When excludeSelectedSession is false provider should include the selected session`() = runTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -214,7 +216,7 @@ class SessionSuggestionProviderTest {
     }
 
     @Test
-    fun `Uses title for chip title when available, but falls back to URL`() = runBlocking {
+    fun `Uses title for chip title when available, but falls back to URL`() = runTest {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(

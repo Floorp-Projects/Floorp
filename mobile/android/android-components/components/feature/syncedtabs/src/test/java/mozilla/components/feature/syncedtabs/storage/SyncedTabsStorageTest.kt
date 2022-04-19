@@ -10,7 +10,6 @@
 
 package mozilla.components.feature.syncedtabs.storage
 
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.TabListAction
@@ -34,6 +33,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -73,7 +73,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `listens to browser store changes, stores state changes, and calls onStoreComplete`() = runBlockingTest {
+    fun `listens to browser store changes, stores state changes, and calls onStoreComplete`() = runTestOnMain {
         val feature = SyncedTabsStorage(
             accountManager,
             store,
@@ -98,7 +98,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `stops listening to browser store changes on stop()`() = runBlockingTest {
+    fun `stops listening to browser store changes on stop()`() = runTestOnMain {
         val feature = SyncedTabsStorage(
             accountManager,
             store,
@@ -124,7 +124,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `getSyncedTabs matches tabs with FxA devices`() = runBlockingTest {
+    fun `getSyncedTabs matches tabs with FxA devices`() = runTestOnMain {
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
@@ -171,7 +171,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `getSyncedTabs returns empty list if syncClients() is null`() = runBlockingTest {
+    fun `getSyncedTabs returns empty list if syncClients() is null`() = runTestOnMain {
         val feature = spy(
             SyncedTabsStorage(
                 accountManager,
@@ -245,7 +245,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `tabs are stored when loaded`() = runBlockingTest {
+    fun `tabs are stored when loaded`() = runTestOnMain {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -282,7 +282,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `only loaded tabs are stored on load`() = runBlockingTest {
+    fun `only loaded tabs are stored on load`() = runTestOnMain {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -312,7 +312,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `tabs are stored when selected tab changes`() = runBlockingTest {
+    fun `tabs are stored when selected tab changes`() = runTestOnMain {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(
@@ -343,7 +343,7 @@ class SyncedTabsStorageTest {
     }
 
     @Test
-    fun `tabs are stored when lastAccessed is changed for any tab`() = runBlockingTest {
+    fun `tabs are stored when lastAccessed is changed for any tab`() = runTestOnMain {
         val store = BrowserStore(
             BrowserState(
                 tabs = listOf(

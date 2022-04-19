@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.session
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
@@ -249,7 +249,7 @@ class SessionUseCasesTest {
     }
 
     @Test
-    fun stopLoading() = runBlocking {
+    fun stopLoading() = runTest {
         useCases.stopLoading()
         store.waitUntilIdle()
         verify(engineSession).stopLoading()

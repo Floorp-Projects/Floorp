@@ -8,7 +8,7 @@ import android.content.Context
 import android.os.Looper.getMainLooper
 import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.syncedtabs.controller.SyncedTabsController
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView.ErrorType
@@ -35,7 +35,7 @@ class DefaultPresenterTest {
     private val prefs = testContext.getSharedPreferences(SYNC_ENGINES_KEY, Context.MODE_PRIVATE)
 
     @Test
-    fun `start returns when there is no profile`() = runBlockingTest {
+    fun `start returns when there is no profile`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -50,7 +50,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `start returns if sync engine is not enabled`() = runBlockingTest {
+    fun `start returns if sync engine is not enabled`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -87,7 +87,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `start invokes syncTabs - account profile is absent`() = runBlockingTest {
+    fun `start invokes syncTabs - account profile is absent`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -107,7 +107,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `start invokes syncTabs - account profile is present`() = runBlockingTest {
+    fun `start invokes syncTabs - account profile is present`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -127,7 +127,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `notify on logout`() = runBlockingTest {
+    fun `notify on logout`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -143,7 +143,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `notify on authenticated`() = runBlockingTest {
+    fun `notify on authenticated`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -159,7 +159,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `notify on authentication problems`() = runBlockingTest {
+    fun `notify on authentication problems`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -175,7 +175,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `sync tabs on idle status - tabs sync enabled`() = runBlockingTest {
+    fun `sync tabs on idle status - tabs sync enabled`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -191,7 +191,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `sync tabs on idle status - tabs sync disabled`() = runBlockingTest {
+    fun `sync tabs on idle status - tabs sync disabled`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -208,7 +208,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `show loading state on started status`() = runBlockingTest {
+    fun `show loading state on started status`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,
@@ -223,7 +223,7 @@ class DefaultPresenterTest {
     }
 
     @Test
-    fun `notify on error`() = runBlockingTest {
+    fun `notify on error`() = runTest {
         val presenter = DefaultPresenter(
             context,
             controller,

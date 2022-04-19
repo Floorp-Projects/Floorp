@@ -5,8 +5,6 @@
 package mozilla.components.feature.accounts.push
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.sync.ConstellationState
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceCapability
@@ -18,8 +16,11 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
@@ -29,6 +30,9 @@ import java.util.UUID
 
 @ExperimentalCoroutinesApi
 class SendTabUseCasesTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     private val manager: FxaAccountManager = mock()
     private val account: OAuthAccount = mock()
@@ -43,7 +47,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - tab is sent to capable device`() = runBlockingTest {
+    fun `SendTabUseCase - tab is sent to capable device`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice()
 
@@ -57,7 +61,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - tabs are sent to capable device`() = runBlockingTest {
+    fun `SendTabUseCase - tabs are sent to capable device`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice()
         val tab = TabData("Title", "http://example.com")
@@ -72,7 +76,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - tabs are NOT sent to incapable devices`() = runBlockingTest {
+    fun `SendTabUseCase - tabs are NOT sent to incapable devices`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = mock()
         val tab = TabData("Title", "http://example.com")
@@ -92,7 +96,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - ONLY tabs with valid schema are sent to capable device`() = runBlockingTest {
+    fun `SendTabUseCase - ONLY tabs with valid schema are sent to capable device`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice()
         val tab = TabData("Title", "http://example.com")
@@ -109,7 +113,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - device id does not match when sending single tab`() = runBlockingTest {
+    fun `SendTabUseCase - device id does not match when sending single tab`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice("123")
         val tab = TabData("Title", "http://example.com")
@@ -132,7 +136,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - device id does not match when sending tabs`() = runBlockingTest {
+    fun `SendTabUseCase - device id does not match when sending tabs`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice("123")
         val tab = TabData("Title", "http://example.com")
@@ -155,7 +159,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabToAllUseCase - tab is sent to capable devices`() = runBlockingTest {
+    fun `SendTabToAllUseCase - tab is sent to capable devices`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice()
         val device2: Device = generateDevice()
@@ -172,7 +176,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabToAllUseCase - tabs is sent to capable devices`() = runBlockingTest {
+    fun `SendTabToAllUseCase - tabs is sent to capable devices`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice()
         val device2: Device = generateDevice()
@@ -190,53 +194,49 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabToAllUseCase - tab is NOT sent to incapable devices`() {
+    fun `SendTabToAllUseCase - tab is NOT sent to incapable devices`() = runTestOnMain {
         val useCases = SendTabUseCases(manager)
         val tab = TabData("Mozilla", "https://mozilla.org")
         val device: Device = mock()
         val device2: Device = mock()
 
-        runBlocking {
-            useCases.sendToAllAsync(tab)
+        useCases.sendToAllAsync(tab)
 
-            verify(constellation, never()).sendCommandToDevice(any(), any())
+        verify(constellation, never()).sendCommandToDevice(any(), any())
 
-            `when`(device.id).thenReturn("123")
-            `when`(device2.id).thenReturn("456")
-            `when`(state.otherDevices).thenReturn(listOf(device, device2))
+        `when`(device.id).thenReturn("123")
+        `when`(device2.id).thenReturn("456")
+        `when`(state.otherDevices).thenReturn(listOf(device, device2))
 
-            useCases.sendToAllAsync(tab)
+        useCases.sendToAllAsync(tab)
 
-            verify(constellation, never()).sendCommandToDevice(any(), any())
-        }
+        verify(constellation, never()).sendCommandToDevice(any(), any())
     }
 
     @Test
-    fun `SendTabToAllUseCase - tabs are NOT sent to capable devices`() {
+    fun `SendTabToAllUseCase - tabs are NOT sent to capable devices`() = runTestOnMain {
         val useCases = SendTabUseCases(manager)
         val tab = TabData("Mozilla", "https://mozilla.org")
         val tab2 = TabData("Firefox", "https://firefox.com")
         val device: Device = mock()
         val device2: Device = mock()
 
-        runBlocking {
-            useCases.sendToAllAsync(tab)
+        useCases.sendToAllAsync(tab)
 
-            verify(constellation, never()).sendCommandToDevice(any(), any())
+        verify(constellation, never()).sendCommandToDevice(any(), any())
 
-            `when`(device.id).thenReturn("123")
-            `when`(device2.id).thenReturn("456")
-            `when`(state.otherDevices).thenReturn(listOf(device, device2))
+        `when`(device.id).thenReturn("123")
+        `when`(device2.id).thenReturn("456")
+        `when`(state.otherDevices).thenReturn(listOf(device, device2))
 
-            useCases.sendToAllAsync(listOf(tab, tab2))
+        useCases.sendToAllAsync(listOf(tab, tab2))
 
-            verify(constellation, never()).sendCommandToDevice(eq("123"), any())
-            verify(constellation, never()).sendCommandToDevice(eq("456"), any())
-        }
+        verify(constellation, never()).sendCommandToDevice(eq("123"), any())
+        verify(constellation, never()).sendCommandToDevice(eq("456"), any())
     }
 
     @Test
-    fun `SendTabToAllUseCase - ONLY tabs with valid schema are sent to capable devices`() = runBlockingTest {
+    fun `SendTabToAllUseCase - ONLY tabs with valid schema are sent to capable devices`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice()
         val device2: Device = generateDevice()
@@ -258,7 +258,7 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - result is false if any send tab action fails`() = runBlockingTest {
+    fun `SendTabUseCase - result is false if any send tab action fails`() = runTestOnMain {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = mock()
         val tab = TabData("Title", "http://example.com")
@@ -280,43 +280,39 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `filter devices returns capable devices`() {
+    fun `filter devices returns capable devices`() = runTestOnMain {
         var executed = false
-        runBlocking {
-            `when`(state.otherDevices).thenReturn(listOf(generateDevice(), generateDevice()))
-            filterSendTabDevices(manager) { _, _ ->
-                executed = true
-            }
-
-            Assert.assertTrue(executed)
+        `when`(state.otherDevices).thenReturn(listOf(generateDevice(), generateDevice()))
+        filterSendTabDevices(manager) { _, _ ->
+            executed = true
         }
+
+        Assert.assertTrue(executed)
     }
 
     @Test
-    fun `filter devices does NOT provide for incapable devices`() {
+    fun `filter devices does NOT provide for incapable devices`() = runTestOnMain {
         val device: Device = mock()
         val device2: Device = mock()
 
-        runBlocking {
-            `when`(device.id).thenReturn("123")
-            `when`(device2.id).thenReturn("456")
-            `when`(state.otherDevices).thenReturn(listOf(device, device2))
+        `when`(device.id).thenReturn("123")
+        `when`(device2.id).thenReturn("456")
+        `when`(state.otherDevices).thenReturn(listOf(device, device2))
 
-            filterSendTabDevices(manager) { _, filteredDevices ->
-                Assert.assertTrue(filteredDevices.isEmpty())
-            }
+        filterSendTabDevices(manager) { _, filteredDevices ->
+            Assert.assertTrue(filteredDevices.isEmpty())
+        }
 
-            val accountManager: FxaAccountManager = mock()
-            val account: OAuthAccount = mock()
-            val constellation: DeviceConstellation = mock()
-            val state: ConstellationState = mock()
-            `when`(accountManager.authenticatedAccount()).thenReturn(account)
-            `when`(account.deviceConstellation()).thenReturn(constellation)
-            `when`(constellation.state()).thenReturn(state)
+        val accountManager: FxaAccountManager = mock()
+        val account: OAuthAccount = mock()
+        val constellation: DeviceConstellation = mock()
+        val state: ConstellationState = mock()
+        `when`(accountManager.authenticatedAccount()).thenReturn(account)
+        `when`(account.deviceConstellation()).thenReturn(constellation)
+        `when`(constellation.state()).thenReturn(state)
 
-            filterSendTabDevices(mock()) { _, _ ->
-                Assert.fail()
-            }
+        filterSendTabDevices(mock()) { _, _ ->
+            Assert.fail()
         }
     }
 

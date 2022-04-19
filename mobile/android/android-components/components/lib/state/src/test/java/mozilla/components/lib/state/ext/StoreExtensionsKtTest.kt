@@ -20,7 +20,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
@@ -28,6 +27,7 @@ import mozilla.components.lib.state.reducer
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -48,7 +48,7 @@ class StoreExtensionsKtTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `Observer will not get registered if lifecycle is already destroyed`() {
+    fun `Observer will not get registered if lifecycle is already destroyed`() = runTestOnMain {
         val owner = MockedLifecycleOwner(Lifecycle.State.DESTROYED)
 
         val store = Store(
@@ -138,7 +138,7 @@ class StoreExtensionsKtTest {
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi // Channel
-    fun `Reading state updates from channel`() {
+    fun `Reading state updates from channel`() = runTestOnMain {
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
         val store = Store(
@@ -183,7 +183,7 @@ class StoreExtensionsKtTest {
         assertEquals(26, receivedValue)
         latch = CountDownLatch(1)
 
-        runBlocking { job.cancelAndJoin() }
+        job.cancelAndJoin()
         assertTrue(channel.isClosedForReceive)
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -207,7 +207,7 @@ class StoreExtensionsKtTest {
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi
-    fun `Reading state updates from Flow with lifecycle owner`() {
+    fun `Reading state updates from Flow with lifecycle owner`() = runTestOnMain {
         val owner = MockedLifecycleOwner(Lifecycle.State.INITIALIZED)
 
         val store = Store(
@@ -253,7 +253,7 @@ class StoreExtensionsKtTest {
         assertEquals(26, receivedValue)
         latch = CountDownLatch(1)
 
-        runBlocking { job.cancelAndJoin() }
+        job.cancelAndJoin()
 
         // Receiving nothing anymore since coroutine is cancelled
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -312,7 +312,7 @@ class StoreExtensionsKtTest {
     @Test
     @Synchronized
     @ExperimentalCoroutinesApi
-    fun `Reading state updates from Flow without lifecycle owner`() {
+    fun `Reading state updates from Flow without lifecycle owner`() = runTestOnMain {
         val store = Store(
             TestState(counter = 23),
             ::reducer
@@ -351,7 +351,7 @@ class StoreExtensionsKtTest {
 
         latch = CountDownLatch(1)
 
-        runBlocking { job.cancelAndJoin() }
+        job.cancelAndJoin()
 
         // Receiving nothing anymore since coroutine is cancelled
         store.dispatch(TestAction.IncrementAction).joinBlocking()
@@ -512,7 +512,7 @@ class StoreExtensionsKtTest {
     }
 
     @Test
-    fun `Observer bound to view will not get notified about state changes until the view is attached`() {
+    fun `Observer bound to view will not get notified about state changes until the view is attached`() = runTestOnMain {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
         val view = View(testContext)
 

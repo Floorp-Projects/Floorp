@@ -16,7 +16,6 @@ import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.PREFERENCE_KEY_SEND_REPORT
@@ -25,6 +24,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -54,7 +54,7 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Pressing close button sends report`() = runBlockingTest {
+    fun `Pressing close button sends report`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -78,7 +78,7 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Pressing restart button sends report`() = runBlockingTest {
+    fun `Pressing restart button sends report`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -102,7 +102,7 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Custom message is set on CrashReporterActivity`() = runBlockingTest {
+    fun `Custom message is set on CrashReporterActivity`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -123,7 +123,7 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Sending crash report saves checkbox state`() = runBlockingTest {
+    fun `Sending crash report saves checkbox state`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -150,7 +150,7 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Restart button visible for main process crash`() = runBlockingTest {
+    fun `Restart button visible for main process crash`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -174,7 +174,7 @@ class CrashReporterActivityTest {
     }
 
     @Test
-    fun `Restart button hidden for background child process crash`() = runBlockingTest {
+    fun `Restart button hidden for background child process crash`() = runTestOnMain {
         CrashReporter(
             context = testContext,
             shouldPrompt = CrashReporter.Prompt.ALWAYS,

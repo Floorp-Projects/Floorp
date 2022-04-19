@@ -14,7 +14,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.menu.R
 import mozilla.components.browser.menu.WebExtensionBrowserMenu
 import mozilla.components.concept.engine.webextension.Action
@@ -286,7 +286,7 @@ class WebExtensionBrowserMenuItemTest {
     }
 
     @Test
-    fun `GIVEN setIcon was called, WHEN bind is called, icon setup uses the tint set`() = runBlocking {
+    fun `GIVEN setIcon was called, WHEN bind is called, icon setup uses the tint set`() = runTest {
         val webExtMenuItem = spy(WebExtensionBrowserMenuItem(mock(), mock()))
         val testIconTintColorResource = R.color.accent_material_dark
         val menu: WebExtensionBrowserMenu = mock()

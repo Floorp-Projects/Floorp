@@ -10,7 +10,7 @@ import androidx.browser.customtabs.CustomTabsService.RELATION_USE_AS_ORIGIN
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.digitalassetlinks.AssetDescriptor
 import mozilla.components.service.digitalassetlinks.Relation
@@ -49,14 +49,14 @@ class OriginVerifierTest {
     }
 
     @Test
-    fun `only HTTPS allowed`() = runBlocking {
+    fun `only HTTPS allowed`() = runTest {
         val verifier = buildVerifier(RELATION_HANDLE_ALL_URLS)
         assertFalse(verifier.verifyOrigin("LOL".toUri()))
         assertFalse(verifier.verifyOrigin("http://www.android.com".toUri()))
     }
 
     @Test
-    fun verifyOrigin() = runBlocking {
+    fun verifyOrigin() = runTest {
         val verifier = buildVerifier(RELATION_USE_AS_ORIGIN)
         doReturn(true).`when`(checker).checkRelationship(
             AssetDescriptor.Web("https://www.example.com"),

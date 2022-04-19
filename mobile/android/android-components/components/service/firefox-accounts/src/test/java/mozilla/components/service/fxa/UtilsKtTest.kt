@@ -4,7 +4,8 @@
 
 package mozilla.components.service.fxa
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.ServiceResult
@@ -25,9 +26,10 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 
+@ExperimentalCoroutinesApi // for runTest
 class UtilsKtTest {
     @Test
-    fun `handleFxaExceptions form 1 returns correct data back`() = runBlocking {
+    fun `handleFxaExceptions form 1 returns correct data back`() = runTest {
         assertEquals(
             1,
             handleFxaExceptions(
@@ -52,7 +54,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `handleFxaExceptions form 1 does not swallow non-panics`() = runBlocking {
+    fun `handleFxaExceptions form 1 does not swallow non-panics`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -113,7 +115,7 @@ class UtilsKtTest {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `handleFxaExceptions form 1 re-throws non-fxa exceptions`() = runBlocking {
+    fun `handleFxaExceptions form 1 re-throws non-fxa exceptions`() = runTest {
         handleFxaExceptions(
             mock(), "test op",
             {
@@ -124,7 +126,7 @@ class UtilsKtTest {
     }
 
     @Test(expected = FxaPanicException::class)
-    fun `handleFxaExceptions form 1 re-throws fxa panic exceptions`() = runBlocking {
+    fun `handleFxaExceptions form 1 re-throws fxa panic exceptions`() = runTest {
         handleFxaExceptions(
             mock(), "test op",
             {
@@ -135,7 +137,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `handleFxaExceptions form 2 works`() = runBlocking {
+    fun `handleFxaExceptions form 2 works`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -173,7 +175,7 @@ class UtilsKtTest {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `handleFxaExceptions form 2 re-throws non-fxa exceptions`() = runBlocking {
+    fun `handleFxaExceptions form 2 re-throws non-fxa exceptions`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -184,7 +186,7 @@ class UtilsKtTest {
     }
 
     @Test(expected = FxaPanicException::class)
-    fun `handleFxaExceptions form 2 re-throws fxa panic exceptions`() = runBlocking {
+    fun `handleFxaExceptions form 2 re-throws fxa panic exceptions`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -196,7 +198,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `handleFxaExceptions form 3 works`() = runBlocking {
+    fun `handleFxaExceptions form 3 works`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -238,7 +240,7 @@ class UtilsKtTest {
     }
 
     @Test(expected = IllegalStateException::class)
-    fun `handleFxaExceptions form 3 re-throws non-fxa exceptions`() = runBlocking {
+    fun `handleFxaExceptions form 3 re-throws non-fxa exceptions`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -249,7 +251,7 @@ class UtilsKtTest {
     }
 
     @Test(expected = FxaPanicException::class)
-    fun `handleFxaExceptions form 3 re-throws fxa panic exceptions`() = runBlocking {
+    fun `handleFxaExceptions form 3 re-throws fxa panic exceptions`() = runTest {
         val accountManager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(accountManager)
 
@@ -260,7 +262,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withRetries immediate success`() = runBlocking {
+    fun `withRetries immediate success`() = runTest {
         when (val res = withRetries(mock(), 3) { true }) {
             is Result.Success -> assertTrue(res.value)
             is Result.Failure -> fail()
@@ -277,7 +279,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withRetries immediate failure`() = runBlocking {
+    fun `withRetries immediate failure`() = runTest {
         when (withRetries(mock(), 3) { false }) {
             is Result.Success -> fail()
             is Result.Failure -> {}
@@ -289,7 +291,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withRetries eventual success`() = runBlocking {
+    fun `withRetries eventual success`() = runTest {
         val eventual = SucceedOn(2, true)
         when (val res = withRetries(mock(), 5) { eventual.nullFailure() }) {
             is Result.Success -> {
@@ -309,7 +311,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withRetries eventual failure`() = runBlocking {
+    fun `withRetries eventual failure`() = runTest {
         val eventual = SucceedOn(6, true)
         when (withRetries(mock(), 5) { eventual.nullFailure() }) {
             is Result.Success -> fail()
@@ -327,7 +329,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withServiceRetries immediate success`() = runBlocking {
+    fun `withServiceRetries immediate success`() = runTest {
         when (withServiceRetries(mock(), 3, suspend { ServiceResult.Ok })) {
             is ServiceResult.Ok -> {}
             else -> fail()
@@ -335,7 +337,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withServiceRetries generic failure keeps retrying`() = runBlocking {
+    fun `withServiceRetries generic failure keeps retrying`() = runTest {
         // keeps retrying on generic error
         val eventual = SucceedOn(0, ServiceResult.Ok, ServiceResult.OtherError)
         when (withServiceRetries(mock(), 3) { eventual.reifiedFailure() }) {
@@ -347,7 +349,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withServiceRetries auth failure short circuit`() = runBlocking {
+    fun `withServiceRetries auth failure short circuit`() = runTest {
         // keeps retrying on generic error
         val eventual = SucceedOn(0, ServiceResult.Ok, ServiceResult.AuthError)
         when (withServiceRetries(mock(), 3) { eventual.reifiedFailure() }) {
@@ -359,7 +361,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `withServiceRetries eventual success`() = runBlocking {
+    fun `withServiceRetries eventual success`() = runTest {
         val eventual = SucceedOn(3, ServiceResult.Ok, ServiceResult.OtherError)
         when (withServiceRetries(mock(), 5) { eventual.reifiedFailure() }) {
             is ServiceResult.Ok -> {
@@ -370,7 +372,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `as auth flow pairing`() = runBlocking {
+    fun `as auth flow pairing`() = runTest {
         val account: OAuthAccount = mock()
         val authFlowUrl: AuthFlowUrl = mock()
         `when`(account.beginPairingFlow(eq("http://pairing.url"), eq(emptySet()), anyString())).thenReturn(authFlowUrl)
@@ -379,7 +381,7 @@ class UtilsKtTest {
     }
 
     @Test
-    fun `as auth flow regular`() = runBlocking {
+    fun `as auth flow regular`() = runTest {
         val account: OAuthAccount = mock()
         val authFlowUrl: AuthFlowUrl = mock()
         `when`(account.beginOAuthFlow(eq(emptySet()), anyString())).thenReturn(authFlowUrl)

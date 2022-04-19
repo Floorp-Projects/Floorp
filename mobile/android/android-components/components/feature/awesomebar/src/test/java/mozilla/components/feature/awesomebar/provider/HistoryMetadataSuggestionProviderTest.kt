@@ -4,7 +4,8 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
@@ -30,6 +31,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 class HistoryMetadataSuggestionProviderTest {
     private val historyEntry = HistoryMetadata(
         key = HistoryMetadataKey("http://www.mozilla.com", null, null),
@@ -47,7 +49,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider returns empty list when text is empty`() = runBlocking {
+    fun `provider returns empty list when text is empty`() = runTest {
         val provider = HistoryMetadataSuggestionProvider(mock(), mock())
 
         val suggestions = provider.onInputChanged("")
@@ -55,7 +57,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider returns suggestions from configured history storage`() = runBlocking {
+    fun `provider returns suggestions from configured history storage`() = runTest {
         val storage: HistoryMetadataStorage = mock()
 
         whenever(storage.queryHistoryMetadata("moz", DEFAULT_METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(historyEntry))
@@ -68,7 +70,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider limits number of returned suggestions to 5 by default`() = runBlocking {
+    fun `provider limits number of returned suggestions to 5 by default`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
         val provider = HistoryMetadataSuggestionProvider(storage, mock())
@@ -80,7 +82,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider allows lowering the number of returned suggestions beneath the default`() = runBlocking {
+    fun `provider allows lowering the number of returned suggestions beneath the default`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
         val provider = HistoryMetadataSuggestionProvider(
@@ -94,7 +96,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider allows increasing the number of returned suggestions above the default`() = runBlocking {
+    fun `provider allows increasing the number of returned suggestions above the default`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         doReturn(emptyList<HistoryMetadata>()).`when`(storage).queryHistoryMetadata(anyString(), anyInt())
         val provider = HistoryMetadataSuggestionProvider(
@@ -108,7 +110,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider only as suggestions pages on which users actually spent some time`() = runBlocking {
+    fun `provider only as suggestions pages on which users actually spent some time`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         val historyEntries = mutableListOf<HistoryMetadata>().apply {
             add(historyEntry)
@@ -122,7 +124,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `provider calls speculative connect for URL of highest scored suggestion`() = runBlocking {
+    fun `provider calls speculative connect for URL of highest scored suggestion`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         val engine: Engine = mock()
         val provider = HistoryMetadataSuggestionProvider(storage, mock(), engine = engine)
@@ -139,7 +141,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `fact is emitted when suggestion is clicked`() = runBlocking {
+    fun `fact is emitted when suggestion is clicked`() = runTest {
         val storage: HistoryMetadataStorage = mock()
         val engine: Engine = mock()
         val provider = HistoryMetadataSuggestionProvider(storage, mock(), engine = engine)
@@ -173,7 +175,7 @@ class HistoryMetadataSuggestionProviderTest {
     }
 
     @Test
-    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runTest {
         val storage: HistoryMetadataStorage = mock()
 
         whenever(storage.queryHistoryMetadata("moz", DEFAULT_METADATA_SUGGESTION_LIMIT)).thenReturn(listOf(historyEntry))

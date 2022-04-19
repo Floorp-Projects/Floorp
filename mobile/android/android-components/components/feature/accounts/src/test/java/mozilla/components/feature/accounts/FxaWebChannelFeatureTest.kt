@@ -6,7 +6,7 @@ package mozilla.components.feature.accounts
 
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -579,7 +579,7 @@ class FxaWebChannelFeatureTest {
 
     // Receiving an oauth-login message account manager accepts the request
     @Test
-    fun `COMMAND_OAUTH_LOGIN web-channel must be processed through when the accountManager accepts the request`() = runBlocking {
+    fun `COMMAND_OAUTH_LOGIN web-channel must be processed through when the accountManager accepts the request`() = runTest {
         val accountManager: FxaAccountManager = mock() // syncConfig is null by default (is not configured)
         val engineSession: EngineSession = mock()
         val ext: WebExtension = mock()
@@ -612,7 +612,7 @@ class FxaWebChannelFeatureTest {
 
     // Receiving an oauth-login message account manager refuses the request
     @Test
-    fun `COMMAND_OAUTH_LOGIN web-channel must be processed when the accountManager refuses the request`() = runBlocking {
+    fun `COMMAND_OAUTH_LOGIN web-channel must be processed when the accountManager refuses the request`() = runTest {
         val accountManager: FxaAccountManager = mock() // syncConfig is null by default (is not configured)
         val engineSession: EngineSession = mock()
         val ext: WebExtension = mock()

@@ -9,7 +9,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
@@ -81,7 +81,7 @@ class CreditCardSelectBarTest {
     }
 
     @Test
-    fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() = runBlocking {
+    fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() = runTest {
         val listener: SelectablePromptView.Listener<CreditCardEntry> = mock()
         creditCardSelectBar.listener = listener
 

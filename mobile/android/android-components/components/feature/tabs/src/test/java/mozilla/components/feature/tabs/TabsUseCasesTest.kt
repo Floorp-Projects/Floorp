@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.tabs
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.session.storage.SessionStorage
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -349,7 +349,7 @@ class TabsUseCasesTest {
     }
 
     @Test
-    fun `RestoreUseCase - filters based on tab timeout`() = runBlocking {
+    fun `RestoreUseCase - filters based on tab timeout`() = runTest {
         val useCases = TabsUseCases(BrowserStore())
 
         val now = System.currentTimeMillis()

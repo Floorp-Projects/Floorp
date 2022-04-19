@@ -8,8 +8,6 @@ import android.content.Context
 import android.webkit.MimeTypeMap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestScope
 import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
@@ -27,6 +25,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -61,6 +60,7 @@ class ShareDownloadFeatureTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val dispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
 
     @Before
     fun setup() {
@@ -75,7 +75,7 @@ class ShareDownloadFeatureTest {
     }
 
     @Test
-    fun `cleanupCache should automatically be called when this class is initialized`() = runBlocking {
+    fun `cleanupCache should automatically be called when this class is initialized`() = runTestOnMain {
         val cacheDir = File(context.cacheDir, cacheDirName).also { dir ->
             dir.mkdirs()
             File(dir, "leftoverFile").also { file ->
@@ -113,7 +113,7 @@ class ShareDownloadFeatureTest {
     }
 
     @Test
-    fun `cleanupCache should delete all files from the cache directory`() = runBlocking {
+    fun `cleanupCache should delete all files from the cache directory`() = runTestOnMain {
         val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null, Dispatchers.Main))
         val testDir = File(context.cacheDir, cacheDirName).also { dir ->
             dir.mkdirs()
@@ -131,12 +131,12 @@ class ShareDownloadFeatureTest {
     }
 
     @Test
-    fun `startSharing() will download and then share the selected download`() = runBlocking {
+    fun `startSharing() will download and then share the selected download`() = runTestOnMain {
         val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
         val shareState = ShareInternetResourceState(url = "testUrl", contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = TestScope(coroutineContext)
+        shareFeature.scope = scope
 
         shareFeature.startSharing(shareState)
 
@@ -146,14 +146,14 @@ class ShareDownloadFeatureTest {
     }
 
     @Test
-    fun `startSharing() will not use a too long HTTP url as message`() = runBlocking {
+    fun `startSharing() will not use a too long HTTP url as message`() = runTestOnMain {
         val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
         val maxSizeUrl = "a".repeat(CHARACTERS_IN_SHARE_TEXT_LIMIT)
         val tooLongUrl = maxSizeUrl + 'x'
         val shareState = ShareInternetResourceState(url = tooLongUrl, contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = TestScope()
+        shareFeature.scope = scope
 
         shareFeature.startSharing(shareState)
 
@@ -163,12 +163,12 @@ class ShareDownloadFeatureTest {
     }
 
     @Test
-    fun `startSharing() will use an empty String as message for data URLs`() = runBlocking {
+    fun `startSharing() will use an empty String as message for data URLs`() = runTestOnMain {
         val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
         val shareState = ShareInternetResourceState(url = "data:image/png;base64,longstring", contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
-        shareFeature.scope = TestScope()
+        shareFeature.scope = scope
 
         shareFeature.startSharing(shareState)
 

@@ -5,7 +5,7 @@
 package mozilla.components.feature.search.storage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.test.robolectric.testContext
@@ -20,7 +20,7 @@ import java.util.Locale
 @RunWith(AndroidJUnit4::class)
 class BundledSearchEnginesStorageTest {
     @Test
-    fun `Load search engines for en-US from assets`() = runBlocking {
+    fun `Load search engines for en-US from assets`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
 
         val engines = storage.load(RegionState("US", "US"), Locale("en", "US"))
@@ -30,7 +30,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for all known locales without region`() = runBlocking {
+    fun `Load search engines for all known locales without region`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
         val locales = Locale.getAvailableLocales()
         assertTrue(locales.isNotEmpty())
@@ -43,7 +43,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for de-DE with global US region override`() = runBlocking {
+    fun `Load search engines for de-DE with global US region override`() = runTest {
         // Without region
         run {
             val storage = BundledSearchEnginesStorage(testContext)
@@ -67,7 +67,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for en-US with local RU region override`() = runBlocking {
+    fun `Load search engines for en-US with local RU region override`() = runTest {
         // Without region
         run {
             val storage = BundledSearchEnginesStorage(testContext)
@@ -92,7 +92,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for zh-CN_CN locale with searchDefault override`() = runBlocking {
+    fun `Load search engines for zh-CN_CN locale with searchDefault override`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
         val engines = storage.load(RegionState("CN", "CN"), Locale("zh", "CN"))
         val searchEngines = engines.list
@@ -112,7 +112,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for ru_RU locale with engines not in searchOrder`() = runBlocking {
+    fun `Load search engines for ru_RU locale with engines not in searchOrder`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
         val engines = storage.load(RegionState("RU", "RU"), Locale("ru", "RU"))
         val searchEngines = engines.list
@@ -129,7 +129,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for trs locale with non-google initial engines and no default`() = runBlocking {
+    fun `Load search engines for trs locale with non-google initial engines and no default`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
         val engines = storage.load(RegionState.Default, Locale("trs", ""))
         val searchEngines = engines.list
@@ -149,7 +149,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Load search engines for locale not in configuration`() = runBlocking {
+    fun `Load search engines for locale not in configuration`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
         val engines = storage.load(RegionState.Default, Locale("xx", "XX"))
         val searchEngines = engines.list
@@ -175,7 +175,7 @@ class BundledSearchEnginesStorageTest {
     }
 
     @Test
-    fun `Verify values of Google search engine`() = runBlocking {
+    fun `Verify values of Google search engine`() = runTest {
         val storage = BundledSearchEnginesStorage(testContext)
 
         val engines = storage.load(RegionState("US", "US"), Locale("en", "US"))

@@ -5,7 +5,6 @@
 package mozilla.components.feature.session.middleware.undo
 
 import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
@@ -16,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -28,7 +28,7 @@ class UndoMiddlewareTest {
     private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
-    fun `Undo scenario - Removing single tab`() = runBlockingTest {
+    fun `Undo scenario - Removing single tab`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
                 UndoMiddleware(clearAfterMillis = 60000)
@@ -60,7 +60,7 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo scenario - Removing list of tabs`() = runBlockingTest {
+    fun `Undo scenario - Removing list of tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
                 UndoMiddleware(clearAfterMillis = 60000)
@@ -92,7 +92,7 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo scenario - Removing all normal tabs`() = runBlockingTest {
+    fun `Undo scenario - Removing all normal tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
                 UndoMiddleware(clearAfterMillis = 60000)
@@ -124,7 +124,7 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo scenario - Removing all tabs`() = runBlockingTest {
+    fun `Undo scenario - Removing all tabs`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
                 UndoMiddleware(clearAfterMillis = 60000)
@@ -156,7 +156,7 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo scenario - Removing all tabs non-recoverable`() = runBlockingTest {
+    fun `Undo scenario - Removing all tabs non-recoverable`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
                 UndoMiddleware(clearAfterMillis = 60000)
@@ -189,7 +189,7 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo History in State is written`() = runBlockingTest {
+    fun `Undo History in State is written`() = runTestOnMain {
         val store = BrowserStore(
             middleware = listOf(
                 UndoMiddleware(clearAfterMillis = 60000)
@@ -238,7 +238,7 @@ class UndoMiddlewareTest {
     }
 
     @Test
-    fun `Undo History gets cleared after time`() = runBlockingTest {
+    fun `Undo History gets cleared after time`() = runTestOnMain {
 
         val store = BrowserStore(
             middleware = listOf(

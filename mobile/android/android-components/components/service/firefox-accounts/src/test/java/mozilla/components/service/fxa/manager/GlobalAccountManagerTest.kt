@@ -4,14 +4,16 @@
 
 package mozilla.components.service.fxa.manager
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito
 
 class GlobalAccountManagerTest {
+    @ExperimentalCoroutinesApi
     @Test
-    fun `GlobalAccountManager authError processing`() = runBlocking {
+    fun `GlobalAccountManager authError processing`() = runTest {
         val manager: FxaAccountManager = mock()
         GlobalAccountManager.setInstance(manager)
 

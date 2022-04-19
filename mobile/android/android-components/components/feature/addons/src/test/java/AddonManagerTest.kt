@@ -10,7 +10,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.WebExtensionState
@@ -30,6 +29,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.junit.After
@@ -68,7 +68,7 @@ class AddonManagerTest {
     }
 
     @Test
-    fun `getAddons - queries addons from provider and updates installation state`() = runBlocking {
+    fun `getAddons - queries addons from provider and updates installation state`() = runTestOnMain {
         // Prepare addons provider
         val addon1 = Addon(id = "ext1")
         val addon2 = Addon(id = "ext2")
@@ -156,7 +156,7 @@ class AddonManagerTest {
     }
 
     @Test
-    fun `getAddons - returns temporary add-ons as supported`() = runBlocking {
+    fun `getAddons - returns temporary add-ons as supported`() = runTestOnMain {
         val addonsProvider: AddonsProvider = mock()
         whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf())
 
@@ -199,7 +199,7 @@ class AddonManagerTest {
     }
 
     @Test(expected = AddonManagerException::class)
-    fun `getAddons - wraps exceptions and rethrows them`() = runBlocking {
+    fun `getAddons - wraps exceptions and rethrows them`() = runTestOnMain {
         val store = BrowserStore()
 
         val engine: Engine = mock()
@@ -217,7 +217,7 @@ class AddonManagerTest {
     }
 
     @Test
-    fun `getAddons - filters unneeded locales`() = runBlocking {
+    fun `getAddons - filters unneeded locales`() = runTestOnMain {
         val addon = Addon(
             id = "addon1",
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "name", "invalid1" to "Name", "invalid2" to "nombre"),
@@ -247,7 +247,7 @@ class AddonManagerTest {
     }
 
     @Test
-    fun `getAddons - suspends until pending actions are completed`() {
+    fun `getAddons - suspends until pending actions are completed`() = runTestOnMain {
         val addon = Addon(
             id = "ext1",
             installedState = Addon.InstalledState("ext1", "1.0", "", true)
@@ -265,11 +265,9 @@ class AddonManagerTest {
         }
         val addonsProvider: AddonsProvider = mock()
 
-        runBlocking {
-            whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
-            WebExtensionSupport.initialize(engine, store)
-            WebExtensionSupport.installedExtensions[addon.id] = extension
-        }
+        whenever(addonsProvider.getAvailableAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
+        WebExtensionSupport.initialize(engine, store)
+        WebExtensionSupport.installedExtensions[addon.id] = extension
 
         val addonManager = AddonManager(store, mock(), addonsProvider, mock())
         addonManager.installAddon(addon)
@@ -283,10 +281,8 @@ class AddonManagerTest {
             getAddonsResult = addonManager.getAddons(waitForPendingActions = false)
         }
 
-        runBlocking {
-            nonSuspendingJob.join()
-            assertNotNull(getAddonsResult)
-        }
+        nonSuspendingJob.join()
+        assertNotNull(getAddonsResult)
 
         getAddonsResult = null
         val suspendingJob = CoroutineScope(Dispatchers.IO).launch {
@@ -295,14 +291,12 @@ class AddonManagerTest {
 
         addonManager.pendingAddonActions.forEach { it.complete(Unit) }
 
-        runBlocking {
-            suspendingJob.join()
-            assertNotNull(getAddonsResult)
-        }
+        suspendingJob.join()
+        assertNotNull(getAddonsResult)
     }
 
     @Test
-    fun `getAddons - passes on allowCache parameter`() = runBlocking {
+    fun `getAddons - passes on allowCache parameter`() = runTestOnMain {
         val store = BrowserStore()
 
         val engine: Engine = mock()

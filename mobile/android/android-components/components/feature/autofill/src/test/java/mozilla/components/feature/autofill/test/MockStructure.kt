@@ -5,11 +5,13 @@
 package mozilla.components.feature.autofill.test
 
 import android.view.autofill.AutofillId
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.feature.autofill.handler.FillRequestHandlerTest
 import mozilla.components.feature.autofill.structure.AutofillNodeNavigator
 import mozilla.components.feature.autofill.structure.RawStructure
 import java.io.File
 
+@ExperimentalCoroutinesApi
 internal fun FillRequestHandlerTest.createMockStructure(filename: String, packageName: String): RawStructure {
     val classLoader = javaClass.classLoader ?: throw RuntimeException("No class loader")
     val resource = classLoader.getResource(filename) ?: throw RuntimeException("Resource not found")

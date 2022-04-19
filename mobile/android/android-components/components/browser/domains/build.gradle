@@ -31,6 +31,7 @@ dependencies {
 
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'

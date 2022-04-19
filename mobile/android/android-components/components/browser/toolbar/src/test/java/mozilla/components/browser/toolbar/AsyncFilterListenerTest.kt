@@ -4,11 +4,12 @@
 
 package mozilla.components.browser.toolbar
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.support.test.mock
@@ -24,9 +25,10 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.util.concurrent.Executor
 
+@ExperimentalCoroutinesApi // for runTest
 class AsyncFilterListenerTest {
     @Test
-    fun `filter listener cancels prior filter executions`() = runBlocking {
+    fun `filter listener cancels prior filter executions`() = runTest {
         val urlView: AutocompleteView = mock()
         val filter: suspend (String, AutocompleteDelegate) -> Unit = mock()
 
@@ -46,7 +48,7 @@ class AsyncFilterListenerTest {
     }
 
     @Test
-    fun `filter delegate checks for cancellations before it runs, passes results to autocomplete view`() = runBlocking {
+    fun `filter delegate checks for cancellations before it runs, passes results to autocomplete view`() = runTest {
         var filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             assertEquals("test", query)
             delegate.applyAutocompleteResult(
@@ -132,7 +134,7 @@ class AsyncFilterListenerTest {
     }
 
     @Test
-    fun `delegate discards stale results`() = runBlocking {
+    fun `delegate discards stale results`() = runTest {
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             assertEquals("test", query)
             delegate.applyAutocompleteResult(
@@ -169,7 +171,7 @@ class AsyncFilterListenerTest {
     }
 
     @Test
-    fun `delegate discards stale lack of results`() = runBlocking {
+    fun `delegate discards stale lack of results`() = runTest {
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             assertEquals("test", query)
             delegate.noAutocompleteResult("test")
@@ -198,7 +200,7 @@ class AsyncFilterListenerTest {
     }
 
     @Test
-    fun `delegate passes through non-stale lack of results`() = runBlocking {
+    fun `delegate passes through non-stale lack of results`() = runTest {
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
             assertEquals("test", query)
             delegate.noAutocompleteResult("test")
@@ -230,7 +232,7 @@ class AsyncFilterListenerTest {
     }
 
     @Test
-    fun `delegate discards results if parent scope was cancelled`() = runBlocking {
+    fun `delegate discards results if parent scope was cancelled`() = runTest {
         var preservedDelegate: AutocompleteDelegate? = null
 
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->
@@ -291,7 +293,7 @@ class AsyncFilterListenerTest {
     }
 
     @Test
-    fun `delegate discards lack of results if parent scope was cancelled`() = runBlocking {
+    fun `delegate discards lack of results if parent scope was cancelled`() = runTest {
         var preservedDelegate: AutocompleteDelegate? = null
 
         val filter: suspend (String, AutocompleteDelegate) -> Unit = { query, delegate ->

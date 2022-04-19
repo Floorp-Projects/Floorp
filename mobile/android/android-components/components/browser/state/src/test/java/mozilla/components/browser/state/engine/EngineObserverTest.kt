@@ -9,7 +9,7 @@ import android.graphics.Bitmap
 import android.view.WindowManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CrashAction
@@ -821,7 +821,7 @@ class EngineObserverTest {
     }
 
     @Test
-    fun engineSessionObserverWithContentPermissionRequests() {
+    fun engineSessionObserverWithContentPermissionRequests() = runTest {
         val permissionRequest: PermissionRequest = mock()
         val store: BrowserStore = mock()
         val observer = EngineObserver("tab-id", store)
@@ -831,14 +831,12 @@ class EngineObserverTest {
         )
         doReturn(Job()).`when`(store).dispatch(action)
 
-        runBlockingTest {
-            observer.onContentPermissionRequest(permissionRequest)
-            verify(store).dispatch(action)
-        }
+        observer.onContentPermissionRequest(permissionRequest)
+        verify(store).dispatch(action)
     }
 
     @Test
-    fun engineSessionObserverWithAppPermissionRequests() {
+    fun engineSessionObserverWithAppPermissionRequests() = runTest {
         val permissionRequest: PermissionRequest = mock()
         val store: BrowserStore = mock()
         val observer = EngineObserver("tab-id", store)
@@ -847,10 +845,8 @@ class EngineObserverTest {
             permissionRequest
         )
 
-        runBlockingTest {
-            observer.onAppPermissionRequest(permissionRequest)
-            verify(store).dispatch(action)
-        }
+        observer.onAppPermissionRequest(permissionRequest)
+        verify(store).dispatch(action)
     }
 
     @Test

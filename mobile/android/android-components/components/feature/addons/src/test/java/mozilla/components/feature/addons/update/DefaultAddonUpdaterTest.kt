@@ -19,7 +19,6 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -31,6 +30,7 @@ import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Before
 import org.junit.Rule
@@ -57,58 +57,54 @@ class DefaultAddonUpdaterTest {
     }
 
     @Test
-    fun `registerForFutureUpdates - schedule work for future update`() {
+    fun `registerForFutureUpdates - schedule work for future update`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
         val updater = DefaultAddonUpdater(testContext, frequency)
         val addonId = "addonId"
 
         val workId = updater.getUniquePeriodicWorkName(addonId)
 
-        runBlocking {
-            val workManger = WorkManager.getInstance(testContext)
-            var workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        val workManger = WorkManager.getInstance(testContext)
+        var workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertTrue(workData.isEmpty())
+        assertTrue(workData.isEmpty())
 
-            updater.registerForFutureUpdates(addonId)
-            workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        updater.registerForFutureUpdates(addonId)
+        workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertFalse(workData.isEmpty())
+        assertFalse(workData.isEmpty())
 
-            assertExtensionIsRegisteredFoUpdates(updater, addonId)
+        assertExtensionIsRegisteredFoUpdates(updater, addonId)
 
-            // Cleaning work manager
-            workManger.cancelUniqueWork(workId)
-        }
+        // Cleaning work manager
+        workManger.cancelUniqueWork(workId)
     }
 
     @Test
-    fun `update - schedule work for immediate update`() {
+    fun `update - schedule work for immediate update`() = runTestOnMain {
         val updater = DefaultAddonUpdater(testContext)
         val addonId = "addonId"
 
         val workId = updater.getUniqueImmediateWorkName(addonId)
 
-        runBlocking {
-            val workManger = WorkManager.getInstance(testContext)
-            var workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        val workManger = WorkManager.getInstance(testContext)
+        var workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertTrue(workData.isEmpty())
+        assertTrue(workData.isEmpty())
 
-            updater.update(addonId)
-            workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        updater.update(addonId)
+        workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertFalse(workData.isEmpty())
+        assertFalse(workData.isEmpty())
 
-            val work = workData.first()
+        val work = workData.first()
 
-            assertEquals(WorkInfo.State.ENQUEUED, work.state)
-            assertTrue(work.tags.contains(workId))
-            assertTrue(work.tags.contains(WORK_TAG_IMMEDIATE))
+        assertEquals(WorkInfo.State.ENQUEUED, work.state)
+        assertTrue(work.tags.contains(workId))
+        assertTrue(work.tags.contains(WORK_TAG_IMMEDIATE))
 
-            // Cleaning work manager
-            workManger.cancelUniqueWork(workId)
-        }
+        // Cleaning work manager
+        workManger.cancelUniqueWork(workId)
     }
 
     @Test
@@ -262,7 +258,7 @@ class DefaultAddonUpdaterTest {
     }
 
     @Test
-    fun `unregisterForFutureUpdates - will remove scheduled work for future update`() {
+    fun `unregisterForFutureUpdates - will remove scheduled work for future update`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
         val updater = DefaultAddonUpdater(testContext, frequency)
         updater.scope = CoroutineScope(Dispatchers.Main)
@@ -273,25 +269,23 @@ class DefaultAddonUpdaterTest {
 
         val workId = updater.getUniquePeriodicWorkName(addonId)
 
-        runBlocking {
-            val workManger = WorkManager.getInstance(testContext)
-            var workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        val workManger = WorkManager.getInstance(testContext)
+        var workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertTrue(workData.isEmpty())
+        assertTrue(workData.isEmpty())
 
-            updater.registerForFutureUpdates(addonId)
-            workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        updater.registerForFutureUpdates(addonId)
+        workData = workManger.getWorkInfosForUniqueWork(workId).await()
 
-            assertFalse(workData.isEmpty())
+        assertFalse(workData.isEmpty())
 
-            assertExtensionIsRegisteredFoUpdates(updater, addonId)
+        assertExtensionIsRegisteredFoUpdates(updater, addonId)
 
-            updater.unregisterForFutureUpdates(addonId)
+        updater.unregisterForFutureUpdates(addonId)
 
-            workData = workManger.getWorkInfosForUniqueWork(workId).await()
-            assertEquals(WorkInfo.State.CANCELLED, workData.first().state)
-            verify(updater.updateAttempStorage).remove(addonId)
-        }
+        workData = workManger.getWorkInfosForUniqueWork(workId).await()
+        assertEquals(WorkInfo.State.CANCELLED, workData.first().state)
+        verify(updater.updateAttempStorage).remove(addonId)
     }
 
     @Test
@@ -313,7 +307,7 @@ class DefaultAddonUpdaterTest {
     }
 
     @Test
-    fun `registerForFutureUpdates - will register only unregistered extensions`() {
+    fun `registerForFutureUpdates - will register only unregistered extensions`() = runTestOnMain {
         val updater = DefaultAddonUpdater(testContext)
         val registeredExt: WebExtension = mock()
         val notRegisteredExt: WebExtension = mock()
@@ -324,21 +318,17 @@ class DefaultAddonUpdaterTest {
 
         val extensions = listOf(registeredExt, notRegisteredExt)
 
-        runBlocking {
-            assertExtensionIsRegisteredFoUpdates(updater, "registeredExt")
-        }
+        assertExtensionIsRegisteredFoUpdates(updater, "registeredExt")
 
         updater.registerForFutureUpdates(extensions)
 
-        runBlocking {
-            extensions.forEach { ext ->
-                assertExtensionIsRegisteredFoUpdates(updater, ext.id)
-            }
+        extensions.forEach { ext ->
+            assertExtensionIsRegisteredFoUpdates(updater, ext.id)
         }
     }
 
     @Test
-    fun `registerForFutureUpdates - will not register built-in and unsupported extensions`() {
+    fun `registerForFutureUpdates - will not register built-in and unsupported extensions`() = runTestOnMain {
         val updater = DefaultAddonUpdater(testContext)
 
         val regularExt: WebExtension = mock()
@@ -357,14 +347,10 @@ class DefaultAddonUpdaterTest {
         val extensions = listOf(regularExt, builtInExt, unsupportedExt)
         updater.registerForFutureUpdates(extensions)
 
-        runBlocking {
-            assertExtensionIsRegisteredFoUpdates(updater, regularExt.id)
-        }
+        assertExtensionIsRegisteredFoUpdates(updater, regularExt.id)
 
-        runBlocking {
-            assertExtensionIsNotRegisteredFoUpdates(updater, builtInExt.id)
-            assertExtensionIsNotRegisteredFoUpdates(updater, unsupportedExt.id)
-        }
+        assertExtensionIsNotRegisteredFoUpdates(updater, builtInExt.id)
+        assertExtensionIsNotRegisteredFoUpdates(updater, unsupportedExt.id)
     }
 
     private suspend fun assertExtensionIsRegisteredFoUpdates(updater: DefaultAddonUpdater, extId: String) {

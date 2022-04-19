@@ -4,7 +4,8 @@
 
 package mozilla.components.feature.top.sites
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.top.sites.db.PinnedSiteDao
 import mozilla.components.feature.top.sites.db.PinnedSiteEntity
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
@@ -15,10 +16,11 @@ import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 class PinnedSitesStorageTest {
 
     @Test
-    fun addAllDefaultSites() = runBlocking {
+    fun addAllDefaultSites() = runTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 
@@ -47,7 +49,7 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun addPinnedSite() = runBlocking {
+    fun addPinnedSite() = runTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 
@@ -66,7 +68,7 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun removePinnedSite() = runBlocking {
+    fun removePinnedSite() = runTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 
@@ -78,7 +80,7 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun getPinnedSites() = runBlocking {
+    fun getPinnedSites() = runTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 
@@ -113,7 +115,7 @@ class PinnedSitesStorageTest {
     }
 
     @Test
-    fun updatePinnedSite() = runBlocking {
+    fun updatePinnedSite() = runTest {
         val storage = PinnedSiteStorage(mock())
         val dao = mockDao(storage)
 

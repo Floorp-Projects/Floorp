@@ -6,7 +6,8 @@ package mozilla.components.feature.awesomebar.provider
 
 import androidx.core.graphics.drawable.toBitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
@@ -39,11 +40,12 @@ import java.io.IOException
 private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 private const val GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES = "[\"firefox\",[\"firefox\",\"firefox\",\"firefox for mac\",\"firefox quantum\",\"firefox update\",\"firefox esr\",\"firefox esr\",\"firefox focus\",\"firefox addons\",\"firefox extensions\",\"firefox nightly\",\"firefox clear cache\"]]"
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class SearchSuggestionProviderTest {
     @Test
     fun `Provider returns suggestion with chips based on search engine suggestion`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -101,7 +103,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider returns multiple suggestions in MULTIPLE mode`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -163,7 +165,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider returns multiple suggestions with limit`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -205,7 +207,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider returns chips with limit`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -242,7 +244,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider should use engine icon by default`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -269,7 +271,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider should use icon parameter when available`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -301,7 +303,7 @@ class SearchSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns empty list if text is empty`() = runBlocking {
+    fun `Provider returns empty list if text is empty`() = runTest {
         val provider = SearchSuggestionProvider(mock(), mock(), mock())
 
         val suggestions = provider.onInputChanged("")
@@ -310,7 +312,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider should return default suggestion for search engine that cannot provide suggestion`() =
-        runBlocking {
+        runTest {
             val searchEngine = createSearchEngine(
                 name = "Test",
                 url = "https://localhost/?q={searchTerms}",
@@ -329,7 +331,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider doesn't fail if fetch returns HTTP error`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setResponseCode(404).setBody("error"))
             server.start()
@@ -361,7 +363,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider doesn't fail if fetch throws exception`() {
-        runBlocking {
+        runTest {
             val searchEngine = createSearchEngine(
                 name = "Test",
                 url = "https://localhost/?q={searchTerms}",
@@ -394,7 +396,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider returns distinct multiple suggestions`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES))
             server.start()
@@ -437,7 +439,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider returns multiple suggestions with limit and no description`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -481,7 +483,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider calls speculativeConnect for URL of highest scored suggestion in MULTIPLE mode`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -518,7 +520,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider calls speculativeConnect for URL of highest scored chip in SINGLE mode`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()
@@ -555,7 +557,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider filters exact match from multiple suggestions`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE_WITH_DUPLICATES))
             server.start()
@@ -597,7 +599,7 @@ class SearchSuggestionProviderTest {
 
     @Test
     fun `Provider filters chips with exact match`() {
-        runBlocking {
+        runTest {
             val server = MockWebServer()
             server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
             server.start()

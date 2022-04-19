@@ -8,12 +8,12 @@ import android.content.ComponentName
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -77,7 +77,7 @@ class CrashHandlerServiceTest {
     }
 
     @Test
-    fun `CrashHandlerService forwards main process native code crash to crash reporter`() = runBlocking {
+    fun `CrashHandlerService forwards main process native code crash to crash reporter`() = runTestOnMain {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
         intent.putExtra("processType", "MAIN")
@@ -88,7 +88,7 @@ class CrashHandlerServiceTest {
     }
 
     @Test
-    fun `CrashHandlerService forwards foreground child process native code crash to crash reporter`() = runBlocking {
+    fun `CrashHandlerService forwards foreground child process native code crash to crash reporter`() = runTestOnMain {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
         intent.putExtra("processType", "FOREGROUND_CHILD")
@@ -99,7 +99,7 @@ class CrashHandlerServiceTest {
     }
 
     @Test
-    fun `CrashHandlerService forwards background child process native code crash to crash reporter`() = runBlocking {
+    fun `CrashHandlerService forwards background child process native code crash to crash reporter`() = runTestOnMain {
         doNothing().`when`(reporter)!!.sendCrashReport(any(), any())
 
         intent.putExtra("processType", "BACKGROUND_CHILD")

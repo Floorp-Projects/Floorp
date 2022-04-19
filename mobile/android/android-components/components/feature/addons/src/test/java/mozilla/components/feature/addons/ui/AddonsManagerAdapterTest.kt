@@ -26,6 +26,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -115,64 +116,58 @@ class AddonsManagerAdapterTest {
     }
 
     @Test
-    fun `handle errors while fetching the add-on icon`() {
+    fun `handle errors while fetching the add-on icon`() = runTestOnMain {
         val addon = mock<Addon>()
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
+        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).then {
+            throw IOException("Request failed")
+        }
 
-        runBlocking {
-            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).then {
-                throw IOException("Request failed")
-            }
-            try {
-                adapter.fetchIcon(addon, mockedImageView, scope).join()
-                verify(mockedImageView).setColorFilter(anyInt())
-            } catch (e: IOException) {
-                fail("The exception must be handle in the adapter")
-            }
+        try {
+            adapter.fetchIcon(addon, mockedImageView, scope).join()
+            verify(mockedImageView).setColorFilter(anyInt())
+        } catch (e: IOException) {
+            fail("The exception must be handle in the adapter")
         }
     }
 
     @Test
-    fun `fetching the add-on icon from cache MUST NOT animate`() {
+    fun `fetching the add-on icon from cache MUST NOT animate`() = runTestOnMain {
         val addon = mock<Addon>()
         val bitmap = mock<Bitmap>()
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
+        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
 
-        runBlocking {
-            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
+        adapter.fetchIcon(addon, mockedImageView, scope).join()
 
-            adapter.fetchIcon(addon, mockedImageView, scope).join()
-            verify(mockedImageView).setImageDrawable(any())
-        }
+        verify(mockedImageView).setImageDrawable(any())
     }
 
     @Test
-    fun `fetching the add-on icon uncached MUST animate`() {
+    fun `fetching the add-on icon uncached MUST animate`() = runTestOnMain {
         val addon = mock<Addon>()
         val bitmap = mock<Bitmap>()
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val adapter = spy(AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList()))
-
-        runBlocking {
-            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenAnswer {
-                runBlocking {
-                    delay(1000)
-                }
-                bitmap
+        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenAnswer {
+            runBlocking {
+                delay(1000)
             }
-
-            adapter.fetchIcon(addon, mockedImageView, scope).join()
-            verify(adapter).setWithCrossFadeAnimation(mockedImageView, bitmap)
+            bitmap
         }
+
+        adapter.fetchIcon(addon, mockedImageView, scope).join()
+
+        verify(adapter).setWithCrossFadeAnimation(mockedImageView, bitmap)
     }
 
     @Test
-    fun `fall back to icon of installed extension`() {
+    fun `fall back to icon of installed extension`() = runTestOnMain {
         val addon = mock<Addon>()
         val installedState = mock<Addon.InstalledState>()
         val icon = mock<Bitmap>()
@@ -181,14 +176,13 @@ class AddonsManagerAdapterTest {
         val mockedImageView = spy(ImageView(testContext))
         val mockedCollectionProvider = mock<AddonCollectionProvider>()
         val adapter = AddonsManagerAdapter(mockedCollectionProvider, mock(), emptyList())
+        val captor = argumentCaptor<BitmapDrawable>()
+        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(null)
 
-        runBlocking {
-            whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(null)
-            adapter.fetchIcon(addon, mockedImageView, scope).join()
-            val captor = argumentCaptor<BitmapDrawable>()
-            verify(mockedImageView).setImageDrawable(captor.capture())
-            assertEquals(icon, captor.value.bitmap)
-        }
+        adapter.fetchIcon(addon, mockedImageView, scope).join()
+
+        verify(mockedImageView).setImageDrawable(captor.capture())
+        assertEquals(icon, captor.value.bitmap)
     }
 
     @Test

@@ -8,21 +8,27 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabDao
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabEntity
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.UUID
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class RecentlyClosedTabDaoTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
@@ -31,13 +37,15 @@ class RecentlyClosedTabDaoTest {
 
     @Before
     fun setUp() {
-        database =
-            Room.inMemoryDatabaseBuilder(context, RecentlyClosedTabsDatabase::class.java).build()
+        database = Room
+            .inMemoryDatabaseBuilder(context, RecentlyClosedTabsDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
         tabDao = database.recentlyClosedTabDao()
     }
 
     @Test
-    fun testAddingTabs() = runBlocking(Dispatchers.IO) {
+    fun testAddingTabs() = runTestOnMain {
         val tab1 = RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -65,7 +73,7 @@ class RecentlyClosedTabDaoTest {
     }
 
     @Test
-    fun testRemovingTab() = runBlocking(Dispatchers.IO) {
+    fun testRemovingTab() = runTestOnMain {
         val tab1 = RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -94,7 +102,7 @@ class RecentlyClosedTabDaoTest {
     }
 
     @Test
-    fun testRemovingAllTabs() = runBlocking(Dispatchers.IO) {
+    fun testRemovingAllTabs() = runTestOnMain {
         RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",

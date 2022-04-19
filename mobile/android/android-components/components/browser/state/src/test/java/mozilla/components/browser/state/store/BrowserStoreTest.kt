@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.state.store
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
@@ -50,7 +50,7 @@ class BrowserStoreTest {
     }
 
     @Test
-    fun `Adding a tab`() = runBlocking {
+    fun `Adding a tab`() = runTest {
         val store = BrowserStore()
 
         assertEquals(0, store.state.tabs.size)

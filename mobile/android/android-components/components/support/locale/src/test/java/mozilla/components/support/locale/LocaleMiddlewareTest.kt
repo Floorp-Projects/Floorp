@@ -6,7 +6,7 @@ package mozilla.components.support.locale
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
@@ -41,7 +41,7 @@ class LocaleMiddlewareTest {
     @Test
     @Ignore("Failing intermittently. To be fixed for https://github.com/mozilla-mobile/android-components/issues/9954")
     @Config(qualifiers = "en-rUS")
-    fun `GIVEN a locale has been chosen in the app WHEN we restore state THEN locale is retrieved from storage`() = runBlockingTest {
+    fun `GIVEN a locale has been chosen in the app WHEN we restore state THEN locale is retrieved from storage`() = runTest {
         val localeManager = spy(LocaleManager)
         val currentLocale = localeManager.getCurrentLocale(testContext)
         assertNull(currentLocale)
@@ -70,7 +70,7 @@ class LocaleMiddlewareTest {
 
     @Test
     @Config(qualifiers = "en-rUS")
-    fun `WHEN we update the locale THEN the locale manager is updated`() = runBlockingTest {
+    fun `WHEN we update the locale THEN the locale manager is updated`() = runTest {
         val localeManager = spy(LocaleManager)
         val currentLocale = localeManager.getCurrentLocale(testContext)
         assertNull(currentLocale)

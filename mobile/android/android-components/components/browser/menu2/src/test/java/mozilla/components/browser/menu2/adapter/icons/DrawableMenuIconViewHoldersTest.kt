@@ -12,7 +12,6 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.menu2.R
 import mozilla.components.concept.menu.Side
 import mozilla.components.concept.menu.candidate.AsyncDrawableMenuIcon
@@ -23,6 +22,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -84,7 +84,7 @@ class DrawableMenuIconViewHoldersTest {
     }
 
     @Test
-    fun `async view holder sets icon on view`() = runBlockingTest {
+    fun `async view holder sets icon on view`() = runTestOnMain {
         val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.END)
 
         val drawable = mock<Drawable>()
@@ -94,7 +94,7 @@ class DrawableMenuIconViewHoldersTest {
     }
 
     @Test
-    fun `async view holder uses loading icon and fallback icon`() = runBlockingTest {
+    fun `async view holder uses loading icon and fallback icon`() = runTestOnMain {
         val logger = mock<Logger>()
         val holder = AsyncDrawableMenuIconViewHolder(parent, layoutInflater, Side.END, logger)
 

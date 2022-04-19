@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.search.region
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.location.LocationService
 import mozilla.components.support.test.fakes.FakeClock
 import mozilla.components.support.test.fakes.android.FakeContext
@@ -28,7 +28,7 @@ class RegionManagerTest {
     }
 
     @Test
-    fun `First update`() {
+    fun `First update`() = runTest {
         val locationService = FakeLocationService(
             region = LocationService.Region("DE", "Germany")
         )
@@ -40,14 +40,14 @@ class RegionManagerTest {
             preferences = lazy { FakeSharedPreferences() }
         )
 
-        val updatedRegion = runBlocking { regionManager.update() }
+        val updatedRegion = regionManager.update()
         assertNotNull(updatedRegion!!)
         assertEquals("DE", updatedRegion.current)
         assertEquals("DE", updatedRegion.home)
     }
 
     @Test
-    fun `Updating to new home region`() {
+    fun `Updating to new home region`() = runTest {
         val clock = FakeClock()
 
         val locationService = FakeLocationService(
@@ -61,12 +61,12 @@ class RegionManagerTest {
             preferences = lazy { FakeSharedPreferences() }
         )
 
-        runBlocking { regionManager.update() }
+        regionManager.update()
 
         locationService.region = LocationService.Region("FR", "France")
 
         // Should not be updated since the "home" region didn't change
-        assertNull(runBlocking { regionManager.update() })
+        assertNull(regionManager.update())
         assertEquals("DE", regionManager.region()?.home)
         assertEquals("FR", regionManager.region()?.current)
 
@@ -74,14 +74,14 @@ class RegionManagerTest {
         clock.advanceBy(60L * 60L * 24L * 7L * 1000L)
 
         // Still not updated because we switch after two weeks
-        assertNull(runBlocking { regionManager.update() })
+        assertNull(regionManager.update())
         assertEquals("DE", regionManager.region()?.home)
         assertEquals("FR", regionManager.region()?.current)
 
         // Let's move the clock 8 more days into the future
         clock.advanceBy(60L * 60L * 24L * 8L * 1000L)
 
-        val updatedRegion = (runBlocking { regionManager.update() })
+        val updatedRegion = (regionManager.update())
         assertNotNull(updatedRegion!!)
         assertEquals("FR", updatedRegion.home)
         assertEquals("FR", updatedRegion.current)
@@ -90,7 +90,7 @@ class RegionManagerTest {
     }
 
     @Test
-    fun `Switching back to home region after staying in different region shortly`() {
+    fun `Switching back to home region after staying in different region shortly`() = runTest {
         val clock = FakeClock()
 
         val locationService = FakeLocationService(
@@ -104,7 +104,7 @@ class RegionManagerTest {
             preferences = lazy { FakeSharedPreferences() }
         )
 
-        runBlocking { regionManager.update() }
+        regionManager.update()
 
         // Let's jump one week into the future!
         clock.advanceBy(60L * 60L * 24L * 7L * 1000L)
@@ -112,7 +112,7 @@ class RegionManagerTest {
         locationService.region = LocationService.Region("FR", "France")
 
         // Should not be updated since the "home" region didn't change
-        assertNull(runBlocking { regionManager.update() })
+        assertNull(regionManager.update())
         assertEquals("DE", regionManager.region()?.home)
         assertEquals("FR", regionManager.region()?.current)
 
@@ -120,7 +120,7 @@ class RegionManagerTest {
         clock.advanceBy(60L * 60L * 24L * 1000L)
 
         locationService.region = LocationService.Region("DE", "Germany")
-        assertNull(runBlocking { regionManager.update() })
+        assertNull(regionManager.update())
         assertEquals("DE", regionManager.region()?.home)
         assertEquals("DE", regionManager.region()?.current)
 
@@ -131,7 +131,7 @@ class RegionManagerTest {
 
         // The "home" region should not have changed since we haven't been in the other region the
         // whole time.
-        assertNull(runBlocking { regionManager.update() })
+        assertNull(regionManager.update())
         assertEquals("DE", regionManager.region()?.home)
         assertEquals("FR", regionManager.region()?.current)
     }

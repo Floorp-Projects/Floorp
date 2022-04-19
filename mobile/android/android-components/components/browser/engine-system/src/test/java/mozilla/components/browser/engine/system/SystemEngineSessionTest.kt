@@ -15,7 +15,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebViewDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
@@ -236,8 +237,9 @@ class SystemEngineSessionTest {
         verify(webView).restoreState(bundle)
     }
 
+    @ExperimentalCoroutinesApi
     @Test
-    fun enableTrackingProtection() {
+    fun enableTrackingProtection() = runTest {
         SystemEngineView.URL_MATCHER = UrlMatcher(arrayOf(""))
 
         val engineSession = spy(SystemEngineSession(testContext))
@@ -257,7 +259,7 @@ class SystemEngineSessionTest {
         })
 
         assertNull(engineSession.trackingProtectionPolicy)
-        runBlocking { engineSession.updateTrackingProtection() }
+        engineSession.updateTrackingProtection()
         assertEquals(
             EngineSession.TrackingProtectionPolicy.strict(),
             engineSession.trackingProtectionPolicy

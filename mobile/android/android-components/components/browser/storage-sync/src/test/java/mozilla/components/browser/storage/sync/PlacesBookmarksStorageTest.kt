@@ -5,13 +5,15 @@
 package mozilla.components.browser.storage.sync
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -19,28 +21,33 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
+@ExperimentalCoroutinesApi // for runTestOnMain
 @RunWith(AndroidJUnit4::class)
 class PlacesBookmarksStorageTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     private lateinit var bookmarks: PlacesBookmarksStorage
 
     @Before
-    fun setup() = runBlocking {
+    fun setup() = runTestOnMain {
         bookmarks = PlacesBookmarksStorage(testContext)
         // There's a database on disk which needs to be cleaned up between tests.
         bookmarks.writer.deleteEverything()
     }
 
     @After
-    fun cleanup() = runBlocking {
+    fun cleanup() = runTestOnMain {
         bookmarks.cleanup()
     }
 
     @Test
-    fun `get bookmarks tree by root, recursive or not`() = runBlocking {
+    fun `get bookmarks tree by root, recursive or not`() = runTestOnMain {
         val tree = bookmarks.getTree(BookmarkRoot.Root.id)!!
         assertEquals(BookmarkRoot.Root.id, tree.guid)
         assertNotNull(tree.children)
@@ -80,7 +87,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks APIs smoke testing - basic operations`() = runBlocking {
+    fun `bookmarks APIs smoke testing - basic operations`() = runTestOnMain {
         val url = "http://www.mozilla.org"
 
         assertEquals(emptyList<BookmarkNode>(), bookmarks.getBookmarksWithUrl(url))
@@ -204,7 +211,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks import v34 populated`() = runBlocking {
+    fun `bookmarks import v34 populated`() = runTestOnMain {
         val path = getTestPath("databases/history-v34.db").absolutePath
 
         // Need to import history first before we import bookmarks.
@@ -244,7 +251,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks import v38 populated`() = runBlocking {
+    fun `bookmarks import v38 populated`() = runTestOnMain {
         val path = getTestPath("databases/populated-v38.db").absolutePath
 
         // Need to import history first before we import bookmarks.
@@ -308,7 +315,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks import v39 populated`() = runBlocking {
+    fun `bookmarks import v39 populated`() = runTestOnMain {
         val path = getTestPath("databases/populated-v39.db").absolutePath
 
         // Need to import history first before we import bookmarks.
@@ -369,7 +376,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks pinned sites read v39`() = runBlocking {
+    fun `bookmarks pinned sites read v39`() = runTestOnMain {
         val path = getTestPath("databases/pinnedSites-v39.db").absolutePath
 
         with(bookmarks.readPinnedSitesFromFennec(path)) {
@@ -392,7 +399,7 @@ class PlacesBookmarksStorageTest {
     }
 
     @Test
-    fun `bookmarks pinned sites read empty v39`() = runBlocking {
+    fun `bookmarks pinned sites read empty v39`() = runTestOnMain {
         val path = getTestPath("databases/populated-v39.db").absolutePath
 
         assertEquals(0, bookmarks.readPinnedSitesFromFennec(path).size)

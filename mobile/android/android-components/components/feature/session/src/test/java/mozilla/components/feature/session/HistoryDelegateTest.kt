@@ -5,7 +5,7 @@
 package mozilla.components.feature.session
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
@@ -28,7 +28,7 @@ import org.mockito.Mockito.verify
 class HistoryDelegateTest {
 
     @Test
-    fun `history delegate passes through onVisited calls`() = runBlocking {
+    fun `history delegate passes through onVisited calls`() = runTest {
         val storage = mock<HistoryStorage>()
         val delegate = HistoryDelegate(lazy { storage })
 
@@ -43,7 +43,7 @@ class HistoryDelegateTest {
     }
 
     @Test
-    fun `history delegate passes through onTitleChanged calls`() = runBlocking {
+    fun `history delegate passes through onTitleChanged calls`() = runTest {
         val storage = mock<HistoryStorage>()
         val delegate = HistoryDelegate(lazy { storage })
 
@@ -52,7 +52,7 @@ class HistoryDelegateTest {
     }
 
     @Test
-    fun `history delegate passes through onPreviewImageChange calls`() = runBlocking {
+    fun `history delegate passes through onPreviewImageChange calls`() = runTest {
         val storage = mock<HistoryStorage>()
         val delegate = HistoryDelegate(lazy { storage })
 
@@ -65,7 +65,7 @@ class HistoryDelegateTest {
     }
 
     @Test
-    fun `history delegate passes through getVisited calls`() = runBlocking {
+    fun `history delegate passes through getVisited calls`() = runTest {
         val storage = TestHistoryStorage()
         val delegate = HistoryDelegate(lazy { storage })
 
@@ -84,7 +84,7 @@ class HistoryDelegateTest {
     }
 
     @Test
-    fun `history delegate checks with storage canAddUriCalled`() = runBlocking {
+    fun `history delegate checks with storage canAddUriCalled`() = runTest {
         val storage = TestHistoryStorage()
         val delegate = HistoryDelegate(lazy { storage })
 

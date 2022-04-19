@@ -6,7 +6,7 @@ package mozilla.components.browser.engine.gecko
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -25,18 +25,18 @@ import org.robolectric.annotation.LooperMode
 class GeckoResultTest {
 
     @Test
-    fun awaitWithResult() = runBlockingTest {
+    fun awaitWithResult() = runTest {
         val result = GeckoResult.fromValue(42).await()
         assertEquals(42, result)
     }
 
     @Test(expected = IllegalStateException::class)
-    fun awaitWithException() = runBlockingTest {
+    fun awaitWithException() = runTest {
         GeckoResult.fromException<Unit>(IllegalStateException()).await()
     }
 
     @Test
-    fun fromResult() = runBlockingTest {
+    fun fromResult() = runTest {
         val result = launchGeckoResult { 42 }
 
         result.then<Int> {
@@ -46,7 +46,7 @@ class GeckoResultTest {
     }
 
     @Test
-    fun fromException() = runBlockingTest {
+    fun fromException() = runTest {
         val result = launchGeckoResult { throw IllegalStateException() }
 
         result.then<Unit>(
@@ -62,7 +62,7 @@ class GeckoResultTest {
     }
 
     @Test
-    fun asCancellableOperation() = runBlockingTest {
+    fun asCancellableOperation() = runTest {
         val geckoResult: GeckoResult<Int> = mock()
         val op = geckoResult.asCancellableOperation()
 

@@ -7,8 +7,8 @@ package mozilla.components.support.migration
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -43,7 +43,7 @@ class SearchEngineMigrationTest {
     }
 
     @Test
-    fun `default Google with en_US_US list`() {
+    fun `default Google with en_US_US list`() = runTest {
         val (store, result) = migrate(
             fennecDefault = "Google",
             language = "en",
@@ -61,7 +61,7 @@ class SearchEngineMigrationTest {
     }
 
     @Test
-    fun `default DuckDuckGo with en_US_US list`() {
+    fun `default DuckDuckGo with en_US_US list`() = runTest {
         val (store, result) = migrate(
             fennecDefault = "DuckDuckGo",
             language = "en",
@@ -79,7 +79,7 @@ class SearchEngineMigrationTest {
     }
 
     @Test
-    fun `default Bing with de_DE_DE list`() {
+    fun `default Bing with de_DE_DE list`() = runTest {
         val (store, result) = migrate(
             fennecDefault = "Bing",
             language = "de",
@@ -97,7 +97,7 @@ class SearchEngineMigrationTest {
     }
 
     @Test
-    fun `default Qwant with de_DE_DE list`() {
+    fun `default Qwant with de_DE_DE list`() = runTest {
         val (store, result) = migrate(
             fennecDefault = "Qwant",
             language = "de",
@@ -115,7 +115,7 @@ class SearchEngineMigrationTest {
     }
 
     @Test
-    fun `default Qwant with en_US_US list`() {
+    fun `default Qwant with en_US_US list`() = runTest {
         val (store, result) = migrate(
             fennecDefault = "Qwant",
             language = "en",
@@ -134,7 +134,7 @@ class SearchEngineMigrationTest {
     }
 
     @Test
-    fun `default null with en_US_US list`() {
+    fun `default null with en_US_US list`() = runTest {
         val (store, result) = migrate(
             fennecDefault = null,
             language = "en",
@@ -174,37 +174,35 @@ private fun assertIsFailure(
     assertEquals(expected, wrapper.failure)
 }
 
-private fun migrate(
+private suspend fun migrate(
     fennecDefault: String?,
     language: String,
     country: String,
     region: String
 ): Pair<BrowserStore, Result<SearchEngineMigrationResult>> {
-    return runBlocking {
-        val store = storeFor(
-            language,
-            country,
-            region
-        )
+    val store = storeFor(
+        language,
+        country,
+        region
+    )
 
-        if (fennecDefault != null) {
-            ApplicationProvider.getApplicationContext<Context>().getSharedPreferences(
-                FennecSettingsMigration.FENNEC_APP_SHARED_PREFS_NAME,
-                Context.MODE_PRIVATE
-            ).edit()
-                .putString("search.engines.defaultname", fennecDefault)
-                .apply()
-        }
-
-        val result = SearchEngineMigration.migrate(
-            ApplicationProvider.getApplicationContext(),
-            store
-        )
-
-        store.waitUntilIdle()
-
-        Pair(store, result)
+    if (fennecDefault != null) {
+        ApplicationProvider.getApplicationContext<Context>().getSharedPreferences(
+            FennecSettingsMigration.FENNEC_APP_SHARED_PREFS_NAME,
+            Context.MODE_PRIVATE
+        ).edit()
+            .putString("search.engines.defaultname", fennecDefault)
+            .apply()
     }
+
+    val result = SearchEngineMigration.migrate(
+        ApplicationProvider.getApplicationContext(),
+        store
+    )
+
+    store.waitUntilIdle()
+
+    return Pair(store, result)
 }
 
 private fun storeFor(language: String, country: String, region: String): BrowserStore {

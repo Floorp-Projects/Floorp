@@ -5,9 +5,9 @@
 package mozilla.components.support.utils
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -24,7 +24,7 @@ class RunWhenReadyQueueTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `task should not run until ready is called`() = runBlockingTest {
+    fun `task should not run until ready is called`() = runTestOnMain {
         val task = mock<() -> Unit>()
         val queue = RunWhenReadyQueue(scope)
 
@@ -39,7 +39,7 @@ class RunWhenReadyQueueTest {
     }
 
     @Test
-    fun `task should run if ready was called`() = runBlockingTest {
+    fun `task should run if ready was called`() = runTestOnMain {
         val task = mock<() -> Unit>()
         val queue = RunWhenReadyQueue(scope)
         queue.ready()
@@ -52,7 +52,7 @@ class RunWhenReadyQueueTest {
     }
 
     @Test
-    fun `tasks should run in the order they were queued`() = runBlockingTest {
+    fun `tasks should run in the order they were queued`() = runTestOnMain {
         val task1 = mock<() -> Unit>()
         val task2 = mock<() -> Unit>()
         val task3 = mock<() -> Unit>()

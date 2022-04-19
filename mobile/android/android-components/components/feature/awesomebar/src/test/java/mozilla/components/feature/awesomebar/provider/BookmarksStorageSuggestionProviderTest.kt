@@ -5,7 +5,8 @@
 package mozilla.components.feature.awesomebar.provider
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
@@ -25,6 +26,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import java.util.UUID
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class BookmarksStorageSuggestionProviderTest {
 
@@ -36,7 +38,7 @@ class BookmarksStorageSuggestionProviderTest {
     )
 
     @Test
-    fun `Provider returns empty list when text is empty`() = runBlocking {
+    fun `Provider returns empty list when text is empty`() = runTest {
         val provider = BookmarksStorageSuggestionProvider(mock(), mock())
 
         val suggestions = provider.onInputChanged("")
@@ -44,7 +46,7 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider returns suggestions from configured bookmarks storage`() = runBlocking {
+    fun `Provider returns suggestions from configured bookmarks storage`() = runTest {
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock())
 
         val id = bookmarks.addItem("Mobile", newItem.url!!, newItem.title!!, null)
@@ -61,7 +63,7 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider does not return duplicate suggestions`() = runBlocking {
+    fun `Provider does not return duplicate suggestions`() = runTest {
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock())
 
         for (i in 1..20) {
@@ -73,7 +75,7 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider limits number of returned unique suggestions`() = runBlocking {
+    fun `Provider limits number of returned unique suggestions`() = runTest {
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock())
 
         for (i in 1..100) {
@@ -90,7 +92,7 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `provider calls speculative connect for URL of first suggestion`() = runBlocking {
+    fun `provider calls speculative connect for URL of first suggestion`() = runTest {
         val engine: Engine = mock()
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock(), engine = engine)
 
@@ -107,7 +109,7 @@ class BookmarksStorageSuggestionProviderTest {
     }
 
     @Test
-    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runBlocking {
+    fun `WHEN provider is set to not show edit suggestions THEN edit suggestion is set to null`() = runTest {
         val engine: Engine = mock()
         val provider = BookmarksStorageSuggestionProvider(bookmarks, mock(), engine = engine, showEditSuggestion = false)
 

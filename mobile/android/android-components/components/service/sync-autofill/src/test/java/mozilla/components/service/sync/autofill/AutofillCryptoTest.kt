@@ -5,7 +5,8 @@
 package mozilla.components.service.sync.autofill
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.KeyGenerationReason
 import mozilla.components.concept.storage.ManagedKey
@@ -21,8 +22,10 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class AutofillCryptoTest {
+
     private lateinit var securePrefs: SecureAbove22Preferences
 
     @Before
@@ -32,7 +35,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `get key - new`() = runBlocking {
+    fun `get key - new`() = runTest {
         val storage = mock<AutofillCreditCardsAddressesStorage>()
         val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
@@ -47,7 +50,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `get key - lost`() = runBlocking {
+    fun `get key - lost`() = runTest {
         val storage = mock<AutofillCreditCardsAddressesStorage>()
         val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
@@ -63,7 +66,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `get key - corrupted`() = runBlocking {
+    fun `get key - corrupted`() = runTest {
         val storage = mock<AutofillCreditCardsAddressesStorage>()
         val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
@@ -80,7 +83,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `get key - corrupted subtly`() = runBlocking {
+    fun `get key - corrupted subtly`() = runTest {
         val storage = mock<AutofillCreditCardsAddressesStorage>()
         val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
@@ -98,7 +101,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `encrypt and decrypt card - normal`() = runBlocking {
+    fun `encrypt and decrypt card - normal`() = runTest {
         val crypto = AutofillCrypto(testContext, securePrefs, mock())
         val key = crypto.getOrGenerateKey()
         val plaintext1 = CreditCardNumber.Plaintext("4111111111111111")
@@ -115,7 +118,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `encrypt and decrypt card - bad keys`() = runBlocking {
+    fun `encrypt and decrypt card - bad keys`() = runTest {
         val crypto = AutofillCrypto(testContext, securePrefs, mock())
         val plaintext = CreditCardNumber.Plaintext("4111111111111111")
 

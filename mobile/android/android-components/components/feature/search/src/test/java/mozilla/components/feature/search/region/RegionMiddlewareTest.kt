@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.search.region
 
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -15,6 +14,7 @@ import mozilla.components.support.test.fakes.android.FakeContext
 import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
@@ -83,12 +83,12 @@ class RegionMiddlewareTest {
     }
 
     @Test
-    fun `Dispatches cached home region and update later`() {
+    fun `Dispatches cached home region and update later`() = runTestOnMain {
         val middleware = RegionMiddleware(FakeContext(), locationService, dispatcher)
         middleware.regionManager = regionManager
 
         locationService.region = LocationService.Region("FR", "France")
-        runBlocking { regionManager.update() }
+        regionManager.update()
 
         val store = BrowserStore(
             middleware = listOf(middleware)
@@ -102,7 +102,7 @@ class RegionMiddlewareTest {
         assertEquals("FR", store.state.search.region!!.current)
 
         locationService.region = LocationService.Region("DE", "Germany")
-        runBlocking { regionManager.update() }
+        regionManager.update()
 
         store.dispatch(InitAction).joinBlocking()
         middleware.updateJob?.joinBlocking()

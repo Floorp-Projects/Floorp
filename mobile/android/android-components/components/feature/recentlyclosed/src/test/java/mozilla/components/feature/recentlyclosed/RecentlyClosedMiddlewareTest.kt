@@ -7,7 +7,6 @@ package mozilla.components.feature.recentlyclosed
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.UndoAction
@@ -24,6 +23,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -63,7 +63,7 @@ class RecentlyClosedMiddlewareTest {
     )
 
     @Test
-    fun `closed tab storage stores the provided tab on add tab action`() = runBlocking {
+    fun `closed tab storage stores the provided tab on add tab action`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -82,7 +82,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage adds normal tabs removed with TabListAction`() = runBlocking {
+    fun `closed tab storage adds normal tabs removed with TabListAction`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -123,7 +123,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage adds a normal tab removed with TabListAction`() = runBlocking {
+    fun `closed tab storage adds a normal tab removed with TabListAction`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -157,7 +157,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage does not add a private tab removed with TabListAction`() = runBlocking {
+    fun `closed tab storage does not add a private tab removed with TabListAction`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -179,7 +179,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage adds all normals tab removed with TabListAction RemoveAllNormalTabsAction`() = runBlocking {
+    fun `closed tab storage adds all normals tab removed with TabListAction RemoveAllNormalTabsAction`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -214,7 +214,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage adds all normal tabs and no private tabs removed with TabListAction RemoveAllTabsAction`() = runBlocking {
+    fun `closed tab storage adds all normal tabs and no private tabs removed with TabListAction RemoveAllTabsAction`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -249,7 +249,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tabs storage adds tabs closed one after the other without clear actions in between`() = runBlocking {
+    fun `closed tabs storage adds tabs closed one after the other without clear actions in between`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -307,7 +307,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `fetch the tabs from the recently closed storage and load into browser state on initialize tab state action`() = runBlocking {
+    fun `fetch the tabs from the recently closed storage and load into browser state on initialize tab state action`() = runTestOnMain {
         val storage = mockStorage(tabs = listOf(closedTab.state))
 
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
@@ -325,7 +325,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `recently closed storage removes the provided tab on remove tab action`() = runBlocking {
+    fun `recently closed storage removes the provided tab on remove tab action`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
@@ -348,7 +348,7 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `recently closed storage removes all tabs on remove all tabs action`() = runBlocking {
+    fun `recently closed storage removes all tabs on remove all tabs action`() = runTestOnMain {
         val storage = mockStorage()
         val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
         val store = BrowserStore(

@@ -5,7 +5,8 @@
 package mozilla.components.service.sync.autofill
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
@@ -24,25 +25,27 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class AutofillCreditCardsAddressesStorageTest {
+
     private lateinit var storage: AutofillCreditCardsAddressesStorage
     private lateinit var securePrefs: SecureAbove22Preferences
 
     @Before
-    fun setup() = runBlocking {
+    fun setup() {
         // forceInsecure is set in the tests because a keystore wouldn't be configured in the test environment.
         securePrefs = SecureAbove22Preferences(testContext, "autofill", forceInsecure = true)
         storage = AutofillCreditCardsAddressesStorage(testContext, lazy { securePrefs })
     }
 
     @After
-    fun cleanup() = runBlocking {
+    fun cleanup() {
         storage.close()
     }
 
     @Test
-    fun `add credit card`() = runBlocking {
+    fun `add credit card`() = runTest {
         val plaintextNumber = CreditCardNumber.Plaintext("4111111111111111")
         val creditCardFields = NewCreditCardFields(
             billingName = "Jon Doe",
@@ -72,7 +75,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `get credit card`() = runBlocking {
+    fun `get credit card`() = runTest {
         val plaintextNumber = CreditCardNumber.Plaintext("5500000000000004")
         val creditCardFields = NewCreditCardFields(
             billingName = "Jon Doe",
@@ -88,12 +91,12 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `GIVEN a non-existent credit card guid WHEN getCreditCard is called THEN null is returned`() = runBlocking {
+    fun `GIVEN a non-existent credit card guid WHEN getCreditCard is called THEN null is returned`() = runTest {
         assertNull(storage.getCreditCard("guid"))
     }
 
     @Test
-    fun `get all credit cards`() = runBlocking {
+    fun `get all credit cards`() = runTest {
         val plaintextNumber1 = CreditCardNumber.Plaintext("5500000000000004")
         val creditCardFields1 = NewCreditCardFields(
             billingName = "Jane Fields",
@@ -141,7 +144,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `update credit card`() = runBlocking {
+    fun `update credit card`() = runTest {
         val creditCardFields = NewCreditCardFields(
             billingName = "Jon Doe",
             plaintextCardNumber = CreditCardNumber.Plaintext("4111111111111111"),
@@ -199,7 +202,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `delete credit card`() = runBlocking {
+    fun `delete credit card`() = runTest {
         val creditCardFields = NewCreditCardFields(
             billingName = "Jon Doe",
             plaintextCardNumber = CreditCardNumber.Plaintext("30000000000004"),
@@ -219,7 +222,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `add address`() = runBlocking {
+    fun `add address`() = runTest {
         val addressFields = UpdatableAddressFields(
             givenName = "John",
             additionalName = "",
@@ -253,7 +256,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `get address`() = runBlocking {
+    fun `get address`() = runTest {
         val addressFields = UpdatableAddressFields(
             givenName = "John",
             additionalName = "",
@@ -274,12 +277,12 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `GIVEN a non-existent address guid WHEN getAddress is called THEN null is returned`() = runBlocking {
+    fun `GIVEN a non-existent address guid WHEN getAddress is called THEN null is returned`() = runTest {
         assertNull(storage.getAddress("guid"))
     }
 
     @Test
-    fun `get all addresses`() = runBlocking {
+    fun `get all addresses`() = runTest {
         val addressFields1 = UpdatableAddressFields(
             givenName = "John",
             additionalName = "",
@@ -337,7 +340,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `update address`() = runBlocking {
+    fun `update address`() = runTest {
         val addressFields = UpdatableAddressFields(
             givenName = "John",
             additionalName = "",
@@ -389,7 +392,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `delete address`() = runBlocking {
+    fun `delete address`() = runTest {
         val addressFields = UpdatableAddressFields(
             givenName = "John",
             additionalName = "",
@@ -415,7 +418,7 @@ class AutofillCreditCardsAddressesStorageTest {
     }
 
     @Test
-    fun `WHEN warmUp method is called THEN the database connection is established`(): Unit = runBlocking {
+    fun `WHEN warmUp method is called THEN the database connection is established`(): Unit = runTest {
         val storageSpy = spy(storage)
         storageSpy.warmUp()
 

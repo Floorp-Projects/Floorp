@@ -6,7 +6,7 @@ package mozilla.components.feature.pwa
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.db.ManifestDao
 import mozilla.components.feature.pwa.db.ManifestEntity
@@ -50,14 +50,14 @@ class ManifestStorageTest {
     )
 
     @Test
-    fun `load returns null if entry does not exist`() = runBlocking {
+    fun `load returns null if entry does not exist`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         mockDatabase(storage)
         assertNull(storage.loadManifest("https://example.com"))
     }
 
     @Test
-    fun `load returns valid manifest`() = runBlocking {
+    fun `load returns valid manifest`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
@@ -69,7 +69,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `save saves the manifest as JSON`() = runBlocking {
+    fun `save saves the manifest as JSON`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
@@ -79,7 +79,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `update replaces the manifest as JSON`() = runBlocking {
+    fun `update replaces the manifest as JSON`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val existing = ManifestEntity(firefoxManifest, currentTime = 0)
@@ -92,7 +92,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `update does not replace non-existed manifest`() = runBlocking {
+    fun `update does not replace non-existed manifest`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
@@ -104,7 +104,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `remove deletes saved manifests`() = runBlocking {
+    fun `remove deletes saved manifests`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
@@ -114,7 +114,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `loading manifests by scope returns list of manifests`() = runBlocking {
+    fun `loading manifests by scope returns list of manifests`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val manifest1 = WebAppManifest(name = "Mozilla1", startUrl = "https://mozilla.org", scope = "https://mozilla.org/pwa/1/")
@@ -131,7 +131,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `loading manifests with share targets returns list of manifests`() = runBlocking {
+    fun `loading manifests with share targets returns list of manifests`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val manifest1 = WebAppManifest(
@@ -158,7 +158,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `updateManifestUsedAt updates usedAt to current timestamp`() = runBlocking {
+    fun `updateManifestUsedAt updates usedAt to current timestamp`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
@@ -178,7 +178,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `has recent manifest returns false if no manifest is found`() = runBlocking {
+    fun `has recent manifest returns false if no manifest is found`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val timeout = ManifestStorage.ACTIVE_THRESHOLD_MS
@@ -192,7 +192,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `has recent manifest returns true if one or more manifests have been found`() = runBlocking {
+    fun `has recent manifest returns true if one or more manifests have been found`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
         val timeout = ManifestStorage.ACTIVE_THRESHOLD_MS
@@ -211,7 +211,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `recently used manifest count`() = runBlocking {
+    fun `recently used manifest count`() = runTest {
         val testThreshold = 1000 * 60 * 24L
         val storage = spy(ManifestStorage(testContext, activeThresholdMs = testThreshold))
         val dao = mockDatabase(storage)
@@ -241,7 +241,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `warmUpScopes populates cache of already installed web app scopes`() = runBlocking {
+    fun `warmUpScopes populates cache of already installed web app scopes`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
@@ -264,7 +264,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `getInstalledScope returns cached scope for an url`() = runBlocking {
+    fun `getInstalledScope returns cached scope for an url`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 
@@ -282,7 +282,7 @@ class ManifestStorageTest {
     }
 
     @Test
-    fun `getStartUrlForInstalledScope returns cached start url for a currently installed scope`() = runBlocking {
+    fun `getStartUrlForInstalledScope returns cached start url for a currently installed scope`() = runTest {
         val storage = spy(ManifestStorage(testContext))
         val dao = mockDatabase(storage)
 

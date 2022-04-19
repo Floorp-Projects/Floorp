@@ -4,11 +4,11 @@
 
 package mozilla.components.feature.push
 
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.appservices.push.PushException.CommunicationException
 import mozilla.appservices.push.PushException.CommunicationServerException
 import mozilla.appservices.push.PushException.CryptoException
@@ -32,28 +32,29 @@ class AutoPushFeatureKtTest {
         assertEquals(ServiceType.FCM, config.serviceType)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     @Test
-    fun `exception handler handles exceptions`() = runBlockingTest {
+    fun `exception handler handles exceptions`() = runTest {
         var invoked = false
-        val scope = CoroutineScope(coroutineContext) + exceptionHandler { invoked = true }
+        val handler = exceptionHandler { invoked = true }
 
-        scope.launch { throw PushError.MalformedMessage("test") }
+        GlobalScope.launch(handler) { throw PushError.MalformedMessage("test") }.join()
         assertFalse(invoked)
 
-        scope.launch { throw GeneralException("test") }
+        GlobalScope.launch(handler) { throw GeneralException("test") }.join()
         assertFalse(invoked)
 
-        scope.launch { throw CryptoException("test") }
+        GlobalScope.launch(handler) { throw CryptoException("test") }.join()
         assertFalse(invoked)
 
-        scope.launch { throw CommunicationException("test") }
+        GlobalScope.launch(handler) { throw CommunicationException("test") }.join()
         assertFalse(invoked)
 
-        scope.launch { throw CommunicationServerException("test") }
+        GlobalScope.launch(handler) { throw CommunicationServerException("test") }.join()
         assertFalse(invoked)
 
         // An exception where we should invoke our callback.
-        scope.launch { throw MissingRegistrationTokenException("") }
+        GlobalScope.launch(handler) { throw MissingRegistrationTokenException("") }.join()
         assertTrue(invoked)
     }
 }

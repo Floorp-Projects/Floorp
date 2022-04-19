@@ -5,7 +5,8 @@
 package mozilla.components.service.pocket.stories
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.stories.db.PocketRecommendationsDao
 import mozilla.components.service.pocket.stories.ext.toPartialTimeShownUpdate
@@ -21,6 +22,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class PocketRecommendationsRepositoryTest {
 
@@ -35,7 +37,7 @@ class PocketRecommendationsRepositoryTest {
 
     @Test
     fun `GIVEN PocketRecommendationsRepository WHEN getPocketRecommendedStories is called THEN return db entities mapped to domain type`() {
-        runBlocking {
+        runTest {
             val dbStory = PocketTestResources.dbExpectedPocketStory
             `when`(dao.getPocketStories()).thenReturn(listOf(dbStory))
 
@@ -49,7 +51,7 @@ class PocketRecommendationsRepositoryTest {
 
     @Test
     fun `GIVEN PocketRecommendationsRepository WHEN addAllPocketApiStories is called THEN persist the received story to db`() {
-        runBlocking {
+        runTest {
             val apiStories = PocketTestResources.apiExpectedPocketStoriesRecommendations
             val apiStoriesMappedForDb = apiStories.map { it.toPocketLocalStory() }
 
@@ -61,7 +63,7 @@ class PocketRecommendationsRepositoryTest {
 
     @Test
     fun `GIVEN PocketRecommendationsRepository WHEN updateShownPocketRecommendedStories should persist the received story to db`() {
-        runBlocking {
+        runTest {
             val clientStories = listOf(PocketTestResources.clientExpectedPocketStory)
             val clientStoriesPartialUpdate = clientStories.map { it.toPartialTimeShownUpdate() }
 

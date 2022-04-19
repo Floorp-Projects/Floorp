@@ -5,7 +5,8 @@
 package mozilla.components.service.contile
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
@@ -27,11 +28,12 @@ import java.io.File
 import java.io.IOException
 import java.util.Date
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class ContileTopSitesProviderTest {
 
     @Test
-    fun `GIVEN a successful status response WHEN top sites are fetched THEN response should contain top sites`() = runBlocking {
+    fun `GIVEN a successful status response WHEN top sites are fetched THEN response should contain top sites`() = runTest {
         val client = prepareClient()
         val provider = ContileTopSitesProvider(testContext, client)
         val topSites = provider.getTopSites()
@@ -56,7 +58,7 @@ class ContileTopSitesProviderTest {
     }
 
     @Test(expected = IOException::class)
-    fun `GIVEN a 500 status response WHEN top sites are fetched THEN throw an exception`() = runBlocking {
+    fun `GIVEN a 500 status response WHEN top sites are fetched THEN throw an exception`() = runTest {
         val client = prepareClient(status = 500)
         val provider = ContileTopSitesProvider(testContext, client)
         provider.getTopSites()
@@ -64,7 +66,7 @@ class ContileTopSitesProviderTest {
     }
 
     @Test
-    fun `GIVEN a cache configuration is allowed and not expired WHEN top sites are fetched THEN read from the disk cache`() = runBlocking {
+    fun `GIVEN a cache configuration is allowed and not expired WHEN top sites are fetched THEN read from the disk cache`() = runTest {
         val client = prepareClient()
         val provider = spy(ContileTopSitesProvider(testContext, client))
 
@@ -83,7 +85,7 @@ class ContileTopSitesProviderTest {
     }
 
     @Test
-    fun `GIVEN a cache configuration is allowed WHEN top sites are fetched THEN write response to cache`() = runBlocking {
+    fun `GIVEN a cache configuration is allowed WHEN top sites are fetched THEN write response to cache`() = runTest {
         val jsonResponse = loadResourceAsString("/contile/contile.json")
         val client = prepareClient(jsonResponse)
         val provider = spy(ContileTopSitesProvider(testContext, client))
@@ -175,7 +177,7 @@ class ContileTopSitesProviderTest {
     }
 
     @Test
-    fun `GIVEN cache is not expired WHEN top sites are refreshed THEN do nothing`() = runBlocking {
+    fun `GIVEN cache is not expired WHEN top sites are refreshed THEN do nothing`() = runTest {
         val provider = spy(
             ContileTopSitesProvider(
                 testContext,
@@ -192,7 +194,7 @@ class ContileTopSitesProviderTest {
     }
 
     @Test
-    fun `GIVEN cache is expired WHEN top sites are refreshed THEN fetch and write new response to cache`() = runBlocking {
+    fun `GIVEN cache is expired WHEN top sites are refreshed THEN fetch and write new response to cache`() = runTest {
         val jsonResponse = loadResourceAsString("/contile/contile.json")
         val provider = spy(
             ContileTopSitesProvider(

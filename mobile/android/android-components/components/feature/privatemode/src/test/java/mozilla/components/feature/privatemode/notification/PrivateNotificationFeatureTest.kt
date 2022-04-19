@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createCustomTab
@@ -15,6 +17,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -49,13 +52,14 @@ class PrivateNotificationFeatureTest {
     }
 
     @Test
-    fun `service should be started if pre-existing private session is present`() = runBlocking {
+    fun `service should be started if pre-existing private session is present`() = runTest(StandardTestDispatcher()) {
         val privateSession = createTab("https://firefox.com", private = true)
         val intent = argumentCaptor<Intent>()
 
         store.dispatch(TabListAction.AddTabAction(privateSession)).join()
 
         feature.start()
+        runCurrent()
         verify(context, times(1)).startService(intent.capture())
 
         val expected = Intent(testContext, AbstractPrivateNotificationService::class.java)
@@ -64,7 +68,7 @@ class PrivateNotificationFeatureTest {
     }
 
     @Test
-    fun `service should be started when private session is added`() = runBlocking {
+    fun `service should be started when private session is added`() = runTestOnMain {
         val privateSession = createTab("https://firefox.com", private = true)
 
         feature.start()
@@ -76,7 +80,7 @@ class PrivateNotificationFeatureTest {
     }
 
     @Test
-    fun `service should not be started multiple times`() = runBlocking {
+    fun `service should not be started multiple times`() = runTestOnMain {
         val privateSession1 = createTab("https://firefox.com", private = true)
         val privateSession2 = createTab("https://mozilla.org", private = true)
 
@@ -90,7 +94,7 @@ class PrivateNotificationFeatureTest {
     }
 
     @Test
-    fun `notification service should not be started when normal sessions are added`() = runBlocking {
+    fun `notification service should not be started when normal sessions are added`() = runTestOnMain {
         val normalSession = createTab("https://firefox.com")
         val customSession = createCustomTab("https://firefox.com")
 
@@ -106,7 +110,7 @@ class PrivateNotificationFeatureTest {
     }
 
     @Test
-    fun `notification service should not be started when custom sessions are added`() = runBlocking {
+    fun `notification service should not be started when custom sessions are added`() = runTestOnMain {
         val privateCustomSession = createCustomTab("https://firefox.com").let {
             it.copy(content = it.content.copy(private = true))
         }

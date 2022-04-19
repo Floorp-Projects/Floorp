@@ -10,8 +10,8 @@ import android.os.Looper.getMainLooper
 import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
@@ -20,6 +20,8 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Okio
@@ -28,6 +30,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertSame
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -39,8 +42,12 @@ import org.mockito.Mockito.verify
 import org.robolectric.Shadows.shadowOf
 import java.io.OutputStream
 
+@ExperimentalCoroutinesApi // for runTestOnMain
 @RunWith(AndroidJUnit4::class)
 class BrowserIconsTest {
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
 
     @Before
     @After
@@ -50,7 +57,7 @@ class BrowserIconsTest {
     }
 
     @Test
-    fun `Uses generator`() {
+    fun `Uses generator`() = runTestOnMain {
         val mockedIcon: Icon = mock()
 
         val generator: IconGenerator = mock()
@@ -60,13 +67,13 @@ class BrowserIconsTest {
         val icon = BrowserIcons(testContext, httpClient = mock(), generator = generator)
             .loadIcon(request)
 
-        assertEquals(mockedIcon, runBlocking { icon.await() })
+        assertEquals(mockedIcon, icon.await())
 
         verify(generator).generate(testContext, request)
     }
 
     @Test
-    fun `WHEN resources are provided THEN an icon will be downloaded from one of them`() = runBlocking {
+    fun `WHEN resources are provided THEN an icon will be downloaded from one of them`() = runTestOnMain {
         val server = MockWebServer()
 
         server.enqueue(
@@ -119,7 +126,7 @@ class BrowserIconsTest {
     }
 
     @Test
-    fun `WHEN icon is loaded twice THEN second load is delivered from memory cache`() = runBlocking {
+    fun `WHEN icon is loaded twice THEN second load is delivered from memory cache`() = runTestOnMain {
         val server = MockWebServer()
 
         server.enqueue(
@@ -162,7 +169,7 @@ class BrowserIconsTest {
     }
 
     @Test
-    fun `WHEN icon is loaded again and not in memory cache THEN second load is delivered from disk cache`() = runBlocking {
+    fun `WHEN icon is loaded again and not in memory cache THEN second load is delivered from disk cache`() = runTestOnMain {
         val server = MockWebServer()
 
         server.enqueue(

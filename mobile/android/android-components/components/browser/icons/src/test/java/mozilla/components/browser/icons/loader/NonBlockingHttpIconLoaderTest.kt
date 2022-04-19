@@ -6,7 +6,6 @@ package mozilla.components.browser.icons.loader
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.fetch.Client
@@ -20,6 +19,7 @@ import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
@@ -47,7 +47,7 @@ class NonBlockingHttpIconLoaderTest {
     private val scope = coroutinesTestRule.scope
 
     @Test
-    fun `Loader will return IconLoader#Result#NoResult for a load request and respond with the result through a callback`() = runBlockingTest {
+    fun `Loader will return IconLoader#Result#NoResult for a load request and respond with the result through a callback`() = runTestOnMain {
         val clients = listOf(
             HttpURLConnectionClient(),
             OkHttpClient()
@@ -100,7 +100,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `Loader will not perform any requests for data uris`() = runBlockingTest {
+    fun `Loader will not perform any requests for data uris`() = runTestOnMain {
         val client: Client = mock()
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
@@ -128,7 +128,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `Request has timeouts applied`() = runBlockingTest {
+    fun `Request has timeouts applied`() = runTestOnMain {
         val client: Client = mock()
         val loader = NonBlockingHttpIconLoader(client, scope) { _, _, _ -> }
         doReturn(
@@ -157,7 +157,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `NoResult is returned for non-successful requests`() = runBlockingTest {
+    fun `NoResult is returned for non-successful requests`() = runTestOnMain {
         val client: Client = mock()
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
@@ -192,7 +192,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `Loader will not try to load URL again that just recently failed`() = runBlockingTest {
+    fun `Loader will not try to load URL again that just recently failed`() = runTestOnMain {
         val client: Client = mock()
         val loader = NonBlockingHttpIconLoader(client, scope) { _, _, _ -> }
         doReturn(
@@ -221,7 +221,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `Loader will return NoResult for IOExceptions happening during fetch`() = runBlockingTest {
+    fun `Loader will return NoResult for IOExceptions happening during fetch`() = runTestOnMain {
         val client: Client = mock()
         doThrow(IOException("Mock")).`when`(client).fetch(any())
         var callbackIconRequest: IconRequest? = null
@@ -247,7 +247,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `Loader will return NoResult for IOExceptions happening during toIconLoaderResult`() = runBlockingTest {
+    fun `Loader will return NoResult for IOExceptions happening during toIconLoaderResult`() = runTestOnMain {
         val client: Client = mock()
         var callbackIconRequest: IconRequest? = null
         var callbackResource: IconRequest.Resource? = null
@@ -285,7 +285,7 @@ class NonBlockingHttpIconLoaderTest {
     }
 
     @Test
-    fun `Loader will sanitize URL`() = runBlockingTest {
+    fun `Loader will sanitize URL`() = runTestOnMain {
         val client: Client = mock()
         val captor = argumentCaptor<Request>()
         val loader = NonBlockingHttpIconLoader(client, scope) { _, _, _ -> }

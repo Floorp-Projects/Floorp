@@ -8,7 +8,6 @@ import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.content.Context
 import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.TabListAction
@@ -27,6 +26,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -47,7 +47,7 @@ class DownloadMiddlewareTest {
     private val dispatcher = coroutinesTestRule.testDispatcher
 
     @Test
-    fun `service is started when download is queued`() = runBlockingTest {
+    fun `service is started when download is queued`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -83,7 +83,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `saveDownload do not store private downloads`() = runBlockingTest {
+    fun `saveDownload do not store private downloads`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -106,7 +106,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `restarted downloads MUST not be passed to the downloadStorage`() = runBlockingTest {
+    fun `restarted downloads MUST not be passed to the downloadStorage`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -132,7 +132,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `previously added downloads MUST be ignored`() = runBlockingTest {
+    fun `previously added downloads MUST be ignored`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val download = DownloadState("https://mozilla.org/download")
@@ -155,7 +155,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `RemoveDownloadAction MUST remove from the storage`() = runBlockingTest {
+    fun `RemoveDownloadAction MUST remove from the storage`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -178,7 +178,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `RemoveAllDownloadsAction MUST remove all downloads from the storage`() = runBlockingTest {
+    fun `RemoveAllDownloadsAction MUST remove all downloads from the storage`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -201,7 +201,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `UpdateDownloadAction MUST update the storage when changes are needed`() = runBlockingTest {
+    fun `UpdateDownloadAction MUST update the storage when changes are needed`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -242,7 +242,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `RestoreDownloadsState MUST populate the store with items in the storage`() = runBlockingTest {
+    fun `RestoreDownloadsState MUST populate the store with items in the storage`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -270,7 +270,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `private downloads MUST NOT be restored`() = runBlockingTest {
+    fun `private downloads MUST NOT be restored`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadStorage: DownloadStorage = mock()
         val downloadMiddleware = DownloadMiddleware(
@@ -298,7 +298,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `sendDownloadIntent MUST call startForegroundService WHEN downloads are NOT COMPLETED, CANCELLED and FAILED`() = runBlockingTest {
+    fun `sendDownloadIntent MUST call startForegroundService WHEN downloads are NOT COMPLETED, CANCELLED and FAILED`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -326,7 +326,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveAllTabsAction and RemoveAllPrivateTabsAction are received THEN removePrivateNotifications must be called`() = runBlockingTest {
+    fun `WHEN RemoveAllTabsAction and RemoveAllPrivateTabsAction are received THEN removePrivateNotifications must be called`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -355,7 +355,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveTabsAction is received AND there is no private tabs THEN removePrivateNotifications MUST be called`() = runBlockingTest {
+    fun `WHEN RemoveTabsAction is received AND there is no private tabs THEN removePrivateNotifications MUST be called`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -386,7 +386,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveTabsAction is received AND there is a private tab THEN removePrivateNotifications MUST NOT be called`() = runBlockingTest {
+    fun `WHEN RemoveTabsAction is received AND there is a private tab THEN removePrivateNotifications MUST NOT be called`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -417,7 +417,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveTabAction is received AND there is no private tabs THEN removePrivateNotifications MUST be called`() = runBlockingTest {
+    fun `WHEN RemoveTabAction is received AND there is no private tabs THEN removePrivateNotifications MUST be called`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -447,7 +447,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN RemoveTabAction is received AND there is a private tab THEN removePrivateNotifications MUST NOT be called`() = runBlockingTest {
+    fun `WHEN RemoveTabAction is received AND there is a private tab THEN removePrivateNotifications MUST NOT be called`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -477,7 +477,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN removeStatusBarNotification is called THEN an ACTION_REMOVE_PRIVATE_DOWNLOAD intent must be created`() = runBlockingTest {
+    fun `WHEN removeStatusBarNotification is called THEN an ACTION_REMOVE_PRIVATE_DOWNLOAD intent must be created`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -497,7 +497,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download`() = runBlockingTest {
+    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called only for private download`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -522,7 +522,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called for all private downloads`() = runBlockingTest {
+    fun `WHEN removePrivateNotifications is called THEN removeStatusBarNotification will be called for all private downloads`() = runTestOnMain {
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(
             DownloadMiddleware(
@@ -548,7 +548,7 @@ class DownloadMiddlewareTest {
     }
 
     @Test
-    fun `WHEN an action for canceling a download response is received THEN a download response must be canceled`() = runBlockingTest {
+    fun `WHEN an action for canceling a download response is received THEN a download response must be canceled`() = runTestOnMain {
         val response = mock<Response>()
         val download = DownloadState(id = "downloadID", url = "example.com/5MB.zip", response = response)
         val applicationContext: Context = mock()

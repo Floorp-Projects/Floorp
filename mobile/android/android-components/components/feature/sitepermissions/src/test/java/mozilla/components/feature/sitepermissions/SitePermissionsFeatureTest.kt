@@ -9,8 +9,6 @@ import android.content.pm.PackageManager.PERMISSION_GRANTED
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdatePermissionHighlightsStateAction.AutoPlayAudibleBlockingAction
@@ -58,6 +56,7 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -367,7 +366,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN a new permissionRequest WHEN storeSitePermissions() THEN save(permissionRequest) is called`() = runBlockingTest {
+    fun `GIVEN a new permissionRequest WHEN storeSitePermissions() THEN save(permissionRequest) is called`() = runTestOnMain {
         // given
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         doReturn(null).`when`(mockStorage).findSitePermissionsBy(ArgumentMatchers.anyString(), anyBoolean())
@@ -400,7 +399,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN an already saved permissionRequest WHEN storeSitePermissions() THEN update(permissionRequest) is called`() = runBlockingTest {
+    fun `GIVEN an already saved permissionRequest WHEN storeSitePermissions() THEN update(permissionRequest) is called`() = runTestOnMain {
         // given
         val sitePermissions = SitePermissions(origin = "origin", savedAt = 0)
         doReturn(sitePermissions).`when`(mockStorage)
@@ -425,7 +424,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN a permissionRequest WITH a private tab WHEN storeSitePermissions() THEN save or update MUST NOT BE called`() = runBlockingTest {
+    fun `GIVEN a permissionRequest WITH a private tab WHEN storeSitePermissions() THEN save or update MUST NOT BE called`() = runTestOnMain {
         // then
         sitePermissionFeature.storeSitePermissions(
             selectedTab.content.copy(private = true),
@@ -500,7 +499,7 @@ class SitePermissionsFeatureTest {
         doNothing().`when`(mockPermissionRequest).reject()
 
         // when
-        runBlockingTest {
+        runTestOnMain {
             sitePermissionFeature.onContentPermissionRequested(mockPermissionRequest, URL)
         }
 
@@ -510,7 +509,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN location permissionRequest and shouldApplyRules is true WHEN onContentPermissionRequested() THEN handleRuledFlow is called`() = runBlockingTest {
+    fun `GIVEN location permissionRequest and shouldApplyRules is true WHEN onContentPermissionRequested() THEN handleRuledFlow is called`() = runTestOnMain {
         // given
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
@@ -523,7 +522,7 @@ class SitePermissionsFeatureTest {
             .handleRuledFlow(mockPermissionRequest, URL)
 
         // when
-        runBlockingTest {
+        runTestOnMain {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
@@ -537,7 +536,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN location permissionRequest and shouldApplyRules is false WHEN onContentPermissionRequested() THEN handleNoRuledFlow is called`() = runBlockingTest {
+    fun `GIVEN location permissionRequest and shouldApplyRules is false WHEN onContentPermissionRequested() THEN handleNoRuledFlow is called`() = runTestOnMain {
         // given
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(ContentGeoLocation(id = "permission")))
@@ -550,7 +549,7 @@ class SitePermissionsFeatureTest {
             .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
 
         // when
-        runBlockingTest {
+        runTestOnMain {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
@@ -564,7 +563,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN autoplay permissionRequest and shouldApplyRules is false WHEN onContentPermissionRequested() THEN handleNoRuledFlow is called`() = runBlockingTest {
+    fun `GIVEN autoplay permissionRequest and shouldApplyRules is false WHEN onContentPermissionRequested() THEN handleNoRuledFlow is called`() = runTestOnMain {
         // given
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(ContentAutoPlayInaudible(id = "permission")))
@@ -578,7 +577,7 @@ class SitePermissionsFeatureTest {
             .handleNoRuledFlow(sitePermissions, mockPermissionRequest, URL)
 
         // when
-        runBlockingTest {
+        runTestOnMain {
             sitePermissionFeature.onContentPermissionRequested(
                 mockPermissionRequest,
                 URL,
@@ -592,7 +591,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `GIVEN shouldShowPrompt with isForAutoplay false AND null permissionFromStorage THEN return true`() = runBlockingTest {
+    fun `GIVEN shouldShowPrompt with isForAutoplay false AND null permissionFromStorage THEN return true`() = runTestOnMain {
         // given
         val mockPermissionRequest: PermissionRequest = mock {
             whenever(permissions).thenReturn(listOf(Permission.ContentGeoLocation(id = "permission")))
@@ -1042,7 +1041,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `is SitePermission granted in the storage`() = runBlockingTest {
+    fun `is SitePermission granted in the storage`() = runTestOnMain {
         val sitePermissionsList = listOf(
             ContentGeoLocation(),
             ContentNotification(),
@@ -1078,7 +1077,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `is SitePermission blocked in the storage`() = runBlockingTest {
+    fun `is SitePermission blocked in the storage`() = runTestOnMain {
         val sitePermissionsList = listOf(
             ContentGeoLocation(),
             ContentNotification(),
@@ -1169,7 +1168,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `getInitialSitePermissions - WHEN sitePermissionsRules is present the function MUST use the sitePermissionsRules values to create a SitePermissions object`() = runBlockingTest {
+    fun `getInitialSitePermissions - WHEN sitePermissionsRules is present the function MUST use the sitePermissionsRules values to create a SitePermissions object`() = runTestOnMain {
 
         val rules = SitePermissionsRules(
             location = SitePermissionsRules.Action.BLOCKED,
@@ -1200,7 +1199,7 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
-    fun `any media request must be rejected WHEN system permissions are not granted first`() = runBlocking() {
+    fun `any media request must be rejected WHEN system permissions are not granted first`() = runTestOnMain {
         val permissions = listOf(
             ContentVideoCapture("", "back camera"),
             ContentVideoCamera("", "front camera"),
@@ -1228,12 +1227,10 @@ class SitePermissionsFeatureTest {
 
             mockStorage = mock()
 
-            runBlocking {
-                val prompt = sitePermissionFeature
-                    .onContentPermissionRequested(permissionRequest, URL)
-                assertNull(prompt)
-                assertFalse(grantWasCalled)
-            }
+            val prompt = sitePermissionFeature
+                .onContentPermissionRequested(permissionRequest, URL)
+            assertNull(prompt)
+            assertFalse(grantWasCalled)
         }
 
         Unit
