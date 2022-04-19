@@ -283,7 +283,8 @@ export class WelcomeScreen extends React.PureComponent {
     // Send telemetry before waiting on actions
     AboutWelcomeUtils.sendActionTelemetry(
       props.messageId,
-      event.currentTarget.value
+      event.currentTarget.value,
+      event.name
     );
 
     let { action } = targetContent;
