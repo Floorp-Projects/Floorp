@@ -345,7 +345,9 @@ void PermissionDelegateHandler::UpdateDelegatedPermission(
 
   const DelegateInfo* info =
       GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
-  NS_ENSURE_TRUE_VOID(info);
+  if (!info) {
+    return;
+  }
   size_t idx = std::distance(sPermissionsMap, info);
 
   WindowContext::Transaction txn;
