@@ -90,9 +90,7 @@ fun AwesomeBar(
             .background(colors.background)
     ) {
         val fetcher = remember(groups) { SuggestionFetcher(groups, profiler) }
-        val suggestions by remember {
-            derivedStateOf { fetcher.state.value }
-        }
+        val suggestions = derivedStateOf { fetcher.state.value }.value
 
         LaunchedEffect(text, fetcher) {
             fetcher.fetch(text)
