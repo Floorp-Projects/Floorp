@@ -234,7 +234,7 @@ const BOOKMARK_VALIDATORS = Object.freeze({
         (typeof val == "string" && val.length <= DB_URL_LENGTH_MAX) ||
         (val instanceof Ci.nsIURI && val.spec.length <= DB_URL_LENGTH_MAX) ||
         (URL.isInstance(val) && val.href.length <= DB_URL_LENGTH_MAX)
-    ).call(this, v);
+    )(v);
     if (typeof v === "string") {
       return new URL(v);
     }
