@@ -2765,6 +2765,9 @@ ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
       mIsRemoteInputEventQueueEnabled(false),
       mIsInputPriorityEventEnabled(false),
       mIsInPool(false),
+#ifdef DEBUG
+      mBlockShutdownCalled(false),
+#endif
       mHangMonitorActor(nullptr) {
   MOZ_DIAGNOSTIC_ASSERT(!IsForJSPlugin(),
                         "XXX(nika): How are we creating a JSPlugin?");
@@ -3518,12 +3521,28 @@ NS_INTERFACE_MAP_END
 // Async shutdown blocker
 NS_IMETHODIMP
 ContentParent::BlockShutdown(nsIAsyncShutdownClient* aClient) {
-  // Make sure that our process will get scheduled.
-  ProcessPriorityManager::SetProcessPriority(this, PROCESS_PRIORITY_FOREGROUND);
+#ifdef DEBUG
+  // We register two shutdown blockers and both would call us, but
+  // if things go well we will unregister both as (delayed) reaction
+  // to the first call we get and thus never receive a second call.
+  // Thus we believe that we will get called only once.
+  MOZ_ASSERT(!mBlockShutdownCalled);
+  mBlockShutdownCalled = true;
+#endif
 
-  // Okay to call ShutDownProcess multiple times.
-  ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
-  MarkAsDead();
+  if (CanSend()) {
+    // Make sure that our process will get scheduled.
+    ProcessPriorityManager::SetProcessPriority(this,
+                                               PROCESS_PRIORITY_FOREGROUND);
+    // The normal shutdown sequence is to send a shutdown message
+    // to the child and then just wait for ActorDestroy which will
+    // cleanup everything and remove our blockers.
+    ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
+  } else {
+    // If we get here with whatever non-active state on the channel,
+    // we just close it and ActorDestroy will remove our blockers.
+    ShutDownProcess(CLOSE_CHANNEL);
+  }
 
   return NS_OK;
 }
