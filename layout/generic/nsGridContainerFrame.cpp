@@ -8601,7 +8601,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     // XXX Technically incorrect: We're ignoring our row sizes, when really
     // we should use them but *they* should be computed as if we had no
     // children. To be fixed in bug 1488878.
-    if (!aReflowInput.mStyleDisplay->IsContainSize()) {
+    if (!aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
       if (IsMasonry(eLogicalAxisBlock)) {
         bSize = computedBSize;
       } else {
@@ -8625,7 +8625,7 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     // XXX Technically incorrect: We're ignoring our row sizes, when really
     // we should use them but *they* should be computed as if we had no
     // children. To be fixed in bug 1488878.
-    if (!aReflowInput.mStyleDisplay->IsContainSize()) {
+    if (!aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
       const uint32_t numRows = gridReflowInput.mRows.mSizes.Length();
       bSize = gridReflowInput.mRows.GridLineEdge(numRows,
                                                  GridLineSide::AfterGridGap);
@@ -9352,7 +9352,7 @@ nscoord nsGridContainerFrame::GetMinISize(gfxContext* aRC) {
 
   DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
   if (mCachedMinISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
-    mCachedMinISize = StyleDisplay()->IsContainSize()
+    mCachedMinISize = StyleDisplay()->GetContainSizeAxes().mIContained
                           ? 0
                           : IntrinsicISize(aRC, IntrinsicISizeType::MinISize);
   }
@@ -9367,7 +9367,7 @@ nscoord nsGridContainerFrame::GetPrefISize(gfxContext* aRC) {
 
   DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
   if (mCachedPrefISize == NS_INTRINSIC_ISIZE_UNKNOWN) {
-    mCachedPrefISize = StyleDisplay()->IsContainSize()
+    mCachedPrefISize = StyleDisplay()->GetContainSizeAxes().mIContained
                            ? 0
                            : IntrinsicISize(aRC, IntrinsicISizeType::PrefISize);
   }

@@ -783,7 +783,7 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
     return mCachedMinISize;
   }
 
-  if (StyleDisplay()->IsContainSize()) {
+  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
     mCachedMinISize = 0;
     return mCachedMinISize;
   }
@@ -873,7 +873,7 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
     return mCachedPrefISize;
   }
 
-  if (StyleDisplay()->IsContainSize()) {
+  if (StyleDisplay()->GetContainSizeAxes().mIContained) {
     mCachedPrefISize = 0;
     return mCachedPrefISize;
   }
@@ -1947,11 +1947,11 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     // is replaced by the block size from aspect-ratio and inline size.
     aMetrics.mCarriedOutBEndMargin.Zero();
   } else if (!IsComboboxControlFrame() &&
-             aReflowInput.mStyleDisplay->IsContainSize()) {
-    // If we're size-containing and we don't have a specified size, then our
-    // final size should actually be computed from only our border and padding,
-    // as though we were empty.
-    // Hence this case is a simplified version of the case below.
+             aReflowInput.mStyleDisplay->GetContainSizeAxes().mBContained) {
+    // If we're size-containing in block axis and we don't have a specified
+    // block size, then our final size should actually be computed from only our
+    // border and padding, as though we were empty. Hence this case is a
+    // simplified version of the case below.
     //
     // NOTE: We exempt the nsComboboxControlFrame subclass from taking this
     // special case, because comboboxes implicitly honors the size-containment

@@ -421,8 +421,8 @@ void ReflowInput::Init(nsPresContext* aPresContext,
     }
   }
 
-  if (mStyleDisplay->IsContainSize()) {
-    // In the case that a box is size contained, we want to ensure
+  if (mStyleDisplay->GetContainSizeAxes().mBContained) {
+    // In the case that a box is size contained in block axis, we want to ensure
     // that it is also monolithic. We do this by unsetting
     // AvailableBSize() to avoid fragmentaiton.
     AvailableBSize() = NS_UNCONSTRAINEDSIZE;

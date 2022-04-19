@@ -12,6 +12,7 @@
 #ifndef nsStyleStruct_h___
 #define nsStyleStruct_h___
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ServoStyleConstsInlines.h"
@@ -39,6 +40,7 @@ struct nsStyleDisplay;
 struct nsStyleVisibility;
 namespace mozilla {
 class ComputedStyle;
+struct IntrinsicSize;
 
 }  // namespace mozilla
 
@@ -65,6 +67,29 @@ inline Position Position::FromPercentage(float aPercent) {
   return {LengthPercentage::FromPercentage(aPercent),
           LengthPercentage::FromPercentage(aPercent)};
 }
+
+/**
+ * Convenience struct for querying if a given box has size-containment in
+ * either axis.
+ */
+struct ContainSizeAxes {
+  ContainSizeAxes(bool aIContained, bool aBContained)
+      : mIContained(aIContained), mBContained(aBContained) {}
+
+  bool IsBoth() const { return mIContained && mBContained; }
+  bool IsAny() const { return mIContained || mBContained; }
+
+  /**
+   * Return a contained size from an uncontained size.
+   */
+  nsSize ContainSize(const nsSize& aUncontainedSize,
+                     const WritingMode& aWM) const;
+  IntrinsicSize ContainIntrinsicSize(const IntrinsicSize& aUncontainedSize,
+                                     const WritingMode& aWM) const;
+
+  const bool mIContained;
+  const bool mBContained;
+};
 
 }  // namespace mozilla
 
@@ -1179,6 +1204,11 @@ struct StyleAnimation {
 }  // namespace mozilla
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
+ private:
+  using StyleContain = mozilla::StyleContain;
+  using StyleContentVisibility = mozilla::StyleContentVisibility;
+
+ public:
   explicit nsStyleDisplay(const mozilla::dom::Document&);
   nsStyleDisplay(const nsStyleDisplay& aOther);
   ~nsStyleDisplay();
@@ -1533,12 +1563,21 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   bool IsContainPaint() const {
-    return (mContain & mozilla::StyleContain::PAINT ||
-            !IsContentVisibilityVisible()) &&
-           !IsInternalRubyDisplayType() && !IsInternalTableStyleExceptCell();
+    const auto contain = EffectiveContainment();
+    // Short circuit for no containment whatsoever
+    if (!contain) {
+      return false;
+    }
+    return (contain & StyleContain::PAINT) && !IsInternalRubyDisplayType() &&
+           !IsInternalTableStyleExceptCell();
   }
 
   bool IsContainLayout() const {
+    const auto contain = EffectiveContainment();
+    // Short circuit for no containment whatsoever
+    if (!contain) {
+      return false;
+    }
     // Note: The spec for layout containment says it should
     // have no effect on non-atomic, inline-level boxes. We
     // don't check for these here because we don't know
@@ -1546,12 +1585,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     // responsible for checking if the box in question is
     // non-atomic and inline-level, and creating an
     // exemption as necessary.
-    return (mContain & mozilla::StyleContain::LAYOUT ||
-            !IsContentVisibilityVisible()) &&
-           !IsInternalRubyDisplayType() && !IsInternalTableStyleExceptCell();
+    return (contain & StyleContain::LAYOUT) && !IsInternalRubyDisplayType() &&
+           !IsInternalTableStyleExceptCell();
   }
 
-  bool IsContainSize() const {
+  mozilla::ContainSizeAxes GetContainSizeAxes() const {
+    const auto contain = EffectiveContainment();
+    // Short circuit for no containment whatsoever
+    if (!contain) {
+      return mozilla::ContainSizeAxes(false, false);
+    }
     // Note: The spec for size containment says it should
     // have no effect on non-atomic, inline-level boxes. We
     // don't check for these here because we don't know
@@ -1559,19 +1602,22 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     // responsible for checking if the box in question is
     // non-atomic and inline-level, and creating an
     // exemption as necessary.
-    return (mContain & mozilla::StyleContain::SIZE ||
-            mContentVisibility == mozilla::StyleContentVisibility::Hidden) &&
-           !IsInternalRubyDisplayType() &&
-           DisplayInside() != mozilla::StyleDisplayInside::Table &&
-           !IsInnerTableStyle();
+    if (IsInternalRubyDisplayType() ||
+        DisplayInside() == mozilla::StyleDisplayInside::Table ||
+        IsInnerTableStyle()) {
+      return mozilla::ContainSizeAxes(false, false);
+    }
+    return mozilla::ContainSizeAxes(
+        static_cast<bool>(contain & StyleContain::INLINE_SIZE),
+        static_cast<bool>(contain & StyleContain::BLOCK_SIZE));
   }
 
   bool IsContentVisibilityVisible() const {
-    return mContentVisibility == mozilla::StyleContentVisibility::Visible;
+    return mContentVisibility == StyleContentVisibility::Visible;
   }
 
   bool IsContentVisibilityHidden() const {
-    return mContentVisibility == mozilla::StyleContentVisibility::Hidden;
+    return mContentVisibility == StyleContentVisibility::Hidden;
   }
 
   /* Returns whether the element has the transform property or a related
@@ -1686,6 +1732,27 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
 
   void GenerateCombinedIndividualTransform();
+
+ private:
+  StyleContain EffectiveContainment() const {
+    // content-visibility and container-type values implicitly enable some
+    // containment flags.
+    // FIXME(dshin, bug 1463600): Add in STYLE containment flag for `auto` &
+    // `hidden` when implemented
+    // FIXME(dshin, bug 1764640): Add in the effect of `container-type`
+    switch (mContentVisibility) {
+      case StyleContentVisibility::Visible:
+        // Most likely case.
+        return mContain;
+      case StyleContentVisibility::Auto:
+        return mContain | StyleContain::LAYOUT | StyleContain::PAINT;
+      case StyleContentVisibility::Hidden:
+        return mContain | StyleContain::LAYOUT | StyleContain::PAINT |
+               StyleContain::INLINE_SIZE | StyleContain::BLOCK_SIZE;
+    }
+    MOZ_ASSERT_UNREACHABLE("Invalid content visibility.");
+    return mContain;
+  }
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTable {
