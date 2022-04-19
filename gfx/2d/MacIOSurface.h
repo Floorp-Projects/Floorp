@@ -51,6 +51,7 @@ class MacIOSurface final
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::YUVColorSpace YUVColorSpace;
   typedef mozilla::gfx::ColorRange ColorRange;
+  typedef mozilla::gfx::ColorDepth ColorDepth;
 
   // The usage count of the IOSurface is increased by 1 during the lifetime
   // of the MacIOSurface instance.
@@ -58,9 +59,10 @@ class MacIOSurface final
 
   static already_AddRefed<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,
                                                         bool aHasAlpha = true);
-  static already_AddRefed<MacIOSurface> CreateNV12Surface(
+  static already_AddRefed<MacIOSurface> CreateNV12OrP010Surface(
       const IntSize& aYSize, const IntSize& aCbCrSize,
-      YUVColorSpace aColorSpace, ColorRange aColorRange);
+      YUVColorSpace aColorSpace, ColorRange aColorRange,
+      ColorDepth aColorDepth);
   static already_AddRefed<MacIOSurface> CreateYUV422Surface(
       const IntSize& aSize, YUVColorSpace aColorSpace, ColorRange aColorRange);
   static void ReleaseIOSurface(MacIOSurface* aIOSurface);
@@ -101,6 +103,7 @@ class MacIOSurface final
   bool HasAlpha() const { return mHasAlpha; }
   mozilla::gfx::SurfaceFormat GetFormat() const;
   mozilla::gfx::SurfaceFormat GetReadFormat() const;
+  mozilla::gfx::ColorDepth GetColorDepth() const;
   // This would be better suited on MacIOSurfaceImage type, however due to the
   // current data structure, this is not possible as only the IOSurfaceRef is
   // being used across.
@@ -109,7 +112,15 @@ class MacIOSurface final
   }
   YUVColorSpace GetYUVColorSpace() const { return mColorSpace; }
   bool IsFullRange() const {
-    return GetPixelFormat() == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+#  if !defined(MAC_OS_VERSION_10_13) || \
+      MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_13
+    enum : OSType{
+        kCVPixelFormatType_420YpCbCr10BiPlanarFullRange = 'xf20',
+    };
+#  endif
+    OSType format = GetPixelFormat();
+    return (format == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange ||
+            format == kCVPixelFormatType_420YpCbCr10BiPlanarFullRange);
   }
   mozilla::gfx::ColorRange GetColorRange() const {
     if (IsFullRange()) return mozilla::gfx::ColorRange::FULL;
