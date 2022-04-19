@@ -23,7 +23,7 @@ addDebuggerToGlobal(this);
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
-  let dbg, iframeDO, doc, script2DO;
+  let dbg, doc;
 
   // Create an iframe to debug.
   const iframe = document.createElement("iframe");
@@ -35,7 +35,6 @@ window.onload = function() {
     // Now that the iframe's window has been created, we can add
     // it as a debuggee.
     dbg = new Debugger();
-    iframeDO = dbg.addDebuggee(iframe.contentWindow);
 
     doc = iframe.contentWindow.document;
     const script = doc.createElement("script");
@@ -58,7 +57,6 @@ window.onload = function() {
     // have proper introduction information.
     const script2 = doc.createElement("script");
     script2.text = "eval('debugger;');";
-    script2DO = iframeDO.makeDebuggeeValue(script2);
     dbg.onDebuggerStatement = evalHandler;
     doc.body.appendChild(script2);
   }
@@ -76,8 +74,6 @@ window.onload = function() {
        "eval frame's introduction script is the older frame's script");
     ok(source.introductionOffset === frame2.offset,
        "eval frame's introduction offset is current offset in older frame");
-    ok(source.introductionScript.source.element === script2DO,
-       "eval frame's introducer belongs to script2 element");
 
     // The frame that called eval, in turn, was introduced at the call that
     // inserted the script element into the document.
