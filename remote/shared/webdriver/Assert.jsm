@@ -137,7 +137,17 @@ assert.content = function(context, msg = "") {
 assert.open = function(browsingContext, msg = "") {
   msg = msg || "Browsing context has been discarded";
   return assert.that(
-    browsingContext => !!browsingContext?.currentWindowGlobal,
+    browsingContext => {
+      if (!browsingContext?.currentWindowGlobal) {
+        return false;
+      }
+
+      if (browsingContext.isContent && !browsingContext.top.embedderElement) {
+        return false;
+      }
+
+      return true;
+    },
     msg,
     error.NoSuchWindowError
   )(browsingContext);
