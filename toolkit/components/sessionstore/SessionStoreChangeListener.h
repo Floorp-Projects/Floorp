@@ -69,7 +69,7 @@ class SessionStoreChangeListener final : public nsINamed,
 
   uint32_t GetEpoch() const { return mEpoch; }
 
-  BrowsingContext* GetBrowsingContext() const { return mBrowsingContext; }
+  void CollectWireframe();
 
  private:
   void RecordChange(WindowContext* aWindowContext, EnumSet<Change> aChanges);
@@ -98,6 +98,8 @@ class SessionStoreChangeListener final : public nsINamed,
   nsCOMPtr<nsITimer> mTimer;
   RefPtr<SessionStoreChild> mSessionStoreChild;
   SessionStoreChangeTable mSessionStoreChanges;
+
+  bool mCollectSessionHistory = false;
 };
 
 }  // namespace mozilla::dom

@@ -167,7 +167,7 @@ void SessionStoreChild::UpdateEventTargets() {
   }
 }
 
-void SessionStoreChild::UpdateSessionStore() {
+void SessionStoreChild::UpdateSessionStore(bool aSessionHistoryUpdate) {
   if (!mSessionStoreListener) {
     // This is the case when we're shutting down, and expect a final update.
     Unused << SendSessionStoreUpdate(Nothing(), Nothing(), false, 0);
@@ -186,9 +186,10 @@ void SessionStoreChild::UpdateSessionStore() {
     privatedMode.emplace(store->GetPrivateModeEnabled());
   }
 
-  Unused << SendSessionStoreUpdate(docShellCaps, privatedMode,
-                                   store->GetAndClearSHistoryChanged(),
-                                   mSessionStoreListener->GetEpoch());
+  Unused << SendSessionStoreUpdate(
+      docShellCaps, privatedMode,
+      store->GetAndClearSHistoryChanged() || aSessionHistoryUpdate,
+      mSessionStoreListener->GetEpoch());
 }
 
 void SessionStoreChild::FlushSessionStore() {
@@ -206,12 +207,7 @@ void SessionStoreChild::UpdateSHistoryChanges() {
 mozilla::ipc::IPCResult SessionStoreChild::RecvFlushTabState(
     FlushTabStateResolver&& aResolver) {
   if (mSessionStoreChangeListener) {
-    if (BrowsingContext* context =
-            mSessionStoreChangeListener->GetBrowsingContext()) {
-      if (auto* docShell = nsDocShell::Cast(context->GetDocShell())) {
-        docShell->CollectWireframe();
-      }
-    }
+    mSessionStoreChangeListener->CollectWireframe();
 
     mSessionStoreChangeListener->FlushSessionStore();
   }

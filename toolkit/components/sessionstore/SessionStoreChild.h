@@ -31,7 +31,7 @@ class SessionStoreChild final : public PSessionStoreChild {
   void SetOwnerContent(Element* aElement);
   void Stop();
   void UpdateEventTargets();
-  void UpdateSessionStore();
+  void UpdateSessionStore(bool aSessionHistoryUpdate = false);
   void FlushSessionStore();
   void UpdateSHistoryChanges();
 
