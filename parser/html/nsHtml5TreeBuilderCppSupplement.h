@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ErrorList.h"
 #include "nsError.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
@@ -1202,7 +1201,7 @@ bool nsHtml5TreeBuilder::HasScript() {
   return mOpQueue.ElementAt(len - 1).IsRunScript();
 }
 
-mozilla::Result<bool, nsresult> nsHtml5TreeBuilder::Flush(bool aDiscretionary) {
+bool nsHtml5TreeBuilder::Flush(bool aDiscretionary) {
   if (MOZ_UNLIKELY(mBuilder)) {
     MOZ_ASSERT_UNREACHABLE("Must never flush with builder.");
     return false;
@@ -1231,9 +1230,7 @@ mozilla::Result<bool, nsresult> nsHtml5TreeBuilder::Flush(bool aDiscretionary) {
                    "Tree builder is broken but the op in queue is not marked "
                    "as broken.");
       }
-      if (!mOpSink->MoveOpsFrom(mOpQueue)) {
-        return Err(NS_ERROR_OUT_OF_MEMORY);
-      }
+      mOpSink->MoveOpsFrom(mOpQueue);
     }
     return hasOps;
   }

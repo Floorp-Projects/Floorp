@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHtml5Highlighter.h"
-#include "ErrorList.h"
 #include "nsDebug.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5Tokenizer.h"
@@ -463,7 +462,7 @@ int32_t nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume,
   return aState;
 }
 
-[[nodiscard]] bool nsHtml5Highlighter::End() {
+void nsHtml5Highlighter::End() {
   switch (mState) {
     case nsHtml5Tokenizer::COMMENT_END:
     case nsHtml5Tokenizer::COMMENT_END_BANG:
@@ -502,7 +501,7 @@ int32_t nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume,
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(mozilla::AsVariant(opStreamEnded()));
-  return FlushOps().isOk();
+  FlushOps();
 }
 
 void nsHtml5Highlighter::SetBuffer(nsHtml5UTF16Buffer* aBuffer) {
@@ -619,19 +618,10 @@ void nsHtml5Highlighter::FlushCurrent() {
   FlushChars();
 }
 
-bool nsHtml5Highlighter::ShouldFlushOps() {
-  // Arbitrary threshold that doesn't have an exact justification.
-  // The general idea is to flush much, much sooner than reaching
-  // the maximum size of `nsTArray`.
-  return mOpQueue.Length() > 100000;
-}
-
-mozilla::Result<bool, nsresult> nsHtml5Highlighter::FlushOps() {
+bool nsHtml5Highlighter::FlushOps() {
   bool hasOps = !mOpQueue.IsEmpty();
   if (hasOps) {
-    if (!mOpSink->MoveOpsFrom(mOpQueue)) {
-      return Err(NS_ERROR_OUT_OF_MEMORY);
-    }
+    mOpSink->MoveOpsFrom(mOpQueue);
   }
   return hasOps;
 }
