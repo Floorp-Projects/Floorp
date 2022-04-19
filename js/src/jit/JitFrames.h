@@ -202,6 +202,26 @@ struct ResumeFromException {
 #if defined(JS_CODEGEN_ARM64)
   uint64_t padding_;
 #endif
+
+  static size_t offsetOfFramePointer() {
+    return offsetof(ResumeFromException, framePointer);
+  }
+  static size_t offsetOfStackPointer() {
+    return offsetof(ResumeFromException, stackPointer);
+  }
+  static size_t offsetOfTarget() {
+    return offsetof(ResumeFromException, target);
+  }
+  static size_t offsetOfKind() { return offsetof(ResumeFromException, kind); }
+  static size_t offsetOfTlsData() {
+    return offsetof(ResumeFromException, tlsData);
+  }
+  static size_t offsetOfException() {
+    return offsetof(ResumeFromException, exception);
+  }
+  static size_t offsetOfBailoutInfo() {
+    return offsetof(ResumeFromException, bailoutInfo);
+  }
 };
 
 #if defined(JS_CODEGEN_ARM64)
