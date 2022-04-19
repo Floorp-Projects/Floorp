@@ -3673,6 +3673,9 @@ pub struct SurfaceInfo {
     pub world_scale_factors: (f32, f32),
     /// Local scale factors surface to raster transform
     pub local_scale: (f32, f32),
+    /// If true, try to find a better scale factor once we
+    /// know the surface's local (and projected) rect
+    pub estimate_scale_from_rect: bool,
 }
 
 impl SurfaceInfo {
@@ -3684,6 +3687,7 @@ impl SurfaceInfo {
         device_pixel_scale: DevicePixelScale,
         world_scale_factors: (f32, f32),
         local_scale: (f32, f32),
+        estimate_scale_from_rect: bool,
     ) -> Self {
         let map_surface_to_world = SpaceMapper::new_with_target(
             spatial_tree.root_reference_frame_index(),
@@ -3711,6 +3715,7 @@ impl SurfaceInfo {
             device_pixel_scale,
             world_scale_factors,
             local_scale,
+            estimate_scale_from_rect,
         }
     }
 
@@ -5633,6 +5638,7 @@ impl PicturePrimitive {
                 // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
                 let mut min_scale;
                 let mut max_scale = 1.0e32;
+                let mut estimate_scale_from_rect = false;
 
                 // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
                 // This scaling helps ensure that the content in this surface does not become blurry or pixelated when composited in the parent surface.
@@ -5738,7 +5744,12 @@ impl PicturePrimitive {
                             // If client supplied a specific local scale, use that instead of
                             // estimating from parent transform
                             let world_scale_factors = match self.raster_space {
-                                RasterSpace::Screen => world_scale_factors,
+                                RasterSpace::Screen => {
+                                    // No client supplied scale factor, try to determine one based
+                                    // on the projected screen rect
+                                    estimate_scale_from_rect = true;
+                                    world_scale_factors
+                                }
                                 RasterSpace::Local(scale) => (scale, scale),
                             };
 
@@ -5757,6 +5768,7 @@ impl PicturePrimitive {
                     device_pixel_scale,
                     world_scale_factors,
                     local_scale,
+                    estimate_scale_from_rect,
                 );
 
                 let surface_index = SurfaceIndex(surfaces.len());
@@ -5787,6 +5799,7 @@ impl PicturePrimitive {
         frame_context: &FrameBuildingContext,
     ) {
         let surface = &mut surfaces[surface_index.0];
+        let estimate_scale_from_rect = surface.estimate_scale_from_rect;
 
         for cluster in &mut self.prim_list.clusters {
             cluster.flags.remove(ClusterFlags::IS_VISIBLE);
@@ -5853,6 +5866,29 @@ impl PicturePrimitive {
                     .map(&surface_rect)
                 {
                     parent_surface.local_rect = parent_surface.local_rect.union(&parent_surface_rect);
+
+                    // Try to estimate a better scale factor based on the local rect vs.
+                    // projected rect if needed
+                    if estimate_scale_from_rect {
+                        let local_surface_size = surface_rect.size();
+                        let parent_surface_size = parent_surface_rect.size();
+                        let parent_scale_factors = parent_surface.world_scale_factors;
+
+                        // If we have a valid rect and it has perspective (otherwise, the previous
+                        // scale_factors calculation is more accurate)
+                        if local_surface_size.width > 0.0 &&
+                           local_surface_size.height > 0.0 &&
+                           parent_surface.map_local_to_surface.get_transform().has_perspective_component() {
+                            let surface = &mut surfaces[surface_index.0];
+
+                            let x_scale = parent_scale_factors.0 * parent_surface_size.width / local_surface_size.width;
+                            let y_scale = parent_scale_factors.1 * parent_surface_size.height / local_surface_size.height;
+
+                            let device_pixel_scale = Scale::new(x_scale.max(y_scale));
+                            surface.world_scale_factors = (x_scale, y_scale);
+                            surface.device_pixel_scale = device_pixel_scale;
+                        }
+                    }
                 }
             }
         }
@@ -6878,6 +6914,7 @@ fn test_large_surface_scale_1() {
             device_pixel_scale: DevicePixelScale::new(1.0),
             world_scale_factors: (1.0, 1.0),
             local_scale: (1.0, 1.0),
+            estimate_scale_from_rect: false,
         },
         SurfaceInfo {
             local_rect: PictureRect::new(
@@ -6892,6 +6929,7 @@ fn test_large_surface_scale_1() {
             device_pixel_scale: DevicePixelScale::new(43.82798767089844),
             world_scale_factors: (1.0, 1.0),
             local_scale: (1.0, 1.0),
+            estimate_scale_from_rect: false,
         },
     ];
 
