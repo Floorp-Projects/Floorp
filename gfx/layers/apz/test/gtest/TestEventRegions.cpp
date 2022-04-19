@@ -16,10 +16,10 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
   void CreateEventRegionsLayerTree1() {
     const char* treeShape = "x(xx)";
-    nsIntRegion layerVisibleRegions[] = {
-        nsIntRegion(IntRect(0, 0, 200, 200)),    // root
-        nsIntRegion(IntRect(0, 0, 100, 200)),    // left half
-        nsIntRegion(IntRect(0, 100, 200, 100)),  // bottom half
+    LayerIntRegion layerVisibleRegions[] = {
+        LayerIntRect(0, 0, 200, 200),    // root
+        LayerIntRect(0, 0, 100, 200),    // left half
+        LayerIntRect(0, 100, 200, 100),  // bottom half
     };
     CreateScrollData(treeShape, layerVisibleRegions);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
@@ -37,9 +37,9 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
 
   void CreateEventRegionsLayerTree2() {
     const char* treeShape = "x(x)";
-    nsIntRegion layerVisibleRegions[] = {
-        nsIntRegion(IntRect(0, 0, 100, 500)),
-        nsIntRegion(IntRect(0, 150, 100, 100)),
+    LayerIntRegion layerVisibleRegions[] = {
+        LayerIntRect(0, 0, 100, 500),
+        LayerIntRect(0, 150, 100, 100),
     };
     CreateScrollData(treeShape, layerVisibleRegions);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
@@ -58,11 +58,11 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     //   transforms are different from 3's.
     // 2 is a small layer that is the actual target
     // 3 is a big layer obscuring 2 with a dispatch-to-content region
-    nsIntRegion layerVisibleRegions[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 0, 0)),
-        nsIntRegion(IntRect(0, 0, 10, 10)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
+    LayerIntRegion layerVisibleRegions[] = {
+        LayerIntRect(0, 0, 100, 100),
+        LayerIntRect(0, 0, 0, 0),
+        LayerIntRect(0, 0, 10, 10),
+        LayerIntRect(0, 0, 100, 100),
     };
     Matrix4x4 layerTransforms[] = {
         Matrix4x4(),

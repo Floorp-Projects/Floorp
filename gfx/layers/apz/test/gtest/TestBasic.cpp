@@ -65,9 +65,9 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 
   const char* treeShape = "x(x)";
   // LayerID                     0 1
-  nsIntRegion layerVisibleRegion[] = {
-      nsIntRegion(IntRect(0, 0, 300, 300)),
-      nsIntRegion(IntRect(0, 0, 150, 300)),
+  LayerIntRegion layerVisibleRegion[] = {
+      LayerIntRect(0, 0, 300, 300),
+      LayerIntRect(0, 0, 150, 300),
   };
   Matrix4x4 transforms[] = {
       Matrix4x4(),

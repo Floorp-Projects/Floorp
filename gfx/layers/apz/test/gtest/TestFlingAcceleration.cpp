@@ -14,8 +14,8 @@ class APZCFlingAccelerationTester : public APZCTreeManagerTester {
   void SetUp() {
     APZCTreeManagerTester::SetUp();
     const char* treeShape = "x";
-    nsIntRegion layerVisibleRegion[] = {
-        nsIntRegion(IntRect(0, 0, 800, 1000)),
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 800, 1000),
     };
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
