@@ -2,10 +2,7 @@
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.eventPages.enabled", true],
-      ["extensions.background.idle.timeout", 0],
-    ],
+    set: [["extensions.eventPages.enabled", true]],
   });
 });
 
@@ -71,14 +68,15 @@ add_task(async function test_menu_onclick() {
       browser.test.sendMessage("click", { info, tab });
     });
     browser.runtime.onSuspend.addListener(() => {
-      browser.test.sendMessage("suspended");
+      browser.test.sendMessage("suspended-test_menu_onclick");
     });
   }
 
   const extension = getExtension(background);
 
   await extension.startup();
-  await extension.awaitMessage("suspended");
+  await extension.terminateBackground(); // Simulated suspend on idle.
+  await extension.awaitMessage("suspended-test_menu_onclick");
 
   // The background is now suspended, test that a menu click starts it.
   const kind = "browser";
@@ -116,14 +114,15 @@ add_task(async function test_menu_onshown() {
       browser.test.sendMessage("hidden", { info, tab });
     });
     browser.runtime.onSuspend.addListener(() => {
-      browser.test.sendMessage("suspended");
+      browser.test.sendMessage("suspended-test_menu_onshown");
     });
   }
 
   const extension = getExtension(background);
 
   await extension.startup();
-  await extension.awaitMessage("suspended");
+  await extension.terminateBackground(); // Simulated suspend on idle.
+  await extension.awaitMessage("suspended-test_menu_onshown");
 
   // The background is now suspended, test that showing a menu starts it.
   const kind = "browser";
