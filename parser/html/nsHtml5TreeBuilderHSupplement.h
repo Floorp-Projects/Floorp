@@ -110,12 +110,7 @@ void SetOpSink(nsAHtml5TreeOpSink* aOpSink) { mOpSink = aOpSink; }
 
 void ClearOps() { mOpQueue.Clear(); }
 
-/**
- * Flushes tree ops.
- * @return Ok(true) if there were ops to flush, Ok(false)
- *         if there were no ops to flush and Err() on OOM.
- */
-mozilla::Result<bool, nsresult> Flush(bool aDiscretionary = false);
+bool Flush(bool aDiscretionary = false);
 
 void FlushLoads();
 
