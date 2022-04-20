@@ -69,10 +69,6 @@ types.addDictType("object.ownPropertyNames", {
   ownPropertyNames: "array:string",
 });
 
-types.addDictType("object.decompile", {
-  decompiledCode: "string",
-});
-
 types.addDictType("object.parameterNames", {
   parameterNames: "nullable:array:string",
 });
@@ -109,12 +105,6 @@ const objectSpec = generateActorSpec({
       response: {
         allocationStack: RetVal("array:object.originalSourceLocation"),
       },
-    },
-    decompile: {
-      request: {
-        pretty: Arg(0, "boolean"),
-      },
-      response: RetVal("object.decompile"),
     },
     dependentPromises: {
       request: {},

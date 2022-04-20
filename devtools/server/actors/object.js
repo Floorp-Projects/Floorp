@@ -753,22 +753,6 @@ const proto = {
   },
 
   /**
-   * Handle a protocol request to provide the source code of a function.
-   *
-   * @param pretty boolean
-   */
-  decompile: function(pretty) {
-    if (this.obj.class !== "Function") {
-      return this.throwError(
-        "objectNotFunction",
-        "decompile request is only valid for grips  with a 'Function' class."
-      );
-    }
-
-    return { decompiledCode: this.obj.decompile(!!pretty) };
-  },
-
-  /**
    * Handle a protocol request to provide the parameters of a function.
    */
   parameterNames: function() {
