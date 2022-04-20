@@ -20,6 +20,7 @@ use crate::values::specified::calc::{self, CalcNode};
 use crate::values::specified::NonNegativeNumber;
 use crate::values::CSSFloat;
 use crate::Zero;
+use app_units::Au;
 use cssparser::{Parser, Token};
 use std::cmp;
 use std::ops::{Add, Mul};
@@ -610,8 +611,13 @@ impl ViewportPercentageLength {
                     size.height
                 }
             },
-        }.to_f32_px();
-        CSSPixelLength::new(length * factor / 100.)
+        };
+
+        // FIXME: Bug 1396535, we need to fix the extremely small viewport length for transform.
+        // See bug 989802. We truncate so that adding multiple viewport units
+        // that add up to 100 does not overflow due to rounding differences
+        let trunc_scaled = ((length.0 as f64) * factor as f64 / 100.).trunc();
+        Au::from_f64_au(trunc_scaled).into()
     }
 }
 
