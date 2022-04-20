@@ -92,7 +92,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   explicit Read_ReadIntoRequest(Promise* aPromise) : mPromise(aPromise) {}
 
   void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     MOZ_ASSERT(aChunk.isObject());
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
@@ -115,7 +115,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   }
 
   void CloseSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     MOZ_ASSERT(aChunk.isObject() || aChunk.isUndefined());
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
@@ -139,7 +139,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   }
 
   void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
     // error steps, given e:
