@@ -3632,12 +3632,6 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     // We know prefs are ASCII here.
     NS_LossyConvertUTF16toASCII strData(aData);
 
-    // A pref changed. If it is useful to do so, inform child processes.
-    if (ShouldSanitizePreference(strData.Data(),
-                                 /* will be fixed later */ false)) {
-      return NS_OK;
-    }
-
     Pref pref(strData, /* isLocked */ false,
               /* isSanitized */ false, Nothing(), Nothing());
 
