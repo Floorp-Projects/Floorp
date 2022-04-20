@@ -1,7 +1,7 @@
 use super::Error;
 use crate::arena::{Arena, Handle, UniqueArena};
 
-fn make_scalar_inner(kind: crate::ScalarKind, width: crate::Bytes) -> crate::ConstantInner {
+const fn make_scalar_inner(kind: crate::ScalarKind, width: crate::Bytes) -> crate::ConstantInner {
     crate::ConstantInner::Scalar {
         width,
         value: match kind {
@@ -121,7 +121,7 @@ pub fn generate_default_built_in(
     span: crate::Span,
 ) -> Result<Handle<crate::Constant>, Error> {
     let inner = match built_in {
-        Some(crate::BuiltIn::Position) => {
+        Some(crate::BuiltIn::Position { .. }) => {
             let zero = constant_arena.fetch_or_append(
                 crate::Constant {
                     name: None,

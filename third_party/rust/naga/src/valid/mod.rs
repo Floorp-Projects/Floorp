@@ -33,6 +33,21 @@ pub use r#type::{Disalignment, TypeError, TypeFlags};
 
 bitflags::bitflags! {
     /// Validation flags.
+    ///
+    /// If you are working with trusted shaders, then you may be able
+    /// to save some time by skipping validation.
+    ///
+    /// If you do not perform full validation, invalid shaders may
+    /// cause Naga to panic. If you do perform full validation and
+    /// [`Validator::validate`] returns `Ok`, then Naga promises that
+    /// code generation will either succeed or return an error; it
+    /// should never panic.
+    ///
+    /// The default value for `ValidationFlags` is
+    /// `ValidationFlags::all()`. If Naga's `"validate"` feature is
+    /// enabled, this requests full validation; otherwise, this
+    /// requests no validation. (The `"validate"` feature is disabled
+    /// by default.)
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
     pub struct ValidationFlags: u8 {
@@ -175,7 +190,7 @@ pub enum ValidationError {
 
 impl crate::TypeInner {
     #[cfg(feature = "validate")]
-    fn is_sized(&self) -> bool {
+    const fn is_sized(&self) -> bool {
         match *self {
             Self::Scalar { .. }
             | Self::Vector { .. }
@@ -194,7 +209,7 @@ impl crate::TypeInner {
 
     /// Return the `ImageDimension` for which `self` is an appropriate coordinate.
     #[cfg(feature = "validate")]
-    fn image_storage_coordinates(&self) -> Option<crate::ImageDimension> {
+    const fn image_storage_coordinates(&self) -> Option<crate::ImageDimension> {
         match *self {
             Self::Scalar {
                 kind: crate::ScalarKind::Sint,

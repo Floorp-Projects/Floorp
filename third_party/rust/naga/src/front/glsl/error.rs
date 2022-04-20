@@ -84,7 +84,7 @@ pub enum ErrorKind {
     /// A reference to a type that wasn't declared was used.
     #[error("Unknown type: {0}")]
     UnknownType(String),
-    /// A reference to a non existant member of a type was made.
+    /// A reference to a non existent member of a type was made.
     #[error("Unknown field: {0}")]
     UnknownField(String),
     /// An unknown layout qualifier was used.
@@ -94,6 +94,12 @@ pub enum ErrorKind {
     /// prioritize work.
     #[error("Unknown layout qualifier: {0}")]
     UnknownLayoutQualifier(String),
+    /// Unsupported matrix of the form matCx2
+    ///
+    /// Our IR expects matrices of the form matCx2 to have a stride of 8 however
+    /// matrices in the std140 layout have a stride of at least 16
+    #[error("unsupported matrix of the form matCx2 in std140 block layout")]
+    UnsupportedMatrixTypeInStd140,
     /// A variable with the same name already exists in the current scope.
     #[cfg(feature = "glsl-validate")]
     #[error("Variable already declared: {0}")]
