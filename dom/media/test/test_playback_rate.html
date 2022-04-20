@@ -47,8 +47,8 @@ function ontimeupdate(e) {
     var delta = t.oldCurrentTime,
         delta_wallclock = (t.timestamp - t.startTimestamp - t.bufferingTime) / 1000;
 
-    t.mozPreservesPitch = false;
-    is(t.mozPreservesPitch, false, t.name + ": If we disable the pitch preservation, it should appear as such.");
+    t.preservesPitch = false;
+    is(t.preservesPitch, false, t.name + ": If we disable the pitch preservation, it should appear as such.");
 
     t.bufferingTime = 0;
 
@@ -154,7 +154,7 @@ function startTest(test, token) {
   element.addEventListener("volumechange", onvolumechange);
   manager.started(token);
   element.startTimestamp = Date.now();
-  is(element.mozPreservesPitch, true, test.name + ": Pitch preservation should be enabled by default.");
+  is(element.preservesPitch, true, test.name + ": Pitch preservation should be enabled by default.");
   element.addEventListener("loadedmetadata", function() {
     is(element.playbackRate, 1.0, test.name + ": playbackRate should be initially 1.0");
     is(element.defaultPlaybackRate, 1.0, test.name + ": defaultPlaybackRate should be initially 1.0");
