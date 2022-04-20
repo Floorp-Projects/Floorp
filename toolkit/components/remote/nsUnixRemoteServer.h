@@ -8,7 +8,7 @@
 #ifndef __nsUnixRemoteServer_h__
 #define __nsUnixRemoteServer_h__
 
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 #ifdef IS_BIG_ENDIAN
 #  define TO_LITTLE_ENDIAN32(x)                           \

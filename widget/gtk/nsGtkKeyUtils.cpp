@@ -12,15 +12,17 @@
 #include <gdk/gdkkeysyms.h>
 #include <algorithm>
 #include <gdk/gdk.h>
-#include <gdk/gdkx.h>
 #include <dlfcn.h>
 #include <gdk/gdkkeysyms-compat.h>
-#include <X11/XKBlib.h>
-#include "X11UndefineNone.h"
+#ifdef MOZ_X11
+#  include <gdk/gdkx.h>
+#  include <X11/XKBlib.h>
+#  include "X11UndefineNone.h"
+#endif
 #include "IMContextWrapper.h"
 #include "WidgetUtils.h"
 #include "WidgetUtilsGtk.h"
-#include "keysym2ucs.h"
+#include "x11/keysym2ucs.h"
 #include "nsContentUtils.h"
 #include "nsGtkUtils.h"
 #include "nsIBidiKeyboard.h"
@@ -55,7 +57,9 @@ namespace widget {
 
 KeymapWrapper* KeymapWrapper::sInstance = nullptr;
 guint KeymapWrapper::sLastRepeatableHardwareKeyCode = 0;
+#ifdef MOZ_X11
 Time KeymapWrapper::sLastRepeatableKeyTime = 0;
+#endif
 KeymapWrapper::RepeatState KeymapWrapper::sRepeatState =
     KeymapWrapper::NOT_PRESSED;
 
@@ -354,9 +358,11 @@ KeymapWrapper::KeymapWrapper()
 
   g_object_ref(mGdkKeymap);
 
+#ifdef MOZ_X11
   if (GdkIsX11Display()) {
     InitXKBExtension();
   }
+#endif
 
   Init();
 }
@@ -373,16 +379,20 @@ void KeymapWrapper::Init() {
   mModifierKeys.Clear();
   memset(mModifierMasks, 0, sizeof(mModifierMasks));
 
+#ifdef MOZ_X11
   if (GdkIsX11Display()) {
     InitBySystemSettingsX11();
   }
+#endif
 #ifdef MOZ_WAYLAND
-  else {
+  if (GdkIsWaylandDisplay()) {
     InitBySystemSettingsWayland();
   }
 #endif
 
+#ifdef MOZ_X11
   gdk_window_add_filter(nullptr, FilterEvents, this);
+#endif
 
   MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p Init, CapsLock=0x%X, NumLock=0x%X, "
@@ -395,6 +405,7 @@ void KeymapWrapper::Init() {
            GetModifierMask(SUPER), GetModifierMask(HYPER)));
 }
 
+#ifdef MOZ_X11
 void KeymapWrapper::InitXKBExtension() {
   PodZero(&mKeyboardState);
 
@@ -626,6 +637,7 @@ void KeymapWrapper::InitBySystemSettingsX11() {
   XFreeModifiermap(xmodmap);
   XFree(xkeymap);
 }
+#endif
 
 #ifdef MOZ_WAYLAND
 void KeymapWrapper::SetModifierMask(xkb_keymap* aKeymap,
@@ -789,7 +801,9 @@ void KeymapWrapper::InitBySystemSettingsWayland() {
 #endif
 
 KeymapWrapper::~KeymapWrapper() {
+#ifdef MOZ_X11
   gdk_window_remove_filter(nullptr, FilterEvents, this);
+#endif
   if (mOnKeysChangedSignalHandle) {
     g_signal_handler_disconnect(mGdkKeymap, mOnKeysChangedSignalHandle);
   }
@@ -800,6 +814,7 @@ KeymapWrapper::~KeymapWrapper() {
   MOZ_LOG(gKeyLog, LogLevel::Info, ("%p Destructor", this));
 }
 
+#ifdef MOZ_X11
 /* static */
 GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
                                             GdkEvent* aGdkEvent,
@@ -913,6 +928,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
 
   return GDK_FILTER_CONTINUE;
 }
+#endif
 
 static void ResetBidiKeyboard() {
   // Reset the bidi keyboard settings for the new GdkKeymap
@@ -1777,6 +1793,7 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
   // key release events, the result isn't what we want.
   guint modifierState = aGdkKeyEvent->state;
   GdkDisplay* gdkDisplay = gdk_display_get_default();
+#ifdef MOZ_X11
   if (aGdkKeyEvent->is_modifier && GdkIsX11Display(gdkDisplay)) {
     Display* display = gdk_x11_display_get_xdisplay(gdkDisplay);
     if (XEventsQueued(display, QueuedAfterReading)) {
@@ -1793,6 +1810,7 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       }
     }
   }
+#endif
   InitInputEvent(aKeyEvent, modifierState);
 
   switch (aGdkKeyEvent->keyval) {
@@ -2039,11 +2057,15 @@ bool KeymapWrapper::IsLatinGroup(guint8 aGroup) {
 }
 
 bool KeymapWrapper::IsAutoRepeatableKey(guint aHardwareKeyCode) {
+#ifdef MOZ_X11
   uint8_t indexOfArray = aHardwareKeyCode / 8;
   MOZ_ASSERT(indexOfArray < ArrayLength(mKeyboardState.auto_repeats),
              "invalid index");
   char bitMask = 1 << (aHardwareKeyCode % 8);
   return (mKeyboardState.auto_repeats[indexOfArray] & bitMask) != 0;
+#else
+  return false;
+#endif
 }
 
 /* static */

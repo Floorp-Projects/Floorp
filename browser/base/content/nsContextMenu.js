@@ -335,6 +335,7 @@ class nsContextMenu {
     this.initViewItems();
     this.initImageItems();
     this.initMiscItems();
+    this.initPocketItems();
     this.initSpellingItems();
     this.initSaveItems();
     this.initSyncItems();
@@ -758,6 +759,51 @@ class nsContextMenu {
       "context-bidi-page-direction-toggle",
       !this.onTextInput && top.gBidiUI
     );
+  }
+
+  initPocketItems() {
+    const pocketEnabled = Services.prefs.getBoolPref(
+      "extensions.pocket.enabled"
+    );
+    let showSaveCurrentPageToPocket = false;
+    let showSaveLinkToPocket = false;
+
+    // We can skip all this is Pocket is not enabled.
+    if (pocketEnabled) {
+      let targetURL, targetURI;
+      // If the context menu is opened over a link, we target the link,
+      // if not, we target the page.
+      if (this.onLink) {
+        targetURL = this.linkURL;
+        // linkURI may be null if the URL is invalid.
+        targetURI = this.linkURI;
+      } else {
+        targetURL = this.browser?.currentURI?.spec;
+        targetURI = Services.io.newURI(targetURL);
+      }
+
+      const canPocket =
+        targetURI?.schemeIs("http") ||
+        targetURI?.schemeIs("https") ||
+        (targetURI?.schemeIs("about") && ReaderMode?.getOriginalUrl(targetURL));
+
+      // If the target is valid, decide which menu item to enable.
+      if (canPocket) {
+        showSaveLinkToPocket = this.onLink;
+        showSaveCurrentPageToPocket = !(
+          this.onTextInput ||
+          this.onLink ||
+          this.isContentSelected ||
+          this.onImage ||
+          this.onCanvas ||
+          this.onVideo ||
+          this.onAudio
+        );
+      }
+    }
+
+    this.showItem("context-pocket", showSaveCurrentPageToPocket);
+    this.showItem("context-savelinktopocket", showSaveLinkToPocket);
   }
 
   initSpellingItems() {

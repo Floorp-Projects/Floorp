@@ -323,7 +323,7 @@ pub struct Writer<W> {
 }
 
 impl crate::ScalarKind {
-    fn to_msl_name(self) -> &'static str {
+    const fn to_msl_name(self) -> &'static str {
         match self {
             Self::Float => "float",
             Self::Sint => "int",
@@ -333,7 +333,7 @@ impl crate::ScalarKind {
     }
 }
 
-fn separate(need_separator: bool) -> &'static str {
+const fn separate(need_separator: bool) -> &'static str {
     if need_separator {
         ","
     } else {
@@ -398,7 +398,7 @@ impl crate::AddressSpace {
     /// Returns true if global variables in this address space are
     /// passed in function arguments. These arguments need to be
     /// passed through any functions called from the entry point.
-    fn needs_pass_through(&self) -> bool {
+    const fn needs_pass_through(&self) -> bool {
         match *self {
             Self::Uniform
             | Self::Storage { .. }
@@ -411,7 +411,7 @@ impl crate::AddressSpace {
     }
 
     /// Returns true if the address space may need a "const" qualifier.
-    fn needs_access_qualifier(&self) -> bool {
+    const fn needs_access_qualifier(&self) -> bool {
         match *self {
             //Note: we are ignoring the storage access here, and instead
             // rely on the actual use of a global by functions. This means we
@@ -425,7 +425,7 @@ impl crate::AddressSpace {
         }
     }
 
-    fn to_msl_name(self) -> Option<&'static str> {
+    const fn to_msl_name(self) -> Option<&'static str> {
         match self {
             Self::Handle => None,
             Self::Uniform | Self::PushConstant => Some("constant"),
@@ -438,7 +438,7 @@ impl crate::AddressSpace {
 
 impl crate::Type {
     // Returns `true` if we need to emit an alias for this type.
-    fn needs_alias(&self) -> bool {
+    const fn needs_alias(&self) -> bool {
         use crate::TypeInner as Ti;
 
         match self.inner {
@@ -459,7 +459,7 @@ impl crate::Type {
 
 impl crate::Constant {
     // Returns `true` if we need to emit an alias for this constant.
-    fn needs_alias(&self) -> bool {
+    const fn needs_alias(&self) -> bool {
         match self.inner {
             crate::ConstantInner::Scalar { .. } => self.name.is_some(),
             crate::ConstantInner::Composite { .. } => true,
@@ -554,8 +554,6 @@ impl<'a> ExpressionContext<'a> {
         index::access_needs_check(base, index, self.module, self.function, self.info)
     }
 
-    // Because packed vectors such as `packed_float3` cannot be directly loaded,
-    // we convert them to unpacked vectors like `float3` on load.
     fn get_packed_vec_kind(
         &self,
         expr_handle: Handle<crate::Expression>,
@@ -1277,7 +1275,7 @@ impl<W: Write> Writer<W> {
                 vector,
                 pattern,
             } => {
-                self.put_expression(vector, context, false)?;
+                self.put_wrapped_expression_for_packed_vec3_access(vector, context, false)?;
                 write!(self.out, ".")?;
                 for &sc in pattern[..size as usize].iter() {
                     write!(self.out, "{}", back::COMPONENTS[sc as usize])?;
@@ -1423,10 +1421,9 @@ impl<W: Write> Writer<W> {
                 use crate::{ScalarKind as Sk, UnaryOperator as Uo};
                 let op_str = match op {
                     Uo::Negate => "-",
-                    Uo::Not => match *context.resolve_type(expr) {
-                        crate::TypeInner::Scalar { kind: Sk::Sint, .. } => "~",
-                        crate::TypeInner::Scalar { kind: Sk::Uint, .. } => "~",
-                        crate::TypeInner::Scalar { kind: Sk::Bool, .. } => "!",
+                    Uo::Not => match context.resolve_type(expr).scalar_kind() {
+                        Some(Sk::Sint) | Some(Sk::Uint) => "~",
+                        Some(Sk::Bool) => "!",
                         _ => return Err(Error::Validation),
                     },
                 };
@@ -1449,9 +1446,31 @@ impl<W: Write> Writer<W> {
                     if !is_scoped {
                         write!(self.out, "(")?;
                     }
-                    self.put_expression(left, context, false)?;
+
+                    // Cast packed vector if necessary
+                    // Packed vector - matrix multiplications are not supported in MSL
+                    if op == crate::BinaryOperator::Multiply
+                        && matches!(
+                            context.resolve_type(right),
+                            &crate::TypeInner::Matrix { .. }
+                        )
+                    {
+                        self.put_wrapped_expression_for_packed_vec3_access(left, context, false)?;
+                    } else {
+                        self.put_expression(left, context, false)?;
+                    }
+
                     write!(self.out, " {} ", op_str)?;
-                    self.put_expression(right, context, false)?;
+
+                    // See comment above
+                    if op == crate::BinaryOperator::Multiply
+                        && matches!(context.resolve_type(left), &crate::TypeInner::Matrix { .. })
+                    {
+                        self.put_wrapped_expression_for_packed_vec3_access(right, context, false)?;
+                    } else {
+                        self.put_expression(right, context, false)?;
+                    }
+
                     if !is_scoped {
                         write!(self.out, ")")?;
                     }
@@ -1740,6 +1759,23 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
+    /// Used by expressions like Swizzle and Binary since they need packed_vec3's to be casted to a vec3
+    fn put_wrapped_expression_for_packed_vec3_access(
+        &mut self,
+        expr_handle: Handle<crate::Expression>,
+        context: &ExpressionContext,
+        is_scoped: bool,
+    ) -> BackendResult {
+        if let Some(scalar_kind) = context.get_packed_vec_kind(expr_handle) {
+            write!(self.out, "{}::{}3(", NAMESPACE, scalar_kind.to_msl_name())?;
+            self.put_expression(expr_handle, context, is_scoped)?;
+            write!(self.out, ")")?;
+        } else {
+            self.put_expression(expr_handle, context, is_scoped)?;
+        }
+        Ok(())
+    }
+
     /// Write a `GuardedIndex` as a Metal expression.
     fn put_index(
         &mut self,
@@ -1917,16 +1953,14 @@ impl<W: Write> Writer<W> {
                         write!(self.out, ".{}", name)?;
                     }
                     crate::TypeInner::ValuePointer { .. } | crate::TypeInner::Vector { .. } => {
-                        let wrap_packed_vec_scalar_kind = context.get_packed_vec_kind(base);
-                        //Note: this doesn't work for left-hand side
-                        if let Some(scalar_kind) = wrap_packed_vec_scalar_kind {
-                            write!(self.out, "{}::{}3(", NAMESPACE, scalar_kind.to_msl_name())?;
-                            self.put_access_chain(base, policy, context)?;
-                            write!(self.out, ")")?;
+                        self.put_access_chain(base, policy, context)?;
+                        // Prior to Metal v2.1 component access for packed vectors wasn't available
+                        // however array indexing is
+                        if context.get_packed_vec_kind(base).is_some() {
+                            write!(self.out, "[{}]", index)?;
                         } else {
-                            self.put_access_chain(base, policy, context)?;
+                            write!(self.out, ".{}", back::COMPONENTS[index as usize])?;
                         }
-                        write!(self.out, ".{}", back::COMPONENTS[index as usize])?;
                     }
                     _ => {
                         self.put_subscripted_access_chain(
@@ -2052,7 +2086,6 @@ impl<W: Write> Writer<W> {
         policy: index::BoundsCheckPolicy,
         context: &ExpressionContext,
     ) -> BackendResult {
-        let wrap_packed_vec_scalar_kind = context.get_packed_vec_kind(pointer);
         let is_atomic = match *context.resolve_type(pointer) {
             crate::TypeInner::Pointer { base, .. } => match context.module.types[base].inner {
                 crate::TypeInner::Atomic { .. } => true,
@@ -2061,11 +2094,7 @@ impl<W: Write> Writer<W> {
             _ => false,
         };
 
-        if let Some(scalar_kind) = wrap_packed_vec_scalar_kind {
-            write!(self.out, "{}::{}3(", NAMESPACE, scalar_kind.to_msl_name())?;
-            self.put_access_chain(pointer, policy, context)?;
-            write!(self.out, ")")?;
-        } else if is_atomic {
+        if is_atomic {
             write!(
                 self.out,
                 "{}::atomic_load_explicit({}",
@@ -3295,11 +3324,11 @@ impl<W: Write> Writer<W> {
                 crate::ShaderStage::Vertex => (
                     "vertex",
                     LocationMode::VertexInput,
-                    LocationMode::Intermediate,
+                    LocationMode::VertexOutput,
                 ),
                 crate::ShaderStage::Fragment { .. } => (
                     "fragment",
-                    LocationMode::Intermediate,
+                    LocationMode::FragmentInput,
                     LocationMode::FragmentOutput,
                 ),
                 crate::ShaderStage::Compute { .. } => {
@@ -3355,7 +3384,7 @@ impl<W: Write> Writer<W> {
                     };
                     let resolved = options.resolve_local_binding(binding, in_mode)?;
                     write!(self.out, "{}{} {}", back::INDENT, ty_name, name)?;
-                    resolved.try_fmt_decorated(&mut self.out)?;
+                    resolved.try_fmt(&mut self.out)?;
                     writeln!(self.out, ";")?;
                 }
                 writeln!(self.out, "}};")?;
@@ -3430,14 +3459,8 @@ impl<W: Write> Writer<W> {
                         if let Some(array_len) = array_len {
                             write!(self.out, " [{}]", array_len)?;
                         }
-                        write!(self.out, " [[")?;
                         resolved.try_fmt(&mut self.out)?;
-                        if options.lang_version >= (2, 1)
-                            && *binding == crate::Binding::BuiltIn(crate::BuiltIn::Position)
-                        {
-                            write!(self.out, ", invariant")?;
-                        }
-                        writeln!(self.out, "]];")?;
+                        writeln!(self.out, ";")?;
                     }
 
                     if pipeline_options.allow_point_size
@@ -3483,7 +3506,7 @@ impl<W: Write> Writer<W> {
             let mut flattened_member_names = FastHashMap::default();
             for &(ref name_key, ty, binding) in flattened_arguments.iter() {
                 let binding = match binding {
-                    Some(ref binding @ &crate::Binding::BuiltIn(..)) => binding,
+                    Some(ref binding @ &crate::Binding::BuiltIn { .. }) => binding,
                     _ => continue,
                 };
                 let name = if let NameKey::StructMember(ty, index) = *name_key {
@@ -3511,7 +3534,7 @@ impl<W: Write> Writer<W> {
                     ','
                 };
                 write!(self.out, "{} {} {}", separator, ty_name, name)?;
-                resolved.try_fmt_decorated(&mut self.out)?;
+                resolved.try_fmt(&mut self.out)?;
                 writeln!(self.out)?;
             }
 
@@ -3560,7 +3583,7 @@ impl<W: Write> Writer<W> {
                 write!(self.out, "{} ", separator)?;
                 tyvar.try_fmt(&mut self.out)?;
                 if let Some(resolved) = resolved {
-                    resolved.try_fmt_decorated(&mut self.out)?;
+                    resolved.try_fmt(&mut self.out)?;
                 }
                 if let Some(value) = var.init {
                     let coco = ConstantContext {
@@ -3589,7 +3612,7 @@ impl<W: Write> Writer<W> {
                     "{} constant _mslBufferSizes& _buffer_sizes",
                     separator,
                 )?;
-                resolved.try_fmt_decorated(&mut self.out)?;
+                resolved.try_fmt(&mut self.out)?;
                 writeln!(self.out)?;
             }
 
@@ -3674,7 +3697,9 @@ impl<W: Write> Writer<W> {
                             // have passed it as its own argument and assigned
                             // it a new name.
                             let name = match member.binding {
-                                Some(crate::Binding::BuiltIn(_)) => &flattened_member_names[&key],
+                                Some(crate::Binding::BuiltIn { .. }) => {
+                                    &flattened_member_names[&key]
+                                }
                                 _ => &self.names[&key],
                             };
                             if member_index != 0 {

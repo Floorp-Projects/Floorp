@@ -13,7 +13,7 @@ use crate::{
 };
 
 impl crate::ScalarKind {
-    fn dummy_storage_format(&self) -> crate::StorageFormat {
+    const fn dummy_storage_format(&self) -> crate::StorageFormat {
         match *self {
             Sk::Sint => crate::StorageFormat::R16Sint,
             Sk::Uint => crate::StorageFormat::R16Uint,
@@ -53,7 +53,7 @@ impl Module {
     }
 }
 
-fn make_coords_arg(number_of_components: usize, kind: Sk) -> TypeInner {
+const fn make_coords_arg(number_of_components: usize, kind: Sk) -> TypeInner {
     let width = 4;
 
     match number_of_components {
@@ -995,6 +995,9 @@ fn inject_standard_builtins(
                     .push(module.add_builtin(args, MacroCall::Clamp(size)))
             }
         }
+        "barrier" => declaration
+            .overloads
+            .push(module.add_builtin(Vec::new(), MacroCall::Barrier)),
         // Add common builtins with floats
         _ => inject_common_builtin(declaration, module, name, 4),
     }
@@ -1587,6 +1590,7 @@ pub enum MacroCall {
     Clamp(Option<VectorSize>),
     BitCast(Sk),
     Derivate(DerivativeAxis),
+    Barrier,
 }
 
 impl MacroCall {
@@ -1830,6 +1834,7 @@ impl MacroCall {
                     },
                     meta,
                 );
+                ctx.emit_start();
                 return Ok(None);
             }
             MacroCall::MathFunction(fun) => ctx.add_expression(
@@ -1992,6 +1997,12 @@ impl MacroCall {
                 Span::default(),
                 body,
             ),
+            MacroCall::Barrier => {
+                ctx.emit_flush(body);
+                ctx.emit_start();
+                body.push(crate::Statement::Barrier(crate::Barrier::all()), meta);
+                return Ok(None);
+            }
         }))
     }
 }
@@ -2290,7 +2301,7 @@ fn texture_args_generator(
 
 /// Helper functions used to convert from a image dimension into a integer representing the
 /// number of components needed for the coordinates vector (1 means scalar instead of vector)
-fn image_dims_to_coords_size(dim: Dim) -> usize {
+const fn image_dims_to_coords_size(dim: Dim) -> usize {
     match dim {
         Dim::D1 => 1,
         Dim::D2 => 2,

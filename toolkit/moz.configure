@@ -407,7 +407,12 @@ def toolkit_choices(target):
     elif target.os == "Android":
         return ("cairo-android",)
     else:
-        return ("cairo-gtk3", "cairo-gtk3-wayland")
+        return (
+            "cairo-gtk3",
+            "cairo-gtk3-wayland",
+            "cairo-gtk3-wayland-only",
+            "cairo-gtk3-x11-wayland",
+        )
 
 
 @depends(toolkit_choices)
@@ -463,7 +468,7 @@ wayland_headers = pkg_check_modules(
     "MOZ_WAYLAND",
     "gtk+-wayland-3.0 >= 3.14 xkbcommon >= 0.4.1 libdrm >= 2.4",
     allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3"),
-    when=depends(full_toolkit)(lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland")),
+    when=toolkit_gtk,
 )
 
 
@@ -1349,10 +1354,6 @@ set_define("MOZ_RAW", depends_if("--enable-raw")(lambda _: True))
 
 # X11
 # ==============================================================
-set_config("MOZ_X11", True, when=toolkit_gtk)
-set_define("MOZ_X11", True, when=toolkit_gtk)
-
-
 @depends(webrtc, when=toolkit_gtk)
 def x11_libs(webrtc):
     libs = [
@@ -1377,8 +1378,28 @@ def x11_libs(webrtc):
     return libs
 
 
-pkg_check_modules("MOZ_X11", x11_libs, when=toolkit_gtk)
-pkg_check_modules("MOZ_X11_SM", ["ice", "sm"], cflags_only=True, when=toolkit_gtk)
+x11_headers = pkg_check_modules(
+    "MOZ_X11",
+    x11_libs,
+    allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3-wayland"),
+    when=depends(full_toolkit)(
+        lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
+    ),
+)
+
+
+set_config("MOZ_X11", True, when=x11_headers)
+set_define("MOZ_X11", True, when=x11_headers)
+
+pkg_check_modules(
+    "MOZ_X11_SM",
+    ["ice", "sm"],
+    cflags_only=True,
+    allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3-wayland"),
+    when=depends(full_toolkit)(
+        lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
+    ),
+)
 
 
 # ASan Reporter Addon

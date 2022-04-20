@@ -6,14 +6,18 @@
 #include "nsGDKErrorHandler.h"
 
 #include <gtk/gtk.h>
-#include <gdk/gdkx.h>
+#ifdef MOZ_X11
+#  include <gdk/gdkx.h>
+#endif
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "nsDebug.h"
 #include "nsString.h"
-#include "nsX11ErrorHandler.h"
+#ifdef MOZ_X11
+#  include "nsX11ErrorHandler.h"
+#endif
 
 #include "prenv.h"
 
@@ -26,6 +30,7 @@
  */
 static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
                             const gchar* message, gpointer user_data) {
+#ifdef MOZ_X11
   if (strstr(message, "X Window System error")) {
     XErrorEvent event;
     nsDependentCString buffer(message);
@@ -92,7 +97,9 @@ static void GdkErrorHandler(const gchar* log_domain, GLogLevelFlags log_level,
     event.resourceid = 0;
 
     X11Error(event.display, &event);
-  } else {
+  } else
+#endif
+  {
     g_log_default_handler(log_domain, log_level, message, user_data);
     MOZ_CRASH_UNSAFE(message);
   }
@@ -103,7 +110,9 @@ void InstallGdkErrorHandler() {
                     (GLogLevelFlags)(G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL |
                                      G_LOG_FLAG_RECURSION),
                     GdkErrorHandler, nullptr);
+#ifdef MOZ_X11
   if (PR_GetEnv("MOZ_X_SYNC")) {
     XSynchronize(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), X11True);
   }
+#endif
 }

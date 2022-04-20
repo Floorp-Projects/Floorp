@@ -26,7 +26,7 @@ from mozharness.mozilla.testing.codecoverage import CodeCoverageMixin
 
 PY2 = sys.version_info.major == 2
 SUITE_DEFAULT_E10S = ["geckoview-junit", "mochitest", "reftest"]
-SUITE_NO_E10S = ["cppunittest", "xpcshell"]
+SUITE_NO_E10S = ["cppunittest", "gtest", "jittest"]
 SUITE_REPEATABLE = ["mochitest", "reftest"]
 
 
@@ -78,6 +78,15 @@ class AndroidHardwareTest(
                 "dest": "log_tbpl_level",
                 "default": "info",
                 "help": "Set log level (debug|info|warning|error|critical|fatal)",
+            },
+        ],
+        [
+            ["--disable-e10s"],
+            {
+                "action": "store_false",
+                "dest": "e10s",
+                "default": True,
+                "help": "Run tests without multiple processes (e10s).",
             },
         ],
         [
@@ -157,6 +166,7 @@ class AndroidHardwareTest(
         self.xre_path = None
         self.log_raw_level = c.get("log_raw_level")
         self.log_tbpl_level = c.get("log_tbpl_level")
+        self.disable_e10s = c.get("disable_e10s")
         self.enable_fission = c.get("enable_fission")
         self.extra_prefs = c.get("extra_prefs")
         self.jittest_flags = c.get("jittest_flags")
@@ -278,6 +288,12 @@ class AndroidHardwareTest(
                 cmd.extend(["--repeat=%s" % c.get("repeat")])
             else:
                 self.log("--repeat not supported in {}".format(category), level=WARNING)
+
+        if category not in SUITE_NO_E10S:
+            if category in SUITE_DEFAULT_E10S and not c["e10s"]:
+                cmd.append("--disable-e10s")
+            elif category not in SUITE_DEFAULT_E10S and c["e10s"]:
+                cmd.append("--e10s")
 
         if self.enable_fission:
             cmd.extend(["--enable-fission"])

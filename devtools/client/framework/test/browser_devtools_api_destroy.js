@@ -11,7 +11,7 @@ async function runTests(aTab) {
   const toolDefinition = {
     id: "testTool",
     visibilityswitch: "devtools.testTool.enabled",
-    isTargetSupported: () => true,
+    isToolSupported: () => true,
     url: "about:blank",
     label: "someLabel",
     build: function(iframeWindow, toolbox) {

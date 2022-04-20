@@ -1,4 +1,4 @@
-// Copyright 2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -16,8 +16,8 @@ use packed_simd::FromBits;
 
 #[inline(always)]
 pub unsafe fn load16_unaligned(ptr: *const u8) -> u8x16 {
-    let mut simd = ::std::mem::uninitialized();
-    ::std::ptr::copy_nonoverlapping(ptr, &mut simd as *mut u8x16 as *mut u8, 16);
+    let mut simd = ::core::mem::uninitialized();
+    ::core::ptr::copy_nonoverlapping(ptr, &mut simd as *mut u8x16 as *mut u8, 16);
     simd
 }
 
@@ -29,7 +29,7 @@ pub unsafe fn load16_aligned(ptr: *const u8) -> u8x16 {
 
 #[inline(always)]
 pub unsafe fn store16_unaligned(ptr: *mut u8, s: u8x16) {
-    ::std::ptr::copy_nonoverlapping(&s as *const u8x16 as *const u8, ptr, 16);
+    ::core::ptr::copy_nonoverlapping(&s as *const u8x16 as *const u8, ptr, 16);
 }
 
 #[allow(dead_code)]
@@ -40,8 +40,8 @@ pub unsafe fn store16_aligned(ptr: *mut u8, s: u8x16) {
 
 #[inline(always)]
 pub unsafe fn load8_unaligned(ptr: *const u16) -> u16x8 {
-    let mut simd = ::std::mem::uninitialized();
-    ::std::ptr::copy_nonoverlapping(ptr as *const u8, &mut simd as *mut u16x8 as *mut u8, 16);
+    let mut simd = ::core::mem::uninitialized();
+    ::core::ptr::copy_nonoverlapping(ptr as *const u8, &mut simd as *mut u16x8 as *mut u8, 16);
     simd
 }
 
@@ -53,7 +53,7 @@ pub unsafe fn load8_aligned(ptr: *const u16) -> u16x8 {
 
 #[inline(always)]
 pub unsafe fn store8_unaligned(ptr: *mut u16, s: u16x8) {
-    ::std::ptr::copy_nonoverlapping(&s as *const u16x8 as *const u8, ptr as *mut u8, 16);
+    ::core::ptr::copy_nonoverlapping(&s as *const u16x8 as *const u8, ptr as *mut u8, 16);
 }
 
 #[allow(dead_code)]
@@ -64,18 +64,18 @@ pub unsafe fn store8_aligned(ptr: *mut u16, s: u16x8) {
 
 cfg_if! {
     if #[cfg(all(target_feature = "sse2", target_arch = "x86_64"))] {
-        use std::arch::x86_64::__m128i;
-        use std::arch::x86_64::_mm_movemask_epi8;
-        use std::arch::x86_64::_mm_packus_epi16;
+        use core::arch::x86_64::__m128i;
+        use core::arch::x86_64::_mm_movemask_epi8;
+        use core::arch::x86_64::_mm_packus_epi16;
     } else if #[cfg(all(target_feature = "sse2", target_arch = "x86"))] {
-        use std::arch::x86::__m128i;
-        use std::arch::x86::_mm_movemask_epi8;
-        use std::arch::x86::_mm_packus_epi16;
+        use core::arch::x86::__m128i;
+        use core::arch::x86::_mm_movemask_epi8;
+        use core::arch::x86::_mm_packus_epi16;
     } else if #[cfg(target_arch = "aarch64")]{
-        use std::arch::aarch64::uint8x16_t;
-        use std::arch::aarch64::uint16x8_t;
-        use std::arch::aarch64::vmaxvq_u8;
-        use std::arch::aarch64::vmaxvq_u16;
+        use core::arch::aarch64::uint8x16_t;
+        use core::arch::aarch64::uint16x8_t;
+        use core::arch::aarch64::vmaxvq_u8;
+        use core::arch::aarch64::vmaxvq_u16;
     } else {
 
     }
@@ -327,6 +327,7 @@ cfg_if! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_unpack() {
@@ -446,7 +447,7 @@ mod tests {
         ];
         let mut alu = 0u64;
         unsafe {
-            ::std::ptr::copy_nonoverlapping(input.as_ptr(), &mut alu as *mut u64 as *mut u8, 8);
+            ::core::ptr::copy_nonoverlapping(input.as_ptr(), &mut alu as *mut u64 as *mut u8, 8);
         }
         let masked = alu & 0x8080808080808080;
         assert_eq!(masked.trailing_zeros(), 39);

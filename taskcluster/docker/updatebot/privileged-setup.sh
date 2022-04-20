@@ -21,6 +21,7 @@ apt-get install -y --no-install-recommends \
     bzr \
     ca-certificates \
     curl \
+    ed \
     golang-go \
     gcc \
     libc6-dev \

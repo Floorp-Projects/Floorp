@@ -479,6 +479,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                                              MutableHandleShape result);
 
   void emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee);
+  ObjOperandId emitFunCallGuard(Int32OperandId argcId);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);

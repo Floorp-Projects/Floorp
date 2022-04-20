@@ -33,7 +33,9 @@ const PublicSuffixList = {
       .then(async records => {
         if (records.length == 1) {
           // Get the downloaded file URI (most likely to be a no-op here, since file will exist).
-          const fileURI = await this.CLIENT.attachments.download(records[0]);
+          const fileURI = await this.CLIENT.attachments.downloadToDisk(
+            records[0]
+          );
           // Send a signal so that the C++ code loads the updated list on startup.
           this.notifyUpdate(fileURI);
         }
@@ -80,7 +82,7 @@ const PublicSuffixList = {
   async onUpdate({ data: { created, updated, deleted } }) {
     // In theory, this will never happen, we will never delete the record.
     if (deleted.length == 1) {
-      await this.CLIENT.attachments.delete(deleted[0]);
+      await this.CLIENT.attachments.deleteFromDisk(deleted[0]);
     }
     // Handle creation and update the same way
     const changed = created.concat(updated.map(u => u.new));
@@ -94,7 +96,7 @@ const PublicSuffixList = {
     // Download the updated file.
     let fileURI;
     try {
-      fileURI = await this.CLIENT.attachments.download(changed[0]);
+      fileURI = await this.CLIENT.attachments.downloadToDisk(changed[0]);
     } catch (err) {
       Cu.reportError(err);
       return;

@@ -65,22 +65,6 @@ types.addDictType("object.enumProperties.Options", {
   sort: "nullable:boolean",
 });
 
-types.addDictType("object.ownPropertyNames", {
-  ownPropertyNames: "array:string",
-});
-
-types.addDictType("object.displayString", {
-  displayString: "string",
-});
-
-types.addDictType("object.decompile", {
-  decompiledCode: "string",
-});
-
-types.addDictType("object.parameterNames", {
-  parameterNames: "nullable:array:string",
-});
-
 types.addDictType("object.dependentPromises", {
   promises: "array:object.descriptor",
 });
@@ -114,19 +98,9 @@ const objectSpec = generateActorSpec({
         allocationStack: RetVal("array:object.originalSourceLocation"),
       },
     },
-    decompile: {
-      request: {
-        pretty: Arg(0, "boolean"),
-      },
-      response: RetVal("object.decompile"),
-    },
     dependentPromises: {
       request: {},
       response: RetVal("object.dependentPromises"),
-    },
-    displayString: {
-      request: {},
-      response: RetVal("object.displayString"),
     },
     enumEntries: {
       request: {},
@@ -159,14 +133,6 @@ const objectSpec = generateActorSpec({
       response: {
         fulfillmentStack: RetVal("array:object.originalSourceLocation"),
       },
-    },
-    ownPropertyNames: {
-      request: {},
-      response: RetVal("object.ownPropertyNames"),
-    },
-    parameterNames: {
-      request: {},
-      response: RetVal("object.parameterNames"),
     },
     prototypeAndProperties: {
       request: {},

@@ -8,7 +8,7 @@
 
 const testToolDefinition = {
   id: "testTool",
-  isTargetSupported: () => true,
+  isToolSupported: () => true,
   visibilityswitch: "devtools.test-tool.enabled",
   url: "about:blank",
   label: "someLabel",
@@ -34,7 +34,7 @@ add_task(async function() {
   await toolbox.destroy();
 
   // Make the previously selected tool unavailable.
-  testToolDefinition.isTargetSupported = () => false;
+  testToolDefinition.isToolSupported = () => false;
 
   toolbox = await gDevTools.showToolboxForTab(tab);
   is(toolbox.currentToolId, "webconsole", "web console was selected");

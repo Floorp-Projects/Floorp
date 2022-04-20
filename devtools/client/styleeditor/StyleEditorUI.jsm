@@ -23,7 +23,7 @@ const {
 } = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 const {
   SplitView,
-} = require("resource://devtools/client/shared/SplitView.jsm");
+} = require("resource://devtools/client/styleeditor/SplitView.jsm");
 const {
   StyleSheetEditor,
 } = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");

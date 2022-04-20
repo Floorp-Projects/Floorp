@@ -152,7 +152,6 @@ testing/gtest/gtest/
 testing/mochitest/MochiKit/
 testing/mochitest/pywebsocket3/
 testing/mochitest/tests/MochiKit-1.4.2/
-testing/modules/ajv-6.12.6.js
 testing/modules/sinon-7.2.7.js
 testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/
 testing/talos/talos/tests/dromaeo/

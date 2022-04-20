@@ -304,7 +304,7 @@ const MessageLoaderUtils = {
               "newtab"
             );
             // Await here in order to capture the exceptions for reporting.
-            await downloader.download(record.data, {
+            await downloader.downloadToDisk(record.data, {
               retries: RS_DOWNLOAD_MAX_RETRIES,
             });
             RemoteL10n.reloadL10n();

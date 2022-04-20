@@ -92,7 +92,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   explicit Read_ReadIntoRequest(Promise* aPromise) : mPromise(aPromise) {}
 
   void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     MOZ_ASSERT(aChunk.isObject());
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
@@ -103,35 +103,35 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
     // another compartment.
     JS::RootedObject chunk(aCx, &aChunk.toObject());
     if (!JS_WrapObject(aCx, &chunk)) {
+      aRv.StealExceptionFromJSContext(aCx);
       return;
     }
 
-    RootedDictionary<ReadableStreamBYOBReadResult> result(aCx);
-    result.mValue.Construct();
-    result.mValue.Value().Init(chunk);
+    RootedDictionary<ReadableStreamReadResult> result(aCx);
+    result.mValue = aChunk;
     result.mDone.Construct(false);
 
     mPromise->MaybeResolve(result);
   }
 
   void CloseSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     MOZ_ASSERT(aChunk.isObject() || aChunk.isUndefined());
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
     // close steps, given chunk:
     // Resolve promise with «[ "value" → chunk, "done" → true ]».
-    RootedDictionary<ReadableStreamBYOBReadResult> result(aCx);
+    RootedDictionary<ReadableStreamReadResult> result(aCx);
     if (aChunk.isObject()) {
       // We need to wrap this as the chunk could have come from
       // another compartment.
       JS::Rooted<JSObject*> chunk(aCx, &aChunk.toObject());
       if (!JS_WrapObject(aCx, &chunk)) {
+        aRv.StealExceptionFromJSContext(aCx);
         return;
       }
 
-      result.mValue.Construct();
-      result.mValue.Value().Init(chunk);
+      result.mValue = aChunk;
     }
     result.mDone.Construct(true);
 
@@ -139,7 +139,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
   }
 
   void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#byob-reader-read Step 6.
     //
     // error steps, given e:

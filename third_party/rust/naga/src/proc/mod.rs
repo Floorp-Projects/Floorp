@@ -57,7 +57,7 @@ impl From<super::StorageFormat> for super::ScalarKind {
 }
 
 impl super::ScalarValue {
-    pub fn scalar_kind(&self) -> super::ScalarKind {
+    pub const fn scalar_kind(&self) -> super::ScalarKind {
         match *self {
             Self::Uint(_) => super::ScalarKind::Uint,
             Self::Sint(_) => super::ScalarKind::Sint,
@@ -70,7 +70,7 @@ impl super::ScalarValue {
 pub const POINTER_SPAN: u32 = 4;
 
 impl super::TypeInner {
-    pub fn scalar_kind(&self) -> Option<super::ScalarKind> {
+    pub const fn scalar_kind(&self) -> Option<super::ScalarKind> {
         match *self {
             super::TypeInner::Scalar { kind, .. } | super::TypeInner::Vector { kind, .. } => {
                 Some(kind)
@@ -80,7 +80,7 @@ impl super::TypeInner {
         }
     }
 
-    pub fn pointer_space(&self) -> Option<crate::AddressSpace> {
+    pub const fn pointer_space(&self) -> Option<crate::AddressSpace> {
         match *self {
             Self::Pointer { space, .. } => Some(space),
             Self::ValuePointer { space, .. } => Some(space),
@@ -135,7 +135,7 @@ impl super::TypeInner {
         self.try_size(constants).unwrap()
     }
 
-    /// Return the canoncal form of `self`, or `None` if it's already in
+    /// Return the canonical form of `self`, or `None` if it's already in
     /// canonical form.
     ///
     /// Certain types have multiple representations in `TypeInner`. This
@@ -185,6 +185,18 @@ impl super::TypeInner {
         let right = rhs.canonical_form(types);
         left.as_ref().unwrap_or(self) == right.as_ref().unwrap_or(rhs)
     }
+
+    pub fn is_dynamically_sized(&self, types: &crate::UniqueArena<crate::Type>) -> bool {
+        use crate::TypeInner as Ti;
+        match *self {
+            Ti::Array { size, .. } => size == crate::ArraySize::Dynamic,
+            Ti::Struct { ref members, .. } => members
+                .last()
+                .map(|last| types[last.ty].inner.is_dynamically_sized(types))
+                .unwrap_or(false),
+            _ => false,
+        }
+    }
 }
 
 impl super::AddressSpace {
@@ -203,7 +215,7 @@ impl super::AddressSpace {
 }
 
 impl super::MathFunction {
-    pub fn argument_count(&self) -> usize {
+    pub const fn argument_count(&self) -> usize {
         match *self {
             // comparison
             Self::Abs => 1,
@@ -287,7 +299,7 @@ impl super::MathFunction {
 
 impl crate::Expression {
     /// Returns true if the expression is considered emitted at the start of a function.
-    pub fn needs_pre_emit(&self) -> bool {
+    pub const fn needs_pre_emit(&self) -> bool {
         match *self {
             Self::Constant(_)
             | Self::FunctionArgument(_)
@@ -348,7 +360,7 @@ impl crate::Function {
 }
 
 impl crate::SampleLevel {
-    pub fn implicit_derivatives(&self) -> bool {
+    pub const fn implicit_derivatives(&self) -> bool {
         match *self {
             Self::Auto | Self::Bias(_) => true,
             Self::Zero | Self::Exact(_) | Self::Gradient { .. } => false,
@@ -388,9 +400,9 @@ impl crate::Constant {
 }
 
 impl crate::Binding {
-    pub fn to_built_in(&self) -> Option<crate::BuiltIn> {
+    pub const fn to_built_in(&self) -> Option<crate::BuiltIn> {
         match *self {
-            Self::BuiltIn(bi) => Some(bi),
+            crate::Binding::BuiltIn(built_in) => Some(built_in),
             Self::Location { .. } => None,
         }
     }
@@ -423,7 +435,7 @@ impl std::hash::Hash for crate::ScalarValue {
 impl super::SwizzleComponent {
     pub const XYZW: [Self; 4] = [Self::X, Self::Y, Self::Z, Self::W];
 
-    pub fn index(&self) -> u32 {
+    pub const fn index(&self) -> u32 {
         match *self {
             Self::X => 0,
             Self::Y => 1,
@@ -431,7 +443,7 @@ impl super::SwizzleComponent {
             Self::W => 3,
         }
     }
-    pub fn from_index(idx: u32) -> Self {
+    pub const fn from_index(idx: u32) -> Self {
         match idx {
             0 => Self::X,
             1 => Self::Y,
@@ -442,14 +454,14 @@ impl super::SwizzleComponent {
 }
 
 impl super::ImageClass {
-    pub fn is_multisampled(self) -> bool {
+    pub const fn is_multisampled(self) -> bool {
         match self {
             crate::ImageClass::Sampled { multi, .. } | crate::ImageClass::Depth { multi } => multi,
             crate::ImageClass::Storage { .. } => false,
         }
     }
 
-    pub fn is_mipmapped(self) -> bool {
+    pub const fn is_mipmapped(self) -> bool {
         match self {
             crate::ImageClass::Sampled { multi, .. } | crate::ImageClass::Depth { multi } => !multi,
             crate::ImageClass::Storage { .. } => false,

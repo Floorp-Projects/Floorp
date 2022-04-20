@@ -6,7 +6,10 @@
 #ifndef DeleteNodeTransaction_h
 #define DeleteNodeTransaction_h
 
-#include "mozilla/EditTransactionBase.h"
+#include "EditTransactionBase.h"
+
+#include "EditorForwards.h"
+
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"
@@ -15,8 +18,6 @@
 #include "nscore.h"
 
 namespace mozilla {
-
-class EditorBase;
 
 /**
  * A transaction that deletes a single element

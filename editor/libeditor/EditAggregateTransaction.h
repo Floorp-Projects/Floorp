@@ -6,7 +6,8 @@
 #ifndef EditAggregateTransaction_h
 #define EditAggregateTransaction_h
 
-#include "mozilla/EditTransactionBase.h"
+#include "EditTransactionBase.h"
+
 #include "mozilla/OwningNonNull.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"

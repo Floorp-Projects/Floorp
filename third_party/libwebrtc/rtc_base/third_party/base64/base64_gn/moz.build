@@ -70,7 +70,6 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_NSS_CERTS"] = "1"
     DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_UDEV"] = True
-    DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
@@ -172,6 +171,10 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
+
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_X11"] = "1"
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 

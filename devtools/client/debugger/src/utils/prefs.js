@@ -59,7 +59,6 @@ if (isNode()) {
   pref("devtools.debugger.features.command-click", false);
   pref("devtools.debugger.features.outline", true);
   pref("devtools.debugger.features.column-breakpoints", true);
-  pref("devtools.debugger.features.skip-pausing", true);
   pref("devtools.debugger.features.component-pane", false);
   pref("devtools.debugger.features.autocomplete-expressions", false);
   pref("devtools.debugger.features.map-expression-bindings", true);
@@ -139,7 +138,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   windowlessWorkers: ["Bool", "windowless-workers"],
   outline: ["Bool", "outline"],
   codeFolding: ["Bool", "code-folding"],
-  skipPausing: ["Bool", "skip-pausing"],
   autocompleteExpression: ["Bool", "autocomplete-expressions"],
   mapExpressionBindings: ["Bool", "map-expression-bindings"],
   mapAwaitExpression: ["Bool", "map-await-expression"],

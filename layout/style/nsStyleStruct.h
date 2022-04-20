@@ -1222,26 +1222,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsChangeHint CalcTransformPropertyDifference(
       const nsStyleDisplay& aNewData) const;
 
-  nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
-  // The number of elements in mTransitions that are not from repeating
-  // a list due to another property being longer.
-  uint32_t mTransitionTimingFunctionCount;
-  uint32_t mTransitionDurationCount;
-  uint32_t mTransitionDelayCount;
-  uint32_t mTransitionPropertyCount;
-  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
-  // The number of elements in mAnimations that are not from repeating
-  // a list due to another property being longer.
-  uint32_t mAnimationTimingFunctionCount;
-  uint32_t mAnimationDurationCount;
-  uint32_t mAnimationDelayCount;
-  uint32_t mAnimationNameCount;
-  uint32_t mAnimationDirectionCount;
-  uint32_t mAnimationFillModeCount;
-  uint32_t mAnimationPlayStateCount;
-  uint32_t mAnimationIterationCountCount;
-  uint32_t mAnimationTimelineCount;
-
   mozilla::StyleDisplay mDisplay;
   mozilla::StyleDisplay mOriginalDisplay;  // saved mDisplay for
                                            //         position:absolute/fixed
@@ -1315,58 +1295,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::NonNegativeLengthPercentage mShapeMargin;
 
   mozilla::StyleShapeOutside mShapeOutside;
-
-  nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
-    return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
-  }
-  float GetTransitionDelay(uint32_t aIndex) const {
-    return mTransitions[aIndex % mTransitionDelayCount].GetDelay();
-  }
-  float GetTransitionDuration(uint32_t aIndex) const {
-    return mTransitions[aIndex % mTransitionDurationCount].GetDuration();
-  }
-  const nsTimingFunction& GetTransitionTimingFunction(uint32_t aIndex) const {
-    return mTransitions[aIndex % mTransitionTimingFunctionCount]
-        .GetTimingFunction();
-  }
-  float GetTransitionCombinedDuration(uint32_t aIndex) const {
-    // https://drafts.csswg.org/css-transitions/#transition-combined-duration
-    return std::max(
-               mTransitions[aIndex % mTransitionDurationCount].GetDuration(),
-               0.0f) +
-           mTransitions[aIndex % mTransitionDelayCount].GetDelay();
-  }
-
-  nsAtom* GetAnimationName(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationNameCount].GetName();
-  }
-  float GetAnimationDelay(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationDelayCount].GetDelay();
-  }
-  float GetAnimationDuration(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationDurationCount].GetDuration();
-  }
-  mozilla::dom::PlaybackDirection GetAnimationDirection(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationDirectionCount].GetDirection();
-  }
-  mozilla::dom::FillMode GetAnimationFillMode(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationFillModeCount].GetFillMode();
-  }
-  mozilla::StyleAnimationPlayState GetAnimationPlayState(
-      uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationPlayStateCount].GetPlayState();
-  }
-  float GetAnimationIterationCount(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationIterationCountCount]
-        .GetIterationCount();
-  }
-  const nsTimingFunction& GetAnimationTimingFunction(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationTimingFunctionCount]
-        .GetTimingFunction();
-  }
-  const mozilla::StyleAnimationTimeline& GetTimeline(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
-  }
 
   bool HasAppearance() const {
     return EffectiveAppearance() != mozilla::StyleAppearance::None;
@@ -1833,6 +1761,58 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
     return mScrollbarWidth;
   }
 
+  nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const {
+    return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
+  }
+  float GetTransitionDelay(uint32_t aIndex) const {
+    return mTransitions[aIndex % mTransitionDelayCount].GetDelay();
+  }
+  float GetTransitionDuration(uint32_t aIndex) const {
+    return mTransitions[aIndex % mTransitionDurationCount].GetDuration();
+  }
+  const nsTimingFunction& GetTransitionTimingFunction(uint32_t aIndex) const {
+    return mTransitions[aIndex % mTransitionTimingFunctionCount]
+        .GetTimingFunction();
+  }
+  float GetTransitionCombinedDuration(uint32_t aIndex) const {
+    // https://drafts.csswg.org/css-transitions/#transition-combined-duration
+    return std::max(
+               mTransitions[aIndex % mTransitionDurationCount].GetDuration(),
+               0.0f) +
+           mTransitions[aIndex % mTransitionDelayCount].GetDelay();
+  }
+
+  nsAtom* GetAnimationName(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationNameCount].GetName();
+  }
+  float GetAnimationDelay(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationDelayCount].GetDelay();
+  }
+  float GetAnimationDuration(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationDurationCount].GetDuration();
+  }
+  mozilla::dom::PlaybackDirection GetAnimationDirection(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationDirectionCount].GetDirection();
+  }
+  mozilla::dom::FillMode GetAnimationFillMode(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationFillModeCount].GetFillMode();
+  }
+  mozilla::StyleAnimationPlayState GetAnimationPlayState(
+      uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationPlayStateCount].GetPlayState();
+  }
+  float GetAnimationIterationCount(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationIterationCountCount]
+        .GetIterationCount();
+  }
+  const nsTimingFunction& GetAnimationTimingFunction(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationTimingFunctionCount]
+        .GetTimingFunction();
+  }
+  const mozilla::StyleAnimationTimeline& GetTimeline(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
+  }
+
   uint8_t mMozForceBrokenImageIcon;  // (0 if not forcing, otherwise forcing)
   mozilla::StyleImeMode mIMEMode;
   mozilla::StyleWindowDragging mWindowDragging;
@@ -1840,6 +1820,26 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUIReset {
   float mWindowOpacity;
   mozilla::StyleTransform mMozWindowTransform;
   mozilla::StyleTransformOrigin mWindowTransformOrigin;
+
+  nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
+  // The number of elements in mTransitions that are not from repeating
+  // a list due to another property being longer.
+  uint32_t mTransitionTimingFunctionCount;
+  uint32_t mTransitionDurationCount;
+  uint32_t mTransitionDelayCount;
+  uint32_t mTransitionPropertyCount;
+  nsStyleAutoArray<mozilla::StyleAnimation> mAnimations;
+  // The number of elements in mAnimations that are not from repeating
+  // a list due to another property being longer.
+  uint32_t mAnimationTimingFunctionCount;
+  uint32_t mAnimationDurationCount;
+  uint32_t mAnimationDelayCount;
+  uint32_t mAnimationNameCount;
+  uint32_t mAnimationDirectionCount;
+  uint32_t mAnimationFillModeCount;
+  uint32_t mAnimationPlayStateCount;
+  uint32_t mAnimationIterationCountCount;
+  uint32_t mAnimationTimelineCount;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {

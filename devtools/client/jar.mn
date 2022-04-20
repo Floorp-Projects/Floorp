@@ -6,7 +6,6 @@ devtools.jar:
 %   content devtools %content/
     content/shared/vendor/dagre-d3.js (shared/vendor/dagre-d3.js)
     content/shared/widgets/widgets.css (shared/widgets/widgets.css)
-    content/shared/splitview.css (shared/splitview.css)
     content/shared/toolbarbutton.css (shared/toolbarbutton.css)
     content/shared/theme-switching.js (shared/theme-switching.js)
     content/shared/widgets/graphs-frame.xhtml (shared/widgets/graphs-frame.xhtml)

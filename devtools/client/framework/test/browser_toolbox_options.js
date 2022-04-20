@@ -43,7 +43,7 @@ add_task(async function() {
 function registerNewTool() {
   const toolDefinition = {
     id: "testTool",
-    isTargetSupported: () => true,
+    isToolSupported: () => true,
     visibilityswitch: "devtools.test-tool.enabled",
     url: "about:blank",
     label: "someLabel",
@@ -81,7 +81,7 @@ function registerNewWebExtensions() {
 function registerNewPerToolboxTool() {
   const toolDefinition = {
     id: "test-pertoolbox-tool",
-    isTargetSupported: () => true,
+    isToolSupported: () => true,
     visibilityswitch: "devtools.test-pertoolbox-tool.enabled",
     url: "about:blank",
     label: "perToolboxSomeLabel",

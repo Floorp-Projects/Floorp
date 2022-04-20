@@ -184,23 +184,19 @@ tree.
 [`ModuleInfo`]: valid::ModuleInfo
 */
 
-// TODO: use `strip_prefix` instead when Rust 1.45 <= MSRV
 #![allow(
-    renamed_and_removed_lints,
-    unknown_lints, // requires Rust 1.51
     clippy::new_without_default,
     clippy::unneeded_field_pattern,
     clippy::match_like_matches_macro,
-    clippy::manual_strip,
-    clippy::if_same_then_else,
-    clippy::unknown_clippy_lints,
+    clippy::if_same_then_else
 )]
 #![warn(
     trivial_casts,
     trivial_numeric_casts,
     unused_extern_crates,
     unused_qualifications,
-    clippy::pattern_type_mismatch
+    clippy::pattern_type_mismatch,
+    clippy::missing_const_for_fn
 )]
 #![deny(clippy::panic)]
 
@@ -325,7 +321,7 @@ pub enum AddressSpace {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum BuiltIn {
-    Position,
+    Position { invariant: bool },
     ViewIndex,
     // vertex
     BaseInstance,
@@ -675,6 +671,8 @@ pub enum TypeInner {
     },
 
     /// User-defined structure.
+    ///
+    /// There must always be at least one member.
     ///
     /// A `Struct` type is [`DATA`], and the types of its members must be
     /// `DATA` as well.

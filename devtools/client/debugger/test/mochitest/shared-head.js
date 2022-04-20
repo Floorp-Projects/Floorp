@@ -1488,7 +1488,6 @@ const selectors = {
   stepIn: ".stepIn.active",
   replayPrevious: ".replay-previous.active",
   replayNext: ".replay-next.active",
-  toggleBreakpoints: ".breakpoints-toggle",
   prettyPrintButton: ".source-footer .prettyPrint",
   sourceMapLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",

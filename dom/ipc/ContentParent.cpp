@@ -4469,6 +4469,9 @@ bool ContentParent::DeallocPBenchmarkStorageParent(
 
 #ifdef MOZ_WEBSPEECH
 PSpeechSynthesisParent* ContentParent::AllocPSpeechSynthesisParent() {
+  if (!StaticPrefs::media_webspeech_synth_enabled()) {
+    return nullptr;
+  }
   return new mozilla::dom::SpeechSynthesisParent();
 }
 
@@ -4547,7 +4550,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
     nsIURI* uri, nsIPrincipal* aTriggeringPrincipal,
     nsIPrincipal* aRedirectPrincipal,
     const MaybeDiscarded<BrowsingContext>& aContext,
-    bool aWasExternallyTriggered) {
+    bool aWasExternallyTriggered, bool aHasValidUserGestureActivation) {
   if (aContext.IsDiscarded()) {
     return IPC_OK();
   }
@@ -4564,7 +4567,8 @@ mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
 
   BrowsingContext* bc = aContext.get();
   extProtService->LoadURI(uri, aTriggeringPrincipal, aRedirectPrincipal, bc,
-                          aWasExternallyTriggered);
+                          aWasExternallyTriggered,
+                          aHasValidUserGestureActivation);
   return IPC_OK();
 }
 

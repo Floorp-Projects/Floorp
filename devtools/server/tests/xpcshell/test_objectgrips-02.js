@@ -23,12 +23,6 @@ add_task(
     const response = await objectFront.getPrototype();
     Assert.ok(response.prototype != undefined);
 
-    const protoFront = response.prototype;
-    const { ownPropertyNames } = await protoFront.getOwnPropertyNames();
-    Assert.equal(ownPropertyNames.length, 2);
-    Assert.equal(ownPropertyNames[0], "b");
-    Assert.equal(ownPropertyNames[1], "c");
-
     await threadFront.resume();
   })
 );

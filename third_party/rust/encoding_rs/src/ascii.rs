@@ -1,4 +1,4 @@
-// Copyright 2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -29,14 +29,14 @@
         all(target_endian = "little", target_feature = "neon")
     )
 ))]
-use simd_funcs::*;
+use crate::simd_funcs::*;
 
 cfg_if! {
     if #[cfg(feature = "simd-accel")] {
         #[allow(unused_imports)]
-        use ::std::intrinsics::unlikely;
+        use ::core::intrinsics::unlikely;
         #[allow(unused_imports)]
-        use ::std::intrinsics::likely;
+        use ::core::intrinsics::likely;
     } else {
         #[allow(dead_code)]
         #[inline(always)]
@@ -103,7 +103,7 @@ macro_rules! ascii_alu {
                 let mut until_alignment = {
                     // Check if the other unit aligns if we move the narrower unit
                     // to alignment.
-                    //               if ::std::mem::size_of::<$src_unit>() == ::std::mem::size_of::<$dst_unit>() {
+                    //               if ::core::mem::size_of::<$src_unit>() == ::core::mem::size_of::<$dst_unit>() {
                     // ascii_to_ascii
                     let src_alignment = (src as usize) & ALU_ALIGNMENT_MASK;
                     let dst_alignment = (dst as usize) & ALU_ALIGNMENT_MASK;
@@ -111,7 +111,7 @@ macro_rules! ascii_alu {
                         break;
                     }
                     (ALU_ALIGNMENT - src_alignment) & ALU_ALIGNMENT_MASK
-                    //               } else if ::std::mem::size_of::<$src_unit>() < ::std::mem::size_of::<$dst_unit>() {
+                    //               } else if ::core::mem::size_of::<$src_unit>() < ::core::mem::size_of::<$dst_unit>() {
                     // ascii_to_basic_latin
                     //                   let src_until_alignment = (ALIGNMENT - ((src as usize) & ALIGNMENT_MASK)) & ALIGNMENT_MASK;
                     //                   if (dst.add(src_until_alignment) as usize) & ALIGNMENT_MASK != 0 {
@@ -197,7 +197,7 @@ macro_rules! basic_latin_alu {
                 let mut until_alignment = {
                     // Check if the other unit aligns if we move the narrower unit
                     // to alignment.
-                    //               if ::std::mem::size_of::<$src_unit>() == ::std::mem::size_of::<$dst_unit>() {
+                    //               if ::core::mem::size_of::<$src_unit>() == ::core::mem::size_of::<$dst_unit>() {
                     // ascii_to_ascii
                     //                   let src_alignment = (src as usize) & ALIGNMENT_MASK;
                     //                   let dst_alignment = (dst as usize) & ALIGNMENT_MASK;
@@ -206,12 +206,14 @@ macro_rules! basic_latin_alu {
                     //                   }
                     //                   (ALIGNMENT - src_alignment) & ALIGNMENT_MASK
                     //               } else
-                    if ::std::mem::size_of::<$src_unit>() < ::std::mem::size_of::<$dst_unit>() {
+                    if ::core::mem::size_of::<$src_unit>() < ::core::mem::size_of::<$dst_unit>() {
                         // ascii_to_basic_latin
                         let src_until_alignment = (ALU_ALIGNMENT
                             - ((src as usize) & ALU_ALIGNMENT_MASK))
                             & ALU_ALIGNMENT_MASK;
-                        if (dst.add(src_until_alignment) as usize) & ALU_ALIGNMENT_MASK != 0 {
+                        if (dst.wrapping_add(src_until_alignment) as usize) & ALU_ALIGNMENT_MASK
+                            != 0
+                        {
                             break;
                         }
                         src_until_alignment
@@ -220,7 +222,9 @@ macro_rules! basic_latin_alu {
                         let dst_until_alignment = (ALU_ALIGNMENT
                             - ((dst as usize) & ALU_ALIGNMENT_MASK))
                             & ALU_ALIGNMENT_MASK;
-                        if (src.add(dst_until_alignment) as usize) & ALU_ALIGNMENT_MASK != 0 {
+                        if (src.wrapping_add(dst_until_alignment) as usize) & ALU_ALIGNMENT_MASK
+                            != 0
+                        {
                             break;
                         }
                         dst_until_alignment
@@ -286,12 +290,14 @@ macro_rules! latin1_alu {
             // This loop is only broken out of as a `goto` forward
             loop {
                 let mut until_alignment = {
-                    if ::std::mem::size_of::<$src_unit>() < ::std::mem::size_of::<$dst_unit>() {
+                    if ::core::mem::size_of::<$src_unit>() < ::core::mem::size_of::<$dst_unit>() {
                         // unpack
                         let src_until_alignment = (ALU_ALIGNMENT
                             - ((src as usize) & ALU_ALIGNMENT_MASK))
                             & ALU_ALIGNMENT_MASK;
-                        if (dst.add(src_until_alignment) as usize) & ALU_ALIGNMENT_MASK != 0 {
+                        if (dst.wrapping_add(src_until_alignment) as usize) & ALU_ALIGNMENT_MASK
+                            != 0
+                        {
                             break;
                         }
                         src_until_alignment
@@ -300,7 +306,9 @@ macro_rules! latin1_alu {
                         let dst_until_alignment = (ALU_ALIGNMENT
                             - ((dst as usize) & ALU_ALIGNMENT_MASK))
                             & ALU_ALIGNMENT_MASK;
-                        if (src.add(dst_until_alignment) as usize) & ALU_ALIGNMENT_MASK != 0 {
+                        if (src.wrapping_add(dst_until_alignment) as usize) & ALU_ALIGNMENT_MASK
+                            != 0
+                        {
                             break;
                         }
                         dst_until_alignment
@@ -439,7 +447,7 @@ macro_rules! ascii_simd_check_align_unrolled {
             dst: *mut $dst_unit,
             len: usize,
         ) -> Option<($src_unit, usize)> {
-            let unit_size = ::std::mem::size_of::<$src_unit>();
+            let unit_size = ::core::mem::size_of::<$src_unit>();
             let mut offset = 0usize;
             // This loop is only broken out of as a goto forward without
             // actually looping
@@ -621,7 +629,7 @@ macro_rules! latin1_simd_check_align_unrolled {
     ) => {
         #[inline(always)]
         pub unsafe fn $name(src: *const $src_unit, dst: *mut $dst_unit, len: usize) {
-            let unit_size = ::std::mem::size_of::<$src_unit>();
+            let unit_size = ::core::mem::size_of::<$src_unit>();
             let mut offset = 0usize;
             if SIMD_STRIDE_SIZE <= len {
                 let mut until_alignment = ((SIMD_STRIDE_SIZE
@@ -1500,9 +1508,10 @@ pub fn iso_2022_jp_ascii_valid_up_to(bytes: &[u8]) -> usize {
 // Any copyright to the test code below this comment is dedicated to the
 // Public Domain. http://creativecommons.org/publicdomain/zero/1.0/
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::*;
+    use alloc::vec::Vec;
 
     macro_rules! test_ascii {
         ($test_name:ident, $fn_tested:ident, $src_unit:ty, $dst_unit:ty) => {
