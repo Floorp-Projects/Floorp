@@ -77,6 +77,12 @@ class AudioSink : private AudioStream::DataSource {
 
   const RefPtr<AudioDeviceInfo>& AudioDevice() { return mAudioDevice; }
 
+  // This returns true if the audio callbacks are being called, and so the
+  // audio stream-based clock is moving forward.
+  bool AudioStreamCallbackStarted() {
+    return mAudioStream && mAudioStream->CallbackStarted();
+  }
+
  private:
   // Allocate and initialize mAudioStream. Returns NS_OK on success.
   nsresult InitializeAudioStream(const PlaybackParams& aParams);
