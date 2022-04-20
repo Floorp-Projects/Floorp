@@ -70,7 +70,7 @@ rev = "746743227485a83123784df0c53227ab466612ed"
 [source."https://github.com/hsivonen/packed_simd"]
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
-rev = "8b4bd7d8229660a749dbe419a57ea01df9de5453"
+rev = "c149d0a519bf878567c7630096737669ec2ff15f"
 
 [source."https://github.com/hsivonen/chardetng_c"]
 git = "https://github.com/hsivonen/chardetng_c"

@@ -1,4 +1,4 @@
-// Copyright 2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -12,7 +12,12 @@ use super::*;
 pub fn decode(encoding: &'static Encoding, bytes: &[u8], expect: &str) {
     let mut vec = Vec::with_capacity(bytes.len() + 32);
     let mut string = String::with_capacity(expect.len() + 32);
-    for i in 0usize..32usize {
+    let range = if cfg!(miri) {
+        0usize..4usize
+    } else {
+        0usize..32usize
+    };
+    for i in range {
         vec.clear();
         string.clear();
         for j in 0usize..i {
@@ -44,7 +49,12 @@ fn decode_without_padding_impl(
 pub fn encode(encoding: &'static Encoding, str: &str, expect: &[u8]) {
     let mut vec = Vec::with_capacity(expect.len() + 32);
     let mut string = String::with_capacity(str.len() + 32);
-    for i in 0usize..32usize {
+    let range = if cfg!(miri) {
+        0usize..4usize
+    } else {
+        0usize..32usize
+    };
+    for i in range {
         vec.clear();
         string.clear();
         for j in 0usize..i {

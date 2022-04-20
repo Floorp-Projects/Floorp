@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright 2013-2016 Mozilla Foundation. See the COPYRIGHT
+# Copyright Mozilla Foundation. See the COPYRIGHT
 # file at the top-level directory of this distribution.
 #
 # Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -1171,7 +1171,7 @@ data_file.close()
 # Variant
 
 variant_file = open("src/variant.rs", "w")
-variant_file.write('''// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+variant_file.write('''// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -1446,12 +1446,20 @@ single_byte_file.write("""
     #[test]
     fn test_single_byte_decode() {""")
 
+idx = 0 # for Miri, return after 2nd test
 for name in preferred:
   if name == u"ISO-8859-8-I":
     continue;
   if is_single_byte(name):
     single_byte_file.write("""
         decode_single_byte(%s, &data::SINGLE_BYTE_DATA.%s);""" % (to_constant_name(name), to_snake_name(name)))
+    idx += 1
+    if idx == 2:
+      single_byte_file.write("""
+        if cfg!(miri) {
+            // Miri is too slow
+            return;
+        }""")
 
 single_byte_file.write("""
     }
@@ -1459,12 +1467,21 @@ single_byte_file.write("""
     #[test]
     fn test_single_byte_encode() {""")
 
+
+idx = 0 # for Miri, return after 2nd test
 for name in preferred:
   if name == u"ISO-8859-8-I":
     continue;
   if is_single_byte(name):
     single_byte_file.write("""
         encode_single_byte(%s, &data::SINGLE_BYTE_DATA.%s);""" % (to_constant_name(name), to_snake_name(name)))
+    idx += 1
+    if idx == 2:
+      single_byte_file.write("""
+        if cfg!(miri) {
+            // Miri is too slow
+            return;
+        }""")
 
 
 single_byte_file.write("""
@@ -1476,7 +1493,7 @@ single_byte_file.close()
 
 static_file = open("../encoding_c/include/encoding_rs_statics.h", "w")
 
-static_file.write("""// Copyright 2016 Mozilla Foundation. See the COPYRIGHT
+static_file.write("""// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or

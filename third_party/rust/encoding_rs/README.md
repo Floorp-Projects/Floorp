@@ -1,13 +1,18 @@
 # encoding_rs
 
 [![Build Status](https://travis-ci.org/hsivonen/encoding_rs.svg?branch=master)](https://travis-ci.org/hsivonen/encoding_rs)
-[![crates.io](https://meritbadge.herokuapp.com/encoding_rs)](https://crates.io/crates/encoding_rs)
+[![crates.io](https://img.shields.io/crates/v/encoding_rs.svg)](https://crates.io/crates/encoding_rs)
 [![docs.rs](https://docs.rs/encoding_rs/badge.svg)](https://docs.rs/encoding_rs/)
-[![Apache 2 / MIT dual-licensed](https://img.shields.io/badge/license-Apache%202%20%2F%20MIT-blue.svg)](https://github.com/hsivonen/encoding_rs/blob/master/COPYRIGHT)
 
 encoding_rs an implementation of the (non-JavaScript parts of) the
-[Encoding Standard](https://encoding.spec.whatwg.org/) written in Rust and
-used in Gecko (starting with Firefox 56).
+[Encoding Standard](https://encoding.spec.whatwg.org/) written in Rust.
+
+The Encoding Standard defines the Web-compatible set of character encodings,
+which means this crate can be used to decode Web content. encoding_rs is
+used in Gecko starting with Firefox 56. Due to the notable overlap between
+the legacy encodings on the Web and the legacy encodings used on Windows,
+this crate may be of use for non-Web-related situations as well; see below
+for links to adjacent crates.
 
 Additionally, the `mem` module provides various operations for dealing with
 in-RAM text (as opposed to data that's coming from or going to an IO boundary).
@@ -75,6 +80,13 @@ a `std::io::Read`, decode it into UTF-8 and presenting the result via
 `std::io::Read`. The [`encoding_rs_io`](https://crates.io/crates/encoding_rs_io)
 crate provides that capability.
 
+## `no_std` Environment
+
+The crate works in a `no_std` environment. By default, the `alloc` feature,
+which assumes that an allocator is present is enabled. For a no-allocator
+environment, the default features (i.e. `alloc`) can be turned off. This
+makes the part of the API that returns `Vec`/`String`/`Cow` unavailable.
+
 ## Decoding Email
 
 For decoding character encodings that occur in email, use the
@@ -85,6 +97,11 @@ one directly. (It wraps this crate and adds UTF-7 decoding.)
 
 For mappings to and from Windows code page identifiers, use the
 [`codepage`](https://crates.io/crates/codepage) crate.
+
+## DOS Encodings
+
+This crate does not support single-byte DOS encodings that aren't required by
+the Web Platform, but the [`oem_cp`](https://crates.io/crates/oem_cp) crate does.
 
 ## Preparing Text for the Encoders
 
@@ -100,8 +117,19 @@ characters. Vietnamese tone marks can be decomposed using the
 
 ## Licensing
 
+TL;DR: `(Apache-2.0 OR MIT) AND BSD-3-Clause` for the code and data combination.
+
 Please see the file named
 [COPYRIGHT](https://github.com/hsivonen/encoding_rs/blob/master/COPYRIGHT).
+
+The non-test code that isn't generated from the WHATWG data in this crate is
+under Apache-2.0 OR MIT. Test code is under CC0.
+
+This crate contains code/data generated from WHATWG-supplied data. The WHATWG
+upstream changed its license for portions of specs incorporated into source code
+from CC0 to BSD-3-Clause between the initial release of this crate and the present
+version of this crate. The in-source licensing legends have been updated for the
+parts of the generated code that have changed since the upstream license change.
 
 ## Documentation
 
@@ -139,7 +167,7 @@ There are currently these optional cargo features:
 
 ### `simd-accel`
 
-Enables SIMD acceleration using the nightly-dependent `packed_simd` crate.
+Enables SIMD acceleration using the nightly-dependent `packed_simd_2` crate.
 
 This is an opt-in feature, because enabling this feature _opts out_ of Rust's
 guarantees of future compilers compiling old code (aka. "stability story").
@@ -160,7 +188,7 @@ feature.
 _Note!_ If you are compiling for a target that does not have 128-bit SIMD
 enabled as part of the target definition and you are enabling 128-bit SIMD
 using `-C target_feature`, you need to enable the `core_arch` Cargo feature
-for `packed_simd` to compile a crates.io snapshot of `core_arch` instead of
+for `packed_simd_2` to compile a crates.io snapshot of `core_arch` instead of
 using the standard-library copy of `core::arch`, because the `core::arch`
 module of the pre-compiled standard library has been compiled with the
 assumption that the CPU doesn't have 128-bit SIMD. At present this applies
@@ -345,16 +373,16 @@ A framework for measuring performance is [available separately][2].
 ## Rust Version Compatibility
 
 It is a goal to support the latest stable Rust, the latest nightly Rust and
-the version of Rust that's used for Firefox Nightly (currently 1.29.0).
-These are tested on Travis.
+the version of Rust that's used for Firefox Nightly.
 
-Additionally, beta and the oldest known to work Rust version (currently
-1.29.0) are tested on Travis. The oldest Rust known to work is tested as
-a canary so that when the oldest known to work no longer works, the change
-can be documented here. At this time, there is no firm commitment to support
-a version older than what's required by Firefox. The oldest supported Rust
-is expected to move forward rapidly when `packed_simd` can replace the `simd`
-crate without performance regression.
+At this time, there is no firm commitment to support a version older than
+what's required by Firefox, and there is no commitment to treat MSRV changes
+as semver-breaking, because this crate depends on `cfg-if`, which doesn't
+appear to treat MSRV changes as semver-breaking, so it would be useless for
+this crate to treat MSRV changes as semver-breaking.
+
+As of 2021-02-04, MSRV appears to be Rust 1.36.0 for using the crate and
+1.42.0 for doc tests to pass without errors about the global allocator.
 
 ## Compatibility with rust-encoding
 
@@ -376,7 +404,10 @@ To regenerate the generated code:
    next to the `encoding_rs` directory.
  * Clone [`https://github.com/whatwg/encoding`](https://github.com/whatwg/encoding)
    next to the `encoding_rs` directory.
- * Checkout revision `f381389` of the `encoding` repo.
+ * Checkout revision `be3337450e7df1c49dca7872153c4c4670dd8256` of the `encoding` repo.
+   (Note: `f381389` was the revision of `encoding` used from before the `encoding` repo
+   license change. So far, only output changed since then has been updated to
+   the new license legend.)
  * With the `encoding_rs` directory as the working directory, run
    `python generate-encoding-data.py`.
 
@@ -414,14 +445,56 @@ To regenerate the generated code:
       adapted to Rust in rust-encoding.~
 - [x] Add actually fast CJK encode options.
 - [ ] ~Investigate [Bob Steagall's lookup table acceleration for UTF-8](https://github.com/BobSteagall/CppNow2018/blob/master/FastConversionFromUTF-8/Fast%20Conversion%20From%20UTF-8%20with%20C%2B%2B%2C%20DFAs%2C%20and%20SSE%20Intrinsics%20-%20Bob%20Steagall%20-%20C%2B%2BNow%202018.pdf).~
+- [ ] Provide a build mode that works without `alloc` (with lesser API surface).
+- [ ] Migrate to `std::simd` once it is stable and declare 1.0.
 
 ## Release Notes
 
-## 0.8.22
+### 0.8.31
+
+* Use SPDX with parentheses now that crates.io supports parentheses.
+
+### 0.8.30
+
+* Update the licensing information to take into account the WHATWG data license change.
+
+### 0.8.29
+
+* Make the parts that use an allocator optional.
+
+### 0.8.28
+
+* Fix error in Serde support introduced as part of `no_std` support.
+
+### 0.8.27
+
+* Make the crate works in a `no_std` environment (with `alloc`).
+
+### 0.8.26
+
+* Fix oversights in edition 2018 migration that broke the `simd-accel` feature.
+
+### 0.8.25
+
+* Do pointer alignment checks in a way where intermediate steps aren't defined to be Undefined Behavior.
+* Update the `packed_simd` dependency to `packed_simd_2`.
+* Update the `cfg-if` dependency to 1.0.
+* Address warnings that have been introduced by newer Rust versions along the way.
+* Update to edition 2018, since even prior to 1.0 `cfg-if` updated to edition 2018 without a semver break.
+
+### 0.8.24
+
+* Avoid computing an intermediate (not dereferenced) pointer value in a manner designated as Undefined Behavior when computing pointer alignment.
+
+### 0.8.23
+
+* Remove year from copyright notices. (No features or bug fixes.)
+
+### 0.8.22
 
 * Formatting fix and new unit test. (No features or bug fixes.)
 
-## 0.8.21
+### 0.8.21
 
 * Fixed a panic with invalid UTF-16[BE|LE] input at the end of the stream.
 

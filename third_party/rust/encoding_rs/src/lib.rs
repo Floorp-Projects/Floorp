@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -11,7 +11,6 @@
     feature = "cargo-clippy",
     allow(doc_markdown, inline_always, new_ret_no_self)
 )]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.22")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -60,6 +59,7 @@
 //! Decode using the non-streaming API:
 //!
 //! ```
+//! #[cfg(feature = "alloc")] {
 //! use encoding_rs::*;
 //!
 //! let expectation = "\u{30CF}\u{30ED}\u{30FC}\u{30FB}\u{30EF}\u{30FC}\u{30EB}\u{30C9}";
@@ -69,6 +69,7 @@
 //! assert_eq!(&cow[..], expectation);
 //! assert_eq!(encoding_used, SHIFT_JIS);
 //! assert!(!had_errors);
+//! }
 //! ```
 //!
 //! Decode using the streaming API with minimal `unsafe`:
@@ -247,6 +248,9 @@
 //! to the encodings defined in the Encoding Standard. The
 //! [charset](https://crates.io/crates/charset) wraps encoding_rs and adds
 //! UTF-7 decoding for email purposes.
+//!
+//! For single-byte DOS encodings beyond the ones supported by the Encoding
+//! Standard, there is the [`oem_cp`](https://crates.io/crates/oem_cp) crate.
 //!
 //! # Preparing Text for the Encoders
 //!
@@ -677,8 +681,14 @@
 //! See the section [_UTF-16LE, UTF-16BE and Unicode Encoding Schemes_](#utf-16le-utf-16be-and-unicode-encoding-schemes)
 //! for discussion about the UTF-16 family.
 
+#![no_std]
 #![cfg_attr(feature = "simd-accel", feature(stdsimd, core_intrinsics))]
 
+#[cfg(feature = "alloc")]
+#[cfg_attr(test, macro_use)]
+extern crate alloc;
+
+extern crate core;
 #[macro_use]
 extern crate cfg_if;
 
@@ -717,7 +727,7 @@ mod macros;
 ))]
 mod simd_funcs;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod testing;
 
 mod big5;
@@ -739,15 +749,20 @@ mod variant;
 
 pub mod mem;
 
-use ascii::ascii_valid_up_to;
-use ascii::iso_2022_jp_ascii_valid_up_to;
-use utf_8::utf8_valid_up_to;
-use variant::*;
+use crate::ascii::ascii_valid_up_to;
+use crate::ascii::iso_2022_jp_ascii_valid_up_to;
+use crate::utf_8::utf8_valid_up_to;
+use crate::variant::*;
 
-use std::borrow::Cow;
-use std::cmp::Ordering;
-use std::hash::Hash;
-use std::hash::Hasher;
+#[cfg(feature = "alloc")]
+use alloc::borrow::Cow;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+use core::cmp::Ordering;
+use core::hash::Hash;
+use core::hash::Hasher;
 
 #[cfg(feature = "serde")]
 use serde::de::Visitor;
@@ -2129,7 +2144,7 @@ pub static X_USER_DEFINED_INIT: Encoding = Encoding {
 /// `static`.
 pub static X_USER_DEFINED: &'static Encoding = &X_USER_DEFINED_INIT;
 
-static LABELS_SORTED: [&'static str; 219] = [
+static LABELS_SORTED: [&'static str; 228] = [
     "l1",
     "l2",
     "l3",
@@ -2145,6 +2160,7 @@ static LABELS_SORTED: [&'static str; 219] = [
     "utf8",
     "koi8",
     "sjis",
+    "ucs-2",
     "ms932",
     "cp866",
     "utf-8",
@@ -2189,6 +2205,7 @@ static LABELS_SORTED: [&'static str; 219] = [
     "gb_2312",
     "dos-874",
     "cn-big5",
+    "unicode",
     "chinese",
     "logical",
     "cskoi8r",
@@ -2241,6 +2258,7 @@ static LABELS_SORTED: [&'static str; 219] = [
     "iso8859-8",
     "iso-ir-58",
     "iso8859-9",
+    "csunicode",
     "macintosh",
     "shift-jis",
     "shift_jis",
@@ -2300,6 +2318,8 @@ static LABELS_SORTED: [&'static str; 219] = [
     "csisolatin9",
     "csiso88596e",
     "csiso88598e",
+    "unicodefffe",
+    "unicodefeff",
     "csmacintosh",
     "csiso88596i",
     "csiso88598i",
@@ -2326,12 +2346,15 @@ static LABELS_SORTED: [&'static str; 219] = [
     "iso-8859-8-i",
     "sun_eu_greek",
     "csksc56011987",
+    "unicode20utf8",
+    "unicode11utf8",
     "ks_c_5601-1987",
     "ansi_x3.4-1968",
     "ks_c_5601-1989",
     "x-mac-cyrillic",
     "x-user-defined",
     "csiso58gb231280",
+    "iso-10646-ucs-2",
     "iso_8859-1:1987",
     "iso_8859-2:1987",
     "iso_8859-6:1987",
@@ -2340,6 +2363,7 @@ static LABELS_SORTED: [&'static str; 219] = [
     "iso_8859-4:1988",
     "iso_8859-5:1988",
     "iso_8859-8:1988",
+    "x-unicode20utf8",
     "iso_8859-9:1989",
     "csisolatingreek",
     "x-mac-ukrainian",
@@ -2351,7 +2375,7 @@ static LABELS_SORTED: [&'static str; 219] = [
     "cseucpkdfmtjapanese",
 ];
 
-static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
+static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 228] = [
     &WINDOWS_1252_INIT,
     &ISO_8859_2_INIT,
     &ISO_8859_3_INIT,
@@ -2367,6 +2391,7 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
     &UTF_8_INIT,
     &KOI8_R_INIT,
     &SHIFT_JIS_INIT,
+    &UTF_16LE_INIT,
     &SHIFT_JIS_INIT,
     &IBM866_INIT,
     &UTF_8_INIT,
@@ -2411,6 +2436,7 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
     &GBK_INIT,
     &WINDOWS_874_INIT,
     &BIG5_INIT,
+    &UTF_16LE_INIT,
     &GBK_INIT,
     &ISO_8859_8_I_INIT,
     &KOI8_R_INIT,
@@ -2463,6 +2489,7 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
     &ISO_8859_8_INIT,
     &GBK_INIT,
     &WINDOWS_1254_INIT,
+    &UTF_16LE_INIT,
     &MACINTOSH_INIT,
     &SHIFT_JIS_INIT,
     &SHIFT_JIS_INIT,
@@ -2522,6 +2549,8 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
     &ISO_8859_15_INIT,
     &ISO_8859_6_INIT,
     &ISO_8859_8_INIT,
+    &UTF_16BE_INIT,
+    &UTF_16LE_INIT,
     &MACINTOSH_INIT,
     &ISO_8859_6_INIT,
     &ISO_8859_8_I_INIT,
@@ -2548,12 +2577,15 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
     &ISO_8859_8_I_INIT,
     &ISO_8859_7_INIT,
     &EUC_KR_INIT,
+    &UTF_8_INIT,
+    &UTF_8_INIT,
     &EUC_KR_INIT,
     &WINDOWS_1252_INIT,
     &EUC_KR_INIT,
     &X_MAC_CYRILLIC_INIT,
     &X_USER_DEFINED_INIT,
     &GBK_INIT,
+    &UTF_16LE_INIT,
     &WINDOWS_1252_INIT,
     &ISO_8859_2_INIT,
     &ISO_8859_6_INIT,
@@ -2562,6 +2594,7 @@ static ENCODINGS_IN_LABEL_SORT: [&'static Encoding; 219] = [
     &ISO_8859_4_INIT,
     &ISO_8859_5_INIT,
     &ISO_8859_8_INIT,
+    &UTF_8_INIT,
     &WINDOWS_1254_INIT,
     &ISO_8859_7_INIT,
     &X_MAC_CYRILLIC_INIT,
@@ -2664,6 +2697,20 @@ impl Encoding {
     /// on it.)
     ///
     /// Available via the C wrapper.
+    ///
+    /// # Example
+    /// ```
+    /// use encoding_rs::Encoding;
+    ///
+    /// assert_eq!(Some(encoding_rs::UTF_8), Encoding::for_label(b"utf-8"));
+    /// assert_eq!(Some(encoding_rs::UTF_8), Encoding::for_label(b"unicode11utf8"));
+    ///
+    /// assert_eq!(Some(encoding_rs::ISO_8859_2), Encoding::for_label(b"latin2"));
+    ///
+    /// assert_eq!(Some(encoding_rs::UTF_16BE), Encoding::for_label(b"utf-16be"));
+    ///
+    /// assert_eq!(None, Encoding::for_label(b"unrecognized label"));
+    /// ```
     pub fn for_label(label: &[u8]) -> Option<&'static Encoding> {
         let mut trimmed = [0u8; LONGEST_LABEL_LENGTH];
         let mut trimmed_pos = 0usize;
@@ -2683,12 +2730,12 @@ impl Encoding {
                         0x09u8 | 0x0Au8 | 0x0Cu8 | 0x0Du8 | 0x20u8 => {
                             continue;
                         }
-                        b'A'...b'Z' => {
+                        b'A'..=b'Z' => {
                             trimmed[trimmed_pos] = *byte + 0x20u8;
                             trimmed_pos = 1usize;
                             break;
                         }
-                        b'a'...b'z' | b'0'...b'9' | b'-' | b'_' | b':' | b'.' => {
+                        b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b':' | b'.' => {
                             trimmed[trimmed_pos] = *byte;
                             trimmed_pos = 1usize;
                             break;
@@ -2711,7 +2758,7 @@ impl Encoding {
                         0x09u8 | 0x0Au8 | 0x0Cu8 | 0x0Du8 | 0x20u8 => {
                             break;
                         }
-                        b'A'...b'Z' => {
+                        b'A'..=b'Z' => {
                             if trimmed_pos == LONGEST_LABEL_LENGTH {
                                 // There's no encoding with a label this long
                                 return None;
@@ -2720,7 +2767,7 @@ impl Encoding {
                             trimmed_pos += 1usize;
                             continue;
                         }
-                        b'a'...b'z' | b'0'...b'9' | b'-' | b'_' | b':' | b'.' => {
+                        b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b':' | b'.' => {
                             if trimmed_pos == LONGEST_LABEL_LENGTH {
                                 // There's no encoding with a label this long
                                 return None;
@@ -2868,6 +2915,7 @@ impl Encoding {
 
     /// Checks whether the bytes 0x00...0x7F map mostly to the characters
     /// U+0000...U+007F and vice versa.
+    #[cfg(feature = "alloc")]
     #[inline]
     fn is_potentially_borrowable(&'static self) -> bool {
         !(self == REPLACEMENT || self == UTF_16BE || self == UTF_16LE)
@@ -2919,7 +2967,9 @@ impl Encoding {
     /// If the size calculation for a heap-allocated backing buffer overflows
     /// `usize`.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     #[inline]
     pub fn decode<'a>(&'static self, bytes: &'a [u8]) -> (Cow<'a, str>, &'static Encoding, bool) {
         let (encoding, without_bom) = match Encoding::for_bom(bytes) {
@@ -2962,7 +3012,9 @@ impl Encoding {
     /// If the size calculation for a heap-allocated backing buffer overflows
     /// `usize`.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     #[inline]
     pub fn decode_with_bom_removal<'a>(&'static self, bytes: &'a [u8]) -> (Cow<'a, str>, bool) {
         let without_bom = if self == UTF_8 && bytes.starts_with(b"\xEF\xBB\xBF") {
@@ -3009,7 +3061,9 @@ impl Encoding {
     /// If the size calculation for a heap-allocated backing buffer overflows
     /// `usize`.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn decode_without_bom_handling<'a>(&'static self, bytes: &'a [u8]) -> (Cow<'a, str>, bool) {
         let (mut decoder, mut string, mut total_read) = if self.is_potentially_borrowable() {
             let valid_up_to = if self == UTF_8 {
@@ -3020,7 +3074,7 @@ impl Encoding {
                 ascii_valid_up_to(bytes)
             };
             if valid_up_to == bytes.len() {
-                let str: &str = unsafe { std::str::from_utf8_unchecked(bytes) };
+                let str: &str = unsafe { core::str::from_utf8_unchecked(bytes) };
                 return (Cow::Borrowed(str), false);
             }
             let decoder = self.new_decoder_without_bom_handling();
@@ -3039,7 +3093,7 @@ impl Encoding {
             unsafe {
                 let vec = string.as_mut_vec();
                 vec.set_len(valid_up_to);
-                std::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
+                core::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
             }
             (decoder, string, valid_up_to)
         } else {
@@ -3104,7 +3158,9 @@ impl Encoding {
     /// If the size calculation for a heap-allocated backing buffer overflows
     /// `usize`.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn decode_without_bom_handling_and_without_replacement<'a>(
         &'static self,
         bytes: &'a [u8],
@@ -3112,7 +3168,7 @@ impl Encoding {
         if self == UTF_8 {
             let valid_up_to = utf8_valid_up_to(bytes);
             if valid_up_to == bytes.len() {
-                let str: &str = unsafe { std::str::from_utf8_unchecked(bytes) };
+                let str: &str = unsafe { core::str::from_utf8_unchecked(bytes) };
                 return Some(Cow::Borrowed(str));
             }
             return None;
@@ -3124,7 +3180,7 @@ impl Encoding {
                 ascii_valid_up_to(bytes)
             };
             if valid_up_to == bytes.len() {
-                let str: &str = unsafe { std::str::from_utf8_unchecked(bytes) };
+                let str: &str = unsafe { core::str::from_utf8_unchecked(bytes) };
                 return Some(Cow::Borrowed(str));
             }
             let decoder = self.new_decoder_without_bom_handling();
@@ -3138,7 +3194,7 @@ impl Encoding {
             unsafe {
                 let vec = string.as_mut_vec();
                 vec.set_len(valid_up_to);
-                std::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
+                core::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
             }
             (decoder, string, &bytes[valid_up_to..])
         } else {
@@ -3199,7 +3255,9 @@ impl Encoding {
     /// If the size calculation for a heap-allocated backing buffer overflows
     /// `usize`.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn encode<'a>(&'static self, string: &'a str) -> (Cow<'a, [u8]>, &'static Encoding, bool) {
         let output_encoding = self.output_encoding();
         if output_encoding == UTF_8 {
@@ -3226,7 +3284,7 @@ impl Encoding {
         );
         unsafe {
             vec.set_len(valid_up_to);
-            std::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
+            core::ptr::copy_nonoverlapping(bytes.as_ptr(), vec.as_mut_ptr(), valid_up_to);
         }
         let mut total_read = valid_up_to;
         let mut total_had_errors = false;
@@ -3355,6 +3413,20 @@ impl PartialEq for Encoding {
 
 impl Eq for Encoding {}
 
+#[cfg(test)]
+impl PartialOrd for Encoding {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        (self as *const Encoding as usize).partial_cmp(&(other as *const Encoding as usize))
+    }
+}
+
+#[cfg(test)]
+impl Ord for Encoding {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self as *const Encoding as usize).cmp(&(other as *const Encoding as usize))
+    }
+}
+
 impl Hash for Encoding {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -3362,9 +3434,9 @@ impl Hash for Encoding {
     }
 }
 
-impl std::fmt::Debug for Encoding {
+impl core::fmt::Debug for Encoding {
     #[inline]
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "Encoding {{ {} }}", self.name)
     }
 }
@@ -3387,7 +3459,7 @@ struct EncodingVisitor;
 impl<'de> Visitor<'de> for EncodingVisitor {
     type Value = &'static Encoding;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
         formatter.write_str("a valid encoding label")
     }
 
@@ -3398,7 +3470,10 @@ impl<'de> Visitor<'de> for EncodingVisitor {
         if let Some(enc) = Encoding::for_label(value.as_bytes()) {
             Ok(enc)
         } else {
-            Err(E::custom(format!("invalid encoding label: {}", value)))
+            Err(E::custom(alloc::format!(
+                "invalid encoding label: {}",
+                value
+            )))
         }
     }
 }
@@ -3672,7 +3747,7 @@ impl Decoder {
                         1,
                         checked_mul(3, checked_div(byte_length.checked_add(1), 2)),
                     ) {
-                        let utf_bom = std::cmp::max(utf8_bom, utf16_bom);
+                        let utf_bom = core::cmp::max(utf8_bom, utf16_bom);
                         let encoding = self.encoding();
                         if encoding == UTF_8 || encoding == UTF_16LE || encoding == UTF_16BE {
                             // No need to consider the internal state of the underlying decoder,
@@ -3681,7 +3756,7 @@ impl Decoder {
                         } else if let Some(non_bom) =
                             self.variant.max_utf8_buffer_length(byte_length)
                         {
-                            return Some(std::cmp::max(utf_bom, non_bom));
+                            return Some(core::cmp::max(utf_bom, non_bom));
                         }
                     }
                 }
@@ -3699,7 +3774,7 @@ impl Decoder {
                             // because it is at start, because no data has reached it yet.
                             return Some(utf8_bom);
                         } else if let Some(non_bom) = self.variant.max_utf8_buffer_length(sum) {
-                            return Some(std::cmp::max(utf8_bom, non_bom));
+                            return Some(core::cmp::max(utf8_bom, non_bom));
                         }
                     }
                 }
@@ -3725,7 +3800,7 @@ impl Decoder {
                             // because it is at start, because no data has reached it yet.
                             return Some(utf16_bom);
                         } else if let Some(non_bom) = self.variant.max_utf8_buffer_length(sum) {
-                            return Some(std::cmp::max(utf16_bom, non_bom));
+                            return Some(core::cmp::max(utf16_bom, non_bom));
                         }
                     }
                 }
@@ -3764,7 +3839,7 @@ impl Decoder {
                         1,
                         checked_mul(3, checked_div(byte_length.checked_add(1), 2)),
                     ) {
-                        let utf_bom = std::cmp::max(utf8_bom, utf16_bom);
+                        let utf_bom = core::cmp::max(utf8_bom, utf16_bom);
                         let encoding = self.encoding();
                         if encoding == UTF_8 || encoding == UTF_16LE || encoding == UTF_16BE {
                             // No need to consider the internal state of the underlying decoder,
@@ -3774,7 +3849,7 @@ impl Decoder {
                             .variant
                             .max_utf8_buffer_length_without_replacement(byte_length)
                         {
-                            return Some(std::cmp::max(utf_bom, non_bom));
+                            return Some(core::cmp::max(utf_bom, non_bom));
                         }
                     }
                 }
@@ -3794,7 +3869,7 @@ impl Decoder {
                         } else if let Some(non_bom) =
                             self.variant.max_utf8_buffer_length_without_replacement(sum)
                         {
-                            return Some(std::cmp::max(utf8_bom, non_bom));
+                            return Some(core::cmp::max(utf8_bom, non_bom));
                         }
                     }
                 }
@@ -3822,7 +3897,7 @@ impl Decoder {
                         } else if let Some(non_bom) =
                             self.variant.max_utf8_buffer_length_without_replacement(sum)
                         {
-                            return Some(std::cmp::max(utf16_bom, non_bom));
+                            return Some(core::cmp::max(utf16_bom, non_bom));
                         }
                     }
                 }
@@ -3916,7 +3991,7 @@ impl Decoder {
         // bytes of trailing garbage. No need to optimize non-ASCII-compatible
         // encodings to avoid overwriting here.
         if self.encoding != UTF_8 {
-            let max = std::cmp::min(len, trail + ascii::MAX_STRIDE_SIZE);
+            let max = core::cmp::min(len, trail + ascii::MAX_STRIDE_SIZE);
             while trail < max {
                 bytes[trail] = 0;
                 trail += 1;
@@ -3945,7 +4020,9 @@ impl Decoder {
     /// See the documentation of the struct for documentation for `decode_*`
     /// methods collectively.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn decode_to_string(
         &mut self,
         src: &[u8],
@@ -4006,7 +4083,7 @@ impl Decoder {
         // bytes of trailing garbage. No need to optimize non-ASCII-compatible
         // encodings to avoid overwriting here.
         if self.encoding != UTF_8 {
-            let max = std::cmp::min(len, trail + ascii::MAX_STRIDE_SIZE);
+            let max = core::cmp::min(len, trail + ascii::MAX_STRIDE_SIZE);
             while trail < max {
                 bytes[trail] = 0;
                 trail += 1;
@@ -4033,7 +4110,9 @@ impl Decoder {
     /// See the documentation of the struct for documentation for `decode_*`
     /// methods collectively.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn decode_to_string_without_replacement(
         &mut self,
         src: &[u8],
@@ -4079,7 +4158,7 @@ impl Decoder {
                     if let Some(utf16_bom) =
                         checked_add(1, checked_div(byte_length.checked_add(1), 2))
                     {
-                        let utf_bom = std::cmp::max(utf8_bom, utf16_bom);
+                        let utf_bom = core::cmp::max(utf8_bom, utf16_bom);
                         let encoding = self.encoding();
                         if encoding == UTF_8 || encoding == UTF_16LE || encoding == UTF_16BE {
                             // No need to consider the internal state of the underlying decoder,
@@ -4088,7 +4167,7 @@ impl Decoder {
                         } else if let Some(non_bom) =
                             self.variant.max_utf16_buffer_length(byte_length)
                         {
-                            return Some(std::cmp::max(utf_bom, non_bom));
+                            return Some(core::cmp::max(utf_bom, non_bom));
                         }
                     }
                 }
@@ -4106,7 +4185,7 @@ impl Decoder {
                             // because it is at start, because no data has reached it yet.
                             return Some(utf8_bom);
                         } else if let Some(non_bom) = self.variant.max_utf16_buffer_length(sum) {
-                            return Some(std::cmp::max(utf8_bom, non_bom));
+                            return Some(core::cmp::max(utf8_bom, non_bom));
                         }
                     }
                 }
@@ -4130,7 +4209,7 @@ impl Decoder {
                             // because it is at start, because no data has reached it yet.
                             return Some(utf16_bom);
                         } else if let Some(non_bom) = self.variant.max_utf16_buffer_length(sum) {
-                            return Some(std::cmp::max(utf16_bom, non_bom));
+                            return Some(core::cmp::max(utf16_bom, non_bom));
                         }
                     }
                 }
@@ -4265,7 +4344,7 @@ pub enum EncoderResult {
 
 impl EncoderResult {
     fn unmappable_from_bmp(bmp: u16) -> EncoderResult {
-        EncoderResult::Unmappable(::std::char::from_u32(u32::from(bmp)).unwrap())
+        EncoderResult::Unmappable(::core::char::from_u32(u32::from(bmp)).unwrap())
     }
 }
 
@@ -4532,7 +4611,9 @@ impl Encoder {
     /// See the documentation of the struct for documentation for `encode_*`
     /// methods collectively.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn encode_from_utf8_to_vec(
         &mut self,
         src: &str,
@@ -4570,7 +4651,9 @@ impl Encoder {
     /// See the documentation of the struct for documentation for `encode_*`
     /// methods collectively.
     ///
-    /// Available to Rust only.
+    /// Available to Rust only and only with the `alloc` feature enabled (enabled
+    /// by default).
+    #[cfg(feature = "alloc")]
     pub fn encode_from_utf8_to_vec_without_replacement(
         &mut self,
         src: &str,
@@ -4836,16 +4919,18 @@ fn checked_div(opt: Option<usize>, num: usize) -> Option<usize> {
     }
 }
 
+#[cfg(feature = "alloc")]
 #[inline(always)]
 fn checked_next_power_of_two(opt: Option<usize>) -> Option<usize> {
     opt.map(|n| n.next_power_of_two())
 }
 
+#[cfg(feature = "alloc")]
 #[inline(always)]
 fn checked_min(one: Option<usize>, other: Option<usize>) -> Option<usize> {
     if let Some(a) = one {
         if let Some(b) = other {
-            Some(::std::cmp::min(a, b))
+            Some(::core::cmp::min(a, b))
         } else {
             Some(a)
         }
@@ -4867,10 +4952,10 @@ struct Demo {
 #[cfg(test)]
 mod test_labels_names;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::*;
-    use std::borrow::Cow;
+    use alloc::borrow::Cow;
 
     fn sniff_to_utf16(
         initial_encoding: &'static Encoding,
@@ -5623,7 +5708,7 @@ mod tests {
 
     #[test]
     fn test_hash() {
-        let mut encodings = ::std::collections::HashSet::new();
+        let mut encodings = ::alloc::collections::btree_set::BTreeSet::new();
         encodings.insert(UTF_8);
         encodings.insert(ISO_2022_JP);
         assert!(encodings.contains(UTF_8));

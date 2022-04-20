@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -8,17 +8,17 @@
 // except according to those terms.
 
 use super::*;
-use ascii::ascii_to_basic_latin;
-use ascii::basic_latin_to_ascii;
-use ascii::validate_ascii;
-use handles::*;
-use mem::convert_utf16_to_utf8_partial;
-use variant::*;
+use crate::ascii::ascii_to_basic_latin;
+use crate::ascii::basic_latin_to_ascii;
+use crate::ascii::validate_ascii;
+use crate::handles::*;
+use crate::mem::convert_utf16_to_utf8_partial;
+use crate::variant::*;
 
 cfg_if! {
     if #[cfg(feature = "simd-accel")] {
-        use ::std::intrinsics::unlikely;
-        use ::std::intrinsics::likely;
+        use ::core::intrinsics::unlikely;
+        use ::core::intrinsics::likely;
     } else {
         #[inline(always)]
         // Unsafe to match the intrinsic, which is needlessly unsafe.
@@ -236,7 +236,7 @@ pub fn convert_utf8_to_utf16_up_to_invalid(src: &[u8], dst: &mut [u16]) -> (usiz
         let mut byte = {
             let src_remaining = &src[read..];
             let dst_remaining = &mut dst[written..];
-            let length = ::std::cmp::min(src_remaining.len(), dst_remaining.len());
+            let length = ::core::cmp::min(src_remaining.len(), dst_remaining.len());
             match unsafe {
                 ascii_to_basic_latin(src_remaining.as_ptr(), dst_remaining.as_mut_ptr(), length)
             } {
@@ -886,7 +886,7 @@ impl Utf8Encoder {
 // Any copyright to the test code below this comment is dedicated to the
 // Public Domain. http://creativecommons.org/publicdomain/zero/1.0/
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::super::testing::*;
     use super::super::*;
