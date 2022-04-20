@@ -240,9 +240,9 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
       !pointAfterInsertedLineFeed.GetChild(),
       "After inserting text into a text node, pointAfterInsertedLineFeed."
       "GetChild() should be nullptr");
-  rv = SelectionRef().CollapseInLimiter(pointAfterInsertedLineFeed);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Selection::CollapseInLimiter() failed");
+  rv = CollapseSelectionTo(pointAfterInsertedLineFeed);
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    NS_WARNING("EditorBase::CollapseSelectionTo() failed");
     return EditActionIgnored(rv);
   }
 
@@ -276,13 +276,16 @@ nsresult TextEditor::EnsureCaretNotAtEndOfTextNode() {
     return NS_OK;
   }
 
-  DebugOnly<nsresult> rvIgnored = CollapseSelectionToEnd();
-  if (NS_WARN_IF(Destroyed())) {
+  nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionToEndOfLastLeafNode() caused destroying "
+        "the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "EditorBase::CollapseSelectionToEnd() failed, but ignored");
+      NS_SUCCEEDED(rv),
+      "EditorBase::CollapseSelectionToEndOfLastLeafNode() failed, but ignored");
 
   return NS_OK;
 }
@@ -508,25 +511,20 @@ EditActionResult TextEditor::HandleInsertText(
       // a LF, in which case make the caret attach to the next line.
       const bool endsWithLF =
           !insertionString.IsEmpty() && insertionString.Last() == nsCRT::LF;
-      DebugOnly<nsresult> rvIgnored = SelectionRef().SetInterlinePosition(
+      pointAfterStringInserted.SetInterlinePosition(
           endsWithLF ? InterlinePosition::StartOfNextLine
                      : InterlinePosition::EndOfLine);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "Selection::SetInterlinePosition() failed, but ignored");
-
       MOZ_ASSERT(
           !pointAfterStringInserted.GetChild(),
           "After inserting text into a text node, pointAfterStringInserted."
           "GetChild() should be nullptr");
-      IgnoredErrorResult ignoredError;
-      SelectionRef().CollapseInLimiter(pointAfterStringInserted, ignoredError);
-      if (NS_WARN_IF(Destroyed())) {
+      nsresult rv = CollapseSelectionTo(pointAfterStringInserted);
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
-          !ignoredError.Failed(),
-          "Selection::CollapseInLimiter() failed, but ignored");
+          NS_SUCCEEDED(rv),
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
     }
   }
 

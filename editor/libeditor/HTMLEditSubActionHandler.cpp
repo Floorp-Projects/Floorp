@@ -934,13 +934,16 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
 
   // Set selection.
-  SelectionRef().CollapseInLimiter(EditorRawDOMPoint(rootElement, 0),
-                                   ignoredError);
-  if (NS_WARN_IF(Destroyed())) {
+  rv = CollapseSelectionToStartOf(*rootElement);
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionToStartOf() caused destroying the "
+        "editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::CollapseInLimiter() failed, but ignored");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
   return NS_OK;
 }
 

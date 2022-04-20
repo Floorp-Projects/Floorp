@@ -83,10 +83,12 @@ NS_IMETHODIMP InsertTextTransaction::DoTransaction() {
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
-    DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
-        textNode, mOffset + mStringToInsert.Length());
+    DebugOnly<nsresult> rvIgnored = editorBase->CollapseSelectionTo(
+        EditorRawDOMPoint(textNode, mOffset + mStringToInsert.Length()));
     NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                 "Selection::CollapseInLimiter() failed, but ignored");
+                 "EditorBase::CollapseSelectionTo() failed, but ignored");
+    // Keep handling to adjust the ranges in the range updater even if the
+    // editor is destroyed.
   } else {
     // Do nothing - DOM Range gravity will adjust selection
   }
@@ -95,7 +97,8 @@ NS_IMETHODIMP InsertTextTransaction::DoTransaction() {
   editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
                                                  mStringToInsert.Length());
 
-  return NS_OK;
+  return MOZ_UNLIKELY(editorBase->Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
+                                               : NS_OK;
 }
 
 NS_IMETHODIMP InsertTextTransaction::UndoTransaction() {

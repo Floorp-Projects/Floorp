@@ -378,7 +378,11 @@ interface nsIEditor  : nsISupports
   [can_run_script]
   void beginningOfDocument();
 
-  /** sets the document selection to the end of the document */
+  /**
+   * Sets the selection to the end of the last leaf child/descendant or the root
+   * element.
+   */
+  [can_run_script]
   void endOfDocument();
 
   /* ------------ Node manipulation methods -------------- */

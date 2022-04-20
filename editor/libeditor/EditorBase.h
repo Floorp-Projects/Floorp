@@ -11,6 +11,7 @@
 #include "mozilla/EditAction.h"          // for EditAction and EditSubAction
 #include "mozilla/EditorDOMPoint.h"      // for EditorDOMPoint
 #include "mozilla/EventForwards.h"       // for InputEventTargetRanges
+#include "mozilla/Likely.h"              // for MOZ_UNLIKELY, MOZ_LIKELY
 #include "mozilla/Maybe.h"               // for Maybe
 #include "mozilla/OwningNonNull.h"       // for OwningNonNull
 #include "mozilla/TypeInState.h"         // for PropItem, StyleCache
@@ -1869,10 +1870,66 @@ class EditorBase : public nsIEditor,
   static nsresult GetEndChildNode(const Selection& aSelection,
                                   nsIContent** aEndNode);
 
+  template <typename PT, typename CT>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  CollapseSelectionTo(const EditorDOMPointBase<PT, CT>& aPoint) const {
+    // We don't need to throw exception directly for a failure of updating
+    // selection.  Therefore, let's use IgnoredErrorResult for the performance.
+    IgnoredErrorResult error;
+    CollapseSelectionTo(aPoint, error);
+    return error.StealNSResult();
+  }
+
+  template <typename PT, typename CT>
+  MOZ_CAN_RUN_SCRIPT void CollapseSelectionTo(
+      const EditorDOMPointBase<PT, CT>& aPoint, ErrorResult& aRv) const {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+    MOZ_ASSERT(!aRv.Failed());
+
+    if (aPoint.GetInterlinePosition() != InterlinePosition::Undefined) {
+      if (MOZ_UNLIKELY(NS_FAILED(SelectionRef().SetInterlinePosition(
+              aPoint.GetInterlinePosition())))) {
+        NS_WARNING("Selection::SetInterlinePosition() failed");
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+    }
+
+    SelectionRef().CollapseInLimiter(aPoint, aRv);
+    if (MOZ_UNLIKELY(Destroyed())) {
+      NS_WARNING("Selection::CollapseInLimiter() caused destroying the editor");
+      aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+      return;
+    }
+    NS_WARNING_ASSERTION(!aRv.Failed(),
+                         "Selection::CollapseInLimiter() failed");
+  }
+
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  CollapseSelectionToStartOf(nsINode& aNode) const {
+    return CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0u));
+  }
+
+  MOZ_CAN_RUN_SCRIPT void CollapseSelectionToStartOf(nsINode& aNode,
+                                                     ErrorResult& aRv) const {
+    CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0u), aRv);
+  }
+
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  CollapseSelectionToEndOf(nsINode& aNode) const {
+    return CollapseSelectionTo(EditorRawDOMPoint::AtEndOf(aNode));
+  }
+
+  MOZ_CAN_RUN_SCRIPT void CollapseSelectionToEndOf(nsINode& aNode,
+                                                   ErrorResult& aRv) const {
+    CollapseSelectionTo(EditorRawDOMPoint::AtEndOf(aNode), aRv);
+  }
+
   /**
-   * CollapseSelectionToEnd() collapses the selection to the end of the editor.
+   * CollapseSelectionToEnd() collapses the selection to the last leaf content
+   * of the editor.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult CollapseSelectionToEnd() const;
+  MOZ_CAN_RUN_SCRIPT nsresult CollapseSelectionToEndOfLastLeafNode() const;
 
   /**
    * AllowsTransactionsToChangeSelection() returns true if editor allows any
