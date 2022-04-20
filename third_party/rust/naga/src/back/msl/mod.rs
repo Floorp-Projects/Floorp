@@ -146,6 +146,8 @@ pub enum Error {
     CapabilityNotSupported(crate::valid::Capabilities),
     #[error("address space {0:?} is not supported for target MSL version")]
     UnsupportedAddressSpace(crate::AddressSpace),
+    #[error("attribute '{0}' is not supported for target MSL version")]
+    UnsupportedAttribute(String),
 }
 
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
@@ -160,11 +162,29 @@ pub enum EntryPointError {
     MissingSizesBuffer,
 }
 
+/// Points in the MSL code where we might emit a pipeline input or output.
+///
+/// Note that, even though vertex shaders' outputs are always fragment
+/// shaders' inputs, we still need to distinguish `VertexOutput` and
+/// `FragmentInput`, since there are certain differences in the way
+/// [`ResolvedBinding`s] are represented on either side.
+///
+/// [`ResolvedBinding`s]: ResolvedBinding
 #[derive(Clone, Copy, Debug)]
 enum LocationMode {
+    /// Input to the vertex shader.
     VertexInput,
+
+    /// Output from the vertex shader.
+    VertexOutput,
+
+    /// Input to the fragment shader.
+    FragmentInput,
+
+    /// Output from the fragment shader.
     FragmentOutput,
-    Intermediate,
+
+    /// Compute shader input or output.
     Uniform,
 }
 
@@ -218,7 +238,21 @@ impl Options {
         mode: LocationMode,
     ) -> Result<ResolvedBinding, Error> {
         match *binding {
-            crate::Binding::BuiltIn(built_in) => Ok(ResolvedBinding::BuiltIn(built_in)),
+            crate::Binding::BuiltIn(mut built_in) => {
+                if let crate::BuiltIn::Position { ref mut invariant } = built_in {
+                    if *invariant && self.lang_version < (2, 1) {
+                        return Err(Error::UnsupportedAttribute("invariant".to_string()));
+                    }
+
+                    // The 'invariant' attribute may only appear on vertex
+                    // shader outputs, not fragment shader inputs.
+                    if !matches!(mode, LocationMode::VertexOutput) {
+                        *invariant = false;
+                    }
+                }
+
+                Ok(ResolvedBinding::BuiltIn(built_in))
+            }
             crate::Binding::Location {
                 location,
                 interpolation,
@@ -226,22 +260,24 @@ impl Options {
             } => match mode {
                 LocationMode::VertexInput => Ok(ResolvedBinding::Attribute(location)),
                 LocationMode::FragmentOutput => Ok(ResolvedBinding::Color(location)),
-                LocationMode::Intermediate => Ok(ResolvedBinding::User {
-                    prefix: if self.spirv_cross_compatibility {
-                        "locn"
-                    } else {
-                        "loc"
-                    },
-                    index: location,
-                    interpolation: {
-                        // unwrap: The verifier ensures that vertex shader outputs and fragment
-                        // shader inputs always have fully specified interpolation, and that
-                        // sampling is `None` only for Flat interpolation.
-                        let interpolation = interpolation.unwrap();
-                        let sampling = sampling.unwrap_or(crate::Sampling::Center);
-                        Some(ResolvedInterpolation::from_binding(interpolation, sampling))
-                    },
-                }),
+                LocationMode::VertexOutput | LocationMode::FragmentInput => {
+                    Ok(ResolvedBinding::User {
+                        prefix: if self.spirv_cross_compatibility {
+                            "locn"
+                        } else {
+                            "loc"
+                        },
+                        index: location,
+                        interpolation: {
+                            // unwrap: The verifier ensures that vertex shader outputs and fragment
+                            // shader inputs always have fully specified interpolation, and that
+                            // sampling is `None` only for Flat interpolation.
+                            let interpolation = interpolation.unwrap();
+                            let sampling = sampling.unwrap_or(crate::Sampling::Center);
+                            Some(ResolvedInterpolation::from_binding(interpolation, sampling))
+                        },
+                    })
+                }
                 LocationMode::Uniform => {
                     log::error!(
                         "Unexpected Binding::Location({}) for the Uniform mode",
@@ -269,7 +305,7 @@ impl Options {
         }
     }
 
-    fn resolve_push_constants(
+    const fn resolve_push_constants(
         &self,
         stage: crate::ShaderStage,
     ) -> Result<ResolvedBinding, EntryPointError> {
@@ -328,11 +364,13 @@ impl ResolvedBinding {
     }
 
     fn try_fmt<W: Write>(&self, out: &mut W) -> Result<(), Error> {
+        write!(out, " [[")?;
         match *self {
             Self::BuiltIn(built_in) => {
                 use crate::BuiltIn as Bi;
                 let name = match built_in {
-                    Bi::Position => "position",
+                    Bi::Position { invariant: false } => "position",
+                    Bi::Position { invariant: true } => "position, invariant",
                     // vertex
                     Bi::BaseInstance => "base_instance",
                     Bi::BaseVertex => "base_vertex",
@@ -384,19 +422,13 @@ impl ResolvedBinding {
                 }
             }
         }
-        Ok(())
-    }
-
-    fn try_fmt_decorated<W: Write>(&self, out: &mut W) -> Result<(), Error> {
-        write!(out, " [[")?;
-        self.try_fmt(out)?;
         write!(out, "]]")?;
         Ok(())
     }
 }
 
 impl ResolvedInterpolation {
-    fn from_binding(interpolation: crate::Interpolation, sampling: crate::Sampling) -> Self {
+    const fn from_binding(interpolation: crate::Interpolation, sampling: crate::Sampling) -> Self {
         use crate::Interpolation as I;
         use crate::Sampling as S;
 

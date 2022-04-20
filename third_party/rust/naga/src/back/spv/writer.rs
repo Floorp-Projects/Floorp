@@ -132,7 +132,7 @@ impl Writer {
     /// If nothing in `capabilities` appears in the available capabilities
     /// specified in the [`Options`] from which this `Writer` was created,
     /// return an error. The `what` string is used in the error message to
-    /// explain what provoked the requirement. (If no available capabilites were
+    /// explain what provoked the requirement. (If no available capabilities were
     /// given, assume everything is available.)
     ///
     /// The first acceptable capability will be added to this `Writer`'s
@@ -523,7 +523,7 @@ impl Writer {
                 gv.access_id = gv.var_id;
             };
 
-            // work around borrow checking in the presense of `self.xxx()` calls
+            // work around borrow checking in the presence of `self.xxx()` calls
             self.global_variables[handle.index()] = gv;
         }
 
@@ -799,8 +799,6 @@ impl Writer {
         handle: Handle<crate::Type>,
     ) -> Result<Word, Error> {
         let ty = &arena[handle];
-        let decorate_layout = true; //TODO?
-
         let id = if let Some(local) = make_local(&ty.inner) {
             // This type can be represented as a `LocalType`, so check if we've
             // already written an instruction for it. If not, do so now, with
@@ -829,9 +827,7 @@ impl Writer {
             let id = self.id_gen.next();
             let instruction = match ty.inner {
                 crate::TypeInner::Array { base, size, stride } => {
-                    if decorate_layout {
-                        self.decorate(id, Decoration::ArrayStride, &[stride]);
-                    }
+                    self.decorate(id, Decoration::ArrayStride, &[stride]);
 
                     let type_id = self.get_type_id(LookupType::Handle(base));
                     match size {
@@ -848,52 +844,7 @@ impl Writer {
                 } => {
                     let mut member_ids = Vec::with_capacity(members.len());
                     for (index, member) in members.iter().enumerate() {
-                        if decorate_layout {
-                            self.annotations.push(Instruction::member_decorate(
-                                id,
-                                index as u32,
-                                Decoration::Offset,
-                                &[member.offset],
-                            ));
-                        }
-
-                        if self.flags.contains(WriterFlags::DEBUG) {
-                            if let Some(ref name) = member.name {
-                                self.debugs
-                                    .push(Instruction::member_name(id, index as u32, name));
-                            }
-                        }
-
-                        // The matrix decorations also go on arrays of matrices,
-                        // so lets check this first.
-                        let member_array_subty_inner = match arena[member.ty].inner {
-                            crate::TypeInner::Array { base, .. } => &arena[base].inner,
-                            ref other => other,
-                        };
-                        if let crate::TypeInner::Matrix {
-                            columns,
-                            rows: _,
-                            width,
-                        } = *member_array_subty_inner
-                        {
-                            let byte_stride = match columns {
-                                crate::VectorSize::Bi => 2 * width,
-                                crate::VectorSize::Tri | crate::VectorSize::Quad => 4 * width,
-                            };
-                            self.annotations.push(Instruction::member_decorate(
-                                id,
-                                index as u32,
-                                Decoration::ColMajor,
-                                &[],
-                            ));
-                            self.annotations.push(Instruction::member_decorate(
-                                id,
-                                index as u32,
-                                Decoration::MatrixStride,
-                                &[byte_stride as u32],
-                            ));
-                        }
-
+                        self.decorate_struct_member(id, index, member, arena)?;
                         let member_id = self.get_type_id(LookupType::Handle(member.ty));
                         member_ids.push(member_id);
                     }
@@ -1177,7 +1128,11 @@ impl Writer {
             crate::Binding::BuiltIn(built_in) => {
                 use crate::BuiltIn as Bi;
                 let built_in = match built_in {
-                    Bi::Position => {
+                    Bi::Position { invariant } => {
+                        if invariant {
+                            self.decorate(id, Decoration::Invariant, &[]);
+                        }
+
                         if class == spirv::StorageClass::Output {
                             BuiltIn::Position
                         } else {
@@ -1283,12 +1238,14 @@ impl Writer {
             let wrapper_type_id = self.id_gen.next();
 
             self.decorate(wrapper_type_id, Decoration::Block, &[]);
-            self.annotations.push(Instruction::member_decorate(
-                wrapper_type_id,
-                0,
-                Decoration::Offset,
-                &[0],
-            ));
+            let member = crate::StructMember {
+                name: None,
+                ty: global_variable.ty,
+                binding: None,
+                offset: 0,
+            };
+            self.decorate_struct_member(wrapper_type_id, 0, &member, &ir_module.types)?;
+
             Instruction::type_struct(wrapper_type_id, &[inner_type_id])
                 .to_words(&mut self.logical_layout.declarations);
 
@@ -1311,6 +1268,66 @@ impl Writer {
         Instruction::variable(pointer_type_id, id, class, init_word)
             .to_words(&mut self.logical_layout.declarations);
         Ok(id)
+    }
+
+    /// Write the necessary decorations for a struct member.
+    ///
+    /// Emit decorations for the `index`'th member of the struct type
+    /// designated by `struct_id`, described by `member`.
+    fn decorate_struct_member(
+        &mut self,
+        struct_id: Word,
+        index: usize,
+        member: &crate::StructMember,
+        arena: &UniqueArena<crate::Type>,
+    ) -> Result<(), Error> {
+        use spirv::Decoration;
+
+        self.annotations.push(Instruction::member_decorate(
+            struct_id,
+            index as u32,
+            Decoration::Offset,
+            &[member.offset],
+        ));
+
+        if self.flags.contains(WriterFlags::DEBUG) {
+            if let Some(ref name) = member.name {
+                self.debugs
+                    .push(Instruction::member_name(struct_id, index as u32, name));
+            }
+        }
+
+        // Matrices and arrays of matrices both require decorations,
+        // so "see through" an array to determine if they're needed.
+        let member_array_subty_inner = match arena[member.ty].inner {
+            crate::TypeInner::Array { base, .. } => &arena[base].inner,
+            ref other => other,
+        };
+        if let crate::TypeInner::Matrix {
+            columns: _,
+            rows,
+            width,
+        } = *member_array_subty_inner
+        {
+            let byte_stride = match rows {
+                crate::VectorSize::Bi => 2 * width,
+                crate::VectorSize::Tri | crate::VectorSize::Quad => 4 * width,
+            };
+            self.annotations.push(Instruction::member_decorate(
+                struct_id,
+                index as u32,
+                Decoration::ColMajor,
+                &[],
+            ));
+            self.annotations.push(Instruction::member_decorate(
+                struct_id,
+                index as u32,
+                Decoration::MatrixStride,
+                &[byte_stride as u32],
+            ));
+        }
+
+        Ok(())
     }
 
     fn get_function_type(&mut self, lookup_function_type: LookupFunctionType) -> Word {
@@ -1534,7 +1551,7 @@ impl Writer {
     }
 
     /// Return the set of capabilities the last module written used.
-    pub fn get_capabilities_used(&self) -> &crate::FastHashSet<spirv::Capability> {
+    pub const fn get_capabilities_used(&self) -> &crate::FastHashSet<spirv::Capability> {
         &self.capabilities_used
     }
 }

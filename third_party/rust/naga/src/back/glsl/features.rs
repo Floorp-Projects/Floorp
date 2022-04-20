@@ -47,7 +47,7 @@ pub struct FeaturesManager(Features);
 
 impl FeaturesManager {
     /// Creates a new [`FeaturesManager`] instance
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self(Features::empty())
     }
 
@@ -404,7 +404,7 @@ impl<'a, W> Writer<'a, W> {
             _ => {
                 if let Some(binding) = binding {
                     match *binding {
-                        Binding::BuiltIn(builtin) => match builtin {
+                        Binding::BuiltIn(built_in) => match built_in {
                             crate::BuiltIn::ClipDistance => {
                                 self.features.request(Features::CLIP_DISTANCE)
                             }

@@ -14,6 +14,7 @@ enum Attribute {
     Binding(u32),
     BuiltIn(crate::BuiltIn),
     Group(u32),
+    Invariant,
     Interpolate(Option<crate::Interpolation>, Option<crate::Sampling>),
     Location(u32),
     Stage(ShaderStage),
@@ -197,7 +198,7 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
-    /// Helper method used to write stuct name
+    /// Helper method used to write struct name
     ///
     /// # Notes
     /// Adds no trailing or leading whitespace
@@ -346,7 +347,7 @@ impl<W: Write> Writer<W> {
                         ShaderStage::Fragment => "fragment",
                         ShaderStage::Compute => "compute",
                     };
-                    write!(self.out, "@stage({}) ", stage_str)?;
+                    write!(self.out, "@{} ", stage_str)?;
                 }
                 Attribute::WorkGroupSize(size) => {
                     write!(
@@ -357,6 +358,7 @@ impl<W: Write> Writer<W> {
                 }
                 Attribute::Binding(id) => write!(self.out, "@binding({}) ", id)?,
                 Attribute::Group(id) => write!(self.out, "@group({}) ", id)?,
+                Attribute::Invariant => write!(self.out, "@invariant ")?,
                 Attribute::Interpolate(interpolation, sampling) => {
                     if sampling.is_some() && sampling != Some(crate::Sampling::Center) {
                         write!(
@@ -400,9 +402,9 @@ impl<W: Write> Writer<W> {
         writeln!(self.out)?;
         for (index, member) in members.iter().enumerate() {
             // Skip struct member with unsupported built in
-            if let Some(crate::Binding::BuiltIn(builtin)) = member.binding {
-                if builtin_str(builtin).is_none() {
-                    log::warn!("Skip member with unsupported builtin {:?}", builtin);
+            if let Some(crate::Binding::BuiltIn(built_in)) = member.binding {
+                if builtin_str(built_in).is_none() {
+                    log::warn!("Skip member with unsupported builtin {:?}", built_in);
                     continue;
                 }
             }
@@ -423,7 +425,7 @@ impl<W: Write> Writer<W> {
             writeln!(self.out)?;
         }
 
-        write!(self.out, "}};")?;
+        write!(self.out, "}}")?;
 
         writeln!(self.out)?;
 
@@ -1517,7 +1519,7 @@ impl<W: Write> Writer<W> {
                     Mf::Fma => Function::Regular("fma"),
                     Mf::Mix => Function::Regular("mix"),
                     Mf::Step => Function::Regular("step"),
-                    Mf::SmoothStep => Function::Regular("smoothStep"),
+                    Mf::SmoothStep => Function::Regular("smoothstep"),
                     Mf::Sqrt => Function::Regular("sqrt"),
                     Mf::InverseSqrt => Function::Regular("inverseSqrt"),
                     Mf::Transpose => Function::Regular("transpose"),
@@ -1673,7 +1675,7 @@ impl<W: Write> Writer<W> {
         global: &crate::GlobalVariable,
         handle: Handle<crate::GlobalVariable>,
     ) -> BackendResult {
-        // Write group and dinding attributes if present
+        // Write group and binding attributes if present
         if let Some(ref binding) = global.binding {
             self.write_attributes(&[
                 Attribute::Group(binding.group),
@@ -1745,13 +1747,13 @@ impl<W: Write> Writer<W> {
 
                 // Write the comma separated constants
                 for (index, constant) in components.iter().enumerate() {
-                    if let Some(&crate::Binding::BuiltIn(builtin)) =
+                    if let Some(&crate::Binding::BuiltIn(built_in)) =
                         members.and_then(|members| members.get(index)?.binding.as_ref())
                     {
-                        if builtin_str(builtin).is_none() {
+                        if builtin_str(built_in).is_none() {
                             log::warn!(
                                 "Skip constant for struct member with unsupported builtin {:?}",
-                                builtin
+                                built_in
                             );
                             continue;
                         }
@@ -1841,13 +1843,13 @@ impl<W: Write> Writer<W> {
     }
 }
 
-fn builtin_str(built_in: crate::BuiltIn) -> Option<&'static str> {
+const fn builtin_str(built_in: crate::BuiltIn) -> Option<&'static str> {
     use crate::BuiltIn as Bi;
 
     match built_in {
         Bi::VertexIndex => Some("vertex_index"),
         Bi::InstanceIndex => Some("instance_index"),
-        Bi::Position => Some("position"),
+        Bi::Position { .. } => Some("position"),
         Bi::FrontFacing => Some("front_facing"),
         Bi::FragDepth => Some("frag_depth"),
         Bi::LocalInvocationId => Some("local_invocation_id"),
@@ -1864,7 +1866,7 @@ fn builtin_str(built_in: crate::BuiltIn) -> Option<&'static str> {
     }
 }
 
-fn image_dimension_str(dim: crate::ImageDimension) -> &'static str {
+const fn image_dimension_str(dim: crate::ImageDimension) -> &'static str {
     use crate::ImageDimension as IDim;
 
     match dim {
@@ -1875,7 +1877,7 @@ fn image_dimension_str(dim: crate::ImageDimension) -> &'static str {
     }
 }
 
-fn scalar_kind_str(kind: crate::ScalarKind) -> &'static str {
+const fn scalar_kind_str(kind: crate::ScalarKind) -> &'static str {
     use crate::ScalarKind as Sk;
 
     match kind {
@@ -1886,7 +1888,7 @@ fn scalar_kind_str(kind: crate::ScalarKind) -> &'static str {
     }
 }
 
-fn storage_format_str(format: crate::StorageFormat) -> &'static str {
+const fn storage_format_str(format: crate::StorageFormat) -> &'static str {
     use crate::StorageFormat as Sf;
 
     match format {
@@ -1926,7 +1928,7 @@ fn storage_format_str(format: crate::StorageFormat) -> &'static str {
 }
 
 /// Helper function that returns the string corresponding to the WGSL interpolation qualifier
-fn interpolation_str(interpolation: crate::Interpolation) -> &'static str {
+const fn interpolation_str(interpolation: crate::Interpolation) -> &'static str {
     use crate::Interpolation as I;
 
     match interpolation {
@@ -1937,7 +1939,7 @@ fn interpolation_str(interpolation: crate::Interpolation) -> &'static str {
 }
 
 /// Return the WGSL auxiliary qualifier for the given sampling value.
-fn sampling_str(sampling: crate::Sampling) -> &'static str {
+const fn sampling_str(sampling: crate::Sampling) -> &'static str {
     use crate::Sampling as S;
 
     match sampling {
@@ -1947,7 +1949,9 @@ fn sampling_str(sampling: crate::Sampling) -> &'static str {
     }
 }
 
-fn address_space_str(space: crate::AddressSpace) -> (Option<&'static str>, Option<&'static str>) {
+const fn address_space_str(
+    space: crate::AddressSpace,
+) -> (Option<&'static str>, Option<&'static str>) {
     use crate::AddressSpace as As;
 
     (
@@ -1975,7 +1979,13 @@ fn map_binding_to_attribute(
     scalar_kind: Option<crate::ScalarKind>,
 ) -> Vec<Attribute> {
     match *binding {
-        crate::Binding::BuiltIn(built_in) => vec![Attribute::BuiltIn(built_in)],
+        crate::Binding::BuiltIn(built_in) => {
+            if let crate::BuiltIn::Position { invariant: true } = built_in {
+                vec![Attribute::BuiltIn(built_in), Attribute::Invariant]
+            } else {
+                vec![Attribute::BuiltIn(built_in)]
+            }
+        }
         crate::Binding::Location {
             location,
             interpolation,
@@ -2006,9 +2016,9 @@ fn access_to_unsupported_builtin(
     {
         // Let's check that we try to access a struct member with unsupported built-in and skip it.
         if let TypeInner::Struct { ref members, .. } = module.types[pointer_base_handle].inner {
-            if let Some(crate::Binding::BuiltIn(builtin)) = members[index as usize].binding {
-                if builtin_str(builtin).is_none() {
-                    log::warn!("Skip component with unsupported builtin {:?}", builtin);
+            if let Some(crate::Binding::BuiltIn(built_in)) = members[index as usize].binding {
+                if builtin_str(built_in).is_none() {
+                    log::warn!("Skip component with unsupported builtin {:?}", built_in);
                     return true;
                 }
             }
