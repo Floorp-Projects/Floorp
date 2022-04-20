@@ -69,10 +69,6 @@ types.addDictType("object.ownPropertyNames", {
   ownPropertyNames: "array:string",
 });
 
-types.addDictType("object.displayString", {
-  displayString: "string",
-});
-
 types.addDictType("object.decompile", {
   decompiledCode: "string",
 });
@@ -123,10 +119,6 @@ const objectSpec = generateActorSpec({
     dependentPromises: {
       request: {},
       response: RetVal("object.dependentPromises"),
-    },
-    displayString: {
-      request: {},
-      response: RetVal("object.displayString"),
     },
     enumEntries: {
       request: {},

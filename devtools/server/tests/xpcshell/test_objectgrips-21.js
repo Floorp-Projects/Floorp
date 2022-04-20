@@ -280,9 +280,6 @@ async function test_unsafe_grips(
       response = await objClient.getPrototype();
       check_prototype(response.prototype, data, isUnsafe, isWorkerServer);
 
-      response = await objClient.getDisplayString();
-      check_display_string(response.displayString, data, isUnsafe);
-
       if (data.isFunction && isUnsafe) {
         // For function-related methods, the object front checks that the class
         // of the grip is "Function", and if it's not, the method in object.js
@@ -404,14 +401,6 @@ function check_prototype(proto, data, isUnsafe, isWorkerServer) {
     deepEqual(protoGrip.type, data.protoType, "Got the right prototype type.");
   } else {
     check_grip(protoGrip, data, true, isWorkerServer);
-  }
-}
-
-function check_display_string(str, data, isUnsafe) {
-  if (isUnsafe) {
-    strictEqual(str, data.string, "The object stringifies correctly.");
-  } else {
-    strictEqual(str, "[object Object]", "The object stringifies correctly.");
   }
 }
 

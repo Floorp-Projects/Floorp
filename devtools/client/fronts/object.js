@@ -233,13 +233,6 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   }
 
   /**
-   * Request the display string of the object.
-   */
-  getDisplayString() {
-    return super.displayString();
-  }
-
-  /**
    * Request the state of a promise.
    */
   async getPromiseState() {
