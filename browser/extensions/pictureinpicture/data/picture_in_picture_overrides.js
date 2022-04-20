@@ -78,6 +78,15 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    piped: {
+      "https://*.piped.kavin.rocks/*": {
+        videoWrapperScriptPath: "video-wrappers/piped.js",
+      },
+      "https://*.piped.silkky.cloud/*": {
+        videoWrapperScriptPath: "video-wrappers/piped.js",
+      },
+    },
+
     twitch: {
       "https://*.twitch.tv/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
       "https://*.twitch.tech/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
