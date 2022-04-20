@@ -79,16 +79,23 @@ class ScrollTimeline final : public AnimationTimeline {
       return {StyleScroller::Root, aOwnerDoc->GetDocumentElement()};
     }
 
+    static Scroller Nearest(Element* aElement) {
+      return {StyleScroller::Nearest, aElement};
+    }
+
     explicit operator bool() const { return mElement; }
     bool operator==(const Scroller& aOther) const {
       return mType == aOther.mType && mElement == aOther.mElement;
     }
   };
 
-  // FIXME: Bug 1737918: Rewrite this because @scroll-timeline will be obsolete.
   static already_AddRefed<ScrollTimeline> FromRule(
       const RawServoScrollTimelineRule& aRule, Document* aDocument,
       const NonOwningAnimationTarget& aTarget);
+
+  static already_AddRefed<ScrollTimeline> FromAnonymousScroll(
+      Document* aDocument, const NonOwningAnimationTarget& aTarget,
+      StyleScrollAxis aAxis, StyleScroller aScroller);
 
   bool operator==(const ScrollTimeline& aOther) const {
     return mDocument == aOther.mDocument && mSource == aOther.mSource &&
@@ -177,12 +184,9 @@ class ScrollTimeline final : public AnimationTimeline {
 
   RefPtr<Document> mDocument;
 
-  // FIXME: Bug 1733260: new spec proposal uses a new way to define scroller,
-  // and move the element-based offset into view-timeline, so here we only
-  // implement the default behavior of scroll timeline:
-  // 1. "source" is auto (use scrolling element), and
-  // 2. "scroll-offsets" is none (i.e. always 0% ~ 100%).
-  // So now we will only use the scroll direction from @scroll-timeline rule.
+  // FIXME: Bug 1765211: We may have to update the source element once the
+  // overflow property of the scroll-container is updated when we are using
+  // nearest scroller.
   Scroller mSource;
   StyleScrollAxis mAxis;
 
