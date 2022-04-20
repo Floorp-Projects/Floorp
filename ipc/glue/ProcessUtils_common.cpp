@@ -8,6 +8,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/GeckoArgs.h"
+#include "mozilla/dom/RemoteType.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsPrintfCString.h"
@@ -36,13 +37,20 @@ SharedPreferenceSerializer::SharedPreferenceSerializer(
   MOZ_COUNT_CTOR(SharedPreferenceSerializer);
 }
 
-bool SharedPreferenceSerializer::SerializeToSharedMemory() {
+bool SharedPreferenceSerializer::SerializeToSharedMemory(
+    const GeckoProcessType aDestinationProcessType,
+    const nsACString& aDestinationRemoteType) {
   mPrefMapHandle =
       Preferences::EnsureSnapshot(&mPrefMapSize).TakePlatformHandle();
 
+  bool destIsWebContent =
+      aDestinationProcessType == GeckoProcessType_Content &&
+      (StringBeginsWith(aDestinationRemoteType, WEB_REMOTE_TYPE) ||
+       StringBeginsWith(aDestinationRemoteType, PREALLOC_REMOTE_TYPE));
+
   // Serialize the early prefs.
   nsAutoCStringN<1024> prefs;
-  Preferences::SerializePreferences(prefs, mShouldSanitizeFn);
+  Preferences::SerializePreferences(prefs, mShouldSanitizeFn, destIsWebContent);
   mPrefsLength = prefs.Length();
 
   base::SharedMemory shm;
