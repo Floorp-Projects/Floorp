@@ -13,8 +13,7 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.db.DownloadsDatabase
 import mozilla.components.feature.downloads.db.Migrations
@@ -165,7 +164,7 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
-    fun testAddingDownload() = runBlockingTest {
+    fun testAddingDownload() = runTest {
         val download1 = createMockDownload("1", "url1")
         val download2 = createMockDownload("2", "url2")
         val download3 = createMockDownload("3", "url3")
@@ -184,7 +183,7 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
-    fun testAddingDataURLDownload() = runBlockingTest {
+    fun testAddingDataURLDownload() = runTest {
         val download1 = createMockDownload("1", "data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==")
         val download2 = createMockDownload("2", "url2")
 
@@ -200,7 +199,7 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
-    fun testUpdatingDataURLDownload() = runBlockingTest {
+    fun testUpdatingDataURLDownload() = runTest {
         val download1 = createMockDownload("1", "url1")
         val download2 = createMockDownload("2", "url2")
 
@@ -227,7 +226,7 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
-    fun testRemovingDownload() = runBlockingTest {
+    fun testRemovingDownload() = runTest {
         val download1 = createMockDownload("1", "url1")
         val download2 = createMockDownload("2", "url2")
 
@@ -246,7 +245,7 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
-    fun testGettingDownloads() = runBlockingTest {
+    fun testGettingDownloads() = runTest {
         val download1 = createMockDownload("1", "url1")
         val download2 = createMockDownload("2", "url2")
 
@@ -262,7 +261,7 @@ class OnDeviceDownloadStorageTest {
     }
 
     @Test
-    fun testRemovingDownloads() = runBlocking {
+    fun testRemovingDownloads() = runTest {
         for (index in 1..2) {
             storage.add(createMockDownload(index.toString(), "url1"))
         }

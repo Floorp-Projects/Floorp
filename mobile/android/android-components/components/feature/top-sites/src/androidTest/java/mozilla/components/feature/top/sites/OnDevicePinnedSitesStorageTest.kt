@@ -11,7 +11,8 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.top.sites.db.Migrations
 import mozilla.components.feature.top.sites.db.TopSiteDatabase
 import org.junit.After
@@ -26,6 +27,7 @@ import java.util.concurrent.Executors
 
 private const val MIGRATION_TEST_DB = "migration-test"
 
+@ExperimentalCoroutinesApi // for runTest
 @Suppress("LargeClass")
 class OnDevicePinnedSitesStorageTest {
     private lateinit var context: Context
@@ -60,7 +62,7 @@ class OnDevicePinnedSitesStorageTest {
     }
 
     @Test
-    fun testAddingAllDefaultSites() = runBlocking {
+    fun testAddingAllDefaultSites() = runTest {
         val defaultTopSites = listOf(
             Pair("Mozilla", "https://www.mozilla.org"),
             Pair("Firefox", "https://www.firefox.com"),
@@ -90,7 +92,7 @@ class OnDevicePinnedSitesStorageTest {
     }
 
     @Test
-    fun testAddingPinnedSite() = runBlocking {
+    fun testAddingPinnedSite() = runTest {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
 
@@ -108,7 +110,7 @@ class OnDevicePinnedSitesStorageTest {
     }
 
     @Test
-    fun testRemovingPinnedSites() = runBlocking {
+    fun testRemovingPinnedSites() = runTest {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com")
 
@@ -129,7 +131,7 @@ class OnDevicePinnedSitesStorageTest {
     }
 
     @Test
-    fun testGettingPinnedSites() = runBlocking {
+    fun testGettingPinnedSites() = runTest {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         storage.addPinnedSite("Firefox", "https://www.firefox.com", isDefault = true)
 
@@ -153,7 +155,7 @@ class OnDevicePinnedSitesStorageTest {
     }
 
     @Test
-    fun testUpdatingPinnedSites() = runBlocking {
+    fun testUpdatingPinnedSites() = runTest {
         storage.addPinnedSite("Mozilla", "https://www.mozilla.org")
         var pinnedSites = storage.getPinnedSites()
 

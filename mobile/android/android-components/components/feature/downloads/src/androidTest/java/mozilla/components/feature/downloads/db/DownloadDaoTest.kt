@@ -9,7 +9,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.DownloadStorage
 import org.junit.After
@@ -46,7 +46,7 @@ class DownloadDaoTest {
     }
 
     @Test
-    fun testInsertingAndReadingDownloads() = runBlocking {
+    fun testInsertingAndReadingDownloads() = runTest {
         val download = insertMockDownload("1", "https://www.mozilla.org/file1.txt")
         val pagedList = getDownloadsPagedList()
 
@@ -55,7 +55,7 @@ class DownloadDaoTest {
     }
 
     @Test
-    fun testRemoveAllDownloads() = runBlocking {
+    fun testRemoveAllDownloads() = runTest {
         for (index in 1..4) {
             insertMockDownload(index.toString(), "https://www.mozilla.org/file1.txt")
         }
@@ -71,7 +71,7 @@ class DownloadDaoTest {
     }
 
     @Test
-    fun testRemovingDownloads() = runBlocking {
+    fun testRemovingDownloads() = runTest {
         for (index in 1..2) {
             insertMockDownload(index.toString(), "https://www.mozilla.org/file1.txt")
         }
@@ -90,7 +90,7 @@ class DownloadDaoTest {
     }
 
     @Test
-    fun testUpdateDownload() = runBlocking {
+    fun testUpdateDownload() = runTest {
         insertMockDownload("1", "https://www.mozilla.org/file1.txt")
 
         var pagedList = getDownloadsPagedList()

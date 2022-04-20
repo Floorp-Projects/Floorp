@@ -77,6 +77,7 @@ dependencies {
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner
     androidTestImplementation Dependencies.androidx_test_rules
+    androidTestImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'

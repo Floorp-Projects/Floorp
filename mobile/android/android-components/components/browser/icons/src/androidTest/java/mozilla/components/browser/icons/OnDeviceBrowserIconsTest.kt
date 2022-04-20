@@ -6,7 +6,8 @@ package mozilla.components.browser.icons
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.fetch.Client
@@ -20,8 +21,9 @@ class OnDeviceBrowserIconsTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun dataUriLoad() = runBlocking {
+    fun dataUriLoad() = runTest {
         val request = IconRequest(
             url = "https://www.mozilla.org",
             size = IconRequest.Size.DEFAULT,

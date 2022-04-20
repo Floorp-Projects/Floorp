@@ -11,7 +11,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.AutoplayStatus
 import mozilla.components.concept.engine.permission.SitePermissions.Status
@@ -56,7 +56,7 @@ class OnDeviceSitePermissionsStorageTest {
     }
 
     @Test
-    fun testStorageInteraction() = runBlockingTest {
+    fun testStorageInteraction() = runTest {
         val origin = "https://www.mozilla.org".toUri().host!!
         val sitePermissions = SitePermissions(
             origin = origin,

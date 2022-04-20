@@ -9,8 +9,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
@@ -27,6 +28,7 @@ import org.junit.Test
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@ExperimentalCoroutinesApi // for runTest
 @Suppress("LargeClass") // Large test is large
 class TabCollectionStorageTest {
     private lateinit var context: Context
@@ -220,7 +222,7 @@ class TabCollectionStorageTest {
 
     @Test
     @Suppress("ComplexMethod")
-    fun testGettingCollections() = runBlocking {
+    fun testGettingCollections() = runTest {
         storage.createCollection(
             "Articles",
             listOf(
@@ -302,7 +304,7 @@ class TabCollectionStorageTest {
 
     @Test
     @Suppress("ComplexMethod")
-    fun testGettingCollectionsList() = runBlocking {
+    fun testGettingCollectionsList() = runTest {
         storage.createCollection(
             "Articles",
             listOf(
@@ -382,7 +384,7 @@ class TabCollectionStorageTest {
     }
 
     @Test
-    fun testGettingTabCollectionCount() = runBlocking {
+    fun testGettingTabCollectionCount() = runTest {
         assertEquals(0, storage.getTabCollectionsCount())
 
         storage.createCollection(

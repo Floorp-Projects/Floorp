@@ -10,7 +10,7 @@ import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.ContainerState.Color
 import mozilla.components.browser.state.state.ContainerState.Icon
 import org.junit.After
@@ -48,7 +48,7 @@ class ContainerDaoTest {
     }
 
     @Test
-    fun testAddingContainer() = runBlockingTest {
+    fun testAddingContainer() = runTest {
         val container =
             ContainerEntity(
                 contextId = UUID.randomUUID().toString(),
@@ -70,7 +70,7 @@ class ContainerDaoTest {
     }
 
     @Test
-    fun testRemovingContainer() = runBlockingTest {
+    fun testRemovingContainer() = runTest {
         val container1 =
             ContainerEntity(
                 contextId = UUID.randomUUID().toString(),

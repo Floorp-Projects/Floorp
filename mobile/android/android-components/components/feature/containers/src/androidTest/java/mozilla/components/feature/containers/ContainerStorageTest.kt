@@ -11,7 +11,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.Container
 import mozilla.components.browser.state.state.ContainerState.Color
 import mozilla.components.browser.state.state.ContainerState.Icon
@@ -52,7 +52,7 @@ class ContainerStorageTest {
     }
 
     @Test
-    fun testAddingContainer() = runBlockingTest {
+    fun testAddingContainer() = runTest {
         storage.addContainer("1", "Personal", Color.RED, Icon.FINGERPRINT)
         storage.addContainer("2", "Shopping", Color.BLUE, Icon.CART)
 
@@ -71,7 +71,7 @@ class ContainerStorageTest {
     }
 
     @Test
-    fun testRemovingContainers() = runBlockingTest {
+    fun testRemovingContainers() = runTest {
         storage.addContainer("1", "Personal", Color.RED, Icon.FINGERPRINT)
         storage.addContainer("2", "Shopping", Color.BLUE, Icon.CART)
 
@@ -92,7 +92,7 @@ class ContainerStorageTest {
     }
 
     @Test
-    fun testGettingContainers() = runBlockingTest {
+    fun testGettingContainers() = runTest {
         storage.addContainer("1", "Personal", Color.RED, Icon.FINGERPRINT)
         storage.addContainer("2", "Shopping", Color.BLUE, Icon.CART)
 
