@@ -65,10 +65,6 @@ types.addDictType("object.enumProperties.Options", {
   sort: "nullable:boolean",
 });
 
-types.addDictType("object.ownPropertyNames", {
-  ownPropertyNames: "array:string",
-});
-
 types.addDictType("object.dependentPromises", {
   promises: "array:object.descriptor",
 });
@@ -137,10 +133,6 @@ const objectSpec = generateActorSpec({
       response: {
         fulfillmentStack: RetVal("array:object.originalSourceLocation"),
       },
-    },
-    ownPropertyNames: {
-      request: {},
-      response: RetVal("object.ownPropertyNames"),
     },
     prototypeAndProperties: {
       request: {},

@@ -42,9 +42,6 @@ add_task(
 
     Assert.ok(prototype != undefined);
 
-    const { ownPropertyNames } = await prototype.getOwnPropertyNames();
-    Assert.ok(ownPropertyNames.toString != undefined);
-
     await threadFront.resume();
   })
 );

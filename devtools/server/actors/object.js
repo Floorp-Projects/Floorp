@@ -269,23 +269,6 @@ const proto = {
   },
 
   /**
-   * Handle a protocol request to provide the names of the properties defined on
-   * the object and not its prototype.
-   */
-  ownPropertyNames: function() {
-    let props = [];
-    if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
-      try {
-        props = this.obj.getOwnPropertyNames();
-      } catch (err) {
-        // The above can throw when the debuggee does not subsume the object's
-        // compartment, or for some WrappedNatives like Cu.Sandbox.
-      }
-    }
-    return { ownPropertyNames: props };
-  },
-
-  /**
    * Creates an actor to iterate over an object property names and values.
    * See PropertyIteratorActor constructor for more info about options param.
    *
