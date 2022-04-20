@@ -18,7 +18,7 @@ namespace mozilla {
 namespace ipc {
 
 SharedPreferenceSerializer::SharedPreferenceSerializer(
-    std::function<bool(const char*)>&& aShouldSerializeFn)
+    std::function<bool(const char*, bool)>&& aShouldSerializeFn)
     : mPrefMapSize(0), mPrefsLength(0), mShouldSerializeFn(aShouldSerializeFn) {
   MOZ_COUNT_CTOR(SharedPreferenceSerializer);
 }
