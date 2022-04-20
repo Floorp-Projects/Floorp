@@ -81,6 +81,7 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     // Rely on the audio sink to report playback position when it is not ended.
     pos = mAudioSink->GetPosition();
     LOGV("%p: Getting position from the Audio Sink %lf", this, pos.ToSeconds());
+    mLastClockSource = ClockSource::AudioStream;
   } else if (!mPlayStartTime.IsNull()) {
     // Calculate playback position using system clock if we are still playing,
     // but not rendering the audio, because this audio sink is muted.
@@ -100,10 +101,12 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
         mEndedPromiseHolder.Resolve(true, __func__);
       }
     }
+    mLastClockSource = ClockSource::SystemClock;
   } else {
     // Return how long we've played if we are not playing.
     pos = mPlayDuration;
     LOGV("%p: Getting static position, not playing %lf", this, pos.ToSeconds());
+    mLastClockSource = ClockSource::Paused;
   }
 
   if (aTimeStamp) {
