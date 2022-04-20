@@ -88,7 +88,7 @@ partial interface Selection {
    * A true value means "selection after newline"; false means "selection before
    * newline" when a selection is positioned "between lines".
    */
-  [ChromeOnly,Throws]
+  [ChromeOnly,Throws, BinaryName=interlinePositionJS]
   attribute boolean interlinePosition;
 
   [Throws]
