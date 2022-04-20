@@ -19,6 +19,12 @@ class SharedPrefMapBuilder;
 
 typedef const char* String;
 
+template <typename T>
+struct IsString : std::false_type {};
+
+template <>
+struct IsString<String> : std::true_type {};
+
 typedef Atomic<bool, Relaxed> RelaxedAtomicBool;
 typedef Atomic<bool, ReleaseAcquire> ReleaseAcquireAtomicBool;
 typedef Atomic<bool, SequentiallyConsistent> SequentiallyConsistentAtomicBool;
