@@ -18,9 +18,12 @@ class ProfilerIOInterposeObserver final : public IOInterposeObserver {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfilerIOInterposeObserver)
 
  public:
+  static ProfilerIOInterposeObserver& GetInstance();
+
   virtual void Observe(Observation& aObservation) override;
 
- protected:
+ private:
+  ProfilerIOInterposeObserver() = default;
   virtual ~ProfilerIOInterposeObserver() {}
 };
 
