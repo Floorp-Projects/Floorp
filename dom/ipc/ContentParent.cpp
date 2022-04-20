@@ -1641,7 +1641,12 @@ void ContentParent::BroadcastMediaCodecsSupportedUpdate(
 
 const nsACString& ContentParent::GetRemoteType() const { return mRemoteType; }
 
+static StaticRefPtr<nsIAsyncShutdownClient> sXPCOMShutdownClient;
+static StaticRefPtr<nsIAsyncShutdownClient> sProfileBeforeChangeClient;
+
 void ContentParent::Init() {
+  MOZ_ASSERT(sXPCOMShutdownClient);
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     size_t length = ArrayLength(sObserverTopics);
@@ -1649,8 +1654,6 @@ void ContentParent::Init() {
       obs->AddObserver(this, sObserverTopics[i], false);
     }
   }
-
-  AddShutdownBlockers();
 
   if (obs) {
     nsAutoString cpId;
@@ -2491,6 +2494,11 @@ void ContentParent::AppendSandboxParams(std::vector<std::string>& aArgs) {
 bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess", OTHER);
 
+  // Ensure we will not rush through our shutdown phases while launching.
+  // LaunchSubprocessReject will remove them in case of failure,
+  // otherwise ActorDestroy will take care.
+  AddShutdownBlockers();
+
   // XXX: This check works only late, as GetSingleton will return nullptr
   // only after ClearOnShutdown happened. See bug 1632740.
   if (!ContentProcessManager::GetSingleton()) {
@@ -2585,6 +2593,7 @@ void ContentParent::LaunchSubprocessReject() {
     mIsAPreallocBlocker = false;
   }
   MarkAsDead();
+  RemoveShutdownBlockers();
 }
 
 bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
@@ -2697,13 +2706,12 @@ bool ContentParent::LaunchSubprocessSync(
   // We've started a sync content process launch.
   Telemetry::Accumulate(Telemetry::CONTENT_PROCESS_LAUNCH_IS_SYNC, 1);
 
-  if (!BeginSubprocessLaunch(aInitialPriority)) {
-    return false;
-  }
-  const bool ok = mSubprocess->WaitForProcessHandle();
-  if (ok && LaunchSubprocessResolve(/* aIsSync = */ true, aInitialPriority)) {
-    ContentParent::DidLaunchSubprocess();
-    return true;
+  if (BeginSubprocessLaunch(aInitialPriority)) {
+    const bool ok = mSubprocess->WaitForProcessHandle();
+    if (ok && LaunchSubprocessResolve(/* aIsSync = */ true, aInitialPriority)) {
+      ContentParent::DidLaunchSubprocess();
+      return true;
+    }
   }
   LaunchSubprocessReject();
   return false;
@@ -3562,9 +3570,6 @@ ContentParent::GetState(nsIPropertyBag** aResult) {
   *aResult = props.forget().downcast<nsIWritablePropertyBag>().take();
   return NS_OK;
 }
-
-static StaticRefPtr<nsIAsyncShutdownClient> sXPCOMShutdownClient;
-static StaticRefPtr<nsIAsyncShutdownClient> sProfileBeforeChangeClient;
 
 static void InitShutdownClients() {
   if (!sXPCOMShutdownClient) {
