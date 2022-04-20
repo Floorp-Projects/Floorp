@@ -101,7 +101,7 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
   // FIXME: Bug 1737918: applying new spec update, e.g. other scrollers and
   // other style values.
   RefPtr<ScrollTimeline> timeline;
-  auto autoScroller = Scroller::Auto(aTarget.mElement->OwnerDoc());
+  auto autoScroller = Scroller::Root(aTarget.mElement->OwnerDoc());
   auto* set =
       ScrollTimelineSet::GetOrCreateScrollTimelineSet(autoScroller.mElement);
   auto p = set->LookupForAdd(axis);
@@ -209,13 +209,14 @@ const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
   }
 
   switch (mSource.mType) {
-    case Scroller::Type::Auto:
+    case StyleScroller::Root:
       if (const PresShell* presShell =
               mSource.mElement->OwnerDoc()->GetPresShell()) {
         return presShell->GetRootScrollFrameAsScrollable();
       }
       break;
-    case Scroller::Type::Other:
+    case StyleScroller::Nearest:
+      // TODO: Implement nearest in the patch series.
     default:
       return nsLayoutUtils::FindScrollableFrameFor(mSource.mElement);
   }
