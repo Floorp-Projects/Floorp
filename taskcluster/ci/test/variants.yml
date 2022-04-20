@@ -2,8 +2,6 @@
 1proc:
     description: "{description} with e10s disabled"
     component: "Testing::General"
-    when:
-        $eval: '!("android" in task["test-platform"])'
     suffix: "1proc"
     merge:
         mozharness:
