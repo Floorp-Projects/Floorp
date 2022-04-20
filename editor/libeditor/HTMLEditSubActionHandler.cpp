@@ -2203,7 +2203,8 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
         forwardScanFromPointToSplitResult.BRElementPtr() != &aMailCiteElement &&
         aMailCiteElement.Contains(
             forwardScanFromPointToSplitResult.BRElementPtr())) {
-      pointToSplit = forwardScanFromPointToSplitResult.PointAfterContent();
+      pointToSplit =
+          forwardScanFromPointToSplitResult.PointAfterContent<EditorDOMPoint>();
     }
 
     if (NS_WARN_IF(!pointToSplit.GetContainerAsContent())) {
@@ -2375,9 +2376,9 @@ HTMLEditor::GetPreviousCharPointDataForNormalizingWhiteSpaces(
     return CharPointData::InSameTextNode(
         HTMLEditor::GetPreviousCharPointType(aPoint));
   }
-  EditorDOMPointInText previousCharPoint =
-      WSRunScanner::GetPreviousEditableCharPoint(GetActiveEditingHost(),
-                                                 aPoint);
+  const auto previousCharPoint =
+      WSRunScanner::GetPreviousEditableCharPoint<EditorRawDOMPointInText>(
+          GetActiveEditingHost(), aPoint);
   if (!previousCharPoint.IsSet()) {
     return CharPointData::InDifferentTextNode(CharPointType::TextEnd);
   }
@@ -2393,9 +2394,9 @@ HTMLEditor::GetInclusiveNextCharPointDataForNormalizingWhiteSpaces(
   if (!aPoint.IsEndOfContainer()) {
     return CharPointData::InSameTextNode(HTMLEditor::GetCharPointType(aPoint));
   }
-  EditorDOMPointInText nextCharPoint =
-      WSRunScanner::GetInclusiveNextEditableCharPoint(GetActiveEditingHost(),
-                                                      aPoint);
+  const auto nextCharPoint =
+      WSRunScanner::GetInclusiveNextEditableCharPoint<EditorRawDOMPointInText>(
+          GetActiveEditingHost(), aPoint);
   if (!nextCharPoint.IsSet()) {
     return CharPointData::InDifferentTextNode(CharPointType::TextEnd);
   }
@@ -2493,9 +2494,9 @@ void HTMLEditor::ExtendRangeToDeleteWithNormalizingWhiteSpaces(
   // touch white-spaces in different text nodes for performance, but we need
   // adjacent text node's first or last character information in some cases.
   Element* editingHost = GetActiveEditingHost();
-  EditorDOMPointInText precedingCharPoint =
+  const EditorDOMPointInText precedingCharPoint =
       WSRunScanner::GetPreviousEditableCharPoint(editingHost, aStartToDelete);
-  EditorDOMPointInText followingCharPoint =
+  const EditorDOMPointInText followingCharPoint =
       WSRunScanner::GetInclusiveNextEditableCharPoint(editingHost,
                                                       aEndToDelete);
   // Blink-compat: Normalize white-spaces in first node only when not removing
@@ -7645,8 +7646,8 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   if (forwardScanFromStartOfListItemResult.ReachedSpecialContent() ||
       forwardScanFromStartOfListItemResult.ReachedBRElement() ||
       forwardScanFromStartOfListItemResult.ReachedHRElement()) {
-    EditorDOMPoint atFoundElement =
-        forwardScanFromStartOfListItemResult.PointAtContent();
+    auto atFoundElement =
+        forwardScanFromStartOfListItemResult.PointAtContent<EditorDOMPoint>();
     if (MOZ_UNLIKELY(NS_WARN_IF(!atFoundElement.IsSetAndValid()))) {
       return Err(NS_ERROR_FAILURE);
     }
@@ -7656,7 +7657,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   // Otherwise, return the point at first visible thing.
   // XXX This may be not meaningful position if it reached block element
   //     in aListItemElement.
-  return forwardScanFromStartOfListItemResult.Point();
+  return forwardScanFromStartOfListItemResult.Point<EditorDOMPoint>();
 }
 
 nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(

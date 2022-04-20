@@ -463,11 +463,12 @@ class MOZ_STACK_CLASS AutoMoveNodeSelNotify final {
     mRangeUpdater.DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
   }
 
-  EditorRawDOMPoint ComputeInsertionPoint() const {
+  template <typename EditorDOMPointType>
+  EditorDOMPointType ComputeInsertionPoint() const {
     if (&mOldParent == &mNewParent && mOldOffset < mNewOffset) {
-      return EditorRawDOMPoint(&mNewParent, mNewOffset - 1);
+      return EditorDOMPointType(&mNewParent, mNewOffset - 1);
     }
-    return EditorRawDOMPoint(&mNewParent, mNewOffset);
+    return EditorDOMPointType(&mNewParent, mNewOffset);
   }
 
  private:

@@ -71,11 +71,34 @@ namespace mozilla {
  * AutoEditorDOMPointOffsetInvalidator and AutoEditorDOMPointChildInvalidator.
  */
 
-#define NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(aResultType, aMethodName) \
-  template aResultType EditorDOMPoint::aMethodName;                      \
-  template aResultType EditorRawDOMPoint::aMethodName;                   \
-  template aResultType EditorDOMPointInText::aMethodName;                \
-  template aResultType EditorRawDOMPointInText::aMethodName;
+// FYI: Don't make the following instantiating macros end with `;` because
+//      using them without `;`, VSCode may be confused and cause wrong red-
+//      wavy underlines in the following code of the macro.
+#define NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(aResultType, aMethodName, ...) \
+  template aResultType EditorDOMPoint::aMethodName(__VA_ARGS__);              \
+  template aResultType EditorRawDOMPoint::aMethodName(__VA_ARGS__);           \
+  template aResultType EditorDOMPointInText::aMethodName(__VA_ARGS__);        \
+  template aResultType EditorRawDOMPointInText::aMethodName(__VA_ARGS__)
+
+#define NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(aResultType, aMethodName, \
+                                                     ...)                      \
+  template aResultType EditorDOMPoint::aMethodName(__VA_ARGS__) const;         \
+  template aResultType EditorRawDOMPoint::aMethodName(__VA_ARGS__) const;      \
+  template aResultType EditorDOMPointInText::aMethodName(__VA_ARGS__) const;   \
+  template aResultType EditorRawDOMPointInText::aMethodName(__VA_ARGS__) const
+
+#define NS_INSTANTIATE_METHOD_RETURNING_ANY_EDITOR_DOM_POINT(aMethodName, ...) \
+  template EditorDOMPoint aMethodName(__VA_ARGS__);                            \
+  template EditorRawDOMPoint aMethodName(__VA_ARGS__);                         \
+  template EditorDOMPointInText aMethodName(__VA_ARGS__);                      \
+  template EditorRawDOMPointInText aMethodName(__VA_ARGS__)
+
+#define NS_INSTANTIATE_CONST_METHOD_RETURNING_ANY_EDITOR_DOM_POINT( \
+    aMethodName, ...)                                               \
+  template EditorDOMPoint aMethodName(__VA_ARGS__) const;           \
+  template EditorRawDOMPoint aMethodName(__VA_ARGS__) const;        \
+  template EditorDOMPointInText aMethodName(__VA_ARGS__) const;     \
+  template EditorRawDOMPointInText aMethodName(__VA_ARGS__) const
 
 template <typename ParentType, typename ChildType>
 class EditorDOMPointBase final {
@@ -627,7 +650,7 @@ class EditorDOMPointBase final {
     if (NS_WARN_IF(aPoint.IsEndOfContainer())) {
       return SelfType();
     }
-    SelfType point = aPoint.NextPoint().template To<SelfType>();
+    auto point = aPoint.NextPoint().template To<SelfType>();
     point.mInterlinePosition = aInterlinePosition;
     return point;
   }
@@ -635,28 +658,31 @@ class EditorDOMPointBase final {
   /**
    * ParentPoint() returns a point whose child is the container.
    */
-  MOZ_NEVER_INLINE_DEBUG SelfType ParentPoint() const {
+  template <typename EditorDOMPointType = SelfType>
+  EditorDOMPointType ParentPoint() const {
     MOZ_ASSERT(mParent);
     if (MOZ_UNLIKELY(!mParent) || !mParent->IsContent()) {
-      return SelfType();
+      return EditorDOMPointType();
     }
-    return SelfType(ContainerAsContent());
+    return EditorDOMPointType(ContainerAsContent());
   }
 
   /**
    * NextPoint() and PreviousPoint() returns next/previous DOM point in
    * the container.
    */
-  MOZ_NEVER_INLINE_DEBUG SelfType NextPoint() const {
+  template <typename EditorDOMPointType = SelfType>
+  EditorDOMPointType NextPoint() const {
     NS_ASSERTION(!IsEndOfContainer(), "Should not be at end of the container");
-    SelfType result(*this);
+    auto result = this->template To<EditorDOMPointType>();
     result.AdvanceOffset();
     return result;
   }
-  MOZ_NEVER_INLINE_DEBUG SelfType PreviousPoint() const {
+  template <typename EditorDOMPointType = SelfType>
+  EditorDOMPointType PreviousPoint() const {
     NS_ASSERTION(!IsStartOfContainer(),
                  "Should not be at start of the container");
-    SelfType result(*this);
+    EditorDOMPointType result = this->template To<EditorDOMPointType>();
     result.RewindOffset();
     return result;
   }
@@ -778,12 +804,13 @@ class EditorDOMPointBase final {
    * non-native-anonymous parent and returns the point of it.  I.e.,
    * container is parent of the found non-anonymous-native node.
    */
-  EditorRawDOMPoint GetNonAnonymousSubtreePoint() const {
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetNonAnonymousSubtreePoint() const {
     if (NS_WARN_IF(!IsSet())) {
-      return EditorRawDOMPoint();
+      return EditorDOMPointType();
     }
     if (!IsInNativeAnonymousSubtree()) {
-      return this->template To<EditorRawDOMPoint>();
+      return this->template To<EditorDOMPointType>();
     }
     nsINode* parent;
     for (parent = mParent->GetParentNode();
@@ -791,9 +818,9 @@ class EditorDOMPointBase final {
          parent = parent->GetParentNode()) {
     }
     if (!parent) {
-      return EditorRawDOMPoint();
+      return EditorDOMPointType();
     }
-    return EditorRawDOMPoint(parent);
+    return EditorDOMPointType(parent);
   }
 
   bool IsSet() const {
