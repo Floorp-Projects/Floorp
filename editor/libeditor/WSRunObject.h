@@ -1468,23 +1468,17 @@ class WhiteSpaceVisibilityKeeper final {
    *
    * @param aStringToInsert     The string to insert.
    * @param aRangeToBeReplaced  The range to be deleted.
-   * @param aPointAfterInsertedString
-   *                        The point after inserted aStringToInsert.
-   *                        So, when this method actually inserts string,
-   *                        this is set to a point in the text node.
-   *                        Otherwise, this may be set to mScanStartPoint.
-   * @return                When this succeeds to insert the string or
-   *                        does nothing during composition, returns NS_OK.
-   *                        Otherwise, an error code.
+   * @return                    If succeeded, returns the point after inserted
+   *                            aStringToInsert. So, when this method actually
+   *                            inserts string, returns a point in the text
+   *                            node. Otherwise, may return mScanStartPoint.
    */
   template <typename EditorDOMPointType>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult InsertText(
-      HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
-      const EditorDOMPointType& aPointToInsert,
-      EditorRawDOMPoint* aPointAfterInsertedString = nullptr) {
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<EditorDOMPoint, nsresult>
+  InsertText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
+             const EditorDOMPointType& aPointToInsert) {
     return WhiteSpaceVisibilityKeeper::ReplaceText(
-        aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert),
-        aPointAfterInsertedString);
+        aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert));
   }
 
   /**
@@ -1494,19 +1488,14 @@ class WhiteSpaceVisibilityKeeper final {
    *
    * @param aStringToInsert     The string to insert.
    * @param aRangeToBeReplaced  The range to be deleted.
-   * @param aPointAfterInsertedString
-   *                        The point after inserted aStringToInsert.
-   *                        So, when this method actually inserts string,
-   *                        this is set to a point in the text node.
-   *                        Otherwise, this may be set to mScanStartPoint.
-   * @return                When this succeeds to insert the string or
-   *                        does nothing during composition, returns NS_OK.
-   *                        Otherwise, an error code.
+   * @return                    If succeeded, returns the point after inserted
+   *                            aStringToInsert. So, when this method actually
+   *                            inserts string, returns a point in the text
+   *                            node. Otherwise, may return mScanStartPoint.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult ReplaceText(
-      HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
-      const EditorDOMRange& aRangeToBeReplaced,
-      EditorRawDOMPoint* aPointAfterInsertedString = nullptr);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<EditorDOMPoint, nsresult>
+  ReplaceText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
+              const EditorDOMRange& aRangeToBeReplaced);
 
   /**
    * DeletePreviousWhiteSpace() deletes previous white-space of aPoint.
