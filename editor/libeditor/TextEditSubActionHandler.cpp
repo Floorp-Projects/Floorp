@@ -249,7 +249,7 @@ EditActionResult TextEditor::InsertLineFeedCharacterAtSelection() {
   // XXX I don't think we still need this.  This must have been required when
   //     `<textarea>` was implemented with text nodes and `<br>` elements.
   // see if we're at the end of the editor range
-  EditorRawDOMPoint endPoint(EditorBase::GetEndPoint(SelectionRef()));
+  const auto endPoint = GetFirstSelectionEndPoint<EditorRawDOMPoint>();
   if (endPoint == pointAfterInsertedLineFeed) {
     // SetInterlinePosition(true) means we want the caret to stick to the
     // content on the "right".  We want the caret to stick to whatever is
@@ -638,8 +638,8 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
   if (IsPasswordEditor() && IsMaskingPassword()) {
     MaskAllCharacters();
   } else {
-    EditorRawDOMPoint selectionStartPoint(
-        EditorBase::GetStartPoint(SelectionRef()));
+    const auto selectionStartPoint =
+        GetFirstSelectionStartPoint<EditorRawDOMPoint>();
     if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
       return EditActionResult(NS_ERROR_FAILURE);
     }
