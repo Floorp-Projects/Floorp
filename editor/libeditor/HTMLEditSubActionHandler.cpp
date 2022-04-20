@@ -1155,12 +1155,13 @@ EditActionResult HTMLEditor::HandleInsertText(
     if (!compositionEndPoint.IsSet()) {
       compositionEndPoint = compositionStartPoint;
     }
-    nsresult rv = WhiteSpaceVisibilityKeeper::ReplaceText(
-        *this, aInsertionString,
-        EditorDOMRange(compositionStartPoint, compositionEndPoint));
-    if (NS_FAILED(rv)) {
+    Result<EditorDOMPoint, nsresult> replaceTextResult =
+        WhiteSpaceVisibilityKeeper::ReplaceText(
+            *this, aInsertionString,
+            EditorDOMRange(compositionStartPoint, compositionEndPoint));
+    if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
       NS_WARNING("WhiteSpaceVisibilityKeeper::ReplaceText() failed");
-      return EditActionHandled(rv);
+      return EditActionHandled(replaceTextResult.unwrapErr());
     }
 
     compositionStartPoint = GetFirstIMESelectionStartPoint<EditorDOMPoint>();
@@ -1170,7 +1171,7 @@ EditActionResult HTMLEditor::HandleInsertText(
       // Mutation event listener has changed the DOM tree...
       return EditActionHandled();
     }
-    rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
+    nsresult rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
         compositionStartPoint.ToRawRangeBoundary(),
         compositionEndPoint.ToRawRangeBoundary());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsRange::SetStartAndEnd() failed");
@@ -1292,17 +1293,17 @@ EditActionResult HTMLEditor::HandleInsertText(
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
-          EditorRawDOMPoint pointAfterInsertedSpaces;
-          nsresult rv = WhiteSpaceVisibilityKeeper::InsertText(
-              *this, spacesStr, currentPoint, &pointAfterInsertedSpaces);
-          if (NS_FAILED(rv)) {
+          Result<EditorDOMPoint, nsresult> insertTextResult =
+              WhiteSpaceVisibilityKeeper::InsertText(*this, spacesStr,
+                                                     currentPoint);
+          if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
-            return EditActionHandled(rv);
+            return EditActionHandled(insertTextResult.unwrapErr());
           }
           pos++;
-          MOZ_ASSERT(pointAfterInsertedSpaces.IsSet());
-          currentPoint = pointAfterInsertedSpaces.To<EditorDOMPoint>();
-          pointToInsert = pointAfterInsertedSpaces.To<EditorDOMPoint>();
+          MOZ_ASSERT(insertTextResult.inspect().IsSet());
+          currentPoint = insertTextResult.inspect();
+          pointToInsert = insertTextResult.unwrap();
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
@@ -1331,16 +1332,16 @@ EditActionResult HTMLEditor::HandleInsertText(
               currentPoint == pointToInsert,
               "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
-          EditorRawDOMPoint pointAfterInsertedString;
-          nsresult rv = WhiteSpaceVisibilityKeeper::InsertText(
-              *this, subStr, currentPoint, &pointAfterInsertedString);
-          if (NS_FAILED(rv)) {
+          Result<EditorDOMPoint, nsresult> insertTextResult =
+              WhiteSpaceVisibilityKeeper::InsertText(*this, subStr,
+                                                     currentPoint);
+          if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
-            return EditActionHandled(rv);
+            return EditActionHandled(insertTextResult.unwrapErr());
           }
-          MOZ_ASSERT(pointAfterInsertedString.IsSet());
-          currentPoint = pointAfterInsertedString.To<EditorDOMPoint>();
-          pointToInsert = pointAfterInsertedString.To<EditorDOMPoint>();
+          MOZ_ASSERT(insertTextResult.inspect().IsSet());
+          currentPoint = insertTextResult.inspect();
+          pointToInsert = insertTextResult.unwrap();
         }
       }
     }
