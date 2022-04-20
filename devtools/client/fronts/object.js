@@ -54,14 +54,6 @@ class ObjectFront extends FrontClassWithSpec(objectSpec) {
   }
 
   /**
-   * Request the names of the properties defined on the object and not its
-   * prototype.
-   */
-  getOwnPropertyNames() {
-    return super.ownPropertyNames();
-  }
-
-  /**
    * Request the prototype and own properties of the object.
    */
   async getPrototypeAndProperties() {
