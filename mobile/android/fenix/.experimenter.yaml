@@ -63,3 +63,11 @@ search-term-groups:
     enabled:
       type: boolean
       description: "If true, the feature shows up on the homescreen and on the new tab screen."
+unified-search:
+  description: A feature allowing user to easily search for specified results directly in the search bar.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature shows up in the search bar."
