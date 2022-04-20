@@ -1724,21 +1724,9 @@ void ArgumentsReplacer::visitGuardProto(MGuardProto* ins) {
     return;
   }
 
-#ifdef DEBUG
   // The prototype can only be changed through explicit operations, for example
   // by calling |Reflect.setPrototype|. We have already determined that the args
   // object doesn't escape, so its prototype can't be mutated.
-  //
-  // Additionally check the prototype of the template object, if present, to
-  // ensure the expected prototype is used.
-
-  if (args_->isCreateArgumentsObject()) {
-    auto* expected = &ins->expected()->toConstant()->toObject();
-    auto* templateObj = args_->toCreateArgumentsObject()->templateObject();
-
-    MOZ_ASSERT_IF(templateObj, templateObj->staticPrototype() == expected);
-  }
-#endif
 
   // Replace the guard with the args object.
   ins->replaceAllUsesWith(args_);
