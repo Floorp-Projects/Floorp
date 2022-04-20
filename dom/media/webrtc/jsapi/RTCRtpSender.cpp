@@ -87,7 +87,7 @@ RTCDTMFSender* RTCRtpSender::GetDtmf() const { return mDtmf; }
 
 already_AddRefed<Promise> RTCRtpSender::GetStats() {
   RefPtr<Promise> promise = MakePromise();
-  if (NS_WARN_IF(!mTransceiverImpl)) {
+  if (NS_WARN_IF(!mPipeline)) {
     // TODO(bug 1056433): When we stop nulling this out when the PC is closed
     // (or when the transceiver is stopped), we can remove this code. We
     // resolve instead of reject in order to make this eventual change in
@@ -109,7 +109,7 @@ already_AddRefed<Promise> RTCRtpSender::GetStats() {
 nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal() {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<RefPtr<RTCStatsPromise>> promises(2);
-  if (!mSenderTrack || !mTransceiverImpl) {
+  if (!mSenderTrack || !mPipeline) {
     return promises;
   }
 
@@ -675,7 +675,6 @@ void RTCRtpSender::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   mPipeline->Shutdown();
   mPipeline = nullptr;
-  mTransceiverImpl = nullptr;
 }
 
 void RTCRtpSender::UpdateTransport() {
