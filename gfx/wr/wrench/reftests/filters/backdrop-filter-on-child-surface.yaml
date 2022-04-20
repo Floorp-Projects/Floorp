@@ -1,0 +1,14 @@
+# Tests that a basic invert backdrop-filter works on a child surface
+---
+root:
+  items:
+    - type: stacking-context
+      backdrop-root: true
+      filters: [identity]
+      items:
+        - type: rect
+          bounds: 0 0 256 256
+          color: red
+        - type: backdrop-filter
+          bounds: 0 0 256 256
+          filters: invert(1)

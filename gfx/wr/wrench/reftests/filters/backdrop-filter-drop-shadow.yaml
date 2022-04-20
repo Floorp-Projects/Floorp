@@ -1,0 +1,13 @@
+# Tests that a drop-shadow backdrop-filter works (involves very complex dependency graph due to picture + shadow content)
+---
+root:
+  items:
+    - type: stacking-context
+      backdrop-root: true
+      items:
+      - type: rect
+        color: red
+        bounds: 0 0 128 128
+      - type: backdrop-filter
+        bounds: 0 0 256 256
+        filters: drop-shadow([20, 20], 10, [255, 0, 0, 1])

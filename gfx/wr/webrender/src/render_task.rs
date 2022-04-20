@@ -173,6 +173,16 @@ pub struct ClipRegionTask {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct TileCompositeTask {
+    pub clear_color: ColorF,
+    pub scissor_rect: DeviceIntRect,
+    pub valid_rect: DeviceIntRect,
+    pub task_id: Option<RenderTaskId>,
+    pub sub_rect_offset: DeviceIntVector2D,
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureTask {
     pub can_merge: bool,
     pub content_origin: DevicePoint,
@@ -185,8 +195,7 @@ pub struct PictureTask {
     pub cmd_buffer_index: CommandBufferIndex,
     pub resolve_op: Option<ResolveOp>,
 
-    /// Whether this picture task is the target of a resolve operation
-    pub is_resolve_target: bool,
+    pub can_use_shared_surface: bool,
 }
 
 impl PictureTask {
@@ -203,6 +212,7 @@ impl PictureTask {
         PictureTask {
             clear_color: None,
             cmd_buffer_index,
+            resolve_op: None,
             ..*self
         }
     }
@@ -333,6 +343,7 @@ pub enum RenderTaskKind {
     RadialGradient(RadialGradientTask),
     ConicGradient(ConicGradientTask),
     SvgFilter(SvgFilterTask),
+    TileComposite(TileCompositeTask),
     #[cfg(test)]
     Test(RenderTargetKind),
 }
@@ -349,7 +360,7 @@ impl RenderTaskKind {
     /// Whether this task can be allocated on a shared render target surface
     pub fn can_use_shared_surface(&self) -> bool {
         match self {
-            &RenderTaskKind::Picture(ref info) => !info.is_resolve_target,
+            &RenderTaskKind::Picture(ref info) => info.can_use_shared_surface,
             _ => true,
         }
     }
@@ -358,7 +369,6 @@ impl RenderTaskKind {
         match self {
             &RenderTaskKind::Image(..) => false,
             &RenderTaskKind::Cached(..) => false,
-            &RenderTaskKind::Picture(ref info) => !info.is_resolve_target,
             _ => true,
         }
     }
@@ -382,6 +392,7 @@ impl RenderTaskKind {
             RenderTaskKind::RadialGradient(..) => "RadialGradient",
             RenderTaskKind::ConicGradient(..) => "ConicGradient",
             RenderTaskKind::SvgFilter(..) => "SvgFilter",
+            RenderTaskKind::TileComposite(..) => "TileComposite",
             #[cfg(test)]
             RenderTaskKind::Test(..) => "Test",
         }
@@ -399,6 +410,7 @@ impl RenderTaskKind {
             RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
+            RenderTaskKind::TileComposite(..) |
             RenderTaskKind::SvgFilter(..) => {
                 RenderTargetKind::Color
             }
@@ -426,6 +438,21 @@ impl RenderTaskKind {
         }
     }
 
+    pub fn new_tile_composite(
+        sub_rect_offset: DeviceIntVector2D,
+        scissor_rect: DeviceIntRect,
+        valid_rect: DeviceIntRect,
+        clear_color: ColorF,
+    ) -> Self {
+        RenderTaskKind::TileComposite(TileCompositeTask {
+            task_id: None,
+            sub_rect_offset,
+            scissor_rect,
+            valid_rect,
+            clear_color,
+        })
+    }
+
     pub fn new_picture(
         size: DeviceIntSize,
         unclipped_size: DeviceSize,
@@ -437,7 +464,7 @@ impl RenderTaskKind {
         valid_rect: Option<DeviceIntRect>,
         clear_color: Option<ColorF>,
         cmd_buffer_index: CommandBufferIndex,
-        is_resolve_target: bool,
+        can_use_shared_surface: bool,
     ) -> Self {
         render_task_sanity_check(&size);
 
@@ -455,7 +482,7 @@ impl RenderTaskKind {
             clear_color,
             cmd_buffer_index,
             resolve_op: None,
-            is_resolve_target,
+            can_use_shared_surface,
         })
     }
 
@@ -670,10 +697,10 @@ impl RenderTaskKind {
             RenderTaskKind::LinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
+            RenderTaskKind::TileComposite(..) |
             RenderTaskKind::Blit(..) => {
                 [0.0; 4]
             }
-
 
             RenderTaskKind::SvgFilter(ref task) => {
                 match task.info {

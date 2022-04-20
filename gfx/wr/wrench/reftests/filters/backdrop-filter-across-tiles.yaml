@@ -1,0 +1,12 @@
+# Verify that resolves across tile boundaries do correct readbacks
+---
+root:
+  items:
+    - type: stacking-context
+      backdrop-root: true
+      items:
+      - image: xy-gradient(640,640)
+        bounds: 0 0 640 640
+      - type: backdrop-filter
+        bounds: 20 20 600 600
+        filters: [invert(1)]
