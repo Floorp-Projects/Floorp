@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/ToString.h"
@@ -25,9 +26,6 @@
 #include "nsStyledElement.h"
 
 namespace mozilla {
-
-template <typename ParentType, typename ChildType>
-class EditorDOMPointBase;
 
 /**
  * EditorDOMPoint and EditorRawDOMPoint are simple classes which refers
@@ -70,12 +68,6 @@ class EditorDOMPointBase;
  * information with new DOM tree, you can use
  * AutoEditorDOMPointOffsetInvalidator and AutoEditorDOMPointChildInvalidator.
  */
-
-typedef EditorDOMPointBase<nsCOMPtr<nsINode>, nsCOMPtr<nsIContent>>
-    EditorDOMPoint;
-typedef EditorDOMPointBase<nsINode*, nsIContent*> EditorRawDOMPoint;
-typedef EditorDOMPointBase<RefPtr<dom::Text>, nsIContent*> EditorDOMPointInText;
-typedef EditorDOMPointBase<dom::Text*, nsIContent*> EditorRawDOMPointInText;
 
 #define NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(aResultType, aMethodName) \
   template aResultType EditorDOMPoint::aMethodName;                      \
@@ -1165,20 +1157,11 @@ inline void ImplCycleCollectionTraverse(
   ImplCycleCollectionTraverse(aCallback, aField.mChild, "mChild", 0);
 }
 
-template <typename EditorDOMPointType>
-class EditorDOMRangeBase;
-
 /**
  * EditorDOMRangeBase class stores a pair of same EditorDOMPointBase type.
  * The instance must be created with valid DOM points and start must be
  * before or same as end.
  */
-
-typedef EditorDOMRangeBase<EditorDOMPoint> EditorDOMRange;
-typedef EditorDOMRangeBase<EditorRawDOMPoint> EditorRawDOMRange;
-typedef EditorDOMRangeBase<EditorDOMPointInText> EditorDOMRangeInTexts;
-typedef EditorDOMRangeBase<EditorRawDOMPointInText> EditorRawDOMRangeInTexts;
-
 template <typename EditorDOMPointType>
 class EditorDOMRangeBase final {
  public:

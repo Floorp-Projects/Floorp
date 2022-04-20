@@ -7,6 +7,9 @@
 #define DeleteRangeTransaction_h
 
 #include "EditAggregateTransaction.h"
+
+#include "EditorForwards.h"
+
 #include "mozilla/RangeBoundary.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
@@ -18,9 +21,6 @@
 class nsINode;
 
 namespace mozilla {
-
-class EditorBase;
-class RangeUpdater;
 
 /**
  * A transaction that deletes an entire range in the content tree

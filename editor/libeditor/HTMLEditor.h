@@ -10,6 +10,7 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/ManualNAC.h"
@@ -47,25 +48,12 @@ namespace mozilla {
 class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
-class EditActionResult;
-class EditResult;
 class EmptyEditableFunctor;
-class JoinNodesTransaction;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
-class MoveNodeResult;
 class ParagraphStateAtSelection;
 class ResizerSelectionListener;
 class Runnable;
-class SplitNodeTransaction;
-class SplitRangeOffFromNodeResult;
-class SplitRangeOffResult;
-class WhiteSpaceVisibilityKeeper;
-class WSRunScanner;
-class WSScanResult;
-enum class EditSubAction : int32_t;
-enum class SpecifiedStyle : uint8_t;
-struct PropItem;
 template <class T>
 class OwningNonNull;
 namespace dom {

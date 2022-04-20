@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/IntegerRange.h"
@@ -34,8 +35,6 @@ class nsAtom;
 class nsPresContext;
 
 namespace mozilla {
-
-enum class EditAction;
 
 class HTMLEditUtils final {
   using AbstractRange = dom::AbstractRange;

@@ -6,6 +6,7 @@
 #ifndef mozilla_EditorCommands_h
 #define mozilla_EditorCommands_h
 
+#include "mozilla/EditorForwards.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPtr.h"
@@ -25,9 +26,6 @@ class nsITransferable;
 class nsStaticAtom;
 
 namespace mozilla {
-
-class EditorBase;
-class HTMLEditor;
 
 /**
  * EditorCommandParamType tells you that EditorCommand subclasses refer

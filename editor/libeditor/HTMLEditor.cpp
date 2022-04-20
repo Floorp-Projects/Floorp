@@ -1394,10 +1394,9 @@ nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
 
   CommitComposition();
 
-  // Do not use AutoTopLevelEditSubActionNotifier -- rules code won't let us
-  // insert in <head>.  Use the head node as a parent and delete/insert
-  // directly.
-  // XXX We're using AutoTopLevelEditSubActionNotifier above...
+  // Do not use AutoEditSubActionNotifier -- rules code won't let us insert in
+  // <head>.  Use the head node as a parent and delete/insert directly.
+  // XXX We're using AutoEditSubActionNotifier above...
   RefPtr<Document> document = GetDocument();
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_NOT_INITIALIZED;
