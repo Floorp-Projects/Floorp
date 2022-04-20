@@ -404,15 +404,15 @@ A ``ToolDefinition`` object contains all the required information for a tool to 
 Methods
 ~~~~~~~
 
-``isTargetSupported(target)``
-  A method that is called during toolbox construction to check if the tool supports debugging the given target.
+``isToolSupported(toolbox)``
+  A method that is called during toolbox construction to check if the tool supports debugging the given target of the given toolbox.
 
   **Parameters:**
 
-  - ``target {Target}`` - The target to check.
+  - ``toolbox {Toolbox}`` - The toolbox where the tool is going to be displayed, if supported.
 
   **Return value:**
-  A boolean indicating if the tool supports the given target.
+  A boolean indicating if the tool supports the given toolbox's target.
 
 ``build(window, toolbox)``
   A method that builds the :ref:`ToolPanel <devtoolsapi-tool-panel>` for this tool.
@@ -508,7 +508,7 @@ Here's a minimal definition for a tool.
     label: "My Tool",
     icon: "chrome://browser/skin/devtools/tool-webconsole.svg",
     url: "about:blank",
-    isTargetSupported: target => true,
+    isToolSupported: toolbox => true,
     build: (window, toolbox) => new MyToolPanel(window, toolbox)
   };
 
@@ -763,8 +763,8 @@ Register a tool
       return strings.GetStringFromName("inspector.label");
     },
 
-    isTargetSupported: function(target) {
-      return !target.isRemote;
+    isToolSupported: function(toolbox) {
+      return toolbox.target.isLocalTab;
     },
 
     build: function(iframeWindow, toolbox, node) {
