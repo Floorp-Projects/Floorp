@@ -41,6 +41,7 @@ class CompositorOptions {
   }
   bool AllowSoftwareWebRenderOGL() const { return mAllowSoftwareWebRenderOGL; }
   bool InitiallyPaused() const { return mInitiallyPaused; }
+  bool NeedFastSnaphot() const { return mNeedFastSnaphot; }
 
   void SetUseAPZ(bool aUseAPZ) { mUseAPZ = aUseAPZ; }
 
@@ -56,12 +57,17 @@ class CompositorOptions {
     mInitiallyPaused = aPauseAtStartup;
   }
 
+  void SetNeedFastSnaphot(bool aNeedFastSnaphot) {
+    mNeedFastSnaphot = aNeedFastSnaphot;
+  }
+
   bool operator==(const CompositorOptions& aOther) const {
     return mUseAPZ == aOther.mUseAPZ &&
            mUseSoftwareWebRender == aOther.mUseSoftwareWebRender &&
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
-           mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL;
+           mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
+           mNeedFastSnaphot == aOther.mNeedFastSnaphot;
   }
 
   friend struct IPC::ParamTraits<CompositorOptions>;
@@ -72,6 +78,7 @@ class CompositorOptions {
   bool mAllowSoftwareWebRenderD3D11 = false;
   bool mAllowSoftwareWebRenderOGL = false;
   bool mInitiallyPaused = false;
+  bool mNeedFastSnaphot = false;
 
   // Make sure to add new fields to the ParamTraits implementation
   // in LayersMessageUtils.h
