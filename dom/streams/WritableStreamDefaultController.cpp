@@ -56,7 +56,9 @@ NS_INTERFACE_MAP_END
 
 WritableStreamDefaultController::WritableStreamDefaultController(
     nsISupports* aGlobal, WritableStream& aStream)
-    : mGlobal(do_QueryInterface(aGlobal)), mStream(&aStream) {}
+    : mGlobal(do_QueryInterface(aGlobal)), mStream(&aStream) {
+  mozilla::HoldJSObjects(this);
+}
 
 WritableStreamDefaultController::~WritableStreamDefaultController() {
   // MG:XXX: LinkedLists are required to be empty at destruction, but it seems
@@ -65,6 +67,7 @@ WritableStreamDefaultController::~WritableStreamDefaultController() {
   //
   //         This needs to be verified as not indicating some other issue.
   mQueue.clear();
+  mozilla::DropJSObjects(this);
 }
 
 JSObject* WritableStreamDefaultController::WrapObject(
