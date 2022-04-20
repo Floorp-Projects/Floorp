@@ -817,7 +817,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
         nsresult rv = CollapseSelectionTo(
             EditorDOMPoint(editableBlockElementOrInlineEditingHost, 0));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "HTMLEditor::CollapseSelectionTo() failed");
+                             "EditorBase::CollapseSelectionTo() failed");
         return rv;
       }
       NS_WARNING("Found leaf content did not have editable parent, why?");
@@ -854,7 +854,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
           scanResultInTextNode.TextPtr() == text) {
         nsresult rv = CollapseSelectionTo(scanResultInTextNode.Point());
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "HTMLEditor::CollapseSelectionTo() failed");
+                             "EditorBase::CollapseSelectionTo() failed");
         return rv;
       }
       // If it's an invisible text node, keep scanning next leaf.
@@ -874,7 +874,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       if (EditorUtils::IsEditableContent(*leafContent, EditorType::HTML)) {
         nsresult rv = CollapseSelectionTo(EditorDOMPoint(leafContent));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "HTMLEditor::CollapseSelectionTo() failed");
+                             "EditorBase::CollapseSelectionTo() failed");
         return rv;
       }
       MOZ_ASSERT_UNREACHABLE(
@@ -883,7 +883,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       // for now.
       nsresult rv = CollapseSelectionTo(EditorDOMPoint(editingHost, 0));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::CollapseSelectionTo() failed");
+                           "EditorBase::CollapseSelectionTo() failed");
       return rv;
     }
 
@@ -916,7 +916,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
   //     reason why we do this is just compatibility with Chromium.
   nsresult rv = CollapseSelectionTo(EditorDOMPoint(editingHost, 0));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -1338,10 +1338,16 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   // CollapseSelectionToDeepestNonTableFirstChild(), but we know cell is an
   // empty new cell, so this works fine)
   if (cell) {
-    DebugOnly<nsresult> rvIgnored = CollapseSelectionToStartOf(*cell);
+    nsresult rv = CollapseSelectionToStartOf(*cell);
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionToStartOf() caused destroying the "
+          "editor");
+      return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
+    }
     NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
+        NS_SUCCEEDED(rv),
+        "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
   }
   return EditActionHandled(NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
                                                    : NS_OK);
@@ -1367,7 +1373,7 @@ void HTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsINode* aNode) {
   DebugOnly<nsresult> rvIgnored = CollapseSelectionToStartOf(*node);
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
-      "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
+      "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
 }
 
 nsresult HTMLEditor::ReplaceHeadContentsWithSourceWithTransaction(
@@ -2023,7 +2029,7 @@ nsresult HTMLEditor::CollapseSelectionAfter(Element& aElement) {
   }
   nsresult rv = CollapseSelectionTo(afterElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -3699,11 +3705,10 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
         NS_WARNING("Setting point to after <br> element failed");
         return Err(NS_ERROR_FAILURE);
       }
-      ErrorResult error;
-      CollapseSelectionTo(afterBRElement, error);
-      if (error.Failed()) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed, but ignored");
-        return Err(error.StealNSResult());
+      nsresult rv = CollapseSelectionTo(afterBRElement);
+      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed, but ignored");
+        return Err(rv);
       }
       break;
     }
@@ -3720,11 +3725,10 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
         NS_WARNING("Setting point to at <br> element failed");
         return Err(NS_ERROR_FAILURE);
       }
-      ErrorResult error;
-      CollapseSelectionTo(atBRElement, error);
-      if (error.Failed()) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed, but ignored");
-        return Err(error.StealNSResult());
+      nsresult rv = CollapseSelectionTo(atBRElement);
+      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed, but ignored");
+        return Err(rv);
       }
       break;
     }
@@ -4078,7 +4082,7 @@ nsresult HTMLEditor::SelectEntireDocument() {
   if (IsEmpty()) {
     nsresult rv = CollapseSelectionToStartOf(*bodyOrDocumentElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionToStartOf() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
 
@@ -4170,7 +4174,7 @@ bool HTMLEditor::SetCaretInTableCell(Element* aElement) {
   // Set selection at beginning of the found node
   nsresult rv = CollapseSelectionToStartOf(*deepestFirstChild);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionToStartOf() failed");
+                       "EditorBase::CollapseSelectionToStartOf() failed");
   return NS_SUCCEEDED(rv);
 }
 
@@ -4241,7 +4245,7 @@ nsresult HTMLEditor::SetSelectionAtDocumentStart() {
 
   nsresult rv = CollapseSelectionToStartOf(*rootElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionToStartOf() failed");
+                       "EditorBase::CollapseSelectionToStartOf() failed");
   return rv;
 }
 
@@ -5188,7 +5192,7 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   MOZ_ASSERT(atRightContent.IsSetAndValid());
   nsresult rv = CollapseSelectionTo(atRightContent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
