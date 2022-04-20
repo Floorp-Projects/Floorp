@@ -65,25 +65,18 @@ class Element;
 class ScrollTimeline final : public AnimationTimeline {
  public:
   struct Scroller {
-    // FIXME: Support nearest and replace auto with root in Bug 1737918.
-    enum class Type : uint8_t {
-      // For auto. Should be scrolling element of the owner doc.
-      Auto,
-      // For any other specific elements.
-      Other,
-    };
-    Type mType = Type::Auto;
+    StyleScroller mType = StyleScroller::Root;
     RefPtr<Element> mElement;
 
     // We use the owner doc of the animation target. This may be different from
     // |mDocument| after we implement ScrollTimeline interface for script.
-    static Scroller Auto(const Document* aOwnerDoc) {
+    static Scroller Root(const Document* aOwnerDoc) {
       // For auto, we use scrolling element as the default scroller.
       // However, it's mutable, and we would like to keep things simple, so
       // we always register the ScrollTimeline to the document element (i.e.
       // root element) because the content of the root scroll frame is the root
       // element.
-      return {Type::Auto, aOwnerDoc->GetDocumentElement()};
+      return {StyleScroller::Root, aOwnerDoc->GetDocumentElement()};
     }
 
     explicit operator bool() const { return mElement; }
