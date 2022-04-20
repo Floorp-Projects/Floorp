@@ -1305,7 +1305,8 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
-      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32 |
+      sandbox::MITIGATION_CET_COMPAT_MODE;
 
   const Maybe<Vector<const wchar_t*>>& exceptionModules =
       GetPrespawnCigExceptionModules();
