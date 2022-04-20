@@ -1,6 +1,6 @@
-diff --git a/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk b/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk
---- a/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk
-+++ b/media/libvpx/libvpx/vpx_dsp/vpx_dsp.mk
+diff --git a/vpx_dsp/vpx_dsp.mk b/vpx_dsp/vpx_dsp.mk
+--- a/vpx_dsp/vpx_dsp.mk
++++ b/vpx_dsp/vpx_dsp.mk
 @@ -160,17 +160,17 @@ DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve
  DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_horiz_dspr2.c
  DSP_SRCS-$(HAVE_DSPR2)  += mips/convolve8_vert_dspr2.c

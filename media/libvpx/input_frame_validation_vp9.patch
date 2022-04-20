@@ -3,9 +3,9 @@
 # Parent  87841f3bfc9d99a37e31cd43b2e2d03c325af84f
 Bug 1315288: Add input checks for VP9 r=rillian
 
-diff --git a/media/libvpx/libvpx/vp9/vp9_cx_iface.c b/media/libvpx/libvpx/vp9/vp9_cx_iface.c
---- a/media/libvpx/libvpx/vp9/vp9_cx_iface.c
-+++ b/media/libvpx/libvpx/vp9/vp9_cx_iface.c
+diff --git a/vp9/vp9_cx_iface.c b/vp9/vp9_cx_iface.c
+--- a/vp9/vp9_cx_iface.c
++++ b/vp9/vp9_cx_iface.c
 @@ -1353,21 +1353,30 @@ static vpx_codec_err_t encoder_encode(vp
      cpi->svc.time_stamp_superframe = dst_time_stamp;
 
