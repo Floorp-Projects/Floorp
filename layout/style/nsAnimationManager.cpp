@@ -232,6 +232,8 @@ static already_AddRefed<dom::AnimationTimeline> GetTimeline(
     case StyleAnimationTimeline::Tag::None:
       // Keep nullptr.
       break;
+    case StyleAnimationTimeline::Tag::Scroll:
+      // TODO: Implement this in the patch series.
     case StyleAnimationTimeline::Tag::Auto:
       timeline = aTarget.mElement->OwnerDoc()->Timeline();
       break;
