@@ -39,9 +39,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">ที่คั่นหน้าล่าสุด</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">ที่คั่นหน้าที่บันทึกไว้ล่าสุด</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">ที่คั่นหน้าที่บันทึกไว้ล่าสุด</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">แสดงหมด</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">แสดงหมด</string>
 
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">แสดงที่คั่นหน้าทั้งหมดที่บันทึกไว้</string>
@@ -178,8 +178,6 @@
     <string name="browser_menu_add_to_homescreen">เพิ่มไปยังหน้าจอหลัก</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ติดตั้ง</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">แท็บที่ซิงค์</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ซิงค์ใหม่</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -211,8 +209,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">แก้ไข</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">ปรับแต่งหน้าแรก</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ปรับแต่งหน้าแรก</string>
     <!-- Browser Toolbar -->
@@ -330,6 +326,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">ถ้าอนุญาต แท็บส่วนตัวจะปรากฏให้เห็นเมื่อมีหลายแอปที่เปิดอยู่</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">เพิ่มทางลัดการเรียกดูแบบส่วนตัว</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">โหมด HTTPS-Only</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">พยายามเชื่อมต่อกับเว็บไซต์โดยใช้โปรโตคอลการเข้ารหัส HTTPS โดยอัตโนมัติเพื่อเพิ่มความปลอดภัย</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">เปิด</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">ปิด</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">เรียนรู้เพิ่มเติม</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">เปิดใช้งานในทุกแท็บ</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">เปิดใช้งานเฉพาะในแท็บส่วนตัว</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">ไซต์ที่ปลอดภัยไม่พร้อมใช้งาน</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">อาจเป็นไปได้มากว่าเว็บไซต์ไม่รองรับ HTTPS</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">อย่างไรก็ตาม อาจเป็นไปได้ว่าผู้โจมตีมีส่วนเกี่ยวข้อง หากคุณเข้าสู่เว็บไซต์ต่อไป คุณไม่ควรป้อนข้อมูลที่ละเอียดอ่อนใด ๆ หากคุณดำเนินการต่อ โหมด HTTPS-Only จะปิดชั่วคราวสำหรับเว็บไซต์นี้</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">การช่วยเข้าถึง</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1064,7 +1080,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">บันทึกที่คั่นหน้าแล้ว!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">เพิ่มไปยังไซต์เด่นแล้ว!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">เพิ่มไปยังไซต์เด่นแล้ว!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">เพิ่มทางลัดแล้ว!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ปิดแท็บส่วนตัวแล้ว</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1614,17 +1632,17 @@
     <string name="search_delete_search_engine_success_message">ลบ %s แล้ว</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">ยินดีต้อนรับสู่ %s โฉมใหม่</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">ยินดีต้อนรับสู่ %s โฉมใหม่</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">เบราว์เซอร์ที่ปรับปรุงใหม่หมดจดกำลังคอยการปรับปรุงคุณสมบัติและประสิทธิภาพเพื่อช่วยให้คุณออนไลน์ได้มากขึ้น\n\nโปรดรอในขณะที่เราอัปเดต %s</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">เบราว์เซอร์ที่ปรับปรุงใหม่หมดจดกำลังคอยการปรับปรุงคุณสมบัติและประสิทธิภาพเพื่อช่วยให้คุณออนไลน์ได้มากขึ้น\n\nโปรดรอในขณะที่เราอัปเดต %s</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">กำลังอัปเดต %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">กำลังอัปเดต %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">เริ่ม %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">เริ่ม %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">การโอนย้ายเสร็จสมบูรณ์</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">การโอนย้ายเสร็จสมบูรณ์</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">รหัสผ่าน</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">รหัสผ่าน</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">เมื่อต้องการอนุญาต:</string>
@@ -1654,9 +1672,13 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">คุณแน่ใจหรือไม่ว่าต้องการลบที่คั่นหน้านี้?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">เพิ่มไปยังไซต์เด่น</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">เพิ่มไปยังไซต์เด่น</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">เอาออกจากไซต์เด่น</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">เอาออกจากไซต์เด่น</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">เพิ่มทางลัด</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">ลบออกจากทางลัด</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ยืนยันโดย: %1$s</string>
@@ -1732,21 +1754,24 @@
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">ถึงขีดจำกัดของไซต์เด่นแล้ว</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ถึงขีดจำกัดของไซต์เด่นแล้ว</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">ถึงขีดจำกัดของทางลัดแล้ว</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">การเพิ่มไซต์ยอดนิยมต้องลบอันเก่าออก แตะค้างที่ไซต์และเลือกลบ</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">การเพิ่มไซต์ยอดนิยมต้องลบอันเก่าออก แตะค้างที่ไซต์และเลือกลบ</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">การเพิ่มทางลัดต้องลบอันเก่าออก แตะค้างที่ไซต์และเลือกลบ</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">ไซต์เด่นที่เยี่ยมชมบ่อยที่สุด</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">ทางลัด</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">ชื่อ</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">ชื่อเว็บไซต์เด่น</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ชื่อเว็บไซต์เด่น</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">ชื่อทางลัด</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ตกลง</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1823,4 +1848,9 @@
     <string name="pocket_stories_feature_caption">ส่วนหนึ่งของตระกูล Firefox %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">เรียนรู้เพิ่มเติม</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">เปิดใช้งานการส่งข้อมูลทางไกลเพื่อส่งข้อมูล</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">ไปยังการตั้งค่า</string>
 </resources>
