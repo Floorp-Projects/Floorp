@@ -670,6 +670,17 @@ class CompileFlags(TargetCompileFlags):
                 ["-fno-strict-aliasing"],
                 ("CXXFLAGS", "CFLAGS"),
             ),
+            (
+                # Disable floating-point contraction by default.
+                "FP_CONTRACT",
+                (
+                    ["-Xclang"]
+                    if context.config.substs.get("CC_TYPE") == "clang-cl"
+                    else []
+                )
+                + ["-ffp-contract=off"],
+                ("CXXFLAGS", "CFLAGS"),
+            ),
         )
 
         TargetCompileFlags.__init__(self, context)
