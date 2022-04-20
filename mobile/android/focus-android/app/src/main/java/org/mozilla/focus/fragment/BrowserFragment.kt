@@ -750,8 +750,8 @@ class BrowserFragment :
 
         val multiTabsFeature = FocusNimbus.features.tabs
         val multiTabsConfig = multiTabsFeature.value()
+        multiTabsFeature.recordExposure()
         if (multiTabsConfig.isMultiTab) {
-            multiTabsFeature.recordExposure()
             requireComponents.customTabsUseCases.migrate(tab.id)
         } else {
             // A Middleware will take care of either opening a new tab for this URL or reusing an

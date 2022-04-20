@@ -57,7 +57,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     private val navigator by lazy { Navigator(components.appStore, MainActivityNavigation(this)) }
     private val tabCount: Int
         get() = components.store.state.privateTabs.size
-    private var experimentsRequestExpired: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -92,7 +91,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
         setContentView(R.layout.activity_main)
 
-        setSplashScreenPreDrawListener()
+        val isTheFirstLaunch = settings.getAppLaunchCount() == 0
+        if (isTheFirstLaunch) {
+            setSplashScreenPreDrawListener()
+        }
 
         val intent = SafeIntent(intent)
 
@@ -127,13 +129,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     private fun setSplashScreenPreDrawListener() {
         val content: View = findViewById(android.R.id.content)
+        val endTime = System.currentTimeMillis() + REQUEST_TIME_OUT
         content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
-                experimentsRequestExpired = settings.experimentsStartFetchingTimestamp?.let { startTimestamp ->
-                    System.currentTimeMillis() - startTimestamp >= REQUEST_TIME_OUT
-                } ?: false
-
-                return if (experimentsRequestExpired) {
+                return if (System.currentTimeMillis() >= endTime) {
                     components.experiments.applyPendingExperiments()
                     content.viewTreeObserver.removeOnPreDrawListener(this)
                     true

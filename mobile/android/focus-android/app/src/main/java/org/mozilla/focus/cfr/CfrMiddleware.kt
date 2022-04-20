@@ -30,8 +30,8 @@ class CfrMiddleware(private val components: Components) : Middleware<BrowserStat
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        onboardingFeature.recordExposure()
         onboardingConfig = onboardingFeature.value()
+        onboardingFeature.recordExposure()
         next(action)
 
         if (action is TabListAction.AddTabAction &&

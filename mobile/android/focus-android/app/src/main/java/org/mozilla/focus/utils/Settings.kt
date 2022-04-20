@@ -168,8 +168,6 @@ class Settings(
             false
         )
 
-    var experimentsStartFetchingTimestamp: Long? = null
-
     var isExperimentationEnabled: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_studies), !isKlarBuild)
         set(value) {

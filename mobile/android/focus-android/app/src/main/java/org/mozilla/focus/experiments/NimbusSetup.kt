@@ -81,7 +81,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
                 setExperimentsLocally(R.raw.initial_experiments)
             }
 
-            context.components.settings.experimentsStartFetchingTimestamp = System.currentTimeMillis()
+            applyPendingExperiments()
             fetchExperiments()
         }
     } catch (e: Throwable) {
