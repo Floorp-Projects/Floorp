@@ -316,6 +316,24 @@ interface nsIPrefBranch : nsISupports
   boolean prefIsLocked(in string aPrefName);
 
   /**
+   * Called to check if a specific preference has been sanitized. If a
+   * preference is sanitized, any user value the preference may have will not
+   * be present in a sub-process.  A preference is never sanitized in the
+   * parent process; it is only marked as sanitized when it is converted
+   * to a dom::Pref for serialization to a child process.
+   *
+   * @param aPrefName The preference to be tested.
+   *
+   * @note
+   * This method can be called on either a default or user branch but it
+   * makes no difference.
+   *
+   * @return boolean  true  The preference is sanitized.
+   *                  false The preference is not sanitized.
+   */
+  boolean prefIsSanitized(in string aPrefName);
+
+  /**
    * Called to unlock a specific preference. Unlocking a previously locked
    * preference allows the preference service to once again return the user set
    * value of the preference.
