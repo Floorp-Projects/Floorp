@@ -44,7 +44,7 @@ class ActionButtonTest {
     @Test
     fun `constructor with drawables`() {
         val visibilityListener = { false }
-        val button = Toolbar.ActionButton(mock(), "image", visibilityListener, 0, null) { }
+        val button = Toolbar.ActionButton(mock(), "image", visibilityListener, { false }, 0, null) { }
         assertNotNull(button.imageDrawable)
         assertEquals("image", button.contentDescription)
         assertEquals(visibilityListener, button.visible)

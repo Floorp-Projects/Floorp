@@ -242,6 +242,9 @@ interface Toolbar {
         val visible: () -> Boolean
             get() = { true }
 
+        val autoHide: () -> Boolean
+            get() = { false }
+
         fun createView(parent: ViewGroup): View
 
         fun bind(view: View)
@@ -253,6 +256,7 @@ interface Toolbar {
      * @param imageDrawable The drawable to be shown.
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param autoHide Lambda that returns true or false to indicate whether this button should auto hide.
      * @param padding A optional custom padding.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
@@ -263,6 +267,7 @@ interface Toolbar {
         val imageDrawable: Drawable? = null,
         val contentDescription: String,
         override val visible: () -> Boolean = { true },
+        override val autoHide: () -> Boolean = { false },
         private val background: Int = 0,
         private val padding: Padding? = null,
         @ColorRes val iconTintColorResource: Int = ViewGroup.NO_ID,

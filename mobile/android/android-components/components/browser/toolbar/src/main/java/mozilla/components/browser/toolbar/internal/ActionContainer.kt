@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
+import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar
 
@@ -90,6 +91,14 @@ internal class ActionContainer @JvmOverloads constructor(
         }
 
         visibility = updatedVisibility
+    }
+
+    fun autoHideAction(isVisible: Boolean) {
+        for (action in actions) {
+            if (action.actual.autoHide()) {
+                action.view?.isVisible = isVisible
+            }
+        }
     }
 
     private fun addActionView(view: View) {

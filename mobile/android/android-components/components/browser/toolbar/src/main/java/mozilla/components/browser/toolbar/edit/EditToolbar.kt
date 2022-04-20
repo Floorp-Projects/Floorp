@@ -312,6 +312,8 @@ class EditToolbar internal constructor(
 
     private fun onTextChanged(text: String) {
         views.clear.isVisible = text.isNotBlank()
+        views.editActionsEnd.autoHideAction(text.isEmpty())
+
         /*
         We use margin_gone instead of margin to take into account both the actionContainer(which in
         most cases is gone) and the clear button.

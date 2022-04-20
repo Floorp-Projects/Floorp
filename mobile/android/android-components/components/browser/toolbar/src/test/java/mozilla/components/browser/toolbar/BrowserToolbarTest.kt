@@ -854,4 +854,20 @@ class BrowserToolbarTest {
 
         verify(behavior).forceCollapse(toolbar)
     }
+
+    @Test
+    fun `WHEN search terms changes THEN edit listener is notified`() {
+        val toolbar = BrowserToolbar(testContext)
+        toolbar.edit = spy(toolbar.edit)
+        toolbar.edit.editListener = mock()
+
+        toolbar.setSearchTerms("")
+        toolbar.editMode()
+
+        toolbar.setSearchTerms("test")
+        verify(toolbar.edit.editListener)?.onTextChanged("test")
+
+        toolbar.setSearchTerms("")
+        verify(toolbar.edit.editListener)?.onTextChanged("")
+    }
 }

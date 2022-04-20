@@ -411,6 +411,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param imageDrawable The drawable to be shown.
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param autoHide Lambda that returns true or false to indicate whether this button should auto hide.
      * @param background A custom (stateful) background drawable resource to be used.
      * @param padding a custom [Padding] for this Button.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
@@ -422,6 +423,7 @@ class BrowserToolbar @JvmOverloads constructor(
         imageDrawable: Drawable,
         contentDescription: String,
         visible: () -> Boolean = { true },
+        autoHide: () -> Boolean = { false },
         @DrawableRes background: Int = 0,
         val padding: Padding = DEFAULT_PADDING,
         @ColorRes iconTintColorResource: Int = NO_ID,
@@ -431,6 +433,7 @@ class BrowserToolbar @JvmOverloads constructor(
         imageDrawable,
         contentDescription,
         visible,
+        autoHide,
         background,
         padding,
         iconTintColorResource,
