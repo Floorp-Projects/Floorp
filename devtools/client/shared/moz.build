@@ -44,7 +44,6 @@ DevToolsModules(
     "screenshot.js",
     "scroll.js",
     "source-utils.js",
-    "SplitView.jsm",
     "string-utils.js",
     "stylesheet-utils.js",
     "suggestion-picker.js",
