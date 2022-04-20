@@ -2779,33 +2779,28 @@ EditorDOMPointType EditorBase::FindBetterInsertionPoint(
   return aPoint;
 }
 
-nsresult EditorBase::InsertTextWithTransaction(
+Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
-    const EditorRawDOMPoint& aPointToInsert,
-    EditorRawDOMPoint* aPointAfterInsertedString) {
+    const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(
       ShouldHandleIMEComposition() || !AllowsTransactionsToChangeSelection(),
       "caller must have already used AutoTransactionsConserveSelection "
       "if this is not for updating composition string");
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   if (!ShouldHandleIMEComposition() && aStringToInsert.IsEmpty()) {
-    if (aPointAfterInsertedString) {
-      *aPointAfterInsertedString = aPointToInsert;
-    }
-    return NS_OK;
+    return aPointToInsert;
   }
 
   // In some cases, the node may be the anonymous div element or a padding
   // <br> element for empty last line.  Let's try to look for better insertion
   // point in the nearest text node if there is.
-  EditorDOMPoint pointToInsert =
-      FindBetterInsertionPoint(aPointToInsert.To<EditorDOMPoint>());
+  EditorDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
 
   // If a neighboring text node already exists, use that
   if (!pointToInsert.IsInTextNode()) {
@@ -2825,84 +2820,83 @@ nsresult EditorBase::InsertTextWithTransaction(
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
       RefPtr<nsTextNode> newNode = CreateTextNode(u""_ns);
-      if (NS_WARN_IF(!newNode)) {
-        return NS_ERROR_FAILURE;
+      if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
+        return Err(NS_ERROR_FAILURE);
       }
       // then we insert it into the dom tree
       nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-        return rv;
+      if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
-      pointToInsert.Set(newNode, 0);
+      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+        return Err(rv);
+      }
+      pointToInsert.Set(newNode, 0u);
       newOffset = aStringToInsert.Length();
     } else {
       newOffset = aStringToInsert.Length();
       newOffset += pointToInsert.Offset();
-      if (NS_WARN_IF(!newOffset.isValid())) {
-        return NS_ERROR_FAILURE;
+      if (MOZ_UNLIKELY(NS_WARN_IF(!newOffset.isValid()))) {
+        return Err(NS_ERROR_FAILURE);
       }
     }
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAsText(),
-                                              pointToInsert.Offset()));
-    if (NS_FAILED(rv)) {
+        aStringToInsert, pointToInsert.AsInText());
+    if (MOZ_UNLIKELY(Destroyed())) {
+      NS_WARNING(
+          "EditorBase::InsertTextIntoTextNodeWithTransaction() caused "
+          "destroying the editor");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return rv;
+      return Err(rv);
     }
-    if (aPointAfterInsertedString) {
-      aPointAfterInsertedString->Set(pointToInsert.GetContainer(),
-                                     newOffset.value());
-      NS_WARNING_ASSERTION(
-          aPointAfterInsertedString->IsSetAndValid(),
-          "Failed to set aPointAfterInsertedString, but ignored");
-    }
-    return NS_OK;
+    return EditorDOMPoint(pointToInsert.GetContainer(), newOffset.value());
   }
 
   if (pointToInsert.IsInTextNode()) {
     CheckedUint32 newOffset = aStringToInsert.Length();
     newOffset += pointToInsert.Offset();
-    if (NS_WARN_IF(!newOffset.isValid())) {
-      return NS_ERROR_FAILURE;
+    if (MOZ_UNLIKELY(NS_WARN_IF(!newOffset.isValid()))) {
+      return Err(NS_ERROR_FAILURE);
     }
     // we are inserting text into an existing text node.
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
         aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAsText(),
                                               pointToInsert.Offset()));
-    if (NS_FAILED(rv)) {
+    if (MOZ_UNLIKELY(Destroyed())) {
+      NS_WARNING(
+          "EditorBase::InsertTextIntoTextNodeWithTransaction() caused "
+          "destroying the editor");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return rv;
+      return Err(rv);
     }
-    if (aPointAfterInsertedString) {
-      aPointAfterInsertedString->Set(pointToInsert.GetContainer(),
-                                     newOffset.value());
-      NS_WARNING_ASSERTION(
-          aPointAfterInsertedString->IsSetAndValid(),
-          "Failed to set aPointAfterInsertedString, but ignored");
-    }
-    return NS_OK;
+    return EditorDOMPoint(pointToInsert.GetContainer(), newOffset.value());
   }
 
   // we are inserting text into a non-text node.  first we have to create a
   // textnode (this also populates it with the text)
   RefPtr<nsTextNode> newNode = CreateTextNode(aStringToInsert);
-  if (NS_WARN_IF(!newNode)) {
-    return NS_ERROR_FAILURE;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
+    return Err(NS_ERROR_FAILURE);
   }
   // then we insert it into the dom tree
   nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(Destroyed())) {
+    NS_WARNING(
+        "EditorBase::InsertNodeWithTransaction() caused destroying the editor");
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return rv;
+    return Err(rv);
   }
-  if (aPointAfterInsertedString) {
-    aPointAfterInsertedString->Set(newNode, aStringToInsert.Length());
-    NS_WARNING_ASSERTION(
-        aPointAfterInsertedString->IsSetAndValid(),
-        "Failed to set aPointAfterInsertedString, but ignored");
-  }
-  return NS_OK;
+  return EditorDOMPoint(newNode, aStringToInsert.Length());
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
