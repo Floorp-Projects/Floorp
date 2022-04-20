@@ -736,37 +736,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       MOZ_ASSERT(aVsyncTimestamp <= tickStart);
 #endif
 
-      // Let also non-RefreshDriver code to run at least for awhile if we have
-      // a mVsyncRefreshDriverTimer.
-      // Always give a tiny bit, 1% of the vsync interval, time outside the
-      // tick
-      double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
-      TimeDuration gracePeriod = TimeDuration::FromMilliseconds(rate / 100.0f);
-      TimeDuration timeForOutsideTick = gracePeriod;
-
       bool shouldGiveNonVSyncTasksMoreTime = ShouldGiveNonVsyncTasksMoreTime();
-      if (!mLastTickEnd.IsNull() && shouldGiveNonVSyncTasksMoreTime &&
-          XRE_IsContentProcess() &&
-          // For RefreshDriver scheduling during page load there is currently
-          // idle priority based setup.
-          // XXX Consider to remove the page load specific code paths.
-          !mVsyncRefreshDriverTimer->IsAnyToplevelContentPageLoading()) {
-        // In case normal tasks are doing lots of work, we still want to paint
-        // every now and then, so only at maximum 4 * rate of work is counted
-        // here.
-        timeForOutsideTick = tickStart - mLastTickEnd;
-        TimeDuration maxOutsideTick = TimeDuration::FromMilliseconds(4 * rate);
-        if (timeForOutsideTick > maxOutsideTick) {
-          timeForOutsideTick = maxOutsideTick;
-        }
-
-        if (timeForOutsideTick > gracePeriod) {
-          // If we're giving extra time for tasks outside a tick, try to
-          // ensure the next vsync after that period is handled, so subtract
-          // a grace period.
-          timeForOutsideTick = timeForOutsideTick - gracePeriod;
-        }
-      }
 
       // Set these variables before calling RunRefreshDrivers so that they are
       // visible to any nested ticks.
@@ -783,16 +753,47 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // tick.
       TimeStamp mostRecentTickStart = mLastTickStart;
 
+      // Let also non-RefreshDriver code to run at least for awhile if we have
+      // a mVsyncRefreshDriverTimer.
+      // Always give a tiny bit, 1% of the vsync interval, time outside the
+      // tick
       // In case there are both normal tasks and RefreshDrivers are doing
       // work, mSuspendVsyncPriorityTicksUntil will be set to a timestamp in the
       // future where the period between the previous tick start
       // (aVsyncTimestamp) and the next tick needs to be at least the amount of
       // work normal tasks and RefreshDrivers did together (minus short grace
       // period).
-      mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + timeForOutsideTick;
+      double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
+      TimeDuration gracePeriod = TimeDuration::FromMilliseconds(rate / 100.0f);
+      TimeDuration timeForOutsideTick = gracePeriod;
+
       if (shouldGiveNonVSyncTasksMoreTime) {
-        TimeDuration tickDuration = tickEnd - mostRecentTickStart;
-        mSuspendVsyncPriorityTicksUntil += tickDuration;
+        if (!mLastTickEnd.IsNull() && XRE_IsContentProcess() &&
+            // For RefreshDriver scheduling during page load there is currently
+            // idle priority based setup.
+            // XXX Consider to remove the page load specific code paths.
+            !mVsyncRefreshDriverTimer->IsAnyToplevelContentPageLoading()) {
+          // In case normal tasks are doing lots of work, we still want to paint
+          // every now and then, so only at maximum 4 * rate of work is counted
+          // here.
+          timeForOutsideTick = tickStart - mLastTickEnd;
+          TimeDuration maxOutsideTick =
+              TimeDuration::FromMilliseconds(4 * rate);
+          if (timeForOutsideTick > maxOutsideTick) {
+            timeForOutsideTick = maxOutsideTick;
+          }
+
+          if (timeForOutsideTick > gracePeriod) {
+            // If we're giving extra time for tasks outside a tick, try to
+            // ensure the next vsync after that period is handled, so subtract
+            // a grace period.
+            timeForOutsideTick = timeForOutsideTick - gracePeriod;
+          }
+        }
+        mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + timeForOutsideTick +
+                                          (tickEnd - mostRecentTickStart);
+      } else {
+        mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + timeForOutsideTick;
       }
 
       mLastIdleTaskCount =
