@@ -9,6 +9,8 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXTUAL_SERVICES_PING_TYPES:
+    "resource:///modules/PartnerLinkAttribution.jsm",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
@@ -163,13 +165,13 @@ add_suggestions_task(async function impression_bestMatch(suggestion) {
 
 async function doImpressionTest({ scenario, suggestion, isBestMatch = false }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
-    spy.resetHistory();
     Services.telemetry.clearEvents();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: suggestion.keywords[0],
       fireInputEvent: true,
     });
+
     let index = 1;
     let isSponsored = suggestion.keywords[0] == "sponsored";
     await QuickSuggestTestUtils.assertIsQuickSuggest({
@@ -179,11 +181,13 @@ async function doImpressionTest({ scenario, suggestion, isBestMatch = false }) {
       isBestMatch,
       url: suggestion.url,
     });
+
     // Press Enter on the heuristic result, which is not the quick suggest, to
     // make sure we don't record click telemetry.
     await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeKey("KEY_Enter");
     });
+
     let scalars = {
       [QuickSuggestTestUtils.SCALARS.IMPRESSION]: index + 1,
     };
@@ -215,14 +219,18 @@ async function doImpressionTest({ scenario, suggestion, isBestMatch = false }) {
         },
       },
     ]);
-    QuickSuggestTestUtils.assertImpressionPing({
-      index,
-      spy,
-      scenario,
-      block_id: suggestion.id,
-      match_type: isBestMatch ? "best-match" : "firefox-suggest",
-    });
-    QuickSuggestTestUtils.assertNoClickPing(spy);
+    QuickSuggestTestUtils.assertPings(spy, [
+      {
+        type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+        payload: {
+          scenario,
+          block_id: suggestion.id,
+          is_clicked: false,
+          match_type: isBestMatch ? "best-match" : "firefox-suggest",
+          position: index + 1,
+        },
+      },
+    ]);
   });
 
   await PlacesUtils.history.clear();
@@ -238,7 +246,6 @@ async function doImpressionTest({ scenario, suggestion, isBestMatch = false }) {
 // abandoned.
 add_task(async function noImpression_abandonment() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
-    spy.resetHistory();
     Services.telemetry.clearEvents();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -254,8 +261,7 @@ add_task(async function noImpression_abandonment() {
     });
     QuickSuggestTestUtils.assertScalars({});
     QuickSuggestTestUtils.assertEvents([]);
-    QuickSuggestTestUtils.assertNoImpressionPing(spy);
-    QuickSuggestTestUtils.assertNoClickPing(spy);
+    QuickSuggestTestUtils.assertPings(spy, []);
   });
 });
 
@@ -263,7 +269,6 @@ add_task(async function noImpression_abandonment() {
 // is not present.
 add_task(async function noImpression_noQuickSuggestResult() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
-    spy.resetHistory();
     Services.telemetry.clearEvents();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -276,8 +281,7 @@ add_task(async function noImpression_noQuickSuggestResult() {
     });
     QuickSuggestTestUtils.assertScalars({});
     QuickSuggestTestUtils.assertEvents([]);
-    QuickSuggestTestUtils.assertNoImpressionPing(spy);
-    QuickSuggestTestUtils.assertNoClickPing(spy);
+    QuickSuggestTestUtils.assertPings(spy, []);
   });
   await PlacesUtils.history.clear();
 });
@@ -452,7 +456,6 @@ async function doClickTest({
   isBestMatch = false,
 }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
-    spy.resetHistory();
     Services.telemetry.clearEvents();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -515,21 +518,27 @@ async function doClickTest({
         },
       },
     ]);
-    QuickSuggestTestUtils.assertImpressionPing({
-      index,
-      spy,
-      scenario,
-      match_type,
-      block_id: suggestion.id,
-      is_clicked: true,
-    });
-    QuickSuggestTestUtils.assertClickPing({
-      index,
-      spy,
-      scenario,
-      match_type,
-      block_id: suggestion.id,
-    });
+    QuickSuggestTestUtils.assertPings(spy, [
+      {
+        type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+        payload: {
+          match_type,
+          scenario,
+          is_clicked: true,
+          block_id: suggestion.id,
+          position: index + 1,
+        },
+      },
+      {
+        type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
+        payload: {
+          match_type,
+          scenario,
+          block_id: suggestion.id,
+          position: index + 1,
+        },
+      },
+    ]);
   });
 
   await PlacesUtils.history.clear();
@@ -548,7 +557,6 @@ add_task(async function click_beforeSearchSuggestions() {
   });
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     await withSuggestions(async () => {
-      spy.resetHistory();
       Services.telemetry.clearEvents();
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
@@ -588,12 +596,21 @@ add_task(async function click_beforeSearchSuggestions() {
           },
         },
       ]);
-      QuickSuggestTestUtils.assertImpressionPing({
-        index,
-        spy,
-        is_clicked: true,
-      });
-      QuickSuggestTestUtils.assertClickPing({ index, spy });
+      QuickSuggestTestUtils.assertPings(spy, [
+        {
+          type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+          payload: {
+            is_clicked: true,
+            position: index + 1,
+          },
+        },
+        {
+          type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
+          payload: {
+            position: index + 1,
+          },
+        },
+      ]);
     });
   });
   await PlacesUtils.history.clear();
@@ -645,7 +662,6 @@ add_suggestions_task(async function help_mouse_bestMatch(suggestion) {
 });
 
 async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
-  spy.resetHistory();
   Services.telemetry.clearEvents();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -716,15 +732,17 @@ async function doHelpTest({ suggestion, useKeyboard, isBestMatch = false }) {
       },
     },
   ]);
-  QuickSuggestTestUtils.assertImpressionPing({
-    index,
-    spy,
-    match_type,
-    block_id: suggestion.id,
-    is_clicked: false,
-    scenario: "offline",
-  });
-  QuickSuggestTestUtils.assertNoClickPing(spy);
+  QuickSuggestTestUtils.assertPings(spy, [
+    {
+      type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+      payload: {
+        match_type,
+        block_id: suggestion.id,
+        is_clicked: false,
+        position: index + 1,
+      },
+    },
+  ]);
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await PlacesUtils.history.clear();

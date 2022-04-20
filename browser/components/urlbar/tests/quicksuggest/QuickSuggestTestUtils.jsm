@@ -43,6 +43,37 @@ const DEFAULT_CONFIG = {
   },
 };
 
+const DEFAULT_PING_PAYLOADS = {
+  [CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK]: {
+    advertiser: "testadvertiser",
+    block_id: 1,
+    context_id: () => actual => !!actual,
+    iab_category: "22 - Shopping",
+    match_type: "firefox-suggest",
+    request_id: null,
+    scenario: "offline",
+  },
+  [CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION]: {
+    advertiser: "testadvertiser",
+    block_id: 1,
+    context_id: () => actual => !!actual,
+    match_type: "firefox-suggest",
+    reporting_url: "http://example.com/click",
+    request_id: null,
+    scenario: "offline",
+  },
+  [CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION]: {
+    advertiser: "testadvertiser",
+    block_id: 1,
+    context_id: () => actual => !!actual,
+    is_clicked: false,
+    match_type: "firefox-suggest",
+    reporting_url: "http://example.com/impression",
+    request_id: null,
+    scenario: "offline",
+  },
+};
+
 const LEARN_MORE_URL =
   Services.urlFormatter.formatURLPref("app.support.baseURL") +
   "firefox-suggest";
@@ -456,139 +487,66 @@ class QSTestUtils {
   }
 
   /**
-   * Asserts that a custom telemetry impression ping was sent with the expected
-   * payload.
-   *
-   * @param {number} index
-   *   The expected zero-based index of the quick suggest result.
-   * @param {object} spy
-   *   A `sinon.spy` object. See `createTelemetryPingSpy`.
-   * @param {string} [advertiser]
-   *   The expected advertiser in the ping.
-   * @param {number} [block_id]
-   *   The expected block_id in the ping.
-   * @param {number} [is_clicked]
-   *   The expected is_clicked in the ping.
-   * @param {string} [match_type]
-   *   The expected match type, one of: "best-match", "firefox-suggest"
-   * @param {string} [reporting_url]
-   *   The expected reporting_url in the ping.
-   * @param {string} [request_id]
-   *   The expected request_id in the ping.
-   * @param {string} [scenario]
-   *   The quick suggest scenario, one of: "history", "offline", "online"
-   */
-  assertImpressionPing({
-    index,
-    spy,
-    advertiser = "testadvertiser",
-    block_id = 1,
-    is_clicked = false,
-    match_type = "firefox-suggest",
-    reporting_url = "http://example.com/impression",
-    request_id = null,
-    scenario = "offline",
-  }) {
-    // Find the call for `QS_IMPRESSION`.
-    let calls = spy.getCalls().filter(call => {
-      let endpoint = call.args[1];
-      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION);
-    });
-    this.Assert.equal(calls.length, 1, "Sent one impression ping");
-
-    let payload = calls[0].args[0];
-    this._assertPingPayload(payload, {
-      advertiser,
-      block_id,
-      is_clicked,
-      match_type,
-      position: index + 1,
-      reporting_url,
-      request_id,
-      scenario,
-      context_id: actual => !!actual,
-    });
-  }
-
-  /**
-   * Asserts no custom telemetry impression ping was sent.
+   * Asserts that custom telemetry pings are recorded in the order they appear
+   * in the given `pings` array and that no other pings are recorded.
    *
    * @param {object} spy
-   *   A `sinon.spy` object. See `createTelemetryPingSpy`.
-   */
-  assertNoImpressionPing(spy) {
-    // Find the call for `QS_IMPRESSION`.
-    let calls = spy.getCalls().filter(call => {
-      let endpoint = call.args[1];
-      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION);
-    });
-    this.Assert.equal(calls.length, 0, "Did not send an impression ping");
-  }
-
-  /**
-   * Asserts that a custom telemetry click ping was sent with the expected
-   * payload.
+   *   A `sinon.spy` object. See `createTelemetryPingSpy()`. This method resets
+   *   the spy before returning.
+   * @param {array} pings
+   *   The expected pings in the order they are expected to be recorded. Each
+   *   item in this array should be an object: `{ type, payload }`
    *
-   * @param {number} index
-   *   The expected zero-based index of the quick suggest result.
-   * @param {object} spy
-   *   A `sinon.spy` object. See `createTelemetryPingSpy`.
-   * @param {string} [advertiser]
-   *   The expected advertiser in the ping.
-   * @param {number} [block_id]
-   *   The expected block_id in the ping.
-   * @param {string} [match_type]
-   *   The expected match type, one of: "best-match", "firefox-suggest"
-   * @param {string} [reporting_url]
-   *   The expected reporting_url in the ping.
-   * @param {string} [request_id]
-   *   The expected request_id in the ping.
-   * @param {string} [scenario]
-   *   The quick suggest scenario, one of: "history", "offline", "online"
+   *   {string} type
+   *     The ping's expected type, one of the `CONTEXTUAL_SERVICES_PING_TYPES`
+   *     values.
+   *   {object} payload
+   *     The ping's expected payload. For convenience, you can leave out
+   *     properties whose values are expected to be the default values defined
+   *     in `DEFAULT_PING_PAYLOADS`.
    */
-  assertClickPing({
-    index,
-    spy,
-    advertiser = "testadvertiser",
-    block_id = 1,
-    match_type = "firefox-suggest",
-    reporting_url = "http://example.com/click",
-    request_id = null,
-    scenario = "offline",
-  }) {
-    // Find the call for `QS_SELECTION`.
-    let calls = spy.getCalls().filter(call => {
-      let endpoint = call.args[1];
-      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION);
-    });
-    this.Assert.equal(calls.length, 1, "Sent one click ping");
+  assertPings(spy, pings) {
+    let calls = spy.getCalls();
+    this.Assert.equal(
+      calls.length,
+      pings.length,
+      "Expected number of ping calls"
+    );
 
-    let payload = calls[0].args[0];
-    this._assertPingPayload(payload, {
-      advertiser,
-      block_id,
-      match_type,
-      position: index + 1,
-      reporting_url,
-      request_id,
-      scenario,
-      context_id: actual => !!actual,
-    });
-  }
+    for (let i = 0; i < pings.length; i++) {
+      let ping = pings[i];
+      this.info?.(
+        `Checking ping at index ${i}, expected is: ` + JSON.stringify(ping)
+      );
 
-  /**
-   * Asserts no custom telemetry click ping was sent.
-   *
-   * @param {object} spy
-   *   A `sinon.spy` object. See `createTelemetryPingSpy`.
-   */
-  assertNoClickPing(spy) {
-    // Find the call for `QS_SELECTION`.
-    let calls = spy.getCalls().filter(call => {
-      let endpoint = call.args[1];
-      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION);
-    });
-    this.Assert.equal(calls.length, 0, "Did not send a click ping");
+      // Add default properties to the expected payload for any that aren't
+      // already defined.
+      let { type, payload } = ping;
+      let defaultPayload = DEFAULT_PING_PAYLOADS[type];
+      this.Assert.ok(
+        defaultPayload,
+        `Sanity check: Default payload exists for type: ${type}`
+      );
+      for (let [key, value] of Object.entries(defaultPayload)) {
+        if (!(key in payload)) {
+          payload[key] = value;
+        }
+      }
+
+      // Check the endpoint URL.
+      let call = calls[i];
+      let endpointURL = call.args[1];
+      this.Assert.ok(
+        endpointURL.includes(type),
+        `Endpoint URL corresponds to the expected ping type: ${type}`
+      );
+
+      // Check the payload.
+      let actualPayload = call.args[0];
+      this._assertPingPayload(actualPayload, payload);
+    }
+
+    spy.resetHistory();
   }
 
   /**
@@ -603,7 +561,12 @@ class QSTestUtils {
    *   values and should return true if the actual values are correct.
    */
   _assertPingPayload(actualPayload, expectedPayload) {
-    this.info?.("Checking ping payload: " + JSON.stringify(actualPayload));
+    this.info?.(
+      "Checking ping payload. Actual: " +
+        JSON.stringify(actualPayload) +
+        " -- Expected (excluding function properties): " +
+        JSON.stringify(expectedPayload)
+    );
 
     this.Assert.equal(
       Object.entries(actualPayload).length,
