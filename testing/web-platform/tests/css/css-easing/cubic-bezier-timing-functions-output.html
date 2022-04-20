@@ -18,7 +18,7 @@ function assert_style_left_at(animation, time, easingFunction) {
   var portion = time / animation.effect.getTiming()['duration'];
   assert_approx_equals(pxToNum(getComputedStyle(animation.effect.target).left),
                        easingFunction(portion) * 100,
-                       0.01,
+                       0.02,
                        'The left of the animation should be approximately ' +
                        easingFunction(portion) * 100 + ' at ' + time + 'ms');
 }
