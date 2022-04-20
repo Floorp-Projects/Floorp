@@ -986,25 +986,9 @@ function cookiesAllowedForDomainOrSubDomain(principal, permissions) {
 
   // If we have the 'cookie' permission for this principal, let's return
   // immediately.
-  let p = Services.perms.testPermissionFromPrincipal(principal, "cookie");
-
-  if (p == Ci.nsICookiePermission.ACCESS_ALLOW) {
-    log("Cookie allowed!");
-    return true;
-  }
-
-  if (
-    p == Ci.nsICookiePermission.ACCESS_DENY ||
-    p == Ci.nsICookiePermission.ACCESS_SESSION
-  ) {
-    log("Cookie denied or session!");
-    return false;
-  }
-
-  // This is an old profile with unsupported permission values
-  if (p != Ci.nsICookiePermission.ACCESS_DEFAULT) {
-    log("Not supported cookie permission: " + p);
-    return false;
+  let cookiePermission = checkIfCookiePermissionIsSet(principal);
+  if (cookiePermission != null) {
+    return cookiePermission;
   }
 
   for (let perm of permissions.values()) {
@@ -1022,13 +1006,46 @@ function cookiesAllowedForDomainOrSubDomain(principal, permissions) {
     if (Services.eTLD.hasRootDomain(perm.principal.host, principal.host)) {
       // Remove the permissions we already checked
       permissions.delete(perm.principal.origin);
-      log("Recursive cookie check on principal: " + perm.principal.asciiSpec);
-      return cookiesAllowedForDomainOrSubDomain(perm.principal, permissions);
+      log("Cookie check on principal: " + perm.principal.asciiSpec);
+      let rootDomainCookiePermission = checkIfCookiePermissionIsSet(
+        perm.principal
+      );
+      if (rootDomainCookiePermission != null) {
+        return rootDomainCookiePermission;
+      }
     }
   }
 
   log("Cookie not allowed.");
   return false;
+}
+
+/**
+ * Checks if a cookie permission is set for a given principal
+ * @returns {boolean} - true: cookie permission "ACCESS_ALLOW", false: cookie permission "ACCESS_DENY"/"ACCESS_SESSION"
+ * @returns {null} - No cookie permission is set for this principal
+ */
+function checkIfCookiePermissionIsSet(principal) {
+  let p = Services.perms.testPermissionFromPrincipal(principal, "cookie");
+
+  if (p == Ci.nsICookiePermission.ACCESS_ALLOW) {
+    log("Cookie allowed!");
+    return true;
+  }
+
+  if (
+    p == Ci.nsICookiePermission.ACCESS_DENY ||
+    p == Ci.nsICookiePermission.ACCESS_SESSION
+  ) {
+    log("Cookie denied or session!");
+    return false;
+  }
+  // This is an old profile with unsupported permission values
+  if (p != Ci.nsICookiePermission.ACCESS_DEFAULT) {
+    log("Not supported cookie permission: " + p);
+    return false;
+  }
+  return null;
 }
 
 async function sanitizeSessionPrincipal(progress, principal, flags) {
