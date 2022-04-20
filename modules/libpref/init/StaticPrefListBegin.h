@@ -22,7 +22,8 @@ namespace StaticPrefs {
 #define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)           \
   extern cpp_type sMirror_##full_id;                                           \
   inline StripAtomic<cpp_type> full_id() {                                     \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value) {                 \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
           "Should not access the preference '" name "' in Content Processes"); \
@@ -40,7 +41,8 @@ namespace StaticPrefs {
   extern cpp_type sMirror_##full_id;                                           \
   inline cpp_type full_id() {                                                  \
     MaybeInitOncePrefs();                                                      \
-    if (!XRE_IsParentProcess() && IsString<cpp_type>::value) {                 \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
           "Should not access the preference '" name "' in Content Processes"); \
