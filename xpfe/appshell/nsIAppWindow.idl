@@ -179,4 +179,10 @@ interface nsIAppWindow : nsISupports
    * nsIOpenWindowInfo to use.
    */
   readonly attribute nsIOpenWindowInfo initialOpenWindowInfo;
+
+  /**
+   * Request fast snapshot at RenderCompositor of WebRender.
+   * Since readback of Windows DirectComposition is very slow.
+   */
+  void needFastSnaphot();
 };

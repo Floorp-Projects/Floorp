@@ -129,7 +129,7 @@ use crate::resource_cache::{ResourceCache, ImageGeneration, ImageRequest};
 use crate::space::SpaceMapper;
 use crate::scene::SceneProperties;
 use crate::spatial_tree::CoordinateSystemId;
-use crate::surface::SurfaceDescriptor;
+use crate::surface::{SurfaceDescriptor, SurfaceTileDescriptor};
 use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -776,6 +776,8 @@ pub struct Tile {
     /// The last frame this tile had its dependencies updated (dependency updating is
     /// skipped if a tile is off-screen).
     pub last_updated_frame_id: FrameId,
+
+    pub sub_graphs: Vec<(PictureRect, Vec<(PictureCompositeMode, SurfaceIndex)>)>,
 }
 
 impl Tile {
@@ -804,6 +806,7 @@ impl Tile {
             local_valid_rect: PictureBox2D::zero(),
             z_id: ZBufferId::invalid(),
             last_updated_frame_id: FrameId::INVALID,
+            sub_graphs: Vec::new(),
         }
     }
 
@@ -929,6 +932,7 @@ impl Tile {
             PicturePoint::new(-1.0e32, -1.0e32),
         );
         self.invalidation_reason  = None;
+        self.sub_graphs.clear();
 
         self.world_tile_rect = ctx.pic_to_world_mapper
             .map(&self.local_tile_rect)
@@ -2512,7 +2516,7 @@ impl TileCacheInstance {
             return SurfacePromotionResult::Failed;
         }
 
-        if self.slice_flags.contains(SliceFlags::IS_BLEND_CONTAINER) {
+        if self.slice_flags.contains(SliceFlags::IS_ATOMIC) {
             return SurfacePromotionResult::Failed;
         }
 
@@ -3267,10 +3271,32 @@ impl TileCacheInstance {
                     });
                 }
             }
+            PrimitiveInstanceKind::Backdrop { .. } => {
+                // If this is a sub-graph, register the bounds on any affected tiles
+                // so we know how much to expand the content tile by.
+
+                // Implicitly, we know that any slice with a sub-graph disables compositor
+                // surface promotion, so sub_slice_index will always be 0.
+                debug_assert_eq!(sub_slice_index, 0);
+                let sub_slice = &mut self.sub_slices[sub_slice_index];
+
+                let mut surface_info = Vec::new();
+                for (pic_index, surface_index) in surface_stack.iter().rev() {
+                    let pic = &pictures[pic_index.0];
+                    surface_info.push((pic.composite_mode.as_ref().unwrap().clone(), *surface_index));
+                }
+
+                for y in p0.y .. p1.y {
+                    for x in p0.x .. p1.x {
+                        let key = TileOffset::new(x, y);
+                        let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
+                        tile.sub_graphs.push((pic_coverage_rect, surface_info.clone()));
+                    }
+                }
+            }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
-            PrimitiveInstanceKind::TextRun { .. } |
-            PrimitiveInstanceKind::Backdrop { .. } => {
+            PrimitiveInstanceKind::TextRun { .. } => {
                 // These don't contribute dependencies
             }
         };
@@ -4750,7 +4776,7 @@ impl PicturePrimitive {
                                     tile_cache.transform_index,
                                 ).to_i32();
 
-                                let task_size = tile_cache.current_tile_size;
+                                let composite_task_size = tile_cache.current_tile_size;
 
                                 let tile_key = TileKey {
                                     sub_slice_index: SubSliceIndex::new(sub_slice_index),
@@ -4774,35 +4800,118 @@ impl PicturePrimitive {
 
                                 let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
 
-                                let render_task_id = frame_state.rg_builder.add().init(
-                                    RenderTask::new(
-                                        RenderTaskLocation::Static {
-                                            surface: StaticRenderTaskSurface::PictureCache {
-                                                surface,
-                                            },
-                                            rect: task_size.into(),
-                                        },
-                                        RenderTaskKind::new_picture(
-                                            task_size,
-                                            tile_cache.current_tile_size.to_f32(),
-                                            content_origin,
-                                            surface_spatial_node_index,
-                                            // raster == surface implicitly for picture cache tiles
-                                            surface_spatial_node_index,
-                                            device_pixel_scale,
-                                            Some(scissor_rect),
-                                            Some(valid_rect),
-                                            Some(clear_color),
-                                            cmd_buffer_index,
-                                            false,
-                                        )
-                                    ),
-                                );
+                                // TODO(gw): As a performance optimization, we could skip the resolve picture
+                                //           if the dirty rect is the same as the resolve rect (probably quite
+                                //           common for effects that scroll underneath a backdrop-filter, for example).
+                                let use_tile_composite = !tile.sub_graphs.is_empty();
 
-                                surface_render_tasks.insert(
-                                    tile_key,
-                                    render_task_id,
-                                );
+                                if use_tile_composite {
+                                    let mut local_content_rect = tile.local_dirty_rect;
+
+                                    for (sub_graph_rect, surface_stack) in &tile.sub_graphs {
+                                        if let Some(dirty_sub_graph_rect) = sub_graph_rect.intersection(&tile.local_dirty_rect) {
+                                            for (composite_mode, surface_index) in surface_stack {
+                                                let surface = &frame_state.surfaces[surface_index.0];
+
+                                                let rect = composite_mode.get_coverage(
+                                                    surface,
+                                                    Some(dirty_sub_graph_rect.cast_unit()),
+                                                ).cast_unit();
+
+                                                local_content_rect = local_content_rect.union(&rect);
+                                            }
+                                        }
+                                    }
+
+                                    let content_device_rect = (local_content_rect.cast_unit() * device_pixel_scale)
+                                        .round_out()
+                                        .to_i32();
+                                    let content_task_size = content_device_rect.size();
+                                    let normalized_content_rect = content_task_size.into();
+
+                                    let inner_offset = content_origin + scissor_rect.min.to_vector().to_f32();
+                                    let outer_offset = content_device_rect.min.to_f32();
+                                    let sub_rect_offset = (inner_offset - outer_offset).round().to_i32();
+
+                                    let render_task_id = frame_state.rg_builder.add().init(
+                                        RenderTask::new_dynamic(
+                                            content_task_size,
+                                            RenderTaskKind::new_picture(
+                                                content_task_size,
+                                                tile_cache.current_tile_size.to_f32(),
+                                                content_device_rect.min.to_f32(),
+                                                surface_spatial_node_index,
+                                                // raster == surface implicitly for picture cache tiles
+                                                surface_spatial_node_index,
+                                                device_pixel_scale,
+                                                Some(normalized_content_rect),
+                                                None,
+                                                Some(clear_color),
+                                                cmd_buffer_index,
+                                                false,
+                                            )
+                                        ),
+                                    );
+
+                                    let composite_task_id = frame_state.rg_builder.add().init(
+                                        RenderTask::new(
+                                            RenderTaskLocation::Static {
+                                                surface: StaticRenderTaskSurface::PictureCache {
+                                                    surface,
+                                                },
+                                                rect: composite_task_size.into(),
+                                            },
+                                            RenderTaskKind::new_tile_composite(
+                                                sub_rect_offset,
+                                                scissor_rect,
+                                                valid_rect,
+                                                clear_color,
+                                            ),
+                                        ),
+                                    );
+
+                                    surface_render_tasks.insert(
+                                        tile_key,
+                                        SurfaceTileDescriptor {
+                                            current_task_id: render_task_id,
+                                            composite_task_id: Some(composite_task_id),
+                                        },
+                                    );
+                                } else {
+                                    let render_task_id = frame_state.rg_builder.add().init(
+                                        RenderTask::new(
+                                            RenderTaskLocation::Static {
+                                                surface: StaticRenderTaskSurface::PictureCache {
+                                                    surface,
+                                                },
+                                                rect: composite_task_size.into(),
+                                            },
+                                            RenderTaskKind::new_picture(
+                                                composite_task_size,
+                                                tile_cache.current_tile_size.to_f32(),
+                                                content_origin,
+                                                surface_spatial_node_index,
+                                                // raster == surface implicitly for picture cache tiles
+                                                surface_spatial_node_index,
+                                                device_pixel_scale,
+                                                Some(scissor_rect),
+                                                Some(valid_rect),
+                                                Some(clear_color),
+                                                cmd_buffer_index,
+                                                false,
+                                            )
+                                        ),
+                                    );
+
+                                    surface_render_tasks.insert(
+                                        tile_key,
+                                        SurfaceTileDescriptor {
+                                            current_task_id: render_task_id,
+                                            composite_task_id: None,
+                                        },
+                                    );
+                                }
+
                                 surface_dirty_rects.push(tile.local_dirty_rect);
                             }
 
@@ -4959,7 +5068,7 @@ impl PicturePrimitive {
                     let surface = &frame_state.surfaces[surface_index.0];
                     (surface.raster_spatial_node_index, surface.device_pixel_scale)
                 };
-                let is_resolve_target = self.flags.contains(PictureFlags::IS_RESOLVE_TARGET);
+                let can_use_shared_surface = !self.flags.contains(PictureFlags::IS_RESOLVE_TARGET);
 
                 let primary_render_task_id;
                 let surface_descriptor;
@@ -5006,7 +5115,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 )
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
@@ -5049,7 +5158,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 ),
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
@@ -5080,10 +5189,7 @@ impl PicturePrimitive {
 
                         // Add this content picture as a dependency of the parent surface, to
                         // ensure it isn't free'd after the shadow uses it as an input.
-                        frame_state.surface_builder.add_child_render_task(
-                            picture_task_id,
-                            frame_state.rg_builder,
-                        );
+                        frame_state.surface_builder.add_picture_render_task(picture_task_id);
 
                         primary_render_task_id = blur_render_task_id;
                         self.secondary_render_task_id = Some(picture_task_id);
@@ -5193,7 +5299,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 )
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
@@ -5222,7 +5328,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 )
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
@@ -5251,7 +5357,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 )
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
@@ -5281,7 +5387,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 )
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
@@ -5310,7 +5416,7 @@ impl PicturePrimitive {
                                     None,
                                     None,
                                     cmd_buffer_index,
-                                    is_resolve_target,
+                                    can_use_shared_surface,
                                 )
                             ).with_uv_rect_kind(surface_rects.uv_rect_kind)
                         );
