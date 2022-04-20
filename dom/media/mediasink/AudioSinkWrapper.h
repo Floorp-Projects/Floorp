@@ -49,8 +49,9 @@ class AudioSinkWrapper : public MediaSink {
  public:
   template <typename Function>
   AudioSinkWrapper(AbstractThread* aOwnerThread,
-                   MediaQueue<AudioData>& aAudioQueue, const Function& aFunc,
-                   double aVolume, double aPlaybackRate, bool aPreservesPitch)
+                   const MediaQueue<AudioData>& aAudioQueue,
+                   const Function& aFunc, double aVolume, double aPlaybackRate,
+                   bool aPreservesPitch)
       : mOwnerThread(aOwnerThread),
         mCreator(new CreatorImpl<Function>(aFunc)),
         mIsStarted(false),
@@ -63,10 +64,9 @@ class AudioSinkWrapper : public MediaSink {
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
-  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) override;
+  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override;
   media::TimeUnit UnplayedDuration(TrackType aType) const override;
-  void DropAudioPacketsIfNeeded(const media::TimeUnit& aMediaPosition);
 
   void SetVolume(double aVolume) override;
   void SetStreamName(const nsAString& aStreamName) override;
@@ -87,31 +87,13 @@ class AudioSinkWrapper : public MediaSink {
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
  private:
-  // The clock that was in use for the previous position query, allowing to
-  // detect clock switches.
-  enum class ClockSource {
-    // The clock comes from an underlying system-level audio stream.
-    AudioStream,
-    // The clock comes from the system clock.
-    SystemClock,
-    // The stream is paused, a constant time is reported.
-    Paused
-  } mLastClockSource = ClockSource::Paused;
-  bool IsMuted() const;
-  void OnMuted(bool aMuted);
   virtual ~AudioSinkWrapper();
 
   void AssertOwnerThread() const {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   }
 
-  nsresult StartAudioSink(const media::TimeUnit& aStartTime);
-
-  // Get the current media position using the system clock. This is used when
-  // the audio is muted, or when the media has no audio track. Otherwise, the
-  // media's position is based on the clock of the AudioStream.
-  media::TimeUnit GetSystemClockPosition(TimeStamp aNow) const;
-  bool CheckIfEnded() const;
+  media::TimeUnit GetVideoPosition(TimeStamp aNow) const;
 
   void OnAudioEnded();
 
@@ -122,7 +104,6 @@ class AudioSinkWrapper : public MediaSink {
   UniquePtr<AudioSink> mAudioSink;
   // Will only exist when media has an audio track.
   RefPtr<EndedPromise> mEndedPromise;
-  MozPromiseHolder<EndedPromise> mEndedPromiseHolder;
 
   bool mIsStarted;
   PlaybackParams mParams;
@@ -132,7 +113,7 @@ class AudioSinkWrapper : public MediaSink {
 
   bool mAudioEnded;
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
-  MediaQueue<AudioData>& mAudioQueue;
+  const MediaQueue<AudioData>& mAudioQueue;
 };
 
 }  // namespace mozilla

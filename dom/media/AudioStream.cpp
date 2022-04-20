@@ -148,8 +148,7 @@ AudioStream::AudioStream(DataSource& aSource, uint32_t aInRate,
       mSandboxed(CubebUtils::SandboxEnabled()),
       mPlaybackComplete(false),
       mPlaybackRate(1.0f),
-      mPreservesPitch(true),
-      mCallbacksStarted(false) {}
+      mPreservesPitch(true) {}
 
 AudioStream::~AudioStream() {
   LOG("deleted, state %d", mState.load());
@@ -227,14 +226,12 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
 
-nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
-    NO_THREAD_SAFETY_ANALYSIS {
+nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) NO_THREAD_SAFETY_ANALYSIS {
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, mOutChannels,
       mAudioClock.GetInputRate());
-
   mSinkInfo = aSinkInfo;
 
   cubeb_stream_params params;
@@ -321,18 +318,19 @@ void AudioStream::SetStreamName(const nsAString& aStreamName) {
   }
 }
 
-nsresult AudioStream::Start(
-    MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise) {
+Result<already_AddRefed<MediaSink::EndedPromise>, nsresult>
+AudioStream::Start() {
   TRACE("AudioStream::Start");
   MOZ_ASSERT(mState == INITIALIZED);
   mState = STARTED;
+
   RefPtr<MediaSink::EndedPromise> promise;
   {
     MonitorAutoLock mon(mMonitor);
     // As cubeb might call audio stream's state callback very soon after we
     // start cubeb, we have to create the promise beforehand in order to handle
     // the case where we immediately get `drained`.
-    mEndedPromise = std::move(aEndedPromise);
+    promise = mEndedPromise.Ensure(__func__);
     mPlaybackComplete = false;
 
     if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
@@ -344,9 +342,9 @@ nsresult AudioStream::Start(
                            : mState == DRAINED ? "DRAINED"
                                                : "ERRORED");
   if (mState == STARTED || mState == DRAINED) {
-    return NS_OK;
+    return promise.forget();
   }
-  return NS_ERROR_FAILURE;
+  return Err(NS_ERROR_FAILURE);
 }
 
 void AudioStream::Pause() {
@@ -391,8 +389,7 @@ void AudioStream::Resume() {
   }
 }
 
-Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioStream::Shutdown(
-    ShutdownCause aCause) {
+void AudioStream::Shutdown() {
   TRACE("AudioStream::Shutdown");
   LOG("Shutdown, state %d", mState.load());
 
@@ -415,15 +412,7 @@ Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioStream::Shutdown(
   }
 
   mState = SHUTDOWN;
-  // When shutting down, if this AudioStream is shutting down because the
-  // HTMLMediaElement is now muted, hand back the ended promise, so that it can
-  // properly be resolved if the end of the media is reached while muted (i.e.
-  // without having an AudioStream)
-  if (aCause != ShutdownCause::Muting) {
-    mEndedPromise.ResolveIfExists(true, __func__);
-    return Nothing();
-  }
-  return Some(std::move(mEndedPromise));
+  mEndedPromise.ResolveIfExists(true, __func__);
 }
 
 int64_t AudioStream::GetPosition() {
@@ -596,9 +585,6 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     CubebUtils::GetAudioThreadRegistry()->Register(mAudioThreadId);
   }
   WebCore::DenormalDisabler disabler;
-  if (!mCallbacksStarted) {
-    mCallbacksStarted = true;
-  }
 
   TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE("AudioStream::DataCallback");
