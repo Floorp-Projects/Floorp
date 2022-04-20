@@ -34,11 +34,6 @@ loader.lazyRequireGetter(
   "previewers",
   "devtools/server/actors/object/previewers"
 );
-loader.lazyRequireGetter(
-  this,
-  "stringify",
-  "devtools/server/actors/object/stringifiers"
-);
 
 // ContentDOMReference requires ChromeUtils, which isn't available in worker context.
 if (!isWorker) {
@@ -685,14 +680,6 @@ const proto = {
     }
 
     return completionGrip;
-  },
-
-  /**
-   * Handle a protocol request to provide the display string for the object.
-   */
-  displayString: function() {
-    const string = stringify(this.obj);
-    return { displayString: this.hooks.createValueGrip(string) };
   },
 
   /**
