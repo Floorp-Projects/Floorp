@@ -93,6 +93,7 @@ STATIC_ATOMS = [
     Atom("allowscriptstoclose", "allowscriptstoclose"),
     Atom("allowtopnavigation", "allow-top-navigation"),
     Atom("allowtopnavigationbyuseractivation", "allow-top-navigation-by-user-activation"),
+    Atom("allowtopnavigationcustomprotocols", "allow-top-navigation-to-custom-protocols"),
     Atom("allowuntrusted", "allowuntrusted"),
     Atom("alt", "alt"),
     Atom("alternate", "alternate"),
