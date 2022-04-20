@@ -16,6 +16,7 @@
 #include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/ipc/ProtocolTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"  // for IToplevelProtocol
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimeStamp.h"  // for TimeStamp
 #include "mozilla/Unused.h"
@@ -54,8 +55,8 @@ bool VRProcessParent::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
-      dom::ContentParent::ShouldSyncPreference);
+  mPrefSerializer =
+      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSyncPreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }
