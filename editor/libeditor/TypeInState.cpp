@@ -197,8 +197,8 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
   if (aHTMLEditor.SelectionRef().IsCollapsed() &&
       aHTMLEditor.SelectionRef().RangeCount()) {
     const auto selectionStartPoint =
-        aHTMLEditor.GetFirstSelectionStartPoint<EditorRawDOMPoint>();
-    if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
+        aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
+    if (MOZ_UNLIKELY(NS_WARN_IF(!selectionStartPoint.IsSet()))) {
       return;
     }
 
@@ -303,7 +303,7 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
       return;
     }
 
-    mLastSelectionPoint = selectionStartPoint.To<EditorDOMPoint>();
+    mLastSelectionPoint = selectionStartPoint;
     // We need to store only offset because referring child may be removed by
     // we'll check the point later.
     AutoEditorDOMPointChildInvalidator saveOnlyOffset(mLastSelectionPoint);
