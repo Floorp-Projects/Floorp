@@ -4445,6 +4445,9 @@ bool ContentParent::DeallocPBenchmarkStorageParent(
 
 #ifdef MOZ_WEBSPEECH
 PSpeechSynthesisParent* ContentParent::AllocPSpeechSynthesisParent() {
+  if (!StaticPrefs::media_webspeech_synth_enabled()) {
+    return nullptr;
+  }
   return new mozilla::dom::SpeechSynthesisParent();
 }
 
