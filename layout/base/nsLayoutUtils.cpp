@@ -9739,7 +9739,7 @@ static std::pair<Maybe<ScreenRect>, FramePosition> GetFrameVisibleRectOnScreen(
 
   nsIFrame* rootFrame = topContextInProcess->PresShell()->GetRootFrame();
   nsRect transformedToIFrame = nsLayoutUtils::TransformFrameRectToAncestor(
-      aFrame, aFrame->GetRectRelativeToSelf(), rootFrame);
+      aFrame, aFrame->InkOverflowRectRelativeToSelf(), rootFrame);
 
   LayoutDeviceRect rectInLayoutDevicePixel = LayoutDeviceRect::FromAppUnits(
       transformedToIFrame, topContextInProcess->AppUnitsPerDevPixel());
