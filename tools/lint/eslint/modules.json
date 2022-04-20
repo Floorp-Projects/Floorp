@@ -10,7 +10,6 @@
   "addonsreconciler.js": ["AddonsReconciler", "CHANGE_INSTALLED", "CHANGE_UNINSTALLED", "CHANGE_ENABLED", "CHANGE_DISABLED"],
   "AddonTestUtils.jsm": ["AddonTestUtils", "MockAsyncShutdown"],
   "addonutils.js": ["AddonUtils"],
-  "ajv-6.12.6.js": ["Ajv"],
   "AlertsHelper.jsm": [],
   "AppData.jsm": ["makeFakeAppDir"],
   "AppInfo.jsm": ["newAppInfo", "getAppInfo", "updateAppInfo"],
