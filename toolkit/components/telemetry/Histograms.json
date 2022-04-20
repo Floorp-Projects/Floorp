@@ -3196,13 +3196,13 @@
     "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "dkeeler@mozilla.com"],
-    "expires_in_version": "102",
+    "expires_in_version": "106",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
     "description": "ms elapsed time scanning for client certificates",
-    "bug_numbers": [1711154, 1736628]
+    "bug_numbers": [1711154, 1736628, 1763524]
   },
   "CRLITE_VS_OCSP_RESULT": {
     "record_in_processes": ["main", "socket"],
