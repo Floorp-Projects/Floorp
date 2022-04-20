@@ -3566,8 +3566,10 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   if (pointToInsert.IsSet()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
-      TopLevelEditSubActionDataRef().DidDeleteText(*this, begin);
-      TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
+      TopLevelEditSubActionDataRef().DidDeleteText(
+          *this, begin.To<EditorRawDOMPoint>());
+      TopLevelEditSubActionDataRef().DidInsertText(
+          *this, begin.To<EditorRawDOMPoint>(), end.To<EditorRawDOMPoint>());
     }
   }
 
@@ -5057,7 +5059,7 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
   }
 
   // Mutation event listener could break insertion point. Let's check it.
-  EditorDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
+  auto pointToInsert = selNotify.ComputeInsertionPoint().To<EditorDOMPoint>();
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
     return NS_ERROR_FAILURE;
   }

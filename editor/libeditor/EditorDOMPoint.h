@@ -25,6 +25,8 @@
 #include "nsINode.h"
 #include "nsStyledElement.h"
 
+#include <type_traits>
+
 namespace mozilla {
 
 /**
@@ -159,14 +161,6 @@ class EditorDOMPointBase final {
         mOffset(aOther.mOffset),
         mIsChildInitialized(aOther.mRef || (aOther.mOffset.isSome() &&
                                             !aOther.mOffset.value())) {}
-
-  template <typename PT, typename CT>
-  MOZ_IMPLICIT EditorDOMPointBase(const EditorDOMPointBase<PT, CT>& aOther)
-      : mParent(aOther.mParent),
-        mChild(aOther.mChild),
-        mOffset(aOther.mOffset),
-        mInterlinePosition(aOther.mInterlinePosition),
-        mIsChildInitialized(aOther.mIsChildInitialized) {}
 
   void SetInterlinePosition(InterlinePosition aInterlinePosition) {
     MOZ_ASSERT(IsSet());
@@ -633,7 +627,7 @@ class EditorDOMPointBase final {
     if (NS_WARN_IF(aPoint.IsEndOfContainer())) {
       return SelfType();
     }
-    SelfType point = aPoint.NextPoint();
+    SelfType point = aPoint.NextPoint().template To<SelfType>();
     point.mInterlinePosition = aInterlinePosition;
     return point;
   }
@@ -789,7 +783,7 @@ class EditorDOMPointBase final {
       return EditorRawDOMPoint();
     }
     if (!IsInNativeAnonymousSubtree()) {
-      return EditorRawDOMPoint(*this);
+      return this->template To<EditorRawDOMPoint>();
     }
     nsINode* parent;
     for (parent = mParent->GetParentNode();
@@ -937,14 +931,20 @@ class EditorDOMPointBase final {
     return *this;
   }
 
-  template <typename A, typename B>
-  EditorDOMPointBase& operator=(const EditorDOMPointBase<A, B>& aOther) {
-    mParent = aOther.mParent;
-    mChild = aOther.mChild;
-    mOffset = aOther.mOffset;
-    mIsChildInitialized = aOther.mIsChildInitialized;
-    mInterlinePosition = aOther.mInterlinePosition;
-    return *this;
+  template <typename EditorDOMPointType>
+  constexpr EditorDOMPointType To() const {
+    // XXX Cannot specialize this method due to implicit instantiatation caused
+    //     by the inline CC functions below.
+    if (std::is_same<SelfType, EditorDOMPointType>::value) {
+      return reinterpret_cast<const EditorDOMPointType&>(*this);
+    }
+    EditorDOMPointType result;
+    result.mParent = mParent;
+    result.mChild = mChild;
+    result.mOffset = mOffset;
+    result.mIsChildInitialized = mIsChildInitialized;
+    result.mInterlinePosition = mInterlinePosition;
+    return result;
   }
 
   /**
@@ -1176,7 +1176,8 @@ class EditorDOMRangeBase final {
   template <typename StartPointType, typename EndPointType>
   explicit EditorDOMRangeBase(const StartPointType& aStart,
                               const EndPointType& aEnd)
-      : mStart(aStart), mEnd(aEnd) {
+      : mStart(aStart.template To<PointType>()),
+        mEnd(aEnd.template To<PointType>()) {
     MOZ_ASSERT_IF(mStart.IsSet(), mStart.IsSetAndValid());
     MOZ_ASSERT_IF(mEnd.IsSet(), mEnd.IsSetAndValid());
     MOZ_ASSERT_IF(mStart.IsSet() && mEnd.IsSet(),
@@ -1190,29 +1191,29 @@ class EditorDOMRangeBase final {
                   mStart.EqualsOrIsBefore(mEnd));
   }
 
-  template <typename PointType>
-  MOZ_NEVER_INLINE_DEBUG void SetStart(const PointType& aStart) {
-    mStart = aStart;
+  template <typename MaybeOtherPointType>
+  MOZ_NEVER_INLINE_DEBUG void SetStart(const MaybeOtherPointType& aStart) {
+    mStart = aStart.template To<PointType>();
   }
-  template <typename PointType>
-  MOZ_NEVER_INLINE_DEBUG void SetEnd(const PointType& aEnd) {
-    mEnd = aEnd;
+  template <typename MaybeOtherPointType>
+  MOZ_NEVER_INLINE_DEBUG void SetEnd(const MaybeOtherPointType& aEnd) {
+    mEnd = aEnd.template To<PointType>();
   }
   template <typename StartPointType, typename EndPointType>
   MOZ_NEVER_INLINE_DEBUG void SetStartAndEnd(const StartPointType& aStart,
                                              const EndPointType& aEnd) {
     MOZ_ASSERT_IF(aStart.IsSet() && aEnd.IsSet(),
                   aStart.EqualsOrIsBefore(aEnd));
-    mStart = aStart;
-    mEnd = aEnd;
+    mStart = aStart.template To<PointType>();
+    mEnd = aEnd.template To<PointType>();
   }
   void Clear() {
     mStart.Clear();
     mEnd.Clear();
   }
 
-  const EditorDOMPointType& StartRef() const { return mStart; }
-  const EditorDOMPointType& EndRef() const { return mEnd; }
+  const PointType& StartRef() const { return mStart; }
+  const PointType& EndRef() const { return mEnd; }
 
   bool Collapsed() const {
     MOZ_ASSERT(IsPositioned());

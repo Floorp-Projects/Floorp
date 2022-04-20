@@ -444,8 +444,8 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     if (GetTopLevelEditSubAction() == EditSubAction::eDeleteSelectedContent &&
         TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange &&
         !TopLevelEditSubActionDataRef().mDidDeleteEmptyParentBlocks) {
-      EditorDOMPoint newCaretPosition =
-          EditorBase::GetStartPoint(SelectionRef());
+      auto newCaretPosition =
+          EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
       if (!newCaretPosition.IsSet()) {
         NS_WARNING("There was no selection range");
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
@@ -527,7 +527,8 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         auto pointToAdjust = GetLastIMESelectionEndPoint<EditorDOMPoint>();
         if (!pointToAdjust.IsInContentNode()) {
           // Otherwise, adjust current selection start point.
-          pointToAdjust = EditorBase::GetStartPoint(SelectionRef());
+          pointToAdjust =
+              EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
           if (NS_WARN_IF(!pointToAdjust.IsInContentNode())) {
             return NS_ERROR_FAILURE;
           }
@@ -1135,7 +1136,7 @@ EditActionResult HTMLEditor::HandleInsertText(
     auto compositionStartPoint =
         GetFirstIMESelectionStartPoint<EditorRawDOMPoint>();
     if (!compositionStartPoint.IsSet()) {
-      compositionStartPoint = pointToInsert;
+      compositionStartPoint = pointToInsert.To<EditorRawDOMPoint>();
     }
 
     if (aInsertionString.IsEmpty()) {
@@ -1259,7 +1260,7 @@ EditActionResult HTMLEditor::HandleInsertText(
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
           nsresult rv = InsertTextWithTransaction(
-              *document, subStr, EditorRawDOMPoint(currentPoint),
+              *document, subStr, currentPoint.To<EditorRawDOMPoint>(),
               &pointAfterInsertedString);
           if (NS_WARN_IF(Destroyed())) {
             return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
@@ -1268,8 +1269,8 @@ EditActionResult HTMLEditor::HandleInsertText(
             NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
             return EditActionHandled(rv);
           }
-          currentPoint = pointAfterInsertedString;
-          pointToInsert = pointAfterInsertedString;
+          currentPoint = pointAfterInsertedString.To<EditorDOMPoint>();
+          pointToInsert = pointAfterInsertedString.To<EditorDOMPoint>();
         }
       }
     } else {
@@ -1307,8 +1308,8 @@ EditActionResult HTMLEditor::HandleInsertText(
           }
           pos++;
           MOZ_ASSERT(pointAfterInsertedSpaces.IsSet());
-          currentPoint = pointAfterInsertedSpaces;
-          pointToInsert = pointAfterInsertedSpaces;
+          currentPoint = pointAfterInsertedSpaces.To<EditorDOMPoint>();
+          pointToInsert = pointAfterInsertedSpaces.To<EditorDOMPoint>();
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
@@ -1345,8 +1346,8 @@ EditActionResult HTMLEditor::HandleInsertText(
             return EditActionHandled(rv);
           }
           MOZ_ASSERT(pointAfterInsertedString.IsSet());
-          currentPoint = pointAfterInsertedString;
-          pointToInsert = pointAfterInsertedString;
+          currentPoint = pointAfterInsertedString.To<EditorDOMPoint>();
+          pointToInsert = pointAfterInsertedString.To<EditorDOMPoint>();
         }
       }
     }
@@ -1589,7 +1590,8 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   }
 
   if (IsMailEditor()) {
-    EditorDOMPoint pointToSplit(EditorBase::GetStartPoint(SelectionRef()));
+    auto pointToSplit =
+        EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
     if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
       return EditActionIgnored(NS_ERROR_FAILURE);
     }
@@ -2098,8 +2100,9 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
   {
     AutoTrackDOMPoint trackingInsertingPosition(RangeUpdaterRef(),
                                                 &pointToInsert);
-    nsresult rv = InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert,
-                                            &caretAfterInsert);
+    nsresult rv = InsertTextWithTransaction(
+        *document, u"\n"_ns, pointToInsert.To<EditorRawDOMPoint>(),
+        &caretAfterInsert);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
       return rv;
@@ -2119,7 +2122,7 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
         wsScannerAtCaret.EndsByBlockBoundary() &&
         HTMLEditUtils::CanNodeContain(*wsScannerAtCaret.GetEndReasonContent(),
                                       *nsGkAtoms::br)) {
-      EditorDOMPoint newCaretPosition(caretAfterInsert);
+      auto newCaretPosition = caretAfterInsert.To<EditorDOMPoint>();
       {
         AutoTrackDOMPoint trackingInsertedPosition(RangeUpdaterRef(),
                                                    &pointToInsert);
@@ -2135,7 +2138,7 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
         }
         MOZ_ASSERT(resultOfInsertingBRElement.inspect());
       }
-      caretAfterInsert = newCaretPosition;
+      caretAfterInsert = newCaretPosition.To<EditorRawDOMPoint>();
     }
   }
 
@@ -2653,18 +2656,18 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
   // normalize white-space sequence, but there is no white-spaces which need to
   // be replaced, we need to do nothing here.
   if (startToDelete == endToDelete) {
-    return EditorDOMPoint(aStartToDelete);
+    return aStartToDelete.To<EditorDOMPoint>();
   }
 
   // Note that the container text node of startToDelete may be removed from
   // the tree if it becomes empty.  Therefore, we need to track the point.
   EditorDOMPoint newCaretPosition;
   if (aStartToDelete.ContainerAsText() == aEndToDelete.ContainerAsText()) {
-    newCaretPosition = aEndToDelete;
+    newCaretPosition = aEndToDelete.To<EditorDOMPoint>();
   } else if (aDeleteDirection == DeleteDirection::Forward) {
     newCaretPosition.SetToEndOf(aStartToDelete.ContainerAsText());
   } else {
-    newCaretPosition.Set(aEndToDelete.ContainerAsText(), 0);
+    newCaretPosition.Set(aEndToDelete.ContainerAsText(), 0u);
   }
 
   // Then, modify the text nodes in the range.
@@ -5992,7 +5995,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineStartPoint(
     return EditorDOMPoint();
   }
 
-  EditorDOMPoint point(aPoint);
+  auto point = aPoint.template To<EditorDOMPoint>();
   // Start scanning from the container node if aPoint is in a text node.
   // XXX Perhaps, IsInDataNode() must be expected.
   if (point.IsInTextNode()) {
@@ -6085,7 +6088,7 @@ EditorDOMPoint HTMLEditor::GetCurrentHardLineEndPoint(
     return EditorDOMPoint();
   }
 
-  EditorDOMPoint point(aPoint);
+  auto point = aPoint.template To<EditorDOMPoint>();
   // Start scanning from the container node if aPoint is in a text node.
   // XXX Perhaps, IsInDataNode() must be expected.
   if (point.IsInTextNode()) {
@@ -6350,8 +6353,8 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     return nullptr;
   }
 
-  EditorRawDOMPoint startPoint(aStartPoint);
-  EditorRawDOMPoint endPoint(aEndPoint);
+  auto startPoint = aStartPoint.template To<EditorRawDOMPoint>();
+  auto endPoint = aEndPoint.template To<EditorRawDOMPoint>();
   SelectBRElementIfCollapsedInEmptyBlock(startPoint, endPoint, *editingHost);
 
   if (NS_WARN_IF(!startPoint.IsInContentNode()) ||
@@ -6427,8 +6430,8 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     return nullptr;
   }
 
-  EditorRawDOMPoint startPoint(aStartPoint);
-  EditorRawDOMPoint endPoint(aEndPoint);
+  auto startPoint = aStartPoint.template To<EditorDOMPoint>();
+  auto endPoint = aEndPoint.template To<EditorDOMPoint>();
   SelectBRElementIfCollapsedInEmptyBlock(startPoint, endPoint, *editingHost);
 
   // Make a new adjusted range to represent the appropriate block content.
@@ -6449,8 +6452,8 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeExtendedToHardLineStartAndEnd(
     return nullptr;
   }
   endPoint = GetCurrentHardLineEndPoint(endPoint, *editingHost);
-  EditorRawDOMPoint lastRawPoint(
-      endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint());
+  const EditorDOMPoint lastRawPoint =
+      endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint();
   // XXX GetCurrentHardLineEndPoint() may return point of editing host.
   //     Perhaps, we should change it and stop checking it here since this
   //     check may be expensive.
@@ -8684,7 +8687,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(SelectionRef().IsCollapsed());
 
-  EditorDOMPoint point(EditorBase::GetStartPoint(SelectionRef()));
+  auto point = EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
   if (NS_WARN_IF(!point.IsInContentNode())) {
     return NS_ERROR_FAILURE;
   }
