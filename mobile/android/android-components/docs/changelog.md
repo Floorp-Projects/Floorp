@@ -17,6 +17,9 @@ permalink: /changelog/
 * **feature-pwa**
   * [TrustedWebActivityIntentProcessor] is now deprecated. See [issue #12024](https://github.com/mozilla-mobile/android-components/issues/12024).
 
+* **feature-top-sites**
+  * Added `providerFilter` to `TopSitesProviderConfig`, allowing the client to filter the provided top sites.
+
 # 101.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v100.0.0...v101.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/148?closed=1)

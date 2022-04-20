@@ -766,6 +766,90 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
+    fun `GIVEN providerFilter is set WHEN getTopSites is called THEN the provided top sites are filtered`() = runBlockingTest {
+        val defaultTopSitesStorage = DefaultTopSitesStorage(
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            topSitesProvider = topSitesProvider,
+            coroutineContext = coroutineContext
+        )
+
+        val filteredUrl = "https://test.com"
+
+        val providerConfig = TopSitesProviderConfig(
+            showProviderTopSites = true,
+            providerFilter = { topSite -> topSite.url != filteredUrl }
+        )
+
+        val defaultSite = TopSite.Default(
+            id = 1,
+            title = "Firefox",
+            url = "https://firefox.com",
+            createdAt = 1
+        )
+        val pinnedSite = TopSite.Pinned(
+            id = 2,
+            title = "Test",
+            url = filteredUrl,
+            createdAt = 2
+        )
+        val providedSite = TopSite.Provided(
+            id = 3,
+            title = "Mozilla",
+            url = "https://mozilla.com",
+            clickUrl = "https://mozilla.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 3
+        )
+        val providedFilteredSite = TopSite.Provided(
+            id = 3,
+            title = "Filtered",
+            url = filteredUrl,
+            clickUrl = "https://test.com/click",
+            imageUrl = "https://test.com/image2.jpg",
+            impressionUrl = "https://example.com",
+            createdAt = 3
+        )
+
+        whenever(pinnedSitesStorage.getPinnedSites()).thenReturn(
+            listOf(
+                defaultSite,
+                pinnedSite
+            )
+        )
+        whenever(topSitesProvider.getTopSites()).thenReturn(listOf(providedSite, providedFilteredSite))
+
+        val frecentSite1 = TopFrecentSiteInfo("https://getpocket.com", "Pocket")
+        whenever(historyStorage.getTopFrecentSites(anyInt(), any())).thenReturn(listOf(frecentSite1))
+
+        var topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 3,
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = providerConfig
+        )
+
+        assertEquals(3, topSites.size)
+        assertEquals(providedSite, topSites[0])
+        assertEquals(defaultSite, topSites[1])
+        assertEquals(pinnedSite, topSites[2])
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 4,
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = providerConfig
+        )
+
+        assertEquals(4, topSites.size)
+        assertEquals(providedSite, topSites[0])
+        assertEquals(defaultSite, topSites[1])
+        assertEquals(pinnedSite, topSites[2])
+        assertEquals(frecentSite1.toTopSite(), topSites[3])
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+    }
+
+    @Test
     fun `GIVEN frecent top sites exist as a pinned or provided site WHEN top sites are retrieved THEN filters out frecent sites that already exist in pinned or provided sites`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,

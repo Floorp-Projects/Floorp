@@ -29,8 +29,10 @@ data class TopSitesConfig(
  * @property showProviderTopSites Whether or not to display the top sites from the provider.
  * @property maxThreshold Only fetch the top sites from the provider if the number of top sites are
  * below the maximum threshold.
+ * @property providerFilter Optional function used to filter the top sites from the provider.
  */
 data class TopSitesProviderConfig(
     val showProviderTopSites: Boolean,
-    val maxThreshold: Int = Int.MAX_VALUE
+    val maxThreshold: Int = Int.MAX_VALUE,
+    val providerFilter: ((TopSite) -> Boolean)? = null
 )
