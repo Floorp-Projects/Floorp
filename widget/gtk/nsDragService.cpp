@@ -34,7 +34,9 @@
 #include "mozilla/WidgetUtilsGtk.h"
 #include "GRefPtr.h"
 
-#include "gfxXlibSurface.h"
+#ifdef MOZ_X11
+#  include "gfxXlibSurface.h"
+#endif
 #include "gfxContext.h"
 #include "nsImageToPixbuf.h"
 #include "nsPresContext.h"

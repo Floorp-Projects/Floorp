@@ -9,10 +9,13 @@
 #define nsUserIdleServiceGTK_h__
 
 #include "nsUserIdleService.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <gdk/gdkx.h>
+#ifdef MOZ_X11
+#  include <X11/Xlib.h>
+#  include <X11/Xutil.h>
+#  include <gdk/gdkx.h>
+#endif
 
+#ifdef MOZ_X11
 typedef struct {
   Window window;               // Screen saver window
   int state;                   // ScreenSaver(Off,On,Disabled)
@@ -21,6 +24,7 @@ typedef struct {
   unsigned long idle;          // milliseconds idle
   unsigned long event_mask;    // event stuff
 } XScreenSaverInfo;
+#endif
 
 class nsUserIdleServiceGTK : public nsUserIdleService {
  public:
@@ -40,7 +44,9 @@ class nsUserIdleServiceGTK : public nsUserIdleService {
 
  private:
   ~nsUserIdleServiceGTK();
+#ifdef MOZ_X11
   XScreenSaverInfo* mXssInfo;
+#endif
 
  protected:
   nsUserIdleServiceGTK();
