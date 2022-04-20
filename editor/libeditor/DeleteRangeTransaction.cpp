@@ -7,12 +7,13 @@
 
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
+#include "EditorBase.h"
+#include "EditorDOMPoint.h"
 #include "EditorUtils.h"
 #include "HTMLEditUtils.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
-#include "mozilla/EditorBase.h"
 #include "mozilla/Logging.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/RangeBoundary.h"
@@ -116,13 +117,11 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  rv = selection->CollapseInLimiter(startRef.AsRaw());
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Selection::CollapseInLimiter() failed");
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  rv = editorBase->CollapseSelectionTo(EditorRawDOMPoint(startRef));
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
   return rv;
 }
 
