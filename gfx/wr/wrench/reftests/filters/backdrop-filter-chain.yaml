@@ -1,0 +1,12 @@
+# Verify that backdrop filters with complex filter chains draw correctly
+---
+root:
+  items:
+    - type: stacking-context
+      backdrop-root: true
+      items:
+      - image: "firefox.png"
+        bounds: 0 0 256 256
+      - type: backdrop-filter
+        bounds: 50 50 100 100
+        filters: ["blur(5,5)", sepia(0.5), brightness(0.8)]

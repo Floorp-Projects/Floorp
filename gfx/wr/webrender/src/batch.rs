@@ -28,6 +28,7 @@ use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest};
 use crate::space::SpaceMapper;
+use crate::surface::SurfaceTileDescriptor;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
@@ -3800,7 +3801,7 @@ pub enum CommandBufferBuilderKind {
         //           of a hash map if it ever shows up in profiles. This is
         //           slightly complicated by the sub_slice_index in the
         //           TileKey structure - could have a 2 level array?
-        tiles: FastHashMap<TileKey, RenderTaskId>,
+        tiles: FastHashMap<TileKey, SurfaceTileDescriptor>,
     },
     Simple {
         render_task_id: RenderTaskId,
@@ -3823,6 +3824,9 @@ pub struct CommandBufferBuilder {
     /// If this surface builds a sub-graph, it will mark a task in the filter sub-graph
     /// as a resolve source for the input from the parent surface.
     pub resolve_source: Option<RenderTaskId>,
+
+    /// List of render tasks that depend on the task that will be created for this builder
+    pub extra_dependencies: Vec<RenderTaskId>,
 }
 
 impl CommandBufferBuilder {
@@ -3831,12 +3835,13 @@ impl CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Invalid,
             establishes_sub_graph: false,
             resolve_source: None,
+            extra_dependencies: Vec::new(),
         }
     }
 
     /// Construct a tiled command buffer builder
     pub fn new_tiled(
-        tiles: FastHashMap<TileKey, RenderTaskId>,
+        tiles: FastHashMap<TileKey, SurfaceTileDescriptor>,
     ) -> Self {
         CommandBufferBuilder {
             kind: CommandBufferBuilderKind::Tiled {
@@ -3844,6 +3849,7 @@ impl CommandBufferBuilder {
             },
             establishes_sub_graph: false,
             resolve_source: None,
+            extra_dependencies: Vec::new(),
         }
     }
 
@@ -3860,6 +3866,7 @@ impl CommandBufferBuilder {
             },
             establishes_sub_graph,
             resolve_source: None,
+            extra_dependencies: Vec::new(),
         }
     }
 }

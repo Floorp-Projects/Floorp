@@ -91,7 +91,7 @@ use crate::render_task::{RenderTask, RenderTaskKind, ReadbackTask};
 use crate::resource_cache::ResourceCache;
 use crate::scene_builder_thread::{SceneBuilderThread, SceneBuilderThreadChannels, LowPrioritySceneBuilderThread};
 use crate::screen_capture::AsyncScreenshotGrabber;
-use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
+use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetKind, BlitJob};
 use crate::texture_cache::{TextureCache, TextureCacheConfig};
@@ -2632,6 +2632,30 @@ impl Renderer {
         }
     }
 
+    fn handle_resolves(
+        &mut self,
+        resolve_ops: &[ResolveOp],
+        render_tasks: &RenderTaskGraph,
+        draw_target: DrawTarget,
+    ) {
+        if resolve_ops.is_empty() {
+            return;
+        }
+
+        let _timer = self.gpu_profiler.start_timer(GPU_TAG_BLIT);
+
+        for resolve_op in resolve_ops {
+            self.handle_resolve(
+                resolve_op,
+                render_tasks,
+                draw_target,
+            );
+        }
+
+        self.device.reset_read_target();
+    }
+
+
     fn handle_blits(
         &mut self,
         blits: &[BlitJob],
@@ -2748,12 +2772,12 @@ impl Renderer {
 
     fn handle_resolve(
         &mut self,
-        draw_target: DrawTarget,
-        resolve_op: Option<ResolveOp>,
+        resolve_op: &ResolveOp,
         render_tasks: &RenderTaskGraph,
+        draw_target: DrawTarget,
     ) {
-        if let Some(resolve_op) = resolve_op {
-            let src_task = &render_tasks[resolve_op.src_task_id];
+        for src_task_id in &resolve_op.src_task_ids {
+            let src_task = &render_tasks[*src_task_id];
             let src_info = match src_task.kind {
                 RenderTaskKind::Picture(ref info) => info,
                 _ => panic!("bug: not a picture"),
@@ -2801,33 +2825,25 @@ impl Renderer {
                 );
 
                 let texture_source = TextureSource::TextureCache(
-                    dest_task.get_target_texture(),
+                    src_task.get_target_texture(),
                     Swizzle::default(),
                 );
                 let (cache_texture, _) = self.texture_resolver
                     .resolve(&texture_source).expect("bug: no source texture");
 
-                let cache_draw_target = DrawTarget::from_texture(
-                    cache_texture,
-                    false,
-                );
+                let read_target = ReadTarget::from_texture(cache_texture);
 
                 // Should always be drawing to picture cache tiles or off-screen surface!
                 debug_assert!(!draw_target.is_default());
                 let device_to_framebuffer = Scale::new(1i32);
 
                 self.device.blit_render_target(
-                    draw_target.into(),
+                    read_target,
                     src * device_to_framebuffer,
-                    cache_draw_target,
+                    draw_target,
                     dest * device_to_framebuffer,
                     TextureFilter::Linear,
                 );
-
-                // Restore draw target to current pass render target, and reset
-                // the read target.
-                self.device.bind_draw_target(draw_target);
-                self.device.reset_read_target();
             }
         }
     }
@@ -2854,7 +2870,7 @@ impl Renderer {
 
             let clear_color = target.clear_color.map(|c| c.to_array());
             let scissor_rect = if self.device.get_capabilities().supports_render_target_partial_update {
-                target.alpha_batch_container.task_scissor_rect
+                Some(target.dirty_rect)
             } else {
                 None
             };
@@ -2904,20 +2920,38 @@ impl Renderer {
             self.device.disable_depth_write();
         }
 
-        self.draw_alpha_batch_container(
-            &target.alpha_batch_container,
-            draw_target,
-            framebuffer_kind,
-            projection,
-            render_tasks,
-            stats,
-        );
+        match target.kind {
+            PictureCacheTargetKind::Draw { ref alpha_batch_container } => {
+                self.draw_alpha_batch_container(
+                    alpha_batch_container,
+                    draw_target,
+                    framebuffer_kind,
+                    projection,
+                    render_tasks,
+                    stats,
+                );
+            }
+            PictureCacheTargetKind::Blit { task_id, sub_rect_offset } => {
+                let src_task = &render_tasks[task_id];
+                let (texture, _swizzle) = self.texture_resolver
+                    .resolve(&src_task.get_texture_source())
+                    .expect("BUG: invalid source texture");
 
-        self.handle_resolve(
-            draw_target,
-            target.resolve_op,
-            render_tasks,
-        );
+                let src_task_rect = src_task.get_target_rect();
+
+                let p0 = src_task_rect.min + sub_rect_offset;
+                let p1 = p0 + target.dirty_rect.size();
+                let src_rect = DeviceIntRect::new(p0, p1);
+
+                self.device.blit_render_target(
+                    ReadTarget::from_texture(texture),
+                    src_rect.cast_unit(),
+                    draw_target,
+                    target.dirty_rect.cast_unit(),
+                    TextureFilter::Nearest,
+                );
+            }
+        }
 
         self.device.invalidate_depth_target();
     }
@@ -3746,6 +3780,13 @@ impl Renderer {
             }
         }
 
+        // Handle any resolves from parent pictures to this target
+        self.handle_resolves(
+            &target.resolve_ops,
+            render_tasks,
+            draw_target,
+        );
+
         // Handle any blits from the texture cache to this target.
         self.handle_blits(
             &target.blits,
@@ -3810,12 +3851,6 @@ impl Renderer {
         if clear_depth.is_some() {
             self.device.invalidate_depth_target();
         }
-
-        self.handle_resolve(
-            draw_target,
-            target.resolve_op,
-            render_tasks,
-        );
     }
 
     fn draw_blurs(
