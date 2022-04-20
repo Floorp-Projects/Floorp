@@ -152,6 +152,11 @@ template EditorRawDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
 template EditorDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
 template EditorRawDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
 
+template EditorDOMPoint EditorBase::FindBetterInsertionPoint(
+    const EditorDOMPoint& aPoint) const;
+template EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
+    const EditorRawDOMPoint& aPoint) const;
+
 template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointAtCaret);
@@ -2695,9 +2700,10 @@ nsresult EditorBase::ScrollSelectionFocusIntoView() {
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
-EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
-    const EditorRawDOMPoint& aPoint) const {
-  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::FindBetterInsertionPoint(
+    const EditorDOMPointType& aPoint) const {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aPoint.IsInContentNode()))) {
     return aPoint;
   }
 
@@ -2723,7 +2729,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
     // available.  In that case, we'll just adjust node and offset accordingly.
     if (aPoint.IsStartOfContainer() && aPoint.GetContainer()->HasChildren() &&
         aPoint.GetContainer()->GetFirstChild()->IsText()) {
-      return EditorRawDOMPoint(aPoint.GetContainer()->GetFirstChild(), 0);
+      return EditorDOMPointType(aPoint.GetContainer()->GetFirstChild(), 0u);
     }
 
     // In some other cases, aNode is the anonymous DIV, and offset points to
@@ -2736,10 +2742,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
         // Thunderbird's plaintext editor.
         nsIContent* child = aPoint.GetPreviousSiblingOfChild();
         if (child && child->IsText()) {
-          if (NS_WARN_IF(child->Length() > INT32_MAX)) {
-            return aPoint;
-          }
-          return EditorRawDOMPoint(child, child->Length());
+          return EditorDOMPointType::AtEndOf(*child);
         }
       } else {
         // If we're in a real plaintext editor, use a fast path that avoids
@@ -2747,10 +2750,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
         nsIContent* child = aPoint.GetContainer()->GetLastChild();
         while (child) {
           if (child->IsText()) {
-            if (NS_WARN_IF(child->Length() > INT32_MAX)) {
-              return aPoint;
-            }
-            return EditorRawDOMPoint(child, child->Length());
+            return EditorDOMPointType::AtEndOf(*child);
           }
           child = child->GetPreviousSibling();
         }
@@ -2766,16 +2766,13 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
       aPoint.IsStartOfContainer()) {
     nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
     if (previousSibling && previousSibling->IsText()) {
-      if (NS_WARN_IF(previousSibling->Length() > INT32_MAX)) {
-        return aPoint;
-      }
-      return EditorRawDOMPoint(previousSibling, previousSibling->Length());
+      return EditorDOMPointType::AtEndOf(*previousSibling);
     }
 
     nsINode* parentOfContainer = aPoint.GetContainerParent();
     if (parentOfContainer && parentOfContainer == rootElement) {
-      return EditorRawDOMPoint(parentOfContainer, aPoint.ContainerAsContent(),
-                               0);
+      return EditorDOMPointType(parentOfContainer, aPoint.ContainerAsContent(),
+                                0u);
     }
   }
 
@@ -2808,7 +2805,7 @@ nsresult EditorBase::InsertTextWithTransaction(
   // <br> element for empty last line.  Let's try to look for better insertion
   // point in the nearest text node if there is.
   EditorDOMPoint pointToInsert =
-      FindBetterInsertionPoint(aPointToInsert).To<EditorDOMPoint>();
+      FindBetterInsertionPoint(aPointToInsert.To<EditorDOMPoint>());
 
   // If a neighboring text node already exists, use that
   if (!pointToInsert.IsInTextNode()) {
