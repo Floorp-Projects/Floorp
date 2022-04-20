@@ -222,7 +222,9 @@ void VRProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
   mozilla::dom::Pref pref(strData, /* isLocked */ false,
                           /* isSanitized */ false, Nothing(), Nothing());
-  Preferences::GetPreference(&pref);
+
+  Preferences::GetPreference(&pref, GeckoProcessType_VR,
+                             /* remoteType */ ""_ns);
   if (!!mVRChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
     mVRChild->SendPreferenceUpdate(pref);
