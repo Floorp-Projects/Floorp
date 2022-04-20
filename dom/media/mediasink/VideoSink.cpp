@@ -115,7 +115,7 @@ media::TimeUnit VideoSink::GetEndTime(TrackType aType) const {
   return media::TimeUnit::Zero();
 }
 
-media::TimeUnit VideoSink::GetPosition(TimeStamp* aTimeStamp) const {
+media::TimeUnit VideoSink::GetPosition(TimeStamp* aTimeStamp) {
   AssertOwnerThread();
   return mAudioSink->GetPosition(aTimeStamp);
 }
