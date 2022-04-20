@@ -140,7 +140,7 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
 
   AlignedAudioBuffer queuedAudio(sampleCount);
   DebugOnly<int> samplesRead =
-    mProcessedSPSCQueue->Dequeue(queuedAudio.Data(), sampleCount);
+      mProcessedSPSCQueue->Dequeue(queuedAudio.Data(), sampleCount);
   MOZ_ASSERT(samplesRead == sampleCount);
 
   // Extrapolate mOffset, mTime from the front of the queue
@@ -149,9 +149,14 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
   // For `mTime`, assume there hasn't been a discontinuity recently.
   RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
   RefPtr<AudioData> data =
-      new AudioData(frontPacket->mOffset, frontPacket->mTime - duration, std::move(queuedAudio),
-                    channelCount, rate);
+      new AudioData(frontPacket->mOffset, frontPacket->mTime - duration,
+                    std::move(queuedAudio), channelCount, rate);
   MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
+
+  SINK_LOG(
+      "Muting: Pushing back %u frames (%lfms) from the ring buffer back into "
+      "the audio queue",
+      frameCount, static_cast<float>(frameCount) / rate);
 
   mAudioQueue.PushFront(data);
 }
