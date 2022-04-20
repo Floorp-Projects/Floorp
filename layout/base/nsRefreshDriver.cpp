@@ -583,6 +583,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // |this| for the duration of the TickRefreshDriver callback.
       MOZ_ASSERT(NS_IsMainThread());
 
+      if (!mVsyncRefreshDriverTimer) {
+        // Ignore calls after Shutdown.
+        return;
+      }
+
       // This clears the input handling start time.
       InputTaskManager::Get()->SetInputHandlingStartTime(TimeStamp());
 
@@ -611,7 +616,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       }
 
       if (StaticPrefs::layout_lower_priority_refresh_driver_during_load() &&
-          ShouldGiveNonVsyncTasksMoreTime() && mVsyncRefreshDriverTimer) {
+          ShouldGiveNonVsyncTasksMoreTime()) {
         nsPresContext* pctx =
             mVsyncRefreshDriverTimer->GetPresContextForOnlyRefreshDriver();
         if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
@@ -663,6 +668,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     }
 
     void IdlePriorityNotify() {
+      if (!mVsyncRefreshDriverTimer) {
+        // Ignore calls after Shutdown.
+        return;
+      }
+
       if (mLastProcessedTick.IsNull() || mRecentVsync > mLastProcessedTick) {
         // mSuspendVsyncPriorityTicksUntil is for high priority vsync
         // notifications only.
@@ -712,6 +722,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
     void TickRefreshDriver(VsyncId aId, TimeStamp aVsyncTimestamp) {
       MOZ_ASSERT(NS_IsMainThread());
+      MOZ_RELEASE_ASSERT(mVsyncRefreshDriverTimer,
+                         "Do not call after a call to Shutdown()");
 
       RecordTelemetryProbes(aVsyncTimestamp);
       mLastTickStart = TimeStamp::Now();
@@ -730,52 +742,44 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
       bool shouldGiveNonVSyncTasksMoreTime = ShouldGiveNonVsyncTasksMoreTime();
 
-      // We might have a problem that we call ~VsyncRefreshDriverTimer() before
-      // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
-      // before use.
-      if (mVsyncRefreshDriverTimer) {
-        // Calculate timeForOutsideTick value and run the RefreshDrivers.
+      // Calculate timeForOutsideTick value and run the RefreshDrivers.
 
-        double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
-        TimeDuration gracePeriod =
-            TimeDuration::FromMilliseconds(rate / 100.0f);
-        // Always give a tiny bit, 1% of the vsync interval, time outside the
-        // tick
-        timeForOutsideTick = gracePeriod;
+      double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
+      TimeDuration gracePeriod = TimeDuration::FromMilliseconds(rate / 100.0f);
+      // Always give a tiny bit, 1% of the vsync interval, time outside the
+      // tick
+      timeForOutsideTick = gracePeriod;
 
-        if (!mLastTickEnd.IsNull() && shouldGiveNonVSyncTasksMoreTime &&
-            XRE_IsContentProcess() &&
-            // For RefreshDriver scheduling during page load there is currently
-            // idle priority based setup.
-            // XXX Consider to remove the page load specific code paths.
-            !mVsyncRefreshDriverTimer->IsAnyToplevelContentPageLoading()) {
-          // In case normal tasks are doing lots of work, we still want to paint
-          // every now and then, so only at maximum 4 * rate of work is counted
-          // here.
-          timeForOutsideTick = TimeStamp::Now() - mLastTickEnd;
-          TimeDuration maxOutsideTick =
-              TimeDuration::FromMilliseconds(4 * rate);
-          if (timeForOutsideTick > maxOutsideTick) {
-            timeForOutsideTick = maxOutsideTick;
-          }
-
-          if (timeForOutsideTick > gracePeriod) {
-            // If we're giving extra time for tasks outside a tick, try to
-            // ensure the next vsync after that period is handled, so subtract
-            // a grace period.
-            timeForOutsideTick = timeForOutsideTick - gracePeriod;
-          }
+      if (!mLastTickEnd.IsNull() && shouldGiveNonVSyncTasksMoreTime &&
+          XRE_IsContentProcess() &&
+          // For RefreshDriver scheduling during page load there is currently
+          // idle priority based setup.
+          // XXX Consider to remove the page load specific code paths.
+          !mVsyncRefreshDriverTimer->IsAnyToplevelContentPageLoading()) {
+        // In case normal tasks are doing lots of work, we still want to paint
+        // every now and then, so only at maximum 4 * rate of work is counted
+        // here.
+        timeForOutsideTick = TimeStamp::Now() - mLastTickEnd;
+        TimeDuration maxOutsideTick = TimeDuration::FromMilliseconds(4 * rate);
+        if (timeForOutsideTick > maxOutsideTick) {
+          timeForOutsideTick = maxOutsideTick;
         }
 
-        RefPtr<VsyncRefreshDriverTimer> timer = mVsyncRefreshDriverTimer;
-        timer->RunRefreshDrivers(aId, aVsyncTimestamp);
-        // Note: mVsyncRefreshDriverTimer might be null now.
-
-        mLastIdleTaskCount =
-            TaskController::Get()->GetIdleTaskManager()->ProcessedTaskCount();
-        mLastRunOutOfMTTasksCount =
-            TaskController::Get()->RunOutOfMTTasksCount();
+        if (timeForOutsideTick > gracePeriod) {
+          // If we're giving extra time for tasks outside a tick, try to
+          // ensure the next vsync after that period is handled, so subtract
+          // a grace period.
+          timeForOutsideTick = timeForOutsideTick - gracePeriod;
+        }
       }
+
+      RefPtr<VsyncRefreshDriverTimer> timer = mVsyncRefreshDriverTimer;
+      timer->RunRefreshDrivers(aId, aVsyncTimestamp);
+      // Note: mVsyncRefreshDriverTimer might be null now.
+
+      mLastIdleTaskCount =
+          TaskController::Get()->GetIdleTaskManager()->ProcessedTaskCount();
+      mLastRunOutOfMTTasksCount = TaskController::Get()->RunOutOfMTTasksCount();
 
       mLastTickEnd = TimeStamp::Now();
 
