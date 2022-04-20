@@ -81,7 +81,7 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
     // For spell checker, previous selected node should be text node if
     // possible. If anchor is root of editor, it may become invalid offset
     // after inserting text.
-    EditorRawDOMPoint point =
+    const EditorRawDOMPoint point =
         FindBetterInsertionPoint(EditorRawDOMPoint(SelectionRef().AnchorRef()));
     NS_WARNING_ASSERTION(
         point.IsSet(),
