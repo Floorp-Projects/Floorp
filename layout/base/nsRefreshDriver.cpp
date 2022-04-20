@@ -775,18 +775,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           // In case normal tasks are doing lots of work, we still want to paint
           // every now and then, so only at maximum 4 * rate of work is counted
           // here.
-          TimeDuration timeForOutsideTick = tickStart - mLastTickEnd;
-          TimeDuration maxOutsideTick = rate * 4;
-          if (timeForOutsideTick > maxOutsideTick) {
-            timeForOutsideTick = maxOutsideTick;
-          }
-
-          if (timeForOutsideTick > gracePeriod) {
-            // If we're giving extra time for tasks outside a tick, try to
-            // ensure the next vsync after that period is handled, so subtract
-            // a grace period.
-            timeForOutsideTick = timeForOutsideTick - gracePeriod;
-          }
+          // If we're giving extra time for tasks outside a tick, try to
+          // ensure the next vsync after that period is handled, so subtract
+          // a grace period.
+          TimeDuration timeForOutsideTick = clamped(
+              tickStart - mLastTickEnd - gracePeriod, TimeDuration(), rate * 4);
           mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp +
                                             timeForOutsideTick +
                                             (tickEnd - mostRecentTickStart);
