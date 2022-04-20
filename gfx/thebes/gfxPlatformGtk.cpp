@@ -31,7 +31,6 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/gfx/XlibDisplay.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -45,6 +44,7 @@
 #include "VsyncSource.h"
 
 #ifdef MOZ_X11
+#  include "mozilla/gfx/XlibDisplay.h"
 #  include <gdk/gdkx.h>
 #  include <X11/extensions/Xrandr.h>
 #  include "cairo-xlib.h"

@@ -12,11 +12,11 @@
 
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/WidgetUtilsGtk.h"
-#  include "nsGTKRemoteServer.h"
 #  ifdef MOZ_ENABLE_DBUS
 #    include "nsDBusRemoteServer.h"
 #    include "nsDBusRemoteClient.h"
 #  else
+#    include "nsGTKRemoteServer.h"
 #    include "nsXRemoteClient.h"
 #  endif
 #elif defined(XP_WIN)
