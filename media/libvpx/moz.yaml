@@ -1,0 +1,70 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Core
+  component: "Audio/Video"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: libvpx
+
+  description: VP8/VP9 Codec SDK
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://chromium.googlesource.com/webm/libvpx
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: 626ff35955c2c35b806b3e0ecf551a1a8611cdbf (Wed Oct 06 17:41:19 2021).
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 626ff35955c2c35b806b3e0ecf551a1a8611cdbf
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: BSD-3-Clause
+
+  license-file: LICENSE
+
+updatebot:
+    maintainer-phab: bryce
+    maintainer-bz: bvandyk@mozilla.com
+    tasks:
+      - type: vendoring
+        enabled: true
+        frequency: release
+
+vendoring:
+  url: https://chromium.googlesource.com/webm/libvpx
+  source-hosting: googlesource
+  vendor-directory: media/libvpx/libvpx/
+  skip-vendoring-steps: ['update-moz-build']
+
+  exclude:
+    - .gitattributes
+    - .gitignore
+    - third_party/libwebm
+    - tools/
+
+  patches:
+    - bug1137614.patch
+    - input_frame_validation.patch
+    - input_frame_validation_vp9.patch
+    - rename_duplicate_files.patch
+    - win64_build_fix.patch
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/vpx_dsp/x86/loopfilter_sse2.c'
+      to: '{vendor_dir}/vpx_dsp/x86/loopfilter_intrin_sse2.c'
+    - action: run-script
+      script: '{yaml_dir}/generate_sources_mozbuild.sh'
+      cwd: '{yaml_dir}'
