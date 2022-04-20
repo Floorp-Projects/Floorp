@@ -1115,7 +1115,7 @@ nsIContent* HTMLEditUtils::GetNextContent(
       "GetNextContent() doesn't assume that the start point is a "
       "data node except text node");
 
-  EditorRawDOMPoint point(aPoint);
+  auto point = aPoint.template To<EditorRawDOMPoint>();
 
   // if the container is a text node, use its location instead
   if (point.IsInTextNode()) {
@@ -1740,8 +1740,8 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
     return EditorDOMPointType();
   }
 
-  EditorDOMPointType pointToInsert(
-      aPointToInsert.GetNonAnonymousSubtreePoint());
+  auto pointToInsert = aPointToInsert.GetNonAnonymousSubtreePoint()
+                           .template To<EditorDOMPointType>();
   if (NS_WARN_IF(!pointToInsert.IsSet()) ||
       NS_WARN_IF(!pointToInsert.GetContainer()->IsInclusiveDescendantOf(
           &aEditingHost))) {
@@ -1789,7 +1789,8 @@ EditorDOMPointType HTMLEditUtils::GetBetterInsertionPointFor(
     return pointToInsert;
   }
 
-  return forwardScanFromPointToInsertResult.RawPointAfterContent();
+  return forwardScanFromPointToInsertResult.RawPointAfterContent()
+      .To<EditorDOMPointType>();
 }
 
 }  // namespace mozilla

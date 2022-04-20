@@ -73,7 +73,8 @@ nsresult TypeInState::UpdateSelState(Selection& aSelection) {
     return NS_OK;
   }
 
-  mLastSelectionPoint = EditorBase::GetStartPoint(aSelection);
+  mLastSelectionPoint =
+      EditorBase::GetStartPoint(aSelection).To<EditorDOMPoint>();
   if (!mLastSelectionPoint.IsSet()) {
     return NS_ERROR_FAILURE;
   }
@@ -302,7 +303,7 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
       return;
     }
 
-    mLastSelectionPoint = selectionStartPoint;
+    mLastSelectionPoint = selectionStartPoint.To<EditorDOMPoint>();
     // We need to store only offset because referring child may be removed by
     // we'll check the point later.
     AutoEditorDOMPointChildInvalidator saveOnlyOffset(mLastSelectionPoint);

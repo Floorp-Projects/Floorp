@@ -1134,8 +1134,8 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   // XXX At here, selection may have no range because of mutation event
   //     listeners can do anything so that we should just return NS_OK instead
   //     of returning error.
-  EditorDOMPoint atNewStartOfSelection(
-      EditorBase::GetStartPoint(SelectionRef()));
+  const auto atNewStartOfSelection =
+      EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
@@ -2029,8 +2029,9 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       return EditActionHandled(rv);
     }
   }
-  EditorDOMPoint newCaretPosition =
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef());
+  const auto newCaretPosition =
+      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef())
+          .To<EditorDOMPoint>();
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2140,8 +2141,9 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
       "failed, but ignored");
 
-  EditorDOMPoint newCaretPosition =
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef());
+  const auto newCaretPosition =
+      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef())
+          .To<EditorDOMPoint>();
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2404,8 +2406,9 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
     return EditActionHandled(rv);
   }
 
-  EditorDOMPoint newCaretPosition =
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef());
+  const auto newCaretPosition =
+      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef())
+          .To<EditorDOMPoint>();
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -5316,8 +5319,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     case nsIEditor::eToEndOfLine: {
       // Collapse Selection to next node of after empty block element
       // if there is.  Otherwise, to just after the empty block.
-      EditorDOMPoint afterEmptyBlock(
-          EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
+      auto afterEmptyBlock(
+          EditorDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
       MOZ_ASSERT(afterEmptyBlock.IsSet());
       if (nsIContent* nextContentOfEmptyBlock = HTMLEditUtils::GetNextContent(
               afterEmptyBlock, {}, aHTMLEditor.GetActiveEditingHost())) {
@@ -5352,8 +5355,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         }
         return pt;
       }
-      EditorDOMPoint afterEmptyBlock(
-          EditorRawDOMPoint::After(*mEmptyInclusiveAncestorBlockElement));
+      auto afterEmptyBlock =
+          EditorDOMPoint::After(*mEmptyInclusiveAncestorBlockElement);
       if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
         return Err(NS_ERROR_FAILURE);
       }
@@ -5540,7 +5543,8 @@ HTMLEditor::AutoDeleteRangesHandler::ExtendOrShrinkRangeToDelete(
           break;
         }
         if (!atFirstInvisibleBRElement.IsSet()) {
-          atFirstInvisibleBRElement = rangeToDelete.EndRef();
+          atFirstInvisibleBRElement =
+              rangeToDelete.EndRef().To<EditorDOMPoint>();
         }
         rangeToDelete.SetEnd(
             EditorRawDOMPoint::After(*wsScannerAtEnd.GetEndReasonContent()));

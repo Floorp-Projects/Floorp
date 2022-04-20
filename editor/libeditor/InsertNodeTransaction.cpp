@@ -48,7 +48,7 @@ InsertNodeTransaction::InsertNodeTransaction(
     EditorBase& aEditorBase, nsIContent& aContentToInsert,
     const EditorDOMPointBase<PT, CT>& aPointToInsert)
     : mContentToInsert(&aContentToInsert),
-      mPointToInsert(aPointToInsert),
+      mPointToInsert(aPointToInsert.template To<EditorDOMPoint>()),
       mEditorBase(&aEditorBase) {
   MOZ_ASSERT(mPointToInsert.IsSetAndValid());
   // Ensure mPointToInsert stores child at offset.
