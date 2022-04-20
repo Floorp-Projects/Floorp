@@ -69,10 +69,6 @@ types.addDictType("object.ownPropertyNames", {
   ownPropertyNames: "array:string",
 });
 
-types.addDictType("object.parameterNames", {
-  parameterNames: "nullable:array:string",
-});
-
 types.addDictType("object.dependentPromises", {
   promises: "array:object.descriptor",
 });
@@ -145,10 +141,6 @@ const objectSpec = generateActorSpec({
     ownPropertyNames: {
       request: {},
       response: RetVal("object.ownPropertyNames"),
-    },
-    parameterNames: {
-      request: {},
-      response: RetVal("object.parameterNames"),
     },
     prototypeAndProperties: {
       request: {},
