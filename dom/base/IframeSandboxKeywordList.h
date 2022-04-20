@@ -30,3 +30,6 @@ SANDBOX_KEYWORD("allow-presentation", allowpresentation, SANDBOXED_PRESENTATION)
 SANDBOX_KEYWORD("allow-storage-access-by-user-activation",
                 allowstorageaccessbyuseractivatetion, SANDBOXED_STORAGE_ACCESS)
 SANDBOX_KEYWORD("allow-downloads", allowdownloads, SANDBOXED_ALLOW_DOWNLOADS)
+SANDBOX_KEYWORD("allow-top-navigation-to-custom-protocols",
+                allowtopnavigationcustomprotocols,
+                SANDBOXED_TOPLEVEL_NAVIGATION_CUSTOM_PROTOCOLS)

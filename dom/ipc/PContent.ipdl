@@ -1121,7 +1121,8 @@ parent:
                           nsIPrincipal triggeringPrincipal,
                           nsIPrincipal redirectPrincipal,
                           MaybeDiscardedBrowsingContext browsingContext,
-                          bool wasExternallyTriggered);
+                          bool wasExternallyTriggered,
+                          bool hasValidUserGestureActivation);
     async ExtProtocolChannelConnectParent(uint64_t registrarId);
 
     // PrefService message
