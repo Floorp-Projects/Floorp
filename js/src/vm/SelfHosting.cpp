@@ -2572,7 +2572,10 @@ class CheckTenuredTracer : public JS::CallbackTracer {
     gc::Cell* cell = thing.asCell();
     MOZ_RELEASE_ASSERT(cell->isTenured(), "Expected tenured cell");
     if (!visited.has(cell)) {
-      MOZ_RELEASE_ASSERT(visited.put(cell) && stack.append(thing), "OOM");
+      if (!visited.put(cell) || !stack.append(thing)) {
+        // Ignore OOM. This can happen during fuzzing.
+        return;
+      }
     }
   }
 };
