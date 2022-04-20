@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -8,9 +8,9 @@
 // except according to those terms.
 
 use super::*;
-use data::*;
-use handles::*;
-use variant::*;
+use crate::data::*;
+use crate::handles::*;
+use crate::variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range32;
 
@@ -263,7 +263,7 @@ impl Big5Encoder {
 // Any copyright to the test code below this comment is dedicated to the
 // Public Domain. http://creativecommons.org/publicdomain/zero/1.0/
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::super::testing::*;
     use super::super::*;
@@ -365,18 +365,21 @@ mod tests {
         // ASCII
         encode_big5("\u{0061}\u{0062}", b"\x61\x62");
 
-        // Edge cases
-        encode_big5("\u{9EA6}\u{0061}", b"&#40614;\x61");
-        encode_big5("\u{2626B}\u{0061}", b"&#156267;\x61");
-        encode_big5("\u{3000}", b"\xA1\x40");
-        encode_big5("\u{20AC}", b"\xA3\xE1");
-        encode_big5("\u{4E00}", b"\xA4\x40");
-        encode_big5("\u{27607}", b"\xC8\xA4");
-        encode_big5("\u{FFE2}", b"\xC8\xCD");
-        encode_big5("\u{79D4}", b"\xFE\xFE");
+        if !cfg!(miri) {
+            // Miri is too slow
+            // Edge cases
+            encode_big5("\u{9EA6}\u{0061}", b"&#40614;\x61");
+            encode_big5("\u{2626B}\u{0061}", b"&#156267;\x61");
+            encode_big5("\u{3000}", b"\xA1\x40");
+            encode_big5("\u{20AC}", b"\xA3\xE1");
+            encode_big5("\u{4E00}", b"\xA4\x40");
+            encode_big5("\u{27607}", b"\xC8\xA4");
+            encode_big5("\u{FFE2}", b"\xC8\xCD");
+            encode_big5("\u{79D4}", b"\xFE\xFE");
 
-        // Not in index
-        encode_big5("\u{2603}\u{0061}", b"&#9731;\x61");
+            // Not in index
+            encode_big5("\u{2603}\u{0061}", b"&#9731;\x61");
+        }
 
         // duplicate low bits
         encode_big5("\u{203B5}", b"\xFD\x6A");
@@ -387,6 +390,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_big5_decode_all() {
         let input = include_bytes!("test_data/big5_in.txt");
         let expectation = include_str!("test_data/big5_in_ref.txt");
@@ -396,6 +400,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_big5_encode_all() {
         let input = include_str!("test_data/big5_out.txt");
         let expectation = include_bytes!("test_data/big5_out_ref.txt");
@@ -406,6 +411,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_big5_encode_from_two_low_surrogates() {
         let expectation = b"&#65533;&#65533;";
         let mut output = [0u8; 40];

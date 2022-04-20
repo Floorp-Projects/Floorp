@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -24,7 +24,12 @@
 //! The FFI binding for this module are in the
 //! [encoding_c_mem crate](https://github.com/hsivonen/encoding_c_mem).
 
-use std::borrow::Cow;
+#[cfg(feature = "alloc")]
+use alloc::borrow::Cow;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
 
 use super::in_inclusive_range16;
 use super::in_inclusive_range32;
@@ -32,8 +37,8 @@ use super::in_inclusive_range8;
 use super::in_range16;
 use super::in_range32;
 use super::DecoderResult;
-use ascii::*;
-use utf_8::*;
+use crate::ascii::*;
+use crate::utf_8::*;
 
 macro_rules! non_fuzz_debug_assert {
     ($($arg:tt)*) => (if !cfg!(fuzzing) { debug_assert!($($arg)*); })
@@ -41,8 +46,8 @@ macro_rules! non_fuzz_debug_assert {
 
 cfg_if! {
     if #[cfg(feature = "simd-accel")] {
-        use ::std::intrinsics::likely;
-        use ::std::intrinsics::unlikely;
+        use ::core::intrinsics::likely;
+        use ::core::intrinsics::unlikely;
     } else {
         #[inline(always)]
         // Unsafe to match the intrinsic, which is needlessly unsafe.
@@ -85,7 +90,7 @@ macro_rules! by_unit_check_alu {
         fn $name(buffer: &[$unit]) -> bool {
             let mut offset = 0usize;
             let mut accu = 0usize;
-            let unit_size = ::std::mem::size_of::<$unit>();
+            let unit_size = ::core::mem::size_of::<$unit>();
             let len = buffer.len();
             if len >= ALU_ALIGNMENT / unit_size {
                 // The most common reason to return `false` is for the first code
@@ -157,7 +162,7 @@ macro_rules! by_unit_check_simd {
         fn $name(buffer: &[$unit]) -> bool {
             let mut offset = 0usize;
             let mut accu = 0usize;
-            let unit_size = ::std::mem::size_of::<$unit>();
+            let unit_size = ::core::mem::size_of::<$unit>();
             let len = buffer.len();
             if len >= SIMD_STRIDE_SIZE / unit_size {
                 // The most common reason to return `false` is for the first code
@@ -230,7 +235,7 @@ macro_rules! by_unit_check_simd {
 
 cfg_if! {
     if #[cfg(all(feature = "simd-accel", any(target_feature = "sse2", all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_feature = "neon"))))] {
-        use simd_funcs::*;
+        use crate::simd_funcs::*;
         use packed_simd::u8x16;
         use packed_simd::u16x8;
 
@@ -248,7 +253,7 @@ cfg_if! {
             // only aligned SIMD (perhaps misguidedly) and needs to deal with
             // the last code unit in a SIMD stride being part of a valid
             // surrogate pair.
-            let unit_size = ::std::mem::size_of::<u16>();
+            let unit_size = ::core::mem::size_of::<u16>();
             let src = buffer.as_ptr();
             let len = buffer.len();
             let mut offset = 0usize;
@@ -276,7 +281,7 @@ cfg_if! {
                     offset = offset_plus_until_alignment;
                 }
                 let len_minus_stride = len - SIMD_STRIDE_SIZE / unit_size;
-                'inner: loop {
+                loop {
                     let offset_plus_stride = offset + SIMD_STRIDE_SIZE / unit_size;
                     if contains_surrogates(unsafe { *(src.add(offset) as *const u16x8) }) {
                         if offset_plus_stride == len {
@@ -740,13 +745,13 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                 'inner: loop {
                     // At this point, `byte` is not included in `read`.
                     match byte {
-                        0...0x7F => {
+                        0..=0x7F => {
                             // ASCII: go back to SIMD.
                             read += 1;
                             src = &src[read..];
                             continue 'outer;
                         }
-                        0xC2...0xD5 => {
+                        0xC2..=0xD5 => {
                             // Two-byte
                             let second = unsafe { *(src.get_unchecked(read + 1)) };
                             if !in_inclusive_range8(second, 0x80, 0xBF) {
@@ -767,7 +772,7 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                             read += 2;
                         }
                         // two-byte starting with 0xD7 and above is bidi
-                        0xE1 | 0xE3...0xEC | 0xEE => {
+                        0xE1 | 0xE3..=0xEC | 0xEE => {
                             // Three-byte normal
                             let second = unsafe { *(src.get_unchecked(read + 1)) };
                             let third = unsafe { *(src.get_unchecked(read + 2)) };
@@ -876,7 +881,7 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                             }
                             read += 3;
                         }
-                        0xF1...0xF4 => {
+                        0xF1..=0xF4 => {
                             // Four-byte normal
                             let second = unsafe { *(src.get_unchecked(read + 1)) };
                             let third = unsafe { *(src.get_unchecked(read + 2)) };
@@ -939,13 +944,13 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
 
             // At this point, `byte` is not included in `read`.
             match byte {
-                0...0x7F => {
+                0..=0x7F => {
                     // ASCII: go back to SIMD.
                     read += 1;
                     src = &src[read..];
                     continue 'outer;
                 }
-                0xC2...0xD5 => {
+                0xC2..=0xD5 => {
                     // Two-byte
                     let new_read = read + 2;
                     if new_read > src.len() {
@@ -982,7 +987,7 @@ pub fn is_utf8_bidi(buffer: &[u8]) -> bool {
                     continue 'outer;
                 }
                 // two-byte starting with 0xD7 and above is bidi
-                0xE1 | 0xE3...0xEC | 0xEE => {
+                0xE1 | 0xE3..=0xEC | 0xEE => {
                     // Three-byte normal
                     let new_read = read + 3;
                     if new_read > src.len() {
@@ -1781,7 +1786,7 @@ pub fn convert_latin1_to_utf8_partial(src: &[u8], dst: &mut [u8]) -> (usize, usi
         // src can't advance more than dst
         let src_left = src_len - total_read;
         let dst_left = dst_len - total_written;
-        let min_left = ::std::cmp::min(src_left, dst_left);
+        let min_left = ::core::cmp::min(src_left, dst_left);
         if let Some((non_ascii, consumed)) = unsafe {
             ascii_to_ascii(
                 src_ptr.add(total_read),
@@ -1850,7 +1855,7 @@ pub fn convert_latin1_to_str_partial(src: &[u8], dst: &mut str) -> (usize, usize
     let (read, written) = convert_latin1_to_utf8_partial(src, bytes);
     let len = bytes.len();
     let mut trail = written;
-    let max = ::std::cmp::min(len, trail + MAX_STRIDE_SIZE);
+    let max = ::core::cmp::min(len, trail + MAX_STRIDE_SIZE);
     while trail < max {
         bytes[trail] = 0;
         trail += 1;
@@ -1986,12 +1991,15 @@ pub fn convert_utf16_to_latin1_lossy(src: &[u16], dst: &mut [u8]) {
 ///
 /// Borrows if input is ASCII-only. Performs a single heap allocation
 /// otherwise.
+///
+/// Only available if the `alloc` feature is enabled (enabled by default).
+#[cfg(feature = "alloc")]
 pub fn decode_latin1<'a>(bytes: &'a [u8]) -> Cow<'a, str> {
     let up_to = ascii_valid_up_to(bytes);
     // >= makes later things optimize better than ==
     if up_to >= bytes.len() {
         debug_assert_eq!(up_to, bytes.len());
-        let s: &str = unsafe { ::std::str::from_utf8_unchecked(bytes) };
+        let s: &str = unsafe { ::core::str::from_utf8_unchecked(bytes) };
         return Cow::Borrowed(s);
     }
     let (head, tail) = bytes.split_at(up_to);
@@ -2020,6 +2028,9 @@ pub fn decode_latin1<'a>(bytes: &'a [u8]) -> Cow<'a, str> {
 ///
 /// Borrows if input is ASCII-only. Performs a single heap allocation
 /// otherwise.
+///
+/// Only available if the `alloc` feature is enabled (enabled by default).
+#[cfg(feature = "alloc")]
 pub fn encode_latin1_lossy<'a>(string: &'a str) -> Cow<'a, [u8]> {
     let bytes = string.as_bytes();
     let up_to = ascii_valid_up_to(bytes);
@@ -2056,7 +2067,7 @@ pub fn utf8_latin1_up_to(buffer: &[u8]) -> usize {
 /// Returns the index of first byte that starts a non-Latin1 byte
 /// sequence, or the length of the string if there are none.
 pub fn str_latin1_up_to(buffer: &str) -> usize {
-    is_str_latin1_impl(buffer).unwrap_or(buffer.len())
+    is_str_latin1_impl(buffer).unwrap_or_else(|| buffer.len())
 }
 
 /// Replaces unpaired surrogates in the input with the REPLACEMENT CHARACTER.
@@ -2153,7 +2164,7 @@ pub fn copy_basic_latin_to_ascii(src: &[u16], dst: &mut [u8]) -> usize {
 // Any copyright to the test code below this comment is dedicated to the
 // Public Domain. http://creativecommons.org/publicdomain/zero/1.0/
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::*;
 
@@ -2231,8 +2242,9 @@ mod tests {
 
     #[test]
     fn test_is_utf16_latin1_fail() {
-        let mut src: Vec<u16> = Vec::with_capacity(256);
-        src.resize(256, 0);
+        let len = if cfg!(miri) { 64 } else { 256 }; // Miri is too slow
+        let mut src: Vec<u16> = Vec::with_capacity(len);
+        src.resize(len, 0);
         for i in 0..src.len() {
             src[i] = i as u16;
         }
@@ -2248,8 +2260,9 @@ mod tests {
 
     #[test]
     fn test_is_str_latin1_success() {
-        let mut src: Vec<u16> = Vec::with_capacity(256);
-        src.resize(256, 0);
+        let len = if cfg!(miri) { 64 } else { 256 }; // Miri is too slow
+        let mut src: Vec<u16> = Vec::with_capacity(len);
+        src.resize(len, 0);
         for i in 0..src.len() {
             src[i] = i as u16;
         }
@@ -2262,8 +2275,9 @@ mod tests {
 
     #[test]
     fn test_is_str_latin1_fail() {
-        let mut src: Vec<u16> = Vec::with_capacity(256);
-        src.resize(256, 0);
+        let len = if cfg!(miri) { 32 } else { 256 }; // Miri is too slow
+        let mut src: Vec<u16> = Vec::with_capacity(len);
+        src.resize(len, 0);
         for i in 0..src.len() {
             src[i] = i as u16;
         }
@@ -2280,8 +2294,9 @@ mod tests {
 
     #[test]
     fn test_is_utf8_latin1_success() {
-        let mut src: Vec<u16> = Vec::with_capacity(256);
-        src.resize(256, 0);
+        let len = if cfg!(miri) { 64 } else { 256 }; // Miri is too slow
+        let mut src: Vec<u16> = Vec::with_capacity(len);
+        src.resize(len, 0);
         for i in 0..src.len() {
             src[i] = i as u16;
         }
@@ -2297,8 +2312,9 @@ mod tests {
 
     #[test]
     fn test_is_utf8_latin1_fail() {
-        let mut src: Vec<u16> = Vec::with_capacity(256);
-        src.resize(256, 0);
+        let len = if cfg!(miri) { 32 } else { 256 }; // Miri is too slow
+        let mut src: Vec<u16> = Vec::with_capacity(len);
+        src.resize(len, 0);
         for i in 0..src.len() {
             src[i] = i as u16;
         }
@@ -3112,11 +3128,11 @@ mod tests {
     #[inline(always)]
     pub fn reference_is_char_bidi(c: char) -> bool {
         match c {
-            '\u{0590}'...'\u{08FF}'
-            | '\u{FB1D}'...'\u{FDFF}'
-            | '\u{FE70}'...'\u{FEFE}'
-            | '\u{10800}'...'\u{10FFF}'
-            | '\u{1E800}'...'\u{1EFFF}'
+            '\u{0590}'..='\u{08FF}'
+            | '\u{FB1D}'..='\u{FDFF}'
+            | '\u{FE70}'..='\u{FEFE}'
+            | '\u{10800}'..='\u{10FFF}'
+            | '\u{1E800}'..='\u{1EFFF}'
             | '\u{200F}'
             | '\u{202B}'
             | '\u{202E}'
@@ -3128,9 +3144,9 @@ mod tests {
     #[inline(always)]
     pub fn reference_is_utf16_code_unit_bidi(u: u16) -> bool {
         match u {
-            0x0590...0x08FF
-            | 0xFB1D...0xFDFF
-            | 0xFE70...0xFEFE
+            0x0590..=0x08FF
+            | 0xFB1D..=0xFDFF
+            | 0xFE70..=0xFEFE
             | 0xD802
             | 0xD803
             | 0xD83A
@@ -3144,18 +3160,20 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_is_char_bidi_thoroughly() {
         for i in 0..0xD800u32 {
-            let c: char = ::std::char::from_u32(i).unwrap();
+            let c: char = ::core::char::from_u32(i).unwrap();
             assert_eq!(is_char_bidi(c), reference_is_char_bidi(c));
         }
         for i in 0xE000..0x110000u32 {
-            let c: char = ::std::char::from_u32(i).unwrap();
+            let c: char = ::core::char::from_u32(i).unwrap();
             assert_eq!(is_char_bidi(c), reference_is_char_bidi(c));
         }
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_is_utf16_code_unit_bidi_thoroughly() {
         for i in 0..0x10000u32 {
             let u = i as u16;
@@ -3167,17 +3185,18 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_is_str_bidi_thoroughly() {
         let mut buf = [0; 4];
         for i in 0..0xD800u32 {
-            let c: char = ::std::char::from_u32(i).unwrap();
+            let c: char = ::core::char::from_u32(i).unwrap();
             assert_eq!(
                 is_str_bidi(c.encode_utf8(&mut buf[..])),
                 reference_is_char_bidi(c)
             );
         }
         for i in 0xE000..0x110000u32 {
-            let c: char = ::std::char::from_u32(i).unwrap();
+            let c: char = ::core::char::from_u32(i).unwrap();
             assert_eq!(
                 is_str_bidi(c.encode_utf8(&mut buf[..])),
                 reference_is_char_bidi(c)
@@ -3186,10 +3205,11 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_is_utf8_bidi_thoroughly() {
         let mut buf = [0; 8];
         for i in 0..0xD800u32 {
-            let c: char = ::std::char::from_u32(i).unwrap();
+            let c: char = ::core::char::from_u32(i).unwrap();
             let expect = reference_is_char_bidi(c);
             {
                 let len = {
@@ -3207,7 +3227,7 @@ mod tests {
             assert_eq!(is_utf8_bidi(&buf[..]), expect);
         }
         for i in 0xE000..0x110000u32 {
-            let c: char = ::std::char::from_u32(i).unwrap();
+            let c: char = ::core::char::from_u32(i).unwrap();
             let expect = reference_is_char_bidi(c);
             {
                 let len = {
@@ -3227,6 +3247,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_is_utf16_bidi_thoroughly() {
         let mut buf = [0; 32];
         for i in 0..0x10000u32 {

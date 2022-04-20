@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -8,9 +8,9 @@
 // except according to those terms.
 
 use super::*;
-use data::*;
-use handles::*;
-use variant::*;
+use crate::data::*;
+use crate::handles::*;
+use crate::variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range16;
 
@@ -346,7 +346,7 @@ impl EucJpEncoder {
 // Any copyright to the test code below this comment is dedicated to the
 // Public Domain. http://creativecommons.org/publicdomain/zero/1.0/
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::super::testing::*;
     use super::super::*;
@@ -437,6 +437,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_jis0208_decode_all() {
         let input = include_bytes!("test_data/jis0208_in.txt");
         let expectation = include_str!("test_data/jis0208_in_ref.txt");
@@ -446,6 +447,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_jis0208_encode_all() {
         let input = include_str!("test_data/jis0208_out.txt");
         let expectation = include_bytes!("test_data/jis0208_out_ref.txt");
@@ -456,6 +458,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_jis0212_decode_all() {
         let input = include_bytes!("test_data/jis0212_in.txt");
         let expectation = include_str!("test_data/jis0212_in_ref.txt");
