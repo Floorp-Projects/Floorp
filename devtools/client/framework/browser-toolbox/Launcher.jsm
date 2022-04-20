@@ -305,7 +305,16 @@ BrowserToolboxLauncher.prototype = {
       "devtools.webconsole.input.context",
       false
     );
+    const env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
     const environment = {
+      // Allow recording the startup of the browser toolbox when setting
+      // MOZ_BROWSER_TOOLBOX_PROFILER_STARTUP=1 when running firefox.
+      MOZ_PROFILER_STARTUP: env.get("MOZ_BROWSER_TOOLBOX_PROFILER_STARTUP"),
+      // And prevent profiling any subsequent toolbox
+      MOZ_BROWSER_TOOLBOX_PROFILER_STARTUP: "0",
+
       // Will be read by the Browser Toolbox Firefox instance to update the
       // devtools.browsertoolbox.fission pref on the Browser Toolbox profile.
       MOZ_BROWSER_TOOLBOX_FISSION_PREF: isBrowserToolboxFission ? "1" : "0",
