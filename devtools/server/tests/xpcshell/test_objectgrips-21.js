@@ -264,9 +264,6 @@ async function test_unsafe_grips(
       slice = await response.slice(0, response.count);
       check_properties(slice.ownProperties, data, isUnsafe);
 
-      response = await objClient.getOwnPropertyNames();
-      check_property_names(response.ownPropertyNames, data, isUnsafe);
-
       response = await objClient.getProperty("x");
       check_property(response.descriptor, data, isUnsafe);
 
