@@ -16,6 +16,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
@@ -1099,6 +1100,10 @@ nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
 bool ExternalProtocolIsBlockedBySandbox(
     BrowsingContext* aBrowsingContext,
     const bool aHasValidUserGestureActivation) {
+  if (!StaticPrefs::dom_block_external_protocol_navigation_from_sandbox()) {
+    return false;
+  }
+
   if (!aBrowsingContext || aBrowsingContext->IsTop()) {
     return false;
   }
