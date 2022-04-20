@@ -276,7 +276,7 @@ internal class ReleaseMetricController(
                         Logger("Metrics").error("Unknown suggestion provider: $provider")
                         null
                     }
-                }?.accumulateSamples(longArrayOf(providerTiming.second as Long))
+                }?.accumulateSamples(listOf(providerTiming.second as Long))
             }
             Unit
         }

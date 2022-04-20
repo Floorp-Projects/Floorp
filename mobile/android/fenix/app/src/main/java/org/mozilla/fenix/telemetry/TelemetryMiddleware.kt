@@ -106,9 +106,9 @@ class TelemetryMiddleware(
 
         // Record the age of the engine session of the killed foreground/background tab.
         if (isSelected && age != null) {
-            EngineMetrics.killForegroundAge.accumulateSamples(listOf(age).toLongArray())
+            EngineMetrics.killForegroundAge.accumulateSamples(listOf(age))
         } else if (age != null) {
-            EngineMetrics.killBackgroundAge.accumulateSamples(listOf(age).toLongArray())
+            EngineMetrics.killBackgroundAge.accumulateSamples(listOf(age))
         }
     }
 }

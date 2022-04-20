@@ -66,7 +66,7 @@ class ColdStartupDurationTelemetry {
 
         val startNanos = StartupTimeline.frameworkStartMeasurement.applicationInitNanos
         val durationMillis = TimeUnit.NANOSECONDS.toMillis(firstFrameNanos - startNanos)
-        metric.accumulateSamples(longArrayOf(durationMillis))
+        metric.accumulateSamples(listOf(durationMillis))
         logger.info("COLD $typeForLog Application.<init> to first frame: $durationMillis ms")
     }
 }

@@ -56,7 +56,7 @@ class TabsTrayMiddleware : Middleware<TabsTrayState, TabsTrayAction> {
                         )
 
                         val tabGroupSizeMapping = tabsPerGroup.map { generateTabGroupSizeMappedValue(it) }
-                        SearchTerms.groupSizeDistribution.accumulateSamples(tabGroupSizeMapping.toLongArray())
+                        SearchTerms.groupSizeDistribution.accumulateSamples(tabGroupSizeMapping.toList())
                     }
                 }
             }

@@ -111,7 +111,7 @@ class RecentSyncedTabFeature(
         syncStartId: GleanTimerId?
     ) {
         RecentSyncedTabs.recentSyncedTabShown[tab.deviceType.name.lowercase()].add()
-        RecentSyncedTabs.recentSyncedTabTimeToLoad.stopAndAccumulate(syncStartId)
+        syncStartId?.let { RecentSyncedTabs.recentSyncedTabTimeToLoad.stopAndAccumulate(it) }
         if (tab == lastSyncedTab) {
             RecentSyncedTabs.latestSyncedTabIsStale.add()
         }
