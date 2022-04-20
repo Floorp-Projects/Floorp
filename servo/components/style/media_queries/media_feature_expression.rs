@@ -17,7 +17,7 @@ use crate::servo::media_queries::MEDIA_FEATURES;
 use crate::str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
 use crate::values::computed::{self, Ratio, ToComputedValue};
 use crate::values::specified::{Integer, Length, Number, Resolution};
-use crate::values::CSSFloat;
+use crate::values::{serialize_atom_identifier, CSSFloat};
 use crate::{Atom, Zero};
 use cssparser::{Parser, Token};
 use std::cmp::{Ordering, PartialOrd};
@@ -78,7 +78,7 @@ pub enum RangeOrOperator {
 impl RangeOrOperator {
     /// Evaluate a given range given an optional query value and a value from
     /// the browser.
-    fn evaluate<T>(range_or_op: Option<Self>, query_value: Option<T>, value: T) -> bool
+    pub fn evaluate<T>(range_or_op: Option<Self>, query_value: Option<T>, value: T) -> bool
     where
         T: PartialOrd + Zero,
     {
@@ -90,7 +90,7 @@ impl RangeOrOperator {
 
     /// Evaluate a given range given a non-optional query value and a value from
     /// the browser.
-    fn evaluate_with_query_value<T>(range_or_op: Option<Self>, query_value: T, value: T) -> bool
+    pub fn evaluate_with_query_value<T>(range_or_op: Option<Self>, query_value: T, value: T) -> bool
     where
         T: PartialOrd,
     {
@@ -125,11 +125,19 @@ impl RangeOrOperator {
 
 /// A feature expression contains a reference to the media feature, the value
 /// the media query contained, and the range to evaluate.
-#[derive(Clone, Debug, MallocSizeOf, ToShmem, PartialEq)]
+#[derive(Clone, Debug, MallocSizeOf, ToShmem)]
 pub struct MediaFeatureExpression {
     feature_index: usize,
     value: Option<MediaExpressionValue>,
     range_or_operator: Option<RangeOrOperator>,
+}
+
+impl PartialEq for MediaFeatureExpression {
+    fn eq(&self, other: &Self) -> bool {
+        self.feature_index == other.feature_index &&
+            self.value == other.value &&
+            self.range_or_operator == other.range_or_operator
+    }
 }
 
 impl ToCss for MediaFeatureExpression {
@@ -400,46 +408,34 @@ impl MediaFeatureExpression {
                         specified.to_computed_value(context)
                     })
                 });
-                let length = eval(device);
-                RangeOrOperator::evaluate(self.range_or_operator, computed, length)
+                eval(device, computed, self.range_or_operator)
             },
             Evaluator::Integer(eval) => {
-                let computed = expect!(Integer).cloned();
-                let integer = eval(device);
-                RangeOrOperator::evaluate(self.range_or_operator, computed, integer)
+                eval(device, expect!(Integer).cloned(), self.range_or_operator)
             },
-            Evaluator::Float(eval) => {
-                let computed = expect!(Float).cloned();
-                let float = eval(device);
-                RangeOrOperator::evaluate(self.range_or_operator, computed, float)
-            }
-            Evaluator::NumberRatio(eval) => {
-                let computed = match expect!(NumberRatio).cloned() {
-                    Some(ratio) => ratio,
-                    None => return true,
-                };
-                let ratio = eval(device);
-                RangeOrOperator::evaluate_with_query_value(self.range_or_operator, computed, ratio)
-            },
+            Evaluator::Float(eval) => eval(device, expect!(Float).cloned(), self.range_or_operator),
+            Evaluator::NumberRatio(eval) => eval(
+                device,
+                expect!(NumberRatio).cloned(),
+                self.range_or_operator,
+            ),
             Evaluator::Resolution(eval) => {
                 let computed = expect!(Resolution).map(|specified| {
                     computed::Context::for_media_query_evaluation(device, quirks_mode, |context| {
-                        specified.to_computed_value(context).dppx()
+                        specified.to_computed_value(context)
                     })
                 });
-                let resolution = eval(device).dppx();
-                RangeOrOperator::evaluate(self.range_or_operator, computed, resolution)
+                eval(device, computed, self.range_or_operator)
             },
             Evaluator::Enumerated { evaluator, .. } => {
-                debug_assert!(self.range_or_operator.is_none(), "Ranges with keywords?");
-                evaluator(device, expect!(Enumerated).cloned())
+                evaluator(device, expect!(Enumerated).cloned(), self.range_or_operator)
             },
-            Evaluator::BoolInteger(eval) => {
-                debug_assert!(self.range_or_operator.is_none(), "Ranges with bools?");
-                let computed = expect!(BoolInteger).cloned();
-                let boolean = eval(device);
-                computed.map_or(boolean, |v| v == boolean)
-            },
+            Evaluator::Ident(eval) => eval(device, expect!(Ident).cloned(), self.range_or_operator),
+            Evaluator::BoolInteger(eval) => eval(
+                device,
+                expect!(BoolInteger).cloned(),
+                self.range_or_operator,
+            ),
         }
     }
 }
@@ -470,6 +466,8 @@ pub enum MediaExpressionValue {
     /// An enumerated value, defined by the variant keyword table in the
     /// feature's `mData` member.
     Enumerated(KeywordDiscriminant),
+    /// An identifier.
+    Ident(Atom),
 }
 
 impl MediaExpressionValue {
@@ -484,6 +482,7 @@ impl MediaExpressionValue {
             MediaExpressionValue::BoolInteger(v) => dest.write_str(if v { "1" } else { "0" }),
             MediaExpressionValue::NumberRatio(ratio) => ratio.to_css(dest),
             MediaExpressionValue::Resolution(ref r) => r.to_css(dest),
+            MediaExpressionValue::Ident(ref ident) => serialize_atom_identifier(ident, dest),
             MediaExpressionValue::Enumerated(value) => match for_expr.feature().evaluator {
                 Evaluator::Enumerated { serializer, .. } => dest.write_str(&*serializer(value)),
                 _ => unreachable!(),
@@ -527,6 +526,9 @@ impl MediaExpressionValue {
             },
             Evaluator::Enumerated { parser, .. } => {
                 MediaExpressionValue::Enumerated(parser(context, input)?)
+            },
+            Evaluator::Ident(..) => {
+                MediaExpressionValue::Ident(Atom::from(input.expect_ident()?.as_ref()))
             },
         })
     }
