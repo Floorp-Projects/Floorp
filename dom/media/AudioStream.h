@@ -35,13 +35,6 @@ struct CubebDestroyPolicy {
   }
 };
 
-enum class ShutdownCause {
-  // Regular shutdown, signal the end of the audio stream.
-  Regular,
-  // Shutdown for muting, don't signal the end of the audio stream.
-  Muting
-};
-
 class AudioStream;
 class FrameHistory;
 class AudioConfig;
@@ -252,8 +245,7 @@ class AudioStream final {
   nsresult Init(AudioDeviceInfo* aSinkInfo);
 
   // Closes the stream. All future use of the stream is an error.
-  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> Shutdown(
-      ShutdownCause = ShutdownCause::Regular);
+  void Shutdown();
 
   void Reset();
 
@@ -263,8 +255,9 @@ class AudioStream final {
 
   void SetStreamName(const nsAString& aStreamName);
 
-  // Start the stream.
-  nsresult Start(MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise);
+  // Start the stream and return a promise that will be resolve when the
+  // playback completes.
+  Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> Start();
 
   // Pause audio playback.
   void Pause();
@@ -296,9 +289,6 @@ class AudioStream final {
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   bool IsPlaybackCompleted() const;
-
-  // Returns true if at least one DataCallback has been called.
-  bool CallbackStarted() const { return mCallbacksStarted; }
 
  protected:
   friend class AudioClock;
@@ -389,7 +379,6 @@ class AudioStream final {
   std::atomic<bool> mPreservesPitch;
   // Audio thread only
   bool mAudioThreadChanged = false;
-  Atomic<bool> mCallbacksStarted;
 };
 
 }  // namespace mozilla
