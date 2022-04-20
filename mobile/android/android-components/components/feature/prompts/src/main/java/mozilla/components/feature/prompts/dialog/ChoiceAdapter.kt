@@ -122,6 +122,8 @@ internal class ChoiceAdapter(
                     fragment.onSelect(actualChoice)
                     labelView.toggle()
                 }
+            } else {
+                itemView.isClickable = false
             }
         }
     }
@@ -148,6 +150,8 @@ internal class ChoiceAdapter(
                     }
                     labelView.toggle()
                 }
+            } else {
+                itemView.isClickable = false
             }
         }
     }
@@ -167,6 +171,8 @@ internal class ChoiceAdapter(
                     val actualChoice = labelView.choice
                     fragment.onSelect(actualChoice)
                 }
+            } else {
+                itemView.isClickable = false
             }
         }
     }
