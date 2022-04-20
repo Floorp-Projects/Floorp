@@ -1745,17 +1745,10 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
 #endif
 
 pref("media.videocontrols.picture-in-picture.enabled", true);
+pref("media.videocontrols.picture-in-picture.audio-toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.video-toggle.visibility-threshold", "1.0");
 pref("media.videocontrols.picture-in-picture.keyboard-controls.enabled", true);
-
-#ifdef NIGHTLY_BUILD
-  // Show the audio toggle for Picture-in-Picture.
-  pref("media.videocontrols.picture-in-picture.audio-toggle.enabled", true);
-  // Enable keyboard controls for Picture-in-Picture.
-#else
-  pref("media.videocontrols.picture-in-picture.audio-toggle.enabled", false);
-#endif
 
 pref("browser.translation.detectLanguage", false);
 pref("browser.translation.neverForLanguages", "");
