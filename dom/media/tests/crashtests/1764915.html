@@ -1,0 +1,14 @@
+<html>
+<head>
+<script>
+window.addEventListener('load', async () => {
+  const frame = document.createElement('frame')
+  document.documentElement.appendChild(frame)
+  const peer = new RTCPeerConnection()
+  await peer.setRemoteDescription({}, () => {}, async () => await peer.getIdentityAssertion())
+  peer.close()
+})
+</script>
+</head>
+</html>
+
