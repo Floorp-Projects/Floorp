@@ -303,7 +303,7 @@ class MOZ_STACK_CLASS WSRunScanner final {
   template <typename EditorDOMPointType>
   WSRunScanner(const Element* aEditingHost,
                const EditorDOMPointType& aScanStartPoint)
-      : mScanStartPoint(aScanStartPoint),
+      : mScanStartPoint(aScanStartPoint.template To<EditorDOMPoint>()),
         mEditingHost(const_cast<Element*>(aEditingHost)),
         mTextFragmentDataAtStart(mScanStartPoint, mEditingHost) {}
 
@@ -812,7 +812,9 @@ class MOZ_STACK_CLASS WSRunScanner final {
       template <typename EditorDOMPointType>
       BoundaryData(const EditorDOMPointType& aPoint, nsIContent& aReasonContent,
                    WSType aReason)
-          : mReasonContent(&aReasonContent), mPoint(aPoint), mReason(aReason) {}
+          : mReasonContent(&aReasonContent),
+            mPoint(aPoint.template To<EditorDOMPoint>()),
+            mReason(aReason) {}
       bool Initialized() const { return mReasonContent && mPoint.IsSet(); }
 
       nsIContent* GetReasonContent() const { return mReasonContent; }

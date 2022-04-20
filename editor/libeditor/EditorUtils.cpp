@@ -280,8 +280,8 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
       }
 
       // node might be anonymous DIV, so we find better text node
-      EditorRawDOMPoint insertionPoint =
-          aEditorBase.FindBetterInsertionPoint(atStartOfSelection);
+      EditorRawDOMPoint insertionPoint = aEditorBase.FindBetterInsertionPoint(
+          atStartOfSelection.To<EditorRawDOMPoint>());
       if (!insertionPoint.IsSet()) {
         NS_WARNING(
             "EditorBase::FindBetterInsertionPoint() failed, but ignored");

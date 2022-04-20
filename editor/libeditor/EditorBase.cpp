@@ -2802,7 +2802,8 @@ nsresult EditorBase::InsertTextWithTransaction(
   // In some cases, the node may be the anonymous div element or a padding
   // <br> element for empty last line.  Let's try to look for better insertion
   // point in the nearest text node if there is.
-  EditorDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
+  EditorDOMPoint pointToInsert =
+      FindBetterInsertionPoint(aPointToInsert).To<EditorDOMPoint>();
 
   // If a neighboring text node already exists, use that
   if (!pointToInsert.IsInTextNode()) {
@@ -2995,7 +2996,8 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   if (IsHTMLEditor() && pointToInsert.IsSet()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
-      TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
+      TopLevelEditSubActionDataRef().DidInsertText(
+          *this, begin.To<EditorRawDOMPoint>(), end.To<EditorRawDOMPoint>());
     }
     if (isIMETransaction) {
       // Let's mark the text node as "modified frequently" if it interact with
@@ -4234,8 +4236,8 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   // XXX This is odd.  We just tries to remove empty text node here but we
   //     refer `Selection`.  It may be modified by mutation event listeners
   //     so that we should remove the empty text node when we make it empty.
-  EditorDOMPoint atNewStartOfSelection(
-      EditorBase::GetStartPoint(SelectionRef()));
+  EditorDOMPoint atNewStartOfSelection =
+      EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     // XXX And also it seems that we don't need to return error here.
     //     Why don't we just ignore?  `Selection::RemoveAllRanges()` may
@@ -4696,8 +4698,9 @@ nsresult EditorBase::DeleteRangesWithTransaction(
       //     this must have a bug since we only add the first range into
       //     the changed range.
       TopLevelEditSubActionDataRef().WillDeleteRange(
-          *this, aRangesToDelete.GetStartPointOfFirstRange(),
-          aRangesToDelete.GetEndPointOfFirstRange());
+          *this,
+          aRangesToDelete.GetStartPointOfFirstRange().To<EditorRawDOMPoint>(),
+          aRangesToDelete.GetEndPointOfFirstRange().To<EditorRawDOMPoint>());
     } else if (!deleteCharData) {
       TopLevelEditSubActionDataRef().WillDeleteContent(*this, *deleteContent);
     }
