@@ -763,8 +763,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // (aVsyncTimestamp) and the next tick needs to be at least the amount of
       // work normal tasks and RefreshDrivers did together (minus short grace
       // period).
-      double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
-      TimeDuration gracePeriod = TimeDuration::FromMilliseconds(rate / 100.0f);
+      TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
+      TimeDuration gracePeriod = rate / int64_t(100);
 
       if (shouldGiveNonVSyncTasksMoreTime) {
         if (!mLastTickEnd.IsNull() && XRE_IsContentProcess() &&
@@ -776,8 +776,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           // every now and then, so only at maximum 4 * rate of work is counted
           // here.
           TimeDuration timeForOutsideTick = tickStart - mLastTickEnd;
-          TimeDuration maxOutsideTick =
-              TimeDuration::FromMilliseconds(4 * rate);
+          TimeDuration maxOutsideTick = rate * 4;
           if (timeForOutsideTick > maxOutsideTick) {
             timeForOutsideTick = maxOutsideTick;
           }
