@@ -14,7 +14,7 @@ try { o3.buffer = function anonymous() {
 var buffer = o2.createBuffer(1, 512, o2.sampleRate);for(var c=0;c<1;c++) {var data = buffer.getChannelData(c);for(var i=0;i<512;i++) {data[i] = i % 512}}return buffer;
 }(); } catch(e) { Logger.JSError(e); }
 try { o3.loop = false; } catch(e) { Logger.JSError(e); }
-try { o0.mozPreservesPitch = false; } catch(e) { Logger.JSError(e); }
+try { o0.preservesPitch = false; } catch(e) { Logger.JSError(e); }
 try { o2.destination.channelCount = 1; } catch(e) { Logger.JSError(e); }
 try { o3.loopStart = 8; } catch(e) { Logger.JSError(e); }
 try { o3.playbackRate.value = 0.46271130895770884; } catch(e) { Logger.JSError(e); }
