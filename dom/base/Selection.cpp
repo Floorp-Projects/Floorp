@@ -381,26 +381,46 @@ void Selection::ToStringWithFormat(const nsAString& aFormatType,
   }
 }
 
-void Selection::SetInterlinePosition(bool aHintRight, ErrorResult& aRv) {
+nsresult Selection::SetInterlinePosition(InterlinePosition aInterlinePosition) {
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+  MOZ_ASSERT(aInterlinePosition != InterlinePosition::Undefined);
 
   if (!mFrameSelection) {
-    aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
-    return;
+    return NS_ERROR_NOT_INITIALIZED;  // Can't do selection
   }
 
-  mFrameSelection->SetHint(aHintRight ? CARET_ASSOCIATE_AFTER
-                                      : CARET_ASSOCIATE_BEFORE);
+  mFrameSelection->SetHint(aInterlinePosition ==
+                                   InterlinePosition::StartOfNextLine
+                               ? CARET_ASSOCIATE_AFTER
+                               : CARET_ASSOCIATE_BEFORE);
+  return NS_OK;
 }
 
-bool Selection::GetInterlinePosition(ErrorResult& aRv) {
+Selection::InterlinePosition Selection::GetInterlinePosition() const {
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
   if (!mFrameSelection) {
+    return InterlinePosition::Undefined;
+  }
+  return mFrameSelection->GetHint() == CARET_ASSOCIATE_AFTER
+             ? InterlinePosition::StartOfNextLine
+             : InterlinePosition::EndOfLine;
+}
+
+void Selection::SetInterlinePositionJS(bool aHintRight, ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
+
+  aRv = SetInterlinePosition(aHintRight ? InterlinePosition::StartOfNextLine
+                                        : InterlinePosition::EndOfLine);
+}
+
+bool Selection::GetInterlinePositionJS(ErrorResult& aRv) const {
+  const InterlinePosition interlinePosition = GetInterlinePosition();
+  if (interlinePosition == InterlinePosition::Undefined) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);  // Can't do selection
     return false;
   }
-  return mFrameSelection->GetHint() == CARET_ASSOCIATE_AFTER;
+  return interlinePosition == InterlinePosition::StartOfNextLine;
 }
 
 static bool IsEditorNode(const nsINode* aNode) {
@@ -1989,7 +2009,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 
   // Make sure the caret appears on the next line, if at a newline
   if (mSelectionType == SelectionType::eNormal) {
-    SetInterlinePosition(true, IgnoreErrors());
+    SetInterlinePosition(InterlinePosition::StartOfNextLine);
   }
 
   if (!mFrameSelection) {

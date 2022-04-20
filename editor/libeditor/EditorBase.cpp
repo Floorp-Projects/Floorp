@@ -4262,11 +4262,12 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   if (!TopLevelEditSubActionDataRef().mDidExplicitlySetInterLine) {
     // We prevent the caret from sticking on the left of previous `<br>`
     // element (i.e. the end of previous line) after this deletion. Bug 92124.
-    ErrorResult error;
-    SelectionRef().SetInterlinePosition(true, error);
-    if (error.Failed()) {
-      NS_WARNING("Selection::SetInterlinePosition(true) failed");
-      return error.StealNSResult();
+    if (MOZ_UNLIKELY(NS_FAILED(SelectionRef().SetInterlinePosition(
+            InterlinePosition::StartOfNextLine)))) {
+      NS_WARNING(
+          "Selection::SetInterlinePosition(InterlinePosition::StartOfNextLine) "
+          "failed");
+      return NS_ERROR_FAILURE;  // Don't need to return NS_ERROR_NOT_INITIALIZED
     }
   }
 

@@ -2191,16 +2191,14 @@ HTMLEditor::AutoDeleteRangesHandler::ShouldDeleteHRElement(
   // end-of-hr-line position.
   EditorRawDOMPoint atHRElement(&aHRElement);
 
-  ErrorResult error;
-  bool interLineIsRight =
-      aHTMLEditor.SelectionRef().GetInterlinePosition(error);
-  if (error.Failed()) {
+  const InterlinePosition interlinePosition =
+      aHTMLEditor.SelectionRef().GetInterlinePosition();
+  if (MOZ_UNLIKELY(interlinePosition == InterlinePosition::Undefined)) {
     NS_WARNING("Selection::GetInterlinePosition() failed");
-    nsresult rv = error.StealNSResult();
-    return Err(rv);
+    return Err(NS_ERROR_FAILURE);
   }
 
-  return !interLineIsRight &&
+  return interlinePosition == InterlinePosition::EndOfLine &&
          aCaretPoint.GetContainer() == atHRElement.GetContainer() &&
          aCaretPoint.Offset() - 1 == atHRElement.Offset();
 }
@@ -2294,11 +2292,12 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteHRElement(
         "HTMLEditor::CollapseSelectionTo() failed, but ignored");
   }
 
-  IgnoredErrorResult ignoredError;
-  aHTMLEditor.SelectionRef().SetInterlinePosition(false, ignoredError);
-  NS_WARNING_ASSERTION(
-      !ignoredError.Failed(),
-      "Selection::SetInterlinePosition(false) failed, but ignored");
+  DebugOnly<nsresult> rvIgnored =
+      aHTMLEditor.SelectionRef().SetInterlinePosition(
+          InterlinePosition::EndOfLine);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Selection::SetInterlinePosition(InterlinePosition::"
+                       "EndOfLine) failed, but ignored");
   aHTMLEditor.TopLevelEditSubActionDataRef().mDidExplicitlySetInterLine = true;
 
   // There is one exception to the move only case.  If the <hr> is

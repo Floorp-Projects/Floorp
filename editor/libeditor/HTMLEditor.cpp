@@ -3686,11 +3686,11 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
     case eNone:
       break;
     case eNext: {
-      ErrorResult error;
-      SelectionRef().SetInterlinePosition(true, error);
-      if (error.Failed()) {
+      if (MOZ_UNLIKELY(NS_FAILED(SelectionRef().SetInterlinePosition(
+              InterlinePosition::StartOfNextLine)))) {
         NS_WARNING("Selection::SetInterlinePosition(true) failed");
-        return Err(error.StealNSResult());
+        // Don't need to return NS_ERROR_NOT_INITIALIZED
+        return Err(NS_ERROR_FAILURE);
       }
       // Collapse selection after the <br> node.
       EditorRawDOMPoint afterBRElement(
@@ -3699,6 +3699,7 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
         NS_WARNING("Setting point to after <br> element failed");
         return Err(NS_ERROR_FAILURE);
       }
+      ErrorResult error;
       CollapseSelectionTo(afterBRElement, error);
       if (error.Failed()) {
         NS_WARNING("HTMLEditor::CollapseSelectionTo() failed, but ignored");
@@ -3707,11 +3708,11 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
       break;
     }
     case ePrevious: {
-      ErrorResult error;
-      SelectionRef().SetInterlinePosition(true, error);
-      if (error.Failed()) {
+      if (MOZ_UNLIKELY(NS_FAILED(SelectionRef().SetInterlinePosition(
+              InterlinePosition::StartOfNextLine)))) {
         NS_WARNING("Selection::SetInterlinePosition(true) failed");
-        return Err(error.StealNSResult());
+        // Don't need to return NS_ERROR_NOT_INITIALIZED
+        return Err(NS_ERROR_FAILURE);
       }
       // Collapse selection at the <br> node.
       EditorRawDOMPoint atBRElement(maybeNewBRElement.inspect());
@@ -3719,6 +3720,7 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElement(
         NS_WARNING("Setting point to at <br> element failed");
         return Err(NS_ERROR_FAILURE);
       }
+      ErrorResult error;
       CollapseSelectionTo(atBRElement, error);
       if (error.Failed()) {
         NS_WARNING("HTMLEditor::CollapseSelectionTo() failed, but ignored");
