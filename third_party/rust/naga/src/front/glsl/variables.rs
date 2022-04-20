@@ -1,6 +1,6 @@
 use super::{
     ast::*,
-    context::Context,
+    context::{Context, ExprPos},
     error::{Error, ErrorKind},
     Parser, Result, Span,
 };
@@ -117,7 +117,7 @@ impl Parser {
                     kind: ScalarKind::Float,
                     width: 4,
                 },
-                builtin: BuiltIn::Position,
+                builtin: BuiltIn::Position { invariant: false },
                 mutable: true,
                 storage: StorageQualifier::Output,
             },
@@ -127,7 +127,7 @@ impl Parser {
                     kind: ScalarKind::Float,
                     width: 4,
                 },
-                builtin: BuiltIn::Position,
+                builtin: BuiltIn::Position { invariant: false },
                 mutable: false,
                 storage: StorageQualifier::Input,
             },
@@ -228,10 +228,28 @@ impl Parser {
         self.add_builtin(ctx, body, name, data, meta)
     }
 
+    pub(crate) fn make_variable_invariant(
+        &mut self,
+        ctx: &mut Context,
+        body: &mut Block,
+        name: &str,
+        meta: Span,
+    ) {
+        if let Some(var) = self.lookup_variable(ctx, body, name, meta) {
+            if let Some(index) = var.entry_arg {
+                if let Binding::BuiltIn(BuiltIn::Position { ref mut invariant }) =
+                    self.entry_args[index].binding
+                {
+                    *invariant = true;
+                }
+            }
+        }
+    }
+
     pub(crate) fn field_selection(
         &mut self,
         ctx: &mut Context,
-        lhs: bool,
+        pos: ExprPos,
         body: &mut Block,
         expression: Handle<Expression>,
         name: &str,
@@ -250,14 +268,21 @@ impl Parser {
                         kind: ErrorKind::UnknownField(name.into()),
                         meta,
                     })?;
-                Ok(ctx.add_expression(
+                let pointer = ctx.add_expression(
                     Expression::AccessIndex {
                         base: expression,
                         index: index as u32,
                     },
                     meta,
                     body,
-                ))
+                );
+
+                Ok(match pos {
+                    ExprPos::Rhs if is_pointer => {
+                        ctx.add_expression(Expression::Load { pointer }, meta, body)
+                    }
+                    _ => pointer,
+                })
             }
             // swizzles (xyzw, rgba, stpq)
             TypeInner::Vector { size, .. } => {
@@ -277,7 +302,7 @@ impl Parser {
                     .or_else(|| check_swizzle_components("stpq"));
 
                 if let Some(components) = components {
-                    if lhs {
+                    if let ExprPos::Lhs = pos {
                         let not_unique = (1..components.len())
                             .any(|i| components[i..].contains(&components[i - 1]));
                         if not_unique {
@@ -315,14 +340,23 @@ impl Parser {
                     }
 
                     let size = match components.len() {
+                        // Swizzles with just one component are accesses and not swizzles
                         1 => {
-                            // only single element swizzle, like pos.y, just return that component.
-                            if lhs {
-                                // Because of possible nested swizzles, like pos.xy.x, we have to unwrap the potential load expr.
-                                if let Expression::Load { ref pointer } = ctx[expression] {
-                                    expression = *pointer;
+                            match pos {
+                                // If the position is in the right hand side and the base
+                                // vector is a pointer, load it, otherwise the swizzle would
+                                // produce a pointer
+                                ExprPos::Rhs if is_pointer => {
+                                    expression = ctx.add_expression(
+                                        Expression::Load {
+                                            pointer: expression,
+                                        },
+                                        meta,
+                                        body,
+                                    );
                                 }
-                            }
+                                _ => {}
+                            };
                             return Ok(ctx.add_expression(
                                 Expression::AccessIndex {
                                     base: expression,
@@ -465,8 +499,8 @@ impl Parser {
             StorageQualifier::AddressSpace(mut space) => {
                 match space {
                     AddressSpace::Storage { ref mut access } => {
-                        if let Some((restricted_access, _)) = qualifiers.storage_acess.take() {
-                            access.remove(restricted_access);
+                        if let Some((allowed_access, _)) = qualifiers.storage_access.take() {
+                            *access = allowed_access;
                         }
                     }
                     AddressSpace::Uniform => match self.module.types[ty].inner {
@@ -480,10 +514,9 @@ impl Parser {
                                 mut format,
                             } = class
                             {
-                                if let Some((restricted_access, _)) =
-                                    qualifiers.storage_acess.take()
+                                if let Some((allowed_access, _)) = qualifiers.storage_access.take()
                                 {
-                                    access.remove(restricted_access);
+                                    access = allowed_access;
                                 }
 
                                 match qualifiers.layout_qualifiers.remove(&QualifierKey::Format) {

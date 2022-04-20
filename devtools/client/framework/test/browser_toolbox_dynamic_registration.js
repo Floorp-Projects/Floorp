@@ -20,7 +20,7 @@ function testRegister(aToolbox) {
     id: "testTool",
     label: "Test Tool",
     inMenu: true,
-    isTargetSupported: () => true,
+    isToolSupported: () => true,
     build: function() {},
   });
 }

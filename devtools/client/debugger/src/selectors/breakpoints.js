@@ -30,11 +30,6 @@ export function getBreakpoint(state, location) {
   return breakpoints[makeBreakpointId(location)];
 }
 
-export function getBreakpointsDisabled(state) {
-  const breakpoints = getBreakpointsList(state);
-  return breakpoints.every(breakpoint => breakpoint.disabled);
-}
-
 export function getBreakpointsForSource(state, sourceId, line) {
   if (!sourceId) {
     return [];

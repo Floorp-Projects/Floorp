@@ -10,6 +10,7 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/ManualNAC.h"
@@ -47,25 +48,12 @@ namespace mozilla {
 class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
-class EditActionResult;
-class EditResult;
 class EmptyEditableFunctor;
-class JoinNodesTransaction;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
-class MoveNodeResult;
 class ParagraphStateAtSelection;
 class ResizerSelectionListener;
 class Runnable;
-class SplitNodeTransaction;
-class SplitRangeOffFromNodeResult;
-class SplitRangeOffResult;
-class WhiteSpaceVisibilityKeeper;
-class WSRunScanner;
-class WSScanResult;
-enum class EditSubAction : int32_t;
-enum class SpecifiedStyle : uint8_t;
-struct PropItem;
 template <class T>
 class OwningNonNull;
 namespace dom {
@@ -2862,39 +2850,6 @@ class HTMLEditor final : public EditorBase,
 
  protected:  // Shouldn't be used by friend classes
   virtual ~HTMLEditor();
-
-  template <typename PT, typename CT>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG nsresult
-  CollapseSelectionTo(const EditorDOMPointBase<PT, CT>& aPoint) const {
-    ErrorResult error;
-    CollapseSelectionTo(aPoint, error);
-    return error.StealNSResult();
-  }
-
-  template <typename PT, typename CT>
-  MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG void CollapseSelectionTo(
-      const EditorDOMPointBase<PT, CT>& aPoint, ErrorResult& aRv) const {
-    MOZ_ASSERT(IsEditActionDataAvailable());
-    MOZ_ASSERT(!aRv.Failed());
-
-    SelectionRef().CollapseInLimiter(aPoint, aRv);
-    if (NS_WARN_IF(Destroyed())) {
-      aRv = NS_ERROR_EDITOR_DESTROYED;
-      return;
-    }
-    NS_WARNING_ASSERTION(!aRv.Failed(),
-                         "Selection::CollapseInLimiter() failed");
-  }
-
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG nsresult
-  CollapseSelectionToStartOf(nsINode& aNode) {
-    return CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0));
-  }
-
-  MOZ_CAN_RUN_SCRIPT MOZ_NEVER_INLINE_DEBUG void CollapseSelectionToStartOf(
-      nsINode& aNode, ErrorResult& aRv) const {
-    CollapseSelectionTo(EditorRawDOMPoint(&aNode, 0), aRv);
-  }
 
   /**
    * InitEditorContentAndSelection() may insert `<br>` elements and padding

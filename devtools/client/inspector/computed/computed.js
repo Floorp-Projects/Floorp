@@ -1549,8 +1549,7 @@ SelectorView.prototype = {
     }
 
     const { sheet, line, column } = this.generatedLocation;
-    const target = inspector.currentTarget;
-    if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
+    if (ToolDefinitions.styleEditor.isToolSupported(inspector.toolbox)) {
       inspector.toolbox.viewSourceInStyleEditorByFront(sheet, line, column);
     }
   },

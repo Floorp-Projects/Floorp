@@ -21,11 +21,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "ReaderMode",
-  "resource://gre/modules/ReaderMode.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "AboutReaderParent",
   "resource:///actors/AboutReaderParent.jsm"
 );
@@ -37,7 +32,6 @@ XPCOMUtils.defineLazyGetter(this, "gStrings", () => {
     "chrome://global/locale/aboutReader.properties"
   );
 });
-
 var PocketCustomizableWidget = {
   init() {
     CustomizableUI.createWidget({
@@ -78,64 +72,12 @@ var PocketCustomizableWidget = {
   },
 };
 
-// PocketContextMenu
-// When the context menu is opened check if we need to build and enable pocket UI.
-var PocketContextMenu = {
-  init() {
-    Services.obs.addObserver(this, "on-build-contextmenu");
-  },
-  shutdown() {
-    Services.obs.removeObserver(this, "on-build-contextmenu");
-  },
-  observe(aSubject, aTopic, aData) {
-    let subject = aSubject.wrappedJSObject;
-    let document = subject.menu.ownerDocument;
-    let pocketEnabled = SaveToPocket.prefEnabled;
-
-    let showSaveCurrentPageToPocket = !(
-      subject.onTextInput ||
-      subject.onLink ||
-      subject.isContentSelected ||
-      subject.onImage ||
-      subject.onCanvas ||
-      subject.onVideo ||
-      subject.onAudio
-    );
-    let targetUrl, targetURI;
-    if (subject.onLink) {
-      targetUrl = subject.linkUrl;
-      // linkURI may be null if the URL is invalid.
-      targetURI = subject.linkURI;
-    } else {
-      targetUrl = subject.pageUrl;
-      targetURI = Services.io.newURI(targetUrl);
-    }
-    let canPocket =
-      pocketEnabled &&
-      targetURI &&
-      (targetURI.schemeIs("http") ||
-        targetURI.schemeIs("https") ||
-        (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetUrl)));
-
-    let showSaveLinkToPocket =
-      canPocket && !showSaveCurrentPageToPocket && subject.onLink;
-
-    let menu = document.getElementById("context-pocket");
-    menu.hidden = !(canPocket && showSaveCurrentPageToPocket);
-
-    menu = document.getElementById("context-savelinktopocket");
-    menu.hidden = !showSaveLinkToPocket;
-  },
-};
-
 var PocketOverlay = {
   startup() {
     PocketCustomizableWidget.init();
-    PocketContextMenu.init();
   },
   shutdown() {
     PocketCustomizableWidget.shutdown();
-    PocketContextMenu.shutdown();
   },
 };
 
@@ -287,12 +229,6 @@ var SaveToPocket = {
     if (enabled) {
       win.document.documentElement.removeAttribute("pocketdisabled");
     } else {
-      // Hide the context menu items to ensure separator logic works.
-      let savePageMenu = win.document.getElementById("context-pocket");
-      let saveLinkMenu = win.document.getElementById(
-        "context-savelinktopocket"
-      );
-      savePageMenu.hidden = saveLinkMenu.hidden = true;
       win.document.documentElement.setAttribute("pocketdisabled", "true");
     }
   },

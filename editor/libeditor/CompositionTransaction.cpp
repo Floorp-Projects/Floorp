@@ -183,30 +183,23 @@ NS_IMETHODIMP CompositionTransaction::UndoTransaction() {
           ("%p CompositionTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // Get the selection first so we'll fail before making any changes if we
-  // can't get it
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
-  if (NS_WARN_IF(!selection)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   OwningNonNull<EditorBase> editorBase = *mEditorBase;
   OwningNonNull<Text> textNode = *mTextNode;
-  ErrorResult error;
+  IgnoredErrorResult error;
   editorBase->DoDeleteText(textNode, mOffset, mStringToInsert.Length(), error);
-  if (error.Failed()) {
+  if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("EditorBase::DoDeleteText() failed");
     return error.StealNSResult();
   }
 
   // set the selection to the insertion point where the string was removed
-  nsresult rv = selection->CollapseInLimiter(textNode, mOffset);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Selection::CollapseInLimiter() failed");
-  return rv;
+  editorBase->CollapseSelectionTo(EditorRawDOMPoint(textNode, mOffset), error);
+  NS_ASSERTION(!error.Failed(), "EditorBase::CollapseSelectionTo() failed");
+  return error.StealNSResult();
 }
 
 NS_IMETHODIMP CompositionTransaction::RedoTransaction() {

@@ -29,8 +29,9 @@ Please do not contribute implementations of encodings that are not specified
 in the [Encoding Standard](https://encoding.spec.whatwg.org/).
 
 For example, an implementation of UTF-7 is explicitly out of scope for this
-crate and is, therefore, provided by the [charset](https://crates.io/crates/charset)
-crate instead.
+crate and is, therefore, provided by the [`charset`](https://crates.io/crates/charset)
+crate instead. For single-byte DOS encodings, please see the
+[`oem_cp`](https://crates.io/crates/oem_cp) crate.
 
 ## Compatibility with Stable Rust
 

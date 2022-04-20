@@ -21,6 +21,12 @@
   }
 }
 
+box,
+.splitview-nav {
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+}
+
 .splitview-nav {
   list-style: none;
   padding: 0;
@@ -66,4 +72,77 @@
 .splitview-main > toolbar,
 .loading .splitview-nav-container {
   border-inline-end: 1px solid var(--theme-splitter-color);
+}
+
+.splitview-nav-container {
+  -moz-box-pack: center;
+}
+
+.loading .splitview-nav-container > .placeholder {
+  display: none !important;
+}
+
+.splitview-controller,
+.splitview-main {
+  -moz-box-flex: 0;
+}
+
+.splitview-controller {
+  min-height: 3em;
+  max-height: 14em;
+  max-width: 400px;
+  min-width: 200px;
+}
+
+.splitview-nav {
+  display: -moz-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* only the active details pane is shown */
+.splitview-side-details > * {
+  display: none;
+}
+.splitview-side-details > .splitview-active {
+  display: -moz-box;
+}
+
+/* filtered items are hidden */
+ol.splitview-nav > li.splitview-filtered {
+  display: none;
+}
+
+/* "empty list" and "all filtered" placeholders are hidden */
+.splitview-nav:empty,
+.splitview-nav.splitview-all-filtered,
+.splitview-nav + .splitview-nav.placeholder {
+  display: none;
+}
+.splitview-nav.splitview-all-filtered ~ .splitview-nav.placeholder.all-filtered,
+.splitview-nav:empty ~ .splitview-nav.placeholder.empty {
+  display: -moz-box;
+}
+
+/* this is to keep in sync with SplitView.jsm's LANDSCAPE_MEDIA_QUERY */
+@media (min-width: 701px) {
+  .splitview-root {
+    -moz-box-orient: horizontal;
+  }
+  .splitview-controller {
+    max-height: none;
+  }
+  .splitview-details {
+    display: none;
+  }
+  .splitview-details.splitview-active {
+    display: -moz-box;
+  }
+}
+
+/* portrait mode */
+@media (max-width: 700px) {
+  .splitview-controller {
+    max-width: none;
+  }
 }

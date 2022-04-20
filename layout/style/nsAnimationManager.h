@@ -14,8 +14,9 @@
 #include "nsISupportsImpl.h"
 #include "nsTHashSet.h"
 
-struct nsStyleDisplay;
 class ServoCSSAnimationBuilder;
+
+struct nsStyleUIReset;
 
 namespace mozilla {
 class ComputedStyle;
@@ -91,7 +92,7 @@ class nsAnimationManager final
   nsTHashSet<RefPtr<nsAtom>> mMaybeReferencedAnimations;
 
   void DoUpdateAnimations(const mozilla::NonOwningAnimationTarget& aTarget,
-                          const nsStyleDisplay& aStyleDisplay,
+                          const nsStyleUIReset& aStyle,
                           ServoCSSAnimationBuilder& aBuilder);
 };
 

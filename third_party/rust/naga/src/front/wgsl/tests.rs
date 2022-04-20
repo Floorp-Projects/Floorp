@@ -157,13 +157,13 @@ fn parse_type_cast() {
 fn parse_struct() {
     parse_str(
         "
-        struct Foo { x: i32 };
+        struct Foo { x: i32 }
         struct Bar {
             @size(16) x: vec2<i32>,
             @align(16) y: f32,
             @size(32) @align(8) z: vec3<f32>,
         };
-        struct Empty {};
+        struct Empty {}
         var<storage,read_write> s: Foo;
     ",
     )
@@ -265,6 +265,32 @@ fn parse_loop() {
     parse_str(
         "
         fn main() {
+            var found: bool = false;
+            var i: i32 = 0;
+            while !found {
+                if i == 10 {
+                    found = true;
+                }
+
+                i = i + 1;
+            }
+        }
+    ",
+    )
+    .unwrap();
+    parse_str(
+        "
+        fn main() {
+            while true {
+                break;
+            }
+        }
+    ",
+    )
+    .unwrap();
+    parse_str(
+        "
+        fn main() {
             var a: i32 = 0;
             for(var i: i32 = 0; i < 4; i = i + 1) {
                 a = a + 2;
@@ -296,6 +322,24 @@ fn parse_switch() {
                 case 2: { pos = 1.0; fallthrough; }
                 case 3: {}
                 default: { pos = 3.0; }
+            }
+        }
+    ",
+    )
+    .unwrap();
+}
+
+#[test]
+fn parse_switch_optional_colon_in_case() {
+    parse_str(
+        "
+        fn main() {
+            var pos: f32;
+            switch (3) {
+                case 0, 1 { pos = 0.0; }
+                case 2 { pos = 1.0; fallthrough; }
+                case 3 {}
+                default { pos = 3.0; }
             }
         }
     ",
@@ -417,9 +461,9 @@ fn parse_struct_instantiation() {
     struct Foo {
         a: f32,
         b: vec3<f32>,
-    };
-    
-    @stage(fragment)
+    }
+
+    @fragment
     fn fs_main() {
         var foo: Foo = Foo(0.0, vec3<f32>(0.0, 1.0, 42.0));
     }
@@ -434,7 +478,7 @@ fn parse_array_length() {
         "
         struct Foo {
             data: array<u32>
-        }; // this is used as both input and output for convenience
+        } // this is used as both input and output for convenience
 
         @group(0) @binding(0)
         var<storage> foo: Foo;

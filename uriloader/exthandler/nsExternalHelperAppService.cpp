@@ -16,6 +16,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/RandomNum.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
@@ -30,6 +31,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 #include "nsDependentSubstring.h"
+#include "nsSandboxFlags.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringEnumerator.h"
@@ -1095,18 +1097,91 @@ nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
   return ios->NewURI(escapedSpec, nullptr, nullptr, aResult);
 }
 
+bool ExternalProtocolIsBlockedBySandbox(
+    BrowsingContext* aBrowsingContext,
+    const bool aHasValidUserGestureActivation) {
+  if (!StaticPrefs::dom_block_external_protocol_navigation_from_sandbox()) {
+    return false;
+  }
+
+  if (!aBrowsingContext || aBrowsingContext->IsTop()) {
+    return false;
+  }
+
+  uint32_t sandboxFlags = aBrowsingContext->GetSandboxFlags();
+
+  if (sandboxFlags == SANDBOXED_NONE) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION)) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION)) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_CUSTOM_PROTOCOLS)) {
+    return false;
+  }
+
+  if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION) &&
+      aHasValidUserGestureActivation) {
+    return false;
+  }
+
+  return true;
+}
+
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aTriggeringPrincipal,
                                     nsIPrincipal* aRedirectPrincipal,
                                     BrowsingContext* aBrowsingContext,
-                                    bool aTriggeredExternally) {
+                                    bool aTriggeredExternally,
+                                    bool aHasValidUserGestureActivation) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
         aURI, aTriggeringPrincipal, aRedirectPrincipal, aBrowsingContext,
-        aTriggeredExternally);
+        aTriggeredExternally, aHasValidUserGestureActivation);
+    return NS_OK;
+  }
+
+  // Prevent sandboxed BrowsingContexts from navigating to external protocols.
+  // This only uses the sandbox flags of the target BrowsingContext of the
+  // load. The navigating document's CSP sandbox flags do not apply.
+  if (aBrowsingContext &&
+      ExternalProtocolIsBlockedBySandbox(aBrowsingContext,
+                                         aHasValidUserGestureActivation)) {
+    // Log an error to the web console of the sandboxed BrowsingContext.
+    nsAutoString localizedMsg;
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+
+    AutoTArray<nsString, 1> params = {NS_ConvertUTF8toUTF16(spec)};
+    nsresult rv = nsContentUtils::FormatLocalizedString(
+        nsContentUtils::eSECURITY_PROPERTIES, "SandboxBlockedCustomProtocols",
+        params, localizedMsg);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Log to the the parent window of the iframe. If there is no parent, fall
+    // back to the iframe window itself.
+    WindowContext* windowContext = aBrowsingContext->GetParentWindowContext();
+    if (!windowContext) {
+      windowContext = aBrowsingContext->GetCurrentWindowContext();
+    }
+
+    // Skip logging if we still don't have a WindowContext.
+    NS_ENSURE_TRUE(windowContext, NS_ERROR_FAILURE);
+
+    nsContentUtils::ReportToConsoleByWindowID(
+        localizedMsg, nsIScriptError::errorFlag, "Security"_ns,
+        windowContext->InnerWindowId(),
+        windowContext->Canonical()->GetDocumentURI());
+
     return NS_OK;
   }
 

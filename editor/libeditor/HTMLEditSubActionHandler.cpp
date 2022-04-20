@@ -857,7 +857,7 @@ nsresult HTMLEditor::EnsureCaretNotAfterInvisibleBRElement() {
   EditorRawDOMPoint atInvisibleBRElement(previousBRElement);
   nsresult rv = CollapseSelectionTo(atInvisibleBRElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -934,13 +934,16 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
   }
 
   // Set selection.
-  SelectionRef().CollapseInLimiter(EditorRawDOMPoint(rootElement, 0),
-                                   ignoredError);
-  if (NS_WARN_IF(Destroyed())) {
+  rv = CollapseSelectionToStartOf(*rootElement);
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionToStartOf() caused destroying the "
+        "editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::CollapseInLimiter() failed, but ignored");
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
   return NS_OK;
 }
 
@@ -1351,29 +1354,30 @@ EditActionResult HTMLEditor::HandleInsertText(
     // After this block, pointToInsert is updated by AutoTrackDOMPoint.
   }
 
-  IgnoredErrorResult ignoredError;
-  SelectionRef().SetInterlinePosition(false, ignoredError);
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Failed to unset interline position");
-
   if (currentPoint.IsSet()) {
+    currentPoint.SetInterlinePosition(InterlinePosition::EndOfLine);
     nsresult rv = CollapseSelectionTo(currentPoint);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Selection::Collapse() failed, but ignored");
-  }
 
-  // manually update the doc changed range so that AfterEdit will clean up
-  // the correct portion of the document.
-  if (currentPoint.IsSet()) {
-    nsresult rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
+    // manually update the doc changed range so that AfterEdit will clean up
+    // the correct portion of the document.
+    rv = TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
         pointToInsert.ToRawRangeBoundary(), currentPoint.ToRawRangeBoundary());
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsRange::SetStartAndEnd() failed");
     return EditActionHandled(rv);
   }
 
+  DebugOnly<nsresult> rvIgnored =
+      SelectionRef().SetInterlinePosition(InterlinePosition::EndOfLine);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "Selection::SetInterlinePosition(InterlinePosition::"
+                       "EndOfLine) failed, but ignored");
   rv = TopLevelEditSubActionDataRef().mChangedRange->CollapseTo(pointToInsert);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsRange::CollapseTo() failed");
   return EditActionHandled(rv);
@@ -1602,18 +1606,14 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
             "HTMLEditor::HandleInsertParagraphInMailCiteElement() failed");
         return EditActionHandled(atNewBRElementOrError.unwrapErr());
       }
-      MOZ_ASSERT(atNewBRElementOrError.inspect().IsSet());
-      IgnoredErrorResult ignoredError;
-      SelectionRef().SetInterlinePosition(true, ignoredError);
-      NS_WARNING_ASSERTION(
-          !ignoredError.Failed(),
-          "Selection::SetInterlinePosition(true) failed, but ignored");
-      MOZ_ASSERT(atNewBRElementOrError.inspect().GetChild());
-      MOZ_ASSERT(atNewBRElementOrError.inspect().GetChild()->IsHTMLElement(
-          nsGkAtoms::br));
-      nsresult rv = CollapseSelectionTo(atNewBRElementOrError.inspect());
+      EditorDOMPoint pointToPutCaret = atNewBRElementOrError.unwrap();
+      MOZ_ASSERT(pointToPutCaret.IsSet());
+      pointToPutCaret.SetInterlinePosition(InterlinePosition::StartOfNextLine);
+      MOZ_ASSERT(pointToPutCaret.GetChild());
+      MOZ_ASSERT(pointToPutCaret.GetChild()->IsHTMLElement(nsGkAtoms::br));
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::CollapseSelectionTo() failed");
+                           "EditorBase::CollapseSelectionTo() failed");
       return EditActionHandled(rv);
     }
   }
@@ -1821,12 +1821,12 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.unwrap());
     if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
       NS_WARNING(
-          "HTMLEditor::CollapseSelectionTo() caused destroying the editor");
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
     return EditActionHandled();
   }
 
@@ -1848,12 +1848,12 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.unwrap());
     if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
       NS_WARNING(
-          "HTMLEditor::CollapseSelectionTo() caused destroying the editor");
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
     return EditActionHandled();
   }
 
@@ -1978,14 +1978,10 @@ nsresult HTMLEditor::HandleInsertBRElement(const EditorDOMPoint& aPointToBreak,
     // XXX brElementIsAfterBlock and brElementIsBeforeBlock were set before
     //     modifying the DOM tree.  So, now, the <br> element may not be
     //     between blocks.
-    IgnoredErrorResult ignoredError;
-    SelectionRef().SetInterlinePosition(true, ignoredError);
-    NS_WARNING_ASSERTION(
-        !ignoredError.Failed(),
-        "Selection::SetInterlinePosition(true) failed, but ignored");
-    nsresult rv = CollapseSelectionTo(EditorRawDOMPoint(brElement));
+    nsresult rv = CollapseSelectionTo(
+        EditorRawDOMPoint(brElement, InterlinePosition::StartOfNextLine));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionTo() failed");
+                         "EditorBase::CollapseSelectionTo() failed");
     return rv;
   }
 
@@ -2023,24 +2019,21 @@ nsresult HTMLEditor::HandleInsertBRElement(const EditorDOMPoint& aPointToBreak,
     }
   }
 
-  // SetInterlinePosition(true) means we want the caret to stick to the
-  // content on the "right".  We want the caret to stick to whatever is past
-  // the break.  This is because the break is on the same line we were on,
-  // but the next content will be on the following line.
+  // We want the caret to stick to whatever is past the break.  This is because
+  // the break is on the same line we were on, but the next content will be on
+  // the following line.
 
   // An exception to this is if the break has a next sibling that is a block
   // node.  Then we stick to the left to avoid an uber caret.
   nsIContent* nextSiblingOfBRElement = brElement->GetNextSibling();
-  IgnoredErrorResult ignoredError;
-  SelectionRef().SetInterlinePosition(
-      !(nextSiblingOfBRElement &&
-        HTMLEditUtils::IsBlockElement(*nextSiblingOfBRElement)),
-      ignoredError);
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Selection::SetInterlinePosition() failed, but ignored");
+  afterBRElement.SetInterlinePosition(
+      nextSiblingOfBRElement &&
+              HTMLEditUtils::IsBlockElement(*nextSiblingOfBRElement)
+          ? InterlinePosition::EndOfLine
+          : InterlinePosition::StartOfNextLine);
   nsresult rv = CollapseSelectionTo(afterBRElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -2146,34 +2139,39 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
     }
   }
 
-  IgnoredErrorResult ignoredError;
-  SelectionRef().SetInterlinePosition(false, ignoredError);
-  NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                       "Failed to unset interline position, but ignored");
-
-  // manually update the doc changed range so that AfterEdit will clean up
-  // the correct portion of the document.
-  if (!caretAfterInsert.IsSet()) {
+  // manually update the doc changed range so that
+  // OnEndHandlingTopLevelEditSubActionInternal will clean up the correct
+  // portion of the document.
+  if (NS_WARN_IF(!caretAfterInsert.IsSet())) {
+    DebugOnly<nsresult> rvIgnored =
+        SelectionRef().SetInterlinePosition(InterlinePosition::EndOfLine);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "Selection::SetInterlinePosition(InterlinePosition::"
+                         "EndOfLine) failed, but ignored");
     if (NS_FAILED(TopLevelEditSubActionDataRef().mChangedRange->CollapseTo(
             pointToInsert))) {
       NS_WARNING("nsRange::CollapseTo() failed");
       return NS_ERROR_FAILURE;
     }
+    // XXX Here is odd.  We did mChangedRange->SetStartAndEnd(pointToInsert,
+    //     caretAfterInsert), but it always fail so that returning
+    //     NS_ERROR_FAILURE from here is the traditional behavior...
+    return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
-          pointToInsert.ToRawRangeBoundary(),
-          caretAfterInsert.ToRawRangeBoundary()))) {
+  if (MOZ_UNLIKELY(NS_FAILED(
+          TopLevelEditSubActionDataRef().mChangedRange->SetStartAndEnd(
+              pointToInsert.ToRawRangeBoundary(),
+              caretAfterInsert.ToRawRangeBoundary())))) {
     NS_WARNING("nsRange::SetStartAndEnd() failed");
     return NS_ERROR_FAILURE;
   }
 
+  caretAfterInsert.SetInterlinePosition(InterlinePosition::EndOfLine);
   rv = CollapseSelectionTo(caretAfterInsert);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-    return rv;
-  }
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::CollapseSelectionTo() failed");
+  return rv;
 }
 
 Result<EditorDOMPoint, nsresult>
@@ -3143,7 +3141,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     restoreSelectionLater.Abort();
     nsresult rv = CollapseSelectionToStartOf(*newListItemElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionToStartOf() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return EditActionResult(rv);
   }
 
@@ -3709,7 +3707,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       nsresult rv = CollapseSelectionTo(
           EditorRawDOMPoint(resultOfInsertingBRElement.inspect()));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::CollapseSelectionTo() failed");
+                           "EditorBase::CollapseSelectionTo() failed");
       return rv;
     }
 
@@ -3775,7 +3773,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     rv = CollapseSelectionToStartOf(
         MOZ_KnownLive(*newBlockElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionToStartOf() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
   // Okay, now go through all the nodes and make the right kind of blocks, or
@@ -4147,7 +4145,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     rv = CollapseSelectionToStartOf(
         MOZ_KnownLive(*newDivElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionToStartOf() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
 
@@ -4346,7 +4344,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     nsresult rv = CollapseSelectionToStartOf(
         MOZ_KnownLive(*newBlockQuoteElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionToStartOf() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
 
@@ -4599,12 +4597,14 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection() {
           afterRememberedLeftBQ.IsSet(),
           "Failed to set after remembered left blockquote element");
       nsresult rv = CollapseSelectionTo(afterRememberedLeftBQ);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        NS_WARNING(
+            "EditorBase::CollapseSelectionTo() caused destroying the editor");
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
     }
   }
   // And pull selection before beginning of right element of last split
@@ -4624,12 +4624,14 @@ EditActionResult HTMLEditor::HandleOutdentAtSelection() {
       // Selection is inside the right element - push it before it.
       EditorRawDOMPoint atRememberedRightBQ(outdentResult.GetRightContent());
       nsresult rv = CollapseSelectionTo(atRememberedRightBQ);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        NS_WARNING(
+            "EditorBase::CollapseSelectionTo() caused destroying the editor");
         return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
     }
   }
   return EditActionHandled();
@@ -5260,7 +5262,7 @@ nsresult HTMLEditor::CreateStyleForInsertText(
 
   nsresult rv = CollapseSelectionTo(pointToPutCaret);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -5505,7 +5507,7 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   rv = CollapseSelectionToStartOf(
       MOZ_KnownLive(*newDivElementOrError.inspect()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionToStartOf() failed");
+                       "EditorBase::CollapseSelectionToStartOf() failed");
   return EditActionHandled(rv);
 }
 
@@ -7391,20 +7393,24 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
       *rightDivOrParagraphElement, {LeafNodeType::LeafNodeOrChildBlock});
   if (child && (child->IsText() || HTMLEditUtils::IsContainerNode(*child))) {
     nsresult rv = CollapseSelectionToStartOf(*child);
-    if (MOZ_UNLIKELY(NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED))) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
+        "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
   } else {
     nsresult rv = CollapseSelectionTo(EditorRawDOMPoint(child));
-    if (MOZ_UNLIKELY(NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED))) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
   return NS_OK;
 }
@@ -8571,7 +8577,7 @@ nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
     }
     nsresult rv = CollapseSelectionTo(endPoint);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionTo() failed");
+                         "EditorBase::CollapseSelectionTo() failed");
     return rv;
   }
 
@@ -8590,7 +8596,7 @@ nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
   }
   rv = CollapseSelectionTo(atStartOfBlock);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -8624,11 +8630,12 @@ void HTMLEditor::SetSelectionInterlinePosition() {
                  WalkTreeOption::StopAtBlockBoundary},
                 editingHost)) {
       if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br)) {
-        IgnoredErrorResult ignoredError;
-        SelectionRef().SetInterlinePosition(true, ignoredError);
+        DebugOnly<nsresult> rvIgnored = SelectionRef().SetInterlinePosition(
+            InterlinePosition::StartOfNextLine);
         NS_WARNING_ASSERTION(
-            !ignoredError.Failed(),
-            "Selection::SetInterlinePosition(true) failed, but ignored");
+            NS_SUCCEEDED(rvIgnored),
+            "Selection::SetInterlinePosition(InterlinePosition::"
+            "StartOfNextLine) failed, but ignored");
         return;
       }
     }
@@ -8646,11 +8653,11 @@ void HTMLEditor::SetSelectionInterlinePosition() {
           HTMLEditUtils::GetPreviousSibling(
               *atCaret.GetChild(), {WalkTreeOption::IgnoreNonEditableNode})) {
     if (HTMLEditUtils::IsBlockElement(*previousEditableContentInBlockAtCaret)) {
-      IgnoredErrorResult ignoredError;
-      SelectionRef().SetInterlinePosition(true, ignoredError);
-      NS_WARNING_ASSERTION(
-          !ignoredError.Failed(),
-          "Selection::SetInterlinePosition(true) failed, but ignored");
+      DebugOnly<nsresult> rvIgnored = SelectionRef().SetInterlinePosition(
+          InterlinePosition::StartOfNextLine);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Selection::SetInterlinePosition(InterlinePosition::"
+                           "StartOfNextLine) failed, but ignored");
       return;
     }
   }
@@ -8663,11 +8670,11 @@ void HTMLEditor::SetSelectionInterlinePosition() {
           HTMLEditUtils::GetNextSibling(
               *atCaret.GetChild(), {WalkTreeOption::IgnoreNonEditableNode})) {
     if (HTMLEditUtils::IsBlockElement(*nextEditableContentInBlockAtCaret)) {
-      IgnoredErrorResult ignoredError;
-      SelectionRef().SetInterlinePosition(false, ignoredError);
-      NS_WARNING_ASSERTION(
-          !ignoredError.Failed(),
-          "Selection::SetInterlinePosition(false) failed, but ignored");
+      DebugOnly<nsresult> rvIgnored =
+          SelectionRef().SetInterlinePosition(InterlinePosition::EndOfLine);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Selection::SetInterlinePosition(InterlinePosition::"
+                           "EndOfLine) failed, but ignored");
     }
   }
 }
@@ -8777,20 +8784,13 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
               "failed");
           return createPaddingBRResult.Rv();
         }
-        point.Set(createPaddingBRResult.GetNewNode());
         // Selection stays *before* padding `<br>` element for empty last
         // line, sticking to it.
-        IgnoredErrorResult ignoredError;
-        SelectionRef().SetInterlinePosition(true, ignoredError);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        NS_WARNING_ASSERTION(
-            !ignoredError.Failed(),
-            "Selection::SetInterlinePosition(true) failed, but ignored");
+        point = EditorDOMPoint(createPaddingBRResult.GetNewNode(),
+                               InterlinePosition::StartOfNextLine);
         nsresult rv = CollapseSelectionTo(point);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+          NS_WARNING("EditorBase::CollapseSelectionTo() failed");
           return rv;
         }
       }
@@ -8806,11 +8806,12 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
                 *nextEditableContentInBlock)) {
           // Make it stick to the padding `<br>` element so that it will be
           // on blank line.
-          IgnoredErrorResult ignoredError;
-          SelectionRef().SetInterlinePosition(true, ignoredError);
+          DebugOnly<nsresult> rvIgnored = SelectionRef().SetInterlinePosition(
+              InterlinePosition::StartOfNextLine);
           NS_WARNING_ASSERTION(
-              !ignoredError.Failed(),
-              "Selection::SetInterlinePosition(true) failed, but ignored");
+              NS_SUCCEEDED(rvIgnored),
+              "Selection::SetInterlinePosition(InterlinePosition::"
+              "StartOfNextLine) failed, but ignored");
         }
       }
     }
@@ -8868,7 +8869,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   }
   nsresult rv = CollapseSelectionTo(pointToPutCaret);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -9234,12 +9235,15 @@ nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
   // If we aren't in the <body> element, force the issue.
   if (!temp) {
     nsresult rv = CollapseSelectionToStartOf(*bodyOrDocumentElement);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionToStartOf() caused destroying the "
+          "editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
+        "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
     return NS_OK;
   }
 
@@ -9258,12 +9262,15 @@ nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
   // If we aren't in the <body> element, force the issue.
   if (!temp) {
     nsresult rv = CollapseSelectionToStartOf(*bodyOrDocumentElement);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionToStartOf() caused destroying the "
+          "editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionToStartOf() failed, but ignored");
+        "EditorBase::CollapseSelectionToStartOf() failed, but ignored");
   }
 
   return NS_OK;
@@ -9836,7 +9843,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     nsresult rv = CollapseSelectionToStartOf(
         MOZ_KnownLive(*newDivElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::CollapseSelectionToStartOf() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     *aTargetElement = newDivElementOrError.unwrap();
     return rv;
   }

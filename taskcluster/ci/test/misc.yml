@@ -8,7 +8,7 @@ job-defaults:
 geckoview-junit:
     description: "Geckoview junit run"
     suite: geckoview-junit
-    variants: ["geckoview-e10s-single", "geckoview-fission"]
+    variants: ["geckoview-e10s-single", "geckoview-fission", "no-fission"]
     treeherder-symbol: gv-junit
     loopback-video: true
     target: geckoview-androidTest.apk
@@ -17,7 +17,8 @@ geckoview-junit:
         by-variant:
             geckoview-e10s-single: ['trunk']
             geckoview-fission: ['trunk']
-            default: built-projects
+            no-fission: built-projects
+            default: []
     tier: default
     mozharness:
         script: android_emulator_unittest.py

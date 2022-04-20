@@ -6,6 +6,7 @@
 #ifndef SplitNodeTransaction_h
 #define SplitNodeTransaction_h
 
+#include "EditorForwards.h"
 #include "EditTransactionBase.h"  // for EditorTransactionBase
 
 #include "nsCOMPtr.h"  // for nsCOMPtr
@@ -15,12 +16,6 @@
 #include "nscore.h"           // for NS_IMETHOD
 
 namespace mozilla {
-
-class HTMLEditor;
-class SplitNodeResult;
-
-template <typename PT, typename CT>
-class EditorDOMPointBase;
 
 /**
  * A transaction that splits a node into two identical nodes, with the children

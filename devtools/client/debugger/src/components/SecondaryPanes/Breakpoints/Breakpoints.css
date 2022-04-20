@@ -6,10 +6,6 @@
   overflow-x: auto;
 }
 
-.breakpoints-toggle {
-  margin: 2px 3px;
-}
-
 .breakpoints-exceptions-options *,
 .breakpoints-list * {
   user-select: none;

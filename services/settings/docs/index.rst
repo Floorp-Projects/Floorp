@@ -117,27 +117,25 @@ Remote files are not downloaded automatically. In order to keep attachments in s
         .filter(d => d.attachment);
 
       // Remove local files of deleted records
-      await Promise.all(toDelete.map(entry => client.attachments.delete(entry)));
-      // Download attachments
-      const fileURLs = await Promise.all(
-        toDownload.map(entry => client.attachments.download(entry, { retries: 2 }))
+      await Promise.all(
+        toDelete.map(record => client.attachments.deleteDownloaded(record))
       );
 
-      // Open downloaded files...
+      // Download new attachments
       const fileContents = await Promise.all(
-        fileURLs.map(async url => {
-          const r = await fetch(url);
-          return r.blob();
-        })
+        toDownload.map(async record => {
+          const { buffer } = await client.attachments.download(record);
+          return buffer;
+        });
       );
     });
 
 The provided helper will:
   - fetch the remote binary content
-  - write the file in the profile folder
+  - write the file in the local IndexedDB
   - check the file size
   - check the content SHA256 hash
-  - do nothing if the file is already present and sound locally.
+  - do nothing if the attachment was already present and sound locally.
 
 .. important::
 
@@ -149,27 +147,22 @@ The provided helper will:
 
 .. note::
 
-    The ``download()`` method does not return a file path but instead a ``file://`` URL which points to the locally-downloaded file.
-    This will allow us to package attachments as part of a Firefox release (see `Bug 1542177 <https://bugzilla.mozilla.org/show_bug.cgi?id=1542177>`_)
-    and return them to calling code as ``resource://`` from within a package archive.
+    The ``download()`` method supports the following options:
+
+    - ``retries`` (default: ``3``): number of retries on network errors
+    - ``fallbackToCache`` (default: ``false``): allows callers to fall back to the cached file and record, if the requested record's attachment fails to download.
+      This enables callers to always have a valid pair of attachment and record,
+      provided that the attachment has been retrieved at least once.
+    - ``fallbackToDump`` (default: ``false``): activates a fallback to a dump that has been
+      packaged with the client, when other ways to load the attachment have failed.
+      See :ref:`services/packaging-attachments <services/packaging-attachments>` for more information.
 
 .. note::
 
-    By default, the ``download()`` method is prone to leaving extraneous files in the profile directory
-    (see `Bug 1634127 <https://bugzilla.mozilla.org/show_bug.cgi?id=1634127>`_).
-    Pass the ``useCache`` option to use an IndexedDB-based cache, and unlock the following features:
+    A ``downloadAsBytes()`` method returning an ``ArrayBuffer`` is also available, if writing the attachment locally is not necessary.
 
-    The ``fallbackToCache`` option allows callers to fall back to the cached file and record, if the requested record's attachment fails to download.
-    This enables callers to always have a valid pair of attachment and record,
-    provided that the attachment has been retrieved at least once.
-
-    The ``fallbackToDump`` option activates a fallback to a dump that has been
-    packaged with the client, when other ways to load the attachment have failed.
-    See :ref:`services/packaging-attachments <services/packaging-attachments>` for more information.
-
-.. note::
-
-    A ``downloadAsBytes()`` method returning an ``ArrayBuffer`` is also available, if writing the attachment into the user profile is not necessary.
+    Some ``downloadToDisk()`` and ``deleteFromDisk()`` methods are also available but generally discouraged, since they are prone to leaving extraneous files
+    in the profile directory (see `Bug 1634127 <https://bugzilla.mozilla.org/show_bug.cgi?id=1634127>`_).
 
 
 .. _services/initial-data:

@@ -410,7 +410,12 @@ class QuickSuggest extends EventEmitter {
         await Promise.all(
           event.data.deleted
             .filter(d => d.attachment)
-            .map(entry => this._rs.attachments.delete(entry))
+            .map(entry =>
+              Promise.all([
+                this._rs.attachments.deleteDownloaded(entry), // type: data
+                this._rs.attachments.deleteFromDisk(entry), // type: icon
+              ])
+            )
         );
       }
 
@@ -420,7 +425,7 @@ class QuickSuggest extends EventEmitter {
         this._rs
           .get({ filters: { type: "icon" } })
           .then(icons =>
-            Promise.all(icons.map(i => this._rs.attachments.download(i)))
+            Promise.all(icons.map(i => this._rs.attachments.downloadToDisk(i)))
           ),
       ]);
 
@@ -430,9 +435,7 @@ class QuickSuggest extends EventEmitter {
       this._resultsByKeyword.clear();
 
       for (let record of data) {
-        let { buffer } = await this._rs.attachments.download(record, {
-          useCache: true,
-        });
+        let { buffer } = await this._rs.attachments.download(record);
         let results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
         this._addResults(results);
       }
@@ -482,7 +485,7 @@ class QuickSuggest extends EventEmitter {
     if (!record) {
       return null;
     }
-    return this._rs.attachments.download(record);
+    return this._rs.attachments.downloadToDisk(record);
   }
 }
 

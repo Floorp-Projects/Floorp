@@ -122,7 +122,7 @@ declare_args() {
   rtc_build_tools = false
 
   # Set this to false to skip building code that requires X11.
-  rtc_use_x11 = is_desktop_linux
+  rtc_use_x11 = use_x11
 
   # Set this to use PipeWire on the Wayland display server.
   # By default it's only enabled on desktop Linux (excludes ChromeOS) and

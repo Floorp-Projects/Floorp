@@ -29,7 +29,6 @@
 #include "nsStyleChangeList.h"
 #include "mozilla/RestyleManager.h"
 
-using mozilla::dom::Animation;
 using mozilla::dom::CSSTransition;
 using mozilla::dom::DocumentTimeline;
 using mozilla::dom::KeyframeEffect;
@@ -62,12 +61,12 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
 
   CSSTransitionCollection* collection =
       CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
-  return DoUpdateTransitions(*aNewStyle.StyleDisplay(), aElement, aPseudoType,
+  return DoUpdateTransitions(*aNewStyle.StyleUIReset(), aElement, aPseudoType,
                              collection, aOldStyle, aNewStyle);
 }
 
 bool nsTransitionManager::DoUpdateTransitions(
-    const nsStyleDisplay& aDisp, dom::Element* aElement,
+    const nsStyleUIReset& aStyle, dom::Element* aElement,
     PseudoStyleType aPseudoType, CSSTransitionCollection*& aElementTransitions,
     const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle) {
   MOZ_ASSERT(!aElementTransitions || aElementTransitions->mElement == aElement,
@@ -79,14 +78,14 @@ bool nsTransitionManager::DoUpdateTransitions(
   // ones (tracked using |propertiesChecked|).
   bool startedAny = false;
   nsCSSPropertyIDSet propertiesChecked;
-  for (uint32_t i = aDisp.mTransitionPropertyCount; i--;) {
+  for (uint32_t i = aStyle.mTransitionPropertyCount; i--;) {
     // We're not going to look at any further transitions, so we can just avoid
     // looking at this if we know it will not start any transitions.
-    if (i == 0 && aDisp.GetTransitionCombinedDuration(i) <= 0.0f) {
+    if (i == 0 && aStyle.GetTransitionCombinedDuration(i) <= 0.0f) {
       continue;
     }
 
-    nsCSSPropertyID property = aDisp.GetTransitionProperty(i);
+    nsCSSPropertyID property = aStyle.GetTransitionProperty(i);
     if (property == eCSSPropertyExtra_no_properties ||
         property == eCSSPropertyExtra_variable ||
         property == eCSSProperty_UNKNOWN) {
@@ -106,19 +105,19 @@ bool nsTransitionManager::DoUpdateTransitions(
           continue;
         }
         startedAny |= ConsiderInitiatingTransition(
-            p, aDisp, i, aElement, aPseudoType, aElementTransitions, aOldStyle,
+            p, aStyle, i, aElement, aPseudoType, aElementTransitions, aOldStyle,
             aNewStyle, propertiesChecked);
       }
     } else if (nsCSSProps::IsShorthand(property)) {
       CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subprop, property,
                                            CSSEnabledState::ForAllContent) {
         startedAny |= ConsiderInitiatingTransition(
-            *subprop, aDisp, i, aElement, aPseudoType, aElementTransitions,
+            *subprop, aStyle, i, aElement, aPseudoType, aElementTransitions,
             aOldStyle, aNewStyle, propertiesChecked);
       }
     } else {
       startedAny |= ConsiderInitiatingTransition(
-          property, aDisp, i, aElement, aPseudoType, aElementTransitions,
+          property, aStyle, i, aElement, aPseudoType, aElementTransitions,
           aOldStyle, aNewStyle, propertiesChecked);
     }
   }
@@ -134,13 +133,13 @@ bool nsTransitionManager::DoUpdateTransitions(
   // nsTransitionManager::PruneCompletedTransitions.
   if (aElementTransitions) {
     bool checkProperties =
-        aDisp.GetTransitionProperty(0) != eCSSPropertyExtra_all_properties;
+        aStyle.GetTransitionProperty(0) != eCSSPropertyExtra_all_properties;
     nsCSSPropertyIDSet allTransitionProperties;
     if (checkProperties) {
-      for (uint32_t i = aDisp.mTransitionPropertyCount; i-- != 0;) {
+      for (uint32_t i = aStyle.mTransitionPropertyCount; i-- != 0;) {
         // FIXME: Would be good to find a way to share code between this
         // interpretation of transition-property and the one above.
-        nsCSSPropertyID property = aDisp.GetTransitionProperty(i);
+        nsCSSPropertyID property = aStyle.GetTransitionProperty(i);
         if (property == eCSSPropertyExtra_no_properties ||
             property == eCSSPropertyExtra_variable ||
             property == eCSSProperty_UNKNOWN) {
@@ -279,7 +278,7 @@ GetReplacedTransitionProperties(const CSSTransition* aTransition,
 }
 
 bool nsTransitionManager::ConsiderInitiatingTransition(
-    nsCSSPropertyID aProperty, const nsStyleDisplay& aStyleDisplay,
+    nsCSSPropertyID aProperty, const nsStyleUIReset& aStyle,
     uint32_t transitionIdx, dom::Element* aElement, PseudoStyleType aPseudoType,
     CSSTransitionCollection*& aElementTransitions,
     const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle,
@@ -306,11 +305,10 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     return false;
   }
 
-  float delay = aStyleDisplay.GetTransitionDelay(transitionIdx);
+  float delay = aStyle.GetTransitionDelay(transitionIdx);
 
   // The spec says a negative duration is treated as zero.
-  float duration =
-      std::max(aStyleDisplay.GetTransitionDuration(transitionIdx), 0.0f);
+  float duration = std::max(aStyle.GetTransitionDuration(transitionIdx), 0.0f);
 
   // If the combined duration of this transition is 0 or less don't start a
   // transition.
@@ -440,7 +438,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       dom::PlaybackDirection::Normal, dom::FillMode::Backwards);
 
   const nsTimingFunction& tf =
-      aStyleDisplay.GetTransitionTimingFunction(transitionIdx);
+      aStyle.GetTransitionTimingFunction(transitionIdx);
   if (!tf.IsLinear()) {
     timing.SetTimingFunction(Some(ComputedTimingFunction(tf)));
   }

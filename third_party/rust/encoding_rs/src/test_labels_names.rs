@@ -23,6 +23,7 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"utf8"), Some(UTF_8));
     assert_eq!(Encoding::for_label(b"koi8"), Some(KOI8_R));
     assert_eq!(Encoding::for_label(b"sjis"), Some(SHIFT_JIS));
+    assert_eq!(Encoding::for_label(b"ucs-2"), Some(UTF_16LE));
     assert_eq!(Encoding::for_label(b"ms932"), Some(SHIFT_JIS));
     assert_eq!(Encoding::for_label(b"cp866"), Some(IBM866));
     assert_eq!(Encoding::for_label(b"utf-8"), Some(UTF_8));
@@ -67,6 +68,7 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"gb_2312"), Some(GBK));
     assert_eq!(Encoding::for_label(b"dos-874"), Some(WINDOWS_874));
     assert_eq!(Encoding::for_label(b"cn-big5"), Some(BIG5));
+    assert_eq!(Encoding::for_label(b"unicode"), Some(UTF_16LE));
     assert_eq!(Encoding::for_label(b"chinese"), Some(GBK));
     assert_eq!(Encoding::for_label(b"logical"), Some(ISO_8859_8_I));
     assert_eq!(Encoding::for_label(b"cskoi8r"), Some(KOI8_R));
@@ -119,6 +121,7 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"iso8859-8"), Some(ISO_8859_8));
     assert_eq!(Encoding::for_label(b"iso-ir-58"), Some(GBK));
     assert_eq!(Encoding::for_label(b"iso8859-9"), Some(WINDOWS_1254));
+    assert_eq!(Encoding::for_label(b"csunicode"), Some(UTF_16LE));
     assert_eq!(Encoding::for_label(b"macintosh"), Some(MACINTOSH));
     assert_eq!(Encoding::for_label(b"shift-jis"), Some(SHIFT_JIS));
     assert_eq!(Encoding::for_label(b"shift_jis"), Some(SHIFT_JIS));
@@ -178,6 +181,8 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"csisolatin9"), Some(ISO_8859_15));
     assert_eq!(Encoding::for_label(b"csiso88596e"), Some(ISO_8859_6));
     assert_eq!(Encoding::for_label(b"csiso88598e"), Some(ISO_8859_8));
+    assert_eq!(Encoding::for_label(b"unicodefffe"), Some(UTF_16BE));
+    assert_eq!(Encoding::for_label(b"unicodefeff"), Some(UTF_16LE));
     assert_eq!(Encoding::for_label(b"csmacintosh"), Some(MACINTOSH));
     assert_eq!(Encoding::for_label(b"csiso88596i"), Some(ISO_8859_6));
     assert_eq!(Encoding::for_label(b"csiso88598i"), Some(ISO_8859_8_I));
@@ -204,12 +209,15 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"iso-8859-8-i"), Some(ISO_8859_8_I));
     assert_eq!(Encoding::for_label(b"sun_eu_greek"), Some(ISO_8859_7));
     assert_eq!(Encoding::for_label(b"csksc56011987"), Some(EUC_KR));
+    assert_eq!(Encoding::for_label(b"unicode20utf8"), Some(UTF_8));
+    assert_eq!(Encoding::for_label(b"unicode11utf8"), Some(UTF_8));
     assert_eq!(Encoding::for_label(b"ks_c_5601-1987"), Some(EUC_KR));
     assert_eq!(Encoding::for_label(b"ansi_x3.4-1968"), Some(WINDOWS_1252));
     assert_eq!(Encoding::for_label(b"ks_c_5601-1989"), Some(EUC_KR));
     assert_eq!(Encoding::for_label(b"x-mac-cyrillic"), Some(X_MAC_CYRILLIC));
     assert_eq!(Encoding::for_label(b"x-user-defined"), Some(X_USER_DEFINED));
     assert_eq!(Encoding::for_label(b"csiso58gb231280"), Some(GBK));
+    assert_eq!(Encoding::for_label(b"iso-10646-ucs-2"), Some(UTF_16LE));
     assert_eq!(Encoding::for_label(b"iso_8859-1:1987"), Some(WINDOWS_1252));
     assert_eq!(Encoding::for_label(b"iso_8859-2:1987"), Some(ISO_8859_2));
     assert_eq!(Encoding::for_label(b"iso_8859-6:1987"), Some(ISO_8859_6));
@@ -218,6 +226,7 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"iso_8859-4:1988"), Some(ISO_8859_4));
     assert_eq!(Encoding::for_label(b"iso_8859-5:1988"), Some(ISO_8859_5));
     assert_eq!(Encoding::for_label(b"iso_8859-8:1988"), Some(ISO_8859_8));
+    assert_eq!(Encoding::for_label(b"x-unicode20utf8"), Some(UTF_8));
     assert_eq!(Encoding::for_label(b"iso_8859-9:1989"), Some(WINDOWS_1254));
     assert_eq!(Encoding::for_label(b"csisolatingreek"), Some(ISO_8859_7));
     assert_eq!(

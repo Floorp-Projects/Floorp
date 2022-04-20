@@ -302,8 +302,7 @@ RuleEditor.prototype = {
     }
 
     const { inspector } = this.ruleView;
-    const target = inspector.currentTarget;
-    if (Tools.styleEditor.isTargetSupported(target)) {
+    if (Tools.styleEditor.isToolSupported(inspector.toolbox)) {
       inspector.toolbox.viewSourceInStyleEditorByFront(
         this.rule.sheet,
         this.rule.ruleLine,

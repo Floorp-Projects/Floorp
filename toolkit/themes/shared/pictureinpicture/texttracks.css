@@ -41,7 +41,7 @@
     left: 50%;
     transform: translateX(-50%);
     padding: 8px;
-    max-width: calc(0.66 * 100vw);
+    max-width: calc(0.88 * 100vw);
     bottom: var(--texttracks-bottom);
     font-size: clamp(var(--min-font-size), calc(var(--font-scale) * 100vh), var(--max-font-size));
     line-height: clamp(14.4px, calc(var(--font-scale) * 1.2 * 100vh), 48px);

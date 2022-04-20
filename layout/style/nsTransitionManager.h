@@ -15,7 +15,7 @@
 
 class nsPresContext;
 class nsCSSPropertyIDSet;
-struct nsStyleDisplay;
+struct nsStyleUIReset;
 
 namespace mozilla {
 class ComputedStyle;
@@ -51,7 +51,7 @@ class nsTransitionManager final
   // as needed. aDisp and aElement must be non-null.
   // aElementTransitions is the collection of current transitions, and it
   // could be a nullptr if we don't have any transitions.
-  bool DoUpdateTransitions(const nsStyleDisplay& aDisp,
+  bool DoUpdateTransitions(const nsStyleUIReset& aStyle,
                            mozilla::dom::Element* aElement,
                            mozilla::PseudoStyleType aPseudoType,
                            CSSTransitionCollection*& aElementTransitions,
@@ -60,7 +60,7 @@ class nsTransitionManager final
 
   // Returns whether the transition actually started.
   bool ConsiderInitiatingTransition(
-      nsCSSPropertyID aProperty, const nsStyleDisplay& aStyleDisplay,
+      nsCSSPropertyID aProperty, const nsStyleUIReset& aStyle,
       uint32_t transitionIdx, mozilla::dom::Element* aElement,
       mozilla::PseudoStyleType aPseudoType,
       CSSTransitionCollection*& aElementTransitions,

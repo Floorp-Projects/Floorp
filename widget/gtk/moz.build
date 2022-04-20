@@ -113,23 +113,27 @@ if CONFIG["MOZ_WAYLAND"]:
         "mozva",
     ]
 
-if CONFIG["MOZ_X11"]:
+if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     UNIFIED_SOURCES += [
         "CompositorWidgetChild.cpp",
         "CompositorWidgetParent.cpp",
         "InProcessGtkCompositorWidget.cpp",
-        "nsClipboardX11.cpp",
-        "nsShmImage.cpp",
         "nsUserIdleServiceGTK.cpp",
-        "WindowSurfaceX11.cpp",
-        "WindowSurfaceX11Image.cpp",
-        "WindowSurfaceX11SHM.cpp",
     ]
     EXPORTS.mozilla.widget += [
         "CompositorWidgetChild.h",
         "CompositorWidgetParent.h",
         "GtkCompositorWidget.h",
         "InProcessGtkCompositorWidget.h",
+    ]
+
+if CONFIG["MOZ_X11"]:
+    UNIFIED_SOURCES += [
+        "nsClipboardX11.cpp",
+        "nsShmImage.cpp",
+        "WindowSurfaceX11.cpp",
+        "WindowSurfaceX11Image.cpp",
+        "WindowSurfaceX11SHM.cpp",
     ]
 
 if CONFIG["NS_PRINTING"]:
@@ -159,7 +163,7 @@ LOCAL_INCLUDES += [
     "/widget/headless",
 ]
 
-if CONFIG["MOZ_X11"]:
+if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     LOCAL_INCLUDES += [
         "/widget/x11",
     ]

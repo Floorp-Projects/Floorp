@@ -34,11 +34,6 @@ loader.lazyRequireGetter(
   "previewers",
   "devtools/server/actors/object/previewers"
 );
-loader.lazyRequireGetter(
-  this,
-  "stringify",
-  "devtools/server/actors/object/stringifiers"
-);
 
 // ContentDOMReference requires ChromeUtils, which isn't available in worker context.
 if (!isWorker) {
@@ -271,23 +266,6 @@ const proto = {
     }
 
     return { promiseState };
-  },
-
-  /**
-   * Handle a protocol request to provide the names of the properties defined on
-   * the object and not its prototype.
-   */
-  ownPropertyNames: function() {
-    let props = [];
-    if (DevToolsUtils.isSafeDebuggerObject(this.obj)) {
-      try {
-        props = this.obj.getOwnPropertyNames();
-      } catch (err) {
-        // The above can throw when the debuggee does not subsume the object's
-        // compartment, or for some WrappedNatives like Cu.Sandbox.
-      }
-    }
-    return { ownPropertyNames: props };
   },
 
   /**
@@ -688,14 +666,6 @@ const proto = {
   },
 
   /**
-   * Handle a protocol request to provide the display string for the object.
-   */
-  displayString: function() {
-    const string = stringify(this.obj);
-    return { displayString: this.hooks.createValueGrip(string) };
-  },
-
-  /**
    * A helper method that creates a property descriptor for the provided object,
    * properly formatted for sending in a protocol response.
    *
@@ -763,36 +733,6 @@ const proto = {
       }
     }
     return retval;
-  },
-
-  /**
-   * Handle a protocol request to provide the source code of a function.
-   *
-   * @param pretty boolean
-   */
-  decompile: function(pretty) {
-    if (this.obj.class !== "Function") {
-      return this.throwError(
-        "objectNotFunction",
-        "decompile request is only valid for grips  with a 'Function' class."
-      );
-    }
-
-    return { decompiledCode: this.obj.decompile(!!pretty) };
-  },
-
-  /**
-   * Handle a protocol request to provide the parameters of a function.
-   */
-  parameterNames: function() {
-    if (this.obj.class !== "Function") {
-      return this.throwError(
-        "objectNotFunction",
-        "'parameterNames' request is only valid for grips with a 'Function' class."
-      );
-    }
-
-    return { parameterNames: this.obj.parameterNames };
   },
 
   /**

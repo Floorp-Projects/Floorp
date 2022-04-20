@@ -256,9 +256,6 @@ These methods may throw if the referent is not a native object. Even simple acce
 
   As described above, each ``Debugger.Object`` instance presents its referent as viewed from a particular compartment. Given a ``Debugger.Object`` instance *d* and an object *o*, the call ``d.makeDebuggeeValue(o)`` returns a ``Debugger.Object`` instance that presents *o* as it would be seen by code in *d*’s compartment.
 
-``decompile([pretty])``
-  If the referent is a function that is debuggee code, return the JavaScript source code for a function definition equivalent to the referent function in its effect and result, as a string. If *pretty* is present and true, produce indented code with line breaks. If the referent is not a function that is debuggee code, return ``undefined``.
-
 ``call(this, argument, …)``
   If the referent is callable, call it with the given *this* value and *argument* values, and return a completion value describing how the call completed. *This* should be a debuggee value, or ``{ asConstructor: true }`` to invoke the referent as a constructor, in which case SpiderMonkey provides an appropriate ``this`` value itself. Each *argument* must be a debuggee value. All extant handler methods, breakpoints, and so on remain active during the call. If the referent is not callable, throw a ``TypeError``. This function follows the invocation function conventions.
 
