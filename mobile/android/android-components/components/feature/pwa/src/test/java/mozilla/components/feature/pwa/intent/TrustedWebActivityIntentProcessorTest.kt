@@ -23,12 +23,15 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
+@Suppress("DEPRECATION")
+@Ignore("TrustedWebActivityIntentProcessorTest] is deprecated. See https://github.com/mozilla-mobile/android-components/issues/12024")
 class TrustedWebActivityIntentProcessorTest {
 
     private lateinit var store: BrowserStore

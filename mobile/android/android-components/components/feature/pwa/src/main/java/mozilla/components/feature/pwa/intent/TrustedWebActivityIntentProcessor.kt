@@ -33,6 +33,7 @@ import mozilla.components.support.utils.toSafeIntent
 /**
  * Processor for intents which open Trusted Web Activities.
  */
+@Deprecated("TWAs are not supported. See https://github.com/mozilla-mobile/android-components/issues/12024")
 class TrustedWebActivityIntentProcessor(
     private val addNewTabUseCase: CustomTabsUseCases.AddCustomTabUseCase,
     packageManager: PackageManager,

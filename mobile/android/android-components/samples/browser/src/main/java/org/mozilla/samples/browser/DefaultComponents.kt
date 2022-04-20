@@ -53,7 +53,6 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppInterceptor
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
-import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
 import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.search.SearchUseCases
@@ -240,12 +239,6 @@ open class DefaultComponents(private val applicationContext: Context) {
     val externalAppIntentProcessors by lazy {
         listOf(
             WebAppIntentProcessor(store, customTabsUseCases.addWebApp, sessionUseCases.loadUrl, webAppManifestStorage),
-            TrustedWebActivityIntentProcessor(
-                customTabsUseCases.add,
-                applicationContext.packageManager,
-                relationChecker,
-                customTabsStore
-            ),
             CustomTabIntentProcessor(customTabsUseCases.add, applicationContext.resources)
         )
     }
