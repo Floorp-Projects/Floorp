@@ -66,6 +66,7 @@ class AudioSinkWrapper : public MediaSink {
   media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) override;
   bool HasUnplayedFrames(TrackType aType) const override;
   media::TimeUnit UnplayedDuration(TrackType aType) const override;
+  void DropAudioPacketsIfNeeded(const media::TimeUnit& aMediaPosition);
 
   void SetVolume(double aVolume) override;
   void SetStreamName(const nsAString& aStreamName) override;
@@ -86,6 +87,8 @@ class AudioSinkWrapper : public MediaSink {
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
 
  private:
+  bool IsMuted() const;
+  void OnMuted(bool aMuted);
   virtual ~AudioSinkWrapper();
 
   void AssertOwnerThread() const {
@@ -94,7 +97,11 @@ class AudioSinkWrapper : public MediaSink {
 
   nsresult StartAudioSink(const media::TimeUnit& aStartTime);
 
-  media::TimeUnit GetVideoPosition(TimeStamp aNow) const;
+  // Get the current media position using the system clock. This is used when
+  // the audio is muted, or when the media has no audio track. Otherwise, the
+  // media's position is based on the clock of the AudioStream.
+  media::TimeUnit GetSystemClockPosition(TimeStamp aNow) const;
+  bool CheckIfEnded() const;
 
   void OnAudioEnded();
 
