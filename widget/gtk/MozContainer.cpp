@@ -9,7 +9,6 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <gdk/gdkx.h>
 #include <stdio.h>
 #include "mozilla/WidgetUtilsGtk.h"
 
