@@ -738,18 +738,13 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
       // Let also non-RefreshDriver code to run at least for awhile if we have
       // a mVsyncRefreshDriverTimer.
-      TimeDuration timeForOutsideTick = TimeDuration::FromMilliseconds(0.0f);
-
-      bool shouldGiveNonVSyncTasksMoreTime = ShouldGiveNonVsyncTasksMoreTime();
-
-      // Calculate timeForOutsideTick value and run the RefreshDrivers.
-
-      double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
-      TimeDuration gracePeriod = TimeDuration::FromMilliseconds(rate / 100.0f);
       // Always give a tiny bit, 1% of the vsync interval, time outside the
       // tick
-      timeForOutsideTick = gracePeriod;
+      double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
+      TimeDuration gracePeriod = TimeDuration::FromMilliseconds(rate / 100.0f);
+      TimeDuration timeForOutsideTick = gracePeriod;
 
+      bool shouldGiveNonVSyncTasksMoreTime = ShouldGiveNonVsyncTasksMoreTime();
       if (!mLastTickEnd.IsNull() && shouldGiveNonVSyncTasksMoreTime &&
           XRE_IsContentProcess() &&
           // For RefreshDriver scheduling during page load there is currently
