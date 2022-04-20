@@ -1172,7 +1172,8 @@ def target_tasks_condprof(full_task_graph, parameters, graph_config):
     """
     for name, task in full_task_graph.tasks.items():
         if task.kind == "condprof":
-            yield name
+            if "a51" not in task.name:  # bug 1765348
+                yield name
 
 
 @_target_task("system_symbols")
