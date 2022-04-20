@@ -5706,15 +5706,43 @@ bool ShouldSanitizePreference(const char* aPref,
       // PREF_LIST_ENTRY("privacy.sanitize."),
   };
 
+  static const PrefListEntry sDynamicPrefOverrideList[]{
+      PREF_LIST_ENTRY("print.printer_")};
+
 #undef PREF_LIST_ENTRY
 
-  for (const auto& entry : sParentOnlyPrefBranchList) {
-    if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+  // In the parent process, we use a heuristic to decide if a pref
+  // value should be sanitized before sending to subprocesses.
+  if (XRE_IsParentProcess()) {
+    // First check against the denylist, the denylist is used for
+    // all subprocesses to reduce IPC traffic.
+    for (const auto& entry : sParentOnlyPrefBranchList) {
+      if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+        return true;
+      }
+    }
+
+    if (!aIsDestWebContentProcess) {
+      return false;
+    }
+
+    // If it's a Web Content Process, also check if it's a dynamically
+    // named string preference
+    if (Preferences::GetType(aPref) == nsIPrefBranch::PREF_STRING &&
+        !Preferences::HasDefaultValue(aPref)) {
+      for (const auto& entry : sDynamicPrefOverrideList) {
+        if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+          return false;
+        }
+      }
       return true;
     }
+
+    return false;
   }
 
-  return false;
+  // In subprocesses we only check the sanitized bit
+  return Preferences::IsSanitized(aPref);
 }
 
 }  // namespace mozilla
