@@ -207,18 +207,23 @@ void ReportBlockingToConsole(nsIChannel* aChannel, nsIURI* aURI,
                              uint32_t aRejectedReason) {
   MOZ_ASSERT(aChannel && aURI);
 
-  // Get the top-level window ID from the top-level BrowsingContext
+  // Get the window ID from the target BrowsingContext
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  RefPtr<dom::BrowsingContext> bc;
-  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+  RefPtr<dom::BrowsingContext> targetBrowsingContext;
+  loadInfo->GetTargetBrowsingContext(getter_AddRefs(targetBrowsingContext));
 
-  BrowsingContext* top = bc ? bc->Top() : nullptr;
-  if (!top) {
+  if (!targetBrowsingContext) {
     return;
   }
 
-  uint64_t windowID = top->GetCurrentInnerWindowId();
+  WindowContext* windowContext =
+      targetBrowsingContext->GetCurrentWindowContext();
+  if (!windowContext) {
+    return;
+  }
+
+  uint64_t windowID = windowContext->InnerWindowId();
 
   ReportBlockingToConsole(windowID, aURI, aRejectedReason);
 }
