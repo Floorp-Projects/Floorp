@@ -814,6 +814,7 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
     WriteParam(aWriter, aParam.mAllowSoftwareWebRenderD3D11);
     WriteParam(aWriter, aParam.mAllowSoftwareWebRenderOGL);
     WriteParam(aWriter, aParam.mInitiallyPaused);
+    WriteParam(aWriter, aParam.mNeedFastSnaphot);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
@@ -821,7 +822,8 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
            ReadParam(aReader, &aResult->mUseSoftwareWebRender) &&
            ReadParam(aReader, &aResult->mAllowSoftwareWebRenderD3D11) &&
            ReadParam(aReader, &aResult->mAllowSoftwareWebRenderOGL) &&
-           ReadParam(aReader, &aResult->mInitiallyPaused);
+           ReadParam(aReader, &aResult->mInitiallyPaused) &&
+           ReadParam(aReader, &aResult->mNeedFastSnaphot);
   }
 };
 

@@ -620,6 +620,8 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
 
   void ClearCachedWebrenderResources() override;
 
+  bool SetNeedFastSnaphot() override;
+
   /**
    * Notify the widget that this window is being used with OMTC.
    */
@@ -730,6 +732,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   bool mIMEHasFocus;
   bool mIMEHasQuit;
   bool mIsFullyOccluded;
+  bool mNeedFastSnaphot;
   // This flag is only used when APZ is off. It indicates that the current pan
   // gesture was processed as a swipe. Sometimes the swipe animation can finish
   // before momentum events of the pan gesture have stopped firing, so this
