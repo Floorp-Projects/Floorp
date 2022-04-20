@@ -68,9 +68,9 @@ bool SocketProcessHost::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  SharedPreferenceSerializer prefSerializer;
-  if (!prefSerializer.SerializeToSharedMemory(GeckoProcessType_VR,
-                                              /* remoteType */ ""_ns)) {
+  SharedPreferenceSerializer prefSerializer(
+      mozilla::dom::ContentParent::ShouldSyncPreference);
+  if (!prefSerializer.SerializeToSharedMemory()) {
     return false;
   }
   prefSerializer.AddSharedPrefCmdLineArgs(*this, extraArgs);
