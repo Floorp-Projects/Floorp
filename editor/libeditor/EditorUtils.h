@@ -296,17 +296,19 @@ class MOZ_STACK_CLASS AutoRangeArray final {
     return ranges;
   }
 
-  EditorDOMPoint GetStartPointOfFirstRange() const {
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetFirstRangeStartPoint() const {
     if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
-      return EditorDOMPoint();
+      return EditorDOMPointType();
     }
-    return EditorDOMPoint(mRanges[0]->StartRef());
+    return EditorDOMPointType(mRanges[0]->StartRef());
   }
-  EditorDOMPoint GetEndPointOfFirstRange() const {
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetFirstRangeEndPoint() const {
     if (mRanges.IsEmpty() || !mRanges[0]->IsPositioned()) {
-      return EditorDOMPoint();
+      return EditorDOMPointType();
     }
-    return EditorDOMPoint(mRanges[0]->EndRef());
+    return EditorDOMPointType(mRanges[0]->EndRef());
   }
 
   nsresult SelectNode(nsINode& aNode) {
