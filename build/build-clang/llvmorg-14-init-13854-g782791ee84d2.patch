@@ -1,0 +1,60 @@
+From 782791ee84d29db137f441c1e033582a7a78ad5e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Markus=20B=C3=B6ck?= <markus.boeck02@gmail.com>
+Date: Fri, 24 Dec 2021 21:55:07 +0100
+Subject: [PATCH] [clang][#52782] Bail on incomplete parameter type in stdcall
+ name mangling
+
+stdcall name mangling requires a suffix with the number equal to the sum of the byte count of all parameter types. In the case of a function prototype that has a parameter type of an incomplete type it is impossible to get the size of the type. While such a function is not callable or able to be defined in the TU, it may still be mangled when generating debug info, which would previously lead to a crash.
+This patch fixes that by simply bailing out of the loop and using the so far accumulated byte count. This matches GCCs behaviour as well: https://github.com/gcc-mirror/gcc/blob/bc8d6c60137f8bbf173b86ddf31b15d7ba2a33dd/gcc/config/i386/winnt.c#L203
+
+Fixes https://github.com/llvm/llvm-project/issues/52782
+
+Differential Revision: https://reviews.llvm.org/D116020
+---
+ clang/lib/AST/Mangle.cpp                         |  8 +++++++-
+ clang/test/CodeGen/pr52782-stdcall-func-decl.cpp | 10 ++++++++++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+ create mode 100644 clang/test/CodeGen/pr52782-stdcall-func-decl.cpp
+
+diff --git a/clang/lib/AST/Mangle.cpp b/clang/lib/AST/Mangle.cpp
+index 54dbf484f377..984da9909ce2 100644
+--- a/clang/lib/AST/Mangle.cpp
++++ b/clang/lib/AST/Mangle.cpp
+@@ -225,11 +225,17 @@ void MangleContext::mangleName(GlobalDecl GD, raw_ostream &Out) {
+   if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD))
+     if (!MD->isStatic())
+       ++ArgWords;
+-  for (const auto &AT : Proto->param_types())
++  for (const auto &AT : Proto->param_types()) {
++    // If an argument type is incomplete there is no way to get its size to
++    // correctly encode into the mangling scheme.
++    // Follow GCCs behaviour by simply breaking out of the loop.
++    if (AT->isIncompleteType())
++      break;
+     // Size should be aligned to pointer size.
+     ArgWords +=
+         llvm::alignTo(ASTContext.getTypeSize(AT), TI.getPointerWidth(0)) /
+         TI.getPointerWidth(0);
++  }
+   Out << ((TI.getPointerWidth(0) / 8) * ArgWords);
+ }
+ 
+diff --git a/clang/test/CodeGen/pr52782-stdcall-func-decl.cpp b/clang/test/CodeGen/pr52782-stdcall-func-decl.cpp
+new file mode 100644
+index 000000000000..c3c94ece24b2
+--- /dev/null
++++ b/clang/test/CodeGen/pr52782-stdcall-func-decl.cpp
+@@ -0,0 +1,10 @@
++// RUN: %clang_cc1 -triple i686-w64-windows-gnu -o - -emit-llvm -debug-info-kind=constructor %s | FileCheck %s
++
++enum nsresult {};
++
++class NotNull;
++
++class nsICanvasRenderingContextInternal {
++  // CHECK: !DISubprogram(name: "InitializeWithDrawTarget", linkageName: "\01__ZN33nsICanvasRenderingContextInternal24InitializeWithDrawTargetE7NotNull@4"
++  nsresult __stdcall InitializeWithDrawTarget(NotNull);
++} nsTBaseHashSet;
+-- 
+2.34.0.1.g4c8d2d0e3e
+
