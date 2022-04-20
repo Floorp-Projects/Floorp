@@ -1203,13 +1203,19 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
     return NS_ERROR_UNEXPECTED;
   }
   OwningNonNull<Document> document = *aHTMLEditor.GetDocument();
-  nsresult rv = aHTMLEditor.InsertTextWithTransaction(
-      document, theString, pointToInsert.To<EditorRawDOMPoint>(),
-      aPointAfterInsertedString);
-  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
+  Result<EditorDOMPoint, nsresult> insertTextResult =
+      aHTMLEditor.InsertTextWithTransaction(document, theString, pointToInsert);
+  if (MOZ_UNLIKELY(insertTextResult.isErr() && insertTextResult.inspectErr() ==
+                                                   NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "HTMLEditor::InsertTextWithTransaction() caused destroying the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  if (NS_SUCCEEDED(rv)) {
+  if (insertTextResult.isOk()) {
+    if (aPointAfterInsertedString) {
+      *aPointAfterInsertedString =
+          insertTextResult.unwrap().To<EditorRawDOMPoint>();
+    }
     return NS_OK;
   }
 
