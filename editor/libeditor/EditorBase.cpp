@@ -378,9 +378,9 @@ nsresult EditorBase::InitEditorContentAndSelection() {
   //     removed by the web app and if they call `Selection::AddRange()`,
   //     it may cause multiple selection ranges.
   if (!SelectionRef().RangeCount()) {
-    nsresult rv = CollapseSelectionToEnd();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::CollapseSelectionToEnd() failed");
+    nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      NS_WARNING("EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
       return rv;
     }
   }
@@ -1328,18 +1328,18 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   }
   if (!firstEditableLeaf) {
     // just the root node, set selection to inside the root
-    nsresult rv = SelectionRef().CollapseInLimiter(rootElement, 0);
+    nsresult rv = CollapseSelectionToStartOf(*rootElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
 
   if (firstEditableLeaf->IsText()) {
     // If firstEditableLeaf is text, set selection to beginning of the text
     // node.
-    nsresult rv = SelectionRef().CollapseInLimiter(firstEditableLeaf, 0);
+    nsresult rv = CollapseSelectionToStartOf(*firstEditableLeaf);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Selection::CollapseInLimiter() failed");
+                         "EditorBase::CollapseSelectionToStartOf() failed");
     return rv;
   }
 
@@ -1352,9 +1352,9 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   MOZ_ASSERT(
       parent->ComputeIndexOf(firstEditableLeaf).valueOr(UINT32_MAX) == 0,
       "How come the first node isn't the left most child in its parent?");
-  nsresult rv = SelectionRef().CollapseInLimiter(parent, 0);
+  nsresult rv = CollapseSelectionToStartOf(*parent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Selection::CollapseInLimiter() failed");
+                       "EditorBase::CollapseSelectionToStartOf() failed");
   return rv;
 }
 
@@ -1363,15 +1363,16 @@ NS_IMETHODIMP EditorBase::EndOfDocument() {
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsresult rv = CollapseSelectionToEnd();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionToEnd() failed");
+  nsresult rv = CollapseSelectionToEndOfLastLeafNode();
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rv),
+      "EditorBase::CollapseSelectionToEndOfLastLeafNode() failed");
   // This is low level API for XUL applcation.  So, we should return raw
   // error code here.
   return rv;
 }
 
-nsresult EditorBase::CollapseSelectionToEnd() const {
+nsresult EditorBase::CollapseSelectionToEndOfLastLeafNode() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // XXX Why doesn't this check if the document is alive?
@@ -1385,22 +1386,22 @@ nsresult EditorBase::CollapseSelectionToEnd() const {
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIContent> lastContent = rootElement;
+  nsIContent* lastLeafContent = rootElement;
   if (IsTextEditor()) {
-    lastContent = rootElement->GetFirstChild();
-    MOZ_ASSERT(lastContent && lastContent->IsText());
+    lastLeafContent = rootElement->GetFirstChild();
+    MOZ_ASSERT(lastLeafContent && lastLeafContent->IsText());
   } else {
-    for (nsIContent* child = lastContent->GetLastChild();
+    for (nsIContent* child = lastLeafContent->GetLastChild();
          child && HTMLEditUtils::IsContainerNode(*child);
          child = child->GetLastChild()) {
-      lastContent = child;
+      lastLeafContent = child;
     }
   }
 
   nsresult rv =
-      SelectionRef().CollapseInLimiter(lastContent, lastContent->Length());
+      CollapseSelectionToEndOf(OwningNonNull<nsINode>(*lastLeafContent));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "Selection::CollapseInLimiter() failed");
+                       "EditorBase::CollapseSelectionToEndOf() failed");
   return rv;
 }
 
@@ -1778,14 +1779,10 @@ nsresult EditorBase::PrepareToInsertContent(
     }
   }
 
-  IgnoredErrorResult error;
-  SelectionRef().CollapseInLimiter(pointToInsert, error);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
-  return error.StealNSResult();
+  nsresult rv = CollapseSelectionTo(pointToInsert);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "EditorBase::CollapseSelectionTo() failed");
+  return rv;
 }
 
 nsresult EditorBase::InsertTextAt(const nsAString& aStringToInsert,
@@ -3157,20 +3154,20 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   // We don't support undo here, so we don't really need all of the transaction
   // machinery, therefore we can run our transaction directly, breaking all of
   // the rules!
-  ErrorResult error;
+  IgnoredErrorResult error;
   DoSetText(aTextNode, aString, error);
-  if (error.Failed()) {
+  if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("EditorBase::DoSetText() failed");
     return error.StealNSResult();
   }
 
-  DebugOnly<nsresult> rvIgnored = SelectionRef().CollapseInLimiter(
-      MOZ_KnownLive(&aTextNode), aString.Length());
-  if (NS_WARN_IF(Destroyed())) {
+  CollapseSelectionTo(EditorRawDOMPoint(&aTextNode, aString.Length()), error);
+  if (MOZ_UNLIKELY(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    NS_WARNING("EditorBase::CollapseSelection() caused destroying the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-               "Selection::CollapseInLimiter() failed, but ignored");
+  NS_ASSERTION(!error.Failed(),
+               "EditorBase::CollapseSelectionTo() failed, but ignored");
 
   RangeUpdaterRef().SelAdjReplaceText(aTextNode, 0, length, aString.Length());
 
@@ -4262,11 +4259,12 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   if (!TopLevelEditSubActionDataRef().mDidExplicitlySetInterLine) {
     // We prevent the caret from sticking on the left of previous `<br>`
     // element (i.e. the end of previous line) after this deletion. Bug 92124.
-    ErrorResult error;
-    SelectionRef().SetInterlinePosition(true, error);
-    if (error.Failed()) {
-      NS_WARNING("Selection::SetInterlinePosition(true) failed");
-      return error.StealNSResult();
+    if (MOZ_UNLIKELY(NS_FAILED(SelectionRef().SetInterlinePosition(
+            InterlinePosition::StartOfNextLine)))) {
+      NS_WARNING(
+          "Selection::SetInterlinePosition(InterlinePosition::StartOfNextLine) "
+          "failed");
+      return NS_ERROR_FAILURE;  // Don't need to return NS_ERROR_NOT_INITIALIZED
     }
   }
 

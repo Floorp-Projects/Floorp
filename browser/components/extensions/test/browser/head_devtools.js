@@ -37,7 +37,7 @@ async function registerBlankToolboxPanel() {
     id: TOOLBOX_BLANK_PANEL_ID,
     url: "about:blank",
     label: "Blank Tool",
-    isTargetSupported() {
+    isToolSupported() {
       return true;
     },
     build(iframeWindow, toolbox) {

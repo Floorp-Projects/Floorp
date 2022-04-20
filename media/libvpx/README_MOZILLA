@@ -1,11 +1,18 @@
 The source from this directory was copied from the libvpx
-git repository using the update.py script. The only changes
-made were those applied by update.py and the addition of
-moz.build and Makefile.in build files for the
-Mozilla build system.
+git repository. The only changes made are those in the
+included patch files and the addition of moz.build and
+Makefile.in build files for the Mozilla build system.
 
 The libvpx git repository is:
 
     https://chromium.googlesource.com/webm/libvpx
 
-The git commit ID used was v1.11.0
+See moz.yaml for the current in-tree version.
+
+To update run 
+
+$ ./mach vendor media/libvpx/moz.yaml --patch-mode=none
+$ hg commit -m "Update libvpx"
+$ ./mach vendor media/libvpx/moz.yaml --patch-mode=only
+$ hg commit -m "Apply local patches to libvpx"
+

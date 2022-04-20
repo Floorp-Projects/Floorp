@@ -156,7 +156,7 @@ SOURCES += [
     "ProfileReset.cpp",
 ]
 
-if CONFIG["MOZ_X11"]:
+if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     UNIFIED_SOURCES += [
         "glxtest.cpp",
     ]
@@ -187,7 +187,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
-if CONFIG["MOZ_X11"]:
+if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     DEFINES["USE_GLX_TEST"] = True
 
 for var in (

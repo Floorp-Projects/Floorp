@@ -583,6 +583,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       // |this| for the duration of the TickRefreshDriver callback.
       MOZ_ASSERT(NS_IsMainThread());
 
+      if (!mVsyncRefreshDriverTimer) {
+        // Ignore calls after Shutdown.
+        return;
+      }
+
       // This clears the input handling start time.
       InputTaskManager::Get()->SetInputHandlingStartTime(TimeStamp());
 
@@ -611,7 +616,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       }
 
       if (StaticPrefs::layout_lower_priority_refresh_driver_during_load() &&
-          ShouldGiveNonVsyncTasksMoreTime() && mVsyncRefreshDriverTimer) {
+          ShouldGiveNonVsyncTasksMoreTime()) {
         nsPresContext* pctx =
             mVsyncRefreshDriverTimer->GetPresContextForOnlyRefreshDriver();
         if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
@@ -663,6 +668,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     }
 
     void IdlePriorityNotify() {
+      if (!mVsyncRefreshDriverTimer) {
+        // Ignore calls after Shutdown.
+        return;
+      }
+
       if (mLastProcessedTick.IsNull() || mRecentVsync > mLastProcessedTick) {
         // mSuspendVsyncPriorityTicksUntil is for high priority vsync
         // notifications only.
@@ -712,39 +722,52 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
     void TickRefreshDriver(VsyncId aId, TimeStamp aVsyncTimestamp) {
       MOZ_ASSERT(NS_IsMainThread());
+      MOZ_RELEASE_ASSERT(mVsyncRefreshDriverTimer,
+                         "Do not call after a call to Shutdown()");
 
       RecordTelemetryProbes(aVsyncTimestamp);
-      mLastTickStart = TimeStamp::Now();
-      mLastProcessedTick = aVsyncTimestamp;
+
+      TimeStamp tickStart = TimeStamp::Now();
 
       // On 32-bit Windows we sometimes get times where TimeStamp::Now() is not
       // monotonic because the underlying system apis produce non-monontonic
       // results. (bug 1306896)
 #if !defined(_WIN32)
-      MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
+      MOZ_ASSERT(aVsyncTimestamp <= tickStart);
 #endif
-
-      // Let also non-RefreshDriver code to run at least for awhile if we have
-      // a mVsyncRefreshDriverTimer.
-      TimeDuration timeForOutsideTick = TimeDuration::FromMilliseconds(0.0f);
 
       bool shouldGiveNonVSyncTasksMoreTime = ShouldGiveNonVsyncTasksMoreTime();
 
-      // We might have a problem that we call ~VsyncRefreshDriverTimer() before
-      // the scheduled TickRefreshDriver() runs. Check mVsyncRefreshDriverTimer
-      // before use.
-      if (mVsyncRefreshDriverTimer) {
-        // Calculate timeForOutsideTick value and run the RefreshDrivers.
+      // Set these variables before calling RunRefreshDrivers so that they are
+      // visible to any nested ticks.
+      mLastTickStart = tickStart;
+      mLastProcessedTick = aVsyncTimestamp;
 
-        double rate = mVsyncRefreshDriverTimer->GetTimerRate().ToMilliseconds();
-        TimeDuration gracePeriod =
-            TimeDuration::FromMilliseconds(rate / 100.0f);
-        // Always give a tiny bit, 1% of the vsync interval, time outside the
-        // tick
-        timeForOutsideTick = gracePeriod;
+      RefPtr<VsyncRefreshDriverTimer> timer = mVsyncRefreshDriverTimer;
+      timer->RunRefreshDrivers(aId, aVsyncTimestamp);
+      // Note: mVsyncRefreshDriverTimer might be null now.
 
-        if (!mLastTickEnd.IsNull() && shouldGiveNonVSyncTasksMoreTime &&
-            XRE_IsContentProcess() &&
+      TimeStamp tickEnd = TimeStamp::Now();
+
+      // Re-read mLastTickStart in case there was a nested tick inside this
+      // tick.
+      TimeStamp mostRecentTickStart = mLastTickStart;
+
+      // Let also non-RefreshDriver code to run at least for awhile if we have
+      // a mVsyncRefreshDriverTimer.
+      // Always give a tiny bit, 1% of the vsync interval, time outside the
+      // tick
+      // In case there are both normal tasks and RefreshDrivers are doing
+      // work, mSuspendVsyncPriorityTicksUntil will be set to a timestamp in the
+      // future where the period between the previous tick start
+      // (aVsyncTimestamp) and the next tick needs to be at least the amount of
+      // work normal tasks and RefreshDrivers did together (minus short grace
+      // period).
+      TimeDuration rate = mVsyncRefreshDriverTimer->GetTimerRate();
+      TimeDuration gracePeriod = rate / int64_t(100);
+
+      if (shouldGiveNonVSyncTasksMoreTime) {
+        if (!mLastTickEnd.IsNull() && XRE_IsContentProcess() &&
             // For RefreshDriver scheduling during page load there is currently
             // idle priority based setup.
             // XXX Consider to remove the page load specific code paths.
@@ -752,44 +775,26 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           // In case normal tasks are doing lots of work, we still want to paint
           // every now and then, so only at maximum 4 * rate of work is counted
           // here.
-          timeForOutsideTick = TimeStamp::Now() - mLastTickEnd;
-          TimeDuration maxOutsideTick =
-              TimeDuration::FromMilliseconds(4 * rate);
-          if (timeForOutsideTick > maxOutsideTick) {
-            timeForOutsideTick = maxOutsideTick;
-          }
-
-          if (timeForOutsideTick > gracePeriod) {
-            // If we're giving extra time for tasks outside a tick, try to
-            // ensure the next vsync after that period is handled, so subtract
-            // a grace period.
-            timeForOutsideTick = timeForOutsideTick - gracePeriod;
-          }
+          // If we're giving extra time for tasks outside a tick, try to
+          // ensure the next vsync after that period is handled, so subtract
+          // a grace period.
+          TimeDuration timeForOutsideTick = clamped(
+              tickStart - mLastTickEnd - gracePeriod, TimeDuration(), rate * 4);
+          mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp +
+                                            timeForOutsideTick +
+                                            (tickEnd - mostRecentTickStart);
+        } else {
+          mSuspendVsyncPriorityTicksUntil =
+              aVsyncTimestamp + gracePeriod + (tickEnd - mostRecentTickStart);
         }
-
-        RefPtr<VsyncRefreshDriverTimer> timer = mVsyncRefreshDriverTimer;
-        timer->RunRefreshDrivers(aId, aVsyncTimestamp);
-        // Note: mVsyncRefreshDriverTimer might be null now.
-
-        mLastIdleTaskCount =
-            TaskController::Get()->GetIdleTaskManager()->ProcessedTaskCount();
-        mLastRunOutOfMTTasksCount =
-            TaskController::Get()->RunOutOfMTTasksCount();
+      } else {
+        mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + gracePeriod;
       }
 
-      mLastTickEnd = TimeStamp::Now();
-
-      // In case there are both normal tasks and RefreshDrivers are doing
-      // work, mSuspendVsyncPriorityTicksUntil will be set to a timestamp in the
-      // future where the period between the previous tick start
-      // (aVsyncTimestamp) and the next tick needs to be at least the amount of
-      // work normal tasks and RefreshDrivers did together (minus short grace
-      // period).
-      mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + timeForOutsideTick;
-      if (shouldGiveNonVSyncTasksMoreTime) {
-        TimeDuration tickDuration = mLastTickEnd - mLastTickStart;
-        mSuspendVsyncPriorityTicksUntil += tickDuration;
-      }
+      mLastIdleTaskCount =
+          TaskController::Get()->GetIdleTaskManager()->ProcessedTaskCount();
+      mLastRunOutOfMTTasksCount = TaskController::Get()->RunOutOfMTTasksCount();
+      mLastTickEnd = tickEnd;
     }
 
     // VsyncRefreshDriverTimer holds this RefreshDriverVsyncObserver and it will

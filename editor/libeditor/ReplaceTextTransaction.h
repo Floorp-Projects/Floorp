@@ -6,10 +6,12 @@
 #ifndef ReplaceTextTransaction_h
 #define ReplaceTextTransaction_h
 
+#include "EditorBase.h"
+#include "EditorDOMPoint.h"
+#include "EditorForwards.h"
+#include "EditTransactionBase.h"
+
 #include "mozilla/Attributes.h"
-#include "mozilla/EditorBase.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EditTransactionBase.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/Text.h"
@@ -17,8 +19,6 @@
 #include "nsString.h"
 
 namespace mozilla {
-
-class EditorBase;
 
 class ReplaceTextTransaction final : public EditTransactionBase {
  private:

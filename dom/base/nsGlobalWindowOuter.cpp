@@ -6976,6 +6976,8 @@ nsresult nsGlobalWindowOuter::OpenInternal(
     // window will do a security check of their own.
     if (!url.IsVoid() && !aDialog && aNavigate)
       rv = SecurityCheckURL(url.get(), getter_AddRefs(uri));
+  } else if (mDoc) {
+    mDoc->SetUseCounter(eUseCounter_custom_WindowOpenEmptyUrl);
   }
 
   if (NS_FAILED(rv)) return rv;

@@ -133,7 +133,7 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
   htmlEditor->CollapseSelectionTo(
       EditorRawDOMPoint::AtEndOf(*splitNodeResult.GetNewContent()), error);
   NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return error.StealNSResult();
 }
 

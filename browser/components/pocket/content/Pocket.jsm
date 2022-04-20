@@ -53,10 +53,14 @@ var Pocket = {
   _urlToSave: null,
   _titleToSave: null,
   savePage(browser, url, title) {
-    if (!browser?.ownerDocument || !browser?.ownerGlobal?.PanelUI) {
+    // We want to target the top browser which has the Pocket panel UI,
+    // which might not be the browser saving the article.
+    const ownerGlobal = browser?.ownerGlobal?.top;
+    const ownerDocument = ownerGlobal?.document;
+
+    if (!ownerDocument || !ownerGlobal?.PanelUI) {
       return;
     }
-    let { ownerDocument, ownerGlobal } = browser;
 
     let widget = CustomizableUI.getWidget("save-to-pocket-button");
     let anchorNode = widget.areaType

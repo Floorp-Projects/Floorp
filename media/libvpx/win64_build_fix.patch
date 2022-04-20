@@ -1,6 +1,6 @@
-diff --git a/media/libvpx/libvpx/vpx_ports/vpx_ports.mk b/media/libvpx/libvpx/vpx_ports/vpx_ports.mk
---- a/media/libvpx/libvpx/vpx_ports/vpx_ports.mk
-+++ b/media/libvpx/libvpx/vpx_ports/vpx_ports.mk
+diff --git a/vpx_ports/vpx_ports.mk b/vpx_ports/vpx_ports.mk
+--- a/vpx_ports/vpx_ports.mk
++++ b/vpx_ports/vpx_ports.mk
 @@ -23,17 +23,17 @@ ifeq ($(VPX_ARCH_X86),yes)
  PORTS_SRCS-$(HAVE_MMX) += emms_mmx.c
  endif

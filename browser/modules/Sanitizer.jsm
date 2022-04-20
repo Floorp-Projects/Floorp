@@ -958,10 +958,17 @@ async function maybeSanitizeSessionPrincipals(progress, principals, flags) {
   log("Sanitizing " + principals.length + " principals");
 
   let promises = [];
+  let permissions = new Map();
+  Services.perms.getAllWithTypePrefix("cookie").forEach(perm => {
+    permissions.set(perm.principal.origin, perm);
+  });
 
   principals.forEach(principal => {
     progress.step = "checking-principal";
-    let cookieAllowed = cookiesAllowedForDomainOrSubDomain(principal);
+    let cookieAllowed = cookiesAllowedForDomainOrSubDomain(
+      principal,
+      permissions
+    );
     progress.step = "principal-checked:" + cookieAllowed;
 
     if (!cookieAllowed) {
@@ -974,12 +981,53 @@ async function maybeSanitizeSessionPrincipals(progress, principals, flags) {
   progress.step = "promises resolved";
 }
 
-function cookiesAllowedForDomainOrSubDomain(principal) {
-  log("Checking principal: " + principal.asciispec);
+function cookiesAllowedForDomainOrSubDomain(principal, permissions) {
+  log("Checking principal: " + principal.asciiSpec);
 
   // If we have the 'cookie' permission for this principal, let's return
   // immediately.
+  let cookiePermission = checkIfCookiePermissionIsSet(principal);
+  if (cookiePermission != null) {
+    return cookiePermission;
+  }
+
+  for (let perm of permissions.values()) {
+    if (perm.type != "cookie") {
+      permissions.delete(perm.principal.origin);
+      continue;
+    }
+    // We consider just permissions set for http, https and file URLs.
+    if (!isSupportedPrincipal(perm.principal)) {
+      permissions.delete(perm.principal.origin);
+      continue;
+    }
+
+    // We don't care about scheme, port, and anything else.
+    if (Services.eTLD.hasRootDomain(perm.principal.host, principal.host)) {
+      // Remove the permissions we already checked
+      permissions.delete(perm.principal.origin);
+      log("Cookie check on principal: " + perm.principal.asciiSpec);
+      let rootDomainCookiePermission = checkIfCookiePermissionIsSet(
+        perm.principal
+      );
+      if (rootDomainCookiePermission != null) {
+        return rootDomainCookiePermission;
+      }
+    }
+  }
+
+  log("Cookie not allowed.");
+  return false;
+}
+
+/**
+ * Checks if a cookie permission is set for a given principal
+ * @returns {boolean} - true: cookie permission "ACCESS_ALLOW", false: cookie permission "ACCESS_DENY"/"ACCESS_SESSION"
+ * @returns {null} - No cookie permission is set for this principal
+ */
+function checkIfCookiePermissionIsSet(principal) {
   let p = Services.perms.testPermissionFromPrincipal(principal, "cookie");
+
   if (p == Ci.nsICookiePermission.ACCESS_ALLOW) {
     log("Cookie allowed!");
     return true;
@@ -992,35 +1040,16 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     log("Cookie denied or session!");
     return false;
   }
-
   // This is an old profile with unsupported permission values
   if (p != Ci.nsICookiePermission.ACCESS_DEFAULT) {
     log("Not supported cookie permission: " + p);
     return false;
   }
-
-  for (let perm of Services.perms.getAllWithTypePrefix("cookie")) {
-    if (perm.type != "cookie") {
-      continue;
-    }
-    // We consider just permissions set for http, https and file URLs.
-    if (!isSupportedPrincipal(perm.principal)) {
-      continue;
-    }
-
-    // We don't care about scheme, port, and anything else.
-    if (Services.eTLD.hasRootDomain(perm.principal.host, principal.host)) {
-      log("Recursive cookie check on principal: " + perm.principal.asciiSpec);
-      return cookiesAllowedForDomainOrSubDomain(perm.principal);
-    }
-  }
-
-  log("Cookie not allowed.");
-  return false;
+  return null;
 }
 
 async function sanitizeSessionPrincipal(progress, principal, flags) {
-  log("Sanitizing principal: " + principal.asciispec);
+  log("Sanitizing principal: " + principal.asciiSpec);
 
   await new Promise(resolve => {
     progress.sanitizePrincipal = "started";

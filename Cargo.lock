@@ -1427,12 +1427,12 @@ dependencies = [
 
 [[package]]
 name = "encoding_rs"
-version = "0.8.22"
+version = "0.8.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd8d03faa7fe0c1431609dfad7bbe827af30f82e1e2ae6f7ee4fca6bd764bc28"
+checksum = "9852635589dc9f9ea1b6fe9f05b50ef208c85c834a562f0c6abb1c475736ec2b"
 dependencies = [
- "cfg-if 0.1.10",
- "packed_simd",
+ "cfg-if 1.0.0",
+ "packed_simd_2",
 ]
 
 [[package]]
@@ -3429,7 +3429,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.8.0"
-source = "git+https://github.com/gfx-rs/naga?rev=f90e563#f90e563c281cfc71c794e0426ebcced9e3999202"
+source = "git+https://github.com/gfx-rs/naga?rev=85056524#850565243d1d0d03215f13246c94d63e1d4c51cd"
 dependencies = [
  "bit-set",
  "bitflags",
@@ -3441,7 +3441,9 @@ dependencies = [
  "rustc-hash",
  "serde",
  "spirv",
+ "termcolor",
  "thiserror",
+ "unicode-xid",
 ]
 
 [[package]]
@@ -3790,12 +3792,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "packed_simd"
-version = "0.3.4"
-source = "git+https://github.com/hsivonen/packed_simd?rev=8b4bd7d8229660a749dbe419a57ea01df9de5453#8b4bd7d8229660a749dbe419a57ea01df9de5453"
+name = "packed_simd_2"
+version = "0.3.7"
+source = "git+https://github.com/hsivonen/packed_simd?rev=c149d0a519bf878567c7630096737669ec2ff15f#c149d0a519bf878567c7630096737669ec2ff15f"
 dependencies = [
- "cfg-if 0.1.10",
- "rustc_version",
+ "cfg-if 1.0.0",
 ]
 
 [[package]]
@@ -5886,7 +5887,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.12.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=75e82afd#75e82afd355ba56b2f3d6f6384fb40c1cb46f1a4"
+source = "git+https://github.com/gfx-rs/wgpu?rev=0b61a191#0b61a191244da0f0d987d53614a6698097a7622f"
 dependencies = [
  "arrayvec 0.7.2",
  "bitflags",
@@ -5909,7 +5910,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.12.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=75e82afd#75e82afd355ba56b2f3d6f6384fb40c1cb46f1a4"
+source = "git+https://github.com/gfx-rs/wgpu?rev=0b61a191#0b61a191244da0f0d987d53614a6698097a7622f"
 dependencies = [
  "arrayvec 0.7.2",
  "ash",
@@ -5946,7 +5947,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.12.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=75e82afd#75e82afd355ba56b2f3d6f6384fb40c1cb46f1a4"
+source = "git+https://github.com/gfx-rs/wgpu?rev=0b61a191#0b61a191244da0f0d987d53614a6698097a7622f"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",

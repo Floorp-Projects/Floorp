@@ -37,7 +37,7 @@ async function getSupportedToolIds(tab) {
 
   const toolIds = gDevTools
     .getToolDefinitionArray()
-    .filter(def => def.isTargetSupported(toolbox.target))
+    .filter(def => def.isToolSupported(toolbox))
     .map(def => def.id);
 
   if (shouldDestroyToolbox) {

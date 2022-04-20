@@ -184,10 +184,6 @@ class CommandBar extends Component {
   renderSkipPausingButton() {
     const { skipPausing, toggleSkipPausing } = this.props;
 
-    if (!features.skipPausing) {
-      return null;
-    }
-
     return (
       <button
         className={classnames(

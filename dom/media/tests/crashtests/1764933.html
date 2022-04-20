@@ -1,0 +1,15 @@
+<html>
+<head>
+    <script>
+      window.addEventListener('load', async () => {
+        const peer = new RTCPeerConnection({})
+        await peer.createOffer({ 'offerToReceiveVideo': true })
+        const receivers = peer.getReceivers()
+        const sender = peer.addTrack(receivers[0].track)
+        peer.close()
+        await sender.getStats()
+        await sender.replaceTrack(receivers[0].track)
+      })
+    </script>
+</head>
+</html>

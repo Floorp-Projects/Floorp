@@ -346,6 +346,13 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         we will abort if that is detected. We'll handle `/` and OR as
         equivalent and approve is any is in our approved list."""
 
+        # This specific AND combination has been reviewed for encoding_rs.
+        if (
+            license_string == "(Apache-2.0 OR MIT) AND BSD-3-Clause"
+            and package == "encoding_rs"
+        ):
+            return True
+
         if re.search(r"\s+AND", license_string):
             return False
 

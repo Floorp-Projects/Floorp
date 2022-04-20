@@ -7,6 +7,7 @@
 #define mozilla_SelectionState_h
 
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "nsCOMPtr.h"
@@ -19,15 +20,11 @@
 class nsCycleCollectionTraversalCallback;
 class nsRange;
 namespace mozilla {
-class RangeUpdater;
 namespace dom {
 class Element;
 class Selection;
 class Text;
 }  // namespace dom
-
-enum class JoinNodesDirection;  // Declared in HTMLEditHelpers.h
-enum class SplitNodeDirection;  // Declared in HTMLEditHelpers.h
 
 /**
  * A helper struct for saving/setting ranges.

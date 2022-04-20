@@ -49,9 +49,20 @@ GtkCompositorWidget::GtkCompositorWidget(
   auto size = mClientSize.Lock();
   *size = aInitData.InitialClientSize();
 
-  LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p "
-      "mIsRenderingSuspended %d\n",
-      (void*)mWidget.get(), (void*)mXWindow, !!mIsRenderingSuspended);
+#if defined(MOZ_X11)
+  if (GdkIsX11Display()) {
+    LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p "
+        "mIsRenderingSuspended %d\n",
+        (void*)mWidget.get(), (void*)mXWindow, !!mIsRenderingSuspended);
+  }
+#endif
+#if defined(MOZ_WAYLAND)
+  if (GdkIsWaylandDisplay()) {
+    LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mWidget %p "
+        "mIsRenderingSuspended %d\n",
+        (void*)mWidget.get(), (void*)mWidget, !!mIsRenderingSuspended);
+  }
+#endif
 }
 
 GtkCompositorWidget::~GtkCompositorWidget() {

@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -24,7 +24,7 @@
         all(target_endian = "little", target_feature = "neon")
     )
 ))]
-use simd_funcs::*;
+use crate::simd_funcs::*;
 
 #[cfg(all(
     feature = "simd-accel",
@@ -38,9 +38,9 @@ use packed_simd::u16x8;
 
 use super::DecoderResult;
 use super::EncoderResult;
-use ascii::*;
-use utf_8::convert_utf8_to_utf16_up_to_invalid;
-use utf_8::utf8_valid_up_to;
+use crate::ascii::*;
+use crate::utf_8::convert_utf8_to_utf16_up_to_invalid;
+use crate::utf_8::utf8_valid_up_to;
 
 pub enum Space<T> {
     Available(T),
@@ -108,11 +108,13 @@ impl UnalignedU16Slice {
 
     #[inline(always)]
     pub fn at(&self, i: usize) -> u16 {
+        use core::mem::MaybeUninit;
+
         assert!(i < self.len);
         unsafe {
-            let mut u: u16 = ::std::mem::uninitialized();
-            ::std::ptr::copy_nonoverlapping(self.ptr.add(i * 2), &mut u as *mut u16 as *mut u8, 2);
-            u
+            let mut u: MaybeUninit<u16> = MaybeUninit::uninit();
+            ::core::ptr::copy_nonoverlapping(self.ptr.add(i * 2), u.as_mut_ptr() as *mut u8, 2);
+            u.assume_init()
         }
     }
 
@@ -193,7 +195,7 @@ fn copy_unaligned_basic_latin_to_ascii_alu<E: Endian>(
     dst: &mut [u8],
     offset: usize,
 ) -> CopyAsciiResult<usize, (u16, usize)> {
-    let len = ::std::cmp::min(src.len(), dst.len());
+    let len = ::core::cmp::min(src.len(), dst.len());
     let mut i = 0usize;
     loop {
         if i == len {
@@ -232,7 +234,7 @@ fn copy_unaligned_basic_latin_to_ascii<E: Endian>(
     src: UnalignedU16Slice,
     dst: &mut [u8],
 ) -> CopyAsciiResult<usize, (u16, usize)> {
-    let len = ::std::cmp::min(src.len(), dst.len());
+    let len = ::core::cmp::min(src.len(), dst.len());
     let mut offset = 0;
     if SIMD_STRIDE_SIZE <= len {
         let len_minus_stride = len - SIMD_STRIDE_SIZE;
@@ -734,7 +736,7 @@ impl<'a> Utf16Destination<'a> {
         let mut src_unaligned = unsafe {
             UnalignedU16Slice::new(
                 src_remaining.as_ptr(),
-                ::std::cmp::min(src_remaining.len() / 2, dst_remaining.len()),
+                ::core::cmp::min(src_remaining.len() / 2, dst_remaining.len()),
             )
         };
         if src_unaligned.len() == 0 {
@@ -1078,7 +1080,7 @@ impl<'a> Utf8Destination<'a> {
     pub fn copy_utf8_up_to_invalid_from(&mut self, source: &mut ByteSource) {
         let src_remaining = &source.slice[source.pos..];
         let dst_remaining = &mut self.slice[self.pos..];
-        let min_len = ::std::cmp::min(src_remaining.len(), dst_remaining.len());
+        let min_len = ::core::cmp::min(src_remaining.len(), dst_remaining.len());
         // Validate first, then memcpy to let memcpy do its thing even for
         // non-ASCII. (And potentially do something better than SSE2 for ASCII.)
         let valid_len = utf8_valid_up_to(&src_remaining[..min_len]);
@@ -1154,7 +1156,7 @@ impl<'a> Utf16Source<'a> {
         self.pos += 1;
         let unit_minus_surrogate_start = unit.wrapping_sub(0xD800);
         if unit_minus_surrogate_start > (0xDFFF - 0xD800) {
-            return unsafe { ::std::char::from_u32_unchecked(u32::from(unit)) };
+            return unsafe { ::core::char::from_u32_unchecked(u32::from(unit)) };
         }
         if unit_minus_surrogate_start <= (0xDBFF - 0xD800) {
             // high surrogate
@@ -1165,7 +1167,7 @@ impl<'a> Utf16Source<'a> {
                     // The next code unit is a low surrogate. Advance position.
                     self.pos += 1;
                     return unsafe {
-                        ::std::char::from_u32_unchecked(
+                        ::core::char::from_u32_unchecked(
                             (u32::from(unit) << 10) + u32::from(second)
                                 - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32),
                         )
@@ -1202,7 +1204,7 @@ impl<'a> Utf16Source<'a> {
                     // The next code unit is a low surrogate. Advance position.
                     self.pos += 1;
                     return Unicode::NonAscii(NonAscii::Astral(unsafe {
-                        ::std::char::from_u32_unchecked(
+                        ::core::char::from_u32_unchecked(
                             (u32::from(unit) << 10) + u32::from(second)
                                 - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32),
                         )
@@ -1266,7 +1268,7 @@ impl<'a> Utf16Source<'a> {
                                     // The next code unit is a low surrogate. Advance position.
                                     self.pos += 1;
                                     NonAscii::Astral(unsafe {
-                                        ::std::char::from_u32_unchecked(
+                                        ::core::char::from_u32_unchecked(
                                             (u32::from(unit) << 10) + u32::from(second)
                                                 - (((0xD800u32 << 10) - 0x10000u32) + 0xDC00u32),
                                         )
@@ -1339,7 +1341,7 @@ impl<'a> Utf16Source<'a> {
                                     // The next code unit is a low surrogate. Advance position.
                                     self.pos += 1;
                                     NonAscii::Astral(unsafe {
-                                        ::std::char::from_u32_unchecked(
+                                        ::core::char::from_u32_unchecked(
                                             (u32::from(unit) << 10) + u32::from(second)
                                                 - (((0xD800u32 << 10) - 0x1_0000u32) + 0xDC00u32),
                                         )
@@ -1467,21 +1469,21 @@ impl<'a> Utf8Source<'a> {
             let point =
                 ((u32::from(unit) & 0x1F) << 6) | (u32::from(self.slice[self.pos + 1]) & 0x3F);
             self.pos += 2;
-            return unsafe { ::std::char::from_u32_unchecked(point) };
+            return unsafe { ::core::char::from_u32_unchecked(point) };
         }
         if unit < 0xF0 {
             let point = ((u32::from(unit) & 0xF) << 12)
                 | ((u32::from(self.slice[self.pos + 1]) & 0x3F) << 6)
                 | (u32::from(self.slice[self.pos + 2]) & 0x3F);
             self.pos += 3;
-            return unsafe { ::std::char::from_u32_unchecked(point) };
+            return unsafe { ::core::char::from_u32_unchecked(point) };
         }
         let point = ((u32::from(unit) & 0x7) << 18)
             | ((u32::from(self.slice[self.pos + 1]) & 0x3F) << 12)
             | ((u32::from(self.slice[self.pos + 2]) & 0x3F) << 6)
             | (u32::from(self.slice[self.pos + 3]) & 0x3F);
         self.pos += 4;
-        unsafe { ::std::char::from_u32_unchecked(point) }
+        unsafe { ::core::char::from_u32_unchecked(point) }
     }
     #[inline(always)]
     fn read_enum(&mut self) -> Unicode {
@@ -1510,7 +1512,7 @@ impl<'a> Utf8Source<'a> {
             | (u32::from(self.slice[self.pos + 3]) & 0x3F);
         self.pos += 4;
         Unicode::NonAscii(NonAscii::Astral(unsafe {
-            ::std::char::from_u32_unchecked(point)
+            ::core::char::from_u32_unchecked(point)
         }))
     }
     #[inline(always)]
@@ -1565,7 +1567,7 @@ impl<'a> Utf8Source<'a> {
                             | ((u32::from(self.slice[self.pos + 2]) & 0x3F) << 6)
                             | (u32::from(self.slice[self.pos + 3]) & 0x3F);
                         self.pos += 4;
-                        NonAscii::Astral(unsafe { ::std::char::from_u32_unchecked(point) })
+                        NonAscii::Astral(unsafe { ::core::char::from_u32_unchecked(point) })
                     }
                 }
             }
@@ -1615,7 +1617,7 @@ impl<'a> Utf8Source<'a> {
                                 | ((u32::from(self.slice[self.pos + 2]) & 0x3F) << 6)
                                 | (u32::from(self.slice[self.pos + 3]) & 0x3F);
                             self.pos += 4;
-                            NonAscii::Astral(unsafe { ::std::char::from_u32_unchecked(point) })
+                            NonAscii::Astral(unsafe { ::core::char::from_u32_unchecked(point) })
                         }
                     } else {
                         return CopyAsciiResult::Stop((
@@ -1672,7 +1674,7 @@ impl<'a> Utf8Source<'a> {
                                 | ((u32::from(self.slice[self.pos + 2]) & 0x3F) << 6)
                                 | (u32::from(self.slice[self.pos + 3]) & 0x3F);
                             self.pos += 4;
-                            NonAscii::Astral(unsafe { ::std::char::from_u32_unchecked(point) })
+                            NonAscii::Astral(unsafe { ::core::char::from_u32_unchecked(point) })
                         }
                     } else {
                         return CopyAsciiResult::Stop((

@@ -974,7 +974,7 @@ describe("ASRouter", () => {
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
         .resolves([{ id: "message_1" }]);
       const spy = sandbox.spy();
-      global.Downloader.prototype.download = spy;
+      global.Downloader.prototype.downloadToDisk = spy;
       const provider = {
         id: "cfr",
         enabled: true,
@@ -2814,7 +2814,7 @@ describe("ASRouter", () => {
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
         .resolves([{ id: "message_1" }]);
       spy = sandbox.spy();
-      global.Downloader.prototype.download = spy;
+      global.Downloader.prototype.downloadToDisk = spy;
     });
     it("should be called with the expected dir path", async () => {
       const dlSpy = sandbox.spy(global, "Downloader");

@@ -5,18 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef XP_UNIX
-#  include <sys/types.h>
-#  include <pwd.h>
-#endif
 
 #ifdef MOZ_WIDGET_GTK
-#  include "mozilla/WidgetUtilsGtk.h"
-#  include "nsGTKRemoteServer.h"
 #  ifdef MOZ_ENABLE_DBUS
 #    include "nsDBusRemoteServer.h"
 #    include "nsDBusRemoteClient.h"
 #  else
+#    include "nsGTKRemoteServer.h"
 #    include "nsXRemoteClient.h"
 #  endif
 #elif defined(XP_WIN)
@@ -31,9 +26,7 @@
 #include "nsIObserverService.h"
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/ModuleUtils.h"
 #include "SpecialSystemDirectory.h"
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 

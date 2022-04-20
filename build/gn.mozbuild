@@ -13,6 +13,12 @@ else:
 
 os = CONFIG['OS_TARGET']
 
+if os == "Linux":
+    if CONFIG['MOZ_X11']:
+        gn_vars['use_x11'] = True
+    else:
+        gn_vars['use_x11'] = False
+
 flavors = {
     'WINNT': 'win',
     'Android': 'android',

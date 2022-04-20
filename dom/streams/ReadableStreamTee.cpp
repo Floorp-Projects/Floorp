@@ -862,7 +862,7 @@ class PullWithBYOBReader_ReadIntoRequest final : public ReadIntoRequest {
   }
 
   void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
-                  ErrorResult& errorResult) override {
+                  ErrorResult& aRv) override {
     // Step 1.
     mTeeState->SetReading(false);
   }
