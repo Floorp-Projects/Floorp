@@ -395,7 +395,8 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
                                                                       __func__);
     }
 
-    if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr)) {
+    if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr) !=
+        media::DecodeSupport::Unsupported) {
       // GMP decodes. Assume that means it can decrypt too.
       return EMEDecoderModule::CreateDecoderPromise::CreateAndResolve(
           CreateDecoderWrapper(mProxy, aParams), __func__);
@@ -423,7 +424,8 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
   MOZ_ASSERT(aParams.mConfig.IsAudio());
 
   // We don't support using the GMP to decode audio.
-  MOZ_ASSERT(!SupportsMimeType(aParams.mConfig.mMimeType, nullptr));
+  MOZ_ASSERT(SupportsMimeType(aParams.mConfig.mMimeType, nullptr) ==
+             media::DecodeSupport::Unsupported);
   MOZ_ASSERT(mPDM);
 
   if (StaticPrefs::media_eme_audio_blank()) {
@@ -460,7 +462,7 @@ EMEDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
   return p;
 }
 
-bool EMEDecoderModule::SupportsMimeType(
+media::DecodeSupportSet EMEDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   Maybe<nsCString> gmp;
   gmp.emplace(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));

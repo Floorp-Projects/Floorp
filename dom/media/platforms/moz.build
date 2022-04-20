@@ -14,6 +14,7 @@ EXPORTS += [
     "agnostic/VPXDecoder.h",
     "agnostic/WAVDecoder.h",
     "AllocationPolicy.h",
+    "MediaCodecsSupport.h",
     "MediaTelemetryConstants.h",
     "PDMFactory.h",
     "PEMFactory.h",

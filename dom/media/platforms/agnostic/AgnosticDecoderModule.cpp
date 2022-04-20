@@ -115,16 +115,16 @@ static bool IsAvailable(DecoderType type) {
                                   : IsAvailableInDefault(type);
 }
 
-bool AgnosticDecoderModule::SupportsMimeType(
+media::DecodeSupportSet AgnosticDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
   if (!trackInfo) {
-    return false;
+    return media::DecodeSupport::Unsupported;
   }
   return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
 }
 
-bool AgnosticDecoderModule::Supports(
+media::DecodeSupportSet AgnosticDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
   const auto& trackInfo = aParams.mConfig;
@@ -146,12 +146,16 @@ bool AgnosticDecoderModule::Supports(
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Agnostic decoder %s requested type '%s'",
            supports ? "supports" : "rejects", mimeType.BeginReading()));
-  return supports;
+  if (supports) {
+    return media::DecodeSupport::SoftwareDecode;
+  }
+  return media::DecodeSupport::Unsupported;
 }
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  if (!Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */)) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */) ==
+      media::DecodeSupport::Unsupported) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> m;
@@ -182,7 +186,8 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  if (!Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */)) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostic */) ==
+      media::DecodeSupport::Unsupported) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> m;
