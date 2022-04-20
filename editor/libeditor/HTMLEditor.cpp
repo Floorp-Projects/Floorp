@@ -5026,13 +5026,16 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
 
   if (allowedTransactionsToChangeSelection) {
     // Editor wants us to set selection at join point.
-    DebugOnly<nsresult> rvIgnored = SelectionRef().CollapseInLimiter(
-        &aContentToKeep, removingContentLength);
-    if (NS_WARN_IF(Destroyed())) {
+    DebugOnly<nsresult> rvIgnored = CollapseSelectionTo(
+        EditorRawDOMPoint(&aContentToKeep, removingContentLength));
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Selection::CollapseInLimiter() failed, but ignored");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBases::CollapseSelectionTos() failed, but ignored");
   }
 
   return NS_OK;
@@ -5105,17 +5108,16 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::DeleteSelectionAndCreateElement(
   MOZ_ASSERT(newElementOrError.inspect());
 
   // We want the selection to be just after the new node
-  EditorRawDOMPoint afterNewElement(
-      EditorRawDOMPoint::After(newElementOrError.inspect()));
+  const auto afterNewElement =
+      EditorRawDOMPoint::After(newElementOrError.inspect());
   MOZ_ASSERT(afterNewElement.IsSetAndValid());
-  IgnoredErrorResult ignoredError;
-  SelectionRef().CollapseInLimiter(afterNewElement, ignoredError);
-  if (ignoredError.Failed()) {
-    NS_WARNING("Selection::CollapseInLimiter() failed");
+  rv = CollapseSelectionTo(afterNewElement);
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    NS_WARNING("EditorBase::CollapseSelectionTo() failed");
     // XXX Even if it succeeded to create new element, this returns error
-    //     when Selection.Collapse() fails something.  This could occur with
+    //     when CollapseSelectionTo() fails something.  This could occur with
     //     mutation observer or mutation event listener.
-    return Err(NS_ERROR_FAILURE);
+    return Err(rv);
   }
   return newElementOrError;
 }
@@ -5151,27 +5153,25 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
   }
 
   if (atAnchor.IsStartOfContainer()) {
-    EditorRawDOMPoint atAnchorContainer(atAnchor.GetContainer());
-    if (NS_WARN_IF(!atAnchorContainer.IsSetAndValid())) {
+    const EditorRawDOMPoint atAnchorContainer(atAnchor.GetContainer());
+    if (MOZ_UNLIKELY(NS_WARN_IF(!atAnchorContainer.IsSetAndValid()))) {
       return NS_ERROR_FAILURE;
     }
-    ErrorResult error;
-    SelectionRef().CollapseInLimiter(atAnchorContainer, error);
-    NS_WARNING_ASSERTION(!error.Failed(),
-                         "Selection::CollapseInLimiter() failed");
-    return error.StealNSResult();
+    nsresult rv = CollapseSelectionTo(atAnchorContainer);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EditorBase::CollapseSelectionTo() failed");
+    return rv;
   }
 
   if (atAnchor.IsEndOfContainer()) {
     EditorRawDOMPoint afterAnchorContainer(atAnchor.GetContainer());
-    if (NS_WARN_IF(!afterAnchorContainer.AdvanceOffset())) {
+    if (MOZ_UNLIKELY(NS_WARN_IF(!afterAnchorContainer.AdvanceOffset()))) {
       return NS_ERROR_FAILURE;
     }
-    ErrorResult error;
-    SelectionRef().CollapseInLimiter(afterAnchorContainer, error);
-    NS_WARNING_ASSERTION(!error.Failed(),
-                         "Selection::CollapseInLimiter() failed");
-    return error.StealNSResult();
+    nsresult rv = CollapseSelectionTo(afterAnchorContainer);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "EditorBase::CollapseSelectionTo() failed");
+    return rv;
   }
 
   SplitNodeResult splitAtAnchorResult = SplitNodeWithTransaction(atAnchor);

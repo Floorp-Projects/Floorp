@@ -123,9 +123,9 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
   }
 
   // Get the text that we're about to delete
-  ErrorResult error;
+  IgnoredErrorResult error;
   mTextNode->SubstringData(mOffset, mLengthToDelete, mDeletedText, error);
-  if (error.Failed()) {
+  if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("Text::SubstringData() failed");
     return error.StealNSResult();
   }
@@ -133,7 +133,7 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
   OwningNonNull<EditorBase> editorBase = *mEditorBase;
   OwningNonNull<Text> textNode = *mTextNode;
   editorBase->DoDeleteText(textNode, mOffset, mLengthToDelete, error);
-  if (error.Failed()) {
+  if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("EditorBase::DoDeleteText() failed");
     return error.StealNSResult();
   }
@@ -145,13 +145,9 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  RefPtr<Selection> selection = editorBase->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-  selection->CollapseInLimiter(EditorRawDOMPoint(textNode, mOffset), error);
+  editorBase->CollapseSelectionTo(EditorRawDOMPoint(textNode, mOffset), error);
   NS_WARNING_ASSERTION(!error.Failed(),
-                       "Selection::CollapseInLimiter() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return error.StealNSResult();
 }
 
