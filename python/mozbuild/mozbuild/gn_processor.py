@@ -153,7 +153,13 @@ def filter_gn_config(gn_result, config, sandbox_vars, input_vars, gn_target):
     # mozbuild configuration.
     gn_out = {"targets": {}, "sandbox_vars": sandbox_vars, "gn_gen_args": input_vars}
 
-    gn_mozbuild_vars = ("MOZ_DEBUG", "OS_TARGET", "HOST_CPU_ARCH", "CPU_ARCH")
+    gn_mozbuild_vars = (
+        "MOZ_DEBUG",
+        "OS_TARGET",
+        "HOST_CPU_ARCH",
+        "CPU_ARCH",
+        "MOZ_X11",
+    )
 
     mozbuild_args = {k: config.substs.get(k) for k in gn_mozbuild_vars}
     gn_out["mozbuild_args"] = mozbuild_args
@@ -486,6 +492,7 @@ def write_mozbuild(
                 ("OS_TARGET",),
                 ("CPU_ARCH",),
                 ("MOZ_DEBUG", "OS_TARGET"),
+                ("OS_TARGET", "MOZ_X11"),
                 ("OS_TARGET", "CPU_ARCH"),
                 ("OS_TARGET", "CPU_ARCH", "MOZ_DEBUG"),
                 ("MOZ_DEBUG", "OS_TARGET", "CPU_ARCH", "HOST_CPU_ARCH"),
