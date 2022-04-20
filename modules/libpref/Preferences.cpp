@@ -3611,10 +3611,8 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
                   nsISupportsWeakReference)
 
 /* static */
-void Preferences::SerializePreferences(
-    nsCString& aStr,
-    const std::function<bool(const char*, bool)>& aShouldSanitizeFn,
-    bool aIsDestinationContentProcess) {
+void Preferences::SerializePreferences(nsCString& aStr,
+                                       bool aIsDestinationWebContentProcess) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
@@ -3623,7 +3621,8 @@ void Preferences::SerializePreferences(
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
       pref->SerializeAndAppend(
-          aStr, aShouldSanitizeFn(pref->Name(), aIsDestinationContentProcess));
+          aStr,
+          ShouldSanitizePreference(pref, aIsDestinationWebContentProcess));
     }
   }
 
