@@ -12,10 +12,7 @@ import { connect } from "../../utils/connect";
 import actions from "../../actions";
 import {
   getTopFrame,
-  getBreakpointsList,
-  getBreakpointsDisabled,
   getExpressions,
-  getIsWaitingOnBreak,
   getPauseCommand,
   isMapScopesEnabled,
   getSelectedFrame,
@@ -81,47 +78,6 @@ class SecondaryPanes extends Component {
   onXHRAdded = () => {
     this.setState({ showXHRInput: false });
   };
-
-  renderBreakpointsToggle() {
-    const {
-      cx,
-      toggleAllBreakpoints,
-      breakpoints,
-      breakpointsDisabled,
-    } = this.props;
-    const isIndeterminate =
-      !breakpointsDisabled && breakpoints.some(x => x.disabled);
-
-    if (features.skipPausing || breakpoints.length === 0) {
-      return null;
-    }
-
-    const inputProps = {
-      type: "checkbox",
-      "aria-label": breakpointsDisabled
-        ? L10N.getStr("breakpoints.enable")
-        : L10N.getStr("breakpoints.disable"),
-      className: "breakpoints-toggle",
-      disabled: false,
-      key: "breakpoints-toggle",
-      onChange: e => {
-        e.stopPropagation();
-        toggleAllBreakpoints(cx, !breakpointsDisabled);
-      },
-      onClick: e => e.stopPropagation(),
-      checked: !breakpointsDisabled && !isIndeterminate,
-      ref: input => {
-        if (input) {
-          input.indeterminate = isIndeterminate;
-        }
-      },
-      title: breakpointsDisabled
-        ? L10N.getStr("breakpoints.enable")
-        : L10N.getStr("breakpoints.disable"),
-    };
-
-    return <input {...inputProps} />;
-  }
 
   watchExpressionHeaderButtons() {
     const { expressions } = this.props;
@@ -324,7 +280,6 @@ class SecondaryPanes extends Component {
     return {
       header: L10N.getStr("breakpoints.header"),
       className: "breakpoints-pane",
-      buttons: [this.renderBreakpointsToggle()],
       component: (
         <Breakpoints
           shouldPauseOnExceptions={shouldPauseOnExceptions}
@@ -503,9 +458,6 @@ const mapStateToProps = state => {
     cx: getThreadContext(state),
     expressions: getExpressions(state),
     hasFrames: !!getTopFrame(state, thread),
-    breakpoints: getBreakpointsList(state),
-    breakpointsDisabled: getBreakpointsDisabled(state),
-    isWaitingOnBreak: getIsWaitingOnBreak(state, thread),
     renderWhyPauseDelay: getRenderWhyPauseDelay(state, thread),
     selectedFrame,
     mapScopesEnabled: isMapScopesEnabled(state),
@@ -521,7 +473,6 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
-  toggleAllBreakpoints: actions.toggleAllBreakpoints,
   evaluateExpressions: actions.evaluateExpressions,
   pauseOnExceptions: actions.pauseOnExceptions,
   toggleMapScopes: actions.toggleMapScopes,
