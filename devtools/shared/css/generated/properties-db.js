@@ -2955,19 +2955,6 @@ exports.CSS_PROPERTIES = {
       "overflow-x",
       "overflow-y",
       "overflow-anchor",
-      "transition-duration",
-      "transition-timing-function",
-      "transition-property",
-      "transition-delay",
-      "animation-name",
-      "animation-duration",
-      "animation-timing-function",
-      "animation-iteration-count",
-      "animation-direction",
-      "animation-play-state",
-      "animation-fill-mode",
-      "animation-delay",
-      "animation-timeline",
       "transform",
       "rotate",
       "scale",
@@ -3222,6 +3209,19 @@ exports.CSS_PROPERTIES = {
       "user-select",
       "-moz-window-dragging",
       "-moz-force-broken-image-icon",
+      "transition-duration",
+      "transition-timing-function",
+      "transition-property",
+      "transition-delay",
+      "animation-name",
+      "animation-duration",
+      "animation-timing-function",
+      "animation-iteration-count",
+      "animation-direction",
+      "animation-play-state",
+      "animation-fill-mode",
+      "animation-delay",
+      "animation-timeline",
       "-moz-box-align",
       "-moz-box-direction",
       "-moz-box-flex",
@@ -11779,6 +11779,42 @@ exports.PREFERENCES = [
     "layout.css.zoom-transform-hack.enabled"
   ],
   [
+    "-moz-transform",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-moz-perspective",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-moz-perspective-origin",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-moz-backface-visibility",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-moz-transform-style",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-moz-transform-origin",
+    "layout.css.prefixes.transforms"
+  ],
+  [
+    "-moz-font-feature-settings",
+    "layout.css.prefixes.font-features"
+  ],
+  [
+    "-moz-font-language-override",
+    "layout.css.prefixes.font-features"
+  ],
+  [
+    "-moz-box-sizing",
+    "layout.css.prefixes.box-sizing"
+  ],
+  [
     "-moz-transition-duration",
     "layout.css.prefixes.transitions"
   ],
@@ -11825,42 +11861,6 @@ exports.PREFERENCES = [
   [
     "-moz-animation-delay",
     "layout.css.prefixes.animations"
-  ],
-  [
-    "-moz-transform",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-perspective",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-perspective-origin",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-backface-visibility",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-transform-style",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-transform-origin",
-    "layout.css.prefixes.transforms"
-  ],
-  [
-    "-moz-font-feature-settings",
-    "layout.css.prefixes.font-features"
-  ],
-  [
-    "-moz-font-language-override",
-    "layout.css.prefixes.font-features"
-  ],
-  [
-    "-moz-box-sizing",
-    "layout.css.prefixes.box-sizing"
   ],
   [
     "-moz-border-image",

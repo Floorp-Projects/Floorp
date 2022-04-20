@@ -2169,24 +2169,7 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
 // nsStyleDisplay
 //
 nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
-    : mTransitions(
-          nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
-      mTransitionTimingFunctionCount(1),
-      mTransitionDurationCount(1),
-      mTransitionDelayCount(1),
-      mTransitionPropertyCount(1),
-      mAnimations(
-          nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT),
-      mAnimationTimingFunctionCount(1),
-      mAnimationDurationCount(1),
-      mAnimationDelayCount(1),
-      mAnimationNameCount(1),
-      mAnimationDirectionCount(1),
-      mAnimationFillModeCount(1),
-      mAnimationPlayStateCount(1),
-      mAnimationIterationCountCount(1),
-      mAnimationTimelineCount(1),
-      mDisplay(StyleDisplay::Inline),
+    : mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
       mContain(StyleContain::NONE),
       mContentVisibility(StyleContentVisibility::Visible),
@@ -2239,28 +2222,10 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mShapeMargin(LengthPercentage::Zero()),
       mShapeOutside(StyleShapeOutside::None()) {
   MOZ_COUNT_CTOR(nsStyleDisplay);
-
-  mTransitions[0].SetInitialValues();
-  mAnimations[0].SetInitialValues();
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
-    : mTransitions(aSource.mTransitions.Clone()),
-      mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
-      mTransitionDurationCount(aSource.mTransitionDurationCount),
-      mTransitionDelayCount(aSource.mTransitionDelayCount),
-      mTransitionPropertyCount(aSource.mTransitionPropertyCount),
-      mAnimations(aSource.mAnimations.Clone()),
-      mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount),
-      mAnimationDurationCount(aSource.mAnimationDurationCount),
-      mAnimationDelayCount(aSource.mAnimationDelayCount),
-      mAnimationNameCount(aSource.mAnimationNameCount),
-      mAnimationDirectionCount(aSource.mAnimationDirectionCount),
-      mAnimationFillModeCount(aSource.mAnimationFillModeCount),
-      mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
-      mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
-      mAnimationTimelineCount(aSource.mAnimationTimelineCount),
-      mDisplay(aSource.mDisplay),
+    : mDisplay(aSource.mDisplay),
       mOriginalDisplay(aSource.mOriginalDisplay),
       mContain(aSource.mContain),
       mContentVisibility(aSource.mContentVisibility),
@@ -2651,25 +2616,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   // properties, since some data did change in the style struct.
 
   // TODO(emilio): Figure out change hints for container-type/name.
-  if (!hint && (mTransitions != aNewData.mTransitions ||
-                mTransitionTimingFunctionCount !=
-                    aNewData.mTransitionTimingFunctionCount ||
-                mTransitionDurationCount != aNewData.mTransitionDurationCount ||
-                mTransitionDelayCount != aNewData.mTransitionDelayCount ||
-                mTransitionPropertyCount != aNewData.mTransitionPropertyCount ||
-                mAnimations != aNewData.mAnimations ||
-                mAnimationTimingFunctionCount !=
-                    aNewData.mAnimationTimingFunctionCount ||
-                mAnimationDurationCount != aNewData.mAnimationDurationCount ||
-                mAnimationDelayCount != aNewData.mAnimationDelayCount ||
-                mAnimationNameCount != aNewData.mAnimationNameCount ||
-                mAnimationDirectionCount != aNewData.mAnimationDirectionCount ||
-                mAnimationFillModeCount != aNewData.mAnimationFillModeCount ||
-                mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
-                mAnimationIterationCountCount !=
-                    aNewData.mAnimationIterationCountCount ||
-                mAnimationTimelineCount != aNewData.mAnimationTimelineCount ||
-                mWillChange != aNewData.mWillChange ||
+  if (!hint && (mWillChange != aNewData.mWillChange ||
                 mOverflowAnchor != aNewData.mOverflowAnchor ||
                 mContainerName != aNewData.mContainerName ||
                 mContainerType != aNewData.mContainerType)) {
@@ -3197,8 +3144,27 @@ nsStyleUIReset::nsStyleUIReset(const Document& aDocument)
       mWindowOpacity(1.0),
       mWindowTransformOrigin{LengthPercentage::FromPercentage(0.5),
                              LengthPercentage::FromPercentage(0.5),
-                             {0.}} {
+                             {0.}},
+      mTransitions(
+          nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
+      mTransitionTimingFunctionCount(1),
+      mTransitionDurationCount(1),
+      mTransitionDelayCount(1),
+      mTransitionPropertyCount(1),
+      mAnimations(
+          nsStyleAutoArray<StyleAnimation>::WITH_SINGLE_INITIAL_ELEMENT),
+      mAnimationTimingFunctionCount(1),
+      mAnimationDurationCount(1),
+      mAnimationDelayCount(1),
+      mAnimationNameCount(1),
+      mAnimationDirectionCount(1),
+      mAnimationFillModeCount(1),
+      mAnimationPlayStateCount(1),
+      mAnimationIterationCountCount(1),
+      mAnimationTimelineCount(1) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
+  mTransitions[0].SetInitialValues();
+  mAnimations[0].SetInitialValues();
 }
 
 nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
@@ -3210,7 +3176,22 @@ nsStyleUIReset::nsStyleUIReset(const nsStyleUIReset& aSource)
       mWindowShadow(aSource.mWindowShadow),
       mWindowOpacity(aSource.mWindowOpacity),
       mMozWindowTransform(aSource.mMozWindowTransform),
-      mWindowTransformOrigin(aSource.mWindowTransformOrigin) {
+      mWindowTransformOrigin(aSource.mWindowTransformOrigin),
+      mTransitions(aSource.mTransitions.Clone()),
+      mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
+      mTransitionDurationCount(aSource.mTransitionDurationCount),
+      mTransitionDelayCount(aSource.mTransitionDelayCount),
+      mTransitionPropertyCount(aSource.mTransitionPropertyCount),
+      mAnimations(aSource.mAnimations.Clone()),
+      mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount),
+      mAnimationDurationCount(aSource.mAnimationDurationCount),
+      mAnimationDelayCount(aSource.mAnimationDelayCount),
+      mAnimationNameCount(aSource.mAnimationNameCount),
+      mAnimationDirectionCount(aSource.mAnimationDirectionCount),
+      mAnimationFillModeCount(aSource.mAnimationFillModeCount),
+      mAnimationPlayStateCount(aSource.mAnimationPlayStateCount),
+      mAnimationIterationCountCount(aSource.mAnimationIterationCountCount),
+      mAnimationTimelineCount(aSource.mAnimationTimelineCount) {
   MOZ_COUNT_CTOR(nsStyleUIReset);
 }
 
@@ -3243,7 +3224,25 @@ nsChangeHint nsStyleUIReset::CalcDifference(
     hint |= nsChangeHint_SchedulePaint;
   }
 
-  if (!hint && (mIMEMode != aNewData.mIMEMode ||
+  if (!hint && (mTransitions != aNewData.mTransitions ||
+                mTransitionTimingFunctionCount !=
+                    aNewData.mTransitionTimingFunctionCount ||
+                mTransitionDurationCount != aNewData.mTransitionDurationCount ||
+                mTransitionDelayCount != aNewData.mTransitionDelayCount ||
+                mTransitionPropertyCount != aNewData.mTransitionPropertyCount ||
+                mAnimations != aNewData.mAnimations ||
+                mAnimationTimingFunctionCount !=
+                    aNewData.mAnimationTimingFunctionCount ||
+                mAnimationDurationCount != aNewData.mAnimationDurationCount ||
+                mAnimationDelayCount != aNewData.mAnimationDelayCount ||
+                mAnimationNameCount != aNewData.mAnimationNameCount ||
+                mAnimationDirectionCount != aNewData.mAnimationDirectionCount ||
+                mAnimationFillModeCount != aNewData.mAnimationFillModeCount ||
+                mAnimationPlayStateCount != aNewData.mAnimationPlayStateCount ||
+                mAnimationIterationCountCount !=
+                    aNewData.mAnimationIterationCountCount ||
+                mAnimationTimelineCount != aNewData.mAnimationTimelineCount ||
+                mIMEMode != aNewData.mIMEMode ||
                 mWindowOpacity != aNewData.mWindowOpacity ||
                 mMozWindowTransform != aNewData.mMozWindowTransform)) {
     hint |= nsChangeHint_NeutralChange;
