@@ -66,9 +66,8 @@ AudioSink::AudioSink(AbstractThread* aThread,
 
 AudioSink::~AudioSink() = default;
 
-nsresult AudioSink::Start(
-    const PlaybackParams& aParams,
-    MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise) {
+Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> AudioSink::Start(
+    const PlaybackParams& aParams) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   mAudioQueueListener = mAudioQueue.PushEvent().Connect(
@@ -86,7 +85,7 @@ nsresult AudioSink::Start(
     return Err(rv);
   }
 
-  return mAudioStream->Start(aEndedPromise);
+  return mAudioStream->Start();
 }
 
 TimeUnit AudioSink::GetPosition() {
@@ -120,86 +119,18 @@ TimeUnit AudioSink::UnplayedDuration() const {
   return TimeUnit::FromMicroseconds(AudioQueuedInRingBufferMS());
 }
 
-void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
-  // This is OK: the AudioStream has been shut down. Shutdown guarantees that
-  // the audio callback thread won't call back again.
-  mProcessedSPSCQueue->ResetThreadIds();
-
-  // construct an AudioData
-  int sampleCount = mProcessedSPSCQueue->AvailableRead();
-
-  if (!sampleCount) {
-    return;
-  }
-
-  uint32_t channelCount;
-  uint32_t rate;
-  if (mConverter) {
-    channelCount = mConverter->OutputConfig().Channels();
-    rate = mConverter->OutputConfig().Rate();
-  } else {
-    channelCount = mOutputChannels;
-    rate = mOutputRate;
-  }
-
-  uint32_t frameCount = sampleCount / channelCount;
-  auto duration = FramesToTimeUnit(frameCount, rate);
-  if (!duration.IsValid()) {
-    NS_WARNING("Int overflow in AudioSink");
-    mErrored = true;
-    return;
-  }
-
-  AlignedAudioBuffer queuedAudio(sampleCount);
-  DebugOnly<int> samplesRead =
-      mProcessedSPSCQueue->Dequeue(queuedAudio.Data(), sampleCount);
-  MOZ_ASSERT(samplesRead == sampleCount);
-
-  // Extrapolate mOffset, mTime from the front of the queue
-  // We can't really find a good value for `mOffset`, so we take what we have
-  // at the front of the queue.
-  // For `mTime`, assume there hasn't been a discontinuity recently.
-  RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
-  uint32_t offset;
-  TimeUnit time;
-  if (!frontPacket) {
-    // We do our best here, but it's not going to be perfect.
-    offset = 0;
-    time = std::max(GetPosition() - duration, TimeUnit::Zero());
-  } else {
-    offset = frontPacket->mOffset;
-    time = frontPacket->mTime - duration;
-  }
-  RefPtr<AudioData> data =
-      new AudioData(offset, time, std::move(queuedAudio), channelCount, rate);
-  MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
-
-  SINK_LOG(
-      "Muting: Pushing back %u frames (%lfms) from the ring buffer back into "
-      "the audio queue",
-      frameCount, static_cast<float>(frameCount) / rate);
-
-  mAudioQueue.PushFront(data);
-}
-
-Maybe<MozPromiseHolder<MediaSink::EndedPromise>> AudioSink::Shutdown(
-    ShutdownCause aShutdownCause) {
+void AudioSink::Shutdown() {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
   mAudioQueueListener.Disconnect();
   mAudioQueueFinishListener.Disconnect();
   mProcessedQueueListener.Disconnect();
 
-  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv;
-
   if (mAudioStream) {
-    rv = mAudioStream->Shutdown(aShutdownCause);
+    mAudioStream->Shutdown();
     mAudioStream = nullptr;
-    ReenqueueUnplayedAudioDataIfNeeded();
   }
   mProcessedQueueFinished = true;
-
-  return rv;
 }
 
 void AudioSink::SetVolume(double aVolume) {
@@ -363,8 +294,7 @@ void AudioSink::NotifyAudioNeeded() {
              "Not called from the owner's thread");
 
   while (mAudioQueue.GetSize() &&
-         AudioQueuedInRingBufferMS() <
-             static_cast<uint32_t>(mProcessedQueueThresholdMS)) {
+         AudioQueuedInRingBufferMS() < mProcessedQueueThresholdMS) {
     // Check if there's room in our ring buffer.
     if (mAudioQueue.PeekFront()->Frames() >
         SampleToFrame(mProcessedSPSCQueue->AvailableWrite())) {
