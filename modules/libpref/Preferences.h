@@ -216,6 +216,7 @@ class Preferences final : public nsIPrefService,
   static nsresult Lock(const char* aPrefName);
   static nsresult Unlock(const char* aPrefName);
   static bool IsLocked(const char* aPrefName);
+  static bool IsSanitized(const char* aPrefName);
 
   // Clears user set pref. Fails if run outside the parent process.
   static nsresult ClearUser(const char* aPrefName);
