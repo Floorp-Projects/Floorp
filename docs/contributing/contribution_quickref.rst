@@ -15,39 +15,6 @@ To register with Phabricator, make sure you enable Two-Factor Authentication (My
 `Phabricator <https://phabricator.services.mozilla.com/>`__: web-based software development collaboration tools, mainly for code review.
 Please obtain an API Token (Settings >> Conduit API Tokens)
 
-Clone the sources
------------------
-
-You can use either mercurial or git. `Mercurial <https://www.mercurial-scm.org/downloads>`__ is the canonical version control system.
-
-.. code-block:: shell
-
-    $ hg clone https://hg.mozilla.org/mozilla-central/
-
-For git, see the `git cinnabar documentation <https://github.com/glandium/git-cinnabar/wiki/Mozilla:-A-git-workflow-for-Gecko-development>`__
-
-The clone can take from 40 minutes to two hours (depending on your connection) and
-the repository should be less than 5GB (~ 20GB after the build).
-
-If you have any network connection issues and cannot clone with command, try :ref:`Mercurial bundles <Mercurial bundles>`.
-
-:ref:`More information <Mercurial Overview>`
-
-Install dependencies (non-Windows)
-----------------------------------
-
-Firefox provides a mechanism to install all dependencies; in the source tree:
-
-.. code-block:: shell
-
-     $ ./mach bootstrap
-
-The default options are recommended.
-If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Understanding Artifact Builds>`
-and follow the instructions at the end of the bootstrap for creating a mozconfig file.
-
-More information :ref:`for Linux <Building Firefox On Linux>` and :ref:`for MacOS <Building Firefox On MacOS>`
-
 Windows dependencies
 --------------------
 
@@ -67,14 +34,49 @@ Windows dependencies
 
 :ref:`More information <Building Firefox On Windows>`
 
-To build & run
---------------
+Bootstrap a copy of the Firefox source code
+-------------------------------------------
 
-Once all the dependencies have been installed, run:
+You can download the source code and have Firefox automatically download and install the other dependencies it needs. The below command as per your Operating System, will download a lot of data (years of Firefox history!) then guide you through the interactive setup process.
+
+Downloading can take from 40 minutes to two hours (depending on your connection) and the repository should be less than 5GB (~ 20GB after the build).
+
+The default options are recommended.
+If you're not planning to write C++ or Rust code, select :ref:`Artifact Mode <Understanding Artifact Builds>`
+and follow the instructions at the end of the bootstrap for creating a mozconfig file.
+
+To Setup Firefox On Windows
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: shell
 
-     $ ./mach build
+    $ cd c:/
+    $ mkdir mozilla-source
+    $ cd mozilla-source
+    $ wget https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py
+    $ python3 bootstrap.py
+
+More information :ref:`for Windows <Building Firefox On Windows>`
+
+To Setup Firefox On macOS and Linux
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: shell
+
+    $ curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
+    $ python3 bootstrap.py
+
+More information :ref:`for Linux <Building Firefox On Linux>` and :ref:`for MacOS <Building Firefox On MacOS>`
+
+To build & run
+--------------
+
+Once the System is bootstrapped, run:
+
+.. code-block:: shell
+
+    $ cd mozilla-unified
+    $ ./mach build
 
 which will check for dependencies and start the build.
 This will take a while; a few minutes to a few hours depending on your hardware.
