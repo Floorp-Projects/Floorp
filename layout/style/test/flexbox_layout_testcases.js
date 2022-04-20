@@ -1290,7 +1290,7 @@ var gFlexboxTestcases = [
         "_main-size": [null, "200px"],
       },
       {
-        flex: "0 1 0.01px",
+        flex: "0 1 0.02px",
         "_main-size": [null, "0px"],
       },
     ],
@@ -1309,7 +1309,7 @@ var gFlexboxTestcases = [
         "_main-size": [null, "250px"],
       },
       {
-        flex: "0 5 0.01px",
+        flex: "0 5 0.02px",
         "_main-size": [null, "0px"],
       },
     ],

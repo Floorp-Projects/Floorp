@@ -1969,11 +1969,11 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
         //    character units in the inline axis is non-zero.
         const auto& margin = ctx->StyleMargin()->mMargin.Get(aSide);
         if (!margin.ConvertsToLength() ||
-            margin.AsLengthPercentage().ToLength() != 0) {
+            !margin.AsLengthPercentage().IsDefinitelyZero()) {
           return true;
         }
         const auto& padding = ctx->StylePadding()->mPadding.Get(aSide);
-        if (!padding.ConvertsToLength() || padding.ToLength() != 0) {
+        if (!padding.ConvertsToLength() || !padding.IsDefinitelyZero()) {
           return true;
         }
         if (ctx->StyleBorder()->GetComputedBorderWidth(aSide) != 0) {
