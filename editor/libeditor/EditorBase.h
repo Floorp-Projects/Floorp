@@ -1832,8 +1832,10 @@ class EditorBase : public nsIEditor,
    */
   bool ShouldHandleIMEComposition() const;
 
-  static EditorRawDOMPoint GetStartPoint(const Selection& aSelection);
-  static EditorRawDOMPoint GetEndPoint(const Selection& aSelection);
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetFirstSelectionStartPoint() const;
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetFirstSelectionEndPoint() const;
 
   static nsresult GetEndChildNode(const Selection& aSelection,
                                   nsIContent** aEndNode);

@@ -1135,7 +1135,7 @@ EditActionResult HTMLEditor::HandleDeleteSelection(
   //     listeners can do anything so that we should just return NS_OK instead
   //     of returning error.
   const auto atNewStartOfSelection =
-      EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
+      GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     return EditActionHandled(NS_ERROR_FAILURE);
   }
@@ -2030,8 +2030,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
     }
   }
   const auto newCaretPosition =
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef())
-          .To<EditorDOMPoint>();
+      aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2142,8 +2141,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::
       "failed, but ignored");
 
   const auto newCaretPosition =
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef())
-          .To<EditorDOMPoint>();
+      aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -2407,8 +2405,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
   }
 
   const auto newCaretPosition =
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef())
-          .To<EditorDOMPoint>();
+      aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (!newCaretPosition.IsSet()) {
     NS_WARNING("There was no selection range");
     return EditActionHandled(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);

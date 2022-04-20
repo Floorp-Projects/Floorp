@@ -147,6 +147,11 @@ template EditorRawDOMPoint EditorBase::GetFirstIMESelectionStartPoint() const;
 template EditorDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
 template EditorRawDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
 
+template EditorDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
+template EditorRawDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
+template EditorDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
+template EditorRawDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
+
 template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointAtCaret);
@@ -3315,32 +3320,34 @@ NS_IMETHODIMP EditorBase::ResetModificationCount() {
   return NS_OK;
 }
 
-// static
-EditorRawDOMPoint EditorBase::GetStartPoint(const Selection& aSelection) {
-  if (NS_WARN_IF(!aSelection.RangeCount())) {
-    return EditorRawDOMPoint();
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::GetFirstSelectionStartPoint() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  if (MOZ_UNLIKELY(!SelectionRef().RangeCount())) {
+    return EditorDOMPointType();
   }
 
-  const nsRange* range = aSelection.GetRangeAt(0);
-  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-    return EditorRawDOMPoint();
+  const nsRange* range = SelectionRef().GetRangeAt(0);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned()))) {
+    return EditorDOMPointType();
   }
 
-  return EditorRawDOMPoint(range->StartRef());
+  return EditorDOMPointType(range->StartRef());
 }
 
-// static
-EditorRawDOMPoint EditorBase::GetEndPoint(const Selection& aSelection) {
-  if (NS_WARN_IF(!aSelection.RangeCount())) {
-    return EditorRawDOMPoint();
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::GetFirstSelectionEndPoint() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  if (MOZ_UNLIKELY(!SelectionRef().RangeCount())) {
+    return EditorDOMPointType();
   }
 
-  const nsRange* range = aSelection.GetRangeAt(0);
-  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-    return EditorRawDOMPoint();
+  const nsRange* range = SelectionRef().GetRangeAt(0);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned()))) {
+    return EditorDOMPointType();
   }
 
-  return EditorRawDOMPoint(range->EndRef());
+  return EditorDOMPointType(range->EndRef());
 }
 
 // static
@@ -4236,8 +4243,8 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   // XXX This is odd.  We just tries to remove empty text node here but we
   //     refer `Selection`.  It may be modified by mutation event listeners
   //     so that we should remove the empty text node when we make it empty.
-  EditorDOMPoint atNewStartOfSelection =
-      EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
+  const auto atNewStartOfSelection =
+      GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     // XXX And also it seems that we don't need to return error here.
     //     Why don't we just ignore?  `Selection::RemoveAllRanges()` may

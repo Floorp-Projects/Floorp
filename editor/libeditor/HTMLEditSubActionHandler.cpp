@@ -444,8 +444,8 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     if (GetTopLevelEditSubAction() == EditSubAction::eDeleteSelectedContent &&
         TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange &&
         !TopLevelEditSubActionDataRef().mDidDeleteEmptyParentBlocks) {
-      auto newCaretPosition =
-          EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
+      const auto newCaretPosition =
+          GetFirstSelectionStartPoint<EditorDOMPoint>();
       if (!newCaretPosition.IsSet()) {
         NS_WARNING("There was no selection range");
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
@@ -527,8 +527,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         auto pointToAdjust = GetLastIMESelectionEndPoint<EditorDOMPoint>();
         if (!pointToAdjust.IsInContentNode()) {
           // Otherwise, adjust current selection start point.
-          pointToAdjust =
-              EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
+          pointToAdjust = GetFirstSelectionStartPoint<EditorDOMPoint>();
           if (NS_WARN_IF(!pointToAdjust.IsInContentNode())) {
             return NS_ERROR_FAILURE;
           }
@@ -696,8 +695,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
 
     // But the cached inline styles should be restored from type-in-state later.
     if (reapplyCachedStyle) {
-      DebugOnly<nsresult> rvIgnored =
-          mTypeInState->UpdateSelState(SelectionRef());
+      DebugOnly<nsresult> rvIgnored = mTypeInState->UpdateSelState(*this);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "TypeInState::UpdateSelState() failed, but ignored");
       rvIgnored = ReapplyCachedStyles();
@@ -1590,8 +1588,7 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
   }
 
   if (IsMailEditor()) {
-    auto pointToSplit =
-        EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
+    const auto pointToSplit = GetFirstSelectionStartPoint<EditorDOMPoint>();
     if (NS_WARN_IF(!pointToSplit.IsInContentNode())) {
       return EditActionIgnored(NS_ERROR_FAILURE);
     }
@@ -4060,7 +4057,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
   // just sublist that <li>.  This prevents bug 97797.
 
   if (SelectionRef().IsCollapsed()) {
-    EditorRawDOMPoint atCaret(EditorBase::GetStartPoint(SelectionRef()));
+    const auto atCaret = GetFirstSelectionStartPoint<EditorRawDOMPoint>();
     if (NS_WARN_IF(!atCaret.IsSet())) {
       return NS_ERROR_FAILURE;
     }
@@ -8534,7 +8531,7 @@ nsresult HTMLEditor::EnsureCaretInBlockElement(Element& aElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(SelectionRef().IsCollapsed());
 
-  EditorRawDOMPoint atCaret(EditorBase::GetStartPoint(SelectionRef()));
+  const auto atCaret = GetFirstSelectionStartPoint<EditorRawDOMPoint>();
   if (NS_WARN_IF(!atCaret.IsSet())) {
     return NS_ERROR_FAILURE;
   }
@@ -8687,7 +8684,7 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(SelectionRef().IsCollapsed());
 
-  auto point = EditorBase::GetStartPoint(SelectionRef()).To<EditorDOMPoint>();
+  auto point = GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (NS_WARN_IF(!point.IsInContentNode())) {
     return NS_ERROR_FAILURE;
   }
@@ -9217,7 +9214,7 @@ nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
     return NS_ERROR_FAILURE;
   }
 
-  EditorRawDOMPoint atCaret(EditorBase::GetStartPoint(SelectionRef()));
+  const auto atCaret = GetFirstSelectionStartPoint<EditorRawDOMPoint>();
   if (NS_WARN_IF(!atCaret.IsSet())) {
     return NS_ERROR_FAILURE;
   }
@@ -9250,7 +9247,7 @@ nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
     return NS_OK;
   }
 
-  EditorRawDOMPoint selectionEndPoint(EditorBase::GetEndPoint(SelectionRef()));
+  const auto selectionEndPoint = GetFirstSelectionEndPoint<EditorRawDOMPoint>();
   if (NS_WARN_IF(!selectionEndPoint.IsSet())) {
     return NS_ERROR_FAILURE;
   }

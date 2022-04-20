@@ -68,13 +68,13 @@ TypeInState::~TypeInState() {
   Reset();
 }
 
-nsresult TypeInState::UpdateSelState(Selection& aSelection) {
-  if (!aSelection.IsCollapsed()) {
+nsresult TypeInState::UpdateSelState(const HTMLEditor& aHTMLEditor) {
+  if (!aHTMLEditor.SelectionRef().IsCollapsed()) {
     return NS_OK;
   }
 
   mLastSelectionPoint =
-      EditorBase::GetStartPoint(aSelection).To<EditorDOMPoint>();
+      aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (!mLastSelectionPoint.IsSet()) {
     return NS_ERROR_FAILURE;
   }
@@ -126,8 +126,8 @@ void TypeInState::PostHandleSelectionChangeCommand(
     return;
   }
 
-  EditorRawDOMPoint caretPoint(
-      EditorBase::GetStartPoint(aHTMLEditor.SelectionRef()));
+  const auto caretPoint =
+      aHTMLEditor.GetFirstSelectionStartPoint<EditorRawDOMPoint>();
   if (NS_WARN_IF(!caretPoint.IsSet())) {
     return;
   }
@@ -196,8 +196,8 @@ void TypeInState::OnSelectionChange(const HTMLEditor& aHTMLEditor,
   bool resetAllStyles = true;
   if (aHTMLEditor.SelectionRef().IsCollapsed() &&
       aHTMLEditor.SelectionRef().RangeCount()) {
-    EditorRawDOMPoint selectionStartPoint(
-        EditorBase::GetStartPoint(aHTMLEditor.SelectionRef()));
+    const auto selectionStartPoint =
+        aHTMLEditor.GetFirstSelectionStartPoint<EditorRawDOMPoint>();
     if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
       return;
     }
