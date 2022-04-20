@@ -26,7 +26,7 @@ void SetThisProcessName(const char* aName);
 class SharedPreferenceSerializer final {
  public:
   explicit SharedPreferenceSerializer(
-      std::function<bool(const char*, bool)>&& aShouldSerializeFn);
+      std::function<bool(const char*, bool)>&& aShouldSanitizeFn);
   SharedPreferenceSerializer(SharedPreferenceSerializer&& aOther);
   ~SharedPreferenceSerializer();
 
@@ -48,7 +48,7 @@ class SharedPreferenceSerializer final {
   size_t mPrefsLength;
   UniqueFileHandle mPrefMapHandle;
   UniqueFileHandle mPrefsHandle;
-  std::function<bool(const char*, bool)> mShouldSerializeFn;
+  std::function<bool(const char*, bool)> mShouldSanitizeFn;
 };
 
 class SharedPreferenceDeserializer final {
