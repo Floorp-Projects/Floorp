@@ -49,7 +49,7 @@ TimeUnit AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const {
   return mPlayDuration + TimeUnit::FromSeconds(delta * mParams.mPlaybackRate);
 }
 
-TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) const {
+TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
   AssertOwnerThread();
   MOZ_ASSERT(mIsStarted, "Must be called after playback starts.");
 
