@@ -13,6 +13,7 @@
 #include "mozilla/ToString.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Selection.h"  // for Selection::InterlinePosition
 #include "mozilla/dom/Text.h"
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
@@ -87,15 +88,18 @@ class EditorDOMPointBase final {
   typedef EditorDOMPointBase<ParentType, ChildType> SelfType;
 
  public:
-  EditorDOMPointBase()
-      : mParent(nullptr), mChild(nullptr), mIsChildInitialized(false) {}
+  using InterlinePosition = dom::Selection::InterlinePosition;
+
+  EditorDOMPointBase() = default;
 
   template <typename ContainerType>
-  EditorDOMPointBase(const ContainerType* aContainer, uint32_t aOffset)
+  EditorDOMPointBase(
+      const ContainerType* aContainer, uint32_t aOffset,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(const_cast<ContainerType*>(aContainer)),
         mChild(nullptr),
-        mOffset(mozilla::Some(aOffset)),
-        mIsChildInitialized(false) {
+        mOffset(Some(aOffset)),
+        mInterlinePosition(aInterlinePosition) {
     NS_WARNING_ASSERTION(
         !mParent || mOffset.value() <= mParent->Length(),
         "The offset is larger than the length of aContainer or negative");
@@ -105,27 +109,31 @@ class EditorDOMPointBase final {
   }
 
   template <typename ContainerType, template <typename> typename StrongPtr>
-  EditorDOMPointBase(const StrongPtr<ContainerType>& aContainer,
-                     uint32_t aOffset)
-      : EditorDOMPointBase(aContainer.get(), aOffset) {}
+  EditorDOMPointBase(
+      const StrongPtr<ContainerType>& aContainer, uint32_t aOffset,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
+      : EditorDOMPointBase(aContainer.get(), aOffset, aInterlinePosition) {}
 
   template <typename ContainerType, template <typename> typename StrongPtr>
-  EditorDOMPointBase(const StrongPtr<const ContainerType>& aContainer,
-                     uint32_t aOffset)
-      : EditorDOMPointBase(aContainer.get(), aOffset) {}
+  EditorDOMPointBase(
+      const StrongPtr<const ContainerType>& aContainer, uint32_t aOffset,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
+      : EditorDOMPointBase(aContainer.get(), aOffset, aInterlinePosition) {}
 
   /**
    * Different from RangeBoundary, aPointedNode should be a child node
    * which you want to refer.
    */
-  explicit EditorDOMPointBase(const nsINode* aPointedNode)
+  explicit EditorDOMPointBase(
+      const nsINode* aPointedNode,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(aPointedNode && aPointedNode->IsContent()
                     ? aPointedNode->GetParentNode()
                     : nullptr),
         mChild(aPointedNode && aPointedNode->IsContent()
                    ? const_cast<nsIContent*>(aPointedNode->AsContent())
                    : nullptr),
-        mIsChildInitialized(false) {
+        mInterlinePosition(aInterlinePosition) {
     mIsChildInitialized = aPointedNode && mChild;
     NS_WARNING_ASSERTION(IsSet(),
                          "The child is nullptr or doesn't have its parent");
@@ -133,11 +141,13 @@ class EditorDOMPointBase final {
                          "Initializing RangeBoundary with invalid value");
   }
 
-  EditorDOMPointBase(nsINode* aContainer, nsIContent* aPointedNode,
-                     uint32_t aOffset)
+  EditorDOMPointBase(
+      nsINode* aContainer, nsIContent* aPointedNode, uint32_t aOffset,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined)
       : mParent(aContainer),
         mChild(aPointedNode),
         mOffset(mozilla::Some(aOffset)),
+        mInterlinePosition(aInterlinePosition),
         mIsChildInitialized(true) {
     MOZ_DIAGNOSTIC_ASSERT(
         aContainer, "This constructor shouldn't be used when pointing nowhere");
@@ -163,7 +173,16 @@ class EditorDOMPointBase final {
       : mParent(aOther.mParent),
         mChild(aOther.mChild),
         mOffset(aOther.mOffset),
+        mInterlinePosition(aOther.mInterlinePosition),
         mIsChildInitialized(aOther.mIsChildInitialized) {}
+
+  void SetInterlinePosition(InterlinePosition aInterlinePosition) {
+    MOZ_ASSERT(IsSet());
+    mInterlinePosition = aInterlinePosition;
+  }
+  InterlinePosition GetInterlinePosition() const {
+    return IsSet() ? mInterlinePosition : InterlinePosition::Undefined;
+  }
 
   /**
    * GetContainer() returns the container node at the point.
@@ -522,6 +541,7 @@ class EditorDOMPointBase final {
     mChild = nullptr;
     mOffset = mozilla::Some(aOffset);
     mIsChildInitialized = false;
+    mInterlinePosition = InterlinePosition::Undefined;
     NS_ASSERTION(!mParent || mOffset.value() <= mParent->Length(),
                  "The offset is out of bounds");
   }
@@ -539,6 +559,7 @@ class EditorDOMPointBase final {
     mChild = const_cast<nsIContent*>(aChild->AsContent());
     mOffset.reset();
     mIsChildInitialized = true;
+    mInterlinePosition = InterlinePosition::Undefined;
   }
 
   /**
@@ -552,6 +573,7 @@ class EditorDOMPointBase final {
     mChild = nullptr;
     mOffset = mozilla::Some(mParent->Length());
     mIsChildInitialized = true;
+    mInterlinePosition = InterlinePosition::Undefined;
   }
   template <typename ContainerType, template <typename> typename StrongPtr>
   MOZ_NEVER_INLINE_DEBUG void SetToEndOf(
@@ -560,16 +582,19 @@ class EditorDOMPointBase final {
   }
   template <typename ContainerType>
   MOZ_NEVER_INLINE_DEBUG static SelfType AtEndOf(
-      const ContainerType& aContainer) {
+      const ContainerType& aContainer,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined) {
     SelfType point;
     point.SetToEndOf(&aContainer);
+    point.mInterlinePosition = aInterlinePosition;
     return point;
   }
   template <typename ContainerType, template <typename> typename StrongPtr>
   MOZ_NEVER_INLINE_DEBUG static SelfType AtEndOf(
-      const StrongPtr<ContainerType>& aContainer) {
+      const StrongPtr<ContainerType>& aContainer,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined) {
     MOZ_ASSERT(aContainer.get());
-    return AtEndOf(*aContainer.get());
+    return AtEndOf(*aContainer.get(), aInterlinePosition);
   }
 
   /**
@@ -590,29 +615,34 @@ class EditorDOMPointBase final {
     SetToEndOf(parentNode);
   }
   template <typename ContainerType>
-  static SelfType After(const ContainerType& aContainer) {
+  static SelfType After(
+      const ContainerType& aContainer,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined) {
     SelfType point;
     point.SetAfter(&aContainer);
+    point.mInterlinePosition = aInterlinePosition;
     return point;
   }
   template <typename ContainerType, template <typename> typename StrongPtr>
   MOZ_NEVER_INLINE_DEBUG static SelfType After(
-      const StrongPtr<ContainerType>& aContainer) {
+      const StrongPtr<ContainerType>& aContainer,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined) {
     MOZ_ASSERT(aContainer.get());
     return After(*aContainer.get());
   }
   template <typename PT, typename CT>
   MOZ_NEVER_INLINE_DEBUG static SelfType After(
-      const EditorDOMPointBase<PT, CT>& aPoint) {
+      const EditorDOMPointBase<PT, CT>& aPoint,
+      InterlinePosition aInterlinePosition = InterlinePosition::Undefined) {
     MOZ_ASSERT(aPoint.IsSet());
     if (aPoint.mChild) {
-      return After(*aPoint.mChild);
+      return After(*aPoint.mChild, aInterlinePosition);
     }
     if (NS_WARN_IF(aPoint.IsEndOfContainer())) {
       return SelfType();
     }
-    SelfType point(aPoint);
-    MOZ_ALWAYS_TRUE(point.AdvanceOffset());
+    SelfType point = aPoint.NextPoint();
+    point.mInterlinePosition = aInterlinePosition;
     return point;
   }
 
@@ -653,6 +683,7 @@ class EditorDOMPointBase final {
     mChild = nullptr;
     mOffset.reset();
     mIsChildInitialized = false;
+    mInterlinePosition = InterlinePosition::Undefined;
   }
 
   /**
@@ -678,6 +709,7 @@ class EditorDOMPointBase final {
         return false;
       }
       mOffset = mozilla::Some(mOffset.value() + 1);
+      mInterlinePosition = InterlinePosition::Undefined;
       return true;
     }
 
@@ -694,6 +726,7 @@ class EditorDOMPointBase final {
       mOffset = mozilla::Some(mOffset.value() + 1);
     }
     mChild = mChild->GetNextSibling();
+    mInterlinePosition = InterlinePosition::Undefined;
     return true;
   }
 
@@ -723,6 +756,7 @@ class EditorDOMPointBase final {
         return false;
       }
       mOffset = mozilla::Some(mOffset.value() - 1);
+      mInterlinePosition = InterlinePosition::Undefined;
       return true;
     }
 
@@ -747,6 +781,7 @@ class EditorDOMPointBase final {
       mOffset = mozilla::Some(mOffset.value() - 1);
     }
     mChild = previousSibling;
+    mInterlinePosition = InterlinePosition::Undefined;
     return true;
   }
 
@@ -906,6 +941,7 @@ class EditorDOMPointBase final {
     mIsChildInitialized =
         aOther.mRef || (aOther.mParent && !aOther.mParent->IsContainerNode()) ||
         (aOther.mOffset.isSome() && !aOther.mOffset.value());
+    mInterlinePosition = InterlinePosition::Undefined;
     return *this;
   }
 
@@ -915,9 +951,14 @@ class EditorDOMPointBase final {
     mChild = aOther.mChild;
     mOffset = aOther.mOffset;
     mIsChildInitialized = aOther.mIsChildInitialized;
+    mInterlinePosition = aOther.mInterlinePosition;
     return *this;
   }
 
+  /**
+   * Don't compare mInterlinePosition.  If it's required to check, perhaps,
+   * another compare operator like `===` should be created.
+   */
   template <typename A, typename B>
   bool operator==(const EditorDOMPointBase<A, B>& aOther) const {
     if (mParent != aOther.mParent) {
@@ -1030,12 +1071,14 @@ class EditorDOMPointBase final {
   }
 
   EditorDOMPointInText GetAsInText() const {
-    return IsInTextNode() ? EditorDOMPointInText(ContainerAsText(), Offset())
+    return IsInTextNode() ? EditorDOMPointInText(ContainerAsText(), Offset(),
+                                                 mInterlinePosition)
                           : EditorDOMPointInText();
   }
   MOZ_NEVER_INLINE_DEBUG EditorDOMPointInText AsInText() const {
     MOZ_ASSERT(IsInTextNode());
-    return EditorDOMPointInText(ContainerAsText(), Offset());
+    return EditorDOMPointInText(ContainerAsText(), Offset(),
+                                mInterlinePosition);
   }
 
   template <typename A, typename B>
@@ -1070,7 +1113,8 @@ class EditorDOMPointBase final {
       aStream << " (" << *aDOMPoint.mChild << ")";
     }
     aStream << ", mOffset=" << aDOMPoint.mOffset << ", mIsChildInitialized="
-            << (aDOMPoint.mIsChildInitialized ? "true" : "false") << " }";
+            << (aDOMPoint.mIsChildInitialized ? "true" : "false")
+            << ", mInterlinePosition=" << aDOMPoint.mInterlinePosition << " }";
     return aStream;
   }
 
@@ -1093,12 +1137,12 @@ class EditorDOMPointBase final {
     MOZ_ASSERT(mChild || mOffset.value() == mParent->Length());
   }
 
-  ParentType mParent;
-  ChildType mChild;
+  ParentType mParent = nullptr;
+  ChildType mChild = nullptr;
 
-  mozilla::Maybe<uint32_t> mOffset;
-
-  bool mIsChildInitialized;
+  Maybe<uint32_t> mOffset;
+  InterlinePosition mInterlinePosition = InterlinePosition::Undefined;
+  bool mIsChildInitialized = false;
 
   template <typename PT, typename CT>
   friend class EditorDOMPointBase;
