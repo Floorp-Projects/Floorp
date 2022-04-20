@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">ขออภัย %1$s มีปัญหาและขัดข้อง</string>
+    <string name="mozac_lib_crash_dialog_title">ขออภัย %1$s มีปัญหา และหยุดการทำงานแล้ว</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">ส่งรายงานข้อขัดข้องไปยัง %1$s</string>
@@ -14,6 +14,9 @@
 
     <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_lib_crash_channel">ข้อขัดข้อง</string>
+
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">ขออภัย เกิดข้อผิดพลาดใน %1$s</string>
 
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">รายงาน</string>
