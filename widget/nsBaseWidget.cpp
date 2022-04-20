@@ -153,6 +153,7 @@ nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
       mIMEHasFocus(false),
       mIMEHasQuit(false),
       mIsFullyOccluded(false),
+      mNeedFastSnaphot(false),
       mCurrentPanGestureBelongsToSwipe(false) {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -478,6 +479,10 @@ already_AddRefed<nsIWidget> nsBaseWidget::CreateChild(
     widget = AllocateChildPopupWidget();
   } else {
     widget = nsIWidget::CreateChildWindow();
+  }
+
+  if (widget && mNeedFastSnaphot) {
+    widget->SetNeedFastSnaphot();
   }
 
   if (widget &&
@@ -1205,6 +1210,9 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
       options.SetAllowSoftwareWebRenderD3D11(
           gfx::gfxVars::AllowSoftwareWebRenderD3D11());
     }
+    if (mNeedFastSnaphot) {
+      options.SetNeedFastSnaphot(true);
+    }
 #elif defined(MOZ_WIDGET_ANDROID)
     MOZ_ASSERT(supportsAcceleration);
     options.SetAllowSoftwareWebRenderOGL(
@@ -1382,6 +1390,18 @@ void nsBaseWidget::ClearCachedWebrenderResources() {
     return;
   }
   mWindowRenderer->AsWebRender()->ClearCachedResources();
+}
+
+bool nsBaseWidget::SetNeedFastSnaphot() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(!mCompositorSession);
+
+  if (!XRE_IsParentProcess() || mCompositorSession) {
+    return false;
+  }
+
+  mNeedFastSnaphot = true;
+  return true;
 }
 
 already_AddRefed<gfx::DrawTarget> nsBaseWidget::StartRemoteDrawing() {

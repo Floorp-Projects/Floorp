@@ -785,7 +785,10 @@ fn assign_free_pass(
                 parent_task.free_after = PassId::INVALID;
 
                 let child_task = &mut graph.tasks[child_id.index as usize];
-                child_task.free_after = child_task.free_after.min(render_on);
+
+                if child_task.free_after != PassId::INVALID {
+                    child_task.free_after = child_task.free_after.min(render_on);
+                }
             }
         }
 

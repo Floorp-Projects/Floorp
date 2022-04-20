@@ -21,7 +21,7 @@ use crate::prim_store::{PictureIndex, PrimitiveDebugId};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
-use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
+use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTargetContext, RenderTargetKind, AlphaRenderTarget, ColorRenderTarget};
 use crate::render_task_graph::{RenderTaskGraph, Pass, SubPassSurface};
 use crate::render_task_graph::{RenderPass, RenderTaskGraphBuilder};
@@ -843,14 +843,28 @@ pub fn build_render_pass(
                         let target = PictureCacheTarget {
                             surface: surface.clone(),
                             clear_color: pic_task.clear_color,
-                            alpha_batch_container,
+                            kind: PictureCacheTargetKind::Draw {
+                                alpha_batch_container,
+                            },
                             dirty_rect: scissor_rect,
                             valid_rect,
-                            resolve_op: pic_task.resolve_op,
                         };
 
                         pass.picture_cache.push(target);
+                    }
+                    RenderTaskKind::TileComposite(ref tile_task) => {
+                        let target = PictureCacheTarget {
+                            surface: surface.clone(),
+                            clear_color: Some(tile_task.clear_color),
+                            kind: PictureCacheTargetKind::Blit {
+                                task_id: tile_task.task_id.expect("bug: no source task_id set"),
+                                sub_rect_offset: tile_task.sub_rect_offset,
+                            },
+                            dirty_rect: tile_task.scissor_rect,
+                            valid_rect: tile_task.valid_rect,
+                        };
 
+                        pass.picture_cache.push(target);
                     }
                     _ => {
                         unreachable!();

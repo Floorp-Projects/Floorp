@@ -222,7 +222,7 @@ pub struct ColorRenderTarget {
     // we can set a scissor rect and only clear to the
     // used portion of the target as an optimization.
     pub used_rect: DeviceIntRect,
-    pub resolve_op: Option<ResolveOp>,
+    pub resolve_ops: Vec<ResolveOp>,
     pub clear_color: Option<ColorF>,
 }
 
@@ -244,7 +244,7 @@ impl RenderTarget for ColorRenderTarget {
             screen_size,
             texture_id,
             used_rect,
-            resolve_op: None,
+            resolve_ops: Vec::new(),
             clear_color: Some(ColorF::TRANSPARENT),
         }
     }
@@ -277,8 +277,8 @@ impl RenderTarget for ColorRenderTarget {
                         Some(target_rect)
                     };
 
-                    if pic_task.is_resolve_target {
-                        self.clear_color = None;
+                    if !pic_task.can_use_shared_surface {
+                        self.clear_color = pic_task.clear_color;
                     }
 
                     // TODO(gw): The type names of AlphaBatchBuilder and BatchBuilder
@@ -371,9 +371,9 @@ impl RenderTarget for ColorRenderTarget {
                 );
             }
             RenderTaskKind::Picture(ref pic_task) => {
-                // Only one resolve per target is supported for now
-                debug_assert!(self.resolve_op.is_none());
-                self.resolve_op = pic_task.resolve_op;
+                if let Some(ref resolve_op) = pic_task.resolve_op {
+                    self.resolve_ops.push(resolve_op.clone());
+                }
                 self.alpha_tasks.push(task_id);
             }
             RenderTaskKind::SvgFilter(ref task_info) => {
@@ -396,6 +396,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::LinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
+            RenderTaskKind::TileComposite(..) |
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
@@ -492,6 +493,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::LinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::ConicGradient(..) |
+            RenderTaskKind::TileComposite(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
@@ -569,22 +571,33 @@ impl RenderTarget for AlphaRenderTarget {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ResolveOp {
-    pub src_task_id: RenderTaskId,
+    pub src_task_ids: Vec<RenderTaskId>,
     pub dest_origin: DevicePoint,
     pub dest_task_id: RenderTaskId,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum PictureCacheTargetKind {
+    Draw {
+        alpha_batch_container: AlphaBatchContainer,
+    },
+    Blit {
+        task_id: RenderTaskId,
+        sub_rect_offset: DeviceIntVector2D,
+    },
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureCacheTarget {
     pub surface: ResolvedSurfaceTexture,
-    pub alpha_batch_container: AlphaBatchContainer,
+    pub kind: PictureCacheTargetKind,
     pub clear_color: Option<ColorF>,
     pub dirty_rect: DeviceIntRect,
     pub valid_rect: DeviceIntRect,
-    pub resolve_op: Option<ResolveOp>,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -704,6 +717,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
+            RenderTaskKind::TileComposite(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
             }

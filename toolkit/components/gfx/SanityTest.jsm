@@ -200,13 +200,6 @@ function verifyLayersRendering(ctx) {
 }
 
 function testCompositor(test, win, ctx) {
-  if (win.windowUtils.layerManagerType.startsWith("WebRender")) {
-    // When layer manger type is WebRender, drawWindow() is skipped, since
-    // drawWindow() could take long time.
-    reportResult(TEST_PASSED);
-    return true;
-  }
-
   takeWindowSnapshot(win, ctx);
   var testPassed = true;
 
@@ -429,6 +422,14 @@ SanityTest.prototype = {
         ",chrome,titlebar=0,scrollbars=0,popup=1",
       null
     );
+
+    let appWin = sanityTest.docShell.treeOwner
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIAppWindow);
+
+    // Request fast snapshot at RenderCompositor of WebRender.
+    // Since readback of Windows DirectComposition is very slow.
+    appWin.needFastSnaphot();
 
     // There's no clean way to have an invisible window and ensure it's always painted.
     // Instead, move the window far offscreen so it doesn't show up during launch.

@@ -1,0 +1,19 @@
+# Verify that blurs across tile boundaries do correct readbacks
+---
+root:
+  items:
+    - type: stacking-context
+      backdrop-root: true
+      bounds: 20 20 0 0
+      items:
+      - image: checkerboard(2,32,32,16,22)
+        bounds: 0 0 516 644
+      - type: backdrop-filter
+        bounds: 50 50 416 544
+        filters: ["blur(5,5)"]
+      - type: border
+        bounds: [ 50, 50, 416, 544 ]
+        width: [ 1, 1, 1, 1 ]
+        border-type: normal
+        style: solid
+        color: black

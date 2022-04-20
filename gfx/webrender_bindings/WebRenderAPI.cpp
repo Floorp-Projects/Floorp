@@ -458,6 +458,9 @@ void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
 }
 
 void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
+  if (mRootApi && mRootApi->mRendererDestroyed) {
+    return;
+  }
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 

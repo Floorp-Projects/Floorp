@@ -801,6 +801,9 @@ fn prepare_interned_prim_for_render(
             }
         }
         PrimitiveInstanceKind::Backdrop { .. } => {
+            // Register the owner picture of this backdrop primitive as the
+            // target for resolve of the sub-graph
+            frame_state.surface_builder.register_resolve_source();
         }
     };
 }
