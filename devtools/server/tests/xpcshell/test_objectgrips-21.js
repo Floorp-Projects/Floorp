@@ -246,7 +246,7 @@ async function test_unsafe_grips(
       // all methods are expected to work the same on `inheritsGrip`.
       check_grip(grip, data, isUnsafe, isWorkerServer);
 
-      let objClient = threadFront.pauseGrip(grip);
+      const objClient = threadFront.pauseGrip(grip);
       let response, slice;
 
       response = await objClient.getPrototypeAndProperties();
@@ -280,30 +280,6 @@ async function test_unsafe_grips(
       response = await objClient.getPrototype();
       check_prototype(response.prototype, data, isUnsafe, isWorkerServer);
 
-      if (data.isFunction && isUnsafe) {
-        // For function-related methods, the object front checks that the class
-        // of the grip is "Function", and if it's not, the method in object.js
-        // is not called. But some tests have a grip with a class that is not
-        // "Function" (e.g. it's "Proxy") but the DebuggerObject has a "Function"
-        // class because the object is callable (despite not being a Function object).
-        // So the grip class is changed in order to test the object.js method.
-        grip.class = "Function";
-        objClient = threadFront.pauseGrip(grip);
-        try {
-          response = await objClient.getParameterNames();
-          ok(
-            true,
-            "getParameterNames passed. DebuggerObject.class is 'Function'" +
-              "on the object actor"
-          );
-        } catch (e) {
-          ok(
-            false,
-            "getParameterNames failed. DebuggerObject.class may not be" +
-              " 'Function' on the object actor"
-          );
-        }
-      }
       await objClient.release();
     }
 

@@ -753,20 +753,6 @@ const proto = {
   },
 
   /**
-   * Handle a protocol request to provide the parameters of a function.
-   */
-  parameterNames: function() {
-    if (this.obj.class !== "Function") {
-      return this.throwError(
-        "objectNotFunction",
-        "'parameterNames' request is only valid for grips with a 'Function' class."
-      );
-    }
-
-    return { parameterNames: this.obj.parameterNames };
-  },
-
-  /**
    * Handle a protocol request to get the target and handler internal slots of a proxy.
    */
   proxySlots: function() {
