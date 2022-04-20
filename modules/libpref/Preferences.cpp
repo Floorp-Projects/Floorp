@@ -3590,7 +3590,8 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
 /* static */
 void Preferences::SerializePreferences(
     nsCString& aStr,
-    const std::function<bool(const char*, bool)>& aShouldSanitizeFn) {
+    const std::function<bool(const char*, bool)>& aShouldSanitizeFn,
+    bool aIsDestinationContentProcess) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
@@ -3599,8 +3600,7 @@ void Preferences::SerializePreferences(
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
       pref->SerializeAndAppend(
-          aStr,
-          aShouldSanitizeFn(pref->Name(), /* will be fixed later */ false));
+          aStr, aShouldSanitizeFn(pref->Name(), aIsDestinationContentProcess));
     }
   }
 
