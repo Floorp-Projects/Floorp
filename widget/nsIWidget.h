@@ -1986,6 +1986,12 @@ class nsIWidget : public nsISupports {
   virtual void ClearCachedWebrenderResources() {}
 
   /**
+   * Request fast snapshot at RenderCompositor of WebRender.
+   * Since readback of Windows DirectComposition is very slow.
+   */
+  virtual bool SetNeedFastSnaphot() { return false; }
+
+  /**
    * If this widget has its own vsync source, return it, otherwise return
    * nullptr. An example of such local source would be Wayland frame callbacks.
    */

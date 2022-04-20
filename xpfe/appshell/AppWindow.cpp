@@ -2580,6 +2580,16 @@ AppWindow::LockAspectRatio(bool aShouldLock) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+AppWindow::NeedFastSnaphot() {
+  MOZ_ASSERT(mWindow);
+  if (!mWindow) {
+    return NS_ERROR_FAILURE;
+  }
+  mWindow->SetNeedFastSnaphot();
+  return NS_OK;
+}
+
 void AppWindow::LoadPersistentWindowState() {
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement) {

@@ -58,6 +58,13 @@ pub struct SpatialNodeIndex(pub u32);
 
 impl SpatialNodeIndex {
     pub const INVALID: SpatialNodeIndex = SpatialNodeIndex(u32::MAX);
+
+    /// May be set on a cluster / picture during scene building if the spatial
+    /// node is not known at this time. It must be set to a valid value before
+    /// scene building is complete (by `finalize_picture`). In future, we could
+    /// make this type-safe with a wrapper type to ensure we know when a spatial
+    /// node index may have an unknown value.
+    pub const UNKNOWN: SpatialNodeIndex = SpatialNodeIndex(u32::MAX - 1);
 }
 
 // In some cases, the conversion from CSS pixels to device pixels can result in small
