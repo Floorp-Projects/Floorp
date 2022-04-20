@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -8,9 +8,9 @@
 // except according to those terms.
 
 use super::*;
-use data::*;
-use handles::*;
-use variant::*;
+use crate::data::*;
+use crate::handles::*;
+use crate::variant::*;
 // Rust 1.14.0 requires the following despite the asterisk above.
 use super::in_inclusive_range16;
 
@@ -754,7 +754,7 @@ impl Iso2022JpEncoder {
 // Any copyright to the test code below this comment is dedicated to the
 // Public Domain. http://creativecommons.org/publicdomain/zero/1.0/
 
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod tests {
     use super::super::testing::*;
     use super::super::*;
@@ -863,6 +863,11 @@ mod tests {
         decode_iso_2022_jp(b"\x1B$@\x80\x54\x64", "\u{FFFD}\u{58FA}");
         decode_iso_2022_jp(b"\x1B$B\x28\x80", "\u{FFFD}");
 
+        if cfg!(miri) {
+            // Miri is too slow
+            return;
+        }
+
         // Transitions
         decode_iso_2022_jp(b"\x1B(B\x5C\x1B(J\x5C", "\u{005C}\u{00A5}");
         decode_iso_2022_jp(b"\x1B(B\x5C\x1B(I\x21", "\u{005C}\u{FF61}");
@@ -938,35 +943,45 @@ mod tests {
         // Roman
         encode_iso_2022_jp("a\u{00A5}b", b"a\x1B(J\x5Cb\x1B(B");
         encode_iso_2022_jp("a\u{203E}b", b"a\x1B(J\x7Eb\x1B(B");
-        encode_iso_2022_jp("a\u{00A5}b\x5C", b"a\x1B(J\x5Cb\x1B(B\x5C");
-        encode_iso_2022_jp("a\u{203E}b\x7E", b"a\x1B(J\x7Eb\x1B(B\x7E");
-        encode_iso_2022_jp("\u{00A5}\u{1F4A9}", b"\x1B(J\x5C&#128169;\x1B(B");
-        encode_iso_2022_jp("\u{00A5}\x1B", b"\x1B(J\x5C&#65533;\x1B(B");
-        encode_iso_2022_jp("\u{00A5}\x0E", b"\x1B(J\x5C&#65533;\x1B(B");
-        encode_iso_2022_jp("\u{00A5}\x0F", b"\x1B(J\x5C&#65533;\x1B(B");
-        encode_iso_2022_jp("\u{00A5}\u{58FA}", b"\x1B(J\x5C\x1B$B\x54\x64\x1B(B");
+        if !cfg!(miri) {
+            // Miri is too slow
+            encode_iso_2022_jp("a\u{00A5}b\x5C", b"a\x1B(J\x5Cb\x1B(B\x5C");
+            encode_iso_2022_jp("a\u{203E}b\x7E", b"a\x1B(J\x7Eb\x1B(B\x7E");
+            encode_iso_2022_jp("\u{00A5}\u{1F4A9}", b"\x1B(J\x5C&#128169;\x1B(B");
+            encode_iso_2022_jp("\u{00A5}\x1B", b"\x1B(J\x5C&#65533;\x1B(B");
+            encode_iso_2022_jp("\u{00A5}\x0E", b"\x1B(J\x5C&#65533;\x1B(B");
+            encode_iso_2022_jp("\u{00A5}\x0F", b"\x1B(J\x5C&#65533;\x1B(B");
+            encode_iso_2022_jp("\u{00A5}\u{58FA}", b"\x1B(J\x5C\x1B$B\x54\x64\x1B(B");
+        }
 
         // Half-width Katakana
         encode_iso_2022_jp("\u{FF61}", b"\x1B$B\x21\x23\x1B(B");
         encode_iso_2022_jp("\u{FF65}", b"\x1B$B\x21\x26\x1B(B");
-        encode_iso_2022_jp("\u{FF66}", b"\x1B$B\x25\x72\x1B(B");
-        encode_iso_2022_jp("\u{FF70}", b"\x1B$B\x21\x3C\x1B(B");
-        encode_iso_2022_jp("\u{FF9D}", b"\x1B$B\x25\x73\x1B(B");
-        encode_iso_2022_jp("\u{FF9E}", b"\x1B$B\x21\x2B\x1B(B");
-        encode_iso_2022_jp("\u{FF9F}", b"\x1B$B\x21\x2C\x1B(B");
+        if !cfg!(miri) {
+            // Miri is too slow
+            encode_iso_2022_jp("\u{FF66}", b"\x1B$B\x25\x72\x1B(B");
+            encode_iso_2022_jp("\u{FF70}", b"\x1B$B\x21\x3C\x1B(B");
+            encode_iso_2022_jp("\u{FF9D}", b"\x1B$B\x25\x73\x1B(B");
+            encode_iso_2022_jp("\u{FF9E}", b"\x1B$B\x21\x2B\x1B(B");
+            encode_iso_2022_jp("\u{FF9F}", b"\x1B$B\x21\x2C\x1B(B");
+        }
 
         // 0208
         encode_iso_2022_jp("\u{58FA}", b"\x1B$B\x54\x64\x1B(B");
         encode_iso_2022_jp("\u{58FA}\u{250F}", b"\x1B$B\x54\x64\x28\x2E\x1B(B");
-        encode_iso_2022_jp("\u{58FA}\u{1F4A9}", b"\x1B$B\x54\x64\x1B(B&#128169;");
-        encode_iso_2022_jp("\u{58FA}\x1B", b"\x1B$B\x54\x64\x1B(B&#65533;");
-        encode_iso_2022_jp("\u{58FA}\x0E", b"\x1B$B\x54\x64\x1B(B&#65533;");
-        encode_iso_2022_jp("\u{58FA}\x0F", b"\x1B$B\x54\x64\x1B(B&#65533;");
-        encode_iso_2022_jp("\u{58FA}\u{00A5}", b"\x1B$B\x54\x64\x1B(J\x5C\x1B(B");
-        encode_iso_2022_jp("\u{58FA}a", b"\x1B$B\x54\x64\x1B(Ba");
+        if !cfg!(miri) {
+            // Miri is too slow
+            encode_iso_2022_jp("\u{58FA}\u{1F4A9}", b"\x1B$B\x54\x64\x1B(B&#128169;");
+            encode_iso_2022_jp("\u{58FA}\x1B", b"\x1B$B\x54\x64\x1B(B&#65533;");
+            encode_iso_2022_jp("\u{58FA}\x0E", b"\x1B$B\x54\x64\x1B(B&#65533;");
+            encode_iso_2022_jp("\u{58FA}\x0F", b"\x1B$B\x54\x64\x1B(B&#65533;");
+            encode_iso_2022_jp("\u{58FA}\u{00A5}", b"\x1B$B\x54\x64\x1B(J\x5C\x1B(B");
+            encode_iso_2022_jp("\u{58FA}a", b"\x1B$B\x54\x64\x1B(Ba");
+        }
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_iso_2022_jp_decode_all() {
         let input = include_bytes!("test_data/iso_2022_jp_in.txt");
         let expectation = include_str!("test_data/iso_2022_jp_in_ref.txt");
@@ -976,6 +991,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)] // Miri is too slow
     fn test_iso_2022_jp_encode_all() {
         let input = include_str!("test_data/iso_2022_jp_out.txt");
         let expectation = include_bytes!("test_data/iso_2022_jp_out_ref.txt");
