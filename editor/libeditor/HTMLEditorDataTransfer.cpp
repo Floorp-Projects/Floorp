@@ -699,7 +699,8 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
   EditorDOMPoint pointToInsert =
       HTMLEditUtils::GetBetterInsertionPointFor<EditorDOMPoint>(
           arrayOfTopMostChildContents[0],
-          EditorBase::GetStartPoint(mHTMLEditor.SelectionRef()), *editingHost);
+          mHTMLEditor.GetFirstSelectionStartPoint<EditorRawDOMPoint>(),
+          *editingHost);
   if (!pointToInsert.IsSet()) {
     NS_WARNING("HTMLEditor::GetBetterInsertionPointFor() failed");
     return NS_ERROR_FAILURE;

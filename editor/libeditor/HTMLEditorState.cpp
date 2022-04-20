@@ -460,8 +460,8 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
   // We might have an empty node list.  if so, find selection parent
   // and put that on the list
   if (arrayOfContents.IsEmpty()) {
-    EditorRawDOMPoint atCaret(
-        EditorBase::GetStartPoint(aHTMLEditor.SelectionRef()));
+    const auto atCaret =
+        aHTMLEditor.GetFirstSelectionStartPoint<EditorRawDOMPoint>();
     if (NS_WARN_IF(!atCaret.IsSet())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
