@@ -4,10 +4,7 @@
 ---
 job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
-    run-without-variant:
-        by-test-platform:
-            android.*: true
-            default: false
+    run-without-variant: false
     variants: ["1proc"]
     virtualization: virtual
     mozharness:
