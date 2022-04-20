@@ -130,9 +130,9 @@ already_AddRefed<MediaDataDecoder> BlankDecoderModule::CreateAudioDecoder(
   return decoder.forget();
 }
 
-bool BlankDecoderModule::SupportsMimeType(
+media::DecodeSupportSet BlankDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  return true;
+  return media::DecodeSupport::SoftwareDecode;
 }
 
 /* static */

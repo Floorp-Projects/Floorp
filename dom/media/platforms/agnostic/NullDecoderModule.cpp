@@ -42,9 +42,10 @@ class NullDecoderModule : public PlatformDecoderModule {
     return nullptr;
   }
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override {
-    return true;
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override {
+    return media::DecodeSupport::SoftwareDecode;
   }
 };
 

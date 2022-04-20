@@ -57,32 +57,34 @@ already_AddRefed<MediaDataDecoder> GMPDecoderModule::CreateAudioDecoder(
 }
 
 /* static */
-bool GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
-                                        const Maybe<nsCString>& aGMP) {
+media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
+    const nsACString& aMimeType, const Maybe<nsCString>& aGMP) {
+  bool isSupported = false;
   if (aGMP.isNothing()) {
-    return false;
+    return media::DecodeSupport::Unsupported;
   }
 
   nsCString api = nsLiteralCString(CHROMIUM_CDM_API);
 
   if (MP4Decoder::IsH264(aMimeType)) {
-    return HaveGMPFor(api, {"h264"_ns, aGMP.value()});
+    isSupported = HaveGMPFor(api, {"h264"_ns, aGMP.value()});
+  } else if (VPXDecoder::IsVP9(aMimeType)) {
+    isSupported = HaveGMPFor(api, {"vp9"_ns, aGMP.value()});
+  } else if (VPXDecoder::IsVP8(aMimeType)) {
+    isSupported = HaveGMPFor(api, {"vp8"_ns, aGMP.value()});
   }
 
-  if (VPXDecoder::IsVP9(aMimeType)) {
-    return HaveGMPFor(api, {"vp9"_ns, aGMP.value()});
+  // TODO: Note that we do not yet distinguish between SW/HW decode support.
+  //       Will be done in bug 1754239.
+  if (isSupported) {
+    return media::DecodeSupport::SoftwareDecode;
   }
-
-  if (VPXDecoder::IsVP8(aMimeType)) {
-    return HaveGMPFor(api, {"vp8"_ns, aGMP.value()});
-  }
-
-  return false;
+  return media::DecodeSupport::Unsupported;
 }
 
-bool GMPDecoderModule::SupportsMimeType(
+media::DecodeSupportSet GMPDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  return false;
+  return media::DecodeSupport::Unsupported;
 }
 
 /* static */
