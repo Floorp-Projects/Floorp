@@ -10,6 +10,11 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  CONTEXTUAL_SERVICES_PING_TYPES:
+    "resource:///modules/PartnerLinkAttribution.jsm",
+});
+
 const { timestampTemplate } = UrlbarProviderQuickSuggest;
 
 // Include the timestamp template in the suggestion URLs so we can make sure
@@ -24,6 +29,7 @@ const SUGGESTIONS = [
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
     advertiser: "TestAdvertiser",
+    iab_category: "22 - Shopping",
   },
   {
     id: 2,
@@ -216,15 +222,26 @@ async function doBasicBlockTest({ suggestion, isBestMatch, block }) {
   ]);
 
   // Check the custom telemetry pings.
-  QuickSuggestTestUtils.assertImpressionPing({
-    spy,
-    match_type,
-    // `assertImpressionPing()` expects a zero-based result index, not a
-    // 1-based telemetry index, so subtract 1.
-    index: index - 1,
-    block_id: suggestion.id,
-  });
-  QuickSuggestTestUtils.assertNoClickPing(spy);
+  QuickSuggestTestUtils.assertPings(spy, [
+    {
+      type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+      payload: {
+        match_type,
+        block_id: suggestion.id,
+        is_clicked: false,
+        position: index,
+      },
+    },
+    {
+      type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
+      payload: {
+        match_type,
+        block_id: suggestion.id,
+        iab_category: suggestion.iab_category,
+        position: index,
+      },
+    },
+  ]);
 
   await UrlbarTestUtils.promisePopupClose(window);
   await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
