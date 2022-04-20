@@ -97,6 +97,7 @@ job-defaults:
             - name: public
               path: /builds/worker/artifacts
               type: directory
+        retry-exit-status: [20]
     worker-type: b-android
 
 jobs:
