@@ -10,7 +10,7 @@
 var res1 = [
   {
     selector: ".boxmodel-element-size",
-    value: "160" + "\u00D7" + "160.117",
+    value: "160" + "\u00D7" + "160.1",
   },
   {
     selector: ".boxmodel-size > .boxmodel-width",
@@ -18,7 +18,7 @@ var res1 = [
   },
   {
     selector: ".boxmodel-size > .boxmodel-height",
-    value: "100.117",
+    value: "100.1",
   },
   {
     selector: ".boxmodel-position.boxmodel-top > span",

@@ -550,7 +550,7 @@ nscoord StyleCSSPixelLength::ToAppUnits() const {
     // Avoid the expensive FP math below.
     return 0;
   }
-  float length = _0 * float(mozilla::AppUnitsPerCSSPixel());
+  float length = _0 * float(AppUnitsPerCSSPixel());
   if (length >= float(nscoord_MAX)) {
     return nscoord_MAX;
   }
@@ -682,14 +682,15 @@ bool LengthPercentage::HasPercent() const { return IsPercentage() || IsCalc(); }
 
 bool LengthPercentage::ConvertsToLength() const { return IsLength(); }
 
-nscoord LengthPercentage::ToLength() const {
-  MOZ_ASSERT(ConvertsToLength());
-  return AsLength().ToAppUnits();
-}
-
 CSSCoord LengthPercentage::ToLengthInCSSPixels() const {
   MOZ_ASSERT(ConvertsToLength());
   return AsLength().ToCSSPixels();
+}
+
+nscoord LengthPercentage::ToLength() const {
+  MOZ_ASSERT(ConvertsToLength());
+  // We use the same rounder as Resolve()'s default.
+  return NSToCoordTruncClamped(ToLengthInCSSPixels() * AppUnitsPerCSSPixel());
 }
 
 bool LengthPercentage::ConvertsToPercentage() const { return IsPercentage(); }
@@ -752,7 +753,7 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter, U aRounder) const {
   static_assert(std::is_same<decltype(aRounder(1.0f)), nscoord>::value,
                 "Should return app units");
   if (ConvertsToLength()) {
-    return ToLength();
+    return aRounder(ToLengthInCSSPixels() * AppUnitsPerCSSPixel());
   }
   if (IsPercentage() && AsPercentage()._0 == 0.0f) {
     return 0.0f;
@@ -778,10 +779,8 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter) const {
 }
 
 template <typename T>
-nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
-                                  T aPercentageRounder) const {
-  return Resolve([aPercentageBasis] { return aPercentageBasis; },
-                 aPercentageRounder);
+nscoord LengthPercentage::Resolve(nscoord aPercentageBasis, T aRounder) const {
+  return Resolve([aPercentageBasis] { return aPercentageBasis; }, aRounder);
 }
 
 void LengthPercentage::ScaleLengthsBy(float aScale) {
