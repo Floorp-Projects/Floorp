@@ -76,7 +76,7 @@ fun ExpandableListHeader(
 
                 Icon(
                     painter = painterResource(
-                        if (expanded) R.drawable.ic_chevron_down else R.drawable.ic_chevron_up
+                        if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down
                     ),
                     contentDescription = if (expanded) {
                         collapseActionContentDescription
