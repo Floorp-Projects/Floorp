@@ -287,7 +287,8 @@ function switchPerformancePanel() {
       // Remote tab toolboxes (eg about:devtools-toolbox from about:debugging) should not
       // use the performance panel; about:debugging provides a "Profile performance" button
       // which can be used instead, without having the overhead of starting a remote toolbox.
-      return toolbox.target.isLocalTab;
+      // Also accept the Browser Toolbox, so that we can profile its process via a second browser toolbox.
+      return toolbox.target.isLocalTab || toolbox.isBrowserToolbox;
     };
   } else {
     Tools.performance.url = "chrome://devtools/content/performance/index.xhtml";

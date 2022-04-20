@@ -104,7 +104,11 @@ async function openProfilerTab(profilerViewMode) {
 
   // Find the most recently used window, as the DevTools client could be in a variety
   // of hosts.
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  // Note that when running from the browser toolbox, there won't be the browser window,
+  // but only the browser toolbox document.
+  const win =
+    Services.wm.getMostRecentWindow("navigator:browser") ||
+    Services.wm.getMostRecentWindow("devtools:toolbox");
   if (!win) {
     throw new Error("No browser window");
   }
@@ -118,7 +122,7 @@ async function openProfilerTab(profilerViewMode) {
     win.openWebLinkIn(urlToLoad, "tab", {
       forceNonPrivate: true,
       resolveOnContentBrowserCreated,
-      userContextId: win.gBrowser.contentPrincipal.userContextId,
+      userContextId: win.gBrowser?.contentPrincipal.userContextId,
     })
   );
   return contentBrowser;
