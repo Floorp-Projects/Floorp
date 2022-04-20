@@ -15,10 +15,12 @@ class AgnosticDecoderModule : public PlatformDecoderModule {
  public:
   static already_AddRefed<PlatformDecoderModule> Create();
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override;
-  bool Supports(const SupportDecoderParams& aParams,
-                DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet Supports(
+      const SupportDecoderParams& aParams,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
 
  protected:
   AgnosticDecoderModule() = default;

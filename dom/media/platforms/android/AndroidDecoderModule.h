@@ -25,10 +25,11 @@ class AndroidDecoderModule : public PlatformDecoderModule {
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override;
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  static bool SupportsMimeType(const nsACString& aMimeType);
+  static media::DecodeSupportSet SupportsMimeType(const nsACString& aMimeType);
 
   static nsTArray<nsCString> GetSupportedMimeTypes();
 

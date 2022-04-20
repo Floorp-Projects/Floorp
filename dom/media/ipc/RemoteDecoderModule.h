@@ -20,11 +20,13 @@ class RemoteDecoderModule : public PlatformDecoderModule {
   static already_AddRefed<PlatformDecoderModule> Create(
       RemoteDecodeIn aLocation);
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  bool Supports(const SupportDecoderParams& aParams,
-                DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet Supports(
+      const SupportDecoderParams& aParams,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
 
   RefPtr<CreateDecoderPromise> AsyncCreateDecoder(
       const CreateDecoderParams& aParams) override;
