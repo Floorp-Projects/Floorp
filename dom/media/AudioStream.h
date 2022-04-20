@@ -297,6 +297,9 @@ class AudioStream final {
 
   bool IsPlaybackCompleted() const;
 
+  // Returns true if at least one DataCallback has been called.
+  bool CallbackStarted() const { return mCallbacksStarted; }
+
  protected:
   friend class AudioClock;
 
@@ -386,6 +389,7 @@ class AudioStream final {
   std::atomic<bool> mPreservesPitch;
   // Audio thread only
   bool mAudioThreadChanged = false;
+  Atomic<bool> mCallbacksStarted;
 };
 
 }  // namespace mozilla
