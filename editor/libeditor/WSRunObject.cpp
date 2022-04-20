@@ -854,10 +854,9 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
 }
 
 // static
-nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
+Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
     HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
-    const EditorDOMRange& aRangeToBeReplaced,
-    EditorRawDOMPoint* aPointAfterInsertedString /* = nullptr */) {
+    const EditorDOMRange& aRangeToBeReplaced) {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in HandleInsertText() in
   // HTMLEditSubActionHandler.cpp
@@ -868,18 +867,14 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
 
   if (aStringToInsert.IsEmpty()) {
     MOZ_ASSERT(aRangeToBeReplaced.Collapsed());
-    if (aPointAfterInsertedString) {
-      *aPointAfterInsertedString =
-          aRangeToBeReplaced.StartRef().To<EditorRawDOMPoint>();
-    }
-    return NS_OK;
+    return EditorDOMPoint(aRangeToBeReplaced.StartRef());
   }
 
   RefPtr<Element> editingHost = aHTMLEditor.GetActiveEditingHost();
   TextFragmentData textFragmentDataAtStart(aRangeToBeReplaced.StartRef(),
                                            editingHost);
-  if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized())) {
-    return NS_ERROR_FAILURE;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!textFragmentDataAtStart.IsInitialized()))) {
+    return Err(NS_ERROR_FAILURE);
   }
   const bool isInsertionPointEqualsOrIsBeforeStartOfText =
       aRangeToBeReplaced.StartRef().EqualsOrIsBefore(
@@ -888,8 +883,8 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
       aRangeToBeReplaced.Collapsed()
           ? textFragmentDataAtStart
           : TextFragmentData(aRangeToBeReplaced.EndRef(), editingHost);
-  if (NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
-    return NS_ERROR_FAILURE;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized()))) {
+    return Err(NS_ERROR_FAILURE);
   }
   const bool isInsertionPointEqualsOrAfterEndOfText =
       textFragmentDataAtEnd.EndRef().EqualsOrIsBefore(
@@ -961,10 +956,10 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
             invisibleTrailingWhiteSpaceRangeAtEnd.StartRef(),
             invisibleTrailingWhiteSpaceRangeAtEnd.EndRef(),
             HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-        if (NS_FAILED(rv)) {
+        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-          return rv;
+          return Err(rv);
         }
       }
     }
@@ -997,9 +992,9 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
             MOZ_KnownLive(*atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
             atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
-        if (NS_FAILED(rv)) {
+        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
-          return rv;
+          return Err(rv);
         }
       }
     }
@@ -1018,10 +1013,10 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
             invisibleLeadingWhiteSpaceRangeAtStart.StartRef(),
             invisibleLeadingWhiteSpaceRangeAtStart.EndRef(),
             HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-        if (NS_FAILED(rv)) {
+        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-          return rv;
+          return Err(rv);
         }
         // Don't refer the following variables anymore unless tracking the
         // change.
@@ -1049,9 +1044,9 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
         nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
             MOZ_KnownLive(*atNBSPReplacedWithASCIIWhiteSpace.ContainerAsText()),
             atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
-        if (NS_FAILED(rv)) {
+        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
-          return rv;
+          return Err(rv);
         }
         // Don't refer the following variables anymore unless tracking the
         // change.
@@ -1197,10 +1192,10 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
   //     runtime cost.  So, perhaps, we should return error code which couldn't
   //     modify it and make each caller of this method decide whether it should
   //     keep or stop handling the edit action.
-  if (!aHTMLEditor.GetDocument()) {
+  if (MOZ_UNLIKELY(!aHTMLEditor.GetDocument())) {
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::ReplaceText() lost proper document");
-    return NS_ERROR_UNEXPECTED;
+    return Err(NS_ERROR_UNEXPECTED);
   }
   OwningNonNull<Document> document = *aHTMLEditor.GetDocument();
   Result<EditorDOMPoint, nsresult> insertTextResult =
@@ -1209,23 +1204,16 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceText(
                                                    NS_ERROR_EDITOR_DESTROYED)) {
     NS_WARNING(
         "HTMLEditor::InsertTextWithTransaction() caused destroying the editor");
-    return NS_ERROR_EDITOR_DESTROYED;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   if (insertTextResult.isOk()) {
-    if (aPointAfterInsertedString) {
-      *aPointAfterInsertedString =
-          insertTextResult.unwrap().To<EditorRawDOMPoint>();
-    }
-    return NS_OK;
+    return insertTextResult.unwrap();
   }
 
   NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed, but ignored");
 
   // XXX Temporarily, set new insertion point to the original point.
-  if (aPointAfterInsertedString) {
-    *aPointAfterInsertedString = pointToInsert.To<EditorRawDOMPoint>();
-  }
-  return NS_OK;
+  return pointToInsert;
 }
 
 // static
