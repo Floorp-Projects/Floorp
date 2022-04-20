@@ -439,6 +439,11 @@ static inline ArenaAllocator<4096, 1>& PrefNameArena() {
 
 class PrefWrapper;
 
+// Two forward declarations for immediately below
+class Pref;
+static bool ShouldSanitizePreference(const Pref* const aPref,
+                                     bool aIsWebContentProcess = true);
+
 class Pref {
  public:
   explicit Pref(const nsACString& aName)
@@ -518,7 +523,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -534,7 +539,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -551,7 +556,7 @@ class Pref {
                                                : HasUserValue());
 
     if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
-        ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
+        ShouldSanitizePreference(this, XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
           Name());
@@ -574,7 +579,7 @@ class Pref {
     aDomPref->isLocked() = mIsLocked;
 
     aDomPref->isSanitized() =
-        ShouldSanitizePreference(mName.get(), aIsDestinationContentProcess);
+        ShouldSanitizePreference(this, aIsDestinationContentProcess);
 
     if (mHasDefaultValue) {
       aDomPref->defaultValue() = Some(dom::PrefValue());
@@ -5705,41 +5710,64 @@ namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
 
-bool ShouldSanitizePreference(const char* aPref,
-                              bool aIsDestWebContentProcess) {
+}  // namespace mozilla
+
+// Preference Sanitization Related Code ---------------------------------------
+
 #define PREF_LIST_ENTRY(s) \
   { s, (sizeof(s) / sizeof(char)) - 1 }
-  struct PrefListEntry {
-    const char* mPrefBranch;
-    size_t mLen;
-  };
 
-  // These prefs are not useful in child processes.
-  static const PrefListEntry sParentOnlyPrefBranchList[] = {
-      PREF_LIST_ENTRY("app.update.lastUpdateTime."),
-      PREF_LIST_ENTRY("datareporting.policy."),
-      PREF_LIST_ENTRY("browser.safebrowsing.provider."),
-      PREF_LIST_ENTRY("browser.shell."),
-      PREF_LIST_ENTRY("browser.slowStartup."),
-      // PREF_LIST_ENTRY("browser.startup."),
-      PREF_LIST_ENTRY("extensions.getAddons.cache."),
-      PREF_LIST_ENTRY("media.gmp-manager."),
-      PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
-      // PREF_LIST_ENTRY("privacy.sanitize."),
-  };
+struct PrefListEntry {
+  const char* mPrefBranch;
+  size_t mLen;
+};
 
-  static const PrefListEntry sDynamicPrefOverrideList[]{
-      PREF_LIST_ENTRY("print.printer_")};
+// These prefs are not useful in child processes.
+static const PrefListEntry sParentOnlyPrefBranchList[] = {
+    PREF_LIST_ENTRY("app.update.lastUpdateTime."),
+    PREF_LIST_ENTRY("datareporting.policy."),
+    PREF_LIST_ENTRY("browser.safebrowsing.provider."),
+    PREF_LIST_ENTRY("browser.shell."), PREF_LIST_ENTRY("browser.slowStartup."),
+    // PREF_LIST_ENTRY("browser.startup."),
+    PREF_LIST_ENTRY("extensions.getAddons.cache."),
+    PREF_LIST_ENTRY("media.gmp-manager."),
+    PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
+    // PREF_LIST_ENTRY("privacy.sanitize."),
+};
+
+static const PrefListEntry sDynamicPrefOverrideList[]{
+    PREF_LIST_ENTRY("print.printer_")};
 
 #undef PREF_LIST_ENTRY
 
+// Forward Declaration - it's not defined in the .h, because we don't need to;
+// it's only used here.
+template <class T>
+static bool ShouldSanitizePreference_Impl(const T& aPref,
+                                          bool aIsDestWebContentProcess);
+
+static bool ShouldSanitizePreference(const Pref* const aPref,
+                                     bool aIsDestWebContentProcess) {
+  return ShouldSanitizePreference_Impl(*aPref, aIsDestWebContentProcess);
+}
+
+static bool ShouldSanitizePreference(const PrefWrapper& aPref,
+                                     bool aIsDestWebContentProcess) {
+  return ShouldSanitizePreference_Impl(aPref, aIsDestWebContentProcess);
+}
+
+template <class T>
+static bool ShouldSanitizePreference_Impl(const T& aPref,
+                                          bool aIsDestWebContentProcess) {
   // In the parent process, we use a heuristic to decide if a pref
   // value should be sanitized before sending to subprocesses.
   if (XRE_IsParentProcess()) {
+    const char* prefName = aPref.Name();
+
     // First check against the denylist, the denylist is used for
     // all subprocesses to reduce IPC traffic.
     for (const auto& entry : sParentOnlyPrefBranchList) {
-      if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+      if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
         return true;
       }
     }
@@ -5750,10 +5778,9 @@ bool ShouldSanitizePreference(const char* aPref,
 
     // If it's a Web Content Process, also check if it's a dynamically
     // named string preference
-    if (Preferences::GetType(aPref) == nsIPrefBranch::PREF_STRING &&
-        !Preferences::HasDefaultValue(aPref)) {
+    if (aPref.Type() == PrefType::String && !aPref.HasDefaultValue()) {
       for (const auto& entry : sDynamicPrefOverrideList) {
-        if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+        if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
           return false;
         }
       }
@@ -5764,7 +5791,28 @@ bool ShouldSanitizePreference(const char* aPref,
   }
 
   // In subprocesses we only check the sanitized bit
-  return Preferences::IsSanitized(aPref);
+  return aPref.IsSanitized();
+}
+
+namespace mozilla {
+
+// Of these four ShouldSanitizePreference* fuctions, this is the
+// only one exposed outside of Preferences.cpp, because this is the
+// only one ever called from outside this file.
+bool ShouldSanitizePreference(const char* aPrefName,
+                              bool aIsDestWebContentProcess) {
+  if (!aIsDestWebContentProcess) {
+    return false;
+  }
+
+  if (Maybe<PrefWrapper> pref = pref_Lookup(aPrefName)) {
+    if (pref.isNothing()) {
+      return true;
+    }
+    return ShouldSanitizePreference(pref.value(), aIsDestWebContentProcess);
+  }
+
+  return true;
 }
 
 Atomic<bool, Relaxed> sOmitBlocklistedPrefValues(false);
