@@ -137,10 +137,11 @@ class EditorBase : public nsIEditor,
    *       method to edit the DOM tree, you can make your new method public.
    ****************************************************************************/
 
-  typedef dom::Document Document;
-  typedef dom::Element Element;
-  typedef dom::Selection Selection;
-  typedef dom::Text Text;
+  using Document = dom::Document;
+  using Element = dom::Element;
+  using InterlinePosition = dom::Selection::InterlinePosition;
+  using Selection = dom::Selection;
+  using Text = dom::Text;
 
   enum class EditorType { Text, HTML };
 
