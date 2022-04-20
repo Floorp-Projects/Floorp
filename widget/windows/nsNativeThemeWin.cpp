@@ -1928,21 +1928,24 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
   if (aAppearance == StyleAppearance::MozWindowTitlebar ||
       aAppearance == StyleAppearance::MozWindowTitlebarMaximized) {
     aResult->SizeTo(0, 0, 0, 0);
-    // XXX Maximized windows have an offscreen offset equal to
-    // the border padding. This should be addressed in nsWindow,
-    // but currently can't be, see UpdateNonClientMargins.
-    if (aAppearance == StyleAppearance::MozWindowTitlebarMaximized) {
+    // Prior to Windows 10, a bug in DwmDefWindowProc would cause window
+    // button presses/mouseovers to be missed.  This bug is circumvented by
+    // adding padding to the top of the window that is the size of the caption
+    // area and then "removing" it when calculating the client area for
+    // WM_NCCALCSIZE.  See bug 618353,
+    if (!IsWin10OrLater() &&
+        aAppearance == StyleAppearance::MozWindowTitlebarMaximized) {
       nsCOMPtr<nsIWidget> rootWidget;
       if (WinUtils::HasSystemMetricsForDpi()) {
         rootWidget = aFrame->PresContext()->GetRootWidget();
       }
       if (rootWidget) {
         double dpi = rootWidget->GetDPI();
-        aResult->top = WinUtils::GetSystemMetricsForDpi(SM_CXFRAME, dpi) +
+        aResult->top = WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
                        WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
       } else {
         aResult->top =
-            GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+            GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
       }
     }
     return ok;
