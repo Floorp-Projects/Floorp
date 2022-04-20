@@ -40,7 +40,7 @@ add_task(async function automaticallyBindTexbox() {
 
   gDevTools.registerTool({
     id: lazyToolId,
-    isTargetSupported: () => true,
+    isToolSupported: () => true,
     url: CHROME_URL_ROOT + "doc_lazy_tool.html",
     label: "Lazy",
     build: function(iframeWindow, toolbox) {

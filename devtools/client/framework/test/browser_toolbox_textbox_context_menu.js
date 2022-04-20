@@ -68,7 +68,7 @@ add_task(async function automaticallyBindTexbox() {
   );
   gDevTools.registerTool({
     id: textboxToolId,
-    isTargetSupported: () => true,
+    isToolSupported: () => true,
     url: CHROME_URL_ROOT + "doc_textbox_tool.html",
     label: "Context menu works without tool intervention",
     build: function(iframeWindow, toolbox) {

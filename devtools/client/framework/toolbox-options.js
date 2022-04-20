@@ -210,7 +210,7 @@ OptionsPanel.prototype = {
     };
 
     for (const button of toolbarButtons) {
-      if (!button.isTargetSupported(this.toolbox.target)) {
+      if (!button.isToolSupported(this.toolbox)) {
         continue;
       }
 
@@ -257,7 +257,7 @@ OptionsPanel.prototype = {
       checkboxInput.setAttribute("title", tool.tooltip || "");
 
       const checkboxSpanLabel = this.panelDoc.createElement("span");
-      if (tool.isTargetSupported(this.target)) {
+      if (tool.isToolSupported(this.toolbox)) {
         checkboxSpanLabel.textContent = tool.label;
       } else {
         atleastOneToolNotSupported = true;
@@ -357,7 +357,7 @@ OptionsPanel.prototype = {
           visibilityswitch: pref,
 
           // Only local tabs are currently supported as targets.
-          isTargetSupported: target => target.isLocalTab,
+          isToolSupported: toolbox => toolbox.target.isLocalTab,
         })
       );
     }
