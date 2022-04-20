@@ -7,6 +7,7 @@
 #define mozilla_TypeInState_h
 
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -26,7 +27,6 @@ class nsAtom;
 class nsINode;
 
 namespace mozilla {
-class HTMLEditor;
 namespace dom {
 class MouseEvent;
 class Selection;

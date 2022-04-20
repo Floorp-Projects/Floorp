@@ -9,6 +9,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Result.h"
@@ -28,7 +29,6 @@
 class nsITransferable;
 
 namespace mozilla {
-class MoveNodeResult;
 template <class T>
 class OwningNonNull;
 

@@ -6,12 +6,14 @@
 #ifndef WSRunObject_h
 #define WSRunObject_h
 
+#include "EditAction.h"
+#include "EditorBase.h"
+#include "EditorForwards.h"
+#include "EditorDOMPoint.h"  // for EditorDOMPoint
+#include "HTMLEditor.h"
+
 #include "HTMLEditUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/EditAction.h"
-#include "mozilla/EditorBase.h"
-#include "mozilla/EditorDOMPoint.h"  // for EditorDOMPoint
-#include "mozilla/HTMLEditor.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/Element.h"
@@ -23,8 +25,6 @@
 namespace mozilla {
 
 using namespace dom;
-
-class WSRunScanner;
 
 /**
  * WSScanResult is result of ScanNextVisibleNodeOrBlockBoundaryFrom(),
@@ -295,8 +295,6 @@ class MOZ_STACK_CLASS WSScanResult final {
   Maybe<uint32_t> mOffset;
   WSType mReason;
 };
-
-class WhiteSpaceVisibilityKeeper;
 
 class MOZ_STACK_CLASS WSRunScanner final {
  public:

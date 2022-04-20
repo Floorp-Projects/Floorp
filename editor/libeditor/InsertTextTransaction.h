@@ -6,9 +6,10 @@
 #ifndef InsertTextTransaction_h
 #define InsertTextTransaction_h
 
-#include "mozilla/EditTransactionBase.h"  // base class
+#include "EditTransactionBase.h"  // base class
 
-#include "mozilla/EditorDOMPoint.h"        // EditorDOMPointInText
+#include "EditorForwards.h"
+
 #include "nsCycleCollectionParticipant.h"  // various macros
 #include "nsID.h"                          // NS_DECLARE_STATIC_IID_ACCESSOR
 #include "nsISupportsImpl.h"               // NS_DECL_ISUPPORTS_INHERITED
@@ -16,9 +17,6 @@
 #include "nscore.h"                        // NS_IMETHOD, nsAString
 
 namespace mozilla {
-
-class EditorBase;
-
 namespace dom {
 class Text;
 }  // namespace dom
