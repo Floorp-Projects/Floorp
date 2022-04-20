@@ -103,6 +103,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
     // another compartment.
     JS::RootedObject chunk(aCx, &aChunk.toObject());
     if (!JS_WrapObject(aCx, &chunk)) {
+      aRv.StealExceptionFromJSContext(aCx);
       return;
     }
 
@@ -127,6 +128,7 @@ struct Read_ReadIntoRequest final : public ReadIntoRequest {
       // another compartment.
       JS::Rooted<JSObject*> chunk(aCx, &aChunk.toObject());
       if (!JS_WrapObject(aCx, &chunk)) {
+        aRv.StealExceptionFromJSContext(aCx);
         return;
       }
 
