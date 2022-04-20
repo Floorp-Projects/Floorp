@@ -1156,6 +1156,32 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
   if (aBrowsingContext &&
       ExternalProtocolIsBlockedBySandbox(aBrowsingContext,
                                          aHasValidUserGestureActivation)) {
+    // Log an error to the web console of the sandboxed BrowsingContext.
+    nsAutoString localizedMsg;
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+
+    AutoTArray<nsString, 1> params = {NS_ConvertUTF8toUTF16(spec)};
+    nsresult rv = nsContentUtils::FormatLocalizedString(
+        nsContentUtils::eSECURITY_PROPERTIES, "SandboxBlockedCustomProtocols",
+        params, localizedMsg);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Log to the the parent window of the iframe. If there is no parent, fall
+    // back to the iframe window itself.
+    WindowContext* windowContext = aBrowsingContext->GetParentWindowContext();
+    if (!windowContext) {
+      windowContext = aBrowsingContext->GetCurrentWindowContext();
+    }
+
+    // Skip logging if we still don't have a WindowContext.
+    NS_ENSURE_TRUE(windowContext, NS_ERROR_FAILURE);
+
+    nsContentUtils::ReportToConsoleByWindowID(
+        localizedMsg, nsIScriptError::errorFlag, "Security"_ns,
+        windowContext->InnerWindowId(),
+        windowContext->Canonical()->GetDocumentURI());
+
     return NS_OK;
   }
 
