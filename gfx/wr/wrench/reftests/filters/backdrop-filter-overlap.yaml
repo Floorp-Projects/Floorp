@@ -1,0 +1,15 @@
+# Verify that sibling backdrop filters correctly read back intermediate results
+---
+root:
+  items:
+    - type: stacking-context
+      backdrop-root: true
+      items:
+      - image: checkerboard(0,16,16)
+        bounds: 0 0 256 256
+      - type: backdrop-filter
+        bounds: 32 32 192 192
+        filters: [invert(1)]
+      - type: backdrop-filter
+        bounds: 64 64 128 128
+        filters: [invert(1)]
