@@ -6,6 +6,8 @@
 #ifndef EditorEventListener_h
 #define EditorEventListener_h
 
+#include "EditorForwards.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
@@ -29,10 +31,7 @@ class nsPresContext;
 #endif
 
 namespace mozilla {
-
-class EditorBase;
 class PresShell;
-
 namespace dom {
 class DragEvent;
 class MouseEvent;

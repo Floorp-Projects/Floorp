@@ -6,6 +6,8 @@
 #ifndef mozilla_EditTransactionBase_h
 #define mozilla_EditTransactionBase_h
 
+#include "mozilla/EditorForwards.h"
+
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 #include "nsITransaction.h"
@@ -21,21 +23,7 @@ nsITransaction::GetAsEditTransactionBase() {
 }
 
 namespace mozilla {
-
-class ChangeAttributeTransaction;
-class ChangeStyleTransaction;
-class CompositionTransaction;
-class DeleteNodeTransaction;
-class DeleteRangeTransaction;
-class DeleteTextTransaction;
-class EditAggregateTransaction;
-class InsertNodeTransaction;
-class InsertTextTransaction;
-class JoinNodesTransaction;
 class LogModule;
-class PlaceholderTransaction;
-class ReplaceTextTransaction;
-class SplitNodeTransaction;
 
 #define NS_DECL_GETASTRANSACTION_BASE(aClass) \
   virtual aClass* GetAs##aClass();            \

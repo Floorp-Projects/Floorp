@@ -6,9 +6,12 @@
 #ifndef InsertNodeTransaction_h
 #define InsertNodeTransaction_h
 
-#include "mozilla/EditTransactionBase.h"  // for EditTransactionBase, etc.
-#include "mozilla/EditorDOMPoint.h"       // for EditorDOMPoint
-#include "nsCOMPtr.h"                     // for nsCOMPtr
+#include "EditTransactionBase.h"  // for EditTransactionBase, etc.
+
+#include "EditorDOMPoint.h"  // for EditorDOMPoint
+#include "EditorForwards.h"
+
+#include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContent.h"       // for nsIContent
 #include "nsISupportsImpl.h"  // for NS_DECL_ISUPPORTS_INHERITED

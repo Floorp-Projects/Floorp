@@ -6,7 +6,10 @@
 #ifndef DeleteTextTransaction_h
 #define DeleteTextTransaction_h
 
-#include "mozilla/EditTransactionBase.h"
+#include "EditTransactionBase.h"
+
+#include "EditorForwards.h"
+
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -15,9 +18,6 @@
 #include "nscore.h"
 
 namespace mozilla {
-
-class EditorBase;
-class RangeUpdater;
 
 /**
  * A transaction that removes text from a content node.

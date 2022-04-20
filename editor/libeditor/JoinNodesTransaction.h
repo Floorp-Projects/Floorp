@@ -9,6 +9,7 @@
 #include "EditTransactionBase.h"  // for EditTransactionBase, etc.
 
 #include "EditorDOMPoint.h"  // for EditorDOMPoint, etc.
+#include "EditorForwards.h"
 
 #include "nsCOMPtr.h"  // for nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
@@ -19,8 +20,6 @@ class nsIContent;
 class nsINode;
 
 namespace mozilla {
-
-class HTMLEditor;
 
 /**
  * A transaction that joins two nodes E1 (left node) and E2 (right node) into a

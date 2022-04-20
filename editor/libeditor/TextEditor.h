@@ -7,6 +7,7 @@
 #define mozilla_TextEditor_h
 
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/TextControlState.h"
 #include "mozilla/UniquePtr.h"
 
@@ -25,10 +26,6 @@ class nsISelectionController;
 class nsITransferable;
 
 namespace mozilla {
-class DeleteNodeTransaction;
-class InsertNodeTransaction;
-enum class EditSubAction : int32_t;
-
 namespace dom {
 class Selection;
 }  // namespace dom
