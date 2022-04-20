@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +28,7 @@ import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 
 private val LIST_ITEM_HEIGHT = 56.dp
 
@@ -98,14 +97,11 @@ fun FaviconListItem(
         description = description,
         onClick = onClick,
         beforeListAction = {
-            Spacer(modifier = Modifier.width(16.dp))
-
             Favicon(
                 url = url,
                 size = ICON_SIZE,
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
-
-            Spacer(modifier = Modifier.width(16.dp))
         },
         afterListAction = {
             iconPainter?.let {
@@ -255,7 +251,7 @@ private fun ListItemIcon(
 @Composable
 @Preview(name = "TextListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(label = "Label only")
         }
@@ -265,7 +261,7 @@ private fun TextListItemPreview() {
 @Composable
 @Preview(name = "TextListItem with a description", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithDescriptionPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
                 label = "Label + description",
@@ -278,7 +274,7 @@ private fun TextListItemWithDescriptionPreview() {
 @Composable
 @Preview(name = "TextListItem with a right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemWithIconPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
                 label = "Label + right icon",
@@ -292,7 +288,7 @@ private fun TextListItemWithIconPreview() {
 @Composable
 @Preview(name = "IconListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun IconListItemPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "Left icon list item",
@@ -306,7 +302,7 @@ private fun IconListItemPreview() {
 @Composable
 @Preview(name = "IconListItem with an interactable right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun IconListItemWithRightIconPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "Left icon list item + right icon",
@@ -323,7 +319,7 @@ private fun IconListItemWithRightIconPreview() {
 @Composable
 @Preview(name = "FaviconListItem with a right icon and onClicks", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun FaviconListItemPreview() {
-    FirefoxTheme {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             FaviconListItem(
                 label = "Favicon + right icon + clicks",
