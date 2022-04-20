@@ -7,9 +7,10 @@
 #define DBusRemoteClient_h__
 
 #include "nsRemoteClient.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/DBusHelpers.h"
-#include "nsString.h"
+#include "mozilla/RefPtr.h"
+#include "nsStringFwd.h"
+#include "nscore.h"
 
 class nsDBusRemoteClient : public nsRemoteClient {
  public:
