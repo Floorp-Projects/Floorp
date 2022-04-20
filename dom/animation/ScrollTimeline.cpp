@@ -7,7 +7,6 @@
 #include "ScrollTimeline.h"
 
 #include "mozilla/dom/Animation.h"
-#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
@@ -46,11 +45,14 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ScrollTimeline,
 TimingParams ScrollTimeline::sTiming;
 
 ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
-                               StyleScrollAxis aAxis)
+                               StyleScrollDirection aDirection)
     : AnimationTimeline(aDocument->GetParentObject()),
       mDocument(aDocument),
+      // FIXME: Bug 1737918: We may have to udpate the constructor arguments
+      // because this can be nearest, root, or a specific container. For now,
+      // the input is a source element directly and it is the root element.
       mSource(aScroller),
-      mAxis(aAxis) {
+      mDirection(aDirection) {
   MOZ_ASSERT(aDocument);
 
   // Use default values except for |mDuration| and |mFill|.
@@ -59,28 +61,6 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
   sTiming = TimingParams(SCROLL_TIMELINE_DURATION_MILLISEC, 0.0,
                          std::numeric_limits<float>::infinity(),
                          PlaybackDirection::Alternate, FillMode::Both);
-}
-
-static StyleScrollAxis ToStyleScrollAxis(
-    const StyleScrollDirection aDirection) {
-  switch (aDirection) {
-    // The spec defines auto, but there is a spec issue:
-    // "ISSUE 5 Define these values." in this section. The DOM interface removed
-    // auto and use block as default value, so we treat auto as block now.
-    // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
-    case StyleScrollDirection::Auto:
-    case StyleScrollDirection::Block:
-      return StyleScrollAxis::Block;
-    case StyleScrollDirection::Inline:
-      return StyleScrollAxis::Inline;
-    case StyleScrollDirection::Horizontal:
-      return StyleScrollAxis::Horizontal;
-    case StyleScrollDirection::Vertical:
-      return StyleScrollAxis::Vertical;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unsupported StyleScrollDirection");
-  return StyleScrollAxis::Block;
 }
 
 already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
@@ -93,56 +73,19 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
   // dropped automatically becuase no animation owns it and its ref-count
   // becomes zero.
 
-  StyleScrollAxis axis =
-      ToStyleScrollAxis(Servo_ScrollTimelineRule_GetOrientation(&aRule));
+  StyleScrollDirection direction =
+      Servo_ScrollTimelineRule_GetOrientation(&aRule);
 
+  // FIXME: Bug 1737918: applying new spec update, e.g. other scrollers and
+  // other style values.
   RefPtr<ScrollTimeline> timeline;
-  auto autoScroller = Scroller::Root(aTarget.mElement->OwnerDoc());
+  auto autoScroller = Scroller::Auto(aTarget.mElement->OwnerDoc());
   auto* set =
       ScrollTimelineSet::GetOrCreateScrollTimelineSet(autoScroller.mElement);
-  auto p = set->LookupForAdd(axis);
+  auto p = set->LookupForAdd(direction);
   if (!p) {
-    timeline = new ScrollTimeline(aDocument, autoScroller, axis);
-    set->Add(p, axis, timeline);
-  } else {
-    timeline = p->value();
-  }
-  return timeline.forget();
-}
-
-/* static */
-already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
-    Document* aDocument, const NonOwningAnimationTarget& aTarget,
-    StyleScrollAxis aAxis, StyleScroller aScroller) {
-  MOZ_ASSERT(aTarget);
-  Scroller scroller;
-  switch (aScroller) {
-    case StyleScroller::Root:
-      scroller = Scroller::Root(aTarget.mElement->OwnerDoc());
-      break;
-    case StyleScroller::Nearest: {
-      Element* curr = aTarget.mElement->GetFlattenedTreeParentElement();
-      Element* root = aTarget.mElement->OwnerDoc()->GetDocumentElement();
-      while (curr && curr != root) {
-        const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(curr);
-        MOZ_ASSERT(style, "The ancestor should be styled.");
-        if (style->StyleDisplay()->IsScrollableOverflow()) {
-          break;
-        }
-        curr = curr->GetFlattenedTreeParentElement();
-      }
-      // If there is no scroll container, we use root.
-      scroller = Scroller::Nearest(curr ? curr : root);
-    }
-  }
-
-  RefPtr<ScrollTimeline> timeline;
-  auto* set =
-      ScrollTimelineSet::GetOrCreateScrollTimelineSet(scroller.mElement);
-  auto p = set->LookupForAdd(aAxis);
-  if (!p) {
-    timeline = new ScrollTimeline(aDocument, scroller, aAxis);
-    set->Add(p, aAxis, timeline);
+    timeline = new ScrollTimeline(aDocument, autoScroller, direction);
+    set->Add(p, direction, timeline);
   } else {
     timeline = p->value();
   }
@@ -191,9 +134,12 @@ layers::ScrollDirection ScrollTimeline::Axis() const {
   MOZ_ASSERT(mSource && mSource.mElement->GetPrimaryFrame());
 
   const WritingMode wm = mSource.mElement->GetPrimaryFrame()->GetWritingMode();
-  return mAxis == StyleScrollAxis::Horizontal ||
-                 (!wm.IsVertical() && mAxis == StyleScrollAxis::Inline) ||
-                 (wm.IsVertical() && mAxis == StyleScrollAxis::Block)
+  return mDirection == StyleScrollDirection::Horizontal ||
+                 (!wm.IsVertical() &&
+                  mDirection == StyleScrollDirection::Inline) ||
+                 (wm.IsVertical() &&
+                  (mDirection == StyleScrollDirection::Block ||
+                   mDirection == StyleScrollDirection::Auto))
              ? layers::ScrollDirection::eHorizontal
              : layers::ScrollDirection::eVertical;
 }
@@ -231,7 +177,7 @@ void ScrollTimeline::UnregisterFromScrollSource() {
 
   if (ScrollTimelineSet* scrollTimelineSet =
           ScrollTimelineSet::GetScrollTimelineSet(mSource.mElement)) {
-    scrollTimelineSet->Remove(mAxis);
+    scrollTimelineSet->Remove(mDirection);
     if (scrollTimelineSet->IsEmpty()) {
       ScrollTimelineSet::DestroyScrollTimelineSet(mSource.mElement);
     }
@@ -244,15 +190,17 @@ const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
   }
 
   switch (mSource.mType) {
-    case StyleScroller::Root:
+    case Scroller::Type::Auto:
       if (const PresShell* presShell =
               mSource.mElement->OwnerDoc()->GetPresShell()) {
         return presShell->GetRootScrollFrameAsScrollable();
       }
-      return nullptr;
-    case StyleScroller::Nearest:
+      break;
+    case Scroller::Type::Other:
+    default:
       return nsLayoutUtils::FindScrollableFrameFor(mSource.mElement);
   }
+  return nullptr;
 }
 
 // ---------------------------------
