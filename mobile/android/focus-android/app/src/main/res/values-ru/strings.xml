@@ -349,7 +349,7 @@
     <string name="preference_choose_search_engine">Выберите поисковую систему</string>
 
     <!-- Action for restoring the default list of search engines -->
-    <string name="preference_search_restore">Восстановить набор поисковых систем по умолчанию</string>
+    <string name="preference_search_restore">Восстановить поисковые системы по умолчанию</string>
 
     <!-- Action for adding an additional search engine to the list.
     The "+" is used to emphasize that this is an "add" action -->
