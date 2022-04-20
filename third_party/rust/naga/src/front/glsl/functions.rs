@@ -113,7 +113,7 @@ impl Parser {
 
         Ok(match self.module.types[ty].inner {
             TypeInner::Vector { size, kind, width } if vector_size.is_none() => {
-                ctx.implicit_conversion(self, &mut value, meta, kind, width)?;
+                ctx.forced_conversion(self, &mut value, expr_meta, kind, width)?;
 
                 if let TypeInner::Scalar { .. } = *self.resolve_type(ctx, value, expr_meta)? {
                     ctx.add_expression(Expression::Splat { size, value }, meta, body)
@@ -256,7 +256,7 @@ impl Parser {
         // `Expression::As` doesn't support matrix width
         // casts so we need to do some extra work for casts
 
-        ctx.implicit_conversion(self, &mut value, expr_meta, ScalarKind::Float, width)?;
+        ctx.forced_conversion(self, &mut value, expr_meta, ScalarKind::Float, width)?;
         match *self.resolve_type(ctx, value, expr_meta)? {
             TypeInner::Scalar { .. } => {
                 // If a matrix is constructed with a single scalar value, then that
@@ -446,7 +446,7 @@ impl Parser {
         let mut components = Vec::with_capacity(size as usize);
 
         for (mut arg, expr_meta) in args.iter().copied() {
-            ctx.implicit_conversion(self, &mut arg, expr_meta, kind, width)?;
+            ctx.forced_conversion(self, &mut arg, expr_meta, kind, width)?;
 
             if components.len() >= size as usize {
                 break;
@@ -512,10 +512,7 @@ impl Parser {
                 let mut flattened = Vec::with_capacity(columns as usize * rows as usize);
 
                 for (mut arg, meta) in args.iter().copied() {
-                    let scalar_components = scalar_components(&self.module.types[ty].inner);
-                    if let Some((kind, width)) = scalar_components {
-                        ctx.implicit_conversion(self, &mut arg, meta, kind, width)?;
-                    }
+                    ctx.forced_conversion(self, &mut arg, meta, ScalarKind::Float, width)?;
 
                     match *self.resolve_type(ctx, arg, meta)? {
                         TypeInner::Vector { size, .. } => {
@@ -775,7 +772,7 @@ impl Parser {
                 };
 
                 // Check if the best parameter corresponds to the current selected overload
-                // to pass to the next comparation, if this isn't true mark it as ambiguous
+                // to pass to the next comparison, if this isn't true mark it as ambiguous
                 match best_arg {
                     true => match superior {
                         Some(false) => ambiguous = true,
@@ -815,7 +812,7 @@ impl Parser {
                 None => {
                     ambiguous = true;
                     // Assign the new overload, this helps ensures that in this case of
-                    // amiguity the parsing won't end immediately and allow for further
+                    // ambiguity the parsing won't end immediately and allow for further
                     // collection of errors.
                     maybe_overload = Some(overload);
                 }
@@ -1524,9 +1521,9 @@ fn conversion(target: &TypeInner, source: &TypeInner) -> Option<Conversion> {
             // A conversion from a float to a double is special
             ((Float, 8), (Float, 4)) => Conversion::FloatToDouble,
             // A conversion from an integer to a float is special
-            ((Float, 4), (Sint, _)) | ((Float, 4), (Uint, _)) => Conversion::IntToFloat,
+            ((Float, 4), (Sint | Uint, _)) => Conversion::IntToFloat,
             // A conversion from an integer to a double is special
-            ((Float, 8), (Sint, _)) | ((Float, 8), (Uint, _)) => Conversion::IntToDouble,
+            ((Float, 8), (Sint | Uint, _)) => Conversion::IntToDouble,
             _ => Conversion::Other,
         },
     )

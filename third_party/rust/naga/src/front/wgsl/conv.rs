@@ -16,7 +16,7 @@ pub fn map_address_space(word: &str, span: Span) -> Result<crate::AddressSpace, 
 
 pub fn map_built_in(word: &str, span: Span) -> Result<crate::BuiltIn, Error<'_>> {
     Ok(match word {
-        "position" => crate::BuiltIn::Position,
+        "position" => crate::BuiltIn::Position { invariant: false },
         // vertex
         "vertex_index" => crate::BuiltIn::VertexIndex,
         "instance_index" => crate::BuiltIn::InstanceIndex,
@@ -36,15 +36,6 @@ pub fn map_built_in(word: &str, span: Span) -> Result<crate::BuiltIn, Error<'_>>
         "num_workgroups" => crate::BuiltIn::NumWorkGroups,
         _ => return Err(Error::UnknownBuiltin(span)),
     })
-}
-
-pub fn map_shader_stage(word: &str, span: Span) -> Result<crate::ShaderStage, Error<'_>> {
-    match word {
-        "vertex" => Ok(crate::ShaderStage::Vertex),
-        "fragment" => Ok(crate::ShaderStage::Fragment),
-        "compute" => Ok(crate::ShaderStage::Compute),
-        _ => Err(Error::UnknownShaderStage(span)),
-    }
 }
 
 pub fn map_interpolation(word: &str, span: Span) -> Result<crate::Interpolation, Error<'_>> {
@@ -191,7 +182,7 @@ pub fn map_standard_fun(word: &str) -> Option<crate::MathFunction> {
         "fma" => Mf::Fma,
         "mix" => Mf::Mix,
         "step" => Mf::Step,
-        "smoothStep" => Mf::SmoothStep,
+        "smoothstep" => Mf::SmoothStep,
         "sqrt" => Mf::Sqrt,
         "inverseSqrt" => Mf::InverseSqrt,
         "transpose" => Mf::Transpose,

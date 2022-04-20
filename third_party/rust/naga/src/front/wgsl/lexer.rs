@@ -1,13 +1,5 @@
 use super::{conv, Error, ExpectedToken, NumberType, Span, Token, TokenSpan};
 
-fn _consume_str<'a>(input: &'a str, what: &str) -> Option<&'a str> {
-    if input.starts_with(what) {
-        Some(&input[what.len()..])
-    } else {
-        None
-    }
-}
-
 fn consume_any(input: &str, what: impl Fn(char) -> bool) -> (&str, &str) {
     let pos = input.find(|c| !what(c)).unwrap_or(input.len());
     input.split_at(pos)
@@ -17,8 +9,8 @@ fn consume_any(input: &str, what: impl Fn(char) -> bool) -> (&str, &str) {
 /// Returns whether the prefix was present and could therefore be skipped,
 /// the remaining str and the number of *bytes* skipped.
 pub fn try_skip_prefix<'a, 'b>(input: &'a str, prefix: &'b str) -> (bool, &'a str, usize) {
-    if input.starts_with(prefix) {
-        (true, &input[prefix.len()..], prefix.len())
+    if let Some(rem) = input.strip_prefix(prefix) {
+        (true, rem, prefix.len())
     } else {
         (false, input, 0)
     }
@@ -194,12 +186,7 @@ fn consume_number(input: &str) -> (Token, &str) {
 
             NumberLexerState {
                 hex,
-                digit_state: NLDigitState::DigitsThenDot,
-                ..
-            }
-            | NumberLexerState {
-                hex,
-                digit_state: NLDigitState::DigitAfterDot,
+                digit_state: NLDigitState::DigitsThenDot | NLDigitState::DigitAfterDot,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -231,11 +218,7 @@ fn consume_number(input: &str) -> (Token, &str) {
             },
 
             NumberLexerState {
-                digit_state: NLDigitState::SignAfterExponent,
-                ..
-            }
-            | NumberLexerState {
-                digit_state: NLDigitState::DigitAfterExponent,
+                digit_state: NLDigitState::SignAfterExponent | NLDigitState::DigitAfterExponent,
                 ..
             } => match c {
                 '0'..='9' => {
@@ -281,22 +264,14 @@ fn consume_number(input: &str) -> (Token, &str) {
     )
 }
 
-fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
+fn consume_token(input: &str, generic: bool) -> (Token<'_>, &str) {
     let mut chars = input.chars();
     let cur = match chars.next() {
         Some(c) => c,
-        None => return (Token::End, input),
+        None => return (Token::End, ""),
     };
     match cur {
-        ':' => {
-            input = chars.as_str();
-            if chars.next() == Some(':') {
-                (Token::DoubleColon, chars.as_str())
-            } else {
-                (Token::Separator(cur), input)
-            }
-        }
-        ';' | ',' => (Token::Separator(cur), chars.as_str()),
+        ':' | ';' | ',' => (Token::Separator(cur), chars.as_str()),
         '.' => {
             let og_chars = chars.as_str();
             match chars.next() {
@@ -307,121 +282,140 @@ fn consume_token(mut input: &str, generic: bool) -> (Token<'_>, &str) {
         '@' => (Token::Attribute, chars.as_str()),
         '(' | ')' | '{' | '}' | '[' | ']' => (Token::Paren(cur), chars.as_str()),
         '<' | '>' => {
-            input = chars.as_str();
-            let next = chars.next();
-            if next == Some('=') && !generic {
-                (Token::LogicalOperation(cur), chars.as_str())
-            } else if next == Some(cur) && !generic {
-                input = chars.as_str();
-                if chars.next() == Some('=') {
-                    (Token::AssignmentOperation(cur), chars.as_str())
-                } else {
-                    (Token::ShiftOperation(cur), input)
+            let og_chars = chars.as_str();
+            match chars.next() {
+                Some('=') if !generic => (Token::LogicalOperation(cur), chars.as_str()),
+                Some(c) if c == cur && !generic => {
+                    let og_chars = chars.as_str();
+                    match chars.next() {
+                        Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
+                        _ => (Token::ShiftOperation(cur), og_chars),
+                    }
                 }
-            } else {
-                (Token::Paren(cur), input)
+                _ => (Token::Paren(cur), og_chars),
             }
         }
         '0'..='9' => consume_number(input),
-        '_' | 'a'..='z' | 'A'..='Z' => {
-            let (word, rest) = consume_any(input, |c| c.is_ascii_alphanumeric() || c == '_');
-            (Token::Word(word), rest)
-        }
-        '"' => {
-            let mut iter = chars.as_str().splitn(2, '"');
-
-            // splitn returns an iterator with at least one element, so unwrapping is fine
-            let quote_content = iter.next().unwrap();
-            if let Some(rest) = iter.next() {
-                (Token::String(quote_content), rest)
-            } else {
-                (Token::UnterminatedString, quote_content)
-            }
-        }
         '/' => {
-            input = chars.as_str();
+            let og_chars = chars.as_str();
             match chars.next() {
                 Some('/') => {
-                    let _ = chars.position(|c| c == '\n' || c == '\r');
+                    let _ = chars.position(is_comment_end);
                     (Token::Trivia, chars.as_str())
                 }
                 Some('*') => {
-                    input = chars.as_str();
-
                     let mut depth = 1;
-                    let mut prev = '\0';
+                    let mut prev = None;
 
                     for c in &mut chars {
                         match (prev, c) {
-                            ('*', '/') => {
-                                prev = '\0';
+                            (Some('*'), '/') => {
+                                prev = None;
                                 depth -= 1;
                                 if depth == 0 {
-                                    break;
+                                    return (Token::Trivia, chars.as_str());
                                 }
                             }
-                            ('/', '*') => {
-                                prev = '\0';
+                            (Some('/'), '*') => {
+                                prev = None;
                                 depth += 1;
                             }
                             _ => {
-                                prev = c;
+                                prev = Some(c);
                             }
                         }
                     }
 
-                    if depth > 0 {
-                        (Token::UnterminatedBlockComment, input)
-                    } else {
-                        (Token::Trivia, chars.as_str())
-                    }
+                    (Token::End, "")
                 }
                 Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
-                _ => (Token::Operation(cur), input),
+                _ => (Token::Operation(cur), og_chars),
             }
         }
         '-' => {
-            let sub_input = chars.as_str();
+            let og_chars = chars.as_str();
             match chars.next() {
                 Some('>') => (Token::Arrow, chars.as_str()),
-                Some('0'..='9') | Some('.') => consume_number(input),
+                Some('0'..='9' | '.') => consume_number(input),
+                Some('-') => (Token::DecrementOperation, chars.as_str()),
                 Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
-                _ => (Token::Operation(cur), sub_input),
+                _ => (Token::Operation(cur), og_chars),
             }
         }
-        '+' | '*' | '%' | '^' => {
-            input = chars.as_str();
-            if chars.next() == Some('=') {
-                (Token::AssignmentOperation(cur), chars.as_str())
-            } else {
-                (Token::Operation(cur), input)
+        '+' => {
+            let og_chars = chars.as_str();
+            match chars.next() {
+                Some('+') => (Token::IncrementOperation, chars.as_str()),
+                Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
+                _ => (Token::Operation(cur), og_chars),
             }
         }
-        '!' | '~' => {
-            input = chars.as_str();
-            if chars.next() == Some('=') {
-                (Token::LogicalOperation(cur), chars.as_str())
-            } else {
-                (Token::Operation(cur), input)
+        '*' | '%' | '^' => {
+            let og_chars = chars.as_str();
+            match chars.next() {
+                Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
+                _ => (Token::Operation(cur), og_chars),
             }
         }
-        '=' | '&' | '|' => {
-            input = chars.as_str();
-            let next = chars.next();
-            if next == Some(cur) {
-                (Token::LogicalOperation(cur), chars.as_str())
-            } else if next == Some('=') {
-                (Token::AssignmentOperation(cur), chars.as_str())
-            } else {
-                (Token::Operation(cur), input)
+        '~' => (Token::Operation(cur), chars.as_str()),
+        '=' | '!' => {
+            let og_chars = chars.as_str();
+            match chars.next() {
+                Some('=') => (Token::LogicalOperation(cur), chars.as_str()),
+                _ => (Token::Operation(cur), og_chars),
             }
         }
-        ' ' | '\n' | '\r' | '\t' => {
-            let (_, rest) = consume_any(input, |c| c == ' ' || c == '\n' || c == '\r' || c == '\t');
+        '&' | '|' => {
+            let og_chars = chars.as_str();
+            match chars.next() {
+                Some(c) if c == cur => (Token::LogicalOperation(cur), chars.as_str()),
+                Some('=') => (Token::AssignmentOperation(cur), chars.as_str()),
+                _ => (Token::Operation(cur), og_chars),
+            }
+        }
+        _ if is_blankspace(cur) => {
+            let (_, rest) = consume_any(input, is_blankspace);
             (Token::Trivia, rest)
+        }
+        _ if is_word_start(cur) => {
+            let (word, rest) = consume_any(input, is_word_part);
+            (Token::Word(word), rest)
         }
         _ => (Token::Unknown(cur), chars.as_str()),
     }
+}
+
+/// Returns whether or not a char is a comment end
+/// (Unicode Pattern_White_Space excluding U+0020, U+0009, U+200E and U+200F)
+const fn is_comment_end(c: char) -> bool {
+    match c {
+        '\u{000a}'..='\u{000d}' | '\u{0085}' | '\u{2028}' | '\u{2029}' => true,
+        _ => false,
+    }
+}
+
+/// Returns whether or not a char is a blankspace (Unicode Pattern_White_Space)
+const fn is_blankspace(c: char) -> bool {
+    match c {
+        '\u{0020}'
+        | '\u{0009}'..='\u{000d}'
+        | '\u{0085}'
+        | '\u{200e}'
+        | '\u{200f}'
+        | '\u{2028}'
+        | '\u{2029}' => true,
+        _ => false,
+    }
+}
+
+/// Returns whether or not a char is a word start (Unicode XID_Start + '_')
+fn is_word_start(c: char) -> bool {
+    c == '_' || unicode_xid::UnicodeXID::is_xid_start(c)
+}
+
+/// Returns whether or not a char is a word part (Unicode XID_Continue)
+fn is_word_part(c: char) -> bool {
+    unicode_xid::UnicodeXID::is_xid_continue(c)
 }
 
 #[derive(Clone)]
@@ -431,14 +425,14 @@ pub(super) struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub(super) fn new(input: &'a str) -> Self {
+    pub(super) const fn new(input: &'a str) -> Self {
         Lexer {
             input,
             source: input,
         }
     }
 
-    pub(super) fn _leftover_span(&self) -> Span {
+    pub(super) const fn _leftover_span(&self) -> Span {
         self.source.len() - self.input.len()..self.source.len()
     }
 
@@ -468,11 +462,11 @@ impl<'a> Lexer<'a> {
         (token, rest)
     }
 
-    pub(super) fn current_byte_offset(&self) -> usize {
+    pub(super) const fn current_byte_offset(&self) -> usize {
         self.source.len() - self.input.len()
     }
 
-    pub(super) fn span_from(&self, offset: usize) -> Span {
+    pub(super) const fn span_from(&self, offset: usize) -> Span {
         offset..self.current_byte_offset()
     }
 
@@ -682,13 +676,24 @@ fn test_tokens() {
         ],
     );
     sub_test(
-        "æNoø",
-        &[Token::Unknown('æ'), Token::Word("No"), Token::Unknown('ø')],
+        "Δέλτα réflexion Кызыл 𐰓𐰏𐰇 朝焼け سلام 검정 שָׁלוֹם गुलाबी փիրուզ",
+        &[
+            Token::Word("Δέλτα"),
+            Token::Word("réflexion"),
+            Token::Word("Кызыл"),
+            Token::Word("𐰓𐰏𐰇"),
+            Token::Word("朝焼け"),
+            Token::Word("سلام"),
+            Token::Word("검정"),
+            Token::Word("שָׁלוֹם"),
+            Token::Word("गुलाबी"),
+            Token::Word("փիրուզ"),
+        ],
     );
+    sub_test("æNoø", &[Token::Word("æNoø")]);
     sub_test("No¾", &[Token::Word("No"), Token::Unknown('¾')]);
-    sub_test("No好", &[Token::Word("No"), Token::Unknown('好')]);
+    sub_test("No好", &[Token::Word("No好")]);
     sub_test("_No", &[Token::Word("_No")]);
-    sub_test("\"\u{2}ПЀ\u{0}\"", &[Token::String("\u{2}ПЀ\u{0}")]); // https://github.com/gfx-rs/naga/issues/90
     sub_test(
         "*/*/***/*//=/*****//",
         &[
