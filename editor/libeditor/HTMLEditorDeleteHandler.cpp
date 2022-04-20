@@ -1303,8 +1303,8 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
           AutoHideSelectionChanges blockSelectionListeners(
               aHTMLEditor.SelectionRef());
           nsresult rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+          if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+            NS_WARNING("EditorBase::CollapseSelectionTo() failed");
             return NS_ERROR_FAILURE;
           }
           if (NS_WARN_IF(!aHTMLEditor.SelectionRef().RangeCount())) {
@@ -1319,11 +1319,16 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
               "Recursive AutoDeleteRangesHandler::ComputeRangesToDelete() "
               "failed");
 
-          DebugOnly<nsresult> rvIgnored =
-              aHTMLEditor.CollapseSelectionTo(caretPoint);
-          NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                               "HTMLEditor::CollapseSelectionTo() failed to "
-                               "restore original selection");
+          rv = aHTMLEditor.CollapseSelectionTo(caretPoint);
+          if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+            NS_WARNING(
+                "EditorBase::CollapseSelectionTo() caused destroying the "
+                "editor");
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                               "EditorBase::CollapseSelectionTo() failed to "
+                               "restore original selection, but ignored");
 
           MOZ_ASSERT(aRangesToDelete.Ranges().Length() == 1);
           // If the range is collapsed, there is no content which should
@@ -2288,12 +2293,14 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::HandleDeleteHRElement(
     AutoEditorDOMPointChildInvalidator lockOffset(atNextOfHRElement);
 
     nsresult rv = aHTMLEditor.CollapseSelectionTo(atNextOfHRElement);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
 
   DebugOnly<nsresult> rvIgnored =
@@ -2514,11 +2521,13 @@ HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::DeleteBRElement(
     return EditActionHandled(NS_ERROR_FAILURE);
   }
   rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionTo() caused destroying the editor");
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+                       "EditorBase::CollapseSelectionTo() failed, but ignored");
   return EditActionHandled();
 }
 
@@ -2595,8 +2604,13 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   }
   // TODO: Stop modifying the `Selection` for computing the targer ranges.
   nsresult rv = aHTMLEditor.CollapseSelectionTo(newCaretPoint);
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionTo() caused destroying the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   if (NS_SUCCEEDED(rv)) {
     aRangesToDelete.Initialize(aHTMLEditor.SelectionRef());
     AutoDeleteRangesHandler anotherHandler(mDeleteRangesHandlerConst);
@@ -2609,9 +2623,14 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   // Restore selection.
   nsresult rvCollapsingSelectionTo =
       aHTMLEditor.CollapseSelectionTo(aCaretPoint);
+  if (MOZ_UNLIKELY(rvCollapsingSelectionTo == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionTo() caused destroying the editor");
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvCollapsingSelectionTo),
-      "HTMLEditor::CollapseSelectionTo() failed to restore caret position");
+      "EditorBase::CollapseSelectionTo() failed to restore caret position");
   return NS_SUCCEEDED(rv) && NS_SUCCEEDED(rvCollapsingSelectionTo)
              ? NS_OK
              : NS_ERROR_FAILURE;
@@ -2658,12 +2677,14 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   if (!canJoinThem.inspect()) {
     nsresult rv = aHTMLEditor.CollapseSelectionTo(aCaretPoint);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
     return EditActionCanceled();
   }
 
@@ -2714,7 +2735,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
       }
       nsresult rv = aHTMLEditor.CollapseSelectionTo(newCaretPoint);
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return result.SetResult(rv);
       }
       AutoRangeArray rangesToDelete(aHTMLEditor.SelectionRef());
@@ -2731,11 +2752,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   // Otherwise, we must have deleted the selection as user expected.
   nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionTo() caused destroying the editor");
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+                       "EditorBase::CollapseSelectionTo() failed, but ignored");
   return result;
 }
 
@@ -2835,12 +2858,14 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
 
   if (!canJoinThem.inspect()) {
     nsresult rv = aHTMLEditor.CollapseSelectionTo(aCaretPoint);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
-        "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
     return EditActionCanceled();
   }
 
@@ -2871,11 +2896,13 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   result.MarkAsHandled();
 
   nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionTo() caused destroying the editor");
     return result.SetResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed, but ignored");
+                       "EditorBase::CollapseSelectionTo() failed, but ignored");
   return result;
 }
 
@@ -3341,7 +3368,7 @@ EditActionResult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   rv = aHTMLEditor.CollapseSelectionTo(
       atFirstChildOfTheLastRightNodeOrError.inspect());
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return EditActionHandled(rv);
 }
 
@@ -3712,7 +3739,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteUnnecessaryNodesAndCollapseSelection(
             .mDidDeleteEmptyParentBlocks) {
       nsresult rv = aHTMLEditor.CollapseSelectionTo(atCaret);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::CollapseSelectionTo() failed");
+                           "EditorBase::CollapseSelectionTo() failed");
       return rv;
     }
   }
@@ -3763,7 +3790,7 @@ HTMLEditor::AutoDeleteRangesHandler::DeleteUnnecessaryNodesAndCollapseSelection(
       aDirectionAndAmount == nsIEditor::ePrevious ? selectionEndPoint
                                                   : atCaret);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::CollapseSelectionTo() failed");
+                       "EditorBase::CollapseSelectionTo() failed");
   return rv;
 }
 
@@ -5107,12 +5134,14 @@ nsresult HTMLEditor::DeleteMostAncestorMailCiteElementIfEmpty(
   MOZ_ASSERT(resultOfInsertingBRElement.inspect());
   nsresult rv = CollapseSelectionTo(
       EditorRawDOMPoint(resultOfInsertingBRElement.inspect()));
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+    NS_WARNING(
+        "EditorBase::CollapseSelectionTo() caused destroying the editor");
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
-      "HTMLEditor::::CollapseSelectionTo() failed, but ignored");
+      "EditorBase::::CollapseSelectionTo() failed, but ignored");
   return NS_OK;
 }
 
@@ -5359,9 +5388,9 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
     if (RefPtr<Element> brElement = result.unwrap()) {
       nsresult rv =
           aHTMLEditor.CollapseSelectionTo(EditorRawDOMPoint(brElement));
-      if (NS_FAILED(rv)) {
+      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "HTMLEditor::CollapseSelectionTo() failed");
+                             "EditorBase::CollapseSelectionTo() failed");
         return EditActionResult(rv);
       }
     }
@@ -5376,7 +5405,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
     if (result.inspect().IsSet()) {
       nsresult rv = aHTMLEditor.CollapseSelectionTo(result.inspect());
       if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+        NS_WARNING("EditorBase::CollapseSelectionTo() failed");
         return EditActionResult(rv);
       }
     }
