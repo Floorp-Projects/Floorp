@@ -48,6 +48,7 @@ class TabsPopup(
         width = FrameLayout.LayoutParams.WRAP_CONTENT
         height = FrameLayout.LayoutParams.WRAP_CONTENT
         animationStyle = android.R.style.Animation_Dialog
+        binding.root.setOnClickListener { dismiss() }
     }
 
     override fun dismiss() {
