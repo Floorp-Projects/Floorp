@@ -4697,18 +4697,6 @@
   value: @IS_ANDROID@
   mirror: always
 
-# If true, do not sent blocklisted preference values to the subprocess
-- name: fission.omitBlocklistedPrefsInSubprocesses
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# If true, crash when a blocklisted preference is accessed in a subprocess
-- name: fission.enforceBlocklistedPrefsInSubprocesses
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
