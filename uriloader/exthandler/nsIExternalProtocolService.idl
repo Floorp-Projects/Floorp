@@ -117,6 +117,10 @@ interface nsIExternalProtocolService : nsISupports
    * @param aWasTriggeredExternally
    *        If true, indicates the load was initiated by an external app.
    *
+   * @param aHasValidUserGestureActivation
+   *        Whether the document that triggered the load had user activation.
+   *        Used for sandbox checks.
+   *
    * @note  Embedders that do not expose the http protocol should not currently
    *        use web-based protocol handlers, as handoff won't work correctly
    *        (bug 394479).
@@ -125,7 +129,8 @@ interface nsIExternalProtocolService : nsISupports
                [optional] in nsIPrincipal aTriggeringPrincipal,
                [optional] in nsIPrincipal aRedirectPrincipal,
                [optional] in BrowsingContext aBrowsingContext,
-               [optional] in bool aWasTriggeredExternally);
+               [optional] in bool aWasTriggeredExternally,
+               [optional] in bool aHasValidUserGestureActivation);
 
   /**
    * Gets a human-readable description for the application responsible for
