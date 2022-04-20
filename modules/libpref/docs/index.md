@@ -159,6 +159,23 @@ variable if the pref is deleted? Currently there is a missing
 the deletion. The cleanest solution is probably to disallow static prefs from
 being deleted.
 
+### Sanitized Prefs
+We restrict certain prefs from entering certain subprocesses. In subprocesses,
+a preference may be marked as 'Sanitized' to indicate that it may or may not
+have a user value, but that value is not present in this process.  In the
+parent process no pref is marked as Sanitized.
+
+Pref Sanitization is overloaded for two purposes:
+ 1. To protect private user data that may be stored in preferences from a
+    Spectre adversary.
+ 2. To reduce IPC use for commonly modified preferences.
+
+A pref is sanitized from entering the web content process if it matches a
+denylist _or_ it is a dynamically-named string preference.
+
+A pref is sanitized from entering other subprocesses if it matches the
+denylist.
+
 ### Loading and Saving
 Default pref values are initialized from various pref data files. Notable ones
 include:
@@ -214,10 +231,10 @@ activity.
 ### about:support
 about:support contains an "Important Modified Preferences" table. It contains
 all prefs that (a) have had their value changed from the default, and (b) whose
-prefix match a whitelist in `Troubleshoot.jsm`. The whitelist matching is to
+prefix match a allowlist in `Troubleshoot.jsm`. The allowlist matching is to
 avoid exposing pref values that might be privacy-sensitive.
 
-**Problem:** The whitelist of prefixes is specified separately from the prefs
+**Problem:** The allowlist of prefixes is specified separately from the prefs
 themselves. Having an attribute on a pref definition would be better.
 
 ### Sync
@@ -349,18 +366,22 @@ process. They exist so that all child processes can be given the same `once`
 values as the parent process.
 
 ### Child process startup (parent side)
-When the first child process is created, the parent process serializes its hash
-table into a shared, immutable snapshot. This snapshot is stored in a shared
-memory region managed by a `SharedPrefMap` instance. The parent process then
-clears the hash table. The hash table is subsequently used only to store
-changed pref values.
+When the first child process is created, the parent process serializes most of
+its hash table into a shared, immutable snapshot. This snapshot is stored in a
+shared memory region managed by a `SharedPrefMap` instance. 
+
+Sanitized preferences (matching _either_ the denylist of the dynamically named
+heuristic) are not included in the shared memory region. After building the
+shared memory region, the parent process clears the hash table and then
+re-enters sanitized prefs into it. Besides the sanitized prefs, the hash table
+is subsequently used only to store changed pref values.
 
 When any child process is created, the parent process serializes all pref
 values present in the hash table (i.e. those that have changed since the
-snapshot was made) and stores them in a second, short-lived shared memory
-region. This represents the set of changes the child process needs to apply on
-top of the snapshot, and allows it to build a hash table which should exactly
-match the parent's.
+snapshot was made) _except sanitized prefs__ and stores them in a second,
+short-lived shared memory region. This represents the set of changes the child
+process needs to apply on top of the snapshot, and allows it to build a hash
+table which should exactly match the parent's, modulo the sanitized prefs.
 
 The parent process passes two file descriptors to the child process, one for
 each region of memory. The snapshot is the same for all child processes.
@@ -421,15 +442,13 @@ want to waste memory creating an unnecessary hash table entry.
 
 Content processes must be told about any visible pref value changes. (A change
 to a default value that is hidden by a user value is unimportant.) When this
-happens, `ContentParent` detects the change (via an observer).  It checks the
-pref name against a small blacklist of prefixes that child processes should not
-care about (this is an optimization to reduce IPC rather than a
-capabilities/security consideration), and for string prefs it also checks the
-value(s) don't exceed 4 KiB. If the checks pass, it sends an IPC message
-(`PreferenceUpdate`) to the child process, and the child process updates
-the pref (default and user value) accordingly.
+happens, `ContentParent` detects the change (via an observer).  Sanitized prefs
+do not produce an update; and for string prefs it also checks the value(s)
+don't exceed 4 KiB. If the checks pass, it sends an IPC message
+(`PreferenceUpdate`) to the child process, and the child process updates the
+pref (default and user value) accordingly.
 
-**Problem:** The blacklist of prefixes is specified separately from the prefs
+**Problem:** The denylist of prefixes is specified separately from the prefs
 themselves. Having an attribute on a pref definition would be better.
 
 **Problem:** The 4 KiB limit can lead to inconsistencies between the parent
