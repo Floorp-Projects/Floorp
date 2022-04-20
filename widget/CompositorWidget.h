@@ -62,7 +62,8 @@ class CompositorWidgetDelegate {
 };
 
 // Platforms that support out-of-process widgets.
-#if defined(XP_WIN) || defined(MOZ_X11) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(MOZ_X11) || defined(MOZ_WIDGET_ANDROID) || \
+    defined(MOZ_WAYLAND)
 // CompositorWidgetParent should implement CompositorWidget and
 // PCompositorWidgetParent.
 class CompositorWidgetParent;
