@@ -1,0 +1,75 @@
+From d9ab62ca3d292c69d69701541b85efba0f195264 Mon Sep 17 00:00:00 2001
+From: Jez Ng <jezng@fb.com>
+Date: Sat, 4 Sep 2021 17:40:07 -0400
+Subject: [PATCH] [lld-macho] Initialize LTO backend with diagnostic handler
+
+Failing to do so results in `std::bad_function_call` being
+thrown when a pass tries to emit a diagnostic.
+
+I've copied the relevant test over from LLD-ELF's test suite.
+
+Reviewed By: #lld-macho, thevinster
+
+Differential Revision: https://reviews.llvm.org/D109274
+---
+ lld/MachO/LTO.cpp                     |  1 +
+ lld/test/MachO/lto-irmover-warning.ll | 35 +++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
+ create mode 100644 lld/test/MachO/lto-irmover-warning.ll
+
+diff --git a/lld/MachO/LTO.cpp b/lld/MachO/LTO.cpp
+index 366193a27eba..09b05ed0dffe 100644
+--- a/lld/MachO/LTO.cpp
++++ b/lld/MachO/LTO.cpp
+@@ -37,6 +37,7 @@ static lto::Config createConfig() {
+   c.CodeModel = getCodeModelFromCMModel();
+   c.CPU = getCPUStr();
+   c.MAttrs = getMAttrs();
++  c.DiagHandler = diagnosticHandler;
+   c.UseNewPM = config->ltoNewPassManager;
+   c.PreCodeGenPassesHook = [](legacy::PassManager &pm) {
+     pm.add(createObjCARCContractPass());
+diff --git a/lld/test/MachO/lto-irmover-warning.ll b/lld/test/MachO/lto-irmover-warning.ll
+new file mode 100644
+index 000000000000..f781215c83c9
+--- /dev/null
++++ b/lld/test/MachO/lto-irmover-warning.ll
+@@ -0,0 +1,35 @@
++; REQUIRES: x86
++; RUN: rm -rf %t; split-file %s %t
++; RUN: llvm-as -o %t/first.bc %t/first.ll
++; RUN: llvm-as -o %t/second.bc %t/second.ll
++; RUN: %no_fatal_warnings_lld -dylib %t/first.bc %t/second.bc -o /dev/null 2>&1 | FileCheck %s
++
++;; FIXME: can we replace ld-temp.o with a proper name?
++; CHECK: warning: linking module flags 'foo': IDs have conflicting values ('i32 2' from {{.*}}second.bc with 'i32 1' from ld-temp.o)
++
++;--- first.ll
++target triple = "x86_64-apple-macosx10.15.0"
++target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
++
++declare void @f()
++
++define void @g() {
++  call void @f()
++  ret void
++}
++
++!0 = !{ i32 2, !"foo", i32 1 }
++
++!llvm.module.flags = !{ !0 }
++
++;--- second.ll
++target triple = "x86_64-apple-macosx10.15.0"
++target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
++
++define void @f() {
++  ret void
++}
++
++!0 = !{ i32 2, !"foo", i32 2 }
++
++!llvm.module.flags = !{ !0 }
+-- 
+2.34.0.1.g4c8d2d0e3e
+
