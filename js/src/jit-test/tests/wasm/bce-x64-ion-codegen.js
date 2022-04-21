@@ -37,8 +37,7 @@ for ( let memType of memTypes ) {
      (i32.load (local.get 1))))`,
     'f', `
 48 3b ..                  cmp %r.., %r..
-0f 82 02 00 00 00         jb 0x00000000000000..
-0f 0b                     ud2
+0f 83 .. 00 00 00         jnb 0x00000000000000..
 41 8b .. ..               movl \\(%r15,%r..,1\\), %e..
 41 8b .. ..               movl \\(%r15,%r..,1\\), %eax`,
         {no_prefix:true});

@@ -24,8 +24,7 @@ codegenTestX86_adhoc(
      (i32.load (local.get 1))))`,
     'f', `
 3b ..                     cmp %e.., %e..
-0f 82 02 00 00 00         jb 0x00000000000000..
-0f 0b                     ud2
+0f 83 .. 00 00 00         jnb 0x00000000000000..
 8b .. ..                  movl \\(%r..,%r..,1\\), %e..
 8b .. ..                  movl \\(%r..,%r..,1\\), %eax`,
     {no_prefix:true});

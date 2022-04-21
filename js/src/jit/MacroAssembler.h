@@ -3522,9 +3522,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
   std::pair<CodeOffset, uint32_t> wasmReserveStackChecked(
       uint32_t amount, wasm::BytecodeOffset trapOffset);
 
-  // Emit a bounds check against the wasm heap limit, jumping to 'ok' if
-  // 'cond' holds. If JitOptions.spectreMaskIndex is true, in speculative
-  // executions 'index' is saturated in-place to 'boundsCheckLimit'.
+  // Emit a bounds check against the wasm heap limit, jumping to 'ok' if 'cond'
+  // holds; this can be the label either of the access or of the trap.  The
+  // label should name a code position greater than the position of the bounds
+  // check.
+  //
+  // If JitOptions.spectreMaskIndex is true, a no-op speculation barrier is
+  // emitted in the code stream after the check to prevent an OOB access from
+  // being executed speculatively.  (On current tier-1 platforms the barrier is
+  // a conditional saturation of 'index' to 'boundsCheckLimit', using the same
+  // condition as the check.)  If the condition is such that the bounds check
+  // branches out of line to the trap, the barrier will actually be executed
+  // when the bounds check passes.
   //
   // On 32-bit systems for both wasm and asm.js, and on 64-bit systems for
   // asm.js, heap lengths are limited to 2GB.  On 64-bit systems for wasm,
