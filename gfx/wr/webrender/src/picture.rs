@@ -3906,8 +3906,8 @@ impl PictureCompositeMode {
                     max_blur_radius,
                     max_blur_radius,
                 );
-                let blur_inflation_x = max_blur_radius_x.ceil() * BLUR_SAMPLE_SCALE;
-                let blur_inflation_y = max_blur_radius_y.ceil() * BLUR_SAMPLE_SCALE;
+                let blur_inflation_x = max_blur_radius_x * BLUR_SAMPLE_SCALE;
+                let blur_inflation_y = max_blur_radius_y * BLUR_SAMPLE_SCALE;
 
                 surface_rect.inflate(blur_inflation_x, blur_inflation_y)
             }
@@ -3994,8 +3994,8 @@ impl PictureCompositeMode {
                         shadow.blur_radius,
                         shadow.blur_radius,
                     );
-                    let blur_inflation_x = blur_radius_x.ceil() * BLUR_SAMPLE_SCALE;
-                    let blur_inflation_y = blur_radius_y.ceil() * BLUR_SAMPLE_SCALE;
+                    let blur_inflation_x = blur_radius_x * BLUR_SAMPLE_SCALE;
+                    let blur_inflation_y = blur_radius_y * BLUR_SAMPLE_SCALE;
 
                     let shadow_rect = surface_rect
                         .translate(shadow.offset)
@@ -6723,8 +6723,8 @@ fn get_surface_rects(
                     shadow.blur_radius,
                     shadow.blur_radius,
                 );
-                let blur_inflation_x = blur_radius_x.ceil() * BLUR_SAMPLE_SCALE;
-                let blur_inflation_y = blur_radius_y.ceil() * BLUR_SAMPLE_SCALE;
+                let blur_inflation_x = blur_radius_x * BLUR_SAMPLE_SCALE;
+                let blur_inflation_y = blur_radius_y * BLUR_SAMPLE_SCALE;
 
                 let local_shadow_rect = local_prim_rect
                     .translate(shadow.offset.cast_unit());
