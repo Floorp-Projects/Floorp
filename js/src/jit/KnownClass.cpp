@@ -24,6 +24,7 @@ KnownClass jit::GetObjectKnownClass(const MDefinition* def) {
     case MDefinition::Opcode::NewArrayDynamicLength:
     case MDefinition::Opcode::NewArrayObject:
     case MDefinition::Opcode::Rest:
+    case MDefinition::Opcode::ArgumentsSlice:
       return KnownClass::Array;
 
     case MDefinition::Opcode::NewObject:
