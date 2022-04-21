@@ -3752,7 +3752,24 @@ JSObject* js::ArgumentsSliceDense(JSContext* cx, HandleObject obj,
   uint32_t count = actualEnd - actualBegin;
 
   if (result) {
-    // TODO: Support pre-allocated object in Warp.
+    Handle<ArrayObject*> resArray = result.as<ArrayObject>();
+    MOZ_ASSERT(resArray->getDenseInitializedLength() == 0);
+    MOZ_ASSERT(resArray->length() == 0);
+
+    if (count > 0) {
+      if (!resArray->ensureElements(cx, count)) {
+        return nullptr;
+      }
+      resArray->setDenseInitializedLength(count);
+      resArray->setLength(count);
+
+      for (uint32_t index = 0; index < count; index++) {
+        const Value& v = argsobj->element(actualBegin + index);
+        resArray->initDenseElement(index, v);
+      }
+    }
+
+    return resArray;
   }
 
   // Slower path if the JIT wasn't able to allocate an object inline.

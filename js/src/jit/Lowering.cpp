@@ -3722,6 +3722,20 @@ void LIRGenerator::visitArraySlice(MArraySlice* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitArgumentsSlice(MArgumentsSlice* ins) {
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->begin()->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->end()->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LArgumentsSlice(
+      useRegisterAtStart(ins->object()), useRegisterAtStart(ins->begin()),
+      useRegisterAtStart(ins->end()), tempFixed(CallTempReg0),
+      tempFixed(CallTempReg1));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitArrayJoin(MArrayJoin* ins) {
   MOZ_ASSERT(ins->type() == MIRType::String);
   MOZ_ASSERT(ins->array()->type() == MIRType::Object);
