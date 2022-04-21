@@ -648,7 +648,9 @@ void nsIOService::NotifySocketProcessPrefsChanged(const char* aName) {
 
   dom::Pref pref(nsCString(aName), /* isLocked */ false,
                  /* isSanitized */ false, Nothing(), Nothing());
-  Preferences::GetPreference(&pref);
+
+  Preferences::GetPreference(&pref, GeckoProcessType_Socket,
+                             /* remoteType */ ""_ns);
   auto sendPrefUpdate = [pref]() {
     Unused << gIOService->mSocketProcess->GetActor()->SendPreferenceUpdate(
         pref);
