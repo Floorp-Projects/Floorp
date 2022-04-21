@@ -907,6 +907,9 @@ class GlobalObject : public NativeObject {
   static NativeObject* getIntrinsicsHolder(JSContext* cx,
                                            Handle<GlobalObject*> global);
 
+  static bool createIntrinsicsHolder(JSContext* cx,
+                                     Handle<GlobalObject*> global);
+
   NativeObject* getComputedIntrinsicsHolder() {
     return data().computedIntrinsicsHolder;
   }
