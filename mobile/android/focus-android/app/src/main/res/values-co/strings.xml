@@ -291,7 +291,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bluccà solu i canistrelli terzi</string>
 
     <string name="preference_privacy_should_block_cookies_cross_site_option">Bluccà i canistrelli intersiti</string>
-    <string name="preference_privacy_should_block_cookies_yes_option2">Iè, per piacè</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Sì, per piacè</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Impiegà un’impronta digitale per spalancà l’appiecazione</string>
@@ -553,7 +553,7 @@
     <string name="dialog_addtohomescreen_action_add">Aghjunghje</string>
 
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
-    <string name="dialog_addtohomescreen_action_yes">IÈ</string>
+    <string name="dialog_addtohomescreen_action_yes">SÌ</string>
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Abbandunà</string>
@@ -678,6 +678,48 @@
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Leghje autumaticamente l’elementi multimedià</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Per permettelu :</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Andate à e preferenze Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tucchate <b>Permessi</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Andà à e preferenze</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Attivate <b>%1$s</b>]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Appareghju-fotò</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Microfonu</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Lucalizazione</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Nutificazioni</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Cuntenutu cuntrollatu da DRM</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Dumandà per permette</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Bluccatu</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Permessu</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Bluccatu da Android</string>
+
     <!-- Preference for allow autoplay audio and video-->
     <string name="preference_allow_audio_video_autoplay">Permette l’audio è a video</string>
 
@@ -748,10 +790,10 @@
     <string name="enable_search_suggestion_description">Per ottene sugestioni di ricerca, %1$s hà bisognu di mandà à u mutore di ricerca ciò chì vo stampittate in a barra d’indirizzu.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestions_no">Innò</string>
+    <string name="enable_search_suggestions_no">Nò</string>
 
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
-    <string name="enable_search_suggestions_yes">Iè</string>
+    <string name="enable_search_suggestions_yes">Sì</string>
 
     <!-- Message displayed when using a search engine that doesn't provide suggestions -->
     <string name="no_suggestions_message">Certi mutori di ricerca ùn ponu affissà sugestioni.</string>
@@ -856,7 +898,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">L’unghjetta hè rotta</string>
     <!-- Headline for the tab crash report screen -->
-    <string name="tab_crash_report_headline">Peccatu. Avemu un penseru cù st’unghjetta.</string>
+    <string name="tab_crash_report_headline">Per disgrazia, avemu un prublema cù st’unghjetta.</string>
     <!-- Subtitle for the tab crash report screen -->
     <string name="tab_crash_report_description">Cum’è a navigazione era privata, ùn avemu micca arregistratu l’unghjetta è dunque ùn pudemu micca risturalla.</string>
     <!-- Label for button to close the tab-->
@@ -866,7 +908,7 @@ The new line here must be kept as the second half of the string is clickable for
 
 
   <!-- Label for the checkbox to send the tab crash report to Mozilla -->
-    <string name="crash_report_send_crash_label">Mandà un raportu di penseri à Mozilla</string>
+    <string name="crash_report_send_crash_label">Mandà un raportu d’accidente à Mozilla</string>
 
     <!-- Tracking protection bottom sheet -->
 
