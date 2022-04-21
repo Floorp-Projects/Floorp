@@ -932,31 +932,24 @@ class GlobalObject : public NativeObject {
     return true;
   }
 
-  static bool maybeGetIntrinsicValue(JSContext* cx,
-                                     Handle<GlobalObject*> global,
-                                     Handle<PropertyName*> name,
-                                     MutableHandleValue vp, bool* exists) {
-    NativeObject& holder = global->getIntrinsicsHolder();
+  // If a self-hosting intrinsic with the given |name| exists, it's stored in
+  // |vp| and this function returns true. Else it returns false.
+  bool maybeGetIntrinsicValue(HandlePropertyName name, MutableHandleValue vp,
+                              JSContext* cx) {
+    NativeObject& holder = getIntrinsicsHolder();
 
     if (mozilla::Maybe<PropertyInfo> prop = holder.lookup(cx, name)) {
       vp.set(holder.getSlot(prop->slot()));
-      *exists = true;
-    } else {
-      *exists = false;
+      return true;
     }
 
-    return true;
+    return false;
   }
 
   static bool getIntrinsicValue(JSContext* cx, Handle<GlobalObject*> global,
                                 HandlePropertyName name,
                                 MutableHandleValue value) {
-    bool exists = false;
-    if (!GlobalObject::maybeGetIntrinsicValue(cx, global, name, value,
-                                              &exists)) {
-      return false;
-    }
-    if (exists) {
+    if (global->maybeGetIntrinsicValue(name, value, cx)) {
       return true;
     }
     return getIntrinsicValueSlow(cx, global, name, value);
