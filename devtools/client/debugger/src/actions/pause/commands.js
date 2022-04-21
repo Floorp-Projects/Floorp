@@ -23,7 +23,7 @@ export function selectThread(cx, thread) {
       return;
     }
 
-    await dispatch({ cx, type: "SELECT_THREAD", thread });
+    dispatch({ cx, type: "SELECT_THREAD", thread });
 
     // Get a new context now that the current thread has changed.
     const threadcx = getThreadContext(getState());

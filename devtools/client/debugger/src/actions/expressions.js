@@ -56,7 +56,7 @@ export function autocomplete(cx, input, cursor) {
     }
     const frameId = getSelectedFrameId(getState(), cx.thread);
     const result = await client.autocomplete(input, cursor, frameId);
-    await dispatch({ type: "AUTOCOMPLETE", cx, input, result });
+    dispatch({ type: "AUTOCOMPLETE", cx, input, result });
   };
 }
 
