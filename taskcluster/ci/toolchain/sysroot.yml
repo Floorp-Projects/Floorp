@@ -75,10 +75,10 @@ sysroot-wasm32-wasi:
         toolchain-artifact: public/build/sysroot-wasm32-wasi.tar.zst
     fetches:
         fetch:
-            - clang-13
+            - clang-14
             - wasi-sdk
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-14
 
 sysroot-aarch64-linux-gnu:
     description: "Sysroot for linux64 aarch64 builds"

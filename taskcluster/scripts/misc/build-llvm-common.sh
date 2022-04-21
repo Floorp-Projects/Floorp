@@ -129,9 +129,9 @@ case "$target" in
     $EXTRA_CMAKE_FLAGS
     -DCMAKE_TOOLCHAIN_FILE=$MOZ_FETCHES_DIR/llvm-project/llvm/cmake/platforms/WinMsvc.cmake
     -DLLVM_NATIVE_TOOLCHAIN=$MOZ_FETCHES_DIR/clang
-    -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.16.27023
+    -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.29.30133
     -DWINSDK_BASE=$MOZ_FETCHES_DIR/vs/sdk
-    -DWINSDK_VER=10.0.17134.0
+    -DWINSDK_VER=10.0.19041.0
     -DHOST_ARCH=${target%-pc-windows-msvc}
   "
   ;;
