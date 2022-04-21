@@ -61,7 +61,7 @@ gboolean save_to_stdout(const gchar* buf, gsize count, GError** error,
   return TRUE;
 }
 
-#if defined(MOZ_ENABLE_DBUS)
+#if defined(MOZ_ENABLE_DBUS) && defined(MOZ_WAYLAND)
 static GdkPixbuf* get_screenshot_dbus() {
   char *path = nullptr, *filename = nullptr, *tmpname = nullptr;
   GdkPixbuf* screenshot = nullptr;
