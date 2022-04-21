@@ -289,7 +289,7 @@ class SpeechEvent : public Runnable {
   friend class SpeechRecognition;
 
  private:
-  SpeechRecognition* mRecognition;
+  RefPtr<SpeechRecognition> mRecognition;
 
   // for AUDIO_DATA events, keep a reference to the provider
   // of the data (i.e., the SpeechTrackListener) to ensure it
