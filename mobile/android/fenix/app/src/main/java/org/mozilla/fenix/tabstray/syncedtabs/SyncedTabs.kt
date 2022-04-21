@@ -10,11 +10,9 @@ import android.content.res.Configuration
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,11 +44,11 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.compose.ext.dashedBorder
 import org.mozilla.fenix.compose.list.ExpandableListHeader
+import org.mozilla.fenix.compose.list.FaviconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import mozilla.components.browser.storage.sync.Tab as SyncTab
@@ -98,12 +96,12 @@ fun SyncedTabsList(
                         if (sectionExpanded) {
                             if (syncedTabItem.tabs.isNotEmpty()) {
                                 items(syncedTabItem.tabs) { syncedTab ->
-                                    SyncedTabsTabItem(
-                                        tabTitleText = syncedTab.displayTitle,
+                                    FaviconListItem(
+                                        label = syncedTab.displayTitle,
+                                        description = syncedTab.displayURL,
                                         url = syncedTab.displayURL,
-                                    ) {
-                                        onTabClick(syncedTab.tab)
-                                    }
+                                        onClick = { onTabClick(syncedTab.tab) },
+                                    )
                                 }
                             } else {
                                 item { SyncedTabsNoTabsItem() }
@@ -134,12 +132,12 @@ fun SyncedTabsList(
                     )
                     is SyncedTabsListItem.NoTabs -> SyncedTabsNoTabsItem()
                     is SyncedTabsListItem.Tab -> {
-                        SyncedTabsTabItem(
-                            tabTitleText = syncedTabItem.displayTitle,
+                        FaviconListItem(
+                            label = syncedTabItem.displayTitle,
+                            description = syncedTabItem.displayURL,
                             url = syncedTabItem.displayURL,
-                        ) {
-                            onTabClick(syncedTabItem.tab)
-                        }
+                            onClick = { onTabClick(syncedTabItem.tab) },
+                        )
                     }
                     else -> {
                         // no-op
@@ -183,53 +181,6 @@ fun SyncedTabsSectionHeader(
         )
 
         Divider(color = FirefoxTheme.colors.borderPrimary)
-    }
-}
-
-/**
- * Synced tab list item UI
- *
- * @param tabTitleText The tab's display text.
- * @param url The tab's URL.
- * @param onClick The click handler when this synced tab is clicked.
- */
-@Composable
-fun SyncedTabsTabItem(
-    tabTitleText: String,
-    url: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .clickable(
-                onClickLabel = tabTitleText,
-                onClick = onClick
-            )
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Favicon(
-            url = url,
-            size = 24.dp,
-        )
-
-        Spacer(modifier = Modifier.width(32.dp))
-
-        Column {
-            PrimaryText(
-                text = tabTitleText,
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 16.sp,
-                maxLines = 1,
-            )
-
-            SecondaryText(
-                text = url,
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 12.sp,
-                maxLines = 1,
-            )
-        }
     }
 }
 
@@ -344,10 +295,12 @@ private fun SyncedTabsListItemsPreview() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SyncedTabsTabItem(
-                tabTitleText = "Mozilla",
-                url = "www.mozilla.org"
-            ) { println("Clicked tab") }
+            FaviconListItem(
+                label = "Mozilla",
+                description = "www.mozilla.org",
+                url = "www.mozilla.org",
+                onClick = {},
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
