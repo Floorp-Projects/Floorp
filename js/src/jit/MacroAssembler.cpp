@@ -3923,7 +3923,8 @@ CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
 
 void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
                                       const wasm::CalleeDesc& callee,
-                                      bool needsBoundsCheck,
+                                      Label* boundsCheckFailedLabel,
+                                      Label* nullCheckFailedLabel,
                                       mozilla::Maybe<uint32_t> tableSize,
                                       CodeOffset* fastCallOffset,
                                       CodeOffset* slowCallOffset) {
@@ -3945,18 +3946,16 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   // spilled and re-loaded before the next call_indirect, or would be abandoned
   // because we could not trust that a hoisted value would not have changed.)
 
-  if (needsBoundsCheck) {
-    Label ok;
+  if (boundsCheckFailedLabel) {
     if (tableSize.isSome()) {
-      branch32(Assembler::Condition::Below, index, Imm32(*tableSize), &ok);
+      branch32(Assembler::Condition::AboveOrEqual, index, Imm32(*tableSize),
+               boundsCheckFailedLabel);
     } else {
-      branch32(Assembler::Condition::Above,
+      branch32(Assembler::Condition::BelowOrEqual,
                Address(InstanceReg, wasm::Instance::offsetOfGlobalArea() +
                                         callee.tableLengthGlobalDataOffset()),
-               index, &ok);
+               index, boundsCheckFailedLabel);
     }
-    wasmTrap(wasm::Trap::OutOfBounds, trapOffset);
-    bind(&ok);
   }
 
   // Write the functype-id into the ABI functype-id register.
@@ -4006,12 +4005,12 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 #ifdef WASM_HAS_HEAPREG
   // Use the null pointer exception resulting from loading HeapReg from a null
   // Tls to handle a call to a null slot.
+  MOZ_ASSERT(nullCheckFailedLabel == nullptr);
   loadWasmPinnedRegsFromInstance(mozilla::Some(trapOffset));
 #else
-  Label nonNull;
-  branchTestPtr(Assembler::NonZero, InstanceReg, InstanceReg, &nonNull);
-  wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
-  bind(&nonNull);
+  MOZ_ASSERT(nullCheckFailedLabel != nullptr);
+  branchTestPtr(Assembler::Zero, InstanceReg, InstanceReg,
+                nullCheckFailedLabel);
 
   loadWasmPinnedRegsFromInstance();
 #endif

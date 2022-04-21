@@ -3285,14 +3285,18 @@ class LWasmCall : public LVariadicInstruction<0, 0> {
     this->setIsCall();
   }
 
-  MWasmCallBase* mir() const {
-    if (mir_->isWasmCallCatchable()) {
-      return static_cast<MWasmCallBase*>(mir_->toWasmCallCatchable());
+  MWasmCallBase* callBase() const {
+    if (isCatchable()) {
+      return static_cast<MWasmCallBase*>(mirCatchable());
     }
-    return static_cast<MWasmCallBase*>(mir_->toWasmCallUncatchable());
+    return static_cast<MWasmCallBase*>(mirUncatchable());
   }
+  bool isCatchable() const { return mir_->isWasmCallCatchable(); }
   MWasmCallCatchable* mirCatchable() const {
     return mir_->toWasmCallCatchable();
+  }
+  MWasmCallUncatchable* mirUncatchable() const {
+    return mir_->toWasmCallUncatchable();
   }
 
   static bool isCallPreserved(AnyRegister reg) {

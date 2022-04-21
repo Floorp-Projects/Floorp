@@ -942,7 +942,7 @@ struct BaseCompiler final {
 
   // Precondition for the call*() methods: sync()
 
-  void callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+  bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                     const Stk& indexVal, const FunctionCall& call,
                     CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
   CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call);

@@ -1558,7 +1558,21 @@ CodeOffset BaseCompiler::callSymbolic(SymbolicAddress callee,
 
 // Precondition: sync()
 
-void BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
+class OutOfLineAbortingTrap : public OutOfLineCode {
+  Trap trap_;
+  BytecodeOffset off_;
+
+ public:
+  OutOfLineAbortingTrap(Trap trap, BytecodeOffset off)
+      : trap_(trap), off_(off) {}
+
+  virtual void generate(MacroAssembler* masm) override {
+    masm->wasmTrap(trap_, off_);
+    MOZ_ASSERT(!rejoin()->bound());
+  }
+};
+
+bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                                 const Stk& indexVal, const FunctionCall& call,
                                 CodeOffset* fastCallOffset,
                                 CodeOffset* slowCallOffset) {
@@ -1571,8 +1585,23 @@ void BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
-  masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
+  OutOfLineCode* oob = addOutOfLineCode(
+      new (alloc_) OutOfLineAbortingTrap(Trap::OutOfBounds, bytecodeOffset()));
+  if (!oob) {
+    return false;
+  }
+  Label* nullCheckFailed = nullptr;
+#ifndef WASM_HAS_HEAPREG
+  OutOfLineCode* nullref = addOutOfLineCode(new (alloc_) OutOfLineAbortingTrap(
+      Trap::IndirectCallToNull, bytecodeOffset()));
+  if (!oob) {
+    return false;
+  }
+  nullCheckFailed = nullref->entry();
+#endif
+  masm.wasmCallIndirect(desc, callee, oob->entry(), nullCheckFailed,
                         mozilla::Nothing(), fastCallOffset, slowCallOffset);
+  return true;
 }
 
 // Precondition: sync()
@@ -4641,8 +4670,10 @@ bool BaseCompiler::emitCallIndirect() {
   const Stk& callee = peek(results.count());
   CodeOffset fastCallOffset;
   CodeOffset slowCallOffset;
-  callIndirect(funcTypeIndex, tableIndex, callee, baselineCall, &fastCallOffset,
-               &slowCallOffset);
+  if (!callIndirect(funcTypeIndex, tableIndex, callee, baselineCall,
+                    &fastCallOffset, &slowCallOffset)) {
+    return false;
+  }
   if (!createStackMap("emitCallIndirect", fastCallOffset)) {
     return false;
   }
