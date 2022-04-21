@@ -7319,6 +7319,31 @@ Custom
 ------
 Browsertime tests that use a custom pageload test script. These use the pageload type, but may have other intentions.
 
+.. dropdown:: browsertime
+   :container: + anchor-id-browsertime-c
+
+   **Owner**: PerfTest Team
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **browser cycles**: 1
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: null.manifest
+   * **playback version**: 5.1.1
+   * **test script**: None
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+
 .. dropdown:: process-switch
    :container: + anchor-id-process-switch-c
 
