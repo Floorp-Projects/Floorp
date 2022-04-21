@@ -37,7 +37,7 @@ export function willNavigate(event) {
 
 export function connect(url, actor, isWebExtension) {
   return async function({ dispatch, getState }) {
-    await dispatch({
+    dispatch({
       type: "CONNECT",
       mainThreadActorID: actor,
       isWebExtension,
