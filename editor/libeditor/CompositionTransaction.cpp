@@ -49,11 +49,6 @@ already_AddRefed<CompositionTransaction> CompositionTransaction::Create(
   }
   RefPtr<CompositionTransaction> transaction =
       new CompositionTransaction(aEditorBase, aStringToInsert, pointToInsert);
-  // XXX Now, it might be better to modify the text node information of
-  //     the TextComposition instance in DoTransaction() because updating
-  //     the information before changing actual DOM tree is pretty odd.
-  composition->OnCreateCompositionTransaction(
-      aStringToInsert, pointToInsert.ContainerAsText(), pointToInsert.Offset());
   return transaction.forget();
 }
 
@@ -125,6 +120,13 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
     // If composition string is split to multiple text nodes, we should put
     // whole new composition string to the first text node and remove the
     // compostion string in other nodes.
+    // TODO: This should be handled by `TextComposition` because this assumes
+    //       that composition string has never touched by JS.  However, it
+    //       would occur if the web app is a corrabolation software which
+    //       multiple users can modify anyware in an editor.
+    // TODO: And if composition starts from a following text node, the offset
+    //       here is outdated and it will cause inserting composition string
+    //       **before** the proper point from point of view of the users.
     uint32_t replaceableLength = textNode->TextLength() - mOffset;
     ErrorResult error;
     editorBase->DoReplaceText(textNode, mOffset, mReplaceLength,
@@ -175,6 +177,12 @@ NS_IMETHODIMP CompositionTransaction::DoTransaction() {
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rv),
       "CompositionTransaction::SetSelectionForRanges() failed");
+
+  if (TextComposition* composition = editorBase->GetComposition()) {
+    composition->OnUpdateCompositionInEditor(mStringToInsert, textNode,
+                                             mOffset);
+  }
+
   return rv;
 }
 

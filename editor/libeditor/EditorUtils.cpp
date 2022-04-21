@@ -274,15 +274,15 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
       // typed character.
       // XXX This is odd if the previous one is a sequence for a grapheme
       //     cluster.
-      EditorDOMPoint atStartOfSelection(GetStartPointOfFirstRange());
-      if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
+      const auto atStartOfSelection = GetFirstRangeStartPoint<EditorDOMPoint>();
+      if (MOZ_UNLIKELY(NS_WARN_IF(!atStartOfSelection.IsSet()))) {
         return Err(NS_ERROR_FAILURE);
       }
 
       // node might be anonymous DIV, so we find better text node
-      EditorRawDOMPoint insertionPoint =
+      const EditorDOMPoint insertionPoint =
           aEditorBase.FindBetterInsertionPoint(atStartOfSelection);
-      if (!insertionPoint.IsSet()) {
+      if (MOZ_UNLIKELY(!insertionPoint.IsSet())) {
         NS_WARNING(
             "EditorBase::FindBetterInsertionPoint() failed, but ignored");
         return aDirectionAndAmount;
@@ -665,8 +665,7 @@ EditorUtils::CreateTransferableForPlainText(const Document& aDocument) {
  * mozilla::EditorDOMPointBase
  *****************************************************************************/
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
-                                       IsCharCollapsibleASCIISpace() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool, IsCharCollapsibleASCIISpace);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleASCIISpace() const {
@@ -677,7 +676,7 @@ bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleASCIISpace() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsCharCollapsibleNBSP() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool, IsCharCollapsibleNBSP);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleNBSP() const {
@@ -687,8 +686,8 @@ bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleNBSP() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsCharCollapsibleASCIISpaceOrNBSP()
-                                                 const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool,
+                                             IsCharCollapsibleASCIISpaceOrNBSP);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleASCIISpaceOrNBSP() const {
@@ -699,9 +698,8 @@ bool EditorDOMPointBase<PT, CT>::IsCharCollapsibleASCIISpaceOrNBSP() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
-                                       IsPreviousCharCollapsibleASCIISpace()
-                                           const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(
+    bool, IsPreviousCharCollapsibleASCIISpace);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleASCIISpace() const {
@@ -712,8 +710,8 @@ bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleASCIISpace() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
-                                       IsPreviousCharCollapsibleNBSP() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool,
+                                             IsPreviousCharCollapsibleNBSP);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleNBSP() const {
@@ -721,8 +719,8 @@ bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleNBSP() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
-    bool, IsPreviousCharCollapsibleASCIISpaceOrNBSP() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(
+    bool, IsPreviousCharCollapsibleASCIISpaceOrNBSP);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleASCIISpaceOrNBSP()
@@ -734,8 +732,8 @@ bool EditorDOMPointBase<PT, CT>::IsPreviousCharCollapsibleASCIISpaceOrNBSP()
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
-                                       IsNextCharCollapsibleASCIISpace() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool,
+                                             IsNextCharCollapsibleASCIISpace);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpace() const {
@@ -746,7 +744,7 @@ bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpace() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsNextCharCollapsibleNBSP() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool, IsNextCharCollapsibleNBSP);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleNBSP() const {
@@ -754,9 +752,8 @@ bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleNBSP() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
-                                       IsNextCharCollapsibleASCIISpaceOrNBSP()
-                                           const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(
+    bool, IsNextCharCollapsibleASCIISpaceOrNBSP);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpaceOrNBSP() const {
@@ -767,7 +764,7 @@ bool EditorDOMPointBase<PT, CT>::IsNextCharCollapsibleASCIISpaceOrNBSP() const {
          !EditorUtils::IsWhiteSpacePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsCharPreformattedNewLine() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool, IsCharPreformattedNewLine);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsCharPreformattedNewLine() const {
@@ -775,8 +772,8 @@ bool EditorDOMPointBase<PT, CT>::IsCharPreformattedNewLine() const {
          EditorUtils::IsNewLinePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
-    bool, IsCharPreformattedNewLineCollapsedWithWhiteSpaces() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(
+    bool, IsCharPreformattedNewLineCollapsedWithWhiteSpaces);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<
@@ -785,8 +782,8 @@ bool EditorDOMPointBase<
          EditorUtils::IsOnlyNewLinePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool, IsPreviousCharPreformattedNewLine()
-                                                 const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool,
+                                             IsPreviousCharPreformattedNewLine);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsPreviousCharPreformattedNewLine() const {
@@ -794,8 +791,8 @@ bool EditorDOMPointBase<PT, CT>::IsPreviousCharPreformattedNewLine() const {
          EditorUtils::IsNewLinePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
-    bool, IsPreviousCharPreformattedNewLineCollapsedWithWhiteSpaces() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(
+    bool, IsPreviousCharPreformattedNewLineCollapsedWithWhiteSpaces);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<
@@ -804,8 +801,8 @@ bool EditorDOMPointBase<
          EditorUtils::IsOnlyNewLinePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(bool,
-                                       IsNextCharPreformattedNewLine() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(bool,
+                                             IsNextCharPreformattedNewLine);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<PT, CT>::IsNextCharPreformattedNewLine() const {
@@ -813,8 +810,8 @@ bool EditorDOMPointBase<PT, CT>::IsNextCharPreformattedNewLine() const {
          EditorUtils::IsNewLinePreformatted(*ContainerAsText());
 }
 
-NS_INSTANTIATE_EDITOR_DOM_POINT_METHOD(
-    bool, IsNextCharPreformattedNewLineCollapsedWithWhiteSpaces() const)
+NS_INSTANTIATE_EDITOR_DOM_POINT_CONST_METHOD(
+    bool, IsNextCharPreformattedNewLineCollapsedWithWhiteSpaces);
 
 template <typename PT, typename CT>
 bool EditorDOMPointBase<

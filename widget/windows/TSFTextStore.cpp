@@ -6398,10 +6398,21 @@ void TSFTextStore::CreateNativeCaret() {
            ToString(mComposition).c_str()));
 
   Maybe<Selection>& selectionForTSF = SelectionForTSF();
-  if (selectionForTSF.isNothing()) {
+  if (MOZ_UNLIKELY(selectionForTSF.isNothing())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
              "SelectionForTSF() failure",
+             this));
+    return;
+  }
+  if (!selectionForTSF->HasRange() && mComposition.isNothing()) {
+    // If there is no selection range nor composition, then, we don't have a
+    // good position to show windows of TIP...
+    // XXX It seems that storing last caret rect and using it in this case might
+    // be better?
+    MOZ_LOG(gIMELog, LogLevel::Warning,
+            ("0x%p   TSFTextStore::CreateNativeCaret() couludn't create native "
+             "caret due to no selection range",
              this));
     return;
   }
@@ -6412,22 +6423,21 @@ void TSFTextStore::CreateNativeCaret() {
   WidgetQueryContentEvent::Options options;
   // XXX If this is called without composition and the selection isn't
   //     collapsed, is it OK?
-  int64_t caretOffset = selectionForTSF->MaxOffset();
+  int64_t caretOffset = selectionForTSF->HasRange()
+                            ? selectionForTSF->MaxOffset()
+                            : mComposition->StartOffset();
   if (mComposition.isSome()) {
-    // If there is a composition, use insertion point relative query for
-    // deciding caret position because composition might be at different
-    // position where TSFTextStore believes it at.
+    // If there is a composition, use the relative query for deciding caret
+    // position because composition might be different place from that
+    // TSFTextStore assumes.
     options.mRelativeToInsertionPoint = true;
     caretOffset -= mComposition->StartOffset();
-  } else if (!selectionForTSF->HasRange()) {
-    // If there is no selection range, there is no good position to show windows
-    // of TIP...
-    return;
   } else if (!CanAccessActualContentDirectly()) {
     // If TSF/TIP cannot access actual content directly, there may be pending
     // text and/or selection changes which have not been notified TSF yet.
-    // Therefore, we should use relative to insertion point query since
-    // TSF/TIP computes the offset from the cached selection.
+    // Therefore, we should use the relative query from start of selection where
+    // TSFTextStore assumes since TSF/TIP computes the offset from our cached
+    // selection.
     options.mRelativeToInsertionPoint = true;
     caretOffset -= selectionForTSF->StartOffset();
   }

@@ -11,6 +11,7 @@
 
 #  include "DecoderDoctorLogger.h"
 #  include "GMPCrashHelper.h"
+#  include "MediaCodecsSupport.h"
 #  include "MediaEventSource.h"
 #  include "MediaInfo.h"
 #  include "MediaResult.h"
@@ -313,22 +314,38 @@ class PlatformDecoderModule {
   // This is called on the decode task queue.
   virtual nsresult Startup() { return NS_OK; }
 
-  // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
+  // Indicates if the PlatformDecoderModule supports decoding of aMimeType,
+  // and whether or not hardware-accelerated decoding is supported.
   // The answer to both SupportsMimeType and Supports doesn't guarantee that
   // creation of a decoder will actually succeed.
-  virtual bool SupportsMimeType(
+  virtual media::DecodeSupportSet SupportsMimeType(
       const nsACString& aMimeType,
       DecoderDoctorDiagnostics* aDiagnostics) const = 0;
 
-  virtual bool Supports(const SupportDecoderParams& aParams,
-                        DecoderDoctorDiagnostics* aDiagnostics) const {
+  virtual media::DecodeSupportSet Supports(
+      const SupportDecoderParams& aParams,
+      DecoderDoctorDiagnostics* aDiagnostics) const {
     const TrackInfo& trackInfo = aParams.mConfig;
-    if (!SupportsMimeType(trackInfo.mMimeType, aDiagnostics)) {
-      return false;
+    const media::DecodeSupportSet support =
+        SupportsMimeType(trackInfo.mMimeType, aDiagnostics);
+
+    // Bail early if we don't support this format at all
+    if (support == media::DecodeSupport::Unsupported) {
+      return support;
     }
+
     const auto* videoInfo = trackInfo.GetAsVideoInfo();
-    return !videoInfo ||
-           SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics);
+
+    if (!videoInfo) {
+      // No video stream = software decode only
+      return media::DecodeSupport::SoftwareDecode;
+    }
+
+    // Check whether we support the desired color depth
+    if (!SupportsColorDepth(videoInfo->mColorDepth, aDiagnostics)) {
+      return media::DecodeSupport::Unsupported;
+    }
+    return support;
   }
 
   using CreateDecoderPromise = MozPromise<RefPtr<MediaDataDecoder>, MediaResult,

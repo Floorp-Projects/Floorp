@@ -49,6 +49,7 @@ XPCOMUtils.defineLazyGetter(this, "contextId", () => {
 const CONTEXTUAL_SERVICES_PING_TYPES = {
   TOPSITES_IMPRESSION: "topsites-impression",
   TOPSITES_SELECTION: "topsites-click",
+  QS_BLOCK: "quicksuggest-block",
   QS_IMPRESSION: "quicksuggest-impression",
   QS_SELECTION: "quicksuggest-click",
 };

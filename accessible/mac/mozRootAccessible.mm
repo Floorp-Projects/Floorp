@@ -11,6 +11,7 @@
 
 #import "mozView.h"
 
+#include "gfxPlatform.h"
 // This must be included last:
 #include "nsObjCExceptions.h"
 
@@ -68,7 +69,7 @@ static id<mozAccessible, mozView> getNativeViewFromRootAccessible(
 - (id)representedView {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  MOZ_ASSERT(mParallelView,
+  MOZ_ASSERT(mParallelView || gfxPlatform::IsHeadless(),
              "root accessible does not have a native parallel view.");
 
   return mParallelView;

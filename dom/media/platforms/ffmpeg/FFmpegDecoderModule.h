@@ -32,7 +32,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
       const CreateDecoderParams& aParams) override {
-    if (!Supports(SupportDecoderParams(aParams), nullptr)) {
+    if (Supports(SupportDecoderParams(aParams), nullptr) ==
+        media::DecodeSupport::Unsupported) {
       return nullptr;
     }
     RefPtr<MediaDataDecoder> decoder = new FFmpegVideoDecoder<V>(
@@ -46,7 +47,8 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
 
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override {
-    if (!Supports(SupportDecoderParams(aParams), nullptr)) {
+    if (Supports(SupportDecoderParams(aParams), nullptr) ==
+        media::DecodeSupport::Unsupported) {
       return nullptr;
     }
     RefPtr<MediaDataDecoder> decoder =
@@ -54,17 +56,19 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     return decoder.forget();
   }
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override {
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override {
     UniquePtr<TrackInfo> trackInfo = CreateTrackInfoWithMIMEType(aMimeType);
     if (!trackInfo) {
-      return false;
+      return media::DecodeSupport::Unsupported;
     }
     return Supports(SupportDecoderParams(*trackInfo), aDiagnostics);
   }
 
-  bool Supports(const SupportDecoderParams& aParams,
-                DecoderDoctorDiagnostics* aDiagnostics) const override {
+  media::DecodeSupportSet Supports(
+      const SupportDecoderParams& aParams,
+      DecoderDoctorDiagnostics* aDiagnostics) const override {
     const auto& trackInfo = aParams.mConfig;
     const nsACString& mimeType = trackInfo.mMimeType;
 
@@ -76,7 +80,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("FFmpeg decoder rejects requested type '%s'",
                mimeType.BeginReading()));
-      return false;
+      return media::DecodeSupport::Unsupported;
     }
 
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(mimeType);
@@ -85,14 +89,19 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       MOZ_LOG(sPDMLog, LogLevel::Debug,
               ("FFmpeg decoder rejects requested type '%s'",
                mimeType.BeginReading()));
-      return false;
+      return media::DecodeSupport::Unsupported;
     }
     AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
     bool supports = !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
     MOZ_LOG(sPDMLog, LogLevel::Debug,
             ("FFmpeg decoder %s requested type '%s'",
              supports ? "supports" : "rejects", mimeType.BeginReading()));
-    return supports;
+    if (supports) {
+      // TODO: Note that we do not yet distinguish between SW/HW decode support.
+      //       Will be done in bug 1754239.
+      return media::DecodeSupport::SoftwareDecode;
+    }
+    return media::DecodeSupport::Unsupported;
   }
 
  protected:
