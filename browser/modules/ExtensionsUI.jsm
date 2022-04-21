@@ -34,10 +34,15 @@ function getTabBrowser(browser) {
   while (browser.ownerGlobal.docShell.itemType !== Ci.nsIDocShell.typeChrome) {
     browser = browser.ownerGlobal.docShell.chromeEventHandler;
   }
-  if (browser.getAttribute("webextension-view-type") == "popup") {
-    browser = browser.ownerGlobal.gBrowser.selectedBrowser;
+  let window = browser.ownerGlobal;
+  let viewType = browser.getAttribute("webextension-view-type");
+  if (viewType == "sidebar") {
+    window = window.browsingContext.topChromeWindow;
   }
-  return { browser, window: browser.ownerGlobal };
+  if (viewType == "popup" || viewType == "sidebar") {
+    browser = window.gBrowser.selectedBrowser;
+  }
+  return { browser, window };
 }
 
 var ExtensionsUI = {
