@@ -53,7 +53,7 @@ class MediaSessionFullscreenFeature(
                     ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
             false ->
                 activity.requestedOrientation =
-                    ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             else -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
         }
     }

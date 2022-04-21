@@ -52,7 +52,7 @@ class MediaSessionFullscreenFeatureTest {
         )
 
         feature.start()
-        verify(mockActivity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE)
+        verify(mockActivity).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE)
 
         store.dispatch(
             MediaSessionAction.UpdateMediaFullscreenAction(
