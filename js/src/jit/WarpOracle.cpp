@@ -379,7 +379,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         //       way so this is only a temporary problem.
         PropertyName* name = loc.getPropertyName(script_);
         Value val;
-        if (cx_->global()->maybeExistingIntrinsicValue(name, &val) &&
+        if (cx_->global()->maybeGetIntrinsicValue(name, &val, cx_) &&
             JS::GCPolicy<Value>::isTenured(val)) {
           if (!AddOpSnapshot<WarpGetIntrinsic>(alloc_, opSnapshots, offset,
                                                val)) {
