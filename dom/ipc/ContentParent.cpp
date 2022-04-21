@@ -3788,32 +3788,34 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
 /* static */
 bool ContentParent::ShouldSyncPreference(const char* aPref) {
-#define PARENT_ONLY_PREF_LIST_ENTRY(s) \
+#define PREF_LIST_ENTRY(s) \
   { s, (sizeof(s) / sizeof(char)) - 1 }
-  struct ParentOnlyPrefListEntry {
+  struct PrefListEntry {
     const char* mPrefBranch;
     size_t mLen;
   };
+
   // These prefs are not useful in child processes.
-  static const ParentOnlyPrefListEntry sParentOnlyPrefBranchList[] = {
-      PARENT_ONLY_PREF_LIST_ENTRY("app.update.lastUpdateTime."),
-      PARENT_ONLY_PREF_LIST_ENTRY("datareporting.policy."),
-      PARENT_ONLY_PREF_LIST_ENTRY("browser.safebrowsing.provider."),
-      PARENT_ONLY_PREF_LIST_ENTRY("browser.shell."),
-      PARENT_ONLY_PREF_LIST_ENTRY("browser.slowStartup."),
-      PARENT_ONLY_PREF_LIST_ENTRY("browser.startup."),
-      PARENT_ONLY_PREF_LIST_ENTRY("extensions.getAddons.cache."),
-      PARENT_ONLY_PREF_LIST_ENTRY("media.gmp-manager."),
-      PARENT_ONLY_PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
-      PARENT_ONLY_PREF_LIST_ENTRY("privacy.sanitize."),
+  static const PrefListEntry sParentOnlyPrefBranchList[] = {
+      PREF_LIST_ENTRY("app.update.lastUpdateTime."),
+      PREF_LIST_ENTRY("datareporting.policy."),
+      PREF_LIST_ENTRY("browser.safebrowsing.provider."),
+      PREF_LIST_ENTRY("browser.shell."),
+      PREF_LIST_ENTRY("browser.slowStartup."),
+      PREF_LIST_ENTRY("browser.startup."),
+      PREF_LIST_ENTRY("extensions.getAddons.cache."),
+      PREF_LIST_ENTRY("media.gmp-manager."),
+      PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
+      PREF_LIST_ENTRY("privacy.sanitize."),
   };
-#undef PARENT_ONLY_PREF_LIST_ENTRY
+#undef PREF_LIST_ENTRY
 
   for (const auto& entry : sParentOnlyPrefBranchList) {
     if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
       return false;
     }
   }
+
   return true;
 }
 
