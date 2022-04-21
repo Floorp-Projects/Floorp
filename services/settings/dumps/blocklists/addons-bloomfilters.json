@@ -3,6 +3,20 @@
     {
       "stash": {
         "blocked": [
+          "{d8246cf5-fdcf-470b-9599-9daa31c7376c}:1.0",
+          "{f9508171-fff5-4fee-94d2-d4bf00adb7e2}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1649939903702,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1650371708670,
+      "id": "982c0a03-ffd9-4e68-92eb-db63664bb880",
+      "last_modified": 1650371906091
+    },
+    {
+      "stash": {
+        "blocked": [
           "{dd70ce08-6a8a-4899-b2bd-17c2ce37805e}:0.0.2"
         ],
         "unblocked": []
