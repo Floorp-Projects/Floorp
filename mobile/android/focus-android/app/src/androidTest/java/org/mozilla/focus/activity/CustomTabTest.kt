@@ -95,6 +95,7 @@ class CustomTabTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6908")
     fun openCustomTabInFocusTest() {
         val browserPage = getGenericAsset(webServer)
         val customTabPage = getGenericTabAsset(webServer, 1)

@@ -7,6 +7,7 @@ import androidx.core.net.toUri
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,6 +43,7 @@ class SettingsPrivacyTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6908")
     fun verifyCookiesAndSiteDataItemsTest() {
         homeScreen {
         }.openMainMenu {
@@ -56,6 +58,7 @@ class SettingsPrivacyTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6908")
     fun verifyCookiesEnabledTest() {
         val cookiesEnabledURL = "https://www.whatismybrowser.com/detect/are-cookies-enabled"
 
@@ -75,6 +78,7 @@ class SettingsPrivacyTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6908")
     fun verify3rdPartyCookiesEnabledTest() {
         val cookiesEnabledURL = "https://www.whatismybrowser.com/detect/are-third-party-cookies-enabled"
 
