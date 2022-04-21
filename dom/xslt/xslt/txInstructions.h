@@ -23,7 +23,15 @@ class txInstruction : public txObject {
  public:
   MOZ_COUNTED_DEFAULT_CTOR(txInstruction)
 
-  MOZ_COUNTED_DTOR_OVERRIDE(txInstruction)
+  ~txInstruction() override {
+    MOZ_COUNT_DTOR(txInstruction);
+
+    mozilla::UniquePtr<txInstruction> next(std::move(mNext));
+    while (next) {
+      mozilla::UniquePtr<txInstruction> destroy(std::move(next));
+      next = std::move(destroy->mNext);
+    }
+  }
 
   virtual nsresult execute(txExecutionState& aEs) = 0;
 
