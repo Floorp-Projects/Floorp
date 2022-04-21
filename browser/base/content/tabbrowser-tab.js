@@ -129,6 +129,15 @@
       return gBrowser.tabContainer;
     }
 
+    set attention(val) {
+      if (val == this.hasAttribute("attention")) {
+        return;
+      }
+
+      this.toggleAttribute("attention", val);
+      gBrowser._tabAttrModified(this, ["attention"]);
+    }
+
     set _visuallySelected(val) {
       if (val == (this.getAttribute("visuallyselected") == "true")) {
         return;
