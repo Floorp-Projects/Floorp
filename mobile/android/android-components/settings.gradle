@@ -117,7 +117,7 @@ def runCmd(cmd, workingDir, successMessage) {
 
 Properties localProperties = null;
 String settingAppServicesPath = "autoPublish.application-services.dir"
-String settingGleanPath = "substitutions.glean.dir";
+String settingGleanPath = "autoPublish.glean.dir";
 
 if (file('local.properties').canRead()) {
     localProperties = new Properties()
@@ -151,15 +151,16 @@ if (localProperties != null) {
     String gleanLocalPath = localProperties.getProperty(settingGleanPath);
 
     if (gleanLocalPath != null) {
-        logger.lifecycle("Local configuration: substituting glean module from path: $gleanLocalPath")
-
-        includeBuild(gleanLocalPath) {
-            dependencySubstitution {
-                substitute module('org.mozilla.telemetry:glean') with project(':glean')
-                    substitute module('org.mozilla.telemetry:glean-forUnitTests') with project(':glean')
-            }
+        logger.lifecycle("Enabling automatic publication of Glean from: $gleanLocalPath")
+        // Windows can't execute .py files directly, so we assume a "manually installed" python,
+        // which comes with a "py" launcher and respects the shebang line to specify the version.
+        def publishGleanCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishGleanCmd << "py";
         }
+        publishGleanCmd << "./build-scripts/publish_to_maven_local_if_modified.py";
+        runCmd(publishGleanCmd, gleanLocalPath, "Published Glean for local development.")
     } else {
-        logger.lifecycle("Local configuration: glean substitution path missing. You may specify it via '$settingGleanPath' setting.")
+        logger.lifecycle("Disabled auto-publication of Glean. Enable it by settings '$settingGleanPath' in local.properties")
     }
 }

@@ -109,6 +109,12 @@ subprojects {
         }
     }
 
+    // Allow local Glean substitution in each subproject.
+    if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
+        ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
+        apply from: "${rootProject.projectDir}/${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+    }
+
     if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
         if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
             ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
