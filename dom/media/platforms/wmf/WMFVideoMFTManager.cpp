@@ -9,7 +9,9 @@
 #include <psapi.h>
 #include <winsdkver.h>
 #include <algorithm>
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "DXVA2Manager.h"
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
 #include "IMFYCbCrImage.h"
@@ -289,6 +291,7 @@ MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
         }
       }
       break;
+#ifdef MOZ_AV1
     case WMFStreamType::AV1:
       if (mVideoInfo.mExtraData && !mVideoInfo.mExtraData->IsEmpty()) {
         // Read AV1 codec configuration and check support for profiles and pixel
@@ -304,6 +307,7 @@ MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
         }
       }
       break;
+#endif
     default:
       break;
   }
