@@ -11726,6 +11726,176 @@ void CodeGenerator::visitFrameArgumentsSlice(LFrameArgumentsSlice* lir) {
   masm.bind(&done);
 }
 
+CodeGenerator::RegisterOrInt32 CodeGenerator::ToRegisterOrInt32(
+    const LAllocation* allocation) {
+  if (allocation->isConstant()) {
+    return RegisterOrInt32(allocation->toConstant()->toInt32());
+  }
+  return RegisterOrInt32(ToRegister(allocation));
+}
+
+void CodeGenerator::visitInlineArgumentsSlice(LInlineArgumentsSlice* lir) {
+  RegisterOrInt32 begin = ToRegisterOrInt32(lir->begin());
+  RegisterOrInt32 count = ToRegisterOrInt32(lir->count());
+  Register temp = ToRegister(lir->temp());
+  Register output = ToRegister(lir->output());
+
+  uint32_t numActuals = lir->mir()->numActuals();
+
+#ifdef DEBUG
+  masm.move32(Imm32(numActuals), temp);
+
+  emitAssertArgumentsSliceBounds(begin, count, temp);
+#endif
+
+  emitNewArray(lir, count, output, temp);
+
+  // We're done if there are no actual arguments.
+  if (numActuals == 0) {
+    return;
+  }
+
+  // Check if any arguments have to be copied.
+  Label done;
+  if (count.is<Register>()) {
+    masm.branch32(Assembler::Equal, count.as<Register>(), Imm32(0), &done);
+  } else {
+    MOZ_ASSERT(count.as<int32_t>() > 0);
+  }
+
+  auto getArg = [&](uint32_t i) {
+    return toConstantOrRegister(lir, LInlineArgumentsSlice::ArgIndex(i),
+                                lir->mir()->getArg(i)->type());
+  };
+
+  auto storeArg = [&](uint32_t i, auto dest) {
+    // We don't need a pre-barrier because the element at |index| is guaranteed
+    // to be a non-GC thing (either uninitialized memory or the magic hole
+    // value).
+    masm.storeConstantOrRegister(getArg(i), dest);
+  };
+
+  // Initialize all elements.
+  if (numActuals == 1) {
+    // There's exactly one argument. We've checked that |count| is non-zero,
+    // which implies that |begin| must be zero.
+    MOZ_ASSERT_IF(begin.is<int32_t>(), begin.as<int32_t>() == 0);
+
+    Register elements = temp;
+    masm.loadPtr(Address(output, NativeObject::offsetOfElements()), elements);
+
+    storeArg(0, Address(elements, 0));
+  } else if (begin.is<Register>()) {
+    // There is more than one argument and |begin| isn't a compile-time
+    // constant. Iterate through 0..numActuals to search for |begin| and then
+    // start copying |count| arguments from that index.
+
+    LiveGeneralRegisterSet liveRegs;
+    liveRegs.add(output);
+    liveRegs.add(begin.as<Register>());
+
+    masm.PushRegsInMask(liveRegs);
+
+    Register elements = output;
+    masm.loadPtr(Address(output, NativeObject::offsetOfElements()), elements);
+
+    Register argIndex = begin.as<Register>();
+
+    Register index = temp;
+    masm.move32(Imm32(0), index);
+
+    Label doneLoop;
+    for (uint32_t i = 0; i < numActuals; ++i) {
+      Label next;
+      masm.branch32(Assembler::NotEqual, argIndex, Imm32(i), &next);
+
+      storeArg(i, BaseObjectElementIndex(elements, index));
+
+      masm.add32(Imm32(1), index);
+      masm.add32(Imm32(1), argIndex);
+
+      if (count.is<Register>()) {
+        masm.branch32(Assembler::GreaterThanOrEqual, index,
+                      count.as<Register>(), &doneLoop);
+      } else {
+        masm.branch32(Assembler::GreaterThanOrEqual, index,
+                      Imm32(count.as<int32_t>()), &doneLoop);
+      }
+
+      masm.bind(&next);
+    }
+    masm.bind(&doneLoop);
+
+    masm.PopRegsInMask(liveRegs);
+  } else {
+    // There is more than one argument and |begin| is a compile-time constant.
+
+    Register elements = temp;
+    masm.loadPtr(Address(output, NativeObject::offsetOfElements()), elements);
+
+    int32_t argIndex = begin.as<int32_t>();
+
+    int32_t index = 0;
+
+    Label doneLoop;
+    for (uint32_t i = argIndex; i < numActuals; ++i) {
+      storeArg(i, Address(elements, index * sizeof(Value)));
+
+      index += 1;
+
+      if (count.is<Register>()) {
+        masm.branch32(Assembler::LessThanOrEqual, count.as<Register>(),
+                      Imm32(index), &doneLoop);
+      } else {
+        if (index >= count.as<int32_t>()) {
+          break;
+        }
+      }
+    }
+    masm.bind(&doneLoop);
+  }
+
+  // Determine if we have to emit post-write barrier.
+  //
+  // If either |begin| or |count| is a constant, use their value directly.
+  // Otherwise assume we copy all inline arguments from 0..numActuals.
+  bool postWriteBarrier = false;
+  uint32_t actualBegin = begin.match([](Register) { return 0; },
+                                     [](int32_t value) { return value; });
+  uint32_t actualCount =
+      count.match([=](Register) { return numActuals; },
+                  [](int32_t value) -> uint32_t { return value; });
+  for (uint32_t i = 0; i < actualCount; ++i) {
+    ConstantOrRegister arg = getArg(actualBegin + i);
+    if (arg.constant()) {
+      Value v = arg.value();
+      if (v.isGCThing() && IsInsideNursery(v.toGCThing())) {
+        postWriteBarrier = true;
+      }
+    } else {
+      MIRType type = arg.reg().type();
+      if (type == MIRType::Value || NeedsPostBarrier(type)) {
+        postWriteBarrier = true;
+      }
+    }
+  }
+
+  // Emit a post-write barrier if |output| is tenured and we couldn't
+  // determine at compile-time that no barrier is needed.
+  if (postWriteBarrier) {
+    masm.branchPtrInNurseryChunk(Assembler::Equal, output, temp, &done);
+
+    LiveRegisterSet volatileRegs = liveVolatileRegs(lir);
+    volatileRegs.takeUnchecked(temp);
+
+    masm.PushRegsInMask(volatileRegs);
+    emitPostWriteBarrier(output);
+    masm.PopRegsInMask(volatileRegs);
+  }
+
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitNormalizeSliceTerm(LNormalizeSliceTerm* lir) {
   Register value = ToRegister(lir->value());
   Register length = ToRegister(lir->length());
