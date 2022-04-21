@@ -132,6 +132,9 @@ updatebot:
     - type: vendoring
       branch: master
       enabled: False
+
+      # frequency can be 'every', 'release', 'N weeks', 'N commits'
+      # or 'N weeks, M commits' requiring satisfying both constraints.
       frequency: 2 weeks
 
 # Configuration for the automated vendoring system.
@@ -421,7 +424,9 @@ def _schema_1():
                                 msg="Invalid filter value specified in tasks",
                             ),
                             "source-extensions": Unique([str]),
-                            "frequency": Match(r"^(every|release|[1-9][0-9]* weeks?)$"),
+                            "frequency": Match(
+                                r"^(every|release|[1-9][0-9]* weeks?|[1-9][0-9]* commits?|[1-9][0-9]* weeks?, ?[1-9][0-9]* commits?)$"
+                            ),
                             "platform": Match(r"^(windows|linux)$"),
                         }
                     ],
