@@ -364,6 +364,8 @@ var pktApi = (function() {
     setSetting("usedTags", undefined);
 
     setSetting("fsv1", undefined);
+
+    _clearRecentSavesCache();
   }
 
   /**
@@ -765,6 +767,11 @@ var pktApi = (function() {
       ...cache,
       lastUpdated: 0,
     });
+  }
+  // Clears the cache, for when a new user logs in.
+  async function _clearRecentSavesCache() {
+    const db = await getDatabase();
+    db.objectStore(STORE_NAME, "readwrite").delete("recentSaves");
   }
 
   async function getRecentSavesCache() {
