@@ -42,6 +42,7 @@ class Browsertime(Perftest):
     def __init__(self, app, binary, process_handler=None, **kwargs):
         self.browsertime = True
         self.browsertime_failure = ""
+        self.browsertime_user_args = []
 
         self.process_handler = process_handler or mozprocess.ProcessHandler
         for key in list(kwargs):
@@ -71,6 +72,7 @@ class Browsertime(Perftest):
             "browsertime_ffmpeg",
             "browsertime_geckodriver",
             "browsertime_chromedriver",
+            "browsertime_user_args",
         ):
             try:
                 if not self.browsertime_video and k == "browsertime_ffmpeg":
@@ -388,6 +390,12 @@ class Browsertime(Perftest):
                     value = ",".join(value.split(",") + extra)
                 if value is not None:
                     priority1_options.extend([browser_time_option, str(value)])
+
+        # Add any user-specified flags here, let them override anything
+        # with no restrictions
+        for user_arg in self.browsertime_user_args:
+            arg, val = user_arg.split("=")
+            priority1_options.extend([f"--{arg}", val])
 
         # In this code block we check if any priority 1 arguments are in conflict with a
         # priority 2/3/4 argument
