@@ -328,6 +328,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">S’ella hè permessa, l’unghjette private seranu ancu videvule quandu parechje appiecazioni sò aperte</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Aghjunghje un accurtatoghju per a navigazione privata</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Modu solu HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Tentativu autumaticu di cunnessione à i siti impieghendu u protocollu di cifratura HTTPS per aumentà a sicurità.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Attivata</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Disattivata</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Sapene di più</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Attivà in tutte l’unghjette</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Attivà solu in l’unghjette private</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">U situ sicurizatu ùn hè micca dispunibule</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Pare guasi sicuru chì u situ web ùn permetti micca u modu HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Sarrimanenti, si pò dinù ch’ellu s’agisce d’un attaccu. S’è vò cuntinuate versu stu situ web, ùn duveria micca stampittà alcunu datu sensibile. S’è vò cuntinuate, u modu solu HTTPS serà timpurariamente disattivatu per stu situ.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilità</string>
     <!-- Preference to override the Firefox Account server -->
@@ -800,7 +820,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Per disgrazia, %1$s ùn pò micca caricà a pagina.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
-    <string name="tab_crash_send_report">Mandà un raportu di penseri à Mozilla</string>
+    <string name="tab_crash_send_report">Mandà un raportu d’accidente à Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Chjode l’unghjetta</string>
     <!-- Restore tab button text on the tab crash page -->
@@ -1071,6 +1091,8 @@
     <string name="snackbar_message_bookmarks_saved">Indette arregistrate !</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Aghjuntu à i siti principale !</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Aghjuntu à l’accurtatoghji !</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Unghjetta privata chjosa</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1382,7 +1404,7 @@
     <!-- About page link text to open support link -->
     <string name="about_support">Assistenza</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
-    <string name="about_crashes">Lampate</string>
+    <string name="about_crashes">Accidenti</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Pulitica di cunfidenzialità</string>
 
@@ -1670,6 +1692,10 @@
     <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Aghjunghje à i siti principale</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
     <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Caccià da i siti principale</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Aghjunghje à l’accurtatoghji</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Caccià da l’accurtatoghji</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verificatu da : %1$s</string>
@@ -1747,8 +1773,12 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Cunfina di siti principale tocca</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Numeru massimu d’accurtatoghji toccu</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Per aghjunghje un novu situ principale, ci vole à cacciane un’altru. Effettuate una longa incalcata nant’à u situ è selezziunate Caccià.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Per aghjunghje un novu accurtatoghju, ci vole à cacciane un’altru. Effettuate una longa incalcata nant’à u situ è selezziunate Caccià</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iè, aghju capitu</string>
 
@@ -1758,7 +1788,9 @@
 	<string name="top_sites_rename_dialog_title">Nome</string>
 	<!-- Hint for renaming title of a top site -->
 	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Nome di u situ principale</string>
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Nome di l’accurtatoghju</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Vai</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Abbandunà</string>
@@ -1837,4 +1869,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Sapene di più</string>
 
-    </resources>
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Attivà a telemetria per mandà dati.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Andà à e preferenze</string>
+</resources>

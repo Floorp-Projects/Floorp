@@ -1776,6 +1776,8 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Omejitev glavnih strani je dosežena</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Doseženo je največje število bližnjic</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Če želite dodati novo glavno stran, eno odstranite. Podržite prst na njej in izberite &quot;Odstrani&quot;.</string>
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
@@ -1871,4 +1873,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Več o tem</string>
 
-    </resources>
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Za pošiljanje podatkov omogočite telemetrijo.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Pojdi v nastavitve</string>
+</resources>
