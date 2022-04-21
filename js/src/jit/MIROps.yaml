@@ -1247,6 +1247,10 @@
   alias_set: none
   possibly_calls: true
 
+# Array.prototype.slice on an inlined arguments object.
+- name: InlineArgumentsSlice
+  gen_boilerplate: false
+
 - name: NormalizeSliceTerm
   operands:
     value: Int32

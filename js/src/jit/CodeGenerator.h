@@ -209,6 +209,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 
   using RegisterOrInt32 = mozilla::Variant<Register, int32_t>;
 
+  static RegisterOrInt32 ToRegisterOrInt32(const LAllocation* allocation);
+
 #ifdef DEBUG
   void emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
                                       const RegisterOrInt32& count,

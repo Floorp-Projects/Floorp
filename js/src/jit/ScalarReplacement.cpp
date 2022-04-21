@@ -2149,7 +2149,10 @@ void ArgumentsReplacer::visitArgumentsSlice(MArgumentsSlice* ins) {
 
   MInstruction* replacement;
   if (isInlinedArguments()) {
-    MOZ_CRASH("NYI");
+    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
+    replacement =
+        MInlineArgumentsSlice::New(alloc(), beginMin, count, actualArgs,
+                                   ins->templateObj(), ins->initialHeap());
   } else {
     replacement = MFrameArgumentsSlice::New(
         alloc(), beginMin, count, ins->templateObj(), ins->initialHeap());
