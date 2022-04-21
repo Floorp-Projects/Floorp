@@ -148,6 +148,9 @@ features:
             DEFAULT:
               priority: 50
               max-display-count: 5
+            SURVEY:
+              priority: 55
+              max-display-count: 10
             PERSISTENT:
               priority: 50
               max-display-count: 20
