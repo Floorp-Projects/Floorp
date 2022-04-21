@@ -63,7 +63,9 @@ add_task(async function() {
         .replace(SEPARATOR_GUID, "-")
         .substr(0, 16);
       ok(
-        menuDeleteItem.getAttribute("label").includes(truncatedRowName),
+        JSON.parse(
+          menuDeleteItem.getAttribute("data-l10n-args")
+        ).itemName.includes(truncatedRowName),
         `Context menu item label contains '${rowName}' (maybe truncated)`
       );
     });
