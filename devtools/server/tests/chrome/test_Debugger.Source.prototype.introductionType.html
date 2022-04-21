@@ -23,7 +23,7 @@ addSandboxedDebuggerToGlobal(this);
 
 let dbg;
 let iframeDO, doc;
-let Tootles, TootlesDO;
+let Tootles;
 
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
@@ -45,7 +45,7 @@ addTest(function setup() {
     iframeDO = dbg.addDebuggee(iframe.contentWindow);
     doc = iframe.contentWindow.document;
     Tootles = doc.getElementById("Tootles");
-    TootlesDO = iframeDO.makeDebuggeeValue(Tootles);
+    iframeDO.makeDebuggeeValue(Tootles);
 
     runNextTest();
   }
@@ -60,8 +60,6 @@ addTest(function ClickOnTootles() {
 
   function TootlesClickDebugger(frame) {
     // some sanity checks
-    ok(frame.script.source.element === TootlesDO,
-       "top frame source belongs to element 'Tootles'");
     is(frame.script.source.elementAttributeName, "onclick",
        "top frame source belongs to 'onclick' attribute");
 
@@ -83,8 +81,6 @@ addTest(function DragTootles() {
 
   function TootlesDragDebugger(frame) {
     // sanity checks
-    ok(frame.script.source.element === TootlesDO,
-       "top frame source belongs to element 'Tootles'");
     is(frame.script.source.elementAttributeName, "ondrag",
        "top frame source belongs to 'ondrag' attribute");
 
@@ -99,12 +95,10 @@ addTest(function DragTootles() {
 // Check the introduction type of an in-markup script element.
 addTest(function checkAuddie() {
   const fnDO = iframeDO.getOwnPropertyDescriptor("auddie").value;
-  const AuddieDO = iframeDO.makeDebuggeeValue(doc.getElementById("Auddie"));
+  iframeDO.makeDebuggeeValue(doc.getElementById("Auddie"));
 
   is(fnDO.class, "Function",
      "Script element 'Auddie' defined function 'auddie'.");
-  ok(fnDO.script.source.element === AuddieDO,
-     "Function auddie's script belongs to script element 'Auddie'");
   is(fnDO.script.source.elementAttributeName, undefined,
      "Function auddie's script doesn't belong to any attribute of 'Auddie'");
   is(fnDO.script.source.introductionType, "inlineScript",
@@ -117,14 +111,12 @@ addTest(function checkAuddie() {
 addTest(function InsertRover() {
   dbg.onDebuggerStatement = RoverDebugger;
   const rover = doc.createElement("script");
-  const roverDO = iframeDO.makeDebuggeeValue(rover);
   rover.text = "debugger;";
   doc.body.appendChild(rover);
+  iframeDO.makeDebuggeeValue(rover);
 
   function RoverDebugger(frame) {
     // sanity checks
-    ok(frame.script.source.element === roverDO,
-       "Rover script belongs to Rover");
     ok(frame.script.source.elementAttributeName === undefined,
        "Rover script doesn't belong to an attribute of Rover");
 
@@ -155,8 +147,6 @@ addTest(function XULDocumentScript() {
     // A XUL script elements' code gets shared amongst all
     // instantiations of the document, so there's no specific DOM element
     // we can attribute the code to.
-    is(xulFnDO.script.source.element, undefined,
-       "XUL script code should not be attributed to any individual element");
 
     is(xulFnDO.script.source.introductionType, "inlineScript",
        "xulScriptFunc's introduction type is 'inlineScript'");
