@@ -130,6 +130,8 @@ struct RequestInit;
 class RequestOrUSVString;
 class SharedWorker;
 class Selection;
+class WebTaskScheduler;
+class WebTaskSchedulerMainThread;
 class SpeechSynthesis;
 class Timeout;
 class U2F;
@@ -988,6 +990,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
   bool CrossOriginIsolated() const override;
 
+  mozilla::dom::WebTaskScheduler* Scheduler();
+
  protected:
   // Web IDL helpers
 
@@ -1345,6 +1349,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
  private:
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
+
+  RefPtr<mozilla::dom::WebTaskSchedulerMainThread> mWebTaskScheduler;
 
  protected:
   // Whether we need to care about orientation changes.

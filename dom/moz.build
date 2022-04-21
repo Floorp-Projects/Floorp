@@ -111,6 +111,7 @@ DIRS += [
     "prio",
     "l10n",
     "origin-trials",
+    "webscheduling",
 ]
 
 
