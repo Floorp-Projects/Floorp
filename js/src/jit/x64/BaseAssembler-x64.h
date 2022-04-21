@@ -1045,6 +1045,12 @@ class BaseAssemblerX64 : public BaseAssembler {
   [[nodiscard]] JmpSrc vmulpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return twoByteRipOpSimd("vmulpd", VEX_PD, OP2_MULPD_VpdWpd, src, dst);
   }
+  [[nodiscard]] JmpSrc vandpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vandpd", VEX_PD, OP2_ANDPD_VpdWpd, src, dst);
+  }
+  [[nodiscard]] JmpSrc vminpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vminpd", VEX_PD, OP2_MINPD_VpdWpd, src, dst);
+  }
   [[nodiscard]] JmpSrc vpacksswb_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return twoByteRipOpSimd("vpacksswb", VEX_PD, OP2_PACKSSWB_VdqWdq, src, dst);
   }
@@ -1057,6 +1063,13 @@ class BaseAssemblerX64 : public BaseAssembler {
   [[nodiscard]] JmpSrc vpackusdw_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return threeByteRipOpSimd("vpackusdw", VEX_PD, OP3_PACKUSDW_VdqWdq,
                               ESCAPE_38, src, dst);
+  }
+  [[nodiscard]] JmpSrc vpunpckldq_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vpunpckldq", VEX_PD, OP2_PUNPCKLDQ_VdqWdq, src,
+                            dst);
+  }
+  [[nodiscard]] JmpSrc vunpcklps_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpSimd("vunpcklps", VEX_PS, OP2_UNPCKLPS_VsdWsd, src, dst);
   }
   [[nodiscard]] JmpSrc vptest_ripr(XMMRegisterID lhs) {
     return threeByteRipOpSimd("vptest", VEX_PD, OP3_PTEST_VdVd, ESCAPE_38, lhs);
