@@ -10,6 +10,7 @@ $break-point-medium: 610px;
 $break-point-large: 866px;
 $logo-size: 80px;
 $main-section-width: 504px;
+$noodle-buffer: 106px;
 
 html {
   height: 100%;
@@ -35,16 +36,12 @@ body {
 :root {
   &[dialogroot] {
     background-color: transparent;
-    min-width: $main-section-width;
-    overflow: hidden;
 
     body {
       padding: 0;
     }
 
     .onboardingContainer {
-      overflow: visible;
-
       &:dir(rtl) {
         transform: unset;
       }
@@ -55,14 +52,6 @@ body {
         &:dir(rtl) {
           transform: unset;
         }
-
-        &.with-noodles {
-          // Adjust for noodles partially extending out from the square modal
-          $noodle-buffer: 106px;
-          min-width: $main-section-width + $noodle-buffer;
-          min-height: $main-section-width + $noodle-buffer;
-        }
-
       }
     }
   }
@@ -70,7 +59,6 @@ body {
 
 .onboardingContainer {
   text-align: center;
-  overflow-x: auto;
   height: 100vh;
 
   @media (prefers-contrast: more) {
@@ -196,6 +184,20 @@ body {
 
     &:dir(rtl) {
       transform: rotateY(180deg);
+    }
+
+    &[pos='center'] {
+      min-width: $main-section-width;
+
+      &.with-noodles {
+        // Adjust for noodles partially extending out from the square modal
+        min-width: $main-section-width + $noodle-buffer;
+        min-height: $main-section-width + $noodle-buffer;
+
+        .section-main {
+          height: $main-section-width;
+        }
+      }
     }
   }
 
@@ -1406,9 +1408,5 @@ body {
         transition-delay: 0.4s;
       }
     }
-  }
-
-  .screen.with-noodles:not(.corner) .section-main {
-    height: $main-section-width;
   }
 }
