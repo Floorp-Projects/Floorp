@@ -3596,25 +3596,29 @@ nsresult EditorBase::OnCompositionChange(
   MOZ_ASSERT(
       !mPlaceholderBatch,
       "UpdateIMEComposition() must be called without place holder batch");
-  bool wasComposing = mComposition->IsComposing();
-  TextComposition::CompositionChangeEventHandlingMarker
-      compositionChangeEventHandlingMarker(mComposition,
-                                           &aCompositionChangeEvent);
-
-  RefPtr<nsCaret> caret = GetCaret();
+  nsString data(aCompositionChangeEvent.mData);
+  if (IsHTMLEditor()) {
+    nsContentUtils::PlatformToDOMLineBreaks(data);
+  }
 
   {
+    // This needs to be destroyed before dispatching "input" event from
+    // the following call of `NotifyEditorObservers`.  Therefore, we need to
+    // put this in this block rather than outside of this.
+    const bool wasComposing = mComposition->IsComposing();
+    TextComposition::CompositionChangeEventHandlingMarker
+        compositionChangeEventHandlingMarker(mComposition,
+                                             &aCompositionChangeEvent);
     AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::IMETxnName,
                                                ScrollSelectionIntoView::Yes,
                                                __FUNCTION__);
 
+    // XXX Why don't we get caret after the DOM mutation?
+    RefPtr<nsCaret> caret = GetCaret();
+
     MOZ_ASSERT(
         mIsInEditSubAction,
         "AutoPlaceholderBatch should've notified the observes of before-edit");
-    nsString data(aCompositionChangeEvent.mData);
-    if (IsHTMLEditor()) {
-      nsContentUtils::PlatformToDOMLineBreaks(data);
-    }
     // If we're updating composition, we need to ignore normal selection
     // which may be updated by the web content.
     rv = InsertTextAsSubAction(data, wasComposing ? SelectionHandling::Ignore
@@ -3633,6 +3637,12 @@ nsresult EditorBase::OnCompositionChange(
   // change.
   // NOTE: We must notify after the auto batch will be gone.
   if (!aCompositionChangeEvent.IsFollowedByCompositionEnd()) {
+    // If we're a TextEditor, we'll be initialized with a new anonymous subtree,
+    // which can be caused by reframing from a "input" event listener.  At that
+    // time, we'll move composition from current text node to the new text node
+    // with using mComposition's data.  Therefore, it's important that
+    // mComposition already has the latest information here.
+    MOZ_ASSERT_IF(mComposition, mComposition->String() == data);
     NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   }
 
@@ -5235,6 +5245,9 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "CompositionTransaction::SetIMESelection() failed, but ignored");
+      mComposition->OnUpdateCompositionInEditor(
+          mComposition->String(), *textNode,
+          mComposition->XPOffsetInTextNode());
     }
   }
 
