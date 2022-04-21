@@ -60,7 +60,7 @@ impl ApiResources {
                 ResourceUpdate::AddBlobImage(ref img) => {
                     self.blob_image_handler
                         .as_mut()
-                        .unwrap()
+                        .expect("no blob image handler")
                         .add(img.key, Arc::clone(&img.data), &img.visible_rect, img.tile_size);
 
                     self.blob_image_templates.insert(
@@ -166,8 +166,11 @@ impl ApiResources {
         visible_rect: &DeviceIntRect,
     ) {
         if let Some(data) = data {
-            let dirty_rect = dirty_rect.unwrap();
-            self.blob_image_handler.as_mut().unwrap().update(key, data, visible_rect, dirty_rect);
+            let dirty_rect = dirty_rect.expect("no dirty rect");
+            self.blob_image_handler
+                .as_mut()
+                .expect("no blob image handler")
+                .update(key, data, visible_rect, dirty_rect);
         }
 
         let image = self.blob_image_templates
@@ -218,7 +221,8 @@ impl ApiResources {
 
         let mut blob_request_params = Vec::new();
         for key in keys {
-            let template = self.blob_image_templates.get_mut(key).unwrap();
+            let template = self.blob_image_templates.get_mut(key)
+                .expect("no blob image template");
 
             // If we know that only a portion of the blob image is in the viewport,
             // only request these visible tiles since blob images can be huge.
@@ -270,7 +274,8 @@ impl ApiResources {
             template.valid_tiles_after_bounds_change = None;
         }
 
-        let handler = self.blob_image_handler.as_mut().unwrap();
+        let handler = self.blob_image_handler.as_mut()
+            .expect("no blob image handler");
         handler.prepare_resources(&self.fonts, &blob_request_params);
         (Some(handler.create_blob_rasterizer()), blob_request_params)
     }
