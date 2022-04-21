@@ -15518,10 +15518,11 @@ void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
 void CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins) {
   const MWasmAlignmentCheck* mir = ins->mir();
   Register ptr = ToRegister(ins->ptr());
-  Label ok;
-  masm.branchTest32(Assembler::Zero, ptr, Imm32(mir->byteSize() - 1), &ok);
-  masm.wasmTrap(wasm::Trap::UnalignedAccess, mir->bytecodeOffset());
-  masm.bind(&ok);
+  OutOfLineAbortingWasmTrap* ool = new (alloc()) OutOfLineAbortingWasmTrap(
+      mir->bytecodeOffset(), wasm::Trap::UnalignedAccess);
+  addOutOfLineCode(ool, mir);
+  masm.branchTest32(Assembler::NonZero, ptr, Imm32(mir->byteSize() - 1),
+                    ool->entry());
 }
 
 void CodeGenerator::visitWasmAlignmentCheck64(LWasmAlignmentCheck64* ins) {
@@ -15532,10 +15533,11 @@ void CodeGenerator::visitWasmAlignmentCheck64(LWasmAlignmentCheck64* ins) {
 #else
   Register r = ptr.low;
 #endif
-  Label ok;
-  masm.branchTestPtr(Assembler::Zero, r, Imm32(mir->byteSize() - 1), &ok);
-  masm.wasmTrap(wasm::Trap::UnalignedAccess, mir->bytecodeOffset());
-  masm.bind(&ok);
+  OutOfLineAbortingWasmTrap* ool = new (alloc()) OutOfLineAbortingWasmTrap(
+      mir->bytecodeOffset(), wasm::Trap::UnalignedAccess);
+  addOutOfLineCode(ool, mir);
+  masm.branchTestPtr(Assembler::NonZero, r, Imm32(mir->byteSize() - 1),
+                     ool->entry());
 }
 
 void CodeGenerator::visitWasmLoadTls(LWasmLoadTls* ins) {
