@@ -6653,6 +6653,79 @@ MDefinition* MGetInlinedArgumentHole::foldsTo(TempAllocator& alloc) {
   return arg;
 }
 
+MDefinition* MNormalizeSliceTerm::foldsTo(TempAllocator& alloc) {
+  auto* length = this->length();
+  if (!length->isConstant() && !length->isArgumentsLength()) {
+    return this;
+  }
+
+  if (length->isConstant()) {
+    int32_t lengthConst = length->toConstant()->toInt32();
+    MOZ_ASSERT(lengthConst >= 0);
+
+    // Result is always zero when |length| is zero.
+    if (lengthConst == 0) {
+      return length;
+    }
+
+    auto* value = this->value();
+    if (value->isConstant()) {
+      int32_t valueConst = value->toConstant()->toInt32();
+
+      int32_t normalized;
+      if (valueConst < 0) {
+        normalized = std::max(valueConst + lengthConst, 0);
+      } else {
+        normalized = std::min(valueConst, lengthConst);
+      }
+
+      if (normalized == valueConst) {
+        return value;
+      }
+      if (normalized == lengthConst) {
+        return length;
+      }
+      return MConstant::New(alloc, Int32Value(normalized));
+    }
+
+    return this;
+  }
+
+  auto* value = this->value();
+  if (value->isConstant()) {
+    int32_t valueConst = value->toConstant()->toInt32();
+
+    // Minimum of |value| and |length|.
+    if (valueConst > 0) {
+      bool isMax = false;
+      return MMinMax::New(alloc, value, length, MIRType::Int32, isMax);
+    }
+
+    // Maximum of |value + length| and zero.
+    if (valueConst < 0) {
+      // Safe to truncate because |length| is never negative.
+      auto* add = MAdd::New(alloc, value, length, TruncateKind::Truncate);
+      block()->insertBefore(this, add);
+
+      auto* zero = MConstant::New(alloc, Int32Value(0));
+      block()->insertBefore(this, zero);
+
+      bool isMax = true;
+      return MMinMax::New(alloc, add, zero, MIRType::Int32, isMax);
+    }
+
+    // Directly return the value when it's zero.
+    return value;
+  }
+
+  // Normalizing MArgumentsLength is a no-op.
+  if (value->isArgumentsLength()) {
+    return value;
+  }
+
+  return this;
+}
+
 bool MWasmShiftSimd128::congruentTo(const MDefinition* ins) const {
   return ins->toWasmShiftSimd128()->simdOp() == simdOp_ &&
          congruentIfOperandsEqual(ins);
