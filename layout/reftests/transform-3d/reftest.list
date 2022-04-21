@@ -66,10 +66,10 @@ fuzzy(0-3,0-304) == scroll-perspective-1.html scroll-perspective-1-ref.html
 fails-if(!layersGPUAccelerated) fails-if(useDrawSnapshot) fuzzy-if(!useDrawSnapshot,0-29,0-826) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
 fails-if(useDrawSnapshot) != 1157984-1.html about:blank # Bug 1157984
 fuzzy(0-220,0-660) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
-fuzzy(0-240,0-600) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,0-16,0-6) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
+fuzzy(0-240,0-400) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,0-16,0-6) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
 != animate-cube-radians-ref.html animate-cube-radians-zoom-ref.html
 fuzzy(0-240,0-660) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
-fuzzy(0-240,0-600) fails-if(useDrawSnapshot) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
+fuzzy(0-240,0-400) fails-if(useDrawSnapshot) == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
 fuzzy-if(gtkWidget,0-128,0-100) fuzzy-if(Android||OSX==1010||(gtkWidget&&layersGPUAccelerated),0-143,0-100) fuzzy-if(winWidget||OSX,0-141,0-100) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy(0-255,0-153) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
