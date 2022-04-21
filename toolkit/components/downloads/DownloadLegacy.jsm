@@ -16,6 +16,14 @@
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+});
+
 ChromeUtils.defineModuleGetter(
   this,
   "Downloads",
@@ -417,8 +425,27 @@ DownloadLegacyTransfer.prototype = {
           aDownload.tryToKeepPartialData = true;
         }
 
-        // Start the download before allowing it to be controlled.  Ignore errors.
-        aDownload.start().catch(() => {});
+        // Hide toolbar before download if we're in reader mode
+        let aboutReaderCb = () => {};
+
+        if (aDownload.source.url.includes("about:reader")) {
+          let browserWin = BrowserWindowTracker.getTopWindow();
+          let actor = browserWin.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+            "AboutReader"
+          );
+          actor.sendQuery("Reader:HideToolbar");
+          aboutReaderCb = () => {
+            actor.sendQuery("Reader:ShowToolbar");
+          };
+        }
+
+        // Start the download before allwoing it to be controlled. Ignore errors.
+        aDownload
+          .start()
+          .then(() => {
+            aboutReaderCb();
+          })
+          .catch(() => {});
 
         // Start processing all the other events received through nsITransfer.
         this._download = aDownload;
