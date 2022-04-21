@@ -65,17 +65,17 @@ class VendorManifest(MozbuildObject):
         if "vendoring" in self.manifest:
             ref_type = self.manifest["vendoring"]["tracking"]
             if revision == "tip":
-                ref, timestamp = self.source_host.upstream_commit("HEAD")
+                new_revision, timestamp = self.source_host.upstream_commit("HEAD")
             elif ref_type == "tag":
-                ref, timestamp = self.source_host.upstream_tag(revision)
+                new_revision, timestamp = self.source_host.upstream_tag(revision)
             else:
-                ref, timestamp = self.source_host.upstream_commit(revision)
+                new_revision, timestamp = self.source_host.upstream_commit(revision)
         else:
             ref_type = "commit"
-            ref, timestamp = self.source_host.upstream_commit(revision)
+            new_revision, timestamp = self.source_host.upstream_commit(revision)
 
         self.logInfo(
-            {"ref_type": ref_type, "ref": ref, "timestamp": timestamp},
+            {"ref_type": ref_type, "ref": new_revision, "timestamp": timestamp},
             "Latest {ref_type} is {ref} from {timestamp}",
         )
 
@@ -88,23 +88,23 @@ class VendorManifest(MozbuildObject):
             )
             return
 
-        if not force and self.manifest["origin"]["revision"] == ref:
+        if not force and self.manifest["origin"]["revision"] == new_revision:
             # We're up to date, don't do anything
             self.logInfo({}, "Latest upstream matches in-tree.")
             return
         elif check_for_update:
             # Only print the new revision to stdout
-            print("%s %s" % (ref, timestamp))
+            print("%s %s" % (new_revision, timestamp))
             return
 
         if self.should_perform_step("fetch"):
-            self.fetch_and_unpack(ref)
+            self.fetch_and_unpack(new_revision)
         else:
             self.logInfo({}, "Skipping fetching upstream source.")
 
         if self.should_perform_step("update-actions"):
             self.logInfo({}, "Updating files")
-            self.update_files(ref)
+            self.update_files(new_revision)
         else:
             self.logInfo({}, "Skipping running the update actions.")
 
@@ -119,13 +119,13 @@ class VendorManifest(MozbuildObject):
 
         if self.should_perform_step("spurious-check"):
             self.logInfo({}, "Checking for a spurious update.")
-            self.spurious_check(revision, ignore_modified)
+            self.spurious_check(new_revision, ignore_modified)
         else:
             self.logInfo({}, "Skipping the spurious update check.")
 
         if self.should_perform_step("update-moz-yaml"):
             self.logInfo({}, "Updating moz.yaml.")
-            self.update_yaml(ref, timestamp)
+            self.update_yaml(new_revision, timestamp)
         else:
             self.logInfo({}, "Skipping updating the moz.yaml file.")
 
@@ -139,7 +139,7 @@ class VendorManifest(MozbuildObject):
         else:
             self.logInfo({}, "Skipping update of moz.build files")
 
-        self.logInfo({"rev": revision}, "Updated to '{rev}'.")
+        self.logInfo({"rev": new_revision}, "Updated to '{rev}'.")
 
         if "patches" in self.manifest["vendoring"]:
             # Remind the user
