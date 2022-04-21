@@ -216,11 +216,13 @@ void VRProcessManager::OnPreferenceChange(const char16_t* aData) {
   // We know prefs are ASCII here.
   NS_LossyConvertUTF16toASCII strData(aData);
 
-  mozilla::dom::Pref pref(strData, /* isLocked */ false,
-                          /* isSanitized */ false, Nothing(), Nothing());
+  // A pref changed. If it is useful to do so, inform child processes.
+  if (!dom::ContentParent::ShouldSyncPreference(strData.Data())) {
+    return;
+  }
 
-  Preferences::GetPreference(&pref, GeckoProcessType_VR,
-                             /* remoteType */ ""_ns);
+  mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
+  Preferences::GetPreference(&pref);
   if (!!mVRChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
     mVRChild->SendPreferenceUpdate(pref);
