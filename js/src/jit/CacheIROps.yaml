@@ -945,6 +945,16 @@
     begin: Int32Id
     end: Int32Id
 
+- name: ArgumentsSliceResult
+  shared: false
+  transpile: false
+  cost_estimate: 5
+  args:
+    templateObject: ObjectField
+    args: ObjId
+    begin: Int32Id
+    end: Int32Id
+
 - name: IsArrayResult
   shared: false
   transpile: true
@@ -1836,6 +1846,14 @@
   cost_estimate: 1
   args:
     obj: ObjId
+
+- name: LoadArgumentsObjectLength
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: Int32Id
 
 - name: LoadFunctionLengthResult
   shared: true

@@ -3284,6 +3284,21 @@ bool CacheIRCompiler::emitLoadArgumentsObjectLengthResult(ObjOperandId objId) {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadArgumentsObjectLength(ObjOperandId objId,
+                                                    Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  Register res = allocator.defineRegister(masm, resultId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadArgumentsObjectLength(obj, res, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadArrayBufferByteLengthInt32Result(
     ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

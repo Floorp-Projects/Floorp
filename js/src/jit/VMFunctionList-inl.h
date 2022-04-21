@@ -40,6 +40,7 @@ namespace jit {
   _(ArgumentsObjectCreateForInlinedIon,                                        \
     js::ArgumentsObject::createForInlinedIon)                                  \
   _(ArgumentsObjectCreateForIon, js::ArgumentsObject::createForIon)            \
+  _(ArgumentsSliceDense, js::ArgumentsSliceDense)                              \
   _(ArrayConstructorOneArg, js::ArrayConstructorOneArg)                        \
   _(ArrayFromArgumentsObject, js::ArrayFromArgumentsObject)                    \
   _(ArrayJoin, js::jit::ArrayJoin)                                             \
