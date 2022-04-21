@@ -1195,6 +1195,14 @@ class RaptorOutput(PerftestOutput):
                                 % measurement_name
                             )
                             new_subtest["shouldAlert"] = True
+                        else:
+                            # Explicitly set `shouldAlert` to False so that the measurement
+                            # is not alerted on. Otherwise Perfherder defaults to alerting
+                            LOG.info(
+                                "turning off subtest alerting for measurement type: %s"
+                                % measurement_name
+                            )
+                            new_subtest["shouldAlert"] = False
 
                     new_subtest["value"] = filters.median(filtered_values)
 
@@ -1584,6 +1592,14 @@ class BrowsertimeOutput(PerftestOutput):
                                 subtest["shouldAlert"] = True
                                 if self.app in ("chrome", "chrome-m", "chromium"):
                                     subtest["shouldAlert"] = False
+                            else:
+                                # Explicitly set `shouldAlert` to False so that the measurement
+                                # is not alerted on. Otherwise Perfherder defaults to alerting.
+                                LOG.info(
+                                    "turning off subtest alerting for measurement type: %s"
+                                    % measurement_name
+                                )
+                                subtest["shouldAlert"] = False
                         subtest["replicates"] = []
                         suite["subtests"][measurement_name] = subtest
                     else:
