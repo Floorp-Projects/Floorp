@@ -36,8 +36,9 @@ class EMEDecoderModule : public PlatformDecoderModule {
     MOZ_CRASH("Not used");
   }
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
 
  private:
   virtual ~EMEDecoderModule();

@@ -9,6 +9,7 @@
 #include "IMEStateManager.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
+#include "nsIMutationObserver.h"
 #include "nsPresContext.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EditorBase.h"
@@ -85,6 +86,82 @@ void TextComposition::Destroy() {
   mCompositionLengthInTextNode = UINT32_MAX;
   // TODO: If the editor is still alive and this is held by it, we should tell
   //       this being destroyed for cleaning up the stuff.
+}
+
+void TextComposition::OnCharacterDataChanged(
+    Text& aText, const CharacterDataChangeInfo& aInfo) {
+  if (mContainerTextNode != &aText ||
+      mCompositionStartOffsetInTextNode == UINT32_MAX ||
+      mCompositionLengthInTextNode == UINT32_MAX) {
+    return;
+  }
+
+  // Ignore changes after composition string.
+  if (aInfo.mChangeStart >=
+      mCompositionStartOffsetInTextNode + mCompositionLengthInTextNode) {
+    return;
+  }
+
+  // If the change ends before the composition string, we need only to adjust
+  // the start offset.
+  if (aInfo.mChangeEnd <= mCompositionStartOffsetInTextNode) {
+    MOZ_ASSERT(aInfo.LengthOfRemovedText() <=
+               mCompositionStartOffsetInTextNode);
+    mCompositionStartOffsetInTextNode -= aInfo.LengthOfRemovedText();
+    mCompositionStartOffsetInTextNode += aInfo.mReplaceLength;
+    return;
+  }
+
+  // If this is caused by a splitting text node, the composition string
+  // may be split out to the new right node.  In the case,
+  // CompositionTransaction::DoTransaction handles it with warking the
+  // following text nodes.  Therefore, we should NOT shrink the composing
+  // range for avoind breaking the fix of bug 1310912.  Although the handling
+  // looks buggy so that we need to move the handling into here later.
+  if (aInfo.mDetails &&
+      aInfo.mDetails->mType == CharacterDataChangeInfo::Details::eSplit) {
+    return;
+  }
+
+  // If the change removes/replaces the last character of the composition
+  // string, we should shrink the composition range before the change start.
+  // Then, the replace string will be never updated by coming composition
+  // updates.
+  if (aInfo.mChangeEnd >=
+      mCompositionStartOffsetInTextNode + mCompositionLengthInTextNode) {
+    // If deleting the first character of the composition string, collapse IME
+    // selection temporarily.  Updating composition string will insert new
+    // composition string there.
+    if (aInfo.mChangeStart <= mCompositionStartOffsetInTextNode) {
+      mCompositionStartOffsetInTextNode = aInfo.mChangeStart;
+      mCompositionLengthInTextNode = 0u;
+      return;
+    }
+    // If some characters in the composition still stay, composition range
+    // should be shrunken.
+    MOZ_ASSERT(aInfo.mChangeStart > mCompositionStartOffsetInTextNode);
+    mCompositionLengthInTextNode =
+        aInfo.mChangeStart - mCompositionStartOffsetInTextNode;
+    return;
+  }
+
+  // If removed range starts in the composition string, we need only adjust
+  // the length to make composition range contain the replace string.
+  if (aInfo.mChangeStart >= mCompositionStartOffsetInTextNode) {
+    MOZ_ASSERT(aInfo.LengthOfRemovedText() <= mCompositionLengthInTextNode);
+    mCompositionLengthInTextNode -= aInfo.LengthOfRemovedText();
+    mCompositionLengthInTextNode += aInfo.mReplaceLength;
+    return;
+  }
+
+  // If preceding characers of the composition string is also removed,  new
+  // composition start will be there and new composition ends at current
+  // position.
+  const uint32_t removedLengthInCompositionString =
+      aInfo.mChangeEnd - mCompositionStartOffsetInTextNode;
+  mCompositionStartOffsetInTextNode = aInfo.mChangeStart;
+  mCompositionLengthInTextNode -= removedLengthInCompositionString;
+  mCompositionLengthInTextNode += aInfo.mReplaceLength;
 }
 
 bool TextComposition::IsValidStateForComposition(nsIWidget* aWidget) const {

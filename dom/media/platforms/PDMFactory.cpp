@@ -336,7 +336,8 @@ PDMFactory::CheckAndMaybeCreateDecoder(CreateDecoderParamsForAsync&& aParams,
   uint32_t i = aIndex;
   auto params = SupportDecoderParams(aParams);
   for (; i < mCurrentPDMs.Length(); i++) {
-    if (!mCurrentPDMs[i]->Supports(params, nullptr /* diagnostic */)) {
+    if (mCurrentPDMs[i]->Supports(params, nullptr /* diagnostic */) ==
+        media::DecodeSupport::Unsupported) {
       continue;
     }
     RefPtr<PlatformDecoderModule::CreateDecoderPromise> p =
@@ -440,7 +441,8 @@ bool PDMFactory::SupportsMimeType(const nsACString& aMimeType) const {
 bool PDMFactory::Supports(const SupportDecoderParams& aParams,
                           DecoderDoctorDiagnostics* aDiagnostics) const {
   if (mEMEPDM) {
-    return mEMEPDM->Supports(aParams, aDiagnostics);
+    return mEMEPDM->Supports(aParams, aDiagnostics) !=
+           media::DecodeSupport::Unsupported;
   }
 
   RefPtr<PlatformDecoderModule> current =
@@ -697,8 +699,9 @@ already_AddRefed<PlatformDecoderModule> PDMFactory::GetDecoderModule(
   }
 
   RefPtr<PlatformDecoderModule> pdm;
-  for (auto& current : mCurrentPDMs) {
-    if (current->Supports(aParams, aDiagnostics)) {
+  for (const auto& current : mCurrentPDMs) {
+    if (current->Supports(aParams, aDiagnostics) !=
+        media::DecodeSupport::Unsupported) {
       pdm = current;
       break;
     }

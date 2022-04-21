@@ -740,11 +740,43 @@ Changelog
 Contextual Services Pings
 -------------------------
 
-The following custom pings record impressions and clicks on Firefox Suggest
-suggestions. For general information on custom ping telemetry in Firefox, see
+The following custom telemetry pings are recorded for Firefox Suggest
+suggestions. For general information on custom telemetry pings in Firefox, see
 the `Custom Ping`_ document.
 
 .. _Custom Ping: https://docs.telemetry.mozilla.org/cookbooks/new_ping.html#sending-a-custom-ping
+
+Block
+~~~~~
+
+A block ping is recorded when the user dismisses ("blocks") a suggestion. Its
+payload includes the following:
+
+:advertiser:
+  The name of the suggestion's advertiser.
+:block_id:
+  A unique identifier for the suggestion (a.k.a. a keywords block).
+:context_id:
+  A UUID representing this user. Note that it's not client_id, nor can it be
+  used to link to a client_id.
+:iab_category:
+  The suggestion's category, either "22 - Shopping" or "5 - Education".
+:match_type:
+  "best-match" if the suggestion was a best match or "firefox-suggest" if it was
+  a non-best-match suggestion.
+:position:
+  The index of the suggestion in the list of results (1-based).
+:request_id:
+  A request identifier for each API request to Merino. This is only included for
+  suggestions provided by Merino.
+:scenario:
+  The user's Suggest scenario, either "offline" or "online".
+
+Changelog
+  Firefox 101.0
+    Introduced. [Bug 1764669_]
+
+.. _1764669: https://bugzilla.mozilla.org/show_bug.cgi?id=1764669
 
 Click
 ~~~~~

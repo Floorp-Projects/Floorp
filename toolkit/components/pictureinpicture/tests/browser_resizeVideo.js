@@ -3,6 +3,11 @@
 
 "use strict";
 
+// Global values for the left and top edge pixel coordinates. These will be written to
+// during the add_setup function in this test file.
+let gLeftEdge = 0;
+let gTopEdge = 0;
+
 /**
  * Run the resize test on a player window.
  *
@@ -59,7 +64,7 @@ async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
     newWidth,
     newHeight
   ) {
-    if (pinX || previousScreenX == 0) {
+    if (pinX || previousScreenX == gLeftEdge) {
       Assert.equal(
         previousScreenX,
         newScreenX,
@@ -208,6 +213,31 @@ async function testVideo(browser, videoID, pipWin, { pinX, pinY } = {}) {
   );
 }
 
+add_setup(async () => {
+  await BrowserTestUtils.withNewTab(
+    {
+      url: TEST_PAGE,
+      gBrowser,
+    },
+    async browser => {
+      // Reset the saved PiP location to top-left edge of the screen, wherever
+      // that may be. We record the top-left edge of the screen coordinates into
+      // global variables to do later coordinate comparisons after resizes.
+      let clearWin = await triggerPictureInPicture(browser, "with-controls");
+      let initialScreenX = clearWin.mozInnerScreenX;
+      let initialScreenY = clearWin.mozInnerScreenY;
+      let PiPScreen = PictureInPicture.getWorkingScreen(
+        initialScreenX,
+        initialScreenY
+      );
+      [gLeftEdge, gTopEdge] = PictureInPicture.getAvailScreenSize(PiPScreen);
+      clearWin.moveTo(gLeftEdge, gTopEdge);
+
+      await BrowserTestUtils.closeWindow(clearWin);
+    }
+  );
+});
+
 /**
  * Tests that if a <video> element is resized the Picture-in-Picture window
  * will be resized to match the new dimensions.
@@ -226,7 +256,7 @@ add_task(async () => {
 
         await testVideo(browser, videoID, pipWin);
 
-        pipWin.moveTo(0, 0);
+        pipWin.moveTo(gLeftEdge, gTopEdge);
 
         await testVideo(browser, videoID, pipWin, { pinX: true, pinY: true });
 

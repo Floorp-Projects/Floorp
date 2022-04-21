@@ -352,7 +352,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
       return EditorDOMPointType();
     }
     if (mGivenSplitPoint.IsSet()) {
-      return EditorDOMPointType(mGivenSplitPoint);
+      return mGivenSplitPoint.To<EditorDOMPointType>();
     }
     if (!mPreviousNode) {
       return EditorDOMPointType(mNextNode);

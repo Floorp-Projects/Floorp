@@ -23,6 +23,7 @@ const SPONSORED_SECOND_POSITION_SUGGEST = {
   click_url: "http://click.reporting.test.com/",
   impression_url: "http://impression.reporting.test.com/",
   advertiser: "TestAdvertiser",
+  iab_category: "22 - Shopping",
   position: 1,
 };
 const SPONSORED_NORMAL_POSITION_SUGGEST = {
@@ -33,6 +34,7 @@ const SPONSORED_NORMAL_POSITION_SUGGEST = {
   click_url: "http://click.reporting.test.com/",
   impression_url: "http://impression.reporting.test.com/",
   advertiser: "TestAdvertiser",
+  iab_category: "22 - Shopping",
 };
 const NONSPONSORED_SECOND_POSITION_SUGGEST = {
   id: 3,
@@ -63,6 +65,7 @@ const FIRST_POSITION_SUGGEST = {
   click_url: "http://click.reporting.test.com/first-position",
   impression_url: "http://impression.reporting.test.com/first-position",
   advertiser: "TestAdvertiserFirstPositionQuickSuggest",
+  iab_category: "22 - Shopping",
   position: 0,
 };
 const SECOND_POSITION_SUGGEST = {
@@ -73,6 +76,7 @@ const SECOND_POSITION_SUGGEST = {
   click_url: "http://click.reporting.test.com/second-position",
   impression_url: "http://impression.reporting.test.com/second-position",
   advertiser: "TestAdvertiserSecondPositionQuickSuggest",
+  iab_category: "22 - Shopping",
   position: 1,
 };
 const THIRD_POSITION_SUGGEST = {
@@ -83,6 +87,7 @@ const THIRD_POSITION_SUGGEST = {
   click_url: "http://click.reporting.test.com/third-position",
   impression_url: "http://impression.reporting.test.com/third-position",
   advertiser: "TestAdvertiserThirdPositionQuickSuggest",
+  iab_category: "22 - Shopping",
   position: 2,
 };
 
@@ -149,6 +154,7 @@ function createExpectedQuickSuggestResult(suggest) {
       sponsoredClickUrl: suggest.click_url,
       sponsoredBlockId: suggest.id,
       sponsoredAdvertiser: suggest.advertiser,
+      sponsoredIabCategory: suggest.iab_category,
       isSponsored: suggest.iab_category !== "5 - Education",
       helpUrl: UrlbarProviderQuickSuggest.helpUrl,
       helpL10nId: "firefox-suggest-urlbar-learn-more",

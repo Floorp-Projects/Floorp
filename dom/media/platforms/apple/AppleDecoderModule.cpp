@@ -54,7 +54,8 @@ nsresult AppleDecoderModule::Startup() {
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
-  if (!Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */)) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */) ==
+      media::DecodeSupport::Unsupported) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> decoder;
@@ -67,14 +68,15 @@ already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateVideoDecoder(
 
 already_AddRefed<MediaDataDecoder> AppleDecoderModule::CreateAudioDecoder(
     const CreateDecoderParams& aParams) {
-  if (!Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */)) {
+  if (Supports(SupportDecoderParams(aParams), nullptr /* diagnostics */) ==
+      media::DecodeSupport::Unsupported) {
     return nullptr;
   }
   RefPtr<MediaDataDecoder> decoder = new AppleATDecoder(aParams.AudioConfig());
   return decoder.forget();
 }
 
-bool AppleDecoderModule::SupportsMimeType(
+media::DecodeSupportSet AppleDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool supports = (aMimeType.EqualsLiteral("audio/mpeg") &&
                    !StaticPrefs::media_ffvpx_mp3_enabled()) ||
@@ -83,18 +85,29 @@ bool AppleDecoderModule::SupportsMimeType(
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Apple decoder %s requested type '%s'",
            supports ? "supports" : "rejects", aMimeType.BeginReading()));
-  return supports;
+  if (supports) {
+    // TODO: Note that we do not yet distinguish between SW/HW decode support.
+    //       Will be done in bug 1754239.
+    return media::DecodeSupport::SoftwareDecode;
+  }
+  return media::DecodeSupport::Unsupported;
 }
 
-bool AppleDecoderModule::Supports(
+media::DecodeSupportSet AppleDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
   const auto& trackInfo = aParams.mConfig;
   if (trackInfo.IsAudio()) {
     return SupportsMimeType(trackInfo.mMimeType, aDiagnostics);
   }
-  return trackInfo.GetAsVideoInfo() &&
-         IsVideoSupported(*trackInfo.GetAsVideoInfo());
+  bool supports = trackInfo.GetAsVideoInfo() &&
+                  IsVideoSupported(*trackInfo.GetAsVideoInfo());
+  if (supports) {
+    // TODO: Note that we do not yet distinguish between SW/HW decode support.
+    //       Will be done in bug 1754239.
+    return media::DecodeSupport::SoftwareDecode;
+  }
+  return media::DecodeSupport::Unsupported;
 }
 
 bool AppleDecoderModule::IsVideoSupported(

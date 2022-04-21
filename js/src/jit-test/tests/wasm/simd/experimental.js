@@ -266,12 +266,12 @@ assertSame(result, [0, 0x80000100, 0x80000100, 0xFFFFFF00]);
 
 set(new Float64Array(mem), 2, [200000.3, -3.4]);
 ins.exports.from64s();
-var result = get(new Int32Array(mem), 0, 2);
-assertSame(result, [200000, -3]);
+var result = get(new Int32Array(mem), 0, 4);
+assertSame(result, [200000, -3, 0, 0]);
 set(new Float64Array(mem), 2, [0x90000000 + 0.1, 0]);
 ins.exports.from64u();
-var result = get(new Uint32Array(mem), 0, 2);
-assertSame(result, [0x90000000, 0]);
+var result = get(new Uint32Array(mem), 0, 4);
+assertSame(result, [0x90000000, 0, 0, 0]);
 
 for (let op of [I32x4RelaxedTruncSSatF32x4Code, I32x4RelaxedTruncUSatF32x4Code,
                 I32x4RelaxedTruncSatF64x2SZeroCode, I32x4RelaxedTruncSatF64x2UZeroCode]) {

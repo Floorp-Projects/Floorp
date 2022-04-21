@@ -58,8 +58,9 @@ class BlankDecoderModule : public PlatformDecoderModule {
   already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams) override;
 
-  bool SupportsMimeType(const nsACString& aMimeType,
-                        DecoderDoctorDiagnostics* aDiagnostics) const override;
+  media::DecodeSupportSet SupportsMimeType(
+      const nsACString& aMimeType,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
 };
 
 }  // namespace mozilla

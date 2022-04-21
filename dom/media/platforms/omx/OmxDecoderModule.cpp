@@ -45,9 +45,14 @@ already_AddRefed<MediaDataDecoder> OmxDecoderModule::CreateAudioDecoder(
   return decoder.forget();
 }
 
-bool OmxDecoderModule::SupportsMimeType(
+media::DecodeSupportSet OmxDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
-  return OmxPlatformLayer::SupportsMimeType(aMimeType);
+  if (OmxPlatformLayer::SupportsMimeType(aMimeType)) {
+    // TODO: Note that we do not yet distinguish between SW/HW decode support.
+    //       Will be done in bug 1754239.
+    return media::DecodeSupport::SoftwareDecode;
+  }
+  return media::DecodeSupport::Unsupported;
 }
 
 }  // namespace mozilla
