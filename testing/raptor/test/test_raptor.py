@@ -255,7 +255,7 @@ def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
         "--timeouts.script",
         str(DEFAULT_TIMEOUT),
         "--resultDir",
-        "-n",
+        "--iterations",
         "1",
     }
     if browsertime_options.get("app") in ["chrome", "chrome-m"]:
@@ -280,8 +280,8 @@ def extract_arg_value(cmd, arg):
 @pytest.mark.parametrize(
     "arg_to_test, expected, test_patch, options_patch",
     [
-        ["-n", "1", {}, {"browser_cycles": None}],
-        ["-n", "123", {"browser_cycles": 123}, {}],
+        ["--iterations", "1", {}, {"browser_cycles": None}],
+        ["--iterations", "123", {"browser_cycles": 123}, {}],
         ["--video", "false", {}, {"browsertime_video": None}],
         ["--video", "true", {}, {"browsertime_video": "dummy_value"}],
         ["--timeouts.script", str(DEFAULT_TIMEOUT), {}, {"page_cycles": None}],

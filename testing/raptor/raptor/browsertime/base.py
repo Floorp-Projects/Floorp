@@ -207,7 +207,32 @@ class Browsertime(Perftest):
             )
         else:
             # Custom scripts are treated as pageload tests for now
-            if test.get("interactive", False):
+            if test.get("name", "") == "browsertime":
+                # Check for either a script or a url from the
+                # --browsertime-arg options
+                browsertime_script = None
+                for option in self.browsertime_user_args:
+                    arg, val = option.split("=")
+                    if arg in ("test_script", "url"):
+                        browsertime_script = val
+                if browsertime_script is None:
+                    raise Exception(
+                        "You must provide a path to the test script or the url like so: "
+                        "`--browsertime-arg test_script=PATH/TO/SCRIPT`, or "
+                        "`--browsertime-arg url=https://www.sitespeed.io`"
+                    )
+
+                # Make it simple to use our builtin test scripts
+                if browsertime_script == "pageload":
+                    browsertime_script = os.path.join(
+                        browsertime_path, "browsertime_pageload.js"
+                    )
+                elif browsertime_script == "interactive":
+                    browsertime_script = os.path.join(
+                        browsertime_path, "browsertime_interactive.js"
+                    )
+
+            elif test.get("interactive", False):
                 browsertime_script = os.path.join(
                     browsertime_path,
                     "browsertime_interactive.js",
@@ -257,6 +282,8 @@ class Browsertime(Perftest):
             # Raptor's `post startup delay` is settle time after the browser has started
             "--browsertime.post_startup_delay",
             str(self.post_startup_delay),
+            "--iterations",
+            str(test.get("browser_cycles", 1)),
         ]
 
         if test.get("secondary_url"):
@@ -428,8 +455,6 @@ class Browsertime(Perftest):
             + self.driver_paths
             + [browsertime_script]
             + browsertime_options
-            # -n option for the browsertime to restart the browser
-            + ["-n", str(test.get("browser_cycles", 1))]
         )
 
     def _compute_process_timeout(self, test, timeout):
