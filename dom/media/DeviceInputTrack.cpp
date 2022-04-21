@@ -82,6 +82,8 @@ void DeviceInputConsumerTrack::ConnectDeviceInput(
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(!mDeviceInputTrack);
   MOZ_ASSERT(mDeviceId.isNothing());
+  MOZ_ASSERT(!mDeviceInputTrack,
+             "Must disconnect a device input before connecting a new one");
 
   mListener = aListener;
   mDeviceId.emplace(aId);
@@ -99,6 +101,7 @@ void DeviceInputConsumerTrack::DisconnectDeviceInput() {
 
   if (!mListener) {
     MOZ_ASSERT(mDeviceId.isNothing());
+    MOZ_ASSERT(!mDeviceInputTrack);
     return;
   }
 
