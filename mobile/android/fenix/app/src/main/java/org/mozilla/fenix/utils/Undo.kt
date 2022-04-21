@@ -51,7 +51,7 @@ fun CoroutineScope.allowUndo(
     message: String,
     undoActionTitle: String,
     onCancel: suspend () -> Unit = {},
-    operation: suspend () -> Unit,
+    operation: suspend (context: Context) -> Unit,
     anchorView: View? = null,
     elevation: Float? = null,
     paddedForBottomToolbar: Boolean = false
@@ -111,7 +111,7 @@ fun CoroutineScope.allowUndo(
 
             if (!requestedUndo.get()) {
                 snackbar.dismiss()
-                operation.invoke()
+                operation.invoke(view.context)
             }
         }
     }

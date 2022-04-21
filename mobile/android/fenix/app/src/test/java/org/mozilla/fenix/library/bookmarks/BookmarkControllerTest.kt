@@ -116,16 +116,10 @@ class BookmarkControllerTest {
 
     @Test
     fun `WHEN handleBookmarkTapped is called with BrowserFragment THEN load the bookmark in current tab`() {
-        var invokePendingDeletionInvoked = false
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
 
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBookmarkTapped(item)
+        createController().handleBookmarkTapped(item)
 
-        assertTrue(invokePendingDeletionInvoked)
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
@@ -138,18 +132,12 @@ class BookmarkControllerTest {
 
     @Test
     fun `WHEN handleBookmarkTapped is called with HomeFragment THEN load the bookmark in new tab`() {
-        var invokePendingDeletionInvoked = false
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
 
         every { navDestination.id } returns R.id.homeFragment
 
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBookmarkTapped(item)
+        createController().handleBookmarkTapped(item)
 
-        assertTrue(invokePendingDeletionInvoked)
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
@@ -162,17 +150,11 @@ class BookmarkControllerTest {
 
     @Test
     fun `WHEN handleBookmarkTapped is called with private browsing THEN load the bookmark in new tab`() {
-        var invokePendingDeletionInvoked = false
         every { homeActivity.browsingModeManager.mode } returns BrowsingMode.Private
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
 
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBookmarkTapped(item)
+        createController().handleBookmarkTapped(item)
 
-        assertTrue(invokePendingDeletionInvoked)
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
@@ -197,18 +179,6 @@ class BookmarkControllerTest {
 
         controller.handleBookmarkTapped(item)
         assertEquals(BrowsingMode.Private, homeActivity.browsingModeManager.mode)
-    }
-
-    @Test
-    fun `handleBookmarkExpand clears selection and invokes pending deletions`() {
-        var invokePendingDeletionInvoked = false
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBookmarkExpand(tree)
-
-        assertTrue(invokePendingDeletionInvoked)
     }
 
     @Test
@@ -239,14 +209,8 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleBookmarkEdit should navigate to the 'Edit' fragment`() {
-        var invokePendingDeletionInvoked = false
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBookmarkEdit(item)
+        createController().handleBookmarkEdit(item)
 
-        assertTrue(invokePendingDeletionInvoked)
         verify {
             navController.navigate(
                 BookmarkFragmentDirections.actionBookmarkFragmentToBookmarkEditFragment(
@@ -328,17 +292,11 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleBookmarkTapped should open the bookmark`() {
-        var invokePendingDeletionInvoked = false
         val flags =
             EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
 
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBookmarkTapped(item)
+        createController().handleBookmarkTapped(item)
 
-        assertTrue(invokePendingDeletionInvoked)
         verify {
             homeActivity.openToBrowserAndLoad(
                 item.url!!,
@@ -351,18 +309,13 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleOpeningBookmark should open the bookmark a new 'Normal' tab`() {
-        var invokePendingDeletionInvoked = false
         var showTabTrayInvoked = false
         createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            },
             showTabTray = {
                 showTabTrayInvoked = true
             }
         ).handleOpeningBookmark(item, BrowsingMode.Normal)
 
-        assertTrue(invokePendingDeletionInvoked)
         assertTrue(showTabTrayInvoked)
         verifyOrder {
             homeActivity.browsingModeManager.mode = BrowsingMode.Normal
@@ -372,18 +325,13 @@ class BookmarkControllerTest {
 
     @Test
     fun `handleOpeningBookmark should open the bookmark a new 'Private' tab`() {
-        var invokePendingDeletionInvoked = false
         var showTabTrayInvoked = false
         createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            },
             showTabTray = {
                 showTabTrayInvoked = true
             }
         ).handleOpeningBookmark(item, BrowsingMode.Private)
 
-        assertTrue(invokePendingDeletionInvoked)
         assertTrue(showTabTrayInvoked)
         verifyOrder {
             homeActivity.browsingModeManager.mode = BrowsingMode.Private
@@ -450,14 +398,7 @@ class BookmarkControllerTest {
         every { bookmarkStore.state.guidBackstack } returns listOf(tree.guid)
         every { bookmarkStore.state.tree } returns tree
 
-        var invokePendingDeletionInvoked = false
-        createController(
-            invokePendingDeletion = {
-                invokePendingDeletionInvoked = true
-            }
-        ).handleBackPressed()
-
-        assertTrue(invokePendingDeletionInvoked)
+        createController().handleBackPressed()
 
         verify {
             navController.popBackStack()
@@ -482,7 +423,6 @@ class BookmarkControllerTest {
         showSnackbar: (String) -> Unit = { _ -> },
         deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit = { _, _ -> },
         deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit = { _ -> },
-        invokePendingDeletion: () -> Unit = { },
         showTabTray: () -> Unit = { }
     ): BookmarkController {
         return DefaultBookmarkController(
@@ -497,7 +437,6 @@ class BookmarkControllerTest {
             showSnackbar = showSnackbar,
             deleteBookmarkNodes = deleteBookmarkNodes,
             deleteBookmarkFolder = deleteBookmarkFolder,
-            invokePendingDeletion = invokePendingDeletion,
             showTabTray = showTabTray
         )
     }

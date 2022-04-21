@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.SpannableString
@@ -51,6 +52,7 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
@@ -70,9 +72,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
             historyProvider = historyProvider
         )
     }.flow
-
-    private var undoScope: CoroutineScope? = null
-    private var pendingHistoryDeletionJob: (suspend () -> Unit)? = null
 
     private var _historyView: HistoryView? = null
     private val historyView: HistoryView
@@ -148,9 +147,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
 
     private fun deleteHistoryItems(items: Set<History>) {
         updatePendingHistoryToDelete(items)
-        undoScope = CoroutineScope(IO)
-        undoScope?.allowUndo(
-            requireView(),
+        CoroutineScope(IO).allowUndo(
+            requireActivity().getRootView()!!,
             getMultiSelectSnackBarMessage(items),
             getString(R.string.bookmark_undo_deletion),
             {
@@ -270,7 +268,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     }
 
     private fun showTabTray() {
-        invokePendingDeletion()
         findNavController().nav(
             R.id.historyFragment,
             HistoryFragmentDirections.actionGlobalTabsTrayFragment()
@@ -294,13 +291,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         }
     }
 
-    override fun onPause() {
-        invokePendingDeletion()
-        super.onPause()
-    }
-
     override fun onBackPressed(): Boolean {
-        invokePendingDeletion()
         return historyView.onBackPressed()
     }
 
@@ -365,61 +356,45 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
     }
 
     private fun navigateToHistoryFragment(directions: NavDirections) {
-        invokePendingDeletion()
         findNavController().nav(
             R.id.historyFragment,
             directions
         )
     }
 
-    private fun getDeleteHistoryItemsOperation(items: Set<History>): (suspend () -> Unit) {
-        return {
+    private fun getDeleteHistoryItemsOperation(items: Set<History>): (suspend (context: Context) -> Unit) {
+        return { context ->
             CoroutineScope(IO).launch {
                 historyStore.dispatch(HistoryFragmentAction.EnterDeletionMode)
-                context?.components?.run {
-                    for (item in items) {
-                        GleanHistory.removed.record(NoExtras())
+                for (item in items) {
+                    GleanHistory.removed.record(NoExtras())
 
-                        when (item) {
-                            is History.Regular -> core.historyStorage.deleteVisitsFor(item.url)
-                            is History.Group -> {
-                                // NB: If we have non-search groups, this logic needs to be updated.
-                                historyProvider.deleteMetadataSearchGroup(item)
-                                core.store.dispatch(
-                                    HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = item.title)
-                                )
-                            }
-                            // We won't encounter individual metadata entries outside of groups.
-                            is History.Metadata -> {}
+                    when (item) {
+                        is History.Regular -> context.components.core.historyStorage.deleteVisitsFor(item.url)
+                        is History.Group -> {
+                            // NB: If we have non-search groups, this logic needs to be updated.
+                            historyProvider.deleteMetadataSearchGroup(item)
+                            context.components.core.store.dispatch(
+                                HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = item.title)
+                            )
                         }
+                        // We won't encounter individual metadata entries outside of groups.
+                        is History.Metadata -> {}
                     }
                 }
                 historyStore.dispatch(HistoryFragmentAction.ExitDeletionMode)
-                pendingHistoryDeletionJob = null
             }
         }
     }
 
     private fun updatePendingHistoryToDelete(items: Set<History>) {
-        pendingHistoryDeletionJob = getDeleteHistoryItemsOperation(items)
         val ids = items.map { item -> item.visitedAt }.toSet()
         historyStore.dispatch(HistoryFragmentAction.AddPendingDeletionSet(ids))
     }
 
     private fun undoPendingDeletion(items: Set<History>) {
-        pendingHistoryDeletionJob = null
         val ids = items.map { item -> item.visitedAt }.toSet()
         historyStore.dispatch(HistoryFragmentAction.UndoPendingDeletionSet(ids))
-    }
-
-    private fun invokePendingDeletion() {
-        pendingHistoryDeletionJob?.let {
-            viewLifecycleOwner.lifecycleScope.launch {
-                it.invoke()
-            }.invokeOnCompletion {
-                pendingHistoryDeletionJob = null
-            }
-        }
     }
 
     private suspend fun syncHistory() {
