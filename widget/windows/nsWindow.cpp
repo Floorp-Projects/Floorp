@@ -2883,15 +2883,28 @@ bool nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow) {
     mNonClientOffset.left = mHorResizeMargin;
     mNonClientOffset.right = mHorResizeMargin;
   } else if (aSizeMode == nsSizeMode_Maximized) {
-    // Remove the default frame from the top of our maximized window.  This
-    // makes the whole caption part of our client area, allowing us to draw
-    // in the whole caption area.  Use default frame size on left, right, and
-    // bottom. The reason this works is that, for maximized windows,
-    // Windows positions them so that their frames fall off the screen.
-    // This gives the illusion of windows having no frames when they are
-    // maximized.  If we try to mess with the frame sizes by setting these
-    // offsets to positive values, our client area will fall off the screen.
-    mNonClientOffset.top = mCaptionHeight;
+    // On Windows 10+, we make the entire frame part of the client area.
+    // We leave the default frame sizes for left, right and bottom since
+    // Windows will automagically position the edges "offscreen" for maximized
+    // windows.
+    // On versions prior to Windows 10, we add padding to the widget to
+    // circumvent a bug in DwmDefWindowProc (see
+    // nsNativeThemeWin::GetWidgetPadding).  We "undo" that padding in
+    // WM_NCCALCSIZE by adding the caption (as well as the sizing frame) to the
+    // client area.
+    // The padding is not needed on Win10+ because we handle window buttons
+    // non-natively in the theme.  It also does not work on Win10+ -- it
+    // exposes a new issue where widget edges would sometimes appear to bleed
+    // into other displays (bug 1614218).
+    int verticalResize = 0;
+    if (IsWin10OrLater()) {
+      verticalResize =
+          WinUtils::GetSystemMetricsForDpi(SM_CYFRAME, dpi) +
+          (hasCaption ? WinUtils::GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi)
+                      : 0);
+    }
+
+    mNonClientOffset.top = mCaptionHeight - verticalResize;
     mNonClientOffset.bottom = 0;
     mNonClientOffset.left = 0;
     mNonClientOffset.right = 0;
@@ -3051,8 +3064,8 @@ void nsWindow::InvalidateNonClientRegion() {
   GetWindowRect(mWnd, &rect);
   rect.top += mCaptionHeight;
   rect.right -= mHorResizeMargin;
-  rect.bottom -= mHorResizeMargin;
-  rect.left += mVertResizeMargin;
+  rect.bottom -= mVertResizeMargin;
+  rect.left += mHorResizeMargin;
   MapWindowPoints(nullptr, mWnd, (LPPOINT)&rect, 2);
   HRGN clientRgn = CreateRectRgnIndirect(&rect);
   CombineRgn(winRgn, winRgn, clientRgn, RGN_DIFF);

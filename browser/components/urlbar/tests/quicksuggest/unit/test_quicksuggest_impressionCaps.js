@@ -15,6 +15,7 @@ const SUGGESTIONS = [
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
     advertiser: "TestAdvertiser",
+    iab_category: "22 - Shopping",
   },
   {
     id: 2,
@@ -44,6 +45,7 @@ const EXPECTED_SPONSORED_RESULT = {
     sponsoredClickUrl: "http://example.com/click",
     sponsoredBlockId: 1,
     sponsoredAdvertiser: "TestAdvertiser",
+    sponsoredIabCategory: "22 - Shopping",
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     source: "remote-settings",
@@ -66,6 +68,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
     sponsoredClickUrl: "http://example.com/click",
     sponsoredBlockId: 2,
     sponsoredAdvertiser: "TestAdvertiser",
+    sponsoredIabCategory: "5 - Education",
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     source: "remote-settings",

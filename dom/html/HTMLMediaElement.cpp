@@ -6775,7 +6775,7 @@ void HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv) {
   DispatchAsyncEvent(u"ratechange"_ns);
 }
 
-void HTMLMediaElement::SetMozPreservesPitch(bool aPreservesPitch) {
+void HTMLMediaElement::SetPreservesPitch(bool aPreservesPitch) {
   mPreservesPitch = aPreservesPitch;
   if (mDecoder) {
     mDecoder->SetPreservesPitch(mPreservesPitch);

@@ -60,6 +60,12 @@ module.exports = function(config) {
     },
     coverageIstanbulReporter: {
       reports: ["lcov", "text-summary"], // for some reason "lcov" reallys means "lcov" and "html"
+      "report-config": {
+        // so the full m-c path gets printed; needed for https://coverage.moz.tools/ integration
+        lcov: {
+          projectRoot: "../../..",
+        },
+      },
       dir: PATHS.coverageReportingPath,
       // This will make karma fail if coverage reporting is less than the minimums here
       thresholds: !isTDD && {

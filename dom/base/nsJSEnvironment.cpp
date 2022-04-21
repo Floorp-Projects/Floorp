@@ -1098,9 +1098,29 @@ static void FinishAnyIncrementalGC() {
   }
 }
 
+namespace geckoprofiler::markers {
+class CCSliceMarker {
+ public:
+  static constexpr Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("CCSlice");
+  }
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      bool aIsDuringIdle) {
+    aWriter.BoolProperty("idle", aIsDuringIdle);
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
+              MS::Location::TimelineOverview};
+    schema.SetAllLabels("{marker.name} (idle={marker.data.idle})");
+    schema.AddKeyLabelFormat("idle", "Idle", MS::Format::Integer);
+    return schema;
+  }
+};
+}  // namespace geckoprofiler::markers
+
 static void FireForgetSkippable(bool aRemoveChildless, TimeStamp aDeadline) {
-  AUTO_PROFILER_MARKER_TEXT("ForgetSkippable", GCCC, {},
-                            aDeadline.IsNull() ? ""_ns : "(idle)"_ns);
   TimeStamp startTimeStamp = TimeStamp::Now();
   FinishAnyIncrementalGC();
 
@@ -1135,6 +1155,10 @@ static void FireForgetSkippable(bool aRemoveChildless, TimeStamp aDeadline) {
         uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
     Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_DURING_IDLE, percent);
   }
+
+  PROFILER_MARKER("ForgetSkippable", GCCC,
+                  MarkerTiming::IntervalUntilNowFrom(startTimeStamp),
+                  CCSliceMarker, !aDeadline.IsNull());
 }
 
 MOZ_ALWAYS_INLINE
@@ -1187,6 +1211,10 @@ void CycleCollectorStats::AfterCycleCollectionSlice() {
 
   mEndSliceTime = TimeStamp::Now();
   TimeDuration duration = mEndSliceTime - mBeginSliceTime;
+
+  PROFILER_MARKER(
+      "CCSlice", GCCC, MarkerTiming::Interval(mBeginSliceTime, mEndSliceTime),
+      CCSliceMarker, !mIdleDeadline.IsNull() && mIdleDeadline >= mEndSliceTime);
 
   if (duration.ToSeconds()) {
     TimeDuration idleDuration;
@@ -1412,9 +1440,6 @@ void nsJSContext::RunCycleCollectorSlice(CCReason aReason,
   if (!NS_IsMainThread()) {
     return;
   }
-
-  AUTO_PROFILER_MARKER_TEXT("CCSlice", GCCC, {},
-                            aDeadline.IsNull() ? ""_ns : "(idle)"_ns);
 
   PrepareForCycleCollectionSlice(aReason, aDeadline);
 

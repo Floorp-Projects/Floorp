@@ -147,6 +147,16 @@ template EditorRawDOMPoint EditorBase::GetFirstIMESelectionStartPoint() const;
 template EditorDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
 template EditorRawDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
 
+template EditorDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
+template EditorRawDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
+template EditorDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
+template EditorRawDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
+
+template EditorDOMPoint EditorBase::FindBetterInsertionPoint(
+    const EditorDOMPoint& aPoint) const;
+template EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
+    const EditorRawDOMPoint& aPoint) const;
+
 template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointAtCaret);
@@ -2690,9 +2700,10 @@ nsresult EditorBase::ScrollSelectionFocusIntoView() {
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
-EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
-    const EditorRawDOMPoint& aPoint) const {
-  if (NS_WARN_IF(!aPoint.IsInContentNode())) {
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::FindBetterInsertionPoint(
+    const EditorDOMPointType& aPoint) const {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aPoint.IsInContentNode()))) {
     return aPoint;
   }
 
@@ -2718,7 +2729,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
     // available.  In that case, we'll just adjust node and offset accordingly.
     if (aPoint.IsStartOfContainer() && aPoint.GetContainer()->HasChildren() &&
         aPoint.GetContainer()->GetFirstChild()->IsText()) {
-      return EditorRawDOMPoint(aPoint.GetContainer()->GetFirstChild(), 0);
+      return EditorDOMPointType(aPoint.GetContainer()->GetFirstChild(), 0u);
     }
 
     // In some other cases, aNode is the anonymous DIV, and offset points to
@@ -2731,10 +2742,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
         // Thunderbird's plaintext editor.
         nsIContent* child = aPoint.GetPreviousSiblingOfChild();
         if (child && child->IsText()) {
-          if (NS_WARN_IF(child->Length() > INT32_MAX)) {
-            return aPoint;
-          }
-          return EditorRawDOMPoint(child, child->Length());
+          return EditorDOMPointType::AtEndOf(*child);
         }
       } else {
         // If we're in a real plaintext editor, use a fast path that avoids
@@ -2742,10 +2750,7 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
         nsIContent* child = aPoint.GetContainer()->GetLastChild();
         while (child) {
           if (child->IsText()) {
-            if (NS_WARN_IF(child->Length() > INT32_MAX)) {
-              return aPoint;
-            }
-            return EditorRawDOMPoint(child, child->Length());
+            return EditorDOMPointType::AtEndOf(*child);
           }
           child = child->GetPreviousSibling();
         }
@@ -2761,42 +2766,35 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
       aPoint.IsStartOfContainer()) {
     nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
     if (previousSibling && previousSibling->IsText()) {
-      if (NS_WARN_IF(previousSibling->Length() > INT32_MAX)) {
-        return aPoint;
-      }
-      return EditorRawDOMPoint(previousSibling, previousSibling->Length());
+      return EditorDOMPointType::AtEndOf(*previousSibling);
     }
 
     nsINode* parentOfContainer = aPoint.GetContainerParent();
     if (parentOfContainer && parentOfContainer == rootElement) {
-      return EditorRawDOMPoint(parentOfContainer, aPoint.ContainerAsContent(),
-                               0);
+      return EditorDOMPointType(parentOfContainer, aPoint.ContainerAsContent(),
+                                0u);
     }
   }
 
   return aPoint;
 }
 
-nsresult EditorBase::InsertTextWithTransaction(
+Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
-    const EditorRawDOMPoint& aPointToInsert,
-    EditorRawDOMPoint* aPointAfterInsertedString) {
+    const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(
       ShouldHandleIMEComposition() || !AllowsTransactionsToChangeSelection(),
       "caller must have already used AutoTransactionsConserveSelection "
       "if this is not for updating composition string");
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   if (!ShouldHandleIMEComposition() && aStringToInsert.IsEmpty()) {
-    if (aPointAfterInsertedString) {
-      *aPointAfterInsertedString = aPointToInsert;
-    }
-    return NS_OK;
+    return aPointToInsert;
   }
 
   // In some cases, the node may be the anonymous div element or a padding
@@ -2822,84 +2820,83 @@ nsresult EditorBase::InsertTextWithTransaction(
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
       RefPtr<nsTextNode> newNode = CreateTextNode(u""_ns);
-      if (NS_WARN_IF(!newNode)) {
-        return NS_ERROR_FAILURE;
+      if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
+        return Err(NS_ERROR_FAILURE);
       }
       // then we insert it into the dom tree
       nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-        return rv;
+      if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
       }
-      pointToInsert.Set(newNode, 0);
+      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+        return Err(rv);
+      }
+      pointToInsert.Set(newNode, 0u);
       newOffset = aStringToInsert.Length();
     } else {
       newOffset = aStringToInsert.Length();
       newOffset += pointToInsert.Offset();
-      if (NS_WARN_IF(!newOffset.isValid())) {
-        return NS_ERROR_FAILURE;
+      if (MOZ_UNLIKELY(NS_WARN_IF(!newOffset.isValid()))) {
+        return Err(NS_ERROR_FAILURE);
       }
     }
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAsText(),
-                                              pointToInsert.Offset()));
-    if (NS_FAILED(rv)) {
+        aStringToInsert, pointToInsert.AsInText());
+    if (MOZ_UNLIKELY(Destroyed())) {
+      NS_WARNING(
+          "EditorBase::InsertTextIntoTextNodeWithTransaction() caused "
+          "destroying the editor");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return rv;
+      return Err(rv);
     }
-    if (aPointAfterInsertedString) {
-      aPointAfterInsertedString->Set(pointToInsert.GetContainer(),
-                                     newOffset.value());
-      NS_WARNING_ASSERTION(
-          aPointAfterInsertedString->IsSetAndValid(),
-          "Failed to set aPointAfterInsertedString, but ignored");
-    }
-    return NS_OK;
+    return EditorDOMPoint(pointToInsert.GetContainer(), newOffset.value());
   }
 
   if (pointToInsert.IsInTextNode()) {
     CheckedUint32 newOffset = aStringToInsert.Length();
     newOffset += pointToInsert.Offset();
-    if (NS_WARN_IF(!newOffset.isValid())) {
-      return NS_ERROR_FAILURE;
+    if (MOZ_UNLIKELY(NS_WARN_IF(!newOffset.isValid()))) {
+      return Err(NS_ERROR_FAILURE);
     }
     // we are inserting text into an existing text node.
     nsresult rv = InsertTextIntoTextNodeWithTransaction(
         aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAsText(),
                                               pointToInsert.Offset()));
-    if (NS_FAILED(rv)) {
+    if (MOZ_UNLIKELY(Destroyed())) {
+      NS_WARNING(
+          "EditorBase::InsertTextIntoTextNodeWithTransaction() caused "
+          "destroying the editor");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
       NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return rv;
+      return Err(rv);
     }
-    if (aPointAfterInsertedString) {
-      aPointAfterInsertedString->Set(pointToInsert.GetContainer(),
-                                     newOffset.value());
-      NS_WARNING_ASSERTION(
-          aPointAfterInsertedString->IsSetAndValid(),
-          "Failed to set aPointAfterInsertedString, but ignored");
-    }
-    return NS_OK;
+    return EditorDOMPoint(pointToInsert.GetContainer(), newOffset.value());
   }
 
   // we are inserting text into a non-text node.  first we have to create a
   // textnode (this also populates it with the text)
   RefPtr<nsTextNode> newNode = CreateTextNode(aStringToInsert);
-  if (NS_WARN_IF(!newNode)) {
-    return NS_ERROR_FAILURE;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
+    return Err(NS_ERROR_FAILURE);
   }
   // then we insert it into the dom tree
   nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(Destroyed())) {
+    NS_WARNING(
+        "EditorBase::InsertNodeWithTransaction() caused destroying the editor");
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return rv;
+    return Err(rv);
   }
-  if (aPointAfterInsertedString) {
-    aPointAfterInsertedString->Set(newNode, aStringToInsert.Length());
-    NS_WARNING_ASSERTION(
-        aPointAfterInsertedString->IsSetAndValid(),
-        "Failed to set aPointAfterInsertedString, but ignored");
-  }
-  return NS_OK;
+  return EditorDOMPoint(newNode, aStringToInsert.Length());
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
@@ -2995,7 +2992,8 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   if (IsHTMLEditor() && pointToInsert.IsSet()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
-      TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
+      TopLevelEditSubActionDataRef().DidInsertText(
+          *this, begin.To<EditorRawDOMPoint>(), end.To<EditorRawDOMPoint>());
     }
     if (isIMETransaction) {
       // Let's mark the text node as "modified frequently" if it interact with
@@ -3313,32 +3311,34 @@ NS_IMETHODIMP EditorBase::ResetModificationCount() {
   return NS_OK;
 }
 
-// static
-EditorRawDOMPoint EditorBase::GetStartPoint(const Selection& aSelection) {
-  if (NS_WARN_IF(!aSelection.RangeCount())) {
-    return EditorRawDOMPoint();
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::GetFirstSelectionStartPoint() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  if (MOZ_UNLIKELY(!SelectionRef().RangeCount())) {
+    return EditorDOMPointType();
   }
 
-  const nsRange* range = aSelection.GetRangeAt(0);
-  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-    return EditorRawDOMPoint();
+  const nsRange* range = SelectionRef().GetRangeAt(0);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned()))) {
+    return EditorDOMPointType();
   }
 
-  return EditorRawDOMPoint(range->StartRef());
+  return EditorDOMPointType(range->StartRef());
 }
 
-// static
-EditorRawDOMPoint EditorBase::GetEndPoint(const Selection& aSelection) {
-  if (NS_WARN_IF(!aSelection.RangeCount())) {
-    return EditorRawDOMPoint();
+template <typename EditorDOMPointType>
+EditorDOMPointType EditorBase::GetFirstSelectionEndPoint() const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  if (MOZ_UNLIKELY(!SelectionRef().RangeCount())) {
+    return EditorDOMPointType();
   }
 
-  const nsRange* range = aSelection.GetRangeAt(0);
-  if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
-    return EditorRawDOMPoint();
+  const nsRange* range = SelectionRef().GetRangeAt(0);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned()))) {
+    return EditorDOMPointType();
   }
 
-  return EditorRawDOMPoint(range->EndRef());
+  return EditorDOMPointType(range->EndRef());
 }
 
 // static
@@ -3596,25 +3596,29 @@ nsresult EditorBase::OnCompositionChange(
   MOZ_ASSERT(
       !mPlaceholderBatch,
       "UpdateIMEComposition() must be called without place holder batch");
-  bool wasComposing = mComposition->IsComposing();
-  TextComposition::CompositionChangeEventHandlingMarker
-      compositionChangeEventHandlingMarker(mComposition,
-                                           &aCompositionChangeEvent);
-
-  RefPtr<nsCaret> caret = GetCaret();
+  nsString data(aCompositionChangeEvent.mData);
+  if (IsHTMLEditor()) {
+    nsContentUtils::PlatformToDOMLineBreaks(data);
+  }
 
   {
+    // This needs to be destroyed before dispatching "input" event from
+    // the following call of `NotifyEditorObservers`.  Therefore, we need to
+    // put this in this block rather than outside of this.
+    const bool wasComposing = mComposition->IsComposing();
+    TextComposition::CompositionChangeEventHandlingMarker
+        compositionChangeEventHandlingMarker(mComposition,
+                                             &aCompositionChangeEvent);
     AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::IMETxnName,
                                                ScrollSelectionIntoView::Yes,
                                                __FUNCTION__);
 
+    // XXX Why don't we get caret after the DOM mutation?
+    RefPtr<nsCaret> caret = GetCaret();
+
     MOZ_ASSERT(
         mIsInEditSubAction,
         "AutoPlaceholderBatch should've notified the observes of before-edit");
-    nsString data(aCompositionChangeEvent.mData);
-    if (IsHTMLEditor()) {
-      nsContentUtils::PlatformToDOMLineBreaks(data);
-    }
     // If we're updating composition, we need to ignore normal selection
     // which may be updated by the web content.
     rv = InsertTextAsSubAction(data, wasComposing ? SelectionHandling::Ignore
@@ -3633,6 +3637,12 @@ nsresult EditorBase::OnCompositionChange(
   // change.
   // NOTE: We must notify after the auto batch will be gone.
   if (!aCompositionChangeEvent.IsFollowedByCompositionEnd()) {
+    // If we're a TextEditor, we'll be initialized with a new anonymous subtree,
+    // which can be caused by reframing from a "input" event listener.  At that
+    // time, we'll move composition from current text node to the new text node
+    // with using mComposition's data.  Therefore, it's important that
+    // mComposition already has the latest information here.
+    MOZ_ASSERT_IF(mComposition, mComposition->String() == data);
     NotifyEditorObservers(eNotifyEditorObserversOfEnd);
   }
 
@@ -4234,8 +4244,8 @@ nsresult EditorBase::DeleteSelectionAsSubAction(
   // XXX This is odd.  We just tries to remove empty text node here but we
   //     refer `Selection`.  It may be modified by mutation event listeners
   //     so that we should remove the empty text node when we make it empty.
-  EditorDOMPoint atNewStartOfSelection(
-      EditorBase::GetStartPoint(SelectionRef()));
+  const auto atNewStartOfSelection =
+      GetFirstSelectionStartPoint<EditorDOMPoint>();
   if (NS_WARN_IF(!atNewStartOfSelection.IsSet())) {
     // XXX And also it seems that we don't need to return error here.
     //     Why don't we just ignore?  `Selection::RemoveAllRanges()` may
@@ -4696,8 +4706,8 @@ nsresult EditorBase::DeleteRangesWithTransaction(
       //     this must have a bug since we only add the first range into
       //     the changed range.
       TopLevelEditSubActionDataRef().WillDeleteRange(
-          *this, aRangesToDelete.GetStartPointOfFirstRange(),
-          aRangesToDelete.GetEndPointOfFirstRange());
+          *this, aRangesToDelete.GetFirstRangeStartPoint<EditorRawDOMPoint>(),
+          aRangesToDelete.GetFirstRangeEndPoint<EditorRawDOMPoint>());
     } else if (!deleteCharData) {
       TopLevelEditSubActionDataRef().WillDeleteContent(*this, *deleteContent);
     }
@@ -5235,6 +5245,9 @@ nsresult EditorBase::InitializeSelection(nsINode& aFocusEventTargetNode) {
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "CompositionTransaction::SetIMESelection() failed, but ignored");
+      mComposition->OnUpdateCompositionInEditor(
+          mComposition->String(), *textNode,
+          mComposition->XPOffsetInTextNode());
     }
   }
 

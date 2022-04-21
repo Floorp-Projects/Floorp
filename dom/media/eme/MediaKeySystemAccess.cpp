@@ -400,7 +400,8 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       for (const auto& data : validationList) {
         if (java::MediaDrmProxy::IsCryptoSchemeSupported(kWidevineKeySystemName,
                                                          data.mMimeType)) {
-          if (AndroidDecoderModule::SupportsMimeType(data.mMimeType)) {
+          if (AndroidDecoderModule::SupportsMimeType(data.mMimeType) !=
+              media::DecodeSupport::Unsupported) {
             data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
           } else {
             data.mSupportType->SetCanDecrypt(data.mEMECodecType);

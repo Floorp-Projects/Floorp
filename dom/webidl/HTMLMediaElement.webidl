@@ -113,7 +113,11 @@ partial interface HTMLMediaElement {
   Promise<DOMString> mozRequestDebugLog();
 
   attribute MediaStream? srcObject;
+
+  // TODO: Remove mozPreservesPitch. (bug 1765201)
+  [Deprecated="MozPreservesPitchDeprecatedPrefix", BinaryName="preservesPitch"]
   attribute boolean mozPreservesPitch;
+  attribute boolean preservesPitch;
 
   // NB: for internal use with the video controls:
   [Func="IsChromeOrUAWidget"] attribute boolean mozAllowCasting;

@@ -31,6 +31,7 @@ const REMOTE_SETTINGS_DATA = [
     click_url: "http://click.reporting.test.com/",
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "TestAdvertiser",
+    iab_category: "22 - Shopping",
   },
   {
     id: 2,
@@ -50,6 +51,7 @@ const REMOTE_SETTINGS_DATA = [
     click_url: "http://click.reporting.test.com/prefix",
     impression_url: "http://impression.reporting.test.com/prefix",
     advertiser: "TestAdvertiserPrefix",
+    iab_category: "22 - Shopping",
   },
   {
     id: 4,
@@ -59,6 +61,7 @@ const REMOTE_SETTINGS_DATA = [
     click_url: "http://click.reporting.test.com/prefix",
     impression_url: "http://impression.reporting.test.com/prefix",
     advertiser: "TestAdvertiserPrefix",
+    iab_category: "22 - Shopping",
   },
   {
     id: 5,
@@ -68,6 +71,7 @@ const REMOTE_SETTINGS_DATA = [
     click_url: TIMESTAMP_SUGGESTION_CLICK_URL,
     impression_url: "http://impression.reporting.test.com/timestamp",
     advertiser: "TestAdvertiserTimestamp",
+    iab_category: "22 - Shopping",
   },
 ];
 
@@ -85,6 +89,7 @@ const EXPECTED_SPONSORED_RESULT = {
     sponsoredClickUrl: "http://click.reporting.test.com/",
     sponsoredBlockId: 1,
     sponsoredAdvertiser: "TestAdvertiser",
+    sponsoredIabCategory: "22 - Shopping",
     isSponsored: true,
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
@@ -107,6 +112,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
     sponsoredClickUrl: "http://click.reporting.test.com/nonsponsored",
     sponsoredBlockId: 2,
     sponsoredAdvertiser: "TestAdvertiserNonSponsored",
+    sponsoredIabCategory: "5 - Education",
     isSponsored: false,
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
@@ -129,6 +135,7 @@ const EXPECTED_HTTP_RESULT = {
     sponsoredClickUrl: "http://click.reporting.test.com/prefix",
     sponsoredBlockId: 3,
     sponsoredAdvertiser: "TestAdvertiserPrefix",
+    sponsoredIabCategory: "22 - Shopping",
     isSponsored: true,
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
@@ -151,6 +158,7 @@ const EXPECTED_HTTPS_RESULT = {
     sponsoredClickUrl: "http://click.reporting.test.com/prefix",
     sponsoredBlockId: 4,
     sponsoredAdvertiser: "TestAdvertiserPrefix",
+    sponsoredIabCategory: "22 - Shopping",
     isSponsored: true,
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
@@ -917,6 +925,7 @@ add_task(async function dedupeAgainstURL_timestamps() {
       sponsoredImpressionUrl: "http://impression.reporting.test.com/timestamp",
       sponsoredBlockId: 5,
       sponsoredAdvertiser: "TestAdvertiserTimestamp",
+      sponsoredIabCategory: "22 - Shopping",
       isSponsored: true,
       helpUrl: UrlbarProviderQuickSuggest.helpUrl,
       helpL10nId: "firefox-suggest-urlbar-learn-more",

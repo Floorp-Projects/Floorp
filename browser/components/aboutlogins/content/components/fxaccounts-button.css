@@ -59,8 +59,8 @@
 .fxaccount-avatar {
   display: inline-block;
   vertical-align: middle;
-  background-image: var(--avatar-url),
-    url(chrome://browser/skin/fxa/avatar-color.svg);
+  background-image: var(--avatar-url,
+    url(chrome://browser/skin/fxa/avatar-color.svg));
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;

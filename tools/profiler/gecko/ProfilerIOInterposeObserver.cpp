@@ -7,6 +7,12 @@
 
 using namespace mozilla;
 
+/* static */
+ProfilerIOInterposeObserver& ProfilerIOInterposeObserver::GetInstance() {
+  static ProfilerIOInterposeObserver sProfilerIOInterposeObserver;
+  return sProfilerIOInterposeObserver;
+}
+
 namespace geckoprofiler::markers {
 struct FileIOMarker {
   static constexpr Span<const char> MarkerTypeName() {

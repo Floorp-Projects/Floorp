@@ -899,6 +899,9 @@ class BaseAssembler : public GenericAssembler {
   void vminpd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vminpd", VEX_PD, OP2_MINPD_VpdWpd, src1, src0, dst);
   }
+  void vminpd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
+    twoByteOpSimd("vminpd", VEX_PD, OP2_MINPD_VpdWpd, address, src0, dst);
+  }
 
   void vaddpd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vaddpd", VEX_PD, OP2_ADDPD_VpdWpd, src1, src0, dst);
@@ -3682,6 +3685,9 @@ class BaseAssembler : public GenericAssembler {
 
   void vandpd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vandpd", VEX_PD, OP2_ANDPD_VpdWpd, src1, src0, dst);
+  }
+  void vandpd_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
+    twoByteOpSimd("vandpd", VEX_PD, OP2_ANDPD_VpdWpd, address, src0, dst);
   }
 
   void vandps_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {

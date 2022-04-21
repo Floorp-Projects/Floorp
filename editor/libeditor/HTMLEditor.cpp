@@ -852,7 +852,8 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       if ((scanResultInTextNode.InVisibleOrCollapsibleCharacters() ||
            scanResultInTextNode.ReachedPreformattedLineBreak()) &&
           scanResultInTextNode.TextPtr() == text) {
-        nsresult rv = CollapseSelectionTo(scanResultInTextNode.Point());
+        nsresult rv = CollapseSelectionTo(
+            scanResultInTextNode.Point<EditorRawDOMPoint>());
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                              "EditorBase::CollapseSelectionTo() failed");
         return rv;
@@ -3492,14 +3493,14 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
     if (NS_WARN_IF(!document)) {
       return NS_ERROR_NOT_INITIALIZED;
     }
-    nsresult rv = InsertTextWithTransaction(
-        *document, aStringToInsert, EditorRawDOMPoint(&aTextNode, aOffset));
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    Result<EditorDOMPoint, nsresult> insertTextResult =
+        InsertTextWithTransaction(*document, aStringToInsert,
+                                  EditorDOMPoint(&aTextNode, aOffset));
+    if (MOZ_UNLIKELY(insertTextResult.isErr())) {
+      NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
+      return insertTextResult.unwrapErr();
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::InsertTextWithTransaction() failed");
-    return rv;
+    return NS_OK;
   }
 
   if (NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(aTextNode))) {
@@ -3566,8 +3567,10 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   if (pointToInsert.IsSet()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
-      TopLevelEditSubActionDataRef().DidDeleteText(*this, begin);
-      TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
+      TopLevelEditSubActionDataRef().DidDeleteText(
+          *this, begin.To<EditorRawDOMPoint>());
+      TopLevelEditSubActionDataRef().DidInsertText(
+          *this, begin.To<EditorRawDOMPoint>(), end.To<EditorRawDOMPoint>());
     }
   }
 
@@ -3588,25 +3591,21 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : rv;
 }
 
-nsresult HTMLEditor::InsertTextWithTransaction(
+Result<EditorDOMPoint, nsresult> HTMLEditor::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
-    const EditorRawDOMPoint& aPointToInsert,
-    EditorRawDOMPoint* aPointAfterInsertedString) {
+    const EditorDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   // Do nothing if the node is read-only
-  if (NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(
-          *aPointToInsert.GetContainer()))) {
-    return NS_ERROR_FAILURE;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(
+          *aPointToInsert.GetContainer())))) {
+    return Err(NS_ERROR_FAILURE);
   }
 
-  nsresult rv = EditorBase::InsertTextWithTransaction(
-      aDocument, aStringToInsert, aPointToInsert, aPointAfterInsertedString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertTextWithTransaction() failed");
-  return rv;
+  return EditorBase::InsertTextWithTransaction(aDocument, aStringToInsert,
+                                               aPointToInsert);
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
@@ -5057,7 +5056,7 @@ nsresult HTMLEditor::MoveNodeWithTransaction(
   }
 
   // Mutation event listener could break insertion point. Let's check it.
-  EditorDOMPoint pointToInsert(selNotify.ComputeInsertionPoint());
+  auto pointToInsert = selNotify.ComputeInsertionPoint<EditorDOMPoint>();
   if (NS_WARN_IF(!pointToInsert.IsSet())) {
     return NS_ERROR_FAILURE;
   }
