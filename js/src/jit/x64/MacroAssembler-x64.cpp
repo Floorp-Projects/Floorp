@@ -297,6 +297,16 @@ void MacroAssemblerX64::vmulpdSimd128(const SimdConstant& v, FloatRegister lhs,
   vpRiprOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX64::vmulpd_ripr);
 }
 
+void MacroAssemblerX64::vandpdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpRiprOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX64::vandpd_ripr);
+}
+
+void MacroAssemblerX64::vminpdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpRiprOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX64::vminpd_ripr);
+}
+
 void MacroAssemblerX64::vpacksswbSimd128(const SimdConstant& v,
                                          FloatRegister lhs,
                                          FloatRegister dest) {
@@ -319,6 +329,19 @@ void MacroAssemblerX64::vpackusdwSimd128(const SimdConstant& v,
                                          FloatRegister lhs,
                                          FloatRegister dest) {
   vpRiprOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX64::vpackusdw_ripr);
+}
+
+void MacroAssemblerX64::vpunpckldqSimd128(const SimdConstant& v,
+                                          FloatRegister lhs,
+                                          FloatRegister dest) {
+  vpRiprOpSimd128(v, lhs, dest,
+                  &X86Encoding::BaseAssemblerX64::vpunpckldq_ripr);
+}
+
+void MacroAssemblerX64::vunpcklpsSimd128(const SimdConstant& v,
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpRiprOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX64::vunpcklps_ripr);
 }
 
 void MacroAssemblerX64::vpshufbSimd128(const SimdConstant& v, FloatRegister lhs,
