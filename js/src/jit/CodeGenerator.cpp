@@ -12063,36 +12063,6 @@ void CodeGenerator::visitGetFrameArgumentHole(LGetFrameArgumentHole* lir) {
   masm.bind(&done);
 }
 
-void CodeGenerator::emitRest(LInstruction* lir, Register array,
-                             Register numActuals, Register temp0,
-                             Register temp1, unsigned numFormals,
-                             Register resultreg) {
-  // Compute actuals() + numFormals.
-  size_t actualsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
-  masm.moveStackPtrTo(temp1);
-  masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp1);
-
-  // Compute numActuals - numFormals.
-  Label emptyLength, joinLength;
-  masm.movePtr(numActuals, temp0);
-  masm.branch32(Assembler::LessThanOrEqual, temp0, Imm32(numFormals),
-                &emptyLength);
-  masm.sub32(Imm32(numFormals), temp0);
-  masm.jump(&joinLength);
-  {
-    masm.bind(&emptyLength);
-    masm.move32(Imm32(0), temp0);
-  }
-  masm.bind(&joinLength);
-
-  pushArg(array);
-  pushArg(temp1);
-  pushArg(temp0);
-
-  using Fn = JSObject* (*)(JSContext*, uint32_t, Value*, HandleObject);
-  callVM<Fn, InitRestParameter>(lir);
-}
-
 void CodeGenerator::visitRest(LRest* lir) {
   Register numActuals = ToRegister(lir->numActuals());
   Register temp0 = ToRegister(lir->temp0());
@@ -12124,8 +12094,32 @@ void CodeGenerator::visitRest(LRest* lir) {
     masm.movePtr(ImmPtr(nullptr), temp2);
   }
 
-  emitRest(lir, temp2, numActuals, temp0, temp1, numFormals,
-           ToRegister(lir->output()));
+  // Compute actuals() + numFormals.
+  size_t actualsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+  masm.moveStackPtrTo(temp1);
+  masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp1);
+
+  // Compute numActuals - numFormals.
+  Label emptyLength, joinLength;
+  masm.movePtr(numActuals, temp0);
+  masm.branch32(Assembler::LessThanOrEqual, temp0, Imm32(numFormals),
+                &emptyLength);
+  {
+    masm.sub32(Imm32(numFormals), temp0);
+    masm.jump(&joinLength);
+  }
+  {
+    masm.bind(&emptyLength);
+    masm.move32(Imm32(0), temp0);
+  }
+  masm.bind(&joinLength);
+
+  pushArg(temp2);
+  pushArg(temp1);
+  pushArg(temp0);
+
+  using Fn = JSObject* (*)(JSContext*, uint32_t, Value*, HandleObject);
+  callVM<Fn, InitRestParameter>(lir);
 }
 
 // Create a stackmap from the given safepoint, with the structure:
