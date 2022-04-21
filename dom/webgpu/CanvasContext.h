@@ -61,7 +61,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
                             const nsAString& aEncoderOptions,
                             nsIInputStream** aStream) override {
     *aStream = nullptr;
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
