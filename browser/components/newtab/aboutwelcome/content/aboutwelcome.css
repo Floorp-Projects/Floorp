@@ -49,9 +49,14 @@ body[lwt-newtab-brighttext] {
 
 :root[dialogroot] {
   background-color: transparent;
+  min-width: 504px;
+  overflow: hidden;
 }
 :root[dialogroot] body {
   padding: 0;
+}
+:root[dialogroot] .onboardingContainer {
+  overflow: visible;
 }
 :root[dialogroot] .onboardingContainer:dir(rtl) {
   transform: unset;
@@ -62,9 +67,14 @@ body[lwt-newtab-brighttext] {
 :root[dialogroot] .onboardingContainer .screen:dir(rtl) {
   transform: unset;
 }
+:root[dialogroot] .onboardingContainer .screen.with-noodles {
+  min-width: 610px;
+  min-height: 610px;
+}
 
 .onboardingContainer {
   text-align: center;
+  overflow-x: auto;
   height: 100vh;
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
 }
@@ -1117,13 +1127,6 @@ body[lwt-newtab-brighttext] {
   translate: 0 calc(2 * var(--translate));
   transition-delay: 0.4s;
 }
-.onboardingContainer .screen[pos=center] {
-  min-width: 504px;
-}
-.onboardingContainer .screen[pos=center].with-noodles {
-  min-width: 610px;
-  min-height: 610px;
-}
-.onboardingContainer .screen[pos=center].with-noodles .section-main {
+.onboardingContainer .screen.with-noodles:not(.corner) .section-main {
   height: 504px;
 }
