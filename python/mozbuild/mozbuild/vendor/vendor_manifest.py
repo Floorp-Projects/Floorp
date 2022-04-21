@@ -34,12 +34,26 @@ def throwe():
     raise Exception
 
 
+def _replace_in_file(file, pattern, replacement, regex=False):
+    with open(file) as f:
+        contents = f.read()
+
+    if regex:
+        contents = re.sub(pattern, replacement, contents)
+    else:
+        contents = contents.replace(pattern, replacement)
+
+    with open(file, "w") as f:
+        f.write(contents)
+
+
 class VendorManifest(MozbuildObject):
     def should_perform_step(self, step):
         return step not in self.manifest["vendoring"].get("skip-vendoring-steps", [])
 
     def vendor(
         self,
+        command_context,
         yaml_file,
         manifest,
         revision,
@@ -96,6 +110,41 @@ class VendorManifest(MozbuildObject):
             # Only print the new revision to stdout
             print("%s %s" % (new_revision, timestamp))
             return
+
+        flavor = self.manifest["vendoring"].get("flavor", "regular")
+        if flavor == "regular":
+            self.process_regular(
+                new_revision, timestamp, ignore_modified, add_to_exports
+            )
+        elif flavor == "rust":
+            self.process_rust(
+                command_context,
+                self.manifest["origin"]["revision"],
+                new_revision,
+                timestamp,
+                ignore_modified,
+            )
+        else:
+            raise Exception("Unknown flavor")
+
+    def process_rust(
+        self, command_context, old_revision, new_revision, timestamp, ignore_modified
+    ):
+        # First update the Cargo.toml
+        cargo_file = os.path.join(os.path.dirname(self.yaml_file), "Cargo.toml")
+        _replace_in_file(cargo_file, old_revision, new_revision)
+
+        # Then call ./mach vendor rust
+        from mozbuild.vendor.vendor_rust import VendorRust
+
+        vendor_command = command_context._spawn(VendorRust)
+        vendor_command.vendor(
+            ignore_modified=True, build_peers_said_large_imports_were_ok=False
+        )
+
+        self.update_yaml(new_revision, timestamp)
+
+    def process_regular(self, new_revision, timestamp, ignore_modified, add_to_exports):
 
         if self.should_perform_step("fetch"):
             self.fetch_and_unpack(new_revision)
@@ -449,17 +498,13 @@ class VendorManifest(MozbuildObject):
 
                 self.logInfo({"file": file}, "action: replace-in-file file: {file}")
 
-                with open(file) as f:
-                    contents = f.read()
-
                 replacement = update["with"].replace("{revision}", revision)
-                if update["action"] == "replace-in-file":
-                    contents = contents.replace(update["pattern"], replacement)
-                else:
-                    contents = re.sub(update["pattern"], replacement, contents)
-
-                with open(file, "w") as f:
-                    f.write(contents)
+                _replace_in_file(
+                    file,
+                    pattern,
+                    replacement,
+                    regex=update["action"] == "replace-in-file",
+                )
             elif update["action"] == "delete-path":
                 path = self.get_full_path(update["path"])
                 self.logInfo({"path": path}, "action: delete-path path: {path}")
