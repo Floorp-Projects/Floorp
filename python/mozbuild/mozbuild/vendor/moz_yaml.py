@@ -425,7 +425,8 @@ def _schema_1():
                             ),
                             "source-extensions": Unique([str]),
                             "frequency": Match(
-                                r"^(every|release|[1-9][0-9]* weeks?|[1-9][0-9]* commits?|[1-9][0-9]* weeks?, ?[1-9][0-9]* commits?)$"
+                                r"^(every|release|[1-9][0-9]* weeks?|[1-9][0-9]* commits?|"
+                                + r"[1-9][0-9]* weeks?, ?[1-9][0-9]* commits?)$"
                             ),
                             "platform": Match(r"^(windows|linux)$"),
                         }
