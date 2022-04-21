@@ -11464,6 +11464,37 @@ void CodeGenerator::visitArraySlice(LArraySlice* lir) {
   callVM<Fn, ArraySliceDense>(lir);
 }
 
+void CodeGenerator::visitArgumentsSlice(LArgumentsSlice* lir) {
+  Register object = ToRegister(lir->object());
+  Register begin = ToRegister(lir->begin());
+  Register end = ToRegister(lir->end());
+  Register temp0 = ToRegister(lir->temp0());
+  Register temp1 = ToRegister(lir->temp1());
+
+  Label call, fail;
+
+  // Try to allocate an object.
+  TemplateObject templateObject(lir->mir()->templateObj());
+  masm.createGCObject(temp0, temp1, templateObject, lir->mir()->initialHeap(),
+                      &fail);
+
+  masm.jump(&call);
+  {
+    masm.bind(&fail);
+    masm.movePtr(ImmPtr(nullptr), temp0);
+  }
+  masm.bind(&call);
+
+  pushArg(temp0);
+  pushArg(end);
+  pushArg(begin);
+  pushArg(object);
+
+  using Fn =
+      JSObject* (*)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
+  callVM<Fn, ArgumentsSliceDense>(lir);
+}
+
 void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
   Label skipCall;
 
