@@ -27,17 +27,26 @@ export function selectThread(cx, thread) {
 
     // Get a new context now that the current thread has changed.
     const threadcx = getThreadContext(getState());
+    // Note that this is a rethorical assertion as threadcx.thread is updated by SELECT_THREAD action
     assert(threadcx.thread == thread, "Thread mismatch");
 
     const serverRequests = [];
+    // Update the watched expressions as we may never have evaluated them against this thread
     serverRequests.push(dispatch(evaluateExpressions(threadcx)));
 
+    // If we were paused on the newly selected thread, ensure:
+    // - select the source where we are paused,
+    // - fetching the paused stackframes,
+    // - fetching the paused scope, so that variable preview are working on the selected source.
+    // (frames and scopes is supposed to be fetched on pause,
+    // but if two threads pause concurrently, it might be cancelled)
     const frame = getSelectedFrame(getState(), thread);
     if (frame) {
       serverRequests.push(dispatch(selectLocation(threadcx, frame.location)));
       serverRequests.push(dispatch(fetchFrames(threadcx)));
       serverRequests.push(dispatch(fetchScopes(threadcx)));
     }
+
     await Promise.all(serverRequests);
   };
 }

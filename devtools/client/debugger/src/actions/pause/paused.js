@@ -32,22 +32,33 @@ export function paused(pauseInfo) {
 
     // Get a context capturing the newly paused and selected thread.
     const cx = getThreadContext(getState());
+    // Note that this is a rethorical assertion as threadcx.thread is updated by PAUSED action
     assert(cx.thread == thread, "Thread mismatch");
 
-    await dispatch(fetchFrames(cx));
-
+    // When we use "continue to here" feature we register an "hidden" breakpoint
+    // that should be removed on the next paused, even if we didn't hit it and
+    // paused for any other reason.
     const hiddenBreakpoint = getHiddenBreakpoint(getState());
     if (hiddenBreakpoint) {
       dispatch(removeBreakpoint(cx, hiddenBreakpoint));
     }
 
+    // The THREAD_STATE's "paused" resource only passes the top level stack frame,
+    // we dispatch the PAUSED action with it so that we can right away
+    // display it and update the UI to be paused.
+    // But we then fetch all the other frames:
+    await dispatch(fetchFrames(cx));
+    // And map them to original source locations:
     await dispatch(mapFrames(cx));
 
+    // If we paused on a particular frame, automatically select the related source
+    // and highlight the paused line
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
       await dispatch(selectSpecificLocation(cx, selectedFrame.location));
     }
 
+    // Fetch the previews for variables visible in the currently selected paused stackframe
     await dispatch(fetchScopes(cx));
 
     // Run after fetching scoping data so that it may make use of the sourcemap
