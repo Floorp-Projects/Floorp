@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
@@ -16,13 +19,13 @@ add_task(async function mainTest() {
   for (let i = 0; i < verdicts.length; i++) {
     await openPanel();
 
-    // The current item is always the first one in the listbox since each
-    // iteration of this loop removes the item at the end.
-    let item = DownloadsView.richListBox.firstElementChild;
+    // Handle items backwards, using lastElementChild, to ensure there's no
+    // code wrongly resetting the selection to the first item during the process.
+    let item = DownloadsView.richListBox.lastElementChild;
 
-    // Open the panel and click the item to show the subview.
+    info("Open the panel and click the item to show the subview.");
     let viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
-    EventUtils.sendMouseEvent({ type: "click" }, item);
+    EventUtils.synthesizeMouseAtCenter(item, {});
     await viewPromise;
 
     // Items are listed in newest-to-oldest order, so e.g. the first item's
@@ -32,53 +35,57 @@ add_task(async function mainTest() {
       verdicts[verdicts.count - i - 1]
     );
 
-    // Go back to the main view.
+    info("Go back to the main view.");
     viewPromise = promiseViewShown(DownloadsBlockedSubview.mainView);
     DownloadsBlockedSubview.panelMultiView.goBack();
     await viewPromise;
 
-    // Show the subview again.
+    info("Show the subview again.");
     viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
-    EventUtils.sendMouseEvent({ type: "click" }, item);
+    EventUtils.synthesizeMouseAtCenter(item, {});
     await viewPromise;
 
-    // Click the Open button.  The download should be unblocked and then opened,
+    info("Click the Open button.");
+    // The download should be unblocked and then opened,
     // i.e., unblockAndOpenDownload() should be called on the item.  The panel
     // should also be closed as a result, so wait for that too.
-    let unblockOpenPromise = promiseUnblockAndOpenDownloadCalled(item);
+    let unblockPromise = promiseUnblockAndSaveCalled(item);
     let hidePromise = promisePanelHidden();
-    EventUtils.synthesizeMouse(
+    // Simulate a mousemove to ensure it's not wrongly being handled by the
+    // panel as the user changing download selection.
+    EventUtils.synthesizeMouseAtCenter(
       DownloadsBlockedSubview.elements.unblockButton,
-      10,
-      10,
-      {},
-      window
+      { type: "mousemove" }
     );
-    await unblockOpenPromise;
+    EventUtils.synthesizeMouseAtCenter(
+      DownloadsBlockedSubview.elements.unblockButton,
+      {}
+    );
+    info("waiting for unblockOpen");
+    await unblockPromise;
+    info("waiting for hide panel");
     await hidePromise;
 
     window.focus();
     await SimpleTest.promiseFocus(window);
 
-    // Reopen the panel and show the subview again.
+    info("Reopen the panel and show the subview again.");
     await openPanel();
-
     viewPromise = promiseViewShown(DownloadsBlockedSubview.subview);
-    EventUtils.sendMouseEvent({ type: "click" }, item);
+    EventUtils.synthesizeMouseAtCenter(item, {});
     await viewPromise;
 
-    // Click the Remove button.  The panel should close and the item should be
-    // removed from it.
+    info("Click the Remove button.");
+    // The panel should close and the item should be removed from it.
     hidePromise = promisePanelHidden();
-    EventUtils.synthesizeMouse(
+    EventUtils.synthesizeMouseAtCenter(
       DownloadsBlockedSubview.elements.deleteButton,
-      10,
-      10,
-      {},
-      window
+      {}
     );
+    info("Waiting for hide panel");
     await hidePromise;
 
+    info("Open the panel again and check the item is gone.");
     await openPanel();
     Assert.ok(!item.parentNode);
 
@@ -167,15 +174,12 @@ function promiseViewShown(view) {
   return BrowserTestUtils.waitForEvent(view, "ViewShown");
 }
 
-function promiseUnblockAndOpenDownloadCalled(item) {
+function promiseUnblockAndSaveCalled(item) {
   return new Promise(resolve => {
-    let realFn = item._shell.unblockAndOpenDownload;
-    item._shell.unblockAndOpenDownload = () => {
-      item._shell.unblockAndOpenDownload = realFn;
+    let realFn = item._shell.unblockAndSave;
+    item._shell.unblockAndSave = async () => {
+      item._shell.unblockAndSave = realFn;
       resolve();
-      // unblockAndOpenDownload returns a promise (that's resolved when the file
-      // is opened).
-      return Promise.resolve();
     };
   });
 }
