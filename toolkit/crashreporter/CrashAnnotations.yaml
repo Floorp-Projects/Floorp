@@ -839,12 +839,16 @@ StorageConnectionNotClosed:
     associated with the connection.
   type: string
 
-SubmittedFromInfobar:
+SubmittedFrom:
   description: >
-    This annotation is set to 1 when the crash report has been manually
-    submitted from Firefox info-bar or has been automatically submitted after
-    the user opted-in to auto-submission.
-  type: boolean
+    This annotation can hold one of the following five values depending on how
+    this crash was submitted by the user:
+    * Auto: the user had opted-in to auto-submission
+    * Infobar: the user clicked on the infobar to submit the crash
+    * AboutCrashes: the user sent the crash from the about:crashes page
+    * CrashedTab: the user sent the crash from a crashed tab page
+    * Client: the user sent the crash using the crash reporter client
+  type: string
 
 SystemMemoryUsePercentage:
   description: >
