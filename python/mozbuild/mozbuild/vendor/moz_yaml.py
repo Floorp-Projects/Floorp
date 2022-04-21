@@ -148,6 +148,10 @@ vendoring:
   # Valid values are 'gitlab', 'github', googlesource
   source-hosting: gitlab
 
+  # Type of Vendoring
+  # This is either 'rust' or 'regular'
+  flavor: rust
+
   # Type of git reference (commit, tag) to track updates from.
   # If omitted, will default to tracking commits.
   tracking: commit
@@ -431,6 +435,7 @@ def _schema_1():
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
                 "tracking": All(str, Length(min=1)),
+                "flavor": Match(r"^(regular|rust)$"),
                 "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),

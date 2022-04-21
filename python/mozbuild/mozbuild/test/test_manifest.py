@@ -233,6 +233,7 @@ updatebot:
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
                             "tracking": "commit",
+                            "flavor": "rust"
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
@@ -267,6 +268,7 @@ vendoring:
   url: https://example.com
   tracking: commit
   source-hosting: gitlab
+  flavor: rust
 bugzilla:
   product: Core
   component: Graphics
@@ -340,6 +342,51 @@ origin:
 vendoring:
   url: https://example.com
   source-hosting: gitlab
+bugzilla:
+  product: Core
+  component: Graphics
+updatebot:
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+  tasks:
+    - type: vendoring
+      enabled: False
+      branch: foo
+      cc:
+        - b@example.com
+        - c@example.com
+      needinfo:
+        - d@example.com
+        - e@example.com
+      frequency: every
+    - type: commit-alert
+      filter: none
+      frequency: 2 weeks
+      platform: linux
+      source-extensions:
+        - .c
+        - .cpp
+            """.strip(),
+                ),
+                # -------------------------------------------------
+                (
+                    "exception",
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  flavor: chocolate
 bugzilla:
   product: Core
   component: Graphics
