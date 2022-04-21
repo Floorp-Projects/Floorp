@@ -904,8 +904,10 @@ class GlobalObject : public NativeObject {
   static bool initAsyncIteratorHelperProto(JSContext* cx,
                                            Handle<GlobalObject*> global);
 
-  static NativeObject* getIntrinsicsHolder(JSContext* cx,
-                                           Handle<GlobalObject*> global);
+  NativeObject& getIntrinsicsHolder() const {
+    MOZ_ASSERT(data().intrinsicsHolder);
+    return *data().intrinsicsHolder;
+  }
 
   static bool createIntrinsicsHolder(JSContext* cx,
                                      Handle<GlobalObject*> global);
@@ -918,18 +920,15 @@ class GlobalObject : public NativeObject {
   }
 
   bool maybeExistingIntrinsicValue(PropertyName* name, Value* vp) {
-    NativeObject* holder = data().intrinsicsHolder;
-    if (!holder) {
-      return false;
-    }
+    NativeObject& holder = getIntrinsicsHolder();
 
-    mozilla::Maybe<PropertyInfo> prop = holder->lookupPure(name);
+    mozilla::Maybe<PropertyInfo> prop = holder.lookupPure(name);
     if (prop.isNothing()) {
       *vp = UndefinedValue();
       return false;
     }
 
-    *vp = holder->getSlot(prop->slot());
+    *vp = holder.getSlot(prop->slot());
     return true;
   }
 
@@ -937,13 +936,10 @@ class GlobalObject : public NativeObject {
                                      Handle<GlobalObject*> global,
                                      Handle<PropertyName*> name,
                                      MutableHandleValue vp, bool* exists) {
-    NativeObject* holder = getIntrinsicsHolder(cx, global);
-    if (!holder) {
-      return false;
-    }
+    NativeObject& holder = global->getIntrinsicsHolder();
 
-    if (mozilla::Maybe<PropertyInfo> prop = holder->lookup(cx, name)) {
-      vp.set(holder->getSlot(prop->slot()));
+    if (mozilla::Maybe<PropertyInfo> prop = holder.lookup(cx, name)) {
+      vp.set(holder.getSlot(prop->slot()));
       *exists = true;
     } else {
       *exists = false;
