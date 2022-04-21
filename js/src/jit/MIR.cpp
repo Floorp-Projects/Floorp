@@ -6653,6 +6653,28 @@ MDefinition* MGetInlinedArgumentHole::foldsTo(TempAllocator& alloc) {
   return arg;
 }
 
+MInlineArgumentsSlice* MInlineArgumentsSlice::New(
+    TempAllocator& alloc, MDefinition* begin, MDefinition* count,
+    MCreateInlinedArgumentsObject* args, JSObject* templateObj,
+    gc::InitialHeap initialHeap) {
+  auto* ins = new (alloc) MInlineArgumentsSlice(templateObj, initialHeap);
+
+  uint32_t argc = args->numActuals();
+  MOZ_ASSERT(argc <= ArgumentsObject::MaxInlinedArgs);
+
+  if (!ins->init(alloc, argc + NumNonArgumentOperands)) {
+    return nullptr;
+  }
+
+  ins->initOperand(0, begin);
+  ins->initOperand(1, count);
+  for (uint32_t i = 0; i < argc; i++) {
+    ins->initOperand(i + NumNonArgumentOperands, args->getArg(i));
+  }
+
+  return ins;
+}
+
 MDefinition* MNormalizeSliceTerm::foldsTo(TempAllocator& alloc) {
   auto* length = this->length();
   if (!length->isConstant() && !length->isArgumentsLength()) {
