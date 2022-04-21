@@ -65,7 +65,15 @@ export async function getMappedLocation(state, sourceMaps, location) {
   return { location: originalLocation, generatedLocation };
 }
 
-export async function mapLocation(state, sourceMaps, location) {
+/**
+ * Gets the "mapped location".
+ *
+ * If the passed location is on a generated source, it gets the
+ * related location in the original source.
+ * If the passed location is on an original source, it gets the
+ * related location in the generated source.
+ */
+export async function getRelatedMapLocation(state, sourceMaps, location) {
   const source = getSource(state, location.sourceId);
 
   if (!source) {

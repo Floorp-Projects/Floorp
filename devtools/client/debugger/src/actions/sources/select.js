@@ -21,7 +21,7 @@ import { setBreakableLines } from ".";
 import { prefs } from "../../utils/prefs";
 import { isMinified } from "../../utils/source";
 import { createLocation } from "../../utils/location";
-import { mapLocation } from "../../utils/source-maps";
+import { getRelatedMapLocation } from "../../utils/source-maps";
 
 import {
   getSource,
@@ -37,6 +37,7 @@ import {
   tabExists,
 } from "../../selectors";
 
+// This is only used by jest tests (and within this module)
 export const setSelectedLocation = (cx, source, location) => ({
   type: "SET_SELECTED_LOCATION",
   cx,
@@ -44,6 +45,7 @@ export const setSelectedLocation = (cx, source, location) => ({
   location,
 });
 
+// This is only used by jest tests (and within this module)
 export const setPendingSelectedLocation = (cx, url, options) => ({
   type: "SET_PENDING_SELECTED_LOCATION",
   cx,
@@ -52,6 +54,7 @@ export const setPendingSelectedLocation = (cx, url, options) => ({
   column: options?.column,
 });
 
+// This is only used by jest tests (and within this module)
 export const clearSelectedLocation = cx => ({
   type: "CLEAR_SELECTED_LOCATION",
   cx,
@@ -64,9 +67,6 @@ export const clearSelectedLocation = cx => ({
  *
  * This exists mostly for external things to interact with the
  * debugger.
- *
- * @memberof actions/sources
- * @static
  */
 export function selectSourceURL(cx, url, options) {
   return async ({ dispatch, getState, sourceMaps }) => {
@@ -82,19 +82,40 @@ export function selectSourceURL(cx, url, options) {
 }
 
 /**
- * @memberof actions/sources
- * @static
+ * Wrapper around selectLocation, which creates the location object for us.
+ * Note that it ignores the currently selected source and will select
+ * the precise generated/original source passed as argument.
+ *
+ * @param {Object} cx
+ * @param {String} sourceId
+ *        The precise source to select.
+ * @param {Object} location
+ *        Optional precise location to select, if we need to select
+ *        a precise line/column.
  */
-export function selectSource(cx, sourceId, options = {}) {
+export function selectSource(cx, sourceId, location = {}) {
   return async ({ dispatch }) => {
-    const location = createLocation({ ...options, sourceId });
+    location = createLocation({ ...location, sourceId });
     return dispatch(selectSpecificLocation(cx, location));
   };
 }
 
 /**
- * @memberof actions/sources
- * @static
+ * Select a new location.
+ * This will automatically select the source in the source tree (if visible)
+ * and open the source (a new tab and the source editor)
+ * as well as highlight a precise line in the editor.
+ *
+ * Note that by default, this may map your passed location to the original
+ * or generated location based on the selected source state. (see keepContext)
+ *
+ * @param {Object} cx
+ * @param {Object} location
+ * @param {Object} options
+ * @param {boolean} options.keepContext
+ *        If false, this will ignore the currently selected source
+ *        and select the generated or original location, even if we
+ *        were currently selecting the other source type.
  */
 export function selectLocation(cx, location, { keepContext = true } = {}) {
   return async ({ dispatch, getState, sourceMaps, client }) => {
@@ -118,14 +139,22 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     }
 
     // Preserve the current source map context (original / generated)
-    // when navigting to a new location.
+    // when navigating to a new location.
+    // i.e. if keepContext isn't manually overriden to false,
+    // we will convert the source we want to select to either
+    // original/generated in order to match the currently selected one.
+    // If the currently selected source is original, we will
+    // automatically map `location` to refer to the original source,
+    // even if that used to refer only to the generated source.
     const selectedSource = getSelectedSource(getState());
     if (
       keepContext &&
       selectedSource &&
       selectedSource.isOriginal != isOriginalId(location.sourceId)
     ) {
-      location = await mapLocation(getState(), sourceMaps, location);
+      // getRelatedMapLocation will just convert to the related generated/original location.
+      // i.e if the original location is passed, the related generated location will be returned and vice versa.
+      location = await getRelatedMapLocation(getState(), sourceMaps, location);
       source = getSourceFromId(getState(), location.sourceId);
     }
 
@@ -174,16 +203,26 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
 }
 
 /**
- * @memberof actions/sources
- * @static
+ * Select a location while ignoring the currently selected source.
+ * This will select the generated location even if the currently
+ * select source is an original source. And the other way around.
+ *
+ * @param {Object} cx
+ * @param {Object} location
+ *        The location to select, object which includes enough
+ *        information to specify a precise source, line and column.
  */
 export function selectSpecificLocation(cx, location) {
   return selectLocation(cx, location, { keepContext: false });
 }
 
 /**
- * @memberof actions/sources
- * @static
+ * Select the "mapped location".
+ *
+ * If the passed location is on a generated source, select the
+ * related location in the original source.
+ * If the passed location is on an original source, select the
+ * related location in the generated source.
  */
 export function jumpToMappedLocation(cx, location) {
   return async function({ dispatch, getState, client, sourceMaps }) {
@@ -191,12 +230,18 @@ export function jumpToMappedLocation(cx, location) {
       return;
     }
 
-    const pairedLocation = await mapLocation(getState(), sourceMaps, location);
+    // Map to either an original or a generated source location
+    const pairedLocation = await getRelatedMapLocation(
+      getState(),
+      sourceMaps,
+      location
+    );
 
-    return dispatch(selectSpecificLocation(cx, { ...pairedLocation }));
+    return dispatch(selectSpecificLocation(cx, pairedLocation));
   };
 }
 
+// This is only used by tests
 export function jumpToMappedSelectedLocation(cx) {
   return async function({ dispatch, getState }) {
     const location = getSelectedLocation(getState());
