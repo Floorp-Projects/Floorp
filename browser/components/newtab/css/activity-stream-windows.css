@@ -182,7 +182,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/history.svg");
 }
 .icon.icon-topsites {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-topsites-16.svg");
+  background-image: url("chrome://browser/skin/topsites.svg");
 }
 .icon.icon-pin-small {
   background-image: url("chrome://browser/skin/pin-12.svg");
