@@ -21,6 +21,10 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Text.h"
 
+class nsRange;
+
+struct CharacterDataChangeInfo;
+
 namespace mozilla {
 
 class EditorBase;
@@ -273,6 +277,13 @@ class TextComposition final {
     // mCompositionLengthInTextNode because editor needs them to restore
     // composition in new text node.
   }
+
+  /**
+   * OnCharacterDataChanged() is called when IMEContentObserver receives
+   * character data change notifications.
+   */
+  void OnCharacterDataChanged(Text& aText,
+                              const CharacterDataChangeInfo& aInfo);
 
  private:
   // Private destructor, to discourage deletion outside of Release():

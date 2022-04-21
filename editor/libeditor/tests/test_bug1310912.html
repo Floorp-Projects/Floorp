@@ -22,96 +22,217 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1310912
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
-  let editor = document.querySelector("div[contenteditable]");
+  const editor = document.querySelector("div[contenteditable]");
 
   editor.focus();
-  let sel = window.getSelection();
+  const sel = window.getSelection();
   sel.collapse(editor.childNodes[0], editor.textContent.length);
 
-  synthesizeCompositionChange({
-    composition: {
-      string: "DEF",
-      clauses: [
-        { length: 3, attr: COMPOSITION_ATTR_RAW_CLAUSE },
-      ],
-    },
-    caret: { start: 3, length: 0 },
-  });
-  is(editor.textContent, "ABCDEF", "composing text should be set");
+  (function testInsertEmptyTextNodeWhenCaretIsAtEndOfComposition() {
+    const description =
+      "testInsertEmptyTextNodeWhenCaretIsAtEndOfComposition: ";
+    synthesizeCompositionChange({
+      composition: {
+        string: "DEF",
+        clauses: [
+          { length: 3, attr: COMPOSITION_ATTR_RAW_CLAUSE },
+        ],
+      },
+      caret: { start: 3, length: 0 },
+    });
+    is(
+      editor.textContent,
+      "ABCDEF",
+      `${description} Composing text "DEF" should be inserted at end of the text node`
+    );
 
-  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
-  synthesizeCompositionChange({
-    composition: {
-      string: "GHI",
-      clauses: [
-        { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE },
-      ],
-    },
-    caret: { start: 0, length: 0 },
-  });
-  is(editor.textContent, "ABCGHI", "composing text should be replaced");
+    window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+    is(
+      editor.childNodes[0].data,
+      "ABCDEF",
+      `${
+        description
+      } First text node should have both preceding text and the composing text`
+    );
+    is(
+      editor.childNodes[1].data,
+      "",
+      `${description} Second text node should be empty`
+    );
+  })();
 
-  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
-  synthesizeCompositionChange({
-    composition: {
-      string: "JKL",
-      clauses: [
-        { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE },
-      ],
-    },
-    caret: { start: 0, length: 0 },
-  });
-  is(editor.textContent, "ABCJKL", "composing text should be replaced");
+  (function testInsertEmptyTextNodeWhenCaretIsAtStartOfComposition() {
+    const description =
+      "testInsertEmptyTextNodeWhenCaretIsAtStartOfComposition: ";
+    synthesizeCompositionChange({
+      composition: {
+        string: "GHI",
+        clauses: [
+          { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE },
+        ],
+      },
+      caret: { start: 0, length: 0 },
+    });
+    is(
+      editor.textContent,
+      "ABCGHI",
+      `${description} Composing text should be replaced with new one`
+    );
 
-  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
-  synthesizeCompositionChange({
-    composition: {
-      string: "MNO",
-      clauses: [
-        { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE },
-      ],
-    },
-    caret: { start: 1, length: 0 },
-  });
-  is(editor.textContent, "ABCMNO", "composing text should be replaced");
+    window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+    is(
+      editor.childNodes[0].data,
+      "ABC",
+      `${
+        description
+      } First text node should have only the preceding text of the composition`
+    );
+    is(
+      editor.childNodes[1].data,
+      "",
+      `${description} Second text node should have be empty`
+    );
+    is(
+      editor.childNodes[2].data,
+      "GHI",
+      `${description} Third text node should have only composing text`
+    );
+  })();
 
-  // Normal selection is the caret, therefore, inserting empty text node
-  // creates the following DOM tree:
-  // <div contenteditable>
-  //  |- #text ("ABCM")
-  //  |- #text ("")
-  //  +- #text ("NO")
-  window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
-  is(editor.childNodes[0].data, "ABCM",
-     "First text node should only have \"M\" of the composition string");
-  is(editor.childNodes[1].data, "",
-     "Second text node should be the inserted empty text node");
-  is(editor.childNodes[2].data, "NO",
-     "Third text node should have the remaining composition string");
-  todo_is(editor.childNodes[3].nodeName, "BR",
-     "Forth node is empty text node, but I don't where this comes from");
+  (function testInsertEmptyTextNodeWhenCaretIsAtStartOfCompositionAgain() {
+    const description =
+      "testInsertEmptyTextNodeWhenCaretIsAtStartOfCompositionAgain: ";
+    synthesizeCompositionChange({
+      composition: {
+        string: "JKL",
+        clauses: [
+          { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE },
+        ],
+      },
+      caret: { start: 0, length: 0 },
+    });
+    is(
+      editor.textContent,
+      "ABCJKL",
+      `${description} Composing text should be replaced`
+    );
+
+    window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+    is(
+      editor.childNodes[0].data,
+      "ABC",
+      `${
+        description
+      } First text node should have only the preceding text of the composition`
+    );
+    is(
+      editor.childNodes[1].data,
+      "",
+      `${description} Second text node should have be empty`
+    );
+    is(
+      editor.childNodes[2].data,
+      "JKL",
+      `${description} Third text node should have only composing text`
+    );
+  })();
+
+  (function testInsertEmptyTextNodeWhenCaretIsAtMiddleOfComposition() {
+    const description =
+      "testInsertEmptyTextNodeWhenCaretIsAtMiddleOfComposition: ";
+    synthesizeCompositionChange({
+      composition: {
+        string: "MNO",
+        clauses: [
+          { length: 3, attr: COMPOSITION_ATTR_CONVERTED_CLAUSE },
+        ],
+      },
+      caret: { start: 1, length: 0 },
+    });
+    is(
+      editor.textContent,
+      "ABCMNO",
+      `${description} Composing text should be replaced`
+    );
+
+    // Normal selection is the caret, therefore, inserting empty text node
+    // creates the following DOM tree:
+    // <div contenteditable>
+    //  |- #text ("ABCM")
+    //  |- #text ("")
+    //  +- #text ("NO")
+    window.getSelection().getRangeAt(0).insertNode(document.createTextNode(""));
+    is(
+      editor.childNodes[0].data,
+      "ABCM",
+      `${
+        description
+      } First text node should have the preceding text and composing string before the split point`
+    );
+    is(
+      editor.childNodes[1].data,
+      "",
+      `${description} Second text node should be empty`
+    );
+    is(
+      editor.childNodes[2].data,
+      "NO",
+      `${
+        description
+      } Third text node should have the remaining composing string`
+    );
+    todo_is(editor.childNodes[3].nodeName, "BR",
+      "Forth node is empty text node, but I don't where this comes from");
+  })();
 
   // Then, committing composition makes the commit string into the first
   // text node and makes the following text nodes empty.
   // XXX I don't know whether the empty text nodes should be removed or not
   //     at this moment.
-  synthesizeComposition({ type: "compositioncommitasis" });
-  is(editor.textContent, "ABCMNO",
-     "composing text should be committed");
-  is(editor.childNodes[0].data, "ABCMNO",
-     "First text node should have the committed string");
+  (function testCommitComposition() {
+    const description = "testCommitComposition: ";
+    synthesizeComposition({ type: "compositioncommitasis" });
+    is(
+      editor.textContent,
+      "ABCMNO",
+      `${description} Composing text should be committed as-is`
+    );
+    is(
+      editor.childNodes[0].data,
+      "ABCMNO",
+      `${description} First text node should have the committed string`
+    );
+  })();
 
-  synthesizeKey("Z", { accelKey: true });
-  is(editor.textContent, "ABC",
-     "text should be undone (commit string should've gone");
-  is(editor.childNodes[0].data, "ABC",
-     "First text node should have the committed string after undone");
+  (function testUndoComposition() {
+    const description = "testUndoComposition: ";
+    synthesizeKey("Z", { accelKey: true });
+    is(
+      editor.textContent,
+      "ABC",
+      `${description} Text should be undone (commit string should've gone)`
+    );
+    is(
+      editor.childNodes[0].data,
+      "ABC",
+      `${description} First text node should have all text`
+    );
+  })();
 
-  synthesizeKey("Z", { accelKey: true, shiftKey: true });
-  is(editor.textContent, "ABCMNO",
-     "text should be redone (commit string should've be back");
-  is(editor.childNodes[0].data, "ABCMNO",
-     "First text node should have the committed string after redone");
+  (function testUndoAgain() {
+    const description = "testUndoAgain: ";
+    synthesizeKey("Z", { accelKey: true, shiftKey: true });
+    is(
+      editor.textContent,
+      "ABCMNO",
+      `${description} Text should be redone (commit string should've be back)`
+    );
+    is(
+      editor.childNodes[0].data,
+      "ABCMNO",
+      `${description} First text node should have all text`
+    );
+  })();
 
   SimpleTest.finish();
 });
