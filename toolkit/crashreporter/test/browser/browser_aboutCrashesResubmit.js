@@ -73,11 +73,17 @@ function check_submit_pending(tab, crashes) {
         0,
         "correctly sent as non-throttleable"
       );
+      Assert.equal(
+        result.SubmittedFrom,
+        "AboutCrashes",
+        "correctly flagged as sent from about:crashes"
+      );
       // we checked these, they're set by the submission process,
       // so they won't be in the "extra" data.
       delete result.upload_file_minidump;
       delete result.memory_report;
       delete result.Throttleable;
+      delete result.SubmittedFrom;
 
       return { id: CrashID, url: CrashURL, result };
     }).then(({ id, url, result }) => {

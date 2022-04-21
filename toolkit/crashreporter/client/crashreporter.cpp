@@ -734,6 +734,7 @@ int main(int argc, char** argv) {
     extraData.removeMember("ServerURL");
     extraData.removeMember("StackTraces");
 
+    extraData["SubmittedFrom"] = "Client";
     extraData["Throttleable"] = "1";
 
     // re-set XUL_APP_FILE for xulrunner wrapped apps
