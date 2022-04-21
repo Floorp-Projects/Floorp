@@ -7,6 +7,7 @@
 #include "ScrollTimeline.h"
 
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/DisplayPortUtils.h"
 #include "mozilla/PresShell.h"
@@ -48,9 +49,6 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
                                StyleScrollAxis aAxis)
     : AnimationTimeline(aDocument->GetParentObject()),
       mDocument(aDocument),
-      // FIXME: Bug 1737918: We may have to udpate the constructor arguments
-      // because this can be nearest, root, or a specific container. For now,
-      // the input is a source element directly and it is the root element.
       mSource(aScroller),
       mAxis(aAxis) {
   MOZ_ASSERT(aDocument);
@@ -98,8 +96,6 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
   StyleScrollAxis axis =
       ToStyleScrollAxis(Servo_ScrollTimelineRule_GetOrientation(&aRule));
 
-  // FIXME: Bug 1737918: applying new spec update, e.g. other scrollers and
-  // other style values.
   RefPtr<ScrollTimeline> timeline;
   auto autoScroller = Scroller::Root(aTarget.mElement->OwnerDoc());
   auto* set =
@@ -108,6 +104,45 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
   if (!p) {
     timeline = new ScrollTimeline(aDocument, autoScroller, axis);
     set->Add(p, axis, timeline);
+  } else {
+    timeline = p->value();
+  }
+  return timeline.forget();
+}
+
+/* static */
+already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
+    Document* aDocument, const NonOwningAnimationTarget& aTarget,
+    StyleScrollAxis aAxis, StyleScroller aScroller) {
+  MOZ_ASSERT(aTarget);
+  Scroller scroller;
+  switch (aScroller) {
+    case StyleScroller::Root:
+      scroller = Scroller::Root(aTarget.mElement->OwnerDoc());
+      break;
+    case StyleScroller::Nearest: {
+      Element* curr = aTarget.mElement->GetFlattenedTreeParentElement();
+      Element* root = aTarget.mElement->OwnerDoc()->GetDocumentElement();
+      while (curr && curr != root) {
+        const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(curr);
+        MOZ_ASSERT(style, "The ancestor should be styled.");
+        if (style->StyleDisplay()->IsScrollableOverflow()) {
+          break;
+        }
+        curr = curr->GetFlattenedTreeParentElement();
+      }
+      // If there is no scroll container, we use root.
+      scroller = Scroller::Nearest(curr ? curr : root);
+    }
+  }
+
+  RefPtr<ScrollTimeline> timeline;
+  auto* set =
+      ScrollTimelineSet::GetOrCreateScrollTimelineSet(scroller.mElement);
+  auto p = set->LookupForAdd(aAxis);
+  if (!p) {
+    timeline = new ScrollTimeline(aDocument, scroller, aAxis);
+    set->Add(p, aAxis, timeline);
   } else {
     timeline = p->value();
   }
@@ -214,12 +249,12 @@ const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
               mSource.mElement->OwnerDoc()->GetPresShell()) {
         return presShell->GetRootScrollFrameAsScrollable();
       }
-      break;
+      return nullptr;
     case StyleScroller::Nearest:
-      // TODO: Implement nearest in the patch series.
-    default:
       return nsLayoutUtils::FindScrollableFrameFor(mSource.mElement);
   }
+
+  MOZ_ASSERT_UNREACHABLE("Unsupported scroller type");
   return nullptr;
 }
 
