@@ -68,3 +68,4 @@ skip_on(android,device) == fuzzy(1,100) svg-filter-composite.yaml svg-filter-com
 skip_on(android,device) == filter-mix-blend-scaling.yaml filter-mix-blend-scaling-ref.yaml
 platform(linux) == blend-clipped-raster-root.yaml blend-clipped-raster-root.png
 == drop-shadow-inverse-scale.yaml blank.yaml
+platform(linux,mac) == filter-drop-shadow-fractional.yaml filter-drop-shadow-fractional.png
