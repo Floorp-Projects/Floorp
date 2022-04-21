@@ -1,0 +1,11 @@
+# Verify that drop shadows with fractional blur radii are correctly centered
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [20, 20, 0, 0]
+      filters: drop-shadow([0, 0], 5.01, [255, 0, 0, 1])
+      items:
+      - type: rect
+        bounds: 0 0 100 100
+        color: black
