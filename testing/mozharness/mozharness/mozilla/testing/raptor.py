@@ -157,6 +157,16 @@ class Raptor(
             },
         ],
         [
+            ["--browsertime-arg"],
+            {
+                "action": "append",
+                "metavar": "PREF=VALUE",
+                "dest": "browsertime_user_args",
+                "default": [],
+                "help": argparse.SUPPRESS,
+            },
+        ],
+        [
             ["--browsertime"],
             {
                 "dest": "browsertime",
@@ -657,6 +667,7 @@ class Raptor(
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
         self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
         self.browsertime_visualmetrics = self.config.get("browsertime_visualmetrics")
+        self.browsertime_user_args = self.config.get("browsertime_user_args")
         self.browsertime_video = False
         self.enable_marionette_trace = self.config.get("enable_marionette_trace")
         self.browser_cycles = self.config.get("browser_cycles")
@@ -953,6 +964,9 @@ class Raptor(
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
                 if isinstance(value, string_types):
                     options.extend([arg, os.path.expandvars(value)])
+                elif isinstance(value, (tuple, list)):
+                    for val in value:
+                        options.extend([arg, val])
                 else:
                     options.extend([arg])
 

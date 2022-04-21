@@ -367,6 +367,15 @@ def create_parser(mach_interface=False):
         help="Whether to use browsertime to execute pageload tests",
     )
     add_arg(
+        "--browsertime-arg",
+        dest="browsertime_user_args",
+        action="append",
+        default=[],
+        metavar="OPTION=VALUE",
+        help="Add extra browsertime arguments to your test run using "
+        "this option e.g.: --browsertime-arg timeout.scripts=1000",
+    )
+    add_arg(
         "--browsertime-node", dest="browsertime_node", help="path to Node.js executable"
     )
     add_arg(
