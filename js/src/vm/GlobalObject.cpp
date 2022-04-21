@@ -839,14 +839,6 @@ bool GlobalObject::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name) {
 }
 
 /* static */
-NativeObject* GlobalObject::getIntrinsicsHolder(JSContext* cx,
-                                                Handle<GlobalObject*> global) {
-  NativeObject* holder = global->data().intrinsicsHolder;
-  MOZ_ASSERT(holder);
-  return holder;
-}
-
-/* static */
 bool GlobalObject::createIntrinsicsHolder(JSContext* cx,
                                           Handle<GlobalObject*> global) {
   Rooted<NativeObject*> intrinsicsHolder(
@@ -929,12 +921,6 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
   // If this is a C++ intrinsic, simply define the function on the intrinsics
   // holder.
   if (const JSFunctionSpec* spec = js::FindIntrinsicSpec(name)) {
-    RootedNativeObject holder(cx,
-                              GlobalObject::getIntrinsicsHolder(cx, global));
-    if (!holder) {
-      return false;
-    }
-
     RootedId id(cx, NameToId(name));
     RootedFunction fun(cx, JS::NewFunctionFromSpec(cx, spec, id));
     if (!fun) {
@@ -970,10 +956,7 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
                                      Handle<GlobalObject*> global,
                                      HandlePropertyName name,
                                      HandleValue value) {
-  RootedNativeObject holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
-  if (!holder) {
-    return false;
-  }
+  RootedNativeObject holder(cx, &global->getIntrinsicsHolder());
 
   RootedId id(cx, NameToId(name));
   MOZ_ASSERT(!holder->containsPure(id));
