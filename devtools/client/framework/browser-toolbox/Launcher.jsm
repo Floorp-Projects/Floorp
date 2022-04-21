@@ -59,6 +59,12 @@ var processes = new Set();
  * @param boolean overwritePreferences [optional]
  *        Set to force overwriting the toolbox profile's preferences with the
  *        current set of preferences.
+ * @param string binaryPath [optional]
+ *        Absolute file path to a custom firefox binary path.
+ *        This is especially useful when debugging debug builds which are really slow
+ *        so that you could pass an optimized build for the browser toolbox.
+ *        This is also useful when debugging patch that break devtools,
+ *        so that you could use a build that works for the browser toolbox.
  */
 function BrowserToolboxLauncher(
   onClose,
@@ -98,14 +104,15 @@ EventEmitter.decorate(BrowserToolboxLauncher);
 
 /**
  * Initializes and starts a chrome toolbox process.
- * @return object
+ *
+ * See BrowserToolboxLauncher jsdoc for the arguments.
  */
-BrowserToolboxLauncher.init = function(
+BrowserToolboxLauncher.init = function({
   onClose,
   onRun,
   overwritePreferences,
-  binaryPath
-) {
+  binaryPath,
+} = {}) {
   if (
     !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
     !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
