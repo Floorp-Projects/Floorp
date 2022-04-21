@@ -918,7 +918,7 @@ DevToolsStartup.prototype = {
     const { BrowserToolboxLauncher } = ChromeUtils.import(
       "resource://devtools/client/framework/browser-toolbox/Launcher.jsm"
     );
-    BrowserToolboxLauncher.init(null, null, null, binaryPath);
+    BrowserToolboxLauncher.init({ binaryPath });
 
     if (pauseOnStartup) {
       // Spin the event loop until the debugger connects.
