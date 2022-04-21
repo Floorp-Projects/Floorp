@@ -17,18 +17,28 @@ const { SpecialMessageActions } = ChromeUtils.import(
 );
 
 async function waitForClick(selector, win) {
-  await TestUtils.waitForCondition(() => win.document.querySelector(selector));
+  await BrowserTestUtils.waitForCondition(() =>
+    win.document.querySelector(selector)
+  );
   win.document.querySelector(selector).click();
 }
 
-async function showDialog(dialogOptions) {
+function waitForDialog(callback = win => win.close()) {
+  return BrowserTestUtils.promiseAlertDialog(
+    null,
+    "chrome://browser/content/spotlight.html",
+    { callback, isSubDialog: true }
+  );
+}
+
+function showAndWaitForDialog(dialogOptions, callback) {
+  const promise = waitForDialog(callback);
   Spotlight.showSpotlightDialog(
     dialogOptions.browser,
     dialogOptions.message,
     dialogOptions.dispatchStub
   );
-  const [win] = await TestUtils.topicObserved("subdialog-loaded");
-  return win;
+  return promise;
 }
 
 add_task(async function test_specialAction() {
@@ -39,9 +49,10 @@ add_task(async function test_specialAction() {
   let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
   let specialActionStub = sinon.stub(SpecialMessageActions, "handleAction");
 
-  let win = await showDialog({ message, browser, dispatchStub });
-  await waitForClick("button.primary", win);
-  win.close();
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    await waitForClick("button.primary", win);
+    win.close();
+  });
 
   Assert.equal(
     specialActionStub.callCount,
@@ -55,4 +66,26 @@ add_task(async function test_specialAction() {
   );
 
   specialActionStub.restore();
+});
+
+add_task(async function send_spotlight_as_page_in_telemetry() {
+  let message = (await PanelTestProvider.getMessages()).find(
+    m => m.id === "MULTISTAGE_SPOTLIGHT_MESSAGE"
+  );
+  let dispatchStub = sinon.stub();
+  let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+
+  let telemetryStub;
+  await showAndWaitForDialog({ message, browser, dispatchStub }, async win => {
+    telemetryStub = sinon.stub(win, "AWSendEventTelemetry");
+    await waitForClick("button.primary", win);
+    win.close();
+  });
+
+  Assert.equal(
+    telemetryStub.lastCall.args[0].event_context.page,
+    "spotlight",
+    "The value of event context page should be set to 'spotlight' in event telemetry"
+  );
+  telemetryStub.restore();
 });
