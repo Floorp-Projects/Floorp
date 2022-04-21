@@ -1235,6 +1235,28 @@
   result_type: Object
   possibly_calls: true
 
+# Array.prototype.slice on an arguments object.
+- name: FrameArgumentsSlice
+  operands:
+    begin: Int32
+    count: Int32
+  arguments:
+    templateObj: JSObject*
+    initialHeap: gc::InitialHeap
+  result_type: Object
+  alias_set: none
+  possibly_calls: true
+
+- name: NormalizeSliceTerm
+  operands:
+    value: Int32
+    length: Int32
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: none
+  folds_to: custom
+
 # MArrayJoin doesn't override |getAliasSet()|, because Array.prototype.join
 # might coerce the elements of the Array to strings. This coercion might
 # cause the evaluation of JavaScript code.

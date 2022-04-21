@@ -11495,6 +11495,259 @@ void CodeGenerator::visitArgumentsSlice(LArgumentsSlice* lir) {
   callVM<Fn, ArgumentsSliceDense>(lir);
 }
 
+#ifdef DEBUG
+void CodeGenerator::emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
+                                                   const RegisterOrInt32& count,
+                                                   Register numActualArgs) {
+  // |begin| must be positive or zero.
+  if (begin.is<Register>()) {
+    Label beginOk;
+    masm.branch32(Assembler::GreaterThanOrEqual, begin.as<Register>(), Imm32(0),
+                  &beginOk);
+    masm.assumeUnreachable("begin < 0");
+    masm.bind(&beginOk);
+  } else {
+    MOZ_ASSERT(begin.as<int32_t>() >= 0);
+  }
+
+  // |count| must be positive or zero.
+  if (count.is<Register>()) {
+    Label countOk;
+    masm.branch32(Assembler::GreaterThanOrEqual, count.as<Register>(), Imm32(0),
+                  &countOk);
+    masm.assumeUnreachable("count < 0");
+    masm.bind(&countOk);
+  } else {
+    MOZ_ASSERT(count.as<int32_t>() >= 0);
+  }
+
+  // |begin| must be less-or-equal to |numActualArgs|.
+  Label argsBeginOk;
+  if (begin.is<Register>()) {
+    masm.branchPtr(Assembler::AboveOrEqual, numActualArgs, begin.as<Register>(),
+                   &argsBeginOk);
+  } else {
+    masm.branchPtr(Assembler::AboveOrEqual, numActualArgs,
+                   Imm32(begin.as<int32_t>()), &argsBeginOk);
+  }
+  masm.assumeUnreachable("begin <= numActualArgs");
+  masm.bind(&argsBeginOk);
+
+  // |count| must be less-or-equal to |numActualArgs|.
+  Label argsCountOk;
+  if (count.is<Register>()) {
+    masm.branchPtr(Assembler::AboveOrEqual, numActualArgs, count.as<Register>(),
+                   &argsCountOk);
+  } else {
+    masm.branchPtr(Assembler::AboveOrEqual, numActualArgs,
+                   Imm32(count.as<int32_t>()), &argsCountOk);
+  }
+  masm.assumeUnreachable("count <= numActualArgs");
+  masm.bind(&argsCountOk);
+
+  // |begin| and |count| must be preserved, but |numActualArgs| can be changed.
+  //
+  // Pre-condition: |count| <= |numActualArgs|
+  // Condition to test: |begin + count| <= |numActualArgs|
+  // Transform to: |begin| <= |numActualArgs - count|
+  if (count.is<Register>()) {
+    masm.subPtr(count.as<Register>(), numActualArgs);
+  } else {
+    masm.subPtr(Imm32(count.as<int32_t>()), numActualArgs);
+  }
+
+  // |begin + count| must be less-or-equal to |numActualArgs|.
+  Label argsBeginCountOk;
+  if (begin.is<Register>()) {
+    masm.branchPtr(Assembler::AboveOrEqual, numActualArgs, begin.as<Register>(),
+                   &argsBeginCountOk);
+  } else {
+    masm.branchPtr(Assembler::AboveOrEqual, numActualArgs,
+                   Imm32(begin.as<int32_t>()), &argsBeginCountOk);
+  }
+  masm.assumeUnreachable("begin + count <= numActualArgs");
+  masm.bind(&argsBeginCountOk);
+}
+#endif
+
+template <class ArgumentsSlice>
+void CodeGenerator::emitNewArray(ArgumentsSlice* lir,
+                                 const RegisterOrInt32& count, Register output,
+                                 Register temp) {
+  using Fn = ArrayObject* (*)(JSContext*, int32_t);
+  auto* ool = count.match(
+      [&](Register count) {
+        return oolCallVM<Fn, NewArrayObjectEnsureDenseInitLength>(
+            lir, ArgList(count), StoreRegisterTo(output));
+      },
+      [&](int32_t count) {
+        return oolCallVM<Fn, NewArrayObjectEnsureDenseInitLength>(
+            lir, ArgList(Imm32(count)), StoreRegisterTo(output));
+      });
+
+  TemplateObject templateObject(lir->mir()->templateObj());
+  MOZ_ASSERT(templateObject.isArrayObject());
+
+  auto templateNativeObj = templateObject.asTemplateNativeObject();
+  MOZ_ASSERT(templateNativeObj.getArrayLength() == 0);
+  MOZ_ASSERT(templateNativeObj.getDenseInitializedLength() == 0);
+  MOZ_ASSERT(!templateNativeObj.hasDynamicElements());
+
+  // Check array capacity. Call into the VM if the template object's capacity
+  // is too small.
+  bool tryAllocate = count.match(
+      [&](Register count) {
+        masm.branch32(Assembler::Above, count,
+                      Imm32(templateNativeObj.getDenseCapacity()),
+                      ool->entry());
+        return true;
+      },
+      [&](int32_t count) {
+        MOZ_ASSERT(count >= 0);
+        if (uint32_t(count) > templateNativeObj.getDenseCapacity()) {
+          masm.jump(ool->entry());
+          return false;
+        }
+        return true;
+      });
+
+  if (tryAllocate) {
+    // Try to allocate an object.
+    masm.createGCObject(output, temp, templateObject, lir->mir()->initialHeap(),
+                        ool->entry());
+
+    auto setInitializedLengthAndLength = [&](auto count) {
+      const int elementsOffset = NativeObject::offsetOfFixedElements();
+
+      // Update initialized length.
+      Address initLength(
+          output, elementsOffset + ObjectElements::offsetOfInitializedLength());
+      masm.store32(count, initLength);
+
+      // Update length.
+      Address length(output, elementsOffset + ObjectElements::offsetOfLength());
+      masm.store32(count, length);
+    };
+
+    // The array object was successfully created. Set the length and initialized
+    // length and then proceed to fill the elements.
+    count.match([&](Register count) { setInitializedLengthAndLength(count); },
+                [&](int32_t count) {
+                  if (count > 0) {
+                    setInitializedLengthAndLength(Imm32(count));
+                  }
+                });
+  }
+
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitFrameArgumentsSlice(LFrameArgumentsSlice* lir) {
+  Register begin = ToRegister(lir->begin());
+  Register count = ToRegister(lir->count());
+  Register temp = ToRegister(lir->temp0());
+  Register output = ToRegister(lir->output());
+
+#ifdef DEBUG
+  Address numActualArgs(masm.getStackPointer(),
+                        frameSize() + JitFrameLayout::offsetOfNumActualArgs());
+  masm.loadPtr(numActualArgs, temp);
+
+  emitAssertArgumentsSliceBounds(RegisterOrInt32(begin), RegisterOrInt32(count),
+                                 temp);
+#endif
+
+  emitNewArray(lir, RegisterOrInt32(count), output, temp);
+
+  Label done;
+  masm.branch32(Assembler::Equal, count, Imm32(0), &done);
+  {
+    AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    allRegs.take(begin);
+    allRegs.take(count);
+    allRegs.take(temp);
+    allRegs.take(output);
+
+    ValueOperand value = allRegs.takeAnyValue();
+
+    LiveRegisterSet liveRegs;
+    liveRegs.add(output);
+    liveRegs.add(begin);
+    liveRegs.add(value);
+
+    masm.PushRegsInMask(liveRegs);
+
+    // Initialize all elements.
+
+    Register elements = output;
+    masm.loadPtr(Address(output, NativeObject::offsetOfElements()), elements);
+
+    Register argIndex = begin;
+
+    Register index = temp;
+    masm.move32(Imm32(0), index);
+
+    size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+    argvOffset += masm.PushRegsInMaskSizeInBytes(liveRegs);
+
+    BaseValueIndex argPtr(masm.getStackPointer(), argIndex, argvOffset);
+
+    Label loop;
+    masm.bind(&loop);
+
+    masm.loadValue(argPtr, value);
+
+    // We don't need a pre-barrier, because the element at |index| is guaranteed
+    // to be a non-GC thing (either uninitialized memory or the magic hole
+    // value).
+    masm.storeValue(value, BaseObjectElementIndex(elements, index));
+
+    masm.add32(Imm32(1), index);
+    masm.add32(Imm32(1), argIndex);
+
+    masm.branch32(Assembler::LessThan, index, count, &loop);
+
+    masm.PopRegsInMask(liveRegs);
+
+    // Emit a post-write barrier if |output| is tenured.
+    //
+    // We expect that |output| is nursery allocated, so it isn't worth the
+    // trouble to check if no frame argument is a nursery thing, which would
+    // allow to omit the post-write barrier.
+    masm.branchPtrInNurseryChunk(Assembler::Equal, output, temp, &done);
+
+    LiveRegisterSet volatileRegs = liveVolatileRegs(lir);
+    volatileRegs.takeUnchecked(temp);
+
+    masm.PushRegsInMask(volatileRegs);
+    emitPostWriteBarrier(output);
+    masm.PopRegsInMask(volatileRegs);
+  }
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitNormalizeSliceTerm(LNormalizeSliceTerm* lir) {
+  Register value = ToRegister(lir->value());
+  Register length = ToRegister(lir->length());
+  Register output = ToRegister(lir->output());
+
+  masm.move32(value, output);
+
+  Label positive;
+  masm.branch32(Assembler::GreaterThanOrEqual, value, Imm32(0), &positive);
+
+  Label done;
+  masm.add32(length, output);
+  masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(0), &done);
+  masm.move32(Imm32(0), output);
+  masm.jump(&done);
+
+  masm.bind(&positive);
+  masm.cmp32Move32(Assembler::LessThan, length, value, length, output);
+
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
   Label skipCall;
 
