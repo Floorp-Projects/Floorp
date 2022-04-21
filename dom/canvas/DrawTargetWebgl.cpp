@@ -2266,6 +2266,8 @@ GlyphCacheEntry::GlyphCacheEntry(const GlyphBuffer& aBuffer,
   mBuffer.mNumGlyphs = aBuffer.mNumGlyphs;
 }
 
+GlyphCacheEntry::~GlyphCacheEntry() { delete[] mBuffer.mGlyphs; }
+
 // Attempt to find a matching entry in the glyph cache. If one isn't found,
 // a new entry will be created. The caller should check whether the contained
 // texture handle is valid to determine if it will need to render the text run
