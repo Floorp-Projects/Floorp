@@ -25,7 +25,7 @@ def browser(full_configuration):
     """
     current_browser = None
 
-    def _browser(extra_args=None, extra_prefs=None):
+    def _browser(enable_bidi=False, extra_args=None, extra_prefs=None):
         nonlocal current_browser
 
         # If the requested preferences and arguments match the ones for the
@@ -33,7 +33,8 @@ def browser(full_configuration):
         # return the instance immediately.
         if current_browser:
             if (
-                current_browser.extra_args == extra_args
+                current_browser.enable_bidi == enable_bidi
+                and current_browser.extra_args == extra_args
                 and current_browser.extra_prefs == extra_prefs
             ):
                 return current_browser
@@ -44,7 +45,10 @@ def browser(full_configuration):
 
         firefox_options = full_configuration["capabilities"]["moz:firefoxOptions"]
         current_browser = Browser(
-            firefox_options, extra_args=extra_args, extra_prefs=extra_prefs
+            firefox_options,
+            enable_bidi=enable_bidi,
+            extra_args=extra_args,
+            extra_prefs=extra_prefs,
         )
         current_browser.start()
         return current_browser
@@ -78,7 +82,14 @@ def geckodriver(configuration):
 
 
 class Browser:
-    def __init__(self, firefox_options, extra_args=None, extra_prefs=None):
+    def __init__(
+        self,
+        firefox_options,
+        enable_bidi=False,
+        extra_args=None,
+        extra_prefs=None,
+    ):
+        self.enable_bidi = enable_bidi
         self.extra_args = extra_args
         self.extra_prefs = extra_prefs
         self.remote_agent_port = None
@@ -93,6 +104,8 @@ class Browser:
         binary = firefox_options["binary"]
 
         cmdargs = ["-no-remote"]
+        if self.enable_bidi:
+            cmdargs.append("--remote-debugging-port")
         if self.extra_args is not None:
             cmdargs.extend(self.extra_args)
         self.runner = FirefoxRunner(
