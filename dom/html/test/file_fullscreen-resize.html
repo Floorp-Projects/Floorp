@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1742421
+-->
+<head>
+  <title>Test for Bug 1742421</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="file_fullscreen-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body style="background-color: gray;">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1742421">Mozilla Bug 1742421</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1742421 **/
+
+function begin()
+{
+  addFullscreenChangeContinuation("enter", () => {
+    opener.info("[resize] Entered fullscreen");
+    // Do not use addFullscreenChangeContinuation for fullscreen exit given that
+    // it expects the window will be restored to the original size.
+    document.addEventListener("fullscreenchange", () => {
+      opener.ok(!document.fullscreenElement, "[resize] Should have left full-screen due to resize");
+      opener.nextTest();
+    }, { once: true });
+    window.resizeBy(100,100);
+  });
+  document.body.requestFullscreen();
+}
+
+</script>
+</pre>
+</body>
+</html>
