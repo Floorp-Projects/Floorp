@@ -25,7 +25,7 @@ window.onload = function() {
 
   let log = "";
   let doc, dieter, ulrich, isolde, albrecht;
-  let dbg, iframeDO, DOFor;
+  let dbg, iframeDO;
 
   // Create an iframe to debug.
   // We can't use a data: URL here, because we want to test script elements
@@ -44,7 +44,7 @@ window.onload = function() {
     dbg = new Debugger();
     dbg.onDebuggerStatement = franzDebuggerHandler;
     iframeDO = dbg.addDebuggee(iframe.contentWindow);
-    DOFor = iframeDO.makeDebuggeeValue.bind(iframeDO);
+    iframeDO.makeDebuggeeValue.bind(iframeDO);
 
     // Send a click event to heidi.
     doc = iframe.contentWindow.document;
@@ -56,20 +56,14 @@ window.onload = function() {
 
     // The top stack frame should be franz, belonging to the script element.
     ok(frame.callee.displayName === "franz", "top frame is franz");
-    ok(frame.script.source.element === DOFor(doc.getElementById("franz")),
-       "top frame source belongs to element franz");
     ok(frame.script.source.elementAttributeName === undefined,
        "top frame source doesn't belong to an attribute");
 
     // The second stack frame should belong to heinrich.
-    ok(frame.older.script.source.element === DOFor(doc.getElementById("heinrich")),
-       "second frame source belongs to element heinrich");
     ok(frame.older.script.source.elementAttributeName === undefined,
        "second frame source doesn't belong to an attribute");
 
     // The next stack frame should belong to heidi's onclick handler.
-    ok(frame.older.older.script.source.element === DOFor(doc.getElementById("heidi")),
-       "third frame source belongs to element heidi");
     ok(frame.older.older.script.source.elementAttributeName === "onclick",
        "third frame source belongs to 'onclick' attribute");
 
@@ -84,8 +78,6 @@ window.onload = function() {
     log += "u";
 
     // The top frame should be ulrich's text.
-    ok(frame.script.source.element === DOFor(ulrich),
-       "top frame belongs to ulrich");
     ok(frame.script.source.elementAttributeName === undefined,
        "top frame is not on an attribute of ulrich");
 
@@ -99,15 +91,6 @@ window.onload = function() {
 
   function isoldeDebuggerHandler(frame) {
     log += "i";
-
-    // The top frame should belong to isolde.
-    ok(frame.script.source.element === DOFor(isolde),
-       "top frame belongs to isolde");
-    info("frame.script.source.element is: " + uneval(frame.script.source.element));
-    if (typeof frame.script.source.element.unsafeDereference() == "object") {
-      info("   toString: " + frame.script.source.element.unsafeDereference());
-      info("   id: " + frame.script.source.element.unsafeDereference().id);
-    }
 
     ok(frame.script.source.elementAttributeName === undefined,
        "top frame source is not an attribute of isolde");
@@ -126,8 +109,6 @@ window.onload = function() {
     log += "d";
 
     // The top frame should belong to dieter's ondrag handler.
-    ok(frame.script.source.element === DOFor(dieter),
-       "second event's handler belongs to dieter");
     ok(frame.script.source.elementAttributeName === "ondrag",
        "second event's handler is on dieter's 'ondrag' element");
 
@@ -148,8 +129,6 @@ window.onload = function() {
 
     // The top frame should belong to the body's 'onresize' handler, even
     // though we sent the message to the window and it was handled.
-    ok(frame.script.source.element === DOFor(doc.body),
-       "onresize event handler belongs to body element");
     ok(frame.script.source.elementAttributeName === "onresize",
        "onresize event handler is on body element's 'onresize' attribute");
 
@@ -167,8 +146,6 @@ window.onload = function() {
     log += "s";
 
     // The top frame's source should be on albrecht's 'onload' attribute.
-    ok(frame.script.source.element === DOFor(albrecht),
-       "SVGLoad event handler belongs to albrecht");
     ok(frame.script.source.elementAttributeName === "onload",
        "SVGLoad event handler is on albrecht's 'onload' attribute");
 
