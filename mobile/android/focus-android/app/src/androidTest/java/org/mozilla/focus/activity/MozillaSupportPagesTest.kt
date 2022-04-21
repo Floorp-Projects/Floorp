@@ -25,8 +25,8 @@ class MozillaSupportPagesTest {
     private val featureSettingsHelper = FeatureSettingsHelper()
     private val firstTipText = getStringResource(R.string.tip_fresh_look)
     private val secondTipText = getStringResource(R.string.tip_about_shortcuts)
-    private val thirdTipText = getStringResource(R.string.tip_explain_allowlist3)
-    private val fourthTipText = getStringResource(R.string.tip_disable_tracking_protection3)
+    private val thirdTipText = getStringResource(R.string.tip_disable_tracking_protection3)
+    private val fourthTipText = getStringResource(R.string.tip_explain_allowlist3)
     private val fifthTipText = getStringResource(R.string.tip_request_desktop2)
 
     @get: Rule

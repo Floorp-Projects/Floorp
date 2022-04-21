@@ -145,8 +145,8 @@ object TipManager {
     private fun populateListOfTips(context: Context) {
         addFreshLookTip(context)
         addShortcutsTip(context)
-        addAllowlistTip(context)
         addTrackingProtectionTip(context)
+        addAllowlistTip(context)
         addRequestDesktopTip(context)
     }
 
