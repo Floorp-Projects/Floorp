@@ -7943,14 +7943,14 @@ void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
 }
 
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {
-  MWasmCallBase* mir = lir->mir();
+  const MWasmCallBase* callBase = lir->callBase();
 
 #ifdef ENABLE_WASM_EXCEPTIONS
   // If this call is in Wasm try code block, initialise a WasmTryNote for this
   // call.
-  bool inTry = mir->inTry();
+  bool inTry = callBase->inTry();
   if (inTry) {
-    size_t tryNoteIndex = mir->tryNoteIndex();
+    size_t tryNoteIndex = callBase->tryNoteIndex();
     wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
     tryNote.begin = masm.currentOffset();
@@ -7977,8 +7977,8 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   bool reloadRegs = true;
   bool switchRealm = true;
 
-  const wasm::CallSiteDesc& desc = mir->desc();
-  const wasm::CalleeDesc& callee = mir->callee();
+  const wasm::CallSiteDesc& desc = callBase->desc();
+  const wasm::CalleeDesc& callee = callBase->callee();
   CodeOffset retOffset;
   CodeOffset secondRetOffset;
   switch (callee.which()) {
@@ -7993,8 +7993,36 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     case wasm::CalleeDesc::AsmJSTable:
       retOffset = masm.asmCallIndirect(desc, callee);
       break;
-    case wasm::CalleeDesc::WasmTable:
-      masm.wasmCallIndirect(desc, callee, lir->needsBoundsCheck(),
+    case wasm::CalleeDesc::WasmTable: {
+      Label* boundsCheckFailed = nullptr;
+      if (lir->needsBoundsCheck()) {
+        OutOfLineAbortingWasmTrap* ool =
+            new (alloc()) OutOfLineAbortingWasmTrap(
+                wasm::BytecodeOffset(desc.lineOrBytecode()),
+                wasm::Trap::OutOfBounds);
+        if (lir->isCatchable()) {
+          addOutOfLineCode(ool, lir->mirCatchable());
+        } else {
+          addOutOfLineCode(ool, lir->mirUncatchable());
+        }
+        boundsCheckFailed = ool->entry();
+      }
+      Label* nullCheckFailed = nullptr;
+#ifndef WASM_HAS_HEAPREG
+      {
+        OutOfLineAbortingWasmTrap* ool =
+            new (alloc()) OutOfLineAbortingWasmTrap(
+                wasm::BytecodeOffset(desc.lineOrBytecode()),
+                wasm::Trap::IndirectCallToNull);
+        if (lir->isCatchable()) {
+          addOutOfLineCode(ool, lir->mirCatchable());
+        } else {
+          addOutOfLineCode(ool, lir->mirUncatchable());
+        }
+        nullCheckFailed = ool->entry();
+      }
+#endif
+      masm.wasmCallIndirect(desc, callee, boundsCheckFailed, nullCheckFailed,
                             lir->tableSize(), &retOffset, &secondRetOffset);
       // Register reloading and realm switching are handled dynamically inside
       // wasmCallIndirect.  There are two return offsets, one for each call
@@ -8002,6 +8030,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
       reloadRegs = false;
       switchRealm = false;
       break;
+    }
     case wasm::CalleeDesc::Builtin:
       retOffset = masm.call(desc, callee.builtin());
       reloadRegs = false;
@@ -8009,8 +8038,8 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
       break;
     case wasm::CalleeDesc::BuiltinInstanceMethod:
       retOffset = masm.wasmCallBuiltinInstanceMethod(
-          desc, mir->instanceArg(), callee.builtin(),
-          mir->builtinMethodFailureMode());
+          desc, callBase->instanceArg(), callee.builtin(),
+          callBase->builtinMethodFailureMode());
       switchRealm = false;
       break;
   }
@@ -8021,7 +8050,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   // Now that all the outbound in-memory args are on the stack, note the
   // required lower boundary point of the associated StackMap.
   uint32_t framePushedAtStackMapBase =
-      masm.framePushed() - mir->stackArgAreaSizeUnaligned();
+      masm.framePushed() - callBase->stackArgAreaSizeUnaligned();
   lir->safepoint()->setFramePushedAtStackMapBase(framePushedAtStackMapBase);
   MOZ_ASSERT(!lir->safepoint()->isWasmTrap());
 
@@ -8047,7 +8076,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 #ifdef ENABLE_WASM_EXCEPTIONS
   if (inTry) {
     // Set the end of the try note range
-    size_t tryNoteIndex = mir->tryNoteIndex();
+    size_t tryNoteIndex = callBase->tryNoteIndex();
     wasm::WasmTryNoteVector& tryNotes = masm.tryNotes();
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
     tryNote.end = masm.currentOffset();
