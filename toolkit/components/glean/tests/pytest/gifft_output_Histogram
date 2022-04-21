@@ -44,10 +44,15 @@ static inline Maybe<TimerToStampMutex::AutoLock> GetTimerIdToStartsLock() {
     // In that event we leak. Grab a pointer so we have something to NS_RELEASE
     // in that case.
     nsIRunnable* temp = cleanupFn.get();
-    if (NS_FAILED(NS_DispatchToMainThread(cleanupFn.forget()))) {
+    nsCOMPtr<nsIThread> mainThread;
+    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread)))
+      || NS_FAILED(mainThread->Dispatch(cleanupFn.forget(), nsIThread::DISPATCH_NORMAL))
+    ) {
       // Failed to dispatch cleanup routine.
-      // First, un-leak the runnable:
-      NS_RELEASE(temp);
+      // First, un-leak the runnable (but only if we actually attempted dispatch)
+      if (!cleanupFn) {
+        NS_RELEASE(temp);
+      }
       // Next, cleanup immediately, and allow metrics to try again later.
       *lock = nullptr;
       return Nothing();
