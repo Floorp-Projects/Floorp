@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+window.onload = function() {
+    setTimeout(step, 500);
+}
+
+var reloads = 5;
+
+function step() {
+    if (--reloads) {
+        document.getElementById("ifr").contentWindow.location.reload();
+    } else {
+        document.documentElement.className = "";
+    }
+}
+
+function settimouestep() {
+    setTimeout(step, 500);
+}
+</script>
+</head>
+<body>
+  <iframe id="ifr" src="1763581-1-iframe.html" height="500" width="400" onload="settimouestep()"></iframe>
+</body>
+</html>
+
