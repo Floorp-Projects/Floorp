@@ -12094,25 +12094,40 @@ void CodeGenerator::visitRest(LRest* lir) {
     masm.movePtr(ImmPtr(nullptr), temp2);
   }
 
-  // Compute actuals() + numFormals.
   size_t actualsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
   masm.moveStackPtrTo(temp1);
-  masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp1);
 
   // Compute numActuals - numFormals.
-  Label emptyLength, joinLength;
-  masm.movePtr(numActuals, temp0);
-  masm.branch32(Assembler::LessThanOrEqual, temp0, Imm32(numFormals),
-                &emptyLength);
-  {
-    masm.sub32(Imm32(numFormals), temp0);
-    masm.jump(&joinLength);
-  }
-  {
+  if (numFormals) {
+    Label emptyLength, joinLength;
+    masm.movePtr(numActuals, temp0);
+    masm.branch32(Assembler::LessThanOrEqual, temp0, Imm32(numFormals),
+                  &emptyLength);
+    {
+      masm.sub32(Imm32(numFormals), temp0);
+
+      // Compute actuals() + numFormals.
+      masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp1);
+
+      masm.jump(&joinLength);
+    }
     masm.bind(&emptyLength);
-    masm.move32(Imm32(0), temp0);
+    {
+      masm.move32(Imm32(0), temp0);
+
+      // Point to the start of actuals() when the rest-array length is zero. We
+      // don't use |actuals() + numFormals| because |numFormals| can be any
+      // non-negative int32 value when this MRest was created from scalar
+      // replacement optimizations. And it seems questionable to compute a
+      // Value* pointer which points to who knows where.
+      masm.addPtr(Imm32(actualsOffset), temp1);
+    }
+    masm.bind(&joinLength);
+  } else {
+    // Directly compute both values when there are no formals.
+    masm.addPtr(Imm32(actualsOffset), temp1);
+    masm.move32(numActuals, temp0);
   }
-  masm.bind(&joinLength);
 
   pushArg(temp2);
   pushArg(temp1);
