@@ -126,9 +126,6 @@ interface nsIXULRuntime : nsISupports
     // Fission is disabled because the `MOZ_FORCE_DISABLE_FISSION` environment
     // variable is set.
     eFissionDisabledByEnv = 5,
-    // Fission is disabled because the current session is running in safe
-    // mode.
-    eFissionDisabledBySafeMode = 6,
     // Fission is enabled because the "fission.autostart" preference is true
     // by default.
     eFissionEnabledByDefault = 7,

@@ -29,7 +29,6 @@ DECISION_STATUS = {
     "disabledByE10sEnv": 3,
     "enabledByEnv": 4,
     "disabledByEnv": 5,
-    "disabledBySafeMode": 6,
     "enabledByDefault": 7,
     "disabledByDefault": 8,
     "enabledByUserPref": 9,
