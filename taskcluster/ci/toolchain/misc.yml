@@ -179,7 +179,7 @@ wrench-deps:
         fetch:
             - android-rs-glue
         toolchain:
-            - linux64-rust-1.59  # whatever m-c is built with
+            - linux64-rust-1.47  # whatever m-c is built with
 
 linux64-liblowercase:
     description: "liblowercase"
