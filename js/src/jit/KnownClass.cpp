@@ -25,6 +25,7 @@ KnownClass jit::GetObjectKnownClass(const MDefinition* def) {
     case MDefinition::Opcode::NewArrayObject:
     case MDefinition::Opcode::Rest:
     case MDefinition::Opcode::ArgumentsSlice:
+    case MDefinition::Opcode::FrameArgumentsSlice:
       return KnownClass::Array;
 
     case MDefinition::Opcode::NewObject:

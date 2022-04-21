@@ -1528,6 +1528,7 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
   void visitApplyArgsObj(MApplyArgsObj* ins);
   void visitArrayFromArgumentsObject(MArrayFromArgumentsObject* ins);
+  void visitArgumentsSlice(MArgumentsSlice* ins);
   void visitLoadFixedSlot(MLoadFixedSlot* ins);
 
   bool oom() const { return oom_; }
@@ -1645,6 +1646,7 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
       case MDefinition::Opcode::LoadArgumentsObjectArgHole:
       case MDefinition::Opcode::InArgumentsObjectArg:
       case MDefinition::Opcode::ArrayFromArgumentsObject:
+      case MDefinition::Opcode::ArgumentsSlice:
         break;
 
       // This instruction is a no-op used to test that scalar replacement
@@ -2108,6 +2110,51 @@ void ArgumentsReplacer::visitArrayFromArgumentsObject(
 
     replacement = rest;
   }
+
+  ins->replaceAllUsesWith(replacement);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitArgumentsSlice(MArgumentsSlice* ins) {
+  // Skip other arguments objects.
+  if (ins->object() != args_) {
+    return;
+  }
+
+  MInstruction* numArgs;
+  if (isInlinedArguments()) {
+    uint32_t argc = args_->toCreateInlinedArgumentsObject()->numActuals();
+    numArgs = MConstant::New(alloc(), Int32Value(argc));
+  } else {
+    numArgs = MArgumentsLength::New(alloc());
+  }
+  ins->block()->insertBefore(ins, numArgs);
+
+  auto* begin = MNormalizeSliceTerm::New(alloc(), ins->begin(), numArgs);
+  ins->block()->insertBefore(ins, begin);
+
+  auto* end = MNormalizeSliceTerm::New(alloc(), ins->end(), numArgs);
+  ins->block()->insertBefore(ins, end);
+
+  bool isMax = false;
+  auto* beginMin = MMinMax::New(alloc(), begin, end, MIRType::Int32, isMax);
+  ins->block()->insertBefore(ins, beginMin);
+
+  // Safe to truncate because both operands are positive and end >= beginMin.
+  auto* count = MSub::New(alloc(), end, beginMin, MIRType::Int32);
+  count->setTruncateKind(TruncateKind::Truncate);
+  ins->block()->insertBefore(ins, count);
+
+  MInstruction* replacement;
+  if (isInlinedArguments()) {
+    MOZ_CRASH("NYI");
+  } else {
+    replacement = MFrameArgumentsSlice::New(
+        alloc(), beginMin, count, ins->templateObj(), ins->initialHeap());
+  }
+  ins->block()->insertBefore(ins, replacement);
 
   ins->replaceAllUsesWith(replacement);
 

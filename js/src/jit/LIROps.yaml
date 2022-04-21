@@ -1683,6 +1683,21 @@
   call_instruction: true
   mir_op: true
 
+- name: FrameArgumentsSlice
+  result_type: WordSized
+  operands:
+    begin: WordSized
+    count: WordSized
+  num_temps: 1
+  mir_op: true
+
+- name: NormalizeSliceTerm
+  result_type: WordSized
+  operands:
+    value: WordSized
+    length: WordSized
+  mir_op: true
+
 - name: ArrayJoin
   result_type: WordSized
   operands:

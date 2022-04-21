@@ -207,6 +207,18 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitGetInlinedArgument(GetInlinedArgument* lir, Register index,
                               ValueOperand output);
 
+  using RegisterOrInt32 = mozilla::Variant<Register, int32_t>;
+
+#ifdef DEBUG
+  void emitAssertArgumentsSliceBounds(const RegisterOrInt32& begin,
+                                      const RegisterOrInt32& count,
+                                      Register numActualArgs);
+#endif
+
+  template <class ArgumentsSlice>
+  void emitNewArray(ArgumentsSlice* lir, const RegisterOrInt32& count,
+                    Register output, Register temp);
+
   void visitNewArrayCallVM(LNewArray* lir);
   void visitNewObjectVMCall(LNewObject* lir);
 

@@ -458,6 +458,8 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 [[nodiscard]] bool NewArgumentsObject(JSContext* cx, BaselineFrame* frame,
                                       MutableHandleValue res);
 
+ArrayObject* NewArrayObjectEnsureDenseInitLength(JSContext* cx, int32_t count);
+
 JSObject* CopyLexicalEnvironmentObject(JSContext* cx, HandleObject env,
                                        bool copySlots);
 
