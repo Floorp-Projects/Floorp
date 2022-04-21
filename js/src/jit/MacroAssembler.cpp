@@ -3750,15 +3750,6 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
   append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
 }
 
-void MacroAssembler::wasmInterruptCheck(Register tls,
-                                        wasm::BytecodeOffset bytecodeOffset) {
-  Label ok;
-  branch32(Assembler::Equal, Address(tls, wasm::Instance::offsetOfInterrupt()),
-           Imm32(0), &ok);
-  wasmTrap(wasm::Trap::CheckInterrupt, bytecodeOffset);
-  bind(&ok);
-}
-
 #ifdef ENABLE_WASM_EXCEPTIONS
 [[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
   wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);

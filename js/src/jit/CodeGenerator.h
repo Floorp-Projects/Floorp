@@ -71,6 +71,7 @@ class OutOfLineRegExpTester;
 class OutOfLineRegExpPrototypeOptimizable;
 class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineNaNToZero;
+class OutOfLineInterruptTrap;
 class OutOfLineZeroIfNaN;
 class OutOfLineGuardNumberToIntPtrIndex;
 class OutOfLineBoxNonStrictThis;
@@ -148,6 +149,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void visitOutOfLineNaNToZero(OutOfLineNaNToZero* ool);
   void visitOutOfLineZeroIfNaN(OutOfLineZeroIfNaN* ool);
 
+  void visitOutOfLineInterruptTrap(OutOfLineInterruptTrap* ool);
   void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);
 
   void visitOutOfLineUnboxFloatingPoint(OutOfLineUnboxFloatingPoint* ool);
