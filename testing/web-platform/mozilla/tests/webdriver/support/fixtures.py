@@ -21,11 +21,11 @@ def browser(full_configuration):
 
     Starting Firefox without geckodriver allows to set those command line arguments
     as needed. The fixture method returns the browser instance that should be used
-    to connect to WebDriverBiDi.
+    to connect to a RemoteAgent supported protocol (CDP, WebDriver BiDi).
     """
     current_browser = None
 
-    def _browser(enable_bidi=False, extra_args=None, extra_prefs=None):
+    def _browser(use_bidi=False, use_cdp=False, extra_args=None, extra_prefs=None):
         nonlocal current_browser
 
         # If the requested preferences and arguments match the ones for the
@@ -33,9 +33,11 @@ def browser(full_configuration):
         # return the instance immediately.
         if current_browser:
             if (
-                current_browser.enable_bidi == enable_bidi
+                current_browser.use_bidi == use_bidi
+                and current_browser.use_cdp == use_cdp
                 and current_browser.extra_args == extra_args
                 and current_browser.extra_prefs == extra_prefs
+                and current_browser.is_running
             ):
                 return current_browser
 
@@ -46,7 +48,8 @@ def browser(full_configuration):
         firefox_options = full_configuration["capabilities"]["moz:firefoxOptions"]
         current_browser = Browser(
             firefox_options,
-            enable_bidi=enable_bidi,
+            use_bidi=use_bidi,
+            use_cdp=use_cdp,
             extra_args=extra_args,
             extra_prefs=extra_prefs,
         )
@@ -85,13 +88,17 @@ class Browser:
     def __init__(
         self,
         firefox_options,
-        enable_bidi=False,
+        use_bidi=False,
+        use_cdp=False,
         extra_args=None,
         extra_prefs=None,
     ):
-        self.enable_bidi = enable_bidi
+        self.use_bidi = use_bidi
+        self.use_cdp = use_cdp
         self.extra_args = extra_args
         self.extra_prefs = extra_prefs
+
+        self.debugger_address = None
         self.remote_agent_port = None
 
         # Prepare temporary profile
@@ -104,7 +111,7 @@ class Browser:
         binary = firefox_options["binary"]
 
         cmdargs = ["-no-remote"]
-        if self.enable_bidi:
+        if self.use_bidi or self.use_cdp:
             cmdargs.append("--remote-debugging-port")
         if self.extra_args is not None:
             cmdargs.extend(self.extra_args)
@@ -112,22 +119,44 @@ class Browser:
             binary=binary, profile=self.profile, cmdargs=cmdargs
         )
 
+    @property
+    def is_running(self):
+        return self.runner.is_running()
+
     def start(self):
         # Start Firefox.
         self.runner.start()
 
-        # Wait until the WebDriverBiDiActivePort file is ready
-        port_file = os.path.join(self.profile.profile, "WebDriverBiDiActivePort")
-        while not os.path.exists(port_file):
-            time.sleep(0.1)
+        if self.use_bidi:
+            # Wait until the WebDriverBiDiActivePort file is ready
+            port_file = os.path.join(self.profile.profile, "WebDriverBiDiActivePort")
+            while not os.path.exists(port_file):
+                time.sleep(0.1)
 
-        # Read the port from the WebDriverBiDiActivePort file
-        self.remote_agent_port = open(port_file).read()
+            # Read the port from the WebDriverBiDiActivePort file
+            self.remote_agent_port = open(port_file).read()
 
-    def quit(self):
-        if self.runner:
+        if self.use_cdp:
+            # Wait until the DevToolsActivePort file is ready
+            port_file = os.path.join(self.profile.profile, "DevToolsActivePort")
+            while not os.path.exists(port_file):
+                time.sleep(0.1)
+
+            # Read the port if needed and the debugger address from the
+            # DevToolsActivePort file
+            lines = open(port_file).readlines()
+            assert len(lines) == 2
+
+            if self.remote_agent_port is None:
+                self.remote_agent_port = lines[0].strip()
+            self.debugger_address = lines[1].strip()
+
+    def quit(self, clean_profile=True):
+        if self.is_running:
             self.runner.stop()
             self.runner.cleanup()
+
+        if clean_profile:
             self.profile.cleanup()
 
 
@@ -174,7 +203,7 @@ class Geckodriver:
         end_time = time.time() + 10
         while time.time() < end_time:
             if self.proc.poll() is not None:
-                raise (f"geckodriver terminated with code {self.proc.poll()}")
+                raise Exception(f"geckodriver terminated with code {self.proc.poll()}")
             with socket.socket() as sock:
                 if sock.connect_ex((self.hostname, self.port)) == 0:
                     break
