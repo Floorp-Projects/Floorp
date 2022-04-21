@@ -1676,7 +1676,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
         return mContain | StyleContain::LAYOUT | StyleContain::PAINT;
       case StyleContentVisibility::Hidden:
         return mContain | StyleContain::LAYOUT | StyleContain::PAINT |
-               StyleContain::INLINE_SIZE | StyleContain::BLOCK_SIZE;
+               StyleContain::SIZE;
     }
     MOZ_ASSERT_UNREACHABLE("Invalid content visibility.");
     return mContain;
