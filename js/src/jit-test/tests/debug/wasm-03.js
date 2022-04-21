@@ -29,7 +29,6 @@ assertEq(!!source.text, true);
 // TODOshu: Wasm is moving very fast and what we return for these values is
 // currently not interesting to test. Instead, test that they do not throw.
 source.url;
-source.element;
 source.displayURL;
 source.introductionOffset;
 source.elementAttributeName;
