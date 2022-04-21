@@ -3588,7 +3588,7 @@ NS_IMPL_ISUPPORTS(Preferences, nsIPrefService, nsIObserver, nsIPrefBranch,
 /* static */
 void Preferences::SerializePreferences(
     nsCString& aStr,
-    const std::function<bool(const char*)>& aShouldSerializeFn) {
+    const std::function<bool(const char*, bool)>& aShouldSerializeFn) {
   MOZ_RELEASE_ASSERT(InitStaticMembers());
 
   aStr.Truncate();
@@ -3596,7 +3596,9 @@ void Preferences::SerializePreferences(
   for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
     Pref* pref = iter.get().get();
     if (!pref->IsTypeNone() && pref->HasAdvisablySizedValues()) {
-      pref->SerializeAndAppend(aStr, !aShouldSerializeFn(pref->Name()));
+      pref->SerializeAndAppend(
+          aStr, !aShouldSerializeFn(pref->Name(),
+                                    /* will be fixed later */ false));
     }
   }
 
@@ -5673,7 +5675,7 @@ namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
 
-bool ShouldSyncPreference(const char* aPref) {
+bool ShouldSyncPreference(const char* aPref, bool aIsDestWebContentProcess) {
 #define PREF_LIST_ENTRY(s) \
   { s, (sizeof(s) / sizeof(char)) - 1 }
   struct PrefListEntry {
