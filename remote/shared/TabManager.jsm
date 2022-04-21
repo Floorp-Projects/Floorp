@@ -183,7 +183,9 @@ var TabManager = {
   /**
    * Retrieve the unique id for the given xul browser element. The id is a
    * dynamically generated uuid associated with the permanentKey property of the
-   * given browser element.
+   * given browser element. This method is preferable over getIdForBrowsingContext
+   * in case of working with browser element of a tab, since we can not guarantee
+   * that browsing context is attached to it.
    *
    * @param {xul:browser} browserElement
    *     The <xul:browser> for which we want to retrieve the id.
@@ -200,19 +202,6 @@ var TabManager = {
       browserUniqueIds.set(key, uuid.substring(1, uuid.length - 1));
     }
     return browserUniqueIds.get(key);
-  },
-
-  /**
-   * Retrieve the unique id for the browser element owning the provided browsing
-   * context.
-   *
-   * @param {BrowsingContext} browsingContext
-   *     The browsing context for which we want to retrieve the (browser) uuid.
-   * @return {String} The unique id for the browser owning the browsing context.
-   */
-  getBrowserIdForBrowsingContext(browsingContext) {
-    const contentBrowser = browsingContext.top.embedderElement;
-    return this.getIdForBrowser(contentBrowser);
   },
 
   /**
