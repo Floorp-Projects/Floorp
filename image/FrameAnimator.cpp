@@ -332,19 +332,13 @@ void FrameAnimator::ResetAnimation(AnimationState& aState) {
 
   // Our surface provider is synchronized to our state, so we need to reset its
   // state as well, if we still have one.
-  LookupResult result = SurfaceCache::Lookup(
+  SurfaceCache::ResetAnimation(
       ImageKey(mImage),
-      RasterSurfaceKey(mSize, DefaultSurfaceFlags(), PlaybackType::eAnimated),
-      /* aMarkUsed = */ false);
-  if (!result) {
-    return;
-  }
-
-  result.Surface().Reset();
+      RasterSurfaceKey(mSize, DefaultSurfaceFlags(), PlaybackType::eAnimated));
 
   // Calling Reset on the surface of the animation can cause discarding surface
   // providers to throw out all their frames so refresh our state.
-  aState.UpdateStateInternal(result, mSize);
+  aState.UpdateState(mImage, mSize);
 }
 
 RefreshResult FrameAnimator::RequestRefresh(AnimationState& aState,

@@ -443,6 +443,16 @@ struct SurfaceCache {
   static void DiscardAll();
 
   /**
+   * Calls Reset on the ISurfaceProvider (which is currently only implemented
+   * for AnimationSurfaceProvider). This is needed because we need to call Reset
+   * on AnimationSurfaceProvider while they are in placeholder status and there
+   * is no way to access a surface cache entry from outside of the surface cache
+   * when it's in placeholder status.
+   */
+  static void ResetAnimation(const ImageKey aImageKey,
+                             const SurfaceKey& aSurfaceKey);
+
+  /**
    * Collects an accounting of the surfaces contained in the SurfaceCache for
    * the given image, along with their size and various other metadata.
    *
