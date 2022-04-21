@@ -126,6 +126,7 @@ def vendor(
 
     vendor_command = command_context._spawn(VendorManifest)
     vendor_command.vendor(
+        command_context,
         library,
         manifest,
         revision,
