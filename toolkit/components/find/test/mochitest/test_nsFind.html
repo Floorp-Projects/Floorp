@@ -269,6 +269,10 @@ async function runTests() {
   assertFound(nullcharsinjected, NULL_CHARACTER);
   assertFound(nullcharsinjected, INJECTED_NULL_TEXT);
 
+  // Content skipped via content-visibility can't be found.
+  assertNotFound(quotes, "Tardigrade");
+  assertNotFound(quotes, "Amoeba");
+
   // Do these test at the end since they trigger failure screenshots in
   // the test harness, and we want as much information as possible about
   // any OTHER tests that may have already failed.
@@ -337,6 +341,10 @@ async function runTests() {
 <p id="guarani">G̃uahe</p>
 <p id="deseret">𐐐𐐯𐑊𐐬 𐐶𐐯𐑉𐑊𐐼!</p>
 <p id="ruby"><ruby>東<rt>とう</rt></ruby><ruby>京<rt>きょう</ruby>駅</p>
+<div id="content-visibility-hidden" style="content-visibility: hidden">
+    Tardigrade
+    <div>Amoeba</div>
+</div>
 <div id="content" style="display: none">
 
 </div>
