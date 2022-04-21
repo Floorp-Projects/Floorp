@@ -36,6 +36,11 @@ static inline Maybe<SubmetricToMirrorMutex::AutoLock> GetLabeledMirrorLock() {
   if (!*lock) {
     *lock = MakeUnique<SubmetricToLabeledMirrorMapType>();
     RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+        auto lock = sLabeledMirrors.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+        return;
+      }
       RunOnShutdown([&] {
         auto lock = sLabeledMirrors.Lock();
         *lock = nullptr;  // deletes, see UniquePtr.h
@@ -92,6 +97,11 @@ static inline Maybe<TimesToStartsMutex::AutoLock> GetTimesToStartsLock() {
   if (!*lock) {
     *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
     RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+        auto lock = sTimespanStarts.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+        return;
+      }
       RunOnShutdown([&] {
         auto lock = sTimespanStarts.Lock();
         *lock = nullptr;  // deletes, see UniquePtr.h
