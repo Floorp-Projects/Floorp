@@ -15433,19 +15433,47 @@ void CodeGenerator::visitInterruptCheck(LInterruptCheck* lir) {
   masm.bind(ool->rejoin());
 }
 
-void CodeGenerator::visitWasmInterruptCheck(LWasmInterruptCheck* lir) {
-  MOZ_ASSERT(gen->compilingWasm());
+class OutOfLineInterruptTrap : public OutOfLineCodeBase<CodeGenerator> {
+  LWasmInterruptCheck* lir_;
+  size_t framePushed_;
 
-  masm.wasmInterruptCheck(ToRegister(lir->tlsPtr()),
-                          lir->mir()->bytecodeOffset());
+ public:
+  explicit OutOfLineInterruptTrap(LWasmInterruptCheck* lir, size_t framePushed)
+      : lir_(lir), framePushed_(framePushed) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineInterruptTrap(this);
+  }
+  LWasmInterruptCheck* lir() const { return lir_; }
+  size_t framePushed() const { return framePushed_; }
+};
+
+void CodeGenerator::visitOutOfLineInterruptTrap(OutOfLineInterruptTrap* ool) {
+  LWasmInterruptCheck* lir = ool->lir();
+  masm.wasmTrap(wasm::Trap::CheckInterrupt, lir->mir()->bytecodeOffset());
 
   markSafepointAt(masm.currentOffset(), lir);
 
   // Note that masm.framePushed() doesn't include the register dump area.
   // That will be taken into account when the StackMap is created from the
   // LSafepoint.
-  lir->safepoint()->setFramePushedAtStackMapBase(masm.framePushed());
+  lir->safepoint()->setFramePushedAtStackMapBase(ool->framePushed());
   lir->safepoint()->setIsWasmTrap();
+
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitWasmInterruptCheck(LWasmInterruptCheck* lir) {
+  MOZ_ASSERT(gen->compilingWasm());
+
+  OutOfLineInterruptTrap* ool =
+      new (alloc()) OutOfLineInterruptTrap(lir, masm.framePushed());
+  addOutOfLineCode(ool, lir->mir());
+  masm.branch32(
+      Assembler::NotEqual,
+      Address(ToRegister(lir->tlsPtr()), wasm::Instance::offsetOfInterrupt()),
+      Imm32(0), ool->entry());
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitWasmTrap(LWasmTrap* lir) {

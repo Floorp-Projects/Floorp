@@ -160,7 +160,12 @@ bool BaseCompiler::addInterruptCheck() {
   ScratchI32 tmp(*this);
   fr.loadTlsPtr(tmp);
 #endif
-  masm.wasmInterruptCheck(tmp, bytecodeOffset());
+  Label ok;
+  masm.branch32(Assembler::Equal,
+                Address(tmp, wasm::Instance::offsetOfInterrupt()), Imm32(0),
+                &ok);
+  masm.wasmTrap(wasm::Trap::CheckInterrupt, bytecodeOffset());
+  masm.bind(&ok);
   return createStackMap("addInterruptCheck");
 }
 

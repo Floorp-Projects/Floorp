@@ -3506,7 +3506,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   CodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
 
   void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
-  void wasmInterruptCheck(Register tls, wasm::BytecodeOffset bytecodeOffset);
 #ifdef ENABLE_WASM_EXCEPTIONS
   [[nodiscard]] bool wasmStartTry(size_t* tryNoteIndex);
 #endif
