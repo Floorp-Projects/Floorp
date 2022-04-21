@@ -158,7 +158,6 @@ var snapshotFormatters = {
       disabledByE10sEnv: "fission-status-disabled-by-e10s-env",
       enabledByEnv: "fission-status-enabled-by-env",
       disabledByEnv: "fission-status-disabled-by-env",
-      disabledBySafeMode: "fission-status-disabled-by-safe-mode",
       enabledByDefault: "fission-status-enabled-by-default",
       disabledByDefault: "fission-status-disabled-by-default",
       enabledByUserPref: "fission-status-enabled-by-user-pref",
