@@ -94,12 +94,14 @@ def get_sdk_dirs(sdk, subdir):
         del include_dirs["include"]
 
     valid_versions = sorted(set(include_dirs) & set(lib_dirs), reverse=True)
-    if valid_versions:
-        return namespace(
+    return [
+        namespace(
             path=sdk,
-            lib=lib_dirs[valid_versions[0]],
-            include=include_dirs[valid_versions[0]],
+            lib=lib_dirs[vv],
+            include=include_dirs[vv],
         )
+        for vv in valid_versions
+    ]
 
 
 @imports(_from="mozbuild.shellutil", _import="quote")
@@ -125,8 +127,8 @@ def valid_windows_sdk_dir(
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
     for d in windows_sdk_dir:
-        sdk = get_sdk_dirs(d, "um")
-        if sdk:
+        sdklist = get_sdk_dirs(d, "um")
+        for sdk in sdklist:
             check = dedent(
                 """\
             #include <winsdkver.h>
@@ -152,8 +154,9 @@ def valid_windows_sdk_dir(
                     pass
                 else:
                     sdks[d] = maxver, sdk
-                    continue
-        if d == windows_sdk_dir_env:
+                    break
+
+        if d == windows_sdk_dir_env and d not in sdks:
             raise FatalCheckError(
                 "Error while checking the version of the SDK in "
                 "WINDOWSSDKDIR (%s). Please verify it contains a valid and "
@@ -206,8 +209,8 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler, host_comp
         windows_sdk_dir_env = windows_sdk_dir_env[0]
     sdks = {}
     for d in windows_sdk_dir:
-        sdk = get_sdk_dirs(d, "ucrt")
-        if sdk:
+        sdklist = get_sdk_dirs(d, "ucrt")
+        for sdk in sdklist:
             version = os.path.basename(sdk.include)
             # We're supposed to always find a version in the directory, because
             # the 8.1 SDK, which doesn't have a version in the directory, doesn't
@@ -216,8 +219,9 @@ def valid_ucrt_sdk_dir(windows_sdk_dir, windows_sdk_dir_env, compiler, host_comp
             # with the UCRT.
             if version != "include":
                 sdks[d] = Version(version), sdk
-                continue
-        if d == windows_sdk_dir_env:
+                break
+
+        if d == windows_sdk_dir_env and d not in sdks:
             # When WINDOWSSDKDIR is set in the environment and we can't find the
             # Universal CRT SDK, chances are this is a start-shell-msvc*.bat
             # setup, where INCLUDE and LIB already contain the UCRT paths.
