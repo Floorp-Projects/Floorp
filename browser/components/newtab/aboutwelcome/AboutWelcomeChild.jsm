@@ -290,7 +290,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
       ...eventData,
       event_context: {
         ...eventData.event_context,
-        page: "about:welcome",
       },
     });
   }
