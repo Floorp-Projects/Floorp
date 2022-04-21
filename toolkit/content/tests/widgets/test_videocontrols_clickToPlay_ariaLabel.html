@@ -20,13 +20,17 @@
         const testCases = [];
 
         function testUI(video) {
-            const clickToPlay = getElementWithinVideo(video, "clickToPlay");
-            ok(!!clickToPlay.getAttribute("aria-label"), "clickToPlay has aria-label attribute");
+          const clickToPlay = getElementWithinVideo(video, "clickToPlay");
+          ok(!!clickToPlay.getAttribute("aria-label"), "clickToPlay has aria-label attribute");
         };
 
         videoElems.forEach(video => {
           testCases.push(() => new Promise(resolve => {
-            SimpleTest.executeSoon(() => {
+            SimpleTest.executeSoon(async () => {
+              const { widget } = SpecialPowers.wrap(window)
+                .windowGlobalChild.getActor("UAWidgets")
+                .widgets.get(video);
+              await widget.impl.Utils.l10n.translateRoots();
               testUI(video);
               resolve();
             });
