@@ -3702,8 +3702,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // gives rise to two call instructions, both of which need safe points.  As
   // per normal, the call offsets are the code offsets at the end of the call
   // instructions (the return points).
+  //
+  // `boundsCheckFailedLabel` is non-null iff a bounds check is required.
+  // `nullCheckFailedLabel` is non-null only on platforms that can't fold the
+  // null check into the rest of the call instructions.
   void wasmCallIndirect(const wasm::CallSiteDesc& desc,
-                        const wasm::CalleeDesc& callee, bool needsBoundsCheck,
+                        const wasm::CalleeDesc& callee,
+                        Label* boundsCheckFailedLabel,
+                        Label* nullCheckFailedLabel,
                         mozilla::Maybe<uint32_t> tableSize,
                         CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
 
