@@ -14,7 +14,9 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "gfxUtils.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -294,6 +296,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   double mPixelAspectRatio;
 };
 
+#ifdef MOZ_AV1
 class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
  public:
   explicit AV1ChangeMonitor(const VideoInfo& aInfo)
@@ -410,6 +413,7 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
   double mPixelAspectRatio;
 };
+#endif
 
 MediaChangeMonitor::MediaChangeMonitor(
     PDMFactory* aPDMFactory,
@@ -428,8 +432,10 @@ RefPtr<PlatformDecoderModule::CreateDecoderPromise> MediaChangeMonitor::Create(
   const VideoInfo& currentConfig = aParams.VideoConfig();
   if (VPXDecoder::IsVPX(currentConfig.mMimeType)) {
     changeMonitor = MakeUnique<VPXChangeMonitor>(currentConfig);
+#ifdef MOZ_AV1
   } else if (AOMDecoder::IsAV1(currentConfig.mMimeType)) {
     changeMonitor = MakeUnique<AV1ChangeMonitor>(currentConfig);
+#endif
   } else {
     MOZ_ASSERT(MP4Decoder::IsH264(currentConfig.mMimeType));
     changeMonitor = MakeUnique<H264ChangeMonitor>(
