@@ -227,9 +227,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitConcat(LInstruction* lir, Register lhs, Register rhs,
                   Register output);
 
-  void emitRest(LInstruction* lir, Register array, Register numActuals,
-                Register temp0, Register temp1, unsigned numFormals,
-                Register resultreg);
   void emitInstanceOf(LInstruction* ins, Register protoReg);
 
   void loadJSScriptForBlock(MBasicBlock* block, Register reg);
