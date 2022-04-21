@@ -71,7 +71,8 @@ class OutOfLineRegExpTester;
 class OutOfLineRegExpPrototypeOptimizable;
 class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineNaNToZero;
-class OutOfLineInterruptTrap;
+class OutOfLineResumableWasmTrap;
+class OutOfLineAbortingWasmTrap;
 class OutOfLineZeroIfNaN;
 class OutOfLineGuardNumberToIntPtrIndex;
 class OutOfLineBoxNonStrictThis;
@@ -149,7 +150,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void visitOutOfLineNaNToZero(OutOfLineNaNToZero* ool);
   void visitOutOfLineZeroIfNaN(OutOfLineZeroIfNaN* ool);
 
-  void visitOutOfLineInterruptTrap(OutOfLineInterruptTrap* ool);
+  void visitOutOfLineResumableWasmTrap(OutOfLineResumableWasmTrap* ool);
+  void visitOutOfLineAbortingWasmTrap(OutOfLineAbortingWasmTrap* ool);
   void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);
 
   void visitOutOfLineUnboxFloatingPoint(OutOfLineUnboxFloatingPoint* ool);
@@ -373,6 +375,46 @@ class CodeGenerator final : public CodeGeneratorSpecific {
 #define LIR_OP(op) void visit##op(L##op* ins);
   LIR_OPCODE_LIST(LIR_OP)
 #undef LIR_OP
+};
+
+class OutOfLineResumableWasmTrap : public OutOfLineCodeBase<CodeGenerator> {
+  LInstruction* lir_;
+  size_t framePushed_;
+  wasm::BytecodeOffset bytecodeOffset_;
+  wasm::Trap trap_;
+
+ public:
+  OutOfLineResumableWasmTrap(LInstruction* lir, size_t framePushed,
+                             wasm::BytecodeOffset bytecodeOffset,
+                             wasm::Trap trap)
+      : lir_(lir),
+        framePushed_(framePushed),
+        bytecodeOffset_(bytecodeOffset),
+        trap_(trap) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineResumableWasmTrap(this);
+  }
+  LInstruction* lir() const { return lir_; }
+  size_t framePushed() const { return framePushed_; }
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+  wasm::Trap trap() const { return trap_; }
+};
+
+class OutOfLineAbortingWasmTrap : public OutOfLineCodeBase<CodeGenerator> {
+  wasm::BytecodeOffset bytecodeOffset_;
+  wasm::Trap trap_;
+
+ public:
+  OutOfLineAbortingWasmTrap(wasm::BytecodeOffset bytecodeOffset,
+                            wasm::Trap trap)
+      : bytecodeOffset_(bytecodeOffset), trap_(trap) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineAbortingWasmTrap(this);
+  }
+  wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+  wasm::Trap trap() const { return trap_; }
 };
 
 }  // namespace jit

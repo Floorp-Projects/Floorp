@@ -15433,24 +15433,10 @@ void CodeGenerator::visitInterruptCheck(LInterruptCheck* lir) {
   masm.bind(ool->rejoin());
 }
 
-class OutOfLineInterruptTrap : public OutOfLineCodeBase<CodeGenerator> {
-  LWasmInterruptCheck* lir_;
-  size_t framePushed_;
-
- public:
-  explicit OutOfLineInterruptTrap(LWasmInterruptCheck* lir, size_t framePushed)
-      : lir_(lir), framePushed_(framePushed) {}
-
-  void accept(CodeGenerator* codegen) override {
-    codegen->visitOutOfLineInterruptTrap(this);
-  }
-  LWasmInterruptCheck* lir() const { return lir_; }
-  size_t framePushed() const { return framePushed_; }
-};
-
-void CodeGenerator::visitOutOfLineInterruptTrap(OutOfLineInterruptTrap* ool) {
-  LWasmInterruptCheck* lir = ool->lir();
-  masm.wasmTrap(wasm::Trap::CheckInterrupt, lir->mir()->bytecodeOffset());
+void CodeGenerator::visitOutOfLineResumableWasmTrap(
+    OutOfLineResumableWasmTrap* ool) {
+  LInstruction* lir = ool->lir();
+  masm.wasmTrap(ool->trap(), ool->bytecodeOffset());
 
   markSafepointAt(masm.currentOffset(), lir);
 
@@ -15463,11 +15449,17 @@ void CodeGenerator::visitOutOfLineInterruptTrap(OutOfLineInterruptTrap* ool) {
   masm.jump(ool->rejoin());
 }
 
+void CodeGenerator::visitOutOfLineAbortingWasmTrap(
+    OutOfLineAbortingWasmTrap* ool) {
+  masm.wasmTrap(ool->trap(), ool->bytecodeOffset());
+}
+
 void CodeGenerator::visitWasmInterruptCheck(LWasmInterruptCheck* lir) {
   MOZ_ASSERT(gen->compilingWasm());
 
-  OutOfLineInterruptTrap* ool =
-      new (alloc()) OutOfLineInterruptTrap(lir, masm.framePushed());
+  OutOfLineResumableWasmTrap* ool = new (alloc()) OutOfLineResumableWasmTrap(
+      lir, masm.framePushed(), lir->mir()->bytecodeOffset(),
+      wasm::Trap::CheckInterrupt);
   addOutOfLineCode(ool, lir->mir());
   masm.branch32(
       Assembler::NotEqual,
@@ -15485,22 +15477,42 @@ void CodeGenerator::visitWasmTrap(LWasmTrap* lir) {
 
 void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
   const MWasmBoundsCheck* mir = ins->mir();
-  Label ok;
   Register ptr = ToRegister(ins->ptr());
   Register boundsCheckLimit = ToRegister(ins->boundsCheckLimit());
-  masm.wasmBoundsCheck32(Assembler::Below, ptr, boundsCheckLimit, &ok);
-  masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
-  masm.bind(&ok);
+  // When there are no spectre mitigations in place, branching out-of-line to
+  // the trap is a big performance win, but with mitigations it's trickier.  See
+  // bug 1680243.
+  if (JitOptions.spectreIndexMasking) {
+    Label ok;
+    masm.wasmBoundsCheck32(Assembler::Below, ptr, boundsCheckLimit, &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+    masm.bind(&ok);
+  } else {
+    OutOfLineAbortingWasmTrap* ool = new (alloc()) OutOfLineAbortingWasmTrap(
+        mir->bytecodeOffset(), wasm::Trap::OutOfBounds);
+    addOutOfLineCode(ool, mir);
+    masm.wasmBoundsCheck32(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
+                           ool->entry());
+  }
 }
 
 void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
   const MWasmBoundsCheck* mir = ins->mir();
-  Label ok;
   Register64 ptr = ToRegister64(ins->ptr());
   Register64 boundsCheckLimit = ToRegister64(ins->boundsCheckLimit());
-  masm.wasmBoundsCheck64(Assembler::Below, ptr, boundsCheckLimit, &ok);
-  masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
-  masm.bind(&ok);
+  // See above.
+  if (JitOptions.spectreIndexMasking) {
+    Label ok;
+    masm.wasmBoundsCheck64(Assembler::Below, ptr, boundsCheckLimit, &ok);
+    masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+    masm.bind(&ok);
+  } else {
+    OutOfLineAbortingWasmTrap* ool = new (alloc()) OutOfLineAbortingWasmTrap(
+        mir->bytecodeOffset(), wasm::Trap::OutOfBounds);
+    addOutOfLineCode(ool, mir);
+    masm.wasmBoundsCheck64(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
+                           ool->entry());
+  }
 }
 
 void CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins) {
