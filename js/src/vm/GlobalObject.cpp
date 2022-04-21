@@ -865,7 +865,7 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
                                          HandlePropertyName selfHostedName,
                                          HandleAtom name, unsigned nargs,
                                          MutableHandleValue funVal) {
-  if (global->maybeGetIntrinsicValue(selfHostedName, funVal, cx)) {
+  if (global->maybeGetIntrinsicValue(selfHostedName, funVal.address(), cx)) {
     RootedFunction fun(cx, &funVal.toObject().as<JSFunction>());
     if (fun->explicitName() == name) {
       return true;
@@ -935,7 +935,7 @@ bool GlobalObject::getIntrinsicValueSlow(JSContext* cx,
   // defining the intrinsic. For instance, cloning can call NewArray, which
   // resolves Array.prototype, which defines some self-hosted functions. If this
   // happens we use the value already defined on the intrinsics holder.
-  if (global->maybeGetIntrinsicValue(name, value, cx)) {
+  if (global->maybeGetIntrinsicValue(name, value.address(), cx)) {
     return true;
   }
 
