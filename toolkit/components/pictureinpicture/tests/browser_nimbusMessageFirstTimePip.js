@@ -72,14 +72,21 @@ add_task(async function test_experiment_control() {
       url: TEST_PAGE,
     },
     async browser => {
-      const l10n = new Localization(
-        ["branding/brand.ftl", "toolkit/global/videocontrols.ftl"],
-        true
-      );
+      const s = `<!DOCTYPE bindings [
+        <!ENTITY % videocontrolsDTD SYSTEM "chrome://global/locale/videocontrols.dtd">
+        %videocontrolsDTD;
+        ]>
+        <html xmlns=\"http://www.w3.org/1999/xhtml\">
+          <head>
+            <meta charset=\"utf-8\"/>
+            <div class="pip-message">&pictureInPictureExplainer;</div>
+          </head>
+        </html>`;
+      const parser = new DOMParser();
 
-      let pipExplainerMessage = l10n.formatValueSync(
-        "videocontrols-picture-in-picture-explainer"
-      );
+      parser.forceEnableDTD();
+      let doc = parser.parseFromString(s, "application/xhtml+xml");
+      const pipDTDMessage = doc.querySelector(".pip-message").innerHTML.trim();
 
       await SimpleTest.promiseFocus(browser);
       await ensureVideosReady(browser);
@@ -93,8 +100,8 @@ add_task(async function test_experiment_control() {
       let videoID = "with-controls";
       await hoverToggle(browser, videoID);
 
-      await SpecialPowers.spawn(browser, [pipExplainerMessage], async function(
-        pipExplainerMessage
+      await SpecialPowers.spawn(browser, [pipDTDMessage], async function(
+        pipDTDMessage
       ) {
         let video = content.document.getElementById("with-controls");
         let shadowRoot = video.openOrClosedShadowRoot;
@@ -102,7 +109,7 @@ add_task(async function test_experiment_control() {
 
         Assert.equal(
           pipButton.textContent.trim(),
-          pipExplainerMessage,
+          pipDTDMessage,
           "The PiP explainer is default"
         );
       });
