@@ -11,6 +11,7 @@ let targets;
 let commands;
 let breakpoints;
 
+// The maximal number of stackframes to retrieve when pausing
 const CALL_STACK_PAGE_SIZE = 1000;
 
 function setupCommands(innerCommands) {
