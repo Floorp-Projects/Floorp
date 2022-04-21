@@ -12,28 +12,34 @@ add_task(async function test_update_highlighted() {
       const trackedEvents = ["onActivated", "onHighlighted"];
       async function expectResults(fn, action) {
         let resolve;
-        let promise = new Promise(r => {
-          resolve = r;
+        let reject;
+        let promise = new Promise((...args) => {
+          [resolve, reject] = args;
         });
-        let expected;
+        let expectedEvents;
         let events = [];
         let listeners = {};
         for (let trackedEvent of trackedEvents) {
           listeners[trackedEvent] = data => {
             events.push([trackedEvent, data]);
-            if (expected && expected.length >= events.length) {
+            if (expectedEvents && expectedEvents.length >= events.length) {
               resolve();
             }
           };
           browser.tabs[trackedEvent].addListener(listeners[trackedEvent]);
         }
-        let {
-          events: expectedEvents,
-          highlighted: expectedHighlighted,
-          active: expectedActive,
-        } = await fn();
+        let expectedData = await fn();
+        let expectedHighlighted = expectedData.highlighted;
+        let expectedActive = expectedData.active;
+        expectedEvents = expectedData.events;
         if (events.length < expectedEvents.length) {
-          await promise;
+          // Wait up to 1000 ms for the expected number of events.
+          // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+          setTimeout(reject, 1000);
+          await promise.catch(() => {
+            let numMissing = expectedEvents.length - events.length;
+            browser.test.fail(`${numMissing} missing events when ${action}`);
+          });
         }
         let [{ id: active }] = await browser.tabs.query({ active: true });
         browser.test.assertEq(
