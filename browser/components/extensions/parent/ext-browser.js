@@ -755,7 +755,7 @@ class Tab extends TabBase {
   }
 
   get attention() {
-    return this.nativeTab.getAttribute("attention") === "true";
+    return this.nativeTab.hasAttribute("attention");
   }
 
   get audible() {

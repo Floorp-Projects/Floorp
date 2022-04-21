@@ -4403,7 +4403,7 @@ BrowserGlue.prototype = {
         } else {
           tab = win.gBrowser.addWebTab(URI.uri);
         }
-        tab.setAttribute("attention", true);
+        tab.attention = true;
         return tab;
       };
 
@@ -4502,7 +4502,7 @@ BrowserGlue.prototype = {
     } else {
       tab = win.gBrowser.addWebTab(url);
     }
-    tab.setAttribute("attention", true);
+    tab.attention = true;
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback") {
         return;
