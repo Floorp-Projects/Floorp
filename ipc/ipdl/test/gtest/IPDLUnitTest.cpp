@@ -49,8 +49,7 @@ already_AddRefed<IPDLUnitTestParent> IPDLUnitTestParent::CreateCrossProcess() {
 
   std::vector<std::string> extraArgs;
 
-  auto prefSerializer =
-      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSanitizePreference);
+  auto prefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
   if (!prefSerializer->SerializeToSharedMemory(GeckoProcessType_IPDLUnitTest,
                                                /* remoteType */ ""_ns)) {
     ADD_FAILURE()
