@@ -95,7 +95,7 @@ void UtilityProcessManager::OnPreferenceChange(const char16_t* aData) {
   NS_LossyConvertUTF16toASCII strData(aData);
 
   // A pref changed. If it is useful to do so, inform child processes.
-  if (!ShouldSyncPreference(strData.Data())) {
+  if (!ShouldSyncPreference(strData.Data(), false)) {
     return;
   }
 
