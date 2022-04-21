@@ -28,7 +28,15 @@ RemoteCanvas.prototype.load = function(callback) {
       "suspend",
       function(aEvent) {
         setTimeout(function() {
-          me.remotePageLoaded(callback);
+          let mediaElement = iframe.contentDocument.querySelector(
+            "audio, video"
+          );
+          const { widget } = SpecialPowers.wrap(iframe.contentWindow)
+            .windowGlobalChild.getActor("UAWidgets")
+            .widgets.get(mediaElement);
+          widget.impl.Utils.l10n.translateRoots().then(() => {
+            me.remotePageLoaded(callback);
+          });
         }, 0);
       },
       { once: true }
