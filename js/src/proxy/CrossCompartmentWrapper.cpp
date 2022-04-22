@@ -496,9 +496,6 @@ JS_PUBLIC_API bool js::NukedObjectRealm(JSObject* obj) {
 // inconsistent state.
 void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
                       JSObject* newTargetArg) {
-  MOZ_ASSERT(!IsInsideNursery(wobjArg));
-  MOZ_ASSERT(!IsInsideNursery(newTargetArg));
-
   RootedObject wobj(cx, wobjArg);
   RootedObject newTarget(cx, newTargetArg);
   MOZ_ASSERT(wobj->is<CrossCompartmentWrapperObject>());
@@ -596,9 +593,6 @@ void js::RemapDeadWrapper(JSContext* cx, HandleObject wobj,
 JS_PUBLIC_API bool js::RemapAllWrappersForObject(JSContext* cx,
                                                  HandleObject oldTarget,
                                                  HandleObject newTarget) {
-  MOZ_ASSERT(!IsInsideNursery(oldTarget));
-  MOZ_ASSERT(!IsInsideNursery(newTarget));
-
   AutoWrapperVector toTransplant(cx);
 
   for (CompartmentsIter c(cx->runtime()); !c.done(); c.next()) {
