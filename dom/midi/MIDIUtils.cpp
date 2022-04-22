@@ -107,12 +107,9 @@ bool IsValidMessage(const MIDIMessage* aMsg) {
 bool ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
                    const TimeStamp& aTimestamp,
                    nsTArray<MIDIMessage>& aMsgArray) {
-  uint32_t bytesRead = 0;
   bool inSysexMessage = false;
   UniquePtr<MIDIMessage> currentMsg = nullptr;
   for (const auto& byte : aByteBuffer) {
-    bytesRead++;
-
     if (IsSystemRealtimeMessage(byte)) {
       MIDIMessage rt_msg;
       rt_msg.data().AppendElement(byte);

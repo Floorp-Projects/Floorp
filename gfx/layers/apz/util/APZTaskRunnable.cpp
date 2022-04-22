@@ -100,7 +100,7 @@ void APZTaskRunnable::QueueFlushCompleteNotification() {
   mNeedsFlushCompleteNotification = true;
 }
 
-bool APZTaskRunnable::IsRegistereddWithCurrentPresShell() const {
+bool APZTaskRunnable::IsRegisteredWithCurrentPresShell() const {
   MOZ_ASSERT(mController);
 
   uint32_t current = 0;
@@ -111,7 +111,7 @@ bool APZTaskRunnable::IsRegistereddWithCurrentPresShell() const {
 }
 
 void APZTaskRunnable::EnsureRegisterAsEarlyRunner() {
-  if (IsRegistereddWithCurrentPresShell()) {
+  if (IsRegisteredWithCurrentPresShell()) {
     return;
   }
 

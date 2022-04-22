@@ -373,11 +373,7 @@ nsDirIndexParser::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
 nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest) {
   if (!mListener) return NS_ERROR_FAILURE;
 
-  int32_t numItems = 0;
-
   while (true) {
-    ++numItems;
-
     int32_t eol = mBuf.FindCharInSet("\n\r", mLineStart);
     if (eol < 0) break;
     mBuf.SetCharAt(char16_t('\0'), eol);

@@ -1113,7 +1113,7 @@ void nsSprocketLayout::ComputeChildSizes(
     // ----- Ok we are give a size to fit into so stretch or squeeze to fit
     // ----- Make sure we look at our min and max size
     bool limit = true;
-    for (int pass = 1; true == limit; pass++) {
+    while (limit) {
       limit = false;
       boxSizes = aBoxSizes;
       computedBoxSizes = aComputedBoxSizes;
