@@ -627,7 +627,7 @@ StyleEditorUI.prototype = {
       events: {
         keypress: event => {
           if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-            this._view.activeSummary = summary;
+            this._view.setActiveSummary(summary);
           }
         },
       },
@@ -780,7 +780,7 @@ StyleEditorUI.prototype = {
       if (!this.editors.includes(editor)) {
         throw new Error("Editor was destroyed");
       }
-      this._view.activeSummary = summary;
+      this._view.setActiveSummary(summary);
     });
 
     return Promise.all([editorPromise, summaryPromise]);
