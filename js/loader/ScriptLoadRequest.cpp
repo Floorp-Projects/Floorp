@@ -79,7 +79,7 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                                      ScriptFetchOptions* aFetchOptions,
                                      const SRIMetadata& aIntegrity,
                                      nsIURI* aReferrer,
-                                     mozilla::dom::ScriptLoadContext* aContext)
+                                     LoadContextBase* aContext)
     : mKind(aKind),
       mState(State::Fetching),
       mFetchSourceOnly(false),
@@ -121,6 +121,11 @@ void ScriptLoadRequest::Cancel() {
 void ScriptLoadRequest::DropBytecodeCacheReferences() {
   mCacheInfo = nullptr;
   DropJSObjects(this);
+}
+
+mozilla::dom::ScriptLoadContext* ScriptLoadRequest::GetLoadContext() {
+  MOZ_ASSERT(mLoadContext);
+  return mLoadContext->AsWindowContext();
 }
 
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {
