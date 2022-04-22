@@ -934,17 +934,9 @@ StyleEditorUI.prototype = {
       ruleCount = "-";
     }
 
-    const flags = [];
-    if (editor.styleSheet.disabled) {
-      flags.push("disabled");
-    }
-    if (editor.unsaved) {
-      flags.push("unsaved");
-    }
-    if (editor.linkedCSSFileError) {
-      flags.push("linked-file-error");
-    }
-    this._view.setItemClassName(summary, flags.join(" "));
+    summary.classList.toggle("disabled", !!editor.styleSheet.disabled);
+    summary.classList.toggle("unsaved", !!editor.unsaved);
+    summary.classList.toggle("linked-file-error", !!editor.linkedCSSFileError);
 
     const label = summary.querySelector(".stylesheet-name > label");
     label.setAttribute("value", editor.friendlyName);
