@@ -280,6 +280,23 @@ CheckCertHostname(Input endEntityCertDER, Input hostname,
   }
 }
 
+// A strict name matching policy for CheckCertHostname which never
+// falls back to searching within the subject name.
+Result StrictNameMatchingPolicy::FallBackToCommonName(
+    Time notBefore,
+    /*out*/ FallBackToSearchWithinSubject& fallBackToCommonName) {
+  fallBackToCommonName = FallBackToSearchWithinSubject::No;
+  return Success;
+}
+
+Result
+CheckCertHostname(Input endEntityCertDER, Input hostname)
+{
+  StrictNameMatchingPolicy policy{};
+  return CheckCertHostname(endEntityCertDER, hostname, policy);
+}
+
+
 // 4.2.1.10. Name Constraints
 Result
 CheckNameConstraints(Input encodedNameConstraints,

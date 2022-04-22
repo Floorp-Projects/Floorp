@@ -223,7 +223,7 @@ class TlsRecordExpander : public TlsRecordFilter {
 };
 
 // Tweak the plaintext of server records so that they exceed the client's limit.
-TEST_P(TlsConnectTls13, RecordSizePlaintextExceed) {
+TEST_F(TlsConnectStreamTls13, RecordSizePlaintextExceed) {
   EnsureTlsSetup();
   auto server_expand = MakeTlsFilter<TlsRecordExpander>(server_, 1);
   server_expand->EnableDecryption();
@@ -247,7 +247,7 @@ TEST_P(TlsConnectTls13, RecordSizePlaintextExceed) {
 // This requires a much larger expansion than for plaintext to trigger the
 // guard, which runs before decryption (current allowance is 320 octets,
 // see MAX_EXPANSION in ssl3con.c).
-TEST_P(TlsConnectTls13, RecordSizeCiphertextExceed) {
+TEST_F(TlsConnectStreamTls13, RecordSizeCiphertextExceed) {
   EnsureTlsSetup();
 
   client_->SetOption(SSL_RECORD_SIZE_LIMIT, 64);
@@ -329,7 +329,7 @@ class TlsRecordPadder : public TlsRecordFilter {
   size_t padding_;
 };
 
-TEST_P(TlsConnectTls13, RecordSizeExceedPad) {
+TEST_F(TlsConnectStreamTls13, RecordSizeExceedPad) {
   EnsureTlsSetup();
   auto server_max = std::make_shared<TlsRecordMaximum>(server_);
   auto server_expand = std::make_shared<TlsRecordPadder>(server_, 1);
@@ -492,6 +492,235 @@ TEST_F(RecordSizeDefaultsTest, RecordSizeGetValue) {
   EXPECT_EQ(SECSuccess, SSL_OptionSetDefault(SSL_RECORD_SIZE_LIMIT, 3000));
   EXPECT_EQ(SECSuccess, SSL_OptionGetDefault(SSL_RECORD_SIZE_LIMIT, &v));
   EXPECT_EQ(3000, v);
+}
+
+class TlsCtextResizer : public TlsRecordFilter {
+ public:
+  TlsCtextResizer(const std::shared_ptr<TlsAgent>& a, size_t size)
+      : TlsRecordFilter(a), size_(size) {}
+
+ protected:
+  virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
+                                            const DataBuffer& data,
+                                            DataBuffer* changed) {
+    // allocate and initialise buffer
+    changed->Allocate(size_);
+
+    // copy record data (partially)
+    changed->Write(0, data.data(),
+                   ((data.len() >= size_) ? size_ : data.len()));
+
+    return CHANGE;
+  }
+
+ private:
+  size_t size_;
+};
+
+/* (D)TLS overlong record test for maximum default record size of
+ * 2^14 + (256 (TLS 1.3) OR 2048 (TLS <= 1.2)
+ * [RFC8446, Section 5.2; RFC5246 , Section 6.2.3].
+ * This should fail the first size check in ssl3gthr.c/ssl3_GatherData().
+ * DTLS Record errors are dropped silently. [RFC6347, Section 4.1.2.7]. */
+TEST_P(TlsConnectGeneric, RecordGatherOverlong) {
+  EnsureTlsSetup();
+
+  size_t max_ctext = MAX_FRAGMENT_LENGTH;
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    max_ctext += TLS_1_3_MAX_EXPANSION;
+  } else {
+    max_ctext += TLS_1_2_MAX_EXPANSION;
+  }
+
+  Connect();
+
+  MakeTlsFilter<TlsCtextResizer>(server_, max_ctext + 1);
+  // Dummy record will be overwritten
+  server_->SendData(0xf0);
+
+  /* Drop DTLS Record Errors silently [RFC6347, Section 4.1.2.7]. */
+  if (variant_ == ssl_variant_datagram) {
+    size_t received = client_->received_bytes();
+    client_->ReadBytes(max_ctext + 1);
+    ASSERT_EQ(received, client_->received_bytes());
+  } else {
+    client_->ExpectSendAlert(kTlsAlertRecordOverflow);
+    client_->ReadBytes(max_ctext + 1);
+    server_->ExpectReceiveAlert(kTlsAlertRecordOverflow);
+    server_->Handshake();
+  }
+}
+
+/* (D)TLS overlong record test with recordSizeLimit Extension and plus RFC
+ * specified maximum Expansion: 2^14 + (256 (TLS 1.3) OR 2048 (TLS <= 1.2)
+ * [RFC8446, Section 5.2; RFC5246 , Section 6.2.3].
+ * DTLS Record errors are dropped silently. [RFC6347, Section 4.1.2.7]. */
+TEST_P(TlsConnectGeneric, RecordSizeExtensionOverlong) {
+  EnsureTlsSetup();
+
+  // Set some boundary
+  size_t max_ctext = 1000;
+
+  client_->SetOption(SSL_RECORD_SIZE_LIMIT, max_ctext);
+
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // The record size limit includes the inner content type byte
+    max_ctext += TLS_1_3_MAX_EXPANSION - 1;
+  } else {
+    max_ctext += TLS_1_2_MAX_EXPANSION;
+  }
+
+  Connect();
+
+  MakeTlsFilter<TlsCtextResizer>(server_, max_ctext + 1);
+  // Dummy record will be overwritten
+  server_->SendData(0xf);
+
+  /* Drop DTLS Record Errors silently [RFC6347, Section 4.1.2.7].
+   * For DTLS 1.0 and 1.2 the package is dropped before the size check because
+   * of the modification. This just tests that no error is thrown as required.
+   */
+  if (variant_ == ssl_variant_datagram) {
+    size_t received = client_->received_bytes();
+    client_->ReadBytes(max_ctext + 1);
+    ASSERT_EQ(received, client_->received_bytes());
+  } else {
+    client_->ExpectSendAlert(kTlsAlertRecordOverflow);
+    client_->ReadBytes(max_ctext + 1);
+    server_->ExpectReceiveAlert(kTlsAlertRecordOverflow);
+    server_->Handshake();
+  }
+}
+
+/* For TLS <= 1.2:
+ * MAX_EXPANSION is the amount by which a record might plausibly be expanded
+ * when protected.  It's the worst case estimate, so the sum of block cipher
+ * padding (up to 256 octets), HMAC (48 octets for SHA-384), and IV (16
+ * octets for AES). */
+#define MAX_EXPANSION (256 + 48 + 16)
+
+/* (D)TLS overlong record test for specific ciphersuite expansion.
+ * Testing the smallest illegal record.
+ * This check is performed in ssl3con.c/ssl3_UnprotectRecord() OR
+ * tls13con.c/tls13_UnprotectRecord() and enforces stricter size limitations,
+ * dependent on the implemented cipher suites, than the RFC.
+ * DTLS Record errors are dropped silently. [RFC6347, Section 4.1.2.7]. */
+TEST_P(TlsConnectGeneric, RecordExpansionOverlong) {
+  EnsureTlsSetup();
+
+  // Set some boundary
+  size_t max_ctext = 1000;
+
+  client_->SetOption(SSL_RECORD_SIZE_LIMIT, max_ctext);
+
+  if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    // For TLS1.3 all ciphers expand the cipherext by 16B
+    // The inner content type byte is included in the record size limit
+    max_ctext += 16;
+  } else {
+    // For TLS<=1.2 the max possible expansion in the NSS implementation is 320
+    max_ctext += MAX_EXPANSION;
+  }
+
+  Connect();
+
+  MakeTlsFilter<TlsCtextResizer>(server_, max_ctext + 1);
+  // Dummy record will be overwritten
+  server_->SendData(0xf);
+
+  /* Drop DTLS Record Errors silently [RFC6347, Section 4.1.2.7].
+   * For DTLS 1.0 and 1.2 the package is dropped before the size check because
+   * of the modification. This just tests that no error is thrown as required/
+   * no bytes are received. */
+  if (variant_ == ssl_variant_datagram) {
+    size_t received = client_->received_bytes();
+    client_->ReadBytes(max_ctext + 1);
+    ASSERT_EQ(received, client_->received_bytes());
+  } else {
+    client_->ExpectSendAlert(kTlsAlertRecordOverflow);
+    client_->ReadBytes(max_ctext + 1);
+    server_->ExpectReceiveAlert(kTlsAlertRecordOverflow);
+    server_->Handshake();
+  }
+}
+
+/* (D)TLS longest allowed record default size test. */
+TEST_P(TlsConnectGeneric, RecordSizeDefaultLong) {
+  EnsureTlsSetup();
+  Connect();
+
+  // Maximum allowed plaintext size
+  size_t max = MAX_FRAGMENT_LENGTH;
+
+  /* For TLS 1.0 the first byte of application data is sent in a single record
+   * as explained in the documentation of SSL_CBC_RANDOM_IV in ssl.h.
+   * Because of that we use TlsCTextResizer to send a record of max size.
+   * A bad record mac alert is expected since we modify the record. */
+  if (version_ == SSL_LIBRARY_VERSION_TLS_1_0 &&
+      variant_ == ssl_variant_stream) {
+    // Set size to maxi plaintext + max allowed expansion
+    MakeTlsFilter<TlsCtextResizer>(server_, max + MAX_EXPANSION);
+    // Dummy record will be overwritten
+    server_->SendData(0xF);
+    // Expect alert
+    client_->ExpectSendAlert(kTlsAlertBadRecordMac);
+    // Receive record
+    client_->ReadBytes(max);
+    // Handle alert on server side
+    server_->ExpectReceiveAlert(kTlsAlertBadRecordMac);
+    server_->Handshake();
+  } else {  // Everything but TLS 1.0
+    // Send largest legal plaintext as single record
+    // by setting SendData() block size to max.
+    server_->SendData(max, max);
+    // Receive record
+    client_->ReadBytes(max);
+    // Assert that data was received successfully
+    ASSERT_EQ(client_->received_bytes(), max);
+  }
+}
+
+/* (D)TLS longest allowed record size limit extension test. */
+TEST_P(TlsConnectGeneric, RecordSizeLimitLong) {
+  EnsureTlsSetup();
+
+  // Set some boundary
+  size_t max = 1000;
+  client_->SetOption(SSL_RECORD_SIZE_LIMIT, max);
+
+  Connect();
+
+  // For TLS 1.3 the InnerContentType byte is included in the record size limit
+  if (version_ == SSL_LIBRARY_VERSION_TLS_1_3) {
+    max--;
+  }
+
+  /* For TLS 1.0 the first byte of application data is sent in a single record
+   * as explained in the documentation of SSL_CBC_RANDOM_IV in ssl.h.
+   * Because of that we use TlsCTextResizer to send a record of max size.
+   * A bad record mac alert is expected since we modify the record. */
+  if (version_ == SSL_LIBRARY_VERSION_TLS_1_0 &&
+      variant_ == ssl_variant_stream) {
+    // Set size to maxi plaintext + max allowed expansion
+    MakeTlsFilter<TlsCtextResizer>(server_, max + MAX_EXPANSION);
+    // Dummy record will be overwritten
+    server_->SendData(0xF);
+    // Expect alert
+    client_->ExpectSendAlert(kTlsAlertBadRecordMac);
+    // Receive record
+    client_->ReadBytes(max);
+    // Handle alert on server side
+    server_->ExpectReceiveAlert(kTlsAlertBadRecordMac);
+    server_->Handshake();
+  } else {  // Everything but TLS 1.0
+    // Send largest legal plaintext as single record
+    // by setting SendData() block size to max.
+    server_->SendData(max, max);
+    // Receive record
+    client_->ReadBytes(max);
+    // Assert that data was received successfully
+    ASSERT_EQ(client_->received_bytes(), max);
+  }
 }
 
 }  // namespace nss_test

@@ -32,14 +32,6 @@
                 ]
             },
             {
-                "name" : "test-tls13-empty-alert.py",
-                "arguments": [
-                    "-p", "@PORT@"
-                ],
-                "comment": "https://bugzilla.mozilla.org/show_bug.cgi?id=1471656",
-                "exp_pass": false
-            },
-            {
                 "name" : "test-tls13-ffdhe-sanity.py",
                 "arguments": [
                     "-p", "@PORT@"

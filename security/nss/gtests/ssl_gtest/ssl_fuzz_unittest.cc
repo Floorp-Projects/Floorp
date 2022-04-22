@@ -57,7 +57,6 @@ FUZZ_P(TlsFuzzTest, DeterministicExporter) {
 
   Reset();
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
-  DisableECDHEServerKeyReuse();
 
   // Reset the RNG state.
   EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
@@ -71,7 +70,6 @@ FUZZ_P(TlsFuzzTest, DeterministicExporter) {
 
   Reset();
   ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
-  DisableECDHEServerKeyReuse();
 
   // Reset the RNG state.
   EXPECT_EQ(SECSuccess, RNG_RandomUpdate(NULL, 0));
@@ -97,7 +95,6 @@ FUZZ_P(TlsFuzzTest, DeterministicTranscript) {
   for (size_t i = 0; i < 5; i++) {
     Reset();
     ConfigureSessionCache(RESUME_NONE, RESUME_NONE);
-    DisableECDHEServerKeyReuse();
 
     DataBuffer buffer;
     MakeTlsFilter<TlsConversationRecorder>(client_, buffer);

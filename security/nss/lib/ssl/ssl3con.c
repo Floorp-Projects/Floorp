@@ -12908,6 +12908,12 @@ ssl_CBCExtractMAC(sslBuffer *plaintext,
     }
 }
 
+/* MAX_EXPANSION is the amount by which a record might plausibly be expanded
+ * when protected.  It's the worst case estimate, so the sum of block cipher
+ * padding (up to 256 octets), HMAC (48 octets for SHA-384), and IV (16
+ * octets for AES). */
+#define MAX_EXPANSION (256 + 48 + 16)
+
 /* Unprotect an SSL3 record and leave the result in plaintext.
  *
  * If SECFailure is returned, we:
@@ -12994,14 +13000,18 @@ ssl3_UnprotectRecord(sslSocket *ss,
     PRINT_BUF(80, (ss, "ciphertext:", cText->buf->buf + ivLen,
                    cText->buf->len - ivLen));
 
-    isTLS = (PRBool)(spec->version > SSL_LIBRARY_VERSION_3_0);
-
-    if (isTLS && cText->buf->len - ivLen > (MAX_FRAGMENT_LENGTH + 2048)) {
+    /* Check if the ciphertext can be valid if we assume maximum plaintext and
+     * add the maximum possible ciphersuite expansion.
+     * This way we detect overlong plaintexts/padding before decryption.
+     * This check enforces size limitations more strict than the RFC.
+     * [RFC5246, Section 6.2.3] */
+    if (cText->buf->len > (spec->recordSizeLimit + MAX_EXPANSION)) {
         *alert = record_overflow;
         PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
         return SECFailure;
     }
 
+    isTLS = (PRBool)(spec->version > SSL_LIBRARY_VERSION_3_0);
     rType = (SSLContentType)cText->hdr[0];
     rVersion = ((SSL3ProtocolVersion)cText->hdr[1] << 8) |
                (SSL3ProtocolVersion)cText->hdr[2];
@@ -13226,12 +13236,6 @@ ssl3_GetCipherSpec(sslSocket *ss, SSL3Ciphertext *cText)
     return NULL;
 }
 
-/* MAX_EXPANSION is the amount by which a record might plausibly be expanded
- * when protected.  It's the worst case estimate, so the sum of block cipher
- * padding (up to 256 octets), HMAC (48 octets for SHA-384), and IV (16
- * octets for AES). */
-#define MAX_EXPANSION (256 + 48 + 16)
-
 /* if cText is non-null, then decipher and check the MAC of the
  * SSL record from cText->buf (typically gs->inbuf)
  * into databuf (typically gs->buf), and any previous contents of databuf
@@ -13258,10 +13262,10 @@ SECStatus
 ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
 {
     SECStatus rv;
-    PRBool isTLS;
+    PRBool isTLS, isTLS13;
     DTLSEpoch epoch;
     ssl3CipherSpec *spec = NULL;
-    PRUint16 recordSizeLimit;
+    PRUint16 recordSizeLimit, cTextSizeLimit;
     PRBool outOfOrderSpec = PR_FALSE;
     SSLContentType rType;
     sslBuffer *plaintext = &ss->gs.buf;
@@ -13322,20 +13326,37 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
         return SECFailure;
     }
 
+    isTLS13 = (PRBool)(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
     recordSizeLimit = spec->recordSizeLimit;
-    if (cText->buf->len > recordSizeLimit + MAX_EXPANSION) {
+    cTextSizeLimit = recordSizeLimit;
+    cTextSizeLimit += (isTLS13) ? TLS_1_3_MAX_EXPANSION : TLS_1_2_MAX_EXPANSION;
+
+    /* Check if the specified recordSizeLimit and the RFC8446 specified max
+     * expansion are respected. recordSizeLimit is probably at the default for
+     * the first (hello) handshake message and then set to a smaller size by
+     * the Record Size Limit Extension.
+     * Stricter expansion size checks dependent on implemented cipher suites
+     * are performed in ssl3con.c/ssl3_UnprotectRecord() OR
+     * tls13con.c/tls13_UnprotextRecord().
+     * After Decryption the plaintext size is checked (l. 13424). This also
+     * applies to unencrypted records. */
+    if (cText->buf->len > cTextSizeLimit) {
         ssl_ReleaseSpecReadLock(ss); /*****************************/
+        /* Drop DTLS Record Errors silently [RFC6347, Section 4.1.2.7] */
+        if (IS_DTLS(ss)) {
+            return SECSuccess;
+        }
         SSL3_SendAlert(ss, alert_fatal, record_overflow);
         PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
         return SECFailure;
     }
 
-    if (plaintext->space < recordSizeLimit + MAX_EXPANSION) {
-        rv = sslBuffer_Grow(plaintext, recordSizeLimit + MAX_EXPANSION);
+    if (plaintext->space < cTextSizeLimit) {
+        rv = sslBuffer_Grow(plaintext, cTextSizeLimit);
         if (rv != SECSuccess) {
             ssl_ReleaseSpecReadLock(ss); /*************************/
             SSL_DBG(("%d: SSL3[%d]: HandleRecord, tried to get %d bytes",
-                     SSL_GETPID(), ss->fd, recordSizeLimit + MAX_EXPANSION));
+                     SSL_GETPID(), ss->fd, cTextSizeLimit));
             /* sslBuffer_Grow has set a memory error code. */
             /* Perhaps we should send an alert. (but we have no memory!) */
             return SECFailure;
@@ -13360,9 +13381,13 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
         rv = Null_Cipher(NULL, plaintext->buf, &plaintext->len,
                          plaintext->space, cText->buf->buf, cText->buf->len);
 #else
-        /* IMPORTANT: Unprotect functions MUST NOT send alerts
+        /* IMPORTANT:
+         * Unprotect functions MUST NOT send alerts
          * because we still hold the spec read lock. Instead, if they
-         * return SECFailure, they set *alert to the alert to be sent. */
+         * return SECFailure, they set *alert to the alert to be sent.
+         * Additionaly, this is used to silently drop DTLS encryption/record
+         * errors/alerts using the error handling below as suggested in the
+         * DTLS specification [RFC6347, Section 4.1.2.7]. */
         if (spec->version < SSL_LIBRARY_VERSION_TLS_1_3 ||
             spec->epoch == 0) {
             rv = ssl3_UnprotectRecord(ss, spec, cText, plaintext, &alert);
@@ -13373,6 +13398,7 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
 #endif
     }
 
+    /* Error/Alert handling for ssl3/tls13_UnprotectRecord */
     if (rv != SECSuccess) {
         ssl_ReleaseSpecReadLock(ss); /***************************/
 
@@ -13400,10 +13426,19 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
             }
         }
 
+        /* All errors/alerts that might occur during unprotection are related
+         * to invalid records (e.g. invalid formatting, length, MAC, ...).
+         * Following the DTLS specification such errors/alerts SHOULD be
+         * dropped silently [RFC6347, Section 4.1.2.7].
+         * This is done below. */
         if ((IS_DTLS(ss) && !dtls13_AeadLimitReached(spec)) ||
             (!IS_DTLS(ss) && ss->sec.isServer &&
              ss->ssl3.hs.zeroRttIgnore == ssl_0rtt_ignore_trial)) {
-            /* Silently drop the packet unless we sent a fatal alert. */
+            /* Silently drop the packet unless we set ss->ssl3.fatalAlertSent.
+             * (Manually or by using functions like
+             * SSL3_SendAlert(.., alert_fatal,..))
+             * This is not currently used in the unprotection functions since
+             * all TLS and DTLS errors are propagated to this handler. */
             if (ss->ssl3.fatalAlertSent) {
                 return SECFailure;
             }
@@ -13444,6 +13479,10 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     /* Check the length of the plaintext. */
     if (isTLS && plaintext->len > recordSizeLimit) {
         plaintext->len = 0;
+        /* Drop DTLS Record Errors silently [RFC6347, Section 4.1.2.7] */
+        if (IS_DTLS(ss)) {
+            return SECSuccess;
+        }
         SSL3_SendAlert(ss, alert_fatal, record_overflow);
         PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
         return SECFailure;

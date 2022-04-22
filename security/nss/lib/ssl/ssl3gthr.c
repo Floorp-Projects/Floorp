@@ -174,13 +174,26 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags, ssl2Gather *ssl2gs)
                     }
                 }
 
-                /* This is the max length for an encrypted SSLv3+ fragment. */
-                if (!v2HdrLength &&
-                    gs->remainder > (MAX_FRAGMENT_LENGTH + 2048)) {
-                    SSL3_SendAlert(ss, alert_fatal, record_overflow);
-                    gs->state = GS_INIT;
-                    PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
-                    return SECFailure;
+                /* If it is NOT an SSLv2 header */
+                if (!v2HdrLength) {
+                    /* Check if default RFC specified max ciphertext/record
+                     * limits are respected. Checks for used record size limit
+                     * extension boundaries are done in
+                     * ssl3con.c/ssl3_HandleRecord() for tls and dtls records.
+                     *
+                     * -> For TLS 1.2 records MUST NOT be longer than
+                     * 2^14 + 2048 bytes.
+                     * -> For TLS 1.3 records MUST NOT exceed 2^14 + 256 bytes.
+                     * -> For older versions this MAY be enforced, we do it.
+                     * [RFC8446 Section 5.2, RFC5246 Section 6.2.3]. */
+                    if (gs->remainder > TLS_1_2_MAX_CTEXT_LENGTH ||
+                        (gs->remainder > TLS_1_3_MAX_CTEXT_LENGTH &&
+                         ss->version >= SSL_LIBRARY_VERSION_TLS_1_3)) {
+                        SSL3_SendAlert(ss, alert_fatal, record_overflow);
+                        gs->state = GS_INIT;
+                        PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
+                        return SECFailure;
+                    }
                 }
 
                 gs->state = GS_DATA;
@@ -267,7 +280,7 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
     int nb;
     PRUint8 contentType;
     unsigned int headerLen;
-    SECStatus rv;
+    SECStatus rv = SECSuccess;
     PRBool dtlsLengthPresent = PR_TRUE;
 
     SSL_TRC(30, ("dtls_GatherData"));
@@ -281,18 +294,33 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
         gs->dtlsPacketOffset = 0;
         gs->dtlsPacket.len = 0;
 
-        /* Resize to the maximum possible size so we can fit a full datagram */
-        /* This is the max fragment length for an encrypted fragment
-        ** plus the size of the record header.
-        ** This magic constant is copied from ssl3_GatherData, with 5 changed
-        ** to 13 (the size of the record header).
-        */
-        if (gs->dtlsPacket.space < MAX_FRAGMENT_LENGTH + 2048 + 13) {
-            rv = sslBuffer_Grow(&gs->dtlsPacket,
-                                MAX_FRAGMENT_LENGTH + 2048 + 13);
-            if (rv != SECSuccess) {
-                return -1; /* Code already set. */
+        /* Resize to the maximum possible size so we can fit a full datagram.
+         * This leads to record_overflow errors if records/ciphertexts greater
+         * than the buffer (= maximum record) size are to be received.
+         * DTLS Record errors are dropped silently. [RFC6347, Section 4.1.2.7].
+         * Checks for record size limit extension boundaries are performed in
+         * ssl3con.c/ssl3_HandleRecord() for tls and dtls records.
+         *
+         * -> For TLS 1.2 records MUST NOT be longer than 2^14 + 2048 bytes.
+         * -> For TLS 1.3 records MUST NOT exceed 2^14 + 256 bytes.
+         * -> For older versions this MAY be enforced, we do it.
+         * [RFC8446 Section 5.2, RFC5246 Section 6.2.3]. */
+        if (ss->version <= SSL_LIBRARY_VERSION_TLS_1_2) {
+            if (gs->dtlsPacket.space < DTLS_1_2_MAX_PACKET_LENGTH) {
+                rv = sslBuffer_Grow(&gs->dtlsPacket, DTLS_1_2_MAX_PACKET_LENGTH);
             }
+        } else { /* version >= TLS 1.3 */
+            if (gs->dtlsPacket.space != DTLS_1_3_MAX_PACKET_LENGTH) {
+                /* During Hello and version negotiation older DTLS versions with
+                 * greater possible packets are used. The buffer must therefore
+                 * be "truncated" by clearing and reallocating it */
+                sslBuffer_Clear(&gs->dtlsPacket);
+                rv = sslBuffer_Grow(&gs->dtlsPacket, DTLS_1_3_MAX_PACKET_LENGTH);
+            }
+        }
+
+        if (rv != SECSuccess) {
+            return -1; /* Code already set. */
         }
 
         /* recv() needs to read a full datagram at a time */
@@ -306,6 +334,8 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
         } else /* if (nb < 0) */ {
             SSL_DBG(("%d: SSL3[%d]: recv error %d", SSL_GETPID(), ss->fd,
                      PR_GetError()));
+            /* DTLS Record Errors, including overlong records, are silently
+             * dropped [RFC6347, Section 4.1.2.7]. */
             return -1;
         }
 
