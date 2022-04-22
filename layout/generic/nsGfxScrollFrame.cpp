@@ -7200,12 +7200,12 @@ nsRect ScrollFrameHelper::GetScrolledRect() const {
   nsRect result = GetUnsnappedScrolledRectInternal(
       mScrolledFrame->ScrollableOverflowRect(), mScrollPort.Size());
 
-  if (result.width < mScrollPort.width) {
+#if 0
+  // This happens often enough.
+  if (result.width < mScrollPort.width || result.height < mScrollPort.height) {
     NS_WARNING("Scrolled rect smaller than scrollport?");
   }
-  if (result.height < mScrollPort.height) {
-    NS_WARNING("Scrolled rect smaller than scrollport?");
-  }
+#endif
 
   // Expand / contract the result by up to half a layer pixel so that scrolling
   // to the right / bottom edge does not change the layer pixel alignment of
