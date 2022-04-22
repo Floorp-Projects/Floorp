@@ -5245,17 +5245,17 @@ void MacroAssemblerLOONG64Compat::handleFailureWithHandlerTail(
   Label wasmCatch;
 
   // Already clobbered a0, so use it...
-  load32(Address(StackPointer, ResumeFromException::offsetOfKind(), a0);
+  load32(Address(StackPointer, ResumeFromException::offsetOfKind()), a0);
   asMasm().branch32(Assembler::Equal, a0,
                     Imm32(ExceptionResumeKind::EntryFrame), &entryFrame);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Catch),
                     &catch_);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Finally),
                     &finally);
-  asMasm().branch32(Assembler::Equal, r0,
+  asMasm().branch32(Assembler::Equal, a0,
                     Imm32(ExceptionResumeKind::ForcedReturnBaseline),
                     &returnBaseline);
-  asMasm().branch32(Assembler::Equal, r0,
+  asMasm().branch32(Assembler::Equal, a0,
                     Imm32(ExceptionResumeKind::ForcedReturnIon), &returnIon);
   asMasm().branch32(Assembler::Equal, a0, Imm32(ExceptionResumeKind::Bailout),
                     &bailout);
