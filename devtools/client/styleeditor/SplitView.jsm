@@ -120,10 +120,6 @@ class SplitView {
     if (this._activeSummary) {
       const binding = bindings.get(this._activeSummary);
 
-      if (binding.onHide) {
-        binding.onHide(this._activeSummary, binding._details, binding.data);
-      }
-
       this._activeSummary.classList.remove("splitview-active");
       binding._details.classList.remove("splitview-active");
     }
@@ -169,10 +165,6 @@ class SplitView {
    *         Called when the item has been added.
    *     - function(summary, details, data) onShow
    *         Called when the item is shown/active.
-   *     - function(summary, details, data) onHide
-   *         Called when the item is hidden/inactive.
-   *     - function(summary, details, data) onDestroy
-   *         Called when the item has been removed.
    *     - object data
    *         Object to pass to the callbacks above.
    *     - number ordinal
@@ -248,10 +240,6 @@ class SplitView {
     const binding = bindings.get(summary);
     summary.remove();
     binding._details.remove();
-
-    if (binding.onDestroy) {
-      binding.onDestroy(summary, binding._details, binding.data);
-    }
   }
 
   /**
