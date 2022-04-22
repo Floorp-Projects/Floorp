@@ -320,10 +320,6 @@ const SpecialMessageActions = {
           "privacy.restrict3rdpartystorage.rollout.enabledByDefault",
           false
         );
-        Services.prefs.setBoolPref(
-          "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard",
-          true
-        );
         break;
       case "SHOW_SPOTLIGHT":
         Spotlight.showSpotlightDialog(browser, action.data);
