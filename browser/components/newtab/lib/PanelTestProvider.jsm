@@ -466,9 +466,10 @@ const MESSAGES = () => [
               height: "100px",
             },
             title: {
+              fontSize: "36px",
+              fontWeight: 276,
               string_id: "mr1-onboarding-default-header",
             },
-            title_style: "slim larger",
             subtitle: {
               string_id: "mr1-onboarding-default-subtitle",
             },
@@ -527,8 +528,12 @@ const MESSAGES = () => [
               height: "200px",
               imageURL: "",
             },
-            title: "Peace of mind.",
-            title_style: "fancy slim larger",
+            title: {
+              fontSize: "36px",
+              fontWeight: 276,
+              raw: "Peace of mind.",
+            },
+            title_style: "fancy shine",
             text_color: "dark",
             subtitle:
               "For the best privacy protection, keep Firefox in easy reach.",
