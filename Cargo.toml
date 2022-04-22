@@ -102,6 +102,7 @@ web-sys = { path = "build/rust/dummy-web/web-sys" }
 
 # Overrides to allow easier use of common internal crates.
 moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
+fog = { path = "toolkit/components/glean/api" }
 
 # Other overrides
 async-task = { git = "https://github.com/smol-rs/async-task", rev="f6488e35beccb26eb6e85847b02aa78a42cd3d0e" }
