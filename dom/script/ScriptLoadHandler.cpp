@@ -122,7 +122,7 @@ ScriptLoadHandler::OnIncrementalData(nsIIncrementalStreamLoader* aLoader,
 
   if (!mPreloadStartNotified) {
     mPreloadStartNotified = true;
-    mRequest->GetLoadContext()->NotifyStart(channelRequest);
+    mRequest->GetScriptLoadContext()->NotifyStart(channelRequest);
   }
 
   if (mRequest->IsCanceled()) {
@@ -222,8 +222,8 @@ bool ScriptLoadHandler::TrySetDecoder(nsIIncrementalStreamLoader* aLoader,
   // Check the hint charset from the script element or preload
   // request.
   nsAutoString hintCharset;
-  if (!mRequest->GetLoadContext()->IsPreload()) {
-    mRequest->GetLoadContext()->GetScriptElement()->GetScriptCharset(
+  if (!mRequest->GetScriptLoadContext()->IsPreload()) {
+    mRequest->GetScriptLoadContext()->GetScriptElement()->GetScriptCharset(
         hintCharset);
   } else {
     nsTArray<ScriptLoader::PreloadInfo>::index_type i =
@@ -297,7 +297,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
 
   if (mRequest->mFetchSourceOnly) {
     mRequest->SetTextSource();
-    TRACE_FOR_TEST(mRequest->GetLoadContext()->GetScriptElement(),
+    TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                    "scriptloader_load_source");
     return NS_OK;
   }
@@ -308,7 +308,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
     cic->GetAlternativeDataType(altDataType);
     if (altDataType.Equals(ScriptLoader::BytecodeMimeTypeFor(mRequest))) {
       mRequest->SetBytecode();
-      TRACE_FOR_TEST(mRequest->GetLoadContext()->GetScriptElement(),
+      TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                      "scriptloader_load_bytecode");
       return NS_OK;
     }
@@ -316,7 +316,7 @@ nsresult ScriptLoadHandler::EnsureKnownDataType(
   }
 
   mRequest->SetTextSource();
-  TRACE_FOR_TEST(mRequest->GetLoadContext()->GetScriptElement(),
+  TRACE_FOR_TEST(mRequest->GetScriptLoadContext()->GetScriptElement(),
                  "scriptloader_load_source");
 
   MOZ_ASSERT(!mRequest->IsUnknownDataType());
@@ -342,11 +342,12 @@ ScriptLoadHandler::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
 
   if (!mPreloadStartNotified) {
     mPreloadStartNotified = true;
-    mRequest->GetLoadContext()->NotifyStart(channelRequest);
+    mRequest->GetScriptLoadContext()->NotifyStart(channelRequest);
   }
 
-  auto notifyStop = MakeScopeExit(
-      [&] { mRequest->GetLoadContext()->NotifyStop(channelRequest, rv); });
+  auto notifyStop = MakeScopeExit([&] {
+    mRequest->GetScriptLoadContext()->NotifyStop(channelRequest, rv);
+  });
 
   if (!mRequest->IsCanceled()) {
     if (mRequest->IsUnknownDataType()) {

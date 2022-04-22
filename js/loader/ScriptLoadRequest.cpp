@@ -114,7 +114,7 @@ void ScriptLoadRequest::SetReady() {
 void ScriptLoadRequest::Cancel() {
   mState = State::Canceled;
   if (HasLoadContext()) {
-    GetLoadContext()->MaybeCancelOffThreadScript();
+    GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
 }
 
@@ -123,7 +123,7 @@ void ScriptLoadRequest::DropBytecodeCacheReferences() {
   DropJSObjects(this);
 }
 
-mozilla::dom::ScriptLoadContext* ScriptLoadRequest::GetLoadContext() {
+mozilla::dom::ScriptLoadContext* ScriptLoadRequest::GetScriptLoadContext() {
   MOZ_ASSERT(mLoadContext);
   return mLoadContext->AsWindowContext();
 }
@@ -167,9 +167,9 @@ bool ScriptLoadRequest::IsMarkedForBytecodeEncoding() const {
 nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
                                             MaybeSourceText* aMaybeSource) {
   // If there's no script text, we try to get it from the element
-  if (HasLoadContext() && GetLoadContext()->mIsInline) {
+  if (HasLoadContext() && GetScriptLoadContext()->mIsInline) {
     nsAutoString inlineData;
-    GetLoadContext()->GetScriptElement()->GetScriptText(inlineData);
+    GetScriptLoadContext()->GetScriptElement()->GetScriptText(inlineData);
 
     size_t nbytes = inlineData.Length() * sizeof(char16_t);
     JS::UniqueTwoByteChars chars(
