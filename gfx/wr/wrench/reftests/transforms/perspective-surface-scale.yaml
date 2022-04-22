@@ -1,0 +1,14 @@
+# Verify that we select a reasonable scale factor for perspective surfaces that don't
+# have a requested scale factor supplied by the caller (based on projected screen rect)
+root:
+  items:
+    - type: "stacking-context"
+      perspective: 1000
+      transform-style: preserve-3d
+      items:
+        - type: "stacking-context"
+          transform-origin: 175 175
+          transform: rotate-x(-20) rotate-y(20)
+          items:
+          - image: checkerboard(2, 22, 16)
+            bounds: [0, 0, 350, 350]

@@ -55,3 +55,4 @@ skip_on(android) == raster-root-scaling-2.yaml raster-root-scaling-2-ref.yaml
 != raster-root-huge-scale.yaml blank.yaml
 != non-inversible-world-rect.yaml blank.yaml
 == nested-local-scale.yaml nested-local-scale-ref.yaml
+platform(linux,mac) == perspective-surface-scale.yaml perspective-surface-scale.png
