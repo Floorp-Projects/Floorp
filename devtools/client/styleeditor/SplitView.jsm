@@ -160,15 +160,6 @@ class SplitView {
   }
 
   /**
-   * Retrieve the active item's details element or null if there is none.
-   * @return DOMElement
-   */
-  get activeDetails() {
-    const summary = this.activeSummary;
-    return summary ? bindings.get(summary)._details : null;
-  }
-
-  /**
    * Retrieve the summary element for a given ordinal.
    *
    * @param number ordinal
