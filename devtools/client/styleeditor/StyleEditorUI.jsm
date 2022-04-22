@@ -590,116 +590,117 @@ StyleEditorUI.prototype = {
     let ordinal = editor.styleSheet.styleSheetIndex;
     ordinal = ordinal == -1 ? Number.MAX_SAFE_INTEGER : ordinal;
     // add new sidebar item and editor to the UI
-    this._view.appendTemplatedItem(STYLE_EDITOR_TEMPLATE, {
-      data: {
-        editor: editor,
-      },
-      disableAnimations: this._alwaysDisableAnimations,
-      ordinal: ordinal,
-      onCreate: (summary, details, data) => {
-        const createdEditor = data.editor;
-        createdEditor.summary = summary;
-        createdEditor.details = details;
+    const { summary, details } = this._view.appendTemplatedItem(
+      STYLE_EDITOR_TEMPLATE,
+      {
+        data: {
+          editor: editor,
+        },
+        disableAnimations: this._alwaysDisableAnimations,
+        ordinal: ordinal,
+        onShow: (summaryEl, detailsEl, data) => {
+          const showEditor = data.editor;
+          this.selectedEditor = showEditor;
 
-        wire(summary, ".stylesheet-enabled", function onToggleDisabled(event) {
-          event.stopPropagation();
-          event.target.blur();
+          (async function() {
+            if (!showEditor.sourceEditor) {
+              // only initialize source editor when we switch to this view
+              const inputElement = detailsEl.querySelector(
+                ".stylesheet-editor-input"
+              );
+              await showEditor.load(inputElement, this._cssProperties);
+            }
 
-          createdEditor.toggleDisabled();
-        });
+            showEditor.onShow();
 
-        wire(summary, ".stylesheet-name", {
-          events: {
-            keypress: event => {
-              if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-                this._view.activeSummary = summary;
-              }
-            },
-          },
-        });
-
-        wire(summary, ".stylesheet-saveButton", function onSaveButton(event) {
-          event.stopPropagation();
-          event.target.blur();
-
-          createdEditor.saveToFile(createdEditor.savedFile);
-        });
-
-        this._updateSummaryForEditor(createdEditor, summary);
-
-        summary.addEventListener("contextmenu", () => {
-          this._contextMenuStyleSheet = createdEditor.styleSheet;
-        });
-
-        summary.addEventListener("focus", function onSummaryFocus(event) {
-          if (event.target == summary) {
-            // autofocus the stylesheet name
-            summary.querySelector(".stylesheet-name").focus();
+            this.emit("editor-selected", showEditor);
           }
-        });
+            .bind(this)()
+            .catch(console.error));
+        },
+      }
+    );
 
-        const sidebar = details.querySelector(".stylesheet-sidebar");
-        sidebar.setAttribute(
-          "width",
-          Services.prefs.getIntPref(PREF_SIDEBAR_WIDTH)
-        );
+    const createdEditor = editor;
+    createdEditor.summary = summary;
+    createdEditor.details = details;
 
-        const splitter = details.querySelector(".devtools-side-splitter");
-        splitter.addEventListener("mousemove", () => {
-          const sidebarWidth = sidebar.getAttribute("width");
-          Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
+    wire(summary, ".stylesheet-enabled", function onToggleDisabled(event) {
+      event.stopPropagation();
+      event.target.blur();
 
-          // update all @media sidebars for consistency
-          const sidebars = [
-            ...this._panelDoc.querySelectorAll(".stylesheet-sidebar"),
-          ];
-          for (const mediaSidebar of sidebars) {
-            mediaSidebar.setAttribute("width", sidebarWidth);
+      createdEditor.toggleDisabled();
+    });
+
+    wire(summary, ".stylesheet-name", {
+      events: {
+        keypress: event => {
+          if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
+            this._view.activeSummary = summary;
           }
-        });
-
-        // autofocus if it's a new user-created stylesheet
-        if (createdEditor.isNew) {
-          this._selectEditor(createdEditor);
-        }
-
-        if (this._isEditorToSelect(createdEditor)) {
-          this.switchToSelectedSheet();
-        }
-
-        // If this is the first stylesheet and there is no pending request to
-        // select a particular style sheet, select this sheet.
-        if (
-          !this.selectedEditor &&
-          !this._styleSheetBoundToSelect &&
-          createdEditor.styleSheet.styleSheetIndex == 0
-        ) {
-          this._selectEditor(createdEditor);
-        }
-        this.emit("editor-added", createdEditor);
-      },
-
-      onShow: (summary, details, data) => {
-        const showEditor = data.editor;
-        this.selectedEditor = showEditor;
-
-        (async function() {
-          if (!showEditor.sourceEditor) {
-            // only initialize source editor when we switch to this view
-            const inputElement = details.querySelector(
-              ".stylesheet-editor-input"
-            );
-            await showEditor.load(inputElement, this._cssProperties);
-          }
-
-          showEditor.onShow();
-
-          this.emit("editor-selected", showEditor);
-        }
-          .bind(this)()
-          .catch(console.error));
+        },
       },
     });
+
+    wire(summary, ".stylesheet-saveButton", function onSaveButton(event) {
+      event.stopPropagation();
+      event.target.blur();
+
+      createdEditor.saveToFile(createdEditor.savedFile);
+    });
+
+    this._updateSummaryForEditor(createdEditor, summary);
+
+    summary.addEventListener("contextmenu", () => {
+      this._contextMenuStyleSheet = createdEditor.styleSheet;
+    });
+
+    summary.addEventListener("focus", function onSummaryFocus(event) {
+      if (event.target == summary) {
+        // autofocus the stylesheet name
+        summary.querySelector(".stylesheet-name").focus();
+      }
+    });
+
+    const sidebar = details.querySelector(".stylesheet-sidebar");
+    sidebar.setAttribute(
+      "width",
+      Services.prefs.getIntPref(PREF_SIDEBAR_WIDTH)
+    );
+
+    const splitter = details.querySelector(".devtools-side-splitter");
+    splitter.addEventListener("mousemove", () => {
+      const sidebarWidth = sidebar.getAttribute("width");
+      Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
+
+      // update all @media sidebars for consistency
+      const sidebars = [
+        ...this._panelDoc.querySelectorAll(".stylesheet-sidebar"),
+      ];
+      for (const mediaSidebar of sidebars) {
+        mediaSidebar.setAttribute("width", sidebarWidth);
+      }
+    });
+
+    // autofocus if it's a new user-created stylesheet
+    if (createdEditor.isNew) {
+      this._selectEditor(createdEditor);
+    }
+
+    if (this._isEditorToSelect(createdEditor)) {
+      this.switchToSelectedSheet();
+    }
+
+    // If this is the first stylesheet and there is no pending request to
+    // select a particular style sheet, select this sheet.
+    if (
+      !this.selectedEditor &&
+      !this._styleSheetBoundToSelect &&
+      createdEditor.styleSheet.styleSheetIndex == 0
+    ) {
+      this._selectEditor(createdEditor);
+    }
+    this.emit("editor-added", createdEditor);
   },
 
   /**
