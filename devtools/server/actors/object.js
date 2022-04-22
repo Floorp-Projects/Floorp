@@ -359,18 +359,17 @@ const proto = {
    * @param array ownProperties
    *        The array that holds the list of known ownProperties names for
    *        |this.obj|.
-   * @param number [limit=0]
+   * @param number [limit=Infinity]
    *        Optional limit of getter values to find.
    * @return object
    *         An object that maps property names to safe getter descriptors as
    *         defined by the remote debugging protocol.
    */
-  // eslint-disable-next-line complexity
-  _findSafeGetterValues: function(ownProperties, limit = 0) {
+  _findSafeGetterValues: function(ownProperties, limit = Infinity) {
     const safeGetterValues = Object.create(null);
     let obj = this.obj;
     let level = 0,
-      i = 0;
+      currentGetterValuesCount = 0;
 
     // Do not search safe getters in unsafe objects.
     if (!DevToolsUtils.isSafeDebuggerObject(obj)) {
@@ -387,8 +386,7 @@ const proto = {
     }
 
     while (obj && DevToolsUtils.isSafeDebuggerObject(obj)) {
-      const getters = this._findSafeGetters(obj);
-      for (const name of getters) {
+      for (const name of this._findSafeGetters(obj)) {
         // Avoid overwriting properties from prototypes closer to this.obj. Also
         // avoid providing safeGetterValues from prototypes if property |name|
         // is already defined as an own property.
@@ -404,38 +402,21 @@ const proto = {
           continue;
         }
 
-        let desc = null,
-          getter = null;
-        try {
-          desc = obj.getOwnPropertyDescriptor(name);
-          getter = desc.get;
-        } catch (ex) {
-          // The above can throw if the cache becomes stale.
-        }
-        if (!getter) {
+        const desc = safeGetOwnPropertyDescriptor(obj, name);
+        if (!desc?.get) {
+          // If no getter matches the name, the cache is stale and should be cleaned up.
           obj._safeGetters = null;
           continue;
         }
 
-        const result = getter.call(this.obj);
-        if (!result || "throw" in result) {
+        const getterValue = this._evaluateGetter(desc.get);
+        if (getterValue === undefined) {
           continue;
-        }
-
-        let getterValue = undefined;
-        if ("return" in result) {
-          getterValue = result.return;
-        } else if ("yield" in result) {
-          getterValue = result.yield;
         }
 
         // Treat an already-rejected Promise as we would a thrown exception
         // by not including it as a safe getter value (see Bug 1477765).
-        if (
-          getterValue &&
-          getterValue.class == "Promise" &&
-          getterValue.promiseState == "rejected"
-        ) {
+        if (isRejectedPromise(getterValue)) {
           // Until we have a good way to handle Promise rejections through the
           // debugger API (Bug 1478076), call `catch` when it's safe to do so.
           const raw = getterValue.unsafeDereference();
@@ -447,20 +428,17 @@ const proto = {
 
         // WebIDL attributes specified with the LenientThis extended attribute
         // return undefined and should be ignored.
-        if (getterValue !== undefined) {
-          safeGetterValues[name] = {
-            getterValue: this.hooks.createValueGrip(getterValue),
-            getterPrototypeLevel: level,
-            enumerable: desc.enumerable,
-            writable: level == 0 ? desc.writable : true,
-          };
-          if (limit && ++i == limit) {
-            break;
-          }
+        safeGetterValues[name] = {
+          getterValue: this.hooks.createValueGrip(getterValue),
+          getterPrototypeLevel: level,
+          enumerable: desc.enumerable,
+          writable: level == 0 ? desc.writable : true,
+        };
+
+        ++currentGetterValuesCount;
+        if (currentGetterValuesCount == limit) {
+          return safeGetterValues;
         }
-      }
-      if (limit && i == limit) {
-        break;
       }
 
       obj = obj.proto;
@@ -468,6 +446,26 @@ const proto = {
     }
 
     return safeGetterValues;
+  },
+
+  /**
+   * Evaluate the getter function |desc.get|.
+   * @param {Object} getter
+   */
+  _evaluateGetter(getter) {
+    const result = getter.call(this.obj);
+    if (!result || "throw" in result) {
+      return undefined;
+    }
+
+    let getterValue = undefined;
+    if ("return" in result) {
+      getterValue = result.return;
+    } else if ("yield" in result) {
+      getterValue = result.yield;
+    }
+
+    return getterValue;
   },
 
   /**
@@ -764,3 +762,27 @@ const proto = {
 
 exports.ObjectActor = protocol.ActorClassWithSpec(objectSpec, proto);
 exports.ObjectActorProto = proto;
+
+function safeGetOwnPropertyDescriptor(obj, name) {
+  let desc = null;
+  try {
+    desc = obj.getOwnPropertyDescriptor(name);
+  } catch (ex) {
+    // The above can throw if the cache becomes stale.
+  }
+  return desc;
+}
+
+/**
+ * Check if the value is rejected promise
+ *
+ * @param {Object} getterValue
+ * @returns {boolean} true if the value is rejected promise, false otherwise.
+ */
+function isRejectedPromise(getterValue) {
+  return (
+    getterValue &&
+    getterValue.class == "Promise" &&
+    getterValue.promiseState == "rejected"
+  );
+}
