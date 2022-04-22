@@ -15,8 +15,8 @@
 #include <spa/param/format-utils.h>
 #include <spa/param/props.h>
 
-#include <sys/mman.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/syscall.h>
 
 #include <cstring>
@@ -31,9 +31,8 @@
 
 #if defined(WEBRTC_DLOPEN_PIPEWIRE)
 #include "modules/desktop_capture/linux/pipewire_stubs.h"
-
 using modules_desktop_capture_linux::InitializeStubs;
-using modules_desktop_capture_linux::kModulePipewire;
+using modules_desktop_capture_linux::kModulePipewire03;
 using modules_desktop_capture_linux::StubPathMap;
 #endif  // defined(WEBRTC_DLOPEN_PIPEWIRE)
 
@@ -50,31 +49,32 @@ const char kScreenCastInterfaceName[] = "org.freedesktop.portal.ScreenCast";
 const int kBytesPerPixel = 4;
 
 #if defined(WEBRTC_DLOPEN_PIPEWIRE)
-const char kPipeWireLib[] = "libpipewire-0.2.so.1";
+const char kPipeWireLib[] = "libpipewire-0.3.so.0";
 #endif
 
 // static
 struct dma_buf_sync {
   uint64_t flags;
 };
-#define DMA_BUF_SYNC_READ      (1 << 0)
-#define DMA_BUF_SYNC_START     (0 << 2)
-#define DMA_BUF_SYNC_END       (1 << 2)
-#define DMA_BUF_BASE           'b'
-#define DMA_BUF_IOCTL_SYNC     _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
+#define DMA_BUF_SYNC_READ (1 << 0)
+#define DMA_BUF_SYNC_START (0 << 2)
+#define DMA_BUF_SYNC_END (1 << 2)
+#define DMA_BUF_BASE 'b'
+#define DMA_BUF_IOCTL_SYNC _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
 
 static void SyncDmaBuf(int fd, uint64_t start_or_end) {
-  struct dma_buf_sync sync = { 0 };
+  struct dma_buf_sync sync = {0};
 
   sync.flags = start_or_end | DMA_BUF_SYNC_READ;
 
-  while(true) {
+  while (true) {
     int ret;
-    ret = ioctl (fd, DMA_BUF_IOCTL_SYNC, &sync);
+    ret = ioctl(fd, DMA_BUF_IOCTL_SYNC, &sync);
     if (ret == -1 && errno == EINTR) {
       continue;
     } else if (ret == -1) {
-      RTC_LOG(LS_ERROR) << "Failed to synchronize DMA buffer: " << g_strerror(errno);
+      RTC_LOG(LS_ERROR) << "Failed to synchronize DMA buffer: "
+                        << g_strerror(errno);
       break;
     } else {
       break;
@@ -82,13 +82,116 @@ static void SyncDmaBuf(int fd, uint64_t start_or_end) {
   }
 }
 
-// static
-void BaseCapturerPipeWire::OnCoreError(void *data,
+class ScopedBuf {
+ public:
+  ScopedBuf() {}
+  ScopedBuf(unsigned char* map, int map_size, bool is_dma_buf, int fd)
+      : map_(map), map_size_(map_size), is_dma_buf_(is_dma_buf), fd_(fd) {}
+  ~ScopedBuf() {
+    if (map_ != MAP_FAILED) {
+      if (is_dma_buf_) {
+        SyncDmaBuf(fd_, DMA_BUF_SYNC_END);
+      }
+      munmap(map_, map_size_);
+    }
+  }
+
+  operator bool() { return map_ != MAP_FAILED; }
+
+  void initialize(unsigned char* map, int map_size, bool is_dma_buf, int fd) {
+    map_ = map;
+    map_size_ = map_size;
+    is_dma_buf_ = is_dma_buf;
+    fd_ = fd;
+  }
+
+  unsigned char* get() { return map_; }
+
+ protected:
+  unsigned char* map_ = nullptr;
+  int map_size_;
+  bool is_dma_buf_;
+  int fd_;
+};
+
+template <class T>
+class Scoped {
+ public:
+  Scoped() {}
+  explicit Scoped(T* val) { ptr_ = val; }
+  ~Scoped() { RTC_NOTREACHED(); }
+
+  T* operator->() { return ptr_; }
+
+  bool operator!() { return ptr_ == nullptr; }
+
+  T* get() { return ptr_; }
+
+  T** receive() {
+    RTC_CHECK(!ptr_);
+    return &ptr_;
+  }
+
+  Scoped& operator=(T* val) {
+    ptr_ = val;
+    return *this;
+  }
+
+ protected:
+  T* ptr_ = nullptr;
+};
+
+template <>
+Scoped<GError>::~Scoped() {
+  if (ptr_) {
+    g_error_free(ptr_);
+  }
+}
+
+template <>
+Scoped<gchar>::~Scoped() {
+  if (ptr_) {
+    g_free(ptr_);
+  }
+}
+
+template <>
+Scoped<GVariant>::~Scoped() {
+  if (ptr_) {
+    g_variant_unref(ptr_);
+  }
+}
+
+template <>
+Scoped<GVariantIter>::~Scoped() {
+  if (ptr_) {
+    g_variant_iter_free(ptr_);
+  }
+}
+
+template <>
+Scoped<GDBusMessage>::~Scoped() {
+  if (ptr_) {
+    g_object_unref(ptr_);
+  }
+}
+
+template <>
+Scoped<GUnixFDList>::~Scoped() {
+  if (ptr_) {
+    g_object_unref(ptr_);
+  }
+}
+
+void BaseCapturerPipeWire::OnCoreError(void* data,
                                        uint32_t id,
                                        int seq,
                                        int res,
-                                       const char *message) {
-  RTC_LOG(LS_ERROR) << "core error: " << message;
+                                       const char* message) {
+  BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(data);
+  RTC_DCHECK(that);
+
+  RTC_LOG(LS_ERROR) << "PipeWire remote error: " << message;
 }
 
 // static
@@ -112,12 +215,13 @@ void BaseCapturerPipeWire::OnStreamStateChanged(void* data,
 }
 
 // static
-void BaseCapturerPipeWire::OnStreamParamChanged(void *data, uint32_t id,
-                                                const struct spa_pod *format) {
+void BaseCapturerPipeWire::OnStreamParamChanged(void* data,
+                                                uint32_t id,
+                                                const struct spa_pod* format) {
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(data);
   RTC_DCHECK(that);
 
-  RTC_LOG(LS_INFO) << "PipeWire stream param changed.";
+  RTC_LOG(LS_INFO) << "PipeWire stream format changed.";
 
   if (!format || id != SPA_PARAM_Format) {
     return;
@@ -139,21 +243,22 @@ void BaseCapturerPipeWire::OnStreamParamChanged(void *data, uint32_t id,
 
   // Setup buffers and meta header for new format.
   const struct spa_pod* params[3];
-  params[0] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
-              SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
-              SPA_PARAM_BUFFERS_dataType, SPA_POD_CHOICE_FLAGS_Int((1<<SPA_DATA_MemPtr) |
-                                                                   (1<<SPA_DATA_MemFd)),
-              SPA_PARAM_BUFFERS_size, SPA_POD_Int(size),
-              SPA_PARAM_BUFFERS_stride, SPA_POD_Int(stride),
-              SPA_PARAM_BUFFERS_buffers, SPA_POD_CHOICE_RANGE_Int(8, 1, 32)));
-  params[1] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
-              SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta,
-              SPA_PARAM_META_type, SPA_POD_Id(SPA_META_Header),
-              SPA_PARAM_META_size, SPA_POD_Int(sizeof(struct spa_meta_header))));
-  params[2] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
-              SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta,
-              SPA_PARAM_META_type, SPA_POD_Id (SPA_META_VideoCrop),
-              SPA_PARAM_META_size, SPA_POD_Int (sizeof(struct spa_meta_region))));
+  params[0] = reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
+      &builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,
+      SPA_PARAM_BUFFERS_dataType,
+      SPA_POD_CHOICE_FLAGS_Int((1<<SPA_DATA_MemPtr) |
+                               (1<<SPA_DATA_MemFd)),
+      SPA_PARAM_BUFFERS_size, SPA_POD_Int(size), SPA_PARAM_BUFFERS_stride,
+      SPA_POD_Int(stride), SPA_PARAM_BUFFERS_buffers,
+      SPA_POD_CHOICE_RANGE_Int(8, 1, 32)));
+  params[1] = reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
+      &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
+      SPA_POD_Id(SPA_META_Header), SPA_PARAM_META_size,
+      SPA_POD_Int(sizeof(struct spa_meta_header))));
+  params[2] = reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
+      &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
+      SPA_POD_Id(SPA_META_VideoCrop), SPA_PARAM_META_size,
+      SPA_POD_Int(sizeof(struct spa_meta_region))));
   pw_stream_update_params(that->pw_stream_, params, 3);
 }
 
@@ -162,8 +267,8 @@ void BaseCapturerPipeWire::OnStreamProcess(void* data) {
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(data);
   RTC_DCHECK(that);
 
-  struct pw_buffer *next_buffer;
-  struct pw_buffer *buffer = nullptr;
+  struct pw_buffer* next_buffer;
+  struct pw_buffer* buffer = nullptr;
 
   next_buffer = pw_stream_dequeue_buffer(that->pw_stream_);
   while (next_buffer) {
@@ -171,7 +276,7 @@ void BaseCapturerPipeWire::OnStreamProcess(void* data) {
     next_buffer = pw_stream_dequeue_buffer(that->pw_stream_);
 
     if (next_buffer) {
-      pw_stream_queue_buffer (that->pw_stream_, buffer);
+      pw_stream_queue_buffer(that->pw_stream_, buffer);
     }
   }
 
@@ -221,18 +326,16 @@ BaseCapturerPipeWire::~BaseCapturerPipeWire() {
   }
 
   if (session_handle_) {
-    GDBusMessage* message = g_dbus_message_new_method_call(
-        kDesktopBusName, session_handle_, kSessionInterfaceName, "Close");
-    if (message) {
-      GError* error = nullptr;
-      g_dbus_connection_send_message(connection_, message,
+    Scoped<GDBusMessage> message(g_dbus_message_new_method_call(
+        kDesktopBusName, session_handle_, kSessionInterfaceName, "Close"));
+    if (message.get()) {
+      Scoped<GError> error;
+      g_dbus_connection_send_message(connection_, message.get(),
                                      G_DBUS_SEND_MESSAGE_FLAGS_NONE,
-                                     /*out_serial=*/nullptr, &error);
-      if (error) {
+                                     /*out_serial=*/nullptr, error.receive());
+      if (error.get()) {
         RTC_LOG(LS_ERROR) << "Failed to close the session: " << error->message;
-        g_error_free(error);
       }
-      g_object_unref(message);
     }
   }
 
@@ -271,7 +374,7 @@ void BaseCapturerPipeWire::InitPipeWire() {
   StubPathMap paths;
 
   // Check if the PipeWire library is available.
-  paths[kModulePipewire].push_back(kPipeWireLib);
+  paths[kModulePipewire03].push_back(kPipeWireLib);
   if (!InitializeStubs(paths)) {
     RTC_LOG(LS_ERROR) << "Failed to load the PipeWire library and symbols.";
     portal_init_failed_ = true;
@@ -282,7 +385,11 @@ void BaseCapturerPipeWire::InitPipeWire() {
   pw_init(/*argc=*/nullptr, /*argc=*/nullptr);
 
   pw_main_loop_ = pw_thread_loop_new("pipewire-main-loop", nullptr);
-  pw_context_ = pw_context_new(pw_thread_loop_get_loop(pw_main_loop_), nullptr, 0);
+
+  pw_thread_loop_lock(pw_main_loop_);
+
+  pw_context_ =
+      pw_context_new(pw_thread_loop_get_loop(pw_main_loop_), nullptr, 0);
   if (!pw_context_) {
     RTC_LOG(LS_ERROR) << "Failed to create PipeWire context";
     return;
@@ -316,6 +423,8 @@ void BaseCapturerPipeWire::InitPipeWire() {
     portal_init_failed_ = true;
   }
 
+  pw_thread_loop_unlock(pw_main_loop_);
+
   RTC_LOG(LS_INFO) << "PipeWire remote opened.";
 }
 
@@ -323,50 +432,42 @@ pw_stream* BaseCapturerPipeWire::CreateReceivingStream() {
   spa_rectangle pwMinScreenBounds = spa_rectangle{1, 1};
   spa_rectangle pwMaxScreenBounds = spa_rectangle{UINT32_MAX, UINT32_MAX};
 
-  auto stream = pw_stream_new(pw_core_, "webrtc-pipewire-stream", nullptr);
-
-  if (!stream) {
-    RTC_LOG(LS_ERROR) << "Could not create receiving stream.";
-    return nullptr;
-  }
+  pw_properties* reuseProps =
+      pw_properties_new_string("pipewire.client.reuse=1");
+  auto stream = pw_stream_new(pw_core_, "webrtc-consume-stream", reuseProps);
 
   uint8_t buffer[1024] = {};
-  const spa_pod* params[2];
-  spa_pod_builder builder = SPA_POD_BUILDER_INIT(buffer, sizeof (buffer));
+  const spa_pod* params[1];
+  spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
 
-  params[0] = reinterpret_cast<spa_pod *>(spa_pod_builder_add_object(&builder,
-              SPA_TYPE_OBJECT_Format, SPA_PARAM_EnumFormat,
-              SPA_FORMAT_mediaType, SPA_POD_Id(SPA_MEDIA_TYPE_video),
-              SPA_FORMAT_mediaSubtype, SPA_POD_Id(SPA_MEDIA_SUBTYPE_raw),
-              SPA_FORMAT_VIDEO_format, SPA_POD_CHOICE_ENUM_Id(5, SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx, SPA_VIDEO_FORMAT_RGBA,
-                                                                 SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_BGRA),
-              SPA_FORMAT_VIDEO_size, SPA_POD_CHOICE_RANGE_Rectangle(&pwMinScreenBounds,
-                                                                    &pwMinScreenBounds,
-                                                                    &pwMaxScreenBounds),
-              0));
-  pw_stream_add_listener(stream, &spa_stream_listener_, &pw_stream_events_, this);
+  params[0] = reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
+      &builder, SPA_TYPE_OBJECT_Format, SPA_PARAM_EnumFormat,
+      SPA_FORMAT_mediaType, SPA_POD_Id(SPA_MEDIA_TYPE_video),
+      SPA_FORMAT_mediaSubtype, SPA_POD_Id(SPA_MEDIA_SUBTYPE_raw),
+      SPA_FORMAT_VIDEO_format,
+      SPA_POD_CHOICE_ENUM_Id(5, SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx,
+                             SPA_VIDEO_FORMAT_RGBA, SPA_VIDEO_FORMAT_BGRx,
+                             SPA_VIDEO_FORMAT_BGRA),
+      SPA_FORMAT_VIDEO_size,
+      SPA_POD_CHOICE_RANGE_Rectangle(&pwMinScreenBounds, &pwMinScreenBounds,
+                                     &pwMaxScreenBounds),
+      0));
 
+  pw_stream_add_listener(stream, &spa_stream_listener_, &pw_stream_events_,
+                         this);
   if (pw_stream_connect(stream, PW_DIRECTION_INPUT, pw_stream_node_id_,
-      PW_STREAM_FLAG_AUTOCONNECT, params, 1) != 0) {
+                        PW_STREAM_FLAG_AUTOCONNECT, params, 1) != 0) {
     RTC_LOG(LS_ERROR) << "Could not connect receiving stream.";
     portal_init_failed_ = true;
+    return nullptr;
   }
 
   return stream;
 }
 
-static void SpaBufferUnmap(unsigned char *map, int map_size, bool IsDMABuf, int fd) {
-  if (map) {
-    if (IsDMABuf) {
-      SyncDmaBuf(fd, DMA_BUF_SYNC_END);
-    }
-    munmap(map, map_size);
-  }
-}
-
 void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
   spa_buffer* spaBuffer = buffer->buffer;
-  uint8_t *map = nullptr;
+  ScopedBuf map;
   uint8_t* src = nullptr;
 
   if (spaBuffer->datas[0].chunk->size == 0) {
@@ -374,109 +475,119 @@ void BaseCapturerPipeWire::HandleBuffer(pw_buffer* buffer) {
     return;
   }
 
-  switch (spaBuffer->datas[0].type) {
-    case SPA_DATA_MemFd:
-    case SPA_DATA_DmaBuf:
-      map = static_cast<uint8_t*>(mmap(
-          nullptr, spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
-          PROT_READ, MAP_PRIVATE, spaBuffer->datas[0].fd, 0));
-      if (map == MAP_FAILED) {
-        RTC_LOG(LS_ERROR) << "Failed to mmap memory: " << std::strerror(errno);
-        return;
-      }
-      if (spaBuffer->datas[0].type == SPA_DATA_DmaBuf) {
-        SyncDmaBuf(spaBuffer->datas[0].fd, DMA_BUF_SYNC_START);
-      }
-      src = SPA_MEMBER(map, spaBuffer->datas[0].mapoffset, uint8_t);
-      break;
-    case SPA_DATA_MemPtr:
-      map = nullptr;
-      src = static_cast<uint8_t*>(spaBuffer->datas[0].data);
-      break;
-    default:
+  if (spaBuffer->datas[0].type == SPA_DATA_MemFd ||
+      spaBuffer->datas[0].type == SPA_DATA_DmaBuf) {
+    map.initialize(
+        static_cast<uint8_t*>(
+            mmap(nullptr,
+                 spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+                 PROT_READ, MAP_PRIVATE, spaBuffer->datas[0].fd, 0)),
+        spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
+        spaBuffer->datas[0].type == SPA_DATA_DmaBuf,
+        spaBuffer->datas[0].fd);
+
+    if (!map) {
+      RTC_LOG(LS_ERROR) << "Failed to mmap the memory: "
+                        << std::strerror(errno);
       return;
+    }
+
+    if (spaBuffer->datas[0].type == SPA_DATA_DmaBuf) {
+      SyncDmaBuf(spaBuffer->datas[0].fd, DMA_BUF_SYNC_START);
+    }
+
+    src = SPA_MEMBER(map.get(), spaBuffer->datas[0].mapoffset, uint8_t);
+  } else if (spaBuffer->datas[0].type == SPA_DATA_MemPtr) {
+    src = static_cast<uint8_t*>(spaBuffer->datas[0].data);
   }
 
   if (!src) {
-    RTC_LOG(LS_ERROR) << "Failed to get video stream: Wrong data after mmap()";
-    SpaBufferUnmap(map,
-      spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
-      spaBuffer->datas[0].type == SPA_DATA_DmaBuf, spaBuffer->datas[0].fd);
     return;
   }
 
   struct spa_meta_region* video_metadata =
-    static_cast<struct spa_meta_region*>(
-       spa_buffer_find_meta_data(spaBuffer, SPA_META_VideoCrop, sizeof(*video_metadata)));
+      static_cast<struct spa_meta_region*>(spa_buffer_find_meta_data(
+          spaBuffer, SPA_META_VideoCrop, sizeof(*video_metadata)));
 
-  // Video size from metada is bigger than an actual video stream size.
-  // The metadata are wrong or we should up-scale te video...in both cases
+  // Video size from metadata is bigger than an actual video stream size.
+  // The metadata are wrong or we should up-scale the video...in both cases
   // just quit now.
-  if (video_metadata &&
-      (video_metadata->region.size.width > (uint32_t)desktop_size_.width() ||
-        video_metadata->region.size.height > (uint32_t)desktop_size_.height())) {
+  if (video_metadata && (video_metadata->region.size.width >
+                             static_cast<uint32_t>(desktop_size_.width()) ||
+                         video_metadata->region.size.height >
+                             static_cast<uint32_t>(desktop_size_.height()))) {
     RTC_LOG(LS_ERROR) << "Stream metadata sizes are wrong!";
-    SpaBufferUnmap(map,
-      spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
-      spaBuffer->datas[0].type == SPA_DATA_DmaBuf, spaBuffer->datas[0].fd);
     return;
   }
 
-  // Use video metada when video size from metadata is set and smaller than
+  // Use video metadata when video size from metadata is set and smaller than
   // video stream size, so we need to adjust it.
-  video_metadata_use_ = (video_metadata &&
-      video_metadata->region.size.width != 0 &&
-        video_metadata->region.size.height != 0 &&
-          (video_metadata->region.size.width < (uint32_t)desktop_size_.width() ||
-            video_metadata->region.size.height < (uint32_t)desktop_size_.height()));
+  bool video_metadata_use = false;
+
+  const struct spa_rectangle* video_metadata_size =
+      video_metadata ? &video_metadata->region.size : nullptr;
+
+  if (video_metadata_size && video_metadata_size->width != 0 &&
+      video_metadata_size->height != 0 &&
+      (static_cast<int>(video_metadata_size->width) < desktop_size_.width() ||
+       static_cast<int>(video_metadata_size->height) <
+           desktop_size_.height())) {
+    video_metadata_use = true;
+  }
 
   DesktopSize video_size_prev = video_size_;
-    if (video_metadata_use_) {
-    video_size_ = DesktopSize(video_metadata->region.size.width,
-                              video_metadata->region.size.height);
+  if (video_metadata_use) {
+    video_size_ =
+        DesktopSize(video_metadata_size->width, video_metadata_size->height);
   } else {
     video_size_ = desktop_size_;
   }
 
   webrtc::MutexLock lock(&current_frame_lock_);
   if (!current_frame_ || !video_size_.equals(video_size_prev)) {
-    current_frame_ =
-      std::make_unique<uint8_t[]>
-        (video_size_.width() * video_size_.height() * BasicDesktopFrame::kBytesPerPixel);
+    current_frame_ = std::make_unique<uint8_t[]>(
+        video_size_.width() * video_size_.height() * BasicDesktopFrame::kBytesPerPixel);
   }
 
-  const int32_t dstStride = video_size_.width() * BasicDesktopFrame::kBytesPerPixel;
-  const int32_t srcStride = spaBuffer->datas[0].chunk->stride;
+  const int32_t dst_stride = video_size_.width() * BasicDesktopFrame::kBytesPerPixel;
+  const int32_t src_stride = spaBuffer->datas[0].chunk->stride;
+
+  if (src_stride != (desktop_size_.width() * BasicDesktopFrame::kBytesPerPixel)) {
+    RTC_LOG(LS_ERROR) << "Got buffer with stride different from screen stride: "
+                      << src_stride
+                      << " != " << (desktop_size_.width() * BasicDesktopFrame::kBytesPerPixel);
+    portal_init_failed_ = true;
+
+    return;
+  }
 
   // Adjust source content based on metadata video position
-  if (video_metadata_use_ &&
-      (video_metadata->region.position.y + video_size_.height() <= desktop_size_.height())) {
-    src += srcStride * video_metadata->region.position.y;
+  if (video_metadata_use &&
+      (video_metadata->region.position.y + video_size_.height() <=
+       desktop_size_.height())) {
+    src += src_stride * video_metadata->region.position.y;
   }
-  const int xOffset =
-      video_metadata_use_ &&
-        (video_metadata->region.position.x + video_size_.width() <= desktop_size_.width())
+  const int x_offset =
+      video_metadata_use &&
+              (video_metadata->region.position.x + video_size_.width() <=
+               desktop_size_.width())
           ? video_metadata->region.position.x * BasicDesktopFrame::kBytesPerPixel
           : 0;
 
   uint8_t* dst = current_frame_.get();
   for (int i = 0; i < video_size_.height(); ++i) {
     // Adjust source content based on crop video position if needed
-    src += xOffset;
-    std::memcpy(dst, src, dstStride);
+    src += x_offset;
+    std::memcpy(dst, src, dst_stride);
     // If both sides decided to go with the RGBx format we need to convert it to
     // BGRx to match color format expected by WebRTC.
     if (spa_video_format_.format == SPA_VIDEO_FORMAT_RGBx ||
         spa_video_format_.format == SPA_VIDEO_FORMAT_RGBA) {
-      ConvertRGBxToBGRx(dst, dstStride);
+      ConvertRGBxToBGRx(dst, dst_stride);
     }
-    src += srcStride - xOffset;
-    dst += dstStride;
+    src += src_stride - x_offset;
+    dst += dst_stride;
   }
-
-  SpaBufferUnmap(map,
-    spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
-    spaBuffer->datas[0].type == SPA_DATA_DmaBuf, spaBuffer->datas[0].fd);
 }
 
 void BaseCapturerPipeWire::ConvertRGBxToBGRx(uint8_t* frame, uint32_t size) {
@@ -505,14 +616,13 @@ void BaseCapturerPipeWire::OnProxyRequested(GObject* /*object*/,
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(user_data);
   RTC_DCHECK(that);
 
-  GError* error = nullptr;
-  GDBusProxy *proxy = g_dbus_proxy_new_finish(result, &error);
+  Scoped<GError> error;
+  GDBusProxy* proxy = g_dbus_proxy_new_finish(result, error.receive());
   if (!proxy) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
     RTC_LOG(LS_ERROR) << "Failed to create a proxy for the screen cast portal: "
                       << error->message;
-    g_error_free(error);
     that->portal_init_failed_ = true;
     return;
   }
@@ -526,38 +636,36 @@ void BaseCapturerPipeWire::OnProxyRequested(GObject* /*object*/,
 // static
 gchar* BaseCapturerPipeWire::PrepareSignalHandle(GDBusConnection* connection,
                                                  const gchar* token) {
-  gchar* sender = g_strdup(g_dbus_connection_get_unique_name(connection) + 1);
-  for (int i = 0; sender[i]; i++) {
-    if (sender[i] == '.') {
-      sender[i] = '_';
+  Scoped<gchar> sender(
+      g_strdup(g_dbus_connection_get_unique_name(connection) + 1));
+  for (int i = 0; sender.get()[i]; i++) {
+    if (sender.get()[i] == '.') {
+      sender.get()[i] = '_';
     }
   }
 
-  gchar* handle = g_strconcat(kDesktopRequestObjectPath, "/", sender, "/",
+  gchar* handle = g_strconcat(kDesktopRequestObjectPath, "/", sender.get(), "/",
                               token, /*end of varargs*/ nullptr);
-  g_free(sender);
 
   return handle;
 }
 
 void BaseCapturerPipeWire::SessionRequest() {
   GVariantBuilder builder;
-  gchar* variant_string;
+  Scoped<gchar> variant_string;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
   variant_string =
       g_strdup_printf("webrtc_session%d", g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "session_handle_token",
-                        g_variant_new_string(variant_string));
-  g_free(variant_string);
+                        g_variant_new_string(variant_string.get()));
   variant_string = g_strdup_printf("webrtc%d", g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "handle_token",
-                        g_variant_new_string(variant_string));
+                        g_variant_new_string(variant_string.get()));
 
-  portal_handle_ = PrepareSignalHandle(connection_, variant_string);
+  portal_handle_ = PrepareSignalHandle(connection_, variant_string.get());
   session_request_signal_id_ = SetupRequestResponseSignal(
       portal_handle_, OnSessionRequestResponseSignal);
-  g_free(variant_string);
 
   RTC_LOG(LS_INFO) << "Screen cast session requested.";
   g_dbus_proxy_call(
@@ -573,22 +681,21 @@ void BaseCapturerPipeWire::OnSessionRequested(GDBusProxy *proxy,
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(user_data);
   RTC_DCHECK(that);
 
-  GError* error = nullptr;
-  GVariant* variant = g_dbus_proxy_call_finish(proxy, result, &error);
+  Scoped<GError> error;
+  Scoped<GVariant> variant(
+      g_dbus_proxy_call_finish(proxy, result, error.receive()));
   if (!variant) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
     RTC_LOG(LS_ERROR) << "Failed to create a screen cast session: "
                       << error->message;
-    g_error_free(error);
     that->portal_init_failed_ = true;
     return;
   }
   RTC_LOG(LS_INFO) << "Initializing the screen cast session.";
 
-  gchar* handle = nullptr;
-  g_variant_get_child(variant, 0, "o", &handle);
-  g_variant_unref(variant);
+  Scoped<gchar> handle;
+  g_variant_get_child(variant.get(), 0, "o", &handle);
   if (!handle) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the screen cast session.";
     if (that->session_request_signal_id_) {
@@ -599,8 +706,6 @@ void BaseCapturerPipeWire::OnSessionRequested(GDBusProxy *proxy,
     that->portal_init_failed_ = true;
     return;
   }
-
-  g_free(handle);
 
   RTC_LOG(LS_INFO) << "Subscribing to the screen cast session.";
 }
@@ -621,15 +726,11 @@ void BaseCapturerPipeWire::OnSessionRequestResponseSignal(
       << "Received response for the screen cast session subscription.";
 
   guint32 portal_response;
-  GVariant* response_data;
-  g_variant_get(parameters, "(u@a{sv})", &portal_response, &response_data);
-
-  GVariant* session_handle =
-      g_variant_lookup_value(response_data, "session_handle", NULL);
-  that->session_handle_ = g_variant_dup_string(session_handle, NULL);
-
-  g_variant_unref(session_handle);
-  g_variant_unref(response_data);
+  Scoped<GVariant> response_data;
+  g_variant_get(parameters, "(u@a{sv})", &portal_response,
+                response_data.receive());
+  g_variant_lookup(response_data.get(), "session_handle", "s",
+                   &that->session_handle_);
 
   if (!that->session_handle_ || portal_response) {
     RTC_LOG(LS_ERROR)
@@ -643,23 +744,40 @@ void BaseCapturerPipeWire::OnSessionRequestResponseSignal(
 
 void BaseCapturerPipeWire::SourcesRequest() {
   GVariantBuilder builder;
-  gchar* variant_string;
+  Scoped<gchar> variant_string;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
   // We want to record monitor content.
-  g_variant_builder_add(&builder, "{sv}", "types",
-                        g_variant_new_uint32(capture_source_type_));
+  g_variant_builder_add(
+      &builder, "{sv}", "types",
+      g_variant_new_uint32(static_cast<uint32_t>(capture_source_type_)));
   // We don't want to allow selection of multiple sources.
   g_variant_builder_add(&builder, "{sv}", "multiple",
                         g_variant_new_boolean(false));
+
+  Scoped<GVariant> variant(
+      g_dbus_proxy_get_cached_property(proxy_, "AvailableCursorModes"));
+  if (variant.get()) {
+    uint32_t modes = 0;
+    g_variant_get(variant.get(), "u", &modes);
+    // Request mouse cursor to be embedded as part of the stream, otherwise it
+    // is hidden by default. Make request only if this mode is advertised by
+    // the portal implementation.
+    if (modes &
+        static_cast<uint32_t>(BaseCapturerPipeWire::CursorMode::kEmbedded)) {
+      g_variant_builder_add(&builder, "{sv}", "cursor_mode",
+                            g_variant_new_uint32(static_cast<uint32_t>(
+                                BaseCapturerPipeWire::CursorMode::kEmbedded)));
+    }
+  }
+
   variant_string = g_strdup_printf("webrtc%d", g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "handle_token",
-                        g_variant_new_string(variant_string));
+                        g_variant_new_string(variant_string.get()));
 
-  sources_handle_ = PrepareSignalHandle(connection_, variant_string);
+  sources_handle_ = PrepareSignalHandle(connection_, variant_string.get());
   sources_request_signal_id_ = SetupRequestResponseSignal(
       sources_handle_, OnSourcesRequestResponseSignal);
-  g_free(variant_string);
 
   RTC_LOG(LS_INFO) << "Requesting sources from the screen cast session.";
   g_dbus_proxy_call(
@@ -676,22 +794,21 @@ void BaseCapturerPipeWire::OnSourcesRequested(GDBusProxy *proxy,
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(user_data);
   RTC_DCHECK(that);
 
-  GError* error = nullptr;
-  GVariant* variant = g_dbus_proxy_call_finish(proxy, result, &error);
+  Scoped<GError> error;
+  Scoped<GVariant> variant(
+      g_dbus_proxy_call_finish(proxy, result, error.receive()));
   if (!variant) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
     RTC_LOG(LS_ERROR) << "Failed to request the sources: " << error->message;
-    g_error_free(error);
     that->portal_init_failed_ = true;
     return;
   }
 
   RTC_LOG(LS_INFO) << "Sources requested from the screen cast session.";
 
-  gchar* handle = nullptr;
-  g_variant_get_child(variant, 0, "o", &handle);
-  g_variant_unref(variant);
+  Scoped<gchar> handle;
+  g_variant_get_child(variant.get(), 0, "o", handle.receive());
   if (!handle) {
     RTC_LOG(LS_ERROR) << "Failed to initialize the screen cast session.";
     if (that->sources_request_signal_id_) {
@@ -702,8 +819,6 @@ void BaseCapturerPipeWire::OnSourcesRequested(GDBusProxy *proxy,
     that->portal_init_failed_ = true;
     return;
   }
-
-  g_free(handle);
 
   RTC_LOG(LS_INFO) << "Subscribed to sources signal.";
 }
@@ -736,17 +851,16 @@ void BaseCapturerPipeWire::OnSourcesRequestResponseSignal(
 
 void BaseCapturerPipeWire::StartRequest() {
   GVariantBuilder builder;
-  gchar* variant_string;
+  Scoped<gchar> variant_string;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
   variant_string = g_strdup_printf("webrtc%d", g_random_int_range(0, G_MAXINT));
   g_variant_builder_add(&builder, "{sv}", "handle_token",
-                        g_variant_new_string(variant_string));
+                        g_variant_new_string(variant_string.get()));
 
-  start_handle_ = PrepareSignalHandle(connection_, variant_string);
+  start_handle_ = PrepareSignalHandle(connection_, variant_string.get());
   start_request_signal_id_ =
       SetupRequestResponseSignal(start_handle_, OnStartRequestResponseSignal);
-  g_free(variant_string);
 
   // "Identifier for the application window", this is Wayland, so not "x11:...".
   const gchar parent_window[] = "";
@@ -766,23 +880,22 @@ void BaseCapturerPipeWire::OnStartRequested(GDBusProxy *proxy,
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(user_data);
   RTC_DCHECK(that);
 
-  GError* error = nullptr;
-  GVariant* variant = g_dbus_proxy_call_finish(proxy, result, &error);
+  Scoped<GError> error;
+  Scoped<GVariant> variant(
+      g_dbus_proxy_call_finish(proxy, result, error.receive()));
   if (!variant) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
     RTC_LOG(LS_ERROR) << "Failed to start the screen cast session: "
                       << error->message;
-    g_error_free(error);
     that->portal_init_failed_ = true;
     return;
   }
 
   RTC_LOG(LS_INFO) << "Initializing the start of the screen cast session.";
 
-  gchar* handle = nullptr;
-  g_variant_get_child(variant, 0, "o", &handle);
-  g_variant_unref(variant);
+  Scoped<gchar> handle;
+  g_variant_get_child(variant.get(), 0, "o", handle.receive());
   if (!handle) {
     RTC_LOG(LS_ERROR)
         << "Failed to initialize the start of the screen cast session.";
@@ -794,8 +907,6 @@ void BaseCapturerPipeWire::OnStartRequested(GDBusProxy *proxy,
     that->portal_init_failed_ = true;
     return;
   }
-
-  g_free(handle);
 
   RTC_LOG(LS_INFO) << "Subscribed to the start signal.";
 }
@@ -814,9 +925,10 @@ void BaseCapturerPipeWire::OnStartRequestResponseSignal(
 
   RTC_LOG(LS_INFO) << "Start signal received.";
   guint32 portal_response;
-  GVariant* response_data;
-  GVariantIter* iter = nullptr;
-  g_variant_get(parameters, "(u@a{sv})", &portal_response, &response_data);
+  Scoped<GVariant> response_data;
+  Scoped<GVariantIter> iter;
+  g_variant_get(parameters, "(u@a{sv})", &portal_response,
+                response_data.receive());
   if (portal_response || !response_data) {
     RTC_LOG(LS_ERROR) << "Failed to start the screen cast session.";
     that->portal_init_failed_ = true;
@@ -826,23 +938,28 @@ void BaseCapturerPipeWire::OnStartRequestResponseSignal(
   // Array of PipeWire streams. See
   // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
   // documentation for <method name="Start">.
-  if (g_variant_lookup(response_data, "streams", "a(ua{sv})", &iter)) {
-    GVariant* variant;
+  if (g_variant_lookup(response_data.get(), "streams", "a(ua{sv})",
+                       iter.receive())) {
+    Scoped<GVariant> variant;
 
-    while (g_variant_iter_next(iter, "@(ua{sv})", &variant)) {
+    while (g_variant_iter_next(iter.get(), "@(ua{sv})", variant.receive())) {
       guint32 stream_id;
-      GVariant* options;
+      guint32 type;
+      Scoped<GVariant> options;
 
-      g_variant_get(variant, "(u@a{sv})", &stream_id, &options);
-      RTC_DCHECK(options != nullptr);
+      g_variant_get(variant.get(), "(u@a{sv})", &stream_id, options.receive());
+      RTC_DCHECK(options.get());
+
+      if (g_variant_lookup(options.get(), "source_type", "u", &type)) {
+        that->capture_source_type_ =
+            static_cast<BaseCapturerPipeWire::CaptureSourceType>(type);
+      }
 
       that->pw_stream_node_id_ = stream_id;
-      g_variant_unref(options);
-      g_variant_unref(variant);
+
+      break;
     }
   }
-  g_variant_iter_free(iter);
-  g_variant_unref(response_data);
 
   that->OpenPipeWireRemote();
 }
@@ -870,34 +987,29 @@ void BaseCapturerPipeWire::OnOpenPipeWireRemoteRequested(
   BaseCapturerPipeWire* that = static_cast<BaseCapturerPipeWire*>(user_data);
   RTC_DCHECK(that);
 
-  GError* error = nullptr;
-  GUnixFDList* outlist = nullptr;
-  GVariant* variant = g_dbus_proxy_call_with_unix_fd_list_finish(
-      proxy, &outlist, result, &error);
+  Scoped<GError> error;
+  Scoped<GUnixFDList> outlist;
+  Scoped<GVariant> variant(g_dbus_proxy_call_with_unix_fd_list_finish(
+      proxy, outlist.receive(), result, error.receive()));
   if (!variant) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    if (g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
     RTC_LOG(LS_ERROR) << "Failed to open the PipeWire remote: "
                       << error->message;
-    g_error_free(error);
     that->portal_init_failed_ = true;
     return;
   }
 
   gint32 index;
-  g_variant_get(variant, "(h)", &index);
+  g_variant_get(variant.get(), "(h)", &index);
 
-  if ((that->pw_fd_ = g_unix_fd_list_get(outlist, index, &error)) == -1) {
+  if ((that->pw_fd_ =
+           g_unix_fd_list_get(outlist.get(), index, error.receive())) == -1) {
     RTC_LOG(LS_ERROR) << "Failed to get file descriptor from the list: "
                       << error->message;
-    g_error_free(error);
-    g_variant_unref(variant);
     that->portal_init_failed_ = true;
     return;
   }
-
-  g_variant_unref(variant);
-  g_object_unref(outlist);
 
   that->InitPipeWire();
 }
@@ -923,10 +1035,7 @@ void BaseCapturerPipeWire::CaptureFrame() {
     return;
   }
 
-  DesktopSize frame_size = desktop_size_;
-  if (video_metadata_use_) {
-    frame_size = video_size_;
-  }
+  DesktopSize frame_size = video_size_;
 
   std::unique_ptr<DesktopFrame> result(new BasicDesktopFrame(frame_size));
   result->CopyPixelsFrom(
@@ -963,21 +1072,10 @@ bool BaseCapturerPipeWire::SelectSource(SourceId id) {
 }
 
 // static
-std::unique_ptr<DesktopCapturer>
-BaseCapturerPipeWire::CreateRawScreenCapturer(
+std::unique_ptr<DesktopCapturer> BaseCapturerPipeWire::CreateRawCapturer(
     const DesktopCaptureOptions& options) {
-  std::unique_ptr<BaseCapturerPipeWire> capturer =
-      std::make_unique<BaseCapturerPipeWire>(BaseCapturerPipeWire::CaptureSourceType::kAny);
-  return std::move(capturer);}
-
-// static
-std::unique_ptr<DesktopCapturer>
-BaseCapturerPipeWire::CreateRawWindowCapturer(
-    const DesktopCaptureOptions& options) {
-
-  std::unique_ptr<BaseCapturerPipeWire> capturer =
-      std::make_unique<BaseCapturerPipeWire>(BaseCapturerPipeWire::CaptureSourceType::kAny);
-  return std::move(capturer);
+  return std::make_unique<BaseCapturerPipeWire>(
+      BaseCapturerPipeWire::CaptureSourceType::kAny);
 }
 
 }  // namespace webrtc
