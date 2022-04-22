@@ -62,6 +62,7 @@
   <div id='div-click-on-demand' onclick="var i=document.createElement('input'); i.type='file'; i.click();" tabindex='1'>foo</div>
   <div id='div-keydown' onkeydown="document.getElementById('by-button').click();" tabindex='1'>foo</div>
   <a id='link-click' href="javascript:document.getElementById('by-button').click();" tabindex='1'>foo</a>
+  <input id='show-picker' type='file'>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -135,6 +136,7 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["div-click-on-demand", 0, undefined, 0],
                 ["div-keydown", 0, undefined, 0],
                 ["link-click", 0, undefined, 0],
+                ["show-picker", 0, undefined, 0],
                ];
 
 var currentTest = 0;
@@ -202,6 +204,9 @@ function launchNextTest() {
     synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]), {});
   } else if (testData[currentTest][0] == 'div-keydown') {
     sendString("a");
+  } else if (testData[currentTest][0] == 'show-picker') {
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    document.getElementById(testData[currentTest][0]).showPicker();
   } else {
     document.getElementById(testData[currentTest][0]).click();
   }
