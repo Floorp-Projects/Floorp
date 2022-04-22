@@ -10,9 +10,9 @@ const OPT_IN_SEARCH_PREFS = [
 ];
 
 const OPT_OUT_SEARCH_PREFS = [
-  ["browser.search.param.google_channel_us", "xus7"],
-  ["browser.search.param.google_channel_row", "xrow7"],
-  ["browser.search.param.bing_ptag", "MOZZ0000000032"],
+  ["browser.search.param.google_channel_us", "tus7"],
+  ["browser.search.param.google_channel_row", "trow7"],
+  ["browser.search.param.bing_ptag", "MOZZ0000000031"],
 ];
 
 add_task(async function test_tcp_action() {
