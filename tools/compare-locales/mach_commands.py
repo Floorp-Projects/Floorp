@@ -180,6 +180,7 @@ def cross_channel(
     strings_path = strings_path.resolve()  # abspath
     if outgoing_path:
         outgoing_path = outgoing_path.resolve()  # abspath
+    get_config = kwargs.get("get_config", None)
     try:
         with tempfile.TemporaryDirectory() as ssh_key_dir:
             retry(
@@ -193,6 +194,7 @@ def cross_channel(
                     ssh_secret,
                     Path(ssh_key_dir),
                     actions,
+                    get_config,
                 ),
             )
     except RetryError as exc:
@@ -206,11 +208,13 @@ def _do_create_content(
     ssh_secret,
     ssh_key_dir,
     actions,
+    get_config,
 ):
-
     from mozxchannel import CrossChannelCreator, get_default_config
 
-    config = get_default_config(Path(command_context.topsrcdir), strings_path)
+    get_config = get_config or get_default_config
+
+    config = get_config(Path(command_context.topsrcdir), strings_path)
     ccc = CrossChannelCreator(config)
     status = 0
     changes = False
