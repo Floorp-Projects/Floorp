@@ -19,6 +19,7 @@ import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.autofill.AutofillConfiguration
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.worker.Frequency
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
@@ -163,11 +164,16 @@ class Components(private val context: Context) {
     val strictMode by lazyMonitored { StrictModeManager(Config, this) }
 
     val wallpaperManager by lazyMonitored {
+        val currentLocale = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
+            LocaleManager.getCurrentLocale(context)?.toLanguageTag()
+                ?: LocaleManager.getSystemDefault().toLanguageTag()
+        }
         strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             WallpaperManager(
                 settings,
                 WallpaperDownloader(context, core.client),
-                WallpaperFileManager(context.filesDir)
+                WallpaperFileManager(context.filesDir),
+                currentLocale
             )
         }
     }

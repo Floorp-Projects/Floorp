@@ -32,11 +32,14 @@ class WallpaperManager(
     private val settings: Settings,
     private val downloader: WallpaperDownloader,
     private val fileManager: WallpaperFileManager,
+    private val currentLocale: String,
     allWallpapers: List<Wallpaper> = availableWallpapers
 ) {
     val logger = Logger("WallpaperManager")
 
-    val wallpapers = allWallpapers.filter(::filterExpiredRemoteWallpapers)
+    val wallpapers = allWallpapers
+        .filter(::filterExpiredRemoteWallpapers)
+        .filter(::filterPromotionalWallpapers)
 
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
         set(value) {
@@ -103,6 +106,13 @@ class WallpaperManager(
         }
         else -> true
     }
+
+    private fun filterPromotionalWallpapers(wallpaper: Wallpaper): Boolean =
+        if (wallpaper is Wallpaper.Promotional) {
+            wallpaper.isAvailableInLocale(currentLocale)
+        } else {
+            true
+        }
 
     private fun getCurrentWallpaperFromSettings(): Wallpaper {
         val currentWallpaper = settings.currentWallpaper
