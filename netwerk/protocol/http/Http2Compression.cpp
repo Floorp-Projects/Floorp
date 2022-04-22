@@ -323,15 +323,12 @@ void Http2BaseCompressor::DumpState(const char* preamble) {
 void Http2BaseCompressor::SetMaxBufferSizeInternal(uint32_t maxBufferSize) {
   MOZ_ASSERT(maxBufferSize <= mMaxBufferSetting);
 
-  uint32_t removedCount = 0;
-
   LOG(("Http2BaseCompressor::SetMaxBufferSizeInternal %u called",
        maxBufferSize));
 
   while (mHeaderTable.VariableLength() &&
          (mHeaderTable.ByteCount() > maxBufferSize)) {
     mHeaderTable.RemoveElement();
-    ++removedCount;
   }
 
   mMaxBuffer = maxBufferSize;
