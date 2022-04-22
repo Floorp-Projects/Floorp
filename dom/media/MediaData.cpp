@@ -273,6 +273,9 @@ PlanarYCbCrData ConstructPlanarYCbCrData(const VideoInfo& aInfo,
   data.mStereoMode = aInfo.mStereoMode;
   data.mYUVColorSpace = aBuffer.mYUVColorSpace;
   data.mColorDepth = aBuffer.mColorDepth;
+  if (aInfo.mTransferFunction) {
+    data.mTransferFunction = *aInfo.mTransferFunction;
+  }
   data.mColorRange = aBuffer.mColorRange;
   data.mChromaSubsampling = aBuffer.mChromaSubsampling;
   return data;
