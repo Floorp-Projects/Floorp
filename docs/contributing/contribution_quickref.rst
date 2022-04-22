@@ -5,6 +5,8 @@ Some parts of this process, including cloning and compiling, can take a long tim
 If at any point you get stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`__
 in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ channel.
 
+Don’t hesitate to look at the :ref:`Getting Set Up To Work On The Firefox Codebase<Getting Set Up To Work On The Firefox Codebase>` for a more detailed tutorial.
+
 Before you start
 ----------------
 Please register and create your account for

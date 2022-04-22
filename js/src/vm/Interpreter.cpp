@@ -542,27 +542,34 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
   return ok;
 }
 
+// Returns true if the callee needs an outerized |this| object. Outerization
+// means passing the WindowProxy instead of the Window (a GlobalObject) because
+// we must never expose the Window to script. This returns false only for DOM
+// getters or setters.
+static bool CalleeNeedsOuterizedThisObject(const Value& callee) {
+  if (!callee.isObject() || !callee.toObject().is<JSFunction>()) {
+    return true;
+  }
+  JSFunction& fun = callee.toObject().as<JSFunction>();
+  if (!fun.isNativeFun() || !fun.hasJitInfo()) {
+    return true;
+  }
+  return fun.jitInfo()->needsOuterizedThisObject();
+}
+
 static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
                          CallReason reason = CallReason::Call) {
   MOZ_ASSERT(args.array() + args.length() == args.end(),
              "must pass calling arguments to a calling attempt");
 
+#ifdef DEBUG
+  // The caller is responsible for calling GetThisObject if needed.
   if (args.thisv().isObject()) {
-    // We must call the thisValue hook in case we are not called from the
-    // interpreter, where a prior bytecode has computed an appropriate
-    // |this| already.  But don't do that if fval is a DOM function.
-    HandleValue fval = args.calleev();
-    if (!fval.isObject() || !fval.toObject().is<JSFunction>() ||
-        !fval.toObject().as<JSFunction>().isNativeFun() ||
-        !fval.toObject().as<JSFunction>().hasJitInfo() ||
-        fval.toObject()
-            .as<JSFunction>()
-            .jitInfo()
-            ->needsOuterizedThisObject()) {
-      JSObject* thisObj = GetThisObject(&args.thisv().toObject());
-      args.mutableThisv().setObject(*thisObj);
-    }
+    JSObject* thisObj = &args.thisv().toObject();
+    MOZ_ASSERT_IF(CalleeNeedsOuterizedThisObject(args.calleev()),
+                  GetThisObject(thisObj) == thisObj);
   }
+#endif
 
   return InternalCallOrConstruct(cx, args, NO_CONSTRUCT, reason);
 }
@@ -580,6 +587,20 @@ bool js::Call(JSContext* cx, HandleValue fval, HandleValue thisv,
   // shadowing.
   args.CallArgs::setCallee(fval);
   args.CallArgs::setThis(thisv);
+
+  if (thisv.isObject()) {
+    // If |this| is a global object, it might be a Window and in that case we
+    // usually have to pass the WindowProxy instead.
+    JSObject* thisObj = &thisv.toObject();
+    if (thisObj->is<GlobalObject>()) {
+      if (CalleeNeedsOuterizedThisObject(fval)) {
+        args.mutableThisv().setObject(*GetThisObject(thisObj));
+      }
+    } else {
+      // Fast path: we don't have to do anything if the object isn't a global.
+      MOZ_ASSERT(GetThisObject(thisObj) == thisObj);
+    }
+  }
 
   if (!InternalCall(cx, args, reason)) {
     return false;

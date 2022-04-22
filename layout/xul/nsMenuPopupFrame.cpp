@@ -578,11 +578,13 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
   if (aSizedToPopup) {
     prefSize.width = aParentMenu->GetRect().width;
   }
+
   prefSize = XULBoundsCheck(minSize, prefSize, maxSize);
 
+#ifdef MOZ_WAYLAND
   if (IS_WAYLAND_DISPLAY()) {
-    // If prefSize it is not a whole number in css pixels we need round it up
-    // to avoid reflow of the tooltips/popups and putting the text on two lines
+    // If prefSize it is not a whole number in CSS pixels we need round it up to
+    // avoid reflow of the tooltips/popups and putting the text on two lines
     // (usually happens with 200% scale factor and font scale factor <> 1)
     // because GTK thrown away the decimals.
     int32_t appPerCSS = AppUnitsPerCSSPixel();
@@ -592,7 +594,27 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
     if (prefSize.height % appPerCSS > 0) {
       prefSize.height += appPerCSS;
     }
+
+    if (nsIWidget* widget = GetWidget()) {
+      // Shrink the popup down if it's larger than popup size received from
+      // Wayland compositor. We don't know screen size on Wayland so this is the
+      // only info we have there.
+      nsSize waylandSize =
+          LayoutDeviceIntRect::ToAppUnits(widget->GetMoveToRectPopupSize(),
+                                          PresContext()->AppUnitsPerDevPixel());
+      if (waylandSize.width > 0 && prefSize.width > waylandSize.width) {
+        LOG_WAYLAND("Wayland constraint width [%p]:  %d to %d", widget,
+                    prefSize.width, waylandSize.width);
+        prefSize.width = waylandSize.width;
+      }
+      if (waylandSize.height > 0 && prefSize.height > waylandSize.height) {
+        LOG_WAYLAND("Wayland constraint height [%p]:  %d to %d", widget,
+                    prefSize.height, waylandSize.height);
+        prefSize.height = waylandSize.height;
+      }
+    }
   }
+#endif
 
   bool sizeChanged = (mPrefSize != prefSize);
   // if the size changed then set the bounds to be the preferred size, and make
@@ -1562,34 +1584,6 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   }
 
   nscoord oldAlignmentOffset = mAlignmentOffset;
-
-  // Shrink the popup down if it's larger than popup size received from Wayland
-  // compositor. We don't know screen size on Wayland so this is the only info
-  // we have there.
-#ifdef MOZ_WAYLAND
-  if (IS_WAYLAND_DISPLAY()) {
-    if (nsIWidget* widget = GetWidget()) {
-      nsSize prefSize = LayoutDeviceIntRect::ToAppUnits(
-          widget->GetMoveToRectPopupSize(), presContext->AppUnitsPerDevPixel());
-      if (prefSize.width > 0 && mRect.width > prefSize.width) {
-        LOG_WAYLAND(
-            "nsMenuPopupFrame::SetPopupPosition [%p]: MoveToRect change "
-            "width from %d to %d",
-            widget, mRect.width / presContext->AppUnitsPerDevPixel(),
-            prefSize.width / presContext->AppUnitsPerDevPixel());
-        mRect.width = prefSize.width;
-      }
-      if (prefSize.height > 0 && mRect.height > prefSize.height) {
-        LOG_WAYLAND(
-            "nsMenuPopupFrame::SetPopupPosition [%p]: MoveToRect change "
-            "height from %d to %d",
-            widget, mRect.height / presContext->AppUnitsPerDevPixel(),
-            prefSize.height / presContext->AppUnitsPerDevPixel());
-        mRect.height = prefSize.height;
-      }
-    }
-  }
-#endif
 
   // If a panel is being moved or has flip="none", don't constrain or flip it,
   // in order to avoid visual noise when moving windows between screens.
