@@ -14,8 +14,8 @@
 
 #include "js/OffThreadScriptCompilation.h"
 #include "js/SourceText.h"
-#include "js/loader/ScriptLoadRequest.h"
 #include "js/loader/LoadContextBase.h"
+#include "js/loader/ModuleLoadRequest.h"
 
 #include "ScriptLoadContext.h"
 #include "ModuleLoadRequest.h"
