@@ -208,27 +208,4 @@ class SplitView {
       this.removeItem(this._nav.firstChild);
     }
   }
-
-  /**
-   * Set the item's CSS class name.
-   * This sets the class on both the summary and details elements, retaining
-   * any SplitView-specific classes.
-   *
-   * @param DOMElement summary
-   *        Summary element of the item to set.
-   * @param string className
-   *        One or more space-separated CSS classes.
-   */
-  setItemClassName(summary, className) {
-    const binding = bindings.get(summary);
-    let viewSpecific;
-
-    viewSpecific = summary.className.match(/(splitview\-[\w-]+)/g);
-    viewSpecific = viewSpecific ? viewSpecific.join(" ") : "";
-    summary.className = viewSpecific + " " + className;
-
-    viewSpecific = binding._details.className.match(/(splitview\-[\w-]+)/g);
-    viewSpecific = viewSpecific ? viewSpecific.join(" ") : "";
-    binding._details.className = viewSpecific + " " + className;
-  }
 }
