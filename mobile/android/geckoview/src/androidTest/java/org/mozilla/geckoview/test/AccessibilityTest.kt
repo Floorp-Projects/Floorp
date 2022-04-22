@@ -1337,12 +1337,12 @@ class AccessibilityTest : BaseSessionTest() {
         // TODO: Bug 1758540
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
-        testAccessibilityFocusIframe(REMOTE_IFRAME);
+        testIframeTree(REMOTE_IFRAME);
     }
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test fun testLocalIframeTree() {
-        testAccessibilityFocusIframe(LOCAL_IFRAME);
+        testIframeTree(LOCAL_IFRAME);
     }
 
     @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
