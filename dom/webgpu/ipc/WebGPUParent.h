@@ -11,7 +11,8 @@
 #include "WebGPUTypes.h"
 #include "base/timer.h"
 
-namespace mozilla::webgpu {
+namespace mozilla {
+namespace webgpu {
 class ErrorBuffer;
 class PresentationData;
 
@@ -89,11 +90,6 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDevicePopErrorScope(
       RawId aSelfId, DevicePopErrorScopeResolver&& aResolver);
 
-  ipc::IPCResult GetFrontBufferSnapshot(IProtocol* aProtocol,
-                                        const CompositableHandle& aHandle,
-                                        Maybe<Shmem>& aShmem,
-                                        gfx::IntSize& aSize);
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
@@ -113,6 +109,7 @@ class WebGPUParent final : public PWebGPUParent {
   std::unordered_map<uint64_t, ErrorScopeStack> mErrorScopeMap;
 };
 
-}  // namespace mozilla::webgpu
+}  // namespace webgpu
+}  // namespace mozilla
 
 #endif  // WEBGPU_PARENT_H_
