@@ -1588,12 +1588,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   auto snappedTrans = LayerIntPoint::Floor(trans);
   LayerPoint residualOffset = trans - snappedTrans;
 
-  // XXX: we currently compute the paintRect for the entire svg, but if the svg
-  // gets split into multiple groups (blobs), then they will all inherit this
-  // overall size even though they may each be much smaller. This can lead to
-  // allocating much larger textures than necessary in webrender.
-  //
-  // Don't bother fixing this unless we run into this in the real world, though.
   auto layerBounds =
       ScaleToOutsidePixelsOffset(groupBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset);
