@@ -385,6 +385,19 @@ nsBrowserContentHandler.prototype = {
     if (cmdLine.handleFlag("kiosk", false)) {
       gKiosk = true;
     }
+    if (cmdLine.handleFlag("disable-pinch", false)) {
+      let defaults = Services.prefs.getDefaultBranch(null);
+      defaults.setBoolPref("apz.allow_zooming", false);
+      Services.prefs.lockPref("apz.allow_zooming");
+      defaults.setCharPref("browser.gesture.pinch.in", "");
+      Services.prefs.lockPref("browser.gesture.pinch.in");
+      defaults.setCharPref("browser.gesture.pinch.in.shift", "");
+      Services.prefs.lockPref("browser.gesture.pinch.in.shift");
+      defaults.setCharPref("browser.gesture.pinch.out", "");
+      Services.prefs.lockPref("browser.gesture.pinch.out");
+      defaults.setCharPref("browser.gesture.pinch.out.shift", "");
+      Services.prefs.lockPref("browser.gesture.pinch.out.shift");
+    }
     if (cmdLine.handleFlag("browser", false)) {
       openBrowserWindow(cmdLine, gSystemPrincipal);
       cmdLine.preventDefault = true;
@@ -598,7 +611,9 @@ nsBrowserContentHandler.prototype = {
     info += "  --setDefaultBrowser Set this app as the default browser.\n";
     info +=
       "  --first-startup    Run post-install actions before opening a new window.\n";
-    info += "  --kiosk Start the browser in kiosk mode.\n";
+    info += "  --kiosk            Start the browser in kiosk mode.\n";
+    info +=
+      "  --disable-pinch    Disable touch-screen and touch-pad pinch gestures.\n";
     return info;
   },
 

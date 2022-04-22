@@ -624,9 +624,11 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   }
 
   callAsyncFunction(args, callback, requireUserInput) {
+    const context = this.childApiManager.context;
+    const isHandlingUserInput =
+      context.contentWindow?.windowUtils?.isHandlingUserInput;
     if (requireUserInput) {
-      let context = this.childApiManager.context;
-      if (!context.contentWindow.windowUtils.isHandlingUserInput) {
+      if (!isHandlingUserInput) {
         let err = new context.cloneScope.Error(
           `${this.path} may only be called from a user input handler`
         );
@@ -637,7 +639,10 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
       this.path,
       args,
       callback,
-      { alreadyLogged: this.alreadyLogged }
+      {
+        alreadyLogged: this.alreadyLogged,
+        isHandlingUserInput,
+      }
     );
   }
 
@@ -876,9 +881,14 @@ class ChildAPIManager {
     let deferred = PromiseUtils.defer();
     this.callPromises.set(callId, deferred);
 
-    // Any child api that calls into a parent function will have already
-    // logged the api_call.  Flag it so the parent doesn't log again.
-    let { alreadyLogged = true } = options;
+    let {
+      // Any child api that calls into a parent function will have already
+      // logged the api_call.  Flag it so the parent doesn't log again.
+      alreadyLogged = true,
+      // Propagating the isHAndlingUserInput flag to the API call handler
+      // executed on the parent process side.
+      isHandlingUserInput = false,
+    } = options;
 
     // TODO: conduit.queryAPICall()
     this.conduit.sendAPICall({
@@ -886,7 +896,7 @@ class ChildAPIManager {
       callId,
       path,
       args,
-      options: { alreadyLogged },
+      options: { alreadyLogged, isHandlingUserInput },
     });
     return this.context.wrapPromise(deferred.promise, callback);
   }

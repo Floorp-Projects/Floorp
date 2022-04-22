@@ -92,7 +92,7 @@ const PluginManager = {
     }
 
     let { pluginDumpID } = report;
-    CrashSubmit.submit(pluginDumpID, {
+    CrashSubmit.submit(pluginDumpID, CrashSubmit.SUBMITTED_FROM_CRASH_TAB, {
       recordSubmission: true,
       extraExtraKeyVals: keyVals,
     });

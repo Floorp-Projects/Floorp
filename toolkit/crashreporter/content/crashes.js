@@ -150,7 +150,9 @@ function showAppropriateSections() {
 function submitPendingReport(reportId, row, button, buttonText, dateFormatter) {
   button.classList.add("submitting");
   document.getElementById("submitAllUnsubmittedReports").disabled = true;
-  CrashSubmit.submit(reportId, { noThrottle: true })
+  CrashSubmit.submit(reportId, CrashSubmit.SUBMITTED_FROM_ABOUT_CRASHES, {
+    noThrottle: true,
+  })
     .then(
       remoteCrashID => {
         document.getElementById("unsubmitted").removeChild(row);

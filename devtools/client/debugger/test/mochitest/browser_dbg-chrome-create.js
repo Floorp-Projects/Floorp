@@ -65,9 +65,12 @@ add_task(async function() {
 function initChromeDebugger() {
   info("Initializing a chrome debugger process.");
   return new Promise(resolve => {
-    BrowserToolboxLauncher.init(onClose, _process => {
-      info("Browser toolbox process started successfully.");
-      resolve(_process);
+    BrowserToolboxLauncher.init({
+      onClose,
+      onRun: _process => {
+        info("Browser toolbox process started successfully.");
+        resolve(_process);
+      },
     });
   });
 }

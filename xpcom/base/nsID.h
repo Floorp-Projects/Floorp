@@ -135,13 +135,6 @@ typedef nsID nsIID;
 #define REFNSIID const nsIID&
 
 /**
- * Define an IID
- * obsolete - do not use this macro
- */
-
-#define NS_DEFINE_IID(_name, _iidspec) const nsIID _name = _iidspec
-
-/**
  * A macro to build the static const IID accessor method. The Dummy
  * template parameter only exists so that the kIID symbol will be linked
  * properly (weak symbol on linux, gnu_linkonce on mac, multiple-definitions

@@ -159,7 +159,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIAccessiblePivotObserver)
 NS_INTERFACE_MAP_END_INHERITING(HyperTextAccessible)
 
@@ -551,17 +550,6 @@ nsRect DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const {
 
 // DocAccessible protected member
 nsresult DocAccessible::AddEventListeners() {
-  nsCOMPtr<nsIDocShell> docShell(mDocumentNode->GetDocShell());
-
-  // We want to add a command observer only if the document is content and has
-  // an editor.
-  if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-    RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
-    if (commandManager) {
-      commandManager->AddCommandObserver(this, "obs_documentCreated");
-    }
-  }
-
   SelectionMgr()->AddDocSelectionListener(mPresShell);
 
   // Add document observer.
@@ -576,18 +564,6 @@ nsresult DocAccessible::RemoveEventListeners() {
 
   if (mDocumentNode) {
     mDocumentNode->RemoveObserver(this);
-
-    nsCOMPtr<nsIDocShell> docShell(mDocumentNode->GetDocShell());
-    NS_ASSERTION(docShell, "doc should support nsIDocShellTreeItem.");
-
-    if (docShell) {
-      if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-        RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
-        if (commandManager) {
-          commandManager->RemoveCommandObserver(this, "obs_documentCreated");
-        }
-      }
-    }
   }
 
   if (mScrollWatchTimer) {
@@ -682,25 +658,6 @@ std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
   }
 
   return {scrollPoint, scrollRange};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIObserver
-
-NS_IMETHODIMP
-DocAccessible::Observe(nsISupports* aSubject, const char* aTopic,
-                       const char16_t* aData) {
-  if (!nsCRT::strcmp(aTopic, "obs_documentCreated")) {
-    // State editable will now be set, readonly is now clear
-    // Normally we only fire delayed events created from the node, not an
-    // accessible object. See the AccStateChangeEvent constructor for details
-    // about this exceptional case.
-    RefPtr<AccEvent> event =
-        new AccStateChangeEvent(this, states::EDITABLE, true);
-    FireDelayedEvent(event);
-  }
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -904,6 +861,20 @@ void DocAccessible::ContentAppended(nsIContent* aFirstNewContent) {}
 void DocAccessible::ContentStateChanged(dom::Document* aDocument,
                                         nsIContent* aContent,
                                         EventStates aStateMask) {
+  if (aStateMask.HasState(NS_EVENT_STATE_READWRITE) &&
+      aContent == mDocumentNode->GetRootElement()) {
+    // This handles changes to designMode. contentEditable is handled by
+    // LocalAccessible::AttributeChangesState and
+    // LocalAccessible::DOMAttributeChanged.
+    const bool isEditable =
+        aContent->AsElement()->State().HasState(NS_EVENT_STATE_READWRITE);
+    RefPtr<AccEvent> event =
+        new AccStateChangeEvent(this, states::EDITABLE, isEditable);
+    FireDelayedEvent(event);
+    event = new AccStateChangeEvent(this, states::READONLY, !isEditable);
+    FireDelayedEvent(event);
+  }
+
   LocalAccessible* accessible = GetAccessible(aContent);
   if (!accessible) return;
 

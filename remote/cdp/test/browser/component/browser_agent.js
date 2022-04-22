@@ -41,30 +41,6 @@ add_agent_task(async function remoteListeningNotification() {
   is(active, null, "remote-listening observer notified disabled state");
 });
 
-add_agent_task(async function remoteDevToolsActivePortFile() {
-  const portFile = PathUtils.join(PathUtils.profileDir, "DevToolsActivePort");
-
-  const port = getNonAtomicFreePort();
-
-  await RemoteAgent.listen("http://localhost:" + port);
-
-  if (await IOUtils.exists(portFile)) {
-    const buffer = await IOUtils.read(portFile);
-    const lines = new TextDecoder().decode(buffer).split("\n");
-    is(lines.length, 2, "DevToolsActivePort file contains two lines");
-    is(parseInt(lines[0]), port, "DevToolsActivePort file contains port");
-    ok(
-      RemoteAgent.cdp.mainTargetPath.includes(lines[1]),
-      "DevToolsActivePort file contains main target path"
-    );
-  } else {
-    ok(false, "DevToolsActivePort file written");
-  }
-
-  await RemoteAgent.close();
-  ok(!(await IOUtils.exists(portFile)), "DevToolsActivePort file removed");
-});
-
 // TODO(ato): https://bugzil.la/1590829
 add_agent_task(async function listenTakesString() {
   await RemoteAgent.listen("http://localhost:0");
@@ -83,7 +59,7 @@ add_agent_task(async function listenNonURL() {
 
 add_agent_task(async function listenRestrictedToLoopbackDevice() {
   try {
-    await RemoteAgent.listen("http://0.0.0.0:0");
+    await RemoteAgent.listen("http://0.0.0.0:9222");
     fail("listen() did not reject non-loopback device");
   } catch (e) {
     is(e.result, Cr.NS_ERROR_ILLEGAL_VALUE);

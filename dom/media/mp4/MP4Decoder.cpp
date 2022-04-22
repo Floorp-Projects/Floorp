@@ -7,7 +7,9 @@
 #include "MP4Decoder.h"
 #include "H264.h"
 #include "VPXDecoder.h"
-#include "AOMDecoder.h"
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "MP4Demuxer.h"
 #include "MediaContainerType.h"
 #include "PDMFactory.h"

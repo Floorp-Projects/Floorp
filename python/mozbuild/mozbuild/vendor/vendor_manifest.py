@@ -34,12 +34,26 @@ def throwe():
     raise Exception
 
 
+def _replace_in_file(file, pattern, replacement, regex=False):
+    with open(file) as f:
+        contents = f.read()
+
+    if regex:
+        contents = re.sub(pattern, replacement, contents)
+    else:
+        contents = contents.replace(pattern, replacement)
+
+    with open(file, "w") as f:
+        f.write(contents)
+
+
 class VendorManifest(MozbuildObject):
     def should_perform_step(self, step):
         return step not in self.manifest["vendoring"].get("skip-vendoring-steps", [])
 
     def vendor(
         self,
+        command_context,
         yaml_file,
         manifest,
         revision,
@@ -65,17 +79,17 @@ class VendorManifest(MozbuildObject):
         if "vendoring" in self.manifest:
             ref_type = self.manifest["vendoring"]["tracking"]
             if revision == "tip":
-                ref, timestamp = self.source_host.upstream_commit("HEAD")
+                new_revision, timestamp = self.source_host.upstream_commit("HEAD")
             elif ref_type == "tag":
-                ref, timestamp = self.source_host.upstream_tag(revision)
+                new_revision, timestamp = self.source_host.upstream_tag(revision)
             else:
-                ref, timestamp = self.source_host.upstream_commit(revision)
+                new_revision, timestamp = self.source_host.upstream_commit(revision)
         else:
             ref_type = "commit"
-            ref, timestamp = self.source_host.upstream_commit(revision)
+            new_revision, timestamp = self.source_host.upstream_commit(revision)
 
         self.logInfo(
-            {"ref_type": ref_type, "ref": ref, "timestamp": timestamp},
+            {"ref_type": ref_type, "ref": new_revision, "timestamp": timestamp},
             "Latest {ref_type} is {ref} from {timestamp}",
         )
 
@@ -88,23 +102,58 @@ class VendorManifest(MozbuildObject):
             )
             return
 
-        if not force and self.manifest["origin"]["revision"] == ref:
+        if not force and self.manifest["origin"]["revision"] == new_revision:
             # We're up to date, don't do anything
             self.logInfo({}, "Latest upstream matches in-tree.")
             return
         elif check_for_update:
             # Only print the new revision to stdout
-            print("%s %s" % (ref, timestamp))
+            print("%s %s" % (new_revision, timestamp))
             return
 
+        flavor = self.manifest["vendoring"].get("flavor", "regular")
+        if flavor == "regular":
+            self.process_regular(
+                new_revision, timestamp, ignore_modified, add_to_exports
+            )
+        elif flavor == "rust":
+            self.process_rust(
+                command_context,
+                self.manifest["origin"]["revision"],
+                new_revision,
+                timestamp,
+                ignore_modified,
+            )
+        else:
+            raise Exception("Unknown flavor")
+
+    def process_rust(
+        self, command_context, old_revision, new_revision, timestamp, ignore_modified
+    ):
+        # First update the Cargo.toml
+        cargo_file = os.path.join(os.path.dirname(self.yaml_file), "Cargo.toml")
+        _replace_in_file(cargo_file, old_revision, new_revision)
+
+        # Then call ./mach vendor rust
+        from mozbuild.vendor.vendor_rust import VendorRust
+
+        vendor_command = command_context._spawn(VendorRust)
+        vendor_command.vendor(
+            ignore_modified=True, build_peers_said_large_imports_were_ok=False
+        )
+
+        self.update_yaml(new_revision, timestamp)
+
+    def process_regular(self, new_revision, timestamp, ignore_modified, add_to_exports):
+
         if self.should_perform_step("fetch"):
-            self.fetch_and_unpack(ref)
+            self.fetch_and_unpack(new_revision)
         else:
             self.logInfo({}, "Skipping fetching upstream source.")
 
         if self.should_perform_step("update-actions"):
             self.logInfo({}, "Updating files")
-            self.update_files(ref)
+            self.update_files(new_revision)
         else:
             self.logInfo({}, "Skipping running the update actions.")
 
@@ -119,13 +168,13 @@ class VendorManifest(MozbuildObject):
 
         if self.should_perform_step("spurious-check"):
             self.logInfo({}, "Checking for a spurious update.")
-            self.spurious_check(revision, ignore_modified)
+            self.spurious_check(new_revision, ignore_modified)
         else:
             self.logInfo({}, "Skipping the spurious update check.")
 
         if self.should_perform_step("update-moz-yaml"):
             self.logInfo({}, "Updating moz.yaml.")
-            self.update_yaml(ref, timestamp)
+            self.update_yaml(new_revision, timestamp)
         else:
             self.logInfo({}, "Skipping updating the moz.yaml file.")
 
@@ -139,7 +188,7 @@ class VendorManifest(MozbuildObject):
         else:
             self.logInfo({}, "Skipping update of moz.build files")
 
-        self.logInfo({"rev": revision}, "Updated to '{rev}'.")
+        self.logInfo({"rev": new_revision}, "Updated to '{rev}'.")
 
         if "patches" in self.manifest["vendoring"]:
             # Remind the user
@@ -449,17 +498,13 @@ class VendorManifest(MozbuildObject):
 
                 self.logInfo({"file": file}, "action: replace-in-file file: {file}")
 
-                with open(file) as f:
-                    contents = f.read()
-
                 replacement = update["with"].replace("{revision}", revision)
-                if update["action"] == "replace-in-file":
-                    contents = contents.replace(update["pattern"], replacement)
-                else:
-                    contents = re.sub(update["pattern"], replacement, contents)
-
-                with open(file, "w") as f:
-                    f.write(contents)
+                _replace_in_file(
+                    file,
+                    pattern,
+                    replacement,
+                    regex=update["action"] == "replace-in-file",
+                )
             elif update["action"] == "delete-path":
                 path = self.get_full_path(update["path"])
                 self.logInfo({"path": path}, "action: delete-path path: {path}")

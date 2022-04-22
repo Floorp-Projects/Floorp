@@ -38,9 +38,9 @@ add_task(async function test_getIdForBrowsingContext() {
     mockBrowsingContext.id
   );
 
-  // Top-level browsing context.
+  const browser = mockTopBrowsingContext.embedderElement;
   equal(
     TabManager.getIdForBrowsingContext(mockTopBrowsingContext),
-    TabManager.getBrowserIdForBrowsingContext(mockTopBrowsingContext)
+    TabManager.getIdForBrowser(browser)
   );
 });

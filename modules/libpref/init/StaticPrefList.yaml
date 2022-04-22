@@ -2146,6 +2146,12 @@
   value: true
   mirror: always
 
+# Whether the scheduler interface will be exposed
+- name: dom.enable_web_task_scheduling
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # If this is true, it's allowed to fire "cut", "copy" and "paste" events.
 # Additionally, "input" events may expose clipboard content when inputType
 # is "insertFromPaste" or something.
@@ -6832,7 +6838,7 @@
   # Changing these prefs requires a restart.
 -   name: javascript.options.wasm_simd_avx
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
 #endif
 #endif

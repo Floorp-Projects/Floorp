@@ -412,7 +412,10 @@ var TabCrashHandler = {
         popup: null,
         callback: async () => {
           if (dumpID) {
-            UnsubmittedCrashHandler.submitReports([dumpID]);
+            UnsubmittedCrashHandler.submitReports(
+              [dumpID],
+              CrashSubmit.SUBMITTED_FROM_CRASH_TAB
+            );
           }
           closeAllNotifications();
         },
@@ -487,7 +490,10 @@ var TabCrashHandler = {
       if (UnsubmittedCrashHandler.autoSubmit) {
         let dumpID = this.childMap.get(childID);
         if (dumpID) {
-          UnsubmittedCrashHandler.submitReports([dumpID]);
+          UnsubmittedCrashHandler.submitReports(
+            [dumpID],
+            CrashSubmit.SUBMITTED_FROM_AUTO
+          );
         }
       } else {
         this.sendToTabCrashedPage(browser);
@@ -624,7 +630,7 @@ var TabCrashHandler = {
       extraExtraKeyVals.URL = "";
     }
 
-    CrashSubmit.submit(dumpID, {
+    CrashSubmit.submit(dumpID, CrashSubmit.SUBMITTED_FROM_CRASH_TAB, {
       recordSubmission: true,
       extraExtraKeyVals,
     }).catch(Cu.reportError);
@@ -890,7 +896,7 @@ var UnsubmittedCrashHandler = {
 
     if (reportIDs.length) {
       if (this.autoSubmit) {
-        this.submitReports(reportIDs);
+        this.submitReports(reportIDs, CrashSubmit.SUBMITTED_FROM_AUTO);
       } else if (this.shouldShowPendingSubmissionsNotification()) {
         return this.showPendingSubmissionsNotification(reportIDs);
       }
@@ -1050,7 +1056,7 @@ var UnsubmittedCrashHandler = {
       {
         label: gNavigatorBundle.GetStringFromName("pendingCrashReports.send"),
         callback: () => {
-          this.submitReports(reportIDs);
+          this.submitReports(reportIDs, CrashSubmit.SUBMITTED_FROM_INFOBAR);
           if (onAction) {
             onAction();
           }
@@ -1062,7 +1068,7 @@ var UnsubmittedCrashHandler = {
         ),
         callback: () => {
           this.autoSubmit = true;
-          this.submitReports(reportIDs);
+          this.submitReports(reportIDs, CrashSubmit.SUBMITTED_FROM_INFOBAR);
           if (onAction) {
             onAction();
           }
@@ -1120,20 +1126,17 @@ var UnsubmittedCrashHandler = {
   },
 
   /**
-   * Attempt to submit reports to the crash report server. Each
-   * report will have the "SubmittedFromInfobar" annotation set
-   * to "1".
+   * Attempt to submit reports to the crash report server.
    *
    * @param reportIDs (Array<string>)
    *        The array of reportIDs to submit.
+   * @param submittedFrom (string)
+   *        One of the CrashSubmit.SUBMITTED_FROM_* constants representing
+   *        how this crash was submitted.
    */
-  submitReports(reportIDs) {
+  submitReports(reportIDs, submittedFrom) {
     for (let reportID of reportIDs) {
-      CrashSubmit.submit(reportID, {
-        extraExtraKeyVals: {
-          SubmittedFromInfobar: "1",
-        },
-      }).catch(Cu.reportError);
+      CrashSubmit.submit(reportID, submittedFrom).catch(Cu.reportError);
     }
   },
 };

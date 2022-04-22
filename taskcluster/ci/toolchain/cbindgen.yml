@@ -17,7 +17,7 @@ job-defaults:
         fetch:
             # If you update this, make sure to update the minimum version in
             # build/moz.configure/bindgen.configure as well.
-            - cbindgen-0.22.0
+            - cbindgen-0.23.0
 
 linux64-cbindgen:
     treeherder:
@@ -29,7 +29,7 @@ linux64-cbindgen:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-rust-1.57
+            - linux64-rust-toolchain
             - sysroot-x86_64-linux-gnu
 
 macosx64-cbindgen:
@@ -41,7 +41,7 @@ macosx64-cbindgen:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-toolchain
-            - linux64-rust-macos-1.57
+            - linux64-rust-macos-toolchain
             - macosx64-sdk-11.0
 
 macosx64-aarch64-cbindgen:
@@ -53,7 +53,7 @@ macosx64-aarch64-cbindgen:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-toolchain
-            - linux64-rust-macos-1.57
+            - linux64-rust-macos-toolchain
             - macosx64-sdk-11.0
 
 win64-cbindgen:
@@ -64,5 +64,5 @@ win64-cbindgen:
         arguments: ['x86_64-pc-windows-msvc']
     fetches:
         toolchain:
-            - win64-rust-1.57
+            - win64-rust-toolchain
             - win64-vs2017

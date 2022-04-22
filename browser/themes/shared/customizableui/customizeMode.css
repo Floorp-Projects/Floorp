@@ -21,14 +21,19 @@
 }
 
 #customization-container {
-  background-color: var(--toolbar-bgcolor);
-  background-image: var(--toolbar-bgimage);
+  background-color: var(--toolbar-non-lwt-bgcolor);
+  background-image: var(--toolbar-non-lwt-bgimage);
   color: var(--toolbar-color);
 }
 
+#customization-container:-moz-lwtheme {
+  /* Ensure this displays on top of the non-lwt bgcolor, to make sure it's not
+   * semi-transparent */
+  background-image: var(--toolbar-bgimage), linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
+}
+
 :root[lwtheme-image] #customization-container {
-  background-color: transparent;
-  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-non-lwt-bgcolor) 45px);
+  background-image: none;
   color: var(--toolbar-non-lwt-textcolor);
   text-shadow: none;
 }
@@ -45,12 +50,6 @@
   font-weight: 600;
   font-size: 1.2em;
   margin: 20px 20px 15px;
-}
-
-:root[lwtheme-image] #customization-header {
-  text-shadow: 0 0 1em var(--toolbar-non-lwt-bgcolor),
-               0 0 1em var(--toolbar-non-lwt-bgcolor),
-               0 0 .5em var(--toolbar-non-lwt-bgcolor);
 }
 
 #customization-panel-container {
