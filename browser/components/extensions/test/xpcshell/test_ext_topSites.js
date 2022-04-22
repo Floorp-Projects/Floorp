@@ -75,12 +75,7 @@ add_task(async function test_topSites() {
     },
     background() {
       browser.test.onMessage.addListener(async options => {
-        let sites;
-        if (typeof options !== undefined) {
-          sites = await browser.topSites.get(options);
-        } else {
-          sites = await browser.topSites.get();
-        }
+        let sites = await browser.topSites.get(options);
         browser.test.sendMessage("sites", sites);
       });
     },
@@ -224,12 +219,7 @@ add_task(async function test_topSites_complete() {
     },
     background() {
       browser.test.onMessage.addListener(async options => {
-        let sites;
-        if (typeof options !== undefined) {
-          sites = await browser.topSites.get(options);
-        } else {
-          sites = await browser.topSites.get();
-        }
+        let sites = await browser.topSites.get(options);
         browser.test.sendMessage("sites", sites);
       });
     },
