@@ -156,8 +156,10 @@ static void dumbUpDownMix(TYPE* aOut, int32_t aOutChannels, const TYPE* aIn,
     for (int32_t j = 0; j < commonChannels; j++) {
       aOut[i * aOutChannels + j] = aIn[i * aInChannels + j];
     }
-    for (int32_t j = 0; j < aInChannels - aOutChannels; j++) {
-      aOut[i * aOutChannels + j] = 0;
+    if (aOutChannels > aInChannels) {
+      for (int32_t j = 0; j < aInChannels - aOutChannels; j++) {
+        aOut[i * aOutChannels + j] = 0;
+      }
     }
   }
 }
