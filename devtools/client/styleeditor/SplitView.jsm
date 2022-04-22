@@ -78,7 +78,7 @@ class SplitView {
       }
       if (newFocusOrdinal !== undefined) {
         event.stopPropagation();
-        const el = this.getSummaryElementByOrdinal(newFocusOrdinal);
+        const el = this.#getSummaryElementByOrdinal(newFocusOrdinal);
         if (el) {
           el.focus();
         }
@@ -151,7 +151,7 @@ class SplitView {
    *         Summary element with given ordinal or null if not found.
    * @see appendItem
    */
-  getSummaryElementByOrdinal(ordinal) {
+  #getSummaryElementByOrdinal(ordinal) {
     return this._nav.querySelector("* > li[data-ordinal='" + ordinal + "']");
   }
 
