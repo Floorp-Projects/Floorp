@@ -880,6 +880,7 @@ STATIC_ATOMS = [
     Atom("onpopupshowing", "onpopupshowing"),
     Atom("onpopupshown", "onpopupshown"),
     Atom("onprocessorerror", "onprocessorerror"),
+    Atom("onprioritychange", "onprioritychange"),
     Atom("onpush", "onpush"),
     Atom("onpushsubscriptionchange", "onpushsubscriptionchange"),
     Atom("onRadioStateChange", "onRadioStateChange"),

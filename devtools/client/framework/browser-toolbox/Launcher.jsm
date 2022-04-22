@@ -44,10 +44,13 @@ XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
 });
 
 const Services = require("Services");
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 const EXPORTED_SYMBOLS = ["BrowserToolboxLauncher"];
 
-var processes = new Set();
+const processes = new Set();
 
 /**
  * Constructor for creating a process that will hold a chrome toolbox.
@@ -60,12 +63,7 @@ var processes = new Set();
  *        Set to force overwriting the toolbox profile's preferences with the
  *        current set of preferences.
  */
-function BrowserToolboxLauncher(
-  onClose,
-  onRun,
-  overwritePreferences,
-  binaryPath
-) {
+function BrowserToolboxLauncher(onClose, onRun, overwritePreferences) {
   const emitter = new EventEmitter();
   this.on = emitter.on.bind(emitter);
   this.off = emitter.off.bind(emitter);
@@ -89,7 +87,7 @@ function BrowserToolboxLauncher(
   Services.obs.addObserver(this.close, "quit-application");
   this._initServer();
   this._initProfile(overwritePreferences);
-  this._create(binaryPath);
+  this._create();
 
   processes.add(this);
 }
@@ -98,14 +96,14 @@ EventEmitter.decorate(BrowserToolboxLauncher);
 
 /**
  * Initializes and starts a chrome toolbox process.
- * @return object
+ *
+ * See BrowserToolboxLauncher jsdoc for the arguments.
  */
-BrowserToolboxLauncher.init = function(
+BrowserToolboxLauncher.init = function({
   onClose,
   onRun,
   overwritePreferences,
-  binaryPath
-) {
+} = {}) {
   if (
     !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
     !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
@@ -113,12 +111,7 @@ BrowserToolboxLauncher.init = function(
     console.error("Could not start Browser Toolbox, you need to enable it.");
     return null;
   }
-  return new BrowserToolboxLauncher(
-    onClose,
-    onRun,
-    overwritePreferences,
-    binaryPath
-  );
+  return new BrowserToolboxLauncher(onClose, onRun, overwritePreferences);
 };
 
 /**
@@ -275,14 +268,20 @@ BrowserToolboxLauncher.prototype = {
   /**
    * Creates and initializes the profile & process for the remote debugger.
    */
-  _create: function(binaryPath) {
+  _create: function() {
     dumpn("Initializing chrome debugging process.");
 
     let command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
     let profilePath = this._dbgProfilePath;
 
-    if (binaryPath) {
-      command = binaryPath;
+    // MOZ_BROWSER_TOOLBOX_BINARY is an absolute file path to a custom firefox binary.
+    // This is especially useful when debugging debug builds which are really slow
+    // so that you could pass an optimized build for the browser toolbox.
+    // This is also useful when debugging a patch that break devtools,
+    // so that you could use a build that works for the browser toolbox.
+    const customBinaryPath = env.get("MOZ_BROWSER_TOOLBOX_BINARY");
+    if (customBinaryPath) {
+      command = customBinaryPath;
       profilePath = FileUtils.getDir("TmpD", ["browserToolboxProfile"], true)
         .path;
     }
@@ -304,9 +303,6 @@ BrowserToolboxLauncher.prototype = {
     const isInputContextEnabled = Services.prefs.getBoolPref(
       "devtools.webconsole.input.context",
       false
-    );
-    const env = Cc["@mozilla.org/process/environment;1"].getService(
-      Ci.nsIEnvironment
     );
     const environment = {
       // Allow recording the startup of the browser toolbox when setting

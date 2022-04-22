@@ -15,7 +15,6 @@
 #include "nsTHashMap.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIDocumentObserver.h"
-#include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsTHashSet.h"
 #include "nsWeakReference.h"
@@ -44,13 +43,11 @@ class TNotification;
 
 class DocAccessible : public HyperTextAccessibleWrap,
                       public nsIDocumentObserver,
-                      public nsIObserver,
                       public nsSupportsWeakReference,
                       public nsIAccessiblePivotObserver {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocAccessible, LocalAccessible)
 
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSIACCESSIBLEPIVOTOBSERVER
 
  protected:

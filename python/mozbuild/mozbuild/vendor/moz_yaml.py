@@ -132,6 +132,9 @@ updatebot:
     - type: vendoring
       branch: master
       enabled: False
+
+      # frequency can be 'every', 'release', 'N weeks', 'N commits'
+      # or 'N weeks, M commits' requiring satisfying both constraints.
       frequency: 2 weeks
 
 # Configuration for the automated vendoring system.
@@ -147,6 +150,10 @@ vendoring:
   # Type of hosting for the upstream repository
   # Valid values are 'gitlab', 'github', googlesource
   source-hosting: gitlab
+
+  # Type of Vendoring
+  # This is either 'rust' or 'regular'
+  flavor: rust
 
   # Type of git reference (commit, tag) to track updates from.
   # If omitted, will default to tracking commits.
@@ -417,7 +424,10 @@ def _schema_1():
                                 msg="Invalid filter value specified in tasks",
                             ),
                             "source-extensions": Unique([str]),
-                            "frequency": Match(r"^(every|release|[1-9][0-9]* weeks?)$"),
+                            "frequency": Match(
+                                r"^(every|release|[1-9][0-9]* weeks?|[1-9][0-9]* commits?|"
+                                + r"[1-9][0-9]* weeks?, ?[1-9][0-9]* commits?)$"
+                            ),
                             "platform": Match(r"^(windows|linux)$"),
                         }
                     ],
@@ -431,6 +441,7 @@ def _schema_1():
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
                 "tracking": All(str, Length(min=1)),
+                "flavor": Match(r"^(regular|rust)$"),
                 "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),

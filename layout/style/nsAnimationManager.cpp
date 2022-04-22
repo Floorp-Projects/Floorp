@@ -205,8 +205,6 @@ static void UpdateOldAnimationPropertiesWithNew(
   }
 }
 
-// FIXME: Bug 1737918: Update the syntax of animation-timeline, and null
-// timeline may be obsolete.
 static already_AddRefed<dom::AnimationTimeline> GetTimeline(
     const StyleAnimationTimeline& aStyleTimeline, nsPresContext* aPresContext,
     const NonOwningAnimationTarget& aTarget) {
@@ -227,6 +225,12 @@ static already_AddRefed<dom::AnimationTimeline> GetTimeline(
         // Unknown timeline, so treat is as no timeline.
         // Keep nullptr.
       }
+      break;
+    }
+    case StyleAnimationTimeline::Tag::Scroll: {
+      const auto& scroll = aStyleTimeline.AsScroll();
+      timeline = ScrollTimeline::FromAnonymousScroll(
+          aPresContext->Document(), aTarget, scroll._0, scroll._1);
       break;
     }
     case StyleAnimationTimeline::Tag::None:

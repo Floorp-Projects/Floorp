@@ -69,7 +69,7 @@ async function initBrowserToolboxTask({
   let process;
   if (!existingProcessClose) {
     process = await new Promise(onRun => {
-      BrowserToolboxLauncher.init(null, onRun, /* overwritePreferences */ true);
+      BrowserToolboxLauncher.init({ onRun, overwritePreferences: true });
     });
     ok(true, "Browser toolbox started");
     is(

@@ -280,6 +280,7 @@ var DownloadsPanel = {
       case "mousemove":
         if (
           !DownloadsView.contextMenuOpen &&
+          !DownloadsView.subViewOpen &&
           this.panel.contains(document.activeElement)
         ) {
           // Let mouse movement remove focus rings and reset focus in the panel.

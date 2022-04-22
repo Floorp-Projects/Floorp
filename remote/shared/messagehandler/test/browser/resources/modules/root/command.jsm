@@ -46,6 +46,16 @@ class CommandModule extends Module {
   testRootModule() {
     return "root-value";
   }
+
+  testMissingIntermediaryMethod(params, destination) {
+    // Spawn a new internal command, but with a commandName which doesn't match
+    // any method.
+    return this.messageHandler.handleCommand({
+      moduleName: "command",
+      commandName: "missingMethod",
+      destination,
+    });
+  }
 }
 
 const command = CommandModule;

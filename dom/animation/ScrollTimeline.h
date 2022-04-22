@@ -65,25 +65,22 @@ class Element;
 class ScrollTimeline final : public AnimationTimeline {
  public:
   struct Scroller {
-    // FIXME: Support nearest and replace auto with root in Bug 1737918.
-    enum class Type : uint8_t {
-      // For auto. Should be scrolling element of the owner doc.
-      Auto,
-      // For any other specific elements.
-      Other,
-    };
-    Type mType = Type::Auto;
+    StyleScroller mType = StyleScroller::Root;
     RefPtr<Element> mElement;
 
     // We use the owner doc of the animation target. This may be different from
     // |mDocument| after we implement ScrollTimeline interface for script.
-    static Scroller Auto(const Document* aOwnerDoc) {
+    static Scroller Root(const Document* aOwnerDoc) {
       // For auto, we use scrolling element as the default scroller.
       // However, it's mutable, and we would like to keep things simple, so
       // we always register the ScrollTimeline to the document element (i.e.
       // root element) because the content of the root scroll frame is the root
       // element.
-      return {Type::Auto, aOwnerDoc->GetDocumentElement()};
+      return {StyleScroller::Root, aOwnerDoc->GetDocumentElement()};
+    }
+
+    static Scroller Nearest(Element* aElement) {
+      return {StyleScroller::Nearest, aElement};
     }
 
     explicit operator bool() const { return mElement; }
@@ -92,14 +89,17 @@ class ScrollTimeline final : public AnimationTimeline {
     }
   };
 
-  // FIXME: Bug 1737918: Rewrite this because @scroll-timeline will be obsolete.
   static already_AddRefed<ScrollTimeline> FromRule(
       const RawServoScrollTimelineRule& aRule, Document* aDocument,
       const NonOwningAnimationTarget& aTarget);
 
+  static already_AddRefed<ScrollTimeline> FromAnonymousScroll(
+      Document* aDocument, const NonOwningAnimationTarget& aTarget,
+      StyleScrollAxis aAxis, StyleScroller aScroller);
+
   bool operator==(const ScrollTimeline& aOther) const {
     return mDocument == aOther.mDocument && mSource == aOther.mSource &&
-           mDirection == aOther.mDirection;
+           mAxis == aOther.mAxis;
   }
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -154,11 +154,6 @@ class ScrollTimeline final : public AnimationTimeline {
   }
 
   // A helper to get the physical orientation of this scroll-timeline.
-  //
-  // The spec defines auto, but there is a spec issue:
-  // "ISSUE 5 Define these values." in this section. The DOM interface removed
-  // auto and use block as default value, so we treat auto as block now.
-  // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
   layers::ScrollDirection Axis() const;
 
   StyleOverflow SourceScrollStyle() const;
@@ -175,7 +170,7 @@ class ScrollTimeline final : public AnimationTimeline {
  private:
   ScrollTimeline() = delete;
   ScrollTimeline(Document* aDocument, const Scroller& aScroller,
-                 StyleScrollDirection aDirection);
+                 StyleScrollAxis aAxis);
 
   // Note: This function is required to be idempotent, as it can be called from
   // both cycleCollection::Unlink() and ~ScrollTimeline(). When modifying this
@@ -189,14 +184,11 @@ class ScrollTimeline final : public AnimationTimeline {
 
   RefPtr<Document> mDocument;
 
-  // FIXME: Bug 1733260: new spec proposal uses a new way to define scroller,
-  // and move the element-based offset into view-timeline, so here we only
-  // implement the default behavior of scroll timeline:
-  // 1. "source" is auto (use scrolling element), and
-  // 2. "scroll-offsets" is none (i.e. always 0% ~ 100%).
-  // So now we will only use the scroll direction from @scroll-timeline rule.
+  // FIXME: Bug 1765211: We may have to update the source element once the
+  // overflow property of the scroll-container is updated when we are using
+  // nearest scroller.
   Scroller mSource;
-  StyleScrollDirection mDirection;
+  StyleScrollAxis mAxis;
 
   // Note: it's unfortunate TimingParams cannot be a const variable because
   // we have to use StickyTimingDuration::FromMilliseconds() in its
@@ -220,16 +212,15 @@ class ScrollTimeline final : public AnimationTimeline {
  */
 class ScrollTimelineSet {
  public:
-  // Use StyleScrollDirection as the key, so we reuse the ScrollTimeline with
-  // the same source and the same direction.
+  // Use StyleScrollAxis as the key, so we reuse the ScrollTimeline with the
+  // same source and the same direction.
   // Note: the drawback of using the direction as the key is that we have to
   // update this once we support more descriptors. This implementation assumes
   // scroll-offsets will be obsolute. However, I'm pretty sure @scroll-timeline
   // will be obsolute, based on the spec issue. We may have to do a lot of
   // updates after the spec updates, so this tentative implmentation should be
   // enough for now.
-  using NonOwningScrollTimelineMap =
-      HashMap<StyleScrollDirection, ScrollTimeline*>;
+  using NonOwningScrollTimelineMap = HashMap<StyleScrollAxis, ScrollTimeline*>;
 
   ~ScrollTimelineSet() = default;
 
@@ -237,14 +228,14 @@ class ScrollTimelineSet {
   static ScrollTimelineSet* GetOrCreateScrollTimelineSet(Element* aElement);
   static void DestroyScrollTimelineSet(Element* aElement);
 
-  NonOwningScrollTimelineMap::AddPtr LookupForAdd(StyleScrollDirection aKey) {
+  NonOwningScrollTimelineMap::AddPtr LookupForAdd(StyleScrollAxis aKey) {
     return mScrollTimelines.lookupForAdd(aKey);
   }
-  void Add(NonOwningScrollTimelineMap::AddPtr& aPtr, StyleScrollDirection aKey,
+  void Add(NonOwningScrollTimelineMap::AddPtr& aPtr, StyleScrollAxis aKey,
            ScrollTimeline* aScrollTimeline) {
     Unused << mScrollTimelines.add(aPtr, aKey, aScrollTimeline);
   }
-  void Remove(StyleScrollDirection aKey) { mScrollTimelines.remove(aKey); }
+  void Remove(StyleScrollAxis aKey) { mScrollTimelines.remove(aKey); }
 
   bool IsEmpty() const { return mScrollTimelines.empty(); }
 

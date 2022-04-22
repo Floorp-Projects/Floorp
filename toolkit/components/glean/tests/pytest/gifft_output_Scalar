@@ -11,6 +11,7 @@
 #include "mozilla/DataMutex.h"
 #include "mozilla/Tuple.h"
 #include "nsClassHashtable.h"
+#include "nsIThread.h"
 #include "nsTHashMap.h"
 #include "nsThreadUtils.h"
 
@@ -36,6 +37,11 @@ static inline Maybe<SubmetricToMirrorMutex::AutoLock> GetLabeledMirrorLock() {
   if (!*lock) {
     *lock = MakeUnique<SubmetricToLabeledMirrorMapType>();
     RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+        auto lock = sLabeledMirrors.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+        return;
+      }
       RunOnShutdown([&] {
         auto lock = sLabeledMirrors.Lock();
         *lock = nullptr;  // deletes, see UniquePtr.h
@@ -45,10 +51,15 @@ static inline Maybe<SubmetricToMirrorMutex::AutoLock> GetLabeledMirrorLock() {
     // In that event we leak. Grab a pointer so we have something to NS_RELEASE
     // in that case.
     nsIRunnable* temp = cleanupFn.get();
-    if (NS_FAILED(NS_DispatchToMainThread(cleanupFn.forget()))) {
+    nsCOMPtr<nsIThread> mainThread;
+    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread)))
+      || NS_FAILED(mainThread->Dispatch(cleanupFn.forget(), nsIThread::DISPATCH_NORMAL))
+    ) {
       // Failed to dispatch cleanup routine.
-      // First, un-leak the runnable:
-      NS_RELEASE(temp);
+      // First, un-leak the runnable (but only if we actually attempted dispatch)
+      if (!cleanupFn) {
+        NS_RELEASE(temp);
+      }
       // Next, cleanup immediately, and allow metrics to try again later.
       *lock = nullptr;
       return Nothing();
@@ -92,6 +103,11 @@ static inline Maybe<TimesToStartsMutex::AutoLock> GetTimesToStartsLock() {
   if (!*lock) {
     *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
     RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+        auto lock = sTimespanStarts.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+        return;
+      }
       RunOnShutdown([&] {
         auto lock = sTimespanStarts.Lock();
         *lock = nullptr;  // deletes, see UniquePtr.h
@@ -101,10 +117,15 @@ static inline Maybe<TimesToStartsMutex::AutoLock> GetTimesToStartsLock() {
     // In that event we leak. Grab a pointer so we have something to NS_RELEASE
     // in that case.
     nsIRunnable* temp = cleanupFn.get();
-    if (NS_FAILED(NS_DispatchToMainThread(cleanupFn.forget()))) {
+    nsCOMPtr<nsIThread> mainThread;
+    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread)))
+      || NS_FAILED(mainThread->Dispatch(cleanupFn.forget(), nsIThread::DISPATCH_NORMAL))
+    ) {
       // Failed to dispatch cleanup routine.
-      // First, un-leak the runnable:
-      NS_RELEASE(temp);
+      // First, un-leak the runnable (but only if we actually attempted dispatch)
+      if (!cleanupFn) {
+        NS_RELEASE(temp);
+      }
       // Next, cleanup immediately, and allow metrics to try again later.
       *lock = nullptr;
       return Nothing();

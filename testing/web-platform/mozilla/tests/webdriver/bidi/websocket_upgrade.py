@@ -52,7 +52,7 @@ from support.network import websocket_request, get_host
 )
 def test_host_header(browser, hostname, port_type, status):
     # Request a default browser
-    current_browser = browser(extra_args=["--remote-debugging-port"])
+    current_browser = browser(use_bidi=True)
     server_port = current_browser.remote_agent_port
     test_host = get_host(port_type, hostname, server_port)
 
@@ -102,7 +102,8 @@ def test_host_header(browser, hostname, port_type, status):
 def test_allowed_hosts(browser, hostname, port_type, status):
     # Request a browser with custom allowed hosts.
     current_browser = browser(
-        extra_args=["--remote-debugging-port", "--remote-allow-hosts", "testhost"]
+        use_bidi=True,
+        extra_args=["--remote-allow-hosts", "testhost"],
     )
     server_port = current_browser.remote_agent_port
     test_host = get_host(port_type, hostname, server_port)
@@ -122,7 +123,7 @@ def test_allowed_hosts(browser, hostname, port_type, status):
 )
 def test_origin_header(browser, origin, status):
     # Request a default browser.
-    current_browser = browser(extra_args=["--remote-debugging-port"])
+    current_browser = browser(use_bidi=True)
     server_port = current_browser.remote_agent_port
     response = websocket_request(server_port, origin=origin)
     assert response.status == status
@@ -141,11 +142,8 @@ def test_origin_header(browser, origin, status):
 def test_allowed_origins(browser, origin, status):
     # Request a browser with custom allowed origins.
     current_browser = browser(
-        extra_args=[
-            "--remote-debugging-port",
-            "--remote-allow-origins",
-            "http://localhost:1234",
-        ]
+        use_bidi=True,
+        extra_args=["--remote-allow-origins", "http://localhost:1234"],
     )
     server_port = current_browser.remote_agent_port
     response = websocket_request(server_port, origin=origin)

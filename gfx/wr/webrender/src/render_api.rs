@@ -1254,9 +1254,11 @@ impl RenderApi {
                 &mut self.scene_sender
             };
 
-            sender.send(SceneBuilderRequest::Transactions(vec![transaction])).unwrap();
+            sender.send(SceneBuilderRequest::Transactions(vec![transaction]))
+                .expect("send by scene sender failed");
         } else {
-            self.api_sender.send(ApiMsg::UpdateDocuments(vec![transaction])).unwrap();
+            self.api_sender.send(ApiMsg::UpdateDocuments(vec![transaction]))
+                .expect("send by api sender failed");
         }
     }
 

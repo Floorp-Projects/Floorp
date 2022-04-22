@@ -214,12 +214,7 @@ class MessageHandler extends EventEmitter {
       `Received command ${moduleName}.${commandName} for destination ${destination.type}`
     );
 
-    const supportsCommand = this.getAllModuleClasses(
-      moduleName,
-      destination
-    ).some(cls => cls.supportsMethod(commandName));
-
-    if (!supportsCommand) {
+    if (!this.supportsCommand(moduleName, commandName, destination)) {
       throw new error.UnsupportedCommandError(
         `${moduleName}.${commandName} not supported for destination ${destination?.type}`
       );
@@ -283,5 +278,24 @@ class MessageHandler extends EventEmitter {
    */
   forwardCommand(command) {
     throw new Error("Not implemented");
+  }
+
+  /**
+   * Check if the given command is supported in the module
+   * for the destination
+   *
+   * @param {String} moduleName
+   *     The name of the module.
+   * @param {String} commandName
+   *     The name of the command.
+   * @param {Destination} destination
+   *     The destination.
+   * @return {Boolean}
+   *     True if the command is supported.
+   */
+  supportsCommand(moduleName, commandName, destination) {
+    return this.getAllModuleClasses(moduleName, destination).some(cls =>
+      cls.supportsMethod(commandName)
+    );
   }
 }
