@@ -561,30 +561,18 @@ JS_PUBLIC_API JSObject* JS_CloneObject(JSContext* cx, HandleObject obj,
 
   RootedObject clone(cx);
   if (obj->is<NativeObject>()) {
-    // JS_CloneObject is used to create the target object for JSObject::swap().
-    // swap() requires its arguments are tenured, so ensure tenure allocation.
-    clone = NewTenuredObjectWithGivenProto(cx, obj->getClass(), proto);
+    clone = NewObjectWithGivenProto(cx, obj->getClass(), proto);
     if (!clone) {
       return nullptr;
     }
 
-    if (clone->is<JSFunction>() &&
-        (obj->compartment() != clone->compartment())) {
+    if (clone->is<JSFunction>() && obj->compartment() != clone->compartment()) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_CANT_CLONE_OBJECT);
       return nullptr;
     }
   } else {
     auto* handler = GetProxyHandler(obj);
-
-    // Same as above, require tenure allocation of the clone. This means for
-    // proxy objects we need to reject nursery allocatable proxies.
-    if (handler->canNurseryAllocate()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_CANT_CLONE_OBJECT);
-      return nullptr;
-    }
-
     clone = ProxyObject::New(cx, handler, JS::NullHandleValue,
                              AsTaggedProto(proto), obj->getClass());
     if (!clone) {
