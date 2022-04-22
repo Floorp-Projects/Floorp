@@ -761,8 +761,10 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
       ctx.SetDeviceColor(DeviceColor::MaskOpaqueWhite());
       RefPtr<Path> path = CSSClipPathInstance::CreateClipPathForFrame(
           ctx.GetDrawTarget(), frame, mat);
-      ctx.SetPath(path);
-      ctx.Fill();
+      if (path) {
+        ctx.SetPath(path);
+        ctx.Fill();
+      }
 
       return true;
     }
