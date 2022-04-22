@@ -640,6 +640,36 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
   delete req;
 }
 
+ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
+    IProtocol* aProtocol, const CompositableHandle& aHandle,
+    Maybe<Shmem>& aShmem, gfx::IntSize& aSize) {
+  const auto& lookup = mCanvasMap.find(aHandle.Value());
+  if (lookup == mCanvasMap.end()) {
+    return IPC_OK();
+  }
+
+  RefPtr<PresentationData> data = lookup->second.get();
+  aSize = data->mTextureHost->GetSize();
+  uint32_t stride =
+      aSize.width * BytesPerPixel(data->mTextureHost->GetFormat());
+  uint32_t len = data->mRowCount * stride;
+  Shmem shmem;
+  if (!AllocShmem(len, ipc::Shmem::SharedMemory::TYPE_BASIC, &shmem)) {
+    return IPC_OK();
+  }
+
+  uint8_t* dst = shmem.get<uint8_t>();
+  uint8_t* src = data->mTextureHost->GetBuffer();
+  for (uint32_t row = 0; row < data->mRowCount; ++row) {
+    memcpy(dst, src, stride);
+    src += data->mTargetPitch;
+    dst += stride;
+  }
+
+  aShmem.emplace(std::move(shmem));
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
     const CompositableHandle& aHandle, RawId aTextureId,
     RawId aCommandEncoderId) {
