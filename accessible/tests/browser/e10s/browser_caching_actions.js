@@ -170,9 +170,9 @@ addAccessibleTask(
     await _testActions("onclick_img", ["showlongdesc"]);
 
     // Remove 'href' from link and test linkable child
-    acc = findAccessibleChildByID(docAcc, "link1");
+    const link1Acc = findAccessibleChildByID(docAcc, "link1");
     is(
-      acc.firstChild.getActionName(0),
+      link1Acc.firstChild.getActionName(0),
       "click ancestor",
       "linkable child has click ancestor action"
     );
@@ -180,8 +180,29 @@ addAccessibleTask(
       let link1 = content.document.getElementById("link1");
       link1.removeAttribute("href");
     });
-    await untilCacheIs(() => acc.actionCount, 0, "link has no actions");
-    is(acc.firstChild.actionCount, 0, "linkable child's actions removed");
+    await untilCacheIs(() => link1Acc.actionCount, 0, "link has no actions");
+    is(link1Acc.firstChild.actionCount, 0, "linkable child's actions removed");
+
+    // Add a click handler to the body. Ensure it propagates to descendants.
+    await invokeContentTask(browser, [], () => {
+      content.document.body.onclick = () => {};
+    });
+    await untilCacheIs(() => docAcc.actionCount, 1, "Doc has 1 action");
+    await _testActions("link1", ["click ancestor"]);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.body.onclick = null;
+    });
+    await untilCacheIs(() => docAcc.actionCount, 0, "Doc has no actions");
+    is(link1Acc.actionCount, 0, "link has no actions");
+
+    // Add a click handler to the root element. Ensure it propagates to
+    // descendants.
+    await invokeContentTask(browser, [], () => {
+      content.document.documentElement.onclick = () => {};
+    });
+    await untilCacheIs(() => docAcc.actionCount, 1, "Doc has 1 action");
+    await _testActions("link1", ["click ancestor"]);
   },
   {
     chrome: true,
