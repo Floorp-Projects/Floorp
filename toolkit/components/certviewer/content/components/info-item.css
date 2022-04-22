@@ -31,11 +31,15 @@ label {
   margin: 0 5px;
 }
 
+.long-hex {
+  padding: 0;
+  border-block: 1px solid transparent;
+}
+
 .long-hex:hover {
-  border-block: 1px solid var(--in-content-border-color);
+  border-block-color: var(--in-content-border-color);
   background-color: var(--in-content-item-hover);
   color: var(--in-content-item-hover-text);
-  padding: 0;
 }
 
 .hex-open {
