@@ -2235,8 +2235,7 @@ class PictureInPictureChild extends JSWindowActorChild {
  *
  * - The "site wrapper" script must export a class called "PictureInPictureVideoWrapper"
  * - Method names on a site wrapper class should match its caller's name
- *   (i.e: PictureInPictureChildVideoWrapper.play will only call `play` on a site-wrapper,
- *    if available)
+ *   (i.e: PictureInPictureChildVideoWrapper.play will only call `play` on a site-wrapper, if available)
  */
 class PictureInPictureChildVideoWrapper {
   #sandbox;
@@ -2252,12 +2251,14 @@ class PictureInPictureChildVideoWrapper {
    *        commanding the original <video>.
    * @param {HTMLVideoElement} video
    *        The original <video> we want to create a wrapper class for.
+   * @param {Object} pipChild
+   *        Reference to PictureInPictureChild class calling this function.
    */
-  constructor(videoWrapperScriptPath, video, piPChild) {
+  constructor(videoWrapperScriptPath, video, pipChild) {
     this.#sandbox = videoWrapperScriptPath
       ? this.#createSandbox(videoWrapperScriptPath, video)
       : null;
-    this.#PictureInPictureChild = piPChild;
+    this.#PictureInPictureChild = pipChild;
   }
 
   /**
@@ -2278,7 +2279,6 @@ class PictureInPictureChildVideoWrapper {
    *        return null.
    *
    * @returns The expected output of the wrapper function.
-   *
    */
   #callWrapperMethod({ name, args = [], fallback = () => {}, validateRetVal }) {
     try {
@@ -2362,6 +2362,9 @@ class PictureInPictureChildVideoWrapper {
     return typeof val === "number";
   }
 
+  /**
+   * Destroys the sandbox for the site wrapper class
+   */
   destroy() {
     if (this.#sandbox) {
       Cu.nukeSandbox(this.#sandbox);
@@ -2381,6 +2384,13 @@ class PictureInPictureChildVideoWrapper {
 
   /* Video methods to be used for video controls from the PiP window. */
 
+  /**
+   * OVERRIDABLE - calls the play() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to handle video
+   * behaviour when a video is played.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   */
   play(video) {
     return this.#callWrapperMethod({
       name: "play",
@@ -2390,6 +2400,13 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the pause() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to handle video
+   * behaviour when a video is paused.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   */
   pause(video) {
     return this.#callWrapperMethod({
       name: "pause",
@@ -2399,6 +2416,14 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the getPaused() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to determine if
+   * a video is paused or not.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @returns {Boolean} Boolean value true if paused, or false if video is still playing
+   */
   getPaused(video) {
     return this.#callWrapperMethod({
       name: "getPaused",
@@ -2408,6 +2433,14 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the getEnded() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to determine if
+   * video playback or streaming has stopped.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @returns {Boolean} Boolean value true if the video has ended, or false if still playing
+   */
   getEnded(video) {
     return this.#callWrapperMethod({
       name: "getEnded",
@@ -2417,6 +2450,14 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the getDuration() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to get the current
+   * duration of a video in seconds.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @returns {Number} Duration of the video in seconds
+   */
   getDuration(video) {
     return this.#callWrapperMethod({
       name: "getDuration",
@@ -2426,6 +2467,14 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the getCurrentTime() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to get the current
+   * time of a video in seconds.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @returns {Number} Current time of the video in seconds
+   */
   getCurrentTime(video) {
     return this.#callWrapperMethod({
       name: "getCurrentTime",
@@ -2435,6 +2484,15 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the setCurrentTime() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to set the current
+   * time of a video.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @param {Number} position
+   *  The current playback time of the video
+   */
   setCurrentTime(video, position) {
     return this.#callWrapperMethod({
       name: "setCurrentTime",
@@ -2446,6 +2504,14 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the getVolume() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to get the volume
+   * value of a video.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @returns {Number} Volume of the video between 0 (muted) and 1 (loudest)
+   */
   getVolume(video) {
     return this.#callWrapperMethod({
       name: "getVolume",
@@ -2455,6 +2521,15 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the setVolume() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to set the volume
+   * value of a video.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @param {Number} volume
+   *  Value between 0 (muted) and 1 (loudest)
+   */
   setVolume(video, volume) {
     return this.#callWrapperMethod({
       name: "setVolume",
@@ -2466,6 +2541,15 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the setMuted() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to mute or unmute
+   * a video.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @param {Boolean} shouldMute
+   *  Boolean value true to mute the video, or false to unmute the video
+   */
   setMuted(video, shouldMute) {
     return this.#callWrapperMethod({
       name: "setMuted",
@@ -2477,7 +2561,17 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
-  setCaptionContainerObserver(video) {
+  /**
+   * OVERRIDABLE - calls the setCaptionContainerObserver() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to listen for any cue changes in a
+   * video's caption container and execute a callback function responsible for updating the pip window's text tracks container whenever
+   * a cue change is triggered {@see updatePiPTextTracks()}.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @param {Function} callback
+   *  The callback function to be executed when cue changes are detected
+   */
+  setCaptionContainerObserver(video, callback) {
     return this.#callWrapperMethod({
       name: "setCaptionContainerObserver",
       args: [
@@ -2491,6 +2585,14 @@ class PictureInPictureChildVideoWrapper {
     });
   }
 
+  /**
+   * OVERRIDABLE - calls the shouldHideToggle() method defined in the site wrapper script. Runs a fallback implementation
+   * if the method does not exist or if an error is thrown while calling it. This method is meant to determine if the pip toggle
+   * for a video should be hidden by the site wrapper.
+   * @param {HTMLVideoElement} video
+   *  The originating video source element
+   * @returns {Boolean} Boolean value true if the pip toggle should be hidden by the site wrapper, or false if it should not
+   */
   shouldHideToggle(video) {
     return this.#callWrapperMethod({
       name: "shouldHideToggle",
