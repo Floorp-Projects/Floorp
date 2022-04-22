@@ -63,6 +63,10 @@
       background: #00DDFF;
       color: #15141A;
 
+      &:hover {
+        background: #80ebfe;
+      }
+
       &:focus {
         outline: 2px solid #00DDFF;
       }
@@ -101,6 +105,10 @@
 
       &:focus {
         outline: 2px solid #00DDFF;
+      }
+
+      &:hover {
+        background: #53535d;
       }
     }
   }
