@@ -43,7 +43,7 @@ add_task(async function testBreakableLinesOverReloads() {
   info("Assert breakable lines of the first iframe page load");
   await assertBreakableLines(dbg, "iframe.html", 30, [
     [16, 17],
-    // [22, 23], // We only see the first inline script as breakable
+    [22, 23],
   ]);
 
   info(
