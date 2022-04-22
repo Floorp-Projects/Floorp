@@ -563,12 +563,16 @@ static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
              "must pass calling arguments to a calling attempt");
 
   if (args.thisv().isObject()) {
-    // We must call the thisValue hook in case we are not called from the
-    // interpreter, where a prior bytecode has computed an appropriate
-    // |this| already.  But don't do that if fval is a DOM function.
-    if (CalleeNeedsOuterizedThisObject(args.calleev())) {
-      JSObject* thisObj = GetThisObject(&args.thisv().toObject());
-      args.mutableThisv().setObject(*thisObj);
+    // If |this| is a global object, it might be a Window and in that case we
+    // usually have to pass the WindowProxy instead.
+    JSObject* thisObj = &args.thisv().toObject();
+    if (thisObj->is<GlobalObject>()) {
+      if (CalleeNeedsOuterizedThisObject(args.calleev())) {
+        args.mutableThisv().setObject(*GetThisObject(thisObj));
+      }
+    } else {
+      // Fast path: we don't have to do anything if the object isn't a global.
+      MOZ_ASSERT(GetThisObject(thisObj) == thisObj);
     }
   }
 
