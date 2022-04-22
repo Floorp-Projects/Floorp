@@ -21,6 +21,7 @@ const TEST_URL = testServer.urlFor("index.html");
 
 const INTEGRATION_TEST_PAGE_SOURCES = [
   "index.html",
+  "iframe.html",
   "script.js",
   "onload.js",
   "test-functions.js",
@@ -267,6 +268,45 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   );
 
   await waitForSourcesInSourceTree(dbg, INTEGRATION_TEST_PAGE_SOURCES);
+
+  info(
+    "Assert the number of sources and source actors for the same-url.sjs sources"
+  );
+  const mainThreadSameUrlSource = findSourceInThread(
+    dbg,
+    "same-url.sjs",
+    "Main Thread"
+  );
+  ok(mainThreadSameUrlSource, "Found same-url.js in the main thread");
+  is(
+    dbg.selectors.getSourceActorsForSource(mainThreadSameUrlSource.id).length,
+    3,
+    "same-url.js is loaded 3 times in the main thread"
+  );
+
+  const iframeSameUrlSource = findSourceInThread(
+    dbg,
+    "same-url.sjs",
+    testServer.urlFor("iframe.html")
+  );
+  ok(iframeSameUrlSource, "Found same-url.js in the iframe thread");
+  is(
+    dbg.selectors.getSourceActorsForSource(iframeSameUrlSource.id).length,
+    1,
+    "same-url.js is loaded one time in the iframe thread"
+  );
+
+  const workerSameUrlSource = findSourceInThread(
+    dbg,
+    "same-url.sjs",
+    "same-url.sjs"
+  );
+  ok(workerSameUrlSource, "Found same-url.js in the worker thread");
+  is(
+    dbg.selectors.getSourceActorsForSource(workerSameUrlSource.id).length,
+    1,
+    "same-url.js is loaded one time in the worker thread"
+  );
 
   info("Assert the content of the named eval");
   await selectSource(dbg, "named-eval.js");
