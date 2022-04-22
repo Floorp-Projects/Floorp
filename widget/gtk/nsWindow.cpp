@@ -1195,8 +1195,7 @@ void nsWindow::HideWaylandPopupWindow(bool aTemporaryHide,
     // details).
     RevokeTransactionIdAllocator();
 
-    // Also clear the move to rect size so it doesn't affect further showing of
-    // the popup.
+    LOG("Clearing mMoveToRectPopupSize\n");
     mMoveToRectPopupSize = {};
   }
 }
