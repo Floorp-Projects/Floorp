@@ -280,7 +280,8 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
   ok(mainThreadSameUrlSource, "Found same-url.js in the main thread");
   is(
     dbg.selectors.getSourceActorsForSource(mainThreadSameUrlSource.id).length,
-    3,
+    // When EFT is disabled the iframe's source is meld into the main target
+    isEveryFrameTargetEnabled() ? 3 : 4,
     "same-url.js is loaded 3 times in the main thread"
   );
 
@@ -289,12 +290,19 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     "same-url.sjs",
     testServer.urlFor("iframe.html")
   );
-  ok(iframeSameUrlSource, "Found same-url.js in the iframe thread");
-  is(
-    dbg.selectors.getSourceActorsForSource(iframeSameUrlSource.id).length,
-    1,
-    "same-url.js is loaded one time in the iframe thread"
-  );
+  if (isEveryFrameTargetEnabled()) {
+    ok(iframeSameUrlSource, "Found same-url.js in the iframe thread");
+    is(
+      dbg.selectors.getSourceActorsForSource(iframeSameUrlSource.id).length,
+      1,
+      "same-url.js is loaded one time in the iframe thread"
+    );
+  } else {
+    ok(
+      !iframeSameUrlSource,
+      "When EFT is off, the iframe source is into the main thread bucket"
+    );
+  }
 
   const workerSameUrlSource = findSourceInThread(
     dbg,
