@@ -2158,6 +2158,7 @@ nsresult OggDemuxer::SeekBisection(TrackInfo::TrackType aType, int64_t aTarget,
     MOZ_ASSERT(endTime >= seekTarget, "End must be after seek target");
   }
 
+  (void)hops;
   SEEK_LOG(LogLevel::Debug, ("Seek complete in %d bisections.", hops));
 
   return NS_OK;
