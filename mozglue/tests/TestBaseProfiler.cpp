@@ -2157,8 +2157,6 @@ static void TestControlledChunkManagerWithLocalLimit() {
   MOZ_RELEASE_ASSERT(!!chunk,
                      "First chunk immediate request should always work");
   const auto chunkActualBufferBytes = chunk->BufferBytes();
-  // Keep address, for later checks.
-  const uintptr_t chunk1Address = reinterpret_cast<uintptr_t>(chunk.get());
   MOZ_RELEASE_ASSERT(updateCount == 1,
                      "GetChunk should have triggered an update");
   MOZ_RELEASE_ASSERT(
@@ -2184,8 +2182,6 @@ static void TestControlledChunkManagerWithLocalLimit() {
   ProfileBufferChunk::Length previousUnreleasedBytes = chunk->BufferBytes();
   ProfileBufferChunk::Length previousReleasedBytes = 0;
   TimeStamp previousOldestDoneTimeStamp;
-
-  unsigned chunk1ReuseCount = 0;
 
   // We will do enough loops to go through the maximum size a number of times.
   const unsigned Rollovers = 3;
@@ -2268,10 +2264,6 @@ static void TestControlledChunkManagerWithLocalLimit() {
 
     // And cycle to the new chunk.
     chunk = std::move(newChunk);
-
-    if (reinterpret_cast<uintptr_t>(chunk.get()) == chunk1Address) {
-      ++chunk1ReuseCount;
-    }
   }
 
   // Enough testing! Clean-up.
