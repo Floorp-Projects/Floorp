@@ -249,3 +249,78 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true, chrome: true }
 );
+
+/**
+ * Test caching of the editable state.
+ */
+addAccessibleTask(
+  `<div id="div" contenteditable></div>`,
+  async function(browser, docAcc) {
+    const div = findAccessibleChildByID(docAcc, "div");
+    testStates(div, 0, EXT_STATE_EDITABLE, 0, 0);
+    // Ensure that a contentEditable descendant doesn't cause editable to be
+    // exposed on the document.
+    testStates(docAcc, STATE_READONLY, 0, 0, EXT_STATE_EDITABLE);
+
+    info("Setting contentEditable on the body");
+    let stateChanged = Promise.all([
+      waitForStateChange(docAcc, EXT_STATE_EDITABLE, true, true),
+      waitForStateChange(docAcc, STATE_READONLY, false, false),
+    ]);
+    await invokeContentTask(browser, [], () => {
+      content.document.body.contentEditable = true;
+    });
+    await stateChanged;
+    testStates(docAcc, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0);
+
+    info("Clearing contentEditable on the body");
+    stateChanged = Promise.all([
+      waitForStateChange(docAcc, EXT_STATE_EDITABLE, false, true),
+      waitForStateChange(docAcc, STATE_READONLY, true, false),
+    ]);
+    await invokeContentTask(browser, [], () => {
+      content.document.body.contentEditable = false;
+    });
+    await stateChanged;
+    testStates(docAcc, STATE_READONLY, 0, 0, EXT_STATE_EDITABLE);
+
+    info("Clearing contentEditable on div");
+    stateChanged = waitForStateChange(div, EXT_STATE_EDITABLE, false, true);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("div").contentEditable = false;
+    });
+    await stateChanged;
+    testStates(div, 0, 0, 0, EXT_STATE_EDITABLE);
+
+    info("Setting contentEditable on div");
+    stateChanged = waitForStateChange(div, EXT_STATE_EDITABLE, true, true);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("div").contentEditable = true;
+    });
+    await stateChanged;
+    testStates(div, 0, EXT_STATE_EDITABLE, 0, 0);
+
+    info("Setting designMode on document");
+    stateChanged = Promise.all([
+      waitForStateChange(docAcc, EXT_STATE_EDITABLE, true, true),
+      waitForStateChange(docAcc, STATE_READONLY, false, false),
+    ]);
+    await invokeContentTask(browser, [], () => {
+      content.document.designMode = "on";
+    });
+    await stateChanged;
+    testStates(docAcc, 0, EXT_STATE_EDITABLE, STATE_READONLY, 0);
+
+    info("Clearing designMode on document");
+    stateChanged = Promise.all([
+      waitForStateChange(docAcc, EXT_STATE_EDITABLE, false, true),
+      waitForStateChange(docAcc, STATE_READONLY, true, false),
+    ]);
+    await invokeContentTask(browser, [], () => {
+      content.document.designMode = "off";
+    });
+    await stateChanged;
+    testStates(docAcc, STATE_READONLY, 0, 0, EXT_STATE_EDITABLE);
+  },
+  { topLevel: true, iframe: true, remoteIframe: true, chrome: true }
+);
