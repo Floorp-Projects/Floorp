@@ -26,8 +26,7 @@
     "eslint-visitor-keys": "^2.1.0",
     "estraverse": "^4.3.0",
     "htmlparser2": "^7.2.0",
-    "multi-ini": "^2.1.2",
-    "sax": "^1.2.4"
+    "multi-ini": "^2.1.2"
   },
   "devDependencies": {
     "eslint": "7.32.0",
