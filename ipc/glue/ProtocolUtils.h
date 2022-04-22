@@ -73,8 +73,8 @@ enum {
   BUILD_IDS_MATCH_MESSAGE_TYPE = kuint16max - 8,
   BUILD_ID_MESSAGE_TYPE = kuint16max - 7,  // unused
   CHANNEL_OPENED_MESSAGE_TYPE = kuint16max - 6,
-  SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 5,  // unused
-  SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 4,    // unused
+  SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 5,
+  SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 4,
   GOODBYE_MESSAGE_TYPE = kuint16max - 3,
   CANCEL_MESSAGE_TYPE = kuint16max - 2,
 
@@ -197,6 +197,13 @@ class IProtocol : public HasResultCodes {
   int32_t RegisterID(IProtocol* aRouted, int32_t aId);
   IProtocol* Lookup(int32_t aId);
   void Unregister(int32_t aId);
+
+  Shmem::SharedMemory* CreateSharedMemory(size_t aSize,
+                                          SharedMemory::SharedMemoryType aType,
+                                          bool aUnsafe, int32_t* aId);
+  Shmem::SharedMemory* LookupSharedMemory(int32_t aId);
+  bool IsTrackingSharedMemory(Shmem::SharedMemory* aSegment);
+  bool DestroySharedMemory(Shmem& aShmem);
 
   MessageChannel* GetIPCChannel();
   const MessageChannel* GetIPCChannel() const;
@@ -392,6 +399,13 @@ class IToplevelProtocol : public IProtocol {
   IProtocol* Lookup(int32_t aId);
   void Unregister(int32_t aId);
 
+  Shmem::SharedMemory* CreateSharedMemory(size_t aSize,
+                                          SharedMemory::SharedMemoryType aType,
+                                          bool aUnsafe, int32_t* aId);
+  Shmem::SharedMemory* LookupSharedMemory(int32_t aId);
+  bool IsTrackingSharedMemory(Shmem::SharedMemory* aSegment);
+  bool DestroySharedMemory(Shmem& aShmem);
+
   MessageChannel* GetIPCChannel() { return &mChannel; }
   const MessageChannel* GetIPCChannel() const { return &mChannel; }
 
@@ -424,6 +438,10 @@ class IToplevelProtocol : public IProtocol {
   void Close();
 
   void SetReplyTimeoutMs(int32_t aTimeoutMs);
+
+  void DeallocShmems();
+  bool ShmemCreated(const Message& aMsg);
+  bool ShmemDestroyed(const Message& aMsg);
 
   virtual bool ShouldContinueFromReplyTimeout() { return false; }
 
@@ -481,6 +499,7 @@ class IToplevelProtocol : public IProtocol {
   // Used to be on mState
   int32_t mLastLocalId;
   IDMap<IProtocol*> mActorMap;
+  IDMap<Shmem::SharedMemory*> mShmemMap;
 
   MessageChannel mChannel;
 };

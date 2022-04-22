@@ -664,6 +664,42 @@ struct QueueParamTraits<std::pair<TypeA, TypeB>> {
   }
 };
 
+// ---------------------------------------------------------------
+
+template <>
+struct QueueParamTraits<mozilla::ipc::Shmem> {
+  using ParamType = mozilla::ipc::Shmem;
+
+  template <typename U>
+  static bool Write(ProducerView<U>& aProducerView, ParamType&& aParam) {
+    if (!aProducerView.WriteParam(
+            aParam.Id(mozilla::ipc::Shmem::PrivateIPDLCaller()))) {
+      return false;
+    }
+
+    aParam.RevokeRights(mozilla::ipc::Shmem::PrivateIPDLCaller());
+    aParam.forget(mozilla::ipc::Shmem::PrivateIPDLCaller());
+  }
+
+  template <typename U>
+  static bool Read(ConsumerView<U>& aConsumerView, ParamType* aResult) {
+    ParamType::id_t id;
+    if (!aConsumerView.ReadParam(&id)) {
+      return false;
+    }
+
+    mozilla::ipc::Shmem::SharedMemory* rawmem =
+        aConsumerView.LookupSharedMemory(id);
+    if (!rawmem) {
+      return false;
+    }
+
+    *aResult = mozilla::ipc::Shmem(mozilla::ipc::Shmem::PrivateIPDLCaller(),
+                                   rawmem, id);
+    return true;
+  }
+};
+
 }  // namespace webgl
 }  // namespace mozilla
 
