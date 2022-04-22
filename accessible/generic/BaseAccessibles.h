@@ -45,13 +45,11 @@ class LeafAccessible : public AccessibleWrap {
 /**
  * Used for text or image accessible nodes contained by link accessibles or
  * accessibles for nodes with registered click event handler. It knows how to
- * report the state of the host link (traveled or not) and can activate (click)
- * the host accessible programmatically.
+ * report the state of the host link (traveled or not) and can focus the host
+ * accessible programmatically.
  */
 class LinkableAccessible : public AccessibleWrap {
  public:
-  enum { eAction_Jump = 0 };
-
   LinkableAccessible(nsIContent* aContent, DocAccessible* aDoc)
       : AccessibleWrap(aContent, aDoc) {}
 
@@ -63,9 +61,6 @@ class LinkableAccessible : public AccessibleWrap {
   virtual void TakeFocus() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() const override;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-  virtual bool DoAction(uint8_t index) const override;
   virtual KeyBinding AccessKey() const override;
 
   // ActionAccessible helpers

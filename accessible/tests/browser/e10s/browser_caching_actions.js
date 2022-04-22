@@ -20,6 +20,7 @@ const gActionDescrMap = {
   expand: "Expand",
   activate: "Activate",
   cycle: "Cycle",
+  "click ancestor": "Click ancestor",
 };
 
 async function testActions(browser, docAcc, id, expectedActions, domEvents) {
@@ -86,14 +87,23 @@ addAccessibleTask(
   <a id="link1" href="#">linkable textleaf accessible</a>
   <div id="link2" onclick="">linkable textleaf accessible</div>
 
+  <a id="link3" href="#">
+    <img id="link3img" alt="image in link"
+          src="http://example.com/a11y/accessible/tests/mochitest/moz.png">
+  </a>
+
   <div>
     <label for="TextBox_t2" id="label1">
       <span>Explicit</span>
     </label>
     <input name="in2" id="TextBox_t2" type="text" maxlength="17">
   </div>
+
+  <div onclick=""><p id="p_in_clickable_div">p in clickable div</p></div>
   `,
   async function(browser, docAcc) {
+    is(docAcc.actionCount, 0, "Doc should not have any actions");
+
     const _testActions = async (id, expectedActions, domEvents) => {
       await testActions(browser, docAcc, id, expectedActions, domEvents);
     };
@@ -105,7 +115,10 @@ addAccessibleTask(
     await _testActions("onclick_img", ["click"], gClickEvents);
     await _testActions("link1", ["jump"], gClickEvents);
     await _testActions("link2", ["click"], gClickEvents);
+    await _testActions("link3", ["jump"], gClickEvents);
+    await _testActions("link3img", ["click ancestor"], gClickEvents);
     await _testActions("label1", ["click"], gClickEvents);
+    await _testActions("p_in_clickable_div", ["click ancestor"], gClickEvents);
 
     await invokeContentTask(browser, [], () => {
       content.document
@@ -160,8 +173,8 @@ addAccessibleTask(
     acc = findAccessibleChildByID(docAcc, "link1");
     is(
       acc.firstChild.getActionName(0),
-      "jump",
-      "linkable child has jump action"
+      "click ancestor",
+      "linkable child has click ancestor action"
     );
     await invokeContentTask(browser, [], () => {
       let link1 = content.document.getElementById("link1");
