@@ -755,9 +755,6 @@ void MemoryTracker::untrackGCMemory(Cell* cell, size_t nbytes, MemoryUse use) {
 }
 
 void MemoryTracker::swapGCMemory(Cell* a, Cell* b, MemoryUse use) {
-  MOZ_ASSERT(a->isTenured());
-  MOZ_ASSERT(b->isTenured());
-
   Key<Cell> ka{a, use};
   Key<Cell> kb{b, use};
 

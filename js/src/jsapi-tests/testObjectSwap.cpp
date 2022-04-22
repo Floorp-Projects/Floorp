@@ -33,7 +33,7 @@ struct ProxyConfig {
 struct ObjectConfig {
   const JSClass* clasp;
   bool isNative;
-  bool isPrototype;
+  bool nurseryAllocated;
   union {
     NativeConfig native;
     ProxyConfig proxy;
@@ -61,17 +61,27 @@ static const uint32_t TestPropertyCounts[] = {0, 1, 2, 7, 8, 20};
 
 static bool Verbose = false;
 
-class DummyProxyHandler final : public ForwardingProxyHandler {
+class TenuredProxyHandler final : public Wrapper {
  public:
-  static const DummyProxyHandler singleton;
-  static const char family;
-  constexpr DummyProxyHandler() : ForwardingProxyHandler(&family) {}
+  static const TenuredProxyHandler singleton;
+  constexpr TenuredProxyHandler() : Wrapper(0) {}
+  bool canNurseryAllocate() const override { return false; }
 };
 
-const DummyProxyHandler DummyProxyHandler::singleton;
-const char DummyProxyHandler::family = 0;
+const TenuredProxyHandler TenuredProxyHandler::singleton;
+
+class NurseryProxyHandler final : public Wrapper {
+ public:
+  static const NurseryProxyHandler singleton;
+  constexpr NurseryProxyHandler() : Wrapper(0) {}
+  bool canNurseryAllocate() const override { return true; }
+};
+
+const NurseryProxyHandler NurseryProxyHandler::singleton;
 
 BEGIN_TEST(testObjectSwap) {
+  AutoLeaveZeal noZeal(cx);
+
   ObjectConfigVector objectConfigs = CreateObjectConfigs();
 
   for (const ObjectConfig& config1 : objectConfigs) {
@@ -85,7 +95,8 @@ BEGIN_TEST(testObjectSwap) {
       CHECK(obj2);
 
       if (Verbose) {
-        fprintf(stderr, "Swap %p and %p\n", obj1.get(), obj2.get());
+        fprintf(stderr, "Swap %p (%s) and %p (%s)\n", obj1.get(),
+                GetLocation(obj1), obj2.get(), GetLocation(obj2));
       }
 
       {
@@ -121,13 +132,17 @@ ObjectConfigVector CreateObjectConfigs() {
     for (uint32_t propCount : TestPropertyCounts) {
       config.native.propCount = propCount;
 
-      for (bool inDictionaryMode : {false, true}) {
-        if (inDictionaryMode && propCount == 0) {
-          continue;
-        }
+      for (bool nurseryAllocated : {false, true}) {
+        config.nurseryAllocated = nurseryAllocated;
 
-        config.native.inDictionaryMode = inDictionaryMode;
-        MOZ_RELEASE_ASSERT(configs.append(config));
+        for (bool inDictionaryMode : {false, true}) {
+          if (inDictionaryMode && propCount == 0) {
+            continue;
+          }
+
+          config.native.inDictionaryMode = inDictionaryMode;
+          MOZ_RELEASE_ASSERT(configs.append(config));
+        }
       }
     }
   }
@@ -138,13 +153,21 @@ ObjectConfigVector CreateObjectConfigs() {
   for (const JSClass& jsClass : TestProxyClasses) {
     config.clasp = &jsClass;
 
-    for (bool inlineValues : {false, true}) {
-      config.proxy.inlineValues = inlineValues;
-      MOZ_RELEASE_ASSERT(configs.append(config));
+    for (bool nurseryAllocated : {false, true}) {
+      config.nurseryAllocated = nurseryAllocated;
+
+      for (bool inlineValues : {true, false}) {
+        config.proxy.inlineValues = inlineValues;
+        MOZ_RELEASE_ASSERT(configs.append(config));
+      }
     }
   }
 
   return configs;
+}
+
+const char* GetLocation(JSObject* obj) {
+  return obj->isTenured() ? "tenured heap" : "nursery";
 }
 
 // Counter used to give slots and property names unique values.
@@ -158,11 +181,13 @@ JSObject* CreateObject(const ObjectConfig& config, uint32_t* idOut) {
 JSObject* CreateNativeObject(const ObjectConfig& config) {
   MOZ_ASSERT(config.isNative);
 
-  RootedNativeObject obj(
-      cx, NewBuiltinClassInstance(cx, config.clasp, TenuredObject));
+  NewObjectKind kind = config.nurseryAllocated ? GenericObject : TenuredObject;
+  RootedNativeObject obj(cx, NewBuiltinClassInstance(cx, config.clasp, kind));
   if (!obj) {
     return nullptr;
   }
+
+  MOZ_RELEASE_ASSERT(IsInsideNursery(obj) == config.nurseryAllocated);
 
   for (uint32_t i = 0; i < JSCLASS_RESERVED_SLOTS(config.clasp); i++) {
     JS::SetReservedSlot(obj, i, Int32Value(nextId++));
@@ -212,8 +237,14 @@ JSObject* CreateProxy(const ObjectConfig& config) {
   options.setClass(config.clasp);
   options.setLazyProto(true);
 
-  RootedObject obj(cx, NewProxyObject(cx, &DummyProxyHandler::singleton, priv,
-                                      nullptr, options));
+  const Wrapper* handler;
+  if (config.nurseryAllocated) {
+    handler = &NurseryProxyHandler::singleton;
+  } else {
+    handler = &TenuredProxyHandler::singleton;
+  }
+
+  RootedObject obj(cx, NewProxyObject(cx, handler, priv, nullptr, options));
   if (!obj) {
     return nullptr;
   }
@@ -228,8 +259,10 @@ JSObject* CreateProxy(const ObjectConfig& config) {
   if (!config.proxy.inlineValues) {
     // To create a proxy with non-inline values we must swap the proxy with an
     // object with a different size.
-    RootedObject dummy(
-        cx, NewBuiltinClassInstance(cx, &TestDOMClasses[0], TenuredObject));
+    NewObjectKind kind =
+        config.nurseryAllocated ? GenericObject : TenuredObject;
+    RootedObject dummy(cx,
+                       NewBuiltinClassInstance(cx, &TestDOMClasses[0], kind));
     if (!dummy) {
       return nullptr;
     }
@@ -239,6 +272,7 @@ JSObject* CreateProxy(const ObjectConfig& config) {
     proxy = &dummy->as<ProxyObject>();
   }
 
+  MOZ_RELEASE_ASSERT(IsInsideNursery(proxy) == config.nurseryAllocated);
   MOZ_RELEASE_ASSERT(proxy->usingInlineValueArray() ==
                      config.proxy.inlineValues);
 
@@ -255,14 +289,13 @@ bool CheckObject(HandleObject obj, const ObjectConfig& config, uint32_t id) {
     fprintf(stderr, "Check %p is a %s object with %u reserved slots", obj.get(),
             config.isNative ? "native" : "proxy", reservedSlots);
     if (config.isNative) {
-      fprintf(stderr, ", %u properties and %s in dictionary mode",
+      fprintf(stderr, ", %u properties and %s in dictionary mode\n",
               config.native.propCount,
               config.native.inDictionaryMode ? "is" : "is not");
     } else {
-      fprintf(stderr, " with %s values",
+      fprintf(stderr, " with %s values\n",
               config.proxy.inlineValues ? "inline" : "out-of-line");
     }
-    fprintf(stderr, "\n");
   }
 
   if (!config.isNative) {

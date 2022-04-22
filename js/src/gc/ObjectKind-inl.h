@@ -118,6 +118,10 @@ static inline size_t GetGCKindBytes(AllocKind thingKind) {
   return sizeof(JSObject_Slots0) + GetGCKindSlots(thingKind) * sizeof(Value);
 }
 
+static inline bool CanUseBackgroundAllocKind(const JSClass* clasp) {
+  return !clasp->hasFinalize() || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE);
+}
+
 static inline bool CanChangeToBackgroundAllocKind(AllocKind kind,
                                                   const JSClass* clasp) {
   // If a foreground alloc kind is specified but the class has no finalizer or a
@@ -133,7 +137,7 @@ static inline bool CanChangeToBackgroundAllocKind(AllocKind kind,
     return false;  // This kind is already a background finalized kind.
   }
 
-  return !clasp->hasFinalize() || (clasp->flags & JSCLASS_BACKGROUND_FINALIZE);
+  return CanUseBackgroundAllocKind(clasp);
 }
 
 static inline AllocKind ForegroundToBackgroundAllocKind(AllocKind fgKind) {

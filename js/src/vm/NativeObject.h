@@ -997,10 +997,12 @@ class NativeObject : public JSObject {
                                            HandleNativeObject obj,
                                            uint32_t nfixed);
 
-  void freeDynamicSlotsAfterSwap(NativeObject* old);
-  [[nodiscard]] static bool fillInAfterSwap(JSContext* cx,
-                                            HandleNativeObject obj,
-                                            HandleValueVector values);
+  [[nodiscard]] bool copyAndFreeSlotsBeforeSwap(
+      JSContext* cx, MutableHandleValueVector values);
+  [[nodiscard]] static bool fillInSlotsAfterSwap(JSContext* cx,
+                                                 HandleNativeObject obj,
+                                                 gc::AllocKind kind,
+                                                 HandleValueVector values);
 
  public:
   // Return true if this object has been converted from shared-immutable
