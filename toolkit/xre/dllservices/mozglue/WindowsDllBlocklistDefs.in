@@ -295,5 +295,10 @@ BROWSER_PROCESS += [
 CHILD_PROCESSES += [
     # Causes crashes in the GPU process with WebRender enabled, bug 1544435
     DllBlocklistEntry("wbload.dll", ALL_VERSIONS),
+
+    # Causes crashes in the content process with win32k lockdown, bug 1766022
+    DllBlocklistEntry("videocapturer.dll", ALL_VERSIONS),
+    DllBlocklistEntry("videocapturerhk32.dll", ALL_VERSIONS),
+    DllBlocklistEntry("videocapturerhk64.dll", ALL_VERSIONS),
 ]
 
