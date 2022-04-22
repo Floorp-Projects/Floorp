@@ -338,7 +338,17 @@ void FrameAnimator::ResetAnimation(AnimationState& aState) {
 
   // Calling Reset on the surface of the animation can cause discarding surface
   // providers to throw out all their frames so refresh our state.
-  aState.UpdateState(mImage, mSize);
+  OrientedIntRect rect =
+      OrientedIntRect::FromUnknownRect(aState.UpdateState(mImage, mSize));
+
+  if (!rect.IsEmpty()) {
+    nsCOMPtr<nsIEventTarget> eventTarget = do_GetMainThread();
+    RefPtr<RasterImage> image = mImage;
+    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableFunction(
+        "FrameAnimator::ResetAnimation",
+        [=]() -> void { image->NotifyProgress(NoProgress, rect); });
+    eventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
+  }
 }
 
 RefreshResult FrameAnimator::RequestRefresh(AnimationState& aState,
