@@ -31,7 +31,20 @@ typedef PRUint16 ssl3CipherSuite;
 /* SSL3_RECORD_HEADER_LENGTH + epoch/sequence_number */
 #define DTLS_RECORD_HEADER_LENGTH 13
 
+/* Max values for TLS records/ciphertexts
+ * For TLS 1.2 records MUST NOT be longer than 2^14 + 2048
+ * For TLS 1.3 records MUST NOT exceed 2^14 + 256 bytes.
+ * [RFC8446 Section 5.2, RFC5246 Section 6.2.3]. */
 #define MAX_FRAGMENT_LENGTH 16384
+#define TLS_1_2_MAX_EXPANSION 2048
+#define TLS_1_3_MAX_EXPANSION (255 + 1)
+#define TLS_1_3_MAX_CTEXT_LENGTH ((MAX_FRAGMENT_LENGTH) + (TLS_1_3_MAX_EXPANSION))
+#define TLS_1_2_MAX_CTEXT_LENGTH ((MAX_FRAGMENT_LENGTH) + (TLS_1_2_MAX_EXPANSION))
+
+/* DTLS_X_X_MAX_PACKET_LENGTH = TLS_X_X_MAX_RECORD_LENGTH + HEADER_LENGTH,
+ * used for DTLS datagram buffer size setting. We do not support DTLS CID! */
+#define DTLS_1_3_MAX_PACKET_LENGTH ((TLS_1_3_MAX_CTEXT_LENGTH) + (SSL3_RECORD_HEADER_LENGTH))
+#define DTLS_1_2_MAX_PACKET_LENGTH ((TLS_1_2_MAX_CTEXT_LENGTH) + (DTLS_RECORD_HEADER_LENGTH))
 
 typedef enum { change_cipher_spec_choice = 1 } SSL3ChangeCipherSpecChoice;
 

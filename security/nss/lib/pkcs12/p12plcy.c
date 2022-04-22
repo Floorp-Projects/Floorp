@@ -85,17 +85,12 @@ SECStatus
 SEC_PKCS12EnableCipher(long which, int on)
 {
     int i;
-    SECStatus rv;
     PRUint32 set = on ? NSS_USE_ALG_IN_PKCS12 : 0;
     PRUint32 clear = on ? 0 : NSS_USE_ALG_IN_PKCS12;
 
     for (i = 0; pkcs12SuiteMaps[i].suite != 0L; i++) {
         if (pkcs12SuiteMaps[i].suite == (unsigned long)which) {
-            rv = NSS_SetAlgorithmPolicy(pkcs12SuiteMaps[i].algTag, set, clear);
-            /* could fail if the policy has been locked */
-            if (rv != SECSuccess) {
-                return rv;
-            }
+            return NSS_SetAlgorithmPolicy(pkcs12SuiteMaps[i].algTag, set, clear);
         }
     }
     PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);

@@ -2359,6 +2359,13 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     return nsChangeHint_ReconstructFrame;
   }
 
+  // `content-visibility` can impact whether or not this frame has containment,
+  // so we reconstruct the frame like we do above.
+  // TODO: We should avoid reconstruction here, per bug 1765615.
+  if (mContentVisibility != aNewData.mContentVisibility) {
+    return nsChangeHint_ReconstructFrame;
+  }
+
   auto oldAppearance = EffectiveAppearance();
   auto newAppearance = aNewData.EffectiveAppearance();
 
@@ -2443,12 +2450,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       // update our overflow areas in that case.
       hint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
     }
-  }
-
-  // FIXME(mrobinson): Depending on how this is implemented this may need a
-  // different set of change hints. See bug 1758490.
-  if (mContentVisibility != aNewData.mContentVisibility) {
-    hint |= nsChangeHint_RepaintFrame;
   }
 
   if (mScrollbarGutter != aNewData.mScrollbarGutter) {

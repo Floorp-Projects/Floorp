@@ -2670,6 +2670,16 @@ impl<'ctx> CoreStreamData<'ctx> {
                 self.stm_ptr,
                 output_hw_desc
             );
+
+            // This has been observed in the wild.
+            if output_hw_desc.mChannelsPerFrame == 0 {
+                cubeb_log!(
+                    "({:p}) Output hardware description channel count is zero",
+                    self.stm_ptr
+                );
+                return Err(Error::error());
+            }
+
             // Notice: when we are using aggregate device, the output_hw_desc.mChannelsPerFrame is
             // the total of all the output channel count of the devices added in the aggregate device.
             // Due to our aggregate device settings, the data recorded by the input device's output

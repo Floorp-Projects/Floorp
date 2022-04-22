@@ -175,7 +175,7 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 
 /* SSL_REUSE_SERVER_ECDHE_KEY controls whether the ECDHE server key is
  * reused for multiple handshakes or generated each time.
- * SSL_REUSE_SERVER_ECDHE_KEY is currently enabled by default.
+ * SSL_REUSE_SERVER_ECDHE_KEY is currently disabled by default.
  * This socket option is for ECDHE, only. It is unrelated to DHE.
  */
 #define SSL_REUSE_SERVER_ECDHE_KEY 27

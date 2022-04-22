@@ -1,0 +1,45 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  display: grid;
+  grid-template-areas:
+    "title"
+    "main";
+}
+
+body > header {
+  grid-area: title;
+  margin: 2em;
+}
+
+body > header > h1 {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+#collection-expiry-date {
+  display: inline-block;
+  background: linear-gradient(to right, purple, pink, orange);
+  background-origin: border-box;
+  border-radius: 1.5em;
+  padding: 1px;
+  margin: 0.2em 1em;
+  vertical-align: bottom;
+}
+
+#collection-expiry-date > span {
+  display: inline-block;
+  color: black;
+  background: white;
+  border-radius: 1.5em;
+  padding: .2em 1em;
+}
+
+body > section {
+  grid-area: main;
+}

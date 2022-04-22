@@ -518,8 +518,12 @@ const Snapshots = new (class Snapshots {
    * @param {number} [options.type]
    *   Restrict the snapshots to those with a particular type of page data available.
    * @param {number} [options.group]
-   *   Restrict the snapshots to those within a particular group. Pass null
-   *   to get all the snapshots that are not part of a group.
+   *   Restrict the snapshots to those within a particular group.
+   * @param {boolean} [includeSnapshotsInUserManagedGroups]
+   *   Whether snapshots that are in a user managed group should be included.
+   *   Snapshots that are part of multiple groups are excluded even if only one
+   *   of the groups is user managed.
+   *   This is ignored if a specific .group id is passed. Defaults to true.
    * @param {boolean} [options.includeHiddenInGroup]
    *   Only applies when querying a particular group. Pass true to include
    *   snapshots that are hidden in the group.
@@ -540,6 +544,7 @@ const Snapshots = new (class Snapshots {
     includeTombstones = false,
     type = undefined,
     group = undefined,
+    includeSnapshotsInUserManagedGroups = true,
     includeHiddenInGroup = false,
     includeUserPersisted = true,
     lastInteractionBefore = undefined,
@@ -571,20 +576,23 @@ const Snapshots = new (class Snapshots {
       bindings.type = type;
     }
 
-    if (group === null) {
-      clauses.push("group_id IS NULL");
-      joins.push(
-        "LEFT JOIN moz_places_metadata_groups_to_snapshots g USING(place_id)"
-      );
-    } else if (group) {
+    if (group) {
       clauses.push("group_id = :group");
       if (!includeHiddenInGroup) {
-        clauses.push("g.hidden = 0");
+        clauses.push("gs.hidden = 0");
       }
       bindings.group = group;
       joins.push(
-        "LEFT JOIN moz_places_metadata_groups_to_snapshots g USING(place_id)"
+        "LEFT JOIN moz_places_metadata_groups_to_snapshots gs USING(place_id)"
       );
+    } else if (!includeSnapshotsInUserManagedGroups) {
+      // TODO: if we change the way to define user managed groups, we should
+      // update this condition.
+      clauses.push(`NOT EXISTS(
+        SELECT 1 FROM moz_places_metadata_snapshots_groups g
+        JOIN moz_places_metadata_groups_to_snapshots gs ON g.id = gs.group_id
+        WHERE gs.place_id = h.id AND builder == 'user'
+      )`);
     }
 
     if (limit != -1) {
@@ -603,7 +611,7 @@ const Snapshots = new (class Snapshots {
              h.visit_count
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
-      LEFT JOIN moz_places_metadata_snapshots_extra e ON e.place_id = s.place_id
+      LEFT JOIN moz_places_metadata_snapshots_extra e USING(place_id)
       ${joins.join(" ")}
       ${whereStatement}
       GROUP BY s.place_id

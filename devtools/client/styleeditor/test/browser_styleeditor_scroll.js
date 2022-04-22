@@ -63,7 +63,7 @@ add_task(async function() {
   // Can't use ui.selectStyleSheet here as it will scroll the editor back to top
   // and we want to check that the previous scroll position is restored.
   const summary = await ui.getEditorSummary(longEditor);
-  ui._view.activeSummary = summary;
+  ui._view.setActiveSummary(summary);
 
   info("Waiting for doc_long.css to be selected.");
   await selectEventPromise;

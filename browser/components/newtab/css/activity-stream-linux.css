@@ -108,7 +108,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 .icon.icon-clear-input {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-cancel-16.svg");
+  background-image: url("chrome://global/skin/icons/close-fill.svg");
 }
 .icon.icon-delete {
   background-image: url("chrome://global/skin/icons/delete.svg");
@@ -157,7 +157,7 @@ body[lwt-newtab-brighttext] {
   transform: scaleX(-1);
 }
 .icon.icon-edit {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg");
+  background-image: url("chrome://global/skin/icons/edit.svg");
 }
 .icon.icon-pocket {
   background-image: url("chrome://global/skin/icons/pocket.svg");
@@ -751,7 +751,7 @@ main.has-snippet {
   background-color: #FFF;
 }
 .top-site-outer .edit-button {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-edit-16.svg");
+  background-image: url("chrome://global/skin/icons/edit.svg");
 }
 .top-site-outer.dragged .tile *, .top-site-outer.dragged .tile::before {
   display: none;

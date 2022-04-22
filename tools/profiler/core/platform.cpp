@@ -5548,7 +5548,14 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
   // Do this before the Base Profiler is stopped, to keep the existing buffer
   // (if any) alive for our use.
-  mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
+  if (NS_IsMainThread()) {
+    mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
+  } else {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("EnsureBufferForMainThreadAddMarker",
+                               &mozilla::base_profiler_markers_detail::
+                                   EnsureBufferForMainThreadAddMarker));
+  }
 
   UniquePtr<ProfileBufferChunkManagerWithLocalLimit> baseChunkManager;
   bool profilersHandOver = false;
@@ -5879,7 +5886,15 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   SamplerThread* samplerThread = ActivePS::Destroy(aLock);
   samplerThread->Stop(aLock);
 
-  mozilla::base_profiler_markers_detail::ReleaseBufferForMainThreadAddMarker();
+  if (NS_IsMainThread()) {
+    mozilla::base_profiler_markers_detail::
+        ReleaseBufferForMainThreadAddMarker();
+  } else {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("ReleaseBufferForMainThreadAddMarker",
+                               &mozilla::base_profiler_markers_detail::
+                                   ReleaseBufferForMainThreadAddMarker));
+  }
 
   return samplerThread;
 }

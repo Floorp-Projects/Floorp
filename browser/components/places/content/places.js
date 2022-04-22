@@ -444,6 +444,24 @@ var PlacesOrganizer = {
         ? [view.selectedNode]
         : view.selectedNodes;
       this._fillDetailsPane(selectedNodes);
+      window
+        .promiseDocumentFlushed(() => {})
+        .then(() => {
+          if (view.selectedNode && ContentArea.currentView.view) {
+            // When looking at a list of bookmarks/folders,
+            // bookmarkIndex can be considered the row number.
+            // In other contexts (Tags/History/Downloads), calculate the
+            // row using the node even if some of the items in the
+            // list happen to be bookmarks.
+            let row =
+              view.selectedNode.bookmarkIndex !== -1
+                ? view.selectedNode.bookmarkIndex
+                : ContentArea.currentView.view.treeIndexForNode(
+                    view.selectedNode
+                  );
+            ContentTree.view.ensureRowIsVisible(row);
+          }
+        });
     }
   },
 

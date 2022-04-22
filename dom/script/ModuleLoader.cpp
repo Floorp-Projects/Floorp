@@ -123,8 +123,9 @@ void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
 
   if (aRequest->IsTopLevel()) {
     if (aRequest->IsDynamicImport() ||
-        (aRequest->GetLoadContext()->mIsInline &&
-         aRequest->GetLoadContext()->GetParserCreated() == NOT_FROM_PARSER)) {
+        (aRequest->GetScriptLoadContext()->mIsInline &&
+         aRequest->GetScriptLoadContext()->GetParserCreated() ==
+             NOT_FROM_PARSER)) {
       GetScriptLoader()->RunScriptWhenSafe(aRequest);
     } else {
       GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
@@ -132,26 +133,28 @@ void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
     }
   }
 
-  aRequest->GetLoadContext()->MaybeUnblockOnload();
+  aRequest->GetScriptLoadContext()->MaybeUnblockOnload();
 }
 
 nsresult ModuleLoader::CompileOrFinishModuleScript(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModule) {
-  if (aRequest->GetLoadContext()->mWasCompiledOMT) {
+  if (aRequest->GetScriptLoadContext()->mWasCompiledOMT) {
     JS::Rooted<JS::InstantiationStorage> storage(aCx);
 
     RefPtr<JS::Stencil> stencil;
     if (aRequest->IsTextSource()) {
       stencil = JS::FinishCompileModuleToStencilOffThread(
-          aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
+          aCx, aRequest->GetScriptLoadContext()->mOffThreadToken,
+          storage.address());
     } else {
       MOZ_ASSERT(aRequest->IsBytecode());
       stencil = JS::FinishDecodeStencilOffThread(
-          aCx, aRequest->GetLoadContext()->mOffThreadToken, storage.address());
+          aCx, aRequest->GetScriptLoadContext()->mOffThreadToken,
+          storage.address());
     }
 
-    aRequest->GetLoadContext()->mOffThreadToken = nullptr;
+    aRequest->GetScriptLoadContext()->mOffThreadToken = nullptr;
 
     if (!stencil) {
       return NS_ERROR_FAILURE;
@@ -246,7 +249,7 @@ already_AddRefed<ModuleLoadRequest> ModuleLoader::CreateStaticImport(
   newContext->mIsInline = false;
   // Propagated Parent values. TODO: allow child modules to use root module's
   // script mode.
-  newContext->mScriptMode = aParent->GetLoadContext()->mScriptMode;
+  newContext->mScriptMode = aParent->GetScriptLoadContext()->mScriptMode;
 
   RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
       aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, newContext,
