@@ -32,11 +32,11 @@
         states: STATE_LINKED,
         actions: "jump",
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText, nsIAccessibleHyperLink ],
-        children: [ // all kids inherits linked state and jump action
+        children: [ // all kids inherits linked state and action
           {
             role: ROLE_TEXT_LEAF,
             states: STATE_LINKED,
-            actions: "jump",
+            actions: "click ancestor",
           },
         ],
       };
