@@ -9,7 +9,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/PresShell.h"
 #include "nsRefreshDriver.h"
-#include "ImageContainer.h"
 
 nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal() =
     default;
@@ -72,13 +71,4 @@ void nsICanvasRenderingContextInternal::DoSecurityCheck(
   } else if (mOffscreenCanvas && (aForceWriteOnly || aCORSUsed)) {
     mOffscreenCanvas->SetWriteOnly();
   }
-}
-
-already_AddRefed<mozilla::layers::Image>
-nsICanvasRenderingContextInternal::GetAsImage() {
-  RefPtr<mozilla::gfx::SourceSurface> snapshot = GetFrontBufferSnapshot(true);
-  if (!snapshot) {
-    return nullptr;
-  }
-  return mozilla::MakeAndAddRef<mozilla::layers::SourceSurfaceImage>(snapshot);
 }
