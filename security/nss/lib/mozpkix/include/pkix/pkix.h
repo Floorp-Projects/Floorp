@@ -117,6 +117,8 @@ Result BuildCertChain(TrustDomain& trustDomain, Input cert, Time time,
 // - IP addresses are out of scope of RFC 6125, but this method accepts them for
 //   backward compatibility (see SearchNames in pkixnames.cpp)
 // - A wildcard in a DNS-ID may only appear as the entirety of the first label.
+// If the NameMatchingPolicy is omitted, a StrictNameMatchingPolicy is used.
+Result CheckCertHostname(Input cert, Input hostname);
 Result CheckCertHostname(Input cert, Input hostname,
                          NameMatchingPolicy& nameMatchingPolicy);
 

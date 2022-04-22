@@ -134,7 +134,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void Receive(size_t amount);
   void ExpectExtendedMasterSecret(bool expected);
   void ExpectEarlyDataAccepted(bool expected);
-  void DisableECDHEServerKeyReuse();
+  void EnableECDHEServerKeyReuse();
   void SkipVersionChecks();
 
   // Move the DTLS timers for both endpoints to pop the next timer.

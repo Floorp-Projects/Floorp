@@ -110,7 +110,6 @@ int32_t DummyPrSocket::Recv(PRFileDesc *f, void *buf, int32_t buflen,
 
   auto &front = input_.front();
   if (static_cast<size_t>(buflen) < front.len()) {
-    PR_ASSERT(false);
     PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
     return -1;
   }

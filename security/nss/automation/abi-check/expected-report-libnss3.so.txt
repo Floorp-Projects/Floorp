@@ -1,8 +1,0 @@
-
-4 Added functions:
-
-  'function SECStatus CERT_FilterCertListByCertList(CERTCertList*, const CERTCertList*)'    {CERT_FilterCertListByCertList@@NSS_3.77}
-  'function SECStatus CERT_FilterCertListByNickname(CERTCertList*, char*, void*)'    {CERT_FilterCertListByNickname@@NSS_3.77}
-  'function PRBool CERT_IsInList(const CERTCertificate*, const CERTCertList*)'    {CERT_IsInList@@NSS_3.77}
-  'function CK_OBJECT_HANDLE PK11_FindObjectForCert(CERTCertificate*, void*, PK11SlotInfo**)'    {PK11_FindObjectForCert@@NSS_3.77}
-
