@@ -19,6 +19,7 @@
 #include "sandbox/linux/bpf_dsl/policy.h"
 #include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 #include "sandbox/linux/bpf_dsl/syscall_set.h"
+#include "sandbox/linux/seccomp-bpf/syscall.h"
 #include "sandbox/linux/system_headers/linux_filter.h"
 #include "sandbox/linux/system_headers/linux_seccomp.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
@@ -318,8 +319,7 @@ CodeGen::Node PolicyCompiler::MaskedEqualHalf(int argno,
     // Special logic for sanity checking the upper 32-bits of 32-bit system
     // call arguments.
 
-    // TODO(mdempsky): Compile Unexpected64bitArgument() just per program.
-    CodeGen::Node invalid_64bit = Unexpected64bitArgument();
+    CodeGen::Node invalid_64bit = Unexpected64bitArgument(argno);
 
     const uint32_t upper = SECCOMP_ARG_MSB_IDX(argno);
     const uint32_t lower = SECCOMP_ARG_LSB_IDX(argno);
@@ -335,8 +335,13 @@ CodeGen::Node PolicyCompiler::MaskedEqualHalf(int argno,
               BPF_JMP + BPF_JEQ + BPF_K, 0, passed, invalid_64bit));
     }
 
-    // On 64-bit platforms, the upper 32-bits may be 0 or ~0; but we only allow
-    // ~0 if the sign bit of the lower 32-bits is set too:
+    // On 64-bit platforms, the ABI (at least on x86_64) allows any value
+    // for the upper half, but to avoid potential vulnerabilties if an
+    // argument is incorrectly tested as a 32-bit type, we require it to be
+    // either zero-extended or sign-extended.  That is, the upper 32-bits
+    // may be 0 or ~0; but we only allow ~0 if the sign bit of the lower
+    // 32-bits is set too:
+    //
     //   LDW  [upper]
     //   JEQ  0, passed, (next)
     //   JEQ  ~0, (next), invalid
@@ -424,8 +429,18 @@ CodeGen::Node PolicyCompiler::MaskedEqualHalf(int argno,
               BPF_JMP + BPF_JEQ + BPF_K, value, passed, failed)));
 }
 
-CodeGen::Node PolicyCompiler::Unexpected64bitArgument() {
-  return CompileResult(panic_func_("Unexpected 64bit argument detected"));
+CodeGen::Node PolicyCompiler::Unexpected64bitArgument(int argno) {
+  // This situation is unlikely, but possible.  Return to userspace,
+  // zero-extend the problematic argument, and re-issue the syscall.
+  return CompileResult(bpf_dsl::Trap(
+      [](const arch_seccomp_data& args_ref, void* aux) -> intptr_t {
+        arch_seccomp_data args = args_ref;
+        int argno = (int)(intptr_t)aux;
+        args.args[argno] &= 0xFFFFFFFF;
+        return Syscall::Call(args.nr, args.args[0], args.args[1], args.args[2],
+                             args.args[3], args.args[4], args.args[5]);
+      },
+      (void*)(intptr_t)argno));
 }
 
 CodeGen::Node PolicyCompiler::Return(uint32_t ret) {
