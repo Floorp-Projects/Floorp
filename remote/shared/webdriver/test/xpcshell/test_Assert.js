@@ -118,6 +118,21 @@ add_test(function test_positiveInteger() {
   run_next_test();
 });
 
+add_test(function test_positiveNumber() {
+  assert.positiveNumber(1);
+  assert.positiveNumber(0);
+  assert.positiveNumber(1.1);
+  assert.positiveNumber(Number.MAX_VALUE);
+  // eslint-disable-next-line no-loss-of-precision
+  Assert.throws(() => assert.positiveNumber(1.8e308), /InvalidArgumentError/);
+  Assert.throws(() => assert.positiveNumber(-1), /InvalidArgumentError/);
+  Assert.throws(() => assert.positiveNumber(Infinity), /InvalidArgumentError/);
+  Assert.throws(() => assert.positiveNumber("foo"), /InvalidArgumentError/);
+  Assert.throws(() => assert.positiveNumber("foo", "custom"), /custom/);
+
+  run_next_test();
+});
+
 add_test(function test_boolean() {
   assert.boolean(true);
   assert.boolean(false);
