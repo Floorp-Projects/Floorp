@@ -20,7 +20,10 @@ add_task(async function() {
   await selectNode("#testid", inspector);
 
   info("Test creating a new property and escaping");
-  await addProperty(view, 1, "color", "red", "VK_ESCAPE", false);
+  await addProperty(view, 1, "color", "red", {
+    commitValueWith: "VK_ESCAPE",
+    blurNewProperty: false,
+  });
 
   is(
     view.styleDocument.activeElement,
