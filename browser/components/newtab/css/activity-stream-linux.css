@@ -108,7 +108,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 .icon.icon-clear-input {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-cancel-16.svg");
+  background-image: url("chrome://global/skin/icons/close-fill.svg");
 }
 .icon.icon-delete {
   background-image: url("chrome://global/skin/icons/delete.svg");
