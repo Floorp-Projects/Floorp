@@ -70,10 +70,13 @@ add_task(async function test_downloads_panel_new_download() {
   DownloadsCommon.openDownload = async () => {
     ok(false, "openDownload was called when it was not expected");
   };
-  let newTabPromise = BrowserTestUtils.openNewForegroundTab(
+  let newTabPromise = BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "foo.txt"
-  );
+    opening: TEST_PATH + "foo.txt",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
+
   await promisePanelOpened();
   let downloadsListBox = document.getElementById("downloadsListBox");
 
