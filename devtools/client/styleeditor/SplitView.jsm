@@ -161,12 +161,10 @@ class SplitView {
    * @param object options
    *     Optional object that defines custom behavior and data for the item.
    *     All properties are optional :
-   *     - function(DOMElement summary, DOMElement details, object data) onCreate
-   *         Called when the item has been added.
    *     - function(summary, details, data) onShow
    *         Called when the item is shown/active.
    *     - object data
-   *         Object to pass to the callbacks above.
+   *         Object to pass to onShow.
    *     - number ordinal
    *         Items with a lower ordinal are displayed before those with a
    *         higher ordinal.
@@ -186,10 +184,6 @@ class SplitView {
     });
 
     this._side.appendChild(details);
-
-    if (binding.onCreate) {
-      binding.onCreate(summary, details, binding.data);
-    }
   }
 
   /**
@@ -223,7 +217,7 @@ class SplitView {
     details.id = "";
 
     this.appendItem(summary, details, options);
-    return { summary: summary, details: details };
+    return { summary, details };
   }
 
   /**
