@@ -244,7 +244,7 @@ const SnapshotMonitor = new (class SnapshotMonitor {
       await Snapshots.query({
         includeUserPersisted: false,
         includeTombstones: false,
-        group: null,
+        includeSnapshotsInUserManagedGroups: false,
         lastInteractionBefore: now - SNAPSHOT_EXPIRE_DAYS * 86400000,
         limit: this.#expirationChunkSize,
       })
@@ -318,6 +318,9 @@ const SnapshotMonitor = new (class SnapshotMonitor {
         break;
       case "idle-daily":
         await this.#expireSnapshotsChunk(true);
+        await this.#triggerBuilders(true);
+        break;
+      case "test-trigger-builders":
         await this.#triggerBuilders(true);
         break;
       case "test-expiration":
