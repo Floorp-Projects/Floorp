@@ -11,6 +11,7 @@
 #include "js/loader/LoadedScript.h"
 #include "js/loader/ScriptKind.h"
 #include "js/loader/ScriptLoadRequest.h"
+#include "mozilla/dom/ScriptLoadContext.h"
 #include "nsCOMPtr.h"
 #include "nsRefPtrHashtable.h"
 #include "nsIScriptElement.h"
