@@ -223,6 +223,13 @@ struct BufferIterator {
     return mBuffer.RangeLength(other.mIter, mIter);
   }
 
+  bool operator==(const BufferIterator& other) const {
+    return mBuffer.Start() == other.mBuffer.Start() && mIter == other.mIter;
+  }
+  bool operator!=(const BufferIterator& other) const {
+    return !(*this == other);
+  }
+
   bool done() const { return mIter.Done(); }
 
   [[nodiscard]] bool readBytes(char* outData, size_t size) {
@@ -347,9 +354,9 @@ struct SCOutput {
 };
 
 class SCInput {
-  typedef js::BufferIterator<uint64_t, SystemAllocPolicy> BufferIterator;
-
  public:
+  using BufferIterator = js::BufferIterator<uint64_t, SystemAllocPolicy>;
+
   SCInput(JSContext* cx, const JSStructuredCloneData& data);
 
   JSContext* context() const { return cx; }
@@ -481,6 +488,15 @@ struct JSStructuredCloneReader {
                             JS::MutableHandleString str);
   friend bool JS_ReadTypedArray(JSStructuredCloneReader* r,
                                 MutableHandleValue vp);
+
+  // Provide a way to detect whether any of the clone data is never used. When
+  // "tail" data (currently, this is only stored data for Transferred
+  // ArrayBuffers in the DifferentProcess scope) is read, record the first and
+  // last positions. At the end of deserialization, make sure there's nothing
+  // between the end of the main data and the beginning of the tail, nor after
+  // the end of the tail.
+  mozilla::Maybe<SCInput::BufferIterator> tailStartPos;
+  mozilla::Maybe<SCInput::BufferIterator> tailEndPos;
 };
 
 struct JSStructuredCloneWriter {
@@ -2961,6 +2977,10 @@ bool JSStructuredCloneReader::readTransferMap() {
         return false;
       }
 
+      if (tailStartPos.isNothing()) {
+        tailStartPos = mozilla::Some(in.tell());
+      }
+
       uint32_t tag, data;
       if (!in.readPair(&tag, &data)) {
         return false;
@@ -2975,6 +2995,7 @@ bool JSStructuredCloneReader::readTransferMap() {
         return false;
       }
       obj = &val.toObject();
+      tailEndPos = mozilla::Some(in.tell());
     } else {
       if (!callbacks || !callbacks->readTransfer) {
         ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE, closure);
@@ -3363,6 +3384,27 @@ bool JSStructuredCloneReader::read(MutableHandleValue vp, size_t nbytes) {
   }
 
   allObjs.clear();
+
+  // For fuzzing, it is convenient to allow extra data at the end
+  // of the input buffer so that more possible inputs are considered
+  // valid.
+#ifndef FUZZING
+  bool extraData;
+  if (tailStartPos.isSome()) {
+    // in.tell() is the end of the main data. If "tail" data was consumed, then
+    // check whether there's any data between the main data and the
+    // beginning of the tail, or after the last read point in the tail.
+    extraData = (in.tell() != *tailStartPos || !tailEndPos->done());
+  } else {
+    extraData = !in.tell().done();
+  }
+  if (extraData) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "extra data after end");
+    return false;
+  }
+#endif
 
   JSRuntime* rt = context()->runtime();
   rt->addTelemetry(JS_TELEMETRY_DESERIALIZE_BYTES,

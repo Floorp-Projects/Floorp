@@ -197,6 +197,11 @@ class BufferList : private AllocPolicy {
       return mData;
     }
 
+    bool operator==(const IterImpl& other) const {
+      return mAbsoluteOffset == other.mAbsoluteOffset;
+    }
+    bool operator!=(const IterImpl& other) const { return !(*this == other); }
+
     // Returns true if the memory in the range [Data(), Data() + aBytes) is all
     // part of one contiguous buffer.
     bool HasRoomFor(size_t aBytes) const {
