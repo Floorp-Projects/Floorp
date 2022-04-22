@@ -161,7 +161,7 @@ bool ScriptLoadContext::IsPreload() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
     JS::loader::ModuleLoadRequest* root =
         mRequest->AsModuleRequest()->GetRootModule();
-    return root->GetLoadContext()->IsPreload();
+    return root->GetScriptLoadContext()->IsPreload();
   }
 
   MOZ_ASSERT_IF(mIsPreload, !GetScriptElement());
