@@ -19,7 +19,7 @@ add_task(async function testBreakableLinesOverReloads() {
   );
 
   info("Assert breakable lines of the first html page load");
-  await assertBreakableLines(dbg, "index.html", 57, [
+  await assertBreakableLines(dbg, "index.html", 59, [
     [16, 17],
     [21],
     [23],
@@ -40,22 +40,46 @@ add_task(async function testBreakableLinesOverReloads() {
   info("Assert breakable lines of the simple first load of script.js");
   await assertBreakableLines(dbg, "script.js", 3, [[1], [3]]);
 
+  info("Assert breakable lines of the first iframe page load");
+  await assertBreakableLines(dbg, "iframe.html", 30, [
+    [16, 17],
+    // [22, 23], // We only see the first inline script as breakable
+  ]);
+
   info(
     "Reload the page, wait for sources and assert that breakable lines get updated"
   );
   testServer.switchToNextVersion();
-  await reload(dbg, "index.html", "script.js", "original.js");
+  await reload(dbg, "index.html", "script.js", "original.js", "iframe.html");
 
   info("Assert breakable lines of the more complex second load of script.js");
   await assertBreakableLines(dbg, "script.js", 23, [[2], [13, 23]]);
 
   info("Assert breakable lines of the second html page load");
-  await assertBreakableLines(dbg, "index.html", 28, [[22], [24]]);
+  await assertBreakableLines(dbg, "index.html", 30, [[22], [24]]);
 
   info("Assert breakable lines of the second orignal file");
   // See first assertion about original.js,
   // the size of original.js doesn't match the size of the test file
   await assertBreakableLines(dbg, "original.js", 18, [[1, 3], [8, 11], [13]]);
+
+  await selectSource(dbg, "iframe.html");
+  // When EFT is disabled, iframe.html is a regular source and the right content is displayed
+  if (isEveryFrameTargetEnabled()) {
+    is(
+      getCM(dbg).getValue(),
+      `Error: Incorrect contents fetched, please reload.`
+    );
+  }
+  /**
+   * Bug 1762381 - Can't assert breakable lines yet, because the iframe page content fails loading
+
+  info("Assert breakable lines of the second iframe page load");
+  await assertBreakableLines(dbg, "iframe.html", 27, [
+    [15, 17],
+    [21, 23],
+  ]);
+  */
 });
 
 function shouldLineBeBreakable(breakableLines, line) {

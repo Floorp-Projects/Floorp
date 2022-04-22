@@ -1,0 +1,29 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Iframe v1</title>
+  </head>
+
+  <body>
+    <!-- A simple inline script, that helps to cover breakable lines/columns -->
+    <!-- Have them define first, so that we avoid shifting lines when adding new scripts later in the html -->
+    <script>
+      // Comment
+      console.log('iframe breakable-line');
+    </script>
+
+    <!-- A second inline script, that helps cover bugs when having two distinct inline scripts -->
+    <script>
+      // Another comment
+      console.log("second iframe inline script");
+    </script>
+
+    <!-- A script whose URL is loaded in many different ways -->
+    <script src="same-url.sjs"></script>
+  </body>
+
+</html>
