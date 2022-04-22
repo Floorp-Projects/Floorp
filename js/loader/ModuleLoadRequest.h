@@ -7,6 +7,7 @@
 #ifndef js_loader_ModuleLoadRequest_h
 #define js_loader_ModuleLoadRequest_h
 
+#include "LoadContextBase.h"
 #include "ScriptLoadRequest.h"
 #include "ModuleLoaderBase.h"
 #include "mozilla/Assertions.h"
@@ -52,7 +53,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    mozilla::dom::ScriptLoadContext* aContext, bool aIsTopLevel,
+                    LoadContextBase* aContext, bool aIsTopLevel,
                     bool aIsDynamicImport, ModuleLoaderBase* aLoader,
                     VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule);
 

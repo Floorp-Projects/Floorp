@@ -4,7 +4,7 @@
     "visibility": "public",
     "filename": "eslint-plugin-mozilla.tar.gz",
     "unpack": true,
-    "digest": "0daab6fda80cde49a591b5317509a3aec61da7d2033ba6fcc1eeac2e9a9ef743ce2c85395f7ad720841312e2c8d8404e729688797646f3a307d0700d0fb9c449",
-    "size": 6294809
+    "digest": "66001bfc0ce0e807d2e082128012ad0b6a5d6278ea5199046ce4d490fbc570066f74ad32e065d5095415b892450acef9684cf4616181cd7313527e3b4e960a51",
+    "size": 5569182
   }
 ]

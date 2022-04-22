@@ -193,7 +193,7 @@ class TlsAgent : public PollTarget {
   void SetDowngradeCheckVersion(uint16_t version);
   void CheckSecretsDestroyed();
   void ConfigNamedGroups(const std::vector<SSLNamedGroup>& groups);
-  void DisableECDHEServerKeyReuse();
+  void EnableECDHEServerKeyReuse();
   bool GetPeerChainLength(size_t* count);
   void CheckCipherSuite(uint16_t cipher_suite);
   void SetResumptionTokenCallback();

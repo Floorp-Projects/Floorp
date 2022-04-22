@@ -279,7 +279,7 @@ $letter-fallback-color: $white;
   }
 
   .edit-button {
-    background-image: url('#{$image-path}glyph-edit-16.svg');
+    background-image: url('chrome://global/skin/icons/edit.svg');
   }
 
   &.dragged {

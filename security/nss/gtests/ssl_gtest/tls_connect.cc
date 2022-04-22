@@ -900,8 +900,8 @@ void TlsConnectTestBase::CheckEarlyDataAccepted() {
   server_->CheckEarlyDataAccepted(expect_early_data_accepted_);
 }
 
-void TlsConnectTestBase::DisableECDHEServerKeyReuse() {
-  server_->DisableECDHEServerKeyReuse();
+void TlsConnectTestBase::EnableECDHEServerKeyReuse() {
+  server_->EnableECDHEServerKeyReuse();
 }
 
 void TlsConnectTestBase::SkipVersionChecks() {

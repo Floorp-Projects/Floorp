@@ -79,7 +79,7 @@ static sslOptions ssl_defaults = {
     .enableOCSPStapling = PR_FALSE,
     .enableDelegatedCredentials = PR_FALSE,
     .enableALPN = PR_TRUE,
-    .reuseServerECDHEKey = PR_TRUE,
+    .reuseServerECDHEKey = PR_FALSE,
     .enableFallbackSCSV = PR_FALSE,
     .enableServerDhe = PR_TRUE,
     .enableExtendedMS = PR_TRUE,
@@ -4413,7 +4413,6 @@ SSLExp_SetTls13GreaseEchSize(PRFileDesc *fd, PRUint8 size)
 {
     sslSocket *ss = ssl_FindSocket(fd);
     if (!ss || size == 0) {
-        exit(-1);
         return SECFailure;
     }
     ssl_Get1stHandshakeLock(ss);

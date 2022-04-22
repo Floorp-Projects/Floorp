@@ -19,12 +19,10 @@ function run_test() {
 
   // access module's global object directly without importing any
   // symbols
-  var module = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", null);
-  Assert.equal(typeof(XPCOMUtils), "undefined");
-  Assert.equal(typeof(module), "object");
-  Assert.equal(typeof(module.XPCOMUtils), "object");
-  Assert.equal(typeof(module.XPCOMUtils.defineLazyGetter), "function");
-  Assert.ok(scope.XPCOMUtils == module.XPCOMUtils);
+  Assert.throws(
+    () => ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", null),
+    TypeError
+  );
 
   // import symbols to our global object
   Assert.equal(typeof(Cu.import), "function");
