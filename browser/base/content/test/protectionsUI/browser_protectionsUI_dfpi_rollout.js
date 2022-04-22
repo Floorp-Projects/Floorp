@@ -25,9 +25,9 @@ const SEARCH_PREFS_OPT_IN = [
 ];
 
 const SEARCH_PREFS_OPT_OUT = [
-  ["browser.search.param.google_channel_us", "xus7"],
-  ["browser.search.param.google_channel_row", "xrow7"],
-  ["browser.search.param.bing_ptag", "MOZZ0000000032"],
+  ["browser.search.param.google_channel_us", "tus7"],
+  ["browser.search.param.google_channel_row", "trow7"],
+  ["browser.search.param.bing_ptag", "MOZZ0000000031"],
 ];
 
 function cleanup() {
