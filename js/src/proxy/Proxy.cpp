@@ -874,12 +874,14 @@ static void proxy_Finalize(JS::GCContext* gcx, JSObject* obj) {
   JS::AutoSuppressGCAnalysis nogc;
 
   MOZ_ASSERT(obj->is<ProxyObject>());
-  obj->as<ProxyObject>().handler()->finalize(gcx, obj);
+  ProxyObject* proxy = &obj->as<ProxyObject>();
+  proxy->handler()->finalize(gcx, obj);
 
-  if (!obj->as<ProxyObject>().usingInlineValueArray()) {
-    // Bug 1560019: This allocation is not tracked, but is only present when
-    // objects are swapped which is assumed to be relatively rare.
-    gcx->freeUntracked(js::detail::GetProxyDataLayout(obj)->values());
+  if (!proxy->usingInlineValueArray() && proxy->isTenured()) {
+    auto* valArray = js::detail::GetProxyDataLayout(obj)->values();
+    size_t size =
+        js::detail::ProxyValueArray::sizeOf(proxy->numReservedSlots());
+    gcx->free_(obj, valArray, size, MemoryUse::ProxyExternalValueArray);
   }
 }
 
@@ -887,13 +889,23 @@ size_t js::proxy_ObjectMoved(JSObject* obj, JSObject* old) {
   ProxyObject& proxy = obj->as<ProxyObject>();
 
   if (IsInsideNursery(old)) {
-    // Objects in the nursery are never swapped so the proxy must have an
-    // inline ProxyValueArray.
-    MOZ_ASSERT(old->as<ProxyObject>().usingInlineValueArray());
-    proxy.setInlineValueArray();
+    proxy.nurseryProxyTenured(&old->as<ProxyObject>());
   }
 
   return proxy.handler()->objectMoved(obj, old);
+}
+
+void ProxyObject::nurseryProxyTenured(ProxyObject* old) {
+  if (old->usingInlineValueArray()) {
+    setInlineValueArray();
+    return;
+  }
+
+  Nursery& nursery = runtimeFromMainThread()->gc.nursery();
+  nursery.removeMallocedBufferDuringMinorGC(data.values());
+
+  size_t size = detail::ProxyValueArray::sizeOf(numReservedSlots());
+  AddCellMemory(this, size, MemoryUse::ProxyExternalValueArray);
 }
 
 const JSClassOps js::ProxyClassOps = {
@@ -963,7 +975,6 @@ JS_PUBLIC_API JSObject* js::NewProxyObject(JSContext* cx,
 }
 
 void ProxyObject::renew(const BaseProxyHandler* handler, const Value& priv) {
-  MOZ_ASSERT(!IsInsideNursery(this));
   MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
   MOZ_ASSERT(getClass() == &ProxyClass);
   MOZ_ASSERT(!IsWindowProxy(this));

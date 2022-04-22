@@ -29,12 +29,7 @@ static gc::AllocKind GetProxyGCObjectKind(const JSClass* clasp,
   // JSCLASS_HAS_RESERVED_SLOTS since bug 1360523.
   MOZ_ASSERT(nreserved > 0);
 
-  MOZ_ASSERT(
-      js::detail::ProxyValueArray::sizeOf(nreserved) % sizeof(Value) == 0,
-      "ProxyValueArray must be a multiple of Value");
-
-  uint32_t nslots =
-      js::detail::ProxyValueArray::sizeOf(nreserved) / sizeof(Value);
+  uint32_t nslots = detail::ProxyValueArray::allocCount(nreserved);
   MOZ_ASSERT(nslots <= NativeObject::MAX_FIXED_SLOTS);
 
   gc::AllocKind kind = gc::GetGCObjectKind(nslots);
@@ -138,7 +133,6 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
 }
 
 gc::AllocKind ProxyObject::allocKindForTenure() const {
-  MOZ_ASSERT(usingInlineValueArray());
   Value priv = private_();
   return GetProxyGCObjectKind(getClass(), data.handler, priv);
 }
