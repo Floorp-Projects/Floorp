@@ -741,13 +741,7 @@ struct RoleDescrComparator {
   MOZ_ASSERT(mGeckoAccessible);
 
   nsAutoString id;
-  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-    if (acc->GetContent()) {
-      nsCoreUtils::GetID(acc->GetContent(), id);
-    }
-  } else {
-    mGeckoAccessible->AsRemote()->DOMNodeID(id);
-  }
+  mGeckoAccessible->DOMNodeID(id);
 
   return nsCocoaUtils::ToNSString(id);
 }
