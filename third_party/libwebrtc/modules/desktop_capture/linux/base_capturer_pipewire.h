@@ -10,12 +10,13 @@
 
 #ifndef MODULES_DESKTOP_CAPTURE_LINUX_BASE_CAPTURER_PIPEWIRE_H_
 #define MODULES_DESKTOP_CAPTURE_LINUX_BASE_CAPTURER_PIPEWIRE_H_
-
 #include <gio/gio.h>
 #define typeof __typeof__
 #include <pipewire/pipewire.h>
 #include <spa/param/video/format-utils.h>
+#include <spa/utils/result.h>
 
+#include "absl/types/optional.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -24,14 +25,26 @@ namespace webrtc {
 
 class BaseCapturerPipeWire : public DesktopCapturer {
  public:
-  enum CaptureSourceType : uint32_t {
+  // Values are set based on source type property in
+  // xdg-desktop-portal/screencast
+  // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
+  enum class CaptureSourceType : uint32_t {
     kScreen = 0b01,
     kWindow = 0b10,
     kAny = 0b11
   };
 
+  enum class CursorMode : uint32_t {
+    kHidden = 0b01,
+    kEmbedded = 0b10,
+    kMetadata = 0b100
+  };
+
   explicit BaseCapturerPipeWire(CaptureSourceType source_type);
   ~BaseCapturerPipeWire() override;
+
+  static std::unique_ptr<DesktopCapturer> CreateRawCapturer(
+      const DesktopCaptureOptions& options);
 
   // DesktopCapturer interface.
   void Start(Callback* delegate) override;
@@ -39,22 +52,17 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
 
-  static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-      const DesktopCaptureOptions& options);
-
-  static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
-      const DesktopCaptureOptions& options);
-
  private:
   // PipeWire types -->
-  pw_context* pw_context_ = nullptr;
-  pw_core* pw_core_ = nullptr;
-  pw_stream* pw_stream_ = nullptr;
-  pw_thread_loop* pw_main_loop_ = nullptr;
+  struct pw_context* pw_context_ = nullptr;
+  struct pw_core* pw_core_ = nullptr;
+  struct pw_stream* pw_stream_ = nullptr;
+  struct pw_thread_loop* pw_main_loop_ = nullptr;
 
-  spa_hook spa_core_listener_ = {};
-  spa_hook spa_stream_listener_ = {};
+  spa_hook spa_core_listener_;
+  spa_hook spa_stream_listener_;
 
+  // event handlers
   pw_core_events pw_core_events_ = {};
   pw_stream_events pw_stream_events_ = {};
 
@@ -64,7 +72,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   gint32 pw_fd_ = -1;
 
   CaptureSourceType capture_source_type_ =
-      BaseCapturerPipeWire::CaptureSourceType::kAny;
+      BaseCapturerPipeWire::CaptureSourceType::kScreen;
 
   // <-- end of PipeWire types
 
@@ -79,7 +87,6 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   guint sources_request_signal_id_ = 0;
   guint start_request_signal_id_ = 0;
 
-  bool video_metadata_use_ = false;
   DesktopSize video_size_;
   DesktopSize desktop_size_ = {};
   DesktopCaptureOptions options_ = {};
@@ -92,24 +99,26 @@ class BaseCapturerPipeWire : public DesktopCapturer {
 
   void InitPortal();
   void InitPipeWire();
+  void InitPipeWireTypes();
 
   pw_stream* CreateReceivingStream();
   void HandleBuffer(pw_buffer* buffer);
 
   void ConvertRGBxToBGRx(uint8_t* frame, uint32_t size);
 
-  static void OnCoreError(void *data,
+  static void OnCoreError(void* data,
                           uint32_t id,
                           int seq,
                           int res,
-                          const char *message);
-  static void OnStreamParamChanged(void *data,
+                          const char* message);
+  static void OnStreamParamChanged(void* data,
                                    uint32_t id,
-                                   const struct spa_pod *format);
+                                   const struct spa_pod* format);
   static void OnStreamStateChanged(void* data,
                                    pw_stream_state old_state,
                                    pw_stream_state state,
                                    const char* error_message);
+
   static void OnStreamProcess(void* data);
   static void OnNewBuffer(void* data, uint32_t id);
 
