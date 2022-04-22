@@ -41,6 +41,7 @@ linux64-rust-1.57:
             '--target', 'wasm32-wasi',
             '--compiler-builtins-hack',
         ]
+        toolchain-alias: linux64-rust-toolchain
     fetches:
         toolchain:
             - linux64-clang-toolchain
@@ -154,6 +155,7 @@ linux64-rust-macos-1.57:
             '--target', 'x86_64-apple-darwin',
             '--target', 'aarch64-apple-darwin',
         ]
+        toolchain-alias: linux64-rust-macos-toolchain
 
 linux64-rust-macos-1.60:
     description: "rust repack with macos-cross support"
@@ -202,6 +204,7 @@ linux64-rust-windows-1.57:
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
         ]
+        toolchain-alias: linux64-rust-windows-toolchain
 
 linux64-rust-windows-1.60:
     description: "rust repack with windows-cross support"
@@ -228,6 +231,7 @@ win64-rust-1.57:
             '--target', 'i686-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
         ]
+        toolchain-alias: win64-rust-toolchain
 
 win64-rust-1.60:
     treeherder:

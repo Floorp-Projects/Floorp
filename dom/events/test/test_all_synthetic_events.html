@@ -350,6 +350,11 @@ const kEventConstructors = {
                                                          return new SubmitEvent(aName, aProps);
                                                        },
                                              },
+  TaskPriorityChangeEvent:                   { create (aName, aProps) {
+                                                         aProps.previousPriority = "user-blocking";
+                                                         return new TaskPriorityChangeEvent(aName, aProps);
+                                                       },
+                                             },
   TCPSocketErrorEvent:                       { create(aName, aProps) {
                                                          return new TCPSocketErrorEvent(aName, aProps);
                                                        },

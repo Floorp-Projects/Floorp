@@ -6,9 +6,13 @@
 
 UNIFIED_SOURCES += [
     "TestContainerParser.cpp",
-    "TestExtractAV1CodecDetails.cpp",
     "TestExtractVPXCodecDetails.cpp",
 ]
+
+if CONFIG["MOZ_AV1"]:
+    UNIFIED_SOURCES += [
+        "TestExtractAV1CodecDetails.cpp",
+    ]
 
 LOCAL_INCLUDES += [
     "/dom/media",

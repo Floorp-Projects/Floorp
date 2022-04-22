@@ -841,8 +841,8 @@ set_define("ENABLE_WASM_SIMD", wasm_simd)
 # =====================================================
 
 
-@depends(milestone.is_nightly, "--enable-wasm-simd", "--enable-simulator", target)
-def default_wasm_avx(is_nightly, wasm_simd_enabled, simulator, target):
+@depends("--enable-wasm-simd", "--enable-simulator", target)
+def default_wasm_avx(wasm_simd_enabled, simulator, target):
     if not wasm_simd_enabled:
         return
 
@@ -850,7 +850,7 @@ def default_wasm_avx(is_nightly, wasm_simd_enabled, simulator, target):
         return
 
     if target.cpu in ("x86_64", "x86"):
-        return is_nightly
+        return True
 
 
 option(

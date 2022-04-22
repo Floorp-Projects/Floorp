@@ -21,7 +21,7 @@ namespace dom {
 
 class AbortSignal;
 
-class AbortController final : public nsISupports, public nsWrapperCache {
+class AbortController : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AbortController)
@@ -40,8 +40,8 @@ class AbortController final : public nsISupports, public nsWrapperCache {
 
   void Abort(JSContext* aCx, JS::Handle<JS::Value> aReason);
 
- private:
-  ~AbortController();
+ protected:
+  virtual ~AbortController();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<AbortSignal> mSignal;

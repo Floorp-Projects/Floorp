@@ -89,6 +89,7 @@ add_task(async function test_default() {
   await crashTabTestHelper(
     {},
     {
+      SubmittedFrom: "CrashedTab",
       Comments: null,
       URL: "",
     }
@@ -101,6 +102,7 @@ add_task(async function test_default() {
 add_task(async function test_just_a_comment() {
   await crashTabTestHelper(
     {
+      SubmittedFrom: "CrashedTab",
       comments: COMMENTS,
     },
     {
@@ -116,6 +118,7 @@ add_task(async function test_just_a_comment() {
 add_task(async function test_send_URL() {
   await crashTabTestHelper(
     {
+      SubmittedFrom: "CrashedTab",
       includeURL: true,
     },
     {
@@ -131,6 +134,7 @@ add_task(async function test_send_URL() {
 add_task(async function test_send_all() {
   await crashTabTestHelper(
     {
+      SubmittedFrom: "CrashedTab",
       includeURL: true,
       comments: COMMENTS,
     },

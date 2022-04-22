@@ -150,6 +150,7 @@ suites:
     custom:
         description: "Browsertime tests that use a custom pageload test script. These use the pageload type, but may have other intentions."
         tests:
+            browsertime: "Used to run vanilla browsertime tests through raptor. For example: `./mach raptor --browsertime -t browsertime --browsertime-arg url=https://www.sitespeed.io --browsertime-arg iterations=3`"
             process-switch: "Measures process switch time"
             welcome: "Measures pageload metrics for the first-install about:welcome page"
     interactive:

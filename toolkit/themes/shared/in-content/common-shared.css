@@ -310,7 +310,7 @@ xul|tabs {
 xul|tab {
   appearance: none;
   margin-top: 0;
-  padding: 2px 20px 0 !important;
+  padding: 2px 20px 0;
   min-height: 44px;
   color: inherit;
   background-color: transparent;

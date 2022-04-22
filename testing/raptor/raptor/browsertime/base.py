@@ -42,6 +42,7 @@ class Browsertime(Perftest):
     def __init__(self, app, binary, process_handler=None, **kwargs):
         self.browsertime = True
         self.browsertime_failure = ""
+        self.browsertime_user_args = []
 
         self.process_handler = process_handler or mozprocess.ProcessHandler
         for key in list(kwargs):
@@ -71,6 +72,7 @@ class Browsertime(Perftest):
             "browsertime_ffmpeg",
             "browsertime_geckodriver",
             "browsertime_chromedriver",
+            "browsertime_user_args",
         ):
             try:
                 if not self.browsertime_video and k == "browsertime_ffmpeg":
@@ -205,7 +207,32 @@ class Browsertime(Perftest):
             )
         else:
             # Custom scripts are treated as pageload tests for now
-            if test.get("interactive", False):
+            if test.get("name", "") == "browsertime":
+                # Check for either a script or a url from the
+                # --browsertime-arg options
+                browsertime_script = None
+                for option in self.browsertime_user_args:
+                    arg, val = option.split("=")
+                    if arg in ("test_script", "url"):
+                        browsertime_script = val
+                if browsertime_script is None:
+                    raise Exception(
+                        "You must provide a path to the test script or the url like so: "
+                        "`--browsertime-arg test_script=PATH/TO/SCRIPT`, or "
+                        "`--browsertime-arg url=https://www.sitespeed.io`"
+                    )
+
+                # Make it simple to use our builtin test scripts
+                if browsertime_script == "pageload":
+                    browsertime_script = os.path.join(
+                        browsertime_path, "browsertime_pageload.js"
+                    )
+                elif browsertime_script == "interactive":
+                    browsertime_script = os.path.join(
+                        browsertime_path, "browsertime_interactive.js"
+                    )
+
+            elif test.get("interactive", False):
                 browsertime_script = os.path.join(
                     browsertime_path,
                     "browsertime_interactive.js",
@@ -255,6 +282,8 @@ class Browsertime(Perftest):
             # Raptor's `post startup delay` is settle time after the browser has started
             "--browsertime.post_startup_delay",
             str(self.post_startup_delay),
+            "--iterations",
+            str(test.get("browser_cycles", 1)),
         ]
 
         if test.get("secondary_url"):
@@ -389,6 +418,12 @@ class Browsertime(Perftest):
                 if value is not None:
                     priority1_options.extend([browser_time_option, str(value)])
 
+        # Add any user-specified flags here, let them override anything
+        # with no restrictions
+        for user_arg in self.browsertime_user_args:
+            arg, val = user_arg.split("=")
+            priority1_options.extend([f"--{arg}", val])
+
         # In this code block we check if any priority 1 arguments are in conflict with a
         # priority 2/3/4 argument
         MULTI_OPTS = [
@@ -420,8 +455,6 @@ class Browsertime(Perftest):
             + self.driver_paths
             + [browsertime_script]
             + browsertime_options
-            # -n option for the browsertime to restart the browser
-            + ["-n", str(test.get("browser_cycles", 1))]
         )
 
     def _compute_process_timeout(self, test, timeout):
