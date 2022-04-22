@@ -30,6 +30,8 @@ class SplitView {
     this._controller = root.querySelector(".splitview-controller");
     this._nav = root.querySelector(".splitview-nav");
     this._side = root.querySelector(".splitview-side-details");
+    this._tplSummary = root.querySelector("#splitview-tpl-summary-stylesheet");
+    this._tplDetails = root.querySelector("#splitview-tpl-details-stylesheet");
     this._activeSummary = null;
     this._filter = null;
 
@@ -154,67 +156,40 @@ class SplitView {
   /**
    * Append an item to the split view.
    *
-   * @param DOMElement summary
-   *        The summary element for the item.
-   * @param DOMElement details
-   *        The details element for the item.
-   * @param object options
-   *     Optional object that defines custom behavior and data for the item.
-   *     All properties are optional :
-   *     - function(details) onShow
-   *         Called when the item is shown/active.
-   *     - number ordinal
-   *         Items with a lower ordinal are displayed before those with a
-   *         higher ordinal.
+   * @param {Object} options
+   *        Optional object that defines custom behavior and data for the item.
+   *        All properties are optional.
+   * @param {function} [options.onShow]
+   *         Called with the detailed element when the item is shown/active.
+   * @param {Number} [options.ordinal]
+   *         Items with a lower ordinal are displayed before those with a higher ordinal.
    */
-  appendItem(summary, details, options) {
-    const binding = options || {};
+  appendItem(options) {
+    // Create the detail and summary nodes from the templates node (declared in index.xhtml)
+    const details = this._tplDetails.cloneNode(true);
+    details.id = "";
+    const summary = this._tplSummary.cloneNode(true);
+    summary.id = "";
 
-    binding._summary = summary;
-    binding._details = details;
-    bindings.set(summary, binding);
-
-    this._nav.appendChild(summary);
-
+    if (options?.ordinal !== undefined) {
+      // can be zero
+      summary.style.MozBoxOrdinalGroup = options.ordinal;
+      summary.setAttribute("data-ordinal", options.ordinal);
+    }
     summary.addEventListener("click", event => {
       event.stopPropagation();
       this.activeSummary = summary;
     });
 
+    this._nav.appendChild(summary);
     this._side.appendChild(details);
-  }
 
-  /**
-   * Append an item to the split view according to two template elements
-   * (one for the item's summary and the other for the item's details).
-   *
-   * @param string name
-   *        Name of the template elements to instantiate.
-   *        Requires two (hidden) DOM elements with id "splitview-tpl-summary-"
-   *        and "splitview-tpl-details-" suffixed with name.
-   * @param object options
-   *        Optional object that defines custom behavior and data for the item.
-   *        See appendItem for full description.
-   * @return object{summary:,details:}
-   *         Object with the new DOM elements created for summary and details.
-   * @see appendItem
-   */
-  appendTemplatedItem(name, options) {
-    options = options || {};
-    let summary = this._root.querySelector("#splitview-tpl-summary-" + name);
-    let details = this._root.querySelector("#splitview-tpl-details-" + name);
+    bindings.set(summary, {
+      _summary: summary,
+      _details: details,
+      onShow: options?.onShow,
+    });
 
-    summary = summary.cloneNode(true);
-    summary.id = "";
-    if (options.ordinal !== undefined) {
-      // can be zero
-      summary.style.MozBoxOrdinalGroup = options.ordinal;
-      summary.setAttribute("data-ordinal", options.ordinal);
-    }
-    details = details.cloneNode(true);
-    details.id = "";
-
-    this.appendItem(summary, details, options);
     return { summary, details };
   }
 
