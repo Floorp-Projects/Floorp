@@ -3,7 +3,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React, { useEffect } from "react";
-const CONFIGURABLE_STYLES = ["color", "fontSize"];
+const CONFIGURABLE_STYLES = [
+  "color",
+  "fontSize",
+  "fontWeight",
+  "letterSpacing",
+  "lineHeight",
+  "marginBlock",
+  "marginInline",
+  "paddingBlock",
+  "paddingInline",
+];
 const ZAP_SIZE_THRESHOLD = 160;
 
 /**
@@ -77,7 +87,7 @@ export const Localized = ({ text, children }) => {
 
   // Apply certain configurable styles.
   CONFIGURABLE_STYLES.forEach(style => {
-    if (text[style]) props.style[style] = text[style];
+    if (text[style] !== undefined) props.style[style] = text[style];
   });
 
   return React.cloneElement(
