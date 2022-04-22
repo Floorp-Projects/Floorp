@@ -94,7 +94,7 @@ async function testEditProperty(inspector, ruleView) {
   is(newValue, "red", "border-color should have been set.");
 
   ruleView.styleDocument.activeElement.blur();
-  await addProperty(ruleView, 1, "color", "red", ";");
+  await addProperty(ruleView, 1, "color", "red", { commitValueWith: ";" });
 
   const props = ruleView.element.querySelectorAll(".ruleview-property");
   for (let i = 0; i < props.length; i++) {
