@@ -11,9 +11,6 @@ const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const EXPORTED_SYMBOLS = ["SplitView"];
 
-/* this must be kept in sync with CSS (ie. splitview.css) */
-const LANDSCAPE_MEDIA_QUERY = "(min-width: 701px)";
-
 var bindings = new WeakMap();
 
 class SplitView {
@@ -35,10 +32,6 @@ class SplitView {
     this._side = root.querySelector(".splitview-side-details");
     this._activeSummary = null;
     this._filter = null;
-
-    this._mql = root.ownerDocument.defaultView.matchMedia(
-      LANDSCAPE_MEDIA_QUERY
-    );
 
     // items list focus and search-on-type handling
     this._nav.addEventListener("keydown", event => {
@@ -94,15 +87,6 @@ class SplitView {
 
       return true;
     });
-  }
-
-  /**
-   * Retrieve whether the UI currently has a landscape orientation.
-   *
-   * @return boolean
-   */
-  get isLandscape() {
-    return this._mql.matches;
   }
 
   /**
