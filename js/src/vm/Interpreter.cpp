@@ -542,6 +542,21 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
   return ok;
 }
 
+// Returns true if the callee needs an outerized |this| object. Outerization
+// means passing the WindowProxy instead of the Window (a GlobalObject) because
+// we must never expose the Window to script. This returns false only for DOM
+// getters or setters.
+static bool CalleeNeedsOuterizedThisObject(const Value& callee) {
+  if (!callee.isObject() || !callee.toObject().is<JSFunction>()) {
+    return true;
+  }
+  JSFunction& fun = callee.toObject().as<JSFunction>();
+  if (!fun.isNativeFun() || !fun.hasJitInfo()) {
+    return true;
+  }
+  return fun.jitInfo()->needsOuterizedThisObject();
+}
+
 static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
                          CallReason reason = CallReason::Call) {
   MOZ_ASSERT(args.array() + args.length() == args.end(),
@@ -551,14 +566,7 @@ static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
     // We must call the thisValue hook in case we are not called from the
     // interpreter, where a prior bytecode has computed an appropriate
     // |this| already.  But don't do that if fval is a DOM function.
-    HandleValue fval = args.calleev();
-    if (!fval.isObject() || !fval.toObject().is<JSFunction>() ||
-        !fval.toObject().as<JSFunction>().isNativeFun() ||
-        !fval.toObject().as<JSFunction>().hasJitInfo() ||
-        fval.toObject()
-            .as<JSFunction>()
-            .jitInfo()
-            ->needsOuterizedThisObject()) {
+    if (CalleeNeedsOuterizedThisObject(args.calleev())) {
       JSObject* thisObj = GetThisObject(&args.thisv().toObject());
       args.mutableThisv().setObject(*thisObj);
     }
