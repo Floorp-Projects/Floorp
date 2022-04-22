@@ -562,19 +562,14 @@ static bool InternalCall(JSContext* cx, const AnyInvokeArgs& args,
   MOZ_ASSERT(args.array() + args.length() == args.end(),
              "must pass calling arguments to a calling attempt");
 
+#ifdef DEBUG
+  // The caller is responsible for calling GetThisObject if needed.
   if (args.thisv().isObject()) {
-    // If |this| is a global object, it might be a Window and in that case we
-    // usually have to pass the WindowProxy instead.
     JSObject* thisObj = &args.thisv().toObject();
-    if (thisObj->is<GlobalObject>()) {
-      if (CalleeNeedsOuterizedThisObject(args.calleev())) {
-        args.mutableThisv().setObject(*GetThisObject(thisObj));
-      }
-    } else {
-      // Fast path: we don't have to do anything if the object isn't a global.
-      MOZ_ASSERT(GetThisObject(thisObj) == thisObj);
-    }
+    MOZ_ASSERT_IF(CalleeNeedsOuterizedThisObject(args.calleev()),
+                  GetThisObject(thisObj) == thisObj);
   }
+#endif
 
   return InternalCallOrConstruct(cx, args, NO_CONSTRUCT, reason);
 }
@@ -592,6 +587,20 @@ bool js::Call(JSContext* cx, HandleValue fval, HandleValue thisv,
   // shadowing.
   args.CallArgs::setCallee(fval);
   args.CallArgs::setThis(thisv);
+
+  if (thisv.isObject()) {
+    // If |this| is a global object, it might be a Window and in that case we
+    // usually have to pass the WindowProxy instead.
+    JSObject* thisObj = &thisv.toObject();
+    if (thisObj->is<GlobalObject>()) {
+      if (CalleeNeedsOuterizedThisObject(fval)) {
+        args.mutableThisv().setObject(*GetThisObject(thisObj));
+      }
+    } else {
+      // Fast path: we don't have to do anything if the object isn't a global.
+      MOZ_ASSERT(GetThisObject(thisObj) == thisObj);
+    }
+  }
 
   if (!InternalCall(cx, args, reason)) {
     return false;
