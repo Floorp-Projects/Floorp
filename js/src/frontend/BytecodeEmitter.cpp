@@ -4890,7 +4890,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
 
 bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
                                               GCThingIndex* outArrayIndex) {
-  uint32_t count = cookedOrRaw->count();
+  DebugOnly<uint32_t> count = cookedOrRaw->count();
   ParseNode* pn = cookedOrRaw->head();
 
   // The first element of a call-site node is the raw-values list. Skip over it.
@@ -4907,7 +4907,7 @@ bool BytecodeEmitter::emitCallSiteObjectArray(JSOp op, ListNode* cookedOrRaw,
   writer.beginArray(op);
   writer.beginDenseArrayElements();
 
-  size_t idx;
+  DebugOnly<size_t> idx;
   for (idx = 0; pn; idx++, pn = pn->pn_next) {
     MOZ_ASSERT(pn->isKind(ParseNodeKind::TemplateStringExpr) ||
                pn->isKind(ParseNodeKind::RawUndefinedExpr));
