@@ -19,6 +19,8 @@ with Files("KeyPressEventModelCheckerChild.jsm"):
 with Files("PictureInPictureChild.jsm"):
     BUG_COMPONENT = ("Toolkit", "Picture-in-Picture")
 
+SPHINX_TREES["actors"] = "docs"
+
 TESTING_JS_MODULES += [
     "TestProcessActorChild.jsm",
     "TestProcessActorParent.jsm",
