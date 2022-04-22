@@ -645,12 +645,7 @@ int32_t AccessibleWrap::GetInputType(const nsString& aInputTypeAttr) {
 }
 
 void AccessibleWrap::WrapperDOMNodeID(nsString& aDOMNodeID) {
-  if (mContent) {
-    nsAtom* id = mContent->GetID();
-    if (id) {
-      id->ToString(aDOMNodeID);
-    }
-  }
+  DOMNodeID(aDOMNodeID);
 }
 
 bool AccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
