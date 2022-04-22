@@ -5658,17 +5658,28 @@ impl PicturePrimitive {
                     Some(parent_surface_index) => {
                         let parent_surface = &surfaces[parent_surface_index.0];
 
-                        let local_to_surface_scale_factors = frame_context
+                        let local_to_surface = frame_context
                             .spatial_tree
                             .get_relative_transform(
                                 surface_spatial_node_index,
                                 parent_surface.surface_spatial_node_index,
-                            )
-                            .scale_factors();
+                            );
+
+                        // Since we can't determine reasonable scale factors for transforms
+                        // with perspective, just use a scale of (1,1) for now, which is
+                        // what Gecko does when it choosed to supplies a scale factor anyway.
+                        // In future, we might be able to improve the quality here by taking
+                        // into account the screen rect after clipping, but for now this gives
+                        // better results than just taking the matrix scale factors.
+                        let scale_factors = if local_to_surface.is_perspective() {
+                            (1.0, 1.0)
+                        } else {
+                            local_to_surface.scale_factors()
+                        };
 
                         (
-                            local_to_surface_scale_factors.0 * parent_surface.world_scale_factors.0,
-                            local_to_surface_scale_factors.1 * parent_surface.world_scale_factors.1,
+                            scale_factors.0 * parent_surface.world_scale_factors.0,
+                            scale_factors.1 * parent_surface.world_scale_factors.1,
                         )
                     }
                     None => {
