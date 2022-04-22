@@ -238,7 +238,7 @@ class TRRService : public TRRServiceBase,
    public:
     // Called when a confirmation completes successfully or when the
     // confirmation context changes.
-    void RecordEvent(const char* aReason);
+    void RecordEvent(const char* aReason, const MutexAutoLock&);
 
     // Called when a confirmation request is completed. The status is recorded
     // in the results.
@@ -289,8 +289,8 @@ class TRRService : public TRRServiceBase,
    public:
     // Called when a confirmation completes successfully or when the
     // confirmation context changes.
-    void RecordEvent(const char* aReason) {
-      mConfirmation.RecordEvent(aReason);
+    void RecordEvent(const char* aReason, const MutexAutoLock& aLock) {
+      mConfirmation.RecordEvent(aReason, aLock);
     }
 
     // Called when a confirmation request is completed. The status is recorded
