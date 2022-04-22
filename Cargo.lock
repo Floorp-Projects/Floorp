@@ -844,7 +844,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys-utils"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=a5a21ccbcc1fb46877b231e6a815cf8a824b1c5c#a5a21ccbcc1fb46877b231e6a815cf8a824b1c5c"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=44eca95823bb57e964cf7b6d9791ed2ccb4b2108#44eca95823bb57e964cf7b6d9791ed2ccb4b2108"
 dependencies = [
  "core-foundation-sys",
  "coreaudio-sys",
@@ -1145,7 +1145,7 @@ dependencies = [
 [[package]]
 name = "cubeb-coreaudio"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=a5a21ccbcc1fb46877b231e6a815cf8a824b1c5c#a5a21ccbcc1fb46877b231e6a815cf8a824b1c5c"
+source = "git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=44eca95823bb57e964cf7b6d9791ed2ccb4b2108#44eca95823bb57e964cf7b6d9791ed2ccb4b2108"
 dependencies = [
  "atomic",
  "audio-mixer",

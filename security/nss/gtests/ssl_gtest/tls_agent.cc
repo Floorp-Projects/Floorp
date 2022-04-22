@@ -1172,9 +1172,9 @@ void TlsAgent::ConfigureSessionCache(SessionResumptionMode mode) {
             mode & RESUME_TICKET ? PR_TRUE : PR_FALSE);
 }
 
-void TlsAgent::DisableECDHEServerKeyReuse() {
+void TlsAgent::EnableECDHEServerKeyReuse() {
   ASSERT_EQ(TlsAgent::SERVER, role_);
-  SetOption(SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
+  SetOption(SSL_REUSE_SERVER_ECDHE_KEY, PR_TRUE);
 }
 
 static const std::string kTlsRolesAllArr[] = {"CLIENT", "SERVER"};

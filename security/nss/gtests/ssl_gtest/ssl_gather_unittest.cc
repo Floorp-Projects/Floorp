@@ -25,21 +25,6 @@ class GatherV2ClientHelloTest : public TlsConnectTestBase {
   }
 };
 
-// Gather a 5-byte v3 record, with a zero fragment length. The empty handshake
-// message should be ignored, and the connection will succeed afterwards.
-TEST_F(TlsConnectTest, GatherEmptyV3Record) {
-  DataBuffer buffer;
-
-  size_t idx = 0;
-  idx = buffer.Write(idx, 0x16, 1);    // handshake
-  idx = buffer.Write(idx, 0x0301, 2);  // record_version
-  (void)buffer.Write(idx, 0U, 2);      // length=0
-
-  EnsureTlsSetup();
-  client_->SendDirect(buffer);
-  Connect();
-}
-
 // Gather a 5-byte v3 record, with a fragment length exceeding the maximum.
 TEST_F(TlsConnectTest, GatherExcessiveV3Record) {
   DataBuffer buffer;

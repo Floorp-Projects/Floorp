@@ -3516,6 +3516,15 @@ Maybe<float> LocalAccessible::Opacity() const {
   return Nothing();
 }
 
+void LocalAccessible::DOMNodeID(nsString& aID) const {
+  aID.Truncate();
+  if (mContent) {
+    if (nsAtom* id = mContent->GetID()) {
+      id->ToString(aID);
+    }
+  }
+}
+
 void LocalAccessible::StaticAsserts() const {
   static_assert(
       eLastStateFlag <= (1 << kStateFlagsBits) - 1,

@@ -191,7 +191,8 @@ class ChromeUtils {
 
   static bool VsyncEnabled(GlobalObject& aGlobal);
 
-  static void Import(const GlobalObject& aGlobal, const nsAString& aResourceURI,
+  static void Import(const GlobalObject& aGlobal,
+                     const nsACString& aResourceURI,
                      const Optional<JS::Handle<JSObject*>>& aTargetObj,
                      JS::MutableHandle<JSObject*> aRetval, ErrorResult& aRv);
 

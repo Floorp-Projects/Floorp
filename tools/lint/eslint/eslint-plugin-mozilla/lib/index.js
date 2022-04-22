@@ -29,9 +29,6 @@ module.exports = {
     privileged: require("../lib/environments/privileged.js"),
     xpcshell: require("../lib/environments/xpcshell.js"),
   },
-  processors: {
-    ".xul": require("../lib/processors/xul"),
-  },
   rules: {
     "avoid-Date-timing": require("../lib/rules/avoid-Date-timing"),
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),

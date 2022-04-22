@@ -14,8 +14,8 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/ScriptLoadContext.h"
 #include "mozilla/dom/SRIMetadata.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
@@ -28,6 +28,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "ScriptKind.h"
+#include "nsIScriptElement.h"
 
 class nsICacheInfoChannel;
 
@@ -44,6 +45,7 @@ namespace loader {
 
 using Utf8Unit = mozilla::Utf8Unit;
 
+class LoadContextBase;
 class ModuleLoadRequest;
 class ScriptLoadRequestList;
 
@@ -158,7 +160,7 @@ class ScriptLoadRequest
   ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
                     ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
-                    mozilla::dom::ScriptLoadContext* aContext);
+                    LoadContextBase* aContext);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ScriptLoadRequest)
@@ -293,10 +295,7 @@ class ScriptLoadRequest
 
   bool HasLoadContext() { return mLoadContext; }
 
-  mozilla::dom::ScriptLoadContext* GetLoadContext() {
-    MOZ_ASSERT(mLoadContext);
-    return mLoadContext;
-  }
+  mozilla::dom::ScriptLoadContext* GetScriptLoadContext();
 
   const ScriptKind mKind;  // Whether this is a classic script or a module
                            // script.
@@ -343,9 +342,9 @@ class ScriptLoadRequest
   // on the cache entry, such that we can load it the next time.
   nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 
-  // ScriptLoadContext for augmenting the load depending on the loading
+  // LoadContext for augmenting the load depending on the loading
   // context (DOM, Worker, etc.)
-  RefPtr<mozilla::dom::ScriptLoadContext> mLoadContext;
+  RefPtr<LoadContextBase> mLoadContext;
 };
 
 class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {

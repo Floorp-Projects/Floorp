@@ -5791,7 +5791,7 @@ tls13_ProtectRecord(sslSocket *ss,
  *
  * If SECFailure is returned, we:
  * 1. Set |*alert| to the alert to be sent.
- * 2. Call PORT_SetError() witn an appropriate code.
+ * 2. Call PORT_SetError() with an appropriate code.
  */
 SECStatus
 tls13_UnprotectRecord(sslSocket *ss,
@@ -5804,6 +5804,7 @@ tls13_UnprotectRecord(sslSocket *ss,
     const ssl3BulkCipherDef *cipher_def = spec->cipherDef;
     const int ivLen = cipher_def->iv_size + cipher_def->explicit_nonce_size;
     const int tagLen = cipher_def->tag_size;
+    const int innerTypeLen = 1;
 
     PRUint8 aad[21];
     unsigned int aadLen;
@@ -5816,7 +5817,7 @@ tls13_UnprotectRecord(sslSocket *ss,
                 SSL_GETPID(), ss->fd, spec, spec->epoch, spec->phase,
                 cText->seqNum, cText->buf->len));
 
-    /* Verify that the content type is right, even though we overwrite it.
+    /* Verify that the content type is right.
      * Also allow the DTLS short header in TLS 1.3. */
     if (!(cText->hdr[0] == ssl_ct_application_data ||
           (IS_DTLS(ss) &&
@@ -5837,6 +5838,17 @@ tls13_UnprotectRecord(sslSocket *ss,
                 ("%d: TLS13[%d]: record too short to contain valid AEAD data",
                  SSL_GETPID(), ss->fd));
         PORT_SetError(SSL_ERROR_BAD_MAC_READ);
+        return SECFailure;
+    }
+
+    /* Check if the ciphertext can be valid if we assume maximum plaintext and
+     * add the specific ciphersuite expansion.
+     * This way we detect overlong plaintexts/padding before decryption.
+     * This check enforces size limitations more strict than the RFC.
+     * (see RFC8446, Section 5.2) */
+    if (cText->buf->len > (spec->recordSizeLimit + innerTypeLen + tagLen)) {
+        *alert = record_overflow;
+        PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
         return SECFailure;
     }
 
@@ -5887,11 +5899,9 @@ tls13_UnprotectRecord(sslSocket *ss,
     }
 
     /* There is a similar test in ssl3_HandleRecord, but this test is needed to
-     * account for padding.  It's safe to do this here (including the alert),
-     * because it only confirms that the record exceeded the size limit, which
-     * is apparent from the size of the ciphertext. */
-    if (plaintext->len > spec->recordSizeLimit + 1) {
-        SSL3_SendAlert(ss, alert_fatal, record_overflow);
+     * account for padding. */
+    if (plaintext->len > spec->recordSizeLimit + innerTypeLen) {
+        *alert = record_overflow;
         PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
         return SECFailure;
     }
@@ -5916,6 +5926,29 @@ tls13_UnprotectRecord(sslSocket *ss,
     /* Record the type. */
     *innerType = (SSLContentType)plaintext->buf[plaintext->len - 1];
     --plaintext->len;
+
+    /* Check for zero-length encrypted Alert and Handshake fragments
+     * (zero-length + inner content type byte).
+     *
+     * Implementations MUST NOT send Handshake and Alert records that have a
+     * zero-length TLSInnerPlaintext.content; if such a message is received,
+     * the receiving implementation MUST terminate the connection with an
+     * "unexpected_message" alert [RFC8446, Section 5.4]. */
+    if (!plaintext->len && ((!IS_DTLS(ss) && cText->hdr[0] == ssl_ct_application_data) ||
+                            (IS_DTLS(ss) && dtls_IsDtls13Ciphertext(spec->version, cText->hdr[0])))) {
+        switch (*innerType) {
+            case ssl_ct_alert:
+                *alert = unexpected_message;
+                PORT_SetError(SSL_ERROR_RX_MALFORMED_ALERT);
+                return SECFailure;
+            case ssl_ct_handshake:
+                *alert = unexpected_message;
+                PORT_SetError(SSL_ERROR_RX_MALFORMED_HANDSHAKE);
+                return SECFailure;
+            default:
+                break;
+        }
+    }
 
     /* Check that we haven't received too much 0-RTT data. */
     if (spec->epoch == TrafficKeyEarlyApplicationData &&

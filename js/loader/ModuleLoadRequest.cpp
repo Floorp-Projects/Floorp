@@ -7,8 +7,10 @@
 #include "ModuleLoadRequest.h"
 
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/ScriptLoadContext.h"
 
 #include "LoadedScript.h"
+#include "LoadContextBase.h"
 #include "ModuleLoaderBase.h"
 
 namespace JS::loader {
@@ -55,9 +57,9 @@ VisitedURLSet* ModuleLoadRequest::NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const mozilla::dom::SRIMetadata& aIntegrity, nsIURI* aReferrer,
-    mozilla::dom::ScriptLoadContext* aContext, bool aIsTopLevel,
-    bool aIsDynamicImport, ModuleLoaderBase* aLoader,
-    VisitedURLSet* aVisitedSet, ModuleLoadRequest* aRootModule)
+    LoadContextBase* aContext, bool aIsTopLevel, bool aIsDynamicImport,
+    ModuleLoaderBase* aLoader, VisitedURLSet* aVisitedSet,
+    ModuleLoadRequest* aRootModule)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
                         aReferrer, aContext),
       mIsTopLevel(aIsTopLevel),

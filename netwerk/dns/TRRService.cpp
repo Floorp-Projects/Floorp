@@ -529,7 +529,10 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     // if we create a new one after ReadPrefs().
     mConfirmationTriggered = false;
     ReadPrefs(NS_ConvertUTF16toUTF8(aData).get());
-    mConfirmation.RecordEvent("pref-change");
+    {
+      MutexAutoLock lock(mLock);
+      mConfirmation.RecordEvent("pref-change", lock);
+    }
 
     // We should only trigger a new confirmation if reading the prefs didn't
     // already trigger one.
@@ -579,7 +582,8 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     if (!strcmp(aTopic, NS_NETWORK_LINK_TOPIC)) {
       if (NS_ConvertUTF16toUTF8(aData).EqualsLiteral(
               NS_NETWORK_LINK_DATA_DOWN)) {
-        mConfirmation.RecordEvent("network-change");
+        MutexAutoLock lock(mLock);
+        mConfirmation.RecordEvent("network-change", lock);
       }
 
       if (mURISetByDetection) {
@@ -596,15 +600,13 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
     // If a confirmation is still in progress we record the event.
     // Since there should be no more confirmations after this, the shutdown
     // reason would not really be recorded in telemetry.
-    mConfirmation.RecordEvent("shutdown");
+    MutexAutoLock lock(mLock);
+    mConfirmation.RecordEvent("shutdown", lock);
 
     if (sTRRBackgroundThread) {
       nsCOMPtr<nsIThread> thread;
-      {
-        MutexAutoLock lock(mLock);
-        thread = sTRRBackgroundThread.get();
-        sTRRBackgroundThread = nullptr;
-      }
+      thread = sTRRBackgroundThread.get();
+      sTRRBackgroundThread = nullptr;
       MOZ_ALWAYS_SUCCEEDS(thread->Shutdown());
       sTRRServicePtr = nullptr;
     }
@@ -761,6 +763,9 @@ bool TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
       break;
     case ConfirmationEvent::FailedLookups:
       MOZ_ASSERT(mState == CONFIRM_OK);
+      mTrigger.Assign("failed-lookups");
+      mFailedLookups = nsDependentCSubstring(
+          mFailureReasons, mTRRFailures % ConfirmationContext::RESULTS_SIZE);
       maybeConfirm("failed-lookups");
       break;
     case ConfirmationEvent::StrictMode:
@@ -1116,17 +1121,14 @@ void TRRService::ConfirmationContext::RecordTRRStatus(nsresult aChannelStatus) {
     // Only after the confirmation fails do we finally go into CONFIRM_FAILED
     // and start skipping TRR.
 
-    mTrigger.Assign("failed-lookups");
-    mFailedLookups = nsDependentCSubstring(
-        mFailureReasons, fails % ConfirmationContext::RESULTS_SIZE);
-
     // Trigger a confirmation immediately.
     // If it fails, it will fire off a timer to start retrying again.
     HandleEvent(ConfirmationEvent::FailedLookups);
   }
 }
 
-void TRRService::ConfirmationContext::RecordEvent(const char* aReason) {
+void TRRService::ConfirmationContext::RecordEvent(const char* aReason,
+                                                  const MutexAutoLock&) {
   // Reset the confirmation context attributes
   // Only resets the attributes that we keep for telemetry purposes.
   auto reset = [&]() {
@@ -1231,14 +1233,15 @@ void TRRService::ConfirmationContext::CompleteConfirmation(nsresult aStatus,
       HandleEvent(ConfirmationEvent::ConfirmFail, lock);
     }
 
+    if (State() == CONFIRM_OK) {
+      // Record event and start new confirmation context
+      RecordEvent("success", lock);
+    }
     LOG(("TRRService finishing confirmation test %s %d %X\n",
          OwningObject()->mPrivateURI.get(), State(), (unsigned int)aStatus));
   }
 
   if (State() == CONFIRM_OK) {
-    // Record event and start new confirmation context
-    RecordEvent("success");
-
     // A fresh confirmation means previous blocked entries might not
     // be valid anymore.
     auto bl = OwningObject()->mTRRBLStorage.Lock();
