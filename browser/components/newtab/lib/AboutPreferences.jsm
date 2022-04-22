@@ -47,7 +47,7 @@ const PREFS_BEFORE_SECTIONS = () => [
           : [];
       },
     },
-    icon: "topsites",
+    icon: "chrome://browser/skin/topsites.svg",
     maxRows: 4,
     rowsPref: "topSitesRows",
     eventSource: "TOP_SITES",
