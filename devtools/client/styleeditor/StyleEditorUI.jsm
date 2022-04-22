@@ -53,7 +53,6 @@ loader.lazyRequireGetter(
 );
 
 const LOAD_ERROR = "error-load";
-const STYLE_EDITOR_TEMPLATE = "stylesheet";
 const PREF_MEDIA_SIDEBAR = "devtools.styleeditor.showMediaSidebar";
 const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.mediaSidebarWidth";
 const PREF_NAV_WIDTH = "devtools.styleeditor.navSidebarWidth";
@@ -590,32 +589,28 @@ StyleEditorUI.prototype = {
     let ordinal = editor.styleSheet.styleSheetIndex;
     ordinal = ordinal == -1 ? Number.MAX_SAFE_INTEGER : ordinal;
     // add new sidebar item and editor to the UI
-    const { summary, details } = this._view.appendTemplatedItem(
-      STYLE_EDITOR_TEMPLATE,
-      {
-        disableAnimations: this._alwaysDisableAnimations,
-        ordinal: ordinal,
-        onShow: detailsEl => {
-          this.selectedEditor = editor;
+    const { summary, details } = this._view.appendItem({
+      ordinal,
+      onShow: detailsEl => {
+        this.selectedEditor = editor;
 
-          (async function() {
-            if (!editor.sourceEditor) {
-              // only initialize source editor when we switch to this view
-              const inputElement = detailsEl.querySelector(
-                ".stylesheet-editor-input"
-              );
-              await editor.load(inputElement, this._cssProperties);
-            }
-
-            editor.onShow();
-
-            this.emit("editor-selected", editor);
+        (async function() {
+          if (!editor.sourceEditor) {
+            // only initialize source editor when we switch to this view
+            const inputElement = detailsEl.querySelector(
+              ".stylesheet-editor-input"
+            );
+            await editor.load(inputElement, this._cssProperties);
           }
-            .bind(this)()
-            .catch(console.error));
-        },
-      }
-    );
+
+          editor.onShow();
+
+          this.emit("editor-selected", editor);
+        }
+          .bind(this)()
+          .catch(console.error));
+      },
+    });
 
     const createdEditor = editor;
     createdEditor.summary = summary;
