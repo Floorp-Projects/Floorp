@@ -911,6 +911,7 @@ void SMRegExpMacroAssembler::createStackFrame() {
                      (pushedNonVolatileRegisters + 1) * sizeof(void*));
   masm_.loadPtr(ioDataAddr, temp0_);
 #else
+  (void)pushedNonVolatileRegisters;
   if (js::jit::IntArgReg0 != temp0_) {
     masm_.movePtr(js::jit::IntArgReg0, temp0_);
   }
