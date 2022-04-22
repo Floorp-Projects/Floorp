@@ -4,8 +4,6 @@ root:
   items:
     - type: stacking-context
       bounds: [0, 0, 0, 0]
-      # Force WebRender to form a raster root
-      transform: perspective(1000)
       items:
       - type: stacking-context
         bounds: [0, 0, 0, 0]
