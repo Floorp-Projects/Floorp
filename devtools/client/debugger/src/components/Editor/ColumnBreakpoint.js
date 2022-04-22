@@ -39,7 +39,6 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
 }
 
 export default class ColumnBreakpoint extends PureComponent {
-  addColumnBreakpoint;
   bookmark;
 
   addColumnBreakpoint = nextProps => {
