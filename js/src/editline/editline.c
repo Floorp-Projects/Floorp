@@ -144,8 +144,7 @@ TTYflush()
 }
 
 STATIC void
-TTYput(c)
-    CHAR	c;
+TTYput(CHAR c)
 {
     Screen[ScreenCount] = c;
     if (++ScreenCount >= ScreenSize - 1) {
@@ -155,16 +154,14 @@ TTYput(c)
 }
 
 STATIC void
-TTYputs(p)
-    CONST CHAR	*p;
+TTYputs(CONST CHAR *p)
 {
     while (*p)
 	TTYput(*p++);
 }
 
 STATIC void
-TTYshow(c)
-    CHAR	c;
+TTYshow(CHAR c)
 {
     if (c == DEL) {
 	TTYput('^');
@@ -184,8 +181,7 @@ TTYshow(c)
 }
 
 STATIC void
-TTYstring(p)
-    CHAR	*p;
+TTYstring(CHAR *p)
 {
     while (*p)
 	TTYshow(*p++);
@@ -209,8 +205,7 @@ TTYget()
 #define TTYback()	(backspace ? TTYputs((CHAR *)backspace) : TTYput('\b'))
 
 STATIC void
-TTYbackn(n)
-    int		n;
+TTYbackn(int n)
 {
     while (--n >= 0)
 	TTYback();
@@ -285,8 +280,7 @@ reposition()
 }
 
 STATIC void
-left(Change)
-    STATUS	Change;
+left(STATUS Change)
 {
     TTYback();
     if (Point) {
@@ -302,8 +296,7 @@ left(Change)
 }
 
 STATIC void
-right(Change)
-    STATUS	Change;
+right(STATUS Change)
 {
     TTYshow(Line[Point]);
     if (Change == CSmove)
@@ -319,8 +312,7 @@ ring_bell()
 }
 
 STATIC STATUS
-do_macro(c)
-    unsigned int	c;
+do_macro(unsigned int c)
 {
     CHAR		name[4];
 
@@ -337,8 +329,7 @@ do_macro(c)
 }
 
 STATIC STATUS
-do_forward(move)
-    STATUS	move;
+do_forward(STATUS move)
 {
     int		i;
     CHAR	*p;
@@ -362,8 +353,7 @@ do_forward(move)
 }
 
 STATIC STATUS
-do_case(type)
-    CASE	type;
+do_case(CASE type)
 {
     int		i;
     int		end;
@@ -438,8 +428,7 @@ clear_line()
 }
 
 STATIC STATUS
-insert_string(p)
-    CHAR	*p;
+insert_string(CHAR *p)
 {
     SIZE_T	len;
     int		i;
@@ -499,8 +488,7 @@ prev_hist()
 }
 
 STATIC STATUS
-do_insert_hist(p)
-    CHAR	*p;
+do_insert_hist(CHAR *p)
 {
     if (p == NULL)
 	return ring_bell();
@@ -512,8 +500,7 @@ do_insert_hist(p)
 }
 
 STATIC STATUS
-do_hist(move)
-    CHAR	*(*move)();
+do_hist(CHAR *(*move)())
 {
     CHAR	*p;
     int		i;
@@ -554,10 +541,7 @@ h_last()
 **  Return zero if pat appears as a substring in text.
 */
 STATIC int
-substrcmp(text, pat, len)
-    char	*text;
-    char	*pat;
-    int		len;
+substrcmp(char *text, char *pat, size_t len)
 {
     char	c;
 
@@ -570,14 +554,12 @@ substrcmp(text, pat, len)
 }
 
 STATIC CHAR *
-search_hist(search, move)
-    CHAR	*search;
-    CHAR	*(*move)();
+search_hist(CHAR *search, CHAR *(*move)())
 {
     static CHAR	*old_search;
     int		len;
     int		pos;
-    int		(*match)();
+    int		(*match)(char *, char *, size_t);
     char	*pat;
 
     /* Save or get remembered search pattern. */
@@ -594,7 +576,7 @@ search_hist(search, move)
 
     /* Set up pattern-finder. */
     if (*search == '^') {
-	match = strncmp;
+	match = (int(*)(char *, char *, size_t))strncmp;
 	pat = (char *)(search + 1);
     }
     else {
@@ -660,9 +642,7 @@ fd_char()
 }
 
 STATIC void
-save_yank(begin, i)
-    int		begin;
-    int		i;
+save_yank(int begin, int i)
 {
     if (Yanked) {
 	DISPOSE(Yanked);
@@ -679,8 +659,7 @@ save_yank(begin, i)
 }
 
 STATIC STATUS
-delete_string(count)
-    int		count;
+delete_string(int count)
 {
     int		i;
     CHAR	*p;
@@ -778,8 +757,7 @@ kill_line()
 }
 
 STATIC STATUS
-insert_char(c)
-    int		c;
+insert_char(int c)
 {
     STATUS	s;
     CHAR	buff[2];
@@ -843,8 +821,7 @@ meta()
 }
 
 STATIC STATUS
-emacs(c)
-    unsigned int	c;
+emacs(unsigned int c)
 {
     STATUS		s;
     const KEYMAP	*kp;
@@ -865,8 +842,7 @@ emacs(c)
 }
 
 STATIC STATUS
-TTYspecial(c)
-    unsigned int	c;
+TTYspecial(unsigned int c)
 {
     if (ISMETA(c))
 	return CSdispatch;
@@ -942,8 +918,7 @@ editinput()
 }
 
 STATIC void
-hist_add(p)
-    CHAR	*p;
+hist_add(CHAR *p)
 {
     int		i;
 
@@ -965,8 +940,7 @@ hist_add(p)
 */
 /* ARGSUSED0 */
 void
-rl_reset_terminal(p)
-    char	*p;
+rl_reset_terminal(char *p)
 {
     (void)p;
 }
@@ -977,8 +951,7 @@ rl_initialize()
 }
 
 char *
-readline(prompt)
-    CONST char	*prompt;
+readline(CONST char *prompt)
 {
     CHAR	*line;
     int		s;
@@ -1013,8 +986,7 @@ readline(prompt)
 }
 
 void
-add_history(p)
-    char	*p;
+add_history(char *p)
 {
     if (p == NULL || *p == '\0')
 	return;
@@ -1217,9 +1189,7 @@ bk_kill_word()
 }
 
 STATIC int
-argify(line, avp)
-    CHAR	*line;
-    CHAR	***avp;
+argify(CHAR *line, CHAR ***avp)
 {
     CHAR	*c;
     CHAR	**p;

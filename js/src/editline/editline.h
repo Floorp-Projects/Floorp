@@ -78,7 +78,7 @@ extern unsigned rl_quit;
 extern char	*rl_complete();
 extern int	rl_list_possib();
 extern void	rl_ttyset(int);
-extern void	rl_add_slash();
+extern void	rl_add_slash(char *, char *);
 
 #if	!defined(HAVE_STDLIB)
 extern char	*getenv();
