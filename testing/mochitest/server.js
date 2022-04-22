@@ -738,7 +738,7 @@ function testListing(metadata, response) {
       metadata.getProperty("directory"),
       true
     );
-  } else if (typeof Components != undefined) {
+  } else if (typeof Components != "undefined") {
     var manifest = metadata.queryString.match(/manifestFile=([^&]+)/)[1];
 
     [links, count] = convertManifestToTestLinks(
