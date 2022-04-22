@@ -135,7 +135,7 @@ class SplitView {
     this._activeSummary = summary;
 
     if (binding.onShow) {
-      binding.onShow(summary, binding._details, binding.data);
+      binding.onShow(binding._details);
     }
   }
 
@@ -161,10 +161,8 @@ class SplitView {
    * @param object options
    *     Optional object that defines custom behavior and data for the item.
    *     All properties are optional :
-   *     - function(summary, details, data) onShow
+   *     - function(details) onShow
    *         Called when the item is shown/active.
-   *     - object data
-   *         Object to pass to onShow.
    *     - number ordinal
    *         Items with a lower ordinal are displayed before those with a
    *         higher ordinal.

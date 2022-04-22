@@ -593,27 +593,23 @@ StyleEditorUI.prototype = {
     const { summary, details } = this._view.appendTemplatedItem(
       STYLE_EDITOR_TEMPLATE,
       {
-        data: {
-          editor: editor,
-        },
         disableAnimations: this._alwaysDisableAnimations,
         ordinal: ordinal,
-        onShow: (summaryEl, detailsEl, data) => {
-          const showEditor = data.editor;
-          this.selectedEditor = showEditor;
+        onShow: detailsEl => {
+          this.selectedEditor = editor;
 
           (async function() {
-            if (!showEditor.sourceEditor) {
+            if (!editor.sourceEditor) {
               // only initialize source editor when we switch to this view
               const inputElement = detailsEl.querySelector(
                 ".stylesheet-editor-input"
               );
-              await showEditor.load(inputElement, this._cssProperties);
+              await editor.load(inputElement, this._cssProperties);
             }
 
-            showEditor.onShow();
+            editor.onShow();
 
-            this.emit("editor-selected", showEditor);
+            this.emit("editor-selected", editor);
           }
             .bind(this)()
             .catch(console.error));
