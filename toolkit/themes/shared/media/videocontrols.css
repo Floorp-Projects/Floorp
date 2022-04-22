@@ -497,13 +497,6 @@
   margin-inline-start: var(--pip-toggle-padding);
 }
 
-@supports -moz-bool-pref("media.videocontrols.picture-in-picture.video-toggle.testing") {
-  /**
-   * To make automated tests faster, we drop the transition duration in
-   * testing mode.
-   */
-}
-
 /* Overlay Play button */
 .clickToPlay {
   appearance: none;
