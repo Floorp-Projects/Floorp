@@ -5,13 +5,13 @@ root:
   items:
     - type: stacking-context
       bounds: 0 0 0 0
-      transform: perspective(1) scale(99999999)
+      transform: scale(99999999)
       transform-style: preserve-3d
       filters: invert(1)
       items:
         - type: stacking-context
           bounds: 0 0 0 0
-          transform: perspective(1) scale(0.0000001)
+          transform: scale(0.0000001)
           transform-style: preserve-3d
           items:
             - type: clip
