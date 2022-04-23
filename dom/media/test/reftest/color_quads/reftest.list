@@ -33,10 +33,10 @@ skip-if(Android) skip-if(!(winWidget&&swgl)) fuzzy(0-31,0-8240) == ../reftest_vi
 # yuv420p10
 
 skip-if(Android) fuzzy(33-49,2263-2579) fuzzy-if(swgl,34-52,180421-270528) fuzzy-if(useDrawSnapshot,16-16,183840-183840) fuzzy-if(OSX,60-74,270329-271024) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
-skip-if(Android) fuzzy-if(OSX,12-36,187246-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
+skip-if(Android) fuzzy-if(OSX,12-36,187246-273730) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 #[2] skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
-skip-if(Android) fuzzy-if(OSX,12-36,187246-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
+skip-if(Android) fuzzy-if(OSX,12-36,187246-273730) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 
 skip-if(Android) fuzzy(33-49,174699-270059) fuzzy-if(swgl&&!winWidget,36-52,11553-11555) fuzzy-if(swgl&&winWidget,40-52,11555-187200) fuzzy-if(swgl&&OSX,34-50,11465-270059) fuzzy-if(useDrawSnapshot,20-20,186800-186800) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
 skip-if(Android) fuzzy-if(OSX,12-27,267487-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm

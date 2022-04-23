@@ -1029,7 +1029,7 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
   }
   LINEAR_QUANTIZE_UV(sampler0, uv0, uv_step0, uv_rect0, min_uv0, max_uv0);
   const auto rgb_from_ycbcr =
-      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
+      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr, rescaleFactor);
   auto c = packColor(buf, color);
   auto* end = buf + span;
   for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0) {
@@ -1095,7 +1095,7 @@ static int blendYUV(P* buf, int span, S0 sampler0, vec2 uv0,
   LINEAR_QUANTIZE_UV(sampler0, uv0, uv_step0, uv_rect0, min_uv0, max_uv0);
   LINEAR_QUANTIZE_UV(sampler1, uv1, uv_step1, uv_rect1, min_uv1, max_uv1);
   const auto rgb_from_ycbcr =
-      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
+      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr, rescaleFactor);
   auto c = packColor(buf, color);
   auto* end = buf + span;
   for (; buf < end; buf += swgl_StepSize, uv0 += uv_step0, uv1 += uv_step1) {
@@ -1157,7 +1157,7 @@ static void blendYUVFallback(P* buf, int span, S0 sampler0, vec2 uv0,
                              const mat3_scalar& rgb_from_debiased_ycbcr,
                              int rescaleFactor, C color) {
   const auto rgb_from_ycbcr =
-      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
+      YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr, rescaleFactor);
   for (auto* end = buf + span; buf < end; buf += swgl_StepSize, uv0 += uv_step0,
              uv1 += uv_step1, uv2 += uv_step2) {
     commit_blend_span<BLEND>(
@@ -1255,7 +1255,7 @@ static int blendYUV(uint32_t* buf, int span, sampler2DRect sampler0, vec2 uv0,
           (sampler0->format == TextureFormat::R16 ? 16 : 8) - rescaleFactor;
       // Finally, call the inner loop of CompositeYUV.
       const auto rgb_from_ycbcr =
-          YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr);
+          YUVMatrix::From(ycbcr_bias, rgb_from_debiased_ycbcr, rescaleFactor);
       linear_row_yuv<BLEND>(
           buf, inside * swgl_StepSize, sampler0, force_scalar(uv0),
           uv_step0.x / swgl_StepSize, sampler1, sampler2, force_scalar(uv1),
