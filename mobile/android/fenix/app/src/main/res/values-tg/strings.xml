@@ -1285,7 +1285,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Ба ҷояш почтаи электрониро истифода баред</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
-    <string name="sign_in_create_account_text"><![CDATA[Ҳисоб надоред? <u> Барои ҳамоҳангсозӣ кардани Firefox байни дастгоҳҳо, <u>ҳисоберо эҷод намоед</u>.]]></string>
+    <string name="sign_in_create_account_text"><![CDATA[Ҳисоб надоред? Барои ҳамоҳангсозӣ кардани Firefox байни дастгоҳҳо, <u>ҳисоберо эҷод намоед</u>.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s ҳамоҳангсозиро бо ҳисоби шумо қатъ мекунад, аммо ягон маълумоти тамошокунии шуморо дар ин дастгоҳ нест намекунад.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
