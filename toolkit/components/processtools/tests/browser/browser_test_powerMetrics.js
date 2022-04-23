@@ -287,4 +287,45 @@ add_task(async () => {
     undefined,
     "no GPU time should be recorded in the __other__ label"
   );
+
+  // Now test per-thread CPU time.
+  // We don't test parentActive as the user is not marked active on infra.
+  let processTypes = [
+    "parentInactive",
+    "contentBackground",
+    "contentForeground",
+  ];
+  if (beforeProcInfo.children.some(p => p.type == "gpu")) {
+    processTypes.push("gpuProcess");
+  }
+  // The list of accepted labels is not accessible to the JS code, so test only the main thread.
+  const kThreadName = "geckomain";
+  if (AppConstants.NIGHTLY_BUILD) {
+    for (let processType of processTypes) {
+      Assert.greater(
+        Glean.powerCpuMsPerThread[processType][kThreadName].testGetValue(),
+        0,
+        `some CPU time should have been recorded for the ${processType} main thread`
+      );
+      Assert.greater(
+        Glean.powerWakeupsPerThread[processType][kThreadName].testGetValue(),
+        0,
+        `some thread wake ups should have been recorded for the ${processType} main thread`
+      );
+    }
+  } else {
+    // We are not recording per thread CPU use outside of the Nightly channel.
+    for (let processType of processTypes) {
+      Assert.equal(
+        Glean.powerCpuMsPerThread[processType][kThreadName].testGetValue(),
+        undefined,
+        `no CPU time should have been recorded for the ${processType} main thread`
+      );
+      Assert.equal(
+        Glean.powerWakeupsPerThread[processType][kThreadName].testGetValue(),
+        undefined,
+        `no thread wake ups should have been recorded for the ${processType} main thread`
+      );
+    }
+  }
 });

@@ -73,6 +73,9 @@ ThreadRegistration::~ThreadRegistration() {
     }
 
     profiler_mark_thread_asleep();
+#ifdef NIGHTLY_BUILD
+    mData.RecordWakeCount();
+#endif
     ThreadRegistry::Unregister(OnThreadRef{*this});
 #ifdef DEBUG
     // After ThreadRegistry::Unregister, other threads should not be able to

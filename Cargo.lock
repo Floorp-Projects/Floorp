@@ -5393,6 +5393,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "topological-sort"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa7c7f42dea4b1b99439786f5633aeb9c14c1b53f75e282803c2ec2ad545873c"
+
+[[package]]
 name = "tower-service"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5813,6 +5819,7 @@ dependencies = [
  "svg_fmt",
  "swgl",
  "time",
+ "topological-sort",
  "tracy-rs",
  "webrender_api",
  "webrender_build",

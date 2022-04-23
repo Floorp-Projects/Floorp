@@ -153,7 +153,7 @@ var PictureInPicture = {
    * @param {PictureInPictureParent} pipActorRef
    *   Reference to the calling PictureInPictureParent actor
    *
-   * @return {DOM Window} the player window if it exists and is not in the
+   * @returns {Window} the player window if it exists and is not in the
    * process of being closed. Returns null otherwise.
    */
   getWeakPipPlayer(pipActorRef) {

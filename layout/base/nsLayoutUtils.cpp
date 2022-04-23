@@ -8107,23 +8107,28 @@ bool nsLayoutUtils::GetContentViewerSize(
 bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
     ParentLayerRect& aCompBounds, const nsPresContext* aPresContext) {
   SubtractDynamicToolbar shouldSubtractDynamicToolbar =
-      SubtractDynamicToolbar::Yes;
+      aPresContext->IsRootContentDocumentCrossProcess() &&
+              aPresContext->HasDynamicToolbar()
+          ? SubtractDynamicToolbar::Yes
+          : SubtractDynamicToolbar::No;
 
-  if (RefPtr<MobileViewportManager> MVM =
-          aPresContext->PresShell()->GetMobileViewportManager()) {
-    CSSSize intrinsicCompositionSize = MVM->GetIntrinsicCompositionSize();
+  if (shouldSubtractDynamicToolbar == SubtractDynamicToolbar::Yes) {
+    if (RefPtr<MobileViewportManager> MVM =
+            aPresContext->PresShell()->GetMobileViewportManager()) {
+      CSSSize intrinsicCompositionSize = MVM->GetIntrinsicCompositionSize();
 
-    if (nsIScrollableFrame* rootScrollableFrame =
-            aPresContext->PresShell()->GetRootScrollFrameAsScrollable()) {
-      // Expand the composition size to include the area initially covered by
-      // the dynamic toolbar only if the content is taller than the intrinsic
-      // composition size (i.e. the dynamic toolbar should be able to move only
-      // if the content is vertically scrollable).
-      if (intrinsicCompositionSize.height <
-          CSSPixel::FromAppUnits(
-              CalculateScrollableRectForFrame(rootScrollableFrame, nullptr)
-                  .Height())) {
-        shouldSubtractDynamicToolbar = SubtractDynamicToolbar::No;
+      if (nsIScrollableFrame* rootScrollableFrame =
+              aPresContext->PresShell()->GetRootScrollFrameAsScrollable()) {
+        // Expand the composition size to include the area initially covered by
+        // the dynamic toolbar only if the content is taller than the intrinsic
+        // composition size (i.e. the dynamic toolbar should be able to move
+        // only if the content is vertically scrollable).
+        if (intrinsicCompositionSize.height <
+            CSSPixel::FromAppUnits(
+                CalculateScrollableRectForFrame(rootScrollableFrame, nullptr)
+                    .Height())) {
+          shouldSubtractDynamicToolbar = SubtractDynamicToolbar::No;
+        }
       }
     }
   }

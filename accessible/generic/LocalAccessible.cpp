@@ -1821,7 +1821,7 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
 role LocalAccessible::NativeRole() const { return roles::NOTHING; }
 
 uint8_t LocalAccessible::ActionCount() const {
-  return HasPrimaryAction() ? 1 : 0;
+  return HasPrimaryAction() || ActionAncestor() ? 1 : 0;
 }
 
 void LocalAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
@@ -1888,12 +1888,17 @@ void LocalAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
       }
       return;
   }
+
+  if (ActionAncestor()) {
+    aName.AssignLiteral("click ancestor");
+    return;
+  }
 }
 
 bool LocalAccessible::DoAction(uint8_t aIndex) const {
   if (aIndex != 0) return false;
 
-  if (HasPrimaryAction()) {
+  if (HasPrimaryAction() || ActionAncestor()) {
     DoCommand();
     return true;
   }

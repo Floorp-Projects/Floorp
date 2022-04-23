@@ -355,7 +355,7 @@ __webpack_require__.r(__webpack_exports__);
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CONFIGURABLE_STYLES = ["color", "fontSize"];
+const CONFIGURABLE_STYLES = ["color", "fontSize", "fontWeight", "letterSpacing", "lineHeight", "marginBlock", "marginInline", "paddingBlock", "paddingInline"];
 const ZAP_SIZE_THRESHOLD = 160;
 /**
  * Based on the .text prop, localizes an inner element if a string_id
@@ -428,7 +428,7 @@ const Localized = ({
 
 
   CONFIGURABLE_STYLES.forEach(style => {
-    if (text[style]) props.style[style] = text[style];
+    if (text[style] !== undefined) props.style[style] = text[style];
   });
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().cloneElement( // Provide a default container for the text if necessary.
   children ?? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null), props, // Conditionally pass in as void elements can't accept empty array.

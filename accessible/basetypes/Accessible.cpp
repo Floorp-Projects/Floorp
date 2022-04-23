@@ -312,7 +312,9 @@ void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
 }
 
 const Accessible* Accessible::ActionAncestor() const {
-  for (Accessible* parent = Parent(); parent && !parent->IsDoc();
+  // We do want to consider a click handler on the document. However, we don't
+  // want to walk outside of this document, so we stop if we see an OuterDoc.
+  for (Accessible* parent = Parent(); parent && !parent->IsOuterDoc();
        parent = parent->Parent()) {
     if (parent->HasPrimaryAction()) {
       return parent;

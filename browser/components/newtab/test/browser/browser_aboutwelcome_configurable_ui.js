@@ -151,12 +151,17 @@ add_task(async function test_aboutwelcome_with_color_backdrop() {
 });
 
 /**
- * Test rendering a screen with a title that's fancy, slim, and larger
+ * Test rendering a screen with a title with custom styles.
  */
 add_task(async function test_aboutwelcome_with_title_styles() {
-  const TEST_TITLE_STYLE = "fancy slim larger";
   const TEST_TITLE_STYLE_CONTENT = makeTestContent("TEST_TITLE_STYLE_STEP", {
-    title_style: TEST_TITLE_STYLE,
+    title: {
+      fontSize: "36px",
+      fontWeight: 276,
+      letterSpacing: 0,
+      raw: "test",
+    },
+    title_style: "fancy shine",
   });
 
   const TEST_TITLE_STYLE_JSON = JSON.stringify([TEST_TITLE_STYLE_CONTENT]);
@@ -166,7 +171,7 @@ add_task(async function test_aboutwelcome_with_title_styles() {
     browser,
     "renders screen with customized title style",
     // Expected selectors:
-    [`div.welcome-text.fancy.slim.larger`]
+    [`div.welcome-text.fancy.shine`]
   );
 
   await test_element_styles(
@@ -177,6 +182,7 @@ add_task(async function test_aboutwelcome_with_title_styles() {
       "font-weight": "276",
       "font-size": "36px",
       animation: "50s linear 0s infinite normal none running shine",
+      "letter-spacing": "normal",
     }
   );
 });
