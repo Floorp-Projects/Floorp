@@ -218,10 +218,10 @@ body[lwt-newtab-brighttext] {
 .onboardingContainer .welcome-text h1,
 .onboardingContainer .welcome-text h2 {
   color: var(--in-content-page-color);
+  line-height: 1.5;
 }
 .onboardingContainer .welcome-text h1 {
   font-size: 24px;
-  line-height: 1.5;
   font-weight: 600;
   margin: 0 6px;
   letter-spacing: -0.02em;
@@ -231,25 +231,17 @@ body[lwt-newtab-brighttext] {
   font-size: 16px;
   font-weight: normal;
   margin: 10px 6px 0;
-  line-height: 24px;
   max-width: 750px;
   letter-spacing: -0.01em;
 }
-.onboardingContainer .welcome-text.larger h1 {
-  font-size: 36px;
-}
-.onboardingContainer .welcome-text.slim h1 {
-  font-weight: 276;
-}
 .onboardingContainer .welcome-text.fancy h1 {
   background-image: linear-gradient(90deg, #9059FF, #FF4AA2, #FF8C00, #FF4AA2, #9059FF);
-  background-size: 400% auto;
   background-clip: text;
-  animation: shine 50s linear infinite;
+  background-size: 200%;
 }
 @media (prefers-contrast: no-preference) {
   .onboardingContainer .welcome-text.fancy h1 {
-    -webkit-text-fill-color: transparent;
+    color: transparent;
   }
 }
 @media (prefers-color-scheme: dark) {
@@ -257,9 +249,13 @@ body[lwt-newtab-brighttext] {
     background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
   }
 }
+.onboardingContainer .welcome-text.shine h1 {
+  animation: shine 50s linear infinite;
+  background-size: 400%;
+}
 @keyframes shine {
   to {
-    background-position: 400% center;
+    background-position: 400%;
   }
 }
 .onboardingContainer .screen.light-text .welcome-text.fancy h1 {

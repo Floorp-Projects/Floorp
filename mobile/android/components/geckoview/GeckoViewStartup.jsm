@@ -44,6 +44,7 @@ const JSWINDOWACTORS = {
         contextmenu: { capture: false, mozSystemGroup: true },
         mozshowdropdown: {},
         "mozshowdropdown-sourcetouch": {},
+        MozOpenDateTimePicker: {},
         DOMPopupBlocked: { capture: false, mozSystemGroup: true },
       },
     },

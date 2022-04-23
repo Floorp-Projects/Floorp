@@ -238,11 +238,11 @@ body {
     h1,
     h2 {
       color: var(--in-content-page-color);
+      line-height: 1.5;
     }
 
     h1 {
       font-size: 24px;
-      line-height: 1.5;
       font-weight: 600;
       margin: 0 6px;
       letter-spacing: -0.02em;
@@ -253,40 +253,33 @@ body {
       font-size: 16px;
       font-weight: normal;
       margin: 10px 6px 0;
-      line-height: 24px;
       max-width: 750px;
       letter-spacing: -0.01em;
-    }
-
-    &.larger {
-      h1 {
-        font-size: 36px;
-      }
-    }
-
-    &.slim {
-      h1 {
-        font-weight: 276;
-      }
     }
 
     &.fancy {
       h1 {
         background-image: linear-gradient(90deg, #9059FF, #FF4AA2, #FF8C00, #FF4AA2, #9059FF);
-        background-size: 400% auto;
         background-clip: text;
-        animation: shine 50s linear infinite;
+        background-size: 200%;
         @media (prefers-contrast: no-preference) {
-          -webkit-text-fill-color: transparent;
+          color: transparent;
         }
         @media (prefers-color-scheme: dark) {
           background-image: linear-gradient(90deg, #C688FF, #FF84C0, #FFBD4F, #FF84C0, #C688FF);
         }
       }
+    }
+
+    &.shine {
+      h1 {
+        animation: shine 50s linear infinite;
+        background-size: 400%;
+      }
 
       @keyframes shine {
         to {
-          background-position: 400% center;
+          background-position: 400%;
         }
       }
     }

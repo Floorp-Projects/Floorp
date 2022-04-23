@@ -2148,8 +2148,8 @@ bool AsyncPanZoomController::CanScroll(const InputData& aEvent) const {
     //    to checking if it is scrollable without adjusting its delta.
     // 2. For a non-auto-dir scroll, simply check if it is scrollable without
     //    adjusting its delta.
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
     if (scrollWheelInput.IsAutoDir(mScrollMetadata.ForceMousewheelAutodir())) {
-      RecursiveMutexAutoLock lock(mRecursiveMutex);
       auto deltaX = scrollWheelInput.mDeltaX;
       auto deltaY = scrollWheelInput.mDeltaY;
       bool isRTL =
@@ -2309,16 +2309,18 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(
   auto deltaX = aEvent.mDeltaX;
   auto deltaY = aEvent.mDeltaY;
   ParentLayerPoint delta;
-  if (aEvent.IsAutoDir(mScrollMetadata.ForceMousewheelAutodir())) {
-    // It's an auto-dir scroll, so check if its delta should be adjusted, if so,
-    // adjust it.
+  {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    bool isRTL = IsContentOfHonouredTargetRightToLeft(
-        aEvent.HonoursRoot(mScrollMetadata.ForceMousewheelAutodirHonourRoot()));
-    APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
-    if (adjuster.ShouldBeAdjusted()) {
-      adjuster.Adjust();
-      adjustedByAutoDir = true;
+    if (aEvent.IsAutoDir(mScrollMetadata.ForceMousewheelAutodir())) {
+      // It's an auto-dir scroll, so check if its delta should be adjusted, if
+      // so, adjust it.
+      bool isRTL = IsContentOfHonouredTargetRightToLeft(aEvent.HonoursRoot(
+          mScrollMetadata.ForceMousewheelAutodirHonourRoot()));
+      APZAutoDirWheelDeltaAdjuster adjuster(deltaX, deltaY, mX, mY, isRTL);
+      if (adjuster.ShouldBeAdjusted()) {
+        adjuster.Adjust();
+        adjustedByAutoDir = true;
+      }
     }
   }
   // Ensure the calls to GetScrollWheelDelta are outside the mRecursiveMutex

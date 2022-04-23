@@ -489,21 +489,21 @@ class PromptDelegateTest : BaseSessionTest() {
                 equalTo("#123456"))
     }
 
-    @Ignore // TODO: Figure out weird test env behavior here.
+    @WithDisplay(width = 100, height = 100)
     @Test fun dateTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
-
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.evaluateJS("document.getElementById('dateexample').click();")
+        mainSession.synthesizeTap(1, 1) // Provides user activation.
 
-        sessionRule.waitUntilCalled(object : PromptDelegate {
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 return GeckoResult.fromValue(prompt.dismiss())
             }
         })
+
+        mainSession.waitForJS("document.getElementById('dateexample').showPicker();")
     }
 
     @Test fun fileTest() {

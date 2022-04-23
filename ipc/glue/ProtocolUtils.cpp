@@ -322,6 +322,21 @@ void IProtocol::Unregister(int32_t aId) {
   return mToplevel->Unregister(aId);
 }
 
+Shmem::SharedMemory* IProtocol::CreateSharedMemory(
+    size_t aSize, SharedMemory::SharedMemoryType aType, bool aUnsafe,
+    int32_t* aId) {
+  return mToplevel->CreateSharedMemory(aSize, aType, aUnsafe, aId);
+}
+Shmem::SharedMemory* IProtocol::LookupSharedMemory(int32_t aId) {
+  return mToplevel->LookupSharedMemory(aId);
+}
+bool IProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* aSegment) {
+  return mToplevel->IsTrackingSharedMemory(aSegment);
+}
+bool IProtocol::DestroySharedMemory(Shmem& aShmem) {
+  return mToplevel->DestroySharedMemory(aShmem);
+}
+
 MessageChannel* IProtocol::GetIPCChannel() {
   return mToplevel->GetIPCChannel();
 }
@@ -393,8 +408,14 @@ bool IProtocol::AllocShmem(size_t aSize,
     return false;
   }
 
-  *aOutMem = Shmem(aSize, aType, false);
-  return aOutMem->IsValid();
+  Shmem::id_t id;
+  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, false, &id));
+  if (!rawmem) {
+    return false;
+  }
+
+  *aOutMem = Shmem(Shmem::PrivateIPDLCaller(), rawmem, id);
+  return true;
 }
 
 bool IProtocol::AllocUnsafeShmem(size_t aSize,
@@ -406,13 +427,30 @@ bool IProtocol::AllocUnsafeShmem(size_t aSize,
     return false;
   }
 
-  *aOutMem = Shmem(aSize, aType, true);
-  return aOutMem->IsValid();
+  Shmem::id_t id;
+  Shmem::SharedMemory* rawmem(CreateSharedMemory(aSize, aType, true, &id));
+  if (!rawmem) {
+    return false;
+  }
+
+  *aOutMem = Shmem(Shmem::PrivateIPDLCaller(), rawmem, id);
+  return true;
 }
 
 bool IProtocol::DeallocShmem(Shmem& aMem) {
-  aMem.RevokeRights();
-  return true;
+  bool ok = DestroySharedMemory(aMem);
+#ifdef DEBUG
+  if (!ok) {
+    if (mSide == ChildSide) {
+      FatalError("bad Shmem");
+    } else {
+      NS_WARNING("bad Shmem");
+    }
+    return false;
+  }
+#endif  // DEBUG
+  aMem.forget(Shmem::PrivateIPDLCaller());
+  return ok;
 }
 
 void IProtocol::SetManager(IProtocol* aManager) {
@@ -627,6 +665,104 @@ void IToplevelProtocol::Unregister(int32_t aId) {
   MOZ_ASSERT(mActorMap.Contains(aId),
              "Attempting to remove an ID not in the actor map");
   mActorMap.Remove(aId);
+}
+
+Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(
+    size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, bool aUnsafe,
+    Shmem::id_t* aId) {
+  RefPtr<Shmem::SharedMemory> segment(
+      Shmem::Alloc(Shmem::PrivateIPDLCaller(), aSize, aType, aUnsafe));
+  if (!segment) {
+    return nullptr;
+  }
+  int32_t id = NextId();
+  Shmem shmem(Shmem::PrivateIPDLCaller(), segment.get(), id);
+
+  UniquePtr<Message> descriptor =
+      shmem.MkCreatedMessage(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
+  if (!descriptor) {
+    return nullptr;
+  }
+  Unused << GetIPCChannel()->Send(std::move(descriptor));
+
+  *aId = shmem.Id(Shmem::PrivateIPDLCaller());
+  Shmem::SharedMemory* rawSegment = segment.get();
+  MOZ_ASSERT(!mShmemMap.Contains(*aId), "Don't insert with an existing ID");
+  mShmemMap.InsertOrUpdate(*aId, segment.forget().take());
+  return rawSegment;
+}
+
+Shmem::SharedMemory* IToplevelProtocol::LookupSharedMemory(Shmem::id_t aId) {
+  return mShmemMap.Get(aId);
+}
+
+bool IToplevelProtocol::IsTrackingSharedMemory(Shmem::SharedMemory* segment) {
+  for (const auto& shmem : mShmemMap.Values()) {
+    if (segment == shmem) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IToplevelProtocol::DestroySharedMemory(Shmem& shmem) {
+  Shmem::id_t aId = shmem.Id(Shmem::PrivateIPDLCaller());
+  Shmem::SharedMemory* segment = LookupSharedMemory(aId);
+  if (!segment) {
+    return false;
+  }
+
+  UniquePtr<Message> descriptor =
+      shmem.MkDestroyedMessage(Shmem::PrivateIPDLCaller(), MSG_ROUTING_CONTROL);
+
+  MOZ_ASSERT(mShmemMap.Contains(aId),
+             "Attempting to remove an ID not in the shmem map");
+  mShmemMap.Remove(aId);
+  Shmem::Dealloc(Shmem::PrivateIPDLCaller(), segment);
+
+  MessageChannel* channel = GetIPCChannel();
+  if (!channel->CanSend()) {
+    return true;
+  }
+
+  return descriptor && channel->Send(std::move(descriptor));
+}
+
+void IToplevelProtocol::DeallocShmems() {
+  for (const auto& shmem : mShmemMap.Values()) {
+    Shmem::Dealloc(Shmem::PrivateIPDLCaller(), shmem);
+  }
+  mShmemMap.Clear();
+}
+
+bool IToplevelProtocol::ShmemCreated(const Message& aMsg) {
+  Shmem::id_t id;
+  RefPtr<Shmem::SharedMemory> rawmem(
+      Shmem::OpenExisting(Shmem::PrivateIPDLCaller(), aMsg, &id, true));
+  if (!rawmem) {
+    return false;
+  }
+  MOZ_ASSERT(!mShmemMap.Contains(id), "Don't insert with an existing ID");
+  mShmemMap.InsertOrUpdate(id, rawmem.forget().take());
+  return true;
+}
+
+bool IToplevelProtocol::ShmemDestroyed(const Message& aMsg) {
+  Shmem::id_t id;
+  MessageReader reader(aMsg);
+  if (!IPC::ReadParam(&reader, &id)) {
+    return false;
+  }
+  reader.EndRead();
+
+  Shmem::SharedMemory* rawmem = LookupSharedMemory(id);
+  if (rawmem) {
+    MOZ_ASSERT(mShmemMap.Contains(id),
+               "Attempting to remove an ID not in the shmem map");
+    mShmemMap.Remove(id);
+    Shmem::Dealloc(Shmem::PrivateIPDLCaller(), rawmem);
+  }
+  return true;
 }
 
 IPDLResolverInner::IPDLResolverInner(UniquePtr<IPC::Message> aReply,
