@@ -82,6 +82,6 @@ partial interface mixin WindowOrWorkerGlobalScope {
 
 // https://wicg.github.io/scheduling-apis/#ref-for-windoworworkerglobalscope-scheduler
 partial interface mixin WindowOrWorkerGlobalScope {
-  [Pref="dom.enable_web_task_scheduling", SameObject]
+  [Replaceable, Pref="dom.enable_web_task_scheduling", SameObject]
   readonly attribute Scheduler scheduler;
 };
