@@ -5,9 +5,11 @@
 
 #include "mozilla/dom/WebGPUBinding.h"
 #include "CanvasContext.h"
-#include "nsDisplayList.h"
+#include "gfxUtils.h"
 #include "LayerUserData.h"
+#include "nsDisplayList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
@@ -122,6 +124,52 @@ void CanvasContext::SwapChainPresent() {
   if (mBridge && mBridge->IsOpen() && mHandle && mTexture) {
     mBridge->SwapChainPresent(mHandle, mTexture->mId);
   }
+}
+
+mozilla::UniquePtr<uint8_t[]> CanvasContext::GetImageBuffer(int32_t* aFormat) {
+  gfxAlphaType any;
+  RefPtr<gfx::SourceSurface> snapshot = GetSurfaceSnapshot(&any);
+  if (!snapshot) {
+    *aFormat = 0;
+    return nullptr;
+  }
+
+  RefPtr<gfx::DataSourceSurface> dataSurface = snapshot->GetDataSurface();
+  return gfxUtils::GetImageBuffer(dataSurface, /* aIsAlphaPremultiplied */ true,
+                                  aFormat);
+}
+
+NS_IMETHODIMP CanvasContext::GetInputStream(const char* aMimeType,
+                                            const nsAString& aEncoderOptions,
+                                            nsIInputStream** aStream) {
+  gfxAlphaType any;
+  RefPtr<gfx::SourceSurface> snapshot = GetSurfaceSnapshot(&any);
+  if (!snapshot) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<gfx::DataSourceSurface> dataSurface = snapshot->GetDataSurface();
+  return gfxUtils::GetInputStream(dataSurface, /* aIsAlphaPremultiplied */ true,
+                                  aMimeType, aEncoderOptions, aStream);
+}
+
+already_AddRefed<mozilla::gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
+    gfxAlphaType* aOutAlphaType) {
+  if (aOutAlphaType) {
+    *aOutAlphaType = gfxAlphaType::Premult;
+  }
+
+  auto* const cm = gfx::CanvasManagerChild::Get();
+  if (!cm) {
+    return nullptr;
+  }
+
+  if (!mBridge || !mBridge->IsOpen() || !mHandle) {
+    return nullptr;
+  }
+
+  return cm->GetSnapshot(cm->Id(), mBridge->Id(), mHandle, mGfxFormat,
+                         /* aPremultiply */ false, /* aYFlip */ false);
 }
 
 }  // namespace webgpu
