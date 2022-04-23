@@ -21,6 +21,7 @@ use crate::image_source::{resolve_image, resolve_cached_render_task};
 use crate::util::VecHelper;
 use smallvec::SmallVec;
 use std::mem;
+use topological_sort::TopologicalSort;
 
 use crate::render_target::{RenderTargetList, ColorRenderTarget};
 use crate::render_target::{PictureCacheTarget, TextureCacheRenderTarget, AlphaRenderTarget};
@@ -298,36 +299,71 @@ impl RenderTaskGraphBuilder {
             unique_surfaces: FastHashSet::default(),
         };
 
-        // Two traversals of the graph are required. The first pass determines how many passes
-        // are required, and assigns render tasks a pass to be drawn on. The second pass determines
-        // when the last time a render task is used as an input, and assigns what pass the surface
-        // backing that render task can be freed (the surface is then returned to the render target
-        // pool and may be aliased / reused during subsequent passes).
+        // First, use a topological sort of the dependency graph to split the task set in to
+        // a list of passes. This is necessary because when we have a complex graph (e.g. due
+        // to a large number of sibling backdrop-filter primitives) traversing it via a simple
+        // recursion can be too slow. The second pass determines when the last time a render task
+        // is used as an input, and assigns what pass the surface backing that render task can
+        // be freed (the surface is then returned to the render target pool and may be aliased
+        // or reused during subsequent passes).
 
         let mut pass_count = 0;
+        let mut passes = Vec::new();
+        let mut task_sorter = TopologicalSort::<RenderTaskId>::new();
 
-        // Traverse each root, and assign `render_on` for each task and count number of required passes
-        for root_id in &self.roots {
-            assign_render_pass(
-                *root_id,
-                PassId(0),
-                &mut graph,
-                &mut pass_count,
-            );
+        // Iterate the task list, and add all the dependencies to the topo sort
+        for (parent_id, task) in graph.tasks.iter().enumerate() {
+            let parent_id = RenderTaskId { index: parent_id as u32 };
+
+            for child_id in &task.children {
+                task_sorter.add_dependency(
+                    parent_id,
+                    *child_id,
+                );
+            }
         }
 
+        // Pop the sorted passes off the topological sort
+        loop {
+            // Get the next set of tasks that can be drawn
+            let tasks = task_sorter.pop_all();
+
+            // If there are no tasks left, we're done
+            if tasks.is_empty() {
+                // If the task sorter itself isn't empty but we couldn't pop off any
+                // tasks, that implies a circular dependency in the task graph
+                assert!(task_sorter.is_empty());
+                break;
+            } else {
+                // Assign the `render_on` field to the task
+                for task_id in &tasks {
+                    graph.tasks[task_id.index as usize].render_on = PassId(pass_count);
+                }
+
+                // Store the task list for this pass, used later for `assign_free_pass`.
+                passes.push(tasks);
+                pass_count += 1;
+            }
+        }
+
+        // Always create at least one pass for root tasks
+        pass_count = pass_count.max(1);
+
         // Determine which pass each task can be freed on, which depends on which is
-        // the last task that has this as an input.
-        for root_id in &self.roots {
-            assign_free_pass(
-                *root_id,
-                PassId(0),
-                &mut graph,
-            );
+        // the last task that has this as an input. This must be done in top-down
+        // pass order to ensure that RenderTaskLocation::Existing references are
+        // visited in the correct order
+        for pass in passes {
+            for task_id in pass {
+                assign_free_pass(
+                    task_id,
+                    &mut graph,
+                );
+            }
         }
 
         // Construct passes array for tasks to be assigned to below
-        for _ in 0 .. pass_count+1 {
+        for _ in 0 .. pass_count {
             graph.passes.push(Pass {
                 task_ids: Vec::new(),
                 sub_passes: Vec::new(),
@@ -690,69 +726,12 @@ impl std::ops::Index<RenderTaskId> for RenderTaskGraph {
     }
 }
 
-/// Recursive helper to assign pass that a task should render on
-fn assign_render_pass(
-    id: RenderTaskId,
-    pass: PassId,
-    graph: &mut RenderTaskGraph,
-    pass_count: &mut usize,
-) {
-    let task = &mut graph.tasks[id.index as usize];
-
-    // No point in recursing into paths in the graph if this task already
-    // has been set to draw after this pass.
-    if task.render_on > pass {
-        return;
-    }
-
-    let next_pass = if task.kind.should_advance_pass() {
-        // Keep count of number of passes needed
-        *pass_count = pass.0.max(*pass_count);
-        PassId(pass.0 + 1)
-    } else {
-        pass
-    };
-
-    // A task should be rendered on the earliest pass in the dependency
-    // graph that it's required. Using max here ensures the correct value
-    // in the presence of multiple paths to this task from the root(s).
-    task.render_on = task.render_on.max(pass);
-
-    // TODO(gw): Work around the borrowck - maybe we could structure the dependencies
-    //           storage better, to avoid this?
-    let mut child_task_ids: SmallVec<[RenderTaskId; 8]> = SmallVec::new();
-    child_task_ids.extend_from_slice(&task.children);
-
-    for child_id in child_task_ids {
-        assign_render_pass(
-            child_id,
-            next_pass,
-            graph,
-            pass_count,
-        );
-    }
-}
-
 fn assign_free_pass(
     id: RenderTaskId,
-    pass: PassId,
     graph: &mut RenderTaskGraph,
 ) {
     let task = &mut graph.tasks[id.index as usize];
-
-    // No point in recursing into paths in the graph if this task already
-    // has been set to free before this pass.
-    if task.free_after.0 + 1 < pass.0 {
-        return;
-    }
-
     let render_on = task.render_on;
-
-    let next_pass = if task.kind.should_advance_pass() {
-        PassId(pass.0 + 1)
-    } else {
-        pass
-    };
 
     let mut child_task_ids: SmallVec<[RenderTaskId; 8]> = SmallVec::new();
     child_task_ids.extend_from_slice(&task.children);
@@ -791,12 +770,6 @@ fn assign_free_pass(
                 }
             }
         }
-
-        assign_free_pass(
-            child_id,
-            next_pass,
-            graph,
-        );
     }
 }
 

@@ -40,6 +40,7 @@
 #include "js/ProfilingFrameIterator.h"
 #include "js/ProfilingStack.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/BaseProfilerDetail.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ProfilerThreadPlatformData.h"
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
@@ -272,6 +273,14 @@ class ThreadRegistrationData {
   Atomic<int> mSleep{AWAKE};
   Atomic<uint64_t> mThreadCpuTimeInNsAtLastSleep{0};
 
+#ifdef NIGHTLY_BUILD
+  // The first wake is the thread creation.
+  Atomic<uint64_t, MemoryOrdering::Relaxed> mWakeCount{1};
+  mutable baseprofiler::detail::BaseProfilerMutex mRecordWakeCountMutex;
+  mutable uint64_t mAlreadyRecordedWakeCount = 0;
+  mutable uint64_t mAlreadyRecordedCpuTimeInMs = 0;
+#endif
+
   // Is this thread currently being profiled, and with which features?
   // Written from profiler, read from any thread.
   // Invariant: `!!mProfilingFeatures == !!mProfiledThreadData` (set together.)
@@ -339,6 +348,9 @@ class ThreadRegistrationUnlockedConstReaderAndAtomicRW
   void SetAwake() {
     MOZ_ASSERT(mSleep != AWAKE);
     mSleep = AWAKE;
+#ifdef NIGHTLY_BUILD
+    ++mWakeCount;
+#endif
   }
 
   // Returns the CPU time used by the thread since the previous call to this
@@ -354,6 +366,10 @@ class ThreadRegistrationUnlockedConstReaderAndAtomicRW
     mThreadCpuTimeInNsAtLastSleep = newCpuTimeNs;
     return result;
   }
+
+#ifdef NIGHTLY_BUILD
+  void RecordWakeCount() const;
+#endif
 
   // This is called on every profiler restart. Put things that should happen
   // at that time here.

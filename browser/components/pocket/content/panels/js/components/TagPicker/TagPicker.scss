@@ -51,6 +51,10 @@
     @include theme_dark {
       color: #8F8F9D;
 
+      &:hover {
+        color: #fff;
+      }
+
       &:focus {
         outline: 2px solid #00DDFF;
       }
@@ -78,7 +82,8 @@
     border-end-start-radius: 4px;
 
     &:focus {
-      outline: 2px solid #0060df;
+      border: 1px solid #0060DF;
+      outline: 1px solid #0060DF;
     }
 
     @include theme_dark {
@@ -86,12 +91,9 @@
       color: #FBFBFB;
 
       &:focus {
-        outline: 2px solid #00DDFF;
+        border: 1px solid #00DDFF;
+        outline: 1px solid #00DDFF;
       }
-    }
-    &:focus {
-      border: 1px solid #0060DF;
-      outline: 1px solid #0060DF;
     }
   }
 
@@ -113,6 +115,21 @@
     &:focus:enabled {
       border: 1px solid #0060DF;
       outline: 1px solid #0060DF;
+    }
+
+    @include theme_dark {
+      background-color: #2B2A33;
+      color: #FBFBFB;
+      &:disabled {
+        color: #666;
+      }
+      &:hover:enabled {
+        background-color: #53535d;
+      }
+      &:focus:enabled {
+        border: 1px solid #00DDFF;
+        outline: 1px solid #00DDFF;
+      }
     }
   }
 }

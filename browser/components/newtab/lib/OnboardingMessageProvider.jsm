@@ -64,9 +64,10 @@ const ONBOARDING_MESSAGES = () => [
             },
             has_noodles: true,
             title: {
+              fontSize: "36px",
               string_id: "fx100-upgrade-thanks-header",
             },
-            title_style: "fancy larger",
+            title_style: "fancy shine",
             background:
               "url('chrome://activity-stream/content/data/content/assets/confetti.svg') top / 100% no-repeat var(--in-content-page-background)",
             subtitle: {

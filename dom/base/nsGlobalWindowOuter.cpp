@@ -4140,11 +4140,17 @@ already_AddRefed<nsIWidget> nsGlobalWindowOuter::GetMainWidget() {
 
 nsIWidget* nsGlobalWindowOuter::GetNearestWidget() const {
   nsIDocShell* docShell = GetDocShell();
-  NS_ENSURE_TRUE(docShell, nullptr);
+  if (!docShell) {
+    return nullptr;
+  }
   PresShell* presShell = docShell->GetPresShell();
-  NS_ENSURE_TRUE(presShell, nullptr);
+  if (!presShell) {
+    return nullptr;
+  }
   nsIFrame* rootFrame = presShell->GetRootFrame();
-  NS_ENSURE_TRUE(rootFrame, nullptr);
+  if (!rootFrame) {
+    return nullptr;
+  }
   return rootFrame->GetView()->GetNearestWidget(nullptr);
 }
 
