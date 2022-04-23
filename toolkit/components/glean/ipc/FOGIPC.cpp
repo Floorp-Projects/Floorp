@@ -71,6 +71,93 @@ struct ProcessingTimeMarker {
 
 namespace mozilla::glean {
 
+#ifdef NIGHTLY_BUILD
+// The 2 following static global variables are set within RecordPowerMetrics
+// so that RecordThreadCpuUse can avoid computing the Glean process type
+// (matching a label of per_process_type_labels).
+// This is useful because RecordThreadCpuUse will either be called in a loop
+// for every thread (recomputing the process type for every thread would be
+// expensive), or will be called off main thread when a thread is unregisters
+// itself (some APIs needed to compute the process type might not be available
+// off main thread).
+// It is fine to call RecordThreadCpuUse during startup before the first
+// RecordPowerMetrics call. In that case the parent process will be recorded
+// as inactive, and other processes will be ignored (content processes start
+// in the 'prealloc' type for which we don't record per-thread CPU use data).
+using LabeledCounterMetric = const impl::Labeled<impl::CounterMetric>;
+static Atomic<LabeledCounterMetric*> gCpuTimePerThreadMetric(nullptr);
+static Atomic<LabeledCounterMetric*> gWakeupsPerThreadMetric(nullptr);
+
+// These 2 macros are only meant to reduce code duplication, there is no
+// requirement of the 2 variables being set atomically as a single value.
+#  define SET_PER_THREAD_CPU_METRICS(aProcessType)                    \
+    gCpuTimePerThreadMetric = &power_cpu_ms_per_thread::aProcessType; \
+    gWakeupsPerThreadMetric = &power_wakeups_per_thread::aProcessType;
+
+#  define RESET_PER_THREAD_CPU_METRICS() \
+    gCpuTimePerThreadMetric = nullptr;   \
+    gWakeupsPerThreadMetric = nullptr;
+
+void RecordThreadCpuUse(const nsACString& aThreadName, uint64_t aCpuTimeMs,
+                        uint64_t aWakeCount) {
+  // Copy the values of the atomics to local variables so that we don't have to
+  // worry about other threads changing them during the execution of this
+  // function.
+  LabeledCounterMetric* cpuTimeMetric = gCpuTimePerThreadMetric;
+  LabeledCounterMetric* wakeupsMetric = gWakeupsPerThreadMetric;
+
+  if (!cpuTimeMetric || !wakeupsMetric) {
+    if (XRE_IsParentProcess()) {
+      // The metrics can be null for the parent process during startup,
+      // and we want to record during that time.
+      SET_PER_THREAD_CPU_METRICS(parent_inactive);
+      cpuTimeMetric = gCpuTimePerThreadMetric;
+      wakeupsMetric = gWakeupsPerThreadMetric;
+      if (!cpuTimeMetric || !wakeupsMetric) {
+        return;
+      }
+    } else {
+      // We are not interested in per-thread CPU use data for the current
+      // process type.
+      return;
+    }
+  }
+
+  nsAutoCString threadName(aThreadName);
+  for (size_t i = 0; i < threadName.Length(); ++i) {
+    const char c = threadName.CharAt(i);
+
+    // Valid characters.
+    if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-' ||
+        c == '_') {
+      continue;
+    }
+
+    // Should only use lower case characters
+    if (c >= 'A' && c <= 'Z') {
+      threadName.SetCharAt(c + ('a' - 'A'), i);
+      continue;
+    }
+
+    // Replace everything else with _
+    threadName.SetCharAt('_', i);
+  }
+
+  if (aCpuTimeMs != 0 &&
+      MOZ_LIKELY(aCpuTimeMs < std::numeric_limits<int32_t>::max())) {
+    cpuTimeMetric->Get(threadName).Add(int32_t(aCpuTimeMs));
+  }
+
+  if (aWakeCount != 0 &&
+      MOZ_LIKELY(aWakeCount < std::numeric_limits<int32_t>::max())) {
+    wakeupsMetric->Get(threadName).Add(int32_t(aWakeCount));
+  }
+}
+#else  // ifdef NIGHTLY_BUILD
+#  define SET_PER_THREAD_CPU_METRICS(aProcessType)
+#  define RESET_PER_THREAD_CPU_METRICS()
+#endif
+
 void RecordPowerMetrics() {
   static uint64_t previousCpuTime = 0, previousGpuTime = 0;
 
@@ -104,23 +191,31 @@ void RecordPowerMetrics() {
         switch (cc->GetProcessPriority()) {
           case hal::PROCESS_PRIORITY_BACKGROUND:
             type.AppendLiteral(".background");
+            SET_PER_THREAD_CPU_METRICS(content_background);
             break;
           case hal::PROCESS_PRIORITY_FOREGROUND:
             type.AppendLiteral(".foreground");
+            SET_PER_THREAD_CPU_METRICS(content_foreground);
             break;
           case hal::PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE:
             type.AppendLiteral(".background-perceivable");
+            RESET_PER_THREAD_CPU_METRICS();
             break;
           default:
+            RESET_PER_THREAD_CPU_METRICS();
             break;
         }
       }
+    } else {
+      RESET_PER_THREAD_CPU_METRICS();
     }
   } else if (XRE_IsParentProcess()) {
     if (nsContentUtils::GetUserIsInteracting()) {
       type.AssignLiteral("parent.active");
+      SET_PER_THREAD_CPU_METRICS(parent_active);
     } else {
       type.AssignLiteral("parent.inactive");
+      SET_PER_THREAD_CPU_METRICS(parent_inactive);
     }
     hal::WakeLockInformation info;
     GetWakeLockInfo(u"video-playing"_ns, &info);
@@ -132,6 +227,10 @@ void RecordPowerMetrics() {
         type.AppendLiteral(".playing-audio");
       }
     }
+  } else if (XRE_IsGPUProcess()) {
+    SET_PER_THREAD_CPU_METRICS(gpu_process);
+  } else {
+    RESET_PER_THREAD_CPU_METRICS();
   }
 
   if (newCpuTime) {
@@ -146,8 +245,8 @@ void RecordPowerMetrics() {
     } else {
       power::cpu_time_bogus_values.Add(1);
     }
-    PROFILER_MARKER("CPU Time", OTHER, {}, ProcessingTimeMarker, nNewCpuTime,
-                    type);
+    PROFILER_MARKER("Process CPU Time", OTHER, {}, ProcessingTimeMarker,
+                    nNewCpuTime, type);
     previousCpuTime += newCpuTime;
   }
 
@@ -159,8 +258,8 @@ void RecordPowerMetrics() {
     } else {
       power::gpu_time_bogus_values.Add(1);
     }
-    PROFILER_MARKER("GPU Time", OTHER, {}, ProcessingTimeMarker, nNewGpuTime,
-                    type);
+    PROFILER_MARKER("Process GPU Time", OTHER, {}, ProcessingTimeMarker,
+                    nNewGpuTime, type);
     previousGpuTime += newGpuTime;
   }
 
