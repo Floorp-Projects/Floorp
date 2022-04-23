@@ -31,6 +31,9 @@ class PromptFactory {
       case "mozshowdropdown-sourcetouch":
         this._handleSelect(aEvent.composedTarget, /* aIsDropDown = */ true);
         break;
+      case "MozOpenDateTimePicker":
+        this._handleDateTime(aEvent.composedTarget);
+        break;
       case "click":
         this._handleClick(aEvent);
         break;
@@ -80,7 +83,7 @@ class PromptFactory {
       type === "time" ||
       type === "datetime-local"
     ) {
-      this._handleDateTime(target, type);
+      this._handleDateTime(target);
       aEvent.preventDefault();
     }
   }
@@ -179,12 +182,12 @@ class PromptFactory {
     );
   }
 
-  _handleDateTime(aElement, aType) {
+  _handleDateTime(aElement) {
     const prompt = new GeckoViewPrompter(aElement.ownerGlobal);
     prompt.asyncShowPrompt(
       {
         type: "datetime",
-        mode: aType,
+        mode: aElement.type,
         value: aElement.value,
         min: aElement.min,
         max: aElement.max,
