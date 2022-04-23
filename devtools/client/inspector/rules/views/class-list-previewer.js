@@ -39,12 +39,6 @@ class ClassListPreviewer {
     );
     this.onCurrentNodeClassChanged = this.onCurrentNodeClassChanged.bind(this);
     this.onNodeFrontWillUnset = this.onNodeFrontWillUnset.bind(this);
-    this.onAutocompleteClassHovered = debounce(
-      this.onAutocompleteClassHovered,
-      75,
-      this
-    );
-    this.onAutocompleteClosed = this.onAutocompleteClosed.bind(this);
 
     // Create the add class text field.
     this.addEl = this.doc.createElement("input");
@@ -67,7 +61,7 @@ class ClassListPreviewer {
     this.autocompletePopup = new AutocompletePopup(this.inspector.toolbox.doc, {
       listId: "inspector_classListPreviewer_autocompletePopupListBox",
       position: "bottom",
-      autoSelect: true,
+      autoSelect: false,
       useXulWrapper: true,
       input: this.addEl,
       onClick: (e, item) => {
@@ -76,11 +70,6 @@ class ClassListPreviewer {
           this.autocompletePopup.hidePopup();
           this.autocompletePopup.clearItems();
           this.model.previewClass(item.label);
-        }
-      },
-      onSelect: item => {
-        if (item) {
-          this.onAutocompleteClassHovered(item?.label);
         }
       },
     });
@@ -93,7 +82,6 @@ class ClassListPreviewer {
     );
     this.containerEl.addEventListener("input", this.onCheckBoxChanged);
     this.model.on("current-node-class-changed", this.onCurrentNodeClassChanged);
-    this.autocompletePopup.on("popup-closed", this.onAutocompleteClosed);
 
     this.onNewSelection();
   }
@@ -104,7 +92,6 @@ class ClassListPreviewer {
       "node-front-will-unset",
       this.onNodeFrontWillUnset
     );
-    this.autocompletePopup.off("popup-closed", this.onAutocompleteClosed);
     this.addEl.removeEventListener("keydown", this.onKeyDown);
     this.addEl.removeEventListener("input", this.onAddElementInputModified);
     this.containerEl.removeEventListener("input", this.onCheckBoxChanged);
@@ -228,13 +215,13 @@ class ClassListPreviewer {
   async onAddElementInputModified() {
     const newValue = this.addEl.value;
 
+    this.model.previewClass(newValue);
+
     // if the input is empty, let's close the popup, if it was open.
     if (newValue === "") {
       if (this.autocompletePopup.isOpen) {
         this.autocompletePopup.hidePopup();
         this.autocompletePopup.clearItems();
-      } else {
-        this.model.previewClass("");
       }
       return;
     }
@@ -243,17 +230,16 @@ class ClassListPreviewer {
     let items = [];
     try {
       const classNames = await this.model.getClassNames(newValue);
-      if (!this.autocompletePopup.isOpen) {
-        this._previewClassesBeforeAutocompletion = this.model.previewClasses.map(
-          previewClass => previewClass.className
-        );
-      }
-      items = classNames.map(className => {
-        return {
-          preLabel: className.substring(0, newValue.length),
-          label: className,
-        };
-      });
+      items = classNames
+        .filter(
+          className => !this.model.previewClasses.split(" ").includes(className)
+        )
+        .map(className => {
+          return {
+            preLabel: className.substring(0, newValue.length),
+            label: className,
+          };
+        });
     } catch (e) {
       // If there was an error while retrieving the classNames, we'll simply NOT show the
       // popup, which is okay.
@@ -265,8 +251,7 @@ class ClassListPreviewer {
       (items.length == 1 && items[0].label === newValue)
     ) {
       this.autocompletePopup.clearItems();
-      await this.autocompletePopup.hidePopup();
-      this.model.previewClass(newValue);
+      this.autocompletePopup.hidePopup();
     } else {
       this.autocompletePopup.setItems(items);
       this.autocompletePopup.openPopup();
@@ -297,17 +282,6 @@ class ClassListPreviewer {
   onNodeFrontWillUnset() {
     this.model.eraseClassPreview();
     this.addEl.value = "";
-  }
-
-  onAutocompleteClassHovered(autocompleteItemLabel = "") {
-    if (this.autocompletePopup.isOpen) {
-      this.model.previewClass(autocompleteItemLabel);
-    }
-  }
-
-  onAutocompleteClosed() {
-    const inputValue = this.addEl.value;
-    this.model.previewClass(inputValue);
   }
 }
 
