@@ -530,7 +530,8 @@ struct YUVMatrix {
   // [ yScale, g_from_u, g_from_v ] x ([cb] - ycbcr_bias )
   // [ yScale, b_from_u,        0 ]   ([cr]              )
   static YUVMatrix From(const vec3_scalar& ycbcr_bias,
-                        const mat3_scalar& rgb_from_debiased_ycbcr) {
+                        const mat3_scalar& rgb_from_debiased_ycbcr,
+                        int rescale_factor = 0) {
     assert(ycbcr_bias.z == ycbcr_bias.y);
 
     const auto rgb_from_y = rgb_from_debiased_ycbcr[0].y;
@@ -540,14 +541,14 @@ struct YUVMatrix {
     if (rgb_from_debiased_ycbcr[0].x == 0.0) {
       // gbr-identity matrix?
       assert(rgb_from_debiased_ycbcr[0].x == 0);
-      assert(rgb_from_debiased_ycbcr[0].y == 1);
+      assert(rgb_from_debiased_ycbcr[0].y >= 1);
       assert(rgb_from_debiased_ycbcr[0].z == 0);
 
       assert(rgb_from_debiased_ycbcr[1].x == 0);
       assert(rgb_from_debiased_ycbcr[1].y == 0);
-      assert(rgb_from_debiased_ycbcr[1].z == 1);
+      assert(rgb_from_debiased_ycbcr[1].z >= 1);
 
-      assert(rgb_from_debiased_ycbcr[2].x == 1);
+      assert(rgb_from_debiased_ycbcr[2].x >= 1);
       assert(rgb_from_debiased_ycbcr[2].y == 0);
       assert(rgb_from_debiased_ycbcr[2].z == 0);
 
@@ -569,24 +570,30 @@ struct YUVMatrix {
     assert(rgb_from_debiased_ycbcr[2].z == 0.0);
 
     return YUVMatrix({ycbcr_bias.x, ycbcr_bias.y}, rgb_from_y, br_from_y_mask,
-                     r_from_v, g_from_u, g_from_v, b_from_u);
+                     r_from_v, g_from_u, g_from_v, b_from_u, rescale_factor);
   }
 
-  // Convert matrix coefficients to fixed-point representation.
+  // Convert matrix coefficients to fixed-point representation. If the matrix
+  // has a rescaling applied to it, then we need to take care to undo the
+  // scaling so that we can convert the coefficients to fixed-point range. The
+  // bias still requires shifting to apply the rescaling. The rescaling will be
+  // applied to the actual YCbCr sample data later by manually shifting it
+  // before applying this matrix.
   YUVMatrix(vec2_scalar yuv_bias, double yCoeff, int16_t br_yMask_, double rv,
-            double gu, double gv, double bu)
-      : br_uvCoeffs(zip(I16(int16_t(bu * (1 << 6) + 0.5)),
-                        I16(int16_t(rv * (1 << 6) + 0.5)))),
-        gg_uvCoeffs(zip(I16(-int16_t(-gu * (1 << 6) +
-                                     0.5)),  // These are negative coeffs, so
-                                             // round them away from zero
-                        I16(-int16_t(-gv * (1 << 6) + 0.5)))),
-        yCoeffs(uint16_t(yCoeff * (1 << (6 + 1)) + 0.5)),
+            double gu, double gv, double bu, int rescale_factor = 0)
+      : br_uvCoeffs(zip(I16(int16_t(bu * (1 << (6 - rescale_factor)) + 0.5)),
+                        I16(int16_t(rv * (1 << (6 - rescale_factor)) + 0.5)))),
+        gg_uvCoeffs(
+            zip(I16(-int16_t(-gu * (1 << (6 - rescale_factor)) +
+                             0.5)),  // These are negative coeffs, so
+                                     // round them away from zero
+                I16(-int16_t(-gv * (1 << (6 - rescale_factor)) + 0.5)))),
+        yCoeffs(uint16_t(yCoeff * (1 << (6 + 1 - rescale_factor)) + 0.5)),
         // We have a +0.5 fudge-factor for -ybias.
         // Without this, we get white=254 not 255.
         // This approximates rounding rather than truncation during `gg >>= 6`.
-        yBias(int16_t( ((yuv_bias.x * 255 * yCoeff) - 0.5 ) * (1<<6) )),
-        uvBias(int16_t(yuv_bias.y * 255 + 0.5)),
+        yBias(int16_t(((yuv_bias.x * 255 * yCoeff) - 0.5) * (1 << 6))),
+        uvBias(int16_t(yuv_bias.y * (255 << rescale_factor) + 0.5)),
         br_yMask(br_yMask_) {
     assert(yuv_bias.x >= 0);
     assert(yuv_bias.y >= 0);
@@ -596,6 +603,7 @@ struct YUVMatrix {
     assert(rv > 0);
     assert(gu <= 0);
     assert(gv <= 0);
+    assert(rescale_factor <= 6);
   }
 
   ALWAYS_INLINE PackedRGBA8 convert(V8<int16_t> yy, V8<int16_t> uv) const {
@@ -877,11 +885,15 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
     // If the source row has less than 2 pixels, it's not safe to use a linear
     // filter because it may overread the row. Just convert the single pixel
     // with nearest filtering and fill the row with it.
-    I16 yuv = CONVERT(
-        round_pixel((Float){texelFetch(samplerY, ivec2(srcUV)).x.x,
-                            texelFetch(samplerU, ivec2(chromaUV)).x.x,
-                            texelFetch(samplerV, ivec2(chromaUV)).x.x, 1.0f}),
-        I16);
+    Float yuvF = {texelFetch(samplerY, ivec2(srcUV)).x.x,
+                  texelFetch(samplerU, ivec2(chromaUV)).x.x,
+                  texelFetch(samplerV, ivec2(chromaUV)).x.x, 1.0f};
+    // If this is an HDR LSB format, we need to renormalize the result.
+    if (colorDepth > 8) {
+      int rescaleFactor = 16 - colorDepth;
+      yuvF *= float(1 << rescaleFactor);
+    }
+    I16 yuv = CONVERT(round_pixel(yuvF), I16);
     commit_solid_span<BLEND>(
         dest,
         unpack(colorSpace.convert(V8<int16_t>(yuv.x),
