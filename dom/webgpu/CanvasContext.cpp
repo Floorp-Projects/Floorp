@@ -78,6 +78,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   } else if (mOffscreenCanvas) {
     dom::OffscreenCanvasDisplayData data;
     data.mSize = {mWidth, mHeight};
+    data.mIsOpaque = false;
     data.mHandle = mHandle;
     mOffscreenCanvas->UpdateDisplayData(data);
   }
