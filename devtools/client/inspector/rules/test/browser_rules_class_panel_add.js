@@ -72,7 +72,11 @@ add_task(async function() {
     for (const key of textEntered.split("")) {
       const onPreviewMutation = inspector.once("markupmutation");
       EventUtils.synthesizeKey(key, {}, view.styleWindow);
-      await onPreviewMutation;
+      await Promise.race([
+        onPreviewMutation,
+        /* eslint-disable mozilla/no-arbitrary-setTimeout */
+        new Promise(resolve => setTimeout(resolve, 100)),
+      ]);
     }
 
     info("Submit the change and wait for the textfield to become empty");
@@ -81,7 +85,11 @@ add_task(async function() {
 
     if (!expectNoMutation) {
       info("Wait for the DOM to change");
-      await onMutation;
+      await Promise.race([
+        onMutation,
+        /* eslint-disable mozilla/no-arbitrary-setTimeout */
+        new Promise(resolve => setTimeout(resolve, 100)),
+      ]);
     }
 
     await onEmpty;
