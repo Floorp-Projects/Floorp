@@ -111,7 +111,7 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvInitialize(
 
 mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
     const uint32_t& aManagerId, const int32_t& aProtocolId,
-    webgl::FrontBufferSnapshotIpc* aResult) {
+    const CompositableHandle& aHandle, webgl::FrontBufferSnapshotIpc* aResult) {
   if (!aManagerId) {
     return IPC_FAIL(this, "invalid id");
   }
@@ -129,16 +129,33 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
     return IPC_FAIL(this, "invalid actor");
   }
 
-  if (actor->GetProtocolId() != ProtocolId::PWebGLMsgStart ||
-      actor->GetSide() != mozilla::ipc::Side::ParentSide) {
+  if (actor->GetSide() != mozilla::ipc::Side::ParentSide) {
     return IPC_FAIL(this, "unsupported actor");
   }
 
-  RefPtr<dom::WebGLParent> webgl = static_cast<dom::WebGLParent*>(actor);
   webgl::FrontBufferSnapshotIpc buffer;
-  mozilla::ipc::IPCResult rv = webgl->GetFrontBufferSnapshot(&buffer, this);
-  if (!rv) {
-    return rv;
+  switch (actor->GetProtocolId()) {
+    case ProtocolId::PWebGLMsgStart: {
+      RefPtr<dom::WebGLParent> webgl = static_cast<dom::WebGLParent*>(actor);
+      mozilla::ipc::IPCResult rv = webgl->GetFrontBufferSnapshot(&buffer, this);
+      if (!rv) {
+        return rv;
+      }
+    } break;
+    case ProtocolId::PWebGPUMsgStart: {
+      RefPtr<webgpu::WebGPUParent> webgpu =
+          static_cast<webgpu::WebGPUParent*>(actor);
+      IntSize size;
+      mozilla::ipc::IPCResult rv =
+          webgpu->GetFrontBufferSnapshot(this, aHandle, buffer.shmem, size);
+      if (!rv) {
+        return rv;
+      }
+      buffer.surfSize.x = static_cast<uint32_t>(size.width);
+      buffer.surfSize.y = static_cast<uint32_t>(size.height);
+    } break;
+    default:
+      return IPC_FAIL(this, "unsupported protocol");
   }
 
   *aResult = std::move(buffer);
