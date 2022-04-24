@@ -16,7 +16,6 @@ pub use cssparser::{SourceLocation, Token, RGBA};
 use precomputed_hash::PrecomputedHash;
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Debug, Write};
-use std::hash;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 use to_shmem::impl_trivial_to_shmem;
 
@@ -448,27 +447,32 @@ impl CustomIdent {
         ident: &CowRcStr<'i>,
         excluding: &[&str],
     ) -> Result<Self, ParseError<'i>> {
-        use crate::properties::CSSWideKeyword;
-        // https://drafts.csswg.org/css-values-4/#custom-idents:
-        //
-        //     The CSS-wide keywords are not valid <custom-ident>s. The default
-        //     keyword is reserved and is also not a valid <custom-ident>.
-        //
-        if CSSWideKeyword::from_ident(ident).is_ok() || ident.eq_ignore_ascii_case("default") {
+        if !Self::is_valid(ident, excluding) {
             return Err(
                 location.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(ident.clone()))
             );
         }
-
-        // https://drafts.csswg.org/css-values-4/#custom-idents:
-        //
-        //     Excluded keywords are excluded in all ASCII case permutations.
-        //
         if excluding.iter().any(|s| ident.eq_ignore_ascii_case(s)) {
             Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError))
         } else {
             Ok(CustomIdent(Atom::from(ident.as_ref())))
         }
+    }
+
+    fn is_valid(ident: &str, excluding: &[&str]) -> bool {
+        use crate::properties::CSSWideKeyword;
+        // https://drafts.csswg.org/css-values-4/#custom-idents:
+        //
+        //     The CSS-wide keywords are not valid <custom-ident>s. The default
+        //     keyword is reserved and is also not a valid <custom-ident>.
+        if CSSWideKeyword::from_ident(ident).is_ok() || ident.eq_ignore_ascii_case("default") {
+            return false;
+        }
+
+        // https://drafts.csswg.org/css-values-4/#custom-idents:
+        //
+        //     Excluded keywords are excluded in all ASCII case permutations.
+        !excluding.iter().any(|s| ident.eq_ignore_ascii_case(s))
     }
 }
 
@@ -486,45 +490,39 @@ impl ToCss for CustomIdent {
 ///
 /// <https://drafts.csswg.org/css-animations-2/#typedef-timeline-name>
 /// <https://drafts.csswg.org/css-animations/#typedef-keyframes-name>
+///
+/// We use a single atom for these. Empty atom represents no animation.
+#[repr(transparent)]
 #[derive(
-    Clone, Debug, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
+    Clone, Debug, Hash, PartialEq, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem,
 )]
-#[repr(C, u8)]
-pub enum TimelineOrKeyframesName {
-    /// <custom-ident>
-    Ident(CustomIdent),
-    /// <string>
-    QuotedString(Atom),
-}
+pub struct TimelineOrKeyframesName(Atom);
 
 impl TimelineOrKeyframesName {
     /// <https://drafts.csswg.org/css-animations/#dom-csskeyframesrule-name>
     pub fn from_ident(value: &str) -> Self {
-        let location = SourceLocation { line: 0, column: 0 };
-        let custom_ident = CustomIdent::from_ident(location, &value.into(), &["none"]).ok();
-        match custom_ident {
-            Some(ident) => Self::Ident(ident),
-            None => Self::QuotedString(value.into()),
-        }
+        Self(Atom::from(value))
+    }
+
+    /// Returns the `none` value.
+    pub fn none() -> Self {
+        Self(atom!(""))
+    }
+
+    /// Returns whether this is the special `none` value.
+    pub fn is_none(&self) -> bool {
+        self.0 == atom!("")
     }
 
     /// Create a new TimelineOrKeyframesName from Atom.
     #[cfg(feature = "gecko")]
     pub fn from_atom(atom: Atom) -> Self {
-        debug_assert_ne!(atom, atom!(""));
-
-        // FIXME: We might want to preserve <string>, but currently Gecko
-        // stores both of <custom-ident> and <string> into nsAtom, so
-        // we can't tell it.
-        Self::Ident(CustomIdent(atom))
+        Self(atom)
     }
 
     /// The name as an Atom
     pub fn as_atom(&self) -> &Atom {
-        match *self {
-            Self::Ident(ref ident) => &ident.0,
-            Self::QuotedString(ref atom) => atom,
-        }
+        &self.0
     }
 }
 
@@ -537,36 +535,17 @@ pub trait IsAuto {
     fn is_auto(&self) -> bool;
 }
 
-impl PartialEq for TimelineOrKeyframesName {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_atom() == other.as_atom()
-    }
-}
-
-impl hash::Hash for TimelineOrKeyframesName {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: hash::Hasher,
-    {
-        self.as_atom().hash(state)
-    }
-}
-
 impl Parse for TimelineOrKeyframesName {
     fn parse<'i, 't>(
         _context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         let location = input.current_source_location();
-        match *input.next()? {
-            Token::Ident(ref s) => Ok(Self::Ident(CustomIdent::from_ident(
-                location,
-                s,
-                &["none"],
-            )?)),
-            Token::QuotedString(ref s) => Ok(Self::QuotedString(Atom::from(s.as_ref()))),
-            ref t => Err(location.new_unexpected_token_error(t.clone())),
-        }
+        Ok(match *input.next()? {
+            Token::Ident(ref s) => Self(CustomIdent::from_ident(location, s, &["none"])?.0),
+            Token::QuotedString(ref s) => Self(Atom::from(s.as_ref())),
+            ref t => return Err(location.new_unexpected_token_error(t.clone())),
+        })
     }
 }
 
@@ -575,10 +554,17 @@ impl ToCss for TimelineOrKeyframesName {
     where
         W: Write,
     {
-        match *self {
-            Self::Ident(ref ident) => ident.to_css(dest),
-            Self::QuotedString(ref atom) => atom.to_string().to_css(dest),
+        if self.0 == atom!("") {
+            return dest.write_str("none")
         }
+
+        self.0.with_str(|s| {
+            if CustomIdent::is_valid(s, &["none"]) {
+                serialize_identifier(s, dest)
+            } else {
+                s.to_css(dest)
+            }
+        })
     }
 }
 
