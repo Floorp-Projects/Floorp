@@ -13,9 +13,6 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 #include "mozilla/layers/KnowsCompositor.h"
-#if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
-#  include "AOMDecoder.h"
-#endif
 #if LIBAVCODEC_VERSION_MAJOR >= 57
 #  include "mozilla/layers/TextureClient.h"
 #endif
@@ -25,6 +22,12 @@
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #  include "FFmpegVideoFramePool.h"
 #  include "va/va.h"
+#endif
+
+#if defined(MOZ_AV1) && defined(MOZ_WAYLAND) && \
+    (defined(FFVPX_VERSION) || LIBAVCODEC_VERSION_MAJOR >= 59)
+#  define FFMPEG_AV1_DECODE 1
+#  include "AOMDecoder.h"
 #endif
 
 #include "libavutil/pixfmt.h"
@@ -989,7 +992,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
 #if LIBAVCODEC_VERSION_MAJOR >= 57
       || mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P12LE
 #endif
-#if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
+#if defined(FFMPEG_AV1_DECODE)
       || mCodecContext->pix_fmt == AV_PIX_FMT_GBRP
 #endif
   ) {
@@ -1151,7 +1154,7 @@ AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
   }
 #endif
 
-#if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
+#if defined(FFMPEG_AV1_DECODE)
   if (AOMDecoder::IsAV1(aMimeType)) {
     return AV_CODEC_ID_AV1;
   }
