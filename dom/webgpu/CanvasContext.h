@@ -54,12 +54,20 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
     return NS_OK;
   }
 
-  mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aFormat) override;
+  mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aFormat) override {
+    MOZ_CRASH("todo");
+  }
   NS_IMETHOD GetInputStream(const char* aMimeType,
                             const nsAString& aEncoderOptions,
-                            nsIInputStream** aStream) override;
+                            nsIInputStream** aStream) override {
+    *aStream = nullptr;
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
-      gfxAlphaType* aOutAlphaType) override;
+      gfxAlphaType* aOutAlphaType) override {
+    return nullptr;
+  }
 
   void SetOpaqueValueFromOpaqueAttr(bool aOpaqueAttrValue) override {}
   bool GetIsOpaque() override { return true; }

@@ -360,8 +360,8 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
             if (aMaybeError->validationMessage.IsEmpty()) {
               error.SetAsGPUOutOfMemoryError();
             } else {
-              error.SetAsGPUValidationError() =
-                  new ValidationError(self, aMaybeError->validationMessage);
+              error.SetAsGPUValidationError() = new ValidationError(
+                  self->GetParentObject(), aMaybeError->validationMessage);
             }
             promise->MaybeResolve(std::move(error));
           }
