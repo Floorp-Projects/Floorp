@@ -256,16 +256,17 @@ void nsFrameIterator::Next() {
           result = parent;
         }
         break;
-      } else {
-        result = GetParentFrameNotPopup(parent);
-        if (!result || IsRootFrame(result) ||
-            (mLockScroll && result->IsScrollFrame())) {
-          result = nullptr;
-          break;
-        }
-        if (mType == ePostOrder) break;
-        parent = result;
       }
+      result = GetParentFrameNotPopup(parent);
+      if (!result || IsRootFrame(result) ||
+          (mLockScroll && result->IsScrollFrame())) {
+        result = nullptr;
+        break;
+      }
+      if (mType == ePostOrder) {
+        break;
+      }
+      parent = result;
     }
   }
 
@@ -313,7 +314,9 @@ void nsFrameIterator::Prev() {
         result = nullptr;
         break;
       }
-      if (mType == ePreOrder) break;
+      if (mType == ePreOrder) {
+        break;
+      }
       parent = result;
     }
   }
