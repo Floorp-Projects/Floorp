@@ -146,7 +146,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   // for possibly reinitializing with SetDimensions/InitializeWithSurface.
   NS_IMETHOD Reset() = 0;
 
-  virtual already_AddRefed<mozilla::layers::Image> GetAsImage();
+  virtual already_AddRefed<mozilla::layers::Image> GetAsImage() {
+    return nullptr;
+  }
 
   virtual bool UpdateWebRenderCanvasData(
       mozilla::nsDisplayListBuilder* aBuilder,
