@@ -63,6 +63,7 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
   if (mLib) {
     mLib->av_buffer_unref(&mHWAVBuffer);
     mLib->av_buffer_unref(&mAVHWDeviceContext);
+    mLib = nullptr;
   }
 
   // If we want to recycle the frame, make sure it's not used
