@@ -2745,7 +2745,7 @@ BrowserGlue.prototype = {
         },
       },
 
-      // WebDriver components (Remote Agent and Marionette) need to be
+      // WebDriver components (Marionette) need to be
       // initialized as very last step.
       {
         condition: AppConstants.ENABLE_WEBDRIVER,
@@ -2758,9 +2758,6 @@ BrowserGlue.prototype = {
               "browser-startup-idle-tasks-finished"
             );
 
-            // Request startup of the Remote Agent (support for WebDriver BiDi
-            // and the partial Chrome DevTools protocol) before Marionette.
-            Services.obs.notifyObservers(null, "remote-startup-requested");
             Services.obs.notifyObservers(null, "marionette-startup-requested");
           });
         },
