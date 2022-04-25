@@ -57,6 +57,7 @@ VideoSourceRestrictions FilterRestrictionsByDegradationPreference(
     VideoSourceRestrictions source_restrictions,
     DegradationPreference degradation_preference);
 
+int GetLowerResolutionThan(int pixel_count);
 int GetHigherResolutionThan(int pixel_count);
 
 // Either represents the next VideoSourceRestrictions the VideoStreamAdapter
