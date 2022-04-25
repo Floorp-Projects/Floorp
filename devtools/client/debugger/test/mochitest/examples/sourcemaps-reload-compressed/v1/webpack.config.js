@@ -30,14 +30,6 @@ const originalBundle = Object.assign({}, config, {
   },
 });
 
-const bundleWithAnotherOriginalFile = Object.assign({}, config, {
-  entry: [path.join(__dirname, "original-with-no-update.js")],
-  output: {
-    path: __dirname,
-    filename: "bundle-with-another-original.js"
-  }
-});
-
 const replacedBundle = Object.assign({}, config, {
   entry: [path.join(__dirname, "removed-original.js")],
   output: {
@@ -46,4 +38,4 @@ const replacedBundle = Object.assign({}, config, {
   },
 });
 
-module.exports = [originalBundle, bundleWithAnotherOriginalFile, replacedBundle];
+module.exports = [originalBundle, replacedBundle];
