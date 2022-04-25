@@ -89,6 +89,7 @@
 #include "plstr.h"
 #include "prlink.h"
 #include "xpcpublic.h"
+#include "js/RootingAPI.h"
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasks.h"
 #endif
@@ -1306,6 +1307,7 @@ static void AddAccessCount(const nsACString& aPrefName) {
   // 1474789), and triggers assertions here if we try to add usage count entries
   // from background threads.
   if (NS_IsMainThread()) {
+    JS::AutoSuppressGCAnalysis nogc;  // Hash functions will not GC.
     uint32_t& count = gAccessCounts->LookupOrInsert(aPrefName);
     count++;
   }
