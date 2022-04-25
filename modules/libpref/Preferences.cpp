@@ -5696,15 +5696,16 @@ struct PrefListEntry {
 static const PrefListEntry sParentOnlyPrefBranchList[] = {
     PREF_LIST_ENTRY("app.update.lastUpdateTime."),
     PREF_LIST_ENTRY("datareporting.policy."),
-      PREF_LIST_ENTRY("browser.safebrowsing.provider."),
-      PREF_LIST_ENTRY("browser.shell."),
-      PREF_LIST_ENTRY("browser.slowStartup."),
-      PREF_LIST_ENTRY("browser.startup."),
-      PREF_LIST_ENTRY("extensions.getAddons.cache."),
-      PREF_LIST_ENTRY("media.gmp-manager."),
-      PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
-      PREF_LIST_ENTRY("privacy.sanitize."),
+    // PREF_LIST_ENTRY("browser.safebrowsing.provider."),
+    // PREF_LIST_ENTRY("browser.shell."),
+    // PREF_LIST_ENTRY("browser.slowStartup."),
+    // PREF_LIST_ENTRY("browser.startup."),
+    // PREF_LIST_ENTRY("extensions.getAddons.cache."),
+    // PREF_LIST_ENTRY("media.gmp-manager."),
+    // PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
+    // PREF_LIST_ENTRY("privacy.sanitize."),
 };
+
 #undef PREF_LIST_ENTRY
 
   for (const auto& entry : sParentOnlyPrefBranchList) {
