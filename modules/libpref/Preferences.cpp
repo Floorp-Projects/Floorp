@@ -517,7 +517,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() &&
+    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
         ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -533,7 +533,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() &&
+    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
         ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -550,7 +550,7 @@ class Pref {
     MOZ_ASSERT(aKind == PrefValueKind::Default ? HasDefaultValue()
                                                : HasUserValue());
 
-    if (!XRE_IsParentProcess() &&
+    if (!XRE_IsParentProcess() && sCrashOnBlocklistedPref &&
         ShouldSanitizePreference(Name(), XRE_IsContentProcess())) {
       MOZ_CRASH_UNSAFE_PRINTF(
           "Should not access the preference '%s' in the Content Processes",
@@ -583,7 +583,8 @@ class Pref {
       aDomPref->defaultValue() = Nothing();
     }
 
-    if (mHasUserValue && !aDomPref->isSanitized()) {
+    if (mHasUserValue &&
+        !(aDomPref->isSanitized() && sOmitBlocklistedPrefValues)) {
       aDomPref->userValue() = Some(dom::PrefValue());
       mUserValue.ToDomPrefValue(Type(), &aDomPref->userValue().ref());
     } else {
@@ -591,7 +592,8 @@ class Pref {
     }
 
     MOZ_ASSERT(aDomPref->defaultValue().isNothing() ||
-               aDomPref->userValue().isNothing() || mIsSanitized ||
+               aDomPref->userValue().isNothing() ||
+               (mIsSanitized && sOmitBlocklistedPrefValues) ||
                (aDomPref->defaultValue().ref().type() ==
                 aDomPref->userValue().ref().type()));
   }
@@ -829,7 +831,7 @@ class Pref {
     }
     aStr.Append(':');
 
-    if (mHasUserValue && !aSanitizeUserValue) {
+    if (mHasUserValue && !(aSanitizeUserValue && sOmitBlocklistedPrefValues)) {
       mUserValue.SerializeAndAppend(Type(), aStr);
     }
     aStr.Append('\n');
@@ -5765,6 +5767,9 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
   // In subprocesses we only check the sanitized bit
   return Preferences::IsSanitized(aPref);
 }
+
+Atomic<bool, Relaxed> sOmitBlocklistedPrefValues(false);
+Atomic<bool, Relaxed> sCrashOnBlocklistedPref(false);
 
 }  // namespace mozilla
 
