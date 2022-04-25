@@ -466,6 +466,15 @@ async function compareFiles(src1, src2, options = {}) {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
     iframeElement.setAttribute("src", new URL(src1, BASE).href);
   });
+  let mediaElements = iframeElement.contentDocument.querySelectorAll(
+    "audio, video"
+  );
+  for (let mediaElement of mediaElements) {
+    let { widget } = SpecialPowers.wrap(iframeElement.contentWindow)
+      .windowGlobalChild.getActor("UAWidgets")
+      .widgets.get(mediaElement);
+    await widget.impl.Utils.l10n.translateRoots();
+  }
 
   if (messagePromise) {
     info("awaiting for message to arrive");
@@ -480,6 +489,15 @@ async function compareFiles(src1, src2, options = {}) {
     iframeElement.addEventListener("load", resolve, { capture: true, once: true });
     iframeElement.setAttribute("src", new URL(src2, BASE).href);
   });
+  mediaElements = iframeElement.contentDocument.querySelectorAll(
+    "audio, video"
+  );
+  for (let mediaElement of mediaElements) {
+    let { widget } = SpecialPowers.wrap(iframeElement.contentWindow)
+      .windowGlobalChild.getActor("UAWidgets")
+      .widgets.get(mediaElement);
+    await widget.impl.Utils.l10n.translateRoots();
+  }
 
   await printpreview(options.ref || options);
   drawPrintPreviewWindow(ctx2);
