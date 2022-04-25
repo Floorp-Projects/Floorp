@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
+#include "nsXULAppAPI.h"
 #include <atomic>
 #include <functional>
 
@@ -409,7 +410,9 @@ class Preferences final : public nsIPrefService,
 
   // When a single pref is changed in the parent process, these methods are
   // used to pass the update to content processes.
-  static void GetPreference(dom::Pref* aPref);
+  static void GetPreference(dom::Pref* aPref,
+                            const GeckoProcessType aDestinationProcessType,
+                            const nsACString& aDestinationRemoteType);
   static void SetPreference(const dom::Pref& aPref);
 
 #ifdef DEBUG
