@@ -38,7 +38,6 @@ import org.mozilla.fenix.ext.sort
 import org.mozilla.fenix.home.PocketUpdatesMiddleware
 import org.mozilla.fenix.home.blocklist.BlocklistHandler
 import org.mozilla.fenix.home.blocklist.BlocklistMiddleware
-import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.perf.AppStartReasonProvider
 import org.mozilla.fenix.perf.StartupActivityLog
 import org.mozilla.fenix.perf.StartupStateProvider
@@ -220,11 +219,6 @@ class Components(private val context: Context) {
                     core.store.state.asRecentTabs()
                 } else {
                     emptyList()
-                },
-                recentSyncedTabState = if (settings.hasFxaAuthenticated) {
-                    RecentSyncedTabState.Loading
-                } else {
-                    RecentSyncedTabState.None
                 },
                 recentHistory = emptyList()
             ).run { filterState(blocklistHandler) },

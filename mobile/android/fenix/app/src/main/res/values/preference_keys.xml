@@ -85,7 +85,6 @@
     <string name="pref_key_sign_out" translatable="false">pref_key_sign_out</string>
     <string name="pref_key_sync_sign_in" translatable="false">pref_key_sync_sign_in</string>
     <string name="pref_key_push_project_id" translatable="false">project_id</string>
-    <string name="pref_key_fxa_has_authenticated" translatable="false">pref_key_fxa_has_authenticated</string>
     <string name="pref_key_search_widget_installed" translatable="false">pref_key_search_widget_installed</string>
     <string name="pref_key_saved_logins_sorting_strategy" translatable="false">pref_key_saved_logins_sorting_strategy</string>
     <!-- Key for credit cards sync preference in the account settings fragment -->

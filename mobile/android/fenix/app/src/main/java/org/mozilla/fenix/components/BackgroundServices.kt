@@ -124,8 +124,6 @@ class BackgroundServices(
         }
     }
 
-    private val accountAuthenticationObserver = AccountAuthenticationObserver(context.settings())
-
     private val telemetryAccountObserver = TelemetryAccountObserver(
         context.settings(),
     )
@@ -165,9 +163,6 @@ class BackgroundServices(
         ),
         crashReporter
     ).also { accountManager ->
-        // Register an authentication account observer to cache status
-        accountManager.register(accountAuthenticationObserver)
-
         // Register a telemetry account observer to keep track of FxA auth metrics.
         accountManager.register(telemetryAccountObserver)
 
@@ -198,16 +193,6 @@ class BackgroundServices(
      */
     private val notificationManager by lazyMonitored {
         NotificationManager(context)
-    }
-}
-
-private class AccountAuthenticationObserver(private val settings: Settings) : AccountObserver {
-    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        settings.hasFxaAuthenticated = true
-    }
-
-    override fun onLoggedOut() {
-        settings.hasFxaAuthenticated = false
     }
 }
 

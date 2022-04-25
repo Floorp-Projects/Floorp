@@ -1012,11 +1012,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
-    var hasFxaAuthenticated by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_fxa_has_authenticated),
-        default = false
-    )
-
     var lastPlacesStorageMaintenance by longPreference(
         appContext.getPreferenceKey(R.string.pref_key_last_maintenance),
         default = 0
