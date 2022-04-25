@@ -45,19 +45,6 @@ int GetHigherFrameRateThan(int fps) {
              : std::numeric_limits<int>::max();
 }
 
-// For resolution, the steps we take are 3/5 (down) and 5/3 (up).
-// Notice the asymmetry of which restriction property is set depending on if
-// we are adapting up or down:
-// - VideoSourceRestrictor::DecreaseResolution() sets the max_pixels_per_frame()
-//   to the desired target and target_pixels_per_frame() to null.
-// - VideoSourceRestrictor::IncreaseResolutionTo() sets the
-//   target_pixels_per_frame() to the desired target, and max_pixels_per_frame()
-//   is set according to VideoSourceRestrictor::GetIncreasedMaxPixelsWanted().
-int GetLowerResolutionThan(int pixel_count) {
-  RTC_DCHECK(pixel_count != std::numeric_limits<int>::max());
-  return (pixel_count * 3) / 5;
-}
-
 int GetIncreasedMaxPixelsWanted(int target_pixels) {
   if (target_pixels == std::numeric_limits<int>::max())
     return std::numeric_limits<int>::max();
@@ -137,6 +124,19 @@ VideoSourceRestrictions FilterRestrictionsByDegradationPreference(
       source_restrictions.set_max_frame_rate(absl::nullopt);
   }
   return source_restrictions;
+}
+
+// For resolution, the steps we take are 3/5 (down) and 5/3 (up).
+// Notice the asymmetry of which restriction property is set depending on if
+// we are adapting up or down:
+// - VideoSourceRestrictor::DecreaseResolution() sets the max_pixels_per_frame()
+//   to the desired target and target_pixels_per_frame() to null.
+// - VideoSourceRestrictor::IncreaseResolutionTo() sets the
+//   target_pixels_per_frame() to the desired target, and max_pixels_per_frame()
+//   is set according to VideoSourceRestrictor::GetIncreasedMaxPixelsWanted().
+int GetLowerResolutionThan(int pixel_count) {
+  RTC_DCHECK(pixel_count != std::numeric_limits<int>::max());
+  return (pixel_count * 3) / 5;
 }
 
 // TODO(hbos): Use absl::optional<> instead?
