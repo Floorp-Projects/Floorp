@@ -47,7 +47,7 @@ bool RDDProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(!mRDDChild);
 
   mPrefSerializer =
-      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSyncPreference);
+      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSanitizePreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }

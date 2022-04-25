@@ -2513,7 +2513,7 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // Instantiate the pref serializer. It will be cleaned up in
   // `LaunchSubprocessReject`/`LaunchSubprocessResolve`.
   mPrefSerializer = MakeUnique<mozilla::ipc::SharedPreferenceSerializer>(
-      ShouldSyncPreference);
+      ShouldSanitizePreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     NS_WARNING("SharedPreferenceSerializer::SerializeToSharedMemory failed");
     MarkAsDead();
@@ -3641,8 +3641,8 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     NS_LossyConvertUTF16toASCII strData(aData);
 
     // A pref changed. If it is useful to do so, inform child processes.
-    if (!ShouldSyncPreference(strData.Data(),
-                              /* will be fixed later */ false)) {
+    if (ShouldSanitizePreference(strData.Data(),
+                                 /* will be fixed later */ false)) {
       return NS_OK;
     }
 
