@@ -21,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/dom/RemoteType.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Logging.h"
@@ -544,14 +545,15 @@ class Pref {
     return nsDependentCString(GetBareStringValue(aKind));
   }
 
-  void ToDomPref(dom::Pref* aDomPref) {
+  void ToDomPref(dom::Pref* aDomPref, bool aIsDestinationContentProcess) {
     MOZ_ASSERT(XRE_IsParentProcess());
 
     aDomPref->name() = mName;
 
     aDomPref->isLocked() = mIsLocked;
 
-    aDomPref->isSanitized() = mIsSanitized;
+    aDomPref->isSanitized() =
+        ShouldSanitizePreference(mName.get(), aIsDestinationContentProcess);
 
     if (mHasDefaultValue) {
       aDomPref->defaultValue() = Some(dom::PrefValue());
@@ -560,7 +562,7 @@ class Pref {
       aDomPref->defaultValue() = Nothing();
     }
 
-    if (mHasUserValue && !mIsSanitized) {
+    if (mHasUserValue && !aDomPref->isSanitized()) {
       aDomPref->userValue() = Some(dom::PrefValue());
       mUserValue.ToDomPrefValue(Type(), &aDomPref->userValue().ref());
     } else {
@@ -3915,12 +3917,18 @@ void Preferences::SetPreference(const dom::Pref& aDomPref) {
 }
 
 /* static */
-void Preferences::GetPreference(dom::Pref* aDomPref) {
+void Preferences::GetPreference(dom::Pref* aDomPref,
+                                const GeckoProcessType aDestinationProcessType,
+                                const nsACString& aDestinationRemoteType) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  bool destIsWebContent =
+      aDestinationProcessType == GeckoProcessType_Content &&
+      (StringBeginsWith(aDestinationRemoteType, WEB_REMOTE_TYPE) ||
+       StringBeginsWith(aDestinationRemoteType, PREALLOC_REMOTE_TYPE));
 
   Pref* pref = pref_HashTableLookup(aDomPref->name().get());
   if (pref && pref->HasAdvisablySizedValues()) {
-    pref->ToDomPref(aDomPref);
+    pref->ToDomPref(aDomPref, destIsWebContent);
   }
 }
 
