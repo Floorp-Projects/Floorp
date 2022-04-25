@@ -26,6 +26,9 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   void ObserveVsync(VsyncObserver* aObserver) override;
   RefPtr<VsyncObserver> GetVsyncObserver() const override;
 
+  mozilla::ipc::IPCResult RecvNotifyClientSizeChanged(
+      const LayoutDeviceIntSize& aClientSize) override;
+
  private:
   // AndroidCompositorWidget overrides
   void OnCompositorSurfaceChanged() override;
