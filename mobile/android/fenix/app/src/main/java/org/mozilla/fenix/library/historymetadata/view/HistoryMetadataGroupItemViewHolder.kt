@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.historymetadata.view
 
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.HistoryMetadataGroupListItemBinding
@@ -38,7 +39,12 @@ class HistoryMetadataGroupItemViewHolder(
         }
     }
 
-    fun bind(item: History.Metadata) {
+    /**
+     * Displays the data of the given history record.
+     * @param isPendingDeletion hides the item unless user evokes Undo snackbar action.
+     */
+    fun bind(item: History.Metadata, isPendingDeletion: Boolean) {
+        binding.historyLayout.isVisible = !isPendingDeletion
         binding.historyLayout.titleView.text = item.title
         binding.historyLayout.urlView.text = item.url
 

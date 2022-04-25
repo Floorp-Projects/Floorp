@@ -4,11 +4,13 @@
 
 package org.mozilla.fenix.library.historymetadata.controller
 
+import android.content.Context
 import androidx.navigation.NavController
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.HistoryMetadataAction
@@ -31,6 +33,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -52,6 +55,8 @@ class HistoryMetadataGroupControllerTest {
     private val scope = TestCoroutineScope(testDispatcher)
 
     private val activity: HomeActivity = mockk(relaxed = true)
+    private val context: Context = mockk(relaxed = true)
+    private val appStore: AppStore = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)
     private val browserStore: BrowserStore = mockk(relaxed = true)
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase = mockk(relaxed = true)
@@ -89,14 +94,23 @@ class HistoryMetadataGroupControllerTest {
         controller = DefaultHistoryMetadataGroupController(
             historyStorage = historyStorage,
             browserStore = browserStore,
+            appStore = appStore,
             store = store,
             selectOrAddUseCase = selectOrAddUseCase,
             navController = navController,
-            scope = scope,
-            searchTerm = "mozilla"
+            searchTerm = "mozilla",
+            deleteSnackbar = { items, _, delete ->
+                scope.launch {
+                    delete(items).invoke(context)
+                }
+            },
+            promptDeleteAll = { deleteAll -> deleteAll.invoke() },
+            allDeletedSnackbar = {}
         )
 
         every { activity.components.core.historyStorage } returns historyStorage
+        every { context.components.core.store } returns browserStore
+        every { context.components.core.historyStorage } returns historyStorage
         every { store.state.items } returns getMetadataItemsList()
     }
 

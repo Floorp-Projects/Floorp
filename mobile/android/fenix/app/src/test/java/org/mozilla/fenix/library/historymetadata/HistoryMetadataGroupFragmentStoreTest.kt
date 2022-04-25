@@ -13,6 +13,8 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
+import org.mozilla.fenix.library.history.PendingDeletionHistory
+import org.mozilla.fenix.library.history.toPendingDeletionHistory
 
 class HistoryMetadataGroupFragmentStoreTest {
 
@@ -37,10 +39,15 @@ class HistoryMetadataGroupFragmentStoreTest {
         totalViewTime = 0,
         historyMetadataKey = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
     )
+    private val pendingDeletionItem = mozillaHistoryMetadataItem.toPendingDeletionHistory()
 
     @Before
     fun setup() {
-        state = HistoryMetadataGroupFragmentState()
+        state = HistoryMetadataGroupFragmentState(
+            items = emptyList(),
+            pendingDeletionItems = emptySet(),
+            isEmpty = true
+        )
         store = HistoryMetadataGroupFragmentStore(state)
     }
 
@@ -105,5 +112,23 @@ class HistoryMetadataGroupFragmentStoreTest {
         store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll).join()
 
         assertEquals(0, store.state.items.size)
+    }
+
+    @Test
+    fun `Test changing the empty state of HistoryMetadataGroupFragmentStore`() = runBlocking {
+        store.dispatch(HistoryMetadataGroupFragmentAction.ChangeEmptyState(false)).join()
+        assertFalse(store.state.isEmpty)
+
+        store.dispatch(HistoryMetadataGroupFragmentAction.ChangeEmptyState(true)).join()
+        assertTrue(store.state.isEmpty)
+    }
+
+    @Test
+    fun `Test updating pending deletion items in HistoryMetadataGroupFragmentStore`() = runBlocking {
+        store.dispatch(HistoryMetadataGroupFragmentAction.UpdatePendingDeletionItems(setOf(pendingDeletionItem))).join()
+        assertEquals(setOf(pendingDeletionItem), store.state.pendingDeletionItems)
+
+        store.dispatch(HistoryMetadataGroupFragmentAction.UpdatePendingDeletionItems(setOf())).join()
+        assertEquals(emptySet<PendingDeletionHistory>(), store.state.pendingDeletionItems)
     }
 }

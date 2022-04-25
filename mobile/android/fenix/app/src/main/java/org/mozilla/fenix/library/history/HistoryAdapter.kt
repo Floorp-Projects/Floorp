@@ -16,13 +16,21 @@ import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
  */
 class HistoryAdapter(
     private val historyInteractor: HistoryInteractor,
+    private val onEmptyStateChanged: (Boolean) -> Unit,
 ) : PagingDataAdapter<History, HistoryListItemViewHolder>(historyDiffCallback),
     SelectionHolder<History> {
 
     private var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
-    override val selectedItems get() = mode.selectedItems
-    var pendingDeletionIds = emptySet<Long>()
+    private var pendingDeletionItems = emptySet<PendingDeletionHistory>()
     private val itemsWithHeaders: MutableMap<HistoryItemTimeGroup, Int> = mutableMapOf()
+    // A flag to track the empty state of the list. Items are not being deleted immediately,
+    // but hidden from the UI until the Undo snackbar will execute the delayed operation.
+    // Whether the adapter has actually zero items or all present items are hidden,
+    // the screen should be updated into proper empty/not empty state.
+    private var isEmpty = true
+
+    override val selectedItems
+        get() = mode.selectedItems
 
     override fun getItemViewType(position: Int): Int = HistoryListItemViewHolder.LAYOUT_ID
 
@@ -38,10 +46,45 @@ class HistoryAdapter(
         if (itemCount > 0) notifyItemChanged(0)
     }
 
+    @Suppress("ComplexMethod")
     override fun onBindViewHolder(holder: HistoryListItemViewHolder, position: Int) {
         val current = getItem(position) ?: return
-        val isPendingDeletion = pendingDeletionIds.contains(current.visitedAt)
+        var isPendingDeletion = false
+        var groupPendingDeletionCount = 0
         var timeGroup: HistoryItemTimeGroup? = null
+        if (position == 0) {
+            isEmpty = true
+        }
+
+        if (pendingDeletionItems.isNotEmpty()) {
+            when (current) {
+                is History.Regular -> {
+                    isPendingDeletion = pendingDeletionItems.find {
+                        it is PendingDeletionHistory.Item && it.visitedAt == current.visitedAt
+                    } != null
+                }
+                is History.Group -> {
+                    isPendingDeletion = pendingDeletionItems.find {
+                        it is PendingDeletionHistory.Group && it.visitedAt == current.visitedAt
+                    } != null
+
+                    if (!isPendingDeletion) {
+                        groupPendingDeletionCount = current.items.count { historyMetadata ->
+                            pendingDeletionItems.find {
+                                it is PendingDeletionHistory.MetaData &&
+                                    it.key == historyMetadata.historyMetadataKey &&
+                                    it.visitedAt == historyMetadata.visitedAt
+                            } != null
+                        }.also {
+                            if (it == current.items.size) {
+                                isPendingDeletion = true
+                            }
+                        }
+                    }
+                }
+                else -> {}
+            }
+        }
 
         // Add or remove the header and position to the map depending on it's deletion status
         if (itemsWithHeaders.containsKey(current.historyTimeGroup)) {
@@ -60,11 +103,33 @@ class HistoryAdapter(
             timeGroup = current.historyTimeGroup
         }
 
-        holder.bind(current, timeGroup, position == 0, mode, isPendingDeletion)
+        // If there is a single visible item, it's enough to change the empty state of the view.
+        if (isEmpty && !isPendingDeletion) {
+            isEmpty = false
+            onEmptyStateChanged.invoke(isEmpty)
+        } else if (position + 1 == itemCount) {
+            // If we reached the bottom of the list and there still has been zero visible items,
+            // we can can change the History view state to empty.
+            if (isEmpty) {
+                onEmptyStateChanged.invoke(isEmpty)
+            }
+        }
+
+        holder.bind(
+            current,
+            timeGroup,
+            position == 0,
+            mode,
+            isPendingDeletion,
+            groupPendingDeletionCount
+        )
     }
 
-    fun updatePendingDeletionIds(pendingDeletionIds: Set<Long>) {
-        this.pendingDeletionIds = pendingDeletionIds
+    /**
+     * @param pendingDeletionItems is used to filter out the items that should not be displayed.
+     */
+    fun updatePendingDeletionItems(pendingDeletionItems: Set<PendingDeletionHistory>) {
+        this.pendingDeletionItems = pendingDeletionItems
     }
 
     companion object {

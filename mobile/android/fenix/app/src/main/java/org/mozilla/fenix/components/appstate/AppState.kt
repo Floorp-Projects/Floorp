@@ -18,6 +18,7 @@ import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.library.history.PendingDeletionHistory
 import org.mozilla.fenix.gleanplumb.MessagingState
 
 /**
@@ -39,6 +40,8 @@ import org.mozilla.fenix.gleanplumb.MessagingState
  * @property pocketStories The list of currently shown [PocketRecommendedStory]s.
  * @property pocketStoriesCategories All [PocketRecommendedStory] categories.
  * @property messaging State related messages.
+ * @property pendingDeletionHistoryItems The set of History items marked for removal in the UI,
+ * awaiting to be removed once the Undo snackbar hides away.
  * Also serves as an in memory cache of all stories mapped by category allowing for quick stories filtering.
  */
 data class AppState(
@@ -57,4 +60,5 @@ data class AppState(
     val pocketStoriesCategories: List<PocketRecommendedStoriesCategory> = emptyList(),
     val pocketStoriesCategoriesSelections: List<PocketRecommendedStoriesSelectedCategory> = emptyList(),
     val messaging: MessagingState = MessagingState(),
+    val pendingDeletionHistoryItems: Set<PendingDeletionHistory> = emptySet(),
 ) : State

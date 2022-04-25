@@ -43,18 +43,25 @@ class HistoryListItemViewHolder(
         }
     }
 
+    /**
+     * Displays the data of the given history record.
+     * @param timeGroup used to form headers for different time frames, like today, yesterday, etc.
+     * @param showTopContent enables the Recent tab button.
+     * @param mode switches between editing and regular modes.
+     * @param isPendingDeletion hides the item unless an undo snackbar action is evoked.
+     * @param groupPendingDeletionCount allows to properly display the number of items inside a
+     * history group, taking into account pending removal of items inside.
+     */
+    @Suppress("LongParameterList")
     fun bind(
         item: History,
         timeGroup: HistoryItemTimeGroup?,
         showTopContent: Boolean,
         mode: HistoryFragmentState.Mode,
-        isPendingDeletion: Boolean = false,
+        isPendingDeletion: Boolean,
+        groupPendingDeletionCount: Int
     ) {
-        if (isPendingDeletion) {
-            binding.historyLayout.visibility = View.GONE
-        } else {
-            binding.historyLayout.visibility = View.VISIBLE
-        }
+        binding.historyLayout.isVisible = !isPendingDeletion
 
         binding.historyLayout.titleView.text = item.title
 
@@ -62,7 +69,7 @@ class HistoryListItemViewHolder(
             is History.Regular -> item.url
             is History.Metadata -> item.url
             is History.Group -> {
-                val numChildren = item.items.size
+                val numChildren = item.items.size - groupPendingDeletionCount
                 val stringId = if (numChildren == 1) {
                     R.string.history_search_group_site
                 } else {

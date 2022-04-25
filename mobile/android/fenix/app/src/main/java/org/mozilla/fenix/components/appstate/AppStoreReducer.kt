@@ -94,7 +94,7 @@ internal object AppStoreReducer {
         )
         is AppAction.DisbandSearchGroupAction -> state.copy(
             recentHistory = state.recentHistory.filterNot {
-                it is RecentlyVisitedItem.RecentHistoryGroup && (
+                it is RecentHistoryGroup && (
                     it.title.equals(action.searchTerm, true) ||
                         it.title.equals(state.recentSearchGroup?.searchTerm, true)
                     )
@@ -173,6 +173,11 @@ internal object AppStoreReducer {
 
             state.copy(pocketStoriesCategories = updatedCategories)
         }
+        is AppAction.AddPendingDeletionSet ->
+            state.copy(pendingDeletionHistoryItems = state.pendingDeletionHistoryItems + action.historyItems)
+
+        is AppAction.UndoPendingDeletionSet ->
+            state.copy(pendingDeletionHistoryItems = state.pendingDeletionHistoryItems - action.historyItems)
     }
 }
 

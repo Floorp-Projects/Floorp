@@ -50,7 +50,7 @@ class HistoryMetadataGroupItemViewHolderTest {
     @Test
     fun `GIVEN a history metadata item on bind THEN set the title and url text`() {
         every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
-        HistoryMetadataGroupItemViewHolder(binding.root, interactor, selectionHolder).bind(item)
+        HistoryMetadataGroupItemViewHolder(binding.root, interactor, selectionHolder).bind(item, isPendingDeletion = false)
 
         assertEquals(item.title, binding.historyLayout.titleView.text)
         assertEquals(item.url, binding.historyLayout.urlView.text)

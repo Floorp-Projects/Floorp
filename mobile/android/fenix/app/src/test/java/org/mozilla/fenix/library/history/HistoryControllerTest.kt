@@ -18,18 +18,28 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryControllerTest {
-    private val historyItem = History.Regular(0, "title", "url", 0.toLong(), HistoryItemTimeGroup.timeGroupForTimestamp(0))
+    private val historyItem = History.Regular(
+        0,
+        "title",
+        "url",
+        0.toLong(),
+        HistoryItemTimeGroup.timeGroupForTimestamp(0)
+    )
     private val scope = TestCoroutineScope()
     private val store: HistoryFragmentStore = mockk(relaxed = true)
+    private val appStore: AppStore = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
+    private val historyProvider: DefaultPagedHistoryProvider = mockk(relaxed = true)
 
     @Before
     fun setUp() {
@@ -183,12 +193,14 @@ class HistoryControllerTest {
     ): HistoryController {
         return DefaultHistoryController(
             store,
+            appStore,
+            historyProvider,
             navController,
             scope,
             openInBrowser,
             displayDeleteAll,
             invalidateOptionsMenu,
-            deleteHistoryItems,
+            { items, _, _ -> deleteHistoryItems.invoke(items) },
             syncHistory,
             metrics
         )
