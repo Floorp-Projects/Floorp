@@ -1512,6 +1512,13 @@ void MacroAssembler::reverseInt64x2(FloatRegister src, FloatRegister dest) {
   vpshufbSimd128(SimdConstant::CreateX16((const int8_t*)lanes), src, dest);
 }
 
+// Any lane true, ie any bit set
+
+void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest) {
+  vptest(src, src);
+  emitSetRegisterIf(Condition::NonZero, dest);
+}
+
 // All lanes true
 
 void MacroAssembler::allTrueInt8x16(FloatRegister src, Register dest) {
@@ -1521,11 +1528,9 @@ void MacroAssembler::allTrueInt8x16(FloatRegister src, Register dest) {
   // Set FFh if byte==0 otherwise 00h
   // Operand ordering constraint: lhs==output
   vpcmpeqb(Operand(src), xtmp, xtmp);
-  // Get all bytes' high bits
-  vpmovmskb(xtmp, dest);
-  // Now set dest to 1 if it is zero, otherwise to zero.
-  testl(dest, dest);
-  emitSetRegisterIfZero(dest);
+  // Check if xtmp is 0.
+  vptest(xtmp, xtmp);
+  emitSetRegisterIf(Condition::Zero, dest);
 }
 
 void MacroAssembler::allTrueInt16x8(FloatRegister src, Register dest) {
@@ -1535,11 +1540,9 @@ void MacroAssembler::allTrueInt16x8(FloatRegister src, Register dest) {
   // Set FFFFh if word==0 otherwise 0000h
   // Operand ordering constraint: lhs==output
   vpcmpeqw(Operand(src), xtmp, xtmp);
-  // Get all bytes' high bits
-  vpmovmskb(xtmp, dest);
-  // Now set dest to 1 if it is zero, otherwise to zero.
-  testl(dest, dest);
-  emitSetRegisterIfZero(dest);
+  // Check if xtmp is 0.
+  vptest(xtmp, xtmp);
+  emitSetRegisterIf(Condition::Zero, dest);
 }
 
 void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest) {
@@ -1549,11 +1552,9 @@ void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest) {
   // Set FFFFFFFFh if doubleword==0 otherwise 00000000h
   // Operand ordering constraint: lhs==output
   vpcmpeqd(Operand(src), xtmp, xtmp);
-  // Get all bytes' high bits
-  vpmovmskb(xtmp, dest);
-  // Now set dest to 1 if it is zero, otherwise to zero.
-  testl(dest, dest);
-  emitSetRegisterIfZero(dest);
+  // Check if xtmp is 0.
+  vptest(xtmp, xtmp);
+  emitSetRegisterIf(Condition::Zero, dest);
 }
 
 void MacroAssembler::allTrueInt64x2(FloatRegister src, Register dest) {
@@ -1563,11 +1564,9 @@ void MacroAssembler::allTrueInt64x2(FloatRegister src, Register dest) {
   // Set FFFFFFFFFFFFFFFFh if quadword==0 otherwise 0000000000000000h
   // Operand ordering constraint: lhs==output
   vpcmpeqq(Operand(src), xtmp, xtmp);
-  // Get all bytes' high bits
-  vpmovmskb(xtmp, dest);
-  // Now set dest to 1 if it is zero, otherwise to zero.
-  testl(dest, dest);
-  emitSetRegisterIfZero(dest);
+  // Check if xtmp is 0.
+  vptest(xtmp, xtmp);
+  emitSetRegisterIf(Condition::Zero, dest);
 }
 
 // Bitmask
