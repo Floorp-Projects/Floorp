@@ -43,7 +43,7 @@ async function test() {
   ok(rootDisplayport != null, "root element should have a displayport");
   dump("root dp: " + JSON.stringify(rootDisplayport) +
        ", height: " + rootElem.clientHeight);
-  var rootDpVerticalMargin = (rootDisplayport.h - rootElem.clientHeight) / 2;
+  var rootDpVerticalMargin = (rootDisplayport.height - rootElem.clientHeight) / 2;
   ok(rootDpVerticalMargin > 500,
      "root element should have at least 500px of vertical displayport margin");
 

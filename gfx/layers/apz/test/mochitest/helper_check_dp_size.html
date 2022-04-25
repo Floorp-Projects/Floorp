@@ -74,13 +74,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1689492
       await promiseApzFlushedRepaints();
 
       let innerdp = getLastContentDisplayportFor("innerdiv");
-      ok(innerdp.h > 30, outputprefix + " innerdiv display port should be larger than innerdiv");
+      ok(innerdp.height > 30, outputprefix + " innerdiv display port should be larger than innerdiv");
 
       let outerdp = getLastContentDisplayportFor("outerdiv");
       is(outerdp.x, 0, outputprefix + " outerdiv display port should be relatively bounded x");
       is(outerdp.y, 0, outputprefix + " outerdiv display port should be relatively bounded y");
-      ok(outerdp.w <= 50, outputprefix + " outerdiv display port should relatively bounded w");
-      ok(outerdp.h < theheight * allowedscalefactor, outputprefix + " outerdiv display port should be relatively bounded h");
+      ok(outerdp.width <= 50, outputprefix + " outerdiv display port should relatively bounded w");
+      ok(outerdp.height < theheight * allowedscalefactor, outputprefix + " outerdiv display port should be relatively bounded h");
 
       ok(true, "innerdp " + JSON.stringify(innerdp));
       ok(true, "outerdp " + JSON.stringify(outerdp));

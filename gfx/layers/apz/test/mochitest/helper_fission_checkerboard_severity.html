@@ -84,8 +84,8 @@ async function test() {
 
   // Since bug 1709460 any visible OOP iframe initially has set the displayport.
   let displayport = await getIframeDisplayport(iframe);
-  is(displayport.w, 400);
-  is(displayport.h, 300);
+  is(displayport.width, 400);
+  is(displayport.height, 300);
 
   let iframeResponse =
     await FissionTestHelper.sendToOopif(iframe, `(${code_for_oopif_to_run})()`);
@@ -106,8 +106,8 @@ async function test() {
 
   // Now the displayport size should have been set.
   displayport = await getIframeDisplayport(iframe);
-  is(displayport.w, 400, "The displayport size should be same as the iframe size");
-  is(displayport.h, 300, "The displayport size should be same as the iframe size");
+  is(displayport.width, 400, "The displayport size should be same as the iframe size");
+  is(displayport.height, 300, "The displayport size should be same as the iframe size");
 
   // Wait 100ms to give a chance to deliver the checkerboard event.
   await new Promise(resolve => {

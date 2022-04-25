@@ -46,8 +46,8 @@ async function test() {
 
   // Fully visible iframe.
   let displayport = await getIframeDisplayport(visibleIframeElement);
-  is(displayport.w, 400, "The displayport size should be same as the iframe size");
-  is(displayport.h, 300, "The displayport size should be same as the iframe size");
+  is(displayport.width, 400, "The displayport size should be same as the iframe size");
+  is(displayport.height, 300, "The displayport size should be same as the iframe size");
 
   // Fully invisible iframe (inside `overflow: hidden` parent element)
   const invisibleIframeElement = document.getElementById("invisible-testframe");
@@ -63,15 +63,15 @@ async function test() {
   // Partially invisible iframe (inside `overflow: hidden` parent element)
   const clippedOutIframeElement = document.getElementById("clipped-out-testframe");
   displayport = await getIframeDisplayport(clippedOutIframeElement);
-  is(displayport.w, 400, "The displayport width should be same as the iframe width");
-  ok(displayport.h > 0, "The displayport height should be greater than zero");
-  ok(displayport.h < 300, "The displayport height should be less than the iframe height");
+  is(displayport.width, 400, "The displayport width should be same as the iframe width");
+  ok(displayport.height > 0, "The displayport height should be greater than zero");
+  ok(displayport.height < 300, "The displayport height should be less than the iframe height");
 
   const partiallyScrolledOutIframeElement = document.getElementById("partially-scrolled-out-testframe");
   displayport = await getIframeDisplayport(partiallyScrolledOutIframeElement);
-  is(displayport.w, 400, "The displayport width should be same as the iframe width");
-  ok(displayport.h > 0, "The displayport height should be greater than zero");
-  ok(displayport.h < 300, "The displayport height should be less than the iframe height");
+  is(displayport.width, 400, "The displayport width should be same as the iframe width");
+  ok(displayport.height > 0, "The displayport height should be greater than zero");
+  ok(displayport.height < 300, "The displayport height should be less than the iframe height");
 }
 
   </script>
