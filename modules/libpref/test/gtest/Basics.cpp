@@ -43,17 +43,13 @@ TEST(PrefsBasics, Serialize)
             true);
 
   nsCString str;
-  Preferences::SerializePreferences(
-      str, [](const char* aPref, bool) -> bool { return true; }, true);
-  // Assert everything was marked sanitized
-  ASSERT_EQ(nullptr, strstr(str.Data(), "--:"));
-
-  Preferences::SerializePreferences(
-      str,
-      [](const char* aPref, bool) -> bool {
-        return strncmp(aPref, "foo.bool", 8) == 0;
-      },
-      true);
-  // Assert the sanitized serializtion was found
-  ASSERT_NE(nullptr, strstr(str.Data(), "B-S:8/foo.bool:T:\n"));
+  Preferences::SerializePreferences(str, true);
+  fprintf(stderr, "%s\n", str.Data());
+  // Assert that some prefs were not sanitized
+  ASSERT_NE(nullptr, strstr(str.Data(), "B--:"));
+  ASSERT_NE(nullptr, strstr(str.Data(), "I--:"));
+  ASSERT_NE(nullptr, strstr(str.Data(), "S--:"));
+  // Assert that something was sanitized
+  ASSERT_NE(nullptr,
+            strstr(str.Data(), "I-S:56/datareporting.policy.dataSubmissionPolicyAcceptedVersion"));
 }
