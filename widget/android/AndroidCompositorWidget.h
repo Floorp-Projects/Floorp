@@ -15,6 +15,9 @@ namespace widget {
 
 class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
  public:
+  virtual void NotifyClientSizeChanged(
+      const LayoutDeviceIntSize& aClientSize) = 0;
+
   // CompositorWidgetDelegate Overrides
   PlatformCompositorWidgetDelegate* AsPlatformSpecificDelegate() override {
     return this;
@@ -53,6 +56,8 @@ class AndroidCompositorWidget : public CompositorWidget {
   ANativeWindow_Buffer mBuffer;
   int32_t mFormat;
   LayoutDeviceIntSize mClientSize;
+
+  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize);
 
  private:
   // Called whenever the compositor surface may have changed. The derived class
