@@ -32,11 +32,9 @@ rtc_library("rnn_vad") {
     "..:biquad_filter",
     "..:cpu_features",
     "../../../../api:array_view",
-    "../../../../api:function_view",
     "../../../../rtc_base:checks",
     "../../../../rtc_base:safe_compare",
     "../../../../rtc_base:safe_conversions",
-    "../../../../rtc_base/system:arch",
     "//third_party/rnnoise:rnn_vad",
   ]
 }
@@ -83,6 +81,8 @@ rtc_source_set("rnn_vad_layers") {
   sources = [
     "rnn_fc.cc",
     "rnn_fc.h",
+    "rnn_gru.cc",
+    "rnn_gru.h",
   ]
   deps = [
     ":rnn_vad_common",
@@ -241,6 +241,7 @@ if (rtc_include_tests) {
       "pitch_search_unittest.cc",
       "ring_buffer_unittest.cc",
       "rnn_fc_unittest.cc",
+      "rnn_gru_unittest.cc",
       "rnn_unittest.cc",
       "rnn_vad_unittest.cc",
       "sequence_buffer_unittest.cc",
