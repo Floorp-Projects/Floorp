@@ -40,21 +40,18 @@ static_assert(kFeatureVectorSize == kInputLayerInputSize, "");
 using rnnoise::kInputDenseBias;
 using rnnoise::kInputDenseWeights;
 using rnnoise::kInputLayerOutputSize;
-static_assert(kInputLayerOutputSize <= kFullyConnectedLayersMaxUnits,
-              "Increase kFullyConnectedLayersMaxUnits.");
+static_assert(kInputLayerOutputSize <= kFullyConnectedLayerMaxUnits, "");
 
 using rnnoise::kHiddenGruBias;
 using rnnoise::kHiddenGruRecurrentWeights;
 using rnnoise::kHiddenGruWeights;
 using rnnoise::kHiddenLayerOutputSize;
-static_assert(kHiddenLayerOutputSize <= kRecurrentLayersMaxUnits,
-              "Increase kRecurrentLayersMaxUnits.");
+static_assert(kHiddenLayerOutputSize <= kGruLayerMaxUnits, "");
 
 using rnnoise::kOutputDenseBias;
 using rnnoise::kOutputDenseWeights;
 using rnnoise::kOutputLayerOutputSize;
-static_assert(kOutputLayerOutputSize <= kFullyConnectedLayersMaxUnits,
-              "Increase kFullyConnectedLayersMaxUnits.");
+static_assert(kOutputLayerOutputSize <= kFullyConnectedLayerMaxUnits, "");
 
 using rnnoise::SigmoidApproximated;
 using rnnoise::TansigApproximated;
@@ -178,21 +175,21 @@ void ComputeGruLayerOutput(int input_size,
   const int stride_out = output_size * output_size;
 
   // Update gate.
-  std::array<float, kRecurrentLayersMaxUnits> update;
+  std::array<float, kGruLayerMaxUnits> update;
   ComputeGruUpdateResetGates(
       input_size, output_size, weights.subview(0, stride_in),
       recurrent_weights.subview(0, stride_out), bias.subview(0, output_size),
       input, state, update);
 
   // Reset gate.
-  std::array<float, kRecurrentLayersMaxUnits> reset;
+  std::array<float, kGruLayerMaxUnits> reset;
   ComputeGruUpdateResetGates(
       input_size, output_size, weights.subview(stride_in, stride_in),
       recurrent_weights.subview(stride_out, stride_out),
       bias.subview(output_size, output_size), input, state, reset);
 
   // Output gate.
-  std::array<float, kRecurrentLayersMaxUnits> output;
+  std::array<float, kGruLayerMaxUnits> output;
   ComputeGruOutputGate(
       input_size, output_size, weights.subview(2 * stride_in, stride_in),
       recurrent_weights.subview(2 * stride_out, stride_out),
@@ -279,7 +276,7 @@ FullyConnectedLayer::FullyConnectedLayer(
       weights_(GetPreprocessedFcWeights(weights, output_size)),
       activation_function_(activation_function),
       cpu_features_(cpu_features) {
-  RTC_DCHECK_LE(output_size_, kFullyConnectedLayersMaxUnits)
+  RTC_DCHECK_LE(output_size_, kFullyConnectedLayerMaxUnits)
       << "Static over-allocation of fully-connected layers output vectors is "
          "not sufficient.";
   RTC_DCHECK_EQ(output_size_, bias_.size())
@@ -289,10 +286,6 @@ FullyConnectedLayer::FullyConnectedLayer(
 }
 
 FullyConnectedLayer::~FullyConnectedLayer() = default;
-
-rtc::ArrayView<const float> FullyConnectedLayer::GetOutput() const {
-  return rtc::ArrayView<const float>(output_.data(), output_size_);
-}
 
 void FullyConnectedLayer::ComputeOutput(rtc::ArrayView<const float> input) {
 #if defined(WEBRTC_ARCH_X86_FAMILY)
@@ -321,7 +314,7 @@ GatedRecurrentLayer::GatedRecurrentLayer(
       weights_(GetPreprocessedGruTensor(weights, output_size)),
       recurrent_weights_(
           GetPreprocessedGruTensor(recurrent_weights, output_size)) {
-  RTC_DCHECK_LE(output_size_, kRecurrentLayersMaxUnits)
+  RTC_DCHECK_LE(output_size_, kGruLayerMaxUnits)
       << "Static over-allocation of recurrent layers state vectors is not "
          "sufficient.";
   RTC_DCHECK_EQ(kNumGruGates * output_size_, bias_.size())
@@ -337,10 +330,6 @@ GatedRecurrentLayer::GatedRecurrentLayer(
 
 GatedRecurrentLayer::~GatedRecurrentLayer() = default;
 
-rtc::ArrayView<const float> GatedRecurrentLayer::GetOutput() const {
-  return rtc::ArrayView<const float>(state_.data(), output_size_);
-}
-
 void GatedRecurrentLayer::Reset() {
   state_.fill(0.f);
 }
@@ -352,49 +341,49 @@ void GatedRecurrentLayer::ComputeOutput(rtc::ArrayView<const float> input) {
                         recurrent_weights_, bias_, state_);
 }
 
-RnnBasedVad::RnnBasedVad(const AvailableCpuFeatures& cpu_features)
-    : input_layer_(kInputLayerInputSize,
-                   kInputLayerOutputSize,
-                   kInputDenseBias,
-                   kInputDenseWeights,
-                   TansigApproximated,
-                   cpu_features),
-      hidden_layer_(kInputLayerOutputSize,
-                    kHiddenLayerOutputSize,
-                    kHiddenGruBias,
-                    kHiddenGruWeights,
-                    kHiddenGruRecurrentWeights),
-      output_layer_(kHiddenLayerOutputSize,
-                    kOutputLayerOutputSize,
-                    kOutputDenseBias,
-                    kOutputDenseWeights,
-                    SigmoidApproximated,
-                    cpu_features) {
+RnnVad::RnnVad(const AvailableCpuFeatures& cpu_features)
+    : input_(kInputLayerInputSize,
+             kInputLayerOutputSize,
+             kInputDenseBias,
+             kInputDenseWeights,
+             TansigApproximated,
+             cpu_features),
+      hidden_(kInputLayerOutputSize,
+              kHiddenLayerOutputSize,
+              kHiddenGruBias,
+              kHiddenGruWeights,
+              kHiddenGruRecurrentWeights),
+      output_(kHiddenLayerOutputSize,
+              kOutputLayerOutputSize,
+              kOutputDenseBias,
+              kOutputDenseWeights,
+              SigmoidApproximated,
+              cpu_features) {
   // Input-output chaining size checks.
-  RTC_DCHECK_EQ(input_layer_.output_size(), hidden_layer_.input_size())
+  RTC_DCHECK_EQ(input_.size(), hidden_.input_size())
       << "The input and the hidden layers sizes do not match.";
-  RTC_DCHECK_EQ(hidden_layer_.output_size(), output_layer_.input_size())
+  RTC_DCHECK_EQ(hidden_.size(), output_.input_size())
       << "The hidden and the output layers sizes do not match.";
 }
 
-RnnBasedVad::~RnnBasedVad() = default;
+RnnVad::~RnnVad() = default;
 
-void RnnBasedVad::Reset() {
-  hidden_layer_.Reset();
+void RnnVad::Reset() {
+  hidden_.Reset();
 }
 
-float RnnBasedVad::ComputeVadProbability(
+float RnnVad::ComputeVadProbability(
     rtc::ArrayView<const float, kFeatureVectorSize> feature_vector,
     bool is_silence) {
   if (is_silence) {
     Reset();
     return 0.f;
   }
-  input_layer_.ComputeOutput(feature_vector);
-  hidden_layer_.ComputeOutput(input_layer_.GetOutput());
-  output_layer_.ComputeOutput(hidden_layer_.GetOutput());
-  const auto vad_output = output_layer_.GetOutput();
-  return vad_output[0];
+  input_.ComputeOutput(feature_vector);
+  hidden_.ComputeOutput(input_);
+  output_.ComputeOutput(hidden_);
+  RTC_DCHECK_EQ(output_.size(), 1);
+  return output_.data()[0];
 }
 
 }  // namespace rnn_vad

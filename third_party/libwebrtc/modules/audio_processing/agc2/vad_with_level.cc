@@ -60,7 +60,7 @@ class Vad : public VoiceActivityDetector {
  private:
   PushResampler<float> resampler_;
   rnn_vad::FeaturesExtractor features_extractor_;
-  rnn_vad::RnnBasedVad rnn_vad_;
+  rnn_vad::RnnVad rnn_vad_;
 };
 
 // Returns an updated version of `p_old` by using instant decay and the given

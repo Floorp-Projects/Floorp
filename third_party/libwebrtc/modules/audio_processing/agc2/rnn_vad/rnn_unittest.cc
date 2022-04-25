@@ -39,30 +39,20 @@ constexpr std::array<float, kFeatureVectorSize> kFeatures = {
     -0.690268f,  -0.925327f, -0.541354f, 0.58455f,    -0.606726f, -0.0372358f,
     0.565991f,   0.435854f,  0.420812f,  0.162198f,   -2.13f,     10.0089f};
 
-void WarmUpRnnVad(RnnBasedVad& rnn_vad) {
+void WarmUpRnnVad(RnnVad& rnn_vad) {
   for (int i = 0; i < 10; ++i) {
     rnn_vad.ComputeVadProbability(kFeatures, /*is_silence=*/false);
   }
-}
-
-void TestFullyConnectedLayer(FullyConnectedLayer* fc,
-                             rtc::ArrayView<const float> input_vector,
-                             rtc::ArrayView<const float> expected_output) {
-  RTC_CHECK(fc);
-  fc->ComputeOutput(input_vector);
-  ExpectNearAbsolute(expected_output, fc->GetOutput(), 1e-5f);
 }
 
 void TestGatedRecurrentLayer(
     GatedRecurrentLayer& gru,
     rtc::ArrayView<const float> input_sequence,
     rtc::ArrayView<const float> expected_output_sequence) {
-  auto gru_output_view = gru.GetOutput();
   const int input_sequence_length = rtc::CheckedDivExact(
       rtc::dchecked_cast<int>(input_sequence.size()), gru.input_size());
   const int output_sequence_length = rtc::CheckedDivExact(
-      rtc::dchecked_cast<int>(expected_output_sequence.size()),
-      gru.output_size());
+      rtc::dchecked_cast<int>(expected_output_sequence.size()), gru.size());
   ASSERT_EQ(input_sequence_length, output_sequence_length)
       << "The test data length is invalid.";
   // Feed the GRU layer and check the output at every step.
@@ -71,9 +61,9 @@ void TestGatedRecurrentLayer(
     SCOPED_TRACE(i);
     gru.ComputeOutput(
         input_sequence.subview(i * gru.input_size(), gru.input_size()));
-    const auto expected_output = expected_output_sequence.subview(
-        i * gru.output_size(), gru.output_size());
-    ExpectNearAbsolute(expected_output, gru_output_view, 3e-6f);
+    const auto expected_output =
+        expected_output_sequence.subview(i * gru.size(), gru.size());
+    ExpectNearAbsolute(expected_output, gru, 3e-6f);
   }
 }
 
@@ -190,8 +180,8 @@ TEST_P(RnnParametrization, CheckFullyConnectedLayerOutput) {
       rnnoise::kInputLayerInputSize, rnnoise::kInputLayerOutputSize,
       rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
       rnnoise::TansigApproximated, /*cpu_features=*/GetParam());
-  TestFullyConnectedLayer(&fc, kFullyConnectedInputVector,
-                          kFullyConnectedExpectedOutput);
+  fc.ComputeOutput(kFullyConnectedInputVector);
+  ExpectNearAbsolute(kFullyConnectedExpectedOutput, fc, 1e-5f);
 }
 
 TEST_P(RnnParametrization, DISABLED_BenchmarkFullyConnectedLayer) {
@@ -237,7 +227,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 // Checks that the speech probability is zero with silence.
 TEST(RnnVadTest, CheckZeroProbabilityWithSilence) {
-  RnnBasedVad rnn_vad(GetAvailableCpuFeatures());
+  RnnVad rnn_vad(GetAvailableCpuFeatures());
   WarmUpRnnVad(rnn_vad);
   EXPECT_EQ(rnn_vad.ComputeVadProbability(kFeatures, /*is_silence=*/true), 0.f);
 }
@@ -245,7 +235,7 @@ TEST(RnnVadTest, CheckZeroProbabilityWithSilence) {
 // Checks that the same output is produced after reset given the same input
 // sequence.
 TEST(RnnVadTest, CheckRnnVadReset) {
-  RnnBasedVad rnn_vad(GetAvailableCpuFeatures());
+  RnnVad rnn_vad(GetAvailableCpuFeatures());
   WarmUpRnnVad(rnn_vad);
   float pre = rnn_vad.ComputeVadProbability(kFeatures, /*is_silence=*/false);
   rnn_vad.Reset();
@@ -257,7 +247,7 @@ TEST(RnnVadTest, CheckRnnVadReset) {
 // Checks that the same output is produced after silence is observed given the
 // same input sequence.
 TEST(RnnVadTest, CheckRnnVadSilence) {
-  RnnBasedVad rnn_vad(GetAvailableCpuFeatures());
+  RnnVad rnn_vad(GetAvailableCpuFeatures());
   WarmUpRnnVad(rnn_vad);
   float pre = rnn_vad.ComputeVadProbability(kFeatures, /*is_silence=*/false);
   rnn_vad.ComputeVadProbability(kFeatures, /*is_silence=*/true);
