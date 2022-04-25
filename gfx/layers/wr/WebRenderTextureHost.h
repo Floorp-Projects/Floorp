@@ -83,8 +83,6 @@ class WebRenderTextureHost : public TextureHost {
 
   bool SupportsExternalCompositing(WebRenderBackend aBackend) override;
 
-  bool NeedsYFlip() const override;
-
   void SetAcquireFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;
 
   void SetReleaseFence(mozilla::ipc::FileDescriptor&& aFenceFd) override;

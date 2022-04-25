@@ -131,7 +131,8 @@ void main(void) {
     );
 #else
     uv = mix(aUvRect0.xy, aUvRect0.zw, uv);
-    vec4 uvBounds = aUvRect0;
+    // The uvs may be inverted, so use the min and max for the bounds
+    vec4 uvBounds = vec4(min(aUvRect0.xy, aUvRect0.zw), max(aUvRect0.xy, aUvRect0.zw));
     int rescale_uv = int(aParams.y);
     if (rescale_uv == 1)
     {
