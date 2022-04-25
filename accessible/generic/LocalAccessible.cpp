@@ -57,6 +57,7 @@
 #include "nsView.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScrollableFrame.h"
+#include "nsStyleStructInlines.h"
 #include "nsFocusManager.h"
 
 #include "nsString.h"
@@ -3467,7 +3468,7 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
     }
 
-    bool newHasValidTransformStyle = frame->IsTransformed();
+    bool newHasValidTransformStyle = newStyle->StyleDisplay()->HasTransform(frame);
     bool oldHasValidTransformStyle =
         (mStateFlags & eOldFrameHasValidTransformStyle) != 0;
 
