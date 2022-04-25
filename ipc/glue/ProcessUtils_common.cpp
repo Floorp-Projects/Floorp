@@ -18,8 +18,8 @@ namespace mozilla {
 namespace ipc {
 
 SharedPreferenceSerializer::SharedPreferenceSerializer(
-    std::function<bool(const char*, bool)>&& aShouldSerializeFn)
-    : mPrefMapSize(0), mPrefsLength(0), mShouldSerializeFn(aShouldSerializeFn) {
+    std::function<bool(const char*, bool)>&& aShouldSanitizeFn)
+    : mPrefMapSize(0), mPrefsLength(0), mShouldSanitizeFn(aShouldSanitizeFn) {
   MOZ_COUNT_CTOR(SharedPreferenceSerializer);
 }
 
@@ -42,7 +42,7 @@ bool SharedPreferenceSerializer::SerializeToSharedMemory() {
 
   // Serialize the early prefs.
   nsAutoCStringN<1024> prefs;
-  Preferences::SerializePreferences(prefs, mShouldSerializeFn);
+  Preferences::SerializePreferences(prefs, mShouldSanitizeFn);
   mPrefsLength = prefs.Length();
 
   base::SharedMemory shm;
