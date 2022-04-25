@@ -53,6 +53,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformFontList.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/BasePrincipal.h"
@@ -606,10 +607,6 @@ UniquePtr<SandboxBrokerPolicyFactory>
 UniquePtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
 
-// This is true when subprocess launching is enabled.  This is the
-// case between StartUp() and ShutDown().
-static bool sCanLaunchSubprocesses;
-
 // Set to true when the first content process gets created.
 static bool sCreatedFirstContentProcess = false;
 
@@ -657,11 +654,8 @@ ContentParent::MakePreallocProcess() {
 
 /*static*/
 void ContentParent::StartUp() {
-  // We could launch sub processes from content process
   // FIXME Bug 1023701 - Stop using ContentParent static methods in
   // child process
-  sCanLaunchSubprocesses = true;
-
   if (!XRE_IsParentProcess()) {
     return;
   }
@@ -687,9 +681,8 @@ void ContentParent::StartUp() {
 
 /*static*/
 void ContentParent::ShutDown() {
-  // No-op for now.  We rely on normal process shutdown and
+  // For the most, we rely on normal process shutdown and
   // ClearOnShutdown() to clean up our state.
-  sCanLaunchSubprocesses = false;
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sSandboxBrokerPolicyFactory = nullptr;
@@ -1446,7 +1439,9 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
       "BrowsingContext must not have BrowserParent, or have previous "
       "BrowserParent cleared");
 
-  if (!sCanLaunchSubprocesses) {
+  // Take a shortcut (BeginSubprpocessLaunch would fail later, too).
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+    MOZ_ASSERT(false, "Late attempt to CreateBrowser!");
     return nullptr;
   }
 
@@ -1849,8 +1844,7 @@ void ContentParent::AssertNotInPool() {
     MOZ_RELEASE_ASSERT(
         !sBrowserContentParents ||
         !sBrowserContentParents->Contains(mRemoteType) ||
-        !sBrowserContentParents->Get(mRemoteType)->Contains(this) ||
-        !sCanLaunchSubprocesses);  // aka in shutdown - avoid timing issues
+        !sBrowserContentParents->Get(mRemoteType)->Contains(this));
 
     for (const auto& group : mGroups) {
       MOZ_RELEASE_ASSERT(group->GetHostProcess(mRemoteType) != this,
@@ -2499,11 +2493,12 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // otherwise ActorDestroy will take care.
   AddShutdownBlockers();
 
-  // XXX: This check works only late, as GetSingleton will return nullptr
-  // only after ClearOnShutdown happened. See bug 1632740.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdown)) {
+    MOZ_ASSERT(false, "Late attempt to launch a process!");
+    return false;
+  }
   if (!ContentProcessManager::GetSingleton()) {
-    NS_WARNING(
-        "Shutdown has begun, we shouldn't spawn any more child processes");
+    MOZ_ASSERT(false, "Unable to acquire ContentProcessManager singleton!");
     return false;
   }
 
