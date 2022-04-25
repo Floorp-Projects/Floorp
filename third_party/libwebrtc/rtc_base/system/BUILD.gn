@@ -57,6 +57,7 @@ rtc_source_set("rtc_export") {
 
 rtc_source_set("no_unique_address") {
   sources = [ "no_unique_address.h" ]
+  deps = [ "..:sanitizer" ]
 }
 
 if (is_mac || is_ios) {

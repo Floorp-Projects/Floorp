@@ -11,6 +11,8 @@
 #ifndef RTC_BASE_SYSTEM_NO_UNIQUE_ADDRESS_H_
 #define RTC_BASE_SYSTEM_NO_UNIQUE_ADDRESS_H_
 
+#include "rtc_base/sanitizer.h"
+
 // RTC_NO_UNIQUE_ADDRESS is a portable annotation to tell the compiler that
 // a data member need not have an address distinct from all other non-static
 // data members of its class.
@@ -26,7 +28,7 @@
 // platform is iOS.
 //
 // TODO(bugs.webrtc.org/12218): Re-enable on MSan builds.
-#if !defined(__SANITIZE_MEMORY__) &&                                       \
+#if !RTC_HAS_MSAN &&                                                       \
     ((defined(__clang__) && !defined(_MSC_VER) && !defined(WEBRTC_IOS)) || \
      __cplusplus > 201703L)
 // NOLINTNEXTLINE(whitespace/braces)
