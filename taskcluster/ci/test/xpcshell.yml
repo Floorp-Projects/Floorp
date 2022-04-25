@@ -65,6 +65,7 @@ xpcshell:
                     default: []
             no-fission:
                 by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']

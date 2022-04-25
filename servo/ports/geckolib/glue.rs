@@ -2711,7 +2711,7 @@ pub unsafe extern "C" fn Servo_KeyframesRule_SetName(
     name: *mut nsAtom,
 ) {
     write_locked_arc(rule, |rule: &mut KeyframesRule| {
-        rule.name = KeyframesName::Ident(CustomIdent(Atom::from_addrefed(name)));
+        rule.name = KeyframesName::from_atom(Atom::from_addrefed(name));
     })
 }
 
