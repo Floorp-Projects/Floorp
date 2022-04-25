@@ -28,8 +28,7 @@ let get_iframe_displayport = function() {
   // in the displayport it sets.
   promiseApzFlushedRepaints().then(() => {
     // Query the composed displayport and report it to the embedder.
-    let dp = getLastContentDisplayportFor("fission_empty_docelement");
-    let result = { x: dp.x, y: dp.y, w: dp.w, h: dp.h };
+    let result = getLastContentDisplayportFor("fission_empty_docelement");
     FissionTestHelper.fireEventInEmbedder("OOPIF:Displayport", result);
   });
   return true;
@@ -56,7 +55,7 @@ async function test() {
   // the page's displayport. The reason it can be up to twice as tall is
   // described in bug 1690697; we may be able to assert a tighter bound
   // after making improvements in that bug.
-  ok(iframeDp.h <= (dp.h * 2), "iframe displayport should be no more than twice as tall as page displayport");
+  ok(iframeDp.height <= (dp.height * 2), "iframe displayport should be no more than twice as tall as page displayport");
 }
 
   </script>

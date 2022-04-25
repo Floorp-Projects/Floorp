@@ -78,9 +78,9 @@ function hasNonZeroMarginDisplayPort(elementId, containingDoc = null) {
   let elt = (containingDoc != null ? containingDoc : document).getElementById(elementId);
   info(elementId);
   info("window size " + window.innerWidth + " " + window.innerHeight);
-  info("dp " + dp.x + " " + dp.y + " " + dp.w + " " + dp.h);
+  info("dp " + dp.x + " " + dp.y + " " + dp.width + " " + dp.height);
   info("eltsize " + elt.clientWidth + " " + elt.clientHeight);
-  return dp.h >= heightMultiplier * Math.min(elt.clientHeight, window.innerHeight);
+  return dp.height >= heightMultiplier * Math.min(elt.clientHeight, window.innerHeight);
 }
 
 function hasMinimalDisplayPort(elementId, containingDoc = null) {
@@ -90,9 +90,9 @@ function hasMinimalDisplayPort(elementId, containingDoc = null) {
   }
   let elt = (containingDoc != null ? containingDoc : document).getElementById(elementId);
   info(elementId);
-  info("dp " + dp.x + " " + dp.y + " " + dp.w + " " + dp.h);
+  info("dp " + dp.x + " " + dp.y + " " + dp.width + " " + dp.height);
   info("eltsize " + elt.clientWidth + " " + elt.clientHeight);
-  return dp.w <= (elt.clientWidth + 2) && dp.h <= (elt.clientHeight + 2);
+  return dp.width <= (elt.clientWidth + 2) && dp.height <= (elt.clientHeight + 2);
 }
 
 function checkDirectActivation(elementId, containingDoc = null) {

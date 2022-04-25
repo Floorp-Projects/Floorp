@@ -62,8 +62,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       info("rootDisplayPort is " + JSON.stringify(rootDisplayPort));
       info("rootElement.clientWidth " + rootElement.clientWidth +
            " rootElement.clientHeight " + rootElement.clientHeight);
-      ok(rootDisplayPort.w >= rootElement.clientWidth, "rootDisplayPort should be at least as wide as page");
-      ok(rootDisplayPort.h >= heightMultiplier * rootElement.clientHeight,
+      ok(rootDisplayPort.width >= rootElement.clientWidth, "rootDisplayPort should be at least as wide as page");
+      ok(rootDisplayPort.height >= heightMultiplier * rootElement.clientHeight,
         "rootDisplayPort should be at least as tall as page times heightMultiplier");
 
       let displayPort = getLastContentDisplayportFor('thediv');
@@ -74,8 +74,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
         info("div displayPort: " + JSON.stringify(displayPort));
         info("div width: " + theDiv.clientWidth);
         info("div height: " + theDiv.clientHeight);
-        ok(displayPort.w <= theDiv.clientWidth + 1, "displayPort w should have empty margins");
-        ok(displayPort.h <= theDiv.clientHeight + 1, "displayPort h should have empty margins");
+        ok(displayPort.width <= theDiv.clientWidth + 1, "displayPort w should have empty margins");
+        ok(displayPort.height <= theDiv.clientHeight + 1, "displayPort h should have empty margins");
       } else {
         is(rcd.children.length, 0, "expected no children on the RCD");
         ok(displayPort == null, "should not have displayPort");

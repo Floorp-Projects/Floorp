@@ -33,7 +33,7 @@ async function test() {
   // We only care the top 10px here since the scroll linked effect on the
   // main-thread can't keep up with the async scrolling by wheel events so that
   // the position absolute element is often partially scrolled out.
-  rect.h = 10;
+  rect.height = 10.0;
   const initialSnapshot = await getSnapshot(rect);
 
   let snapshots = [];
