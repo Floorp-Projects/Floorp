@@ -363,8 +363,8 @@ class _RemoteSettingsExperimentLoader {
         let validator;
         if (validatorCache[featureId]) {
           validator = validatorCache[featureId];
-        } else if (NimbusFeatures[featureId].manifest.schema) {
-          const uri = NimbusFeatures[featureId].manifest.schema;
+        } else if (NimbusFeatures[featureId].manifest.schema?.uri) {
+          const uri = NimbusFeatures[featureId].manifest.schema.uri;
           try {
             const schema = await fetch(uri, { credentials: "omit" }).then(rsp =>
               rsp.json()
