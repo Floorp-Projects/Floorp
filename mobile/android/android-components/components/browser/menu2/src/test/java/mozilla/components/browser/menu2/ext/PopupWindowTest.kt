@@ -7,12 +7,14 @@ package mozilla.components.browser.menu2.ext
 import android.view.Gravity
 import android.view.View
 import android.widget.PopupWindow
+import androidx.core.view.ViewCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu2.R
 import mozilla.components.concept.menu.Orientation
 import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doAnswer
@@ -25,129 +27,137 @@ import org.robolectric.shadows.ShadowDisplay
 @RunWith(AndroidJUnit4::class)
 class PopupWindowTest {
 
-    @Test
-    fun `displayPopup that fitsDown with preferredOrientation DOWN`() {
-        val menuContentView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 10)
-        val popupWindow = spy(PopupWindow())
+    private lateinit var menuContentView: View
+    private lateinit var anchor: View
+    private lateinit var popupWindow: PopupWindow
+
+    @Before
+    fun setUp() {
+        menuContentView = createMockViewWith(x = 0, y = 0, false)
+        doReturn(90).`when`(menuContentView).measuredHeight
+        doReturn(30).`when`(menuContentView).measuredWidth
+
+        popupWindow = spy(PopupWindow())
 
         // Makes the availableHeightToBottom bigger than the menuContentView
-        setScreenHeight(200)
-        doReturn(11).`when`(menuContentView).measuredHeight
-        doReturn(-10).`when`(anchor).height
+        setScreenHeightAndWidth()
+    }
 
+    @Test
+    fun `WHEN displaying prefer down popup from top left THEN show popup down and to the right`() {
+        anchor = createMockViewWith(x = 0, y = 0, false)
         popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN)
 
-        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop, popupWindow.animationStyle)
-        verify(popupWindow).showAsDropDown(anchor, 0, 10)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftTop, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -10)
     }
 
     @Test
-    fun `displayPopup that fitsDown with preferredOrientation UP`() {
-        val menuContentView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 10)
-        val popupWindow = spy(PopupWindow())
+    fun `WHEN displaying prefer down popup from top right THEN show popup down and to the left`() {
+        anchor = createMockViewWith(x = 90, y = 0, false)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN)
 
-        // Makes the availableHeightToBottom bigger than the menuContentView
-        setScreenHeight(200)
-        doReturn(11).`when`(menuContentView).measuredHeight
-        doReturn(-10).`when`(anchor).height
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightTop, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -10)
+    }
 
+    @Test
+    fun `WHEN display down popup on right to left device THEN show on the correct side of the anchor`() {
+        anchor = createMockViewWith(x = 90, y = 0, true)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN)
+
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightTop, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, -10, -10)
+    }
+
+    @Test
+    fun `WHEN displaying prefer up popup from top right THEN show popup down and to the left`() {
+        anchor = createMockViewWith(x = 90, y = 0, false)
         popupWindow.displayPopup(menuContentView, anchor, Orientation.UP)
 
-        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop, popupWindow.animationStyle)
-        verify(popupWindow).showAsDropDown(anchor, 0, 10)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightTop, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -10)
     }
 
     @Test
-    fun `displayPopup that fitsUp with preferredOrientation UP`() {
-        val containerView = createMockViewWith(y = 0)
-        // Makes the availableHeightToTop 10
-        val anchor = createMockViewWith(y = 10)
-        val popupWindow = spy(PopupWindow())
+    fun `WHEN displaying prefer up popup from bottom right THEN show popup up and to the left`() {
+        anchor = createMockViewWith(x = 90, y = 190, false)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.UP)
 
-        // Makes the availableHeightToBottom smaller than the availableHeightToTop
-        setScreenHeight(0)
-        doReturn(-10).`when`(anchor).height
-
-        // Makes the content of the menu smaller than the availableHeightToTop
-        doReturn(9).`when`(containerView).measuredHeight
-
-        popupWindow.displayPopup(containerView, anchor, Orientation.UP)
-
-        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom, popupWindow.animationStyle)
-        verify(popupWindow).showAsDropDown(anchor, 0, -9)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightBottom, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -90)
     }
 
     @Test
-    fun `displayPopup that fitsUp with preferredOrientation DOWN`() {
-        val containerView = createMockViewWith(y = 0)
-        // Makes the availableHeightToTop 10
-        val anchor = createMockViewWith(y = 10)
-        val popupWindow = spy(PopupWindow())
-        val contentHeight = 9
+    fun `WHEN displaying prefer up popup from bottom left THEN show popup up and to the left`() {
+        anchor = createMockViewWith(x = 0, y = 190, false)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.UP)
 
-        // Makes the availableHeightToBottom smaller than the availableHeightToTop
-        setScreenHeight(0)
-        doReturn(-10).`when`(anchor).height
-
-        // Makes the content of the menu smaller than the availableHeightToTop
-        doReturn(contentHeight).`when`(containerView).measuredHeight
-
-        popupWindow.displayPopup(containerView, anchor, Orientation.DOWN)
-
-        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom, popupWindow.animationStyle)
-        verify(popupWindow).showAsDropDown(anchor, 0, -contentHeight)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftBottom, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -90)
     }
 
     @Test
-    fun `displayPopup that fitsUp when anchor is partially below of the bottom of the screen`() {
-        val containerView = createMockViewWith(y = 0)
-        // Makes the availableHeightToTop 10
-        val anchor = createMockViewWith(y = 10)
-        val popupWindow = spy(PopupWindow())
-        val screenHeight = -1
-        val contentHeight = -9
+    fun `WHEN display up popup on right to left device THEN show on the correct side of the anchor`() {
+        anchor = createMockViewWith(x = 0, y = 190, true)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.UP)
 
-        // Makes the availableHeightToBottom smaller than the availableHeightToTop
-        setScreenHeight(screenHeight)
-        doReturn(-10).`when`(anchor).height
-
-        // Makes the content of the menu smaller than the availableHeightToTop
-        doReturn(contentHeight).`when`(containerView).measuredHeight
-
-        popupWindow.displayPopup(containerView, anchor, Orientation.UP)
-
-        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuBottom, popupWindow.animationStyle)
-        verify(popupWindow).showAsDropDown(anchor, 0, screenHeight - contentHeight)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftBottom, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, -10, -90)
     }
 
     @Test
-    fun `displayPopup that don't fitUp neither fitDown`() {
-        val containerView = createMockViewWith(y = 0)
-        val anchor = createMockViewWith(y = 0)
-        val popupWindow = spy(PopupWindow())
-        doReturn(Int.MAX_VALUE).`when`(containerView).measuredHeight
+    fun `WHEN displaying prefer down popup from bottom left THEN show popup up and to the left`() {
+        anchor = createMockViewWith(x = 0, y = 190, false)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN)
 
-        popupWindow.displayPopup(containerView, anchor, Orientation.DOWN)
-        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuTop, popupWindow.animationStyle)
-        verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 0)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftBottom, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -90)
     }
 
-    private fun createMockViewWith(y: Int): View {
+    @Test
+    fun `WHEN displaying popup from below screen bottom right THEN show popup up`() {
+        anchor = createMockViewWith(x = 110, y = 210, false)
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.UP)
+
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuRightBottom, popupWindow.animationStyle)
+        verify(popupWindow).showAsDropDown(anchor, 0, -110)
+    }
+
+    @Test
+    fun `WHEN displaying popup that doesn't fit up or down THEN show popup up from anchor`() {
+        anchor = createMockViewWith(x = 0, y = 10, false)
+        doReturn(Int.MAX_VALUE).`when`(menuContentView).measuredHeight
+
+        popupWindow.displayPopup(menuContentView, anchor, Orientation.DOWN)
+        assertEquals(R.style.Mozac_Browser_Menu2_Animation_OverflowMenuLeftTop, popupWindow.animationStyle)
+        verify(popupWindow).showAtLocation(anchor, Gravity.START or Gravity.TOP, 0, 10)
+    }
+
+    private fun createMockViewWith(x: Int, y: Int, isRTL: Boolean): View {
         val view = spy(View(testContext))
         doAnswer { invocation ->
             val locationInWindow = (invocation.getArgument(0) as IntArray)
-            locationInWindow[0] = 0
+            locationInWindow[0] = x
             locationInWindow[1] = y
             locationInWindow
         }.`when`(view).getLocationInWindow(any())
+
+        doReturn(10).`when`(view).height
+        doReturn(10).`when`(view).width
+        if (isRTL) {
+            doReturn(ViewCompat.LAYOUT_DIRECTION_RTL).`when`(view).layoutDirection
+        } else {
+            doReturn(ViewCompat.LAYOUT_DIRECTION_LTR).`when`(view).layoutDirection
+        }
+
         return view
     }
 
-    private fun setScreenHeight(value: Int) {
+    private fun setScreenHeightAndWidth() {
         val display = ShadowDisplay.getDefaultDisplay()
         val shadow = Shadows.shadowOf(display)
-        shadow.setHeight(value)
+        shadow.setHeight(200)
+        shadow.setWidth(100)
     }
 }

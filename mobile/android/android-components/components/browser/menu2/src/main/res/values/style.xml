@@ -55,13 +55,23 @@
     <!-- BrowserMenuImageText -->
 
     <!-- Animation -->
-    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuTop" parent="">
-        <item name="android:windowEnterAnimation">@anim/menu_enter_top</item>
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuLeftTop" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_left_top</item>
         <item name="android:windowExitAnimation">@anim/menu_exit</item>
     </style>
 
-    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuBottom" parent="">
-        <item name="android:windowEnterAnimation">@anim/menu_enter_bottom</item>
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuRightTop" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_right_top</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuLeftBottom" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_left_bottom</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu2.Animation.OverflowMenuRightBottom" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_right_bottom</item>
         <item name="android:windowExitAnimation">@anim/menu_exit</item>
     </style>
     <!-- Animation -->
