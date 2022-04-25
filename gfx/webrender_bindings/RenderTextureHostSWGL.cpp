@@ -123,15 +123,22 @@ wr::WrExternalImage RenderTextureHostSWGL::LockSWGL(
   }
   const PlaneInfo& plane = mPlanes[aChannelIndex];
 
+  const auto uvs = GetUvCoords(plane.mSize);
+
   // Prefer native textures, unless our backend forbids it.
+  // If the GetUvCoords call above returned anything other than the default,
+  // for example if this is a RenderAndroidSurfaceTextureHost, then this won't
+  // be handled correctly in the RawDataToWrExternalImage path. But we shouldn't
+  // hit this path in practice with a RenderAndroidSurfaceTextureHost.
   layers::TextureHost::NativeTexturePolicy policy =
       layers::TextureHost::BackendNativeTexturePolicy(
           layers::WebRenderBackend::SOFTWARE, plane.mSize);
   return policy == layers::TextureHost::NativeTexturePolicy::FORBID
              ? RawDataToWrExternalImage((uint8_t*)plane.mData,
                                         plane.mStride * plane.mSize.height)
-             : NativeTextureToWrExternalImage(
-                   plane.mTexture, 0, 0, plane.mSize.width, plane.mSize.height);
+             : NativeTextureToWrExternalImage(plane.mTexture, uvs.first.x,
+                                              uvs.first.y, uvs.second.x,
+                                              uvs.second.y);
 }
 
 void RenderTextureHostSWGL::UnlockSWGL() {
