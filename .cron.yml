@@ -242,17 +242,6 @@ jobs:
           - {weekday: 'Saturday', hour: 3, minute: 0}
           - {weekday: 'Sunday', hour: 3, minute: 0}
 
-    - name: perftest-s7
-      job:
-          type: decision-task
-          treeherder-symbol: tp6m
-          target-tasks-method: perftest_s7
-          include-push-tasks: true
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {weekday: 'Saturday', hour: 3, minute: 0}
-
     - name: condprof
       job:
           type: decision-task
@@ -274,12 +263,12 @@ jobs:
           - mozilla-central
           - mozilla-beta
       when:
-        by-project:
-            # 3h15m before launch of `nightly-desktop`
-            mozilla-central: [{hour: 6, minute: 45}, {hour: 18, minute: 45}]
-            # 3h15m before launch of `daily-releases`
-            mozilla-beta: [{hour: 18, minute: 45}]
-            # No default
+          by-project:
+              # 3h15m before launch of `nightly-desktop`
+              mozilla-central: [{hour: 6, minute: 45}, {hour: 18, minute: 45}]
+              # 3h15m before launch of `daily-releases`
+              mozilla-beta: [{hour: 18, minute: 45}]
+              # No default
 
     - name: system-symbols
       job:
