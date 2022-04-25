@@ -905,7 +905,10 @@
   "Launcher specs Puppeteer Puppeteer.launch should work with no default arguments (launcher.spec.ts)": [
     "FAIL", "PASS"
   ],
-  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default arguments (launcher.spec.ts)": [
+  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default arguments in Chrome (launcher.spec.ts)": [
+    "SKIP"
+  ],
+  "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default argument in Firefox (launcher.spec.ts)": [
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should have default URL when launching browser (launcher.spec.ts)": [
