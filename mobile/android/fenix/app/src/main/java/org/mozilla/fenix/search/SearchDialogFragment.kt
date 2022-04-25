@@ -758,7 +758,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             val qrAction = BrowserToolbar.Button(
                 AppCompatResources.getDrawable(requireContext(), R.drawable.ic_qr)!!,
                 requireContext().getString(R.string.search_scan_button),
-                listener = ::launchQr
+                autoHide = { true },
+                listener = ::launchQr,
             )
             toolbarView.view.run {
                 addEditActionEnd(IncreasedTapAreaActionDecorator(qrAction))
