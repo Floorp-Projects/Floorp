@@ -33,8 +33,6 @@
   --thumb-size: 13px;
   --label-font-size: 13px;
   --pip-toggle-padding: 5px;
-  --pip-toggle-icon-width-height: 16px;
-  --pip-toggle-translate-x: calc(100% - var(--pip-toggle-icon-width-height) - 2 * var(--pip-toggle-padding));
   --control-focus-outline: 2px solid #00DDFF;
   --control-focus-outline-offset: -2px;
 
@@ -495,13 +493,6 @@
 
 .pictureInPictureToggleLabel {
   margin-inline-start: var(--pip-toggle-padding);
-}
-
-@supports -moz-bool-pref("media.videocontrols.picture-in-picture.video-toggle.testing") {
-  /**
-   * To make automated tests faster, we drop the transition duration in
-   * testing mode.
-   */
 }
 
 /* Overlay Play button */
