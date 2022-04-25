@@ -20,9 +20,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/system/arch.h"
 #include "test/gtest.h"
-#include "third_party/rnnoise/src/rnn_activations.h"
 #include "third_party/rnnoise/src/rnn_vad_weights.h"
 
 namespace webrtc {
@@ -66,21 +64,6 @@ void TestGatedRecurrentLayer(
     ExpectNearAbsolute(expected_output, gru, 3e-6f);
   }
 }
-
-// Fully connected layer test data.
-constexpr std::array<float, 42> kFullyConnectedInputVector = {
-    -1.00131f,   -0.627069f, -7.81097f,  7.86285f,    -2.87145f,  3.32365f,
-    -0.653161f,  0.529839f,  -0.425307f, 0.25583f,    0.235094f,  0.230527f,
-    -0.144687f,  0.182785f,  0.57102f,   0.125039f,   0.479482f,  -0.0255439f,
-    -0.0073141f, -0.147346f, -0.217106f, -0.0846906f, -8.34943f,  3.09065f,
-    1.42628f,    -0.85235f,  -0.220207f, -0.811163f,  2.09032f,   -2.01425f,
-    -0.690268f,  -0.925327f, -0.541354f, 0.58455f,    -0.606726f, -0.0372358f,
-    0.565991f,   0.435854f,  0.420812f,  0.162198f,   -2.13f,     10.0089f};
-constexpr std::array<float, 24> kFullyConnectedExpectedOutput = {
-    -0.623293f, -0.988299f, 0.999378f,  0.967168f,  0.103087f,  -0.978545f,
-    -0.856347f, 0.346675f,  1.f,        -0.717442f, -0.544176f, 0.960363f,
-    0.983443f,  0.999991f,  -0.824335f, 0.984742f,  0.990208f,  0.938179f,
-    0.875092f,  0.999846f,  0.997707f,  -0.999382f, 0.973153f,  -0.966605f};
 
 // Gated recurrent units layer test data.
 constexpr int kGruInputSize = 5;
@@ -169,61 +152,6 @@ TEST(RnnVadTest, DISABLED_BenchmarkGatedRecurrentLayer) {
                    << (perf_timer.GetDurationStandardDeviation() / 1000)
                    << " ms";
 }
-
-class RnnParametrization
-    : public ::testing::TestWithParam<AvailableCpuFeatures> {};
-
-// Checks that the output of a fully connected layer is within tolerance given
-// test input data.
-TEST_P(RnnParametrization, CheckFullyConnectedLayerOutput) {
-  FullyConnectedLayer fc(
-      rnnoise::kInputLayerInputSize, rnnoise::kInputLayerOutputSize,
-      rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
-      rnnoise::TansigApproximated, /*cpu_features=*/GetParam());
-  fc.ComputeOutput(kFullyConnectedInputVector);
-  ExpectNearAbsolute(kFullyConnectedExpectedOutput, fc, 1e-5f);
-}
-
-TEST_P(RnnParametrization, DISABLED_BenchmarkFullyConnectedLayer) {
-  const AvailableCpuFeatures cpu_features = GetParam();
-  FullyConnectedLayer fc(rnnoise::kInputLayerInputSize,
-                         rnnoise::kInputLayerOutputSize,
-                         rnnoise::kInputDenseBias, rnnoise::kInputDenseWeights,
-                         rnnoise::TansigApproximated, cpu_features);
-
-  constexpr int kNumTests = 10000;
-  ::webrtc::test::PerformanceTimer perf_timer(kNumTests);
-  for (int k = 0; k < kNumTests; ++k) {
-    perf_timer.StartTimer();
-    fc.ComputeOutput(kFullyConnectedInputVector);
-    perf_timer.StopTimer();
-  }
-  RTC_LOG(LS_INFO) << "CPU features: " << cpu_features.ToString() << " | "
-                   << (perf_timer.GetDurationAverage() / 1000) << " +/- "
-                   << (perf_timer.GetDurationStandardDeviation() / 1000)
-                   << " ms";
-}
-
-// Finds the relevant CPU features combinations to test.
-std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
-  std::vector<AvailableCpuFeatures> v;
-  v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
-  AvailableCpuFeatures available = GetAvailableCpuFeatures();
-  if (available.sse2) {
-    AvailableCpuFeatures features(
-        {/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
-    v.push_back(features);
-  }
-  return v;
-}
-
-INSTANTIATE_TEST_SUITE_P(
-    RnnVadTest,
-    RnnParametrization,
-    ::testing::ValuesIn(GetCpuFeaturesToTest()),
-    [](const ::testing::TestParamInfo<AvailableCpuFeatures>& info) {
-      return info.param.ToString();
-    });
 
 // Checks that the speech probability is zero with silence.
 TEST(RnnVadTest, CheckZeroProbabilityWithSilence) {

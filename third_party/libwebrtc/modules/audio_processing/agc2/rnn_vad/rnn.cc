@@ -60,37 +60,6 @@ inline float RectifiedLinearUnit(float x) {
   return x < 0.f ? 0.f : x;
 }
 
-std::vector<float> GetScaledParams(rtc::ArrayView<const int8_t> params) {
-  std::vector<float> scaled_params(params.size());
-  std::transform(params.begin(), params.end(), scaled_params.begin(),
-                 [](int8_t x) -> float {
-                   return rnnoise::kWeightsScale * static_cast<float>(x);
-                 });
-  return scaled_params;
-}
-
-// TODO(bugs.chromium.org/10480): Hard-code optimized layout and remove this
-// function to improve setup time.
-// Casts and scales |weights| and re-arranges the layout.
-std::vector<float> GetPreprocessedFcWeights(
-    rtc::ArrayView<const int8_t> weights,
-    int output_size) {
-  if (output_size == 1) {
-    return GetScaledParams(weights);
-  }
-  // Transpose, scale and cast.
-  const int input_size = rtc::CheckedDivExact(
-      rtc::dchecked_cast<int>(weights.size()), output_size);
-  std::vector<float> w(weights.size());
-  for (int o = 0; o < output_size; ++o) {
-    for (int i = 0; i < input_size; ++i) {
-      w[o * input_size + i] = rnnoise::kWeightsScale *
-                              static_cast<float>(weights[i * output_size + o]);
-    }
-  }
-  return w;
-}
-
 constexpr int kNumGruGates = 3;  // Update, reset, output.
 
 // TODO(bugs.chromium.org/10480): Hard-coded optimized layout and remove this
@@ -202,105 +171,7 @@ void ComputeGruLayerOutput(int input_size,
   }
 }
 
-// Fully connected layer un-optimized implementation.
-void ComputeFullyConnectedLayerOutput(
-    int input_size,
-    int output_size,
-    rtc::ArrayView<const float> input,
-    rtc::ArrayView<const float> bias,
-    rtc::ArrayView<const float> weights,
-    rtc::FunctionView<float(float)> activation_function,
-    rtc::ArrayView<float> output) {
-  RTC_DCHECK_EQ(input.size(), input_size);
-  RTC_DCHECK_EQ(bias.size(), output_size);
-  RTC_DCHECK_EQ(weights.size(), input_size * output_size);
-  for (int o = 0; o < output_size; ++o) {
-    output[o] = bias[o];
-    // TODO(bugs.chromium.org/9076): Benchmark how different layouts for
-    // |weights_| change the performance across different platforms.
-    for (int i = 0; i < input_size; ++i) {
-      output[o] += input[i] * weights[o * input_size + i];
-    }
-    output[o] = activation_function(output[o]);
-  }
-}
-
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-// Fully connected layer SSE2 implementation.
-void ComputeFullyConnectedLayerOutputSse2(
-    int input_size,
-    int output_size,
-    rtc::ArrayView<const float> input,
-    rtc::ArrayView<const float> bias,
-    rtc::ArrayView<const float> weights,
-    rtc::FunctionView<float(float)> activation_function,
-    rtc::ArrayView<float> output) {
-  RTC_DCHECK_EQ(input.size(), input_size);
-  RTC_DCHECK_EQ(bias.size(), output_size);
-  RTC_DCHECK_EQ(weights.size(), input_size * output_size);
-  const int input_size_by_4 = input_size >> 2;
-  const int offset = input_size & ~3;
-  __m128 sum_wx_128;
-  const float* v = reinterpret_cast<const float*>(&sum_wx_128);
-  for (int o = 0; o < output_size; ++o) {
-    // Perform 128 bit vector operations.
-    sum_wx_128 = _mm_set1_ps(0);
-    const float* x_p = input.data();
-    const float* w_p = weights.data() + o * input_size;
-    for (int i = 0; i < input_size_by_4; ++i, x_p += 4, w_p += 4) {
-      sum_wx_128 = _mm_add_ps(sum_wx_128,
-                              _mm_mul_ps(_mm_loadu_ps(x_p), _mm_loadu_ps(w_p)));
-    }
-    // Perform non-vector operations for any remaining items, sum up bias term
-    // and results from the vectorized code, and apply the activation function.
-    output[o] = activation_function(
-        std::inner_product(input.begin() + offset, input.end(),
-                           weights.begin() + o * input_size + offset,
-                           bias[o] + v[0] + v[1] + v[2] + v[3]));
-  }
-}
-#endif
-
 }  // namespace
-
-FullyConnectedLayer::FullyConnectedLayer(
-    const int input_size,
-    const int output_size,
-    const rtc::ArrayView<const int8_t> bias,
-    const rtc::ArrayView<const int8_t> weights,
-    rtc::FunctionView<float(float)> activation_function,
-    const AvailableCpuFeatures& cpu_features)
-    : input_size_(input_size),
-      output_size_(output_size),
-      bias_(GetScaledParams(bias)),
-      weights_(GetPreprocessedFcWeights(weights, output_size)),
-      activation_function_(activation_function),
-      cpu_features_(cpu_features) {
-  RTC_DCHECK_LE(output_size_, kFullyConnectedLayerMaxUnits)
-      << "Static over-allocation of fully-connected layers output vectors is "
-         "not sufficient.";
-  RTC_DCHECK_EQ(output_size_, bias_.size())
-      << "Mismatching output size and bias terms array size.";
-  RTC_DCHECK_EQ(input_size_ * output_size_, weights_.size())
-      << "Mismatching input-output size and weight coefficients array size.";
-}
-
-FullyConnectedLayer::~FullyConnectedLayer() = default;
-
-void FullyConnectedLayer::ComputeOutput(rtc::ArrayView<const float> input) {
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-  // TODO(bugs.chromium.org/10480): Add AVX2.
-  if (cpu_features_.sse2) {
-    ComputeFullyConnectedLayerOutputSse2(input_size_, output_size_, input,
-                                         bias_, weights_, activation_function_,
-                                         output_);
-    return;
-  }
-#endif
-  // TODO(bugs.chromium.org/10480): Add Neon.
-  ComputeFullyConnectedLayerOutput(input_size_, output_size_, input, bias_,
-                                   weights_, activation_function_, output_);
-}
 
 GatedRecurrentLayer::GatedRecurrentLayer(
     const int input_size,
@@ -346,8 +217,9 @@ RnnVad::RnnVad(const AvailableCpuFeatures& cpu_features)
              kInputLayerOutputSize,
              kInputDenseBias,
              kInputDenseWeights,
-             TansigApproximated,
-             cpu_features),
+             ActivationFunction::kTansigApproximated,
+             cpu_features,
+             /*layer_name=*/"FC1"),
       hidden_(kInputLayerOutputSize,
               kHiddenLayerOutputSize,
               kHiddenGruBias,
@@ -357,8 +229,9 @@ RnnVad::RnnVad(const AvailableCpuFeatures& cpu_features)
               kOutputLayerOutputSize,
               kOutputDenseBias,
               kOutputDenseWeights,
-              SigmoidApproximated,
-              cpu_features) {
+              ActivationFunction::kSigmoidApproximated,
+              cpu_features,
+              /*layer_name=*/"FC2") {
   // Input-output chaining size checks.
   RTC_DCHECK_EQ(input_.size(), hidden_.input_size())
       << "The input and the hidden layers sizes do not match.";

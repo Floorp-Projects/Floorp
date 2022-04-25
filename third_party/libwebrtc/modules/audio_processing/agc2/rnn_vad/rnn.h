@@ -21,53 +21,14 @@
 #include "api/function_view.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/rnn_vad/common.h"
+#include "modules/audio_processing/agc2/rnn_vad/rnn_fc.h"
 #include "rtc_base/system/arch.h"
 
 namespace webrtc {
 namespace rnn_vad {
 
-// Maximum number of units for an FC layer.
-constexpr int kFullyConnectedLayerMaxUnits = 24;
-
 // Maximum number of units for a GRU layer.
 constexpr int kGruLayerMaxUnits = 24;
-
-// Fully-connected layer with a custom activation function which owns the output
-// buffer.
-class FullyConnectedLayer {
- public:
-  // Ctor. `output_size` cannot be greater than `kFullyConnectedLayerMaxUnits`.
-  FullyConnectedLayer(int input_size,
-                      int output_size,
-                      rtc::ArrayView<const int8_t> bias,
-                      rtc::ArrayView<const int8_t> weights,
-                      rtc::FunctionView<float(float)> activation_function,
-                      const AvailableCpuFeatures& cpu_features);
-  FullyConnectedLayer(const FullyConnectedLayer&) = delete;
-  FullyConnectedLayer& operator=(const FullyConnectedLayer&) = delete;
-  ~FullyConnectedLayer();
-
-  // Returns the size of the input vector.
-  int input_size() const { return input_size_; }
-  // Returns the pointer to the first element of the output buffer.
-  const float* data() const { return output_.data(); }
-  // Returns the size of the output buffer.
-  int size() const { return output_size_; }
-
-  // Computes the fully-connected layer output.
-  void ComputeOutput(rtc::ArrayView<const float> input);
-
- private:
-  const int input_size_;
-  const int output_size_;
-  const std::vector<float> bias_;
-  const std::vector<float> weights_;
-  rtc::FunctionView<float(float)> activation_function_;
-  // The output vector of a recurrent layer has length equal to |output_size_|.
-  // However, for efficiency, over-allocation is used.
-  std::array<float, kFullyConnectedLayerMaxUnits> output_;
-  const AvailableCpuFeatures cpu_features_;
-};
 
 // Recurrent layer with gated recurrent units (GRUs) with sigmoid and ReLU as
 // activation functions for the update/reset and output gates respectively. It
