@@ -761,7 +761,7 @@ fn prepare_interned_prim_for_render(
                     let splitter = &mut frame_state.plane_splitters[plane_splitter_index.0];
                     let surface_index = pic.raster_config.as_ref().unwrap().surface_index;
                     let surface = &frame_state.surfaces[surface_index.0];
-                    let local_prim_rect = surface.local_rect.cast_unit();
+                    let local_prim_rect = surface.clipped_local_rect.cast_unit();
 
                     PicturePrimitive::add_split_plane(
                         splitter,
