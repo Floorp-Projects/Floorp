@@ -531,7 +531,6 @@ const PDFBug = (function PDFBugClosure() {
       }
     },
     init(pdfjsLib, container, ids) {
-      this.loadCSS();
       this.enable(ids);
       /*
        * Basic Layout:
@@ -579,15 +578,6 @@ const PDFBug = (function PDFBugClosure() {
         buttons.push(panelButton);
       }
       this.selectPanel(0);
-    },
-    loadCSS() {
-      const { url } = import.meta;
-
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = url.replace(/.js$/, ".css");
-
-      document.head.appendChild(link);
     },
     cleanup() {
       for (const tool of this.tools) {
