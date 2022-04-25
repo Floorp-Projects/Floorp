@@ -81,7 +81,7 @@ fuzzy(1,15) platform(linux) force_subpixel_aa_where_possible(false) == text-fixe
 # most pixels are off by a small amount, but a few pixels on the edge vary by a lot, pushing up the fuzzy max-diff;
 # the main goal of the test is that everything is in the same place, at the same scale, clipped the same way,
 # despite 4x on-the-fly scale change.
-skip_on(android) fuzzy(110,20200) == raster_root_C_8192.yaml raster_root_C_ref.yaml
+skip_on(android) fuzzy(120,20800) == raster_root_C_8192.yaml raster_root_C_ref.yaml
 == subpx-bg-mask.yaml subpx-bg-mask-ref.yaml
 platform(linux,mac) == rotate-snap-clip.yaml rotate-snap-clip-ref.yaml
 platform(linux,mac) == rotate-snap-filter.yaml rotate-snap-filter-ref.yaml
