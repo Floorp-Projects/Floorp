@@ -895,6 +895,14 @@ TextureUsage:
   type: string
   ping: true
 
+Throttleable:
+  description: >
+    Whether Socorro can selectively discard this crash report or not. If set
+    to "0" the crash report will always be processed by Socorro. Do not set
+    this annotation within Gecko code, it's only supposed to be used by the
+    crash reporting machinery.
+  type: boolean
+
 TotalPageFile:
   description: >
     Maximum amount of memory that can be committed without extending the swap/page file.

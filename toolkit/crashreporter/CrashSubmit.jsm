@@ -229,12 +229,11 @@ Submitter.prototype = {
 
     let formData = new FormData();
 
+    // tell the server not to throttle this if requested
+    this.extraKeyVals.Throttleable = this.noThrottle ? "0" : "1";
+
     // add the data
     let payload = Object.assign({}, this.extraKeyVals);
-    if (this.noThrottle) {
-      // tell the server not to throttle this, since it was manually submitted
-      payload.Throttleable = "0";
-    }
     let json = new Blob([JSON.stringify(payload)], {
       type: "application/json",
     });
@@ -454,7 +453,7 @@ var CrashSubmit = {
    *          If true, a submission event is recorded in CrashManager.
    *        - noThrottle
    *          If true, this crash report should be submitted with
-   *          an extra parameter of "Throttleable=0" indicating that
+   *          the Throttleable annotation set to "0" indicating that
    *          it should be processed right away. This should be set
    *          when the report is being submitted and the user expects
    *          to see the results immediately. Defaults to false.
