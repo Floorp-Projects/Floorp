@@ -30,6 +30,19 @@ const originalBundle = Object.assign({}, config, {
   },
 });
 
+const bundleWithAnotherOriginalFile = Object.assign({}, config, {
+  entry: [
+    // This should cause the content of `original-with-no-update.js`
+    // to shift in the new `bundle-with-another-original.js` generated.
+    path.join(__dirname, "another-original.js"),
+    path.join(__dirname, "original-with-no-update.js")
+  ],
+  output: {
+    path: __dirname,
+    filename: "bundle-with-another-original.js"
+  }
+});
+
 const replacedBundle = Object.assign({}, config, {
   entry: [path.join(__dirname, "new-original.js")],
   output: {
@@ -38,4 +51,4 @@ const replacedBundle = Object.assign({}, config, {
   },
 });
 
-module.exports = [originalBundle, replacedBundle];
+module.exports = [originalBundle, bundleWithAnotherOriginalFile, replacedBundle];
