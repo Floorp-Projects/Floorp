@@ -18,55 +18,13 @@
 #include <vector>
 
 #include "api/array_view.h"
-#include "api/function_view.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
 #include "modules/audio_processing/agc2/rnn_vad/common.h"
 #include "modules/audio_processing/agc2/rnn_vad/rnn_fc.h"
-#include "rtc_base/system/arch.h"
+#include "modules/audio_processing/agc2/rnn_vad/rnn_gru.h"
 
 namespace webrtc {
 namespace rnn_vad {
-
-// Maximum number of units for a GRU layer.
-constexpr int kGruLayerMaxUnits = 24;
-
-// Recurrent layer with gated recurrent units (GRUs) with sigmoid and ReLU as
-// activation functions for the update/reset and output gates respectively. It
-// owns the output buffer.
-class GatedRecurrentLayer {
- public:
-  // Ctor. `output_size` cannot be greater than `kGruLayerMaxUnits`.
-  GatedRecurrentLayer(int input_size,
-                      int output_size,
-                      rtc::ArrayView<const int8_t> bias,
-                      rtc::ArrayView<const int8_t> weights,
-                      rtc::ArrayView<const int8_t> recurrent_weights);
-  GatedRecurrentLayer(const GatedRecurrentLayer&) = delete;
-  GatedRecurrentLayer& operator=(const GatedRecurrentLayer&) = delete;
-  ~GatedRecurrentLayer();
-
-  // Returns the size of the input vector.
-  int input_size() const { return input_size_; }
-  // Returns the pointer to the first element of the output buffer.
-  const float* data() const { return state_.data(); }
-  // Returns the size of the output buffer.
-  int size() const { return output_size_; }
-
-  // Resets the GRU state.
-  void Reset();
-  // Computes the recurrent layer output and updates the status.
-  void ComputeOutput(rtc::ArrayView<const float> input);
-
- private:
-  const int input_size_;
-  const int output_size_;
-  const std::vector<float> bias_;
-  const std::vector<float> weights_;
-  const std::vector<float> recurrent_weights_;
-  // The state vector of a recurrent layer has length equal to |output_size_|.
-  // However, to avoid dynamic allocation, over-allocation is used.
-  std::array<float, kGruLayerMaxUnits> state_;
-};
 
 // Recurrent network with hard-coded architecture and weights for voice activity
 // detection.
