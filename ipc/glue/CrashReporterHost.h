@@ -54,7 +54,6 @@ class CrashReporterHost {
   // This calls TakeCrashedChildMinidump and FinalizeCrashReport.
   template <typename Toplevel>
   bool GenerateMinidumpAndPair(Toplevel* aToplevelProtocol,
-                               nsIFile* aMinidumpToPair,
                                const nsACString& aPairName) {
     ScopedProcessHandle childHandle;
 #ifdef XP_MACOSX
@@ -68,9 +67,9 @@ class CrashReporterHost {
 #endif
 
     nsCOMPtr<nsIFile> targetDump;
-    if (!CrashReporter::CreateMinidumpsAndPair(
-            childHandle, mThreadId, aPairName, aMinidumpToPair,
-            mExtraAnnotations, getter_AddRefs(targetDump))) {
+    if (!CrashReporter::CreateMinidumpsAndPair(childHandle, mThreadId,
+                                               aPairName, mExtraAnnotations,
+                                               getter_AddRefs(targetDump))) {
       return false;
     }
 
