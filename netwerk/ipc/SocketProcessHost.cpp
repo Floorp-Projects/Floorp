@@ -68,7 +68,7 @@ bool SocketProcessHost::Launch() {
   std::vector<std::string> extraArgs;
   ProcessChild::AddPlatformBuildID(extraArgs);
 
-  SharedPreferenceSerializer prefSerializer(ShouldSyncPreference);
+  SharedPreferenceSerializer prefSerializer(ShouldSanitizePreference);
   if (!prefSerializer.SerializeToSharedMemory()) {
     return false;
   }
