@@ -249,10 +249,9 @@ void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess);
 ThreadId CurrentThreadId();
 
 /*
- * Take a minidump of the target process and pair it with an incoming minidump
- * provided by the caller or a new minidump of the calling process and thread.
- * The caller will own both dumps after this call. If this function fails
- * it will attempt to delete any files that were created.
+ * Take a minidump of the target process and pair it with a new minidump of the
+ * calling process and thread. The caller will own both dumps after this call.
+ * If this function fails it will attempt to delete any files that were created.
  *
  * The .extra information created will not include an 'additional_minidumps'
  * annotation.
@@ -261,29 +260,15 @@ ThreadId CurrentThreadId();
  * @param aTargetBlamedThread The target thread for the minidump.
  * @param aIncomingPairName The name to apply to the paired dump the caller
  *   passes in.
- * @param aIncomingDumpToPair Existing dump to pair with the new dump. if this
- *   is null, TakeMinidumpAndPair will take a new minidump of the calling
- *   process and thread and use it in aIncomingDumpToPairs place.
- * @param aTargetDumpOut The target minidump file paired up with
- *   aIncomingDumpToPair.
+ * @param aTargetDumpOut The target minidump file paired up with the new one.
  * @param aTargetAnnotations The crash annotations of the target process.
  * @return bool indicating success or failure
  */
 bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
                             ThreadId aTargetBlamedThread,
                             const nsACString& aIncomingPairName,
-                            nsIFile* aIncomingDumpToPair,
                             AnnotationTable& aTargetAnnotations,
                             nsIFile** aTargetDumpOut);
-
-// Create an additional minidump for a child of a process which already has
-// a minidump (|parentMinidump|).
-// The resulting dump will get the id of the parent and use the |name| as
-// an extension.
-bool CreateAdditionalChildMinidump(ProcessHandle childPid,
-                                   ThreadId childBlamedThread,
-                                   nsIFile* parentMinidump,
-                                   const nsACString& name);
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
 // Parent-side API for children
