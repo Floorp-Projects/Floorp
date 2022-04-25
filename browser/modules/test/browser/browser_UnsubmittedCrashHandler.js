@@ -372,6 +372,7 @@ add_task(async function test_can_submit() {
     }
 
     Assert.equal(extra.get("SubmittedFrom"), "Infobar");
+    Assert.equal(extra.get("Throttleable"), "1");
   }
 
   let reportIDs = await createPendingCrashReports(1);
@@ -480,6 +481,7 @@ add_task(async function test_can_submit_always() {
   Assert.equal(result, null, "The notification should not be shown");
   promiseReports = await waitForSubmittedReports(reportIDs, extra => {
     Assert.equal(extra.get("SubmittedFrom"), "Auto");
+    Assert.equal(extra.get("Throttleable"), "1");
   });
 
   // And revert back to default now.
