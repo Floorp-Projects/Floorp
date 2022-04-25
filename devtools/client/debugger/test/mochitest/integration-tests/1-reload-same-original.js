@@ -32,11 +32,6 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
 
   info("Check that only one breakpoint is set");
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
-  is(
-    dbg.client.getServerBreakpointsList().length,
-    1,
-    "One breakpoint exists on the server"
-  );
 
   info("Check that the breakpoint location info is correct");
   let breakpoint = dbg.selectors.getBreakpointsList(dbg)[0];
@@ -85,11 +80,6 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
 
   info("Check that only one breakpoint is set");
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
-  is(
-    dbg.client.getServerBreakpointsList().length,
-    1,
-    "One breakpoint exists on the server"
-  );
 
   info("Check that the original location has changed");
   breakpoint = dbg.selectors.getBreakpointsList(dbg)[0];
@@ -147,11 +137,6 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
   await addBreakpoint(dbg, "original.js", 13);
 
   is(dbg.selectors.getBreakpointCount(dbg), 2, "Two breakpoints exist");
-  is(
-    dbg.client.getServerBreakpointsList().length,
-    2,
-    "Two breakpoint exists on the server"
-  );
 
   info("Check that the original location of the new breakpoint is correct");
   breakpoint = dbg.selectors.getBreakpointsList(dbg)[1];
@@ -175,10 +160,4 @@ addIntegrationTask(async function testReloadingStableOriginalSource(
 
   assertNotPaused(dbg);
   is(dbg.selectors.getBreakpointCount(dbg), 0, "No breakpoints");
-  // TODO: fails intermitently, look to fix
-  /*is(
-    dbg.client.getServerBreakpointsList().length,
-    2,
-    "No breakpoint exists on the server"
-  );*/
 });
