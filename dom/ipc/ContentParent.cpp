@@ -4141,7 +4141,7 @@ void ContentParent::GeneratePairedMinidump(const char* aReason) {
                                   reason);
 
     // Generate the report and insert into the queue for submittal.
-    if (mCrashReporter->GenerateMinidumpAndPair(this, nullptr, "browser"_ns)) {
+    if (mCrashReporter->GenerateMinidumpAndPair(this, "browser"_ns)) {
       mCreatedPairedMinidumps = mCrashReporter->FinalizeCrashReport();
     }
   }
