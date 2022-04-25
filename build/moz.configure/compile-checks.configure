@@ -194,17 +194,14 @@ def check_and_add_flags(
             host_cxx_compiler: ("host C++", flags_collection.host_cxxflags),
         }[c]
 
-        @depends(c, when)
-        def result(c, when):
-            if when and c.type in ("clang", "gcc"):
-                return True
+        result = when
 
         if check:
 
             @depends(c, dependable(flags))
             def flags(c, flags):
                 # Don't error out just because clang complains about other things.
-                if c.type == "clang":
+                if c.type in ("clang", "clang-cl"):
                     flags += ["-Wno-error=unused-command-line-argument"]
 
                 return flags
