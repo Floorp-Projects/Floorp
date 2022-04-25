@@ -94,11 +94,6 @@ void UtilityProcessManager::OnPreferenceChange(const char16_t* aData) {
   // We know prefs are ASCII here.
   NS_LossyConvertUTF16toASCII strData(aData);
 
-  // A pref changed. If it is useful to do so, inform child processes.
-  if (ShouldSanitizePreference(strData.Data(), false)) {
-    return;
-  }
-
   mozilla::dom::Pref pref(strData, /* isLocked */ false,
                           /* isSanitized */ false, Nothing(), Nothing());
   Preferences::GetPreference(&pref, GeckoProcessType_Utility,
