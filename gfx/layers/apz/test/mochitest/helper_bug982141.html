@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=982141
       // In general they will be (50 - <scrollbarwidth>, 50 - <scrollbarheight>).
       SimpleTest.ok(subframe.clientWidth > 0, "Expected a non-zero clientWidth, got: " + subframe.clientWidth);
       SimpleTest.ok(subframe.clientHeight > 0, "Expected a non-zero clientHeight, got: " + subframe.clientHeight);
-      SimpleTest.ok(dp.w >= subframe.clientWidth && dp.h >= subframe.clientHeight,
+      SimpleTest.ok(dp.width >= subframe.clientWidth && dp.height >= subframe.clientHeight,
                     "expected a displayport at least as large as the scrollable element, got " + JSON.stringify(dp));
 
       window.opener.finishTest();

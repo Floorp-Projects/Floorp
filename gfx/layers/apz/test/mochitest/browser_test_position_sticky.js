@@ -63,12 +63,7 @@ add_task(async () => {
   );
 
   // Take a snapshot where the position:sticky element is initially painted.
-  const reference = await getSnapshot({
-    x: rect.x,
-    y: rect.y,
-    w: rect.width,
-    h: rect.height,
-  });
+  const reference = await getSnapshot(rect);
 
   let mouseX = window.innerWidth - scrollbarWidth / 2;
   let mouseY = tab.linkedBrowser.getBoundingClientRect().y + 5;
@@ -95,12 +90,7 @@ add_task(async () => {
   }
 
   // Take a snapshot again where the position:sticky element should be painted.
-  const snapshot = await getSnapshot({
-    x: rect.x,
-    y: rect.y,
-    w: rect.width,
-    h: rect.height,
-  });
+  const snapshot = await getSnapshot(rect);
 
   await dragFinisher();
 
