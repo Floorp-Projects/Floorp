@@ -14,7 +14,11 @@ add_task(async function test_onCreated_active() {
         browser.test.sendMessage("onCreated", tab);
       });
       browser.tabs.onUpdated.addListener((tabId, changes, tab) => {
-        browser.test.fail("unexpected tabs.onUpdated during tab creation");
+        browser.test.assertEq(
+          '["status"]',
+          JSON.stringify(Object.keys(changes)),
+          "Should get no update other than 'status' during tab creation."
+        );
       });
       browser.test.sendMessage("ready");
     },

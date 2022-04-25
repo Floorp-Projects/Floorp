@@ -853,15 +853,13 @@ function startup() {
     );
 
     InitLater(() => {
-      // This lets Marionette and the Remote Agent (used for our CDP and the
-      // upcoming WebDriver BiDi implementation) start listening (when enabled).
-      // Both GeckoView and these two remote protocols do most of their
+      // This lets Marionette start listening (when enabled).
+      // Both GeckoView and this remote protocol do most of their
       // initialization in "profile-after-change", and there is no order enforced
-      // between them.  Therefore we defer asking both components to startup
-      // until after all "profile-after-change" handlers (including this one)
-      // have completed.
+      // between them.  Therefore we defer asking the Marionette component to
+      // startup until after all "profile-after-change" handlers (including this
+      // one) have completed.
       Services.obs.notifyObservers(null, "marionette-startup-requested");
-      Services.obs.notifyObservers(null, "remote-startup-requested");
     });
   });
 

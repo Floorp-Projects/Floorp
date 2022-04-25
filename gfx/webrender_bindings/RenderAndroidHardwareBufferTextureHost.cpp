@@ -139,8 +139,9 @@ wr::WrExternalImage RenderAndroidHardwareBufferTextureHost::Lock(
     return InvalidToWrExternalImage();
   }
 
-  return NativeTextureToWrExternalImage(mTextureHandle, 0, 0, GetSize().width,
-                                        GetSize().height);
+  const auto uvs = GetUvCoords(GetSize());
+  return NativeTextureToWrExternalImage(
+      mTextureHandle, uvs.first.x, uvs.first.y, uvs.second.x, uvs.second.y);
 }
 
 void RenderAndroidHardwareBufferTextureHost::Unlock() {}

@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = [
   "AnimationFramePromise",
+  "Deferred",
   "EventPromise",
   "executeSoon",
   "PollPromise",
@@ -20,6 +21,49 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const { TYPE_REPEATING_SLACK } = Ci.nsITimer;
+
+/**
+ * Throttle until the `window` has performed an animation frame.
+ *
+ * @param {ChromeWindow} win
+ *     Window to request the animation frame from.
+ *
+ * @return {Promise}
+ */
+function AnimationFramePromise(win) {
+  const animationFramePromise = new Promise(resolve => {
+    win.requestAnimationFrame(resolve);
+  });
+
+  // Abort if the underlying window gets closed
+  const windowClosedPromise = new PollPromise(resolve => {
+    if (win.closed) {
+      resolve();
+    }
+  });
+
+  return Promise.race([animationFramePromise, windowClosedPromise]);
+}
+
+/**
+ * Create a helper object to defer a promise.
+ *
+ * @returns {Object}
+ *     An object that returns the following properties:
+ *       - promise The actual promise
+ *       - reject Callback to reject the promise
+ *       - resolve Callback to resolve the promise
+ */
+function Deferred() {
+  const deferred = {};
+
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+
+  return deferred;
+}
 
 /**
  * Wait for a single event to be fired on a specific EventListener.
@@ -101,29 +145,6 @@ function executeSoon(fn) {
   }
 
   Services.tm.dispatchToMainThread(fn);
-}
-
-/**
- * Throttle until the `window` has performed an animation frame.
- *
- * @param {ChromeWindow} win
- *     Window to request the animation frame from.
- *
- * @return {Promise
- */
-function AnimationFramePromise(win) {
-  const animationFramePromise = new Promise(resolve => {
-    win.requestAnimationFrame(resolve);
-  });
-
-  // Abort if the underlying window gets closed
-  const windowClosedPromise = new PollPromise(resolve => {
-    if (win.closed) {
-      resolve();
-    }
-  });
-
-  return Promise.race([animationFramePromise, windowClosedPromise]);
 }
 
 /**

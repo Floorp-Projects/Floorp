@@ -813,12 +813,18 @@ var gXPInstallObserver = {
               install.sourceURI.host;
           }
 
+          // Construct the l10n ID for the error, e.g. "addonInstallError-3"
           let error =
             host || install.error == 0
               ? "addonInstallError"
               : "addonLocalInstallError";
           let args;
           if (install.error < 0) {
+            // Append the error code for the installation failure to get the
+            // matching translation of the error. The error code is defined in
+            // AddonManager's _errors Map. Not all error codes listed there are
+            // translated, since errors that are only triggered during updates
+            // will never reach this code.
             error += install.error;
             args = [brandShortName, install.name];
           } else if (

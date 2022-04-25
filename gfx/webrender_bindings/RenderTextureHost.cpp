@@ -54,5 +54,12 @@ wr::WrExternalImage RenderTextureHost::LockSWGL(uint8_t aChannelIndex,
   return InvalidToWrExternalImage();
 }
 
+std::pair<gfx::Point, gfx::Point> RenderTextureHost::GetUvCoords(
+    gfx::IntSize aTextureSize) const {
+  return std::make_pair(gfx::Point(0.0, 0.0),
+                        gfx::Point(static_cast<float>(aTextureSize.width),
+                                   static_cast<float>(aTextureSize.height)));
+}
+
 }  // namespace wr
 }  // namespace mozilla

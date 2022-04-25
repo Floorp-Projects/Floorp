@@ -10,17 +10,19 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "GLContext.h"
+#include "AndroidSurfaceTexture.h"
 
 namespace mozilla {
 namespace wr {
 
 RenderAndroidSurfaceTextureHost::RenderAndroidSurfaceTextureHost(
     const java::GeckoSurfaceTexture::GlobalRef& aSurfTex, gfx::IntSize aSize,
-    gfx::SurfaceFormat aFormat, bool aContinuousUpdate)
+    gfx::SurfaceFormat aFormat, bool aContinuousUpdate, bool aIgnoreTransform)
     : mSurfTex(aSurfTex),
       mSize(aSize),
       mFormat(aFormat),
       mContinuousUpdate(aContinuousUpdate),
+      mIgnoreTransform(aIgnoreTransform),
       mPrepareStatus(STATUS_NONE),
       mAttachedToGLContext(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderAndroidSurfaceTextureHost, RenderTextureHost);
@@ -81,8 +83,10 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHost::Lock(
     mPrepareStatus = STATUS_PREPARED;
   }
 
-  return NativeTextureToWrExternalImage(mSurfTex->GetTexName(), 0, 0,
-                                        mSize.width, mSize.height);
+  const auto uvs = GetUvCoords(mSize);
+  return NativeTextureToWrExternalImage(mSurfTex->GetTexName(), uvs.first.x,
+                                        uvs.first.y, uvs.second.x,
+                                        uvs.second.y);
 }
 
 void RenderAndroidSurfaceTextureHost::Unlock() {}
@@ -263,6 +267,37 @@ void RenderAndroidSurfaceTextureHost::UnmapPlanes() {
     mReadback->Unmap();
     mReadback = nullptr;
   }
+}
+
+std::pair<gfx::Point, gfx::Point> RenderAndroidSurfaceTextureHost::GetUvCoords(
+    gfx::IntSize aTextureSize) const {
+  gfx::Matrix4x4 transform;
+
+  // GetTransformMatrix() returns the transform set by the producer side of
+  // the SurfaceTexture. We should ignore this if we know the transform should
+  // be identity but the producer couldn't set it correctly, like is the
+  // case for AndroidNativeWindowTextureData.
+  if (mSurfTex && !mIgnoreTransform) {
+    const auto& surf = java::sdk::SurfaceTexture::LocalRef(
+        java::sdk::SurfaceTexture::Ref::From(mSurfTex));
+    gl::AndroidSurfaceTexture::GetTransformMatrix(surf, &transform);
+  }
+
+  // We expect this transform to always be rectilinear, usually just a
+  // y-flip and sometimes an x and y scale. This allows this function
+  // to simply transform and return 2 points here instead of 4.
+  MOZ_ASSERT(transform.IsRectilinear(),
+             "Unexpected non-rectilinear transform returned from "
+             "SurfaceTexture.GetTransformMatrix()");
+
+  transform.PostScale(aTextureSize.width, aTextureSize.height, 0.0);
+
+  gfx::Point uv0 = gfx::Point(0.0, 0.0);
+  gfx::Point uv1 = gfx::Point(1.0, 1.0);
+  uv0 = transform.TransformPoint(uv0);
+  uv1 = transform.TransformPoint(uv1);
+
+  return std::make_pair(uv0, uv1);
 }
 
 }  // namespace wr
