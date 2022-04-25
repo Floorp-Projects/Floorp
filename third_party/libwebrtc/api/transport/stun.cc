@@ -33,6 +33,7 @@ namespace {
 const int k127Utf8CharactersLengthInBytes = 508;
 const int kDefaultMaxAttributeLength = 508;
 const int kMessageIntegrityAttributeLength = 20;
+const int kTheoreticalMaximumAttributeLength = 65535;
 
 uint32_t ReduceTransactionId(const std::string& transaction_id) {
   RTC_DCHECK(transaction_id.length() == cricket::kStunTransactionIdLength ||
@@ -77,10 +78,10 @@ bool LengthValid(int type, int length) {
       // No length restriction in RFC; it's the content of an UDP datagram,
       // which in theory can be up to 65.535 bytes.
       // TODO(bugs.webrtc.org/12179): Write a test to find the real limit.
-      return length <= 65535;
+      return length <= kTheoreticalMaximumAttributeLength;
     default:
       // Return an arbitrary restriction for all other types.
-      return length <= kDefaultMaxAttributeLength;
+      return length <= kTheoreticalMaximumAttributeLength;
   }
   RTC_NOTREACHED();
   return true;
