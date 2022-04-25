@@ -1070,6 +1070,8 @@ class CCacheStats(object):
             ts = time.strptime(raw_value, "%c")
             return int(time.mktime(ts))
         except ValueError:
+            if raw_value == "never":
+                return 0
             pass
 
         value = raw_value.split()
