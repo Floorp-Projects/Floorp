@@ -180,8 +180,6 @@ rtc_library("delay_based_bwe") {
   sources = [
     "delay_based_bwe.cc",
     "delay_based_bwe.h",
-    "inter_arrival_delta.cc",
-    "inter_arrival_delta.h",
   ]
 
   deps = [
@@ -189,9 +187,8 @@ rtc_library("delay_based_bwe") {
     "../../../api:network_state_predictor_api",
     "../../../api/rtc_event_log",
     "../../../api/transport:network_control",
+    "../../../api/transport:network_control",
     "../../../api/transport:webrtc_key_value_config",
-    "../../../api/units:time_delta",
-    "../../../api/units:timestamp",
     "../../../logging:rtc_event_bwe",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
