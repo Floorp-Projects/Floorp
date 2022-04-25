@@ -14,8 +14,6 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 job-defaults:
-    run-on-projects:
-        - mozilla-central
     treeherder:
         kind: other
         tier: 2
@@ -35,6 +33,7 @@ jobs:
     windows2012-64-firefox:
         worker-type: b-win2012
         description: Creates or updates conditioned profiles on Win64
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(firefox)
             platform: windows2012-64/opt
@@ -68,6 +67,7 @@ jobs:
     linux64-firefox:
         worker-type: b-linux
         description: Creates or updates conditioned profiles on Linux
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(firefox)
             platform: linux64/opt
@@ -103,6 +103,7 @@ jobs:
     macosx64-firefox:
         worker-type: t-osx-1015-r8
         description: Creates or updates conditioned profiles on macOS
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(firefox)
             platform: macosx1015-64-qr/opt
@@ -135,6 +136,7 @@ jobs:
     android-hw-g5-7-0-arm7-geckoview:
         worker-type: t-bitbar-gw-perf-g5
         description: Creates or update conditioned profiles on GeckoView+G5
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(geckoview)
             platform: android-hw-g5-7-0-arm7/opt
@@ -170,6 +172,7 @@ jobs:
     android-hw-g5-7-0-arm7-fenix:
         worker-type: t-bitbar-gw-perf-g5
         description: Creates or update conditioned profiles on Fenix+G5
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(fenix)
             platform: android-hw-g5-7-0-arm7/opt
@@ -277,6 +280,7 @@ jobs:
     android-hw-p2-8-0-aarch64-fenix:
         worker-type: t-bitbar-gw-perf-p2
         description: Creates or update conditioned profiles on Fenix+P2
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(fenix)
             platform: android-hw-p2-8-0-android-aarch64/opt
@@ -312,6 +316,7 @@ jobs:
     android-hw-p2-8-0-android-aarch64-geckoview:
         worker-type: t-bitbar-gw-perf-p2
         description: Creates or update conditioned profiles on GeckoView+P2
+        run-on-projects: ['mozilla-central']
         treeherder:
             symbol: condprof(geckoview)
             platform: android-hw-p2-8-0-android-aarch64/opt
