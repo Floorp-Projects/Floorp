@@ -46,8 +46,7 @@ bool RDDProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mRDDChild);
 
-  mPrefSerializer =
-      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSanitizePreference);
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
   if (!mPrefSerializer->SerializeToSharedMemory(GeckoProcessType_RDD,
                                                 /* remoteType */ ""_ns)) {
     return false;
