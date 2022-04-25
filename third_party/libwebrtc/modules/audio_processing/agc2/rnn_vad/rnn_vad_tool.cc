@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
   const AvailableCpuFeatures cpu_features = GetAvailableCpuFeatures();
   FeaturesExtractor features_extractor(cpu_features);
   std::array<float, kFeatureVectorSize> feature_vector;
-  RnnBasedVad rnn_vad(cpu_features);
+  RnnVad rnn_vad(cpu_features);
 
   // Compute VAD probabilities.
   while (true) {

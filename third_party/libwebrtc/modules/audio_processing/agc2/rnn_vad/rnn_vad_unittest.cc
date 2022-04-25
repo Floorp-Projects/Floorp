@@ -68,7 +68,7 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
   PushSincResampler decimator(kFrameSize10ms48kHz, kFrameSize10ms24kHz);
   const AvailableCpuFeatures cpu_features = GetParam();
   FeaturesExtractor features_extractor(cpu_features);
-  RnnBasedVad rnn_vad(cpu_features);
+  RnnVad rnn_vad(cpu_features);
 
   // Init input samples and expected output readers.
   auto samples_reader = CreatePcmSamplesReader(kFrameSize10ms48kHz);
@@ -135,7 +135,7 @@ TEST_P(RnnVadProbabilityParametrization, DISABLED_RnnVadPerformance) {
   const AvailableCpuFeatures cpu_features = GetParam();
   FeaturesExtractor features_extractor(cpu_features);
   std::array<float, kFeatureVectorSize> feature_vector;
-  RnnBasedVad rnn_vad(cpu_features);
+  RnnVad rnn_vad(cpu_features);
   constexpr int number_of_tests = 100;
   ::webrtc::test::PerformanceTimer perf_timer(number_of_tests);
   for (int k = 0; k < number_of_tests; ++k) {
