@@ -180,10 +180,6 @@ function hasBreakpoint(location) {
   return !!breakpoints[makePendingLocationId(location)];
 }
 
-function getServerBreakpointsList() {
-  return Object.values(breakpoints);
-}
-
 async function setBreakpoint(location, options) {
   const breakpoint = breakpoints[makePendingLocationId(location)];
   if (
@@ -446,7 +442,6 @@ const clientCommands = {
   getSourceActorBreakpointPositions,
   getSourceActorBreakableLines,
   hasBreakpoint,
-  getServerBreakpointsList,
   setBreakpoint,
   setXHRBreakpoint,
   removeXHRBreakpoint,
