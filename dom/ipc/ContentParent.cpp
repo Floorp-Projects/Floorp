@@ -3641,7 +3641,8 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     NS_LossyConvertUTF16toASCII strData(aData);
 
     // A pref changed. If it is useful to do so, inform child processes.
-    if (!ShouldSyncPreference(strData.Data())) {
+    if (!ShouldSyncPreference(strData.Data(),
+                              /* will be fixed later */ false)) {
       return NS_OK;
     }
 
