@@ -1531,12 +1531,30 @@ class TestConfigure(unittest.TestCase):
         with self.assertRaises(TypeError) as e:
             with self.moz_configure(
                 """
-                depends('--help')(42)
+                @depends('--help')
+                def foo(value):
+                    return value
+
+                depends('--help')(foo)
             """
             ):
                 self.get_config()
 
-        self.assertEqual(str(e.exception), "Unexpected type: 'int'")
+        self.assertEqual(str(e.exception), "Cannot nest @depends functions")
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure(
+                """
+                @template
+                def foo(f):
+                    pass
+
+                depends('--help')(foo)
+            """
+            ):
+                self.get_config()
+
+        self.assertEqual(str(e.exception), "Cannot use a @template function here")
 
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure(
@@ -1606,6 +1624,47 @@ class TestConfigure(unittest.TestCase):
                     "QUX": "qux",
                 },
             )
+
+    def test_depends_value(self):
+        with self.moz_configure(
+            """
+            foo = depends(when=True)('foo')
+
+            set_config('FOO', foo)
+
+            bar = depends(when=False)('bar')
+
+            set_config('BAR', bar)
+
+            option('--with-qux', help='qux')
+            @depends(when='--with-qux')
+            def qux():
+                return 'qux'
+
+            set_config('QUX', qux)
+        """
+        ):
+            config = self.get_config()
+            self.assertEqual(
+                config,
+                {
+                    "FOO": "foo",
+                },
+            )
+
+        with self.assertRaises(TypeError) as e:
+            with self.moz_configure(
+                """
+                option('--foo', help='foo')
+
+                depends('--foo')('foo')
+            """
+            ):
+                self.get_config()
+
+        self.assertEqual(
+            str(e.exception), "Cannot wrap literal values in @depends with dependencies"
+        )
 
     def test_imports_failures(self):
         with self.assertRaises(ConfigureError) as e:
