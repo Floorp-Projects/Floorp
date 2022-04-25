@@ -1038,7 +1038,16 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
 
   RefPtr<VideoData> v;
 #ifdef CUSTOMIZED_BUFFER_ALLOCATION
-  if (mIsUsingShmemBufferForDecode && *mIsUsingShmemBufferForDecode) {
+  bool requiresCopy = false;
+#  ifdef XP_MACOSX
+  // Bug 1765388: macOS needs to generate a MacIOSurfaceImage in order to
+  // properly display HDR video. The later call to ::CreateAndCopyData does
+  // that. If this shared memory buffer path also generated a
+  // MacIOSurfaceImage, then we could use it for HDR.
+  requiresCopy = (b.mColorDepth != gfx::ColorDepth::COLOR_8);
+#  endif
+  if (mIsUsingShmemBufferForDecode && *mIsUsingShmemBufferForDecode &&
+      !requiresCopy) {
     RefPtr<ImageBufferWrapper> wrapper = static_cast<ImageBufferWrapper*>(
         mLib->av_buffer_get_opaque(mFrame->buf[0]));
     MOZ_ASSERT(wrapper);
