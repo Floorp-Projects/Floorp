@@ -24,6 +24,7 @@ rtc_library("rnn_vad") {
 
   deps = [
     ":rnn_vad_common",
+    ":rnn_vad_layers",
     ":rnn_vad_lp_residual",
     ":rnn_vad_pitch",
     ":rnn_vad_sequence_buffer",
@@ -76,6 +77,24 @@ rtc_library("rnn_vad_lp_residual") {
     "../../../../rtc_base:checks",
     "../../../../rtc_base:safe_compare",
   ]
+}
+
+rtc_source_set("rnn_vad_layers") {
+  sources = [
+    "rnn_fc.cc",
+    "rnn_fc.h",
+  ]
+  deps = [
+    ":rnn_vad_common",
+    "..:cpu_features",
+    "../../../../api:array_view",
+    "../../../../api:function_view",
+    "../../../../rtc_base:checks",
+    "../../../../rtc_base:safe_conversions",
+    "../../../../rtc_base/system:arch",
+    "//third_party/rnnoise:rnn_vad",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_source_set("vector_math") {
@@ -221,6 +240,7 @@ if (rtc_include_tests) {
       "pitch_search_internal_unittest.cc",
       "pitch_search_unittest.cc",
       "ring_buffer_unittest.cc",
+      "rnn_fc_unittest.cc",
       "rnn_unittest.cc",
       "rnn_vad_unittest.cc",
       "sequence_buffer_unittest.cc",
@@ -233,6 +253,7 @@ if (rtc_include_tests) {
       ":rnn_vad",
       ":rnn_vad_auto_correlation",
       ":rnn_vad_common",
+      ":rnn_vad_layers",
       ":rnn_vad_lp_residual",
       ":rnn_vad_pitch",
       ":rnn_vad_ring_buffer",
