@@ -1278,7 +1278,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       result,
       lcSearch,
       attributeType,
-      targetDocument
+      targetDocument,
+      node.rawNode
     );
     this._collectAttributesFromDocumentStyleSheets(
       result,
@@ -1298,12 +1299,14 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    * @param {String} search: A string to filter attribute value on.
    * @param {String} attributeType: The type of attribute we want to retrieve the values.
    * @param {Document} targetDocument: The document the search occurs in.
+   * @param {Node} currentNode: The current element rawNode
    */
   _collectAttributesFromDocumentDOM(
     result,
     search,
     attributeType,
-    targetDocument
+    targetDocument,
+    nodeRawNode
   ) {
     // In order to retrieve attributes from DOM elements in the document, we're going to
     // do a query on the root node using attributes selector, to directly get the elements
@@ -1318,6 +1321,9 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     const matchingElements = targetDocument.querySelectorAll(selector);
 
     for (const element of matchingElements) {
+      if (element === nodeRawNode) {
+        return;
+      }
       // For class attribute, we need to add the elements of the classList that match
       // the filter string.
       if (attributeType === "class") {
