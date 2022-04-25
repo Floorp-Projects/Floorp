@@ -428,13 +428,19 @@ struct PrefsSizes {
 
 static StaticRefPtr<SharedPrefMap> gSharedMap;
 
-// Arena for Pref names. Inside a function so we can assert it's only accessed
-// on the main thread.
-static inline ArenaAllocator<4096, 1>& PrefNameArena() {
+// Arena for Pref names.
+// Never access sPrefNameArena directly, always use PrefNameArena()
+// because it must only be accessed on the Main Thread
+typedef ArenaAllocator<4096, 1> NameArena;
+static NameArena* sPrefNameArena;
+
+static inline NameArena& PrefNameArena() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  static ArenaAllocator<4096, 1> sPrefNameArena;
-  return sPrefNameArena;
+  if (!sPrefNameArena) {
+    sPrefNameArena = new NameArena();
+  }
+  return *sPrefNameArena;
 }
 
 class PrefWrapper;
@@ -496,6 +502,8 @@ class Pref {
 
   template <typename T>
   void AddToMap(SharedPrefMapBuilder& aMap) {
+    // Sanitized preferences should never be added to the shared pref map
+    MOZ_ASSERT(!ShouldSanitizePreference(this, true));
     aMap.Add(NameString(),
              {HasDefaultValue(), HasUserValue(), IsSticky(), IsLocked(),
               /* isSanitized */ false, IsSkippedByIteration()},
@@ -930,8 +938,12 @@ class Pref {
     }
   }
 
+  void RelocateName(NameArena* aArena) {
+    mName.Rebind(ArenaStrdup(mName.get(), *aArena), mName.Length());
+  }
+
  private:
-  const nsDependentCString mName;  // allocated in sPrefNameArena
+  nsDependentCString mName;  // allocated in sPrefNameArena
 
   uint32_t mType : 2;
   uint32_t mIsSticky : 1;
@@ -3672,12 +3684,21 @@ static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder);
 /* static */
 FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (!gSharedMap) {
     SharedPrefMapBuilder builder;
 
-    for (auto iter = HashTable()->iter(); !iter.done(); iter.next()) {
-      iter.get()->AddToMap(builder);
+    nsTArray<Pref*> toRepopulate;
+    NameArena* newPrefNameArena = new NameArena();
+    for (auto iter = HashTable()->modIter(); !iter.done(); iter.next()) {
+      if (!ShouldSanitizePreference(iter.get().get(), true)) {
+        iter.get()->AddToMap(builder);
+      } else {
+        Pref* pref = iter.getMutable().release();
+        pref->RelocateName(newPrefNameArena);
+        toRepopulate.AppendElement(pref);
+      }
     }
 
     // Store the current value of `once`-mirrored prefs. After this point they
@@ -3698,8 +3719,16 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
     HashTable()->clearAndCompact();
     Unused << HashTable()->reserve(kHashTableInitialLengthContent);
 
-    PrefNameArena().Clear();
+    delete sPrefNameArena;
+    sPrefNameArena = newPrefNameArena;
     gCallbackPref = nullptr;
+
+    for (uint32_t i = 0; i < toRepopulate.Length(); i++) {
+      auto pref = toRepopulate[i];
+      auto p = HashTable()->lookupForAdd(pref->Name());
+      MOZ_ASSERT(!p.found());
+      Unused << HashTable()->add(p, pref);
+    }
   }
 
   *aSize = gSharedMap->MapSize();
