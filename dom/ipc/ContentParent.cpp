@@ -3645,7 +3645,8 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
+    Pref pref(strData, /* isLocked */ false, /* isSanitized */ false, Nothing(),
+              Nothing());
     Preferences::GetPreference(&pref);
     if (IsInitialized()) {
       MOZ_ASSERT(mQueuedPrefs.IsEmpty());
