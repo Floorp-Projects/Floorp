@@ -39,7 +39,14 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   assertPausedAtSourceAndLine(dbg, replacedSource.id, 4);
   assertTextContentOnLine(dbg, 4, 'console.log("Removed original");');
   await assertBreakpoint(dbg, 4);
+
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
+  is(
+    dbg.client.getServerBreakpointsList().length,
+    1,
+    "One breakpoint exists on the server"
+  );
+
   let breakpoint = dbg.selectors.getBreakpointsList()[0];
   is(breakpoint.location.sourceUrl, replacedSource.url);
   is(breakpoint.location.line, 4);
@@ -69,7 +76,14 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   assertPausedAtSourceAndLine(dbg, newSource.id, 4);
   assertTextContentOnLine(dbg, 4, 'console.log("New original");');
   await assertBreakpoint(dbg, 4);
+
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
+  is(
+    dbg.client.getServerBreakpointsList().length,
+    1,
+    "One breakpoint exists on the server"
+  );
+
   breakpoint = dbg.selectors.getBreakpointsList()[0];
   is(breakpoint.location.sourceUrl, newSource.url);
   is(breakpoint.location.line, 4);
@@ -103,4 +117,11 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   );
   assertNotPaused(dbg);
   is(dbg.selectors.getBreakpointCount(), 0, "We no longer have any breakpoint");
+  // The breakpoint for the removed source still exists, atm this difficult to fix
+  // as the frontend never loads the source.
+  is(
+    dbg.client.getServerBreakpointsList().length,
+    1,
+    "One breakpoint still exists on the server"
+  );
 });
