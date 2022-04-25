@@ -3785,10 +3785,12 @@ var AddonManager = {
   ]),
 
   // Constants representing different types of errors while downloading an
-  // add-on.
+  // add-on as a preparation for installation.
   // These will show up as AddonManager.ERROR_* (eg, ERROR_NETWORK_FAILURE)
   // The _errors codes are translated to text for a panel in browser-addons.js.
-  // The text is located in browser.properties.
+  // The text is located in browser.properties. Errors with the "Updates only:"
+  // prefix are not translated because the error is dumped to the console
+  // instead of a panel.
   _errors: new Map([
     // The download failed due to network problems.
     ["ERROR_NETWORK_FAILURE", -1],
@@ -3800,11 +3802,9 @@ var AddonManager = {
     ["ERROR_FILE_ACCESS", -4],
     // The add-on must be signed and isn't.
     ["ERROR_SIGNEDSTATE_REQUIRED", -5],
-    // The downloaded add-on had a different type than expected.
-    // TODO Bug 1740792
+    // Updates only: The downloaded add-on had a different type than expected.
     ["ERROR_UNEXPECTED_ADDON_TYPE", -6],
-    // The addon did not have the expected ID
-    // TODO Bug 1740792
+    // Updates only: The addon did not have the expected ID.
     ["ERROR_INCORRECT_ID", -7],
     // The addon install_origins does not list the 3rd party domain.
     ["ERROR_INVALID_DOMAIN", -8],

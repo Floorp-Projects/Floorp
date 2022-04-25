@@ -11747,6 +11747,9 @@ void CodeGenerator::visitFrameArgumentsSlice(LFrameArgumentsSlice* lir) {
 
     LiveRegisterSet volatileRegs = liveVolatileRegs(lir);
     volatileRegs.takeUnchecked(temp);
+    if (output.volatile_()) {
+      volatileRegs.addUnchecked(output);
+    }
 
     masm.PushRegsInMask(volatileRegs);
     emitPostWriteBarrier(output);
@@ -11916,6 +11919,9 @@ void CodeGenerator::visitInlineArgumentsSlice(LInlineArgumentsSlice* lir) {
 
     LiveRegisterSet volatileRegs = liveVolatileRegs(lir);
     volatileRegs.takeUnchecked(temp);
+    if (output.volatile_()) {
+      volatileRegs.addUnchecked(output);
+    }
 
     masm.PushRegsInMask(volatileRegs);
     emitPostWriteBarrier(output);

@@ -716,20 +716,19 @@ AliasDataBuilder::readAlias(
         status = U_MEMORY_ALLOCATION_ERROR;
         return;
     }
-    int i = 0;
-    while (ures_hasNext(alias)) {
+    for (int i = 0; U_SUCCESS(status) && ures_hasNext(alias); i++) {
         LocalUResourceBundlePointer res(
             ures_getNextResource(alias, nullptr, &status));
         const char* aliasFrom = ures_getKey(res.getAlias());
         UnicodeString aliasTo =
             ures_getUnicodeStringByKey(res.getAlias(), "replacement", &status);
+        if (U_FAILURE(status)) return;
 
         checkType(aliasFrom);
         checkReplacement(aliasTo);
 
         rawTypes[i] = aliasFrom;
         rawIndexes[i] = strings->add(aliasTo, status);
-        i++;
     }
 }
 

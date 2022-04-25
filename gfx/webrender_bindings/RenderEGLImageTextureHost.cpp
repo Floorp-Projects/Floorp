@@ -83,8 +83,9 @@ wr::WrExternalImage RenderEGLImageTextureHost::Lock(
                                  mTextureHandle, aRendering);
   }
 
-  return NativeTextureToWrExternalImage(mTextureHandle, 0, 0, mSize.width,
-                                        mSize.height);
+  const auto uvs = GetUvCoords(mSize);
+  return NativeTextureToWrExternalImage(
+      mTextureHandle, uvs.first.x, uvs.first.y, uvs.second.x, uvs.second.y);
 }
 
 void RenderEGLImageTextureHost::Unlock() {}
