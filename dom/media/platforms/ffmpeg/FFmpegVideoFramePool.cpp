@@ -38,16 +38,21 @@ VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
 void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
     AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
     FFmpegLibWrapper* aLib) {
-  FFMPEG_LOG("VideoFrameSurface: VAAPI locking dmabuf surface UID = %d",
-             mSurface->GetUID());
   mLib = aLib;
   mAVHWDeviceContext = aLib->av_buffer_ref(aAVCodecContext->hw_device_ctx);
   mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
+  FFMPEG_LOG(
+      "VideoFrameSurface: VAAPI locking dmabuf surface UID = %d "
+      "mAVHWDeviceContext %p mHWAVBuffer %p",
+      mSurface->GetUID(), mAVHWDeviceContext, mHWAVBuffer);
 }
 
 void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
-  FFMPEG_LOG("VideoFrameSurface: VAAPI releasing dmabuf surface UID = %d",
-             mSurface->GetUID());
+  FFMPEG_LOG(
+      "VideoFrameSurface: VAAPI releasing dmabuf surface UID = %d "
+      "aForFrameRecycle %d mLib %p mAVHWDeviceContext %p mHWAVBuffer %p",
+      mSurface->GetUID(), aForFrameRecycle, mLib, mAVHWDeviceContext,
+      mHWAVBuffer);
 
   // It's possible to unref GPU data while IsUsed() is still set.
   // It can happens when VideoFramePool is deleted while decoder shutdown
@@ -58,6 +63,7 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
   if (mLib) {
     mLib->av_buffer_unref(&mHWAVBuffer);
     mLib->av_buffer_unref(&mAVHWDeviceContext);
+    mLib = nullptr;
   }
 
   // If we want to recycle the frame, make sure it's not used
