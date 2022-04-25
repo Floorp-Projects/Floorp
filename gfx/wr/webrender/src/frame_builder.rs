@@ -337,7 +337,7 @@ impl FrameBuilder {
                         // re-map the dependencies of any child primitives.
                         let surface = &scene.surfaces[surface_index.0];
                         let world_culling_rect = tile_cache.pre_update(
-                            surface.local_rect,
+                            surface.unclipped_local_rect,
                             surface_index,
                             &visibility_context,
                             &mut visibility_state,
