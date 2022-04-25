@@ -281,7 +281,7 @@ void ScriptPreloader::InvalidateCache() {
     // of any cache file we've already written out this session, which will
     // prevent us from falling back to the current session's cache file on the
     // next startup.
-    if (mSaveComplete && mChildCache) {
+    if (mSaveComplete && !mSaveThread && mChildCache) {
       mSaveComplete = false;
 
       StartCacheWrite();
