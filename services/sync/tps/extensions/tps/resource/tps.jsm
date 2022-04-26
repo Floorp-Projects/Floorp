@@ -1022,7 +1022,7 @@ var TPS = {
       let schema = JSON.parse(gTextDecoder.decode(bytes));
       Logger.logInfo("Successfully loaded schema");
 
-      this.pingValidator = new JsonSchema.validator(schema);
+      this.pingValidator = new JsonSchema.Validator(schema);
     } catch (e) {
       this.DumpError(
         `Failed to load ping schema relative to "${testFile}".`,
@@ -1203,6 +1203,10 @@ var TPS = {
         // fail validation).
         return;
       }
+      // Our ping may have some undefined values, which we rely on JSON stripping
+      // out as part of the ping submission - but our validator fails with them,
+      // so round-trip via JSON here to avoid that.
+      record = JSON.parse(JSON.stringify(record));
       const result = this.pingValidator.validate(record);
       if (!result.valid) {
         // Note that we already logged the record.

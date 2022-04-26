@@ -486,7 +486,9 @@ cfr:
   hasExposure: true
   exposureDescription: "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   isEarlyStartup: false
-  schema: "resource://activity-stream/schemas/CFR/ExtensionDoorhanger.schema.json"
+  schema:
+    uri: "resource://activity-stream/schemas/CFR/ExtensionDoorhanger.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json"
   variables: {}
 "moments-page":
   description: "Message with URL data for Messaging System"
@@ -494,7 +496,9 @@ cfr:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   isEarlyStartup: false
-  schema: "resource://activity-stream/schemas/OnboardingMessage/UpdateAction.schema.json"
+  schema:
+    uri: "resource://activity-stream/schemas/OnboardingMessage/UpdateAction.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json"
   variables: {}
 infobar:
   description: "Message template for Messaging System"
@@ -502,7 +506,9 @@ infobar:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   isEarlyStartup: false
-  schema: "resource://activity-stream/schemas/CFR/InfoBar.schema.json"
+  schema:
+    uri: "resource://activity-stream/schemas/CFR/InfoBar.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/templates/CFR/templates/InfoBar.schema.json"
   variables: {}
 spotlight:
   description: "Modal message template for Messaging System"
@@ -510,7 +516,9 @@ spotlight:
   exposureDescription: >-
     "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched."
   isEarlyStartup: false
-  schema: "resource://activity-stream/schemas/OnboardingMessage/Spotlight.schema.json"
+  schema:
+    uri: "resource://activity-stream/schemas/OnboardingMessage/Spotlight.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json"
   variables: {}
 pbNewtab:
   description: Message shown on the PB newtab for Messaging System
@@ -518,7 +526,9 @@ pbNewtab:
   exposureDescription: >-
     Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
   isEarlyStartup: false
-  schema: "resource://activity-stream/schemas/PBNewtab/NewtabPromoMessage.schema.json"
+  schema:
+    uri: "resource://activity-stream/schemas/PBNewtab/NewtabPromoMessage.schema.json"
+    path: "browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json"
   variables: {}
 syncAfterTabChange:
   description: "Schedule a sync after any tab change"

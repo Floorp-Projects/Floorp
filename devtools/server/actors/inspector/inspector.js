@@ -51,6 +51,8 @@
  */
 
 const Services = require("Services");
+
+const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 
@@ -142,10 +144,26 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       };
 
       if (this.window.document.readyState === "loading") {
-        this.window.addEventListener("DOMContentLoaded", domReady, {
-          capture: true,
-          once: true,
-        });
+        // Expose an abort controller for DOMContentLoaded to remove the
+        // listener unconditionally, even if the race hits the timeout.
+        const abortController = new AbortController();
+        Promise.race([
+          new Promise(r => {
+            this.window.addEventListener("DOMContentLoaded", r, {
+              capture: true,
+              once: true,
+              signal: abortController.signal,
+            });
+          }),
+          // The DOMContentLoaded event will never be emitted on documents stuck
+          // in the loading state, for instance if document.write was called
+          // without calling document.close.
+          // TODO: It is not clear why we are waiting for the event overall, see
+          // Bug 1766279 to actually stop listening to the event altogether.
+          new Promise(r => setTimeout(r, 500)),
+        ])
+          .then(domReady)
+          .finally(() => abortController.abort());
       } else {
         domReady();
       }

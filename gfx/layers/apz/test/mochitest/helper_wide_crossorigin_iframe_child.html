@@ -28,11 +28,9 @@ html {
     }
     let dp = getLastContentDisplayportFor("helper_wide_crossorigin_iframe_child_docelement", /* expectPainted = */ false);
     if (dp != null) {
-      let result = { x: dp.x, y: dp.y, w: dp.w, h: dp.h };
+      info("result " + dp.x + " " + dp.y + " " + dp.width + " " + dp.height);
 
-      info("result " + dp.x + " " + dp.y + " " + dp.w + " " + dp.h);
-
-      parent.postMessage(result, "*");
+      parent.postMessage(dp, "*");
     } else {
       info("no dp yet");
     }

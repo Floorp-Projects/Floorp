@@ -194,17 +194,14 @@ def check_and_add_flags(
             host_cxx_compiler: ("host C++", flags_collection.host_cxxflags),
         }[c]
 
-        @depends(c, when)
-        def result(c, when):
-            if when and c.type in ("clang", "gcc"):
-                return True
+        result = when
 
         if check:
 
             @depends(c, dependable(flags))
             def flags(c, flags):
                 # Don't error out just because clang complains about other things.
-                if c.type == "clang":
+                if c.type in ("clang", "clang-cl"):
                     flags += ["-Wno-error=unused-command-line-argument"]
 
                 return flags
@@ -240,9 +237,9 @@ def warnings_flags():
 #   when the warning flag is wanted.
 # - `check`, when not set, skips checking whether the flag is supported and
 #   adds it to the list of warning flags unconditionally. This is only meant
-#   for add_gcc_warning().
+#   for add_warning().
 @template
-def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
+def check_and_add_warning(warning, compiler=None, when=None, check=True):
     # GCC and clang will fail if given an unknown warning option like
     # -Wfoobar. But later versions won't fail if given an unknown negated
     # warning option like -Wno-foobar. So when we are checking for support
@@ -270,8 +267,8 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
 
 
 @template
-def add_gcc_warning(warning, compiler=None, when=None):
-    check_and_add_gcc_warning(warning, compiler, when, check=False)
+def add_warning(warning, compiler=None, when=None):
+    check_and_add_warning(warning, compiler, when, check=False)
 
 
 # Like the warning checks above, but for general compilation flags.
@@ -290,9 +287,9 @@ def compilation_flags():
 #   when the warning flag is wanted.
 # - `check`, when not set, skips checking whether the flag is supported and
 #   adds it to the list of flags unconditionally. This is only meant for
-#   add_gcc_flag().
+#   add_flag().
 @template
-def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
+def check_and_add_flag(flag, compiler=None, when=None, check=True):
     flags = ["-Werror", flag]
 
     return check_and_add_flags(
@@ -308,5 +305,5 @@ def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
 # - `when` (optional) is a @depends function or option name conditioning
 #   when the flag is wanted.
 @template
-def add_gcc_flag(warning, compiler=None, when=None):
-    check_and_add_gcc_flag(warning, compiler, when, check=False)
+def add_flag(warning, compiler=None, when=None):
+    check_and_add_flag(warning, compiler, when, check=False)

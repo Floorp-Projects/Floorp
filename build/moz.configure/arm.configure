@@ -146,7 +146,7 @@ def soft_float_option(value):
     return []
 
 
-check_and_add_gcc_flag(
+check_and_add_flag(
     "-mno-unaligned-access", when=depends(target.os)(lambda os: os == "Android")
 )
 

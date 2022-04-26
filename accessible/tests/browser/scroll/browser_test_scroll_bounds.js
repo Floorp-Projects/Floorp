@@ -14,10 +14,8 @@ function testCachedScrollPosition(acc, expectedX, expectedY) {
   try {
     cachedPosition = acc.cache.getStringProperty("scroll-position");
   } catch (e) {
-    // `getStringProperty` will throw an exception if we ask for
-    // a domain it doesn't have -- catch the exception here to
-    // prevent it from taking down the whole test.
-    console.info("Unable to fetch scroll position from cache!");
+    // If the key doesn't exist, this means 0, 0.
+    cachedPosition = "0, 0";
   }
 
   // The value we retrieve from the cache is in app units, but the values

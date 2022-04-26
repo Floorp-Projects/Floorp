@@ -649,8 +649,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     };
   }
 
-  getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen, includeNoodles) {
-    const screenClass = isCornerPosition ? "corner" : `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
+  getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles) {
+    const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
     return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${isLastCenteredScreen ? `dialog-last` : ``} ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
   }
 
@@ -720,10 +720,10 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     const includeNoodles = content.has_noodles;
     const isCornerPosition = content.position === "corner";
     const hideStepsIndicator = autoAdvance || isCornerPosition || isFirstCenteredScreen && isLastCenteredScreen;
-    const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' by checking
-    // if screen order is even or odd.
+    const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
+    // by checking if screen order is even or odd.
 
-    const screenClassName = this.getScreenClassName(isCornerPosition, isFirstCenteredScreen, isLastCenteredScreen, includeNoodles);
+    const screenClassName = isCornerPosition ? "" : this.getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles);
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""} ${screenClassName} ${textColorClass}`,
       role: "dialog",

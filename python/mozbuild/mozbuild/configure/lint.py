@@ -126,6 +126,8 @@ class LintSandbox(ConfigureSandbox):
             self._never,
         ):
             return
+        if not inspect.isroutine(obj._func):
+            return
         func, glob = self.unwrap(obj._func)
         func_args = inspect.getfullargspec(func)
         if func_args.varkw:
@@ -159,7 +161,7 @@ class LintSandbox(ConfigureSandbox):
         if isinstance(obj, (CombinedDependsFunction, TrivialDependsFunction)):
             return False
         if isinstance(obj, DependsFunction):
-            if obj in (self._always, self._never):
+            if obj in (self._always, self._never) or not inspect.isroutine(obj._func):
                 return False
             func, glob = self.unwrap(obj._func)
             # We allow missing --help dependencies for functions that:

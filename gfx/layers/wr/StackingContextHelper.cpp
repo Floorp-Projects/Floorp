@@ -185,22 +185,21 @@ StackingContextHelper::StackingContextHelper(
   } else if (!aAsr && !aContainerFrame && !aContainerItem &&
              aParams.mRootReferenceFrame) {
     // this is the root stacking context helper
-    float resolutionX = 1.f;
-    float resolutionY = 1.f;
+    Scale2D resolution;
 
     // If we are in a remote browser, then apply scaling from ancestor browsers
     if (mozilla::dom::BrowserChild* browserChild =
             mozilla::dom::BrowserChild::GetFrom(
                 aParams.mRootReferenceFrame->PresShell())) {
-      resolutionX *= browserChild->GetEffectsInfo().mScaleX;
-      resolutionY *= browserChild->GetEffectsInfo().mScaleY;
+      resolution = browserChild->GetEffectsInfo().mRasterScale;
     }
 
-    gfx::Matrix transform = gfx::Matrix::Scaling(resolutionX, resolutionY);
+    gfx::Matrix transform =
+        gfx::Matrix::Scaling(resolution.xScale, resolution.yScale);
 
     mInheritedTransform = transform * aParentSC.mInheritedTransform;
-    mScale = gfx::Size(aParentSC.mScale.width * resolutionX,
-                       aParentSC.mScale.height * resolutionY);
+    mScale = gfx::Size(aParentSC.mScale.width * resolution.xScale,
+                       aParentSC.mScale.height * resolution.yScale);
 
     MOZ_ASSERT(!aParams.mAnimated);
     mSnappingSurfaceTransform = transform * aParentSC.mSnappingSurfaceTransform;

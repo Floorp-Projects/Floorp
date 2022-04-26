@@ -400,16 +400,11 @@ def deprecated_option(*args, **kwargs):
 # The given object can be a literal value, a function that takes no argument,
 # or, for convenience, a @depends function.
 @template
-@imports(_from="inspect", _import="isfunction")
 @imports(_from="mozbuild.configure", _import="SandboxDependsFunction")
 def dependable(obj):
     if isinstance(obj, SandboxDependsFunction):
         return obj
-    if isfunction(obj):
-        return depends(when=True)(obj)
-    # Depend on --help to make lint happy if the dependable is used as an input
-    # to an option().
-    return depends("--help", when=True)(lambda _: obj)
+    return depends(when=True)(obj)
 
 
 always = dependable(True)
