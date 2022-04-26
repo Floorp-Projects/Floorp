@@ -23,6 +23,7 @@ function parameterstest(pc) {
       var validateEncoding = (a, b) => {
         is(a.rid, b.rid, "same rid");
         is(a.maxBitrate, b.maxBitrate, "same maxBitrate");
+        is(a.maxFramerate, b.maxFramerate, "same maxFramerate");
         is(a.scaleResolutionDownBy, b.scaleResolutionDownBy,
            "same scaleResolutionDownBy");
       };
@@ -51,6 +52,9 @@ function parameterstest(pc) {
                     { rid: "bar", maxBitrate: 10000, scaleResolutionDownBy: 4 }]
     }],
     [{ encodings: [{ maxBitrate: 10000, scaleResolutionDownBy: 4 }]}],
+    [{ encodings: [{ maxFramerate: 0.0, scaleResolutionDownBy: 1 }]}],
+    [{ encodings: [{ maxFramerate: 30.5, scaleResolutionDownBy: 1 }]}],
+    [{ encodings: [{ maxFramerate: -1, scaleResolutionDownBy: 1 }]}, "RangeError", "maxFramerate must be non-negative"],
     [{ encodings: [{ maxBitrate: 40000 },
                    { rid: "bar", maxBitrate: 10000 }] }, "TypeError", "Missing rid"],
     [{ encodings: [{ rid: "foo", maxBitrate: 40000 },
