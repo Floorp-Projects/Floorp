@@ -97,7 +97,7 @@ check_and_add_warning("-Wno-range-loop-analysis")
 check_and_add_warning("-Wc++2a-compat", cxx_compiler)
 
 # catches possible misuse of the comma operator
-check_and_add_warning("-Wcomma", cxx_compiler, when=not_clang_cl)
+check_and_add_warning("-Wcomma", cxx_compiler)
 
 # catches duplicated conditions in if-else-if chains
 check_and_add_warning("-Wduplicated-cond")
