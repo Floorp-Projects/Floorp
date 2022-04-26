@@ -52,6 +52,11 @@
           "world": {
             "$ref": "ExecutionWorld",
             "optional": true
+          },
+          "injectImmediately": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the injection should be triggered in the target as soon as possible (but not necessarily prior to page load)."
           }
         }
       },
