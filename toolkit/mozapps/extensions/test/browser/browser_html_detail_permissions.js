@@ -18,26 +18,34 @@ async function background() {
   });
 }
 
-async function getExtensions() {
+async function getExtensions({ manifest_version = 2 } = {}) {
   let extensions = {
+    "addon0@mochi.test": ExtensionTestUtils.loadExtension({
+      manifest: {
+        manifest_version,
+        name: "Test add-on 0",
+        applications: { gecko: { id: "addon0@mochi.test" } },
+        permissions: ["alarms", "contextMenus"],
+      },
+      background,
+      useAddonManager: "temporary",
+    }),
     "addon1@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
+        manifest_version,
         name: "Test add-on 1",
         applications: { gecko: { id: "addon1@mochi.test" } },
-        permissions: [
-          "alarms",
-          "contextMenus",
-          "tabs",
-          "webNavigation",
-          "<all_urls>",
-          "file://*/*",
-        ],
+        permissions: ["alarms", "contextMenus", "tabs", "webNavigation"],
+        // Note: for easier testing, we merge host_permissions into permissions
+        // when loading mv2 extensions, see ExtensionTestCommon.generateFiles.
+        host_permissions: ["<all_urls>", "file://*/*"],
       },
       background,
       useAddonManager: "temporary",
     }),
     "addon2@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
+        manifest_version,
         name: "Test add-on 2",
         applications: { gecko: { id: "addon2@mochi.test" } },
         permissions: ["alarms", "contextMenus"],
@@ -48,6 +56,7 @@ async function getExtensions() {
     }),
     "addon3@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
+        manifest_version,
         name: "Test add-on 3",
         version: "1.0",
         applications: { gecko: { id: "addon3@mochi.test" } },
@@ -59,6 +68,7 @@ async function getExtensions() {
     }),
     "addon4@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
+        manifest_version,
         name: "Test add-on 4",
         applications: { gecko: { id: "addon4@mochi.test" } },
         optional_permissions: ["tabs", "webNavigation"],
@@ -68,6 +78,7 @@ async function getExtensions() {
     }),
     "addon5@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
+        manifest_version,
         name: "Test add-on 5",
         applications: { gecko: { id: "addon5@mochi.test" } },
         optional_permissions: ["*://*/*"],
@@ -75,8 +86,47 @@ async function getExtensions() {
       background,
       useAddonManager: "temporary",
     }),
+    "priv6@mochi.test": ExtensionTestUtils.loadExtension({
+      isPrivileged: true,
+      manifest: {
+        manifest_version,
+        name: "Privileged add-on 6",
+        applications: { gecko: { id: "priv6@mochi.test" } },
+        optional_permissions: [
+          "file://*/*",
+          "about:reader*",
+          "resource://pdf.js/*",
+          "*://*.mozilla.com/*",
+          "*://*/*",
+          "<all_urls>",
+        ],
+      },
+      background,
+      useAddonManager: "temporary",
+    }),
+    "addon7@mochi.test": ExtensionTestUtils.loadExtension({
+      manifest: {
+        manifest_version,
+        name: "Test add-on 7",
+        applications: { gecko: { id: "addon7@mochi.test" } },
+        optional_permissions: ["<all_urls>", "*://*/*", "file://*/*"],
+      },
+      background,
+      useAddonManager: "temporary",
+    }),
+    "addon8@mochi.test": ExtensionTestUtils.loadExtension({
+      manifest: {
+        manifest_version,
+        name: "Test add-on 8",
+        applications: { gecko: { id: "addon8@mochi.test" } },
+        optional_permissions: ["*://*/*", "file://*/*", "<all_urls>"],
+      },
+      background,
+      useAddonManager: "temporary",
+    }),
     "other@mochi.test": ExtensionTestUtils.loadExtension({
       manifest: {
+        manifest_version,
         name: "Test add-on 6",
         applications: { gecko: { id: "other@mochi.test" } },
         optional_permissions: [
@@ -102,6 +152,8 @@ async function runTest(options) {
     permissions = [],
     optional_permissions = [],
     optional_enabled = [],
+    // Map<permission->string> to check optional_permissions against, if set.
+    optional_strings = {},
     view,
   } = options;
   if (extension) {
@@ -300,7 +352,14 @@ async function runTest(options) {
       // Check the row is a permission row with the correct key on the toggle
       // control.
       let row = permission_rows.shift();
-      let toggle = row.firstElementChild.lastElementChild;
+      let label = row.firstElementChild;
+
+      let str = optional_strings[name];
+      if (str) {
+        is(label.textContent, str, `Expected permission string ${str}`);
+      }
+
+      let toggle = label.lastElementChild;
       ok(
         row.classList.contains("permission-info"),
         `optional permission row for ${name}`
@@ -330,29 +389,72 @@ async function runTest(options) {
   }
 }
 
-add_task(async function testPermissionsView() {
+async function testPermissionsView({ manifestV3enabled, manifest_version }) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", manifestV3enabled]],
+  });
+
   // pre-set a permission prior to starting extensions.
   await ExtensionPermissions.add("addon4@mochi.test", {
     permissions: ["tabs"],
     origins: [],
   });
 
-  let extensions = await getExtensions();
+  let extensions = await getExtensions({ manifest_version });
 
   info("Check add-on with required permissions");
-  await runTest({
-    extension: extensions["addon1@mochi.test"],
-    permissions: ["<all_urls>", "tabs", "webNavigation"],
-  });
+  if (manifest_version < 3) {
+    await runTest({
+      extension: extensions["addon1@mochi.test"],
+      permissions: ["<all_urls>", "tabs", "webNavigation"],
+    });
+  } else {
+    await runTest({
+      extension: extensions["addon1@mochi.test"],
+      permissions: ["tabs", "webNavigation"],
+      optional_permissions: ["<all_urls>"],
+    });
+  }
 
   info("Check add-on without any displayable permissions");
-  await runTest({ extension: extensions["addon2@mochi.test"] });
+  await runTest({ extension: extensions["addon0@mochi.test"] });
+
+  info("Check add-on with only one optional origin.");
+  await runTest({
+    extension: extensions["addon2@mochi.test"],
+    optional_permissions: manifestV3enabled ? ["http://mochi.test/*"] : [],
+    optional_strings: {
+      "http://mochi.test/*": "Access your data for http://mochi.test",
+    },
+  });
 
   info("Check add-on with both required and optional permissions");
   await runTest({
     extension: extensions["addon3@mochi.test"],
     permissions: ["tabs"],
     optional_permissions: ["webNavigation", "<all_urls>"],
+  });
+
+  // Grant a specific optional host permission not listed in the manifest.
+  await ExtensionPermissions.add("addon3@mochi.test", {
+    permissions: [],
+    origins: ["https://example.com/*"],
+  });
+  extensions["addon3@mochi.test"].awaitMessage("permission-added");
+
+  info("Check addon3 again and expect the new optional host permission");
+  await runTest({
+    extension: extensions["addon3@mochi.test"],
+    permissions: ["tabs"],
+    optional_permissions: [
+      "webNavigation",
+      "<all_urls>",
+      ...(manifestV3enabled ? ["https://example.com/*"] : []),
+    ],
+    optional_enabled: ["https://example.com/*"],
+    optional_strings: {
+      "https://example.com/*": "Access your data for https://example.com",
+    },
   });
 
   info("Check add-on with only optional permissions, tabs is pre-enabled");
@@ -368,9 +470,48 @@ add_task(async function testPermissionsView() {
     optional_permissions: ["*://*/*"],
   });
 
+  info("Check privileged add-on with non-web origin permissions");
+  await runTest({
+    extension: extensions["priv6@mochi.test"],
+    optional_permissions: [
+      "<all_urls>",
+      ...(manifestV3enabled ? ["*://*.mozilla.com/*"] : []),
+    ],
+    optional_strings: {
+      "*://*.mozilla.com/*":
+        "Access your data for sites in the *://mozilla.com domain",
+    },
+  });
+
+  info(`Check that <all_urls> is used over other "all websites" permissions`);
+  await runTest({
+    extension: extensions["addon7@mochi.test"],
+    optional_permissions: ["<all_urls>"],
+  });
+
+  info(`And again with permissions in the opposite order in the manifest`);
+  await runTest({
+    extension: extensions["addon8@mochi.test"],
+    optional_permissions: ["<all_urls>"],
+  });
+
   for (let ext of Object.values(extensions)) {
     await ext.unload();
   }
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function testPermissionsView_MV2_manifestV3disabled() {
+  await testPermissionsView({ manifestV3enabled: false, manifest_version: 2 });
+});
+
+add_task(async function testPermissionsView_MV2_manifestV3enabled() {
+  await testPermissionsView({ manifestV3enabled: true, manifest_version: 2 });
+});
+
+add_task(async function testPermissionsView_MV3() {
+  await testPermissionsView({ manifestV3enabled: true, manifest_version: 3 });
 });
 
 add_task(async function testPermissionsViewStates() {
@@ -444,4 +585,35 @@ add_task(async function testPermissionsViewStates() {
 
   await closeView(view);
   await extension.unload();
+});
+
+add_task(async function testAllUrlsNotGrantedUnconditionally_MV3() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      host_permissions: ["<all_urls>"],
+    },
+    async background() {
+      const perms = await browser.permissions.getAll();
+      browser.test.sendMessage("granted-permissions", perms);
+    },
+  });
+
+  await extension.startup();
+  const perms = await extension.awaitMessage("granted-permissions");
+  ok(
+    !perms.origins.includes("<all_urls>"),
+    "Optional <all_urls> should not be granted as host permission yet"
+  );
+  ok(
+    !perms.permissions.includes("<all_urls>"),
+    "Optional <all_urls> should not be granted as an API permission neither"
+  );
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
 });
