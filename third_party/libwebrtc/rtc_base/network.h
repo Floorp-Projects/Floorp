@@ -293,6 +293,7 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
       nullptr;
   std::unique_ptr<NetworkMonitorInterface> network_monitor_
       RTC_GUARDED_BY(thread_);
+  bool allow_mac_based_ipv6_ = false;
 };
 
 // Represents a Unix-type network interface, with a name and single address.

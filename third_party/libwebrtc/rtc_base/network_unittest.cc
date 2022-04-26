@@ -33,6 +33,7 @@
 #if defined(WEBRTC_WIN)
 #include "rtc_base/logging.h"  // For RTC_LOG_GLE
 #endif
+#include "test/field_trial.h"
 
 using ::testing::Contains;
 using ::testing::Not;
@@ -1239,5 +1240,43 @@ TEST_F(NetworkTest, TestWhenNetworkListChangeReturnsChangedFlag) {
     EXPECT_EQ(ADAPTER_TYPE_CELLULAR_4G, list2[0]->type());
   }
 }
+
+#if defined(WEBRTC_POSIX)
+TEST_F(NetworkTest, IgnoresMACBasedIPv6Address) {
+  std::string ipv6_address = "2607:fc20:f340:1dc8:214:22ff:fe01:2345";
+  std::string ipv6_mask = "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF";
+  BasicNetworkManager manager;
+  manager.StartUpdating();
+
+  // IPSec interface; name is in form "ipsec<index>".
+  char if_name[20] = "ipsec11";
+  ifaddrs* addr_list =
+      InstallIpv6Network(if_name, ipv6_address, ipv6_mask, manager);
+
+  BasicNetworkManager::NetworkList list;
+  manager.GetNetworks(&list);
+  EXPECT_EQ(list.size(), 0u);
+  ReleaseIfAddrs(addr_list);
+}
+
+TEST_F(NetworkTest, WebRTC_AllowMACBasedIPv6Address) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-AllowMACBasedIPv6/Enabled/");
+  std::string ipv6_address = "2607:fc20:f340:1dc8:214:22ff:fe01:2345";
+  std::string ipv6_mask = "FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF:FFFF";
+  BasicNetworkManager manager;
+  manager.StartUpdating();
+
+  // IPSec interface; name is in form "ipsec<index>".
+  char if_name[20] = "ipsec11";
+  ifaddrs* addr_list =
+      InstallIpv6Network(if_name, ipv6_address, ipv6_mask, manager);
+
+  BasicNetworkManager::NetworkList list;
+  manager.GetNetworks(&list);
+  EXPECT_EQ(list.size(), 1u);
+  ReleaseIfAddrs(addr_list);
+}
+#endif
 
 }  // namespace rtc
