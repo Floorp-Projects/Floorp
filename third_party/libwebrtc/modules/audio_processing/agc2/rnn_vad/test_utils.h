@@ -77,6 +77,9 @@ ChunksFileReader CreatePitchBuffer24kHzReader();
 // Creates a reader for the LP residual and pitch information test data.
 ChunksFileReader CreateLpResidualAndPitchInfoReader();
 
+// Creates a reader for the sequence of GRU input vectors.
+std::unique_ptr<FileReader> CreateGruInputReader();
+
 // Creates a reader for the VAD probabilities test data.
 std::unique_ptr<FileReader> CreateVadProbsReader();
 

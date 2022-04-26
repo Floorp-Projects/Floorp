@@ -17,6 +17,7 @@
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
+#include "modules/audio_processing/agc2/rnn_vad/vector_math.h"
 
 namespace webrtc {
 namespace rnn_vad {
@@ -34,6 +35,7 @@ class GatedRecurrentLayer {
                       rtc::ArrayView<const int8_t> bias,
                       rtc::ArrayView<const int8_t> weights,
                       rtc::ArrayView<const int8_t> recurrent_weights,
+                      const AvailableCpuFeatures& cpu_features,
                       absl::string_view layer_name);
   GatedRecurrentLayer(const GatedRecurrentLayer&) = delete;
   GatedRecurrentLayer& operator=(const GatedRecurrentLayer&) = delete;
@@ -57,6 +59,7 @@ class GatedRecurrentLayer {
   const std::vector<float> bias_;
   const std::vector<float> weights_;
   const std::vector<float> recurrent_weights_;
+  const VectorMath vector_math_;
   // Over-allocated array with size equal to `output_size_`.
   std::array<float, kGruLayerMaxUnits> state_;
 };
