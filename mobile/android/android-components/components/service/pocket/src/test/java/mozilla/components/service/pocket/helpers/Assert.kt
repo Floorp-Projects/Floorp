@@ -77,3 +77,7 @@ fun assertResponseIsClosed(client: Client, response: Response, makeRequest: () -
 fun assertResponseIsFailure(response: Any) {
     assertEquals(PocketResponse.Failure::class.java, response.javaClass)
 }
+
+fun assertResponseIsSuccess(response: Any) {
+    assertEquals(PocketResponse.Success::class.java, response.javaClass)
+}

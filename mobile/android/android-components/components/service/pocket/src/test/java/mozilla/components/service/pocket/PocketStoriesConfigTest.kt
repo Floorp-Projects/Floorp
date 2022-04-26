@@ -9,6 +9,7 @@ import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.reflect.KVisibility
@@ -27,6 +28,13 @@ class PocketStoriesConfigTest {
         val defaultFrequency = Frequency(DEFAULT_REFRESH_INTERVAL, DEFAULT_REFRESH_TIMEUNIT)
         assertEquals(defaultFrequency.repeatInterval, config.frequency.repeatInterval)
         assertEquals(defaultFrequency.repeatIntervalTimeUnit, config.frequency.repeatIntervalTimeUnit)
+    }
+
+    @Test
+    fun `WHEN instantiating a PocketStoriesConfig THEN profile is by default null`() {
+        val config = PocketStoriesConfig(mock())
+
+        assertNull(config.profile)
     }
 
     @Test

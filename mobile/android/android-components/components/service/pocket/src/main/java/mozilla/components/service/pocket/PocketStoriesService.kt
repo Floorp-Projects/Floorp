@@ -22,6 +22,26 @@ class PocketStoriesService(
     private val useCases = PocketStoriesUseCases()
     internal var getStoriesUsecase = useCases.GetPocketStories(context)
     internal var updateStoriesTimesShownUsecase = useCases.UpdateStoriesTimesShown(context)
+    internal val getSpocsUsecase = when (pocketStoriesConfig.profile) {
+        null -> {
+            logger.debug("Missing profile for sponsored stories")
+            null
+        }
+        else -> useCases.GetSponsoredStories(
+            profileId = pocketStoriesConfig.profile.profileId,
+            appId = pocketStoriesConfig.profile.appId
+        )
+    }
+    internal val getDeleteProfileUsecase = when (pocketStoriesConfig.profile) {
+        null -> {
+            logger.debug("Missing profile for sponsored stories")
+            null
+        }
+        else -> useCases.DeleteUserProfile(
+            profileId = pocketStoriesConfig.profile.profileId,
+            appId = pocketStoriesConfig.profile.appId
+        )
+    }
 
     /**
      * Entry point to start fetching Pocket stories in the background.
@@ -59,6 +79,20 @@ class PocketStoriesService(
      */
     suspend fun getStories(): List<PocketRecommendedStory> {
         return getStoriesUsecase.invoke()
+    }
+
+    /**
+     * Get a list of Pocket sponsored stories based on the initial configuration.
+     */
+    suspend fun getSponsoredStories(): List<PocketSponsoredStory> {
+        return getSpocsUsecase?.invoke() ?: emptyList()
+    }
+
+    /**
+     * Delete all stored user data used for downloading personalized sponsored stories.
+     */
+    suspend fun deleteProfile(): Boolean {
+        return getDeleteProfileUsecase?.invoke() ?: false
     }
 
     /**

@@ -28,12 +28,14 @@ internal sealed class PocketResponse<T> {
          * - null, then Failure
          * - a Collection and empty, then Failure
          * - a String and empty, then Failure
+         * - a Boolean and false, then Failure
          * - otherwise, Success
          */
         internal fun <T : Any> wrap(target: T?): PocketResponse<T> = when (target) {
             null -> Failure()
             is Collection<*> -> if (target.isEmpty()) Failure() else Success(target)
             is String -> if (target.isBlank()) Failure() else Success(target)
+            is Boolean -> if (target == false) Failure() else Success(target)
             else -> Success(target)
         }
     }

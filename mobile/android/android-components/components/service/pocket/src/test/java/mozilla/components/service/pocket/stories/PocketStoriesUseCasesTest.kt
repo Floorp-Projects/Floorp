@@ -9,10 +9,13 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.api.PocketEndpoint
 import mozilla.components.service.pocket.api.PocketResponse
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
+import mozilla.components.service.pocket.spocs.SpocsEndpoint
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -30,6 +33,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import java.util.UUID
 import kotlin.reflect.KVisibility
 
 @ExperimentalCoroutinesApi // for runTest
@@ -38,11 +42,13 @@ class PocketStoriesUseCasesTest {
     private val usecases = spy(PocketStoriesUseCases())
     private val pocketRepo: PocketRecommendationsRepository = mock()
     private val pocketEndoint: PocketEndpoint = mock()
+    private val spocsProvider: SpocsEndpoint = mock()
 
     @Before
     fun setup() {
         doReturn(pocketEndoint).`when`(usecases).getPocketEndpoint(any())
         doReturn(pocketRepo).`when`(usecases).getPocketRepository(any())
+        doReturn(spocsProvider).`when`(usecases).getSpocsProvider(any(), any(), any())
     }
 
     @After
@@ -66,6 +72,16 @@ class PocketStoriesUseCasesTest {
     @Test
     fun `GIVEN a GetPocketStories THEN its visibility is public`() {
         assertClassVisibility(PocketStoriesUseCases.GetPocketStories::class, KVisibility.INTERNAL)
+    }
+
+    @Test
+    fun `GIVEN a GetSponsoredStories THEN its visibility is internal`() {
+        assertClassVisibility(PocketStoriesUseCases.GetSponsoredStories::class, KVisibility.INTERNAL)
+    }
+
+    @Test
+    fun `GIVEN a DeleteUserProfile THEN its visibility is internal`() {
+        assertClassVisibility(PocketStoriesUseCases.DeleteUserProfile::class, KVisibility.INTERNAL)
     }
 
     @Test
@@ -156,8 +172,84 @@ class PocketStoriesUseCasesTest {
         verify(pocketRepo).updateShownPocketRecommendedStories(updatedStories)
     }
 
+    @Test
+    fun `GIVEN PocketStoriesUseCases WHEN GetSponsoredStories is called THEN return the stories from provider`() = runTest {
+        PocketStoriesUseCases.initialize(mock())
+        val sponsoredStoriesUsecase = spy(
+            usecases.GetSponsoredStories(UUID.randomUUID(), "test")
+        )
+        val successfulResponse = getSuccessfulSponsoredStories()
+        doReturn(successfulResponse).`when`(spocsProvider).getSponsoredStories()
+        val expectedSponsoredStories = (successfulResponse as PocketResponse.Success).data.map {
+            PocketSponsoredStory(
+                title = it.title,
+                url = it.url,
+                imageUrl = it.imageSrc,
+                sponsor = it.sponsor,
+                shim = PocketSponsoredStoryShim(
+                    click = it.shim.click,
+                    impression = it.shim.impression
+                )
+            )
+        }
+
+        val result = sponsoredStoriesUsecase.invoke()
+
+        verify(spocsProvider).getSponsoredStories()
+        assertEquals(expectedSponsoredStories, result)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases WHEN GetSponsoredStories is called THEN return return an empty list if the provider fails`() = runTest {
+        PocketStoriesUseCases.initialize(mock())
+        val sponsoredStoriesUsecase = spy(
+            usecases.GetSponsoredStories(UUID.randomUUID(), "test")
+        )
+        val unsuccessfulResponse = PocketResponse.Failure<Any>()
+        doReturn(unsuccessfulResponse).`when`(spocsProvider).getSponsoredStories()
+        val expectedSponsoredStories = emptyList<List<PocketSponsoredStory>>()
+
+        val result = sponsoredStoriesUsecase.invoke()
+
+        verify(spocsProvider).getSponsoredStories()
+        assertEquals(expectedSponsoredStories, result)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases WHEN DeleteUserProfile is called THEN return true if profile deletion was successful`() = runTest {
+        PocketStoriesUseCases.initialize(mock())
+        val deleteProfileUsecase = spy(
+            usecases.DeleteUserProfile(UUID.randomUUID(), "test")
+        )
+        val successfulResponse = PocketResponse.Success(true)
+        doReturn(successfulResponse).`when`(spocsProvider).deleteProfile()
+
+        val result = deleteProfileUsecase.invoke()
+
+        verify(spocsProvider).deleteProfile()
+        assertTrue(result)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases WHEN DeleteUserProfile is called THEN return false if profile deletion was not successful`() = runTest {
+        PocketStoriesUseCases.initialize(mock())
+        val deleteProfileUsecase = spy(
+            usecases.DeleteUserProfile(UUID.randomUUID(), "test")
+        )
+        val unsuccessfulResponse = PocketResponse.Failure<Any>()
+        doReturn(unsuccessfulResponse).`when`(spocsProvider).deleteProfile()
+
+        val result = deleteProfileUsecase.invoke()
+
+        verify(spocsProvider).deleteProfile()
+        assertFalse(result)
+    }
+
     private fun getSuccessfulPocketStories() =
         PocketResponse.wrap(PocketTestResources.apiExpectedPocketStoriesRecommendations)
+
+    private fun getSuccessfulSponsoredStories() =
+        PocketResponse.wrap(PocketTestResources.apiExpectedPocketSpocs)
 
     private fun getFailedPocketStories() = PocketResponse.wrap(null)
 }
