@@ -22,7 +22,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 constexpr int kTestPitchPeriodsLow = 3 * kMinPitch48kHz / 2;
@@ -63,12 +62,12 @@ TEST(RnnVadTest, ComputeSlidingFrameSquareEnergies24kHzWithinTolerance) {
   const AvailableCpuFeatures cpu_features = GetAvailableCpuFeatures();
 
   PitchTestData test_data;
-  std::array<float, kNumPitchBufSquareEnergies> computed_output;
+  std::array<float, kRefineNumLags24kHz> computed_output;
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
-  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
+  ComputeSlidingFrameSquareEnergies24kHz(test_data.PitchBuffer24kHzView(),
                                          computed_output, cpu_features);
-  auto square_energies_view = test_data.GetPitchBufSquareEnergiesView();
+  auto square_energies_view = test_data.SquareEnergies24kHzView();
   ExpectNearAbsolute({square_energies_view.data(), square_energies_view.size()},
                      computed_output, 1e-3f);
 }
@@ -79,13 +78,12 @@ TEST(RnnVadTest, ComputePitchPeriod12kHzBitExactness) {
 
   PitchTestData test_data;
   std::array<float, kBufSize12kHz> pitch_buf_decimated;
-  Decimate2x(test_data.GetPitchBufView(), pitch_buf_decimated);
+  Decimate2x(test_data.PitchBuffer24kHzView(), pitch_buf_decimated);
   CandidatePitchPeriods pitch_candidates;
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
-  auto auto_corr_view = test_data.GetPitchBufAutoCorrCoeffsView();
-  pitch_candidates = ComputePitchPeriod12kHz(pitch_buf_decimated,
-                                             auto_corr_view, cpu_features);
+  pitch_candidates = ComputePitchPeriod12kHz(
+      pitch_buf_decimated, test_data.AutoCorrelation12kHzView(), cpu_features);
   EXPECT_EQ(pitch_candidates.best, 140);
   EXPECT_EQ(pitch_candidates.second_best, 142);
 }
@@ -98,16 +96,16 @@ TEST(RnnVadTest, ComputePitchPeriod48kHzBitExactness) {
   std::vector<float> y_energy(kRefineNumLags24kHz);
   rtc::ArrayView<float, kRefineNumLags24kHz> y_energy_view(y_energy.data(),
                                                            kRefineNumLags24kHz);
-  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
+  ComputeSlidingFrameSquareEnergies24kHz(test_data.PitchBuffer24kHzView(),
                                          y_energy_view, cpu_features);
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
   EXPECT_EQ(
-      ComputePitchPeriod48kHz(test_data.GetPitchBufView(), y_energy_view,
+      ComputePitchPeriod48kHz(test_data.PitchBuffer24kHzView(), y_energy_view,
                               /*pitch_candidates=*/{280, 284}, cpu_features),
       560);
   EXPECT_EQ(
-      ComputePitchPeriod48kHz(test_data.GetPitchBufView(), y_energy_view,
+      ComputePitchPeriod48kHz(test_data.PitchBuffer24kHzView(), y_energy_view,
                               /*pitch_candidates=*/{260, 284}, cpu_features),
       568);
 }
@@ -132,12 +130,12 @@ TEST_P(PitchCandidatesParametrization,
   std::vector<float> y_energy(kRefineNumLags24kHz);
   rtc::ArrayView<float, kRefineNumLags24kHz> y_energy_view(y_energy.data(),
                                                            kRefineNumLags24kHz);
-  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
+  ComputeSlidingFrameSquareEnergies24kHz(test_data.PitchBuffer24kHzView(),
                                          y_energy_view, params.cpu_features);
   EXPECT_EQ(
-      ComputePitchPeriod48kHz(test_data.GetPitchBufView(), y_energy_view,
+      ComputePitchPeriod48kHz(test_data.PitchBuffer24kHzView(), y_energy_view,
                               params.pitch_candidates, params.cpu_features),
-      ComputePitchPeriod48kHz(test_data.GetPitchBufView(), y_energy_view,
+      ComputePitchPeriod48kHz(test_data.PitchBuffer24kHzView(), y_energy_view,
                               swapped_pitch_candidates, params.cpu_features));
 }
 
@@ -179,13 +177,13 @@ TEST_P(ExtendedPitchPeriodSearchParametrizaion,
   std::vector<float> y_energy(kRefineNumLags24kHz);
   rtc::ArrayView<float, kRefineNumLags24kHz> y_energy_view(y_energy.data(),
                                                            kRefineNumLags24kHz);
-  ComputeSlidingFrameSquareEnergies24kHz(test_data.GetPitchBufView(),
+  ComputeSlidingFrameSquareEnergies24kHz(test_data.PitchBuffer24kHzView(),
                                          y_energy_view, params.cpu_features);
   // TODO(bugs.webrtc.org/8948): Add when the issue is fixed.
   // FloatingPointExceptionObserver fpe_observer;
   const auto computed_output = ComputeExtendedPitchPeriod48kHz(
-      test_data.GetPitchBufView(), y_energy_view, params.initial_pitch_period,
-      params.last_pitch, params.cpu_features);
+      test_data.PitchBuffer24kHzView(), y_energy_view,
+      params.initial_pitch_period, params.last_pitch, params.cpu_features);
   EXPECT_EQ(params.expected_pitch.period, computed_output.period);
   EXPECT_NEAR(params.expected_pitch.strength, computed_output.strength, 1e-6f);
 }
@@ -219,6 +217,5 @@ INSTANTIATE_TEST_SUITE_P(
     PrintTestIndexAndCpuFeatures<ExtendedPitchPeriodSearchParameters>);
 
 }  // namespace
-}  // namespace test
 }  // namespace rnn_vad
 }  // namespace webrtc

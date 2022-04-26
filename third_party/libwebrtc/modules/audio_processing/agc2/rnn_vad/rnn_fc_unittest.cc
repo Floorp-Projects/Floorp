@@ -24,7 +24,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 using ::rnnoise::kInputDenseBias;
@@ -104,6 +103,5 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 }  // namespace
-}  // namespace test
 }  // namespace rnn_vad
 }  // namespace webrtc

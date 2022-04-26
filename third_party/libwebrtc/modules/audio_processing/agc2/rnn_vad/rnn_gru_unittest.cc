@@ -21,7 +21,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 void TestGatedRecurrentLayer(
@@ -135,6 +134,5 @@ TEST(RnnVadTest, DISABLED_BenchmarkGatedRecurrentLayer) {
 }
 
 }  // namespace
-}  // namespace test
 }  // namespace rnn_vad
 }  // namespace webrtc

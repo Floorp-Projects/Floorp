@@ -9,6 +9,7 @@
  */
 
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -26,7 +27,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 constexpr int kFrameSize10ms48kHz = 480;
@@ -49,8 +49,6 @@ void DumpPerfStats(int num_samples,
 // constant below to true in order to write new expected output binary files.
 constexpr bool kWriteComputedOutputToFile = false;
 
-}  // namespace
-
 // Avoids that one forgets to set |kWriteComputedOutputToFile| back to false
 // when the expected output files are re-exported.
 TEST(RnnVadTest, CheckWriteComputedOutputIsFalse) {
@@ -71,12 +69,11 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
   RnnVad rnn_vad(cpu_features);
 
   // Init input samples and expected output readers.
-  auto samples_reader = CreatePcmSamplesReader(kFrameSize10ms48kHz);
-  auto expected_vad_prob_reader = CreateVadProbsReader();
+  std::unique_ptr<FileReader> samples_reader = CreatePcmSamplesReader();
+  std::unique_ptr<FileReader> expected_vad_prob_reader = CreateVadProbsReader();
 
-  // Input length.
-  const int num_frames = samples_reader.second;
-  ASSERT_GE(expected_vad_prob_reader.second, num_frames);
+  // Input length. The last incomplete frame is ignored.
+  const int num_frames = samples_reader->size() / kFrameSize10ms48kHz;
 
   // Init buffers.
   std::vector<float> samples_48k(kFrameSize10ms48kHz);
@@ -86,12 +83,12 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
   std::vector<float> expected_vad_prob(num_frames);
 
   // Read expected output.
-  ASSERT_TRUE(expected_vad_prob_reader.first->ReadChunk(expected_vad_prob));
+  ASSERT_TRUE(expected_vad_prob_reader->ReadChunk(expected_vad_prob));
 
   // Compute VAD probabilities on the downsampled input.
   float cumulative_error = 0.f;
   for (int i = 0; i < num_frames; ++i) {
-    samples_reader.first->ReadChunk(samples_48k);
+    ASSERT_TRUE(samples_reader->ReadChunk(samples_48k));
     decimator.Resample(samples_48k.data(), samples_48k.size(),
                        samples_24k.data(), samples_24k.size());
     bool is_silence = features_extractor.CheckSilenceComputeFeatures(
@@ -106,7 +103,7 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
   EXPECT_LT(cumulative_error / num_frames, 1e-4f);
 
   if (kWriteComputedOutputToFile) {
-    BinaryFileWriter<float> vad_prob_writer("new_vad_prob.dat");
+    FileWriter vad_prob_writer("new_vad_prob.dat");
     vad_prob_writer.WriteChunk(computed_vad_prob);
   }
 }
@@ -118,15 +115,16 @@ TEST_P(RnnVadProbabilityParametrization, RnnVadProbabilityWithinTolerance) {
 // - on android: run the this unit test adding "--logcat-output-file".
 TEST_P(RnnVadProbabilityParametrization, DISABLED_RnnVadPerformance) {
   // PCM samples reader and buffers.
-  auto samples_reader = CreatePcmSamplesReader(kFrameSize10ms48kHz);
-  const int num_frames = samples_reader.second;
+  std::unique_ptr<FileReader> samples_reader = CreatePcmSamplesReader();
+  // The last incomplete frame is ignored.
+  const int num_frames = samples_reader->size() / kFrameSize10ms48kHz;
   std::array<float, kFrameSize10ms48kHz> samples;
   // Pre-fetch and decimate samples.
   PushSincResampler decimator(kFrameSize10ms48kHz, kFrameSize10ms24kHz);
   std::vector<float> prefetched_decimated_samples;
   prefetched_decimated_samples.resize(num_frames * kFrameSize10ms24kHz);
   for (int i = 0; i < num_frames; ++i) {
-    samples_reader.first->ReadChunk(samples);
+    ASSERT_TRUE(samples_reader->ReadChunk(samples));
     decimator.Resample(samples.data(), samples.size(),
                        &prefetched_decimated_samples[i * kFrameSize10ms24kHz],
                        kFrameSize10ms24kHz);
@@ -151,7 +149,6 @@ TEST_P(RnnVadProbabilityParametrization, DISABLED_RnnVadPerformance) {
       rnn_vad.ComputeVadProbability(feature_vector, is_silence);
     }
     perf_timer.StopTimer();
-    samples_reader.first->SeekBeginning();
   }
   DumpPerfStats(num_frames * kFrameSize10ms24kHz, kSampleRate24kHz,
                 perf_timer.GetDurationAverage(),
@@ -180,6 +177,6 @@ INSTANTIATE_TEST_SUITE_P(
       return info.param.ToString();
     });
 
-}  // namespace test
+}  // namespace
 }  // namespace rnn_vad
 }  // namespace webrtc
