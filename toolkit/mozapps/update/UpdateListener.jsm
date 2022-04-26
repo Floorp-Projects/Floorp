@@ -127,7 +127,7 @@ var UpdateListener = {
     return promptTime - now;
   },
 
-  maybeShowUnsupportedNotification() {
+  init() {
     // Persist the unsupported notification across sessions. If at some point an
     // update is found this pref is cleared and the notification won't be shown.
     let url = Services.prefs.getCharPref(PREF_APP_UPDATE_UNSUPPORTED_URL, null);
@@ -136,6 +136,10 @@ var UpdateListener = {
         this.openUnsupportedUpdateUrl(win, url)
       );
     }
+  },
+
+  uninit() {
+    this.reset();
   },
 
   reset() {
