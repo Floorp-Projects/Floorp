@@ -10,4 +10,7 @@
 [Exposed=(Window,Worker)]
 interface PerformanceMark : PerformanceEntry
 {
+  [Throws]
+  constructor(DOMString markName, optional PerformanceMarkOptions markOptions = {});
+  readonly attribute any detail;
 };

@@ -27,6 +27,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerScope.h"
 
 #define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)
 
@@ -61,6 +62,27 @@ already_AddRefed<Performance> Performance::CreateForWorker(
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<Performance> performance = new PerformanceWorker(aWorkerPrivate);
+  return performance.forget();
+}
+
+/* static */
+already_AddRefed<Performance> Performance::Get(JSContext* aCx,
+                                               nsIGlobalObject* aGlobal) {
+  RefPtr<Performance> performance;
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
+  if (window) {
+    performance = window->GetPerformance();
+  } else {
+    const WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    if (!workerPrivate) {
+      return nullptr;
+    }
+
+    WorkerGlobalScope* scope = workerPrivate->GlobalScope();
+    MOZ_ASSERT(scope);
+    performance = scope->GetPerformance();
+  }
+
   return performance.forget();
 }
 
@@ -315,20 +337,38 @@ struct UserTimingMarker {
   }
 };
 
-void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
-  // We add nothing when 'privacy.resistFingerprinting' is on.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
-    return;
+already_AddRefed<PerformanceMark> Performance::Mark(
+    JSContext* aCx, const nsAString& aName,
+    const PerformanceMarkOptions& aMarkOptions, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> parent = GetParentObject();
+  if (!parent || parent->IsDying() || !parent->HasJSGlobal()) {
+    aRv.ThrowInvalidStateError("Global object is unavailable");
+    return nullptr;
   }
 
-  if (IsPerformanceTimingAttribute(aName)) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return;
+  GlobalObject global(aCx, parent->GetGlobalJSObject());
+  if (global.Failed()) {
+    aRv.ThrowInvalidStateError("Global object is unavailable");
+    return nullptr;
   }
 
   RefPtr<PerformanceMark> performanceMark =
-      new PerformanceMark(GetParentObject(), aName, Now());
-  InsertUserEntry(performanceMark);
+      PerformanceMark::Constructor(global, aName, aMarkOptions, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // To avoid fingerprinting in User Timing L2, we didn't add marks to the
+  // buffer so the user could not get timing data (which can be used to
+  // fingerprint) from the API. This may no longer be necessary (since
+  // performance.now() has reduced precision to protect against fingerprinting
+  // and performance.mark's primary fingerprinting issue is probably this timing
+  // data) but we need to do a more thorough reanalysis before we remove the
+  // fingerprinting protection. For now, we preserve the User Timing L2 behavior
+  // while supporting User Timing L3.
+  if (!nsContentUtils::ShouldResistFingerprinting()) {
+    InsertUserEntry(performanceMark);
+  }
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     Maybe<uint64_t> innerWindowId;
@@ -339,6 +379,8 @@ void Performance::Mark(const nsAString& aName, ErrorResult& aRv) {
                         MarkerInnerWindowId(innerWindowId), UserTimingMarker{},
                         aName, /* aIsMeasure */ false, Nothing{}, Nothing{});
   }
+
+  return performanceMark.forget();
 }
 
 void Performance::ClearMarks(const Optional<nsAString>& aName) {
