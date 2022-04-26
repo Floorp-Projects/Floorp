@@ -422,13 +422,6 @@ class BaseMarionetteArguments(ArgumentParser):
             " Pass in the debugger you want to use, eg pdb or ipdb.",
         )
         self.add_argument(
-            "--enable-fission",
-            action="store_true",
-            dest="enable_fission",
-            default=False,
-            help="Enable Fission (site isolation) in Gecko.",
-        )
-        self.add_argument(
             "-z",
             "--headless",
             action="store_true",
@@ -643,7 +636,6 @@ class BaseMarionetteTestRunner(object):
         verbose=0,
         emulator=False,
         headless=False,
-        enable_fission=False,
         **kwargs
     ):
         self._appName = None
@@ -687,20 +679,6 @@ class BaseMarionetteTestRunner(object):
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
         self.headless = headless
-
-        self.enable_fission = enable_fission
-        if self.enable_fission:
-            self.prefs.update(
-                {
-                    "fission.autostart": True,
-                }
-            )
-        else:
-            self.prefs.update(
-                {
-                    "fission.autostart": False,
-                }
-            )
 
         # If no repeat has been set, default to 30 extra runs
         if self.run_until_failure and repeat is None:
