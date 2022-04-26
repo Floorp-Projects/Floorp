@@ -113,7 +113,6 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
   eq &= (failIfMajorPerformanceCaveat == r.failIfMajorPerformanceCaveat);
   eq &= (xrCompatible == r.xrCompatible);
   eq &= (powerPreference == r.powerPreference);
-  eq &= (colorSpace == r.colorSpace);
   return eq;
 }
 
@@ -876,8 +875,7 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
   if (!ValidateAndInitFB(nullptr)) return false;
 
   {
-    const auto colorSpace = gfx::ToColorSpace2(mOptions.colorSpace);
-    auto presenter = swapChain.Acquire(mDefaultFB->mSize, colorSpace);
+    auto presenter = swapChain.Acquire(mDefaultFB->mSize);
     if (!presenter) {
       GenerateWarning("Swap chain surface creation failed.");
       LoseContext();
@@ -918,8 +916,7 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
                                  const gl::MozFramebuffer& fb) {
   OnEndOfFrame();
 
-  const auto colorSpace = gfx::ToColorSpace2(mOptions.colorSpace);
-  auto presenter = swapChain.Acquire(fb.mSize, colorSpace);
+  auto presenter = swapChain.Acquire(fb.mSize);
   if (!presenter) {
     GenerateWarning("Swap chain surface creation failed.");
     LoseContext();
@@ -1005,9 +1002,7 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
 
   InitSwapChain(*gl, srcFb->mSwapChain, consumerType);
 
-  // ColorSpace will need to be part of SwapChainOptions for DTWebgl.
-  const auto colorSpace = gfx::ToColorSpace2(mOptions.colorSpace);
-  auto presenter = srcFb->mSwapChain.Acquire(size, colorSpace);
+  auto presenter = srcFb->mSwapChain.Acquire(size);
   if (!presenter) {
     GenerateWarning("Swap chain surface creation failed.");
     LoseContext();
