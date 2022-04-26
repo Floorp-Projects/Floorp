@@ -57,7 +57,8 @@ RnnVad::RnnVad(const AvailableCpuFeatures& cpu_features)
               kOutputDenseBias,
               kOutputDenseWeights,
               ActivationFunction::kSigmoidApproximated,
-              cpu_features,
+              // The output layer is just 24x1. The unoptimized code is faster.
+              NoAvailableCpuFeatures(),
               /*layer_name=*/"FC2") {
   // Input-output chaining size checks.
   RTC_DCHECK_EQ(input_.size(), hidden_.input_size())

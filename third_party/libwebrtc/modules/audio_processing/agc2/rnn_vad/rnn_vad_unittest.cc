@@ -158,7 +158,7 @@ TEST_P(RnnVadProbabilityParametrization, DISABLED_RnnVadPerformance) {
 // Finds the relevant CPU features combinations to test.
 std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   std::vector<AvailableCpuFeatures> v;
-  v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
+  v.push_back(NoAvailableCpuFeatures());
   AvailableCpuFeatures available = GetAvailableCpuFeatures();
   if (available.avx2 && available.sse2) {
     v.push_back({/*sse2=*/true, /*avx2=*/true, /*neon=*/false});

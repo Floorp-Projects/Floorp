@@ -84,7 +84,7 @@ TEST_P(RnnFcParametrization, DISABLED_BenchmarkFullyConnectedLayer) {
 // Finds the relevant CPU features combinations to test.
 std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   std::vector<AvailableCpuFeatures> v;
-  v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
+  v.push_back(NoAvailableCpuFeatures());
   AvailableCpuFeatures available = GetAvailableCpuFeatures();
   if (available.sse2) {
     v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});

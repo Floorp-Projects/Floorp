@@ -55,4 +55,8 @@ AvailableCpuFeatures GetAvailableCpuFeatures() {
 #endif
 }
 
+AvailableCpuFeatures NoAvailableCpuFeatures() {
+  return {/*sse2=*/false, /*avx2=*/false, /*neon=*/false};
+}
+
 }  // namespace webrtc

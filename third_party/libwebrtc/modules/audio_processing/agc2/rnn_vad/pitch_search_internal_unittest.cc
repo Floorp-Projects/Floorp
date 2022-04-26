@@ -41,17 +41,13 @@ std::string PrintTestIndexAndCpuFeatures(
 // Finds the relevant CPU features combinations to test.
 std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   std::vector<AvailableCpuFeatures> v;
-  v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
+  v.push_back(NoAvailableCpuFeatures());
   AvailableCpuFeatures available = GetAvailableCpuFeatures();
   if (available.avx2) {
-    AvailableCpuFeatures features(
-        {/*sse2=*/false, /*avx2=*/true, /*neon=*/false});
-    v.push_back(features);
+    v.push_back({/*sse2=*/false, /*avx2=*/true, /*neon=*/false});
   }
   if (available.sse2) {
-    AvailableCpuFeatures features(
-        {/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
-    v.push_back(features);
+    v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
   }
   return v;
 }

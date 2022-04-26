@@ -18,7 +18,7 @@
 #include "api/array_view.h"
 #include "api/function_view.h"
 #include "modules/audio_processing/agc2/cpu_features.h"
-#include "rtc_base/system/arch.h"
+#include "modules/audio_processing/agc2/rnn_vad/vector_math.h"
 
 namespace webrtc {
 namespace rnn_vad {
@@ -56,15 +56,11 @@ class FullyConnectedLayer {
   void ComputeOutput(rtc::ArrayView<const float> input);
 
  private:
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-  void ComputeOutputSse2(rtc::ArrayView<const float> input);
-#endif
-
   const int input_size_;
   const int output_size_;
   const std::vector<float> bias_;
   const std::vector<float> weights_;
-  const AvailableCpuFeatures cpu_features_;
+  const VectorMath vector_math_;
   rtc::FunctionView<float(float)> activation_function_;
   // Over-allocated array with size equal to `output_size_`.
   std::array<float, kFullyConnectedLayerMaxUnits> output_;
