@@ -1150,7 +1150,9 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       mozilla::nsAutoMicroTask mt;
     }
 
-    nsresult rv = modReq->ProcessFetchedModuleSource();
+    // This calls OnFetchComplete directly since there's no need to start
+    // fetching an inline script.
+    nsresult rv = modReq->OnFetchComplete(NS_OK);
     if (NS_FAILED(rv)) {
       ReportErrorToConsole(modReq, rv);
       HandleLoadError(modReq, rv);
@@ -1385,7 +1387,7 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->GetScriptLoadContext()->mOffThreadToken);
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
-    return request->ProcessFetchedModuleSource();
+    return request->OnFetchComplete(NS_OK);
   }
 
   // Element may not be ready yet if speculatively compiling, so process the
@@ -3015,10 +3017,9 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     mDocument->AddBlockedNodeByClassifier(cont);
   }
 
-  if (aRequest->IsModuleRequest() &&
-      !aRequest->GetScriptLoadContext()->mIsInline) {
-    auto* request = aRequest->AsModuleRequest();
-    request->SetModuleFetchFinishedAndResumeWaitingRequests(aResult);
+  if (aRequest->IsModuleRequest()) {
+    MOZ_ASSERT(!aRequest->GetScriptLoadContext()->mIsInline);
+    aRequest->AsModuleRequest()->OnFetchComplete(aResult);
   }
 
   if (aRequest->GetScriptLoadContext()->mInDeferList) {
@@ -3343,7 +3344,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     }
 
     // Otherwise compile it right away and start fetching descendents.
-    return request->ProcessFetchedModuleSource();
+    return request->OnFetchComplete(NS_OK);
   }
 
   // The script is now loaded and ready to run.

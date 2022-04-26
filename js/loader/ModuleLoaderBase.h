@@ -155,10 +155,9 @@ class ModuleLoaderBase : public nsISupports {
   nsresult StartModuleLoad(ModuleLoadRequest* aRequest);
   nsresult RestartModuleLoad(ModuleLoadRequest* aRequest);
 
-  void SetModuleFetchFinishedAndResumeWaitingRequests(
-      ModuleLoadRequest* aRequest, nsresult aResult);
+  // Notify the module loader when a fetch started by StartFetch() completes.
+  nsresult OnFetchComplete(ModuleLoadRequest* aRequest, nsresult aRv);
 
-  nsresult ProcessFetchedModuleSource(ModuleLoadRequest* aRequest);
   bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
 
   // Implements https://html.spec.whatwg.org/#run-a-module-script
@@ -219,6 +218,9 @@ class ModuleLoaderBase : public nsISupports {
                                                 ModuleLoadRequest* aRequest);
   static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
                                           nsCOMArray<nsIURI>* aUrlsOut);
+
+  void SetModuleFetchFinishedAndResumeWaitingRequests(
+      ModuleLoadRequest* aRequest, nsresult aResult);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
