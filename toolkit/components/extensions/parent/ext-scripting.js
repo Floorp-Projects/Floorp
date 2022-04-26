@@ -85,7 +85,9 @@ const execute = (context, details, kind, method) => {
     options.frameIds = [0];
   }
 
-  options.runAt = "document_idle";
+  options.runAt = details.injectImmediately
+    ? "document_start"
+    : "document_idle";
   options.matchAboutBlank = true;
   options.wantReturnValue = true;
   // With this option set to `true`, we'll receive executeScript() results with
