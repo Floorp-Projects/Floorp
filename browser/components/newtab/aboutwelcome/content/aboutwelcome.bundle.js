@@ -25,6 +25,141 @@ module.exports = ReactDOM;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "AboutWelcomeUtils": () => (/* binding */ AboutWelcomeUtils),
+/* harmony export */   "DEFAULT_RTAMO_CONTENT": () => (/* binding */ DEFAULT_RTAMO_CONTENT)
+/* harmony export */ });
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// If we're in a subdialog, then this is a spotlight modal
+const page = document.querySelector(":root[dialogroot=true]") ? "spotlight" : "about:welcome";
+const AboutWelcomeUtils = {
+  handleUserAction(action) {
+    window.AWSendToParent("SPECIAL_ACTION", action);
+  },
+
+  sendImpressionTelemetry(messageId, context) {
+    window.AWSendEventTelemetry({
+      event: "IMPRESSION",
+      event_context: { ...context,
+        page
+      },
+      message_id: messageId
+    });
+  },
+
+  sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
+    const ping = {
+      event: eventName,
+      event_context: {
+        source: elementId,
+        page
+      },
+      message_id: messageId
+    };
+    window.AWSendEventTelemetry(ping);
+  },
+
+  async fetchFlowParams(metricsFlowUri) {
+    let flowParams;
+
+    try {
+      const response = await fetch(metricsFlowUri, {
+        credentials: "omit"
+      });
+
+      if (response.status === 200) {
+        const {
+          deviceId,
+          flowId,
+          flowBeginTime
+        } = await response.json();
+        flowParams = {
+          deviceId,
+          flowId,
+          flowBeginTime
+        };
+      } else {
+        console.error("Non-200 response", response); // eslint-disable-line no-console
+      }
+    } catch (e) {
+      flowParams = null;
+    }
+
+    return flowParams;
+  },
+
+  sendEvent(type, detail) {
+    document.dispatchEvent(new CustomEvent(`AWPage:${type}`, {
+      bubbles: true,
+      detail
+    }));
+  }
+
+};
+const DEFAULT_RTAMO_CONTENT = {
+  template: "return_to_amo",
+  utm_term: "rtamo",
+  content: {
+    position: "corner",
+    hero_text: {
+      string_id: "mr1-welcome-screen-hero-text"
+    },
+    title: {
+      string_id: "return-to-amo-subtitle"
+    },
+    has_noodles: true,
+    subtitle: {
+      string_id: "return-to-amo-addon-title"
+    },
+    help_text: {
+      string_id: "mr1-onboarding-welcome-image-caption"
+    },
+    backdrop: "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
+    primary_button: {
+      label: {
+        string_id: "return-to-amo-add-extension-label"
+      },
+      source_id: "ADD_EXTENSION_BUTTON",
+      action: {
+        type: "INSTALL_ADDON_FROM_URL",
+        data: {
+          url: null,
+          telemetrySource: "rtamo"
+        }
+      }
+    },
+    secondary_button: {
+      label: {
+        string_id: "onboarding-not-now-button-label"
+      },
+      source_id: "RTAMO_START_BROWSING_BUTTON",
+      action: {
+        type: "OPEN_AWESOME_BAR"
+      }
+    },
+    secondary_button_top: {
+      label: {
+        string_id: "mr1-onboarding-sign-in-button-label"
+      },
+      source_id: "RTAMO_FXA_SIGNIN_BUTTON",
+      action: {
+        data: {
+          entrypoint: "activity-stream-firstrun"
+        },
+        type: "SHOW_FIREFOX_ACCOUNTS",
+        addFlowParams: true
+      }
+    }
+  }
+};
+
+/***/ }),
+/* 4 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "MultiStageAboutWelcome": () => (/* binding */ MultiStageAboutWelcome),
 /* harmony export */   "SecondaryCTA": () => (/* binding */ SecondaryCTA),
 /* harmony export */   "StepsIndicator": () => (/* binding */ StepsIndicator),
@@ -32,8 +167,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(6);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(10);
 /* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(11);
@@ -342,7 +477,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
 }
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -436,137 +571,6 @@ const Localized = ({
 };
 
 /***/ }),
-/* 5 */
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "AboutWelcomeUtils": () => (/* binding */ AboutWelcomeUtils),
-/* harmony export */   "DEFAULT_RTAMO_CONTENT": () => (/* binding */ DEFAULT_RTAMO_CONTENT)
-/* harmony export */ });
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-const AboutWelcomeUtils = {
-  handleUserAction(action) {
-    window.AWSendToParent("SPECIAL_ACTION", action);
-  },
-
-  sendImpressionTelemetry(messageId, context) {
-    window.AWSendEventTelemetry({
-      event: "IMPRESSION",
-      event_context: context,
-      message_id: messageId
-    });
-  },
-
-  sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
-    const ping = {
-      event: eventName,
-      event_context: {
-        source: elementId,
-        page: "about:welcome"
-      },
-      message_id: messageId
-    };
-    window.AWSendEventTelemetry(ping);
-  },
-
-  async fetchFlowParams(metricsFlowUri) {
-    let flowParams;
-
-    try {
-      const response = await fetch(metricsFlowUri, {
-        credentials: "omit"
-      });
-
-      if (response.status === 200) {
-        const {
-          deviceId,
-          flowId,
-          flowBeginTime
-        } = await response.json();
-        flowParams = {
-          deviceId,
-          flowId,
-          flowBeginTime
-        };
-      } else {
-        console.error("Non-200 response", response); // eslint-disable-line no-console
-      }
-    } catch (e) {
-      flowParams = null;
-    }
-
-    return flowParams;
-  },
-
-  sendEvent(type, detail) {
-    document.dispatchEvent(new CustomEvent(`AWPage:${type}`, {
-      bubbles: true,
-      detail
-    }));
-  }
-
-};
-const DEFAULT_RTAMO_CONTENT = {
-  template: "return_to_amo",
-  utm_term: "rtamo",
-  content: {
-    position: "corner",
-    hero_text: {
-      string_id: "mr1-welcome-screen-hero-text"
-    },
-    title: {
-      string_id: "return-to-amo-subtitle"
-    },
-    has_noodles: true,
-    subtitle: {
-      string_id: "return-to-amo-addon-title"
-    },
-    help_text: {
-      string_id: "mr1-onboarding-welcome-image-caption"
-    },
-    backdrop: "#212121 url(chrome://activity-stream/content/data/content/assets/proton-bkg.avif) center/cover no-repeat fixed",
-    primary_button: {
-      label: {
-        string_id: "return-to-amo-add-extension-label"
-      },
-      source_id: "ADD_EXTENSION_BUTTON",
-      action: {
-        type: "INSTALL_ADDON_FROM_URL",
-        data: {
-          url: null,
-          telemetrySource: "rtamo"
-        }
-      }
-    },
-    secondary_button: {
-      label: {
-        string_id: "onboarding-not-now-button-label"
-      },
-      source_id: "RTAMO_START_BROWSING_BUTTON",
-      action: {
-        type: "OPEN_AWESOME_BAR"
-      }
-    },
-    secondary_button_top: {
-      label: {
-        string_id: "mr1-onboarding-sign-in-button-label"
-      },
-      source_id: "RTAMO_FXA_SIGNIN_BUTTON",
-      action: {
-        data: {
-          entrypoint: "activity-stream-firstrun"
-        },
-        type: "SHOW_FIREFOX_ACCOUNTS",
-        addFlowParams: true
-      }
-    }
-  }
-};
-
-/***/ }),
 /* 6 */
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
@@ -577,11 +581,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
 /* harmony import */ var _Colorways__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7);
 /* harmony import */ var _MobileDownloads__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8);
 /* harmony import */ var _Themes__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9);
-/* harmony import */ var _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(3);
+/* harmony import */ var _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(4);
 /* harmony import */ var _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(10);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -820,7 +824,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1008,7 +1012,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1067,7 +1071,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1122,8 +1126,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5);
+/* harmony import */ var _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1412,7 +1416,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* harmony import */ var _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
 /* harmony import */ var _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(11);
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1607,13 +1611,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
-/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(12);
+/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
+/* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(12);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -1645,17 +1651,12 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         domComplete,
         domInteractive
       } = performance.getEntriesByType("navigation").pop();
-      window.AWSendEventTelemetry({
-        event: "IMPRESSION",
-        event_context: {
-          domComplete,
-          domInteractive,
-          mountStart: performance.getEntriesByName("mount").pop().startTime,
-          domState,
-          source: this.props.UTMTerm,
-          page: "about:welcome"
-        },
-        message_id: this.props.messageId
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(this.props.messageId, {
+        domComplete,
+        domInteractive,
+        mountStart: performance.getEntriesByName("mount").pop().startTime,
+        domState,
+        source: this.props.UTMTerm
       });
     };
 
@@ -1681,7 +1682,7 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     } = this;
 
     if (props.template === "return_to_amo") {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_3__.ReturnToAMO, {
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__.ReturnToAMO, {
         message_id: props.messageId,
         type: props.type,
         name: props.name,
@@ -1692,7 +1693,7 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       });
     }
 
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__.MultiStageAboutWelcome, {
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.MultiStageAboutWelcome, {
       message_id: props.messageId,
       screens: props.screens,
       metricsFlowUri: this.state.metricsFlowUri,
