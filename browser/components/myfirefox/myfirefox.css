@@ -6,6 +6,12 @@ body {
   display: flex;
   align-items: stretch;
   padding-block: 40px 80px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Helvetica Neue", sans-serif;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: 700;
 }
 
 body > nav {
@@ -33,15 +39,116 @@ body > main > aside {
   display: none !important;
 }
 
+.empty-container {
+  background-color: rgba(240, 240, 244, 0.4);
+}
+
+.placeholder-content {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.page-section-header {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: 1fr auto;
+  column-gap: 16px;
+
+  grid-template-areas:
+      "head head head head head head head twisty"
+      "desc desc desc desc desc desc desc desc";
+}
+
+.page-section-header > h1 {
+  color: var(--in-content-deemphasized-text);
+  grid-area: head;
+  margin: 0;
+  padding-block: 4px;
+}
+
+.page-section-header > .twisty {
+  color: var(--in-content-deemphasized-text);
+  grid-area: twisty;
+  justify-self: end;
+  margin-block: 0;
+  min-width: 32px;
+  padding-inline: 7px;
+}
+
+.page-section-header > .section-description {
+  grid-area: desc;
+}
+
 .setup-step > h2 {
   margin-block: 4px;
 }
 
-.setup-step > .step-body {
-  display: flex;
-  justify-content: space-between;
-}
-
 .setup-step > .step-body > :is(.step-content, button.primary) {
   flex: 0 1 auto;
+}
+
+#recently-closed-tabs-container {
+  padding-top: 30px;
+}
+
+#recently-closed-tabs-container > p {
+  margin-top: 0;
+}
+
+.closed-tabs-list {
+  padding-inline-start: 0;
+}
+
+.closed-tab-li {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  column-gap: 16px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.closed-tab-li:hover {
+  background-color: var(--in-content-button-background-hover);
+  color: var(--in-content-button-text-color-hover);
+}
+
+.closed-tab-li:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+.closed-tab-li-title {
+  grid-column: span 5;
+  padding-inline-start: 2px;
+}
+
+.closed-tab-li-url {
+  grid-column: span 2;
+  text-decoration-line: underline;
+}
+
+.closed-tab-li-time {
+  text-align: end;
+}
+
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: inline-block;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  height: 16px;
+  width: 16px;
+  margin-top: 10px;
+}
+
+.icon.arrow-down {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+
+.icon.arrow-up {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+
+.icon.history {
+  background-image: url('chrome://browser/skin/history.svg');
 }

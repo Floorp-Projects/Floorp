@@ -17,6 +17,12 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm"
+);
+
 var navigatorBundle = Services.strings.createBundle(
   "chrome://browser/locale/browser.properties"
 );
@@ -156,16 +162,6 @@ var RecentlyClosedTabsAndWindowsMenuUtils = {
   },
 };
 
-function setImage(aItem, aElement) {
-  let iconURL = aItem.image;
-  // don't initiate a connection just to fetch a favicon (see bug 467828)
-  if (/^https?:/.test(iconURL)) {
-    iconURL = "moz-anno:favicon:" + iconURL;
-  }
-
-  aElement.setAttribute("image", iconURL);
-}
-
 /**
  * Create a UI entry for a recently closed tab or window.
  * @param aTagName
@@ -196,7 +192,7 @@ function createEntry(
 
   element.setAttribute("label", aMenuLabel);
   if (aClosedTab.image) {
-    setImage(aClosedTab, element);
+    PlacesUIUtils.setImage(aClosedTab, element);
   }
   if (!aIsWindowsFragment) {
     element.setAttribute("value", aIndex);
