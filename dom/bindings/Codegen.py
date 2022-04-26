@@ -18027,17 +18027,16 @@ class CGForwardDeclarations(CGWrapper):
                         d.interface.maplikeOrSetlikeOrIterable.valueType, config
                     )
 
+            # Add the atoms cache type, even if we don't need it.
+            builder.add(d.nativeType + "Atoms", isStruct=True)
+
+            for m in d.interface.members:
+                if m.isAttr() and m.type.isObservableArray():
+                    builder.forwardDeclareForType(m.type, config)
+
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks", isStruct=True)
         builder.addInMozillaDom("ProtoAndIfaceCache")
-        # Add the atoms cache type, even if we don't need it.
-        for d in descriptors:
-            # Iterators have native types that are template classes, so
-            # creating an 'Atoms' cache type doesn't work for them, and is one
-            # of the cases where we don't need it anyways.
-            if d.interface.isIteratorInterface():
-                continue
-            builder.add(d.nativeType + "Atoms", isStruct=True)
 
         for callback in callbacks:
             builder.addInMozillaDom(callback.identifier.name)
