@@ -641,6 +641,11 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     }
   }
 
+  nsAutoString name;
+  if (Name(name) != eNameFromSubtree && !name.IsVoid()) {
+    attributes->SetAttribute(nsGkAtoms::explicit_name, true);
+  }
+
   return attributes.forget();
 }
 
