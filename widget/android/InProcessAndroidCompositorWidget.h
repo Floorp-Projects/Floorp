@@ -32,6 +32,10 @@ class InProcessAndroidCompositorWidget final
 
   void OnCompositorSurfaceChanged() override;
 
+  // PlatformCompositorWidgetDelegate overrides
+
+  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
+
  private:
   nsWindow* mWindow;
 };

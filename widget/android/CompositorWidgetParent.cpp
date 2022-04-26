@@ -37,6 +37,12 @@ RefPtr<VsyncObserver> CompositorWidgetParent::GetVsyncObserver() const {
   return mVsyncObserver;
 }
 
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
+  NotifyClientSizeChanged(aClientSize);
+  return IPC_OK();
+}
+
 void CompositorWidgetParent::OnCompositorSurfaceChanged() {
   mSurface = java::GeckoServiceGpuProcess::RemoteCompositorSurfaceManager::
                  GetInstance()
