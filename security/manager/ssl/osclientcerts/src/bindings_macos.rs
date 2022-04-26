@@ -11,6 +11,7 @@
 
 pub type OSStatus = i32;
 pub const errSecSuccess: OSStatus = 0;
+pub const errSecItemNotFound: OSStatus = -25300;
 
 pub type SecKeyAlgorithm = CFStringRef;
 
