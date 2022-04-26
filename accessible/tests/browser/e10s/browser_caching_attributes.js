@@ -231,3 +231,31 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of the explicit-name attribute.
+ */
+addAccessibleTask(
+  `
+<h1 id="h1">content</h1>
+<button id="buttonContent">content</button>
+<button id="buttonLabel" aria-label="label">content</button>
+  `,
+  async function(browser, docAcc) {
+    const h1 = findAccessibleChildByID(docAcc, "h1");
+    testAbsentAttrs(h1, { "explicit-name": "" });
+    const buttonContent = findAccessibleChildByID(docAcc, "buttonContent");
+    testAbsentAttrs(buttonContent, { "explicit-name": "" });
+    const buttonLabel = findAccessibleChildByID(docAcc, "buttonLabel");
+    testAttrs(buttonLabel, { "explicit-name": "true" }, true);
+
+    info("Setting aria-label on h1");
+    let nameChanged = waitForEvent(EVENT_NAME_CHANGE, h1);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("h1").setAttribute("aria-label", "label");
+    });
+    await nameChanged;
+    testAttrs(h1, { "explicit-name": "true" }, true);
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
