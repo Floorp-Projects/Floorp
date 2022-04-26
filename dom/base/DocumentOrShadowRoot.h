@@ -209,9 +209,8 @@ class DocumentOrShadowRoot : public RadioGroupManager {
 
   nsIContent* Retarget(nsIContent* aContent) const;
 
-  void SetAdoptedStyleSheets(
-      const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
-      ErrorResult& aRv);
+  void OnSetAdoptedStyleSheets(StyleSheet&, uint32_t aIndex, ErrorResult&);
+  void OnDeleteAdoptedStyleSheets(StyleSheet&, uint32_t aIndex, ErrorResult&);
 
   // This is needed because ServoStyleSet / ServoAuthorData don't deal with
   // duplicate stylesheets (and it's unclear we'd want to support that as it'd
