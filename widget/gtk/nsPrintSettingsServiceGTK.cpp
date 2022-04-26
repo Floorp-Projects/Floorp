@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrintSettingsServiceGTK.h"
+
+#include "mozilla/embedding/PPrintingTypes.h"
 #include "nsPrintSettingsGTK.h"
 
 using namespace mozilla::embedding;
