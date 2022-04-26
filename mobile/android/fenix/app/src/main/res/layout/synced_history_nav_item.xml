@@ -4,8 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/recently_closed_nav"
+    android:id="@+id/synced_history_nav"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
@@ -25,40 +24,24 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_multiple_tabs" />
+        app:srcCompat="@drawable/ic_synced_tabs" />
 
     <TextView
-        android:id="@+id/recently_closed_tabs_header"
+        android:id="@+id/synced_history_header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:ellipsize="end"
         android:singleLine="true"
-        android:text="@string/library_recently_closed_tabs"
+        android:text="@string/history_synced_from_other_devices"
         android:textAlignment="viewStart"
         android:textColor="?attr/textPrimary"
         android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/recently_closed_tabs_description"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_goneMarginEnd="@dimen/library_item_icon_margin_horizontal" />
 
-    <TextView
-        android:id="@+id/recently_closed_tabs_description"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:textAlignment="viewStart"
-        android:textColor="?attr/textSecondary"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/icon"
-        app:layout_constraintTop_toBottomOf="@id/recently_closed_tabs_header"
-        app:layout_goneMarginEnd="@dimen/library_item_icon_margin_horizontal"
-        tools:text="2 tabs" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -276,6 +276,10 @@
             app:destination="@id/historySearchDialogFragment"
             app:popUpTo="@id/historySearchDialogFragment"
             app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_historyFragment_to_syncedHistoryFragment"
+            app:destination="@id/syncedHistoryFragment" />
     </fragment>
 
     <dialog
@@ -293,6 +297,18 @@
         <argument
             android:name="historyMetadataItems"
             app:argType="org.mozilla.fenix.library.history.History[]" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/syncedHistoryFragment"
+        android:name="org.mozilla.fenix.library.syncedhistory.SyncedHistoryFragment"
+        android:label="@string/history_from_other_devices"
+        tools:layout="@layout/fragment_synced_history">
+        <action
+            android:id="@+id/action_global_history_search_dialog"
+            app:destination="@id/historySearchDialogFragment"
+            app:popUpTo="@id/historySearchDialogFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

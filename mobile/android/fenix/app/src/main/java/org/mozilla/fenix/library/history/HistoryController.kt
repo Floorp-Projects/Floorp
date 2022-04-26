@@ -34,6 +34,10 @@ interface HistoryController {
     fun handleDeleteSome(items: Set<History>)
     fun handleRequestSync()
     fun handleEnterRecentlyClosed()
+    /**
+     * Navigates to [org.mozilla.fenix.library.syncedhistory.SyncedHistoryFragment]
+     */
+    fun handleEnterSyncedHistory()
 }
 
 @Suppress("TooManyFunctions", "LongParameterList")
@@ -98,8 +102,7 @@ class DefaultHistoryController(
     }
 
     override fun handleSearch() {
-        val directions =
-            HistoryFragmentDirections.actionGlobalHistorySearchDialog()
+        val directions = HistoryFragmentDirections.actionGlobalHistorySearchDialog()
         navController.navigateSafe(R.id.historyFragment, directions)
     }
 
@@ -157,5 +160,11 @@ class DefaultHistoryController(
             NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build()
         )
         Events.recentlyClosedTabsOpened.record(NoExtras())
+    }
+
+    override fun handleEnterSyncedHistory() {
+        navController.navigate(
+            HistoryFragmentDirections.actionHistoryFragmentToSyncedHistoryFragment()
+        )
     }
 }
