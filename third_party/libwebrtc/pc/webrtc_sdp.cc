@@ -3059,6 +3059,7 @@ bool ParseContent(const std::string& message,
       }
       media_desc->set_bandwidth(b);
       media_desc->set_bandwidth_type(bandwidth_type);
+      continue;
     }
 
     // Parse the media level connection data.
