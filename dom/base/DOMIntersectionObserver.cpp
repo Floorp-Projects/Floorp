@@ -598,6 +598,15 @@ void DOMIntersectionObserver::Update(Document* aDocument,
         return false;
       }
 
+      // "From the perspective of an IntersectionObserver, the skipped contents
+      // of an element are never intersecting the intersection root. This is
+      // true even if both the root and the target elements are in the skipped
+      // contents."
+      // https://drafts.csswg.org/css-contain/#cv-notes
+      if (targetFrame->AncestorHidesContent()) {
+        return false;
+      }
+
       // 2.1. If the intersection root is not the implicit root and target is
       // not a descendant of the intersection root in the containing block
       // chain, skip further processing for target.
