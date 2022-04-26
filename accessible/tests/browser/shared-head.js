@@ -906,19 +906,19 @@ async function testBoundsInContent(iframeDocAcc, id, browser) {
       ] = LayoutUtils.getBoundsForDOMElm(_id, content.document);
 
       ok(
-        _x >= expectedX - 5 || _x <= expectedX + 5,
+        _x >= expectedX - 5 && _x <= expectedX + 5,
         "Got " + _x + ", accurate x for " + _id
       );
       ok(
-        _y >= expectedY - 5 || _y <= expectedY + 5,
+        _y >= expectedY - 5 && _y <= expectedY + 5,
         "Got " + _y + ", accurate y for " + _id
       );
       ok(
-        _width >= expectedWidth - 5 || _width <= expectedWidth + 5,
+        _width >= expectedWidth - 5 && _width <= expectedWidth + 5,
         "Got " + _width + ", accurate width for " + _id
       );
       ok(
-        _height >= expectedHeight - 5 || _height <= expectedHeight + 5,
+        _height >= expectedHeight - 5 && _height <= expectedHeight + 5,
         "Got " + _height + ", accurate height for " + _id
       );
     }
