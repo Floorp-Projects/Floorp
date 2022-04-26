@@ -919,12 +919,10 @@ rtc_library("rtc_base") {
     #"openssl.h",
     #"openssl_adapter.cc",
     #"openssl_adapter.h",
-    #"openssl_certificate.cc",
-    #"openssl_certificate.h",
     #"openssl_digest.cc",
     #"openssl_digest.h",
-    #"openssl_identity.cc",
-    #"openssl_identity.h",
+    #"openssl_key_pair.cc",
+    #"openssl_key_pair.h",
     #"openssl_session_cache.cc",
     #"openssl_session_cache.h",
     #"openssl_stream_adapter.cc",
@@ -969,6 +967,22 @@ rtc_library("rtc_base") {
     #"unique_id_generator.cc",
     #"unique_id_generator.h",
   ]
+
+  if (rtc_openssl_is_boringssl) {
+    sources += [
+      "boringssl_certificate.cc",
+      "boringssl_certificate.h",
+      "boringssl_identity.cc",
+      "boringssl_identity.h",
+    ]
+  } else {
+    sources += [
+      "openssl_certificate.cc",
+      "openssl_certificate.h",
+      "openssl_identity.cc",
+      "openssl_identity.h",
+    ]
+  }
 
   if (build_with_chromium) {
     include_dirs = [ "../../boringssl/src/include" ]

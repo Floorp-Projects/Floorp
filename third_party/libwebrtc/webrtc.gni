@@ -238,6 +238,10 @@ declare_args() {
   rtc_build_libvpx = !build_with_mozilla
   rtc_build_opus = !build_with_mozilla
   rtc_build_ssl = !build_with_mozilla
+
+  # Can be set to true if rtc_build_ssl is false, but externally provided
+  # openssl library is boringssl, to enable the use of boringssl-specific code.
+  rtc_openssl_is_boringssl = !build_with_mozilla
   rtc_build_usrsctp = !build_with_mozilla
 
   # Enable libevent task queues on platforms that support it.
