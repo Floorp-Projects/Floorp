@@ -418,6 +418,7 @@ const MESSAGES = () => [
     groups: ["panel-test-provider"],
     template: "spotlight",
     content: {
+      id: "control",
       template: "multistage",
       backdrop: "transparent",
       transitions: true,
