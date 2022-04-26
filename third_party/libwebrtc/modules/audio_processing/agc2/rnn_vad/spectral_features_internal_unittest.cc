@@ -26,7 +26,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 // Generates the values for the array named |kOpusBandWeights24kHz20ms| in the
@@ -48,8 +47,6 @@ std::vector<float> ComputeTriangularFiltersWeights() {
   }
   return weights;
 }
-
-}  // namespace
 
 // Checks that the values returned by GetOpusScaleNumBins24kHz20ms() match the
 // Opus scale frequency boundaries.
@@ -158,6 +155,6 @@ TEST(RnnVadTest, ComputeDctWithinTolerance) {
   }
 }
 
-}  // namespace test
+}  // namespace
 }  // namespace rnn_vad
 }  // namespace webrtc

@@ -17,7 +17,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 template <typename T, int S, int N>
@@ -60,8 +59,6 @@ void TestSequenceBufferPushOp() {
   }
 }
 
-}  // namespace
-
 TEST(RnnVadTest, SequenceBufferGetters) {
   constexpr int buffer_size = 8;
   constexpr int chunk_size = 8;
@@ -100,6 +97,6 @@ TEST(RnnVadTest, SequenceBufferPushOpsFloating) {
   TestSequenceBufferPushOp<float, 23, 7>();   // Non-integer ratio.
 }
 
-}  // namespace test
+}  // namespace
 }  // namespace rnn_vad
 }  // namespace webrtc

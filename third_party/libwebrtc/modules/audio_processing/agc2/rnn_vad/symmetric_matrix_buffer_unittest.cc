@@ -15,7 +15,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 template <typename T, int S>
@@ -43,8 +42,6 @@ bool CheckPairsWithValueExist(
   }
   return false;
 }
-
-}  // namespace
 
 // Test that shows how to combine RingBuffer and SymmetricMatrixBuffer to
 // efficiently compute pair-wise scores. This test verifies that the evolution
@@ -105,6 +102,6 @@ TEST(RnnVadTest, SymmetricMatrixBufferUseCase) {
   }
 }
 
-}  // namespace test
+}  // namespace
 }  // namespace rnn_vad
 }  // namespace webrtc

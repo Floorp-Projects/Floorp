@@ -21,7 +21,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 constexpr int kTestFeatureVectorSize = kNumBands + 3 * kNumLowerBands + 1;
@@ -65,8 +64,6 @@ float* GetCepstralVariability(
 }
 
 constexpr float kInitialFeatureVal = -9999.f;
-
-}  // namespace
 
 // Checks that silence is detected when the input signal is 0 and that the
 // feature vector is written only if the input signal is not tagged as silence.
@@ -159,6 +156,6 @@ TEST(RnnVadTest, CepstralFeaturesConstantAverageZeroDerivative) {
                   feature_vector_last[kNumBands + 3 * kNumLowerBands]);
 }
 
-}  // namespace test
+}  // namespace
 }  // namespace rnn_vad
 }  // namespace webrtc

@@ -14,7 +14,6 @@
 
 namespace webrtc {
 namespace rnn_vad {
-namespace test {
 namespace {
 
 // Compare the elements of two given array views.
@@ -64,8 +63,6 @@ void TestRingBuffer() {
   }
 }
 
-}  // namespace
-
 // Check that for different delays, different views are returned.
 TEST(RnnVadTest, RingBufferArrayViews) {
   constexpr int s = 3;
@@ -110,6 +107,6 @@ TEST(RnnVadTest, RingBufferFloating) {
   TestRingBuffer<float, 5, 5>();
 }
 
-}  // namespace test
+}  // namespace
 }  // namespace rnn_vad
 }  // namespace webrtc

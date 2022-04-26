@@ -26,8 +26,8 @@ namespace rnn_vad {
 // Checks that the computed pitch period is bit-exact and that the computed
 // pitch gain is within tolerance given test input data.
 TEST(RnnVadTest, PitchSearchWithinTolerance) {
-  auto lp_residual_reader = test::CreateLpResidualAndPitchPeriodGainReader();
-  const int num_frames = std::min(lp_residual_reader.second, 300);  // Max 3 s.
+  ChunksFileReader reader = CreateLpResidualAndPitchInfoReader();
+  const int num_frames = std::min(reader.num_chunks, 300);  // Max 3 s.
   std::vector<float> lp_residual(kBufSize24kHz);
   float expected_pitch_period, expected_pitch_strength;
   const AvailableCpuFeatures cpu_features = GetAvailableCpuFeatures();
@@ -37,9 +37,9 @@ TEST(RnnVadTest, PitchSearchWithinTolerance) {
     // FloatingPointExceptionObserver fpe_observer;
     for (int i = 0; i < num_frames; ++i) {
       SCOPED_TRACE(i);
-      lp_residual_reader.first->ReadChunk(lp_residual);
-      lp_residual_reader.first->ReadValue(&expected_pitch_period);
-      lp_residual_reader.first->ReadValue(&expected_pitch_strength);
+      ASSERT_TRUE(reader.reader->ReadChunk(lp_residual));
+      ASSERT_TRUE(reader.reader->ReadValue(expected_pitch_period));
+      ASSERT_TRUE(reader.reader->ReadValue(expected_pitch_strength));
       int pitch_period =
           pitch_estimator.Estimate({lp_residual.data(), kBufSize24kHz});
       EXPECT_EQ(expected_pitch_period, pitch_period);
