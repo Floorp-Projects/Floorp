@@ -4,6 +4,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
+import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
 import { MultiStageAboutWelcome } from "./components/MultiStageAboutWelcome";
 import { ReturnToAMO } from "./components/ReturnToAMO";
 
@@ -27,17 +28,12 @@ class AboutWelcome extends React.PureComponent {
       const { domComplete, domInteractive } = performance
         .getEntriesByType("navigation")
         .pop();
-      window.AWSendEventTelemetry({
-        event: "IMPRESSION",
-        event_context: {
-          domComplete,
-          domInteractive,
-          mountStart: performance.getEntriesByName("mount").pop().startTime,
-          domState,
-          source: this.props.UTMTerm,
-          page: "about:welcome",
-        },
-        message_id: this.props.messageId,
+      AboutWelcomeUtils.sendImpressionTelemetry(this.props.messageId, {
+        domComplete,
+        domInteractive,
+        mountStart: performance.getEntriesByName("mount").pop().startTime,
+        domState,
+        source: this.props.UTMTerm,
       });
     };
     if (document.readyState === "complete") {
