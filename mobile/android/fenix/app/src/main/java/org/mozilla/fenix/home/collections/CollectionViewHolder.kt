@@ -2,154 +2,103 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.home.sessioncontrol.viewholders
+package org.mozilla.fenix.home.collections
 
-import android.content.Context
 import android.view.View
-import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat.SRC_IN
-import mozilla.components.browser.menu.BrowserMenuBuilder
-import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.browser.state.selector.normalTabs
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LifecycleOwner
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.R
-import org.mozilla.fenix.databinding.CollectionHomeListRowBinding
-import org.mozilla.fenix.utils.view.ViewHolder
-import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getIconColor
-import org.mozilla.fenix.ext.increaseTapArea
-import org.mozilla.fenix.ext.removeAndDisable
-import org.mozilla.fenix.ext.removeTouchDelegate
-import org.mozilla.fenix.ext.showAndEnable
+import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
-import org.mozilla.fenix.theme.ThemeManager
 
+/**
+ * [RecyclerView.ViewHolder] for displaying an individual [TabCollection].
+ * Clients are expected to use [bindSession] to link a particular [TabCollection] to be displayed
+ * otherwise this will be an empty, 0 size View.
+ *
+ * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
+ * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
+ * @param interactor [CollectionInteractor] callback for user interactions.
+ */
 class CollectionViewHolder(
-    view: View,
-    val interactor: CollectionInteractor
-) : ViewHolder(view) {
-
-    private lateinit var collection: TabCollection
-    private var expanded = false
-    private var collectionMenu: CollectionItemMenu
-    private var binding: CollectionHomeListRowBinding
+    composeView: ComposeView,
+    viewLifecycleOwner: LifecycleOwner,
+    private val interactor: CollectionInteractor,
+) : ComposeViewHolder(composeView, viewLifecycleOwner) {
+    private var collectionData = CollectionInfo()
 
     init {
-        binding = CollectionHomeListRowBinding.bind(view)
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
 
-        collectionMenu = CollectionItemMenu(
-            view.context,
-            { view.context.components.core.store.state.normalTabs.isNotEmpty() }
-        ) {
-            when (it) {
-                is CollectionItemMenu.Item.DeleteCollection -> interactor.onDeleteCollectionTapped(collection)
-                is CollectionItemMenu.Item.AddTab -> interactor.onCollectionAddTabTapped(collection)
-                is CollectionItemMenu.Item.RenameCollection -> interactor.onRenameCollectionTapped(collection)
-                is CollectionItemMenu.Item.OpenTabs -> interactor.onCollectionOpenTabsTapped(collection)
+    @Composable
+    override fun Content() {
+        val collectionInfo by remember { mutableStateOf(collectionData) }
+
+        collectionInfo.collection?.let { collection ->
+            val menuItems = getMenuItems(
+                collection = collection,
+                onOpenTabsTapped = interactor::onCollectionOpenTabsTapped,
+                onRenameCollectionTapped = interactor::onRenameCollectionTapped,
+                onAddTabTapped = interactor::onCollectionAddTabTapped,
+                onDeleteCollectionTapped = interactor::onDeleteCollectionTapped,
+            )
+
+            Column {
+                Spacer(Modifier.height(12.dp))
+
+                Collection(
+                    collection = collection,
+                    expanded = collectionInfo.isExpanded,
+                    menuItems = menuItems,
+                    onToggleCollectionExpanded = interactor::onToggleCollectionExpanded,
+                    onCollectionShareTabsClicked = interactor::onCollectionShareTabsClicked,
+                    onCollectionMenuOpened = interactor::onCollectionMenuOpened,
+                )
             }
-        }
-
-        binding.collectionOverflowButton.setOnClickListener {
-            interactor.onCollectionMenuOpened()
-            collectionMenu.menuBuilder
-                .build(view.context)
-                .show(anchor = it)
-        }
-
-        binding.collectionShareButton.setOnClickListener {
-            interactor.onCollectionShareTabsClicked(collection)
-        }
-
-        view.clipToOutline = true
-        view.setOnClickListener {
-            interactor.onToggleCollectionExpanded(collection, !expanded)
         }
     }
 
+    /**
+     * Dynamically replace the current [TabCollection] shown in this `ViewHolder`.
+     *
+     * @param collection [TabCollection] to be shown
+     * @param expanded Whether to show the collection as expanded or collapsed.
+     */
     fun bindSession(collection: TabCollection, expanded: Boolean) {
-        this.collection = collection
-        this.expanded = expanded
-        updateCollectionUI()
-    }
-
-    private fun updateCollectionUI() {
-        binding.collectionTitle.text = collection.title
-
-        itemView.isActivated = expanded
-        if (expanded) {
-            binding.collectionShareButton.apply {
-                showAndEnable()
-                increaseTapArea(buttonIncreaseDps)
-            }
-            binding.collectionOverflowButton.apply {
-                showAndEnable()
-                increaseTapArea(buttonIncreaseDps)
-            }
-        } else {
-
-            binding.collectionShareButton.apply {
-                removeAndDisable()
-                removeTouchDelegate()
-            }
-            binding.collectionOverflowButton.apply {
-                removeAndDisable()
-                removeTouchDelegate()
-            }
-        }
-
-        binding.collectionIcon.colorFilter = createBlendModeColorFilterCompat(
-            collection.getIconColor(itemView.context),
-            SRC_IN
+        collectionData = CollectionInfo(
+            collection = collection,
+            isExpanded = expanded
         )
     }
 
     companion object {
-        const val buttonIncreaseDps = 16
-        const val LAYOUT_ID = R.layout.collection_home_list_row
-        const val maxTitleLength = 20
+        val LAYOUT_ID = View.generateViewId()
     }
 }
 
-class CollectionItemMenu(
-    private val context: Context,
-    private val shouldShowAddTab: () -> Boolean,
-    private val onItemTapped: (Item) -> Unit = {}
-) {
-    sealed class Item {
-        object DeleteCollection : Item()
-        object AddTab : Item()
-        object RenameCollection : Item()
-        object OpenTabs : Item()
-    }
-
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
-
-    private val menuItems by lazy {
-        listOf(
-            SimpleBrowserMenuItem(
-                context.getString(R.string.collection_open_tabs)
-            ) {
-                onItemTapped.invoke(Item.OpenTabs)
-            },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.collection_rename)
-            ) {
-                onItemTapped.invoke(Item.RenameCollection)
-            },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.add_tab)
-            ) {
-                onItemTapped.invoke(Item.AddTab)
-            }.apply { visible = shouldShowAddTab },
-
-            SimpleBrowserMenuItem(
-                context.getString(R.string.collection_delete),
-                textColorResource = ThemeManager.resolveAttribute(R.attr.textWarning, context)
-            ) {
-                onItemTapped.invoke(Item.DeleteCollection)
-            }
-        )
-    }
-}
+/**
+ * Wrapper over a [TabCollection] adding information about whether it should be shown as expanded or collapsed.
+ *
+ * @property collection [TabCollection] to display.
+ * @property isExpanded Whether the collection is expanded to show it's containing tabs or not.
+ */
+@Stable
+private data class CollectionInfo(
+    val collection: TabCollection? = null,
+    val isExpanded: Boolean = false,
+)

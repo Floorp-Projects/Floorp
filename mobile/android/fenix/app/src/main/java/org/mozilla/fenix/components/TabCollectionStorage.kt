@@ -21,8 +21,9 @@ import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.toShortUrl
-import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.perf.StrictModeManager
+
+private const val COLLECTION_MAX_TITLE_LENGTH = 20
 
 class TabCollectionStorage(
     private val context: Context,
@@ -106,10 +107,10 @@ fun TabCollection.description(context: Context): String {
     return this.tabs
         .map { it.url.toShortUrl(context.components.publicSuffixList) }
         .map {
-            if (it.length > CollectionViewHolder.maxTitleLength) {
+            if (it.length > COLLECTION_MAX_TITLE_LENGTH) {
                 it.substring(
                     0,
-                    CollectionViewHolder.maxTitleLength
+                    COLLECTION_MAX_TITLE_LENGTH
                 ) + "…"
             } else {
                 it
