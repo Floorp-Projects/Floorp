@@ -137,7 +137,7 @@ class InputPipe extends Pipe {
     }
 
     if (read < buffer.byteLength) {
-      return ArrayBuffer.transfer(buffer, read);
+      return ArrayBuffer_transfer(buffer, read);
     }
 
     return buffer;

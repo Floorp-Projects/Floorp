@@ -224,7 +224,7 @@ class InputPipe extends Pipe {
       if (read == buffer.byteLength) {
         resolve(buffer);
       } else {
-        resolve(ArrayBuffer.transfer(buffer, read));
+        resolve(ArrayBuffer_transfer(buffer, read));
       }
 
       if (this.pending.length) {
