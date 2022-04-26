@@ -971,6 +971,26 @@ TEST_F(WebRtcVideoEngineTest,
   EXPECT_THAT(engine_.send_codecs(), Contains(flexfec));
 }
 
+// Test that the FlexFEC "codec" gets assigned to the lower payload type range
+TEST_F(WebRtcVideoEngineTest, Flexfec03LowerPayloadTypeRange) {
+  encoder_factory_->AddSupportedVideoCodecType("VP8");
+
+  auto flexfec = Field("name", &VideoCodec::name, "flexfec-03");
+
+  // FlexFEC is active with field trial.
+  RTC_DCHECK(!override_field_trials_);
+  override_field_trials_ = std::make_unique<webrtc::test::ScopedFieldTrials>(
+      "WebRTC-FlexFEC-03-Advertised/Enabled/");
+  auto send_codecs = engine_.send_codecs();
+  auto it = std::find_if(send_codecs.begin(), send_codecs.end(),
+                         [](const cricket::VideoCodec& codec) {
+                           return codec.name == "flexfec-03";
+                         });
+  ASSERT_NE(it, send_codecs.end());
+  EXPECT_LE(35, it->id);
+  EXPECT_GE(65, it->id);
+}
+
 // Test that codecs are added in the order they are reported from the factory.
 TEST_F(WebRtcVideoEngineTest, ReportSupportedCodecs) {
   encoder_factory_->AddSupportedVideoCodecType("VP8");
