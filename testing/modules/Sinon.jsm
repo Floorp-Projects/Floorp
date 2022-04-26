@@ -20,18 +20,20 @@ const {
   setTimeoutWithTarget,
 } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 // eslint-disable-next-line no-unused-vars
-const global = {
-  clearInterval,
-  clearTimeout,
-  setInterval,
-  setIntervalWithTarget,
-  setTimeout,
-  setTimeoutWithTarget,
-  Date,
+const obj = {
+  global: {
+    clearInterval,
+    clearTimeout,
+    setInterval,
+    setIntervalWithTarget,
+    setTimeout,
+    setTimeoutWithTarget,
+    Date,
+  },
 };
 Services.scriptloader.loadSubScript(
   "resource://testing-common/sinon-7.2.7.js",
-  this
+  obj
 );
-const sinon = global.sinon;
+const sinon = obj.global.sinon;
 // ================================================
