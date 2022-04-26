@@ -131,11 +131,13 @@ class ModuleLoaderBase : public nsISupports {
   // called if CanStartLoad returned true.
   virtual nsresult StartFetch(ModuleLoadRequest* aRequest) = 0;
 
-  virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
   virtual nsresult CompileOrFinishModuleScript(
       JSContext* aCx, JS::Handle<JSObject*> aGlobal,
       JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
       JS::MutableHandle<JSObject*> aModuleScript) = 0;
+
+  // Called when a module script has been loaded, including imports.
+  virtual void OnModuleLoadComplete(ModuleLoadRequest* aRequest) = 0;
 
   // Public API methods.
 
