@@ -12,7 +12,6 @@ const EXPORTED_SYMBOLS = [
   "assert",
   "log",
   "text",
-  "wire",
   "showFilePicker",
   "optionsPopupMenu",
 ];
@@ -126,50 +125,6 @@ function forEach(object, callback) {
  */
 function log() {
   console.logStringMessage(Array.prototype.slice.call(arguments).join(" "));
-}
-
-/**
- * Wire up element(s) matching selector with attributes, event listeners, etc.
- *
- * @param DOMElement root
- *        The element to use for querySelectorAll.
- *        Can be null if selector is a DOMElement.
- * @param string|DOMElement selectorOrElement
- *        Selector string or DOMElement for the element(s) to wire up.
- * @param object descriptor
- *        An object describing how to wire matching selector,
- *        supported properties are "events" and "attributes" taking
- *        objects themselves.
- *        Each key of properties above represents the name of the event or
- *        attribute, with the value being a function used as an event handler or
- *        string to use as attribute value.
- *        If descriptor is a function, the argument is equivalent to :
- *        {events: {'click': descriptor}}
- */
-function wire(root, selectorOrElement, descriptor) {
-  let matches;
-  if (typeof selectorOrElement == "string") {
-    // selector
-    matches = root.querySelectorAll(selectorOrElement);
-    if (!matches.length) {
-      return;
-    }
-  } else {
-    // element
-    matches = [selectorOrElement];
-  }
-
-  if (typeof descriptor == "function") {
-    descriptor = { events: { click: descriptor } };
-  }
-
-  for (let i = 0; i < matches.length; i++) {
-    const element = matches[i];
-    forEach(descriptor.events, function(name, handler) {
-      element.addEventListener(name, handler);
-    });
-    forEach(descriptor.attributes, element.setAttribute);
-  }
 }
 
 /**
