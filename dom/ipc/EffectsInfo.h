@@ -22,18 +22,17 @@ class EffectsInfo {
   EffectsInfo() { *this = EffectsInfo::FullyHidden(); }
 
   static EffectsInfo VisibleWithinRect(
-      const nsRect& aVisibleRect, float aScaleX, float aScaleY,
+      const nsRect& aVisibleRect, const Scale2D& aRasterScale,
       const ParentLayerToScreenScale2D& aTransformToAncestorScale) {
-    return EffectsInfo{aVisibleRect, aScaleX, aScaleY,
-                       aTransformToAncestorScale};
+    return EffectsInfo{aVisibleRect, aRasterScale, aTransformToAncestorScale};
   }
   static EffectsInfo FullyHidden() {
-    return EffectsInfo{nsRect(), 1.0f, 1.0f, ParentLayerToScreenScale2D()};
+    return EffectsInfo{nsRect(), Scale2D(), ParentLayerToScreenScale2D()};
   }
 
   bool operator==(const EffectsInfo& aOther) {
-    return mVisibleRect == aOther.mVisibleRect && mScaleX == aOther.mScaleX &&
-           mScaleY == aOther.mScaleY &&
+    return mVisibleRect == aOther.mVisibleRect &&
+           mRasterScale == aOther.mRasterScale &&
            mTransformToAncestorScale == aOther.mTransformToAncestorScale;
   }
   bool operator!=(const EffectsInfo& aOther) { return !(*this == aOther); }
@@ -46,8 +45,7 @@ class EffectsInfo {
   // The desired scale factors to apply to rasterized content to match
   // transforms applied in ancestor browsers. This gets propagated into the
   // scale in StackingContextHelper.
-  float mScaleX;
-  float mScaleY;
+  Scale2D mRasterScale;
   // TransformToAncestorScale to be set on FrameMetrics. It includes CSS
   // transform scales and cumulative presshell resolution.
   ParentLayerToScreenScale2D mTransformToAncestorScale;
@@ -62,11 +60,10 @@ class EffectsInfo {
   // TabMessageUtils.
 
  private:
-  EffectsInfo(const nsRect& aVisibleRect, float aScaleX, float aScaleY,
+  EffectsInfo(const nsRect& aVisibleRect, const Scale2D& aRasterScale,
               const ParentLayerToScreenScale2D& aTransformToAncestorScale)
       : mVisibleRect(aVisibleRect),
-        mScaleX(aScaleX),
-        mScaleY(aScaleY),
+        mRasterScale(aRasterScale),
         mTransformToAncestorScale(aTransformToAncestorScale) {}
 };
 
