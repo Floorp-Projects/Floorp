@@ -210,7 +210,7 @@
           "description": "Show transitions within and between screens"
         }
       },
-      "additionalProperties": false,
+      "additionalProperties": true,
       "if": {
         "properties": {
           "logoImageURL": { "type": "null" }
