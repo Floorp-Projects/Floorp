@@ -739,6 +739,8 @@ var PlacesProvider = {
  * history changes.
  */
 var ActivityStreamProvider = {
+  THUMB_FAVICON_SIZE: 96,
+
   /**
    * Shared adjustment for selecting potentially blocked links.
    */
@@ -877,7 +879,10 @@ var ActivityStreamProvider = {
     // Fetch the largest icon available.
     let faviconData;
     try {
-      faviconData = await PlacesUtils.promiseFaviconData(aUri, 0);
+      faviconData = await PlacesUtils.promiseFaviconData(
+        aUri,
+        this.THUMB_FAVICON_SIZE
+      );
       Object.assign(iconData, {
         favicon: faviconData.data,
         faviconLength: faviconData.dataLen,
