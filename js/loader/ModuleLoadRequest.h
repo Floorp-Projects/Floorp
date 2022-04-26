@@ -102,11 +102,8 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 #endif
   nsresult StartModuleLoad() { return mLoader->StartModuleLoad(this); }
   nsresult RestartModuleLoad() { return mLoader->RestartModuleLoad(this); }
-  void SetModuleFetchFinishedAndResumeWaitingRequests(nsresult aResult) {
-    mLoader->SetModuleFetchFinishedAndResumeWaitingRequests(this, aResult);
-  }
-  nsresult ProcessFetchedModuleSource() {
-    return mLoader->ProcessFetchedModuleSource(this);
+  nsresult OnFetchComplete(nsresult aRv) {
+    return mLoader->OnFetchComplete(this, aRv);
   }
   bool InstantiateModuleTree() { return mLoader->InstantiateModuleTree(this); }
   nsresult EvaluateModule() { return mLoader->EvaluateModule(this); }
