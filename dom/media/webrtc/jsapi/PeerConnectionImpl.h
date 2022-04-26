@@ -440,9 +440,9 @@ class PeerConnectionImpl final
   };
 
   MOZ_CAN_RUN_SCRIPT
-  dom::Promise* Chain(dom::ChainedOperation& aOperation);
+  already_AddRefed<dom::Promise> Chain(dom::ChainedOperation& aOperation);
   MOZ_CAN_RUN_SCRIPT
-  dom::Promise* Chain(const RefPtr<Operation>& aOperation);
+  already_AddRefed<dom::Promise> Chain(const RefPtr<Operation>& aOperation);
   already_AddRefed<dom::Promise> MakePromise() const;
 
   void UpdateNegotiationNeeded();
