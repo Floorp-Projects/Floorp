@@ -775,8 +775,7 @@ void nsDisplayListBuilder::AddEffectUpdate(dom::RemoteBrowser* aBrowser,
     Maybe<dom::EffectsInfo> existing = mEffectsUpdates.MaybeGet(aBrowser);
     if (existing.isSome()) {
       // Only the visible rect should differ, the scales should match.
-      MOZ_ASSERT(existing->mScaleX == aUpdate.mScaleX &&
-                 existing->mScaleY == aUpdate.mScaleY &&
+      MOZ_ASSERT(existing->mRasterScale == aUpdate.mRasterScale &&
                  existing->mTransformToAncestorScale ==
                      aUpdate.mTransformToAncestorScale);
       update.mVisibleRect = update.mVisibleRect.Union(existing->mVisibleRect);

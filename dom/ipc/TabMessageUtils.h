@@ -66,15 +66,13 @@ struct ParamTraits<mozilla::dom::EffectsInfo> {
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mVisibleRect);
-    WriteParam(aWriter, aParam.mScaleX);
-    WriteParam(aWriter, aParam.mScaleY);
+    WriteParam(aWriter, aParam.mRasterScale);
     WriteParam(aWriter, aParam.mTransformToAncestorScale);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mVisibleRect) &&
-           ReadParam(aReader, &aResult->mScaleX) &&
-           ReadParam(aReader, &aResult->mScaleY) &&
+           ReadParam(aReader, &aResult->mRasterScale) &&
            ReadParam(aReader, &aResult->mTransformToAncestorScale);
   }
 };
