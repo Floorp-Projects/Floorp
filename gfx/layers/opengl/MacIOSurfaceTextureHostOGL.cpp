@@ -192,7 +192,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
                          preferCompositorSurface,
-                         /* aSupportsExternalCompositing */ false);
+                         /* aSupportsExternalCompositing */ true);
       break;
     }
     case gfx::SurfaceFormat::YUV422: {
