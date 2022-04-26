@@ -558,7 +558,7 @@ class AbuseReport extends HTMLElement {
       Services.focus.moveFocus(
         chromeWin,
         null,
-        Services.MOVEFOCUS_BACKWARD,
+        Services.focus.MOVEFOCUS_BACKWARD,
         Services.focus.FLAG_BYKEY
       );
     }
