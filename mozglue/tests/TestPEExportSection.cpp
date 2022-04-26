@@ -345,7 +345,6 @@ class ChildProcess final {
     for (;;) {
       ::Sleep(100);
     }
-    return 0;
   }
 
   ChildProcess(const wchar_t* aExecutable, const wchar_t* aOption,
