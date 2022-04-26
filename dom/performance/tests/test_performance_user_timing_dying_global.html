@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test for User Timing APIs on dying globals</title>
+        <script src="/tests/SimpleTest/SimpleTest.js"></script>
+        <script type="text/javascript">
+            // We must wait for the iframe to load.
+            SimpleTest.waitForExplicitFinish();
+            window.addEventListener('load', () => {
+                const dyingWindow = initTest();
+                ok(true, 'Initialization complete');
+
+                testDoesNotCrash(dyingWindow);
+                SimpleTest.finish();
+            });
+
+            function initTest() {
+                // We create a dying global by creating an iframe, keeping a
+                // reference to it, and removing it.
+                const iframe = document.querySelector('iframe');
+                const iframeWindow = iframe.contentWindow;
+
+                // We want to call the User Timing functions in the context of
+                // the dying global. However, we can't call constructors
+                // directly on a reference to a window so we have to wrap it.
+                iframeWindow.newPerformanceMark = () => {
+                  new PerformanceMark('constructor', {detail: 'constructorDetail'});
+                };
+
+                // Send the global to a dying state.
+                iframe.remove();
+
+                return iframeWindow;
+            }
+
+            function testDoesNotCrash(dyingWindow) {
+                ok(true, 'Running testDoesNotCrash');
+
+                dyingWindow.newPerformanceMark();
+                ok(true, 'new PerformanceMark() on dying global did not crash');
+
+                try {
+                  dyingWindow.performance.mark('markMethod', {detail: 'markMethodDetail'});
+                } catch (e) {
+                  is(e.code, e.INVALID_STATE_ERR, 'performance.mark on dying global threw expected exception');
+                }
+                ok(true, 'performance.mark on dying global did not crash');
+
+                dyingWindow.performance.measure('measureMethod');
+                ok(true, 'performance.measure on dying global did not crash');
+            }
+        </script>
+    </head>
+    <body>
+        <iframe width="200" height="200" src="about:blank"></iframe>
+    </body>
+</html>
