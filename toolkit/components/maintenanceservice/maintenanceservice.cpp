@@ -211,7 +211,6 @@ void BackupOldLogs(LPCWSTR basePath, int numLogsToKeep) {
 DWORD WINAPI EnsureProcessTerminatedThread(LPVOID) {
   Sleep(5000);
   exit(0);
-  return 0;
 }
 
 void StartTerminationThread() {

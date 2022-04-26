@@ -65,7 +65,7 @@ check_and_add_warning("-Wno-error=tautological-type-limit-compare")
 
 # catches some dead code
 add_warning("-Wunreachable-code", when=not_clang_cl)
-check_and_add_warning("-Wunreachable-code-return", when=not_clang_cl)
+check_and_add_warning("-Wunreachable-code-return")
 
 # catches parameters that are set but not read
 # Only enable on clang because gcc reports false positives.
