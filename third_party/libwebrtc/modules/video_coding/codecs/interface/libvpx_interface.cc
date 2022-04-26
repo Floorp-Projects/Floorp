@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/codecs/vp8/libvpx_interface.h"
+#include "modules/video_coding/codecs/interface/libvpx_interface.h"
 
 #include <memory>
 
@@ -16,10 +16,10 @@
 
 namespace webrtc {
 namespace {
-class LibvpxVp8Facade : public LibvpxInterface {
+class LibvpxFacade : public LibvpxInterface {
  public:
-  LibvpxVp8Facade() = default;
-  ~LibvpxVp8Facade() override = default;
+  LibvpxFacade() = default;
+  ~LibvpxFacade() override = default;
 
   vpx_image_t* img_alloc(vpx_image_t* img,
                          vpx_img_fmt_t fmt,
@@ -203,8 +203,8 @@ class LibvpxVp8Facade : public LibvpxInterface {
 
 }  // namespace
 
-std::unique_ptr<LibvpxInterface> LibvpxInterface::CreateEncoder() {
-  return std::make_unique<LibvpxVp8Facade>();
+std::unique_ptr<LibvpxInterface> LibvpxInterface::Create() {
+  return std::make_unique<LibvpxFacade>();
 }
 
 }  // namespace webrtc

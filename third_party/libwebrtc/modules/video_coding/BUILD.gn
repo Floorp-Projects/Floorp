@@ -452,14 +452,26 @@ rtc_library("webrtc_multiplex") {
   ]
 }
 
+# This target defines a bare-bones interface towards libvpx, used by the
+# VP8 and VP9 wrappers below.
+rtc_library("webrtc_libvpx_interface") {
+  visibility = [ "*" ]
+  sources = [
+    "codecs/interface/libvpx_interface.cc",
+    "codecs/interface/libvpx_interface.h",
+  ]
+  deps = [ "../../rtc_base:checks" ]
+  if (rtc_build_libvpx) {
+    deps += [ rtc_libvpx_dir ]
+  }
+}
+
 # This target includes the internal SW codec.
 rtc_library("webrtc_vp8") {
   visibility = [ "*" ]
   poisonous = [ "software_video_codecs" ]
   sources = [
     "codecs/vp8/include/vp8.h",
-    "codecs/vp8/libvpx_interface.cc",
-    "codecs/vp8/libvpx_interface.h",
     "codecs/vp8/libvpx_vp8_decoder.cc",
     "codecs/vp8/libvpx_vp8_decoder.h",
     "codecs/vp8/libvpx_vp8_encoder.cc",
@@ -470,6 +482,7 @@ rtc_library("webrtc_vp8") {
     ":codec_globals_headers",
     ":video_codec_interface",
     ":video_coding_utility",
+    ":webrtc_libvpx_interface",
     ":webrtc_vp8_temporal_layers",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
@@ -556,16 +569,19 @@ rtc_library("webrtc_vp9") {
   poisonous = [ "software_video_codecs" ]
   sources = [
     "codecs/vp9/include/vp9.h",
+    "codecs/vp9/libvpx_vp9_decoder.cc",
+    "codecs/vp9/libvpx_vp9_decoder.h",
+    "codecs/vp9/libvpx_vp9_encoder.cc",
+    "codecs/vp9/libvpx_vp9_encoder.h",
     "codecs/vp9/vp9.cc",
     "codecs/vp9/vp9_frame_buffer_pool.cc",
     "codecs/vp9/vp9_frame_buffer_pool.h",
-    "codecs/vp9/vp9_impl.cc",
-    "codecs/vp9/vp9_impl.h",
   ]
 
   deps = [
     ":video_codec_interface",
     ":video_coding_utility",
+    ":webrtc_libvpx_interface",
     ":webrtc_vp9_helpers",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
@@ -662,6 +678,15 @@ if (rtc_include_tests) {
       "../../api/video:video_frame_type",
       "../../api/video_codecs:video_codecs_api",
       "../../rtc_base:checks",
+    ]
+  }
+
+  rtc_library("mock_libvpx_interface") {
+    testonly = true
+    sources = [ "codecs/interface/mock_libvpx_interface.h" ]
+    deps = [
+      ":webrtc_libvpx_interface",
+      "../../test:test_support",
     ]
   }
 
@@ -839,7 +864,6 @@ if (rtc_include_tests) {
       "codecs/multiplex/test/multiplex_adapter_unittest.cc",
       "codecs/test/video_encoder_decoder_instantiation_tests.cc",
       "codecs/test/videocodec_test_libvpx.cc",
-      "codecs/vp8/test/mock_libvpx_interface.h",
       "codecs/vp8/test/vp8_impl_unittest.cc",
       "codecs/vp9/test/vp9_impl_unittest.cc",
     ]
@@ -854,6 +878,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":encoded_video_frame_producer",
+      ":mock_libvpx_interface",
       ":video_codec_interface",
       ":video_codecs_test_framework",
       ":video_coding_utility",

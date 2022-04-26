@@ -177,13 +177,13 @@ absl::optional<int> GetRequestedResolutionAlignmentOverride() {
 }  // namespace
 
 std::unique_ptr<VideoEncoder> VP8Encoder::Create() {
-  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::CreateEncoder(),
+  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::Create(),
                                             VP8Encoder::Settings());
 }
 
 std::unique_ptr<VideoEncoder> VP8Encoder::Create(
     VP8Encoder::Settings settings) {
-  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::CreateEncoder(),
+  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::Create(),
                                             std::move(settings));
 }
 
@@ -193,7 +193,7 @@ std::unique_ptr<VideoEncoder> VP8Encoder::Create(
   VP8Encoder::Settings settings;
   settings.frame_buffer_controller_factory =
       std::move(frame_buffer_controller_factory);
-  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::CreateEncoder(),
+  return std::make_unique<LibvpxVp8Encoder>(LibvpxInterface::Create(),
                                             std::move(settings));
 }
 
