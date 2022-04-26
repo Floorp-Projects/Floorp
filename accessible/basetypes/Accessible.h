@@ -453,6 +453,14 @@ class Accessible {
   virtual TableAccessibleBase* AsTableBase() { return nullptr; }
   virtual TableCellAccessibleBase* AsTableCellBase() { return nullptr; }
 
+#ifdef A11Y_LOG
+  /**
+   * Provide a human readable description of the accessible,
+   * including memory address, role, name, DOM tag and DOM ID.
+   */
+  void DebugDescription(nsCString& aDesc);
+#endif
+
   /**
    * Return the localized string for the given key.
    */
