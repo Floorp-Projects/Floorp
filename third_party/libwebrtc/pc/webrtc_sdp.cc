@@ -3280,12 +3280,12 @@ bool ParseContent(const std::string& message,
         continue;
       } else {
         // Unrecognized attribute in RTP protocol.
-        RTC_LOG(LS_INFO) << "Ignored line: " << line;
+        RTC_LOG(LS_VERBOSE) << "Ignored line: " << line;
         continue;
       }
     } else {
       // Only parse lines that we are interested of.
-      RTC_LOG(LS_INFO) << "Ignored line: " << line;
+      RTC_LOG(LS_VERBOSE) << "Ignored line: " << line;
       continue;
     }
   }
