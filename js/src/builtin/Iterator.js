@@ -185,8 +185,8 @@ function IteratorFrom(O) {
 /* Iterator Helpers proposal 2.1.3.3.1.1.1 */
 function WrapForValidIteratorNext(value) {
   // Step 1-2.
-  let O;
-  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToWrapForValidIterator(O)) === null) {
     if (arguments.length === 0) {
       return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
                           "WrapForValidIteratorNext");
@@ -211,8 +211,8 @@ function WrapForValidIteratorNext(value) {
 /* Iterator Helpers proposal 2.1.3.3.1.1.2 */
 function WrapForValidIteratorReturn(value) {
   // Step 1-2.
-  let O;
-  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToWrapForValidIterator(O)) === null) {
     return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
                         value, "WrapForValidIteratorReturn");
   }
@@ -238,8 +238,8 @@ function WrapForValidIteratorReturn(value) {
 /* Iterator Helpers proposal 2.1.3.3.1.1.3 */
 function WrapForValidIteratorThrow(value) {
   // Step 1-2.
-  let O;
-  if (!IsObject(this) || (O = GuardToWrapForValidIterator(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToWrapForValidIterator(O)) === null) {
     return callFunction(CallWrapForValidIteratorMethodIfWrapped, this,
                         value, "WrapForValidIteratorThrow");
   }
@@ -258,8 +258,8 @@ function WrapForValidIteratorThrow(value) {
 
 /* Iterator Helper object prototype methods. */
 function IteratorHelperNext(value) {
-  let O;
-  if (!IsObject(this) || (O = GuardToIteratorHelper(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
     return callFunction(CallIteratorHelperMethodIfWrapped, this,
                         value, "IteratorHelperNext");
   }
@@ -268,8 +268,8 @@ function IteratorHelperNext(value) {
 }
 
 function IteratorHelperReturn(value) {
-  let O;
-  if (!IsObject(this) || (O = GuardToIteratorHelper(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
     return callFunction(CallIteratorHelperMethodIfWrapped, this,
                         value, "IteratorHelperReturn");
   }
@@ -278,8 +278,8 @@ function IteratorHelperReturn(value) {
 }
 
 function IteratorHelperThrow(value) {
-  let O;
-  if (!IsObject(this) || (O = GuardToIteratorHelper(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToIteratorHelper(O)) === null) {
     return callFunction(CallIteratorHelperMethodIfWrapped, this,
                         value, "IteratorHelperThrow");
   }

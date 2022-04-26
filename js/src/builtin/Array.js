@@ -665,8 +665,8 @@ function CreateArrayIterator(obj, kind) {
 // http://www.ecma-international.org/ecma-262/6.0/index.html#sec-%arrayiteratorprototype%.next
 function ArrayIteratorNext() {
     // Step 1-3.
-    var obj;
-    if (!IsObject(this) || (obj = GuardToArrayIterator(this)) === null) {
+    var obj = this;
+    if (!IsObject(obj) || (obj = GuardToArrayIterator(obj)) === null) {
         return callFunction(CallArrayIteratorMethodIfWrapped, this,
                             "ArrayIteratorNext");
     }
