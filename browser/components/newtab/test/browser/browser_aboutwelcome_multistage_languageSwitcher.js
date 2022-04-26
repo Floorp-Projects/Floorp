@@ -39,10 +39,11 @@ async function spyOnTelemetryButtonClicks(browser) {
 }
 
 async function openAboutWelcome() {
-  await pushPrefs([
-    "intl.multilingual.aboutWelcome.languageMismatchEnabled",
-    true,
-  ]);
+  await pushPrefs(
+    // Speed up the tests by disabling transitions.
+    ["browser.aboutwelcome.transitions", false],
+    ["intl.multilingual.aboutWelcome.languageMismatchEnabled", true]
+  );
   await setAboutWelcomePref(true);
 
   // Stub out the doesAppNeedPin to false so the about:welcome pages do not attempt
@@ -81,7 +82,12 @@ async function clickVisibleButton(browser, selector) {
       return null;
     }
 
-    await ContentTaskUtils.waitForCondition(getVisibleElement, selector);
+    await ContentTaskUtils.waitForCondition(
+      getVisibleElement,
+      selector,
+      200, // interval
+      100 // maxTries
+    );
     getVisibleElement().click();
   });
 }
