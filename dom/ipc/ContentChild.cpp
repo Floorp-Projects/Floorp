@@ -109,6 +109,7 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/net/CaptivePortalService.h"
@@ -194,9 +195,6 @@
 #include "nsThreadManager.h"
 #include "nsVariant.h"
 #include "nsXULAppAPI.h"
-#ifdef NS_PRINTING
-#  include "nsPrintingProxy.h"
-#endif
 #include "IHistory.h"
 #include "ReferrerInfo.h"
 #include "base/message_loop.h"
@@ -800,12 +798,6 @@ void ContentChild::Init(base::ProcessId aParentPid, const char* aParentBuildID,
 
   mID = aChildID;
   mIsForBrowser = aIsForBrowser;
-
-#ifdef NS_PRINTING
-  // Force the creation of the nsPrintingProxy so that it's IPC counterpart,
-  // PrintingParent, is always available for printing initiated from the parent.
-  RefPtr<nsPrintingProxy> printingProxy = nsPrintingProxy::GetInstance();
-#endif
 
   SetProcessName("Web Content"_ns);
 
@@ -2025,17 +2017,8 @@ mozilla::ipc::IPCResult ContentChild::RecvSocketProcessCrashed() {
   return IPC_OK();
 }
 
-PPrintingChild* ContentChild::AllocPPrintingChild() {
-  // The ContentParent should never attempt to allocate the nsPrintingProxy,
-  // which implements PPrintingChild. Instead, the nsPrintingProxy service is
-  // requested and instantiated via XPCOM, and the constructor of
-  // nsPrintingProxy sets up the IPC connection.
-  MOZ_CRASH("Should never get here!");
-  return nullptr;
-}
-
-bool ContentChild::DeallocPPrintingChild(PPrintingChild* printing) {
-  return true;
+PRemotePrintJobChild* ContentChild::AllocPRemotePrintJobChild() {
+  return new RemotePrintJobChild();
 }
 
 PChildToParentStreamChild* ContentChild::SendPChildToParentStreamConstructor(

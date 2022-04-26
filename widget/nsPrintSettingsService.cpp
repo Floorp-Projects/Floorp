@@ -5,12 +5,11 @@
 
 #include "nsPrintSettingsService.h"
 
-#include "mozilla/embedding/PPrinting.h"
+#include "mozilla/embedding/PPrintingTypes.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/RefPtr.h"
 #include "nsCoord.h"
 #include "nsIPrinterList.h"
-#include "nsPrintingProxy.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
 #include "nsIPrintSession.h"
