@@ -67,6 +67,11 @@ bool IsEnabled(const webrtc::WebRtcKeyValueConfig& trials,
   return absl::StartsWith(trials.Lookup(name), "Enabled");
 }
 
+bool IsDisabled(const webrtc::WebRtcKeyValueConfig& trials,
+                absl::string_view name) {
+  return absl::StartsWith(trials.Lookup(name), "Disabled");
+}
+
 bool PowerOfTwo(int value) {
   return (value > 0) && ((value & (value - 1)) == 0);
 }
@@ -107,7 +112,8 @@ void AddDefaultFeedbackParams(VideoCodec* codec,
 // VP9, H264 and RED). It will also add default feedback params to the codecs.
 std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
     std::vector<webrtc::SdpVideoFormat> input_formats,
-    const webrtc::WebRtcKeyValueConfig& trials) {
+    const webrtc::WebRtcKeyValueConfig& trials,
+    bool is_decoder_factory) {
   if (input_formats.empty())
     return std::vector<VideoCodec>();
   // Due to interoperability issues with old Chrome/WebRTC versions only use
@@ -123,7 +129,13 @@ std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
   input_formats.push_back(webrtc::SdpVideoFormat(kRedCodecName));
   input_formats.push_back(webrtc::SdpVideoFormat(kUlpfecCodecName));
 
-  if (IsEnabled(trials, "WebRTC-FlexFEC-03-Advertised")) {
+  // flexfec-03 is supported as
+  // - receive codec unless WebRTC-FlexFEC-03-Advertised is disabled
+  // - send codec if WebRTC-FlexFEC-03-Advertised is enabled
+  if ((is_decoder_factory &&
+       !IsDisabled(trials, "WebRTC-FlexFEC-03-Advertised")) ||
+      (!is_decoder_factory &&
+       IsEnabled(trials, "WebRTC-FlexFEC-03-Advertised"))) {
     webrtc::SdpVideoFormat flexfec_format(kFlexfecCodecName);
     // This value is currently arbitrarily set to 10 seconds. (The unit
     // is microseconds.) This parameter MUST be present in the SDP, but
@@ -193,7 +205,9 @@ std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
 
 // is_decoder_factory is needed to keep track of the implict assumption that any
 // H264 decoder also supports constrained base line profile.
-// TODO(kron): Perhaps it better to move the implcit knowledge to the place
+// Also, is_decoder_factory is used to decide whether FlexFEC video format
+// should be advertised as supported.
+// TODO(kron): Perhaps it is better to move the implicit knowledge to the place
 // where codecs are negotiated.
 template <class T>
 std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
@@ -211,7 +225,7 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
   }
 
   return AssignPayloadTypesAndDefaultCodecs(std::move(supported_formats),
-                                            trials);
+                                            trials, is_decoder_factory);
 }
 
 bool IsTemporalLayersSupported(const std::string& codec_name) {
@@ -1532,7 +1546,7 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
 
   // TODO(brandtr): Generalize when we add support for multistream protection.
   flexfec_config->payload_type = recv_flexfec_payload_type_;
-  if (IsEnabled(call_->trials(), "WebRTC-FlexFEC-03-Advertised") &&
+  if (!IsDisabled(call_->trials(), "WebRTC-FlexFEC-03-Advertised") &&
       sp.GetFecFrSsrc(ssrc, &flexfec_config->remote_ssrc)) {
     flexfec_config->protected_media_ssrcs = {ssrc};
     flexfec_config->local_ssrc = config->rtp.local_ssrc;
