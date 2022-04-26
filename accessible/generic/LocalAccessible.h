@@ -424,6 +424,9 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   /**
    * Return boundaries rect relative to the frame of the parent accessible.
+   * The returned bounds are the same regardless of whether the parent is
+   * scrolled. This means the scroll position must be later subtracted to
+   * calculate absolute coordinates.
    */
   virtual nsRect ParentRelativeBounds();
 
