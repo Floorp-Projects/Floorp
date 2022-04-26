@@ -46,22 +46,7 @@ constexpr double kTimestampToMs =
 constexpr uint32_t kFixedSsrc = 0;
 }  // namespace
 
-constexpr char BweIgnoreSmallPacketsSettings::kKey[];
 constexpr char BweSeparateAudioPacketsSettings::kKey[];
-
-BweIgnoreSmallPacketsSettings::BweIgnoreSmallPacketsSettings(
-    const WebRtcKeyValueConfig* key_value_config) {
-  Parser()->Parse(
-      key_value_config->Lookup(BweIgnoreSmallPacketsSettings::kKey));
-}
-
-std::unique_ptr<StructParametersParser>
-BweIgnoreSmallPacketsSettings::Parser() {
-  return StructParametersParser::Create("smoothing", &smoothing_factor,     //
-                                        "fraction_large", &fraction_large,  //
-                                        "large", &large_threshold,          //
-                                        "small", &small_threshold);
-}
 
 BweSeparateAudioPacketsSettings::BweSeparateAudioPacketsSettings(
     const WebRtcKeyValueConfig* key_value_config) {
@@ -84,20 +69,12 @@ DelayBasedBwe::Result::Result()
       recovered_from_overuse(false),
       backoff_in_alr(false) {}
 
-DelayBasedBwe::Result::Result(bool probe, DataRate target_bitrate)
-    : updated(true),
-      probe(probe),
-      target_bitrate(target_bitrate),
-      recovered_from_overuse(false),
-      backoff_in_alr(false) {}
 
 DelayBasedBwe::DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
                              RtcEventLog* event_log,
                              NetworkStatePredictor* network_state_predictor)
     : event_log_(event_log),
       key_value_config_(key_value_config),
-      ignore_small_(key_value_config),
-      fraction_large_packets_(0.5),
       separate_audio_(key_value_config),
       audio_packets_since_last_video_(0),
       last_video_packet_recv_time_(Timestamp::MinusInfinity()),
@@ -118,12 +95,10 @@ DelayBasedBwe::DelayBasedBwe(const WebRtcKeyValueConfig* key_value_config,
       alr_limited_backoff_enabled_(absl::StartsWith(
           key_value_config->Lookup("WebRTC-Bwe-AlrLimitedBackoff"),
           "Enabled")) {
-  RTC_LOG(LS_INFO) << "Initialized DelayBasedBwe with small packet filtering "
-                   << ignore_small_.Parser()->Encode()
-                   << ", separate audio overuse detection"
-                   << separate_audio_.Parser()->Encode()
-                   << " and alr limited backoff "
-                   << (alr_limited_backoff_enabled_ ? "enabled" : "disabled");
+  RTC_LOG(LS_INFO)
+      << "Initialized DelayBasedBwe with separate audio overuse detection"
+      << separate_audio_.Parser()->Encode() << " and alr limited backoff "
+      << (alr_limited_backoff_enabled_ ? "enabled" : "disabled");
 }
 
 DelayBasedBwe::~DelayBasedBwe() {}
@@ -193,22 +168,6 @@ void DelayBasedBwe::IncomingPacketFeedback(const PacketResult& packet_feedback,
   }
   last_seen_packet_ = at_time;
 
-  // Ignore "small" packets if many/most packets in the call are "large". The
-  // packet size may have a significant effect on the propagation delay,
-  // especially at low bandwidths. Variations in packet size will then show up
-  // as noise in the delay measurement. By default, we include all packets.
-  DataSize packet_size = packet_feedback.sent_packet.size;
-  if (!ignore_small_.small_threshold.IsZero()) {
-    double is_large =
-        static_cast<double>(packet_size >= ignore_small_.large_threshold);
-    fraction_large_packets_ +=
-        ignore_small_.smoothing_factor * (is_large - fraction_large_packets_);
-    if (packet_size <= ignore_small_.small_threshold &&
-        fraction_large_packets_ >= ignore_small_.fraction_large) {
-      return;
-    }
-  }
-
   // As an alternative to ignoring small packets, we can separate audio and
   // video packets for overuse detection.
   InterArrival* inter_arrival_for_packet = video_inter_arrival_.get();
@@ -246,6 +205,7 @@ void DelayBasedBwe::IncomingPacketFeedback(const PacketResult& packet_feedback,
   uint32_t timestamp_delta = 0;
   int64_t recv_delta_ms = 0;
   int size_delta = 0;
+  DataSize packet_size = packet_feedback.sent_packet.size;
   bool calculated_deltas = inter_arrival_for_packet->ComputeDeltas(
       timestamp, packet_feedback.receive_time.ms(), at_time.ms(),
       packet_size.bytes(), &timestamp_delta, &recv_delta_ms, &size_delta);

@@ -31,21 +31,6 @@
 namespace webrtc {
 class RtcEventLog;
 
-struct BweIgnoreSmallPacketsSettings {
-  static constexpr char kKey[] = "WebRTC-BweIgnoreSmallPacketsFix";
-
-  BweIgnoreSmallPacketsSettings() = default;
-  explicit BweIgnoreSmallPacketsSettings(
-      const WebRtcKeyValueConfig* key_value_config);
-
-  double smoothing_factor = 0.1;
-  double fraction_large = 1.0;
-  DataSize large_threshold = DataSize::Zero();
-  DataSize small_threshold = DataSize::Zero();
-
-  std::unique_ptr<StructParametersParser> Parser();
-};
-
 struct BweSeparateAudioPacketsSettings {
   static constexpr char kKey[] = "WebRTC-Bwe-SeparateAudioPackets";
 
@@ -64,7 +49,6 @@ class DelayBasedBwe {
  public:
   struct Result {
     Result();
-    Result(bool probe, DataRate target_bitrate);
     ~Result() = default;
     bool updated;
     bool probe;
@@ -112,18 +96,13 @@ class DelayBasedBwe {
       Timestamp at_time);
   // Updates the current remote rate estimate and returns true if a valid
   // estimate exists.
-  bool UpdateEstimate(Timestamp now,
+  bool UpdateEstimate(Timestamp at_time,
                       absl::optional<DataRate> acked_bitrate,
-                      DataRate* target_bitrate);
+                      DataRate* target_rate);
 
   rtc::RaceChecker network_race_;
   RtcEventLog* const event_log_;
   const WebRtcKeyValueConfig* const key_value_config_;
-
-  // Filtering out small packets. Intention is to base the detection only
-  // on video packets even if we have TWCC sequence numbers for audio.
-  BweIgnoreSmallPacketsSettings ignore_small_;
-  double fraction_large_packets_;
 
   // Alternatively, run two separate overuse detectors for audio and video,
   // and fall back to the audio one if we haven't seen a video packet in a
