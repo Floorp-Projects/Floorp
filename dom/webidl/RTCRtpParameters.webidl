@@ -38,6 +38,8 @@ dictionary RTCRtpEncodingParameters {
   RTCDegradationPreference degradationPreference = "balanced";
   DOMString                rid;
   float                    scaleResolutionDownBy = 1.0;
+  // From https://w3c.github.io/webrtc-extensions/#rtcrtpencodingparameters-dictionary
+  double                   maxFramerate;
 };
 
 dictionary RTCRtpHeaderExtensionParameters {
