@@ -2473,11 +2473,6 @@ RTCError SdpOfferAnswerHandler::UpdateSessionState(
   // But all call-sites should be verifying this before calling us!
   RTC_DCHECK(session_error() == SessionError::kNone);
 
-  // If this is answer-ish we're ready to let media flow.
-  if (type == SdpType::kPrAnswer || type == SdpType::kAnswer) {
-    EnableSending();
-  }
-
   // Update the signaling state according to the specified state machine (see
   // https://w3c.github.io/webrtc-pc/#rtcsignalingstate-enum).
   if (type == SdpType::kOffer) {
@@ -4201,21 +4196,6 @@ void SdpOfferAnswerHandler::UpdateRemoteSendersList(
   }
 }
 
-void SdpOfferAnswerHandler::EnableSending() {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  for (const auto& transceiver : transceivers()->List()) {
-    cricket::ChannelInterface* channel = transceiver->internal()->channel();
-    if (channel && !channel->enabled()) {
-      channel->Enable(true);
-    }
-  }
-
-  if (data_channel_controller()->rtp_data_channel() &&
-      !data_channel_controller()->rtp_data_channel()->enabled()) {
-    data_channel_controller()->rtp_data_channel()->Enable(true);
-  }
-}
-
 RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     SdpType type,
     cricket::ContentSource source) {
@@ -4225,15 +4205,13 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(sdesc);
 
-  if (!UpdatePayloadTypeDemuxingState(source)) {
-    // Note that this is never expected to fail, since RtpDemuxer doesn't return
-    // an error when changing payload type demux criteria, which is all this
-    // does.
-    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
-                         "Failed to update payload type demuxing state.");
-  }
+  // Gather lists of updates to be made on cricket channels on the signaling
+  // thread, before performing them all at once on the worker thread. Necessary
+  // due to threading restrictions.
+  auto payload_type_demuxing_updates = GetPayloadTypeDemuxingUpdates(source);
+  std::vector<ContentUpdate> content_updates;
 
-  // Push down the new SDP media section for each audio/video transceiver.
+  // Collect updates for each audio/video transceiver.
   for (const auto& transceiver : transceivers()->List()) {
     const ContentInfo* content_info =
         FindMediaSectionForTransceiver(transceiver, sdesc);
@@ -4243,19 +4221,12 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
     }
     const MediaContentDescription* content_desc =
         content_info->media_description();
-    if (!content_desc) {
-      continue;
-    }
-    std::string error;
-    bool success = (source == cricket::CS_LOCAL)
-                       ? channel->SetLocalContent(content_desc, type, &error)
-                       : channel->SetRemoteContent(content_desc, type, &error);
-    if (!success) {
-      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
+    if (content_desc) {
+      content_updates.emplace_back(channel, content_desc);
     }
   }
 
-  // If using the RtpDataChannel, push down the new SDP section for it too.
+  // If using the RtpDataChannel, add it to the list of updates.
   if (data_channel_controller()->rtp_data_channel()) {
     const ContentInfo* data_content =
         cricket::GetFirstDataContent(sdesc->description());
@@ -4263,19 +4234,19 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
       const MediaContentDescription* data_desc =
           data_content->media_description();
       if (data_desc) {
-        std::string error;
-        bool success = (source == cricket::CS_LOCAL)
-                           ? data_channel_controller()
-                                 ->rtp_data_channel()
-                                 ->SetLocalContent(data_desc, type, &error)
-                           : data_channel_controller()
-                                 ->rtp_data_channel()
-                                 ->SetRemoteContent(data_desc, type, &error);
-        if (!success) {
-          LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
-        }
+        content_updates.push_back(
+            {data_channel_controller()->rtp_data_channel(), data_desc});
       }
     }
+  }
+
+  RTCError error = pc_->worker_thread()->Invoke<RTCError>(
+      RTC_FROM_HERE,
+      rtc::Bind(&SdpOfferAnswerHandler::ApplyChannelUpdates, this, type, source,
+                std::move(payload_type_demuxing_updates),
+                std::move(content_updates)));
+  if (!error.ok()) {
+    return error;
   }
 
   // Need complete offer/answer with an SCTP m= section before starting SCTP,
@@ -4304,6 +4275,49 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
   }
 
   return RTCError::OK();
+}
+
+RTCError SdpOfferAnswerHandler::ApplyChannelUpdates(
+    SdpType type,
+    cricket::ContentSource source,
+    std::vector<PayloadTypeDemuxingUpdate> payload_type_demuxing_updates,
+    std::vector<ContentUpdate> content_updates) {
+  RTC_DCHECK_RUN_ON(pc_->worker_thread());
+  // If this is answer-ish we're ready to let media flow.
+  bool enable_sending = type == SdpType::kPrAnswer || type == SdpType::kAnswer;
+  std::set<cricket::ChannelInterface*> modified_channels;
+  for (const auto& update : payload_type_demuxing_updates) {
+    modified_channels.insert(update.channel);
+    update.channel->SetPayloadTypeDemuxingEnabled(update.enabled);
+  }
+  for (const auto& update : content_updates) {
+    modified_channels.insert(update.channel);
+    std::string error;
+    bool success = (source == cricket::CS_LOCAL)
+                       ? update.channel->SetLocalContent(
+                             update.content_description, type, &error)
+                       : update.channel->SetRemoteContent(
+                             update.content_description, type, &error);
+    if (!success) {
+      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
+    }
+    if (enable_sending && !update.channel->enabled()) {
+      update.channel->Enable(true);
+    }
+  }
+  // The above calls may have modified properties of the channel (header
+  // extension mappings, demuxer criteria) which still need to be applied to the
+  // RtpTransport.
+  return pc_->network_thread()->Invoke<RTCError>(
+      RTC_FROM_HERE, [modified_channels] {
+        for (auto channel : modified_channels) {
+          std::string error;
+          if (!channel->UpdateRtpTransport(&error)) {
+            LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER, error);
+          }
+        }
+        return RTCError::OK();
+      });
 }
 
 RTCError SdpOfferAnswerHandler::PushdownTransportDescription(
@@ -4904,7 +4918,8 @@ const std::string SdpOfferAnswerHandler::GetTransportName(
   return "";
 }
 
-bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
+std::vector<SdpOfferAnswerHandler::PayloadTypeDemuxingUpdate>
+SdpOfferAnswerHandler::GetPayloadTypeDemuxingUpdates(
     cricket::ContentSource source) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   // We may need to delete any created default streams and disable creation of
@@ -4976,8 +4991,7 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
 
   // Gather all updates ahead of time so that all channels can be updated in a
   // single Invoke; necessary due to thread guards.
-  std::vector<std::pair<RtpTransceiverDirection, cricket::ChannelInterface*>>
-      channels_to_update;
+  std::vector<PayloadTypeDemuxingUpdate> channel_updates;
   for (const auto& transceiver : transceivers()->List()) {
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
     const ContentInfo* content =
@@ -4990,38 +5004,22 @@ bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
     if (source == cricket::CS_REMOTE) {
       local_direction = RtpTransceiverDirectionReversed(local_direction);
     }
-    channels_to_update.emplace_back(local_direction,
-                                    transceiver->internal()->channel());
+    cricket::MediaType media_type = channel->media_type();
+    bool in_bundle_group =
+        (bundle_group && bundle_group->HasContentName(channel->content_name()));
+    bool payload_type_demuxing_enabled = false;
+    if (media_type == cricket::MediaType::MEDIA_TYPE_AUDIO) {
+      payload_type_demuxing_enabled =
+          (!in_bundle_group || pt_demuxing_enabled_audio) &&
+          RtpTransceiverDirectionHasRecv(local_direction);
+    } else if (media_type == cricket::MediaType::MEDIA_TYPE_VIDEO) {
+      payload_type_demuxing_enabled =
+          (!in_bundle_group || pt_demuxing_enabled_video) &&
+          RtpTransceiverDirectionHasRecv(local_direction);
+    }
+    channel_updates.emplace_back(channel, payload_type_demuxing_enabled);
   }
-
-  if (channels_to_update.empty()) {
-    return true;
-  }
-  return pc_->worker_thread()->Invoke<bool>(
-      RTC_FROM_HERE, [&channels_to_update, bundle_group,
-                      pt_demuxing_enabled_audio, pt_demuxing_enabled_video]() {
-        for (const auto& it : channels_to_update) {
-          RtpTransceiverDirection local_direction = it.first;
-          cricket::ChannelInterface* channel = it.second;
-          cricket::MediaType media_type = channel->media_type();
-          bool in_bundle_group = (bundle_group && bundle_group->HasContentName(
-                                                      channel->content_name()));
-          if (media_type == cricket::MediaType::MEDIA_TYPE_AUDIO) {
-            if (!channel->SetPayloadTypeDemuxingEnabled(
-                    (!in_bundle_group || pt_demuxing_enabled_audio) &&
-                    RtpTransceiverDirectionHasRecv(local_direction))) {
-              return false;
-            }
-          } else if (media_type == cricket::MediaType::MEDIA_TYPE_VIDEO) {
-            if (!channel->SetPayloadTypeDemuxingEnabled(
-                    (!in_bundle_group || pt_demuxing_enabled_video) &&
-                    RtpTransceiverDirectionHasRecv(local_direction))) {
-              return false;
-            }
-          }
-        }
-        return true;
-      });
+  return channel_updates;
 }
 
 }  // namespace webrtc
