@@ -134,7 +134,6 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
-#include "mozilla/embedding/printingui/PrintingParent.h"
 #include "mozilla/extensions/ExtensionsParent.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -4327,51 +4326,6 @@ already_AddRefed<PNeckoParent> ContentParent::AllocPNeckoParent() {
   RefPtr<NeckoParent> actor = new NeckoParent();
   return actor.forget();
 }
-
-PPrintingParent* ContentParent::AllocPPrintingParent() {
-#ifdef NS_PRINTING
-  if (mPrintingParent) {
-    // Only one PrintingParent should be created per process.
-    return nullptr;
-  }
-
-  // Create the printing singleton for this process.
-  mPrintingParent = new PrintingParent();
-
-  // Take another reference for IPDL code.
-  mPrintingParent.get()->AddRef();
-
-  return mPrintingParent.get();
-#else
-  MOZ_ASSERT_UNREACHABLE("Should never be created if no printing.");
-  return nullptr;
-#endif
-}
-
-bool ContentParent::DeallocPPrintingParent(PPrintingParent* printing) {
-#ifdef NS_PRINTING
-  MOZ_RELEASE_ASSERT(
-      mPrintingParent == printing,
-      "Only one PrintingParent should have been created per process.");
-
-  // Release reference taken for IPDL code.
-  static_cast<PrintingParent*>(printing)->Release();
-
-  mPrintingParent = nullptr;
-#else
-  MOZ_ASSERT_UNREACHABLE("Should never have been created if no printing.");
-#endif
-  return true;
-}
-
-#ifdef NS_PRINTING
-already_AddRefed<embedding::PrintingParent> ContentParent::GetPrintingParent() {
-  MOZ_ASSERT(mPrintingParent);
-
-  RefPtr<embedding::PrintingParent> printingParent = mPrintingParent;
-  return printingParent.forget();
-}
-#endif
 
 mozilla::ipc::IPCResult ContentParent::RecvInitStreamFilter(
     const uint64_t& aChannelId, const nsString& aAddonId,
