@@ -1116,6 +1116,7 @@ Family* FontList::FindFamily(const nsCString& aName, bool aPrimaryNameOnly) {
   // the "real" family names will have been found in AliasFamilies() above.
   if (aName.Contains(' ')) {
     auto pfl = gfxPlatformFontList::PlatformFontList();
+    pfl->mLock.AssertCurrentThreadIn();
     if (header.mAliasCount) {
       // Aliases have been fully loaded by the parent process, so just discard
       // any stray mAliasTable and mLocalNameTable entries from earlier calls
