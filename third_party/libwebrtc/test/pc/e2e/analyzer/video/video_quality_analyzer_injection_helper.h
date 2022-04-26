@@ -46,6 +46,12 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
       EncodedImageDataExtractor* extractor);
   ~VideoQualityAnalyzerInjectionHelper() override;
 
+  // Registers new call participant to the underlying video quality analyzer.
+  // The method should be called before the participant is actually added.
+  void RegisterParticipantInCall(absl::string_view peer_name) {
+    analyzer_->RegisterParticipantInCall(peer_name);
+  }
+
   // Wraps video encoder factory to give video quality analyzer access to frames
   // before encoding and encoded images after.
   std::unique_ptr<VideoEncoderFactory> WrapVideoEncoderFactory(
