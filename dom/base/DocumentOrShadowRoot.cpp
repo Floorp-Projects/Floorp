@@ -109,108 +109,101 @@ void DocumentOrShadowRoot::RemoveSheetFromStylesIfApplicable(
   }
 }
 
-// https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
-void DocumentOrShadowRoot::SetAdoptedStyleSheets(
-    const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
-    ErrorResult& aRv) {
+// https://drafts.csswg.org/cssom/#dom-documentorshadowroot-adoptedstylesheets
+void DocumentOrShadowRoot::OnSetAdoptedStyleSheets(StyleSheet& aSheet,
+                                                   uint32_t aIndex,
+                                                   ErrorResult& aRv) {
   Document& doc = *AsNode().OwnerDoc();
-  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
-    // 2.1 Check if all sheets are constructed, else throw NotAllowedError
-    if (!sheet->IsConstructed()) {
-      return aRv.ThrowNotAllowedError(
-          "Each adopted style sheet must be created through the Constructable "
-          "StyleSheets API");
-    }
-    // 2.2 Check if all sheets' constructor documents match the
-    // DocumentOrShadowRoot's node document, else throw NotAlloweError
-    if (!sheet->ConstructorDocumentMatches(doc)) {
-      return aRv.ThrowNotAllowedError(
-          "Each adopted style sheet's constructor document must match the "
-          "document or shadow root's node document");
-    }
+  // 1. If value’s constructed flag is not set, or its constructor document is
+  // not equal to this DocumentOrShadowRoot's node document, throw a
+  // "NotAllowedError" DOMException.
+  if (!aSheet.IsConstructed()) {
+    return aRv.ThrowNotAllowedError(
+        "Adopted style sheet must be created through the Constructable "
+        "StyleSheets API");
+  }
+  if (!aSheet.ConstructorDocumentMatches(doc)) {
+    return aRv.ThrowNotAllowedError(
+        "Adopted style sheet's constructor document must match the "
+        "document or shadow root's node document");
   }
 
   auto* shadow = ShadowRoot::FromNode(AsNode());
   MOZ_ASSERT((mKind == Kind::ShadowRoot) == !!shadow);
 
-  StyleSheetSet set(aAdoptedStyleSheets.Length());
-  size_t commonPrefix = 0;
-
-  // Find the index at which the new array differs from the old array.
-  // We don't want to do extra work for the sheets that both arrays have.
-  size_t min =
-      std::min(aAdoptedStyleSheets.Length(), mAdoptedStyleSheets.Length());
-  for (size_t i = 0; i < min; ++i) {
-    if (aAdoptedStyleSheets[i] != mAdoptedStyleSheets[i]) {
-      break;
-    }
-    ++commonPrefix;
-    set.Insert(mAdoptedStyleSheets[i]);
+  auto existingIndex = mAdoptedStyleSheets.LastIndexOf(&aSheet);
+  // Ensure it's in the backing array at the right index.
+  mAdoptedStyleSheets.InsertElementAt(aIndex, &aSheet);
+  if (existingIndex == mAdoptedStyleSheets.NoIndex) {
+    // common case: we're not already adopting this sheet.
+    aSheet.AddAdopter(*this);
+  } else if (existingIndex < aIndex) {
+    // We're inserting an already-adopted stylesheet in a later position, so
+    // this one should take precedent and we should remove the old one.
+    RemoveSheetFromStylesIfApplicable(aSheet);
+  } else {
+    // The sheet is already at a position later than or equal to the current
+    // one, and is already adopted by us, we have nothing to do here other than
+    // adding to the current list.
+    return;
   }
 
-  // Try to truncate the sheets to a common prefix.
-  // If the prefix contains duplicates of sheets that we are removing,
-  // we are just going to re-build everything from scratch.
-  if (commonPrefix != mAdoptedStyleSheets.Length()) {
-    StyleSheetSet removedSet(mAdoptedStyleSheets.Length() - commonPrefix);
-    for (size_t i = mAdoptedStyleSheets.Length(); i != commonPrefix; --i) {
-      StyleSheet* sheetToRemove = mAdoptedStyleSheets.ElementAt(i - 1);
-      if (MOZ_UNLIKELY(set.Contains(sheetToRemove))) {
-        // Fixing duplicate sheets would require insertions/removals from the
-        // style set. We may as well just rebuild the whole thing from scratch.
-        set.Clear();
-        // Note that setting this to zero means we'll continue the loop until
-        // all the sheets are cleared.
-        commonPrefix = 0;
-      }
-      if (MOZ_LIKELY(removedSet.EnsureInserted(sheetToRemove))) {
-        RemoveSheetFromStylesIfApplicable(*sheetToRemove);
-        sheetToRemove->RemoveAdopter(*this);
-      }
-    }
-    mAdoptedStyleSheets.TruncateLength(commonPrefix);
-  }
-
-  // 3. Set the adopted style sheets to the new sheets
-  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
-
-  // Only add sheets that are not already in the common prefix.
-  for (const auto& sheet : Span(aAdoptedStyleSheets).From(commonPrefix)) {
-    if (MOZ_UNLIKELY(!set.EnsureInserted(sheet))) {
-      // The idea is that this case is rare, so we pay the price of removing the
-      // old sheet from the styles and append it later rather than the other way
-      // around.
-      RemoveSheetFromStylesIfApplicable(*sheet);
+  if (aSheet.IsApplicable()) {
+    if (mKind == Kind::Document) {
+      doc.AddStyleSheetToStyleSets(aSheet);
     } else {
-      sheet->AddAdopter(*this);
+      shadow->InsertSheetIntoAuthorData(aIndex, aSheet, mAdoptedStyleSheets);
     }
-    mAdoptedStyleSheets.AppendElement(sheet);
-    if (sheet->IsApplicable()) {
-      if (mKind == Kind::Document) {
-        doc.AddStyleSheetToStyleSets(*sheet);
-      } else {
-        shadow->InsertSheetIntoAuthorData(mAdoptedStyleSheets.Length() - 1,
-                                          *sheet, mAdoptedStyleSheets);
-      }
+  }
+}
+
+void DocumentOrShadowRoot::OnDeleteAdoptedStyleSheets(StyleSheet& aSheet,
+                                                      uint32_t aIndex,
+                                                      ErrorResult&) {
+  MOZ_ASSERT(mAdoptedStyleSheets.ElementAt(aIndex) == &aSheet);
+  mAdoptedStyleSheets.RemoveElementAt(aIndex);
+  auto existingIndex = mAdoptedStyleSheets.LastIndexOf(&aSheet);
+  if (existingIndex != mAdoptedStyleSheets.NoIndex && existingIndex >= aIndex) {
+    // The sheet is still adopted by us and was already later from the one we're
+    // removing, so nothing to do.
+    return;
+  }
+
+  RemoveSheetFromStylesIfApplicable(aSheet);
+  if (existingIndex == mAdoptedStyleSheets.NoIndex) {
+    // The sheet is no longer adopted by us.
+    aSheet.RemoveAdopter(*this);
+  } else if (aSheet.IsApplicable()) {
+    // We need to re-insert the sheet at the right (pre-existing) index.
+    nsINode& node = AsNode();
+    if (mKind == Kind::Document) {
+      node.AsDocument()->AddStyleSheetToStyleSets(aSheet);
+    } else {
+      ShadowRoot::FromNode(node)->InsertSheetIntoAuthorData(
+          existingIndex, aSheet, mAdoptedStyleSheets);
     }
   }
 }
 
 void DocumentOrShadowRoot::ClearAdoptedStyleSheets() {
-  EnumerateUniqueAdoptedStyleSheetsBackToFront([&](StyleSheet& aSheet) {
-    RemoveSheetFromStylesIfApplicable(aSheet);
-    aSheet.RemoveAdopter(*this);
-  });
-  mAdoptedStyleSheets.Clear();
+  auto* shadow = ShadowRoot::FromNode(AsNode());
+  auto* doc = shadow ? nullptr : AsNode().AsDocument();
+  MOZ_ASSERT(shadow || doc);
+  IgnoredErrorResult rv;
+  while (!mAdoptedStyleSheets.IsEmpty()) {
+    if (shadow) {
+      ShadowRoot_Binding::AdoptedStyleSheetsHelpers::RemoveLastElement(shadow,
+                                                                       rv);
+    } else {
+      Document_Binding::AdoptedStyleSheetsHelpers::RemoveLastElement(doc, rv);
+    }
+    MOZ_DIAGNOSTIC_ASSERT(!rv.Failed(), "Removal doesn't fail");
+  }
 }
 
 void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
     const DocumentOrShadowRoot& aSource) {
   if (!aSource.AdoptedSheetCount()) {
-    return;
-  }
-  Sequence<OwningNonNull<StyleSheet>> list;
-  if (!list.SetCapacity(mAdoptedStyleSheets.Length(), fallible)) {
     return;
   }
 
@@ -220,18 +213,17 @@ void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
       sourceDoc.GetProperty(nsGkAtoms::adoptedsheetclones));
   MOZ_ASSERT(clonedSheetMap);
 
+  // We don't need to care about the reflector (AdoptedStyleSheetsHelpers and
+  // so) because this is only used for static documents.
   for (const StyleSheet* sheet : aSource.mAdoptedStyleSheets) {
     RefPtr<StyleSheet> clone = clonedSheetMap->LookupOrInsertWith(
         sheet, [&] { return sheet->CloneAdoptedSheet(ownerDoc); });
     MOZ_ASSERT(clone);
     MOZ_DIAGNOSTIC_ASSERT(clone->ConstructorDocumentMatches(ownerDoc));
-    DebugOnly<bool> succeeded = list.AppendElement(std::move(clone), fallible);
-    MOZ_ASSERT(succeeded);
+    ErrorResult rv;
+    OnSetAdoptedStyleSheets(*clone, mAdoptedStyleSheets.Length(), rv);
+    MOZ_ASSERT(!rv.Failed());
   }
-
-  ErrorResult rv;
-  SetAdoptedStyleSheets(list, rv);
-  MOZ_ASSERT(!rv.Failed());
 }
 
 Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
