@@ -1589,17 +1589,18 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aRequest->GetScriptLoadContext()->mOffThreadToken =
-        maybeSource.constructed<SourceText<char16_t>>()
-            ? JS::CompileModuleToStencilOffThread(
-                  cx, options, maybeSource.ref<SourceText<char16_t>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
-            : JS::CompileModuleToStencilOffThread(
-                  cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
-    if (!aRequest->GetScriptLoadContext()->mOffThreadToken) {
+    auto compile = [&](auto& source) {
+      return JS::CompileModuleToStencilOffThread(
+          cx, options, source, OffThreadScriptLoaderCallback, runnable.get());
+    };
+
+    MOZ_ASSERT(!maybeSource.empty());
+    JS::OffThreadToken* token = maybeSource.mapNonEmpty(compile);
+    if (!token) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    aRequest->GetScriptLoadContext()->mOffThreadToken = token;
   } else {
     MOZ_ASSERT(aRequest->IsTextSource());
 
@@ -1638,17 +1639,18 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
       }
     }
 
-    aRequest->GetScriptLoadContext()->mOffThreadToken =
-        maybeSource.constructed<SourceText<char16_t>>()
-            ? JS::CompileToStencilOffThread(
-                  cx, options, maybeSource.ref<SourceText<char16_t>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
-            : JS::CompileToStencilOffThread(
-                  cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
-                  OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
-    if (!aRequest->GetScriptLoadContext()->mOffThreadToken) {
+    auto compile = [&](auto& source) {
+      return JS::CompileToStencilOffThread(
+          cx, options, source, OffThreadScriptLoaderCallback, runnable.get());
+    };
+
+    MOZ_ASSERT(!maybeSource.empty());
+    JS::OffThreadToken* token = maybeSource.mapNonEmpty(compile);
+    if (!token) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    aRequest->GetScriptLoadContext()->mOffThreadToken = token;
   }
   signalOOM.release();
 
@@ -2170,10 +2172,11 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
                                 MarkerInnerWindowIdFromJSContext(aCx),
                                 profilerLabelString);
 
+      auto compile = [&](auto& source) { return aExec.Compile(source); };
+
+      MOZ_ASSERT(!maybeSource.empty());
       TimeStamp startTime = TimeStamp::Now();
-      rv = maybeSource.constructed<SourceText<char16_t>>()
-               ? aExec.Compile(maybeSource.ref<SourceText<char16_t>>())
-               : aExec.Compile(maybeSource.ref<SourceText<Utf8Unit>>());
+      rv = maybeSource.mapNonEmpty(compile);
       mMainThreadParseTime += TimeStamp::Now() - startTime;
     }
   }
