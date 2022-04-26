@@ -171,23 +171,19 @@ int64_t FrameBuffer::FindNextFrame(int64_t now_ms) {
       }
 
       if (next_frame_it->second.num_missing_decodable > 0) {
-        // For now VP9 uses the inter_layer_predicted to signal a dependency
-        // instead of adding it as a reference.
-        // TODO(webrtc:12206): Stop using inter_layer_predicted for VP9.
-        bool has_inter_layer_dependency =
-            next_frame_it->second.frame->inter_layer_predicted;
-        for (size_t i = 0; !has_inter_layer_dependency &&
-                           i < EncodedFrame::kMaxFrameReferences &&
+        bool has_inter_layer_dependency = false;
+        for (size_t i = 0; i < EncodedFrame::kMaxFrameReferences &&
                            i < next_frame_it->second.frame->num_references;
              ++i) {
           if (next_frame_it->second.frame->references[i] >=
               frame_it->first.picture_id) {
             has_inter_layer_dependency = true;
+            break;
           }
         }
 
         // If the frame has an undecoded dependency that is not within the same
-        // temporal unit then this frame is not ready to be decoded yet. If it
+        // temporal unit then this frame is not yet ready to be decoded. If it
         // is within the same temporal unit then the not yet decoded dependency
         // is just a lower spatial frame, which is ok.
         if (!has_inter_layer_dependency ||
@@ -403,9 +399,6 @@ bool FrameBuffer::ValidReferences(const EncodedFrame& frame) const {
         return false;
     }
   }
-
-  if (frame.inter_layer_predicted && frame.id.spatial_layer == 0)
-    return false;
 
   return true;
 }
@@ -657,23 +650,6 @@ bool FrameBuffer::UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
       bool ref_continuous =
           ref_info != frames_.end() && ref_info->second.continuous;
       not_yet_fulfilled_dependencies.push_back({ref_key, ref_continuous});
-    }
-  }
-
-  // Does |frame| depend on the lower spatial layer?
-  if (frame.inter_layer_predicted) {
-    VideoLayerFrameId ref_key(frame.id.picture_id, frame.id.spatial_layer - 1);
-    auto ref_info = frames_.find(ref_key);
-
-    bool lower_layer_decoded =
-        last_decoded_frame && *last_decoded_frame == ref_key;
-    bool lower_layer_continuous =
-        lower_layer_decoded ||
-        (ref_info != frames_.end() && ref_info->second.continuous);
-
-    if (!lower_layer_continuous || !lower_layer_decoded) {
-      not_yet_fulfilled_dependencies.push_back(
-          {ref_key, lower_layer_continuous});
     }
   }
 
