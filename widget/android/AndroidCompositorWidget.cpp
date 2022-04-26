@@ -109,5 +109,10 @@ LayoutDeviceIntSize AndroidCompositorWidget::GetClientSize() {
   return mClientSize;
 }
 
+void AndroidCompositorWidget::NotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
+  mClientSize = aClientSize;
+}
+
 }  // namespace widget
 }  // namespace mozilla

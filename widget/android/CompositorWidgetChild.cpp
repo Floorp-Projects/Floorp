@@ -33,5 +33,10 @@ mozilla::ipc::IPCResult CompositorWidgetChild::RecvUnobserveVsync() {
   return IPC_OK();
 }
 
+void CompositorWidgetChild::NotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
+  Unused << SendNotifyClientSizeChanged(aClientSize);
+}
+
 }  // namespace widget
 }  // namespace mozilla

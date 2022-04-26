@@ -6,6 +6,8 @@
 
 include protocol PCompositorBridge;
 
+using mozilla::LayoutDeviceIntSize from "Units.h";
+
 namespace mozilla {
 namespace widget {
 
@@ -16,6 +18,8 @@ sync protocol PCompositorWidget
 
 parent:
   async __delete__();
+
+  async NotifyClientSizeChanged(LayoutDeviceIntSize aClientSize);
 
 child:
   async ObserveVsync();
