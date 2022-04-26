@@ -609,6 +609,10 @@ void WebrtcGmpVideoEncoder::Encoded(
   unit.capture_time_ms_ = capture_time.ms();
   unit._completeFrame = true;
 
+  // Parse QP.
+  mH264BitstreamParser.ParseBitstream(unit.data(), unit.size());
+  mH264BitstreamParser.GetLastSliceQp(&unit.qp_);
+
   // TODO: Currently the OpenH264 codec does not preserve any codec
   //       specific info passed into it and just returns default values.
   //       If this changes in the future, it would be nice to get rid of
