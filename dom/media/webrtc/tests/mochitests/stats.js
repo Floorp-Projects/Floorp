@@ -26,6 +26,7 @@ const statsExpectedByType = {
       "pliCount",
       "framesDecoded",
       "discardedPackets",
+      "framesPerSecond",
     ],
     unimplemented: [
       "mediaTrackId",
@@ -503,6 +504,12 @@ function pedanticChecks(report) {
           stat.discardedPackets < 100,
           `${stat.type}.discardedPackets is a sane number for a short test. ` +
             `value=${stat.discardedPackets}`
+        );
+        // framesPerSecond
+        ok(
+          stat.framesPerSecond > 0 && stat.framesPerSecond < 70,
+          `${stat.type}.framesPerSecond is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesPerSecond}`
         );
         // framesDecoded
         ok(
