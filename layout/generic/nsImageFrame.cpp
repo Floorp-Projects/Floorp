@@ -1086,8 +1086,10 @@ void nsImageFrame::MaybeDecodeForPredictedSize() {
 
   // If we are in a remote browser, then apply scaling from ancestor browsers
   if (BrowserChild* browserChild = BrowserChild::GetFrom(presShell)) {
-    resolutionToScreen.xScale *= browserChild->GetEffectsInfo().mScaleX;
-    resolutionToScreen.yScale *= browserChild->GetEffectsInfo().mScaleY;
+    resolutionToScreen.xScale *=
+        browserChild->GetEffectsInfo().mRasterScale.xScale;
+    resolutionToScreen.yScale *=
+        browserChild->GetEffectsInfo().mRasterScale.yScale;
   }
 
   // ...and this frame's content box...
