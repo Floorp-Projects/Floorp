@@ -936,6 +936,8 @@ gfxFontEntry* gfxDWriteFontList::LookupLocalFont(
     nsPresContext* aPresContext, const nsACString& aFontName,
     WeightRange aWeightForEntry, StretchRange aStretchForEntry,
     SlantStyleRange aStyleForEntry) {
+  AutoLock lock(mLock);
+
   if (SharedFontList()) {
     return LookupInSharedFaceNameList(aPresContext, aFontName, aWeightForEntry,
                                       aStretchForEntry, aStyleForEntry);
