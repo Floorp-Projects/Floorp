@@ -7,17 +7,15 @@ import logging
 import re
 import os
 import sys
-from abc import ABC, abstractmethod
 
 import attr
 
-from taskgraph.parameters import Parameters
-from taskgraph.taskgraph import TaskGraph
+from taskgraph.util.verify import (
+    VerificationSequence,
+)
 
 from gecko_taskgraph import GECKO
-from gecko_taskgraph.config import GraphConfig
 from gecko_taskgraph.util.attributes import (
-    match_run_on_projects,
     RELEASE_PROJECTS,
     ALL_PROJECTS,
     RUN_ON_PROJECT_ALIASES,
@@ -26,101 +24,6 @@ from gecko_taskgraph.util.treeherder import join_symbol
 
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, "taskcluster", "docs")
-
-
-@attr.s(frozen=True)
-class Verification(ABC):
-    func = attr.ib()
-
-    @abstractmethod
-    def verify(self, **kwargs) -> None:
-        pass
-
-
-@attr.s(frozen=True)
-class InitialVerification(Verification):
-    """Verification that doesn't depend on any generation state."""
-
-    def verify(self):
-        self.func()
-
-
-@attr.s(frozen=True)
-class GraphVerification(Verification):
-    """Verification for a TaskGraph object."""
-
-    run_on_projects = attr.ib(default=None)
-
-    def verify(
-        self, graph: TaskGraph, graph_config: GraphConfig, parameters: Parameters
-    ):
-        if self.run_on_projects and not match_run_on_projects(
-            parameters["project"], self.run_on_projects
-        ):
-            return
-
-        scratch_pad = {}
-        graph.for_each_task(
-            self.func,
-            scratch_pad=scratch_pad,
-            graph_config=graph_config,
-            parameters=parameters,
-        )
-        self.func(
-            None,
-            graph,
-            scratch_pad=scratch_pad,
-            graph_config=graph_config,
-            parameters=parameters,
-        )
-
-
-@attr.s(frozen=True)
-class ParametersVerification(Verification):
-    """Verification for a set of parameters."""
-
-    def verify(self, parameters: Parameters):
-        self.func(parameters)
-
-
-@attr.s(frozen=True)
-class KindsVerification(Verification):
-    """Verification for kinds."""
-
-    def verify(self, kinds: dict):
-        self.func(kinds)
-
-
-@attr.s(frozen=True)
-class VerificationSequence:
-    """
-    Container for a sequence of verifications over a TaskGraph. Each
-    verification is represented as a callable taking (task, taskgraph,
-    scratch_pad), called for each task in the taskgraph, and one more
-    time with no task but with the taskgraph and the same scratch_pad
-    that was passed for each task.
-    """
-
-    _verifications = attr.ib(factory=dict)
-    _verification_types = {
-        "graph": GraphVerification,
-        "initial": InitialVerification,
-        "kinds": KindsVerification,
-        "parameters": ParametersVerification,
-    }
-
-    def __call__(self, name, *args, **kwargs):
-        for verification in self._verifications.get(name, []):
-            verification.verify(*args, **kwargs)
-
-    def add(self, name, **kwargs):
-        cls = self._verification_types.get(name, GraphVerification)
-
-        def wrap(func):
-            self._verifications.setdefault(name, []).append(cls(func, **kwargs))
-            return func
-
-        return wrap
 
 
 verifications = VerificationSequence()
