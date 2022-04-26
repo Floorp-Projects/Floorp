@@ -48,6 +48,10 @@ AvailableCpuFeatures GetAvailableCpuFeatures() {
   return {/*sse2=*/false,
           /*avx2=*/false,
           /*neon=*/true};
+#else
+  return {/*sse2=*/false,
+          /*avx2=*/false,
+          /*neon=*/false};
 #endif
 }
 
