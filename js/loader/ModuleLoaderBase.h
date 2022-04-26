@@ -75,6 +75,60 @@ class ScriptLoaderInterface : public nsISupports {
   virtual void MaybeTriggerBytecodeEncoding() = 0;
 };
 
+/*
+ * [DOMDOC] Module Loading
+ *
+ * ModuleLoaderBase provides support for loading module graphs as defined in the
+ * EcmaScript specification. A derived module loader class must be created for a
+ * specific use case (for example loading HTML module scripts). The derived
+ * class provides operations such as fetching of source code and scheduling of
+ * module execution.
+ *
+ * Module loading works in terms of 'requests' which hold data about modules as
+ * they move through the loading process. There may be more than one load
+ * request active for a single module URI, but the module is only loaded
+ * once. This is achieved by tracking all fetching and fetched modules in the
+ * module map.
+ *
+ * The module map is made up of two parts. A module that has been requested but
+ * has not yet loaded is represented by a promise in the mFetchingModules map. A
+ * module which has been loaded is represented by a ModuleScript in the
+ * mFetchedModules map.
+ *
+ * Module loading typically works as follows:
+ *
+ * 1.  The client ensures there is an instance of the derived module loader
+ *     class for its global or creates one if necessary.
+ *
+ * 2.  The client creates a ModuleLoadRequest object for the module to load and
+ *     calls the loader's StartModuleLoad() method. This is a top-level request,
+ *     i.e. not an import.
+ *
+ * 3.  The module loader calls the virtual method CanStartLoad() to check
+ *     whether the request should be loaded.
+ *
+ * 4.  If the module is not already present in the module map, the loader calls
+ *     the virtual method StartFetch() to set up an asynchronous operation to
+ *     fetch the module source.
+ *
+ * 5.  When the fetch operation is complete, the derived loader calls
+ *     OnFetchComplete() passing an error code to indicate success or failure.
+ *
+ * 6.  On success, the loader attempts to create a module script by calling the
+ *     virtual CompileFetchedModule() method.
+ *
+ * 7.  If compilation is successful, the loader creates load requests for any
+ *     imported modules if present. If so, the process repeats from step 3.
+ *
+ * 8.  When a load request is completed, the virtual OnModuleLoadComplete()
+ *     method is called. This is called for the top-level request and import
+ *     requests.
+ *
+ * 9.  The client calls InstantiateModuleGraph() for the top-level request. This
+ *     links the loaded module graph.
+ *
+ * 10. The client calls EvaluateModule() to execute the top-level module.
+ */
 class ModuleLoaderBase : public nsISupports {
  private:
   using GenericNonExclusivePromise = mozilla::GenericNonExclusivePromise;
