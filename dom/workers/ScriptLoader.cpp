@@ -2305,10 +2305,10 @@ bool ScriptExecutorRunnable::AllScriptsExecutable() const {
 
 void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
                     UniquePtr<SerializedStackHolder> aOriginStack,
-                    nsTArray<ScriptLoadInfo> aLoadInfos, bool aIsMainScript,
+                    const nsTArray<nsString>& aScriptURLs, bool aIsMainScript,
                     WorkerScriptType aWorkerScriptType, ErrorResult& aRv) {
   aWorkerPrivate->AssertIsOnWorkerThread();
-  NS_ASSERTION(!aLoadInfos.IsEmpty(), "Bad arguments!");
+  NS_ASSERTION(!aScriptURLs.IsEmpty(), "Bad arguments!");
 
   AutoSyncLoopHolder syncLoop(aWorkerPrivate, Canceling);
   nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
@@ -2326,6 +2326,13 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 
   clientInfo = global->GetClientInfo();
   controller = global->GetController();
+
+  nsTArray<ScriptLoadInfo> aLoadInfos =
+      TransformIntoNewArray(aScriptURLs, [](const auto& scriptURL) {
+        ScriptLoadInfo res;
+        res.mURL = scriptURL;
+        return res;
+      });
 
   RefPtr<ScriptLoaderRunnable> loader = new ScriptLoaderRunnable(
       aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
@@ -2451,13 +2458,12 @@ void LoadMainScript(WorkerPrivate* aWorkerPrivate,
                     UniquePtr<SerializedStackHolder> aOriginStack,
                     const nsAString& aScriptURL,
                     WorkerScriptType aWorkerScriptType, ErrorResult& aRv) {
-  nsTArray<ScriptLoadInfo> loadInfos;
+  nsTArray<nsString> scriptURLs;
 
-  ScriptLoadInfo* info = loadInfos.AppendElement();
-  info->mURL = aScriptURL;
+  scriptURLs.AppendElement(aScriptURL);
 
-  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), std::move(loadInfos),
-                 true, aWorkerScriptType, aRv);
+  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), scriptURLs, true,
+                 aWorkerScriptType, aRv);
 }
 
 void Load(WorkerPrivate* aWorkerPrivate,
@@ -2475,15 +2481,8 @@ void Load(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  nsTArray<ScriptLoadInfo> loadInfos =
-      TransformIntoNewArray(aScriptURLs, [](const auto& scriptURL) {
-        ScriptLoadInfo res;
-        res.mURL = scriptURL;
-        return res;
-      });
-
-  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), std::move(loadInfos),
-                 false, aWorkerScriptType, aRv);
+  LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), aScriptURLs, false,
+                 aWorkerScriptType, aRv);
 }
 
 }  // namespace workerinternals
