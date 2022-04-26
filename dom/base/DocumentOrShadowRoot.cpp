@@ -620,11 +620,6 @@ int32_t DocumentOrShadowRoot::StyleOrderIndexOfSheet(
   return mStyleSheets.IndexOf(&aSheet);
 }
 
-void DocumentOrShadowRoot::GetAdoptedStyleSheets(
-    nsTArray<RefPtr<StyleSheet>>& aAdoptedStyleSheets) const {
-  aAdoptedStyleSheets = mAdoptedStyleSheets.Clone();
-}
-
 void DocumentOrShadowRoot::TraverseSheetRefInStylesIfApplicable(
     StyleSheet& aSheet, nsCycleCollectionTraversalCallback& cb) {
   if (!aSheet.IsApplicable()) {
