@@ -31,6 +31,9 @@ struct AvailableCpuFeatures {
 // Detects what CPU features are available.
 AvailableCpuFeatures GetAvailableCpuFeatures();
 
+// Returns the CPU feature flags all set to false.
+AvailableCpuFeatures NoAvailableCpuFeatures();
+
 }  // namespace webrtc
 
 #endif  // MODULES_AUDIO_PROCESSING_AGC2_CPU_FEATURES_H_

@@ -8,13 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-// Defines WEBRTC_ARCH_X86_FAMILY, used below.
-#include "rtc_base/system/arch.h"
-
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-#include <emmintrin.h>
-#endif
-
 #include <algorithm>
 #include <numeric>
 
@@ -84,7 +77,7 @@ FullyConnectedLayer::FullyConnectedLayer(
       output_size_(output_size),
       bias_(GetScaledParams(bias)),
       weights_(PreprocessWeights(weights, output_size)),
-      cpu_features_(cpu_features),
+      vector_math_(cpu_features),
       activation_function_(GetActivationFunction(activation_function)) {
   RTC_DCHECK_LE(output_size_, kFullyConnectedLayerMaxUnits)
       << "Insufficient FC layer over-allocation (" << layer_name << ").";
@@ -100,52 +93,13 @@ FullyConnectedLayer::~FullyConnectedLayer() = default;
 
 void FullyConnectedLayer::ComputeOutput(rtc::ArrayView<const float> input) {
   RTC_DCHECK_EQ(input.size(), input_size_);
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-  // TODO(bugs.chromium.org/10480): Add AVX2.
-  if (cpu_features_.sse2) {
-    ComputeOutputSse2(input);
-    return;
-  }
-#endif
-  // TODO(bugs.chromium.org/10480): Add Neon.
-
-  // Un-optimized implementation.
+  rtc::ArrayView<const float> weights(weights_);
   for (int o = 0; o < output_size_; ++o) {
-    output_[o] = bias_[o];
-    // TODO(bugs.chromium.org/9076): Benchmark how different layouts for
-    // |weights_| change the performance across different platforms.
-    for (int i = 0; i < input_size_; ++i) {
-      output_[o] += input[i] * weights_[o * input_size_ + i];
-    }
-    output_[o] = activation_function_(output_[o]);
-  }
-}
-
-#if defined(WEBRTC_ARCH_X86_FAMILY)
-void FullyConnectedLayer::ComputeOutputSse2(rtc::ArrayView<const float> input) {
-  const int input_size_by_4 = input_size_ >> 2;
-  const int offset = input_size_ & ~3;
-  // TODO(bugs.chromium.org/10480): Check if reinterpret_cast below is ok.
-  __m128 sum_wx_128;
-  const float* v = reinterpret_cast<const float*>(&sum_wx_128);
-  for (int o = 0; o < output_size_; ++o) {
-    // Perform 128 bit vector operations.
-    sum_wx_128 = _mm_set1_ps(0);
-    const float* x_p = input.data();
-    const float* w_p = weights_.data() + o * input.size();
-    for (int i = 0; i < input_size_by_4; ++i, x_p += 4, w_p += 4) {
-      sum_wx_128 = _mm_add_ps(sum_wx_128,
-                              _mm_mul_ps(_mm_loadu_ps(x_p), _mm_loadu_ps(w_p)));
-    }
-    // Perform non-vector operations for any remaining items, sum up bias term
-    // and results from the vectorized code, and apply the activation function.
     output_[o] = activation_function_(
-        std::inner_product(input.begin() + offset, input.end(),
-                           weights_.begin() + o * input.size() + offset,
-                           bias_[o] + v[0] + v[1] + v[2] + v[3]));
+        bias_[o] + vector_math_.DotProduct(
+                       input, weights.subview(o * input_size_, input_size_)));
   }
 }
-#endif  // defined(WEBRTC_ARCH_X86_FAMILY)
 
 }  // namespace rnn_vad
 }  // namespace webrtc
