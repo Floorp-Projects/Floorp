@@ -105,6 +105,14 @@ class MockTopContext {
   }
 }
 
+const hasPromiseResolved = async function(promise) {
+  let resolved = false;
+  promise.finally(() => (resolved = true));
+  // Make sure microtasks have time to run.
+  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+  return resolved;
+};
+
 add_test(
   async function test_waitForInitialNavigation_initialDocumentNoWindowGlobal() {
     const browsingContext = new MockTopContext();
@@ -115,10 +123,16 @@ add_test(
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
-    const completed = waitForInitialNavigationCompleted(webProgress);
+    const navigated = waitForInitialNavigationCompleted(webProgress);
     await webProgress.sendStartState({ isInitial: true });
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
+
     await webProgress.sendStopState();
-    const { currentURI, targetURI } = await completed;
+    const { currentURI, targetURI } = await navigated;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
     ok(
@@ -143,10 +157,17 @@ add_test(
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
-    const completed = waitForInitialNavigationCompleted(webProgress);
+    const navigated = waitForInitialNavigationCompleted(webProgress);
+
     await webProgress.sendStartState({ isInitial: true });
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
+
     await webProgress.sendStopState();
-    const { currentURI, targetURI } = await completed;
+    const { currentURI, targetURI } = await navigated;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
     ok(
@@ -172,9 +193,15 @@ add_test(
     await webProgress.sendStartState({ isInitial: true });
     ok(webProgress.isLoadingDocument, "Document is loading");
 
-    const completed = waitForInitialNavigationCompleted(webProgress);
+    const navigated = waitForInitialNavigationCompleted(webProgress);
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
+
     await webProgress.sendStopState();
-    const { currentURI, targetURI } = await completed;
+    const { currentURI, targetURI } = await navigated;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
     ok(
@@ -202,9 +229,14 @@ add_test(
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
-    const { currentURI, targetURI } = await waitForInitialNavigationCompleted(
-      webProgress
+    const navigated = waitForInitialNavigationCompleted(webProgress);
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
     );
+
+    const { currentURI, targetURI } = await navigated;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
     ok(
@@ -232,6 +264,11 @@ add_test(
     ok(webProgress.isLoadingDocument, "Document is loading");
 
     const navigated = waitForInitialNavigationCompleted(webProgress);
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
 
     await webProgress.sendStopState();
 
@@ -271,6 +308,11 @@ add_test(
 
     const navigated = waitForInitialNavigationCompleted(webProgress);
 
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
+
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -302,10 +344,16 @@ add_test(
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
 
-    const completed = waitForInitialNavigationCompleted(webProgress);
+    const navigated = waitForInitialNavigationCompleted(webProgress);
     await webProgress.sendStartState({ isInitial: false });
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
+
     await webProgress.sendStopState();
-    const { currentURI, targetURI } = await completed;
+    const { currentURI, targetURI } = await navigated;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
     ok(
@@ -331,9 +379,15 @@ add_test(
     await webProgress.sendStartState({ isInitial: false });
     ok(webProgress.isLoadingDocument, "Document is loading");
 
-    const completed = waitForInitialNavigationCompleted(webProgress);
+    const navigated = waitForInitialNavigationCompleted(webProgress);
+
+    ok(
+      !(await hasPromiseResolved(navigated)),
+      "waitForInitialNavigationCompleted has not resolved yet"
+    );
+
     await webProgress.sendStopState();
-    const { currentURI, targetURI } = await completed;
+    const { currentURI, targetURI } = await navigated;
 
     ok(!webProgress.isLoadingDocument, "Document is not loading");
     ok(
@@ -388,10 +442,12 @@ add_test(async function test_waitForInitialNavigation_resolveWhenStarted() {
   await webProgress.sendStartState({ isInitial: true });
   ok(webProgress.isLoadingDocument, "Document is already loading");
 
-  const completed = waitForInitialNavigationCompleted(webProgress, {
-    resolveWhenStarted: true,
-  });
-  const { currentURI, targetURI } = await completed;
+  const { currentURI, targetURI } = await waitForInitialNavigationCompleted(
+    webProgress,
+    {
+      resolveWhenStarted: true,
+    }
+  );
 
   ok(webProgress.isLoadingDocument, "Document is still loading");
   ok(
@@ -410,10 +466,16 @@ add_test(async function test_waitForInitialNavigation_crossOrigin() {
 
   ok(!webProgress.isLoadingDocument, "Document is not loading");
 
-  const completed = waitForInitialNavigationCompleted(webProgress);
+  const navigated = waitForInitialNavigationCompleted(webProgress);
   await webProgress.sendStartState({ coop: true });
+
+  ok(
+    !(await hasPromiseResolved(navigated)),
+    "waitForInitialNavigationCompleted has not resolved yet"
+  );
+
   await webProgress.sendStopState();
-  const { currentURI, targetURI } = await completed;
+  const { currentURI, targetURI } = await navigated;
 
   notEqual(
     browsingContext,
@@ -443,13 +505,12 @@ add_test(async function test_ProgressListener_notWaitForExplicitStart() {
   });
   const navigated = progressListener.start();
 
-  // Monitor the progress listener with a flag.
-  let hasNavigated = false;
-  navigated.finally(() => (hasNavigated = true));
-
   // Send stop state to complete the initial navigation
   await webProgress.sendStopState();
-  ok(hasNavigated, "Listener has resolved after initial navigation");
+  ok(
+    await hasPromiseResolved(navigated),
+    "Listener has resolved after initial navigation"
+  );
 
   run_next_test();
 });
@@ -466,21 +527,26 @@ add_test(async function test_ProgressListener_waitForExplicitStart() {
   });
   const navigated = progressListener.start();
 
-  // Monitor the progress listener with a flag.
-  let hasNavigated = false;
-  navigated.finally(() => (hasNavigated = true));
-
   // Send stop state to complete the initial navigation
   await webProgress.sendStopState();
-  ok(!hasNavigated, "Listener has not resolved after initial navigation");
+  ok(
+    !(await hasPromiseResolved(navigated)),
+    "Listener has not resolved after initial navigation"
+  );
 
   // Start a new navigation
   await webProgress.sendStartState();
-  ok(!hasNavigated, "Listener has not resolved after starting new navigation");
+  ok(
+    !(await hasPromiseResolved(navigated)),
+    "Listener has not resolved after starting new navigation"
+  );
 
   // Finish the new navigation
   await webProgress.sendStopState();
-  ok(hasNavigated, "Listener resolved after finishing the new navigation");
+  ok(
+    await hasPromiseResolved(navigated),
+    "Listener resolved after finishing the new navigation"
+  );
 
   run_next_test();
 });
