@@ -152,17 +152,12 @@ BaseChannel::~BaseChannel() {
   // Eats any outstanding messages or packets.
   worker_thread_->Clear(&invoker_);
   worker_thread_->Clear(this);
-  // We must destroy the media channel before the transport channel, otherwise
-  // the media channel may try to send on the dead transport channel. NULLing
-  // is not an effective strategy since the sends will come on another thread.
-  media_channel_.reset();
-  RTC_LOG(LS_INFO) << "Destroyed channel: " << ToString();
+  // The media channel is destroyed at the end of the destructor, since it
+  // is a std::unique_ptr. The transport channel (rtp_transport) must outlive
+  // the media channel.
 }
 
 std::string BaseChannel::ToString() const {
-  // TODO(bugs.webrtc.org/12230): When media_channel_ is guarded by
-  // worker_thread(), rewrite this debug printout to not print the
-  // media type when called from non-worker-thread.
   rtc::StringBuilder sb;
   sb << "{mid: " << content_name_;
   if (media_channel_) {
