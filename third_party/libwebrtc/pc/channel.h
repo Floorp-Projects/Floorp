@@ -106,14 +106,18 @@ class BaseChannel : public ChannelInterface,
 
   // This function returns true if using SRTP (DTLS-based keying or SDES).
   bool srtp_active() const {
-    // TODO(bugs.webrtc.org/12230): At least some tests call this function
-    // from other threads.
+    RTC_DCHECK_RUN_ON(network_thread());
+    return rtp_transport_ && rtp_transport_->IsSrtpActive();
+  }
+
+  // Version of the above that can be called from any thread.
+  bool SrtpActiveForTesting() const {
     if (!network_thread_->IsCurrent()) {
       return network_thread_->Invoke<bool>(RTC_FROM_HERE,
                                            [this] { return srtp_active(); });
     }
     RTC_DCHECK_RUN_ON(network_thread());
-    return rtp_transport_ && rtp_transport_->IsSrtpActive();
+    return srtp_active();
   }
 
   bool writable() const { return writable_; }
@@ -125,14 +129,18 @@ class BaseChannel : public ChannelInterface,
   bool SetRtpTransport(webrtc::RtpTransportInternal* rtp_transport) override;
 
   webrtc::RtpTransportInternal* rtp_transport() const {
-    // TODO(bugs.webrtc.org/12230): At least some tests call this function
-    // from other threads.
+    RTC_DCHECK_RUN_ON(network_thread());
+    return rtp_transport_;
+  }
+
+  // Version of the above that can be called from any thread.
+  webrtc::RtpTransportInternal* RtpTransportForTesting() const {
     if (!network_thread_->IsCurrent()) {
       return network_thread_->Invoke<webrtc::RtpTransportInternal*>(
           RTC_FROM_HERE, [this] { return rtp_transport(); });
     }
     RTC_DCHECK_RUN_ON(network_thread());
-    return rtp_transport_;
+    return rtp_transport();
   }
 
   // Channel control
