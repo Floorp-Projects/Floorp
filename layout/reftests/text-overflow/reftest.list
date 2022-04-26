@@ -9,7 +9,7 @@ fuzzy(0-16,0-454) fails-if(gtkWidget) fuzzy-if(winWidget,25-85,406-499) fuzzy-if
 fuzzy(0-47,0-3) == false-marker-overlap.html false-marker-overlap-ref.html
 == visibility-hidden.html visibility-hidden-ref.html
 fuzzy(0-47,0-24) == block-padding.html block-padding-ref.html
-fuzzy(0-3,0-825) == quirks-decorations.html quirks-decorations-ref.html
+fuzzy(0-155,0-825) == quirks-decorations.html quirks-decorations-ref.html
 == quirks-line-height.html quirks-line-height-ref.html
 == standards-decorations.html standards-decorations-ref.html
 == standards-line-height.html standards-line-height-ref.html

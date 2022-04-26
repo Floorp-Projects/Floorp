@@ -2920,6 +2920,10 @@ impl TileCacheInstance {
         let prim_surface_index = surface_stack.last().unwrap().1;
         let prim_clip_chain = &prim_instance.vis.clip_chain;
 
+        // Accumulate the exact (clipped) local rect in to the parent surface
+        let mut surface = &mut surfaces[prim_surface_index.0];
+        surface.clipped_local_rect = surface.clipped_local_rect.union(&prim_clip_chain.pic_coverage_rect);
+
         // If the primitive is directly drawn onto this picture cache surface, then
         // the pic_coverage_rect is in the same space. If not, we need to map it from
         // the surface space into the picture cache space.
@@ -2945,7 +2949,7 @@ impl TileCacheInstance {
                 let map_local_to_surface = SpaceMapper::new_with_target(
                     surface.surface_spatial_node_index,
                     current_spatial_node_index,
-                    surface.local_rect,
+                    surface.unclipped_local_rect,
                     frame_context.spatial_tree,
                 );
 
@@ -3327,7 +3331,7 @@ impl TileCacheInstance {
                     // - Have a rect that covers the surface local rect
                     if is_same_coord_system &&
                        !prim_clip_chain.needs_mask &&
-                       prim_clip_chain.pic_coverage_rect.contains_box(&surface.local_rect)
+                       prim_clip_chain.pic_coverage_rect.contains_box(&surface.unclipped_local_rect)
                     {
                         // Note that we use `prim_clip_chain.pic_clip_rect` here rather
                         // than `backdrop_candidate.opaque_rect`. The former is in the
@@ -3679,8 +3683,12 @@ pub struct SurfaceIndex(pub usize);
 /// frames and display lists.
 pub struct SurfaceInfo {
     /// A local rect defining the size of this surface, in the
-    /// coordinate system of the surface itself.
-    pub local_rect: PictureRect,
+    /// coordinate system of the surface itself. This contains
+    /// the unclipped bounding rect of child primitives.
+    pub unclipped_local_rect: PictureRect,
+    /// The local space coverage of child primitives after they are
+    /// are clipped to their owning clip-chain.
+    pub clipped_local_rect: PictureRect,
     /// If true, we know this surface is completely opaque
     pub is_opaque: bool,
     /// The (conservative) valid part of this surface rect. Used
@@ -3728,7 +3736,8 @@ impl SurfaceInfo {
         );
 
         SurfaceInfo {
-            local_rect: PictureRect::zero(),
+            unclipped_local_rect: PictureRect::zero(),
+            clipped_local_rect: PictureRect::zero(),
             is_opaque: false,
             clipping_rect: PictureRect::zero(),
             map_local_to_surface,
@@ -3889,7 +3898,7 @@ impl PictureCompositeMode {
     ) -> LayoutRect {
         let surface_rect = match sub_rect {
             Some(sub_rect) => sub_rect,
-            None => surface.local_rect.cast_unit(),
+            None => surface.clipped_local_rect.cast_unit(),
         };
 
         match self {
@@ -3979,7 +3988,7 @@ impl PictureCompositeMode {
     ) -> LayoutRect {
         let surface_rect = match sub_rect {
             Some(sub_rect) => sub_rect,
-            None => surface.local_rect.cast_unit(),
+            None => surface.clipped_local_rect.cast_unit(),
         };
 
         match self {
@@ -5011,7 +5020,7 @@ impl PicturePrimitive {
             Some(ref mut raster_config) => {
                 let pic_rect = frame_state
                     .surfaces[raster_config.surface_index.0]
-                    .local_rect;
+                    .clipped_local_rect;
 
                 let parent_surface_index = parent_surface_index.expect("bug: no parent for child surface");
 
@@ -5944,7 +5953,7 @@ impl PicturePrimitive {
             // backface checks.
             cluster.flags.insert(ClusterFlags::IS_VISIBLE);
             if let Some(cluster_rect) = surface.map_local_to_surface.map(&cluster.bounding_rect) {
-                surface.local_rect = surface.local_rect.union(&cluster_rect);
+                surface.unclipped_local_rect = surface.unclipped_local_rect.union(&cluster_rect);
             }
         }
 
@@ -5954,7 +5963,10 @@ impl PicturePrimitive {
         if let Some(ref mut raster_config) = self.raster_config {
             // Propagate up to parent surface, now that we know this surface's static rect
             if let Some(parent_surface_index) = parent_surface_index {
-                let surface_rect = raster_config.composite_mode.get_coverage(surface, None);
+                let surface_rect = raster_config.composite_mode.get_coverage(
+                    surface,
+                    Some(surface.unclipped_local_rect.cast_unit()),
+                );
 
                 let parent_surface = &mut surfaces[parent_surface_index.0];
                 parent_surface.map_local_to_surface.set_target_spatial_node(
@@ -5969,7 +5981,8 @@ impl PicturePrimitive {
                     .map_local_to_surface
                     .map(&surface_rect)
                 {
-                    parent_surface.local_rect = parent_surface.local_rect.union(&parent_surface_rect);
+                    parent_surface.unclipped_local_rect =
+                        parent_surface.unclipped_local_rect.union(&parent_surface_rect);
                 }
             }
         }
@@ -6002,7 +6015,7 @@ impl PicturePrimitive {
                 for (shadow, extra_handle) in shadows.iter().zip(self.extra_gpu_data_handles.iter_mut()) {
                     if let Some(mut request) = frame_state.gpu_cache.request(extra_handle) {
                         let surface = &frame_state.surfaces[raster_config.surface_index.0];
-                        let prim_rect = surface.local_rect.cast_unit();
+                        let prim_rect = surface.clipped_local_rect.cast_unit();
 
                         // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                         //  [brush specific data]
@@ -6811,7 +6824,7 @@ fn get_surface_rects(
 
     let (clipped_local, unclipped_local) = match composite_mode {
         PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
-            let local_prim_rect = surface.local_rect;
+            let local_prim_rect = surface.clipped_local_rect;
 
             let mut required_local_rect = match local_prim_rect.intersection(&local_clip_rect) {
                 Some(rect) => rect,
@@ -6849,7 +6862,7 @@ fn get_surface_rects(
             (clipped, unclipped)
         }
         _ => {
-            let surface_origin = surface.local_rect.min.to_vector().cast_unit();
+            let surface_origin = surface.clipped_local_rect.min.to_vector().cast_unit();
 
             let normalized_prim_rect = composite_mode
                 .get_rect(surface, None)
@@ -6986,7 +6999,8 @@ fn test_large_surface_scale_1() {
 
     let mut surfaces = vec![
         SurfaceInfo {
-            local_rect: PictureRect::max_rect(),
+            unclipped_local_rect: PictureRect::max_rect(),
+            clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
             map_local_to_surface: map_local_to_surface.clone(),
@@ -6997,10 +7011,11 @@ fn test_large_surface_scale_1() {
             local_scale: (1.0, 1.0),
         },
         SurfaceInfo {
-            local_rect: PictureRect::new(
+            unclipped_local_rect: PictureRect::new(
                 PicturePoint::new(52.76350021362305, 0.0),
                 PicturePoint::new(159.6738739013672, 35.0),
             ),
+            clipped_local_rect: PictureRect::max_rect(),
             is_opaque: true,
             clipping_rect: PictureRect::max_rect(),
             map_local_to_surface,
