@@ -7,3 +7,4 @@ arm64_set_LoaderThreads.patch
 change_to_DCHECK_in_CloseHandleWrapper.patch
 move_shared_memory_duplication_after_initialization.patch
 allow_ntpath_in_SignedPolicy_GenerateRules.patch
+linux_32bit_arg_fixup.patch
