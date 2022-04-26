@@ -600,7 +600,7 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
       new ReplaceTrackOperation(mPc, mTransceiverImpl, aWithTrack);
   // Static analysis forces us to use a temporary.
   auto pc = mPc;
-  return do_AddRef(pc->Chain(op));
+  return pc->Chain(op);
 }
 
 nsPIDOMWindowInner* RTCRtpSender::GetParentObject() const { return mWindow; }
