@@ -26,20 +26,27 @@ static constexpr size_t kPoolSize =
     0;
 #endif
 
-UniquePtr<SwapChainPresenter> SwapChain::Acquire(const gfx::IntSize& size) {
+UniquePtr<SwapChainPresenter> SwapChain::Acquire(
+    const gfx::IntSize& size, const gfx::ColorSpace2 colorSpace) {
   MOZ_ASSERT(mFactory);
 
   std::shared_ptr<SharedSurface> surf;
-  if (!mPool.empty() &&
-      (mPool.front()->mDesc.size != size || !mPool.front()->IsValid())) {
-    mPool = {};
+  if (!mPool.empty()) {
+    // Try reuse
+    const auto& existingDesc = mPool.front()->mDesc;
+    auto newDesc = existingDesc;
+    newDesc.size = size;
+    newDesc.colorSpace = colorSpace;
+    if (newDesc != existingDesc || !mPool.front()->IsValid()) {
+      mPool = {};
+    }
   }
   if (kPoolSize && mPool.size() == kPoolSize) {
     surf = mPool.front();
     mPool.pop();
   }
   if (!surf) {
-    auto uniquePtrSurf = mFactory->CreateShared(size);
+    auto uniquePtrSurf = mFactory->CreateShared(size, colorSpace);
     if (!uniquePtrSurf) return nullptr;
     surf.reset(uniquePtrSurf.release());
   }
