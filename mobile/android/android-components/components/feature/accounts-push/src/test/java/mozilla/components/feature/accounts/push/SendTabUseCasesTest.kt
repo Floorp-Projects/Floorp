@@ -92,6 +92,23 @@ class SendTabUseCasesTest {
     }
 
     @Test
+    fun `SendTabUseCase - ONLY tabs with valid schema are sent to capable device`() = runBlockingTest {
+        val useCases = SendTabUseCases(manager, coroutineContext)
+        val device: Device = generateDevice()
+        val tab = TabData("Title", "http://example.com")
+        val tab1 = TabData("PDFFile", "file://path/to/some/pdf")
+        val tab2 = TabData("AboutConfig", "about:config")
+
+        `when`(state.otherDevices).thenReturn(listOf(device))
+        `when`(constellation.sendCommandToDevice(any(), any()))
+            .thenReturn(true)
+
+        useCases.sendToDeviceAsync(device.id, listOf(tab, tab1, tab2))
+
+        verify(constellation, times(1)).sendCommandToDevice(any(), any())
+    }
+
+    @Test
     fun `SendTabUseCase - device id does not match when sending single tab`() = runBlockingTest {
         val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = generateDevice("123")
@@ -216,6 +233,28 @@ class SendTabUseCasesTest {
             verify(constellation, never()).sendCommandToDevice(eq("123"), any())
             verify(constellation, never()).sendCommandToDevice(eq("456"), any())
         }
+    }
+
+    @Test
+    fun `SendTabToAllUseCase - ONLY tabs with valid schema are sent to capable devices`() = runBlockingTest {
+        val useCases = SendTabUseCases(manager, coroutineContext)
+        val device: Device = generateDevice()
+        val device2: Device = generateDevice()
+
+        `when`(state.otherDevices).thenReturn(listOf(device, device2))
+        `when`(constellation.sendCommandToDevice(any(), any()))
+            .thenReturn(false)
+
+        val tab = TabData("Mozilla", "https://mozilla.org")
+        val tab2 = TabData("Firefox", "https://firefox.com")
+        // Invalid url to send
+        val tab3 = TabData("PDFFile", "file://path/to/pdffile")
+        // Invalid url to send
+        val tab4 = TabData("AboutPage", "about:config")
+
+        useCases.sendToAllAsync(listOf(tab, tab2, tab3, tab4))
+
+        verify(constellation, times(4)).sendCommandToDevice(any(), any())
     }
 
     @Test
