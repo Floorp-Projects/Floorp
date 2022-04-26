@@ -47,6 +47,12 @@ XPCOMUtils.defineLazyGetter(this, "extensionStylesheets", () => {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "manifestV3enabled",
+  "extensions.manifestV3.enabled"
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "SUPPORT_URL",
   "app.support.baseURL",
   "",
@@ -2558,19 +2564,35 @@ class AddonPermissionsList extends HTMLElement {
 
   async render() {
     let appName = brandBundle.GetStringFromName("brandShortName");
+
+    let empty = { origins: [], permissions: [] };
+    let requiredPerms = { ...(this.addon.userPermissions ?? empty) };
+    let optionalPerms = { ...(this.addon.optionalPermissions ?? empty) };
+    let grantedPerms = await ExtensionPermissions.get(this.addon.id);
+
+    if (manifestV3enabled) {
+      // If optional permissions include <all_urls>, extension can request and
+      // be granted permission for individual sites not listed in the manifest.
+      // Include them as well in the optional origins list.
+      optionalPerms.origins = [
+        ...optionalPerms.origins,
+        ...grantedPerms.origins.filter(o => !requiredPerms.origins.includes(o)),
+      ];
+    }
+
     let permissions = Extension.formatPermissionStrings(
       {
-        permissions: this.addon.userPermissions,
-        optionalPermissions: this.addon.optionalPermissions,
+        permissions: requiredPerms,
+        optionalPermissions: optionalPerms,
         appName,
       },
-      browserBundle
+      browserBundle,
+      { buildOptionalOrigins: manifestV3enabled }
     );
     let optionalEntries = [
       ...Object.entries(permissions.optionalPermissions),
       ...Object.entries(permissions.optionalOrigins),
     ];
-    let perms = await ExtensionPermissions.get(this.addon.id);
 
     this.textContent = "";
     let frag = importTemplate("addon-permissions-list");
@@ -2587,6 +2609,7 @@ class AddonPermissionsList extends HTMLElement {
         list.appendChild(item);
       }
     }
+
     if (optionalEntries.length) {
       let section = frag.querySelector(".addon-permissions-optional");
       section.hidden = false;
@@ -2613,7 +2636,10 @@ class AddonPermissionsList extends HTMLElement {
 
         toggle.setAttribute("permission-type", type);
         toggle.setAttribute("type", "checkbox");
-        if (perms.permissions.includes(perm) || perms.origins.includes(perm)) {
+        if (
+          grantedPerms.permissions.includes(perm) ||
+          grantedPerms.origins.includes(perm)
+        ) {
           toggle.checked = true;
           item.classList.add("permission-checked");
         }
@@ -3033,11 +3059,12 @@ class AddonCard extends HTMLElement {
       }
       permissions = [permission];
     } else if (type == "origin") {
-      if (
-        action == "add" &&
-        !addon.optionalPermissions.origins.includes(permission)
-      ) {
-        throw new Error("origin missing from manifest");
+      if (action === "add") {
+        let { origins } = addon.optionalPermissions;
+        let patternSet = new MatchPatternSet(origins, { ignorePath: true });
+        if (!patternSet.subsumes(new MatchPattern(permission))) {
+          throw new Error("origin missing from manifest");
+        }
       }
       origins = [permission];
     } else {

@@ -1238,7 +1238,7 @@ class ExtensionData {
         }
 
         // Unfortunately, we treat <all_urls> as an API permission as well.
-        if (!type.origin || perm === "<all_urls>") {
+        if (!type.origin || (perm === "<all_urls>" && !result.originControls)) {
           permissions.add(perm);
         }
       }
@@ -1702,38 +1702,68 @@ class ExtensionData {
    * Classify host permissions
    * @param {array<string>} origins
    *                        permission origins
+   * @param {boolean}       ignoreNonWebSchemes
+   *                        return only these schemes: *, http, https, ws, wss
+   *
    * @returns {object}
-   *              "object.allUrls" contains the permission used to obtain all urls access
-   *              "object.wildcards" set contains permissions with wildcards
-   *              "object.sites" set contains explicit host permissions
+   *   @param {string} .allUrls   permission used to obtain all urls access
+   *   @param {Set} .wildcards    set contains permissions with wildcards
+   *   @param {Set} .sites        set contains explicit host permissions
+   *   @param {Map} .wildcardsMap mapping origin wildcards to labels
+   *   @param {Map} .sitesMap     mapping origin patterns to labels
    */
-  static classifyOriginPermissions(origins = []) {
+  static classifyOriginPermissions(origins = [], ignoreNonWebSchemes = false) {
     let allUrls = null,
       wildcards = new Set(),
-      sites = new Set();
+      sites = new Set(),
+      // TODO: use map.values() instead of these sets.  Note: account for two
+      // match patterns producing the same permission string, see bug 1765828.
+      wildcardsMap = new Map(),
+      sitesMap = new Map();
+
+    // https://searchfox.org/mozilla-central/rev/6f6cf28107/toolkit/components/extensions/MatchPattern.cpp#235
+    const wildcardSchemes = ["*", "http", "https", "ws", "wss"];
+
     for (let permission of origins) {
       if (permission == "<all_urls>") {
         allUrls = permission;
-        break;
+        continue;
       }
 
       // Privileged extensions may request access to "about:"-URLs, such as
       // about:reader.
-      let match = /^[a-z*]+:\/\/([^/]*)\/|^about:/.exec(permission);
+      let match = /^([a-z*]+):\/\/([^/]*)\/|^about:/.exec(permission);
       if (!match) {
         throw new Error(`Unparseable host permission ${permission}`);
       }
+
       // Note: the scheme is ignored in the permission warnings. If this ever
       // changes, update the comparePermissions method as needed.
-      if (!match[1] || match[1] == "*") {
-        allUrls = permission;
-      } else if (match[1].startsWith("*.")) {
-        wildcards.add(match[1].slice(2));
+      let [, scheme, host] = match;
+      if (ignoreNonWebSchemes && !wildcardSchemes.includes(scheme)) {
+        continue;
+      }
+
+      if (!host || host == "*") {
+        if (!allUrls) {
+          allUrls = permission;
+        }
+      } else if (host.startsWith("*.")) {
+        wildcards.add(host.slice(2));
+        // Using MatchPattern to normalize the pattern string.
+        let pat = new MatchPattern(permission, { ignorePath: true });
+        wildcardsMap.set(pat.pattern, `${scheme}://${host.slice(2)}`);
       } else {
-        sites.add(match[1]);
+        sites.add(host);
+        let pat = new MatchPattern(permission, {
+          ignorePath: true,
+          // Safe because used just for normalization, not for granting access.
+          restrictSchemes: false,
+        });
+        sitesMap.set(pat.pattern, `${scheme}://${host}`);
       }
     }
-    return { allUrls, wildcards, sites };
+    return { allUrls, wildcards, sites, wildcardsMap, sitesMap };
   }
 
   /**
@@ -1764,6 +1794,9 @@ class ExtensionData {
    * @param {boolean} options.collapseOrigins
    *                  Wether to limit the number of displayed host permissions.
    *                  Default is false.
+   * @param {boolean} options.buildOptionalOrigins
+   *                  Wether to build optional origins Maps for permission
+   *                  controls.  Defaults to false.
    * @param {function} options.getKeyForPermission
    *                   An optional callback function that returns the locale key for a given
    *                   permission name (set by default to a callback returning the locale
@@ -1792,6 +1825,7 @@ class ExtensionData {
     bundle,
     {
       collapseOrigins = false,
+      buildOptionalOrigins = false,
       getKeyForPermission = perm => `webextPerms.description.${perm}`,
     } = {}
   ) {
@@ -1955,13 +1989,29 @@ class ExtensionData {
         // So if we don't find one then just skip it.
       }
     }
-    allUrls = ExtensionData.classifyOriginPermissions(
-      optional_permissions.origins
-    ).allUrls;
-    if (allUrls) {
-      result.optionalOrigins[allUrls] = bundle.GetStringFromName(
+
+    let optionalInfo = ExtensionData.classifyOriginPermissions(
+      optional_permissions.origins,
+      true
+    );
+    if (optionalInfo.allUrls) {
+      result.optionalOrigins[optionalInfo.allUrls] = bundle.GetStringFromName(
         "webextPerms.hostDescription.allUrls"
       );
+    }
+
+    // Current UX controls are meant for developer testing with mv3.
+    if (buildOptionalOrigins) {
+      for (let [pattern, originLabel] of optionalInfo.wildcardsMap.entries()) {
+        let key = "webextPerms.hostDescription.wildcard";
+        let str = bundle.formatStringFromName(key, [originLabel]);
+        result.optionalOrigins[pattern] = str;
+      }
+      for (let [pattern, originLabel] of optionalInfo.sitesMap.entries()) {
+        let key = "webextPerms.hostDescription.oneSite";
+        let str = bundle.formatStringFromName(key, [originLabel]);
+        result.optionalOrigins[pattern] = str;
+      }
     }
 
     if (info.type == "sideload") {
