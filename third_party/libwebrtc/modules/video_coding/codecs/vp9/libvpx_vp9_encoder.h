@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2020 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -9,14 +9,13 @@
  *
  */
 
-#ifndef MODULES_VIDEO_CODING_CODECS_VP9_VP9_IMPL_H_
-#define MODULES_VIDEO_CODING_CODECS_VP9_VP9_IMPL_H_
+#ifndef MODULES_VIDEO_CODING_CODECS_VP9_LIBVPX_VP9_ENCODER_H_
+#define MODULES_VIDEO_CODING_CODECS_VP9_LIBVPX_VP9_ENCODER_H_
 
 #ifdef RTC_ENABLE_VP9
 
 #include <map>
 #include <memory>
-#include <string>
 #include <vector>
 
 #include "api/fec_controller_override.h"
@@ -24,23 +23,22 @@
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/include/video_frame_buffer_pool.h"
 #include "media/base/vp9_profile.h"
+#include "modules/video_coding/codecs/interface/libvpx_interface.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "modules/video_coding/utility/framerate_controller.h"
 #include "vpx/vp8cx.h"
-#include "vpx/vpx_decoder.h"
-#include "vpx/vpx_encoder.h"
 
 namespace webrtc {
 
-class VP9EncoderImpl : public VP9Encoder {
+class LibvpxVp9Encoder : public VP9Encoder {
  public:
-  explicit VP9EncoderImpl(const cricket::VideoCodec& codec);
-  VP9EncoderImpl(const cricket::VideoCodec& codec,
-                 const WebRtcKeyValueConfig& trials);
+  LibvpxVp9Encoder(const cricket::VideoCodec& codec,
+                   std::unique_ptr<LibvpxInterface> interface,
+                   const WebRtcKeyValueConfig& trials);
 
-  ~VP9EncoderImpl() override;
+  ~LibvpxVp9Encoder() override;
 
   void SetFecControllerOverride(
       FecControllerOverride* fec_controller_override) override;
@@ -108,6 +106,7 @@ class VP9EncoderImpl : public VP9Encoder {
 
   void MaybeRewrapRawWithFormat(const vpx_img_fmt fmt);
 
+  const std::unique_ptr<LibvpxInterface> libvpx_;
   EncodedImage encoded_image_;
   CodecSpecificInfo codec_specific_;
   EncodedImageCallback* encoded_complete_callback_;
@@ -237,47 +236,8 @@ class VP9EncoderImpl : public VP9Encoder {
   bool config_changed_;
 };
 
-class VP9DecoderImpl : public VP9Decoder {
- public:
-  VP9DecoderImpl();
-  explicit VP9DecoderImpl(const WebRtcKeyValueConfig& trials);
-
-  virtual ~VP9DecoderImpl();
-
-  int InitDecode(const VideoCodec* inst, int number_of_cores) override;
-
-  int Decode(const EncodedImage& input_image,
-             bool missing_frames,
-             int64_t /*render_time_ms*/) override;
-
-  int RegisterDecodeCompleteCallback(DecodedImageCallback* callback) override;
-
-  int Release() override;
-
-  const char* ImplementationName() const override;
-
- private:
-  int ReturnFrame(const vpx_image_t* img,
-                  uint32_t timestamp,
-                  int qp,
-                  const webrtc::ColorSpace* explicit_color_space);
-
-  // Memory pool used to share buffers between libvpx and webrtc.
-  Vp9FrameBufferPool libvpx_buffer_pool_;
-  // Buffer pool used to allocate additionally needed NV12 buffers.
-  VideoFrameBufferPool output_buffer_pool_;
-  DecodedImageCallback* decode_complete_callback_;
-  bool inited_;
-  vpx_codec_ctx_t* decoder_;
-  bool key_frame_required_;
-  VideoCodec current_codec_;
-  int num_cores_;
-
-  // Decoder should produce this format if possible.
-  const VideoFrameBuffer::Type preferred_output_format_;
-};
 }  // namespace webrtc
 
 #endif  // RTC_ENABLE_VP9
 
-#endif  // MODULES_VIDEO_CODING_CODECS_VP9_VP9_IMPL_H_
+#endif  // MODULES_VIDEO_CODING_CODECS_VP9_LIBVPX_VP9_ENCODER_H_
