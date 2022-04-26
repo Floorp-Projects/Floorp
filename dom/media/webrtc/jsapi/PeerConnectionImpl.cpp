@@ -685,7 +685,7 @@ class ConfigureCodec {
             }
           }
           videoCodec.mConstraints.maxFs = mVP8MaxFs;
-          videoCodec.mConstraints.maxFps = mVP8MaxFr;
+          videoCodec.mConstraints.maxFps = Some(mVP8MaxFr);
         }
 
         if (mUseTmmbr) {

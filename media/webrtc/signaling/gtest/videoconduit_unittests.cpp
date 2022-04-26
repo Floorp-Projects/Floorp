@@ -352,7 +352,6 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxFps) {
   mControl.Update([&](auto& aControl) {
     aControl.mTransmitting = true;
     EncodingConstraints constraints;
-    constraints.maxFps = 0;
     VideoCodecConfig codecConfig(120, "VP8", constraints);
     codecConfig.mEncodings.emplace_back();
     aControl.mVideoSendCodec = Some(codecConfig);
@@ -367,7 +366,7 @@ TEST_F(VideoConduitTest, TestConfigureSendMediaCodecMaxFps) {
 
   mControl.Update([&](auto& aControl) {
     EncodingConstraints constraints;
-    constraints.maxFps = 42;
+    constraints.maxFps = Some(42);
     VideoCodecConfig codecConfig(120, "VP8", constraints);
     codecConfig.mEncodings.emplace_back();
     aControl.mVideoSendCodec = Some(codecConfig);
