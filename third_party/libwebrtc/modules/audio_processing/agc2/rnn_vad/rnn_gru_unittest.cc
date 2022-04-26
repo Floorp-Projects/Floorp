@@ -11,6 +11,8 @@
 #include "modules/audio_processing/agc2/rnn_vad/rnn_gru.h"
 
 #include <array>
+#include <memory>
+#include <vector>
 
 #include "api/array_view.h"
 #include "modules/audio_processing/agc2/rnn_vad/test_utils.h"
@@ -18,6 +20,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "test/gtest.h"
+#include "third_party/rnnoise/src/rnn_vad_weights.h"
 
 namespace webrtc {
 namespace rnn_vad {
@@ -101,24 +104,44 @@ constexpr std::array<float, 16> kGruExpectedOutputSequence = {
     0.00781069f, 0.75267816f, 0.f,         0.02579715f,
     0.00471378f, 0.59162533f, 0.11087593f, 0.01334511f};
 
+class RnnGruParametrization
+    : public ::testing::TestWithParam<AvailableCpuFeatures> {};
+
 // Checks that the output of a GRU layer is within tolerance given test input
 // data.
-TEST(RnnVadTest, CheckGatedRecurrentLayer) {
+TEST_P(RnnGruParametrization, CheckGatedRecurrentLayer) {
   GatedRecurrentLayer gru(kGruInputSize, kGruOutputSize, kGruBias, kGruWeights,
-                          kGruRecurrentWeights, /*layer_name=*/"GRU");
+                          kGruRecurrentWeights,
+                          /*cpu_features=*/GetParam(),
+                          /*layer_name=*/"GRU");
   TestGatedRecurrentLayer(gru, kGruInputSequence, kGruExpectedOutputSequence);
 }
 
-TEST(RnnVadTest, DISABLED_BenchmarkGatedRecurrentLayer) {
-  GatedRecurrentLayer gru(kGruInputSize, kGruOutputSize, kGruBias, kGruWeights,
-                          kGruRecurrentWeights, /*layer_name=*/"GRU");
+TEST_P(RnnGruParametrization, DISABLED_BenchmarkGatedRecurrentLayer) {
+  // Prefetch test data.
+  std::unique_ptr<FileReader> reader = CreateGruInputReader();
+  std::vector<float> gru_input_sequence(reader->size());
+  reader->ReadChunk(gru_input_sequence);
 
-  rtc::ArrayView<const float> input_sequence(kGruInputSequence);
-  static_assert(kGruInputSequence.size() % kGruInputSize == 0, "");
-  constexpr int input_sequence_length =
-      kGruInputSequence.size() / kGruInputSize;
+  using ::rnnoise::kHiddenGruBias;
+  using ::rnnoise::kHiddenGruRecurrentWeights;
+  using ::rnnoise::kHiddenGruWeights;
+  using ::rnnoise::kHiddenLayerOutputSize;
+  using ::rnnoise::kInputLayerOutputSize;
 
-  constexpr int kNumTests = 10000;
+  GatedRecurrentLayer gru(kInputLayerOutputSize, kHiddenLayerOutputSize,
+                          kHiddenGruBias, kHiddenGruWeights,
+                          kHiddenGruRecurrentWeights,
+                          /*cpu_features=*/GetParam(),
+                          /*layer_name=*/"GRU");
+
+  rtc::ArrayView<const float> input_sequence(gru_input_sequence);
+  ASSERT_EQ(input_sequence.size() % kInputLayerOutputSize,
+            static_cast<size_t>(0));
+  const int input_sequence_length =
+      input_sequence.size() / kInputLayerOutputSize;
+
+  constexpr int kNumTests = 100;
   ::webrtc::test::PerformanceTimer perf_timer(kNumTests);
   for (int k = 0; k < kNumTests; ++k) {
     perf_timer.StartTimer();
@@ -132,6 +155,28 @@ TEST(RnnVadTest, DISABLED_BenchmarkGatedRecurrentLayer) {
                    << (perf_timer.GetDurationStandardDeviation() / 1000)
                    << " ms";
 }
+
+// Finds the relevant CPU features combinations to test.
+std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
+  std::vector<AvailableCpuFeatures> v;
+  AvailableCpuFeatures available = GetAvailableCpuFeatures();
+  v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
+  if (available.avx2) {
+    v.push_back({/*sse2=*/false, /*avx2=*/true, /*neon=*/false});
+  }
+  if (available.sse2) {
+    v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
+  }
+  return v;
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RnnVadTest,
+    RnnGruParametrization,
+    ::testing::ValuesIn(GetCpuFeaturesToTest()),
+    [](const ::testing::TestParamInfo<AvailableCpuFeatures>& info) {
+      return info.param.ToString();
+    });
 
 }  // namespace
 }  // namespace rnn_vad

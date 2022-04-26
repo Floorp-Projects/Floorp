@@ -46,12 +46,12 @@ constexpr std::array<float, 24> kFullyConnectedExpectedOutput = {
     0.983443f,  0.999991f,  -0.824335f, 0.984742f,  0.990208f,  0.938179f,
     0.875092f,  0.999846f,  0.997707f,  -0.999382f, 0.973153f,  -0.966605f};
 
-class RnnParametrization
+class RnnFcParametrization
     : public ::testing::TestWithParam<AvailableCpuFeatures> {};
 
 // Checks that the output of a fully connected layer is within tolerance given
 // test input data.
-TEST_P(RnnParametrization, CheckFullyConnectedLayerOutput) {
+TEST_P(RnnFcParametrization, CheckFullyConnectedLayerOutput) {
   FullyConnectedLayer fc(kInputLayerInputSize, kInputLayerOutputSize,
                          kInputDenseBias, kInputDenseWeights,
                          ActivationFunction::kTansigApproximated,
@@ -61,7 +61,7 @@ TEST_P(RnnParametrization, CheckFullyConnectedLayerOutput) {
   ExpectNearAbsolute(kFullyConnectedExpectedOutput, fc, 1e-5f);
 }
 
-TEST_P(RnnParametrization, DISABLED_BenchmarkFullyConnectedLayer) {
+TEST_P(RnnFcParametrization, DISABLED_BenchmarkFullyConnectedLayer) {
   const AvailableCpuFeatures cpu_features = GetParam();
   FullyConnectedLayer fc(kInputLayerInputSize, kInputLayerOutputSize,
                          kInputDenseBias, kInputDenseWeights,
@@ -87,16 +87,14 @@ std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/false});
   AvailableCpuFeatures available = GetAvailableCpuFeatures();
   if (available.sse2) {
-    AvailableCpuFeatures features(
-        {/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
-    v.push_back(features);
+    v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
   }
   return v;
 }
 
 INSTANTIATE_TEST_SUITE_P(
     RnnVadTest,
-    RnnParametrization,
+    RnnFcParametrization,
     ::testing::ValuesIn(GetCpuFeaturesToTest()),
     [](const ::testing::TestParamInfo<AvailableCpuFeatures>& info) {
       return info.param.ToString();

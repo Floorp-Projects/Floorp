@@ -111,6 +111,12 @@ ChunksFileReader CreateLpResidualAndPitchInfoReader() {
   return {kChunkSize, num_chunks, std::move(reader)};
 }
 
+std::unique_ptr<FileReader> CreateGruInputReader() {
+  return std::make_unique<FloatFileReader<float>>(
+      /*filename=*/test::ResourcePath("audio_processing/agc2/rnn_vad/gru_in",
+                                      "dat"));
+}
+
 std::unique_ptr<FileReader> CreateVadProbsReader() {
   return std::make_unique<FloatFileReader<float>>(
       /*filename=*/test::ResourcePath("audio_processing/agc2/rnn_vad/vad_prob",
