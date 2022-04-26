@@ -67,14 +67,11 @@ export class ProtonScreen extends React.PureComponent {
   }
 
   getScreenClassName(
-    isCornerPosition,
     isFirstCenteredScreen,
     isLastCenteredScreen,
     includeNoodles
   ) {
-    const screenClass = isCornerPosition
-      ? "corner"
-      : `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
+    const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
     return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${
       isLastCenteredScreen ? `dialog-last` : ``
     } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
@@ -168,14 +165,15 @@ export class ProtonScreen extends React.PureComponent {
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
       : "";
-    // Assign proton screen style 'screen-1' or 'screen-2' by checking
-    // if screen order is even or odd.
-    const screenClassName = this.getScreenClassName(
-      isCornerPosition,
-      isFirstCenteredScreen,
-      isLastCenteredScreen,
-      includeNoodles
-    );
+    // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
+    // by checking if screen order is even or odd.
+    const screenClassName = isCornerPosition
+      ? ""
+      : this.getScreenClassName(
+          isFirstCenteredScreen,
+          isLastCenteredScreen,
+          includeNoodles
+        );
 
     return (
       <main

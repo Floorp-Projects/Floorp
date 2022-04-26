@@ -8,6 +8,7 @@ window.inlineSelectionCss = `
   display: flex;
   align-items: center;
   justify-content: center;
+  column-gap: 8px;
   border: 0;
   border-radius: 3px;
   cursor: pointer;

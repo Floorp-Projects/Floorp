@@ -2566,12 +2566,12 @@ def stdcxx_compat(value):
 
 
 set_config("MOZ_STDCXX_COMPAT", True, when=stdcxx_compat)
-add_gcc_flag(
+add_flag(
     "-D_GLIBCXX_USE_CXX11_ABI=0",
     cxx_compiler,
     when=stdcxx_compat,
 )
-add_gcc_flag(
+add_flag(
     "-D_GLIBCXX_USE_CXX11_ABI=0",
     host_cxx_compiler,
     when=stdcxx_compat,

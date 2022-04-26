@@ -50,10 +50,10 @@ appmenuitem-exit2 =
            *[other] Exit
         }
 appmenu-menu-button-closed2 =
-    .tooltiptext = Open Application Menu
+    .tooltiptext = Open application menu
     .label = { -brand-short-name }
 appmenu-menu-button-opened2 =
-    .tooltiptext = Close Application Menu
+    .tooltiptext = Close application menu
     .label = { -brand-short-name }
 
 # Settings is now used to access the browser settings across all platforms,

@@ -205,6 +205,7 @@ var whitelist = [
 
   // Files from upstream library
   { file: "resource://pdf.js/web/debugger.js" },
+  { file: "resource://pdf.js/web/debugger.css" },
 
   // resource://app/modules/translation/TranslationContentHandler.jsm
   { file: "resource://app/modules/translation/BingTranslator.jsm" },

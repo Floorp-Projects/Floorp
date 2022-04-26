@@ -33,8 +33,6 @@
   --thumb-size: 13px;
   --label-font-size: 13px;
   --pip-toggle-padding: 5px;
-  --pip-toggle-icon-width-height: 16px;
-  --pip-toggle-translate-x: calc(100% - var(--pip-toggle-icon-width-height) - 2 * var(--pip-toggle-padding));
   --control-focus-outline: 2px solid #00DDFF;
   --control-focus-outline-offset: -2px;
 
@@ -78,7 +76,6 @@
 .controlsContainer [hidden],
 .controlBar[hidden] .progressBar,
 .controlBar[hidden] .bufferBar,
-.pictureInPictureToggleButton[hidden],
 .videocontrols[inDOMFullscreen] > .controlsContainer > .controlsOverlay > #pictureInPictureToggle {
   display: none;
 }
@@ -490,61 +487,12 @@
   fill: currentColor;
 }
 
-.pictureInPictureToggleButton {
-  display: flex;
-  appearance: none;
-  position: absolute;
-  background-color: #0060df;
-  color: inherit;
-  border: 0;
-  padding: var(--pip-toggle-padding);
-  right: 0;
-  top: 50%;
-  translate: var(--pip-toggle-translate-x) -50%;
-  transition: opacity 160ms linear, translate 160ms linear;
-  min-width: max-content;
-  pointer-events: auto;
-  opacity: 0;
-}
-
-.pictureInPictureToggleButton[policy="hidden"] {
-  display: none;
-}
-
-.pictureInPictureToggleButton[policy="top"] {
-  top: 0%;
-  translate: var(--pip-toggle-translate-x);
-}
-
-.pictureInPictureToggleButton[policy="one-quarter"] {
-  top: 25%;
-}
-
-.pictureInPictureToggleButton[policy="three-quarters"] {
-  top: 75%;
-}
-
-.pictureInPictureToggleButton[policy="bottom"] {
-  top: 100%;
-  translate: var(--pip-toggle-translate-x) -100%;
-}
-
 .videocontrols[localedir="rtl"] .statusIcon[type="pictureInPicture"] {
   transform: scaleX(-1);
 }
 
 .pictureInPictureToggleLabel {
   margin-inline-start: var(--pip-toggle-padding);
-}
-
-@supports -moz-bool-pref("media.videocontrols.picture-in-picture.video-toggle.testing") {
-  /**
-   * To make automated tests faster, we drop the transition duration in
-   * testing mode.
-   */
-  .pictureInPictureToggleButton {
-    transition-duration: 10ms;
-  }
 }
 
 /* Overlay Play button */

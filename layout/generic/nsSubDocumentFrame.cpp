@@ -1371,7 +1371,7 @@ bool nsDisplayRemote::CreateWebRenderCommands(
 
     aDisplayListBuilder->AddEffectUpdate(
         remoteBrowser,
-        EffectsInfo::VisibleWithinRect(visibleRect, scale.width, scale.height,
+        EffectsInfo::VisibleWithinRect(visibleRect, {scale.width, scale.height},
                                        transformToAncestorScale));
 
     // Create a WebRenderRemoteData to notify the RemoteBrowser when it is no

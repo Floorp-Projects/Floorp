@@ -38,7 +38,8 @@ class ClassList {
     this.inspector.on("markupmutation", this.onMutations);
 
     this.classListProxyNode = this.inspector.panelDoc.createElement("div");
-    this.previewClasses = "";
+    this.previewClasses = [];
+    this.unresolvedStateChanges = [];
   }
 
   destroy() {
@@ -75,7 +76,12 @@ class ClassList {
       this.classListProxyNode.className = this.currentNode.className;
       const nodeClasses = [...new Set([...this.classListProxyNode.classList])]
         .filter(
-          className => !this.previewClasses.split(" ").includes(className)
+          className =>
+            !this.previewClasses.some(
+              previewClass =>
+                previewClass.className === className &&
+                !previewClass.wasAppliedOnNode
+            )
         )
         .map(name => {
           return { name, isApplied: true };
@@ -96,11 +102,14 @@ class ClassList {
       .filter(({ isApplied }) => isApplied)
       .map(({ name }) => name);
     const previewClasses = this.previewClasses
-      .split(" ")
-      .filter(previewClass => !currentClasses.includes(previewClass))
-      .filter(item => item !== "");
+      .filter(previewClass => !currentClasses.includes(previewClass.className))
+      .filter(item => item !== "")
+      .map(({ className }) => className);
 
-    return currentClasses.concat(previewClasses).join(" ");
+    return currentClasses
+      .concat(previewClasses)
+      .join(" ")
+      .trim();
   }
 
   /**
@@ -169,12 +178,13 @@ class ClassList {
       return Promise.resolve();
     }
 
-    // Remember which node we changed and the className we applied, so we can filter out
-    // dom mutations that are caused by us in onMutations.
-    this.lastStateChange = {
+    // Remember which node & className we applied until their mutation event is received, so we
+    // can filter out dom mutations that are caused by us in onMutations, even in situations when
+    // a new change is applied before that the event of the previous one has been received yet
+    this.unresolvedStateChanges.push({
       node: this.currentNode,
       className: this.currentClassesPreview,
-    };
+    });
 
     // Apply the change to the node.
     const mod = this.currentNode.startModifyingAttributes();
@@ -189,16 +199,19 @@ class ClassList {
         continue;
       }
 
-      const isMutationForOurChange =
-        this.lastStateChange &&
-        target === this.lastStateChange.node &&
-        target.className === this.lastStateChange.className;
+      const isMutationForOurChange = this.unresolvedStateChanges.some(
+        previousStateChange =>
+          previousStateChange.node === target &&
+          previousStateChange.className === target.className
+      );
 
       if (!isMutationForOurChange) {
         CLASSES.delete(target);
         if (target === this.currentNode) {
           this.emit("current-node-class-changed");
         }
+      } else {
+        this.removeResolvedStateChanged(target, target.className);
       }
     }
   }
@@ -222,14 +235,39 @@ class ClassList {
   }
 
   previewClass(inputClasses) {
-    if (this.previewClasses !== inputClasses) {
-      this.previewClasses = inputClasses;
+    if (
+      this.previewClasses
+        .map(previewClass => previewClass.className)
+        .join(" ") !== inputClasses
+    ) {
+      this.previewClasses = [];
+      inputClasses.split(" ").forEach(className => {
+        this.previewClasses.push({
+          className: className,
+          wasAppliedOnNode: this.isClassAlreadyApplied(className),
+        });
+      });
       this.applyClassState();
     }
   }
 
   eraseClassPreview() {
     this.previewClass("");
+  }
+
+  removeResolvedStateChanged(currentNode, currentClassesPreview) {
+    this.unresolvedStateChanges.splice(
+      0,
+      this.unresolvedStateChanges.findIndex(
+        previousState =>
+          previousState.node === currentNode &&
+          previousState.className === currentClassesPreview
+      ) + 1
+    );
+  }
+
+  isClassAlreadyApplied(className) {
+    return this.currentClasses.some(({ name }) => name === className);
   }
 }
 

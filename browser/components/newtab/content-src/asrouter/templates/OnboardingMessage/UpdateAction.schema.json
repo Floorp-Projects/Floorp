@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
   "title": "UpdateActionMessage",
   "description": "A template for messages that execute predetermined actions.",
   "version": "1.0.0",
@@ -41,10 +42,9 @@
             "description": "Additional data provided as argument when executing the action"
           },
           "additionalProperties": false,
-          "description": "Optional action to take in addition to showing the notification"
-        },
-        "additionalProperties": false,
-        "required": ["id", "action"]
+          "description": "Optional action to take in addition to showing the notification",
+          "required": ["id", "data"]
+        }
       },
       "additionalProperties": false,
       "required": ["action"]

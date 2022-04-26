@@ -2918,7 +2918,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Any lane true, ie, any bit set
 
   inline void anyTrueSimd128(FloatRegister src, Register dest)
-      DEFINED_ON(x86, x64, arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   // All lanes true
 
