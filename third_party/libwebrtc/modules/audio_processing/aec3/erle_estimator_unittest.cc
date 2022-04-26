@@ -47,7 +47,7 @@ void VerifyErle(
     float reference_lf,
     float reference_hf) {
   VerifyErleBands(erle, reference_lf, reference_hf);
-  EXPECT_NEAR(reference_lf, erle_time_domain, 0.5);
+  EXPECT_NEAR(kTrueErle, erle_time_domain, 0.5);
 }
 
 void FormFarendTimeFrame(std::vector<std::vector<std::vector<float>>>* x) {
@@ -172,7 +172,7 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleIncreaseAndHold) {
   // Verifies that the ERLE estimate is properly increased to higher values.
   FormFarendFrame(*render_delay_buffer->GetRenderBuffer(), kTrueErle, &X2, E2,
                   Y2);
-  for (size_t k = 0; k < 200; ++k) {
+  for (size_t k = 0; k < 1000; ++k) {
     render_delay_buffer->Insert(x);
     render_delay_buffer->PrepareCaptureProcessing();
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
@@ -237,7 +237,7 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
     }
     FormFarendFrame(*render_delay_buffer->GetRenderBuffer(), kTrueErle, &X2, E2,
                     Y2);
-    for (size_t k = 0; k < 200; ++k) {
+    for (size_t k = 0; k < 1000; ++k) {
       render_delay_buffer->Insert(x);
       render_delay_buffer->PrepareCaptureProcessing();
       estimator.Update(*render_delay_buffer->GetRenderBuffer(),
