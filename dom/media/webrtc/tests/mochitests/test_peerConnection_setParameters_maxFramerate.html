@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1611957",
+  title: "Live-updating maxFramerate"
+});
+
+let sender, receiver;
+
+async function checkMaxFrameRate(rate) {
+  sender.setParameters({ encodings: [{ maxFramerate: rate }] });
+  await wait(2000);
+  const stats = Array.from((await receiver.getStats()).values());
+  const inboundRtp = stats.find(stat => stat.type == "inbound-rtp");
+  info(`inbound-rtp stats: ${JSON.stringify(inboundRtp)}`);
+  const fps = inboundRtp.framesPerSecond;
+  ok(fps <= (rate * 1.1) + 1, `fps is an appropriate value (${fps}) for rate (${rate})`);
+}
+
+runNetworkTest(async function (options) {
+  let test = new PeerConnectionTest(options);
+  test.setMediaConstraints([{video: true}], []);
+  test.chain.append([
+    function CHECK_PRECONDITIONS() {
+      is(test.pcLocal._pc.getSenders().length, 1,
+          "Should have 1 local sender");
+      is(test.pcRemote._pc.getReceivers().length, 1,
+          "Should have 1 remote receiver");
+
+      sender = test.pcLocal._pc.getSenders()[0];
+      receiver = test.pcRemote._pc.getReceivers()[0];
+    },
+    function PC_LOCAL_SET_MAX_FRAMERATE_2() {
+      return checkMaxFrameRate(2);
+    },
+    function PC_LOCAL_SET_MAX_FRAMERATE_4() {
+      return checkMaxFrameRate(4);
+    },
+    function PC_LOCAL_SET_MAX_FRAMERATE_15() {
+      return checkMaxFrameRate(15);
+    },
+    function PC_LOCAL_SET_MAX_FRAMERATE_8() {
+      return checkMaxFrameRate(8);
+    },
+    function PC_LOCAL_SET_MAX_FRAMERATE_1() {
+      return checkMaxFrameRate(1);
+    },
+  ]);
+  await test.run();
+});
+</script>
+</pre>
+</body>
+</html>
