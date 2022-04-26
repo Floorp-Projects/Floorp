@@ -1263,8 +1263,6 @@ int VP9EncoderImpl::UpdateCodecFrameSize(
   // Determine number of threads based on the image size and #cores.
   config_->g_threads = NumberOfThreads(codec_.width, codec_.height,
                                        num_cores_);
-  // Update the cpu_speed setting for resolution change.
-  cpu_speed_ = GetCpuSpeed(codec_.width, codec_.height);
 
   // NOTE: We would like to do this the same way vp8 does it
   // (with vpx_codec_enc_config_set()), but that causes asserts
