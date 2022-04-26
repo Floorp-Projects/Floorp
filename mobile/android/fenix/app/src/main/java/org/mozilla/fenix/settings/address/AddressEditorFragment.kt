@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.databinding.FragmentAddressEditorBinding
@@ -48,5 +49,10 @@ class AddressEditorFragment : SecureFragment(R.layout.fragment_address_editor) {
     override fun onResume() {
         super.onResume()
         showToolbar(getString(R.string.addresses_add_address))
+    }
+
+    override fun onStop() {
+        super.onStop()
+        this.view?.hideKeyboard()
     }
 }
