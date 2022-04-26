@@ -408,6 +408,8 @@ bool nsIFrame::IsVisibleConsideringAncestors(uint32_t aFlags) const {
     nsView* view = frame->GetView();
     if (view && view->GetVisibility() == nsViewVisibility_kHide) return false;
 
+    if (this != frame && frame->IsContentHidden()) return false;
+
     nsIFrame* parent = frame->GetParent();
     nsDeckFrame* deck = do_QueryFrame(parent);
     if (deck) {
