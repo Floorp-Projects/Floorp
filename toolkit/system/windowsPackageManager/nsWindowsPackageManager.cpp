@@ -6,10 +6,13 @@
 #include "nsWindowsPackageManager.h"
 #include "mozilla/Logging.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #ifndef __MINGW32__
 #  include <comutil.h>
 #  include <wrl.h>
+#  include <windows.applicationmodel.store.h>
 #  include <windows.management.deployment.h>
+#  include <windows.services.store.h>
 #endif  // __MINGW32__
 #include "nsError.h"
 #include "nsString.h"
@@ -17,6 +20,7 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXPCOMCID.h"
+#include "json/json.h"
 
 #ifndef __MINGW32__  // WinRT headers not yet supported by MinGW
 using namespace Microsoft::WRL;
@@ -24,7 +28,13 @@ using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Management;
+using namespace ABI::Windows::Services::Store;
 #endif
+
+// Campaign IDs are stored in a JSON data structure under this key
+// for installs done without the user being signed in to the Microsoft
+// store.
+#define CAMPAIGN_ID_JSON_FIELD_NAME "customPolicyField1"
 
 namespace mozilla {
 namespace toolkit {
@@ -138,6 +148,141 @@ nsWindowsPackageManager::GetInstalledDate(uint64_t* ts) {
 
   *ts = installedDate.UniversalTime;
   return NS_OK;
+#endif  // __MINGW32__
+}
+
+NS_IMETHODIMP
+nsWindowsPackageManager::GetCampaignId(nsAString& aCampaignId) {
+#ifdef __MINGW32__
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  // The classes we're using are only available beginning with Windows 10,
+  // and this is only relevant for MSIX packaged builds.
+  if (!mozilla::IsWin10OrLater() || !mozilla::HasPackageIdentity()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  ComPtr<IStoreContextStatics> scStatics = nullptr;
+  HRESULT hr = RoGetActivationFactory(
+      HStringReference(RuntimeClass_Windows_Services_Store_StoreContext).Get(),
+      IID_PPV_ARGS(&scStatics));
+  /* Per
+   * https://docs.microsoft.com/en-us/windows/uwp/publish/create-a-custom-app-promotion-campaign#programmatically-retrieve-the-custom-campaign-id-for-an-app
+   * there are three ways to find a campaign ID.
+   * 1) If the user was logged into the Microsoft Store when they installed
+   *    it will be available in a SKU.
+   * 2) If they were not logged in, it will be available through the
+   *    StoreAppLicense
+   *
+   * There's also a third way, in theory, to retrieve it on very old versions of
+   * Windows 10 (1511 or earlier). However, these versions don't appear to be
+   * able to use the Windows Store at all anymore - so there's no point in
+   * supporting that scenario.
+   *
+   */
+  if (!SUCCEEDED(hr) || scStatics == nullptr) return NS_ERROR_FAILURE;
+  ComPtr<IStoreContext> storeContext = nullptr;
+  hr = scStatics->GetDefault(&storeContext);
+  if (!SUCCEEDED(hr) || storeContext == nullptr) return NS_ERROR_FAILURE;
+
+  ComPtr<IAsyncOperation<StoreProductResult*> > asyncSpr = nullptr;
+  hr = storeContext->GetStoreProductForCurrentAppAsync(&asyncSpr);
+  if (!SUCCEEDED(hr) || asyncSpr == nullptr) return NS_ERROR_FAILURE;
+
+  ComPtr<IAsyncInfo> asyncInfo = nullptr;
+  hr = asyncSpr->QueryInterface(IID_IAsyncInfo, &asyncInfo);
+  if (!SUCCEEDED(hr)) return NS_ERROR_FAILURE;
+
+  AsyncStatus status;
+  do {
+    asyncInfo->get_Status(&status);
+  } while (status != AsyncStatus::Completed);
+
+  ComPtr<IStoreProductResult> productResult = nullptr;
+  hr = asyncSpr->GetResults(&productResult);
+  if (!SUCCEEDED(hr) || productResult == nullptr) return NS_ERROR_FAILURE;
+
+  ComPtr<IStoreProduct> product = nullptr;
+  hr = productResult->get_Product(&product);
+  if (!SUCCEEDED(hr) || product == nullptr) return NS_ERROR_FAILURE;
+  ComPtr<Collections::IVectorView<StoreSku*> > skus = nullptr;
+  hr = product->get_Skus(&skus);
+  if (!SUCCEEDED(hr) || skus == nullptr) return NS_ERROR_FAILURE;
+
+  unsigned int size;
+  hr = skus->get_Size(&size);
+  if (!SUCCEEDED(hr)) return NS_ERROR_FAILURE;
+
+  for (unsigned int i = 0; i < size; i++) {
+    ComPtr<IStoreSku> sku = nullptr;
+    hr = skus->GetAt(i, &sku);
+    if (!SUCCEEDED(hr) || sku == nullptr) return NS_ERROR_FAILURE;
+
+    boolean isInUserCollection = false;
+    hr = sku->get_IsInUserCollection(&isInUserCollection);
+    if (!SUCCEEDED(hr) || !isInUserCollection) continue;
+
+    ComPtr<IStoreCollectionData> scd = nullptr;
+    hr = sku->get_CollectionData(&scd);
+    if (!SUCCEEDED(hr) || scd == nullptr) continue;
+
+    HString campaignId;
+    hr = scd->get_CampaignId(campaignId.GetAddressOf());
+    if (!SUCCEEDED(hr)) continue;
+
+    unsigned int tmp;
+    aCampaignId.Assign(campaignId.GetRawBuffer(&tmp));
+    if (aCampaignId.Length() > 0) {
+      aCampaignId.AppendLiteral("&msstoresignedin=true");
+    }
+  }
+
+  // There's various points above that could exit without a failure.
+  // If we get here without a campaignId we may as well just check
+  // the AppStoreLicense.
+  if (aCampaignId.IsEmpty()) {
+    ComPtr<IAsyncOperation<StoreAppLicense*> > asyncSal = nullptr;
+    hr = storeContext->GetAppLicenseAsync(&asyncSal);
+    if (!SUCCEEDED(hr) || asyncSal == nullptr) return NS_ERROR_FAILURE;
+    hr = asyncSal->QueryInterface(IID_IAsyncInfo, &asyncInfo);
+    if (!SUCCEEDED(hr)) return NS_ERROR_FAILURE;
+    AsyncStatus status;
+    do {
+      asyncInfo->get_Status(&status);
+    } while (status != AsyncStatus::Completed);
+
+    ComPtr<IStoreAppLicense> license = nullptr;
+    hr = asyncSal->GetResults(&license);
+    if (!SUCCEEDED(hr) || license == nullptr) return NS_ERROR_FAILURE;
+
+    HString extendedData;
+    hr = license->get_ExtendedJsonData(extendedData.GetAddressOf());
+    if (!SUCCEEDED(hr)) return NS_ERROR_FAILURE;
+
+    Json::Value jsonData;
+    Json::Reader jsonReader;
+
+    unsigned int tmp;
+    nsAutoString key(extendedData.GetRawBuffer(&tmp));
+    if (!jsonReader.parse(NS_ConvertUTF16toUTF8(key).get(), jsonData, false)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (jsonData.isMember(CAMPAIGN_ID_JSON_FIELD_NAME) &&
+        jsonData[CAMPAIGN_ID_JSON_FIELD_NAME].isString()) {
+      aCampaignId.Assign(
+          *(jsonData[CAMPAIGN_ID_JSON_FIELD_NAME].asString().c_str()));
+      if (aCampaignId.Length() > 0) {
+        aCampaignId.AppendLiteral("&msstoresignedin=false");
+      }
+    }
+  }
+
+  // No matter what happens in either block above, if they don't exit with a
+  // failure we managed to successfully pull the campaignId from somewhere
+  // (even if its empty).
+  return NS_OK;
+
 #endif  // __MINGW32__
 }
 
