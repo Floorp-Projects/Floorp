@@ -64,7 +64,7 @@ add_warning("-Wtype-limits")
 check_and_add_warning("-Wno-error=tautological-type-limit-compare")
 
 # catches some dead code
-add_warning("-Wunreachable-code", when=not_clang_cl)
+add_warning("-Wunreachable-code")
 check_and_add_warning("-Wunreachable-code-return")
 
 # catches parameters that are set but not read

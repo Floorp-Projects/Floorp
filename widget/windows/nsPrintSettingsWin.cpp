@@ -301,8 +301,7 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   if (aDevMode->dmFields & DM_DUPLEX) {
     switch (aDevMode->dmDuplex) {
       default:
-        MOZ_ASSERT_UNREACHABLE("bad value for dmDuplex field");
-        [[fallthrough]];
+        MOZ_FALLTHROUGH_ASSERT("bad value for dmDuplex field");
       case DMDUP_SIMPLEX:
         mDuplex = kDuplexNone;
         break;

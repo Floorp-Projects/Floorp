@@ -161,8 +161,7 @@ static void DevmodeToSettingsInitializer(
   if (aDevmode->dmFields & DM_DUPLEX) {
     switch (aDevmode->dmDuplex) {
       default:
-        MOZ_ASSERT_UNREACHABLE("bad value for dmDuplex field");
-        [[fallthrough]];
+        MOZ_FALLTHROUGH_ASSERT("bad value for dmDuplex field");
       case DMDUP_SIMPLEX:
         aSettingsInitializer.mDuplex = nsPrintSettings::kDuplexNone;
         break;
