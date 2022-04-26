@@ -299,7 +299,6 @@ struct ScriptLoadInfo {
   nsCOMPtr<nsIInputStream> mCacheReadStream;
 
   nsCOMPtr<nsIChannel> mChannel;
-  Maybe<ClientInfo> mReservedClientInfo;
   nsresult mLoadResult = NS_ERROR_NOT_INITIALIZED;
 
   // If |mScriptIsUTF8|, then |mUTF8| is active, otherwise |mUTF16| is active.
@@ -1099,7 +1098,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     }
 
     if (IsMainWorkerScript()) {
-      MOZ_DIAGNOSTIC_ASSERT(aLoadInfo.mReservedClientInfo.isSome());
+      MOZ_DIAGNOSTIC_ASSERT(mClientInfo.isSome());
 
       // In order to get the correct foreign partitioned prinicpal, we need to
       // set the `IsThirdPartyContextToTopWindow` to the channel's loadInfo.
@@ -1109,9 +1108,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       loadInfo->SetIsThirdPartyContextToTopWindow(
           mWorkerPrivate->IsThirdPartyContextToTopWindow());
 
-      rv = AddClientChannelHelper(
-          channel, std::move(aLoadInfo.mReservedClientInfo),
-          Maybe<ClientInfo>(), mWorkerPrivate->HybridEventTarget());
+      rv = AddClientChannelHelper(channel, std::move(mClientInfo),
+                                  Maybe<ClientInfo>(),
+                                  mWorkerPrivate->HybridEventTarget());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2320,15 +2319,13 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 
   Maybe<ClientInfo> clientInfo;
   Maybe<ServiceWorkerDescriptor> controller;
-  if (!aIsMainScript) {
-    nsIGlobalObject* global =
-        aWorkerScriptType == WorkerScript
-            ? static_cast<nsIGlobalObject*>(aWorkerPrivate->GlobalScope())
-            : aWorkerPrivate->DebuggerGlobalScope();
+  nsIGlobalObject* global =
+      aWorkerScriptType == WorkerScript
+          ? static_cast<nsIGlobalObject*>(aWorkerPrivate->GlobalScope())
+          : aWorkerPrivate->DebuggerGlobalScope();
 
-    clientInfo = global->GetClientInfo();
-    controller = global->GetController();
-  }
+  clientInfo = global->GetClientInfo();
+  controller = global->GetController();
 
   RefPtr<ScriptLoaderRunnable> loader = new ScriptLoaderRunnable(
       aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
@@ -2458,15 +2455,6 @@ void LoadMainScript(WorkerPrivate* aWorkerPrivate,
 
   ScriptLoadInfo* info = loadInfos.AppendElement();
   info->mURL = aScriptURL;
-
-  // We are loading the main script, so the worker's Client must be
-  // reserved.
-  if (aWorkerScriptType == WorkerScript) {
-    info->mReservedClientInfo = aWorkerPrivate->GlobalScope()->GetClientInfo();
-  } else {
-    info->mReservedClientInfo =
-        aWorkerPrivate->DebuggerGlobalScope()->GetClientInfo();
-  }
 
   LoadAllScripts(aWorkerPrivate, std::move(aOriginStack), std::move(loadInfos),
                  true, aWorkerScriptType, aRv);
