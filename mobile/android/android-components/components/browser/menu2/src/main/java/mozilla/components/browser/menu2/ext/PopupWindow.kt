@@ -30,6 +30,9 @@ internal fun PopupWindow.displayPopup(
     val fitsDown = availableHeightToBottom >= containerHeight
     val reversed = availableWidthToLeft < availableWidthToRight
 
+    // Popup window does not need a input method. This avoids keyboard flicker when menu is opened.
+    inputMethodMode = PopupWindow.INPUT_METHOD_NOT_NEEDED
+
     // Try to use the preferred orientation, if doesn't fit fallback to the best fit.
     when {
         preferredOrientation == Orientation.DOWN && fitsDown ->
