@@ -40,9 +40,9 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Nodau tudalen diweddar</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string name="recently_saved_bookmarks_content_description">Nodau tudalen wedi’u cadw’n ddiweddar</string>
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Nodau tudalen wedi’u cadw’n ddiweddar</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">Dangos y cyfan</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Dangos y cyfan</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Dangos pob nod tudalen wedi’u cadw</string>
 
@@ -179,8 +179,6 @@
     <string name="browser_menu_add_to_homescreen">Ychwanegu i’r sgrin Cartref</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Gosod</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string moz:removedIn="98" name="synced_tabs" tools:ignore="UnusedResources">Tabiau wedi’u cydweddu</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Ailgydweddu</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -212,8 +210,6 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Golygu</string>
 
-    <!-- Browser menu button that opens the Customize menu -->
-    <string moz:removedIn="98" name="browser_menu_customize_home" tools:ignore="UnusedResources">Cyfaddasu cartref</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Cyfaddasu’r dudalen cartref</string>
     <!-- Browser Toolbar -->
@@ -328,6 +324,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Os fydd yn cael ei ganiatáu, bydd tabiau preifat hefyd yn weladwy pan fydd sawl ap ar agor</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ychwanegu llwybr byr pori preifat</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Modd HTTPS-yn-Unig</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Yn ceisio cysylltu’n awtomatig â gwefannau gan ddefnyddio’r protocol amgryptio HTTPS am fwy o ddiogelwch.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Ymlaen</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Diffodd</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Dysgu rhagor</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Galluogi ym mhob tab</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Galluogi mewn tabiau preifat yn unig</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Gwefan ddiogel ddim ar gael</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Yn fwyaf tebygol, nid yw’r wefan yn cefnogi HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Fodd bynnag, mae hefyd yn bosibl bod ymosodwr wrthi. Os byddwch yn parhau i’r wefan, peidiwch â rhoi unrhyw wybodaeth sensitif. Os byddwch yn parhau, bydd modd HTTPS-yn-Unig yn cael ei ddiffodd dros dro ar gyfer y wefan.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Hygyrchedd</string>
     <!-- Preference to override the Firefox Account server -->
@@ -1063,7 +1079,9 @@
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Nodau tudalen wedi’u cadw!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Cadw fel Hoff wefan!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Cadw fel Hoff wefan!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Ychwanegwyd at y llwybrau byr!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Tab preifat wedi’i gau</string>
 
@@ -1614,17 +1632,17 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="search_delete_search_engine_success_message">Dilëwyd %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Croeso i’r %s newydd sbon</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Croeso i’r %s newydd sbon</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Mae porwr wedi’i ailgynllunio’n llwyr yn eich disgwyl, gyda gwell perfformiad a nodweddion i’ch helpu chi i wneud mwy ar-lein.\n\n Arhoswch wrth i ni ddiweddaru %s gyda’ch</string>
+    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Mae porwr wedi’i ailgynllunio’n llwyr yn eich disgwyl, gyda gwell perfformiad a nodweddion i’ch helpu chi i wneud mwy ar-lein.\n\n Arhoswch wrth i ni ddiweddaru %s gyda’ch</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Diweddaru %s…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Diweddaru %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Cychwyn %s</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Cychwyn %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Mudo wedi’i gwblhau</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Mudo wedi’i gwblhau</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Cyfrineiriau</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Cyfrineiriau</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">I’w ganiatáu:</string>
@@ -1654,9 +1672,13 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Ychwanegu i Hoff wefan</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Ychwanegu i Hoff wefan</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
-    <string name="browser_menu_remove_from_top_sites">Tynnu o’r hoff wefannau</string>
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Tynnu o’r hoff wefannau</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Ychwanegu at y llwybrau byr</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Tynnu o’r llwybrau byr</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Dilyswyd gan: %1$s</string>
@@ -1732,21 +1754,24 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Wedi cyrraedd terfyn nifer eich Hoff wefannau</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Wedi cyrraedd terfyn nifer eich Hoff wefannau</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Cyrhaeddwyd terfyn llwybr byr</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content_2">I ychwanegu hoff wefan newydd, tynnwch un. Pwyswch a dal y wefan a dewis tynnu.</string>
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">I ychwanegu hoff wefan newydd, tynnwch un. Pwyswch a dal y wefan a dewis tynnu.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">I ychwanegu llwybr byr newydd, tynnwch un. Cyffyrddwch a daliwch y wefan a dewiswch dileu.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iawn, Wedi deall!</string>
-
-    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
-    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Dangos yr hoff wefannau yr ymwelwyd â nhw amlaf</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Llwybrau byr</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Enw</string>
 	<!-- Hint for renaming title of a top site -->
-	<string name="top_site_name_hint">Enw’r hoff wefan</string>
+	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Enw’r hoff wefan</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Enw llwybr byr</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Iawn</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
@@ -1823,4 +1848,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="pocket_stories_feature_caption">Rhan o deulu Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Dysgu rhagor</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Galluogi telemetreg i anfon data.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Mynd i gosodiadau</string>
 </resources>

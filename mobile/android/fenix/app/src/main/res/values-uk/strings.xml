@@ -340,7 +340,7 @@
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_all_tabs">Увімкнути на всіх вкладках</string>
     <!-- Option for the https only setting -->
-    <string name="preferences_https_only_in_private_tabs">Увімкнути лише на приватних вкладках</string>
+    <string name="preferences_https_only_in_private_tabs">Увімкнути лише у приватних вкладках</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">Захищений сайт недоступний</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
