@@ -418,49 +418,6 @@ void FrameBuffer::CancelCallback() {
   callback_checker_.Detach();
 }
 
-bool FrameBuffer::IsCompleteSuperFrame(const EncodedFrame& frame) {
-  if (frame.inter_layer_predicted) {
-    // Check that all previous spatial layers are already inserted.
-    VideoLayerFrameId id = frame.id;
-    RTC_DCHECK_GT(id.spatial_layer, 0);
-    --id.spatial_layer;
-    FrameMap::iterator prev_frame = frames_.find(id);
-    if (prev_frame == frames_.end() || !prev_frame->second.frame)
-      return false;
-    while (prev_frame->second.frame->inter_layer_predicted) {
-      if (prev_frame == frames_.begin())
-        return false;
-      --prev_frame;
-      --id.spatial_layer;
-      if (!prev_frame->second.frame ||
-          prev_frame->first.picture_id != id.picture_id ||
-          prev_frame->first.spatial_layer != id.spatial_layer) {
-        return false;
-      }
-    }
-  }
-
-  if (!frame.is_last_spatial_layer) {
-    // Check that all following spatial layers are already inserted.
-    VideoLayerFrameId id = frame.id;
-    ++id.spatial_layer;
-    FrameMap::iterator next_frame = frames_.find(id);
-    if (next_frame == frames_.end() || !next_frame->second.frame)
-      return false;
-    while (!next_frame->second.frame->is_last_spatial_layer) {
-      ++next_frame;
-      ++id.spatial_layer;
-      if (next_frame == frames_.end() || !next_frame->second.frame ||
-          next_frame->first.picture_id != id.picture_id ||
-          next_frame->first.spatial_layer != id.spatial_layer) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
   TRACE_EVENT0("webrtc", "FrameBuffer::InsertFrame");
   RTC_DCHECK(frame);
@@ -572,7 +529,9 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
   if (!frame->delayed_by_retransmission())
     timing_->IncomingTimestamp(frame->Timestamp(), frame->ReceivedTime());
 
-  if (stats_callback_ && IsCompleteSuperFrame(*frame)) {
+  // It can happen that a frame will be reported as fully received even if a
+  // lower spatial layer frame is missing.
+  if (stats_callback_ && frame->is_last_spatial_layer) {
     TRACE_EVENT2("webrtc",
                  "FrameBuffer::InsertFrame Frame Complete",
                  "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
@@ -789,14 +748,14 @@ EncodedFrame* FrameBuffer::CombineAndDeleteFrames(
   }
   auto encoded_image_buffer = EncodedImageBuffer::Create(total_length);
   uint8_t* buffer = encoded_image_buffer->data();
-  first_frame->SetSpatialLayerFrameSize(first_frame->id.spatial_layer,
+  first_frame->SetSpatialLayerFrameSize(first_frame->SpatialIndex().value_or(0),
                                         first_frame->size());
   memcpy(buffer, first_frame->data(), first_frame->size());
   buffer += first_frame->size();
 
   // Spatial index of combined frame is set equal to spatial index of its top
   // spatial layer.
-  first_frame->SetSpatialIndex(last_frame->id.spatial_layer);
+  first_frame->SetSpatialIndex(last_frame->SpatialIndex().value_or(0));
   first_frame->id.spatial_layer = last_frame->id.spatial_layer;
 
   first_frame->video_timing_mutable()->network2_timestamp_ms =
@@ -807,8 +766,8 @@ EncodedFrame* FrameBuffer::CombineAndDeleteFrames(
   // Append all remaining frames to the first one.
   for (size_t i = 1; i < frames.size(); ++i) {
     EncodedFrame* next_frame = frames[i];
-    first_frame->SetSpatialLayerFrameSize(next_frame->id.spatial_layer,
-                                          next_frame->size());
+    first_frame->SetSpatialLayerFrameSize(
+        next_frame->SpatialIndex().value_or(0), next_frame->size());
     memcpy(buffer, next_frame->data(), next_frame->size());
     buffer += next_frame->size();
     delete next_frame;

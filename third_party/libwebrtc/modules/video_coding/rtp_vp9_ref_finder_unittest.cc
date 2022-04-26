@@ -8,22 +8,21 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cstring>
-#include <map>
-#include <set>
 #include <utility>
 #include <vector>
 
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/rtp_vp9_ref_finder.h"
-#include "rtc_base/random.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
+using ::testing::Contains;
 using ::testing::Matcher;
 using ::testing::MatcherInterface;
 using ::testing::Matches;
 using ::testing::MatchResultListener;
+using ::testing::Pointee;
+using ::testing::Property;
 using ::testing::UnorderedElementsAreArray;
 
 namespace webrtc {
@@ -101,6 +100,7 @@ class Frame {
       }
     }
     vp9_header.temporal_up_switch = up_switch;
+    vp9_header.inter_layer_predicted = inter_layer;
     vp9_header.inter_pic_predicted = inter_pic && !keyframe;
     if (scalability_structure != nullptr) {
       vp9_header.ss_data_available = true;
@@ -155,23 +155,19 @@ using FrameVector = std::vector<std::unique_ptr<EncodedFrame>>;
 class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
  public:
   explicit HasFrameMatcher(int64_t frame_id,
-                           int spatial_id,
                            const std::vector<int64_t>& expected_refs)
       : frame_id_(frame_id),
-        spatial_id_(spatial_id),
         expected_refs_(expected_refs) {}
 
   bool MatchAndExplain(const FrameVector& frames,
                        MatchResultListener* result_listener) const override {
     auto it = std::find_if(frames.begin(), frames.end(),
                            [this](const std::unique_ptr<EncodedFrame>& f) {
-                             return f->id.picture_id == frame_id_ &&
-                                    f->id.spatial_layer == spatial_id_;
+                             return f->id.picture_id == frame_id_;
                            });
     if (it == frames.end()) {
       if (result_listener->IsInterested()) {
-        *result_listener << "No frame with frame_id:" << frame_id_
-                         << " and spatial_id:" << spatial_id_;
+        *result_listener << "No frame with frame_id:" << frame_id_;
       }
       return false;
     }
@@ -180,8 +176,7 @@ class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
                                         (*it)->num_references);
     if (!Matches(UnorderedElementsAreArray(expected_refs_))(actual_refs)) {
       if (result_listener->IsInterested()) {
-        *result_listener << "Frame with frame_id:" << frame_id_
-                         << ", spatial_id:" << spatial_id_ << " and "
+        *result_listener << "Frame with frame_id:" << frame_id_ << " and "
                          << actual_refs.size() << " references { ";
         for (auto r : actual_refs) {
           *result_listener << r << " ";
@@ -195,8 +190,8 @@ class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
   }
 
   void DescribeTo(std::ostream* os) const override {
-    *os << "frame with frame_id:" << frame_id_ << ", spatial_id:" << spatial_id_
-        << " and " << expected_refs_.size() << " references { ";
+    *os << "frame with frame_id:" << frame_id_ << " and "
+        << expected_refs_.size() << " references { ";
     for (auto r : expected_refs_) {
       *os << r << " ";
     }
@@ -205,8 +200,7 @@ class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
 
  private:
   const int64_t frame_id_;
-  const int spatial_id_;
-  std::vector<int64_t> expected_refs_;
+  const std::vector<int64_t> expected_refs_;
 };
 
 }  // namespace
@@ -225,11 +219,9 @@ class RtpVp9RefFinderTest : public ::testing::Test {
   FrameVector frames_;
 };
 
-Matcher<const FrameVector&> HasFrameWithIdAndRefs(
-    int64_t frame_id,
-    int spatial_id,
-    const std::vector<int64_t>& refs) {
-  return MakeMatcher(new HasFrameMatcher(frame_id, spatial_id, refs));
+Matcher<const FrameVector&> HasFrameWithIdAndRefs(int64_t frame_id,
+                                                  std::vector<int64_t> refs) {
+  return MakeMatcher(new HasFrameMatcher(frame_id, refs));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofInsertOneFrame) {
@@ -239,7 +231,7 @@ TEST_F(RtpVp9RefFinderTest, GofInsertOneFrame) {
   Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).AsKeyFrame().Gof(&ss));
 
   EXPECT_EQ(frames_.size(), 1UL);
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_0) {
@@ -250,8 +242,8 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_0) {
   Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
 
   EXPECT_EQ(frames_.size(), 2UL);
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {5}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofSpatialLayers_2) {
@@ -265,11 +257,11 @@ TEST_F(RtpVp9RefFinderTest, GofSpatialLayers_2) {
   Insert(Frame().Pid(3).SidAndTid(1, 0).Tl0(2));
 
   EXPECT_EQ(frames_.size(), 5UL);
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {1}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {5}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(16, {11}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_0) {
@@ -287,15 +279,15 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_0) {
   Insert(Frame().Pid(5).SidAndTid(0, 0).Tl0(4));
 
   EXPECT_EQ(frames_.size(), 9UL);
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {1}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {3}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 1, {3}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 1, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {5}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(16, {11}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {15}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(21, {16}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(26, {21}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_01) {
@@ -314,12 +306,12 @@ TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_01) {
   Insert(Frame().Pid(11).SidAndTid(0, 1).Tl0(5));
 
   ASSERT_EQ(6UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(50, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(55, {50}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_0212) {
@@ -333,10 +325,10 @@ TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_0212) {
   Insert(Frame().Pid(3).SidAndTid(0, 2).Tl0(0));
 
   ASSERT_EQ(4UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
 
   // Skip frames with tl0 = 1
 
@@ -347,25 +339,25 @@ TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_0212) {
   Insert(Frame().Pid(11).SidAndTid(0, 2).Tl0(2));
 
   ASSERT_EQ(8UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(40, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(45, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(50, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(55, {50}));
 
   // Now insert frames with tl0 = 1
   Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(1).AsKeyFrame().Gof(&ss));
   Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
 
   ASSERT_EQ(9UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {}));
 
   Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(1));
   Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(1));
 
   ASSERT_EQ(12UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_01) {
@@ -379,10 +371,10 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_01) {
   Insert(Frame().Pid(3).SidAndTid(0, 1).Tl0(1));
 
   ASSERT_EQ(4UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_01) {
@@ -402,16 +394,16 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_01) {
   Insert(Frame().Pid(9).SidAndTid(0, 1).Tl0(4));
 
   ASSERT_EQ(10UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {6}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(40, {30}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(45, {40}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_0212) {
@@ -429,14 +421,14 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_0212) {
   Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
 
   ASSERT_EQ(8UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_0212) {
@@ -458,18 +450,18 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_0212) {
   Insert(Frame().Pid(10).SidAndTid(0, 1).Tl0(2));
 
   ASSERT_EQ(12UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(40, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(45, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(50, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(55, {50}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayersUpSwitch_02120212) {
@@ -495,22 +487,22 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayersUpSwitch_02120212) {
   Insert(Frame().Pid(15).SidAndTid(0, 2).Tl0(3));
 
   ASSERT_EQ(16UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {1, 2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {3, 4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {2, 4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {9, 10}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(12, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(13, 0, {11, 12}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(14, 0, {10, 12}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, 0, {13, 14}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {5, 10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {15, 20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {10, 20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(40, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(45, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(50, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(55, {45, 50}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(60, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(65, {55, 60}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(70, {50, 60}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(75, {65, 70}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayersUpSwitchReordered_02120212) {
@@ -536,22 +528,22 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayersUpSwitchReordered_02120212) {
   Insert(Frame().Pid(14).SidAndTid(0, 1).Tl0(3));
 
   ASSERT_EQ(16UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {1, 2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {3, 4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {2, 4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {9, 10}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(12, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(13, 0, {11, 12}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(14, 0, {10, 12}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, 0, {13, 14}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {5, 10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {15, 20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {10, 20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(40, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(45, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(50, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(55, {45, 50}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(60, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(65, {55, 60}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(70, {50, 60}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(75, {65, 70}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_01_0212) {
@@ -574,25 +566,25 @@ TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_01_0212) {
   Insert(Frame().Pid(9).SidAndTid(0, 2).Tl0(3));
 
   ASSERT_EQ(12UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(25, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(30, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(35, {30}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(40, {20}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(45, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(50, {40}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(55, {50}));
 }
 
 TEST_F(RtpVp9RefFinderTest, FlexibleModeOneFrame) {
   Insert(Frame().Pid(0).SidAndTid(0, 0).AsKeyFrame());
 
   ASSERT_EQ(1UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
 }
 
 TEST_F(RtpVp9RefFinderTest, FlexibleModeTwoSpatialLayers) {
@@ -606,14 +598,14 @@ TEST_F(RtpVp9RefFinderTest, FlexibleModeTwoSpatialLayers) {
   Insert(Frame().Pid(4).SidAndTid(1, 0).FlexRefs({1}));
 
   ASSERT_EQ(8UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 1, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 1, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {1}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 1, {3}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(16, {11}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(21, {16}));
 }
 
 TEST_F(RtpVp9RefFinderTest, FlexibleModeTwoSpatialLayersReordered) {
@@ -627,14 +619,14 @@ TEST_F(RtpVp9RefFinderTest, FlexibleModeTwoSpatialLayersReordered) {
   Insert(Frame().Pid(4).SidAndTid(0, 0).FlexRefs({2}));
 
   ASSERT_EQ(8UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 1, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 1, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {1}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {2}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 1, {3}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(16, {11}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(20, {10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(21, {16}));
 }
 
 TEST_F(RtpVp9RefFinderTest, WrappingFlexReference) {
@@ -642,7 +634,8 @@ TEST_F(RtpVp9RefFinderTest, WrappingFlexReference) {
 
   ASSERT_EQ(1UL, frames_.size());
   const EncodedFrame& frame = *frames_[0];
-  ASSERT_EQ(frame.id.picture_id - frame.references[0], 1);
+
+  ASSERT_EQ(frame.id.picture_id - frame.references[0], 5);
 }
 
 TEST_F(RtpVp9RefFinderTest, GofPidJump) {
@@ -680,7 +673,7 @@ TEST_F(RtpVp9RefFinderTest, GofTidTooHigh) {
   Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(1));
 
   ASSERT_EQ(1UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
 }
 
 TEST_F(RtpVp9RefFinderTest, GofZeroFrames) {
@@ -692,8 +685,22 @@ TEST_F(RtpVp9RefFinderTest, GofZeroFrames) {
   Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(1));
 
   ASSERT_EQ(2UL, frames_.size());
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
-  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, {0}));
+}
+
+TEST_F(RtpVp9RefFinderTest, SpatialIndex) {
+  Insert(Frame().Pid(0).SidAndTid(0, 0).AsKeyFrame());
+  Insert(Frame().Pid(0).SidAndTid(1, 0).AsKeyFrame());
+  Insert(Frame().Pid(0).SidAndTid(2, 0).AsKeyFrame());
+
+  ASSERT_EQ(3UL, frames_.size());
+  EXPECT_THAT(frames_,
+              Contains(Pointee(Property(&EncodedFrame::SpatialIndex, 0))));
+  EXPECT_THAT(frames_,
+              Contains(Pointee(Property(&EncodedFrame::SpatialIndex, 1))));
+  EXPECT_THAT(frames_,
+              Contains(Pointee(Property(&EncodedFrame::SpatialIndex, 2))));
 }
 
 }  // namespace video_coding
