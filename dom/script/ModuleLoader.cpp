@@ -136,9 +136,9 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
   aRequest->GetScriptLoadContext()->MaybeUnblockOnload();
 }
 
-nsresult ModuleLoader::CompileOrFinishModuleScript(
+nsresult ModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
-    ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModule) {
+    ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
   if (aRequest->GetScriptLoadContext()->mWasCompiledOMT) {
     JS::Rooted<JS::InstantiationStorage> storage(aCx);
 
@@ -161,9 +161,9 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
     }
 
     JS::InstantiateOptions instantiateOptions(aOptions);
-    aModule.set(JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil,
-                                             storage.address()));
-    if (!aModule) {
+    aModuleOut.set(JS::InstantiateModuleStencil(aCx, instantiateOptions,
+                                                stencil, storage.address()));
+    if (!aModuleOut) {
       return NS_ERROR_FAILURE;
     }
 
@@ -214,8 +214,9 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
   }
 
   JS::InstantiateOptions instantiateOptions(aOptions);
-  aModule.set(JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
-  if (!aModule) {
+  aModuleOut.set(
+      JS::InstantiateModuleStencil(aCx, instantiateOptions, stencil));
+  if (!aModuleOut) {
     return NS_ERROR_FAILURE;
   }
 

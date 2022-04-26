@@ -55,7 +55,7 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
 
   void OnModuleLoadComplete(ModuleLoadRequest* aRequest) override;
 
-  nsresult CompileOrFinishModuleScript(
+  nsresult CompileFetchedModule(
       JSContext* aCx, JS::Handle<JSObject*> aGlobal,
       JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
       JS::MutableHandle<JSObject*> aModuleScript) override;

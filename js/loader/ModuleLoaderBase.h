@@ -127,14 +127,16 @@ class ModuleLoaderBase : public nsISupports {
   // NS_OK to abort load without returning an error.
   virtual bool CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) = 0;
 
-  // Start the process of fetching module source or bytecode. This is only
+  // Start the process of fetching module source (or bytecode). This is only
   // called if CanStartLoad returned true.
   virtual nsresult StartFetch(ModuleLoadRequest* aRequest) = 0;
 
-  virtual nsresult CompileOrFinishModuleScript(
+  // Create a JS module for a fetched module request. This might compile source
+  // text or decode cached bytecode.
+  virtual nsresult CompileFetchedModule(
       JSContext* aCx, JS::Handle<JSObject*> aGlobal,
       JS::CompileOptions& aOptions, ModuleLoadRequest* aRequest,
-      JS::MutableHandle<JSObject*> aModuleScript) = 0;
+      JS::MutableHandle<JSObject*> aModuleOut) = 0;
 
   // Called when a module script has been loaded, including imports.
   virtual void OnModuleLoadComplete(ModuleLoadRequest* aRequest) = 0;
