@@ -11,6 +11,10 @@ TEST_DIRS += ["tests/gtest"]
 
 SOURCES += ["nsWindowsPackageManager.cpp"]
 
+LOCAL_INCLUDES += ["/toolkit/components/jsoncpp/include"]
+
+USE_LIBS += ["jsoncpp"]
+
 XPCOM_MANIFESTS += [
     "components.conf",
 ]
