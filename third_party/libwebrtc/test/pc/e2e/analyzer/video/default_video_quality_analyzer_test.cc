@@ -745,6 +745,114 @@ TEST(DefaultVideoQualityAnalyzerTest, CpuUsage) {
   EXPECT_EQ(analyzer.GetCpuUsagePercent(), cpu_usage);
 }
 
+TEST(DefaultVideoQualityAnalyzerTest, RuntimeParticipantsAdding) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  constexpr char kAlice[] = "alice";
+  constexpr char kBob[] = "bob";
+  constexpr char kCharlie[] = "charlie";
+
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       AnalyzerOptionsForTest());
+  analyzer.Start("test_case", {}, kAnalyzerMaxThreadsCount);
+
+  std::map<uint16_t, VideoFrame> captured_frames;
+  std::vector<uint16_t> frames_order;
+  analyzer.RegisterParticipantInCall(kAlice);
+  analyzer.RegisterParticipantInCall(kBob);
+  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
+    VideoFrame frame = NextFrame(frame_generator.get(), i);
+    frame.set_id(analyzer.OnFrameCaptured(kAlice, kStreamLabel, frame));
+    frames_order.push_back(frame.id());
+    captured_frames.insert({frame.id(), frame});
+    analyzer.OnFramePreEncode(kAlice, frame);
+    analyzer.OnFrameEncoded(kAlice, frame.id(), FakeEncode(frame),
+                            VideoQualityAnalyzerInterface::EncoderStats());
+  }
+
+  for (size_t i = 0; i < frames_order.size() / 2; ++i) {
+    uint16_t frame_id = frames_order.at(i);
+    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
+    analyzer.OnFramePreDecode(kBob, received_frame.id(),
+                              FakeEncode(received_frame));
+    analyzer.OnFrameDecoded(kBob, received_frame,
+                            VideoQualityAnalyzerInterface::DecoderStats());
+    analyzer.OnFrameRendered(kBob, received_frame);
+  }
+
+  analyzer.RegisterParticipantInCall(kCharlie);
+
+  for (size_t i = frames_order.size() / 2; i < frames_order.size(); ++i) {
+    uint16_t frame_id = frames_order.at(i);
+    VideoFrame bob_received_frame = DeepCopy(captured_frames.at(frame_id));
+    analyzer.OnFramePreDecode(kBob, bob_received_frame.id(),
+                              FakeEncode(bob_received_frame));
+    analyzer.OnFrameDecoded(kBob, bob_received_frame,
+                            VideoQualityAnalyzerInterface::DecoderStats());
+    analyzer.OnFrameRendered(kBob, bob_received_frame);
+
+    VideoFrame charlie_received_frame = DeepCopy(captured_frames.at(frame_id));
+    analyzer.OnFramePreDecode(kCharlie, charlie_received_frame.id(),
+                              FakeEncode(charlie_received_frame));
+    analyzer.OnFrameDecoded(kCharlie, charlie_received_frame,
+                            VideoQualityAnalyzerInterface::DecoderStats());
+    analyzer.OnFrameRendered(kCharlie, charlie_received_frame);
+  }
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  AnalyzerStats stats = analyzer.GetAnalyzerStats();
+  EXPECT_EQ(stats.memory_overloaded_comparisons_done, 0);
+  EXPECT_EQ(stats.comparisons_done,
+            kMaxFramesInFlightPerStream + kMaxFramesInFlightPerStream / 2);
+
+  std::vector<StatsSample> frames_in_flight_sizes =
+      GetSortedSamples(stats.frames_in_flight_left_count);
+  EXPECT_EQ(frames_in_flight_sizes.back().value, 0)
+      << ToString(frames_in_flight_sizes);
+
+  FrameCounters frame_counters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream);
+  EXPECT_EQ(frame_counters.received,
+            kMaxFramesInFlightPerStream + kMaxFramesInFlightPerStream / 2);
+  EXPECT_EQ(frame_counters.decoded,
+            kMaxFramesInFlightPerStream + kMaxFramesInFlightPerStream / 2);
+  EXPECT_EQ(frame_counters.rendered,
+            kMaxFramesInFlightPerStream + kMaxFramesInFlightPerStream / 2);
+  EXPECT_EQ(frame_counters.dropped, 0);
+
+  EXPECT_EQ(analyzer.GetKnownVideoStreams().size(), 2lu);
+  const StatsKey kAliceBobStats(kStreamLabel, kAlice, kBob);
+  const StatsKey kAliceCharlieStats(kStreamLabel, kAlice, kCharlie);
+  {
+    FrameCounters stream_conters =
+        analyzer.GetPerStreamCounters().at(kAliceBobStats);
+    EXPECT_EQ(stream_conters.captured, 10);
+    EXPECT_EQ(stream_conters.pre_encoded, 10);
+    EXPECT_EQ(stream_conters.encoded, 10);
+    EXPECT_EQ(stream_conters.received, 10);
+    EXPECT_EQ(stream_conters.decoded, 10);
+    EXPECT_EQ(stream_conters.rendered, 10);
+  }
+  {
+    FrameCounters stream_conters =
+        analyzer.GetPerStreamCounters().at(kAliceCharlieStats);
+    EXPECT_EQ(stream_conters.captured, 5);
+    EXPECT_EQ(stream_conters.pre_encoded, 5);
+    EXPECT_EQ(stream_conters.encoded, 5);
+    EXPECT_EQ(stream_conters.received, 5);
+    EXPECT_EQ(stream_conters.decoded, 5);
+    EXPECT_EQ(stream_conters.rendered, 5);
+  }
+}
+
 }  // namespace
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

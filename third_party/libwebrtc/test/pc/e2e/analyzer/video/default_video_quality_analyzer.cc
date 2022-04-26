@@ -495,6 +495,40 @@ void DefaultVideoQualityAnalyzer::OnDecoderError(absl::string_view peer_name,
                     << ", code=" << error_code;
 }
 
+void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
+    absl::string_view peer_name) {
+  MutexLock lock1(&lock_);
+  MutexLock lock2(&comparison_lock_);
+  RTC_CHECK(!peers_->HasName(peer_name));
+  peers_->AddIfAbsent(peer_name);
+
+  // Ensure stats for receiving (for frames from other peers to this one)
+  // streams exists. Since in flight frames will be sent to the new peer
+  // as well. Sending stats (from this peer to others) will be added by
+  // DefaultVideoQualityAnalyzer::OnFrameCaptured.
+  for (auto& key_val : stream_to_sender_) {
+    InternalStatsKey key(key_val.first, key_val.second,
+                         peers_->index(peer_name));
+    const int64_t frames_count = captured_frames_in_flight_.size();
+    FrameCounters counters;
+    counters.captured = frames_count;
+    counters.pre_encoded = frames_count;
+    counters.encoded = frames_count;
+    stream_frame_counters_.insert({key, std::move(counters)});
+
+    stream_last_freeze_end_time_.insert({key, start_time_});
+  }
+  // Ensure, that frames states are handled correctly
+  // (e.g. dropped frames tracking).
+  for (auto& key_val : stream_states_) {
+    key_val.second.AddPeer();
+  }
+  // Register new peer for every frame in flight.
+  for (auto& key_val : captured_frames_in_flight_) {
+    key_val.second.AddPeer();
+  }
+}
+
 void DefaultVideoQualityAnalyzer::Stop() {
   {
     MutexLock lock(&lock_);

@@ -221,6 +221,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   void OnDecoderError(absl::string_view peer_name,
                       uint16_t frame_id,
                       int32_t error_code) override;
+  void RegisterParticipantInCall(absl::string_view peer_name) override;
   void Stop() override;
   std::string GetStreamLabel(uint16_t frame_id) override;
   void OnStatsReports(
@@ -309,11 +310,17 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     size_t owner() const { return owner_; }
 
     void PushBack(uint16_t frame_id) { frame_ids_.PushBack(frame_id); }
-    // Crash if state is empty.
+    // Crash if state is empty. Guarantees that there can be no alive frames
+    // that are not in the owner queue
     uint16_t PopFront(size_t peer);
     bool IsEmpty(size_t peer) const { return frame_ids_.IsEmpty(peer); }
     // Crash if state is empty.
     uint16_t Front(size_t peer) const { return frame_ids_.Front(peer).value(); }
+
+    // When new peer is added - all current alive frames will be sent to it as
+    // well. So we need to register them as expected by copying owner_ head to
+    // the new head.
+    void AddPeer() { frame_ids_.AddHead(owner_); }
 
     size_t GetAliveFramesCount() { return frame_ids_.size(owner_); }
     uint16_t MarkNextAliveFrameAsDead();
@@ -379,6 +386,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
     bool RemoveFrame();
     void SetFrameId(uint16_t id);
 
+    void AddPeer() { ++peers_count_; }
+
     std::vector<size_t> GetPeersWhichDidntReceive() const;
     bool HaveAllPeersReceived() const;
 
@@ -425,7 +434,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
    private:
     const size_t stream_;
     const size_t owner_;
-    const size_t peers_count_;
+    size_t peers_count_;
     absl::optional<VideoFrame> frame_;
 
     // Frame events timestamp.
