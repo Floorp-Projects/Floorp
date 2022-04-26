@@ -48,5 +48,10 @@ void InProcessAndroidCompositorWidget::OnCompositorSurfaceChanged() {
       static_cast<jobject>(mWindow->GetNativeData(NS_JAVA_SURFACE)));
 }
 
+void InProcessAndroidCompositorWidget::NotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
+  AndroidCompositorWidget::NotifyClientSizeChanged(aClientSize);
+}
+
 }  // namespace widget
 }  // namespace mozilla

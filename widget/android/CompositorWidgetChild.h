@@ -26,6 +26,10 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   mozilla::ipc::IPCResult RecvObserveVsync() override;
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
 
+  // PlatformCompositorWidgetDelegate overrides
+
+  void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
+
  private:
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;
   RefPtr<CompositorWidgetVsyncObserver> mVsyncObserver;

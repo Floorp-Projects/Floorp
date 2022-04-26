@@ -30,6 +30,9 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
 
   void OnCompositorSurfaceChanged() override;
 
+  mozilla::ipc::IPCResult RecvNotifyClientSizeChanged(
+      const LayoutDeviceIntSize& aClientSize) override;
+
  private:
   RefPtr<VsyncObserver> mVsyncObserver;
 };

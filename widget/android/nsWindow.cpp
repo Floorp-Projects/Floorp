@@ -2316,6 +2316,11 @@ void nsWindow::OnSizeChanged(const gfx::IntSize& aSize) {
   if (mAttachedWidgetListener) {
     mAttachedWidgetListener->WindowResized(this, aSize.width, aSize.height);
   }
+
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(
+        LayoutDeviceIntSize::FromUnknownSize(aSize));
+  }
 }
 
 void nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint) {
