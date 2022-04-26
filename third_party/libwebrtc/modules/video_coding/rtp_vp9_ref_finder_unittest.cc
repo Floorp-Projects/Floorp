@@ -17,839 +17,683 @@
 #include "modules/video_coding/frame_object.h"
 #include "modules/video_coding/rtp_vp9_ref_finder.h"
 #include "rtc_base/random.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
+
+using ::testing::Matcher;
+using ::testing::MatcherInterface;
+using ::testing::Matches;
+using ::testing::MatchResultListener;
+using ::testing::UnorderedElementsAreArray;
 
 namespace webrtc {
 namespace video_coding {
 
 namespace {
-std::unique_ptr<RtpFrameObject> CreateFrame(
-    uint16_t seq_num_start,
-    uint16_t seq_num_end,
-    bool keyframe,
-    VideoCodecType codec,
-    const RTPVideoTypeHeader& video_type_header) {
-  RTPVideoHeader video_header;
-  video_header.frame_type = keyframe ? VideoFrameType::kVideoFrameKey
-                                     : VideoFrameType::kVideoFrameDelta;
-  video_header.video_type_header = video_type_header;
+class Frame {
+ public:
+  Frame& SeqNum(uint16_t start, uint16_t end) {
+    seq_num_start = start;
+    seq_num_end = end;
+    return *this;
+  }
 
-  // clang-format off
-  return std::make_unique<RtpFrameObject>(
-      seq_num_start,
-      seq_num_end,
-      /*markerBit=*/true,
-      /*times_nacked=*/0,
-      /*first_packet_received_time=*/0,
-      /*last_packet_received_time=*/0,
-      /*rtp_timestamp=*/0,
-      /*ntp_time_ms=*/0,
-      VideoSendTiming(),
-      /*payload_type=*/0,
-      codec,
-      kVideoRotation_0,
-      VideoContentType::UNSPECIFIED,
-      video_header,
-      /*color_space=*/absl::nullopt,
-      RtpPacketInfos(),
-      EncodedImageBuffer::Create(/*size=*/0));
-  // clang-format on
-}
+  Frame& AsKeyFrame(bool is_keyframe = true) {
+    keyframe = is_keyframe;
+    return *this;
+  }
+
+  Frame& Pid(int pid) {
+    picture_id = pid;
+    return *this;
+  }
+
+  Frame& SidAndTid(int sid, int tid) {
+    spatial_id = sid;
+    temporal_id = tid;
+    return *this;
+  }
+
+  Frame& Tl0(int tl0) {
+    tl0_idx = tl0;
+    return *this;
+  }
+
+  Frame& AsUpswitch(bool is_up = true) {
+    up_switch = is_up;
+    return *this;
+  }
+
+  Frame& AsInterLayer(bool is_inter_layer = true) {
+    inter_layer = is_inter_layer;
+    return *this;
+  }
+
+  Frame& NotAsInterPic(bool is_inter_pic = false) {
+    inter_pic = is_inter_pic;
+    return *this;
+  }
+
+  Frame& Gof(GofInfoVP9* ss) {
+    scalability_structure = ss;
+    return *this;
+  }
+
+  Frame& FlexRefs(const std::vector<uint8_t>& refs) {
+    flex_refs = refs;
+    return *this;
+  }
+
+  operator std::unique_ptr<RtpFrameObject>() {
+    RTPVideoHeaderVP9 vp9_header{};
+    vp9_header.picture_id = *picture_id;
+    vp9_header.temporal_idx = *temporal_id;
+    vp9_header.spatial_idx = *spatial_id;
+    if (tl0_idx.has_value()) {
+      RTC_DCHECK(flex_refs.empty());
+      vp9_header.flexible_mode = false;
+      vp9_header.tl0_pic_idx = *tl0_idx;
+    } else {
+      vp9_header.flexible_mode = true;
+      vp9_header.num_ref_pics = flex_refs.size();
+      for (size_t i = 0; i < flex_refs.size(); ++i) {
+        vp9_header.pid_diff[i] = flex_refs.at(i);
+      }
+    }
+    vp9_header.temporal_up_switch = up_switch;
+    vp9_header.inter_pic_predicted = inter_pic && !keyframe;
+    if (scalability_structure != nullptr) {
+      vp9_header.ss_data_available = true;
+      vp9_header.gof = *scalability_structure;
+    }
+
+    RTPVideoHeader video_header;
+    video_header.frame_type = keyframe ? VideoFrameType::kVideoFrameKey
+                                       : VideoFrameType::kVideoFrameDelta;
+    video_header.video_type_header = vp9_header;
+    // clang-format off
+    return std::make_unique<RtpFrameObject>(
+        seq_num_start,
+        seq_num_end,
+        /*markerBit=*/true,
+        /*times_nacked=*/0,
+        /*first_packet_received_time=*/0,
+        /*last_packet_received_time=*/0,
+        /*rtp_timestamp=*/0,
+        /*ntp_time_ms=*/0,
+        VideoSendTiming(),
+        /*payload_type=*/0,
+        kVideoCodecVP9,
+        kVideoRotation_0,
+        VideoContentType::UNSPECIFIED,
+        video_header,
+        /*color_space=*/absl::nullopt,
+        RtpPacketInfos(),
+        EncodedImageBuffer::Create(/*size=*/0));
+    // clang-format on
+  }
+
+ private:
+  uint16_t seq_num_start = 0;
+  uint16_t seq_num_end = 0;
+  bool keyframe = false;
+  absl::optional<int> picture_id;
+  absl::optional<int> spatial_id;
+  absl::optional<int> temporal_id;
+  absl::optional<int> tl0_idx;
+  bool up_switch = false;
+  bool inter_layer = false;
+  bool inter_pic = true;
+  GofInfoVP9* scalability_structure = nullptr;
+  std::vector<uint8_t> flex_refs;
+};
+
+using FrameVector = std::vector<std::unique_ptr<EncodedFrame>>;
+
+// Would have been nice to use the MATCHER_P3 macro instead, but when used it
+// fails to infer the type of the vector if not explicitly given in the
+class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
+ public:
+  explicit HasFrameMatcher(int64_t frame_id,
+                           int spatial_id,
+                           const std::vector<int64_t>& expected_refs)
+      : frame_id_(frame_id),
+        spatial_id_(spatial_id),
+        expected_refs_(expected_refs) {}
+
+  bool MatchAndExplain(const FrameVector& frames,
+                       MatchResultListener* result_listener) const override {
+    auto it = std::find_if(frames.begin(), frames.end(),
+                           [this](const std::unique_ptr<EncodedFrame>& f) {
+                             return f->id.picture_id == frame_id_ &&
+                                    f->id.spatial_layer == spatial_id_;
+                           });
+    if (it == frames.end()) {
+      if (result_listener->IsInterested()) {
+        *result_listener << "No frame with frame_id:" << frame_id_
+                         << " and spatial_id:" << spatial_id_;
+      }
+      return false;
+    }
+
+    rtc::ArrayView<int64_t> actual_refs((*it)->references,
+                                        (*it)->num_references);
+    if (!Matches(UnorderedElementsAreArray(expected_refs_))(actual_refs)) {
+      if (result_listener->IsInterested()) {
+        *result_listener << "Frame with frame_id:" << frame_id_
+                         << ", spatial_id:" << spatial_id_ << " and "
+                         << actual_refs.size() << " references { ";
+        for (auto r : actual_refs) {
+          *result_listener << r << " ";
+        }
+        *result_listener << "}";
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  void DescribeTo(std::ostream* os) const override {
+    *os << "frame with frame_id:" << frame_id_ << ", spatial_id:" << spatial_id_
+        << " and " << expected_refs_.size() << " references { ";
+    for (auto r : expected_refs_) {
+      *os << r << " ";
+    }
+    *os << "}";
+  }
+
+ private:
+  const int64_t frame_id_;
+  const int spatial_id_;
+  std::vector<int64_t> expected_refs_;
+};
+
 }  // namespace
 
 class RtpVp9RefFinderTest : public ::testing::Test {
  protected:
-  RtpVp9RefFinderTest()
-      : rand_(0x8739211),
-        reference_finder_(std::make_unique<RtpVp9RefFinder>()),
-        frames_from_callback_(FrameComp()) {}
+  RtpVp9RefFinderTest() : ref_finder_(std::make_unique<RtpVp9RefFinder>()) {}
 
-  uint16_t Rand() { return rand_.Rand<uint16_t>(); }
-
-  void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
-    int64_t pid = frame->id.picture_id;
-    uint16_t sidx = frame->id.spatial_layer;
-    auto frame_it = frames_from_callback_.find(std::make_pair(pid, sidx));
-    if (frame_it != frames_from_callback_.end()) {
-      ADD_FAILURE() << "Already received frame with (pid:sidx): (" << pid << ":"
-                    << sidx << ")";
-      return;
-    }
-
-    frames_from_callback_.insert(
-        std::make_pair(std::make_pair(pid, sidx), std::move(frame)));
-  }
-
-  void InsertVp9Gof(uint16_t seq_num_start,
-                    uint16_t seq_num_end,
-                    bool keyframe,
-                    int32_t pid = kNoPictureId,
-                    uint8_t sid = kNoSpatialIdx,
-                    uint8_t tid = kNoTemporalIdx,
-                    int32_t tl0 = kNoTl0PicIdx,
-                    bool up_switch = false,
-                    bool inter_pic_predicted = true,
-                    GofInfoVP9* ss = nullptr) {
-    RTPVideoHeaderVP9 vp9_header{};
-    vp9_header.flexible_mode = false;
-    vp9_header.picture_id = pid % (1 << 15);
-    vp9_header.temporal_idx = tid;
-    vp9_header.spatial_idx = sid;
-    vp9_header.tl0_pic_idx = tl0;
-    vp9_header.temporal_up_switch = up_switch;
-    vp9_header.inter_pic_predicted = inter_pic_predicted && !keyframe;
-    if (ss != nullptr) {
-      vp9_header.ss_data_available = true;
-      vp9_header.gof = *ss;
-    }
-
-    std::unique_ptr<RtpFrameObject> frame = CreateFrame(
-        seq_num_start, seq_num_end, keyframe, kVideoCodecVP9, vp9_header);
-
-    for (auto& f : reference_finder_->ManageFrame(std::move(frame))) {
-      OnCompleteFrame(std::move(f));
+  void Insert(std::unique_ptr<RtpFrameObject> frame) {
+    for (auto& f : ref_finder_->ManageFrame(std::move(frame))) {
+      frames_.push_back(std::move(f));
     }
   }
 
-  void InsertVp9Flex(uint16_t seq_num_start,
-                     uint16_t seq_num_end,
-                     bool keyframe,
-                     int32_t pid = kNoPictureId,
-                     uint8_t sid = kNoSpatialIdx,
-                     uint8_t tid = kNoTemporalIdx,
-                     bool inter = false,
-                     std::vector<uint8_t> refs = std::vector<uint8_t>()) {
-    RTPVideoHeaderVP9 vp9_header{};
-    vp9_header.inter_layer_predicted = inter;
-    vp9_header.flexible_mode = true;
-    vp9_header.picture_id = pid % (1 << 15);
-    vp9_header.temporal_idx = tid;
-    vp9_header.spatial_idx = sid;
-    vp9_header.tl0_pic_idx = kNoTl0PicIdx;
-    vp9_header.num_ref_pics = refs.size();
-    for (size_t i = 0; i < refs.size(); ++i)
-      vp9_header.pid_diff[i] = refs[i];
-
-    std::unique_ptr<RtpFrameObject> frame = CreateFrame(
-        seq_num_start, seq_num_end, keyframe, kVideoCodecVP9, vp9_header);
-    for (auto& f : reference_finder_->ManageFrame(std::move(frame))) {
-      OnCompleteFrame(std::move(f));
-    }
-  }
-
-  // Check if a frame with picture id |pid| and spatial index |sidx| has been
-  // delivered from the packet buffer, and if so, if it has the references
-  // specified by |refs|.
-  template <typename... T>
-  void CheckReferences(int64_t picture_id_offset,
-                       uint16_t sidx,
-                       T... refs) const {
-    int64_t pid = picture_id_offset;
-    auto frame_it = frames_from_callback_.find(std::make_pair(pid, sidx));
-    if (frame_it == frames_from_callback_.end()) {
-      ADD_FAILURE() << "Could not find frame with (pid:sidx): (" << pid << ":"
-                    << sidx << ")";
-      return;
-    }
-
-    std::set<int64_t> actual_refs;
-    for (uint8_t r = 0; r < frame_it->second->num_references; ++r)
-      actual_refs.insert(frame_it->second->references[r]);
-
-    std::set<int64_t> expected_refs;
-    RefsToSet(&expected_refs, refs...);
-
-    ASSERT_EQ(expected_refs, actual_refs);
-  }
-
-  template <typename... T>
-  void CheckReferencesVp9(int64_t pid, uint8_t sidx, T... refs) const {
-    CheckReferences(pid, sidx, refs...);
-  }
-
-  template <typename... T>
-  void RefsToSet(std::set<int64_t>* m, int64_t ref, T... refs) const {
-    m->insert(ref);
-    RefsToSet(m, refs...);
-  }
-
-  void RefsToSet(std::set<int64_t>* m) const {}
-
-  Random rand_;
-  std::unique_ptr<RtpVp9RefFinder> reference_finder_;
-  struct FrameComp {
-    bool operator()(const std::pair<int64_t, uint8_t> f1,
-                    const std::pair<int64_t, uint8_t> f2) const {
-      if (f1.first == f2.first)
-        return f1.second < f2.second;
-      return f1.first < f2.first;
-    }
-  };
-  std::
-      map<std::pair<int64_t, uint8_t>, std::unique_ptr<EncodedFrame>, FrameComp>
-          frames_from_callback_;
+  std::unique_ptr<RtpVp9RefFinder> ref_finder_;
+  FrameVector frames_;
 };
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofInsertOneFrame) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+Matcher<const FrameVector&> HasFrameWithIdAndRefs(
+    int64_t frame_id,
+    int spatial_id,
+    const std::vector<int64_t>& refs) {
+  return MakeMatcher(new HasFrameMatcher(frame_id, spatial_id, refs));
+}
+
+TEST_F(RtpVp9RefFinderTest, GofInsertOneFrame) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode1);
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).AsKeyFrame().Gof(&ss));
 
-  CheckReferencesVp9(pid, 0);
+  EXPECT_EQ(frames_.size(), 1UL);
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayers_0) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_0) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode1);  // Only 1 spatial layer.
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 0, 1, false);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 0, 2, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 0, 3, false);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 4, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 0, 5, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 0, 6, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 0, 7, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 8, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 0, 9, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 0, 10, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 0, 11, false);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 12, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 0, 13, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 0, 14, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 0, 15, false);
-  InsertVp9Gof(sn + 16, sn + 16, false, pid + 16, 0, 0, 16, false);
-  InsertVp9Gof(sn + 17, sn + 17, false, pid + 17, 0, 0, 17, false);
-  InsertVp9Gof(sn + 18, sn + 18, false, pid + 18, 0, 0, 18, false);
-  InsertVp9Gof(sn + 19, sn + 19, false, pid + 19, 0, 0, 19, false);
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).AsKeyFrame().Gof(&ss));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
 
-  ASSERT_EQ(20UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid + 1);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid + 3);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 5);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 7);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 9);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 11);
-  CheckReferencesVp9(pid + 13, 0, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 13);
-  CheckReferencesVp9(pid + 15, 0, pid + 14);
-  CheckReferencesVp9(pid + 16, 0, pid + 15);
-  CheckReferencesVp9(pid + 17, 0, pid + 16);
-  CheckReferencesVp9(pid + 18, 0, pid + 17);
-  CheckReferencesVp9(pid + 19, 0, pid + 18);
+  EXPECT_EQ(frames_.size(), 2UL);
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {1}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofSpatialLayers_2) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofSpatialLayers_2) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode1);  // Only 1 spatial layer.
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 0, 1, false, true);
-  // Not inter_pic_predicted because it's the first frame with this layer.
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 1, 1, 0, 1, false, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 2, 0, 0, 1, false, true);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 2, 1, 0, 1, false, true);
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).AsKeyFrame().Gof(&ss));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(2).SidAndTid(1, 0).Tl0(1).NotAsInterPic());
+  Insert(Frame().Pid(3).SidAndTid(0, 0).Tl0(2));
+  Insert(Frame().Pid(3).SidAndTid(1, 0).Tl0(2));
 
-  ASSERT_EQ(5UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 1, 1);
-  CheckReferencesVp9(pid + 2, 0, pid + 1);
-  CheckReferencesVp9(pid + 2, 1, pid + 1);
+  EXPECT_EQ(frames_.size(), 5UL);
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayersReordered_0) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_0) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode1);  // Only 1 spatial layer.
 
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 0, 2, false);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 0, 1, false);
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 4, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 0, 3, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 0, 5, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 0, 7, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 0, 6, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 8, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 0, 10, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 0, 13, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 0, 11, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 0, 9, false);
-  InsertVp9Gof(sn + 16, sn + 16, false, pid + 16, 0, 0, 16, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 0, 14, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 0, 15, false);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 12, false);
-  InsertVp9Gof(sn + 17, sn + 17, false, pid + 17, 0, 0, 17, false);
-  InsertVp9Gof(sn + 19, sn + 19, false, pid + 19, 0, 0, 19, false);
-  InsertVp9Gof(sn + 18, sn + 18, false, pid + 18, 0, 0, 18, false);
+  Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(2).SidAndTid(1, 0).Tl0(1).NotAsInterPic());
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).AsKeyFrame().Gof(&ss));
+  Insert(Frame().Pid(3).SidAndTid(0, 0).Tl0(2));
+  Insert(Frame().Pid(3).SidAndTid(1, 0).Tl0(2));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(3));
+  Insert(Frame().Pid(5).SidAndTid(1, 0).Tl0(4));
+  Insert(Frame().Pid(4).SidAndTid(1, 0).Tl0(3));
+  Insert(Frame().Pid(5).SidAndTid(0, 0).Tl0(4));
 
-  ASSERT_EQ(20UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid + 1);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid + 3);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 5);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 7);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 9);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 11);
-  CheckReferencesVp9(pid + 13, 0, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 13);
-  CheckReferencesVp9(pid + 15, 0, pid + 14);
-  CheckReferencesVp9(pid + 16, 0, pid + 15);
-  CheckReferencesVp9(pid + 17, 0, pid + 16);
-  CheckReferencesVp9(pid + 18, 0, pid + 17);
-  CheckReferencesVp9(pid + 19, 0, pid + 18);
+  EXPECT_EQ(frames_.size(), 9UL);
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {3}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 1, {3}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 1, {4}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofSkipFramesTemporalLayers_01) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_01) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode2);  // 0101 pattern
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 1, 0, false);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 1).Tl0(0));
   // Skip GOF with tl0 1
-  InsertVp9Gof(sn + 4, sn + 4, true, pid + 4, 0, 0, 2, false, true, &ss);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 1, 2, false);
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(2).AsKeyFrame().Gof(&ss));
+  Insert(Frame().Pid(5).SidAndTid(0, 1).Tl0(2));
   // Skip GOF with tl0 3
   // Skip GOF with tl0 4
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 0, 5, false, true, &ss);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 1, 5, false);
+  Insert(Frame().Pid(10).SidAndTid(0, 0).Tl0(5).Gof(&ss));
+  Insert(Frame().Pid(11).SidAndTid(0, 1).Tl0(5));
 
-  ASSERT_EQ(6UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 4, 0);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
+  ASSERT_EQ(6UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofSkipFramesTemporalLayers_0212) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofSkipFramesTemporalLayers_0212) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode3);  // 02120212 pattern
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 2, 0, false);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 1, 0, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 2, 0, false);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(2).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(3).SidAndTid(0, 2).Tl0(0));
 
-  ASSERT_EQ(4UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
+  ASSERT_EQ(4UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
 
   // Skip frames with tl0 = 1
 
-  InsertVp9Gof(sn + 8, sn + 8, true, pid + 8, 0, 0, 2, false, false, &ss);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 2, 2, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 1, 2, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 2, 2, false);
+  Insert(Frame().Pid(8).SidAndTid(0, 0).Tl0(2).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(9).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(10).SidAndTid(0, 1).Tl0(2));
+  Insert(Frame().Pid(11).SidAndTid(0, 2).Tl0(2));
 
-  ASSERT_EQ(8UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid + 8, 0);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
+  ASSERT_EQ(8UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
 
   // Now insert frames with tl0 = 1
-  InsertVp9Gof(sn + 4, sn + 4, true, pid + 4, 0, 0, 1, false, true, &ss);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 2, 1, false);
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(1).AsKeyFrame().Gof(&ss));
+  Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
 
-  ASSERT_EQ(9UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid + 4, 0);
+  ASSERT_EQ(9UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {}));
 
-  // Rest of frames belonging to tl0 = 1
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 2, 1, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 1, 1, true);  // up-switch
+  Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(1));
 
-  ASSERT_EQ(12UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
+  ASSERT_EQ(12UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayers_01) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_01) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode2);  // 0101 pattern
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 1, 0, false);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 0, 1, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 1, 1, false);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 2, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 1, 2, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 0, 3, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 1, 3, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 4, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 1, 4, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 0, 5, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 1, 5, false);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 6, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 1, 6, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 0, 7, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 1, 7, false);
-  InsertVp9Gof(sn + 16, sn + 16, false, pid + 16, 0, 0, 8, false);
-  InsertVp9Gof(sn + 17, sn + 17, false, pid + 17, 0, 1, 8, false);
-  InsertVp9Gof(sn + 18, sn + 18, false, pid + 18, 0, 0, 9, false);
-  InsertVp9Gof(sn + 19, sn + 19, false, pid + 19, 0, 1, 9, false);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(3).SidAndTid(0, 1).Tl0(1));
 
-  ASSERT_EQ(20UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid + 2);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 6);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 10);
-  CheckReferencesVp9(pid + 13, 0, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 12);
-  CheckReferencesVp9(pid + 15, 0, pid + 14);
-  CheckReferencesVp9(pid + 16, 0, pid + 14);
-  CheckReferencesVp9(pid + 17, 0, pid + 16);
-  CheckReferencesVp9(pid + 18, 0, pid + 16);
-  CheckReferencesVp9(pid + 19, 0, pid + 18);
+  ASSERT_EQ(4UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayersReordered_01) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_01) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode2);  // 01 pattern
 
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 1, 0, false);
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 0, 1, false);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 2, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 1, 1, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 1, 2, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 1, 3, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 0, 3, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 0, 5, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 4, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 1, 4, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 1, 5, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 1, 6, false);
-  InsertVp9Gof(sn + 16, sn + 16, false, pid + 16, 0, 0, 8, false);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 6, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 0, 7, false);
-  InsertVp9Gof(sn + 17, sn + 17, false, pid + 17, 0, 1, 8, false);
-  InsertVp9Gof(sn + 19, sn + 19, false, pid + 19, 0, 1, 9, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 1, 7, false);
-  InsertVp9Gof(sn + 18, sn + 18, false, pid + 18, 0, 0, 9, false);
+  Insert(Frame().Pid(1).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(2));
+  Insert(Frame().Pid(3).SidAndTid(0, 1).Tl0(1));
+  Insert(Frame().Pid(5).SidAndTid(0, 1).Tl0(2));
+  Insert(Frame().Pid(7).SidAndTid(0, 1).Tl0(3));
+  Insert(Frame().Pid(6).SidAndTid(0, 0).Tl0(3));
+  Insert(Frame().Pid(8).SidAndTid(0, 0).Tl0(4));
+  Insert(Frame().Pid(9).SidAndTid(0, 1).Tl0(4));
 
-  ASSERT_EQ(20UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid + 2);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 6);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 10);
-  CheckReferencesVp9(pid + 13, 0, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 12);
-  CheckReferencesVp9(pid + 15, 0, pid + 14);
-  CheckReferencesVp9(pid + 16, 0, pid + 14);
-  CheckReferencesVp9(pid + 17, 0, pid + 16);
-  CheckReferencesVp9(pid + 18, 0, pid + 16);
-  CheckReferencesVp9(pid + 19, 0, pid + 18);
+  ASSERT_EQ(10UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayers_0212) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayers_0212) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode3);  // 0212 pattern
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 2, 0, false);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 1, 0, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 2, 0, false);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 1, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 2, 1, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 1, 1, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 2, 1, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 2, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 2, 2, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 1, 2, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 2, 2, false);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 3, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 2, 3, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 1, 3, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 2, 3, false);
-  InsertVp9Gof(sn + 16, sn + 16, false, pid + 16, 0, 0, 4, false);
-  InsertVp9Gof(sn + 17, sn + 17, false, pid + 17, 0, 2, 4, false);
-  InsertVp9Gof(sn + 18, sn + 18, false, pid + 18, 0, 1, 4, false);
-  InsertVp9Gof(sn + 19, sn + 19, false, pid + 19, 0, 2, 4, false);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(2).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(3).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(1));
+  Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
 
-  ASSERT_EQ(20UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 4);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 8);
-  CheckReferencesVp9(pid + 13, 0, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 12);
-  CheckReferencesVp9(pid + 15, 0, pid + 14);
-  CheckReferencesVp9(pid + 16, 0, pid + 12);
-  CheckReferencesVp9(pid + 17, 0, pid + 16);
-  CheckReferencesVp9(pid + 18, 0, pid + 16);
-  CheckReferencesVp9(pid + 19, 0, pid + 18);
+  ASSERT_EQ(8UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayersReordered_0212) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_0212) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode3);  // 0212 pattern
 
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 1, 0, false);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 2, 0, false);
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 2, 0, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 1, 1, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 2, 1, false);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 1, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 2, 2, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 2, 1, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 2, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 2, 2, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 1, 2, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 2, 3, false);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 3, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 1, 3, false);
-  InsertVp9Gof(sn + 16, sn + 16, false, pid + 16, 0, 0, 4, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 2, 3, false);
-  InsertVp9Gof(sn + 17, sn + 17, false, pid + 17, 0, 2, 4, false);
-  InsertVp9Gof(sn + 19, sn + 19, false, pid + 19, 0, 2, 4, false);
-  InsertVp9Gof(sn + 18, sn + 18, false, pid + 18, 0, 1, 4, false);
+  Insert(Frame().Pid(2).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(1).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(3).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(1));
+  Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(9).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(8).SidAndTid(0, 0).Tl0(2));
+  Insert(Frame().Pid(11).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(10).SidAndTid(0, 1).Tl0(2));
 
-  ASSERT_EQ(20UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 4);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 8);
-  CheckReferencesVp9(pid + 13, 0, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 12);
-  CheckReferencesVp9(pid + 15, 0, pid + 14);
-  CheckReferencesVp9(pid + 16, 0, pid + 12);
-  CheckReferencesVp9(pid + 17, 0, pid + 16);
-  CheckReferencesVp9(pid + 18, 0, pid + 16);
-  CheckReferencesVp9(pid + 19, 0, pid + 18);
+  ASSERT_EQ(12UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayersUpSwitch_02120212) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayersUpSwitch_02120212) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode4);  // 02120212 pattern
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 2, 0, false);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 1, 0, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 2, 0, false);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 1, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 2, 1, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 1, 1, true);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 2, 1, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 2, true);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 2, 2, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 1, 2, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 2, 2, true);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 3, false);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 2, 3, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 1, 3, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 2, 3, false);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(2).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(3).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(1).AsUpswitch());
+  Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(8).SidAndTid(0, 0).Tl0(2).AsUpswitch());
+  Insert(Frame().Pid(9).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(10).SidAndTid(0, 1).Tl0(2));
+  Insert(Frame().Pid(11).SidAndTid(0, 2).Tl0(2).AsUpswitch());
+  Insert(Frame().Pid(12).SidAndTid(0, 0).Tl0(3));
+  Insert(Frame().Pid(13).SidAndTid(0, 2).Tl0(3));
+  Insert(Frame().Pid(14).SidAndTid(0, 1).Tl0(3));
+  Insert(Frame().Pid(15).SidAndTid(0, 2).Tl0(3));
 
-  ASSERT_EQ(16UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 1, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid);
-  CheckReferencesVp9(pid + 5, 0, pid + 3, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 2, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 4);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 9, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 8);
-  CheckReferencesVp9(pid + 13, 0, pid + 11, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 10, pid + 12);
-  CheckReferencesVp9(pid + 15, 0, pid + 13, pid + 14);
+  ASSERT_EQ(16UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {1, 2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {3, 4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {2, 4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {9, 10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(12, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(13, 0, {11, 12}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(14, 0, {10, 12}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, 0, {13, 14}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayersUpSwitchReordered_02120212) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayersUpSwitchReordered_02120212) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode4);  // 02120212 pattern
 
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 2, 0, false);
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 1, false);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 1, 0, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 2, 1, false);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 2, 0, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 2, 1, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 2, 2, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 1, 1, true);
-  InsertVp9Gof(sn + 12, sn + 12, false, pid + 12, 0, 0, 3, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 1, 2, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 2, true);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 2, 2, true);
-  InsertVp9Gof(sn + 13, sn + 13, false, pid + 13, 0, 2, 3, false);
-  InsertVp9Gof(sn + 15, sn + 15, false, pid + 15, 0, 2, 3, false);
-  InsertVp9Gof(sn + 14, sn + 14, false, pid + 14, 0, 1, 3, false);
+  Insert(Frame().Pid(1).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(2).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(3).SidAndTid(0, 2).Tl0(0));
+  Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(1));
+  Insert(Frame().Pid(9).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(1).AsUpswitch());
+  Insert(Frame().Pid(12).SidAndTid(0, 0).Tl0(3));
+  Insert(Frame().Pid(10).SidAndTid(0, 1).Tl0(2));
+  Insert(Frame().Pid(8).SidAndTid(0, 0).Tl0(2).AsUpswitch());
+  Insert(Frame().Pid(11).SidAndTid(0, 2).Tl0(2).AsUpswitch());
+  Insert(Frame().Pid(13).SidAndTid(0, 2).Tl0(3));
+  Insert(Frame().Pid(15).SidAndTid(0, 2).Tl0(3));
+  Insert(Frame().Pid(14).SidAndTid(0, 1).Tl0(3));
 
-  ASSERT_EQ(16UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 1, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid);
-  CheckReferencesVp9(pid + 5, 0, pid + 3, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 2, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 4);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 9, pid + 10);
-  CheckReferencesVp9(pid + 12, 0, pid + 8);
-  CheckReferencesVp9(pid + 13, 0, pid + 11, pid + 12);
-  CheckReferencesVp9(pid + 14, 0, pid + 10, pid + 12);
-  CheckReferencesVp9(pid + 15, 0, pid + 13, pid + 14);
+  ASSERT_EQ(16UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {1, 2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {3, 4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {2, 4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {9, 10}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(12, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(13, 0, {11, 12}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(14, 0, {10, 12}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(15, 0, {13, 14}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTemporalLayersReordered_01_0212) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTemporalLayersReordered_01_0212) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode2);  // 01 pattern
 
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 1, 0, false);
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 3, sn + 3, false, pid + 3, 0, 1, 1, false);
-  InsertVp9Gof(sn + 6, sn + 6, false, pid + 6, 0, 1, 2, false);
+  Insert(Frame().Pid(1).SidAndTid(0, 1).Tl0(0));
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(3).SidAndTid(0, 1).Tl0(1));
+  Insert(Frame().Pid(6).SidAndTid(0, 1).Tl0(2));
   ss.SetGofInfoVP9(kTemporalStructureMode3);  // 0212 pattern
-  InsertVp9Gof(sn + 4, sn + 4, false, pid + 4, 0, 0, 2, false, true, &ss);
-  InsertVp9Gof(sn + 2, sn + 2, false, pid + 2, 0, 0, 1, false);
-  InsertVp9Gof(sn + 5, sn + 5, false, pid + 5, 0, 2, 2, false);
-  InsertVp9Gof(sn + 8, sn + 8, false, pid + 8, 0, 0, 3, false);
-  InsertVp9Gof(sn + 10, sn + 10, false, pid + 10, 0, 1, 3, false);
-  InsertVp9Gof(sn + 7, sn + 7, false, pid + 7, 0, 2, 2, false);
-  InsertVp9Gof(sn + 11, sn + 11, false, pid + 11, 0, 2, 3, false);
-  InsertVp9Gof(sn + 9, sn + 9, false, pid + 9, 0, 2, 3, false);
+  Insert(Frame().Pid(4).SidAndTid(0, 0).Tl0(2).Gof(&ss));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).Tl0(1));
+  Insert(Frame().Pid(5).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(8).SidAndTid(0, 0).Tl0(3));
+  Insert(Frame().Pid(10).SidAndTid(0, 1).Tl0(3));
+  Insert(Frame().Pid(7).SidAndTid(0, 2).Tl0(2));
+  Insert(Frame().Pid(11).SidAndTid(0, 2).Tl0(3));
+  Insert(Frame().Pid(9).SidAndTid(0, 2).Tl0(3));
 
-  ASSERT_EQ(12UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 3, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid);
-  CheckReferencesVp9(pid + 5, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 7, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 4);
-  CheckReferencesVp9(pid + 9, 0, pid + 8);
-  CheckReferencesVp9(pid + 10, 0, pid + 8);
-  CheckReferencesVp9(pid + 11, 0, pid + 10);
+  ASSERT_EQ(12UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(5, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(6, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(7, 0, {6}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, 0, {4}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(9, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(10, 0, {8}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(11, 0, {10}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9FlexibleModeOneFrame) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, FlexibleModeOneFrame) {
+  Insert(Frame().Pid(0).SidAndTid(0, 0).AsKeyFrame());
 
-  InsertVp9Flex(sn, sn, true, pid, 0, 0, false);
-
-  ASSERT_EQ(1UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
+  ASSERT_EQ(1UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9FlexibleModeTwoSpatialLayers) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, FlexibleModeTwoSpatialLayers) {
+  Insert(Frame().Pid(0).SidAndTid(0, 0).AsKeyFrame());
+  Insert(Frame().Pid(0).SidAndTid(1, 0).AsKeyFrame().AsInterLayer());
+  Insert(Frame().Pid(1).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).FlexRefs({2}));
+  Insert(Frame().Pid(2).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(3).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).FlexRefs({2}));
+  Insert(Frame().Pid(4).SidAndTid(1, 0).FlexRefs({1}));
 
-  InsertVp9Flex(sn, sn, true, pid, 0, 0, false);
-  InsertVp9Flex(sn + 1, sn + 1, true, pid, 1, 0, true);
-  InsertVp9Flex(sn + 2, sn + 2, false, pid + 1, 1, 0, false, {1});
-  InsertVp9Flex(sn + 3, sn + 3, false, pid + 2, 0, 0, false, {2});
-  InsertVp9Flex(sn + 4, sn + 4, false, pid + 2, 1, 0, false, {1});
-  InsertVp9Flex(sn + 5, sn + 5, false, pid + 3, 1, 0, false, {1});
-  InsertVp9Flex(sn + 6, sn + 6, false, pid + 4, 0, 0, false, {2});
-  InsertVp9Flex(sn + 7, sn + 7, false, pid + 4, 1, 0, false, {1});
-  InsertVp9Flex(sn + 8, sn + 8, false, pid + 5, 1, 0, false, {1});
-  InsertVp9Flex(sn + 9, sn + 9, false, pid + 6, 0, 0, false, {2});
-  InsertVp9Flex(sn + 10, sn + 10, false, pid + 6, 1, 0, false, {1});
-  InsertVp9Flex(sn + 11, sn + 11, false, pid + 7, 1, 0, false, {1});
-  InsertVp9Flex(sn + 12, sn + 12, false, pid + 8, 0, 0, false, {2});
-  InsertVp9Flex(sn + 13, sn + 13, false, pid + 8, 1, 0, false, {1});
-
-  ASSERT_EQ(14UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid, 1);
-  CheckReferencesVp9(pid + 1, 1, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 2, 1, pid + 1);
-  CheckReferencesVp9(pid + 3, 1, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 1, pid + 3);
-  CheckReferencesVp9(pid + 5, 1, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 1, pid + 5);
-  CheckReferencesVp9(pid + 7, 1, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 1, pid + 7);
+  ASSERT_EQ(8UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 1, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 1, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 1, {3}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9FlexibleModeTwoSpatialLayersReordered) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, FlexibleModeTwoSpatialLayersReordered) {
+  Insert(Frame().Pid(0).SidAndTid(1, 0).AsKeyFrame().AsInterLayer());
+  Insert(Frame().Pid(1).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(0).SidAndTid(0, 0).AsKeyFrame());
+  Insert(Frame().Pid(2).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(3).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(2).SidAndTid(0, 0).FlexRefs({2}));
+  Insert(Frame().Pid(4).SidAndTid(1, 0).FlexRefs({1}));
+  Insert(Frame().Pid(4).SidAndTid(0, 0).FlexRefs({2}));
 
-  InsertVp9Flex(sn + 1, sn + 1, true, pid, 1, 0, true);
-  InsertVp9Flex(sn + 2, sn + 2, false, pid + 1, 1, 0, false, {1});
-  InsertVp9Flex(sn, sn, true, pid, 0, 0, false);
-  InsertVp9Flex(sn + 4, sn + 4, false, pid + 2, 1, 0, false, {1});
-  InsertVp9Flex(sn + 5, sn + 5, false, pid + 3, 1, 0, false, {1});
-  InsertVp9Flex(sn + 3, sn + 3, false, pid + 2, 0, 0, false, {2});
-  InsertVp9Flex(sn + 7, sn + 7, false, pid + 4, 1, 0, false, {1});
-  InsertVp9Flex(sn + 6, sn + 6, false, pid + 4, 0, 0, false, {2});
-  InsertVp9Flex(sn + 8, sn + 8, false, pid + 5, 1, 0, false, {1});
-  InsertVp9Flex(sn + 9, sn + 9, false, pid + 6, 0, 0, false, {2});
-  InsertVp9Flex(sn + 11, sn + 11, false, pid + 7, 1, 0, false, {1});
-  InsertVp9Flex(sn + 10, sn + 10, false, pid + 6, 1, 0, false, {1});
-  InsertVp9Flex(sn + 13, sn + 13, false, pid + 8, 1, 0, false, {1});
-  InsertVp9Flex(sn + 12, sn + 12, false, pid + 8, 0, 0, false, {2});
-
-  ASSERT_EQ(14UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid, 1);
-  CheckReferencesVp9(pid + 1, 1, pid);
-  CheckReferencesVp9(pid + 2, 0, pid);
-  CheckReferencesVp9(pid + 2, 1, pid + 1);
-  CheckReferencesVp9(pid + 3, 1, pid + 2);
-  CheckReferencesVp9(pid + 4, 0, pid + 2);
-  CheckReferencesVp9(pid + 4, 1, pid + 3);
-  CheckReferencesVp9(pid + 5, 1, pid + 4);
-  CheckReferencesVp9(pid + 6, 0, pid + 4);
-  CheckReferencesVp9(pid + 6, 1, pid + 5);
-  CheckReferencesVp9(pid + 7, 1, pid + 6);
-  CheckReferencesVp9(pid + 8, 0, pid + 6);
-  CheckReferencesVp9(pid + 8, 1, pid + 7);
+  ASSERT_EQ(8UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 1, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 1, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 0, {0}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(2, 1, {1}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(3, 1, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 0, {2}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(4, 1, {3}));
 }
 
 TEST_F(RtpVp9RefFinderTest, WrappingFlexReference) {
-  InsertVp9Flex(0, 0, false, 0, 0, 0, false, {1});
+  Insert(Frame().Pid(0).SidAndTid(0, 0).FlexRefs({1}));
 
-  ASSERT_EQ(1UL, frames_from_callback_.size());
-  const EncodedFrame& frame = *frames_from_callback_.begin()->second;
+  ASSERT_EQ(1UL, frames_.size());
+  const EncodedFrame& frame = *frames_[0];
   ASSERT_EQ(frame.id.picture_id - frame.references[0], 1);
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofPidJump) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofPidJump) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode3);
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1000, 0, 0, 1);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1000).SidAndTid(0, 0).Tl0(1));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTl0Jump) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofTl0Jump) {
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode3);
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 125, true, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 0, 0, false, true, &ss);
+  Insert(Frame()
+             .Pid(0)
+             .SidAndTid(0, 0)
+             .Tl0(125)
+             .AsUpswitch()
+             .AsKeyFrame()
+             .NotAsInterPic()
+             .Gof(&ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(0).Gof(&ss));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofTidTooHigh) {
+TEST_F(RtpVp9RefFinderTest, GofTidTooHigh) {
   const int kMaxTemporalLayers = 5;
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
   GofInfoVP9 ss;
   ss.SetGofInfoVP9(kTemporalStructureMode2);
   ss.temporal_idx[1] = kMaxTemporalLayers;
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 0, 1);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(1));
 
-  ASSERT_EQ(1UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
+  ASSERT_EQ(1UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
 }
 
-TEST_F(RtpVp9RefFinderTest, Vp9GofZeroFrames) {
-  uint16_t pid = Rand();
-  uint16_t sn = Rand();
+TEST_F(RtpVp9RefFinderTest, GofZeroFrames) {
   GofInfoVP9 ss;
   ss.num_frames_in_gof = 0;
 
-  InsertVp9Gof(sn, sn, true, pid, 0, 0, 0, false, false, &ss);
-  InsertVp9Gof(sn + 1, sn + 1, false, pid + 1, 0, 0, 1);
+  Insert(Frame().Pid(0).SidAndTid(0, 0).Tl0(0).AsKeyFrame().NotAsInterPic().Gof(
+      &ss));
+  Insert(Frame().Pid(1).SidAndTid(0, 0).Tl0(1));
 
-  ASSERT_EQ(2UL, frames_from_callback_.size());
-  CheckReferencesVp9(pid, 0);
-  CheckReferencesVp9(pid + 1, 0, pid);
+  ASSERT_EQ(2UL, frames_.size());
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(0, 0, {}));
+  EXPECT_THAT(frames_, HasFrameWithIdAndRefs(1, 0, {0}));
 }
 
 }  // namespace video_coding
