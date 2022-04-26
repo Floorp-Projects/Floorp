@@ -94,6 +94,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
   TRRRacer: "resource:///modules/TRRPerformance.jsm",
   UIState: "resource://services-sync/UIState.jsm",
+  UpdateListener: "resource://gre/modules/UpdateListener.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
@@ -114,7 +115,6 @@ let initializedModules = {};
     "resource://gre/modules/ContentPrefServiceParent.jsm",
     "alwaysInit",
   ],
-  ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
 ].forEach(([name, resource, init]) => {
   XPCOMUtils.defineLazyGetter(this, name, () => {
     ChromeUtils.import(resource, initializedModules);
@@ -1979,6 +1979,7 @@ BrowserGlue.prototype = {
       () => Normandy.uninit(),
       () => RFPHelper.uninit(),
       () => ASRouterNewTabHook.destroy(),
+      () => UpdateListener.reset(),
     ];
 
     tasks.push(
@@ -2742,6 +2743,12 @@ BrowserGlue.prototype = {
             null,
             "unblock-untrusted-modules-thread"
           );
+        },
+      },
+
+      {
+        task: () => {
+          UpdateListener.maybeShowUnsupportedNotification();
         },
       },
 
