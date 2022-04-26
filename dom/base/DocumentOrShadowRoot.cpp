@@ -203,7 +203,7 @@ void DocumentOrShadowRoot::ClearAdoptedStyleSheets() {
 
 void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
     const DocumentOrShadowRoot& aSource) {
-  if (aSource.mAdoptedStyleSheets.IsEmpty()) {
+  if (!aSource.AdoptedSheetCount()) {
     return;
   }
 
