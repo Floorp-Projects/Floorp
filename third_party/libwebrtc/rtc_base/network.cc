@@ -131,7 +131,7 @@ uint16_t ComputeNetworkCostByType(int type,
 }
 
 #if !defined(__native_client__)
-bool IsIgnoredIPv6(const InterfaceAddress& ip) {
+bool IsIgnoredIPv6(bool allow_mac_based_ipv6, const InterfaceAddress& ip) {
   if (ip.family() != AF_INET6) {
     return false;
   }
@@ -144,7 +144,7 @@ bool IsIgnoredIPv6(const InterfaceAddress& ip) {
   }
 
   // Any MAC based IPv6 should be avoided to prevent the MAC tracking.
-  if (IPIsMacBased(ip)) {
+  if (IPIsMacBased(ip) && !allow_mac_based_ipv6) {
     return true;
   }
 
@@ -478,11 +478,15 @@ Network* NetworkManagerBase::GetNetworkFromAddress(
   return nullptr;
 }
 
-BasicNetworkManager::BasicNetworkManager() {}
+BasicNetworkManager::BasicNetworkManager()
+    : allow_mac_based_ipv6_(
+          webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")) {}
 
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory)
-    : network_monitor_factory_(network_monitor_factory) {}
+    : network_monitor_factory_(network_monitor_factory),
+      allow_mac_based_ipv6_(
+          webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")) {}
 
 BasicNetworkManager::~BasicNetworkManager() {}
 
@@ -535,7 +539,7 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
 
     // Special case for IPv6 address.
     if (cursor->ifa_addr->sa_family == AF_INET6) {
-      if (IsIgnoredIPv6(ip)) {
+      if (IsIgnoredIPv6(allow_mac_based_ipv6_, ip)) {
         continue;
       }
       scope_id =
@@ -713,7 +717,7 @@ bool BasicNetworkManager::CreateNetworks(bool include_ignored,
             scope_id = v6_addr->sin6_scope_id;
             ip = IPAddress(v6_addr->sin6_addr);
 
-            if (IsIgnoredIPv6(InterfaceAddress(ip))) {
+            if (IsIgnoredIPv6(allow_mac_based_ipv6_, InterfaceAddress(ip))) {
               continue;
             }
 
