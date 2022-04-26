@@ -398,6 +398,9 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                             bool aResult, bool aMutedError);
 
+  bool EvaluateLoadInfo(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                        ScriptLoadInfo& aLoadInfo);
+
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* WorkerPrivate);
 
   bool AllScriptsExecutable() const;
@@ -667,7 +670,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   WorkerScriptType mWorkerScriptType;
   bool mCanceledMainThread;
   ErrorResult& mRv;
-  bool mExecutionFailed = false;
+  bool mExecutionAborted = false;
+  bool mMutedErrorFlag = false;
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -2097,12 +2101,73 @@ static bool EvaluateScriptData(JSContext* aCx,
   return Evaluate(aCx, aOptions, srcBuf, &unused);
 }
 
+bool ScriptExecutorRunnable::EvaluateLoadInfo(JSContext* aCx,
+                                              WorkerPrivate* aWorkerPrivate,
+                                              ScriptLoadInfo& aLoadInfo) {
+  NS_ASSERTION(!aLoadInfo.mChannel, "Should no longer have a channel!");
+  NS_ASSERTION(aLoadInfo.mExecutionScheduled, "Should be scheduled!");
+  NS_ASSERTION(!aLoadInfo.mExecutionResult, "Should not have executed yet!");
+
+  MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
+  mScriptLoader.mRv.MightThrowJSException();
+  if (NS_FAILED(aLoadInfo.mLoadResult)) {
+    workerinternals::ReportLoadError(mScriptLoader.mRv, aLoadInfo.mLoadResult,
+                                     aLoadInfo.mURL);
+    return false;
+  }
+
+  // If this is a top level script that succeeded, then mark the
+  // Client execution ready and possible controlled by a service worker.
+  if (mIsWorkerScript) {
+    if (mScriptLoader.mController.isSome()) {
+      MOZ_ASSERT(mScriptLoader.mWorkerScriptType == WorkerScript,
+                 "Debugger clients can't be controlled.");
+      aWorkerPrivate->GlobalScope()->Control(mScriptLoader.mController.ref());
+    }
+    aWorkerPrivate->ExecutionReady();
+  }
+
+  NS_ConvertUTF16toUTF8 filename(aLoadInfo.mURL);
+
+  JS::CompileOptions options(aCx);
+  options.setFileAndLine(filename.get(), 1).setNoScriptRval(true);
+
+  MOZ_ASSERT(aLoadInfo.mMutedErrorFlag.isSome());
+  options.setMutedErrors(aLoadInfo.mMutedErrorFlag.valueOr(true));
+
+  if (aLoadInfo.mSourceMapURL) {
+    options.setSourceMapURL(aLoadInfo.mSourceMapURL->get());
+  }
+
+  // Our ErrorResult still shouldn't be a failure.
+  MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
+
+  // Transfer script length to a local variable, encoding-agnostically.
+  size_t scriptLength = 0;
+  std::swap(scriptLength, aLoadInfo.mScriptLength);
+
+  // This transfers script data out of the active arm of |aLoadInfo.mScript|.
+  bool successfullyEvaluated =
+      aLoadInfo.mScriptIsUTF8
+          ? EvaluateScriptData(aCx, options, aLoadInfo.mScript.mUTF8,
+                               scriptLength)
+          : EvaluateScriptData(aCx, options, aLoadInfo.mScript.mUTF16,
+                               scriptLength);
+  MOZ_ASSERT(aLoadInfo.ScriptTextIsNull());
+  if (!successfullyEvaluated) {
+    mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
+    return false;
+  }
+  aLoadInfo.mExecutionResult = true;
+  return true;
+}
+
 bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
                                        WorkerPrivate* aWorkerPrivate) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   // Don't run if something else has already failed.
-  if (mScriptLoader.mExecutionFailed) {
+  if (mScriptLoader.mExecutionAborted) {
     return true;
   }
 
@@ -2115,64 +2180,13 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
   MOZ_ASSERT(global);
 
   for (ScriptLoadInfo& loadInfo : mLoadInfosToExecute) {
-    NS_ASSERTION(!loadInfo.mChannel, "Should no longer have a channel!");
-    NS_ASSERTION(loadInfo.mExecutionScheduled, "Should be scheduled!");
-    NS_ASSERTION(!loadInfo.mExecutionResult, "Should not have executed yet!");
-
-    MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
-    mScriptLoader.mRv.MightThrowJSException();
-    if (NS_FAILED(loadInfo.mLoadResult)) {
-      workerinternals::ReportLoadError(mScriptLoader.mRv, loadInfo.mLoadResult,
-                                       loadInfo.mURL);
-      mScriptLoader.mExecutionFailed = true;
-      return true;
+    if (mScriptLoader.mExecutionAborted) {
+      break;
     }
-
-    // If this is a top level script that succeeded, then mark the
-    // Client execution ready and possible controlled by a service worker.
-    if (mIsWorkerScript) {
-      if (mScriptLoader.mController.isSome()) {
-        MOZ_ASSERT(mScriptLoader.mWorkerScriptType == WorkerScript,
-                   "Debugger clients can't be controlled.");
-        aWorkerPrivate->GlobalScope()->Control(mScriptLoader.mController.ref());
-      }
-      aWorkerPrivate->ExecutionReady();
+    if (!EvaluateLoadInfo(aCx, aWorkerPrivate, loadInfo)) {
+      mScriptLoader.mExecutionAborted = true;
+      mScriptLoader.mMutedErrorFlag = loadInfo.mMutedErrorFlag.valueOr(true);
     }
-
-    NS_ConvertUTF16toUTF8 filename(loadInfo.mURL);
-
-    JS::CompileOptions options(aCx);
-    options.setFileAndLine(filename.get(), 1).setNoScriptRval(true);
-
-    MOZ_ASSERT(loadInfo.mMutedErrorFlag.isSome());
-    options.setMutedErrors(loadInfo.mMutedErrorFlag.valueOr(true));
-
-    if (loadInfo.mSourceMapURL) {
-      options.setSourceMapURL(loadInfo.mSourceMapURL->get());
-    }
-
-    // Our ErrorResult still shouldn't be a failure.
-    MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
-
-    // Transfer script length to a local variable, encoding-agnostically.
-    size_t scriptLength = 0;
-    std::swap(scriptLength, loadInfo.mScriptLength);
-
-    // This transfers script data out of the active arm of |loadInfo.mScript|.
-    bool successfullyEvaluated =
-        loadInfo.mScriptIsUTF8
-            ? EvaluateScriptData(aCx, options, loadInfo.mScript.mUTF8,
-                                 scriptLength)
-            : EvaluateScriptData(aCx, options, loadInfo.mScript.mUTF16,
-                                 scriptLength);
-    MOZ_ASSERT(loadInfo.ScriptTextIsNull());
-    if (!successfullyEvaluated) {
-      mScriptLoader.mRv.StealExceptionFromJSContext(aCx);
-      mScriptLoader.mExecutionFailed = true;
-      return true;
-    }
-
-    loadInfo.mExecutionResult = true;
   }
 
   return true;
@@ -2185,23 +2199,16 @@ void ScriptExecutorRunnable::PostRun(JSContext* aCx,
   MOZ_ASSERT(!JS_IsExceptionPending(aCx), "Who left an exception on there?");
 
   if (AllScriptsExecutable()) {
-    // All done. If anything failed then return false.
-    bool result = true;
-    bool mutedError = false;
-    for (const auto& loadInfo : mScriptLoader.mLoadInfos) {
-      if (!loadInfo.mExecutionResult) {
-        mutedError = loadInfo.mMutedErrorFlag.valueOr(true);
-        result = false;
-        break;
-      }
-    }
-
-    // The only way we can get here with "result" false but without
+    // The only way we can get here with an aborted execution but without
     // mScriptLoader.mRv being a failure is if we're loading the main worker
     // script and GetOrCreateGlobalScope() fails.  In that case we would have
     // returned false from WorkerRun, so assert that.
-    MOZ_ASSERT_IF(!result && !mScriptLoader.mRv.Failed(), !aRunResult);
-    ShutdownScriptLoader(aCx, aWorkerPrivate, result, mutedError);
+    MOZ_ASSERT_IF(
+        mScriptLoader.mExecutionAborted && !mScriptLoader.mRv.Failed(),
+        !aRunResult);
+    // All done.
+    ShutdownScriptLoader(aCx, aWorkerPrivate, !mScriptLoader.mExecutionAborted,
+                         mScriptLoader.mMutedErrorFlag);
   }
 }
 
