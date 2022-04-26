@@ -60,10 +60,6 @@ UniquePtr<SharedSurface_IOSurface> SharedSurface_IOSurface::Create(
     return nullptr;
   }
 
-  ioSurf->SetColorSpace(desc.colorSpace);
-
-  // -
-
   auto tex = MakeUnique<Texture>(*desc.gl);
   BackTextureWithIOSurf(desc.gl, tex->name, ioSurf);
 

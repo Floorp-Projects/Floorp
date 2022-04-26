@@ -364,7 +364,6 @@ struct WebGLContextOptions {
   bool xrCompatible = false;
   dom::WebGLPowerPreference powerPreference =
       dom::WebGLPowerPreference::Default;
-  Maybe<dom::PredefinedColorSpace> colorSpace;
   bool shouldResistFingerprinting = true;
   bool enableDebugRendererInfo = false;
 
@@ -376,26 +375,6 @@ struct WebGLContextOptions {
     return !(*this == rhs);
   }
 };
-
-namespace gfx {
-
-inline ColorSpace2 ToColorSpace2(const Maybe<dom::PredefinedColorSpace> cs) {
-  if (!cs) {
-    return ColorSpace2::UNKNOWN;
-  }
-
-  switch (*cs) {
-    case dom::PredefinedColorSpace::Srgb:
-      return ColorSpace2::SRGB;
-    case dom::PredefinedColorSpace::Display_p3:
-      return ColorSpace2::DISPLAY_P3;
-    case dom::PredefinedColorSpace::EndGuard_:
-      break;
-  }
-  MOZ_CRASH("Exhaustive switch");
-}
-
-}  // namespace gfx
 
 // -
 
