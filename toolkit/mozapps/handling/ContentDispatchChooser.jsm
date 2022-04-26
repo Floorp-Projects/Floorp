@@ -8,6 +8,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 const DIALOG_URL_APP_CHOOSER =
   "chrome://mozapps/content/handling/appChooser.xhtml";
@@ -310,12 +313,14 @@ class nsContentDispatchChooser {
     }
 
     let shouldOpenHandler = false;
+
     try {
       shouldOpenHandler = await this._prompt(
         aHandler,
         aPrincipal,
         callerHasPermission,
-        aBrowsingContext
+        aBrowsingContext,
+        aURI
       );
     } catch (error) {
       Cu.reportError(error.message);
@@ -358,9 +363,31 @@ class nsContentDispatchChooser {
    * @param {BrowsingContext} [aBrowsingContext] - Context associated with the
    * protocol navigation.
    */
-  async _prompt(aHandler, aPrincipal, aHasPermission, aBrowsingContext) {
+  async _prompt(aHandler, aPrincipal, aHasPermission, aBrowsingContext, aURI) {
     let shouldOpenHandler = false;
     let resetHandlerChoice = false;
+    let updateHandlerData = false;
+
+    const isStandardProtocol = E10SUtils.STANDARD_SAFE_PROTOCOLS.includes(
+      aURI.scheme
+    );
+    const {
+      hasDefaultHandler,
+      preferredApplicationHandler,
+      alwaysAskBeforeHandling,
+    } = aHandler;
+
+    // This will skip the app chooser dialog flow unless the user explicitly opts to choose
+    // another app in the permission dialog.
+    if (
+      !isStandardProtocol &&
+      hasDefaultHandler &&
+      preferredApplicationHandler == null &&
+      alwaysAskBeforeHandling
+    ) {
+      aHandler.alwaysAskBeforeHandling = false;
+      updateHandlerData = true;
+    }
 
     // If caller does not have permission, prompt the user.
     if (!aHasPermission) {
@@ -446,12 +473,15 @@ class nsContentDispatchChooser {
         ]) {
           aHandler[prop] = outArgs.getProperty(prop);
         }
-
-        // Store handler data
-        Cc["@mozilla.org/uriloader/handler-service;1"]
-          .getService(Ci.nsIHandlerService)
-          .store(aHandler);
+        updateHandlerData = true;
       }
+    }
+
+    if (updateHandlerData) {
+      // Store handler data
+      Cc["@mozilla.org/uriloader/handler-service;1"]
+        .getService(Ci.nsIHandlerService)
+        .store(aHandler);
     }
 
     return shouldOpenHandler;
