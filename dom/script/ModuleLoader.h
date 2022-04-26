@@ -53,7 +53,7 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
 
   nsresult StartFetch(ModuleLoadRequest* aRequest) override;
 
-  void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) override;
+  void OnModuleLoadComplete(ModuleLoadRequest* aRequest) override;
 
   nsresult CompileOrFinishModuleScript(
       JSContext* aCx, JS::Handle<JSObject*> aGlobal,

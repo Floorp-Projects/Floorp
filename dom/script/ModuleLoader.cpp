@@ -118,7 +118,7 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   return NS_OK;
 }
 
-void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
+void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
   if (aRequest->IsTopLevel()) {

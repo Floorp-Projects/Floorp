@@ -190,7 +190,7 @@ void ModuleLoadRequest::LoadFinished() {
     mLoader->RemoveDynamicImport(request);
   }
 
-  mLoader->ProcessLoadedModuleTree(request);
+  mLoader->OnModuleLoadComplete(request);
 }
 
 void ModuleLoadRequest::ClearDynamicImport() {
