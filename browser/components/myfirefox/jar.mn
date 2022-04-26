@@ -7,3 +7,5 @@ browser.jar:
     content/browser/myfirefox.js
     content/browser/myfirefox.css
     content/browser/tabs-pickup.js
+    content/browser/recently-closed-tabs.js
+

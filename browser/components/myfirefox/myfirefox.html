@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="chrome://browser/content/myfirefox.css">
     <script type="module" src="chrome://browser/content/tabs-pickup.js"></script>
     <script type="module" src="chrome://browser/content/myfirefox.js"></script>
+    <script type="module" src="chrome://browser/content/recently-closed-tabs.js"></script>
   </head>
 
   <body>
@@ -71,6 +72,22 @@
       <aside>
         <button data-l10n-id="myfirefox-colorway-button" id="colorway-closet-button"></button>
       </aside>
+      <section is="recently-closed-tabs-container" id="recently-closed-tabs-container">
+        <header class="page-section-header">
+          <h1 data-l10n-id="myfirefox-closed-tabs-title" ></h1>
+          <button data-l10n-id="myfirefox-closed-tabs-collapse-button" id="collapsible-tabs-button" class="ghost-button twisty icon arrow-up"></button>
+          <p class="section-description" data-l10n-id="myfirefox-closed-tabs-description"></p>
+        </header>
+        <div id="collapsible-tabs-container">
+          <recently-closed-tabs-list>
+            <ol hidden="true" class="closed-tabs-list"></ol>
+          </recently-closed-tabs-list>
+          <div hidden="true" id="recently-closed-tabs-placeholder" class="placeholder-content">
+            <icon class="icon history"></icon>
+            <p data-l10n-id="myfirefox-closed-tabs-placeholder"></p>
+          </div>
+        </div>
+      </section>
     </main>
   </body>
 </html>

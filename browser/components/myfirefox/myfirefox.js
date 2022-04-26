@@ -5,6 +5,7 @@
 "use strict";
 
 import { tabsSetupFlowManager } from "./tabs-pickup.js";
+import "./recently-closed-tabs.js";
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -23,4 +24,5 @@ window.addEventListener("load", () => {
   tabsSetupFlowManager.initialize(
     document.getElementById("tabs-pickup-container")
   );
+  document.getElementById("recently-closed-tabs-container").onLoad();
 });
