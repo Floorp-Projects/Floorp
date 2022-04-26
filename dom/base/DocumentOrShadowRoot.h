@@ -76,9 +76,7 @@ class DocumentOrShadowRoot : public RadioGroupManager {
 
   size_t SheetCount() const { return mStyleSheets.Length(); }
 
-  const nsTArray<RefPtr<StyleSheet>>& AdoptedStyleSheets() const {
-    return mAdoptedStyleSheets;
-  }
+  size_t AdoptedSheetCount() const { return mAdoptedStyleSheets.Length(); }
 
   /**
    * Returns an index for the sheet in relative style order.
