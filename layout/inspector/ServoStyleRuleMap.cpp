@@ -37,9 +37,6 @@ void ServoStyleRuleMap::EnsureTable(ShadowRoot& aShadowRoot) {
   for (auto index : IntegerRange(aShadowRoot.SheetCount())) {
     FillTableFromStyleSheet(*aShadowRoot.SheetAt(index));
   }
-  for (auto& sheet : aShadowRoot.AdoptedStyleSheets()) {
-    FillTableFromStyleSheet(*sheet);
-  }
 }
 
 void ServoStyleRuleMap::SheetAdded(StyleSheet& aStyleSheet) {
