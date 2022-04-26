@@ -3,29 +3,31 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import os
 import json
 import logging
-
-
+import os
+import pathlib
+import shutil
 import time
-import yaml
+from pathlib import Path
 
-from .actions import render_actions_json
-from .create import create_tasks
-from .generator import TaskGraphGenerator
-from .parameters import Parameters
-from .taskgraph import TaskGraph
-from taskgraph.util.python_path import find_object
-from taskgraph.util.vcs import get_repository
-from .util.schema import validate_schema, Schema
-from taskgraph.util.yaml import load_yaml
+import yaml
 from voluptuous import Optional
 
+from taskgraph.actions import render_actions_json
+from taskgraph.create import create_tasks
+from taskgraph.generator import TaskGraphGenerator
+from taskgraph.parameters import Parameters
+from taskgraph.taskgraph import TaskGraph
+from taskgraph.util.python_path import find_object
+from taskgraph.util.schema import Schema, validate_schema
+from taskgraph.util.vcs import get_repository
+from taskgraph.util.yaml import load_yaml
 
 logger = logging.getLogger(__name__)
 
-ARTIFACTS_DIR = "artifacts"
+ARTIFACTS_DIR = Path("artifacts")
+
 
 # For each project, this gives a set of parameters specific to the project.
 # See `taskcluster/docs/parameters.rst` for information on parameters.
@@ -115,6 +117,11 @@ def taskgraph_decision(options, parameters=None):
     # and the map of labels to taskids
     write_artifact("task-graph.json", tgg.morphed_task_graph.to_json())
     write_artifact("label-to-taskid.json", tgg.label_to_taskid)
+
+    # write out current run-task and fetch-content scripts
+    RUN_TASK_DIR = pathlib.Path(__file__).parent / "run-task"
+    shutil.copy2(RUN_TASK_DIR / "run-task", ARTIFACTS_DIR)
+    shutil.copy2(RUN_TASK_DIR / "fetch-content", ARTIFACTS_DIR)
 
     # actually create the graph
     create_tasks(
@@ -249,7 +256,7 @@ def write_artifact(filename, data):
     logger.info(f"writing artifact file `{filename}`")
     if not os.path.isdir(ARTIFACTS_DIR):
         os.mkdir(ARTIFACTS_DIR)
-    path = os.path.join(ARTIFACTS_DIR, filename)
+    path = ARTIFACTS_DIR / filename
     if filename.endswith(".yml"):
         with open(path, "w") as f:
             yaml.safe_dump(data, f, allow_unicode=True, default_flow_style=False)
@@ -266,7 +273,7 @@ def write_artifact(filename, data):
 
 
 def read_artifact(filename):
-    path = os.path.join(ARTIFACTS_DIR, filename)
+    path = ARTIFACTS_DIR / filename
     if filename.endswith(".yml"):
         return load_yaml(path, filename)
     elif filename.endswith(".json"):
@@ -282,4 +289,4 @@ def read_artifact(filename):
 
 
 def rename_artifact(src, dest):
-    os.rename(os.path.join(ARTIFACTS_DIR, src), os.path.join(ARTIFACTS_DIR, dest))
+    os.rename(ARTIFACTS_DIR / src, ARTIFACTS_DIR / dest)
