@@ -110,7 +110,42 @@ static inline bool IsOptimizableObjectInstruction(MInstruction* ins) {
          ins->isNewCallObject() || ins->isNewIterator();
 }
 
-static bool IsObjectEscaped(MInstruction* ins, MInstruction* newObject,
+static bool PhiOperandEqualTo(MDefinition* operand, MInstruction* newObject) {
+  if (operand == newObject) {
+    return true;
+  }
+
+  switch (operand->op()) {
+    case MDefinition::Opcode::GuardShape:
+      return PhiOperandEqualTo(operand->toGuardShape()->input(), newObject);
+
+    case MDefinition::Opcode::GuardToClass:
+      return PhiOperandEqualTo(operand->toGuardToClass()->input(), newObject);
+
+    case MDefinition::Opcode::CheckIsObj:
+      return PhiOperandEqualTo(operand->toCheckIsObj()->input(), newObject);
+
+    case MDefinition::Opcode::Unbox:
+      return PhiOperandEqualTo(operand->toUnbox()->input(), newObject);
+
+    default:
+      return false;
+  }
+}
+
+// Return true if all phi operands are equal to |newObject|.
+static bool PhiOperandsEqualTo(MPhi* phi, MInstruction* newObject) {
+  MOZ_ASSERT(IsOptimizableObjectInstruction(newObject));
+
+  for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
+    if (!PhiOperandEqualTo(phi->getOperand(i), newObject)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool IsObjectEscaped(MDefinition* ins, MInstruction* newObject,
                             const Shape* shapeDefault = nullptr);
 
 // Returns False if the lambda is not escaped and if it is optimizable by
@@ -155,9 +190,9 @@ static bool IsLambdaEscaped(MInstruction* lambda, MInstruction* newObject,
 //
 // For the moment, this code is dumb as it only supports objects which are not
 // changing shape.
-static bool IsObjectEscaped(MInstruction* ins, MInstruction* newObject,
+static bool IsObjectEscaped(MDefinition* ins, MInstruction* newObject,
                             const Shape* shapeDefault) {
-  MOZ_ASSERT(ins->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Object || ins->isPhi());
   MOZ_ASSERT(IsOptimizableObjectInstruction(newObject));
 
   JitSpewDef(JitSpew_Escape, "Check object\n", ins);
@@ -279,6 +314,19 @@ static bool IsObjectEscaped(MInstruction* ins, MInstruction* newObject,
         break;
       }
 
+      case MDefinition::Opcode::Phi: {
+        auto* phi = def->toPhi();
+        if (!PhiOperandsEqualTo(phi, newObject)) {
+          JitSpewDef(JitSpew_Escape, "has different phi operands\n", def);
+          return true;
+        }
+        if (IsObjectEscaped(phi, newObject, shape)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
       // This instruction is a no-op used to verify that scalar replacement
       // is working as expected in jit-test.
       case MDefinition::Opcode::AssertRecoveredOnBailout:
@@ -344,6 +392,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitFunctionEnvironment(MFunctionEnvironment* ins);
   void visitLambda(MLambda* ins);
   void visitFunctionWithProto(MFunctionWithProto* ins);
+  void visitPhi(MPhi* ins);
 };
 
 /* static */ const char ObjectMemoryView::phaseName[] =
@@ -723,6 +772,19 @@ void ObjectMemoryView::visitFunctionWithProto(MFunctionWithProto* ins) {
   }
 
   ins->setIncompleteObject();
+}
+
+void ObjectMemoryView::visitPhi(MPhi* ins) {
+  // Skip phis on other objects.
+  if (!PhiOperandsEqualTo(ins, obj_)) {
+    return;
+  }
+
+  // Replace the phi by its object.
+  ins->replaceAllUsesWith(obj_);
+
+  // Remove original instruction.
+  ins->block()->discardPhi(ins);
 }
 
 static bool IndexOf(MDefinition* ins, int32_t* res) {
