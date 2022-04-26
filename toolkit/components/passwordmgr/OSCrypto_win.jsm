@@ -4,6 +4,8 @@
 
 "use strict";
 
+const EXPORTED_SYMBOLS = ["OSCrypto"];
+
 ChromeUtils.defineModuleGetter(
   this,
   "ctypes",
