@@ -478,7 +478,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     if (NS_SUCCEEDED(rv)) {
       JS::Rooted<JSObject*> global(cx, mGlobalObject->GetGlobalJSObject());
-      rv = CompileOrFinishModuleScript(cx, global, options, aRequest, &module);
+      rv = CompileFetchedModule(cx, global, options, aRequest, &module);
     }
 
     MOZ_ASSERT(NS_SUCCEEDED(rv) == (module != nullptr));
