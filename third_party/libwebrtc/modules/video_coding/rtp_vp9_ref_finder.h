@@ -59,7 +59,7 @@ class RtpVp9RefFinder {
                              uint8_t temporal_idx,
                              uint16_t pid_ref);
 
-  void UnwrapPictureIds(RtpFrameObject* frame);
+  void FlattenFrameIdAndRefs(RtpFrameObject* frame, bool inter_layer_predicted);
 
   // Save the last picture id in order to detect when there is a gap in frames
   // that have not yet been fully received.

@@ -51,8 +51,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
       codec_header.spatial_idx >= kMaxSpatialLayers)
     return kDrop;
 
-  frame->id.spatial_layer = codec_header.spatial_idx;
-  frame->inter_layer_predicted = codec_header.inter_layer_predicted;
+  frame->SetSpatialIndex(codec_header.spatial_idx);
   frame->id.picture_id = codec_header.picture_id & (kFrameIdLength - 1);
 
   if (last_picture_id_ == -1)
@@ -68,7 +67,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
                                                       codec_header.pid_diff[i]);
     }
 
-    UnwrapPictureIds(frame);
+    FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
     return kHandOff;
   }
 
@@ -120,11 +119,11 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
       frame->num_references = 0;
       FrameReceivedVp9(frame->id.picture_id, info);
-      UnwrapPictureIds(frame);
+      FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
       return kHandOff;
     }
   } else if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
-    if (frame->id.spatial_layer == 0) {
+    if (frame->SpatialIndex() == 0) {
       RTC_LOG(LS_WARNING) << "Received keyframe without scalability structure";
       return kDrop;
     }
@@ -134,12 +133,10 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
 
     info = &gof_info_it->second;
 
-    if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
-      frame->num_references = 0;
-      FrameReceivedVp9(frame->id.picture_id, info);
-      UnwrapPictureIds(frame);
-      return kHandOff;
-    }
+    frame->num_references = 0;
+    FrameReceivedVp9(frame->id.picture_id, info);
+    FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
+    return kHandOff;
   } else {
     auto gof_info_it = gof_info_.find(
         (codec_header.temporal_idx == 0) ? unwrapped_tl0 - 1 : unwrapped_tl0);
@@ -204,7 +201,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     frame->num_references = 0;
   }
 
-  UnwrapPictureIds(frame);
+  FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
   return kHandOff;
 }
 
@@ -326,10 +323,22 @@ void RtpVp9RefFinder::RetryStashedFrames(
   } while (complete_frame);
 }
 
-void RtpVp9RefFinder::UnwrapPictureIds(RtpFrameObject* frame) {
-  for (size_t i = 0; i < frame->num_references; ++i)
-    frame->references[i] = unwrapper_.Unwrap(frame->references[i]);
-  frame->id.picture_id = unwrapper_.Unwrap(frame->id.picture_id);
+void RtpVp9RefFinder::FlattenFrameIdAndRefs(RtpFrameObject* frame,
+                                            bool inter_layer_predicted) {
+  for (size_t i = 0; i < frame->num_references; ++i) {
+    frame->references[i] =
+        unwrapper_.Unwrap(frame->references[i]) * kMaxSpatialLayers +
+        *frame->SpatialIndex();
+  }
+  frame->id.picture_id =
+      unwrapper_.Unwrap(frame->id.picture_id) * kMaxSpatialLayers +
+      *frame->SpatialIndex();
+
+  if (inter_layer_predicted &&
+      frame->num_references + 1 <= EncodedFrame::kMaxFrameReferences) {
+    frame->references[frame->num_references] = frame->id.picture_id - 1;
+    ++frame->num_references;
+  }
 }
 
 void RtpVp9RefFinder::ClearTo(uint16_t seq_num) {
