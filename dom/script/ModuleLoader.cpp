@@ -187,11 +187,10 @@ nsresult ModuleLoader::CompileOrFinishModuleScript(
     nsresult rv = aRequest->GetScriptSource(aCx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    stencil = maybeSource.constructed<SourceText<char16_t>>()
-                  ? JS::CompileModuleScriptToStencil(
-                        aCx, aOptions, maybeSource.ref<SourceText<char16_t>>())
-                  : JS::CompileModuleScriptToStencil(
-                        aCx, aOptions, maybeSource.ref<SourceText<Utf8Unit>>());
+    auto compile = [&](auto& source) {
+      return JS::CompileModuleScriptToStencil(aCx, aOptions, source);
+    };
+    stencil = maybeSource.mapNonEmpty(compile);
   } else {
     MOZ_ASSERT(aRequest->IsBytecode());
     JS::DecodeOptions decodeOptions(aOptions);

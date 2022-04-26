@@ -1281,11 +1281,11 @@ static JSString* ToUpperCase(JSContext* cx, JSLinearString* str) {
     }
   }
 
-  return newChars.constructed<Latin1Buffer>()
-             ? newChars.ref<Latin1Buffer>().toStringDontDeflate(cx,
-                                                                resultLength)
-             : newChars.ref<TwoByteBuffer>().toStringDontDeflate(cx,
-                                                                 resultLength);
+  auto toString = [&](auto& chars) {
+    return chars.toStringDontDeflate(cx, resultLength);
+  };
+
+  return newChars.mapNonEmpty(toString);
 }
 
 JSString* js::StringToUpperCase(JSContext* cx, HandleString string) {
