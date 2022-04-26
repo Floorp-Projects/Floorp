@@ -2943,11 +2943,19 @@ impl Renderer {
                 let p1 = p0 + target.dirty_rect.size();
                 let src_rect = DeviceIntRect::new(p0, p1);
 
+                // TODO(gw): In future, it'd be tidier to have the draw target offset
+                //           for DC surfaces handled by `blit_render_target`. However,
+                //           for now they are only ever written to here.
+                let target_rect = target
+                    .dirty_rect
+                    .translate(draw_target.offset().to_vector())
+                    .cast_unit();
+
                 self.device.blit_render_target(
                     ReadTarget::from_texture(texture),
                     src_rect.cast_unit(),
                     draw_target,
-                    target.dirty_rect.cast_unit(),
+                    target_rect,
                     TextureFilter::Nearest,
                 );
             }

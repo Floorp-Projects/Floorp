@@ -22,108 +22,111 @@ def warnings_as_errors(warnings_as_errors):
 
 set_config("WARNINGS_AS_ERRORS", warnings_as_errors)
 
+not_clang_cl = depends(c_compiler)(lambda c: c.type != "clang-cl")
 
 # GCC/Clang warnings:
 # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 # https://clang.llvm.org/docs/DiagnosticsReference.html
 
-# lots of useful warnings
-add_gcc_warning("-Wall")
+# Lots of useful warnings
+add_warning("-Wall", when=not_clang_cl)
+# In clang-cl, -Wall actually means -Weverything. -W3 does mean -Wall.
+add_warning("-W3", when=depends(c_compiler)(lambda c: c.type == "clang-cl"))
 
 # catch implicit truncation of enum values assigned to smaller bit fields
-check_and_add_gcc_warning("-Wbitfield-enum-conversion")
+check_and_add_warning("-Wbitfield-enum-conversion", when=not_clang_cl)
 
 # catches deprecated implicit capture of `this` in lambdas.
-check_and_add_gcc_warning("-Wdeprecated-this-capture", cxx_compiler)
+check_and_add_warning("-Wdeprecated-this-capture", cxx_compiler)
 
 # catches bugs, e.g. "if (c); foo();", few false positives
-add_gcc_warning("-Wempty-body")
+add_warning("-Wempty-body")
 
 # catches mismatched printf integer sizes.
-check_and_add_gcc_warning("-Wformat-type-confusion")
+check_and_add_warning("-Wformat-type-confusion")
 
 # catches return types with qualifiers like const
-add_gcc_warning("-Wignored-qualifiers")
+add_warning("-Wignored-qualifiers", when=not_clang_cl)
 
 # catches pointer arithmetic using NULL or sizeof(void)
-add_gcc_warning("-Wpointer-arith")
+add_warning("-Wpointer-arith")
 
 # catch modifying constructor parameter that shadows member variable
-check_and_add_gcc_warning("-Wshadow-field-in-constructor-modified")
+check_and_add_warning("-Wshadow-field-in-constructor-modified")
 
 # catches comparing signed/unsigned ints
-add_gcc_warning("-Wsign-compare")
+add_warning("-Wsign-compare", when=not_clang_cl)
 
 # catches overflow bugs, few false positives
-add_gcc_warning("-Wtype-limits")
+add_warning("-Wtype-limits")
 
 # This can be triggered by certain patterns used deliberately in portable code
-check_and_add_gcc_warning("-Wno-error=tautological-type-limit-compare")
+check_and_add_warning("-Wno-error=tautological-type-limit-compare")
 
 # catches some dead code
-add_gcc_warning("-Wunreachable-code")
-check_and_add_gcc_warning("-Wunreachable-code-return")
+add_warning("-Wunreachable-code", when=not_clang_cl)
+check_and_add_warning("-Wunreachable-code-return", when=not_clang_cl)
 
 # catches parameters that are set but not read
 # Only enable on clang because gcc reports false positives.
-check_and_add_gcc_warning(
+check_and_add_warning(
     "-Wunused-but-set-parameter",
-    when=depends(c_compiler)(lambda c: c.type == "clang"),
+    when=depends(c_compiler)(lambda c: c.type in ("clang", "clang-cl")),
 )
 
 # turned on by -Wall, but we use offsetof on non-POD types frequently
-add_gcc_warning("-Wno-invalid-offsetof", cxx_compiler)
+add_warning("-Wno-invalid-offsetof", cxx_compiler)
 
 # catches objects passed by value to variadic functions.
-check_and_add_gcc_warning("-Wclass-varargs")
+check_and_add_warning("-Wclass-varargs", when=not_clang_cl)
 
 # catches empty if/switch/for initialization statements that have no effect
-check_and_add_gcc_warning("-Wempty-init-stmt", cxx_compiler)
+check_and_add_warning("-Wempty-init-stmt", cxx_compiler)
 
 # catches some implicit conversion of floats to ints
-check_and_add_gcc_warning("-Wfloat-overflow-conversion")
-check_and_add_gcc_warning("-Wfloat-zero-conversion")
+check_and_add_warning("-Wfloat-overflow-conversion")
+check_and_add_warning("-Wfloat-zero-conversion")
 
 # catches issues around loops
-check_and_add_gcc_warning("-Wloop-analysis")
+check_and_add_warning("-Wloop-analysis")
 # But, disable range-loop-analysis because it can raise unhelpful false
 # positives.
-check_and_add_gcc_warning("-Wno-range-loop-analysis")
+check_and_add_warning("-Wno-range-loop-analysis")
 
 # catches C++ version forward-compat issues
-check_and_add_gcc_warning("-Wc++2a-compat", cxx_compiler)
+check_and_add_warning("-Wc++2a-compat", cxx_compiler)
 
 # catches possible misuse of the comma operator
-check_and_add_gcc_warning("-Wcomma", cxx_compiler)
+check_and_add_warning("-Wcomma", cxx_compiler)
 
 # catches duplicated conditions in if-else-if chains
-check_and_add_gcc_warning("-Wduplicated-cond")
+check_and_add_warning("-Wduplicated-cond")
 
 # catches expessions mixing different enum types deprecated in C++20
-check_and_add_gcc_warning("-Wenum-compare-conditional")
+check_and_add_warning("-Wenum-compare-conditional")
 
 # catches unintentional switch case fallthroughs
-check_and_add_gcc_warning("-Wimplicit-fallthrough", cxx_compiler)
+check_and_add_warning("-Wimplicit-fallthrough", cxx_compiler, when=not_clang_cl)
 
 # Enable some ObjC diagnostics that are only relevant when targeting macOS:
 with only_when(depends(target)(lambda t: t.kernel == "Darwin")):
     # catch redeclaration of ObjC method parameter name
-    check_and_add_gcc_warning("-Wduplicate-method-arg")
+    check_and_add_warning("-Wduplicate-method-arg")
 
     # catch multiple declarations of ObjC method found
-    check_and_add_gcc_warning("-Wduplicate-method-match")
+    check_and_add_warning("-Wduplicate-method-match")
 
     # catch ObjC method with no return type specified
-    check_and_add_gcc_warning("-Wmissing-method-return-type")
+    check_and_add_warning("-Wmissing-method-return-type")
 
     # catch implicit conversions between ObjC BOOL and int
-    check_and_add_gcc_warning("-Wobjc-signed-char-bool")
+    check_and_add_warning("-Wobjc-signed-char-bool")
 
     # catch semicolon before ObjC method body
-    check_and_add_gcc_warning("-Wsemicolon-before-method-body")
+    check_and_add_warning("-Wsemicolon-before-method-body")
 
     # catch ObjC method parameter type not matching super class method
-    check_and_add_gcc_warning("-Wsuper-class-method-mismatch")
+    check_and_add_warning("-Wsuper-class-method-mismatch")
 
 # catches expressions used as a null pointer constant
 # XXX: at the time of writing, the version of clang used on the OS X test
@@ -133,116 +136,177 @@ with only_when(depends(target)(lambda t: t.kernel == "Darwin")):
 # -Werror=non-literal-null-conversion, but we only do that when
 # --enable-warnings-as-errors is specified so that no unexpected fatal
 # warnings are produced.
-check_and_add_gcc_warning(
+check_and_add_warning(
     "-Werror=non-literal-null-conversion", when="--enable-warnings-as-errors"
 )
 
 # catches string literals used in boolean expressions
-check_and_add_gcc_warning("-Wstring-conversion")
+check_and_add_warning("-Wstring-conversion")
 
 # we inline 'new' and 'delete' in mozalloc
-check_and_add_gcc_warning("-Wno-inline-new-delete", cxx_compiler)
+check_and_add_warning("-Wno-inline-new-delete", cxx_compiler)
 
 # Prevent the following GCC warnings from being treated as errors:
 # too many false positives
-check_and_add_gcc_warning("-Wno-error=maybe-uninitialized")
+check_and_add_warning("-Wno-error=maybe-uninitialized")
 
 # we don't want our builds held hostage when a platform-specific API
 # becomes deprecated.
-check_and_add_gcc_warning("-Wno-error=deprecated-declarations")
+check_and_add_warning("-Wno-error=deprecated-declarations")
 
 # false positives depending on optimization
-check_and_add_gcc_warning("-Wno-error=array-bounds")
+check_and_add_warning("-Wno-error=array-bounds")
 
 # can't get rid of those PGO warnings
-check_and_add_gcc_warning("-Wno-error=coverage-mismatch")
+check_and_add_warning("-Wno-error=coverage-mismatch")
 
 # -Wbackend-plugin warnings from Android PGO profile-use builds:
 # error: /builds/worker/workspace/build/src/mozglue/misc/AutoProfilerLabel.cpp:
 #  Function control flow change detected (hash mismatch)
 #  _ZN7mozilla17AutoProfilerLabelD2Ev [-Werror,-Wbackend-plugin]
-check_and_add_gcc_warning("-Wno-error=backend-plugin")
+check_and_add_warning("-Wno-error=backend-plugin")
 
 # false positives depending on optimizations
-check_and_add_gcc_warning("-Wno-error=free-nonheap-object")
+check_and_add_warning("-Wno-error=free-nonheap-object")
 
 # Would be a pain to fix all occurrences, for very little gain
-check_and_add_gcc_warning("-Wno-multistatement-macros")
+check_and_add_warning("-Wno-multistatement-macros")
 
 # Disable the -Werror for return-std-move because of a false positive
 # on nsTAutoStringN: https://bugs.llvm.org/show_bug.cgi?id=37249
-check_and_add_gcc_warning("-Wno-error=return-std-move")
+check_and_add_warning("-Wno-error=return-std-move")
 
 # Disable the -Werror for -Wclass-memaccess as we have a long
 # tail of issues to fix
-check_and_add_gcc_warning("-Wno-error=class-memaccess")
+check_and_add_warning("-Wno-error=class-memaccess")
 
 # -Watomic-alignment is a new warning in clang 7 that seems way too broad.
 # https://bugs.llvm.org/show_bug.cgi?id=38593
-check_and_add_gcc_warning("-Wno-error=atomic-alignment")
+check_and_add_warning("-Wno-error=atomic-alignment")
 
 # New warning with gcc 9. Not useful
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1515356
-check_and_add_gcc_warning("-Wno-error=deprecated-copy")
+check_and_add_warning("-Wno-error=deprecated-copy")
 
 # catches format/argument mismatches with printf
-c_format_warning, cxx_format_warning = check_and_add_gcc_warning(
+c_format_warning, cxx_format_warning = check_and_add_warning(
     "-Wformat", when=depends(target)(lambda t: t.kernel != "WINNT")
 )
 
 # Add compile-time warnings for unprotected functions and format functions
 # that represent possible security problems. Enable this only when -Wformat
 # is enabled, otherwise it is an error
-check_and_add_gcc_warning(
-    "-Wformat-security", when=c_format_warning & cxx_format_warning
-)
-check_and_add_gcc_warning(
-    "-Wformat-overflow=2", when=c_format_warning & cxx_format_warning
-)
+check_and_add_warning("-Wformat-security", when=c_format_warning & cxx_format_warning)
+check_and_add_warning("-Wformat-overflow=2", when=c_format_warning & cxx_format_warning)
 
-# Other MinGW specific things
-with only_when(depends(target)(lambda t: t.kernel == "WINNT")):
+# Other Windows specific things
+with only_when(target_is_windows):
     # When compiling for Windows with gcc, we encounter lots of "#pragma warning"'s
     # which is an MSVC-only pragma that GCC does not recognize.
-    check_and_add_gcc_warning("-Wno-unknown-pragmas")
+    # With clang-cl, as it claims to be MSVC it would be difficult to add
+    # #if defined(_MSC_VER) && !defined(__clang__) everywhere we use such pragmas,
+    # so just ignore them.
+    check_and_add_warning("-Wno-unknown-pragmas")
 
-    # When compiling for Windows with gcc, gcc throws false positives and true
-    # positives where the callsite is ifdef-ed out
-    check_and_add_gcc_warning("-Wno-unused-function")
+    with only_when(depends(c_compiler)(lambda c: c.type == "clang-cl")):
+        # We get errors about various #pragma intrinsic directives from
+        # clang-cl, and we don't need to hear about those.
+        check_and_add_warning("-Wno-ignored-pragmas")
 
-    # When compiling for Windows with gcc, gcc cannot produce this warning
-    # correctly: it mistakes DWORD_PTR and ULONG_PTR as types you cannot
-    # give NULL to. (You can in fact do that.)
-    check_and_add_gcc_warning("-Wno-conversion-null")
+        # clang-cl's Intrin.h marks things like _ReadWriteBarrier as
+        # __attribute((__deprecated__)).  This is nice to know, but since we don't
+        # get the equivalent warning from MSVC, let's just ignore it.
+        check_and_add_warning("-Wno-deprecated-declarations")
 
-    # Throughout the codebase we regularly have switch statements off of enums
-    # without covering every value in the enum. We don't care about these warnings.
-    check_and_add_gcc_warning("-Wno-switch")
+        # This warns for reasonable things like:
+        #   enum { X = 0xffffffffU };
+        # which is annoying for IDL headers.
+        check_and_add_warning("-Wno-microsoft-enum-value", cxx_compiler)
 
-    # Another code pattern we have is using start and end constants in enums of
-    # different types. We do this for safety, but then when comparing it throws
-    # an error, which we would like to ignore. This seems to only affect the MinGW
-    # build, but we're not sure why.
-    check_and_add_gcc_warning("-Wno-enum-compare")
+        # This warns for cases that would be reached by the Microsoft
+        # #include rules, but also currently warns on cases that would
+        # *also* be reached by standard C++ include rules.  That
+        # behavior doesn't seem useful, so we turn it off.
+        check_and_add_warning("-Wno-microsoft-include", cxx_compiler)
+
+        # We use a function like:
+        #   __declspec(noreturn) __inline void f() {}
+        # which -Winvalid-noreturn complains about.  Again, MSVC seems
+        # OK with it, so let's silence the warning.
+        check_and_add_warning("-Wno-invalid-noreturn")
+
+        # Missing |override| on virtual function declarations isn't
+        # something that MSVC currently warns about.
+        check_and_add_warning("-Wno-inconsistent-missing-override", cxx_compiler)
+
+        # We use -DHAS_EXCEPTIONS=0, which removes the |throw()|
+        # declaration on |operator delete(void*)|.  However, clang-cl
+        # must internally declare |operator delete(void*)| differently,
+        # which causes this warning for virtually every file in the
+        # tree.  clang-cl doesn't support -fno-exceptions or equivalent,
+        # so there doesn't seem to be any way to convince clang-cl to
+        # declare |delete| differently.  Therefore, suppress this
+        # warning.
+        check_and_add_warning("-Wno-implicit-exception-spec-mismatch", cxx_compiler)
+
+        # Macros like STDMETHOD() and IFACEMETHOD() can declare
+        # __attribute__((nothrow)) on their respective method declarations,
+        # while the definitions are left without the matching attribute.
+        check_and_add_warning("-Wno-microsoft-exception-spec", cxx_compiler)
+
+        # At least one MSVC header and several headers in-tree have
+        # unused typedefs, so turn this on.
+        check_and_add_warning("-Wno-unused-local-typedef", cxx_compiler)
+
+        # jemalloc uses __declspec(allocator) as a profiler hint,
+        # which clang-cl doesn't understand.
+        check_and_add_warning("-Wno-ignored-attributes", cxx_compiler)
+
+        # __attribute__((unused)) really means "might be unused" and
+        # we use it to avoid warnings about things that are unused
+        # in some compilation units, but used in many others.  This
+        # warning insists on complaining about the latter case, which
+        # is annoying, and rather noisy.
+        check_and_add_warning("-Wno-used-but-marked-unused", cxx_compiler)
+
+    with only_when(depends(c_compiler)(lambda c: c.type != "clang-cl")):
+        # When compiling for Windows with gcc, gcc throws false positives and true
+        # positives where the callsite is ifdef-ed out
+        check_and_add_warning("-Wno-unused-function")
+
+        # When compiling for Windows with gcc, gcc cannot produce this warning
+        # correctly: it mistakes DWORD_PTR and ULONG_PTR as types you cannot
+        # give NULL to. (You can in fact do that.)
+        check_and_add_warning("-Wno-conversion-null")
+
+        # Throughout the codebase we regularly have switch statements off of enums
+        # without covering every value in the enum. We don't care about these warnings.
+        check_and_add_warning("-Wno-switch")
+
+        # Another code pattern we have is using start and end constants in enums of
+        # different types. We do this for safety, but then when comparing it throws
+        # an error, which we would like to ignore. This seems to only affect the MinGW
+        # build, but we're not sure why.
+        check_and_add_warning("-Wno-enum-compare")
 
 # We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
-check_and_add_gcc_warning("-Wno-gnu-zero-variadic-macro-arguments")
+check_and_add_warning("-Wno-gnu-zero-variadic-macro-arguments")
 
 # Make it an error to be missing function declarations for C code.
-check_and_add_gcc_warning("-Werror=implicit-function-declaration", c_compiler)
+check_and_add_warning("-Werror=implicit-function-declaration", c_compiler)
 
 # New in clang 11. We can't really do anything about this warning.
-check_and_add_gcc_warning("-Wno-psabi")
+check_and_add_warning("-Wno-psabi")
 
 # Disable broken missing-braces warning on old clang versions
-check_and_add_gcc_warning(
+check_and_add_warning(
     "-Wno-missing-braces",
     when=depends(c_compiler)(lambda c: c.type == "clang" and c.version < "6.0"),
 )
 
 # Turn on clang thread-safety analysis
 # Older clangs don't support AutoUnlock, and have other issues
-check_and_add_gcc_warning(
+check_and_add_warning(
     "-Wthread-safety",
     when=depends(c_compiler)(lambda c: c.type == "clang" and c.version >= "8.0"),
 )

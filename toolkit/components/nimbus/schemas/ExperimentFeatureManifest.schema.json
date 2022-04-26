@@ -22,8 +22,20 @@
           "description": "If the feature values should be cached in prefs for fast early startup."
         },
         "schema": {
-          "type": "string",
-          "description": "For features with large number of variables we instead point to a JSONSchema file instead of specifying them in the variables field"
+          "type": "object",
+          "description": "For features with large number of variables we instead point to a JSONSchema file instead of specifying them in the variables field",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "A resource:// URI that can be loaded at runtime from within Firefox.",
+              "format": "uri"
+            },
+            "path": {
+              "type": "string",
+              "description": "The path to the schema file relative to the repository root"
+            }
+          },
+          "required": ["uri", "path"]
         },
         "variables": {
           "additionalProperties": false,

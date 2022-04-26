@@ -48,6 +48,7 @@ def generate_scenarios(config, tasks):
         index = task["index"]
         jobname = index["job-name"]
         label = task["name"]
+        run_as_root = task["run"].get("run-as-root", False)
 
         for scenario in set(task["scenarios"]):
             extra_args = ""
@@ -60,7 +61,7 @@ def generate_scenarios(config, tasks):
             index["job-name"] = "%s-%s" % (jobname, scenario)
 
             taskdesc = {
-                "label": "%s-%s" % (label, scenario),
+                "name": "%s-%s" % (label, scenario),
                 "description": task["description"],
                 "treeherder": {
                     "symbol": "%s-%s)" % (symbol, scenario),
@@ -77,11 +78,11 @@ def generate_scenarios(config, tasks):
                     "checkout": task["run"]["checkout"],
                     "tooltool-downloads": deepcopy(task["run"]["tooltool-downloads"]),
                     "command": tcmd,
+                    "run-as-root": run_as_root,
                 },
                 "run-on-projects": deepcopy(task["run-on-projects"]),
                 "scopes": deepcopy(task["scopes"]),
                 "dependencies": deepcopy(task["dependencies"]),
                 "fetches": deepcopy(task["fetches"]),
             }
-
             yield taskdesc

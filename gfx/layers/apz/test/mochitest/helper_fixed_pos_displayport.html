@@ -62,8 +62,8 @@
 
       // First, check check that we don't expand the displayport to the entire layout viewport
       // even if we are zoomed in a lot.
-      ok(fixedPosDisplayport.w < window.innerWidth, "fixed-pos displayport is too wide");
-      ok(fixedPosDisplayport.h < window.innerHeight, "fixed-pos displayport is too tall");
+      ok(fixedPosDisplayport.width < window.innerWidth, "fixed-pos displayport is too wide");
+      ok(fixedPosDisplayport.height < window.innerHeight, "fixed-pos displayport is too tall");
 
       // Now, check the position. We want it to track the visual scroll position
       // relative to the layout viewport (but not relative to the page), since
@@ -72,8 +72,8 @@
       // the visual viewport rect as expressed relative to the layout viewport.
       let vvRect = { x: vv.offsetLeft,  // offsets relative to layout viewport
                      y: vv.offsetTop,
-                     w: vv.width,
-                     h: vv.height };
+                     width: vv.width,
+                     height: vv.height };
       assertRectContainment(fixedPosDisplayport, "fixed-pos displayport",
                             vvRect, "visual viewport");
     }

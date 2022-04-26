@@ -27,6 +27,10 @@
 #  include <android/log.h>
 #endif
 
+#ifdef FUZZING_SNAPSHOT
+#  include <mozilla/fuzzing/NyxWrapper.h>
+#endif
+
 using namespace mozilla;
 
 const char* NS_strspnp(const char* aDelims, const char* aStr) {
@@ -266,6 +270,15 @@ void vprintf_stderr(const char* aFmt, va_list aArgs) {
 #elif defined(ANDROID)
 void vprintf_stderr(const char* aFmt, va_list aArgs) {
   __android_log_vprint(ANDROID_LOG_INFO, "Gecko", aFmt, aArgs);
+}
+#elif defined(FUZZING_SNAPSHOT)
+void vprintf_stderr(const char* aFmt, va_list aArgs) {
+  if (nyx_puts) {
+    auto msgbuf = mozilla::Vsmprintf(aFmt, aArgs);
+    nyx_puts(msgbuf.get());
+  } else {
+    vfprintf(stderr, aFmt, aArgs);
+  }
 }
 #else
 void vprintf_stderr(const char* aFmt, va_list aArgs) {

@@ -356,8 +356,8 @@ function rectRelativeToScreen(aElement) {
   return {
     x: (targetWindow.mozInnerScreenX + rect.left) * scale,
     y: (targetWindow.mozInnerScreenY + rect.top) * scale,
-    w: rect.width * scale,
-    h: rect.height * scale,
+    width: rect.width * scale,
+    height: rect.height * scale,
   };
 }
 

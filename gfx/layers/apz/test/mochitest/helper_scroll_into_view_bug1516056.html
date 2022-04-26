@@ -27,14 +27,6 @@
         height: rootScroller.scrollHeight - vv.height,
       };
     }
-    function getVisualViewportRect() {
-      return {
-        x: vv.pageLeft,
-        y: vv.pageTop,
-        w: vv.width,
-        h: vv.height,
-      };
-    }
     async function test() {
       is(window.scrollMaxX, 0, "page should have a zero horizontal layout scroll range");
       is(window.scrollMaxY, 0, "page should have a zero vertical layout scroll range");
@@ -56,11 +48,8 @@
       is(window.scrollY, 0, "page should not layout-scroll with a zero layout scroll range");
 
       // Test that scrollIntoView() did perform visual scrolling.
-      let vvRect = getVisualViewportRect();
+      let vvRect = getVisualViewportRect(vv);
       let targetBounds = target.getBoundingClientRect();
-      // set property names expected by rectContains()
-      targetBounds.w = targetBounds.width;
-      targetBounds.h = targetBounds.height;
       assertRectContainment(vvRect, "visual viewport", targetBounds, "target element bounding rect");
     }
     SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);

@@ -55,5 +55,10 @@ void InProcessAndroidCompositorWidget::OnCompositorSurfaceChanged() {
   }
 }
 
+void InProcessAndroidCompositorWidget::NotifyClientSizeChanged(
+    const LayoutDeviceIntSize& aClientSize) {
+  AndroidCompositorWidget::NotifyClientSizeChanged(aClientSize);
+}
+
 }  // namespace widget
 }  // namespace mozilla

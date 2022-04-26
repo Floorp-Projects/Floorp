@@ -27,7 +27,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
     });
 
-    it("should render section left on first screen", () => {
+    it("should render section left for corner positioned screens", () => {
       const SCREEN_PROPS = {
         content: {
           position: "corner",
@@ -40,6 +40,20 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
       assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
       assert.equal(wrapper.find("main").prop("pos"), "corner");
+    });
+
+    it("should render with no section left for center positioned screens", () => {
+      const SCREEN_PROPS = {
+        content: {
+          position: "center",
+          title: "test title",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find(".section-left").exists(), false);
+      assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
+      assert.equal(wrapper.find("main").prop("pos"), "center");
     });
   });
 
