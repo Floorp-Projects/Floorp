@@ -13,3 +13,7 @@ test(function() {
 test(function() {
   assert_throws_js(TypeError, function() { self.performance.mark("mark1", "string"); }, "String passed as a dict argument should cause type-error.")
 }, "String should be rejected as the mark-options.")
+
+test(function() {
+  assert_throws_js(TypeError, function() { self.performance.mark("mark1", {startTime: -1}); }, "Negative startTime should cause type-error.")
+}, "Negative startTime in mark-options should be rejected");
