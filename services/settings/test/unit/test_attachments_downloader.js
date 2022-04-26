@@ -61,20 +61,6 @@ function run_test() {
     do_get_file("test_attachments_downloader")
   );
 
-  server.registerPathHandler("/v1/", (request, response) => {
-    response.write(
-      JSON.stringify({
-        capabilities: {
-          attachments: {
-            base_url: `http://localhost:${server.identity.primaryPort}/cdn/`,
-          },
-        },
-      })
-    );
-    response.setHeader("Content-Type", "application/json; charset=UTF-8");
-    response.setStatusLine(null, 200, "OK");
-  });
-
   Services.prefs.setCharPref(
     "services.settings.server",
     `http://localhost:${server.identity.primaryPort}/v1`
@@ -97,10 +83,43 @@ async function clear_state() {
     // Writable to allow specific tests to override cacheImpl.
     writable: true,
   });
-
   await downloader.deleteDownloaded(RECORD);
+
+  server.registerPathHandler("/v1/", (request, response) => {
+    response.write(
+      JSON.stringify({
+        capabilities: {
+          attachments: {
+            base_url: `http://localhost:${server.identity.primaryPort}/cdn/`,
+          },
+        },
+      })
+    );
+    response.setHeader("Content-Type", "application/json; charset=UTF-8");
+    response.setStatusLine(null, 200, "OK");
+  });
 }
 
+add_task(clear_state);
+
+add_task(
+  async function test_download_throws_server_info_error_if_invalid_response() {
+    server.registerPathHandler("/v1/", (request, response) => {
+      response.write("{bad json content");
+      response.setHeader("Content-Type", "application/json; charset=UTF-8");
+      response.setStatusLine(null, 200, "OK");
+    });
+
+    let error;
+    try {
+      await downloader.download(RECORD);
+    } catch (e) {
+      error = e;
+    }
+
+    Assert.ok(error instanceof Downloader.ServerInfoError);
+  }
+);
 add_task(clear_state);
 
 add_task(async function test_download_writes_file_in_profile() {

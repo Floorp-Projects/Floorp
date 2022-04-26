@@ -29,6 +29,14 @@ class BadContentError extends Error {
   }
 }
 
+class ServerInfoError extends Error {
+  constructor(error) {
+    super(`Server response is invalid ${error}`);
+    this.name = "ServerInfoError";
+    this.original = error;
+  }
+}
+
 // Helper for the `download` method for commonly used methods, to help with
 // lazily accessing the record and attachment content.
 class LazyRecordAndBuffer {
@@ -92,6 +100,9 @@ class Downloader {
   static get BadContentError() {
     return BadContentError;
   }
+  static get ServerInfoError() {
+    return ServerInfoError;
+  }
 
   constructor(...folders) {
     this.folders = ["settings", ...folders];
@@ -128,6 +139,8 @@ class Downloader {
    *                                         (default: `false`)
    * @throws {Downloader.DownloadError} if the file could not be fetched.
    * @throws {Downloader.BadContentError} if the downloaded content integrity is not valid.
+   * @throws {Downloader.ServerInfoError} if the server response is not valid.
+   * @throws {NetworkError} if fetching the server infos and fetching the attachment fails.
    * @returns {Object} An object with two properties:
    *   `buffer` `ArrayBuffer`: the file content.
    *   `record` `Object`: record associated with the attachment.
@@ -282,6 +295,8 @@ class Downloader {
    * @param {Number} options.retries Number of times download should be retried (default: `3`)
    * @throws {Downloader.DownloadError} if the file could not be fetched.
    * @throws {Downloader.BadContentError} if the downloaded file integrity is not valid.
+   * @throws {Downloader.ServerInfoError} if the server response is not valid.
+   * @throws {NetworkError} if fetching the attachment fails.
    * @returns {String} the absolute file path to the downloaded attachment.
    */
   async downloadToDisk(record, options = {}) {
@@ -396,8 +411,13 @@ class Downloader {
 
   async _baseAttachmentsURL() {
     if (!this._cdnURL) {
-      const server = Utils.SERVER_URL;
-      const serverInfo = await (await Utils.fetch(`${server}/`)).json();
+      const resp = await Utils.fetch(`${Utils.SERVER_URL}/`);
+      let serverInfo;
+      try {
+        serverInfo = await resp.json();
+      } catch (error) {
+        throw new Downloader.ServerInfoError(error);
+      }
       // Server capabilities expose attachments configuration.
       const {
         capabilities: {
