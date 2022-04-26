@@ -501,7 +501,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   // Basic sanity check.
   void TestInit() {
     CreateChannels(0, 0);
-    EXPECT_FALSE(channel1_->srtp_active());
+    EXPECT_FALSE(channel1_->SrtpActiveForTesting());
     EXPECT_FALSE(media_channel1_->sending());
     if (verify_playout_) {
       EXPECT_FALSE(media_channel1_->playout());
@@ -843,14 +843,14 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
   // Test setting up a call.
   void TestCallSetup() {
     CreateChannels(0, 0);
-    EXPECT_FALSE(channel1_->srtp_active());
+    EXPECT_FALSE(channel1_->SrtpActiveForTesting());
     EXPECT_TRUE(SendInitiate());
     if (verify_playout_) {
       EXPECT_TRUE(media_channel1_->playout());
     }
     EXPECT_FALSE(media_channel1_->sending());
     EXPECT_TRUE(SendAccept());
-    EXPECT_FALSE(channel1_->srtp_active());
+    EXPECT_FALSE(channel1_->SrtpActiveForTesting());
     EXPECT_TRUE(media_channel1_->sending());
     EXPECT_EQ(1U, media_channel1_->codecs().size());
     if (verify_playout_) {
@@ -887,8 +887,8 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     CreateChannels(RTCP_MUX, RTCP_MUX);
     EXPECT_TRUE(SendInitiate());
     EXPECT_TRUE(SendAccept());
-    EXPECT_TRUE(channel1_->rtp_transport()->rtcp_mux_enabled());
-    EXPECT_TRUE(channel2_->rtp_transport()->rtcp_mux_enabled());
+    EXPECT_TRUE(channel1_->RtpTransportForTesting()->rtcp_mux_enabled());
+    EXPECT_TRUE(channel2_->RtpTransportForTesting()->rtcp_mux_enabled());
     SendRtp1();
     SendRtp2();
     WaitForThreads();
@@ -911,15 +911,15 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
 
   void SendDtlsSrtpToDtlsSrtp(int flags1, int flags2) {
     CreateChannels(flags1 | DTLS, flags2 | DTLS);
-    EXPECT_FALSE(channel1_->srtp_active());
-    EXPECT_FALSE(channel2_->srtp_active());
+    EXPECT_FALSE(channel1_->SrtpActiveForTesting());
+    EXPECT_FALSE(channel2_->SrtpActiveForTesting());
     EXPECT_TRUE(SendInitiate());
     WaitForThreads();
     EXPECT_TRUE(channel1_->writable());
     EXPECT_TRUE(channel2_->writable());
     EXPECT_TRUE(SendAccept());
-    EXPECT_TRUE(channel1_->srtp_active());
-    EXPECT_TRUE(channel2_->srtp_active());
+    EXPECT_TRUE(channel1_->SrtpActiveForTesting());
+    EXPECT_TRUE(channel2_->SrtpActiveForTesting());
     SendRtp1();
     SendRtp2();
     WaitForThreads();
@@ -937,10 +937,10 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     CreateChannels(SSRC_MUX | RTCP_MUX | DTLS, SSRC_MUX | RTCP_MUX | DTLS);
     EXPECT_TRUE(SendOffer());
     EXPECT_TRUE(SendProvisionalAnswer());
-    EXPECT_TRUE(channel1_->srtp_active());
-    EXPECT_TRUE(channel2_->srtp_active());
-    EXPECT_TRUE(channel1_->rtp_transport()->rtcp_mux_enabled());
-    EXPECT_TRUE(channel2_->rtp_transport()->rtcp_mux_enabled());
+    EXPECT_TRUE(channel1_->SrtpActiveForTesting());
+    EXPECT_TRUE(channel2_->SrtpActiveForTesting());
+    EXPECT_TRUE(channel1_->RtpTransportForTesting()->rtcp_mux_enabled());
+    EXPECT_TRUE(channel2_->RtpTransportForTesting()->rtcp_mux_enabled());
     WaitForThreads();  // Wait for 'sending' flag go through network thread.
     SendCustomRtp1(kSsrc1, ++sequence_number1_1);
     WaitForThreads();
@@ -953,8 +953,8 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
 
     // Complete call setup and ensure everything is still OK.
     EXPECT_TRUE(SendFinalAnswer());
-    EXPECT_TRUE(channel1_->srtp_active());
-    EXPECT_TRUE(channel2_->srtp_active());
+    EXPECT_TRUE(channel1_->SrtpActiveForTesting());
+    EXPECT_TRUE(channel2_->SrtpActiveForTesting());
     SendCustomRtp1(kSsrc1, ++sequence_number1_1);
     SendCustomRtp2(kSsrc2, ++sequence_number2_2);
     WaitForThreads();
@@ -983,8 +983,8 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     CreateChannels(RTCP_MUX, RTCP_MUX);
     EXPECT_TRUE(SendInitiate());
     EXPECT_TRUE(SendAccept());
-    EXPECT_TRUE(channel1_->rtp_transport()->rtcp_mux_enabled());
-    EXPECT_TRUE(channel2_->rtp_transport()->rtcp_mux_enabled());
+    EXPECT_TRUE(channel1_->RtpTransportForTesting()->rtcp_mux_enabled());
+    EXPECT_TRUE(channel2_->RtpTransportForTesting()->rtcp_mux_enabled());
     SendRtp1();
     SendRtp2();
     WaitForThreads();
