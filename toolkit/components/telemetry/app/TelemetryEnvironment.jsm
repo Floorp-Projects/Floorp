@@ -1701,10 +1701,12 @@ EnvironmentCache.prototype = {
 
     let attributionData = {};
     for (let key in data) {
-      attributionData[key] = limitStringToLength(
-        data[key],
-        MAX_ATTRIBUTION_STRING_LENGTH
-      );
+      attributionData[key] =
+        // At least one of these may be boolean, and limitStringToLength
+        // returns null for non-string inputs.
+        typeof data[key] === "string"
+          ? limitStringToLength(data[key], MAX_ATTRIBUTION_STRING_LENGTH)
+          : data[key];
     }
     this._currentEnvironment.settings.attribution = attributionData;
   },
