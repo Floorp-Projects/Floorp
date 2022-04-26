@@ -714,7 +714,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
   static constexpr int kMaxNativeSampleRateHz =
       kNativeSampleRatesHz[kNumNativeSampleRates - 1];
 
-  static const int kChunkSizeMs = 10;
+  static constexpr int kChunkSizeMs = 10;
 };
 
 class RTC_EXPORT AudioProcessingBuilder {
