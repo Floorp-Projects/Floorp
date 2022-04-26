@@ -68,6 +68,7 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
   unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
+  double framesPerSecond;
 };
 
 dictionary RTCRemoteInboundRtpStreamStats : RTCReceivedRtpStreamStats {
