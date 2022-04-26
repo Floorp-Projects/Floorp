@@ -28,6 +28,7 @@ let validAttrCodes = [
       content: "(not%20set)",
       msstoresignedin: true,
     },
+    platforms: ["win"],
   },
   {
     code: "source%3Dgoogle.com%26medium%3Dorganic%26campaign%3D%26content%3D",
