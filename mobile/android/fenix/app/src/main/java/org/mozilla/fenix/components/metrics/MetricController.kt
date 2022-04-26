@@ -242,12 +242,57 @@ internal class ReleaseMetricController(
         Component.FEATURE_SEARCH to InContentTelemetry.IN_CONTENT_SEARCH -> {
             BrowserSearch.inContent[value!!].add()
         }
+        Component.SUPPORT_WEBEXTENSIONS to WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED -> {
+            metadata?.get("installed")?.let { installedAddons ->
+                if (installedAddons is List<*>) {
+                    settings.installedAddonsCount = installedAddons.size
+                    settings.installedAddonsList = installedAddons.joinToString(",")
+                }
+            }
 
-        else -> {
-            this.toEvent()?.also {
-                track(it)
+            metadata?.get("enabled")?.let { enabledAddons ->
+                if (enabledAddons is List<*>) {
+                    settings.enabledAddonsCount = enabledAddons.size
+                    settings.enabledAddonsList = enabledAddons.joinToString(",")
+                }
             }
             Unit
+        }
+        Component.COMPOSE_AWESOMEBAR to ComposeAwesomeBarFacts.Items.PROVIDER_DURATION -> {
+            metadata?.get(ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR)?.let { providerTiming ->
+                require(providerTiming is Pair<*, *>) { "Expected providerTiming to be a Pair" }
+                when (val provider = providerTiming.first as AwesomeBar.SuggestionProvider) {
+                    is HistoryStorageSuggestionProvider -> PerfAwesomebar.historySuggestions
+                    is BookmarksStorageSuggestionProvider -> PerfAwesomebar.bookmarkSuggestions
+                    is SessionSuggestionProvider -> PerfAwesomebar.sessionSuggestions
+                    is SearchSuggestionProvider -> PerfAwesomebar.searchEngineSuggestions
+                    is ClipboardSuggestionProvider -> PerfAwesomebar.clipboardSuggestions
+                    is ShortcutsSuggestionProvider -> PerfAwesomebar.shortcutsSuggestions
+                    // NB: add PerfAwesomebar.syncedTabsSuggestions once we're using SyncedTabsSuggestionProvider
+                    else -> {
+                        Logger("Metrics").error("Unknown suggestion provider: $provider")
+                        null
+                    }
+                }?.accumulateSamples(longArrayOf(providerTiming.second as Long))
+            }
+            Unit
+        }
+        Component.FEATURE_TOP_SITES to TopSitesFacts.Items.COUNT -> {
+            value?.let {
+                var count = 0
+                try {
+                    count = it.toInt()
+                } catch (e: NumberFormatException) {
+                    // Do nothing
+                }
+
+                settings.topSitesSize = count
+            }
+            Unit
+        }
+
+        else -> {
+            // no-op
         }
     }
 
@@ -293,74 +338,11 @@ internal class ReleaseMetricController(
             }
     }
 
-    @VisibleForTesting
-    internal fun factToEvent(
-        fact: Fact
-    ): Event? {
-        return fact.toEvent()
-    }
-
     private fun isInitialized(type: MetricServiceType): Boolean = initialized.contains(type)
 
     private fun isTelemetryEnabled(type: MetricServiceType): Boolean = when (type) {
         MetricServiceType.Data -> isDataTelemetryEnabled()
         MetricServiceType.Marketing -> isMarketingDataTelemetryEnabled()
-    }
-
-    @Suppress("LongMethod", "MaxLineLength")
-    private fun Fact.toEvent(): Event? = when {
-        Component.SUPPORT_WEBEXTENSIONS == component && WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED == item -> {
-            metadata?.get("installed")?.let { installedAddons ->
-                if (installedAddons is List<*>) {
-                    settings.installedAddonsCount = installedAddons.size
-                    settings.installedAddonsList = installedAddons.joinToString(",")
-                }
-            }
-
-            metadata?.get("enabled")?.let { enabledAddons ->
-                if (enabledAddons is List<*>) {
-                    settings.enabledAddonsCount = enabledAddons.size
-                    settings.enabledAddonsList = enabledAddons.joinToString(",")
-                }
-            }
-
-            null
-        }
-        Component.COMPOSE_AWESOMEBAR == component && ComposeAwesomeBarFacts.Items.PROVIDER_DURATION == item -> {
-            metadata?.get(ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR)?.let { providerTiming ->
-                require(providerTiming is Pair<*, *>) { "Expected providerTiming to be a Pair" }
-                when (val provider = providerTiming.first as AwesomeBar.SuggestionProvider) {
-                    is HistoryStorageSuggestionProvider -> PerfAwesomebar.historySuggestions
-                    is BookmarksStorageSuggestionProvider -> PerfAwesomebar.bookmarkSuggestions
-                    is SessionSuggestionProvider -> PerfAwesomebar.sessionSuggestions
-                    is SearchSuggestionProvider -> PerfAwesomebar.searchEngineSuggestions
-                    is ClipboardSuggestionProvider -> PerfAwesomebar.clipboardSuggestions
-                    is ShortcutsSuggestionProvider -> PerfAwesomebar.shortcutsSuggestions
-                    // NB: add PerfAwesomebar.syncedTabsSuggestions once we're using SyncedTabsSuggestionProvider
-                    else -> {
-                        Logger("Metrics").error("Unknown suggestion provider: $provider")
-                        null
-                    }
-                }?.accumulateSamples(longArrayOf(providerTiming.second as Long))
-            }
-            null
-        }
-
-        Component.FEATURE_TOP_SITES == component && TopSitesFacts.Items.COUNT == item -> {
-            value?.let {
-                var count = 0
-                try {
-                    count = it.toInt()
-                } catch (e: NumberFormatException) {
-                    // Do nothing
-                }
-
-                settings.topSitesSize = count
-            }
-            null
-        }
-
-        else -> null
     }
 
     companion object {

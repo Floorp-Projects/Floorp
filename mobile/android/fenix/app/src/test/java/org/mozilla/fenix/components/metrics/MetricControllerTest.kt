@@ -12,6 +12,11 @@ import io.mockk.verifyAll
 import io.mockk.impl.annotations.MockK
 import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
+import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
@@ -43,11 +48,14 @@ import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
+import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.compose.browser.awesomebar.AwesomeBarFacts as ComposeAwesomeBarFacts
 
 @RunWith(FenixRobolectricTestRunner::class)
 class MetricControllerTest {
@@ -148,6 +156,113 @@ class MetricControllerTest {
     }
 
     @Test
+    fun `WHEN AwesomeBar duration fact is processed THEN the correct metric is recorded`() {
+        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
+        val action = mockk<Action>()
+        val duration = 1000L
+        var metadata = mapOf<String, Pair<*, Long>>(
+            ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
+                mockk<HistoryStorageSuggestionProvider>(),
+                duration
+            )
+        )
+        var fact = Fact(
+            Component.COMPOSE_AWESOMEBAR,
+            action,
+            ComposeAwesomeBarFacts.Items.PROVIDER_DURATION,
+            metadata = metadata
+        )
+        // Verify history based suggestions
+        assertFalse(PerfAwesomebar.historySuggestions.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(PerfAwesomebar.historySuggestions.testHasValue())
+
+        // Verify bookmark based suggestions
+        metadata = mapOf(
+            ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
+                mockk<BookmarksStorageSuggestionProvider>(),
+                duration
+            )
+        )
+        fact = fact.copy(metadata = metadata)
+        assertFalse(PerfAwesomebar.bookmarkSuggestions.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(PerfAwesomebar.bookmarkSuggestions.testHasValue())
+
+        // Verify session based suggestions
+        metadata = mapOf(
+            ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
+                mockk<SessionSuggestionProvider>(),
+                duration
+            )
+        )
+        fact = fact.copy(metadata = metadata)
+        assertFalse(PerfAwesomebar.sessionSuggestions.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(PerfAwesomebar.sessionSuggestions.testHasValue())
+
+        // Verify search engine suggestions
+        metadata = mapOf(
+            ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
+                mockk<SearchSuggestionProvider>(),
+                duration
+            )
+        )
+        fact = fact.copy(metadata = metadata)
+        assertFalse(PerfAwesomebar.searchEngineSuggestions.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(PerfAwesomebar.searchEngineSuggestions.testHasValue())
+
+        // Verify clipboard based suggestions
+        metadata = mapOf(
+            ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
+                mockk<ClipboardSuggestionProvider>(),
+                duration
+            )
+        )
+        fact = fact.copy(metadata = metadata)
+        assertFalse(PerfAwesomebar.clipboardSuggestions.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(PerfAwesomebar.clipboardSuggestions.testHasValue())
+
+        // Verify shortcut based suggestions
+        metadata = mapOf(
+            ComposeAwesomeBarFacts.MetadataKeys.DURATION_PAIR to Pair(
+                mockk<ShortcutsSuggestionProvider>(),
+                duration
+            )
+        )
+        fact = fact.copy(metadata = metadata)
+        assertFalse(PerfAwesomebar.shortcutsSuggestions.testHasValue())
+
+        with(controller) {
+            fact.process()
+        }
+
+        assertTrue(PerfAwesomebar.shortcutsSuggestions.testHasValue())
+    }
+
+    @Test
     fun `release metric controller starts and stops all marketing services`() {
         var enabled = true
         val controller = ReleaseMetricController(
@@ -194,7 +309,9 @@ class MetricControllerTest {
         )
 
         verify(exactly = 0) { settings.topSitesSize = any() }
-        controller.factToEvent(fact)
+        with(controller) {
+            fact.process()
+        }
         verify(exactly = 1) { settings.topSitesSize = any() }
     }
 
@@ -222,7 +339,9 @@ class MetricControllerTest {
         assertEquals(settings.installedAddonsList, "")
         assertEquals(settings.enabledAddonsCount, 0)
         assertEquals(settings.enabledAddonsList, "")
-        controller.factToEvent(fact)
+        with(controller) {
+            fact.process()
+        }
         assertEquals(settings.installedAddonsCount, 4)
         assertEquals(settings.installedAddonsList, "test1,test2,test3,test4")
         assertEquals(settings.enabledAddonsCount, 2)
