@@ -22,6 +22,7 @@ interface MessagePort : EventTarget {
   attribute EventHandler onmessageerror;
 };
 
+// Used to declare which objects should be transferred.
 dictionary StructuredSerializeOptions {
   sequence<object> transfer = [];
 };
