@@ -342,11 +342,6 @@ enum class FlushLayout {
   Yes,
 };
 
-enum class PerformRetargeting {
-  No,
-  Yes,
-};
-
 template <typename NodeOrElement>
 NodeOrElement* CastTo(nsIContent* aContent);
 
@@ -365,7 +360,6 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
                                FrameForPointOptions aOptions,
                                FlushLayout aShouldFlushLayout,
                                Multiple aMultiple, ViewportType aViewportType,
-                               PerformRetargeting aPerformRetargeting,
                                nsTArray<RefPtr<NodeOrElement>>& aNodes) {
   static_assert(std::is_same<nsINode, NodeOrElement>::value ||
                     std::is_same<Element, NodeOrElement>::value,
@@ -373,7 +367,6 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
 
   constexpr bool returningElements =
       std::is_same<Element, NodeOrElement>::value;
-  const bool retargeting = aPerformRetargeting == PerformRetargeting::Yes;
 
   nsCOMPtr<Document> doc = aRoot.AsNode().OwnerDoc();
 
@@ -427,9 +420,7 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
     // XXXsmaug There is plenty of unspec'ed behavior here
     //         https://github.com/w3c/webcomponents/issues/735
     //         https://github.com/w3c/webcomponents/issues/736
-    if (retargeting) {
-      content = aRoot.Retarget(content);
-    }
+    content = aRoot.Retarget(content);
 
     if (content && content != aNodes.SafeLastElement(nullptr)) {
       aNodes.AppendElement(CastTo<NodeOrElement>(content));
@@ -445,7 +436,6 @@ static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
                                 FrameForPointOptions aOptions,
                                 FlushLayout aShouldFlushLayout,
                                 Multiple aMultiple, ViewportType aViewportType,
-                                PerformRetargeting aPerformRetargeting,
                                 nsTArray<RefPtr<NodeOrElement>>& aNodes) {
   // As per the spec, we return null if either coord is negative.
   if (!aOptions.mBits.contains(FrameForPointOption::IgnoreRootScrollFrame) &&
@@ -457,8 +447,7 @@ static void QueryNodesFromPoint(DocumentOrShadowRoot& aRoot, float aX, float aY,
   nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
   nsPoint pt(x, y);
   QueryNodesFromRect(aRoot, nsRect(pt, nsSize(1, 1)), aOptions,
-                     aShouldFlushLayout, aMultiple, aViewportType,
-                     aPerformRetargeting, aNodes);
+                     aShouldFlushLayout, aMultiple, aViewportType, aNodes);
 }
 
 }  // namespace
@@ -470,20 +459,19 @@ Element* DocumentOrShadowRoot::ElementFromPoint(float aX, float aY) {
 void DocumentOrShadowRoot::ElementsFromPoint(
     float aX, float aY, nsTArray<RefPtr<Element>>& aElements) {
   QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      ViewportType::Layout, PerformRetargeting::Yes,
-                      aElements);
+                      ViewportType::Layout, aElements);
 }
 
 void DocumentOrShadowRoot::NodesFromPoint(float aX, float aY,
                                           nsTArray<RefPtr<nsINode>>& aNodes) {
   QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::Yes,
-                      ViewportType::Layout, PerformRetargeting::Yes, aNodes);
+                      ViewportType::Layout, aNodes);
 }
 
 nsINode* DocumentOrShadowRoot::NodeFromPoint(float aX, float aY) {
   AutoTArray<RefPtr<nsINode>, 1> nodes;
   QueryNodesFromPoint(*this, aX, aY, {}, FlushLayout::Yes, Multiple::No,
-                      ViewportType::Layout, PerformRetargeting::Yes, nodes);
+                      ViewportType::Layout, nodes);
   return nodes.SafeElementAt(0);
 }
 
@@ -499,7 +487,7 @@ Element* DocumentOrShadowRoot::ElementFromPointHelper(
 
   AutoTArray<RefPtr<Element>, 1> elements;
   QueryNodesFromPoint(*this, aX, aY, options, flush, Multiple::No,
-                      aViewportType, PerformRetargeting::Yes, elements);
+                      aViewportType, elements);
   return elements.SafeElementAt(0);
 }
 
@@ -534,7 +522,7 @@ void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
 
   auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;
   QueryNodesFromRect(*this, rect, options, flush, Multiple::Yes,
-                     ViewportType::Layout, PerformRetargeting::No, aReturn);
+                     ViewportType::Layout, aReturn);
 }
 
 Element* DocumentOrShadowRoot::AddIDTargetObserver(nsAtom* aID,
