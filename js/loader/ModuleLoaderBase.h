@@ -162,8 +162,10 @@ class ModuleLoaderBase : public nsISupports {
   // Notify the module loader when a fetch started by StartFetch() completes.
   nsresult OnFetchComplete(ModuleLoadRequest* aRequest, nsresult aRv);
 
-  bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
+  // Link the module and all its imports. This must occur prior to evaluation.
+  bool InstantiateModuleGraph(ModuleLoadRequest* aRequest);
 
+  // Executes the module.
   // Implements https://html.spec.whatwg.org/#run-a-module-script
   nsresult EvaluateModule(ModuleLoadRequest* aRequest);
 
@@ -218,8 +220,8 @@ class ModuleLoaderBase : public nsISupports {
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
 
   JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
-  static nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
-                                                ModuleLoadRequest* aRequest);
+  static nsresult InitDebuggerDataForModuleGraph(JSContext* aCx,
+                                                 ModuleLoadRequest* aRequest);
   static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
                                           nsCOMArray<nsIURI>* aUrlsOut);
 
