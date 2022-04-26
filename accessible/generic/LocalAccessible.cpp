@@ -672,22 +672,34 @@ nsRect LocalAccessible::ParentRelativeBounds() {
     }
 
     nsIFrame* boundingFrame = FindNearestAccessibleAncestorFrame();
-    nsRect unionRect =
-        nsLayoutUtils::GetAllInFlowRectsUnion(frame, boundingFrame);
+    nsRect result = nsLayoutUtils::GetAllInFlowRectsUnion(frame, boundingFrame);
 
-    if (unionRect.IsEmpty()) {
+    if (result.IsEmpty()) {
       // If we end up with a 0x0 rect from above (or one with negative
       // height/width) we should try using the ink overflow rect instead. If we
       // use this rect, our relative bounds will match the bounds of what
       // appears visually. We do this because some web authors (icloud.com for
       // example) employ things like 0x0 buttons with visual overflow. Without
       // this, such frames aren't navigable by screen readers.
-      nsRect overflow = frame->InkOverflowRectRelativeToSelf();
-      nsLayoutUtils::TransformRect(frame, boundingFrame, overflow);
-      return overflow;
+      result = frame->InkOverflowRectRelativeToSelf();
+      nsLayoutUtils::TransformRect(frame, boundingFrame, result);
     }
 
-    return unionRect;
+    if (nsIScrollableFrame* sf =
+            mParent == mDoc
+                ? mDoc->PresShellPtr()->GetRootScrollFrameAsScrollable()
+                : boundingFrame->GetScrollTargetFrame()) {
+      // If boundingFrame has a scroll position, result is currently relative
+      // to that. Instead, we want result to remain the same regardless of
+      // scrolling. We then subtract the scroll position later when calculating
+      // absolute bounds. We do this because we don't want to push cache
+      // updates for the bounds of all descendants every time we scroll.
+      nsPoint scrollPos = sf->GetScrollPosition().ApplyResolution(
+          mDoc->PresShellPtr()->GetResolution());
+      result.MoveBy(scrollPos.x, scrollPos.y);
+    }
+
+    return result;
   }
 
   return nsRect();

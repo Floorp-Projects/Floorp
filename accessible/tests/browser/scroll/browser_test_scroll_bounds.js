@@ -27,6 +27,16 @@ function testCachedScrollPosition(acc, expectedX, expectedY) {
   );
 }
 
+function getCachedBounds(acc) {
+  let cachedBounds = "";
+  try {
+    cachedBounds = acc.cache.getStringProperty("relative-bounds");
+  } catch (e) {
+    ok(false, "Unable to fetch cached bounds from cache!");
+  }
+  return cachedBounds;
+}
+
 /**
  * Test bounds of accessibles after scrolling
  */
@@ -52,8 +62,15 @@ addAccessibleTask(
     await testBoundsInContent(docAcc, "square", browser);
     await testBoundsInContent(docAcc, "rect", browser);
 
+    // Scroll rect into view, but also make it reflow so we can be sure the
+    // bounds are correct for reflowed frames.
     await invokeContentTask(browser, [], () => {
-      content.document.getElementById("rect").scrollIntoView();
+      const rect = content.document.getElementById("rect");
+      rect.scrollIntoView();
+      rect.style.width = "300px";
+      rect.offsetTop; // Flush layout.
+      rect.style.width = "200px";
+      rect.offsetTop; // Flush layout.
     });
 
     await waitForContentPaint(browser);
@@ -87,6 +104,8 @@ addAccessibleTask(
       () => testCachedScrollPosition(docAcc, 0, 0),
       "Correct initial scroll position."
     );
+    const rectAcc = findAccessibleChildByID(docAcc, "rect");
+    const rectInitialBounds = getCachedBounds(rectAcc);
 
     await invokeContentTask(browser, [], () => {
       content.document.getElementById("square").scrollIntoView();
@@ -101,8 +120,14 @@ addAccessibleTask(
       "Correct scroll position after first scroll."
     );
 
+    // Scroll rect into view, but also make it reflow so we can be sure the
+    // bounds are correct for reflowed frames.
     await invokeContentTask(browser, [], () => {
-      content.document.getElementById("rect").scrollIntoView();
+      const rect = content.document.getElementById("rect");
+      rect.scrollIntoView();
+      rect.style.width = "300px";
+      rect.offsetTop;
+      rect.style.width = "200px";
     });
 
     await waitForContentPaint(browser);
@@ -112,6 +137,11 @@ addAccessibleTask(
     await untilCacheOk(
       () => testCachedScrollPosition(docAcc, 0, 7100),
       "Correct final scroll position."
+    );
+    await untilCacheIs(
+      () => getCachedBounds(rectAcc),
+      rectInitialBounds,
+      "Cached relative bounds don't change when scrolling"
     );
   },
   { iframe: true, remoteIframe: true }
