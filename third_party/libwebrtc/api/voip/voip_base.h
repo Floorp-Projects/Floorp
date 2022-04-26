@@ -12,6 +12,7 @@
 #define API_VOIP_VOIP_BASE_H_
 
 #include "absl/types/optional.h"
+#include "rtc_base/system/unused.h"
 
 namespace webrtc {
 
@@ -35,7 +36,7 @@ class Transport;
 
 enum class ChannelId : int {};
 
-enum class VoipResult {
+enum class RTC_WARN_UNUSED_RESULT VoipResult {
   // kOk indicates the function was successfully invoked with no error.
   kOk,
   // kInvalidArgument indicates the caller specified an invalid argument, such

@@ -21,6 +21,7 @@ rtc_source_set("voip_api") {
   ]
   deps = [
     "..:array_view",
+    "../../rtc_base/system:unused",
     "../audio_codecs:audio_codecs_api",
     "../neteq:neteq_api",
   ]
