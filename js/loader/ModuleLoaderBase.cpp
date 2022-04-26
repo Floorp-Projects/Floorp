@@ -428,24 +428,27 @@ ModuleScript* ModuleLoaderBase::GetFetchedModule(nsIURI* aURL) const {
   return ms;
 }
 
-nsresult ModuleLoaderBase::ProcessFetchedModuleSource(
-    ModuleLoadRequest* aRequest) {
+nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
+                                           nsresult aRv) {
   MOZ_ASSERT(aRequest->mLoader == this);
   MOZ_ASSERT(!aRequest->mModuleScript);
 
-  nsresult rv = CreateModuleScript(aRequest);
-  MOZ_ASSERT(NS_FAILED(rv) == !aRequest->mModuleScript);
+  nsresult rv = aRv;
+  if (NS_SUCCEEDED(rv)) {
+    rv = CreateModuleScript(aRequest);
 
-  aRequest->ClearScriptSource();
+    aRequest->ClearScriptSource();
 
-  if (NS_FAILED(rv)) {
-    aRequest->LoadFailed();
-    return rv;
+    if (NS_FAILED(rv)) {
+      aRequest->LoadFailed();
+      return rv;
+    }
   }
 
+  MOZ_ASSERT(NS_SUCCEEDED(rv) == bool(aRequest->mModuleScript));
   SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
 
-  if (!aRequest->mModuleScript->HasParseError()) {
+  if (aRequest->mModuleScript && !aRequest->mModuleScript->HasParseError()) {
     StartFetchingModuleDependencies(aRequest);
   }
 
