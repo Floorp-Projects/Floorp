@@ -132,9 +132,11 @@ class SANDBOX_EXPORT PolicyCompiler {
                                 CodeGen::Node passed,
                                 CodeGen::Node failed);
 
-  // Returns the fatal CodeGen::Node that is used to indicate that somebody
-  // attempted to pass a 64bit value in a 32bit system call argument.
-  CodeGen::Node Unexpected64bitArgument();
+  // Returns the CodeGen::Node that is used to handle the case where a
+  // system call argument was expected to be a 32-bit type, but the
+  // value in the 64-bit register doesn't correspond to a
+  // zero-extended or sign-extended 32-bit value.
+  CodeGen::Node Unexpected64bitArgument(int argno);
 
   const Policy* policy_;
   TrapRegistry* registry_;
