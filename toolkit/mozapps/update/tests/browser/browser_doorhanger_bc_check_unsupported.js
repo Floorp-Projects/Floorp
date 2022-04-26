@@ -50,7 +50,7 @@ add_task(async function doorhanger_bc_check_unsupported() {
         !PanelUI.menuButton.hasAttribute("badge-status"),
         "The window does not have a badge."
       );
-      UpdateListener.init();
+      UpdateListener.maybeShowUnsupportedNotification();
       is(
         PanelUI.notificationPanel.state,
         "closed",
