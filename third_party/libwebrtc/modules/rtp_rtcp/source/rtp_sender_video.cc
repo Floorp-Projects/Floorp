@@ -650,6 +650,8 @@ bool RTPSenderVideo::SendVideo(
       return false;
 
     packet->set_allow_retransmission(allow_retransmission);
+    packet->set_is_key_frame(video_header.frame_type ==
+                             VideoFrameType::kVideoFrameKey);
 
     // Put packetization finish timestamp into extension.
     if (packet->HasExtension<VideoTimingExtension>()) {

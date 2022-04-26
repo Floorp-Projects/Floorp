@@ -77,6 +77,7 @@ const char kNoMid[] = "";
 
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::AtLeast;
 using ::testing::Contains;
 using ::testing::Each;
 using ::testing::ElementsAreArray;
@@ -2816,6 +2817,53 @@ TEST_P(RtpSenderTest, DoesntFecProtectRetransmissions) {
 
   time_controller_.AdvanceTime(TimeDelta::Millis(kRtt));
   EXPECT_GT(rtp_sender()->ReSendPacket(kSeqNum), 0);
+}
+
+TEST_P(RtpSenderTest, MarksPacketsWithKeyframeStatus) {
+  FieldTrialBasedConfig field_trials;
+  RTPSenderVideo::Config video_config;
+  video_config.clock = clock_;
+  video_config.rtp_sender = rtp_sender();
+  video_config.field_trials = &field_trials;
+  RTPSenderVideo rtp_sender_video(video_config);
+
+  const uint8_t kPayloadType = 127;
+  const absl::optional<VideoCodecType> kCodecType =
+      VideoCodecType::kVideoCodecGeneric;
+
+  const uint32_t kCaptureTimeMsToRtpTimestamp = 90;  // 90 kHz clock
+
+  {
+    EXPECT_CALL(mock_paced_sender_,
+                EnqueuePackets(Each(
+                    Pointee(Property(&RtpPacketToSend::is_key_frame, true)))))
+        .Times(AtLeast(1));
+    RTPVideoHeader video_header;
+    video_header.frame_type = VideoFrameType::kVideoFrameKey;
+    int64_t capture_time_ms = clock_->TimeInMilliseconds();
+    EXPECT_TRUE(rtp_sender_video.SendVideo(
+        kPayloadType, kCodecType,
+        capture_time_ms * kCaptureTimeMsToRtpTimestamp, capture_time_ms,
+        kPayloadData, video_header, kDefaultExpectedRetransmissionTimeMs));
+
+    time_controller_.AdvanceTime(TimeDelta::Millis(33));
+  }
+
+  {
+    EXPECT_CALL(mock_paced_sender_,
+                EnqueuePackets(Each(
+                    Pointee(Property(&RtpPacketToSend::is_key_frame, false)))))
+        .Times(AtLeast(1));
+    RTPVideoHeader video_header;
+    video_header.frame_type = VideoFrameType::kVideoFrameDelta;
+    int64_t capture_time_ms = clock_->TimeInMilliseconds();
+    EXPECT_TRUE(rtp_sender_video.SendVideo(
+        kPayloadType, kCodecType,
+        capture_time_ms * kCaptureTimeMsToRtpTimestamp, capture_time_ms,
+        kPayloadData, video_header, kDefaultExpectedRetransmissionTimeMs));
+
+    time_controller_.AdvanceTime(TimeDelta::Millis(33));
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P(WithAndWithoutOverhead,
