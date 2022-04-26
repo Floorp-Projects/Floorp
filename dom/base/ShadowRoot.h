@@ -185,10 +185,7 @@ class ShadowRoot final : public DocumentFragment,
 
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) final;
 
-  void NodeInfoChanged(Document* aOldDoc) override {
-    DocumentFragment::NodeInfoChanged(aOldDoc);
-    ClearAdoptedStyleSheets();
-  }
+  void NodeInfoChanged(Document* aOldDoc) override;
 
   void AddToIdTable(Element* aElement, nsAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsAtom* aId);
