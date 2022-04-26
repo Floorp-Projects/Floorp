@@ -7,7 +7,6 @@
 #ifndef nsPrintSettingsServiceWin_h
 #define nsPrintSettingsServiceWin_h
 
-#include "mozilla/embedding/PPrinting.h"
 #include "nsPrintSettingsService.h"
 
 class nsIPrintSettings;

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PPrinting;
+include protocol PContent;
 
 namespace mozilla {
 namespace layout {
@@ -12,7 +12,7 @@ namespace layout {
 [ChildImpl=virtual, ParentImpl=virtual]
 async protocol PRemotePrintJob
 {
-  manager PPrinting;
+  manager PContent;
 
 both:
   // Tell either side to abort printing and clean up.

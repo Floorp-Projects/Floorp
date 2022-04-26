@@ -25,11 +25,14 @@
 #include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layout/RemotePrintJobParent.h"
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintSettingsService.h"
 #include "nsISupports.h"
 #include "nsIWebNavigation.h"
 #include "mozilla/MozPromiseInlines.h"
@@ -50,10 +53,6 @@
 #include "nsIXPConnect.h"
 #include "nsImportModule.h"
 #include "UnitTransforms.h"
-
-#ifdef NS_PRINTING
-#  include "mozilla/embedding/printingui/PrintingParent.h"
-#endif
 
 using namespace mozilla::ipc;
 
@@ -708,15 +707,37 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
     return promise.forget();
   }
 
-  RefPtr<embedding::PrintingParent> printingParent =
-      browserParent->Manager()->GetPrintingParent();
+  nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  if (NS_WARN_IF(!printSettingsSvc)) {
+    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+    return promise.forget();
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIPrintSettings> printSettings = aPrintSettings;
+  if (!printSettings) {
+    rv = printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      promise->MaybeReject(ErrorResult(rv));
+      return promise.forget();
+    }
+  }
 
   embedding::PrintData printData;
-  nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
-      aPrintSettings, listener, nullptr, &printData);
+  rv = printSettingsSvc->SerializeToPrintData(printSettings, &printData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(ErrorResult(rv));
     return promise.forget();
+  }
+
+  layout::RemotePrintJobParent* remotePrintJob =
+      new layout::RemotePrintJobParent(printSettings);
+  printData.remotePrintJobParent() =
+      browserParent->Manager()->SendPRemotePrintJobConstructor(remotePrintJob);
+
+  if (listener) {
+    remotePrintJob->RegisterListener(listener);
   }
 
   if (NS_WARN_IF(!browserParent->SendPrint(this, printData))) {
