@@ -41,6 +41,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::Contains;
+using ::testing::NiceMock;
 using ::testing::StrictMock;
 
 struct CallHelper {
@@ -52,7 +53,8 @@ struct CallHelper {
     audio_state_config.audio_processing =
         use_null_audio_processing
             ? nullptr
-            : new rtc::RefCountedObject<webrtc::test::MockAudioProcessing>();
+            : new rtc::RefCountedObject<
+                  NiceMock<webrtc::test::MockAudioProcessing>>();
     audio_state_config.audio_device_module =
         new rtc::RefCountedObject<webrtc::test::MockAudioDeviceModule>();
     webrtc::Call::Config config(&event_log_);

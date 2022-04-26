@@ -67,7 +67,7 @@ class MockEchoControl : public EchoControl {
   MOCK_METHOD(bool, ActiveProcessing, (), (const, override));
 };
 
-class MockAudioProcessing : public ::testing::NiceMock<AudioProcessing> {
+class MockAudioProcessing : public AudioProcessing {
  public:
   MockAudioProcessing() {}
 

@@ -36,6 +36,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::FloatEq;
+using ::testing::NiceMock;
 using ::testing::Return;
 
 AudioDecodingCallStats MakeAudioDecodeStatsForTest() {
@@ -112,7 +113,7 @@ struct ConfigHelper {
     config.audio_processing =
         use_null_audio_processing
             ? nullptr
-            : new rtc::RefCountedObject<MockAudioProcessing>();
+            : new rtc::RefCountedObject<NiceMock<MockAudioProcessing>>();
     config.audio_device_module =
         new rtc::RefCountedObject<testing::NiceMock<MockAudioDeviceModule>>();
     audio_state_ = AudioState::Create(config);

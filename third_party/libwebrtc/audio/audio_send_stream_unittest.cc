@@ -48,6 +48,7 @@ using ::testing::Field;
 using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::Ne;
+using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::StrEq;
 
@@ -153,7 +154,7 @@ struct ConfigHelper {
         audio_processing_(
             use_null_audio_processing
                 ? nullptr
-                : new rtc::RefCountedObject<MockAudioProcessing>()),
+                : new rtc::RefCountedObject<NiceMock<MockAudioProcessing>>()),
         bitrate_allocator_(&limit_observer_),
         worker_queue_(task_queue_factory_->CreateTaskQueue(
             "ConfigHelper_worker_queue",
