@@ -1,0 +1,14 @@
+<html>
+<head>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        const peer = new RTCPeerConnection({ 'iceServers': [{ 'urls': 'stun:23.21.150.121' }] })
+        const offer = await peer.createOffer({ 'offerToReceiveVideo': true })
+        await peer.setRemoteDescription(offer)
+        const senders = peer.getSenders()
+        setTimeout(async () => await senders[1].setParameters({}), 334)
+        await peer.setRemoteDescription(offer)
+      })
+    </script>
+</head>
+</html>
