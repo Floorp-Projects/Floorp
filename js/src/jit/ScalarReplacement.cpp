@@ -336,6 +336,10 @@ static bool IsObjectEscaped(MDefinition* ins, MInstruction* newObject,
         break;
       }
 
+      // Doesn't escape the object.
+      case MDefinition::Opcode::IsObject:
+        break;
+
       // This instruction is a no-op used to verify that scalar replacement
       // is working as expected in jit-test.
       case MDefinition::Opcode::AssertRecoveredOnBailout:
@@ -403,6 +407,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitFunctionWithProto(MFunctionWithProto* ins);
   void visitPhi(MPhi* ins);
   void visitCompare(MCompare* ins);
+  void visitIsObject(MIsObject* ins);
 };
 
 /* static */ const char ObjectMemoryView::phaseName[] =
@@ -810,6 +815,22 @@ void ObjectMemoryView::visitCompare(MCompare* ins) {
   ins->block()->insertBefore(ins, cst);
 
   // Replace the comparison with a constant.
+  ins->replaceAllUsesWith(cst);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitIsObject(MIsObject* ins) {
+  // Skip unrelated tests.
+  if (ins->input() != obj_) {
+    return;
+  }
+
+  auto* cst = MConstant::New(alloc_, BooleanValue(true));
+  ins->block()->insertBefore(ins, cst);
+
+  // Replace the test with a constant.
   ins->replaceAllUsesWith(cst);
 
   // Remove original instruction.
