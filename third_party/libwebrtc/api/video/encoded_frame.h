@@ -79,6 +79,7 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   // many |references|.
   size_t num_references = 0;
   int64_t references[kMaxFrameReferences];
+  // TODO(bugs.webrtc.org/12206) Remove after downstream has been updated.
   bool inter_layer_predicted = false;
   // Is this subframe the last one in the superframe (In RTP stream that would
   // mean that the last packet has a marker bit set).
