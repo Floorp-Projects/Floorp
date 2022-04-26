@@ -729,8 +729,8 @@ function String_iterator() {
 }
 
 function StringIteratorNext() {
-    var obj;
-    if (!IsObject(this) || (obj = GuardToStringIterator(this)) === null) {
+    var obj = this;
+    if (!IsObject(obj) || (obj = GuardToStringIterator(obj)) === null) {
         return callFunction(CallStringIteratorMethodIfWrapped, this,
                             "StringIteratorNext");
     }

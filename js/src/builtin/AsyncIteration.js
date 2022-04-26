@@ -78,8 +78,8 @@ function GetAsyncIteratorDirectWrapper(obj) {
 
 /* AsyncIteratorHelper object prototype methods. */
 function AsyncIteratorHelperNext(value) {
-  let O;
-  if (!IsObject(this) || (O = GuardToAsyncIteratorHelper(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToAsyncIteratorHelper(O)) === null) {
     return callFunction(CallAsyncIteratorHelperMethodIfWrapped, this,
                         value, "AsyncIteratorHelperNext");
   }
@@ -88,8 +88,8 @@ function AsyncIteratorHelperNext(value) {
 }
 
 function AsyncIteratorHelperReturn(value) {
-  let O;
-  if (!IsObject(this) || (O = GuardToAsyncIteratorHelper(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToAsyncIteratorHelper(O)) === null) {
     return callFunction(CallAsyncIteratorHelperMethodIfWrapped, this,
                         value, "AsyncIteratorHelperReturn");
   }
@@ -98,8 +98,8 @@ function AsyncIteratorHelperReturn(value) {
 }
 
 function AsyncIteratorHelperThrow(value) {
-  let O;
-  if (!IsObject(this) || (O = GuardToAsyncIteratorHelper(this)) === null) {
+  let O = this;
+  if (!IsObject(O) || (O = GuardToAsyncIteratorHelper(O)) === null) {
     return callFunction(CallAsyncIteratorHelperMethodIfWrapped, this,
                         value, "AsyncIteratorHelperThrow");
   }
