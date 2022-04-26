@@ -1716,7 +1716,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
     if (request->mModuleScript) {
-      if (!request->InstantiateModuleTree()) {
+      if (!request->InstantiateModuleGraph()) {
         request->mModuleScript = nullptr;
       }
     }

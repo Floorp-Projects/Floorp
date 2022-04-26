@@ -716,8 +716,8 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
     return;
   }
 
-  // For each url in urls, fetch a module script tree given url, module script's
-  // CORS setting, and module script's settings object.
+  // For each url in urls, fetch a module script graph given url, module
+  // script's CORS setting, and module script's settings object.
   nsTArray<RefPtr<mozilla::GenericPromise>> importsReady;
   for (auto* url : urls) {
     RefPtr<mozilla::GenericPromise> childReady =
@@ -896,16 +896,16 @@ JS::Value ModuleLoaderBase::FindFirstParseError(ModuleLoadRequest* aRequest) {
   return JS::UndefinedValue();
 }
 
-bool ModuleLoaderBase::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
+bool ModuleLoaderBase::InstantiateModuleGraph(ModuleLoadRequest* aRequest) {
   // Instantiate a top-level module and record any error.
 
   MOZ_ASSERT(aRequest);
   MOZ_ASSERT(aRequest->mLoader == this);
   MOZ_ASSERT(aRequest->IsTopLevel());
 
-  LOG(("ScriptLoadRequest (%p): Instantiate module tree", aRequest));
+  LOG(("ScriptLoadRequest (%p): Instantiate module graph", aRequest));
 
-  AUTO_PROFILER_LABEL("ModuleLoaderBase::InstantiateModuleTree", JS);
+  AUTO_PROFILER_LABEL("ModuleLoaderBase::InstantiateModuleGraph", JS);
 
   ModuleScript* moduleScript = aRequest->mModuleScript;
   MOZ_ASSERT(moduleScript);
@@ -943,7 +943,7 @@ bool ModuleLoaderBase::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
   return true;
 }
 
-nsresult ModuleLoaderBase::InitDebuggerDataForModuleTree(
+nsresult ModuleLoaderBase::InitDebuggerDataForModuleGraph(
     JSContext* aCx, ModuleLoadRequest* aRequest) {
   // JS scripts can be associated with a DOM element for use by the debugger,
   // but preloading can cause scripts to be compiled before DOM script element
@@ -958,7 +958,7 @@ nsresult ModuleLoaderBase::InitDebuggerDataForModuleTree(
   }
 
   for (ModuleLoadRequest* childRequest : aRequest->mImports) {
-    nsresult rv = InitDebuggerDataForModuleTree(aCx, childRequest);
+    nsresult rv = InitDebuggerDataForModuleGraph(aCx, childRequest);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -977,7 +977,7 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
 
   if (aRequest->mModuleScript) {
-    if (!InstantiateModuleTree(aRequest)) {
+    if (!InstantiateModuleGraph(aRequest)) {
       aRequest->mModuleScript = nullptr;
     }
   }
@@ -1036,7 +1036,7 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
     return NS_OK;
   }
 
-  nsresult rv = InitDebuggerDataForModuleTree(cx, request);
+  nsresult rv = InitDebuggerDataForModuleGraph(cx, request);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (request->HasLoadContext()) {
