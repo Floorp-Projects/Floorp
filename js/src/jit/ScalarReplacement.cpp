@@ -233,6 +233,19 @@ static bool IsObjectEscaped(MInstruction* ins, const Shape* shapeDefault) {
         break;
       }
 
+      case MDefinition::Opcode::GuardToClass: {
+        MGuardToClass* guard = def->toGuardToClass();
+        if (!shape || shape->getObjectClass() != guard->getClass()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching class guard\n", guard);
+          return true;
+        }
+        if (IsObjectEscaped(def->toInstruction(), shape)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
       case MDefinition::Opcode::CheckIsObj: {
         if (IsObjectEscaped(def->toInstruction(), shape)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
@@ -321,6 +334,7 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitStoreDynamicSlot(MStoreDynamicSlot* ins);
   void visitLoadDynamicSlot(MLoadDynamicSlot* ins);
   void visitGuardShape(MGuardShape* ins);
+  void visitGuardToClass(MGuardToClass* ins);
   void visitCheckIsObj(MCheckIsObj* ins);
   void visitUnbox(MUnbox* ins);
   void visitFunctionEnvironment(MFunctionEnvironment* ins);
@@ -615,6 +629,19 @@ void ObjectMemoryView::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
 }
 
 void ObjectMemoryView::visitGuardShape(MGuardShape* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != obj_) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(obj_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitGuardToClass(MGuardToClass* ins) {
   // Skip guards on other objects.
   if (ins->object() != obj_) {
     return;
