@@ -190,7 +190,7 @@ def _get_morph_url():
     existing use case.
     """
     taskgraph_repo = os.environ.get(
-        "TASKGRAPH_HEAD_REPOSITORY", "https://hg.mozilla.org/ci/taskgraph"
+        "TASKGRAPH_HEAD_REPOSITORY", "https://github.com/taskcluster/taskgraph"
     )
     taskgraph_rev = os.environ.get("TASKGRAPH_HEAD_REV", "default")
     return f"{taskgraph_repo}/raw-file/{taskgraph_rev}/src/taskgraph/morph.py"
