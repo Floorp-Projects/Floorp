@@ -2,9 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env mozilla/chrome-worker, node */
-/* global finish, log */
 
+/* import-globals-from /testing/mochitest/tests/SimpleTest/WorkerSimpleTest.js */
 importScripts("chrome://mochikit/content/tests/SimpleTest/WorkerSimpleTest.js");
+/* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
 
 var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
@@ -47,6 +48,7 @@ self.onmessage = function onmessage_start(msg) {
 
 function test_init() {
   info("Starting test_init");
+  /* import-globals-from /toolkit/components/osfile/osfile.jsm */
   importScripts("resource://gre/modules/osfile.jsm");
 }
 

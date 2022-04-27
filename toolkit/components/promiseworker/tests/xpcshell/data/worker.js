@@ -7,6 +7,7 @@
 
 // Trivial worker definition
 
+/* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
 var PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
 
