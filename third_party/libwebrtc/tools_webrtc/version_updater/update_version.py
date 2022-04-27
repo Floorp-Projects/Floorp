@@ -98,10 +98,15 @@ def _IsTreeClean():
 def _LocalCommit():
     logging.info('Committing changes locally.')
     d = datetime.datetime.utcnow()
+
+    git_author = subprocess.check_output(['git', 'config',
+                                          'user.email']).strip()
+    tbr_authors = git_author + ',' + 'mbonadei@webrtc.org'
+    tbr = 'TBR=%s' % tbr_authors
     commit_msg = ('Update WebRTC code version (%02d-%02d-%02dT%02d:%02d:%02d).'
-                  '\n\nBugs: None')
+                  '\n\nTBR=%s\nBugs: None')
     commit_msg = commit_msg % (d.year, d.month, d.day, d.hour, d.minute,
-                               d.second)
+                               d.second, tbr_authors)
     subprocess.check_call(['git', 'add', '--update', '.'])
     subprocess.check_call(['git', 'commit', '-m', commit_msg])
 
@@ -145,7 +150,7 @@ def main():
     else:
         _LocalCommit()
         logging.info('Uploading CL...')
-        _UploadCL(1)
+        _UploadCL(2)
     return 0
 
 
