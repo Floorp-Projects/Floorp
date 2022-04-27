@@ -110,6 +110,8 @@ if (rtc_include_tests) {
         "win/cursor_unittest_resources.rc",
         "win/screen_capture_utils_unittest.cc",
         "win/screen_capturer_win_directx_unittest.cc",
+        "win/test_support/test_window.cc",
+        "win/test_support/test_window.h",
         "win/window_capture_utils_unittest.cc",
       ]
     }
