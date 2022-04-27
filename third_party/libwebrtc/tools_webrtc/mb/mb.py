@@ -1069,27 +1069,6 @@ class MetaBuildWrapper(object):
       raise MBErr('Error %s writing to the output path "%s"' %
                  (e, path))
 
-  def CheckCompile(self, master, builder):
-    url_template = self.args.url_template + '/{builder}/builds/_all?as_text=1'
-    url = urllib2.quote(url_template.format(master=master, builder=builder),
-                        safe=':/()?=')
-    try:
-      builds = json.loads(self.Fetch(url))
-    except Exception as e:
-      return str(e)
-    successes = sorted(
-        [int(x) for x in builds.keys() if "text" in builds[x] and
-          cmp(builds[x]["text"][:2], ["build", "successful"]) == 0],
-        reverse=True)
-    if not successes:
-      return "no successful builds"
-    build = builds[str(successes[0])]
-    step_names = set([step["name"] for step in build["steps"]])
-    compile_indicators = set(["compile", "compile (with patch)", "analyze"])
-    if compile_indicators & step_names:
-      return "compiles"
-    return "does not compile"
-
   def PrintCmd(self, cmd, env):
     if self.platform == 'win32':
       env_prefix = 'set '
