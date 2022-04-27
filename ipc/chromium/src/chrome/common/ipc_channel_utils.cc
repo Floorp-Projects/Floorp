@@ -16,7 +16,7 @@ void AddIPCProfilerMarker(const Message& aMessage, int32_t aOtherPid,
                           mozilla::ipc::MessagePhase aPhase) {
   if (aMessage.routing_id() != MSG_ROUTING_NONE &&
       profiler_feature_active(ProfilerFeature::IPCMessages)) {
-    if (aOtherPid == -1) {
+    if (aOtherPid == base::kInvalidProcessId) {
       DLOG(WARNING) << "Unable to record IPC profile marker, other PID not set";
       return;
     }

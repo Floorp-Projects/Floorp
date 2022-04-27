@@ -357,7 +357,7 @@ bool SharedSurfacesParent::AccumulateMemoryReport(
     SharedSurfacesMemoryReport& aReport) {
   if (XRE_IsParentProcess()) {
     GPUProcessManager* gpm = GPUProcessManager::Get();
-    if (!gpm || gpm->GPUProcessPid() != -1) {
+    if (!gpm || gpm->GPUProcessPid() != base::kInvalidProcessId) {
       return false;
     }
   } else if (!XRE_IsGPUProcess()) {

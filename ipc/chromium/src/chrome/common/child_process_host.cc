@@ -47,7 +47,8 @@ void ChildProcessHost::ListenerHook::OnMessageReceived(IPC::Message&& msg) {
   host_->OnMessageReceived(std::move(msg));
 }
 
-void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {
+void ChildProcessHost::ListenerHook::OnChannelConnected(
+    base::ProcessId peer_pid) {
   host_->opening_channel_ = false;
   host_->OnChannelConnected(peer_pid);
 }
