@@ -308,7 +308,9 @@ check_and_add_warning(
 # Older clangs don't support AutoUnlock, and have other issues
 check_and_add_warning(
     "-Wthread-safety",
-    when=depends(c_compiler)(lambda c: c.type == "clang" and c.version >= "8.0"),
+    when=depends(c_compiler)(
+        lambda c: c.type in ("clang", "clang-cl") and c.version >= "8.0"
+    ),
 )
 
 # Please keep these last in this file
