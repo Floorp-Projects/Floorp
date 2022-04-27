@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["allowNullOrigin", "WebSocketHandshake"];
+var EXPORTED_SYMBOLS = ["WebSocketHandshake"];
 
 // This file is an XPCOM service-ified copy of ../devtools/server/socket/websocket-server.js.
 
@@ -31,14 +31,6 @@ XPCOMUtils.defineLazyGetter(this, "CryptoHash", () => {
 XPCOMUtils.defineLazyGetter(this, "threadManager", () => {
   return Cc["@mozilla.org/thread-manager;1"].getService();
 });
-
-// This should only be used by the CDP browser mochitests which create a
-// websocket handshake with a non-null origin. It can be removed once
-// Mochitest supports custom arguments in browser.ini (bug 1762647)
-let nullOriginAllowed = false;
-function allowNullOrigin(allowed) {
-  nullOriginAllowed = allowed;
-}
 
 /**
  * Allowed origins are exposed through 2 separate getters because while most
@@ -154,7 +146,7 @@ function isOriginValid(originHeader) {
 
   // Special case "null" origins, used for privacy sensitive or opaque origins.
   if (originHeader === "null") {
-    return allowedOrigins.includes("null") || nullOriginAllowed;
+    return allowedOrigins.includes("null");
   }
 
   try {

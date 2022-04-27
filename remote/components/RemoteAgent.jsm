@@ -180,7 +180,7 @@ class RemoteAgentClass {
     }
   }
 
-  async listen(url) {
+  async #listen(url) {
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
       throw Components.Exception(
         "May only be instantiated in parent process",
@@ -217,12 +217,12 @@ class RemoteAgentClass {
 
       await Promise.all([this.webDriverBiDi?.start(), this.cdp?.start()]);
     } catch (e) {
-      await this.close();
+      await this.#stop();
       logger.error(`Unable to start remote agent: ${e.message}`, e);
     }
   }
 
-  async close() {
+  async #stop() {
     if (!this.listening) {
       return;
     }
@@ -315,37 +315,30 @@ class RemoteAgentClass {
 
           this.#allowHosts = this.handleAllowHostsFlag(subject);
           this.#allowOrigins = this.handleAllowOriginsFlag(subject);
-        }
 
-        // Ideally we should only initialize the Remote Agent when the command
-        // line argument has been specified. But to allow Browser Chrome tests
-        // to run certain states have to be set and listeners registered.
-        // Once bug 1762647 is fixed all the next lines can be moved to
-        // "final-ui-startup".
+          Services.obs.addObserver(this, "sessionstore-windows-restored");
+          Services.obs.addObserver(this, "quit-application");
 
-        Services.obs.addObserver(this, "sessionstore-windows-restored");
-        Services.obs.addObserver(this, "quit-application");
+          // With Bug 1717899 we will extend the lifetime of the Remote Agent to
+          // the whole Firefox session, which will be identical to Marionette. For
+          // now prevent logging if the component is not enabled during startup.
+          if (
+            (activeProtocols & WEBDRIVER_BIDI_ACTIVE) ===
+            WEBDRIVER_BIDI_ACTIVE
+          ) {
+            this.#webDriverBiDi = new WebDriverBiDi(this);
+            if (this.enabled) {
+              logger.debug("WebDriver BiDi enabled");
+            }
+          }
 
-        // With Bug 1717899 we will extend the lifetime of the Remote Agent to
-        // the whole Firefox session, which will be identical to Marionette. For
-        // now prevent logging if the component is not enabled during startup.
-        if (
-          (activeProtocols & WEBDRIVER_BIDI_ACTIVE) ===
-          WEBDRIVER_BIDI_ACTIVE
-        ) {
-          this.#webDriverBiDi = new WebDriverBiDi(this);
-          if (this.enabled) {
-            logger.debug("WebDriver BiDi enabled");
+          if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
+            this.#cdp = new CDP(this);
+            if (this.enabled) {
+              logger.debug("CDP enabled");
+            }
           }
         }
-
-        if ((activeProtocols & CDP_ACTIVE) === CDP_ACTIVE) {
-          this.#cdp = new CDP(this);
-          if (this.enabled) {
-            logger.debug("CDP enabled");
-          }
-        }
-
         break;
 
       case "final-ui-startup":
@@ -353,7 +346,7 @@ class RemoteAgentClass {
 
         try {
           let address = Services.io.newURI(`http://localhost:${this.#port}`);
-          await this.listen(address);
+          await this.#listen(address);
         } catch (e) {
           throw Error(`Unable to start remote agent: ${e}`);
         }
@@ -372,7 +365,7 @@ class RemoteAgentClass {
       case "quit-application":
         Services.obs.removeObserver(this, "quit-application");
 
-        this.close();
+        this.#stop();
         break;
     }
   }
