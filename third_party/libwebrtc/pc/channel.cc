@@ -30,6 +30,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/trace_event.h"
 
@@ -839,17 +840,14 @@ void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
 void BaseChannel::SetNegotiatedHeaderExtensions_w(
     const RtpHeaderExtensions& extensions) {
   TRACE_EVENT0("webrtc", __func__);
-  RtpHeaderExtensions extensions_copy = extensions;
-  invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(),
-      [this, extensions_copy = std::move(extensions_copy)] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        negotiated_header_extensions_ = std::move(extensions_copy);
-      });
+  RTC_DCHECK_RUN_ON(worker_thread());
+  webrtc::MutexLock lock(&negotiated_header_extensions_lock_);
+  negotiated_header_extensions_ = extensions;
 }
 
 RtpHeaderExtensions BaseChannel::GetNegotiatedRtpHeaderExtensions() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  webrtc::MutexLock lock(&negotiated_header_extensions_lock_);
   return negotiated_header_extensions_;
 }
 
