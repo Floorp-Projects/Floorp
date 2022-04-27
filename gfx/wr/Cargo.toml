@@ -23,3 +23,5 @@ opt-level = 2
 
 [patch.crates-io]
 fog = { path = "fog" }
+# use a patched version of glutin that works on android
+glutin = { version = "0.28", git = "https://github.com/jamienicol/glutin", branch="wr" }

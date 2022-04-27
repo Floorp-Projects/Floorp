@@ -338,12 +338,12 @@ llvm-mingw:
         repo: https://github.com/mstorsjo/llvm-mingw
         revision: 9f8e5cebd6dbbb7546e8917e6c59284699a48d26
 
-android-rs-glue:
-    description: android-rs-glue source code
+android-ndk-rs:
+    description: android-ndk-rs source code
     fetch:
         type: git
-        repo: https://github.com/jamienicol/android-rs-glue
-        revision: 86d9cb4db7bf7a8052e6765d9f8caae6009107cb
+        repo: https://github.com/jamienicol/android-ndk-rs
+        revision: 595f4e14a78371e3ab59b12f7bd8131f2ec5b4a1
 
 clang-5.0:
     description: clang 5.0.2 source code
