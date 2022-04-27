@@ -458,6 +458,19 @@ VoipResult VoipCore::GetIngressStatistics(ChannelId channel_id,
   return VoipResult::kOk;
 }
 
+VoipResult VoipCore::GetChannelStatistics(ChannelId channel_id,
+                                          ChannelStatistics& channel_stats) {
+  rtc::scoped_refptr<AudioChannel> channel = GetChannel(channel_id);
+
+  if (!channel) {
+    return VoipResult::kInvalidArgument;
+  }
+
+  channel_stats = channel->GetChannelStatistics();
+
+  return VoipResult::kOk;
+}
+
 VoipResult VoipCore::SetInputMuted(ChannelId channel_id, bool enable) {
   rtc::scoped_refptr<AudioChannel> channel = GetChannel(channel_id);
 
