@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* This is a JavaScript module (JSM) to be imported via
- * Components.utils.import() and acts as a singleton. Only the following
+ * ChromeUtils.import() and acts as a singleton. Only the following
  * listed symbols will exposed on import, and only when and where imported.
  */
 
@@ -23,13 +23,12 @@ var EXPORTED_SYMBOLS = [
   "Windows",
 ];
 
-var module = this;
-
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Authentication: "resource://tps/auth/fxaccounts.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   Async: "resource://services-common/async.js",
   BrowserTabs: "resource://tps/modules/tabs.jsm",
@@ -171,9 +170,6 @@ var TPS = {
     OBSERVER_TOPICS.forEach(function(aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
-
-    /* global Authentication */
-    ChromeUtils.import("resource://tps/auth/fxaccounts.jsm", module);
 
     // Some engines bump their score during their sync, which then causes
     // another sync immediately (notably, prefs and addons). We don't want
