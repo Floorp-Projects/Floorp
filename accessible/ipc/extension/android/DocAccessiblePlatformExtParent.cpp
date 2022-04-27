@@ -35,7 +35,8 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtParent::RecvSetPivotBoundaries(
   // We may not have proxy accessibles available yet for those accessibles
   // in the parent process.
   if (first && last) {
-    sessionAcc->UpdateAccessibleFocusBoundaries(first, last);
+    sessionAcc->UpdateAccessibleFocusBoundaries(WrapperFor(first),
+                                                WrapperFor(last));
   }
 
   return IPC_OK();
