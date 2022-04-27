@@ -16261,6 +16261,13 @@ bool Document::HasBeenUserGestureActivated() {
   return wc && wc->HasBeenUserGestureActivated();
 }
 
+DOMHighResTimeStamp Document::LastUserGestureTimeStamp() {
+  if (RefPtr<WindowContext> wc = GetWindowContext()) {
+    return wc->LastUserGestureTimeStamp();
+  }
+  return 0;
+}
+
 void Document::ClearUserGestureActivation() {
   if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
     bc = bc->Top();

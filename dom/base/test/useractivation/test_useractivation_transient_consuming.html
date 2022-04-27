@@ -24,11 +24,30 @@ function waitForEvent(aTarget, aEvent, aCallback) {
   });
 }
 
+function doCheck(aDocument, aName, aHasBeenUserGestureActivated,
+                 aHasValidTransientUserGestureActivation,
+                 aLastUserGestureTimeStamp) {
+  is(SpecialPowers.wrap(aDocument).hasBeenUserGestureActivated,
+     aHasBeenUserGestureActivated,
+     `check has-been-user-activated on the ${aName}`);
+  is(SpecialPowers.wrap(aDocument).hasValidTransientUserGestureActivation,
+     aHasValidTransientUserGestureActivation,
+     `check has-valid-transient-user-activation on the ${aName}`);
+  is(SpecialPowers.wrap(aDocument).lastUserGestureTimeStamp,
+     aLastUserGestureTimeStamp,
+     `check last-user-gesture-timestamp on the ${aName}`);
+}
+
 add_task(async function checkInitialStatus() {
+  doCheck(document, "top-level document", false, false, 0);
   ok(!SpecialPowers.wrap(document).consumeTransientUserGestureActivation(),
      "consume transient-user-activation on top-level document");
+
+  doCheck(frames[0].document, "first iframe", false, false, 0);
   ok(!SpecialPowers.wrap(frames[0].document).consumeTransientUserGestureActivation(),
      "consume transient-user-activation on first iframe");
+
+  doCheck(frames[1].document, "second iframe", false, false, 0);
   ok(!SpecialPowers.wrap(frames[1].document).consumeTransientUserGestureActivation(),
      "consume transient-user-activation on second iframe");
 });
@@ -36,6 +55,8 @@ add_task(async function checkInitialStatus() {
 add_task(async function consumeTransientUserActivation() {
   // Trigger user activation on the first iframe.
   SpecialPowers.wrap(frames[0].document).notifyUserGestureActivation();
+  let lastTimeStampTop = SpecialPowers.wrap(document).lastUserGestureTimeStamp;
+  let lastTimeStampFirst = SpecialPowers.wrap(frames[0].document).lastUserGestureTimeStamp;
 
   // Try to consume transient user activation.
   ok(!SpecialPowers.wrap(frames[1].document).consumeTransientUserGestureActivation(),
@@ -46,21 +67,11 @@ add_task(async function consumeTransientUserActivation() {
   ok(!SpecialPowers.wrap(document).consumeTransientUserGestureActivation(),
      "consume transient-user-activation on top-level document");
 
-  // Check has-valid-transient-user-activation
-  ok(!SpecialPowers.wrap(document).hasValidTransientUserGestureActivation,
-     "check has-valid-transient-user-activation on the top-level document");
-  ok(!SpecialPowers.wrap(frames[0].document).hasValidTransientUserGestureActivation,
-     "check has-valid-transient-user-activation on the first iframe");
-  ok(!SpecialPowers.wrap(frames[1].document).hasValidTransientUserGestureActivation,
-     "check has-valid-transient-user-activation on the second iframe");
-
-  // Should not affect has-been-user-activated
-  ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the top-level document");
-  ok(SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the first iframe");
-  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the second iframe");
+  // Check has-valid-transient-user-activation and should not affect
+  // has-been-user-activated
+  doCheck(document, "top-level document", true, false, lastTimeStampTop);
+  doCheck(frames[0].document, "first iframe", true, false, lastTimeStampFirst);
+  doCheck(frames[1].document, "second iframe", false, false, 0);
 });
 
 add_task(async function consumeTransientUserActivationTimeout() {

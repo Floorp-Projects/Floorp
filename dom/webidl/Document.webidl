@@ -585,6 +585,8 @@ partial interface Document {
   [ChromeOnly]
   readonly attribute boolean hasValidTransientUserGestureActivation;
   [ChromeOnly]
+  readonly attribute DOMHighResTimeStamp lastUserGestureTimeStamp;
+  [ChromeOnly]
   boolean consumeTransientUserGestureActivation();
 };
 
