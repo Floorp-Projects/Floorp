@@ -36,30 +36,20 @@ const uint32_t kCacheRefreshInterval = 500;
 
 DocAccessibleWrap::DocAccessibleWrap(Document* aDocument, PresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell) {
-  if (aDocument->GetBrowsingContext()->IsTopContent()) {
-    // The top-level content document gets this special ID.
-    mID = kNoID;
-  } else {
-    mID = AcquireID();
-  }
+  // We need an nsINode associated with this accessible to register it with the
+  // right SessionAccessibility instance. When the base AccessibleWrap
+  // constructor is called we don't have one yet because null is passed as the
+  // content node. So we do it here after a Document is associated with the
+  // accessible.
+  SessionAccessibility::RegisterAccessible(this);
 }
 
 DocAccessibleWrap::~DocAccessibleWrap() {}
 
-AccessibleWrap* DocAccessibleWrap::GetAccessibleByID(int32_t aID) const {
-  if (AccessibleWrap* acc = mIDToAccessibleMap.Get(aID)) {
-    return acc;
-  }
-
-  // If the ID is not in the hash table, check the IDs of the child docs.
-  for (uint32_t i = 0; i < ChildDocumentCount(); i++) {
-    auto childDoc = static_cast<AccessibleWrap*>(GetChildDocumentAt(i));
-    if (childDoc->VirtualViewID() == aID) {
-      return childDoc;
-    }
-  }
-
-  return nullptr;
+void DocAccessibleWrap::Shutdown() {
+  // Unregister here before disconnecting from PresShell.
+  SessionAccessibility::RegisterAccessible(this);
+  DocAccessible::Shutdown();
 }
 
 void DocAccessibleWrap::DoInitialUpdate() {
@@ -206,7 +196,7 @@ void DocAccessibleWrap::CacheViewport(bool aCachePivotBoundaries) {
     return;
   }
   mCachePivotBoundaries |= aCachePivotBoundaries;
-  if (VirtualViewID() == kNoID && !mCacheRefreshTimer) {
+  if (IsTopLevelContentDoc() && !mCacheRefreshTimer) {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mCacheRefreshTimer),
                                 CacheViewportCallback, this,
                                 kCacheRefreshInterval, nsITimer::TYPE_ONE_SHOT,
@@ -221,11 +211,17 @@ DocAccessibleWrap* DocAccessibleWrap::GetTopLevelContentDoc(
     AccessibleWrap* aAccessible) {
   DocAccessibleWrap* doc =
       static_cast<DocAccessibleWrap*>(aAccessible->Document());
-  while (doc && doc->VirtualViewID() != kNoID) {
+  while (doc && !doc->IsTopLevelContentDoc()) {
     doc = static_cast<DocAccessibleWrap*>(doc->ParentDocument());
   }
 
   return doc;
+}
+
+bool DocAccessibleWrap::IsTopLevelContentDoc() {
+  DocAccessible* parentDoc = ParentDocument();
+  return DocumentNode()->IsContentDocument() &&
+         (!parentDoc || !parentDoc->DocumentNode()->IsContentDocument());
 }
 
 void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {

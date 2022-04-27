@@ -5,6 +5,7 @@
 
 #include "RemoteAccessibleWrap.h"
 #include "LocalAccessible-inl.h"
+#include "SessionAccessibility.h"
 
 #include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -28,23 +29,12 @@ RemoteAccessibleWrap::RemoteAccessibleWrap(RemoteAccessible* aProxy)
     mGenericTypes |= eHyperText;
   }
 
-  auto doc = reinterpret_cast<DocRemoteAccessibleWrap*>(
-      Proxy()->Document()->GetWrapper());
-  if (doc) {
-    mID = AcquireID();
-    doc->AddID(mID, this);
+  if (aProxy->IsDoc()) {
+    mGenericTypes |= eDocument;
   }
 }
 
 void RemoteAccessibleWrap::Shutdown() {
-  auto doc = reinterpret_cast<DocRemoteAccessibleWrap*>(
-      Proxy()->Document()->GetWrapper());
-  if (mID && doc) {
-    doc->RemoveID(mID);
-    ReleaseID(mID);
-    mID = 0;
-  }
-
   mBits.proxy = nullptr;
   mStateFlags |= eIsDefunct;
 }
