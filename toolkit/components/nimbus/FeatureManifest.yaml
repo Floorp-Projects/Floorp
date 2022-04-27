@@ -481,6 +481,14 @@ tcpPreferences:
       type: boolean
       fallbackPref: "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard"
       description: "Turn on the section in about:preferences"
+tcpByDefault:
+  description: "Enables TCP by default by updating the default pref value of network.cookie.cookieBehavior."
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    enabled:
+      type: boolean
+      description: "Enables TCP by default"
 cfr:
   description: "Doorhanger message template for Messaging System"
   hasExposure: true
