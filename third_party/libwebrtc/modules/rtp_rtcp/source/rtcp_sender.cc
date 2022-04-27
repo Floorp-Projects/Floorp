@@ -436,14 +436,7 @@ bool RTCPSender::TimeToSendRTCPReport(bool sendKeyframeBeforeRTP) const {
     now += RTCP_SEND_BEFORE_KEY_FRAME_MS;
   }
 
-  if (now >= next_time_to_send_rtcp_) {
-    return true;
-  } else if (now < 0x0000ffff &&
-             next_time_to_send_rtcp_ > 0xffff0000) {  // 65 sec margin
-    // wrap
-    return true;
-  }
-  return false;
+  return now >= next_time_to_send_rtcp_;
 }
 
 std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildSR(const RtcpContext& ctx) {
