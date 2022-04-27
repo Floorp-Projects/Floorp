@@ -3,18 +3,6 @@
 
 "use strict";
 
-const OPT_IN_SEARCH_PREFS = [
-  ["browser.search.param.google_channel_us", "tus7"],
-  ["browser.search.param.google_channel_row", "trow7"],
-  ["browser.search.param.bing_ptag", "MOZZ0000000031"],
-];
-
-const OPT_OUT_SEARCH_PREFS = [
-  ["browser.search.param.google_channel_us", "tus7"],
-  ["browser.search.param.google_channel_row", "trow7"],
-  ["browser.search.param.bing_ptag", "MOZZ0000000031"],
-];
-
 add_task(async function test_tcp_action() {
   let PREF = "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
 
@@ -29,7 +17,6 @@ add_task(async function test_tcp_action() {
   ok(!error, "The action should be valid");
 
   Services.prefs.clearUserPref(PREF);
-  OPT_IN_SEARCH_PREFS.forEach(([key]) => Services.prefs.clearUserPref(key));
 });
 
 add_task(async function test_tcp_section_action() {
@@ -50,7 +37,6 @@ add_task(async function test_tcp_section_action() {
 
   Services.prefs.clearUserPref(PREF);
   Services.prefs.clearUserPref(PREF_TCP_ENABLED_BY_DEFAULT);
-  OPT_OUT_SEARCH_PREFS.forEach(([key]) => Services.prefs.clearUserPref(key));
 });
 
 add_task(async function test_tcp_action_pref() {
@@ -65,17 +51,7 @@ add_task(async function test_tcp_action_pref() {
     `Pref '${PREF}' is enabled by the action`
   );
 
-  OPT_IN_SEARCH_PREFS.forEach(([key, value]) => {
-    Assert.ok(Services.prefs.prefHasUserValue(key));
-    is(
-      Services.prefs.getStringPref(key),
-      value,
-      `Pref '${key}' is set by the action`
-    );
-  });
-
   Services.prefs.clearUserPref(PREF);
-  OPT_IN_SEARCH_PREFS.forEach(([key]) => Services.prefs.clearUserPref(key));
 });
 
 add_task(async function test_tcp_section_action_pref() {
@@ -86,9 +62,6 @@ add_task(async function test_tcp_section_action_pref() {
 
   Assert.ok(!Services.prefs.prefHasUserValue(PREF));
   Assert.ok(!Services.prefs.prefHasUserValue(PREF_TCP_ENABLED_BY_DEFAULT));
-  OPT_OUT_SEARCH_PREFS.forEach(([key]) =>
-    Assert.ok(!Services.prefs.prefHasUserValue(key))
-  );
 
   await SMATestUtils.executeAndValidateAction({
     type: "ENABLE_TOTAL_COOKIE_PROTECTION_SECTION_AND_OPT_OUT",
@@ -105,16 +78,6 @@ add_task(async function test_tcp_section_action_pref() {
     `Pref '${PREF_TCP_ENABLED_BY_DEFAULT}' is disabled by the action`
   );
 
-  OPT_OUT_SEARCH_PREFS.forEach(([key, value]) => {
-    Assert.ok(Services.prefs.prefHasUserValue(key));
-    is(
-      Services.prefs.getStringPref(key),
-      value,
-      `Pref '${key}' is set by the action`
-    );
-  });
-
   Services.prefs.clearUserPref(PREF);
   Services.prefs.clearUserPref(PREF_TCP_ENABLED_BY_DEFAULT);
-  OPT_OUT_SEARCH_PREFS.forEach(([key]) => Services.prefs.clearUserPref(key));
 });
