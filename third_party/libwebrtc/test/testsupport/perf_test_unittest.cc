@@ -64,6 +64,7 @@ TEST_F(PerfTest, TestClearPerfResults) {
 #if WEBRTC_ENABLE_PROTOBUF
 
 TEST_F(PerfTest, TestGetPerfResultsHistograms) {
+  ClearPerfResults();
   PrintResult("measurement", "_modifier", "story_1", 42, "ms", false);
   PrintResult("foo", "bar", "story_1", 7, "sigma", true);
   // Note: the error will be ignored, not supported by histograms.
