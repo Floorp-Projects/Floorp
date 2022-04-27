@@ -159,13 +159,16 @@ TEST_P(RnnGruParametrization, DISABLED_BenchmarkGatedRecurrentLayer) {
 // Finds the relevant CPU features combinations to test.
 std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   std::vector<AvailableCpuFeatures> v;
-  AvailableCpuFeatures available = GetAvailableCpuFeatures();
   v.push_back(NoAvailableCpuFeatures());
+  AvailableCpuFeatures available = GetAvailableCpuFeatures();
+  if (available.sse2) {
+    v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
+  }
   if (available.avx2) {
     v.push_back({/*sse2=*/false, /*avx2=*/true, /*neon=*/false});
   }
-  if (available.sse2) {
-    v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
+  if (available.neon) {
+    v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/true});
   }
   return v;
 }
