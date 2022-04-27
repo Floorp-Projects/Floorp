@@ -216,11 +216,14 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
       shader = currentShader;
     } else {
       // Allocate new shader.
-      currentShaderType = shaderType;
+      currentShaderType = null;
       if (currentShader != null) {
         currentShader.release();
+        currentShader = null;
       }
+
       shader = createShader(shaderType);
+      currentShaderType = shaderType;
       currentShader = shader;
 
       shader.useProgram();
