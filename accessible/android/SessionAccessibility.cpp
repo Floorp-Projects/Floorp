@@ -7,6 +7,7 @@
 #include "LocalAccessible-inl.h"
 #include "AndroidUiThread.h"
 #include "DocAccessibleParent.h"
+#include "IDSet.h"
 #include "nsThreadUtils.h"
 #include "AccAttributes.h"
 #include "AccessibilityEvent.h"
@@ -19,6 +20,9 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
@@ -38,17 +42,15 @@
     } while (0)
 #endif
 
-#define FORWARD_ACTION_TO_ACCESSIBLE(funcname, ...)         \
-  if (RootAccessibleWrap* rootAcc = GetRoot()) {            \
-    AccessibleWrap* acc = rootAcc->FindAccessibleById(aID); \
-    if (!acc) {                                             \
-      return;                                               \
-    }                                                       \
-                                                            \
-    acc->funcname(__VA_ARGS__);                             \
+#define FORWARD_ACTION_TO_ACCESSIBLE(funcname, ...)   \
+  if (AccessibleWrap* acc = GetAccessibleByID(aID)) { \
+    acc->funcname(__VA_ARGS__);                       \
   }
 
 using namespace mozilla::a11y;
+
+// IDs should be a positive 32bit integer.
+IDSet sIDSet(31UL);
 
 class Settings final
     : public mozilla::java::SessionAccessibility::Settings::Natives<Settings> {
@@ -100,31 +102,14 @@ mozilla::jni::Object::LocalRef SessionAccessibility::GetNodeInfo(int32_t aID) {
   java::GeckoBundle::GlobalRef ret = nullptr;
   RefPtr<SessionAccessibility> self(this);
   nsAppShell::SyncRunEvent([this, self, aID, &ret] {
-    if (RootAccessibleWrap* rootAcc = GetRoot()) {
-      AccessibleWrap* acc = rootAcc->FindAccessibleById(aID);
-      if (acc) {
-        ret = ToBundle(acc);
-      } else {
-        AALOG("oops, nothing for %d", aID);
-      }
+    if (AccessibleWrap* acc = GetAccessibleByID(aID)) {
+      ret = ToBundle(acc);
+    } else {
+      AALOG("oops, nothing for %d", aID);
     }
   });
 
   return mozilla::jni::Object::Ref::From(ret);
-}
-
-RootAccessibleWrap* SessionAccessibility::GetRoot() {
-  auto gvAccessor(mWindow.Access());
-  if (!gvAccessor) {
-    return nullptr;
-  }
-
-  nsWindow* gkWindow = gvAccessor->GetNsWindow();
-  if (!gkWindow) {
-    return nullptr;
-  }
-
-  return static_cast<RootAccessibleWrap*>(gkWindow->GetRootAccessible());
 }
 
 void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
@@ -141,10 +126,8 @@ bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
   bool ret = false;
   nsAppShell::SyncRunEvent(
       [this, self, aID, aGranularity, aForward, aInclusive, &ret] {
-        if (RootAccessibleWrap* rootAcc = GetRoot()) {
-          if (AccessibleWrap* acc = rootAcc->FindAccessibleById(aID)) {
-            ret = acc->PivotTo(aGranularity, aForward, aInclusive);
-          }
+        if (AccessibleWrap* acc = GetAccessibleByID(aID)) {
+          ret = acc->PivotTo(aGranularity, aForward, aInclusive);
         }
       });
 
@@ -199,33 +182,53 @@ void SessionAccessibility::Paste(int32_t aID) {
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     Accessible* aAccessible) {
-  if (aAccessible->IsLocal()) {
-    RootAccessible* rootAcc = aAccessible->AsLocal()->RootAccessible();
-    nsViewManager* vm = rootAcc->PresShellPtr()->GetViewManager();
-    if (!vm) {
-      return nullptr;
+  PresShell* presShell = nullptr;
+  if (LocalAccessible* localAcc = aAccessible->AsLocal()) {
+    if (localAcc->IsProxy()) {
+      // XXX: Will go away when removing RemoteAccessibleWrapper
+      return GetInstanceFor(localAcc->Proxy());
     }
-
-    nsCOMPtr<nsIWidget> rootWidget = vm->GetRootWidget();
-    // `rootWidget` can be one of several types. Here we make sure it is an
-    // android nsWindow.
-    if (RefPtr<nsWindow> window = nsWindow::From(rootWidget)) {
-      return window->GetSessionAccessibility();
+    DocAccessible* doc = localAcc->Document();
+    if (doc && !doc->HasShutdown() &&
+        doc->DocumentNode()->IsContentDocument()) {
+      // Only content accessibles should have an associated SessionAccessible.
+      presShell = doc->PresShellPtr();
     }
+  } else {
+    dom::CanonicalBrowsingContext* cbc =
+        static_cast<dom::BrowserParent*>(
+            aAccessible->AsRemote()->Document()->Manager())
+            ->GetBrowsingContext()
+            ->Top();
+    dom::BrowserParent* bp = cbc->GetBrowserParent();
+    if (!bp) {
+      bp = static_cast<dom::BrowserParent*>(
+          aAccessible->AsRemote()->Document()->Manager());
+    }
+    nsPresContext* presContext =
+        bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
+    if (presContext) {
+      presShell = presContext->PresShell();
+    }
+  }
 
+  if (!presShell) {
     return nullptr;
   }
 
-  auto tab = static_cast<dom::BrowserParent*>(
-      aAccessible->AsRemote()->Document()->Manager());
-  dom::Element* frame = tab->GetOwnerElement();
-  MOZ_ASSERT(frame);
-  if (!frame) {
+  nsViewManager* vm = presShell->GetViewManager();
+  if (!vm) {
     return nullptr;
   }
 
-  LocalAccessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
-  return chromeDoc ? GetInstanceFor(chromeDoc) : nullptr;
+  nsCOMPtr<nsIWidget> rootWidget = vm->GetRootWidget();
+  // `rootWidget` can be one of several types. Here we make sure it is an
+  // android nsWindow.
+  if (RefPtr<nsWindow> window = nsWindow::From(rootWidget)) {
+    return window->GetSessionAccessibility();
+  }
+
+  return nullptr;
 }
 
 void SessionAccessibility::SendAccessibilityFocusedEvent(
@@ -261,7 +264,7 @@ void SessionAccessibility::SendScrollingEvent(AccessibleWrap* aAccessible,
                                               int32_t aMaxScrollY) {
   int32_t virtualViewId = aAccessible->VirtualViewID();
 
-  if (virtualViewId != AccessibleWrap::kNoID) {
+  if (virtualViewId != kNoID) {
     // XXX: Support scrolling in subframes
     return;
   }
@@ -283,9 +286,8 @@ void SessionAccessibility::SendScrollingEvent(AccessibleWrap* aAccessible,
 
 void SessionAccessibility::SendWindowContentChangedEvent() {
   mSessionAccessibility->SendEvent(
-      java::sdk::AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED,
-      AccessibleWrap::kNoID, java::SessionAccessibility::CLASSNAME_WEBVIEW,
-      nullptr);
+      java::sdk::AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED, kNoID,
+      java::SessionAccessibility::CLASSNAME_WEBVIEW, nullptr);
 }
 
 void SessionAccessibility::SendWindowStateChangedEvent(
@@ -409,7 +411,7 @@ void SessionAccessibility::SendAnnouncementEvent(AccessibleWrap* aAccessible,
   // Announcements should have the root as their source, so we ignore the
   // accessible of the event.
   mSessionAccessibility->SendEvent(
-      java::sdk::AccessibilityEvent::TYPE_ANNOUNCEMENT, AccessibleWrap::kNoID,
+      java::sdk::AccessibilityEvent::TYPE_ANNOUNCEMENT, kNoID,
       java::SessionAccessibility::CLASSNAME_WEBVIEW, eventInfo);
 }
 
@@ -494,8 +496,8 @@ void SessionAccessibility::UpdateCachedBounds(
 void SessionAccessibility::UpdateAccessibleFocusBoundaries(
     AccessibleWrap* aFirst, AccessibleWrap* aLast) {
   mSessionAccessibility->UpdateAccessibleFocusBoundaries(
-      aFirst ? aFirst->VirtualViewID() : AccessibleWrap::kNoID,
-      aLast ? aLast->VirtualViewID() : AccessibleWrap::kNoID);
+      aFirst ? aFirst->VirtualViewID() : kNoID,
+      aLast ? aLast->VirtualViewID() : kNoID);
 }
 
 mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
@@ -597,7 +599,7 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
 
   nsAutoString geckoRole;
   nsAutoString roleDescription;
-  if (virtualViewID != AccessibleWrap::kNoID) {
+  if (virtualViewID != kNoID) {
     AccessibleWrap::GetRoleDescription(role, aAttributes, geckoRole,
                                        roleDescription);
   }
@@ -711,4 +713,68 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
   GECKOBUNDLE_FINISH(nodeInfo);
 
   return nodeInfo;
+}
+
+void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
+  if (IPCAccessibilityActive()) {
+    // Don't register accessible in content process.
+    return;
+  }
+
+  RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
+  if (!sessionAcc) {
+    return;
+  }
+
+  bool isTopLevel = false;
+  if (aAccessible->IsLocal() && aAccessible->IsDoc()) {
+    DocAccessibleWrap* doc =
+        static_cast<DocAccessibleWrap*>(aAccessible->AsLocal()->AsDoc());
+    isTopLevel = doc->IsTopLevelContentDoc();
+  } else if (aAccessible->IsRemote() && aAccessible->IsDoc()) {
+    isTopLevel = aAccessible->AsRemote()->AsDoc()->IsTopLevel();
+  }
+
+  int32_t virtualViewID = kNoID;
+  if (!isTopLevel) {
+    // Don't use the special "unset" value (0).
+    while ((virtualViewID = sIDSet.GetID()) == kUnsetID) {
+    }
+  }
+  AccessibleWrap::SetVirtualViewID(aAccessible, virtualViewID);
+
+  MOZ_ASSERT(
+      !sessionAcc->mIDToAccessibleMap.IsEmpty() || virtualViewID == kNoID,
+      "root (kNoID) accessible should be the first one added");
+  MOZ_ASSERT(!sessionAcc->mIDToAccessibleMap.Contains(virtualViewID),
+             "ID already registered");
+  sessionAcc->mIDToAccessibleMap.InsertOrUpdate(virtualViewID, aAccessible);
+}
+
+void SessionAccessibility::UnregisterAccessible(Accessible* aAccessible) {
+  if (IPCAccessibilityActive()) {
+    // Don't unregister accessible in content process.
+    return;
+  }
+
+  int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(aAccessible);
+  if (virtualViewID == kUnsetID) {
+    return;
+  }
+
+  RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
+  if (sessionAcc) {
+    MOZ_ASSERT(sessionAcc->mIDToAccessibleMap.Contains(virtualViewID),
+               "Unregistering unregistered accessible");
+    MOZ_ASSERT(
+        virtualViewID == kNoID || sessionAcc->mIDToAccessibleMap.Count() > 1,
+        "Root accessible should be the last one removed");
+    sessionAcc->mIDToAccessibleMap.Remove(virtualViewID);
+  }
+
+  if (virtualViewID > kNoID) {
+    sIDSet.ReleaseID(virtualViewID);
+  }
+
+  AccessibleWrap::SetVirtualViewID(aAccessible, kUnsetID);
 }
