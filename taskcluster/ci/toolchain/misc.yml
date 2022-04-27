@@ -177,7 +177,7 @@ wrench-deps:
         toolchain-artifact: public/build/wrench-deps.tar.zst
     fetches:
         fetch:
-            - android-rs-glue
+            - android-ndk-rs
         toolchain:
             - linux64-rust  # whatever m-c is built with
 
