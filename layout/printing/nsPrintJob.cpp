@@ -383,14 +383,6 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   return NS_OK;
 }
 
-//-------------------------------------------------------
-nsresult nsPrintJob::Cancel() {
-  if (mPrt && mPrt->mPrintSettings) {
-    return mPrt->mPrintSettings->SetIsCancelled(true);
-  }
-  return NS_ERROR_FAILURE;
-}
-
 //-----------------------------------------------------------------
 std::tuple<nsPageSequenceFrame*, int32_t>
 nsPrintJob::GetSeqFrameAndCountSheets() const {
