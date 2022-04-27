@@ -65,8 +65,15 @@ class PlatformData {
  *
  * @return true on success.
  */
+#if defined(MOZ_GECKO_PROFILER)
 bool GetCpuTimeSinceThreadStartInNs(uint64_t* aResult,
                                     const PlatformData& aPlatformData);
+#else
+static inline bool GetCpuTimeSinceThreadStartInNs(
+    uint64_t* aResult, const PlatformData& aPlatformData) {
+  return false;
+}
+#endif
 
 }  // namespace mozilla::profiler
 
