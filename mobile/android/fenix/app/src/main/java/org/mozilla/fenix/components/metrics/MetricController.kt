@@ -6,8 +6,6 @@ package org.mozilla.fenix.components.metrics
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.facts.BrowserMenuFacts
-import mozilla.components.browser.toolbar.facts.ToolbarFacts
-import mozilla.components.compose.browser.awesomebar.AwesomeBarFacts as ComposeAwesomeBarFacts
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
@@ -17,7 +15,6 @@ import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionPr
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
-import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
@@ -42,8 +39,6 @@ import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
-import org.mozilla.fenix.GleanMetrics.CustomTab
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -52,6 +47,7 @@ import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
 import org.mozilla.fenix.utils.Settings
+import mozilla.components.compose.browser.awesomebar.AwesomeBarFacts as ComposeAwesomeBarFacts
 
 interface MetricController {
     fun start(type: MetricServiceType)
@@ -143,17 +139,6 @@ internal class ReleaseMetricController(
                 else -> Unit
             }
         }
-        Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
-            metadata?.get("customTab")?.let { CustomTab.menu.record(NoExtras()) }
-                ?: Events.toolbarMenuVisible.record(NoExtras())
-        }
-        Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> {
-            CustomTab.actionButton.record(NoExtras())
-        }
-        Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> {
-            CustomTab.closed.record(NoExtras())
-        }
-
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
             metadata?.get("item")?.let { item ->
                 contextMenuAllowList[item]?.let { extraKey ->

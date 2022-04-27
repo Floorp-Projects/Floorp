@@ -6,15 +6,13 @@ package org.mozilla.fenix.components.metrics
 
 import io.mockk.MockKAnnotations
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyAll
-import mozilla.components.browser.toolbar.facts.ToolbarFacts
+import io.mockk.impl.annotations.MockK
 import mozilla.components.feature.autofill.facts.AutofillFacts
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
-import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.media.facts.MediaFacts
 import mozilla.components.feature.prompts.dialog.LoginDialogFacts
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
@@ -43,12 +41,11 @@ import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
 import org.mozilla.fenix.GleanMetrics.CreditCards
-import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.LoginDialog
 import org.mozilla.fenix.GleanMetrics.MediaNotification
 import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
-import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
 import org.mozilla.fenix.GleanMetrics.SyncedTabs
+import org.mozilla.fenix.components.metrics.ReleaseMetricController.Companion
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 
@@ -312,41 +309,6 @@ class MetricControllerTest {
         assertTrue(MediaNotification.pause.testHasValue())
         assertEquals(1, MediaNotification.pause.testGetValue().size)
         assertNull(MediaNotification.pause.testGetValue().single().extra)
-    }
-
-    @Test
-    fun `WHEN processing a CustomTab fact THEN the right metric is recorded`() {
-        val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
-        val action = mockk<Action>(relaxed = true)
-        var fact: Fact
-
-        with(controller) {
-            fact = Fact(
-                Component.BROWSER_TOOLBAR,
-                action,
-                ToolbarFacts.Items.MENU,
-                metadata = mapOf("customTab" to true)
-            )
-            fact.process()
-
-            assertEquals(true, CustomTab.menu.testHasValue())
-            assertEquals(1, CustomTab.menu.testGetValue().size)
-            assertEquals(null, CustomTab.menu.testGetValue().single().extra)
-
-            fact = Fact(Component.FEATURE_CUSTOMTABS, action, CustomTabsFacts.Items.ACTION_BUTTON)
-            fact.process()
-
-            assertEquals(true, CustomTab.actionButton.testHasValue())
-            assertEquals(1, CustomTab.actionButton.testGetValue().size)
-            assertEquals(null, CustomTab.actionButton.testGetValue().single().extra)
-
-            fact = Fact(Component.FEATURE_CUSTOMTABS, action, CustomTabsFacts.Items.CLOSE)
-            fact.process()
-
-            assertEquals(true, CustomTab.closed.testHasValue())
-            assertEquals(1, CustomTab.closed.testGetValue().size)
-            assertEquals(null, CustomTab.closed.testGetValue().single().extra)
-        }
     }
 
     @Test
