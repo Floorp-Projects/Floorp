@@ -37,7 +37,7 @@ job-defaults:
                     subject: '[{product_name}] Raptor-Browsertime job "{task_name}" failed'
                     to-addresses: [perftest-alerts@mozilla.com]
             default: {}
-    run-on-tasks-for: []
+    run-on-tasks-for: [github-pull-request]
     treeherder:
         kind: test
         tier: 2
@@ -98,7 +98,7 @@ job-defaults:
             - linux64-ffmpeg-4.1.4
             - linux64-geckodriver
             - linux64-minidump-stackwalk
-            - linux64-node
+            - linux64-node-16
 
 jobs:
     tp6m:

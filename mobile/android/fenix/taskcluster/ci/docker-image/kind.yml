@@ -22,6 +22,3 @@ jobs:
     ui-tests:
         parent: base
         symbol: I(ui-tests)
-    visual-metrics:
-        parent: base
-        symbol: I(visual-metrics)

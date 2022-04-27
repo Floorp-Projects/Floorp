@@ -49,10 +49,10 @@ linux64-node:
         index-search:
             - gecko.cache.level-3.toolchains.v3.linux64-node-12.latest
 
-visual-metrics:
+linux64-node-16:
     attributes:
-        toolchain-artifact: public/visualmetrics.py
-    description: "Browsertime visual metrics analysis script"
+        toolchain-artifact: public/build/node.tar.zst
+    description: "Node.js toolchain"
     run:
         index-search:
-            - gecko.cache.level-3.content.v1.visual-metrics.latest
+            - gecko.cache.level-3.toolchains.v3.linux64-node-16.latest
