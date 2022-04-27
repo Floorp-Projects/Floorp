@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <vector>
@@ -96,6 +97,15 @@ std::string ToString(const std::vector<StatsSample>& values) {
     out << "{ time_ms=" << v.time.ms() << "; value=" << v.value << "}, ";
   }
   return out.str();
+}
+
+void FakeCPULoad() {
+  std::vector<int> temp(100000);
+  for (size_t i = 0; i < temp.size(); ++i) {
+    temp[i] = rand();
+  }
+  std::sort(temp.begin(), temp.end());
+  ASSERT_TRUE(std::is_sorted(temp.begin(), temp.end()));
 }
 
 TEST(DefaultVideoQualityAnalyzerTest,
@@ -712,6 +722,10 @@ TEST(DefaultVideoQualityAnalyzerTest, CpuUsage) {
                             VideoQualityAnalyzerInterface::EncoderStats());
   }
 
+  // Windows CPU clock has low accuracy. We need to fake some additional load to
+  // be sure that the clock ticks (https://crbug.com/webrtc/12249).
+  FakeCPULoad();
+
   for (size_t i = 1; i < frames_order.size(); i += 2) {
     uint16_t frame_id = frames_order.at(i);
     VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
@@ -729,15 +743,7 @@ TEST(DefaultVideoQualityAnalyzerTest, CpuUsage) {
   analyzer.Stop();
 
   double cpu_usage = analyzer.GetCpuUsagePercent();
-  // On windows bots GetProcessCpuTimeNanos doesn't work properly (returns the
-  // same number over the whole run). Adhoc solution to prevent them from
-  // failing.
-  // TODO(12249): remove it after issue is fixed.
-#if defined(WEBRTC_WIN)
-  ASSERT_GE(cpu_usage, 0);
-#else
   ASSERT_GT(cpu_usage, 0);
-#endif
 
   SleepMs(100);
   analyzer.Stop();
