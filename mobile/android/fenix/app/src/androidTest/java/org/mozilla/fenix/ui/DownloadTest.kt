@@ -9,6 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -111,6 +112,7 @@ class DownloadTest {
         }
     }
 
+    @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/23434")
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {

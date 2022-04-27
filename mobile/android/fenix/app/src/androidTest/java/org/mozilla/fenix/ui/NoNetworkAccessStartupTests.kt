@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -87,6 +88,7 @@ class NoNetworkAccessStartupTests {
         }.refreshPage { }
     }
 
+    @Ignore("Failing with frequent ANR: https://bugzilla.mozilla.org/show_bug.cgi?id=1764605")
     @Test
     fun testSignInPageWithNoNetworkConnection() {
         setNetworkEnabled(false)
