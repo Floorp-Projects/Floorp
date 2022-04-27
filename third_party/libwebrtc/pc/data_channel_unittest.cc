@@ -546,7 +546,7 @@ TEST_F(SctpDataChannelTest, ClosedWhenSendBufferFull) {
   SetChannelReady();
 
   rtc::CopyOnWriteBuffer buffer(1024);
-  memset(buffer.data(), 0, buffer.size());
+  memset(buffer.MutableData(), 0, buffer.size());
 
   webrtc::DataBuffer packet(buffer, true);
   provider_->set_send_blocked(true);
@@ -581,7 +581,7 @@ TEST_F(SctpDataChannelTest, ClosedOnTransportError) {
 TEST_F(SctpDataChannelTest, ClosedWhenReceivedBufferFull) {
   SetChannelReady();
   rtc::CopyOnWriteBuffer buffer(1024);
-  memset(buffer.data(), 0, buffer.size());
+  memset(buffer.MutableData(), 0, buffer.size());
 
   cricket::ReceiveDataParams params;
   params.ssrc = 0;
@@ -623,7 +623,7 @@ TEST_F(SctpDataChannelTest, TransportDestroyedWhileDataBuffered) {
   SetChannelReady();
 
   rtc::CopyOnWriteBuffer buffer(1024);
-  memset(buffer.data(), 0, buffer.size());
+  memset(buffer.MutableData(), 0, buffer.size());
   webrtc::DataBuffer packet(buffer, true);
 
   // Send a packet while sending is blocked so it ends up buffered.

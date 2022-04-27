@@ -128,7 +128,7 @@ bool SrtpTransport::SendRtpPacket(rtc::CopyOnWriteBuffer* packet,
   rtc::PacketOptions updated_options = options;
   TRACE_EVENT0("webrtc", "SRTP Encode");
   bool res;
-  uint8_t* data = packet->data();
+  uint8_t* data = packet->MutableData();
   int len = rtc::checked_cast<int>(packet->size());
 // If ENABLE_EXTERNAL_AUTH flag is on then packet authentication is not done
 // inside libsrtp for a RTP packet. A external HMAC module will be writing
@@ -185,7 +185,7 @@ bool SrtpTransport::SendRtcpPacket(rtc::CopyOnWriteBuffer* packet,
   }
 
   TRACE_EVENT0("webrtc", "SRTP Encode");
-  uint8_t* data = packet->data();
+  uint8_t* data = packet->MutableData();
   int len = rtc::checked_cast<int>(packet->size());
   if (!ProtectRtcp(data, len, static_cast<int>(packet->capacity()), &len)) {
     int type = -1;
@@ -208,7 +208,7 @@ void SrtpTransport::OnRtpPacketReceived(rtc::CopyOnWriteBuffer packet,
     return;
   }
   TRACE_EVENT0("webrtc", "SRTP Decode");
-  char* data = packet.data<char>();
+  char* data = packet.MutableData<char>();
   int len = rtc::checked_cast<int>(packet.size());
   if (!UnprotectRtp(data, len, &len)) {
     int seq_num = -1;
@@ -240,7 +240,7 @@ void SrtpTransport::OnRtcpPacketReceived(rtc::CopyOnWriteBuffer packet,
     return;
   }
   TRACE_EVENT0("webrtc", "SRTP Decode");
-  char* data = packet.data<char>();
+  char* data = packet.MutableData<char>();
   int len = rtc::checked_cast<int>(packet.size());
   if (!UnprotectRtcp(data, len, &len)) {
     int type = -1;

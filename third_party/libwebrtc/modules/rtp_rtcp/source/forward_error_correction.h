@@ -235,8 +235,8 @@ class ForwardErrorCorrection {
 
   // TODO(brandtr): Remove these functions when the Packet classes
   // have been refactored.
-  static uint16_t ParseSequenceNumber(uint8_t* packet);
-  static uint32_t ParseSsrc(uint8_t* packet);
+  static uint16_t ParseSequenceNumber(const uint8_t* packet);
+  static uint32_t ParseSsrc(const uint8_t* packet);
 
  protected:
   ForwardErrorCorrection(std::unique_ptr<FecHeaderReader> fec_header_reader,

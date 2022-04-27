@@ -57,7 +57,7 @@ UlpfecHeaderReader::~UlpfecHeaderReader() = default;
 
 bool UlpfecHeaderReader::ReadFecHeader(
     ForwardErrorCorrection::ReceivedFecPacket* fec_packet) const {
-  uint8_t* data = fec_packet->pkt->data.data();
+  uint8_t* data = fec_packet->pkt->data.MutableData();
   if (fec_packet->pkt->data.size() < kPacketMaskOffset) {
     return false;  // Truncated packet.
   }
@@ -108,7 +108,7 @@ void UlpfecHeaderWriter::FinalizeFecHeader(
     const uint8_t* packet_mask,
     size_t packet_mask_size,
     ForwardErrorCorrection::Packet* fec_packet) const {
-  uint8_t* data = fec_packet->data.data();
+  uint8_t* data = fec_packet->data.MutableData();
   // Set E bit to zero.
   data[0] &= 0x7f;
   // Set L bit based on packet mask size. (Note that the packet mask

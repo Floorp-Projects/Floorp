@@ -1136,14 +1136,14 @@ void SctpTransport::OnPacketFromSctpToNetwork(
 }
 
 int SctpTransport::InjectDataOrNotificationFromSctpForTesting(
-    void* data,
+    const void* data,
     size_t length,
     struct sctp_rcvinfo rcv,
     int flags) {
   return OnDataOrNotificationFromSctp(data, length, rcv, flags);
 }
 
-int SctpTransport::OnDataOrNotificationFromSctp(void* data,
+int SctpTransport::OnDataOrNotificationFromSctp(const void* data,
                                                 size_t length,
                                                 struct sctp_rcvinfo rcv,
                                                 int flags) {
@@ -1166,7 +1166,7 @@ int SctpTransport::OnDataOrNotificationFromSctp(void* data,
         << " length=" << length;
 
     // Copy and dispatch asynchronously
-    rtc::CopyOnWriteBuffer notification(reinterpret_cast<uint8_t*>(data),
+    rtc::CopyOnWriteBuffer notification(reinterpret_cast<const uint8_t*>(data),
                                         length);
     network_thread_->PostTask(ToQueuedTask(
         task_safety_, [this, notification = std::move(notification)]() {
@@ -1216,7 +1216,7 @@ int SctpTransport::OnDataOrNotificationFromSctp(void* data,
   params.timestamp = 0;
 
   // Append the chunk's data to the message buffer
-  partial_incoming_message_.AppendData(reinterpret_cast<uint8_t*>(data),
+  partial_incoming_message_.AppendData(reinterpret_cast<const uint8_t*>(data),
                                        length);
   partial_params_ = params;
   partial_flags_ = flags;

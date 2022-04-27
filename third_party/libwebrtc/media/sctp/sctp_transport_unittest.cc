@@ -589,7 +589,7 @@ TEST_P(SctpTransportTestWithOrdered, SignalReadyToSendDataAfterBlocked) {
   params.sid = 1;
   params.ordered = GetParam();
   rtc::CopyOnWriteBuffer buf(1024);
-  memset(buf.data<uint8_t>(), 0, 1024);
+  memset(buf.MutableData(), 0, 1024);
   SendDataResult result;
   size_t message_count = 0;
   for (; message_count < kMaxMessages; ++message_count) {

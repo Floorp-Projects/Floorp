@@ -151,7 +151,7 @@ int ForwardErrorCorrection::EncodeFec(const PacketList& media_packets,
   }
   for (int i = 0; i < num_fec_packets; ++i) {
     generated_fec_packets_[i].data.EnsureCapacity(IP_PACKET_SIZE);
-    memset(generated_fec_packets_[i].data.data(), 0, IP_PACKET_SIZE);
+    memset(generated_fec_packets_[i].data.MutableData(), 0, IP_PACKET_SIZE);
     // Use this as a marker for untouched packets.
     generated_fec_packets_[i].data.SetSize(0);
     fec_packets->push_back(&generated_fec_packets_[i]);
@@ -231,7 +231,7 @@ void ForwardErrorCorrection::GenerateFecPayloads(
           fec_packet->data.SetSize(fec_packet_length);
         }
         if (first_protected_packet) {
-          uint8_t* data = fec_packet->data.data();
+          uint8_t* data = fec_packet->data.MutableData();
           // Write P, X, CC, M, and PT recovery fields.
           // Note that bits 0, 1, and 16 are overwritten in FinalizeFecHeaders.
           memcpy(&data[0], &media_packet_data[0], 2);
@@ -567,11 +567,11 @@ bool ForwardErrorCorrection::StartPacketRecovery(
   // Copy bytes corresponding to minimum RTP header size.
   // Note that the sequence number and SSRC fields will be overwritten
   // at the end of packet recovery.
-  memcpy(recovered_packet->pkt->data.data(), fec_packet.pkt->data.cdata(),
-         kRtpHeaderSize);
+  memcpy(recovered_packet->pkt->data.MutableData(),
+         fec_packet.pkt->data.cdata(), kRtpHeaderSize);
   // Copy remaining FEC payload.
   if (fec_packet.protection_length > 0) {
-    memcpy(recovered_packet->pkt->data.data() + kRtpHeaderSize,
+    memcpy(recovered_packet->pkt->data.MutableData() + kRtpHeaderSize,
            fec_packet.pkt->data.cdata() + fec_packet.fec_header_size,
            fec_packet.protection_length);
   }
@@ -581,7 +581,7 @@ bool ForwardErrorCorrection::StartPacketRecovery(
 bool ForwardErrorCorrection::FinishPacketRecovery(
     const ReceivedFecPacket& fec_packet,
     RecoveredPacket* recovered_packet) {
-  uint8_t* data = recovered_packet->pkt->data.data();
+  uint8_t* data = recovered_packet->pkt->data.MutableData();
   // Set the RTP version to 2.
   data[0] |= 0x80;  // Set the 1st bit.
   data[0] &= 0xbf;  // Clear the 2nd bit.
@@ -603,7 +603,7 @@ bool ForwardErrorCorrection::FinishPacketRecovery(
 }
 
 void ForwardErrorCorrection::XorHeaders(const Packet& src, Packet* dst) {
-  uint8_t* dst_data = dst->data.data();
+  uint8_t* dst_data = dst->data.MutableData();
   const uint8_t* src_data = src.data.cdata();
   // XOR the first 2 bytes of the header: V, P, X, CC, M, PT fields.
   dst_data[0] ^= src_data[0];
@@ -635,7 +635,7 @@ void ForwardErrorCorrection::XorPayloads(const Packet& src,
   if (dst_offset + payload_length > dst->data.size()) {
     dst->data.SetSize(dst_offset + payload_length);
   }
-  uint8_t* dst_data = dst->data.data();
+  uint8_t* dst_data = dst->data.MutableData();
   const uint8_t* src_data = src.data.cdata();
   for (size_t i = 0; i < payload_length; ++i) {
     dst_data[dst_offset + i] ^= src_data[kRtpHeaderSize + i];
@@ -731,11 +731,11 @@ void ForwardErrorCorrection::DiscardOldRecoveredPackets(
   RTC_DCHECK_LE(recovered_packets->size(), max_media_packets);
 }
 
-uint16_t ForwardErrorCorrection::ParseSequenceNumber(uint8_t* packet) {
+uint16_t ForwardErrorCorrection::ParseSequenceNumber(const uint8_t* packet) {
   return (packet[2] << 8) + packet[3];
 }
 
-uint32_t ForwardErrorCorrection::ParseSsrc(uint8_t* packet) {
+uint32_t ForwardErrorCorrection::ParseSsrc(const uint8_t* packet) {
   return (packet[8] << 24) + (packet[9] << 16) + (packet[10] << 8) + packet[11];
 }
 

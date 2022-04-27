@@ -2050,7 +2050,7 @@ TEST_F(WebRtcVideoChannelBaseTest, SetSink) {
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
   rtc::CopyOnWriteBuffer packet1(data1, sizeof(data1));
-  rtc::SetBE32(packet1.data() + 8, kSsrc);
+  rtc::SetBE32(packet1.MutableData() + 8, kSsrc);
   channel_->SetDefaultSink(NULL);
   EXPECT_TRUE(SetDefaultCodec());
   EXPECT_TRUE(SetSend(true));

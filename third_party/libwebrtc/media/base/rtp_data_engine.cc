@@ -312,7 +312,7 @@ bool RtpDataMediaChannel::SendData(const SendDataParams& params,
                                              &header.timestamp);
 
   rtc::CopyOnWriteBuffer packet(kMinRtpPacketLen, packet_len);
-  if (!SetRtpHeader(packet.data(), packet.size(), header)) {
+  if (!SetRtpHeader(packet.MutableData(), packet.size(), header)) {
     return false;
   }
   packet.AppendData(kReservedSpace);

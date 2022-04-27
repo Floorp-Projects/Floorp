@@ -593,12 +593,12 @@ class FakePacketRoute : public EmulatedNetworkReceiverInterface {
     RTC_CHECK_GE(size, sizeof(int));
     sent_.emplace(next_packet_id_, packet);
     rtc::CopyOnWriteBuffer buf(size);
-    reinterpret_cast<int*>(buf.data())[0] = next_packet_id_++;
+    reinterpret_cast<int*>(buf.MutableData())[0] = next_packet_id_++;
     route_->from->SendPacket(send_addr_, recv_addr_, buf);
   }
 
   void OnPacketReceived(EmulatedIpPacket packet) override {
-    int packet_id = reinterpret_cast<int*>(packet.data.data())[0];
+    int packet_id = reinterpret_cast<const int*>(packet.data.data())[0];
     action_(std::move(sent_[packet_id]), packet.arrival_time);
     sent_.erase(packet_id);
   }
