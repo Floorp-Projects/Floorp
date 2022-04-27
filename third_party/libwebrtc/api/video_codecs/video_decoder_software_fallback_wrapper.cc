@@ -50,7 +50,6 @@ class VideoDecoderSoftwareFallbackWrapper final : public VideoDecoder {
       DecodedImageCallback* callback) override;
 
   int32_t Release() override;
-  bool PrefersLateDecoding() const override;
 
   const char* ImplementationName() const override;
 
@@ -260,10 +259,6 @@ int32_t VideoDecoderSoftwareFallbackWrapper::Release() {
 
   decoder_type_ = DecoderType::kNone;
   return status;
-}
-
-bool VideoDecoderSoftwareFallbackWrapper::PrefersLateDecoding() const {
-  return active_decoder().PrefersLateDecoding();
 }
 
 const char* VideoDecoderSoftwareFallbackWrapper::ImplementationName() const {

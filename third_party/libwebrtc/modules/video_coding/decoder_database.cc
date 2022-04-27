@@ -133,10 +133,6 @@ VCMGenericDecoder* VCMDecoderDataBase::GetDecoder(
   return ptr_decoder_.get();
 }
 
-bool VCMDecoderDataBase::PrefersLateDecoding() const {
-  return ptr_decoder_ ? ptr_decoder_->PrefersLateDecoding() : true;
-}
-
 std::unique_ptr<VCMGenericDecoder> VCMDecoderDataBase::CreateAndInitDecoder(
     const VCMEncodedFrame& frame,
     VideoCodec* new_codec) const {

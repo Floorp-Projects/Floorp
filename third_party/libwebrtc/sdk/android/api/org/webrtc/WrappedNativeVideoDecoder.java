@@ -32,11 +32,6 @@ public abstract class WrappedNativeVideoDecoder implements VideoDecoder {
   }
 
   @Override
-  public final boolean getPrefersLateDecoding() {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
   public final String getImplementationName() {
     throw new UnsupportedOperationException("Not implemented.");
   }

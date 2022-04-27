@@ -69,7 +69,6 @@ class QualityAnalyzingVideoDecoder : public VideoDecoder {
   int32_t RegisterDecodeCompleteCallback(
       DecodedImageCallback* callback) override;
   int32_t Release() override;
-  bool PrefersLateDecoding() const override;
   const char* ImplementationName() const override;
 
  private:

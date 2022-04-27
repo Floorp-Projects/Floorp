@@ -144,11 +144,6 @@ int32_t VideoDecoderWrapper::Release() {
   return status;
 }
 
-bool VideoDecoderWrapper::PrefersLateDecoding() const {
-  JNIEnv* jni = AttachCurrentThreadIfNeeded();
-  return Java_VideoDecoder_getPrefersLateDecoding(jni, decoder_);
-}
-
 const char* VideoDecoderWrapper::ImplementationName() const {
   return implementation_name_.c_str();
 }

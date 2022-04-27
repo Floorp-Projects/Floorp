@@ -111,7 +111,6 @@ class VCMGenericDecoder {
    */
   int32_t RegisterDecodeCompleteCallback(VCMDecodedFrameCallback* callback);
 
-  bool PrefersLateDecoding() const;
   bool IsSameDecoder(VideoDecoder* decoder) const {
     return decoder_.get() == decoder;
   }
