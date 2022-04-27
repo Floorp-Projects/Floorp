@@ -494,16 +494,19 @@ class PromptDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(PROMPT_HTML_PATH)
         mainSession.waitForPageStop()
 
-        mainSession.synthesizeTap(1, 1) // Provides user activation.
+        mainSession.evaluateJS("""
+            document.body.addEventListener("click", () => {
+                document.getElementById('dateexample').showPicker();
+            });
+        """.trimIndent())
 
-        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+        mainSession.synthesizeTap(1, 1) // Provides user activation.
+        sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
                 return GeckoResult.fromValue(prompt.dismiss())
             }
         })
-
-        mainSession.waitForJS("document.getElementById('dateexample').showPicker();")
     }
 
     @Test fun fileTest() {
