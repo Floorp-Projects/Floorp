@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TestUtils: "resource://testing-common/TestUtils.jsm",
 });
 
-var dirSvc = Services.dirSvc;
 var profileDir = do_get_profile();
 
 const kSearchEngineID = "test_urifixup_search_engine";
