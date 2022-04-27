@@ -168,7 +168,8 @@ void GPUProcessManager::OnPreferenceChange(const char16_t* aData) {
     return;
   }
 
-  mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
+  mozilla::dom::Pref pref(strData, /* isLocked */ false,
+                          /* isSanitized */ false, Nothing(), Nothing());
   Preferences::GetPreference(&pref);
   if (!!mGPUChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
