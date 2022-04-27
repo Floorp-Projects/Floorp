@@ -97,6 +97,8 @@ interface nsIWebBrowserPrint : nsISupports
    *                            then the global PS will be used.
    * @param aWPListener - is updated during the print
    * @return void
+   *
+   * @note To cancel, close the window of the document that is being printed.
    */
   [noscript] void print(in nsIPrintSettings aThePrintSettings,
                         in nsIWebProgressListener aWPListener);
@@ -108,6 +110,8 @@ interface nsIWebBrowserPrint : nsISupports
    *                            then the global PS will be used.
    * @param aWPListener - is updated during the printpreview
    * @return void
+   *
+   * @note To cancel, close the print preview document's window.
    */
   [noscript] void printPreview(in nsIPrintSettings aThePrintSettings,
                                in nsIWebProgressListener aWPListener,
@@ -119,12 +123,6 @@ interface nsIWebBrowserPrint : nsISupports
    * @return void
    */
   void printPreviewScrollToPage(in short aNavType, in long aPageNum);
-
-  /**
-   * Cancels the current print
-   * @return void
-   */
-  void cancel();
 
   /**
    * This exists PrintPreview mode and returns browser window to galley mode
