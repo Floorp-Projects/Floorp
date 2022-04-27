@@ -3524,7 +3524,7 @@ EncoderStreamFactory::CreateDefaultVideoStreams(
           *encoder_config.simulcast_layers[0].num_temporal_layers;
     }
   }
-
+  layer.scalability_mode = encoder_config.simulcast_layers[0].scalability_mode;
   layers.push_back(layer);
   return layers;
 }
