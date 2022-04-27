@@ -10,6 +10,11 @@
  * A worker dedicated to Remote Settings.
  */
 
+/* import-globals-from /toolkit/components/workerloader/require.js */
+/* import-globals-from /toolkit/modules/CanonicalJSON.jsm */
+/* import-globals-from IDBHelpers.jsm */
+/* import-globals-from SharedUtils.jsm */
+/* import-globals-from /toolkit/modules/third_party/jsesc/jsesc.js */
 importScripts(
   "resource://gre/modules/workers/require.js",
   "resource://gre/modules/CanonicalJSON.jsm",
