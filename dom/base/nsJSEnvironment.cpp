@@ -1112,7 +1112,7 @@ class CCSliceMarker {
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
-              MS::Location::TimelineOverview};
+              MS::Location::TimelineMemory};
     schema.SetAllLabels("{marker.name} (idle={marker.data.idle})");
     schema.AddKeyLabelFormat("idle", "Idle", MS::Format::Integer);
     return schema;
