@@ -8,6 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/gfx/PCanvasManagerChild.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/ThreadLocal.h"
 
 namespace mozilla {
@@ -29,9 +30,10 @@ class CanvasManagerChild final : public PCanvasManagerChild {
 
   explicit CanvasManagerChild(uint32_t aId);
   uint32_t Id() const { return mId; }
-  already_AddRefed<DataSourceSurface> GetSnapshot(uint32_t aManagerId,
-                                                  int32_t aProtocolId,
-                                                  bool aHasAlpha);
+  already_AddRefed<DataSourceSurface> GetSnapshot(
+      uint32_t aManagerId, int32_t aProtocolId,
+      const layers::CompositableHandle& aHandle, SurfaceFormat aFormat,
+      bool aPremultiply, bool aYFlip);
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   static CanvasManagerChild* Get();
