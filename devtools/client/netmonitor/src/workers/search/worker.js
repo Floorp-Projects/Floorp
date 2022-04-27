@@ -4,7 +4,10 @@
 
 "use strict";
 
-/* eslint-disable no-undef*/
+/* eslint-env worker */
+
+/* import-globals-from search.js */
+/* import-globals-from ../../../../shared/worker-utils.js */
 importScripts(
   "resource://devtools/client/netmonitor/src/workers/search/search.js",
   "resource://devtools/client/shared/worker-utils.js"
