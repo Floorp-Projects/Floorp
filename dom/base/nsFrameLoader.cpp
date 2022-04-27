@@ -136,7 +136,6 @@
 #include "nsXULPopupManager.h"
 
 #ifdef NS_PRINTING
-#  include "mozilla/embedding/printingui/PrintingParent.h"
 #  include "nsIWebBrowserPrint.h"
 #endif
 

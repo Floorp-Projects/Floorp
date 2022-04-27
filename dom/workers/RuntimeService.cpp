@@ -111,12 +111,6 @@ namespace workerinternals {
 static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
               "We should allow at least one worker per domain.");
 
-// The number of seconds that idle threads can hang around before being killed.
-#define IDLE_THREAD_TIMEOUT_SEC 30
-
-// The maximum number of threads that can be idle at one time.
-#define MAX_IDLE_THREADS 20
-
 #define PREF_WORKERS_PREFIX "dom.workers."
 #define PREF_WORKERS_MAX_PER_DOMAIN PREF_WORKERS_PREFIX "maxPerDomain"
 
@@ -1307,22 +1301,12 @@ bool RuntimeService::ScheduleWorker(WorkerPrivate& aWorkerPrivate) {
     return true;
   }
 
-  SafeRefPtr<WorkerThread> thread;
-  {
-    MutexAutoLock lock(mMutex);
-    if (!mIdleThreadArray.IsEmpty()) {
-      thread = std::move(mIdleThreadArray.PopLastElement().mThread);
-    }
-  }
-
   const WorkerThreadFriendKey friendKey;
 
+  SafeRefPtr<WorkerThread> thread = WorkerThread::Create(friendKey);
   if (!thread) {
-    thread = WorkerThread::Create(friendKey);
-    if (!thread) {
-      UnregisterWorker(aWorkerPrivate);
-      return false;
-    }
+    UnregisterWorker(aWorkerPrivate);
+    return false;
   }
 
   if (NS_FAILED(thread->SetPriority(nsISupportsPriority::PRIORITY_NORMAL))) {
@@ -1342,54 +1326,6 @@ bool RuntimeService::ScheduleWorker(WorkerPrivate& aWorkerPrivate) {
   return true;
 }
 
-// static
-void RuntimeService::ShutdownIdleThreads(nsITimer* aTimer,
-                                         void* /* aClosure */) {
-  AssertIsOnMainThread();
-
-  RuntimeService* runtime = RuntimeService::GetService();
-  NS_ASSERTION(runtime, "This should never be null!");
-
-  NS_ASSERTION(aTimer == runtime->mIdleThreadTimer, "Wrong timer!");
-
-  // Cheat a little and grab all threads that expire within one second of now.
-  const TimeStamp now = TimeStamp::NowLoRes() + TimeDuration::FromSeconds(1);
-
-  TimeStamp nextExpiration;
-
-  AutoTArray<SafeRefPtr<WorkerThread>, 20> expiredThreads;
-  {
-    MutexAutoLock lock(runtime->mMutex);
-
-    for (auto& info : runtime->mIdleThreadArray) {
-      if (info.mExpirationTime > now) {
-        nextExpiration = info.mExpirationTime;
-        break;
-      }
-
-      expiredThreads.AppendElement(std::move(info.mThread));
-    }
-
-    runtime->mIdleThreadArray.RemoveElementsAt(0, expiredThreads.Length());
-  }
-
-  if (!nextExpiration.IsNull()) {
-    const TimeDuration delta = nextExpiration - TimeStamp::NowLoRes();
-    const uint32_t delay = delta > TimeDuration{} ? delta.ToMilliseconds() : 0;
-
-    // Reschedule the timer.
-    MOZ_ALWAYS_SUCCEEDS(aTimer->InitWithNamedFuncCallback(
-        ShutdownIdleThreads, nullptr, delay, nsITimer::TYPE_ONE_SHOT,
-        "RuntimeService::ShutdownIdleThreads"));
-  }
-
-  for (const auto& expiredThread : expiredThreads) {
-    if (NS_FAILED(expiredThread->Shutdown())) {
-      NS_WARNING("Failed to shutdown thread!");
-    }
-  }
-}
-
 nsresult RuntimeService::Init() {
   AssertIsOnMainThread();
 
@@ -1407,9 +1343,6 @@ nsresult RuntimeService::Init() {
   nsCOMPtr<nsIStreamTransportService> sts =
       do_GetService(kStreamTransportServiceCID, &rv);
   NS_ENSURE_TRUE(sts, NS_ERROR_FAILURE);
-
-  mIdleThreadTimer = NS_NewTimer();
-  NS_ENSURE_STATE(mIdleThreadTimer);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
@@ -1659,13 +1592,6 @@ void RuntimeService::Cleanup() {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_WARNING_ASSERTION(obs, "Failed to get observer service?!");
 
-  if (mIdleThreadTimer) {
-    if (NS_FAILED(mIdleThreadTimer->Cancel())) {
-      NS_WARNING("Failed to cancel idle timer!");
-    }
-    mIdleThreadTimer = nullptr;
-  }
-
   {
     MutexAutoLock lock(mMutex);
 
@@ -1675,33 +1601,6 @@ void RuntimeService::Cleanup() {
     if (!workers.IsEmpty()) {
       nsIThread* currentThread = NS_GetCurrentThread();
       NS_ASSERTION(currentThread, "This should never be null!");
-
-      // Shut down any idle threads.
-      if (!mIdleThreadArray.IsEmpty()) {
-        AutoTArray<SafeRefPtr<WorkerThread>, 20> idleThreads;
-        idleThreads.SetCapacity(mIdleThreadArray.Length());
-
-#ifdef DEBUG
-        const bool anyNullThread = std::any_of(
-            mIdleThreadArray.begin(), mIdleThreadArray.end(),
-            [](const auto& entry) { return entry.mThread == nullptr; });
-        MOZ_ASSERT(!anyNullThread);
-#endif
-
-        std::transform(mIdleThreadArray.begin(), mIdleThreadArray.end(),
-                       MakeBackInserter(idleThreads),
-                       [](auto& entry) { return std::move(entry.mThread); });
-
-        mIdleThreadArray.Clear();
-
-        MutexAutoUnlock unlock(mMutex);
-
-        for (const auto& idleThread : idleThreads) {
-          if (NS_FAILED(idleThread->Shutdown())) {
-            NS_WARNING("Failed to shutdown thread!");
-          }
-        }
-      }
 
       // And make sure all their final messages have run and all their threads
       // have joined.
@@ -1858,47 +1757,6 @@ void RuntimeService::PropagateStorageAccessPermissionGranted(
 
   for (WorkerPrivate* const worker : GetWorkersForWindow(aWindow)) {
     worker->PropagateStorageAccessPermissionGranted();
-  }
-}
-
-void RuntimeService::NoteIdleThread(SafeRefPtr<WorkerThread> aThread) {
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aThread);
-
-  bool shutdownThread = mShuttingDown;
-  bool scheduleTimer = false;
-
-  if (!shutdownThread) {
-    static TimeDuration timeout =
-        TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
-
-    const TimeStamp expirationTime = TimeStamp::NowLoRes() + timeout;
-
-    MutexAutoLock lock(mMutex);
-
-    const uint32_t previousIdleCount = mIdleThreadArray.Length();
-
-    if (previousIdleCount < MAX_IDLE_THREADS) {
-      IdleThreadInfo* const info = mIdleThreadArray.AppendElement();
-      info->mThread = std::move(aThread);
-      info->mExpirationTime = expirationTime;
-
-      scheduleTimer = previousIdleCount == 0;
-    } else {
-      shutdownThread = true;
-    }
-  }
-
-  MOZ_ASSERT_IF(shutdownThread, !scheduleTimer);
-  MOZ_ASSERT_IF(scheduleTimer, !shutdownThread);
-
-  // Too many idle threads, just shut this one down.
-  if (shutdownThread) {
-    MOZ_ALWAYS_SUCCEEDS(aThread->Shutdown());
-  } else if (scheduleTimer) {
-    MOZ_ALWAYS_SUCCEEDS(mIdleThreadTimer->InitWithNamedFuncCallback(
-        ShutdownIdleThreads, nullptr, IDLE_THREAD_TIMEOUT_SEC * 1000,
-        nsITimer::TYPE_ONE_SHOT, "RuntimeService::ShutdownIdleThreads"));
   }
 }
 
@@ -2255,11 +2113,7 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run() {
   AssertIsOnMainThread();
 
   SafeRefPtr<WorkerThread> thread = std::move(mThread);
-
-  RuntimeService* rts = RuntimeService::GetService();
-  if (rts) {
-    rts->NoteIdleThread(std::move(thread));
-  } else if (thread->ShutdownRequired()) {
+  if (thread->ShutdownRequired()) {
     MOZ_ALWAYS_SUCCEEDS(thread->Shutdown());
   }
 

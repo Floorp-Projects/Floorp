@@ -3721,19 +3721,18 @@ static bool PairedDumpCallback(
     EXCEPTION_POINTERS* /*unused*/, MDRawAssertionInfo* /*unused*/,
 #endif
     const phc::AddrInfo* addrInfo, bool succeeded) {
-  nsCOMPtr<nsIFile>& minidump = *static_cast<nsCOMPtr<nsIFile>*>(context);
+  XP_CHAR* path = static_cast<XP_CHAR*>(context);
+  size_t size = XP_PATH_MAX;
 
-  xpstring path;
 #ifdef XP_LINUX
-  path = descriptor.path();
+  Concat(path, descriptor.path(), &size);
 #else
-  path = dump_path;
-  path += XP_PATH_SEPARATOR;
-  path += minidump_id;
-  path += dumpFileExtension;
+  path = Concat(path, dump_path, &size);
+  path = Concat(path, XP_PATH_SEPARATOR, &size);
+  path = Concat(path, minidump_id, &size);
+  Concat(path, dumpFileExtension, &size);
 #endif
 
-  CreateFileFromPath(path, getter_AddRefs(minidump));
   return true;
 }
 
@@ -3800,11 +3799,14 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
   dump_path = gExceptionHandler->minidump_descriptor().directory();
 #endif
 
+  // Ugly, but due to Breakpad limitations we can't allocate memory in the
+  // callback when generating a dump of the calling process.
+  XP_CHAR minidumpPath[XP_PATH_MAX] = {};
+
   // dump the target
-  nsCOMPtr<nsIFile> targetMinidump;
   if (!google_breakpad::ExceptionHandler::WriteMinidumpForChild(
           aTargetHandle, targetThread, dump_path, PairedDumpCallback,
-          static_cast<void*>(&targetMinidump)
+          static_cast<void*>(minidumpPath)
 #ifdef XP_WIN
               ,
           GetMinidumpType()
@@ -3813,14 +3815,16 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
     return false;
   }
 
+  nsCOMPtr<nsIFile> targetMinidump;
+  CreateFileFromPath(xpstring(minidumpPath), getter_AddRefs(targetMinidump));
+
   // Create a dump of this process.
-  nsCOMPtr<nsIFile> incomingDump;
   if (!google_breakpad::ExceptionHandler::WriteMinidump(
           dump_path,
 #ifdef XP_MACOSX
           true,
 #endif
-          PairedDumpCallback, static_cast<void*>(&incomingDump)
+          PairedDumpCallback, static_cast<void*>(minidumpPath)
 #ifdef XP_WIN
                                   ,
           GetMinidumpType()
@@ -3829,6 +3833,9 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
     targetMinidump->Remove(false);
     return false;
   }
+
+  nsCOMPtr<nsIFile> incomingDump;
+  CreateFileFromPath(xpstring(minidumpPath), getter_AddRefs(incomingDump));
 
   RenameAdditionalHangMinidump(incomingDump, targetMinidump, aIncomingPairName);
 

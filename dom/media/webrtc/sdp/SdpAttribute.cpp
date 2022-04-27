@@ -813,10 +813,11 @@ bool SdpRidAttributeList::Rid::ParseParameters(std::istream& is,
         return false;
       }
     } else if (key == "max-fps") {
-      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &constraints.maxFps,
-                                 error)) {
+      uint32_t maxFps;
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxFps, error)) {
         return false;
       }
+      constraints.maxFps = Some(maxFps);
     } else if (key == "max-fs") {
       if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &constraints.maxFs,
                                  error)) {

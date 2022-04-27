@@ -33,19 +33,9 @@ NS_EVENT_MESSAGE(eVoidEvent)
 // EventListenerManager.
 NS_EVENT_MESSAGE(eAllEvents)
 
-// Widget may be destroyed
-NS_EVENT_MESSAGE(eWindowClose)
-
 NS_EVENT_MESSAGE(eKeyPress)
 NS_EVENT_MESSAGE(eKeyUp)
 NS_EVENT_MESSAGE(eKeyDown)
-
-// These messages are dispatched when PluginInstaceChild receives native
-// keyboard events directly and it posts the information to the widget.
-// These messages shouldn't be handled by content and non-reserved chrome
-// event handlers.
-NS_EVENT_MESSAGE(eKeyDownOnPlugin)
-NS_EVENT_MESSAGE(eKeyUpOnPlugin)
 
 // This message is sent after a content process handles a key event or accesskey
 // to indicate that an potential accesskey was not found. The parent process may
@@ -57,17 +47,6 @@ NS_EVENT_MESSAGE(eResize)
 NS_EVENT_MESSAGE(eScroll)
 NS_EVENT_MESSAGE(eMozVisualResize)
 NS_EVENT_MESSAGE(eMozVisualScroll)
-
-// Application installation
-NS_EVENT_MESSAGE(eInstall)
-NS_EVENT_MESSAGE(eAppInstalled)
-
-// A plugin was clicked or otherwise focused. ePluginActivate should be
-// used when the window is not active. ePluginFocus should be used when
-// the window is active. In the latter case, the dispatcher of the event
-// is expected to ensure that the plugin's widget is focused beforehand.
-NS_EVENT_MESSAGE(ePluginActivate)
-NS_EVENT_MESSAGE(ePluginFocus)
 
 NS_EVENT_MESSAGE(eOffline)
 NS_EVENT_MESSAGE(eOnline)
@@ -152,7 +131,6 @@ NS_EVENT_MESSAGE_FIRST_LAST(eDragDropEvent, eDragEnter, eDragLeave)
 // XUL specific events
 NS_EVENT_MESSAGE(eXULPopupShowing)
 NS_EVENT_MESSAGE(eXULPopupShown)
-NS_EVENT_MESSAGE(eXULPopupPositioned)
 NS_EVENT_MESSAGE(eXULPopupHiding)
 NS_EVENT_MESSAGE(eXULPopupHidden)
 NS_EVENT_MESSAGE(eXULBroadcast)
@@ -430,13 +408,6 @@ NS_EVENT_MESSAGE(eWheelOperationStart)
 // mouse wheel.  This won't be fired on some platforms which don't have
 // corresponding native event.
 NS_EVENT_MESSAGE(eWheelOperationEnd)
-
-// System time is changed
-NS_EVENT_MESSAGE(eTimeChange)
-
-// Network packet events.
-NS_EVENT_MESSAGE(eNetworkUpload)
-NS_EVENT_MESSAGE(eNetworkDownload)
 
 // MediaRecorder events.
 NS_EVENT_MESSAGE(eMediaRecorderDataAvailable)

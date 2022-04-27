@@ -11,6 +11,10 @@
 #include "mozilla/Components.h"
 #include "nsIStringBundle.h"
 
+#ifdef A11Y_LOG
+#  include "nsAccessibilityService.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::a11y;
 
@@ -293,6 +297,38 @@ void Accessible::GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize) {
     *aSetSize = groupInfo->SetSize();
   }
 }
+
+#ifdef A11Y_LOG
+void Accessible::DebugDescription(nsCString& aDesc) {
+  aDesc.Truncate();
+  aDesc.AppendPrintf("[%p] ", this);
+  nsAutoString role;
+  GetAccService()->GetStringRole(Role(), role);
+  aDesc.Append(NS_ConvertUTF16toUTF8(role));
+
+  if (nsAtom* tagAtom = TagName()) {
+    nsAutoCString tag;
+    tagAtom->ToUTF8String(tag);
+    aDesc.AppendPrintf(" %s", tag.get());
+
+    nsAutoString id;
+    DOMNodeID(id);
+    if (!id.IsEmpty()) {
+      aDesc.Append("#");
+      aDesc.Append(NS_ConvertUTF16toUTF8(id));
+    }
+  }
+  nsAutoString id;
+
+  nsAutoString name;
+  Name(name);
+  if (!name.IsEmpty()) {
+    aDesc.Append(" '");
+    aDesc.Append(NS_ConvertUTF16toUTF8(name));
+    aDesc.Append("'");
+  }
+}
+#endif
 
 void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
   nsCOMPtr<nsIStringBundleService> stringBundleService =

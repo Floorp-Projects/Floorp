@@ -5,12 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* exported libc */
+/* exported LIBC, libc */
 
 // This file is loaded into the same scope as subprocess_unix.jsm
+/* import-globals-from subprocess_shared.js */
 /* import-globals-from subprocess_unix.jsm */
 
-const LIBC = OS.Constants.libc;
+var LIBC = OS.Constants.libc;
 
 const LIBC_CHOICES = ["libc.so", "libSystem.B.dylib", "a.out"];
 

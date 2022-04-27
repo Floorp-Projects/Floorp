@@ -942,6 +942,7 @@ class MochitestDesktop(object):
         self.sslTunnel = None
         self.manifest = None
         self.tests_by_manifest = defaultdict(list)
+        self.args_by_manifest = defaultdict(set)
         self.prefs_by_manifest = defaultdict(set)
         self.env_vars_by_manifest = defaultdict(set)
         self.tests_dirs_by_manifest = defaultdict(set)
@@ -954,6 +955,7 @@ class MochitestDesktop(object):
         self.start_script = None
         self.mozLogs = None
         self.start_script_kwargs = {}
+        self.extraArgs = []
         self.extraPrefs = {}
         self.extraEnv = {}
         self.extraTestsDirs = []
@@ -1671,11 +1673,12 @@ toolbar#nav-bar {
                 manifest_key = "{}:{}".format(test["ancestor_manifest"], manifest_key)
 
             self.tests_by_manifest[manifest_key.replace("\\", "/")].append(tp)
+            self.args_by_manifest[manifest_key].add(test.get("args"))
             self.prefs_by_manifest[manifest_key].add(test.get("prefs"))
             self.env_vars_by_manifest[manifest_key].add(test.get("environment"))
             self.tests_dirs_by_manifest[manifest_key].add(test.get("test-directories"))
 
-            for key in ["prefs", "environment", "test-directories"]:
+            for key in ["args", "prefs", "environment", "test-directories"]:
                 if key in test and not options.runByManifest and "disabled" not in test:
                     self.log.error(
                         "parsing {}: runByManifest mode must be enabled to "
@@ -1703,10 +1706,23 @@ toolbar#nav-bar {
                     testob["expected"] = patterns
             paths.append(testob)
 
-        # The 'prefs' key needs to be set in the DEFAULT section, unfortunately
+        # The 'args' key needs to be set in the DEFAULT section, unfortunately
         # we can't tell what comes from DEFAULT or not. So to validate this, we
-        # stash all prefs from tests in the same manifest into a set. If the
-        # length of the set > 1, then we know 'prefs' didn't come from DEFAULT.
+        # stash all args from tests in the same manifest into a set. If the
+        # length of the set > 1, then we know 'args' didn't come from DEFAULT.
+        args_not_default = [
+            m for m, p in six.iteritems(self.args_by_manifest) if len(p) > 1
+        ]
+        if args_not_default:
+            self.log.error(
+                "The 'args' key must be set in the DEFAULT section of a "
+                "manifest. Fix the following manifests: {}".format(
+                    "\n".join(args_not_default)
+                )
+            )
+            sys.exit(1)
+
+        # The 'prefs' key needs to be set in the DEFAULT section too.
         pref_not_default = [
             m for m, p in six.iteritems(self.prefs_by_manifest) if len(p) > 1
         ]
@@ -3077,6 +3093,20 @@ toolbar#nav-bar {
         for m in sorted(manifests):
             self.log.info("Running manifest: {}".format(m))
 
+            args = list(self.args_by_manifest[m])[0]
+            self.extraArgs = []
+            if args:
+                for arg in args.strip().split():
+                    # Split off the argument value if available so that both
+                    # name and value will be set individually
+                    self.extraArgs.extend(arg.split("="))
+
+                self.log.info(
+                    "The following arguments will be set:\n  {}".format(
+                        "\n  ".join(self.extraArgs)
+                    )
+                )
+
             prefs = list(self.prefs_by_manifest[m])[0]
             self.extraPrefs = origPrefs.copy()
             if prefs:
@@ -3365,7 +3395,7 @@ toolbar#nav-bar {
                     self.browserEnv,
                     options.app,
                     profile=self.profile,
-                    extraArgs=options.browserArgs,
+                    extraArgs=options.browserArgs + self.extraArgs,
                     utilityPath=options.utilityPath,
                     debuggerInfo=debuggerInfo,
                     valgrindPath=valgrindPath,

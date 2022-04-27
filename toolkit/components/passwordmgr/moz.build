@@ -64,7 +64,7 @@ else:
 
 if CONFIG["OS_TARGET"] == "WINNT":
     EXTRA_JS_MODULES += [
-        "OSCrypto_win.js",
+        "OSCrypto_win.jsm",
     ]
 
 if CONFIG["MOZ_BUILD_APP"] == "browser" or CONFIG["MOZ_SUITE"]:

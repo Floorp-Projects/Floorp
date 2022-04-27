@@ -17,7 +17,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getString,
   text,
-  wire,
   showFilePicker,
   optionsPopupMenu,
 } = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
@@ -159,18 +158,24 @@ StyleEditorUI.prototype = {
   createUI: function() {
     this._view = new SplitView(this._root);
 
-    wire(this._view.rootElement, ".style-editor-newButton", async () => {
-      const stylesheetsFront = await this.currentTarget.getFront("stylesheets");
-      stylesheetsFront.addStyleSheet(null);
-    });
+    this._root
+      .querySelector(".style-editor-newButton")
+      .addEventListener("click", async () => {
+        const stylesheetsFront = await this.currentTarget.getFront(
+          "stylesheets"
+        );
+        stylesheetsFront.addStyleSheet(null);
+      });
 
-    wire(this._view.rootElement, ".style-editor-importButton", () => {
-      this._importFromFile(this._mockImportFile || null, this._window);
-    });
+    this._root
+      .querySelector(".style-editor-importButton")
+      .addEventListener("click", () => {
+        this._importFromFile(this._mockImportFile || null, this._window);
+      });
 
-    wire(this._view.rootElement, "#style-editor-options", event => {
-      this._onOptionsButtonClick(event);
-    });
+    this._root
+      .querySelector("#style-editor-options")
+      .addEventListener("click", this._onOptionsButtonClick);
 
     this._panelDoc.addEventListener(
       "contextmenu",
@@ -616,29 +621,31 @@ StyleEditorUI.prototype = {
     createdEditor.summary = summary;
     createdEditor.details = details;
 
-    wire(summary, ".stylesheet-enabled", function onToggleDisabled(event) {
-      event.stopPropagation();
-      event.target.blur();
+    summary
+      .querySelector(".stylesheet-enabled")
+      .addEventListener("click", event => {
+        event.stopPropagation();
+        event.target.blur();
 
-      createdEditor.toggleDisabled();
-    });
+        createdEditor.toggleDisabled();
+      });
 
-    wire(summary, ".stylesheet-name", {
-      events: {
-        keypress: event => {
-          if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-            this._view.setActiveSummary(summary);
-          }
-        },
-      },
-    });
+    summary
+      .querySelector(".stylesheet-name")
+      .addEventListener("keypress", event => {
+        if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
+          this._view.setActiveSummary(summary);
+        }
+      });
 
-    wire(summary, ".stylesheet-saveButton", function onSaveButton(event) {
-      event.stopPropagation();
-      event.target.blur();
+    summary
+      .querySelector(".stylesheet-saveButton")
+      .addEventListener("click", event => {
+        event.stopPropagation();
+        event.target.blur();
 
-      createdEditor.saveToFile(createdEditor.savedFile);
-    });
+        createdEditor.saveToFile(createdEditor.savedFile);
+      });
 
     this._updateSummaryForEditor(createdEditor, summary);
 

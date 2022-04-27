@@ -685,6 +685,10 @@ void RemoteAccessible::TableUnselectRow(uint32_t aRow) {
 }
 
 bool RemoteAccessible::TableIsProbablyForLayout() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TableIsProbablyForLayout();
+  }
+
   bool forLayout = false;
   Unused << mDoc->SendTableIsProbablyForLayout(mID, &forLayout);
   return forLayout;

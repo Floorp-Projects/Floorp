@@ -161,6 +161,8 @@ class WebrtcVideoConduit
   // Call thread.
   void UnsetRemoteSSRC(uint32_t aSsrc) override;
 
+  static unsigned ToLibwebrtcMaxFramerate(const Maybe<double>& aMaxFramerate);
+
  private:
   void NotifyUnsetCurrentRemoteSSRC();
   void SetRemoteSSRCConfig(uint32_t aSsrc, uint32_t aRtxSsrc);
@@ -406,7 +408,7 @@ class WebrtcVideoConduit
   Maybe<uint32_t> mLastRTPTimestampReceive;
 
   // Accessed under mMutex.
-  unsigned int mSendingFramerate;
+  unsigned int mMaxFramerateForAllStreams;
 
   // Accessed from any thread under mRendererMonitor.
   uint64_t mVideoLatencyAvg = 0;

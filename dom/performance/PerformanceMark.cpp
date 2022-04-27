@@ -6,19 +6,104 @@
 
 #include "PerformanceMark.h"
 #include "MainThreadUtils.h"
+#include "nsContentUtils.h"
+#include "Performance.h"
+#include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceMarkBinding.h"
 
 using namespace mozilla::dom;
 
 PerformanceMark::PerformanceMark(nsISupports* aParent, const nsAString& aName,
-                                 DOMHighResTimeStamp aStartTime)
-    : PerformanceEntry(aParent, aName, u"mark"_ns), mStartTime(aStartTime) {}
+                                 DOMHighResTimeStamp aStartTime,
+                                 const JS::Handle<JS::Value>& aDetail)
+    : PerformanceEntry(aParent, aName, u"mark"_ns),
+      mStartTime(aStartTime),
+      mDetail(aDetail) {
+  mozilla::HoldJSObjects(this);
+}
 
-PerformanceMark::~PerformanceMark() = default;
+already_AddRefed<PerformanceMark> PerformanceMark::Constructor(
+    const GlobalObject& aGlobal, const nsAString& aMarkName,
+    const PerformanceMarkOptions& aMarkOptions, ErrorResult& aRv) {
+  const nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(aGlobal.GetAsSupports());
+  return PerformanceMark::Constructor(aGlobal.Context(), global, aMarkName,
+                                      aMarkOptions, aRv);
+}
+
+already_AddRefed<PerformanceMark> PerformanceMark::Constructor(
+    JSContext* aCx, nsIGlobalObject* aGlobal, const nsAString& aMarkName,
+    const PerformanceMarkOptions& aMarkOptions, ErrorResult& aRv) {
+  RefPtr<Performance> performance = Performance::Get(aCx, aGlobal);
+  if (!performance) {
+    // This is similar to the message that occurs when accessing `performance`
+    // from outside a valid global.
+    aRv.ThrowTypeError(
+        "can't access PerformanceMark constructor, performance is null");
+    return nullptr;
+  }
+
+  if (performance->IsPerformanceTimingAttribute(aMarkName)) {
+    aRv.ThrowSyntaxError("markName cannot be a performance timing attribute");
+    return nullptr;
+  }
+
+  DOMHighResTimeStamp startTime = aMarkOptions.mStartTime.WasPassed()
+                                      ? aMarkOptions.mStartTime.Value()
+                                      : performance->Now();
+  if (startTime < 0) {
+    aRv.ThrowTypeError("Expected startTime >= 0");
+    return nullptr;
+  }
+
+  JS::Rooted<JS::Value> detail(aCx);
+  if (aMarkOptions.mDetail.isNullOrUndefined()) {
+    detail.setNull();
+  } else {
+    StructuredSerializeOptions serializeOptions;
+    JS::Rooted<JS::Value> valueToClone(aCx, aMarkOptions.mDetail);
+    nsContentUtils::StructuredClone(aCx, aGlobal, valueToClone,
+                                    serializeOptions, &detail, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+  }
+
+  return do_AddRef(new PerformanceMark(aGlobal, aMarkName, startTime, detail));
+}
+
+PerformanceMark::~PerformanceMark() { mozilla::DropJSObjects(this); }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceMark)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMark,
+                                                PerformanceEntry)
+  tmp->mDetail.setUndefined();
+  mozilla::DropJSObjects(tmp);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMark,
+                                                  PerformanceEntry)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceMark,
+                                               PerformanceEntry)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDetail)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(PerformanceMark,
+                                               PerformanceEntry)
 
 JSObject* PerformanceMark::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
   return PerformanceMark_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void PerformanceMark::GetDetail(JSContext* aCx,
+                                JS::MutableHandle<JS::Value> aRetval) {
+  // Return a copy so that the PerformanceMark.detail reference always returns
+  // the same value. However, the contents of detail can be mutated. The spec
+  // isn't clear if this is okay but it matches Chrome's behavior.
+  aRetval.set(mDetail);
 }
 
 size_t PerformanceMark::SizeOfIncludingThis(

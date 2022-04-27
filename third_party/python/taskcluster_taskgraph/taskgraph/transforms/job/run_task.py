@@ -110,32 +110,14 @@ worker_defaults = {
 
 
 def script_url(config, script):
-    # This logic is a bit of a hack, and should be replaced by something better.
-    # TASK_ID is used as a proxy for running in automation.  In that case, we
-    # want to use the run-task/fetch-content corresponding to the taskgraph
-    # version we are running, and otherwise, we aren't going to run the task we
-    # generate, so the exact version doesn't matter.
-    # TASK_ID is also set for test-action-callback, so we check for that with
-    # taskcluster.testing.
-    # If we checked out the taskgraph code with run-task in the decision task,
-    # we can use TASKGRAPH_* to find the right version, which covers the
-    # existing use case.
-    if "TASK_ID" in os.environ and not taskcluster.testing:
-        if (
-            "TASKGRAPH_HEAD_REPOSITORY" not in os.environ
-            or "TASKGRAPH_HEAD_REV" not in os.environ
-        ):
-            raise Exception(
-                "Must specify 'TASKGRAPH_HEAD_REPOSITORY' and 'TASKGRAPH_HEAD_REV' "
-                "to use run-task on generic-worker."
-            )
-    taskgraph_repo = os.environ.get(
-        "TASKGRAPH_HEAD_REPOSITORY", "https://hg.mozilla.org/ci/taskgraph"
-    )
-    taskgraph_rev = os.environ.get("TASKGRAPH_HEAD_REV", "default")
-    return "{}/raw-file/{}/src/taskgraph/run-task/{}".format(
-        taskgraph_repo, taskgraph_rev, script
-    )
+    if "MOZ_AUTOMATION" in os.environ and "TASK_ID" not in os.environ:
+        raise Exception("TASK_ID must be defined to use run-task on generic-worker")
+    task_id = os.environ.get("TASK_ID", "<TASK_ID>")
+    # use_proxy = False to avoid having all generic-workers turn on proxy
+    # Assumes the cluster allows anonymous downloads of public artifacts
+    tc_url = taskcluster.get_root_url(False)
+    # TODO: Use util/taskcluster.py:get_artifact_url once hack for Bug 1405889 is removed
+    return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
 
 
 @run_job_using(

@@ -8,6 +8,7 @@
 #define _ENCODING_CONSTRAINTS_H_
 
 #include <algorithm>
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 class EncodingConstraints {
@@ -15,7 +16,6 @@ class EncodingConstraints {
   EncodingConstraints()
       : maxWidth(0),
         maxHeight(0),
-        maxFps(0),
         maxFs(0),
         maxBr(0),
         maxPps(0),
@@ -44,7 +44,7 @@ class EncodingConstraints {
 
   uint32_t maxWidth;
   uint32_t maxHeight;
-  uint32_t maxFps;
+  Maybe<double> maxFps;
   uint32_t maxFs;
   uint32_t maxBr;
   uint32_t maxPps;

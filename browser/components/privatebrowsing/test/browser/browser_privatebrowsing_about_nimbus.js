@@ -2,36 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
-const { ExperimentAPI } = ChromeUtils.import(
-  "resource://nimbus/ExperimentAPI.jsm"
-);
-const { PanelTestProvider } = ChromeUtils.import(
-  "resource://activity-stream/lib/PanelTestProvider.jsm"
-);
-const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
-);
-
-function waitForTelemetryEvent(category) {
-  info("waiting for telemetry event");
-  return TestUtils.waitForCondition(() => {
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      false
-    ).content;
-    if (!events) {
-      return null;
-    }
-    events = events.filter(e => e[1] == category);
-    if (events.length) {
-      return events[0];
-    }
-    return null;
-  }, "waiting for telemetry event");
-}
+/* import-globals-from head.js */
 
 add_task(async function test_experiment_plain_text() {
   const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
@@ -214,9 +185,10 @@ add_task(async function test_experiment_click_info_telemetry() {
     },
   });
 
-  let { win, tab } = await openTabAndWaitForRender();
-
+  // Required for `mach test --verify`
   Services.telemetry.clearEvents();
+
+  let { win, tab } = await openTabAndWaitForRender();
 
   await SpecialPowers.spawn(tab, [], () => {
     const el = content.document.querySelector(".info a");
@@ -318,7 +290,6 @@ add_task(async function test_experiment_bottom_promo() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-
   await doExperimentCleanup();
 });
 
@@ -378,7 +349,6 @@ add_task(async function test_experiment_below_search_promo() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-
   await doExperimentCleanup();
 });
 
@@ -435,6 +405,5 @@ add_task(async function test_experiment_top_promo() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-
   await doExperimentCleanup();
 });

@@ -302,6 +302,7 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
     WriteParam(aWriter, aParam.mNackCount);
     WriteParam(aWriter, aParam.mFirCount);
     WriteParam(aWriter, aParam.mPliCount);
+    WriteParam(aWriter, aParam.mFramesPerSecond);
     WriteRTCReceivedRtpStreamStats(aWriter, aParam);
   }
 
@@ -312,6 +313,7 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
            ReadParam(aReader, &(aResult->mNackCount)) &&
            ReadParam(aReader, &(aResult->mFirCount)) &&
            ReadParam(aReader, &(aResult->mPliCount)) &&
+           ReadParam(aReader, &(aResult->mFramesPerSecond)) &&
            ReadRTCReceivedRtpStreamStats(aReader, aResult);
   }
 };

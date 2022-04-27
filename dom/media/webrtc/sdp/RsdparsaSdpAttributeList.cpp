@@ -1188,7 +1188,12 @@ void RsdparsaSdpAttributeList::LoadRids(RustAttributeList* attributeList) {
     EncodingConstraints parameters;
     parameters.maxWidth = rid.params.max_width;
     parameters.maxHeight = rid.params.max_height;
-    parameters.maxFps = rid.params.max_fps;
+    // Right now, we treat max-fps=0 and the absence of max-fps as no limit.
+    // We will eventually want to treat max-fps=0 as 0 frames per second, and
+    // the absence of max-fps as no limit (bug 1762632).
+    if (rid.params.max_fps) {
+      parameters.maxFps = Some(rid.params.max_fps);
+    }
     parameters.maxFs = rid.params.max_fs;
     parameters.maxBr = rid.params.max_br;
     parameters.maxPps = rid.params.max_pps;

@@ -1695,7 +1695,7 @@ TEST_F(JsepTrackTest, NonDefaultVideoSdpFmtpLine) {
       auto* video = static_cast<JsepVideoCodecDescription*>(codec.get());
       video->mConstraints.maxFs = 1200;
       if (codec->mName == "VP8") {
-        video->mConstraints.maxFps = 15;
+        video->mConstraints.maxFps = Some(15);
       } else {
         video->mConstraints.maxDpb = 6400;
         video->mConstraints.maxBr = 1000;
@@ -1710,7 +1710,7 @@ TEST_F(JsepTrackTest, NonDefaultVideoSdpFmtpLine) {
       auto* video = static_cast<JsepVideoCodecDescription*>(codec.get());
       video->mConstraints.maxFs = 32400;
       if (codec->mName == "VP8") {
-        video->mConstraints.maxFps = 60;
+        video->mConstraints.maxFps = Some(60);
       } else {
         video->mConstraints.maxMbps = 1944000;
         video->mConstraints.maxCpb = 800000;

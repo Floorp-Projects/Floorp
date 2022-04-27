@@ -379,8 +379,9 @@ bool WindowsUIUtils::ComputeOverlayScrollbars() {
   boolean autoHide = false;
   sUiSettings->get_AutoHideScrollBars(&autoHide);
   return autoHide;
-#endif
+#else
   return false;
+#endif
 }
 
 void WindowsUIUtils::UpdateInTabletMode() {

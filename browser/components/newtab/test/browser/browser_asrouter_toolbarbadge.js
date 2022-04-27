@@ -14,6 +14,8 @@ add_task(async function test_setup() {
     // state opens a new tab for signing in.
     // We'll clean those up here for now.
     gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
+    // Stop the load in the last tab that remains.
+    gBrowser.stop();
     Services.prefs.clearUserPref("identity.fxaccounts.toolbar.accessed");
   });
 });

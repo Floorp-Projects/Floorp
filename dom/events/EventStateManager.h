@@ -1242,10 +1242,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
 // Click and double-click events need to be handled even for content that
 // has no frame. This is required for Web compatibility.
-#define NS_EVENT_NEEDS_FRAME(event)               \
-  (!(event)->HasPluginActivationEventMessage() && \
-   (event)->mMessage != eMouseClick &&            \
-   (event)->mMessage != eMouseDoubleClick &&      \
+#define NS_EVENT_NEEDS_FRAME(event)          \
+  ((event)->mMessage != eMouseClick &&       \
+   (event)->mMessage != eMouseDoubleClick && \
    (event)->mMessage != eMouseAuxClick)
 
 #endif  // mozilla_EventStateManager_h_
