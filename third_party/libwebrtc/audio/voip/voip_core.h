@@ -109,8 +109,6 @@ class VoipCore : public VoipEngine,
   // Implements VoipStatistics interfaces.
   VoipResult GetIngressStatistics(ChannelId channel_id,
                                   IngressStatistics& ingress_stats) override;
-  VoipResult GetChannelStatistics(ChannelId channe_id,
-                                  ChannelStatistics& channel_stats) override;
 
   // Implements VoipVolumeControl interfaces.
   VoipResult SetInputMuted(ChannelId channel_id, bool enable) override;
