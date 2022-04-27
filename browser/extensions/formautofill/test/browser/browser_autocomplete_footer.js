@@ -70,8 +70,10 @@ add_task(async function test_click_on_footer() {
       PRIVACY_PREF_URL,
       true
     );
-    // Wait for dropdown animation finished to continue mouse synthesizing.
-    await sleep(3000);
+    // Make sure dropdown is visible before continuing mouse synthesizing.
+    await BrowserTestUtils.waitForCondition(() =>
+      BrowserTestUtils.is_visible(optionButton)
+    );
     await EventUtils.synthesizeMouseAtCenter(optionButton, {});
     info(`expecting tab: about:preferences#privacy opened`);
     const prefTab = await prefTabPromise;
