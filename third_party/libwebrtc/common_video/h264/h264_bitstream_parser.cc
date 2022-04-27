@@ -296,35 +296,24 @@ void H264BitstreamParser::ParseSlice(const uint8_t* slice, size_t length) {
   }
 }
 
-void H264BitstreamParser::ParseBitstream(const uint8_t* bitstream,
-                                         size_t length) {
-  std::vector<H264::NaluIndex> nalu_indices =
-      H264::FindNaluIndices(bitstream, length);
-  for (const H264::NaluIndex& index : nalu_indices)
-    ParseSlice(&bitstream[index.payload_start_offset], index.payload_size);
-}
-
-bool H264BitstreamParser::GetLastSliceQp(int* qp) const {
-  if (!last_slice_qp_delta_ || !pps_)
-    return false;
-  const int parsed_qp = 26 + pps_->pic_init_qp_minus26 + *last_slice_qp_delta_;
-  if (parsed_qp < kMinQpValue || parsed_qp > kMaxQpValue) {
-    RTC_LOG(LS_ERROR) << "Parsed invalid QP from bitstream.";
-    return false;
-  }
-  *qp = parsed_qp;
-  return true;
-}
-
 void H264BitstreamParser::ParseBitstream(
     rtc::ArrayView<const uint8_t> bitstream) {
-  ParseBitstream(bitstream.data(), bitstream.size());
+  std::vector<H264::NaluIndex> nalu_indices =
+      H264::FindNaluIndices(bitstream.data(), bitstream.size());
+  for (const H264::NaluIndex& index : nalu_indices)
+    ParseSlice(bitstream.data() + index.payload_start_offset,
+               index.payload_size);
 }
 
 absl::optional<int> H264BitstreamParser::GetLastSliceQp() const {
-  int qp;
-  bool success = GetLastSliceQp(&qp);
-  return success ? absl::optional<int>(qp) : absl::nullopt;
+  if (!last_slice_qp_delta_ || !pps_)
+    return absl::nullopt;
+  const int qp = 26 + pps_->pic_init_qp_minus26 + *last_slice_qp_delta_;
+  if (qp < kMinQpValue || qp > kMaxQpValue) {
+    RTC_LOG(LS_ERROR) << "Parsed invalid QP from bitstream.";
+    return absl::nullopt;
+  }
+  return qp;
 }
 
 }  // namespace webrtc

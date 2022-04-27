@@ -481,9 +481,9 @@ int32_t H264EncoderImpl::Encode(
     // |encoded_images_[i]._length| == 0.
     if (encoded_images_[i].size() > 0) {
       // Parse QP.
-      h264_bitstream_parser_.ParseBitstream(encoded_images_[i].data(),
-                                            encoded_images_[i].size());
-      h264_bitstream_parser_.GetLastSliceQp(&encoded_images_[i].qp_);
+      h264_bitstream_parser_.ParseBitstream(encoded_images_[i]);
+      encoded_images_[i].qp_ =
+          h264_bitstream_parser_.GetLastSliceQp().value_or(-1);
 
       // Deliver encoded image.
       CodecSpecificInfo codec_specific;
