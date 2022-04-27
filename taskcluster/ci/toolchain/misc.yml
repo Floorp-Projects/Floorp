@@ -175,15 +175,9 @@ wrench-deps:
             - 'gfx/wr/Cargo.lock'
             - 'gfx/wr/ci-scripts/install-meson.sh'
         toolchain-artifact: public/build/wrench-deps.tar.zst
-    dependencies:
-        linux64-rust-1.47: toolchain-linux64-rust-1.47
     fetches:
         fetch:
-            - android-rs-glue
-        linux64-rust-1.47:
-            - artifact: rustc.tar.zst
-              extract: true
-              dest: rustc-1.47
+            - android-ndk-rs
         toolchain:
             - linux64-rust  # whatever m-c is built with
 

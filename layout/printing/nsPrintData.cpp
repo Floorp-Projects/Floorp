@@ -43,12 +43,10 @@ nsPrintData::~nsPrintData() {
   if (mPrintDC) {
     PR_PL(("****************** End Document ************************\n"));
     PR_PL(("\n"));
-    bool isCancelled = false;
-    mPrintSettings->GetIsCancelled(&isCancelled);
 
     nsresult rv = NS_OK;
     if (mType == eIsPrinting && mPrintDC->IsCurrentlyPrintingDocument()) {
-      if (!isCancelled && !mIsAborted) {
+      if (!mIsAborted) {
         rv = mPrintDC->EndDocument();
       } else {
         rv = mPrintDC->AbortDocument();

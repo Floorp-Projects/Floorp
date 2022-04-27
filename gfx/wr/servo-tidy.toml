@@ -11,17 +11,15 @@ packages = [
     "core-foundation-sys",
     "core-graphics",
     "gl_generator",
-    "gleam",
+    # glsl requires 5.1, and xcursor (required by winit) requires 7.1.
+    # when a version of glsl depending on 7.1 is published we can update.
+    "nom",
     "rand_core",
-    # https://github.com/trimental/andrew/issues/5
-    "rusttype",
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=1615148
-    "smallvec",
+    # Can be fixed by updating clap dependency - see bug 1765326
+    "strsim",
     "yaml-rust",
-    # These are tracked in bug 1587468, see there for pending work.
-    "proc-macro2",
-    "quote",
-    "unicode-xid",
+    # Can be fixed by removing time dependency - see bug 1765324
+    "wasi",
 ]
 
 # Files that are ignored for all tidy and lint checks.

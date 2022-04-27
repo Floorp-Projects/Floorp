@@ -76,3 +76,72 @@ add_task(async function process_switch_in_sidebars_popups() {
   await closeBrowserAction(extension);
   await extension.unload();
 });
+
+// Test that navigating the browserAction popup between extension pages doesn't keep the
+// parser blocked (See Bug 1747813).
+add_task(
+  async function test_navigate_browserActionPopups_shouldnot_block_parser() {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        browser_action: {
+          default_popup: "popup-1.html",
+        },
+      },
+      files: {
+        "popup-1.html": `<!DOCTYPE html><meta charset=utf-8><script src=popup-1.js></script><h1>Popup 1</h1>`,
+        "popup-2.html": `<!DOCTYPE html><meta charset=utf-8><script src=popup-2.js></script><h1>Popup 2</h1>`,
+
+        "popup-1.js": function() {
+          browser.test.onMessage.addListener(msg => {
+            if (msg !== "navigate-popup") {
+              browser.test.fail(`Unexpected test message "${msg}"`);
+              return;
+            }
+            location.href = "/popup-2.html";
+          });
+          window.onload = () => browser.test.sendMessage("popup-page-1");
+        },
+
+        "popup-2.js": function() {
+          window.onload = () => browser.test.sendMessage("popup-page-2");
+        },
+      },
+    });
+
+    // Make sure the mouse isn't hovering over the browserAction widget.
+    EventUtils.synthesizeMouseAtCenter(
+      gURLBar.textbox,
+      { type: "mouseover" },
+      window
+    );
+
+    await extension.startup();
+
+    // Triggers popup preload (otherwise we wouldn't be blocking the parser for the browserAction popup
+    // and the issue wouldn't be triggered, a real user on the contrary has a pretty high chance to trigger a
+    // preload while hovering the browserAction popup before opening the popup with a click).
+    let widget = getBrowserActionWidget(extension).forWindow(window);
+    EventUtils.synthesizeMouseAtCenter(
+      widget.node,
+      { type: "mouseover" },
+      window
+    );
+    await clickBrowserAction(extension);
+
+    await extension.awaitMessage("popup-page-1");
+
+    extension.sendMessage("navigate-popup");
+
+    await extension.awaitMessage("popup-page-2");
+    // If the bug is triggered (e.g. it did regress), the test will get stuck waiting for
+    // the test message "popup-page-2" (which will never be sent because the extension page
+    // script isn't executed while the parser is blocked).
+    ok(
+      true,
+      "Extension browserAction popup successfully navigated to popup-page-2.html"
+    );
+
+    await closeBrowserAction(extension);
+    await extension.unload();
+  }
+);

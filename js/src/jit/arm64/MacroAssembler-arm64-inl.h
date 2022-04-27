@@ -2209,12 +2209,6 @@ void MacroAssembler::moveSimd128(FloatRegister src, FloatRegister dest) {
   }
 }
 
-void MacroAssembler::zeroSimd128(FloatRegister dest) {
-  // Unclear what the best code is here, xor is just what we do on x86.
-  // Alternatives would be `FMOV dest.4s, #0` and `FMOV dest, xzr`.
-  Eor(Simd16B(dest), Simd16B(dest), Simd16B(dest));
-}
-
 void MacroAssembler::loadConstantSimd128(const SimdConstant& v,
                                          FloatRegister dest) {
   // Movi does not yet generate good code for many cases, bug 1664397.

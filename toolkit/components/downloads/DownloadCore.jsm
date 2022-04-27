@@ -285,6 +285,15 @@ Download.prototype = {
   launchWhenSucceeded: false,
 
   /**
+   * When a download starts, we typically want to automatically open the
+   * downloads panel if the pref browser.download.alwaysOpenPanel is enabled.
+   * However, there are conditions where we want to prevent this. For example, a
+   * false value can prevent the downloads panel from opening when an add-on
+   * creates a download without user input as part of some background operation.
+   */
+  openDownloadsListOnStart: true,
+
+  /**
    * This represents the MIME type of the download.
    */
   contentType: null,
@@ -1334,6 +1343,7 @@ const kPlainSerializableDownloadProperties = [
   "launchWhenSucceeded",
   "contentType",
   "handleInternally",
+  "openDownloadsListOnStart",
 ];
 
 /**

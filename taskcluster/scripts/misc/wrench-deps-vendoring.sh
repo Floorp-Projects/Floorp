@@ -17,11 +17,10 @@ mkdir wrench-deps
 mv vendor .cargo wrench-deps/
 mkdir wrench-deps/cargo-apk
 # Until there's a version of cargo-apk published on crates.io that has
-# https://github.com/rust-windowing/android-rs-glue/pull/223, we need to use
-# an unpublished version.
-# That version of cargo-apk needs to be built with an older version of rust.
-# See bug 1722702 comment 4.
-PATH=$MOZ_FETCHES_DIR/rustc-1.47/rustc/bin:$PATH cargo install --path $MOZ_FETCHES_DIR/android-rs-glue/cargo-apk --root wrench-deps/cargo-apk cargo-apk
+# https://github.com/rust-windowing/android-ndk-rs/pull/236, we need to use
+# an unpublished version. Additionally, until we update the NDK version used
+# in gecko we must use our own patched version. See bug 1615148.
+cargo install --path $MOZ_FETCHES_DIR/android-ndk-rs/cargo-apk --root wrench-deps/cargo-apk cargo-apk
 
 ci-scripts/install-meson.sh
 mv meson wrench-deps/meson

@@ -9,7 +9,9 @@
 // namespace.
 
 #include "StaticPrefsBase.h"
+#include "Preferences.h"
 #include "MainThreadUtils.h"  // for NS_IsMainThread()
+#include "nsXULAppAPI.h"      // for XRE_IsContentProcess()
 
 namespace mozilla {
 namespace StaticPrefs {
@@ -17,23 +19,35 @@ namespace StaticPrefs {
 // For mirrored prefs we generate an extern variable declaration and three
 // getter declarations/definitions.
 #define NEVER_PREF(name, cpp_type, default_value)
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)          \
-  extern cpp_type sMirror_##full_id;                                          \
-  inline StripAtomic<cpp_type> full_id() {                                    \
-    MOZ_DIAGNOSTIC_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),     \
-                          "Non-atomic static pref '" name                     \
-                          "' being accessed on background thread by getter"); \
-    return sMirror_##full_id;                                                 \
-  }                                                                           \
-  inline const char* GetPrefName_##base_id() { return name; }                 \
-  inline StripAtomic<cpp_type> GetPrefDefault_##base_id() {                   \
-    return default_value;                                                     \
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)           \
+  extern cpp_type sMirror_##full_id;                                           \
+  inline StripAtomic<cpp_type> full_id() {                                     \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
+          "Should not access the preference '" name "' in Content Processes"); \
+    }                                                                          \
+    MOZ_DIAGNOSTIC_ASSERT(IsAtomic<cpp_type>::value || NS_IsMainThread(),      \
+                          "Non-atomic static pref '" name                      \
+                          "' being accessed on background thread by getter");  \
+    return sMirror_##full_id;                                                  \
+  }                                                                            \
+  inline const char* GetPrefName_##base_id() { return name; }                  \
+  inline StripAtomic<cpp_type> GetPrefDefault_##base_id() {                    \
+    return default_value;                                                      \
   }
-#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value) \
-  extern cpp_type sMirror_##full_id;                               \
-  inline cpp_type full_id() {                                      \
-    MaybeInitOncePrefs();                                          \
-    return sMirror_##full_id;                                      \
-  }                                                                \
-  inline const char* GetPrefName_##base_id() { return name; }      \
+#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)             \
+  extern cpp_type sMirror_##full_id;                                           \
+  inline cpp_type full_id() {                                                  \
+    MaybeInitOncePrefs();                                                      \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
+          "Should not access the preference '" name "' in Content Processes"); \
+    }                                                                          \
+    return sMirror_##full_id;                                                  \
+  }                                                                            \
+  inline const char* GetPrefName_##base_id() { return name; }                  \
   inline cpp_type GetPrefDefault_##base_id() { return default_value; }

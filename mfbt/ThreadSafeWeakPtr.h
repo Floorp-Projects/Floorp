@@ -182,6 +182,7 @@ class SupportsThreadSafeWeakPtr : public detail::SupportsThreadSafeWeakPtrBase {
   void ref() { AddRef(); }
   void deref() { Release(); }
   MozRefCountType refCount() const { return mWeakRef->mStrongCnt; }
+  bool hasOneRef() const { return refCount() == 1; }
 
  private:
   template <typename U>
@@ -245,6 +246,11 @@ class ThreadSafeWeakPtr {
 
   bool operator==(const RefPtr<T>& aOther) const {
     return *this == aOther.get();
+  }
+
+  friend bool operator==(const RefPtr<T>& aStrong,
+                         const ThreadSafeWeakPtr& aWeak) {
+    return aWeak == aStrong.get();
   }
 
   bool operator==(const T* aOther) const {

@@ -41,6 +41,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   int32_t SetRates(
       const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
+  WebrtcVideoEncoder::EncoderInfo GetEncoderInfo() const override;
   MediaEventSource<uint64_t>* InitPluginEvent() override { return nullptr; }
 
   MediaEventSource<uint64_t>* ReleasePluginEvent() override { return nullptr; }

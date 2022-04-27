@@ -392,22 +392,9 @@ nscoord nsVideoFrame::GetMinISize(gfxContext* aRenderingContext) {
   // Bind the result variable to a RAII-based debug object - the variable
   // therefore must match the function's return value.
   DISPLAY_MIN_INLINE_SIZE(this, result);
-  nsSize size;
-  const auto wm = GetWritingMode();
-  if (HasVideoElement()) {
-    // This call handles size-containment
-    size = GetVideoIntrinsicSize();
-  } else {
-    const auto containAxes = StyleDisplay()->GetContainSizeAxes();
-    // We expect last and only child of audio elements to be control if
-    // "controls" attribute is present.
-    if (containAxes.IsBoth() || !mFrames.LastChild()) {
-      size = nsSize();
-    } else {
-      size = containAxes.ContainSize(kFallbackIntrinsicSize, wm);
-    }
-  }
-  result = wm.IsVertical() ? size.height : size.width;
+  // This call handles size-containment
+  nsSize size = GetVideoIntrinsicSize();
+  result = GetWritingMode().IsVertical() ? size.height : size.width;
   return result;
 }
 
@@ -471,29 +458,32 @@ bool nsVideoFrame::ShouldDisplayPoster() const {
 }
 
 nsSize nsVideoFrame::GetVideoIntrinsicSize() const {
-  if (!HasVideoElement()) {
-    return nsSize(0, 0);
+  const auto containAxes = StyleDisplay()->GetContainSizeAxes();
+  const auto isVideo = HasVideoElement();
+  // Intrinsic size will be 0,0 if the element is:
+  // - Size-contained, or
+  // - An audio element with no "controls" attribute, distinguished by the last
+  // and only child being the control.
+  if (containAxes.IsBoth() || (!isVideo && !mFrames.LastChild())) {
+    return {};
   }
 
-  const auto containAxes = StyleDisplay()->GetContainSizeAxes();
-  // 'contain:size' replaced elements have intrinsic size 0,0.
-  if (containAxes.IsBoth()) {
-    return nsSize(0, 0);
+  auto wm = GetWritingMode();
+  if (!isVideo) {
+    return containAxes.ContainSize(kFallbackIntrinsicSize, wm);
   }
 
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   if (Maybe<CSSIntSize> size = element->GetVideoSize()) {
-    return containAxes.ContainSize(CSSPixel::ToAppUnits(*size),
-                                   GetWritingMode());
+    return containAxes.ContainSize(CSSPixel::ToAppUnits(*size), wm);
   }
 
   if (ShouldDisplayPoster()) {
     if (Maybe<nsSize> imgSize = PosterImageSize()) {
-      return containAxes.ContainSize(*imgSize, GetWritingMode());
+      return containAxes.ContainSize(*imgSize, wm);
     }
   }
-
-  return containAxes.ContainSize(kFallbackIntrinsicSize, GetWritingMode());
+  return containAxes.ContainSize(kFallbackIntrinsicSize, wm);
 }
 
 IntrinsicSize nsVideoFrame::GetIntrinsicSize() {

@@ -66,7 +66,22 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
 
-  auto storageAllowed = StorageAllowedForWindow(window);
+  // Our current idiom is that storage-related APIs specialize for the system
+  // principal themselves, which is consistent with StorageAllowedForwindow not
+  // specializing for the system principal.  Without this specialization we
+  // would end up with ePrivateBrowsing for system principaled private browsing
+  // windows which is explicitly not what we want.  System Principal code always
+  // should have access to storage.  It may make sense to enhance
+  // StorageAllowedForWindow in the future to handle this after comprehensive
+  // auditing.
+  nsCOMPtr<nsIPrincipal> principal = aGlobal.GetSubjectPrincipal();
+  StorageAccess storageAllowed;
+  if (principal && principal->IsSystemPrincipal()) {
+    storageAllowed = StorageAccess::eAllow;
+  } else {
+    storageAllowed = StorageAllowedForWindow(window);
+  }
+
   if (storageAllowed == StorageAccess::eDeny) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
@@ -83,8 +98,6 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   // StorageAccess value.
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (storageAllowed == StorageAccess::ePrivateBrowsing) {
-    nsCOMPtr<Document> doc = window->GetExtantDoc();
-    nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
     uint32_t privateBrowsingId = 0;
     if (principal) {
       MOZ_ALWAYS_SUCCEEDS(principal->GetPrivateBrowsingId(&privateBrowsingId));

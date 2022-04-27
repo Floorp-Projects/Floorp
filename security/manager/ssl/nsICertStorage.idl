@@ -122,6 +122,7 @@ interface nsICertStorage : nsISupports {
   const short STATE_ENFORCE = 1;
   const short STATE_NOT_ENROLLED = 2;
   const short STATE_NOT_COVERED = 3;
+  const short STATE_NO_FILTER = 4;
 
   /**
    * Asynchronously set the revocation states of a set of certificates.
@@ -173,6 +174,7 @@ interface nsICertStorage : nsISupports {
    *    - STATE_NOT_ENROLLED if the issuer is not enrolled in CRLite, or
    *    - STATE_NOT_COVERED if the issuer is enrolled but the provided timestamps indicate
    *      that the serial number is not covered by the current CRLite filter.
+   *    - STATE_NO_FILTER if there is no (usable) CRLite filter.
    * No lookup is performed in the STATE_NOT_ENROLLED and STATE_NOT_COVERED cases.
    */
   [must_use]
