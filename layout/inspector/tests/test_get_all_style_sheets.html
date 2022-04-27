@@ -1,44 +1,39 @@
 <!DOCTYPE HTML>
-<html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=734861
 -->
-<head>
-  <meta charset="utf-8">
-  <title>Test for Bug 734861</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript">
+<meta charset="utf-8">
+<title>Test for Bug 734861</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=734861">Mozilla Bug 734861</a>
+<div id="host"></div>
+<script>
+/** Test for Bug 734861 **/
+const InspectorUtils = SpecialPowers.InspectorUtils;
 
-  /** Test for Bug 734861 **/
+add_task(async function() {
+  let sheet = new CSSStyleSheet();
+  await sheet.replace(`* { color: blue }`);
 
-  const InspectorUtils = SpecialPowers.InspectorUtils;
+  let host = document.querySelector("#host");
+  host.adoptedStyleSheets = [sheet, sheet];
+  document.adoptedStyleSheets.push(sheet);
 
-  SimpleTest.waitForExplicitFinish();
+  let res = InspectorUtils.getAllStyleSheets(document);
 
-  function runTest() {
-    var res = InspectorUtils.getAllStyleSheets(document);
-
-    var foundUA = false;
-    for (var i = 0; i < res.length; i++) {
-      if (res[i].href === "resource://gre-resources/ua.css") {
-        foundUA = true;
-        break;
-      }
+  let foundUA = false;
+  let adoptedCount = 0;
+  for (let s of InspectorUtils.getAllStyleSheets(document)) {
+    if (SpecialPowers.unwrap(s) == sheet) {
+      adoptedCount++;
     }
-    ok(foundUA, "UA sheet should be returned with all the other sheets.");
-    SimpleTest.finish();
+    if (s.href === "resource://gre-resources/ua.css") {
+      foundUA = true;
+    }
   }
 
-  </script>
-</head>
-<body onload="runTest();">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=734861">Mozilla Bug 734861</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-
-</div>
-<pre id="test">
-</pre>
-</body>
-</html>
+  ok(foundUA, "UA sheet should be returned with all the other sheets.");
+  is(adoptedCount, 1, "Adopted stylesheet should show up once");
+});
+</script>

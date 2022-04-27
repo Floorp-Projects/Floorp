@@ -83,6 +83,7 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
                                        nsTArray<RefPtr<StyleSheet>>& aResult) {
   // Get the agent, then user and finally xbl sheets in the style set.
   PresShell* presShell = aDocument.GetPresShell();
+  nsTHashSet<StyleSheet*> sheetSet;
 
   if (presShell) {
     ServoStyleSet* styleSet = presShell->StyleSet();
@@ -101,8 +102,8 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
     AutoTArray<StyleSheet*, 32> nonDocumentSheets;
     styleSet->AppendAllNonDocumentAuthorSheets(nonDocumentSheets);
 
-    // The non-document stylesheet array can't have duplicates right now, but it
-    // could once we include adopted stylesheets.
+    // The non-document stylesheet array can have duplicates due to adopted
+    // stylesheets.
     nsTHashSet<StyleSheet*> sheetSet;
     for (StyleSheet* sheet : nonDocumentSheets) {
       if (sheetSet.EnsureInserted(sheet)) {
@@ -116,9 +117,11 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
     aResult.AppendElement(aDocument.SheetAt(i));
   }
 
-  // FIXME(emilio, bug 1617948): This doesn't deal with adopted stylesheets, and
-  // it should. It should also handle duplicates correctly when it does, see
-  // above.
+  for (auto& sheet : aDocument.AdoptedStyleSheets()) {
+    if (sheetSet.EnsureInserted(sheet)) {
+      aResult.AppendElement(sheet);
+    }
+  }
 }
 
 bool InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode) {
