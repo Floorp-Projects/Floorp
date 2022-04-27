@@ -66,10 +66,12 @@ function() {
     let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
+    is(clientData.hashAlgorithm, "SHA-256", "Hash algorithm is correct");
     is(clientData.type, "webauthn.create", "Type is correct");
 
     let extensions = aCredInfo.getClientExtensionResults();
     is(extensions.appid, undefined, "appid extension wasn't used");
+    is(clientData.clientExtensions.appid, undefined, "appid extension wasn't sent");
 
     return webAuthnDecodeCBORAttestation(aCredInfo.response.attestationObject)
     .then(function(aAttestationObj) {
