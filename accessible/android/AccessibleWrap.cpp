@@ -283,38 +283,37 @@ bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
   return false;
 }
 
+Accessible* AccessibleWrap::DoPivot(Accessible* aAccessible,
+                                    int32_t aGranularity, bool aForward,
+                                    bool aInclusive) {
+  a11y::Pivot pivot(nullptr);
+  // Depending on the start accessible, the pivot rule will either traverse
+  // local or remote accessibles exclusively.
+  TraversalRule rule(aGranularity, aAccessible->IsLocal());
+  Accessible* result = aForward ? pivot.Next(aAccessible, rule, aInclusive)
+                                : pivot.Prev(aAccessible, rule, aInclusive);
+
+  if (result && (result != aAccessible || aInclusive)) {
+    return result;
+  }
+
+  return nullptr;
+}
+
 bool AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                              bool aInclusive) {
-  a11y::Pivot pivot(RootAccessible());
-  TraversalRule rule(aGranularity);
-  Accessible* current = IsProxy() ? Proxy() : static_cast<Accessible*>(this);
-  Accessible* result = aForward ? pivot.Next(current, rule, aInclusive)
-                                : pivot.Prev(current, rule, aInclusive);
-
-  if (result && (result != current || aInclusive)) {
-    RefPtr<AccessibleWrap> newPosition =
-        result->IsRemote() ? WrapperFor(result->AsRemote())
-                           : static_cast<AccessibleWrap*>(result->AsLocal());
-
-    if (IPCAccessibilityActive()) {
-      // We are in the child process. Dispatch a virtual cursor
-      // change event that will be turned into an android
-      // accessibility focused changed event in the parent.
-      PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
-                                        : nsIAccessiblePivot::REASON_PREV;
-      LocalAccessible* localResult = result->AsLocal();
-      MOZ_ASSERT(localResult);
-      RefPtr<AccEvent> event = new AccVCChangeEvent(
-          localResult->Document(), this, -1, -1, localResult, -1, -1, reason,
-          nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
-      nsEventShell::FireEvent(event);
-    } else {
-      // We are in the parent process. Dispatch an accessibility focused
-      // event directly.
-      RefPtr<SessionAccessibility> sessionAcc =
-          SessionAccessibility::GetInstanceFor(result);
-      sessionAcc->SendAccessibilityFocusedEvent(newPosition);
-    }
+  Accessible* result = DoPivot(this, aGranularity, aForward, aInclusive);
+  if (result) {
+    MOZ_ASSERT(result->IsLocal());
+    // Dispatch a virtual cursor change event that will be turned into an
+    // android accessibility focused changed event in the parent.
+    PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
+                                      : nsIAccessiblePivot::REASON_PREV;
+    LocalAccessible* localResult = result->AsLocal();
+    RefPtr<AccEvent> event = new AccVCChangeEvent(
+        localResult->Document(), this, -1, -1, localResult, -1, -1, reason,
+        nsIAccessiblePivot::NO_BOUNDARY, eFromUserInput);
+    nsEventShell::FireEvent(event);
 
     return true;
   }
@@ -324,7 +323,7 @@ bool AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
 
 void AccessibleWrap::ExploreByTouch(float aX, float aY) {
   a11y::Pivot pivot(RootAccessible());
-  ExploreByTouchRule rule;
+  TraversalRule rule;
 
   Accessible* maybeResult = pivot.AtPoint(aX, aY, rule);
   LocalAccessible* result = maybeResult ? maybeResult->AsLocal() : nullptr;

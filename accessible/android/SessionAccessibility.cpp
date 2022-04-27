@@ -126,11 +126,24 @@ bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
   bool ret = false;
   nsAppShell::SyncRunEvent(
       [this, self, aID, aGranularity, aForward, aInclusive, &ret] {
-        if (AccessibleWrap* acc = GetAccessibleByID(aID)) {
-          ret = acc->PivotTo(aGranularity, aForward, aInclusive);
+        if (Accessible* acc = GetAccessibleByID(aID)) {
+          if (acc->AsLocal()->IsProxy()) {
+            // XXX: Will be removed with RemoteAccessibleWrap
+            acc = acc->AsLocal()->Proxy();
+          }
+          Accessible* result =
+              AccessibleWrap::DoPivot(acc, aGranularity, aForward, aInclusive);
+          if (result) {
+            ret = true;
+            int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(result);
+            nsAppShell::PostEvent([this, self, virtualViewID] {
+              if (AccessibleWrap* acc = GetAccessibleByID(virtualViewID)) {
+                SendAccessibilityFocusedEvent(acc);
+              }
+            });
+          }
         }
       });
-
   return ret;
 }
 
@@ -236,7 +249,8 @@ void SessionAccessibility::SendAccessibilityFocusedEvent(
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED,
       aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
-  aAccessible->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+  RefPtr<AccessibleWrap> acc = aAccessible;
+  acc->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
 }
 
 void SessionAccessibility::SendHoverEnterEvent(AccessibleWrap* aAccessible) {

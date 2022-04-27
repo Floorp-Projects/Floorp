@@ -157,7 +157,8 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
 
   if (docAcc->mCachePivotBoundaries) {
     a11y::Pivot pivot(docAcc);
-    TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT);
+    TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
+                       true);
     Accessible* maybeFirst = pivot.First(rule);
     Accessible* maybeLast = pivot.Last(rule);
     LocalAccessible* first = maybeFirst ? maybeFirst->AsLocal() : nullptr;

@@ -119,7 +119,6 @@ void ProxySelectionEvent(RemoteAccessible* aTarget, RemoteAccessible* aWidget,
                          uint32_t aType);
 
 #if defined(ANDROID)
-MOZ_CAN_RUN_SCRIPT
 void ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
                                    RemoteAccessible* aOldPosition,
                                    int32_t aOldStartOffset,
