@@ -861,7 +861,7 @@ TEST_P(RtpSenderVideoTest, VideoLayersAllocationWithResolutionSentOnKeyFrames) {
 }
 
 TEST_P(RtpSenderVideoTest,
-       VideoLayersAllocationWithoutResolutionSentOnDeltaFrames) {
+       VideoLayersAllocationWithoutResolutionSentOnDeltaWhenUpdated) {
   const size_t kFrameSize = 100;
   uint8_t kFrame[kFrameSize];
   rtp_module_->RegisterRtpHeaderExtension(
@@ -875,14 +875,28 @@ TEST_P(RtpSenderVideoTest,
   allocation.resolution_and_frame_rate_is_valid = true;
   layer.target_bitrate_per_temporal_layer.push_back(
       DataRate::KilobitsPerSec(50));
-
   allocation.active_spatial_layers.push_back(layer);
   rtp_sender_video_->SetVideoLayersAllocation(allocation);
 
   RTPVideoHeader hdr;
+  hdr.frame_type = VideoFrameType::kVideoFrameKey;
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+  EXPECT_TRUE(transport_.last_sent_packet()
+                  .HasExtension<RtpVideoLayersAllocationExtension>());
+
+  // No allocation sent on delta frame unless it has been updated.
   hdr.frame_type = VideoFrameType::kVideoFrameDelta;
   rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
                                kDefaultExpectedRetransmissionTimeMs);
+  EXPECT_FALSE(transport_.last_sent_packet()
+                   .HasExtension<RtpVideoLayersAllocationExtension>());
+
+  // Update the allocation.
+  rtp_sender_video_->SetVideoLayersAllocation(allocation);
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+
   VideoLayersAllocation sent_allocation;
   EXPECT_TRUE(
       transport_.last_sent_packet()
@@ -894,6 +908,52 @@ TEST_P(RtpSenderVideoTest,
               SizeIs(1));
 }
 
+TEST_P(RtpSenderVideoTest,
+       VideoLayersAllocationWithResolutionSentOnDeltaWhenSpatialLayerAdded) {
+  const size_t kFrameSize = 100;
+  uint8_t kFrame[kFrameSize];
+  rtp_module_->RegisterRtpHeaderExtension(
+      RtpVideoLayersAllocationExtension::kUri,
+      kVideoLayersAllocationExtensionId);
+
+  VideoLayersAllocation allocation;
+  allocation.resolution_and_frame_rate_is_valid = true;
+  VideoLayersAllocation::SpatialLayer layer;
+  layer.width = 360;
+  layer.height = 180;
+  layer.spatial_id = 0;
+  layer.target_bitrate_per_temporal_layer.push_back(
+      DataRate::KilobitsPerSec(50));
+  allocation.active_spatial_layers.push_back(layer);
+  rtp_sender_video_->SetVideoLayersAllocation(allocation);
+
+  RTPVideoHeader hdr;
+  hdr.frame_type = VideoFrameType::kVideoFrameKey;
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+  ASSERT_TRUE(transport_.last_sent_packet()
+                  .HasExtension<RtpVideoLayersAllocationExtension>());
+
+  // Update the allocation.
+  layer.width = 640;
+  layer.height = 320;
+  layer.spatial_id = 1;
+  layer.target_bitrate_per_temporal_layer.push_back(
+      DataRate::KilobitsPerSec(100));
+  allocation.active_spatial_layers.push_back(layer);
+  rtp_sender_video_->SetVideoLayersAllocation(allocation);
+  hdr.frame_type = VideoFrameType::kVideoFrameDelta;
+  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
+                               kDefaultExpectedRetransmissionTimeMs);
+
+  VideoLayersAllocation sent_allocation;
+  EXPECT_TRUE(
+      transport_.last_sent_packet()
+          .GetExtension<RtpVideoLayersAllocationExtension>(&sent_allocation));
+  EXPECT_THAT(sent_allocation.active_spatial_layers, SizeIs(2));
+  EXPECT_TRUE(sent_allocation.resolution_and_frame_rate_is_valid);
+}
+
 TEST_P(RtpSenderVideoTest, VideoLayersAllocationSentOnDeltaFramesOnlyOnUpdate) {
   const size_t kFrameSize = 100;
   uint8_t kFrame[kFrameSize];
@@ -903,6 +963,8 @@ TEST_P(RtpSenderVideoTest, VideoLayersAllocationSentOnDeltaFramesOnlyOnUpdate) {
 
   VideoLayersAllocation allocation;
   VideoLayersAllocation::SpatialLayer layer;
+  layer.width = 360;
+  layer.height = 180;
   layer.target_bitrate_per_temporal_layer.push_back(
       DataRate::KilobitsPerSec(50));
   allocation.active_spatial_layers.push_back(layer);
@@ -942,7 +1004,10 @@ TEST_P(RtpSenderVideoTest, VideoLayersAllocationNotSentOnHigherTemporalLayers) {
       kVideoLayersAllocationExtensionId);
 
   VideoLayersAllocation allocation;
+  allocation.resolution_and_frame_rate_is_valid = true;
   VideoLayersAllocation::SpatialLayer layer;
+  layer.width = 360;
+  layer.height = 180;
   layer.target_bitrate_per_temporal_layer.push_back(
       DataRate::KilobitsPerSec(50));
   allocation.active_spatial_layers.push_back(layer);
@@ -956,18 +1021,15 @@ TEST_P(RtpSenderVideoTest, VideoLayersAllocationNotSentOnHigherTemporalLayers) {
 
   rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
                                kDefaultExpectedRetransmissionTimeMs);
-  VideoLayersAllocation sent_allocation;
-  EXPECT_FALSE(
-      transport_.last_sent_packet()
-          .GetExtension<RtpVideoLayersAllocationExtension>(&sent_allocation));
+  EXPECT_FALSE(transport_.last_sent_packet()
+                   .HasExtension<RtpVideoLayersAllocationExtension>());
 
   // Send a delta frame on tl0.
   vp8_header.temporalIdx = 0;
   rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp, 0, kFrame, hdr,
                                kDefaultExpectedRetransmissionTimeMs);
-  EXPECT_TRUE(
-      transport_.last_sent_packet()
-          .GetExtension<RtpVideoLayersAllocationExtension>(&sent_allocation));
+  EXPECT_TRUE(transport_.last_sent_packet()
+                  .HasExtension<RtpVideoLayersAllocationExtension>());
 }
 
 TEST_P(RtpSenderVideoTest, AbsoluteCaptureTime) {
