@@ -836,6 +836,23 @@ void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
                              });
 }
 
+void BaseChannel::SetNegotiatedHeaderExtensions_w(
+    const RtpHeaderExtensions& extensions) {
+  TRACE_EVENT0("webrtc", __func__);
+  RtpHeaderExtensions extensions_copy = extensions;
+  invoker_.AsyncInvoke<void>(
+      RTC_FROM_HERE, signaling_thread(),
+      [this, extensions_copy = std::move(extensions_copy)] {
+        RTC_DCHECK_RUN_ON(signaling_thread());
+        negotiated_header_extensions_ = std::move(extensions_copy);
+      });
+}
+
+RtpHeaderExtensions BaseChannel::GetNegotiatedRtpHeaderExtensions() const {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  return negotiated_header_extensions_;
+}
+
 VoiceChannel::VoiceChannel(rtc::Thread* worker_thread,
                            rtc::Thread* network_thread,
                            rtc::Thread* signaling_thread,
@@ -895,6 +912,9 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   const AudioContentDescription* audio = content->as_audio();
 
+  if (type == SdpType::kAnswer)
+    SetNegotiatedHeaderExtensions_w(audio->rtp_header_extensions());
+
   RtpHeaderExtensions rtp_header_extensions =
       GetFilteredRtpHeaderExtensions(audio->rtp_header_extensions());
   SetReceiveExtensions(rtp_header_extensions);
@@ -953,6 +973,9 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
   }
 
   const AudioContentDescription* audio = content->as_audio();
+
+  if (type == SdpType::kAnswer)
+    SetNegotiatedHeaderExtensions_w(audio->rtp_header_extensions());
 
   RtpHeaderExtensions rtp_header_extensions =
       GetFilteredRtpHeaderExtensions(audio->rtp_header_extensions());
@@ -1057,6 +1080,9 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   const VideoContentDescription* video = content->as_video();
 
+  if (type == SdpType::kAnswer)
+    SetNegotiatedHeaderExtensions_w(video->rtp_header_extensions());
+
   RtpHeaderExtensions rtp_header_extensions =
       GetFilteredRtpHeaderExtensions(video->rtp_header_extensions());
   SetReceiveExtensions(rtp_header_extensions);
@@ -1148,6 +1174,9 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   }
 
   const VideoContentDescription* video = content->as_video();
+
+  if (type == SdpType::kAnswer)
+    SetNegotiatedHeaderExtensions_w(video->rtp_header_extensions());
 
   RtpHeaderExtensions rtp_header_extensions =
       GetFilteredRtpHeaderExtensions(video->rtp_header_extensions());
