@@ -133,6 +133,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   ipc::IPCResult RecvDeviceUncapturedError(RawId aDeviceId,
                                            const nsACString& aMessage);
   ipc::IPCResult RecvDropAction(const ipc::ByteBuf& aByteBuf);
+  void ActorDestroy(ActorDestroyReason) override;
 };
 
 }  // namespace webgpu

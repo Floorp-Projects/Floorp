@@ -105,7 +105,12 @@ void Texture::Cleanup() {
 
 already_AddRefed<TextureView> Texture::CreateView(
     const dom::GPUTextureViewDescriptor& aDesc) {
-  RawId id = mParent->GetBridge()->TextureCreateView(mId, mParent->mId, aDesc);
+  auto bridge = mParent->GetBridge();
+  RawId id = 0;
+  if (bridge->IsOpen()) {
+    id = bridge->TextureCreateView(mId, mParent->mId, aDesc);
+  }
+
   RefPtr<TextureView> view = new TextureView(this, id);
   return view.forget();
 }
