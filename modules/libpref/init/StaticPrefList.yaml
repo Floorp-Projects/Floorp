@@ -1569,12 +1569,6 @@
   value: true
   mirror: always
 
-# Provide ability to turn on support for canvas mozGetAsFile API.
-- name: canvas.mozgetasfile.enabled
-  type: bool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "channelclassifier."
 #---------------------------------------------------------------------------
