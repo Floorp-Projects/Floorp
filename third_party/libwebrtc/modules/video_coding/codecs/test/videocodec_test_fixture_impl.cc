@@ -58,7 +58,7 @@ using VideoStatistics = VideoCodecTestStats::VideoStatistics;
 namespace {
 const int kBaseKeyFrameInterval = 3000;
 const double kBitratePriority = 1.0;
-const int kMaxFramerateFps = 30;
+const int kDefaultMaxFramerateFps = 30;
 const int kMaxQp = 56;
 
 void ConfigureSimulcast(VideoCodec* codec_settings) {
@@ -86,7 +86,7 @@ void ConfigureSvc(VideoCodec* codec_settings) {
   RTC_CHECK_EQ(kVideoCodecVP9, codec_settings->codecType);
 
   const std::vector<SpatialLayer> layers = GetSvcConfig(
-      codec_settings->width, codec_settings->height, kMaxFramerateFps,
+      codec_settings->width, codec_settings->height, kDefaultMaxFramerateFps,
       /*first_active_layer=*/0, codec_settings->VP9()->numberOfSpatialLayers,
       codec_settings->VP9()->numberOfTemporalLayers,
       /* is_screen_sharing = */ false);
@@ -646,10 +646,16 @@ void VideoCodecTestFixtureImpl::SetUpAndInitObjects(
   config_.codec_settings.startBitrate = static_cast<int>(initial_bitrate_kbps);
   config_.codec_settings.maxFramerate = std::ceil(initial_framerate_fps);
 
+  int clip_width = config_.clip_width.value_or(config_.codec_settings.width);
+  int clip_height = config_.clip_height.value_or(config_.codec_settings.height);
+
   // Create file objects for quality analysis.
-  source_frame_reader_.reset(
-      new YuvFrameReaderImpl(config_.filepath, config_.codec_settings.width,
-                             config_.codec_settings.height));
+  source_frame_reader_.reset(new YuvFrameReaderImpl(
+      config_.filepath, clip_width, clip_height,
+      config_.reference_width.value_or(clip_width),
+      config_.reference_height.value_or(clip_height),
+      YuvFrameReaderImpl::RepeatMode::kPingPong, config_.clip_fps,
+      config_.codec_settings.maxFramerate));
   EXPECT_TRUE(source_frame_reader_->Init());
 
   RTC_DCHECK(encoded_frame_writers_.empty());
