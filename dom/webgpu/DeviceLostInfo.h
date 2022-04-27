@@ -6,28 +6,46 @@
 #ifndef GPU_DeviceLostInfo_H_
 #define GPU_DeviceLostInfo_H_
 
+#include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/Maybe.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 class Device;
 
-class DeviceLostInfo final : public nsWrapperCache, public ChildOf<Device> {
+class DeviceLostInfo final : public nsWrapperCache {
  public:
   GPU_DECL_CYCLE_COLLECTION(DeviceLostInfo)
   GPU_DECL_JS_WRAP(DeviceLostInfo)
 
+  explicit DeviceLostInfo(nsIGlobalObject* const aGlobal,
+                          const nsAString& aMessage)
+      : mGlobal(aGlobal), mMessage(aMessage) {}
+  DeviceLostInfo(nsIGlobalObject* const aGlobal,
+                 dom::GPUDeviceLostReason aReason, const nsAString& aMessage)
+      : mGlobal(aGlobal), mReason(Some(aReason)), mMessage(aMessage) {}
+
  private:
-  DeviceLostInfo() = delete;
   ~DeviceLostInfo() = default;
   void Cleanup() {}
 
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  const Maybe<dom::GPUDeviceLostReason> mReason;
+  const nsAutoString mMessage;
+
  public:
-  void GetMessage(nsAString& aValue) const {}
+  void GetReason(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) {
+    if (!mReason || !dom::ToJSValue(aCx, mReason.value(), aRetval)) {
+      aRetval.setUndefined();
+    }
+  }
+
+  void GetMessage(nsAString& aValue) const { aValue = mMessage; }
+
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 };
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
 
 #endif  // GPU_DeviceLostInfo_H_
