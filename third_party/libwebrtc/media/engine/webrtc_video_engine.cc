@@ -106,16 +106,34 @@ void AddDefaultFeedbackParams(VideoCodec* codec,
   }
 }
 
-// This function will assign dynamic payload types (in the range [96, 127] and
-// for new additions the [35, 65] range) to the input codecs, and also add
-// ULPFEC, RED, FlexFEC, and associated RTX codecs for recognized codecs (VP8,
-// VP9, H264 and RED). It will also add default feedback params to the codecs.
-std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
-    std::vector<webrtc::SdpVideoFormat> input_formats,
-    const webrtc::WebRtcKeyValueConfig& trials,
-    bool is_decoder_factory) {
-  if (input_formats.empty())
+// This function will assign dynamic payload types (in the range [96, 127]) to
+// the input codecs, and also add ULPFEC, RED, FlexFEC, and associated RTX
+// codecs for recognized codecs (VP8, VP9, H264, and RED). It will also add
+// default feedback params to the codecs.
+// is_decoder_factory is needed to keep track of the implict assumption that any
+// H264 decoder also supports constrained base line profile.
+// Also, is_decoder_factory is used to decide whether FlexFEC video format
+// should be advertised as supported.
+// TODO(kron): Perhaps it is better to move the implicit knowledge to the place
+// where codecs are negotiated.
+template <class T>
+std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
+    const T* factory,
+    bool is_decoder_factory,
+    const webrtc::WebRtcKeyValueConfig& trials) {
+  if (!factory) {
+    return {};
+  }
+
+  std::vector<webrtc::SdpVideoFormat> supported_formats =
+      factory->GetSupportedFormats();
+  if (is_decoder_factory) {
+    AddH264ConstrainedBaselineProfileToSupportedFormats(&supported_formats);
+  }
+
+  if (supported_formats.empty())
     return std::vector<VideoCodec>();
+
   // Due to interoperability issues with old Chrome/WebRTC versions only use
   // the lower range for new codecs.
   static const int kFirstDynamicPayloadTypeLowerRange = 35;
@@ -126,8 +144,8 @@ std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
   int payload_type_upper = kFirstDynamicPayloadTypeUpperRange;
   int payload_type_lower = kFirstDynamicPayloadTypeLowerRange;
 
-  input_formats.push_back(webrtc::SdpVideoFormat(kRedCodecName));
-  input_formats.push_back(webrtc::SdpVideoFormat(kUlpfecCodecName));
+  supported_formats.push_back(webrtc::SdpVideoFormat(kRedCodecName));
+  supported_formats.push_back(webrtc::SdpVideoFormat(kUlpfecCodecName));
 
   // flexfec-03 is supported as
   // - receive codec unless WebRTC-FlexFEC-03-Advertised is disabled
@@ -142,11 +160,11 @@ std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
     // we never use the actual value anywhere in our code however.
     // TODO(brandtr): Consider honouring this value in the sender and receiver.
     flexfec_format.parameters = {{kFlexfecFmtpRepairWindow, "10000000"}};
-    input_formats.push_back(flexfec_format);
+    supported_formats.push_back(flexfec_format);
   }
 
   std::vector<VideoCodec> output_codecs;
-  for (const webrtc::SdpVideoFormat& format : input_formats) {
+  for (const webrtc::SdpVideoFormat& format : supported_formats) {
     VideoCodec codec(format);
     bool isCodecValidForLowerRange =
         absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
@@ -201,31 +219,6 @@ std::vector<VideoCodec> AssignPayloadTypesAndDefaultCodecs(
     }
   }
   return output_codecs;
-}
-
-// is_decoder_factory is needed to keep track of the implict assumption that any
-// H264 decoder also supports constrained base line profile.
-// Also, is_decoder_factory is used to decide whether FlexFEC video format
-// should be advertised as supported.
-// TODO(kron): Perhaps it is better to move the implicit knowledge to the place
-// where codecs are negotiated.
-template <class T>
-std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
-    const T* factory,
-    bool is_decoder_factory,
-    const webrtc::WebRtcKeyValueConfig& trials) {
-  if (!factory) {
-    return {};
-  }
-
-  std::vector<webrtc::SdpVideoFormat> supported_formats =
-      factory->GetSupportedFormats();
-  if (is_decoder_factory) {
-    AddH264ConstrainedBaselineProfileToSupportedFormats(&supported_formats);
-  }
-
-  return AssignPayloadTypesAndDefaultCodecs(std::move(supported_formats),
-                                            trials, is_decoder_factory);
 }
 
 bool IsTemporalLayersSupported(const std::string& codec_name) {
