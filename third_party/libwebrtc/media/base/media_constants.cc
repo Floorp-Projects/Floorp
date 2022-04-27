@@ -56,9 +56,6 @@ const char kCodecParamUseDtx[] = "usedtx";
 const char kCodecParamMaxAverageBitrate[] = "maxaveragebitrate";
 const char kCodecParamMaxPlaybackRate[] = "maxplaybackrate";
 
-const char kCodecParamSctpProtocol[] = "protocol";
-const char kCodecParamSctpStreams[] = "streams";
-
 const char kParamValueTrue[] = "1";
 const char kParamValueEmpty[] = "";
 
@@ -92,8 +89,6 @@ const char kCodecParamMaxBitrate[] = "x-google-max-bitrate";
 const char kCodecParamMinBitrate[] = "x-google-min-bitrate";
 const char kCodecParamStartBitrate[] = "x-google-start-bitrate";
 const char kCodecParamMaxQuantization[] = "x-google-max-quantization";
-const char kCodecParamPort[] = "x-google-port";
-const char kCodecParamMaxMessageSize[] = "x-google-max-message-size";
 
 const int kGoogleRtpDataCodecPlType = 109;
 const char kGoogleRtpDataCodecName[] = "google-data";
