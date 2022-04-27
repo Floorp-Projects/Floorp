@@ -238,7 +238,10 @@ if (is_ios || is_mac) {
 
         sources = [ "objc/native/src/audio/audio_session_observer.h" ]
 
-        deps = [ "../rtc_base" ]
+        deps = [
+          "../rtc_base",
+          "../rtc_base:threading",
+        ]
       }
 
       rtc_library("audio_device") {
@@ -267,6 +270,7 @@ if (is_ios || is_mac) {
           "../modules/audio_device:audio_device_generic",
           "../rtc_base",
           "../rtc_base:checks",
+          "../rtc_base:threading",
           "../system_wrappers:field_trial",
           "../system_wrappers:metrics",
         ]
@@ -340,7 +344,11 @@ if (is_ios || is_mac) {
 
         sources = [ "objc/native/src/network_monitor_observer.h" ]
 
-        deps = [ "../rtc_base" ]
+        deps = [
+          "../rtc_base",
+          "../rtc_base:network_constants",
+          "../rtc_base:threading",
+        ]
       }
 
       rtc_library("network_monitor_objc") {
@@ -385,6 +393,7 @@ if (is_ios || is_mac) {
         "../media:rtc_media_base",
         "../rtc_base",
         "../rtc_base:checks",
+        "../rtc_base:threading",
         "//third_party/libyuv",
       ]
 
@@ -975,6 +984,7 @@ if (is_ios || is_mac) {
         "../pc:peerconnection",
         "../rtc_base",
         "../rtc_base:checks",
+        "../rtc_base:network_constants",
         "../system_wrappers:field_trial",
         "../system_wrappers:metrics",
       ]
@@ -1079,6 +1089,7 @@ if (is_ios || is_mac) {
             ":sdk_unittests_bundle_data",
             ":sdk_unittests_sources",
             "../rtc_base",
+            "../rtc_base:threading",
             "//test:test_support",
           ]
           ldflags = [ "-all_load" ]
@@ -1098,6 +1109,7 @@ if (is_ios || is_mac) {
             ":framework_objc+link",
             ":ios_framework_bundle",
             "../rtc_base",
+            "../rtc_base:threading",
             "//test:test_support",
           ]
         }
@@ -1502,6 +1514,7 @@ if (is_ios || is_mac) {
         "../api/video_codecs:video_codecs_api",
         "../common_video",
         "../rtc_base",
+        "../rtc_base:threading",
       ]
       if (is_ios) {
         deps += [ ":native_network_monitor" ]
@@ -1522,6 +1535,7 @@ if (is_ios || is_mac) {
           ":network_monitor_objc",
           ":network_monitor_observer",
           "../rtc_base",
+          "../rtc_base:threading",
           "../rtc_base/synchronization:sequence_checker",
         ]
       }
