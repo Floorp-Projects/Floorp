@@ -244,8 +244,6 @@ bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword,
     case FormControlType::InputMonth:
     case FormControlType::InputWeek:
       return true;
-    case FormControlType::InputDatetimeLocal:
-      return !mozilla::StaticPrefs::dom_forms_datetime_local_widget();
     case FormControlType::InputPassword:
       return !aExcludePassword;
     default:
