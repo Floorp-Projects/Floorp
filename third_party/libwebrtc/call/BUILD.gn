@@ -280,7 +280,6 @@ rtc_library("call") {
     "../logging:rtc_event_rtp_rtcp",
     "../logging:rtc_event_video",
     "../logging:rtc_stream_config",
-    "../modules:module_api",
     "../modules/congestion_controller",
     "../modules/pacing",
     "../modules/rtp_rtcp",

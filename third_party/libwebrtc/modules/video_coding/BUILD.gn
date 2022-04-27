@@ -232,7 +232,6 @@ rtc_library("video_codec_interface") {
   ]
   deps = [
     ":codec_globals_headers",
-    "..:module_api",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
     "../../api/video_codecs:video_codecs_api",

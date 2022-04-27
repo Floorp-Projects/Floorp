@@ -40,19 +40,13 @@ class TaskQueue;
 }  // namespace rtc
 namespace webrtc {
 
-class CallStatsObserver;
 class FrameEncryptorInterface;
 class TargetTransferRateObserver;
 class Transport;
-class Module;
-class PacedSender;
 class PacketRouter;
 class RtpVideoSenderInterface;
-class RateLimiter;
 class RtcpBandwidthObserver;
 class RtpPacketSender;
-class SendDelayStats;
-class SendStatisticsProxy;
 
 struct RtpSenderObservers {
   RtcpRttStats* rtcp_rtt_stats;

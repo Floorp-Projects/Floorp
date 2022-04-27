@@ -334,7 +334,6 @@ if (rtc_enable_protobuf) {
       "../api/units:timestamp",
       "../api/video:video_frame",
       "../call:video_stream_api",
-      "../modules:module_api",
       "../modules:module_api_public",
       "../modules/audio_coding:audio_network_adaptor",
       "../modules/rtp_rtcp",

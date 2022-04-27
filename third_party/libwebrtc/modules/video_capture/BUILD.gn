@@ -27,7 +27,6 @@ rtc_library("video_capture_module") {
   ]
 
   deps = [
-    "..:module_api",
     "../../api:scoped_refptr",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
