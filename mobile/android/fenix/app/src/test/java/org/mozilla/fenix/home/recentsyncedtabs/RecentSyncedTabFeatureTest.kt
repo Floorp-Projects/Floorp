@@ -87,7 +87,11 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `WHEN loading is started THEN loading state is dispatched`() {
+    fun `GIVEN that there is no current state WHEN loading is started THEN loading state is dispatched`() {
+        every { store.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+
         feature.startLoading()
 
         verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)) }
@@ -186,6 +190,9 @@ class RecentSyncedTabFeatureTest {
 
     @Test
     fun `GIVEN that tab previously started loading WHEN synced tab displayed THEN load time metric recorded`() {
+        every { store.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
         val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
 
         feature.startLoading()
@@ -216,20 +223,38 @@ class RecentSyncedTabFeatureTest {
     }
 
     @Test
-    fun `GIVEN that feature is not loading WHEN no tabs error received THEN dispatches NONE state`() {
-        every { store.state } returns mockk {
-            every { recentSyncedTabState } returns RecentSyncedTabState.None
-        }
-        feature.onError(SyncedTabsView.ErrorType.NO_TABS_AVAILABLE)
+    fun `GIVEN that no tab is displayed WHEN stopLoading is called THEN none state dispatched`() {
+        feature.stopLoading()
 
         verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
     }
 
     @Test
-    fun `GIVEN that feature is loading WHEN fatal error received THEN dispatches NONE state`() {
+    fun `GIVEN that a tab is displayed WHEN stopLoading is called THEN nothing dispatched`() {
+        val tab = SyncedDeviceTabs(deviceAccessed1, listOf(createActiveTab()))
+
+        feature.displaySyncedTabs(listOf(tab))
+        feature.stopLoading()
+
+        verify(exactly = 0) { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
+    }
+
+    @Test
+    fun `GIVEN that feature is not loading WHEN error received THEN does not dispatch NONE state`() {
+        every { store.state } returns mockk {
+            every { recentSyncedTabState } returns RecentSyncedTabState.None
+        }
+        feature.onError(SyncedTabsView.ErrorType.NO_TABS_AVAILABLE)
+
+        verify(exactly = 0) { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }
+    }
+
+    @Test
+    fun `GIVEN that feature is loading WHEN error received THEN dispatches NONE state`() {
         every { store.state } returns mockk {
             every { recentSyncedTabState } returns RecentSyncedTabState.Loading
         }
+
         feature.onError(SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
 
         verify { store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None)) }

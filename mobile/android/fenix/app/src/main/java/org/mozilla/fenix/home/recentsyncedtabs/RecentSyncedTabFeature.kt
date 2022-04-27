@@ -54,9 +54,9 @@ class RecentSyncedTabFeature(
     override fun startLoading() {
         syncStartId?.let { RecentSyncedTabs.recentSyncedTabTimeToLoad.cancel(it) }
         syncStartId = RecentSyncedTabs.recentSyncedTabTimeToLoad.start()
-        store.dispatch(
-            AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading)
-        )
+        if (store.state.recentSyncedTabState == RecentSyncedTabState.None) {
+            store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.Loading))
+        }
     }
 
     override fun displaySyncedTabs(syncedTabs: List<SyncedDeviceTabs>) {
@@ -80,13 +80,19 @@ class RecentSyncedTabFeature(
         lastSyncedTab = syncedTab
     }
 
-    // UI will either not be displayed if not authenticated (DefaultPresenter.start),
-    // or the display state will be tied directly to the success and error cases.
-    override fun stopLoading() = Unit
+    /**
+     * Note: This is called in success cases as well, but the state should only change if there
+     * isn't a tab displayed. The store's state isn't updated in time to rely on it for this
+     * condition, so local state is used instead.
+     */
+    override fun stopLoading() {
+        if (lastSyncedTab == null) {
+            store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None))
+        }
+    }
 
     override fun onError(error: SyncedTabsView.ErrorType) {
-        val isSyncing = store.state.recentSyncedTabState == RecentSyncedTabState.Loading
-        if ((!isSyncing && error == SyncedTabsView.ErrorType.NO_TABS_AVAILABLE) || error.isFatal()) {
+        if (store.state.recentSyncedTabState == RecentSyncedTabState.Loading) {
             store.dispatch(AppAction.RecentSyncedTabStateChange(RecentSyncedTabState.None))
         }
     }
@@ -109,19 +115,6 @@ class RecentSyncedTabFeature(
         if (tab == lastSyncedTab) {
             RecentSyncedTabs.latestSyncedTabIsStale.add()
         }
-    }
-
-    // Fatal errors represent any that will force a NONE state for the recent synced tab, such that
-    // it won't be displayed.
-    // SYNC_UNAVAILABLE is sent even though displaySyncedTabs is never called when an account
-    // is not authenticated. NO_TABS_AVAILABLE is only fatal if encountered after a sync is
-    // completed, and is handled separately above.
-    private fun SyncedTabsView.ErrorType.isFatal(): Boolean = when (this) {
-        SyncedTabsView.ErrorType.MULTIPLE_DEVICES_UNAVAILABLE,
-        SyncedTabsView.ErrorType.SYNC_ENGINE_UNAVAILABLE,
-        SyncedTabsView.ErrorType.SYNC_NEEDS_REAUTHENTICATION -> true
-        SyncedTabsView.ErrorType.NO_TABS_AVAILABLE,
-        SyncedTabsView.ErrorType.SYNC_UNAVAILABLE -> false
     }
 }
 
