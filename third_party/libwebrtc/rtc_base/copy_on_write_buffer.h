@@ -86,13 +86,21 @@ class RTC_EXPORT CopyOnWriteBuffer {
   template <typename T = uint8_t,
             typename std::enable_if<
                 internal::BufferCompat<uint8_t, T>::value>::type* = nullptr>
-  T* data() {
+  T* MutableData() {
     RTC_DCHECK(IsConsistent());
     if (!buffer_) {
       return nullptr;
     }
     UnshareAndEnsureCapacity(capacity());
     return buffer_->data<T>() + offset_;
+  }
+
+  // TODO(bugs.webrtc.org/12334): Delete when all usage updated to MutableData()
+  template <typename T = uint8_t,
+            typename std::enable_if<
+                internal::BufferCompat<uint8_t, T>::value>::type* = nullptr>
+  T* data() {
+    return MutableData<T>();
   }
 
   // Get const pointer to the data. This will not create a copy of the
@@ -146,9 +154,10 @@ class RTC_EXPORT CopyOnWriteBuffer {
     return !(*this == buf);
   }
 
+  // TODO(bugs.webrtc.org/12334): Delete when all usage updated to MutableData()
   uint8_t& operator[](size_t index) {
     RTC_DCHECK_LT(index, size());
-    return data()[index];
+    return MutableData()[index];
   }
 
   uint8_t operator[](size_t index) const {
