@@ -37,7 +37,7 @@ namespace mozilla::ipc {
 
 NodeChannel::NodeChannel(const NodeName& aName,
                          UniquePtr<IPC::Channel> aChannel, Listener* aListener,
-                         int32_t aPid)
+                         base::ProcessId aPid)
     : mListener(aListener),
       mName(aName),
       mOtherPid(aPid),
@@ -97,8 +97,8 @@ void NodeChannel::Start(bool aCallConnect) {
     }
   } else {
     // Check if our channel has already been connected, and knows the other PID.
-    int32_t otherPid = mChannel->OtherPid();
-    if (otherPid != -1) {
+    base::ProcessId otherPid = mChannel->OtherPid();
+    if (otherPid != base::kInvalidProcessId) {
       SetOtherPid(otherPid);
     }
 
@@ -121,11 +121,11 @@ void NodeChannel::Close() {
   mClosed = true;
 }
 
-void NodeChannel::SetOtherPid(int32_t aNewPid) {
+void NodeChannel::SetOtherPid(base::ProcessId aNewPid) {
   AssertIOThread();
-  MOZ_ASSERT(aNewPid != -1);
+  MOZ_ASSERT(aNewPid != base::kInvalidProcessId);
 
-  int32_t previousPid = -1;
+  base::ProcessId previousPid = base::kInvalidProcessId;
   if (!mOtherPid.compare_exchange_strong(previousPid, aNewPid)) {
     // The PID was already set before this call, double-check that it's correct.
     MOZ_RELEASE_ASSERT(previousPid == aNewPid,
@@ -282,7 +282,7 @@ void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
   OnChannelError();
 }
 
-void NodeChannel::OnChannelConnected(int32_t aPeerPid) {
+void NodeChannel::OnChannelConnected(base::ProcessId aPeerPid) {
   AssertIOThread();
 
   SetOtherPid(aPeerPid);

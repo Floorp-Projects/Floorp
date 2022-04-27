@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <queue>
 #include "base/basictypes.h"
+#include "base/process.h"
 #include "build/build_config.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -60,7 +61,7 @@ class Channel {
 
     // Called when the channel is connected and we have received the internal
     // Hello message from the peer.
-    virtual void OnChannelConnected(int32_t peer_pid) {}
+    virtual void OnChannelConnected(base::ProcessId peer_pid) {}
 
     // Called when an error is detected that causes the channel to close.
     // This method is not called when a channel is closed normally.

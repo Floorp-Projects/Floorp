@@ -1575,7 +1575,7 @@ bool GeckoChildProcessHost::OpenPrivilegedHandle(base::ProcessId aPid) {
   return base::OpenPrivilegedProcessHandle(aPid, &mChildProcessHandle);
 }
 
-void GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid) {
+void GeckoChildProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   if (!OpenPrivilegedHandle(peer_pid)) {
     MOZ_CRASH("can't open handle to child process");
   }

@@ -306,7 +306,8 @@ bool RDDProcessManager::CreateVideoBridge() {
   ipc::Endpoint<PVideoBridgeChild> childPipe;
 
   GPUProcessManager* gpuManager = GPUProcessManager::Get();
-  base::ProcessId gpuProcessPid = gpuManager ? gpuManager->GPUProcessPid() : -1;
+  base::ProcessId gpuProcessPid =
+      gpuManager ? gpuManager->GPUProcessPid() : base::kInvalidProcessId;
 
   // Build content device data first; this ensure that the GPU process is fully
   // ready.
@@ -316,8 +317,9 @@ bool RDDProcessManager::CreateVideoBridge() {
   // The child end is the producer of video frames; the parent end is the
   // consumer.
   base::ProcessId childPid = RDDProcessPid();
-  base::ProcessId parentPid =
-      gpuProcessPid != -1 ? gpuProcessPid : base::GetCurrentProcId();
+  base::ProcessId parentPid = gpuProcessPid != base::kInvalidProcessId
+                                  ? gpuProcessPid
+                                  : base::GetCurrentProcId();
 
   nsresult rv = PVideoBridge::CreateEndpoints(parentPid, childPid, &parentPipe,
                                               &childPipe);
@@ -329,7 +331,7 @@ bool RDDProcessManager::CreateVideoBridge() {
 
   mRDDChild->SendInitVideoBridge(std::move(childPipe),
                                  mNumUnexpectedCrashes == 0, contentDeviceData);
-  if (gpuProcessPid != -1) {
+  if (gpuProcessPid != base::kInvalidProcessId) {
     gpuManager->InitVideoBridge(std::move(parentPipe));
   } else {
     VideoBridgeParent::Open(std::move(parentPipe),
@@ -341,7 +343,8 @@ bool RDDProcessManager::CreateVideoBridge() {
 
 base::ProcessId RDDProcessManager::RDDProcessPid() {
   MOZ_ASSERT(NS_IsMainThread());
-  base::ProcessId rddPid = mRDDChild ? mRDDChild->OtherPid() : -1;
+  base::ProcessId rddPid =
+      mRDDChild ? mRDDChild->OtherPid() : base::kInvalidProcessId;
   return rddPid;
 }
 

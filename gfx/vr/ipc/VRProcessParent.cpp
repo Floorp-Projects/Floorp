@@ -198,7 +198,7 @@ void VRProcessParent::OnChannelError() {
   MOZ_ASSERT(false, "VR process channel error.");
 }
 
-void VRProcessParent::OnChannelConnected(int32_t peer_pid) {
+void VRProcessParent::OnChannelConnected(base::ProcessId peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
