@@ -19,13 +19,27 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 
 TraversalRule::TraversalRule()
-    : TraversalRule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT) {}
+    : TraversalRule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
+                    true) {}
 
-TraversalRule::TraversalRule(int32_t aGranularity)
-    : mGranularity(aGranularity) {}
+TraversalRule::TraversalRule(int32_t aGranularity, bool aIsLocal)
+    : mGranularity(aGranularity), mIsLocal(aIsLocal) {}
 
 uint16_t TraversalRule::Match(Accessible* aAcc) {
   MOZ_ASSERT(aAcc);
+
+  if (mIsLocal && aAcc->IsRemote()) {
+    // If we encounter a remote accessible in a local rule, we should
+    // ignore the subtree because we won't encounter anymore local accessibles
+    // in it.
+    return nsIAccessibleTraversalRule::FILTER_IGNORE |
+           nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+  } else if (!mIsLocal && aAcc->IsLocal()) {
+    // If we encounter a local accessible in a remote rule we are likely
+    // traversing backwards/upwards, we don't ignore its subtree because it is
+    // likely the outer doc root of the remote tree.
+    return nsIAccessibleTraversalRule::FILTER_IGNORE;
+  }
 
   uint16_t result = nsIAccessibleTraversalRule::FILTER_IGNORE;
 
@@ -280,15 +294,4 @@ uint16_t TraversalRule::DefaultMatch(Accessible* aAccessible) {
   }
 
   return nsIAccessibleTraversalRule::FILTER_IGNORE;
-}
-
-uint16_t ExploreByTouchRule::Match(Accessible* aAcc) {
-  if (aAcc->IsRemote()) {
-    // Explore by touch happens in the local process and should
-    // not drill down into remote frames.
-    return nsIAccessibleTraversalRule::FILTER_IGNORE |
-           nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
-  }
-
-  return TraversalRule::Match(aAcc);
 }
