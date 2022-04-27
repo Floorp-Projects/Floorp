@@ -13962,7 +13962,7 @@ class FullscreenRoots {
   MOZ_COUNTED_DEFAULT_CTOR(FullscreenRoots)
   MOZ_COUNTED_DTOR(FullscreenRoots)
 
-  enum { NotFound = uint32_t(-1) };
+  enum : uint32_t { NotFound = uint32_t(-1) };
   // Looks in mRoots for aRoot. Returns the index if found, otherwise NotFound.
   static uint32_t Find(Document* aRoot);
 
