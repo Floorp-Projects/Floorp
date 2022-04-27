@@ -782,7 +782,7 @@ class KeyboardInput : public InputData {
     KEY_DOWN,
     KEY_PRESS,
     KEY_UP,
-    // Any other key event such as eKeyDownOnPlugin
+    // Any other key event such as eAccessKeyNotFound
     KEY_OTHER,
 
     // Used as an upper bound for ContiguousEnumSerializer

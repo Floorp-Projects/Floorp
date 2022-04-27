@@ -790,10 +790,6 @@ class WidgetEvent : public WidgetEventTime {
    * event.
    */
   bool HasIMEEventMessage() const;
-  /**
-   * Returns true if the event mMessage is one of plugin activation events.
-   */
-  bool HasPluginActivationEventMessage() const;
 
   /**
    * Returns true if the event can be sent to remote process.
