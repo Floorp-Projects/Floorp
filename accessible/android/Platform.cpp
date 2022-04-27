@@ -27,15 +27,10 @@ void a11y::PlatformInit() {}
 void a11y::PlatformShutdown() { NS_IF_RELEASE(sStringBundle); }
 
 void a11y::ProxyCreated(RemoteAccessible* aProxy) {
-  AccessibleWrap* wrapper = nullptr;
-  if (aProxy->IsDoc()) {
-    wrapper = new DocRemoteAccessibleWrap(aProxy->AsDoc());
-  } else {
-    wrapper = new RemoteAccessibleWrap(aProxy);
-  }
-
+  AccessibleWrap* wrapper = new RemoteAccessibleWrap(aProxy);
   wrapper->AddRef();
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
+  SessionAccessibility::RegisterAccessible(aProxy);
 }
 
 void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
@@ -49,6 +44,7 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
     return;
   }
 
+  SessionAccessibility::UnregisterAccessible(aProxy);
   wrapper->Shutdown();
   aProxy->SetWrapper(0);
   wrapper->Release();
