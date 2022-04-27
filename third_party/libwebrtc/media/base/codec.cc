@@ -285,7 +285,11 @@ webrtc::RtpCodecParameters AudioCodec::ToCodecParameters() const {
 std::string VideoCodec::ToString() const {
   char buf[256];
   rtc::SimpleStringBuilder sb(buf);
-  sb << "VideoCodec[" << id << ":" << name << "]";
+  sb << "VideoCodec[" << id << ":" << name;
+  if (packetization.has_value()) {
+    sb << ":" << *packetization;
+  }
+  sb << "]";
   return sb.str();
 }
 
