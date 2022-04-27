@@ -17,13 +17,14 @@ use webrender::api::units::*;
 use webrender::render_api::*;
 use webrender::DebugFlags;
 use winit::dpi::LogicalSize;
+use winit::platform::run_return::EventLoopExtRunReturn;
 
 struct Notifier {
-    events_proxy: winit::EventsLoopProxy,
+    events_proxy: winit::event_loop::EventLoopProxy<()>,
 }
 
 impl Notifier {
-    fn new(events_proxy: winit::EventsLoopProxy) -> Notifier {
+    fn new(events_proxy: winit::event_loop::EventLoopProxy<()>) -> Notifier {
         Notifier { events_proxy }
     }
 }
@@ -37,7 +38,7 @@ impl RenderNotifier for Notifier {
 
     fn wake_up(&self, _composite_needed: bool) {
         #[cfg(not(target_os = "android"))]
-        let _ = self.events_proxy.wakeup();
+        let _ = self.events_proxy.send_event(());
     }
 
     fn new_frame_ready(&self,
@@ -50,7 +51,7 @@ impl RenderNotifier for Notifier {
 }
 
 struct Window {
-    events_loop: winit::EventsLoop, //TODO: share events loop?
+    events_loop: winit::event_loop::EventLoop<()>, //TODO: share events loop?
     context: Option<glutin::WindowedContext<NotCurrent>>,
     renderer: webrender::Renderer,
     name: &'static str,
@@ -63,11 +64,10 @@ struct Window {
 
 impl Window {
     fn new(name: &'static str, clear_color: ColorF) -> Self {
-        let events_loop = winit::EventsLoop::new();
-        let window_builder = winit::WindowBuilder::new()
+        let events_loop = winit::event_loop::EventLoop::new();
+        let window_builder = winit::window::WindowBuilder::new()
             .with_title(name)
-            .with_multitouch()
-            .with_dimensions(LogicalSize::new(800., 600.));
+            .with_inner_size(LogicalSize::new(800. as f64, 600. as f64));
         let context = glutin::ContextBuilder::new()
             .with_gl(glutin::GlRequest::GlThenGles {
                 opengl_version: (3, 2),
@@ -88,8 +88,6 @@ impl Window {
             glutin::Api::WebGl => unimplemented!(),
         };
 
-        let device_pixel_ratio = context.window().get_hidpi_factor() as f32;
-
         let opts = webrender::RendererOptions {
             clear_color,
             ..webrender::RendererOptions::default()
@@ -98,9 +96,7 @@ impl Window {
         let device_size = {
             let size = context
                 .window()
-                .get_inner_size()
-                .unwrap()
-                .to_physical(device_pixel_ratio as f64);
+                .inner_size();
             DeviceIntSize::new(size.width as i32, size.height as i32)
         };
         let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
@@ -140,45 +136,46 @@ impl Window {
         let renderer = &mut self.renderer;
         let api = &mut self.api;
 
-        self.events_loop.poll_events(|global_event| match global_event {
-            winit::Event::WindowEvent { event, .. } => match event {
-                winit::WindowEvent::CloseRequested |
-                winit::WindowEvent::KeyboardInput {
-                    input: winit::KeyboardInput {
-                        virtual_keycode: Some(winit::VirtualKeyCode::Escape),
+        self.events_loop.run_return(|global_event, _elwt, control_flow| {
+            *control_flow = winit::event_loop::ControlFlow::Exit;
+            match global_event {
+                winit::event::Event::WindowEvent { event, .. } => match event {
+                    winit::event::WindowEvent::CloseRequested |
+                    winit::event::WindowEvent::KeyboardInput {
+                        input: winit::event::KeyboardInput {
+                            virtual_keycode: Some(winit::event::VirtualKeyCode::Escape),
+                            ..
+                        },
                         ..
-                    },
-                    ..
-                } => {
-                    do_exit = true
-                }
-                winit::WindowEvent::KeyboardInput {
-                    input: winit::KeyboardInput {
-                        state: winit::ElementState::Pressed,
-                        virtual_keycode: Some(winit::VirtualKeyCode::P),
+                    } => {
+                        do_exit = true
+                    }
+                    winit::event::WindowEvent::KeyboardInput {
+                        input: winit::event::KeyboardInput {
+                            state: winit::event::ElementState::Pressed,
+                            virtual_keycode: Some(winit::event::VirtualKeyCode::P),
+                            ..
+                        },
                         ..
-                    },
-                    ..
-                } => {
-                    println!("set flags {}", my_name);
-                    api.send_debug_cmd(DebugCommand::SetFlags(DebugFlags::PROFILER_DBG))
+                    } => {
+                        println!("set flags {}", my_name);
+                        api.send_debug_cmd(DebugCommand::SetFlags(DebugFlags::PROFILER_DBG))
+                    }
+                    _ => {}
                 }
                 _ => {}
             }
-            _ => {}
         });
         if do_exit {
             return true
         }
 
         let context = unsafe { self.context.take().unwrap().make_current().unwrap() };
-        let device_pixel_ratio = context.window().get_hidpi_factor() as f32;
+        let device_pixel_ratio = context.window().scale_factor() as f32;
         let device_size = {
             let size = context
                 .window()
-                .get_inner_size()
-                .unwrap()
-                .to_physical(device_pixel_ratio as f64);
+                .inner_size();
             DeviceIntSize::new(size.width as i32, size.height as i32)
         };
         let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);

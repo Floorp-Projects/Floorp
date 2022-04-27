@@ -9,7 +9,7 @@ use crossbeam::sync::chase_lev;
 use dwrote;
 #[cfg(all(unix, not(target_os = "android")))]
 use font_loader::system_fonts;
-use winit::EventsLoopProxy;
+use winit::event_loop::EventLoopProxy;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -36,7 +36,7 @@ pub enum FontDescriptor {
 }
 
 struct NotifierData {
-    events_loop_proxy: Option<EventsLoopProxy>,
+    events_loop_proxy: Option<EventLoopProxy<()>>,
     frames_notified: u32,
     timing_receiver: chase_lev::Stealer<time::SteadyTime>,
     verbose: bool,
@@ -44,7 +44,7 @@ struct NotifierData {
 
 impl NotifierData {
     fn new(
-        events_loop_proxy: Option<EventsLoopProxy>,
+        events_loop_proxy: Option<EventLoopProxy<()>>,
         timing_receiver: chase_lev::Stealer<time::SteadyTime>,
         verbose: bool,
     ) -> Self {
@@ -84,7 +84,7 @@ impl Notifier {
 
         if let Some(ref _elp) = data.events_loop_proxy {
             #[cfg(not(target_os = "android"))]
-            let _ = _elp.wakeup();
+            let _ = _elp.send_event(());
         }
     }
 }
@@ -217,7 +217,7 @@ impl Wrench {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         window: &mut WindowWrapper,
-        proxy: Option<EventsLoopProxy>,
+        proxy: Option<EventLoopProxy<()>>,
         shader_override_path: Option<PathBuf>,
         use_optimized_shaders: bool,
         size: DeviceIntSize,
@@ -268,7 +268,7 @@ impl Wrench {
         // put an Awakened event into the queue to kick off the first frame
         if let Some(ref _elp) = proxy {
             #[cfg(not(target_os = "android"))]
-            let _ = _elp.wakeup();
+            let _ = _elp.send_event(());
         }
 
         let (timing_sender, timing_receiver) = chase_lev::deque();
