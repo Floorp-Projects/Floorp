@@ -186,7 +186,7 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, RejectsUnsupportedExtension) {
       {RtpHeaderExtensionCapability("uri3", 1,
                                     RtpTransceiverDirection::kSendRecv)});
   EXPECT_THAT(transceiver_.SetOfferedRtpHeaderExtensions(modified_extensions),
-              Property(&RTCError::type, RTCErrorType::INVALID_PARAMETER));
+              Property(&RTCError::type, RTCErrorType::UNSUPPORTED_PARAMETER));
   EXPECT_EQ(transceiver_.HeaderExtensionsToOffer(), extensions_);
 }
 
