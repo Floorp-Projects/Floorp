@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.pocket.api
+package mozilla.components.service.pocket.stories.api
 
 /**
  * A response from the Pocket API: the subclasses determine the type of the result and contain usable data.

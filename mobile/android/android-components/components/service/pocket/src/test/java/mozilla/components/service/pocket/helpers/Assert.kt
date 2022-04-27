@@ -8,7 +8,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
-import mozilla.components.service.pocket.api.PocketResponse
+import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.support.test.any
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals

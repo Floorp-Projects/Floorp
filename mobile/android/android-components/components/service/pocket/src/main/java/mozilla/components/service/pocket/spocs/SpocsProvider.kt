@@ -4,7 +4,7 @@
 
 package mozilla.components.service.pocket.spocs
 
-import mozilla.components.service.pocket.api.PocketResponse
+import mozilla.components.service.pocket.stories.api.PocketResponse
 
 /**
  * All possible operations related to SPocs - Sponsored Pocket stories.

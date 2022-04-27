@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.pocket.api
+package mozilla.components.service.pocket.stories.api
 
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.pocket.api.PocketEndpoint.Companion.newInstance
+import mozilla.components.service.pocket.stories.api.PocketEndpoint.Companion.newInstance
 
 /**
  * Makes requests to the Pocket API and returns the requested data.

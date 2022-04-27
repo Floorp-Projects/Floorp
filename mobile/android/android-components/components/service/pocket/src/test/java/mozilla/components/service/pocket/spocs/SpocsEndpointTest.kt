@@ -8,11 +8,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.pocket.api.PocketResponse
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.helpers.assertResponseIsFailure
 import mozilla.components.service.pocket.helpers.assertResponseIsSuccess
+import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals

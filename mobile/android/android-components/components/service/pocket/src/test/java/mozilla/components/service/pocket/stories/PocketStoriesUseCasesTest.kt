@@ -11,11 +11,11 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketSponsoredStoryShim
-import mozilla.components.service.pocket.api.PocketEndpoint
-import mozilla.components.service.pocket.api.PocketResponse
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.spocs.SpocsEndpoint
+import mozilla.components.service.pocket.stories.api.PocketEndpoint
+import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext

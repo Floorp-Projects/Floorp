@@ -6,7 +6,7 @@ package mozilla.components.service.pocket
 
 import android.content.Context
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
-import mozilla.components.service.pocket.stories.update.PocketStoriesRefreshScheduler
+import mozilla.components.service.pocket.update.PocketStoriesRefreshScheduler
 
 /**
  * Allows for getting a list of pocket stories based on the provided [PocketStoriesConfig]

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.pocket.api.ext
+package mozilla.components.service.pocket.ext
 
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders

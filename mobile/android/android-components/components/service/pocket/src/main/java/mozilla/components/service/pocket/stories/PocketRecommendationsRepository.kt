@@ -7,11 +7,11 @@ package mozilla.components.service.pocket.stories
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
-import mozilla.components.service.pocket.api.PocketApiStory
+import mozilla.components.service.pocket.ext.toPartialTimeShownUpdate
+import mozilla.components.service.pocket.ext.toPocketLocalStory
+import mozilla.components.service.pocket.ext.toPocketRecommendedStory
+import mozilla.components.service.pocket.stories.api.PocketApiStory
 import mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase
-import mozilla.components.service.pocket.stories.ext.toPartialTimeShownUpdate
-import mozilla.components.service.pocket.stories.ext.toPocketLocalStory
-import mozilla.components.service.pocket.stories.ext.toPocketRecommendedStory
 
 /**
  * Wrapper over our local database.

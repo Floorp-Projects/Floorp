@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.pocket.stories.update
+package mozilla.components.service.pocket.update
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -12,7 +12,7 @@ import androidx.work.WorkManager
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.pocket.PocketStoriesConfig
 import mozilla.components.service.pocket.helpers.assertClassVisibility
-import mozilla.components.service.pocket.stories.update.RefreshPocketWorker.Companion.REFRESH_WORK_TAG
+import mozilla.components.service.pocket.update.RefreshPocketWorker.Companion.REFRESH_WORK_TAG
 import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock

@@ -5,9 +5,9 @@
 package mozilla.components.service.pocket.helpers
 
 import mozilla.components.service.pocket.PocketRecommendedStory
-import mozilla.components.service.pocket.api.PocketApiStory
 import mozilla.components.service.pocket.spocs.ApiSpoc
 import mozilla.components.service.pocket.spocs.ApiSpocShim
+import mozilla.components.service.pocket.stories.api.PocketApiStory
 import mozilla.components.service.pocket.stories.db.PocketStoryEntity
 
 private const val POCKET_DIR = "pocket"

@@ -7,13 +7,13 @@ package mozilla.components.service.pocket.spocs
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Response
-import mozilla.components.service.pocket.api.PocketEndpointRaw
-import mozilla.components.service.pocket.api.PocketEndpointRaw.Companion
 import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.helpers.assertRequestParams
 import mozilla.components.service.pocket.helpers.assertResponseIsClosed
 import mozilla.components.service.pocket.helpers.assertSuccessfulRequestReturnsResponseBody
+import mozilla.components.service.pocket.stories.api.PocketEndpointRaw
+import mozilla.components.service.pocket.stories.api.PocketEndpointRaw.Companion
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals

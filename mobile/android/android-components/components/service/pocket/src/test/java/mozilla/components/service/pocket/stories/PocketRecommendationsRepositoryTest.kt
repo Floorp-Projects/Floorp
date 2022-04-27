@@ -7,11 +7,11 @@ package mozilla.components.service.pocket.stories
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import mozilla.components.service.pocket.ext.toPartialTimeShownUpdate
+import mozilla.components.service.pocket.ext.toPocketLocalStory
+import mozilla.components.service.pocket.ext.toPocketRecommendedStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.stories.db.PocketRecommendationsDao
-import mozilla.components.service.pocket.stories.ext.toPartialTimeShownUpdate
-import mozilla.components.service.pocket.stories.ext.toPocketLocalStory
-import mozilla.components.service.pocket.stories.ext.toPocketRecommendedStory
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before

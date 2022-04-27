@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.pocket.stories.ext
+package mozilla.components.service.pocket.ext
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
-import mozilla.components.service.pocket.api.PocketApiStory
+import mozilla.components.service.pocket.stories.api.PocketApiStory
 import mozilla.components.service.pocket.stories.db.PocketLocalStoryTimesShown
 import mozilla.components.service.pocket.stories.db.PocketStoryEntity
 

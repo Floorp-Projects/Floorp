@@ -7,9 +7,9 @@ package mozilla.components.service.pocket.spocs
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.pocket.api.PocketEndpoint.Companion.newInstance
-import mozilla.components.service.pocket.api.PocketResponse
 import mozilla.components.service.pocket.spocs.SpocsEndpoint.Companion.newInstance
+import mozilla.components.service.pocket.stories.api.PocketEndpoint.Companion.newInstance
+import mozilla.components.service.pocket.stories.api.PocketResponse
 import java.util.UUID
 
 /**

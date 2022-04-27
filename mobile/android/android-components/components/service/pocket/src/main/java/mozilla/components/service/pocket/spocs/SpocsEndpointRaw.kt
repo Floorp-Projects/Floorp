@@ -13,10 +13,10 @@ import mozilla.components.concept.fetch.Request.Body
 import mozilla.components.concept.fetch.Request.Method
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
-import mozilla.components.service.pocket.api.PocketEndpointRaw.Companion.newInstance
-import mozilla.components.service.pocket.api.ext.fetchBodyOrNull
+import mozilla.components.service.pocket.ext.fetchBodyOrNull
 import mozilla.components.service.pocket.logger
 import mozilla.components.service.pocket.spocs.SpocsEndpointRaw.Companion.newInstance
+import mozilla.components.service.pocket.stories.api.PocketEndpointRaw.Companion.newInstance
 import org.json.JSONObject
 import java.io.IOException
 import java.util.UUID
