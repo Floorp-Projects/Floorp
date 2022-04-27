@@ -471,7 +471,8 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
     CanonicalBrowsingContext* aTopBC, WindowGlobalParent* aParentWindow,
     nsIURI* aChannelCreationURI, nsIChannel* aChannel,
     const nsACString& aCurrentRemoteType, bool aHasCOOPMismatch,
-    uint32_t aLoadStateLoadType, const Maybe<uint64_t>& aChannelId,
+    bool aForNewTab, uint32_t aLoadStateLoadType,
+    const Maybe<uint64_t>& aChannelId,
     const Maybe<nsCString>& aRemoteTypeOverride) {
   // Get the final principal, used to select which process to load into.
   nsCOMPtr<nsIPrincipal> resultPrincipal;
@@ -660,7 +661,7 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
 
   // Check if we can put the previous document into the BFCache.
   if (mozilla::BFCacheInParent() && nsSHistory::GetMaxTotalViewers() > 0 &&
-      !aParentWindow && !aTopBC->HadOriginalOpener() &&
+      !aForNewTab && !aParentWindow && !aTopBC->HadOriginalOpener() &&
       behavior != IsolationBehavior::Parent &&
       (ExtensionPolicyService::GetSingleton().UseRemoteExtensions() ||
        behavior != IsolationBehavior::Extension) &&
@@ -765,9 +766,9 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
   // where we may have multiple documents with the same principal in different
   // processes. Those have been handled above, and will not be reaching here.
   //
-  // If we're doing a replace load, we won't be staying in the same
-  // BrowsingContext, so ignore this step.
-  if (!options.mReplaceBrowsingContext) {
+  // If we're doing a replace load or opening a new tab, we won't be staying in
+  // the same BrowsingContextGroup, so ignore this step.
+  if (!options.mReplaceBrowsingContext && !aForNewTab) {
     // Helper for efficiently determining if a given origin is same-site. This
     // will attempt to do a fast equality check, and will only fall back to
     // computing the site-origin for content principals.

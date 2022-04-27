@@ -351,8 +351,20 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // aWillSwitchToRemote is set to true if we initiate a process switch,
   // and that the new remote type will be something other than NOT_REMOTE
   bool MaybeTriggerProcessSwitch(bool* aWillSwitchToRemote);
+
+  // Called when the process switch is going to happen, potentially
+  // asynchronously, from `MaybeTriggerProcessSwitch`.
+  //
+  // aContext should be the target context for the navigation. This will either
+  // be the loading BrowsingContext, the newly created BrowsingContext for an
+  // object or embed element load, or a newly created tab for new tab load.
+  //
+  // If `aIsNewTab` is specified, the navigation in the original process will be
+  // aborted immediately, rather than waiting for a process switch to happen and
+  // the previous page to be unloaded or hidden.
   void TriggerProcessSwitch(dom::CanonicalBrowsingContext* aContext,
-                            const dom::NavigationIsolationOptions& aOptions);
+                            const dom::NavigationIsolationOptions& aOptions,
+                            bool aIsNewTab = false);
 
   // A helper for TriggerRedirectToRealChannel that abstracts over
   // the same-process and cross-process switch cases and returns

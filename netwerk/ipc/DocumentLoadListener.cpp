@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
+#include "mozilla/NullPrincipal.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_fission.h"
@@ -37,6 +38,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsDSURIContentListener.h"
 #include "nsObjectLoadingContent.h"
+#include "nsOpenWindowInfo.h"
 #include "nsExternalHelperAppService.h"
 #include "nsHttpChannel.h"
 #include "nsIBrowser.h"
@@ -1492,7 +1494,52 @@ void DocumentLoadListener::SerializeRedirectData(
   }
 }
 
-DocumentLoadListener::ProcessBehavior GetProcessSwitchBehavior(
+static bool IsFirstLoadInWindow(nsIChannel* aChannel) {
+  if (nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aChannel)) {
+    bool tmp = false;
+    nsresult rv =
+        props->GetPropertyAsBool(u"docshell.newWindowTarget"_ns, &tmp);
+    return NS_SUCCEEDED(rv) && tmp;
+  }
+  return false;
+}
+
+// Get where the document loaded by this nsIChannel should be rendered. This
+// will be `OPEN_CURRENTWINDOW` unless we're loading an attachment which would
+// normally open in an external program, but we're instead choosing to render
+// internally.
+static int32_t GetWhereToOpen(nsIChannel* aChannel, bool aIsDocumentLoad) {
+  // Ignore content disposition for loads from an object or embed element.
+  if (!aIsDocumentLoad) {
+    return nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
+  }
+
+  // Always continue in the same window if we're not loading an attachment.
+  uint32_t disposition = nsIChannel::DISPOSITION_INLINE;
+  if (NS_FAILED(aChannel->GetContentDisposition(&disposition)) ||
+      disposition != nsIChannel::DISPOSITION_ATTACHMENT) {
+    return nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
+  }
+
+  // If the channel is for a new window target, continue in the same window.
+  if (IsFirstLoadInWindow(aChannel)) {
+    return nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
+  }
+
+  // Respect the user's preferences with browser.link.open_newwindow
+  // FIXME: There should probably be a helper for this, as the logic is
+  // duplicated in a few places.
+  int32_t where = Preferences::GetInt("browser.link.open_newwindow",
+                                      nsIBrowserDOMWindow::OPEN_NEWTAB);
+  if (where == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW ||
+      where == nsIBrowserDOMWindow::OPEN_NEWWINDOW ||
+      where == nsIBrowserDOMWindow::OPEN_NEWTAB) {
+    return where;
+  }
+  return nsIBrowserDOMWindow::OPEN_NEWTAB;
+}
+
+static DocumentLoadListener::ProcessBehavior GetProcessSwitchBehavior(
     Element* aBrowserElement) {
   if (aBrowserElement->HasAttribute(u"maychangeremoteness"_ns)) {
     return DocumentLoadListener::ProcessBehavior::PROCESS_BEHAVIOR_STANDARD;
@@ -1508,7 +1555,8 @@ DocumentLoadListener::ProcessBehavior GetProcessSwitchBehavior(
 }
 
 static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
-                                    WindowGlobalParent* aParentWindow) {
+                                    WindowGlobalParent* aParentWindow,
+                                    bool aSwitchToNewTab) {
   if (NS_WARN_IF(!aBrowsingContext)) {
     MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
             ("Process Switch Abort: no browsing context"));
@@ -1518,6 +1566,13 @@ static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
     MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
             ("Process Switch Abort: non-content browsing context"));
     return false;
+  }
+
+  // If we're switching into a new tab, we can skip the remaining checks, as
+  // we're not actually changing the process of aBrowsingContext, so whether or
+  // not it is allowed to process switch isn't relevant.
+  if (aSwitchToNewTab) {
+    return true;
   }
 
   if (aParentWindow && !aBrowsingContext->UseRemoteSubframes()) {
@@ -1569,6 +1624,65 @@ static bool ContextCanProcessSwitch(CanonicalBrowsingContext* aBrowsingContext,
   return true;
 }
 
+static RefPtr<dom::BrowsingContextCallbackReceivedPromise> SwitchToNewTab(
+    CanonicalBrowsingContext* aLoadingBrowsingContext, int32_t aWhere) {
+  MOZ_ASSERT(aWhere == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+                 aWhere == nsIBrowserDOMWindow::OPEN_NEWWINDOW,
+             "Unsupported open location");
+
+  auto promise =
+      MakeRefPtr<dom::BrowsingContextCallbackReceivedPromise::Private>(
+          __func__);
+
+  // Get the nsIBrowserDOMWindow for the given BrowsingContext's tab.
+  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWindow =
+      aLoadingBrowsingContext->GetBrowserDOMWindow();
+  if (NS_WARN_IF(!browserDOMWindow)) {
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+            ("Process Switch Abort: Unable to get nsIBrowserDOMWindow"));
+    promise->Reject(NS_ERROR_FAILURE, __func__);
+    return promise;
+  }
+
+  // Open a new content tab by calling into frontend. We don't need to worry
+  // about the triggering principal or CSP, as createContentWindow doesn't
+  // actually start loading anything, but use a null principal anyway in case
+  // something changes.
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+      NullPrincipal::Create(aLoadingBrowsingContext->OriginAttributesRef());
+
+  RefPtr<nsOpenWindowInfo> openInfo = new nsOpenWindowInfo();
+  openInfo->mBrowsingContextReadyCallback =
+      new nsBrowsingContextReadyCallback(promise);
+  openInfo->mOriginAttributes = aLoadingBrowsingContext->OriginAttributesRef();
+  openInfo->mParent = aLoadingBrowsingContext;
+  openInfo->mForceNoOpener = true;
+  openInfo->mIsRemote = true;
+
+  // Do the actual work to open a new tab or window async.
+  nsresult rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "DocumentLoadListener::SwitchToNewTab",
+      [browserDOMWindow, openInfo, aWhere, triggeringPrincipal, promise] {
+        RefPtr<BrowsingContext> bc;
+        nsresult rv = browserDOMWindow->CreateContentWindow(
+            /* uri */ nullptr, openInfo, aWhere,
+            nsIBrowserDOMWindow::OPEN_NO_REFERRER, triggeringPrincipal,
+            /* csp */ nullptr, getter_AddRefs(bc));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          MOZ_LOG(gProcessIsolationLog, LogLevel::Warning,
+                  ("Process Switch Abort: CreateContentWindow threw"));
+          promise->Reject(rv, __func__);
+        }
+        if (bc) {
+          promise->Resolve(bc, __func__);
+        }
+      }));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->Reject(NS_ERROR_UNEXPECTED, __func__);
+  }
+  return promise;
+}
+
 bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     bool* aWillSwitchToRemote) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1601,9 +1715,14 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     }
   }
 
+  // Check if we should handle this load in a different tab or window.
+  int32_t where = GetWhereToOpen(mChannel, mIsDocumentLoad);
+  bool switchToNewTab = where != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW;
+
   // Get the loading BrowsingContext. This may not be the context which will be
-  // switching processes in the case of an <object> or <embed> element, as we
-  // don't create the final context until after process selection.
+  // switching processes when switching to a new tab, and in the case of an
+  // <object> or <embed> element, as we don't create the final context until
+  // after process selection.
   //
   // - /!\ WARNING /!\ -
   // Don't use `browsingContext->IsTop()` in this method! It will behave
@@ -1611,8 +1730,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   // Instead, check whether or not `parentWindow` is null.
   RefPtr<CanonicalBrowsingContext> browsingContext =
       GetLoadingBrowsingContext();
-  RefPtr<WindowGlobalParent> parentWindow = GetParentWindowContext();
-  if (!ContextCanProcessSwitch(browsingContext, parentWindow)) {
+  // If switching to a new tab, the final BC isn't a frame.
+  RefPtr<WindowGlobalParent> parentWindow =
+      switchToNewTab ? nullptr : GetParentWindowContext();
+  if (!ContextCanProcessSwitch(browsingContext, parentWindow, switchToNewTab)) {
     return false;
   }
 
@@ -1636,9 +1757,10 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   }
 
   auto optionsResult = IsolationOptionsForNavigation(
-      browsingContext->Top(), parentWindow, GetChannelCreationURI(), mChannel,
-      currentRemoteType, HasCrossOriginOpenerPolicyMismatch(),
-      mLoadStateLoadType, mDocumentChannelId, mRemoteTypeOverride);
+      browsingContext->Top(), switchToNewTab ? nullptr : parentWindow.get(),
+      GetChannelCreationURI(), mChannel, currentRemoteType,
+      HasCrossOriginOpenerPolicyMismatch(), switchToNewTab, mLoadStateLoadType,
+      mDocumentChannelId, mRemoteTypeOverride);
   if (optionsResult.isErr()) {
     MOZ_LOG(gProcessIsolationLog, LogLevel::Error,
             ("Process Switch Abort: CheckIsolationForNavigation Failed with %s",
@@ -1651,6 +1773,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   if (options.mTryUseBFCache) {
     MOZ_ASSERT(!parentWindow, "Can only BFCache toplevel windows");
+    MOZ_ASSERT(!switchToNewTab, "Can't BFCache for a tab switch");
     bool sameOrigin = false;
     if (auto* wgp = browsingContext->GetCurrentWindowGlobal()) {
       nsCOMPtr<nsIPrincipal> resultPrincipal;
@@ -1670,14 +1793,15 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   MOZ_LOG(
       gProcessIsolationLog, LogLevel::Verbose,
       ("CheckIsolationForNavigation -> current:(%s) remoteType:(%s) replace:%d "
-       "group:%" PRIx64 " bfcache:%d shentry:%p",
+       "group:%" PRIx64 " bfcache:%d shentry:%p newTab:%d",
        currentRemoteType.get(), options.mRemoteType.get(),
        options.mReplaceBrowsingContext, options.mSpecificGroupId,
-       options.mTryUseBFCache, options.mActiveSessionHistoryEntry.get()));
+       options.mTryUseBFCache, options.mActiveSessionHistoryEntry.get(),
+       switchToNewTab));
 
   // Check if a process switch is needed.
   if (currentRemoteType == options.mRemoteType &&
-      !options.mReplaceBrowsingContext) {
+      !options.mReplaceBrowsingContext && !switchToNewTab) {
     MOZ_LOG(gProcessIsolationLog, LogLevel::Info,
             ("Process Switch Abort: type (%s) is compatible",
              options.mRemoteType.get()));
@@ -1691,6 +1815,37 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   }
 
   *aWillSwitchToRemote = !options.mRemoteType.IsEmpty();
+
+  // If we've decided to re-target this load into a new tab or window (see
+  // `GetWhereToOpen`), do so before performing a process switch. This will
+  // require creating the new <browser> to load in, which may be performed
+  // async.
+  if (switchToNewTab) {
+    SwitchToNewTab(browsingContext, where)
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [self = RefPtr{this},
+             options](const RefPtr<BrowsingContext>& aBrowsingContext) mutable {
+              if (aBrowsingContext->IsDiscarded()) {
+                MOZ_LOG(
+                    gProcessIsolationLog, LogLevel::Error,
+                    ("Process Switch: Got invalid new-tab BrowsingContext"));
+                self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
+                return;
+              }
+
+              MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
+                      ("Process Switch: Redirected load to new tab"));
+              self->TriggerProcessSwitch(aBrowsingContext->Canonical(), options,
+                                         /* aIsNewTab */ true);
+            },
+            [self = RefPtr{this}](const CopyableErrorResult&) {
+              MOZ_LOG(gProcessIsolationLog, LogLevel::Error,
+                      ("Process Switch: SwitchToNewTab failed"));
+              self->RedirectToRealChannelFinished(NS_ERROR_FAILURE);
+            });
+    return true;
+  }
 
   // If we're doing a document load, we can immediately perform a process
   // switch.
@@ -1740,24 +1895,24 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
 void DocumentLoadListener::TriggerProcessSwitch(
     CanonicalBrowsingContext* aContext,
-    const NavigationIsolationOptions& aOptions) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      aContext->IsOwnedByProcess(GetContentProcessId(mContentParent)),
-      "not owned by creator process anymore?");
-  nsAutoCString currentRemoteType(NOT_REMOTE_TYPE);
-  if (mContentParent) {
-    currentRemoteType = mContentParent->GetRemoteType();
-  }
+    const NavigationIsolationOptions& aOptions, bool aIsNewTab) {
+  MOZ_DIAGNOSTIC_ASSERT(aIsNewTab || aContext->IsOwnedByProcess(
+                                         GetContentProcessId(mContentParent)),
+                        "not owned by creator process anymore?");
+  if (MOZ_LOG_TEST(gProcessIsolationLog, LogLevel::Info)) {
+    nsCString currentRemoteType = "INVALID"_ns;
+    aContext->GetCurrentRemoteType(currentRemoteType, IgnoreErrors());
 
-  MOZ_LOG(gProcessIsolationLog, LogLevel::Info,
-          ("Process Switch: Changing Remoteness from '%s' to '%s'",
-           currentRemoteType.get(), aOptions.mRemoteType.get()));
+    MOZ_LOG(gProcessIsolationLog, LogLevel::Info,
+            ("Process Switch: Changing Remoteness from '%s' to '%s'",
+             currentRemoteType.get(), aOptions.mRemoteType.get()));
+  }
 
   // We're now committing to a process switch, so we can disconnect from
   // the listeners in the old process.
-  mDoingProcessSwitch = true;
+  mDoingProcessSwitch = !aIsNewTab;
 
-  DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
+  DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, !aIsNewTab);
 
   MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
           ("Process Switch: Calling ChangeRemoteness"));
@@ -2209,13 +2364,8 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
           new MaybeCloseWindowHelper(loadingContext);
       // If a new window was opened specifically for this request, close it
       // after blocking the navigation.
-      if (nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(mChannel)) {
-        bool tmp = false;
-        if (NS_SUCCEEDED(props->GetPropertyAsBool(
-                u"docshell.newWindowTarget"_ns, &tmp))) {
-          maybeCloseWindowHelper->SetShouldCloseWindow(tmp);
-        }
-      }
+      maybeCloseWindowHelper->SetShouldCloseWindow(
+          IsFirstLoadInWindow(mChannel));
       Unused << maybeCloseWindowHelper->MaybeCloseWindow();
     }
     DisconnectListeners(NS_ERROR_DOM_BAD_URI, NS_ERROR_DOM_BAD_URI);
