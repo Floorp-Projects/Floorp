@@ -44,8 +44,8 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
   explicit NetworkEmulationManagerImpl(TimeMode mode);
   ~NetworkEmulationManagerImpl();
 
-  EmulatedNetworkNode* CreateEmulatedNode(
-      BuiltInNetworkBehaviorConfig config) override;
+  EmulatedNetworkNode* CreateEmulatedNode(BuiltInNetworkBehaviorConfig config,
+                                          uint64_t random_seed = 1) override;
   EmulatedNetworkNode* CreateEmulatedNode(
       std::unique_ptr<NetworkBehaviorInterface> network_behavior) override;
 
