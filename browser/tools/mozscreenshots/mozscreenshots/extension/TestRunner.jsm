@@ -202,10 +202,8 @@ var TestRunner = {
         setName = filteredData.trimmedSetName;
         restrictions = filteredData.restrictions;
       }
-      let imported = {};
-      ChromeUtils.import(
-        `resource://mozscreenshots/configurations/${setName}.jsm`,
-        imported
+      let imported = ChromeUtils.import(
+        `resource://mozscreenshots/configurations/${setName}.jsm`
       );
       imported[setName].init(this._libDir);
       let configurationNames = Object.keys(imported[setName].configurations);
