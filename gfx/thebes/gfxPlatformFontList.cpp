@@ -1728,6 +1728,8 @@ bool gfxPlatformFontList::InitializeFamily(fontlist::Family* aFamily,
 gfxFontEntry* gfxPlatformFontList::FindFontForFamily(
     nsPresContext* aPresContext, const nsACString& aFamily,
     const gfxFontStyle* aStyle) {
+  AutoLock lock(mLock);
+
   nsAutoCString key;
   GenerateFontListKey(aFamily, key);
 

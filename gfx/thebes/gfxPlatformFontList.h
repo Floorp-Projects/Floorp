@@ -331,7 +331,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   gfxFontEntry* FindFontForFamily(nsPresContext* aPresContext,
                                   const nsACString& aFamily,
-                                  const gfxFontStyle* aStyle) REQUIRES(mLock);
+                                  const gfxFontStyle* aStyle);
 
   mozilla::fontlist::FontList* SharedFontList() const {
     return mSharedFontList.get();
