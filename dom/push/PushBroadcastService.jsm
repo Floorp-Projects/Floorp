@@ -219,9 +219,9 @@ var BroadcastService = class {
 
       const { moduleURI, symbolName } = sourceInfo;
 
-      const module = {};
+      let module;
       try {
-        ChromeUtils.import(moduleURI, module);
+        module = ChromeUtils.import(moduleURI);
       } catch (e) {
         console.error(
           "receivedBroadcastMessage: couldn't invoke",

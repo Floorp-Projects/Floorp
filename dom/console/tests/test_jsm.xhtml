@@ -13,7 +13,6 @@
   <script type="application/javascript">
   <![CDATA[
 
-/* import-globals-from console.jsm */
 const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -83,7 +82,7 @@ async function test() {
   SimpleTest.waitForExplicitFinish();
 
   let consolePromise = promiseConsoleListenerCalled();
-  ChromeUtils.import(JSM, window);
+  let { ConsoleTest } = ChromeUtils.import(JSM);
   await SpecialPowers.pushPrefEnv({set: [["pref.test.console", "log"]]})
   ConsoleTest.go(dumpFunction);
 
