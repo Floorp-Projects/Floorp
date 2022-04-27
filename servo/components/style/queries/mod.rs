@@ -12,7 +12,6 @@ mod condition;
 #[macro_use]
 pub mod feature;
 pub mod feature_expression;
-pub mod values;
 
 pub use self::condition::QueryCondition;
-pub use self::feature_expression::{QueryFeatureExpression, FeatureType};
+pub use self::feature_expression::QueryFeatureExpression;
