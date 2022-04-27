@@ -68,7 +68,7 @@ class RtpSenderAudioTest : public ::testing::Test {
  public:
   RtpSenderAudioTest()
       : fake_clock_(kStartTime),
-        rtp_module_(ModuleRtpRtcpImpl2::Create([&] {
+        rtp_module_(std::make_unique<ModuleRtpRtcpImpl2>([&] {
           RtpRtcpInterface::Configuration config;
           config.audio = true;
           config.clock = &fake_clock_;

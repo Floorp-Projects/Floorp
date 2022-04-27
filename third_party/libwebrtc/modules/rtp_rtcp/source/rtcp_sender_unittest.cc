@@ -91,7 +91,7 @@ class RtcpSenderTest : public ::testing::Test {
         receive_statistics_(ReceiveStatistics::Create(&clock_)),
         retransmission_rate_limiter_(&clock_, 1000) {
     RtpRtcpInterface::Configuration configuration = GetDefaultConfig();
-    rtp_rtcp_impl_.reset(new ModuleRtpRtcpImpl2(configuration));
+    rtp_rtcp_impl_ = std::make_unique<ModuleRtpRtcpImpl2>(configuration);
   }
 
   RtpRtcpInterface::Configuration GetDefaultConfig() {

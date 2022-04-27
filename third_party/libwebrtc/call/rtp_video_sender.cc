@@ -232,6 +232,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
   configuration.extmap_allow_mixed = rtp_config.extmap_allow_mixed;
   configuration.rtcp_report_interval_ms = rtcp_report_interval_ms;
   configuration.field_trials = &trials;
+  configuration.task_queue = TaskQueueBase::Current();
 
   std::vector<RtpStreamSender> rtp_streams;
 
@@ -252,8 +253,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
 
     configuration.need_rtp_packet_infos = rtp_config.lntf.enabled;
 
-    std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp(
-        ModuleRtpRtcpImpl2::Create(configuration));
+    auto rtp_rtcp = std::make_unique<ModuleRtpRtcpImpl2>(configuration);
     rtp_rtcp->SetSendingStatus(false);
     rtp_rtcp->SetSendingMediaStatus(false);
     rtp_rtcp->SetRTCPStatus(RtcpMode::kCompound);
