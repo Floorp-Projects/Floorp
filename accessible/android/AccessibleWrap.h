@@ -28,14 +28,6 @@ class AccessibleWrap : public LocalAccessible {
 
   virtual bool DoAction(uint8_t aIndex) const override;
 
-  int32_t VirtualViewID() const { return mID; }
-
-  virtual void SetTextContents(const nsAString& aText);
-
-  virtual void GetTextContents(nsAString& aText);
-
-  virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset);
-
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool PivotTo(int32_t aGranularity, bool aForward, bool aInclusive);
 
@@ -53,22 +45,6 @@ class AccessibleWrap : public LocalAccessible {
 
   void ExploreByTouch(float aX, float aY);
 
-  virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
-
-  int32_t AndroidClass() {
-    return mID == -1 ? java::SessionAccessibility::CLASSNAME_WEBVIEW
-                     : GetAndroidClass(WrapperRole());
-  }
-
-  virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal,
-                                double* aMaxVal, double* aStep);
-
-  virtual AccessibleWrap* WrapperParent() {
-    return static_cast<AccessibleWrap*>(LocalParent());
-  }
-
-  virtual role WrapperRole() { return Role(); }
-
   static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 
   static int32_t GetInputType(const nsString& aInputTypeAttr);
@@ -78,6 +54,8 @@ class AccessibleWrap : public LocalAccessible {
   static void GetRoleDescription(role aRole, AccAttributes* aAttributes,
                                  nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
+
+  static int32_t AndroidClass(Accessible* aAccessible);
 
   static int32_t GetVirtualViewID(Accessible* aAccessible);
 
@@ -96,10 +74,6 @@ class AccessibleWrap : public LocalAccessible {
 
   void GetSelectionOrCaret(int32_t* aStartOffset, int32_t* aEndOffset);
 };
-
-static inline AccessibleWrap* WrapperFor(const RemoteAccessible* aProxy) {
-  return reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
-}
 
 }  // namespace a11y
 }  // namespace mozilla
