@@ -8,6 +8,7 @@
 importScripts("utils_worker.js"); // Test suite code
 info("Test suite configured");
 
+/* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
 info("Loader imported");
 
