@@ -123,10 +123,6 @@ int32_t QualityAnalyzingVideoDecoder::Release() {
   return result;
 }
 
-bool QualityAnalyzingVideoDecoder::PrefersLateDecoding() const {
-  return delegate_->PrefersLateDecoding();
-}
-
 const char* QualityAnalyzingVideoDecoder::ImplementationName() const {
   return implementation_name_.c_str();
 }

@@ -47,11 +47,6 @@ class VideoDecoderWrapper : public VideoDecoder {
   // still safe and synchronous.
   int32_t Release() override RTC_NO_THREAD_SAFETY_ANALYSIS;
 
-  // Returns true if the decoder prefer to decode frames late.
-  // That is, it can not decode infinite number of frames before the decoded
-  // frame is consumed.
-  bool PrefersLateDecoding() const override;
-
   const char* ImplementationName() const override;
 
   // Wraps the frame to a AndroidVideoBuffer and passes it to the callback.

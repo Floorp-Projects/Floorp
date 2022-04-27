@@ -294,8 +294,4 @@ int32_t VCMGenericDecoder::RegisterDecodeCompleteCallback(
   return decoder_->RegisterDecodeCompleteCallback(callback);
 }
 
-bool VCMGenericDecoder::PrefersLateDecoding() const {
-  return decoder_->PrefersLateDecoding();
-}
-
 }  // namespace webrtc
