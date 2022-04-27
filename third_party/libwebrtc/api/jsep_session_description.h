@@ -49,7 +49,7 @@ class JsepSessionDescription : public SessionDescriptionInterface {
                   const std::string& session_id,
                   const std::string& session_version);
 
-  virtual std::unique_ptr<SessionDescriptionInterface> Clone();
+  virtual std::unique_ptr<SessionDescriptionInterface> Clone() const;
 
   virtual cricket::SessionDescription* description() {
     return description_.get();

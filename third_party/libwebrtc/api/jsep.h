@@ -139,7 +139,7 @@ class RTC_EXPORT SessionDescriptionInterface {
   // Create a new SessionDescriptionInterface object
   // with the same values as the old object.
   // TODO(bugs.webrtc.org:12215): Remove default implementation
-  virtual std::unique_ptr<SessionDescriptionInterface> Clone() {
+  virtual std::unique_ptr<SessionDescriptionInterface> Clone() const {
     return nullptr;
   }
 
