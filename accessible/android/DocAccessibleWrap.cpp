@@ -132,7 +132,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       nsAutoString textValue;
       accessible->Value(textValue);
       nsAutoString nodeID;
-      static_cast<AccessibleWrap*>(accessible)->WrapperDOMNodeID(nodeID);
+      accessible->DOMNodeID(nodeID);
       nsAutoString description;
       accessible->Description(description);
 
@@ -147,9 +147,9 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     ipcDoc->SendBatch(eBatch_Viewport, cacheData);
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(docAcc)) {
-    nsTArray<AccessibleWrap*> accessibles(inViewAccs.Count());
+    nsTArray<Accessible*> accessibles(inViewAccs.Count());
     for (const auto& entry : inViewAccs) {
-      accessibles.AppendElement(static_cast<AccessibleWrap*>(entry.GetWeak()));
+      accessibles.AppendElement(entry.GetWeak());
     }
 
     sessionAcc->ReplaceViewportCache(accessibles);
@@ -241,7 +241,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       nsAutoString textValue;
       acc->Value(textValue);
       nsAutoString nodeID;
-      acc->WrapperDOMNodeID(nodeID);
+      acc->DOMNodeID(nodeID);
       nsAutoString description;
       acc->Description(description);
       RefPtr<AccAttributes> attributes = acc->Attributes();
@@ -256,9 +256,9 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
     ipcDoc->SendBatch(eBatch_FocusPath, cacheData);
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
-    nsTArray<AccessibleWrap*> accessibles;
-    for (AccessibleWrap* acc = aAccessible; acc && acc != this->LocalParent();
-         acc = static_cast<AccessibleWrap*>(acc->LocalParent())) {
+    nsTArray<Accessible*> accessibles;
+    for (LocalAccessible* acc = aAccessible; acc && acc != this->LocalParent();
+         acc = acc->LocalParent()) {
       accessibles.AppendElement(acc);
       mFocusPath.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
@@ -296,7 +296,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
     ipcDoc->SendBatch(eBatch_BoundsUpdate, boundsData);
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
-    nsTArray<AccessibleWrap*> accessibles(mFocusPath.Count());
+    nsTArray<Accessible*> accessibles(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
       LocalAccessible* accessible = iter.Data();
       if (!accessible || accessible->IsDefunct()) {
@@ -304,7 +304,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
         continue;
       }
 
-      accessibles.AppendElement(static_cast<AccessibleWrap*>(accessible));
+      accessibles.AppendElement(accessible);
     }
 
     sessionAcc->UpdateCachedBounds(accessibles);
