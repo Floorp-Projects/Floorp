@@ -46,7 +46,7 @@ deps = {
   'src/buildtools/mac': {
     'packages': [
       {
-        'package': 'gn/gn/mac-amd64',
+        'package': 'gn/gn/mac-${{arch}}',
         'version': 'git_revision:0d67e272bdb8145f87d238bc0b2cb8bf80ccec90',
       }
     ],
