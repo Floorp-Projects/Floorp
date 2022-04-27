@@ -16,6 +16,7 @@
 #include <mutex>
 
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/win/test_support/test_window.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
 
@@ -23,48 +24,7 @@ namespace webrtc {
 namespace {
 
 const char kWindowThreadName[] = "window_capture_utils_test_thread";
-const WCHAR kWindowClass[] = L"WindowCaptureUtilsTestClass";
 const WCHAR kWindowTitle[] = L"Window Capture Utils Test";
-const int kWindowWidth = 300;
-const int kWindowHeight = 200;
-
-struct WindowInfo {
-  HWND hwnd;
-  HINSTANCE window_instance;
-  ATOM window_class;
-};
-
-WindowInfo CreateTestWindow(const WCHAR* window_title) {
-  WindowInfo info;
-  ::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                       reinterpret_cast<LPCWSTR>(&::DefWindowProc),
-                       &info.window_instance);
-
-  WNDCLASSEXW wcex;
-  memset(&wcex, 0, sizeof(wcex));
-  wcex.cbSize = sizeof(wcex);
-  wcex.style = CS_HREDRAW | CS_VREDRAW;
-  wcex.hInstance = info.window_instance;
-  wcex.lpfnWndProc = &::DefWindowProc;
-  wcex.lpszClassName = kWindowClass;
-  info.window_class = ::RegisterClassExW(&wcex);
-
-  info.hwnd = ::CreateWindowW(kWindowClass, window_title, WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT, CW_USEDEFAULT, kWindowWidth,
-                              kWindowHeight, /*parent_window=*/nullptr,
-                              /*menu_bar=*/nullptr, info.window_instance,
-                              /*additional_params=*/nullptr);
-
-  ::ShowWindow(info.hwnd, SW_SHOWNORMAL);
-  ::UpdateWindow(info.hwnd);
-  return info;
-}
-
-void DestroyTestWindow(WindowInfo info) {
-  ::DestroyWindow(info.hwnd);
-  ::UnregisterClass(MAKEINTATOM(info.window_class), info.window_instance);
-}
 
 std::unique_ptr<rtc::Thread> SetUpUnresponsiveWindow(std::mutex& mtx,
                                                      WindowInfo& info) {
