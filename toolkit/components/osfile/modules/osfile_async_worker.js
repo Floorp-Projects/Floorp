@@ -21,6 +21,9 @@ if (this.Components) {
     loaded: null,
   };
 
+  // NOTE: osfile.jsm imports require.js
+  /* import-globals-from /toolkit/components/workerloader/require.js */
+  /* import-globals-from /toolkit/components/osfile/osfile.jsm */
   importScripts("resource://gre/modules/osfile.jsm");
 
   let PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
