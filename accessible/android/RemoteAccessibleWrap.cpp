@@ -109,7 +109,7 @@ bool RemoteAccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
     return AccessibleWrap::PivotTo(aGranularity, aForward, aInclusive);
   }
 
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendPivot(
+  Unused << Proxy()->Document()->GetPlatformExtension()->SendPivotTo(
       Proxy()->ID(), aGranularity, aForward, aInclusive);
 
   return true;
