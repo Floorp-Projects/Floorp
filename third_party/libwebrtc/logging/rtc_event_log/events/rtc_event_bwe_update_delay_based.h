@@ -23,13 +23,14 @@ enum class BandwidthUsage;
 
 class RtcEventBweUpdateDelayBased final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::BweUpdateDelayBased;
+
   RtcEventBweUpdateDelayBased(int32_t bitrate_bps,
                               BandwidthUsage detector_state);
   ~RtcEventBweUpdateDelayBased() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventBweUpdateDelayBased> Copy() const;
 

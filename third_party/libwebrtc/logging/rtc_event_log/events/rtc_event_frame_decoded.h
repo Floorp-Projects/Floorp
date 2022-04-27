@@ -22,6 +22,8 @@ namespace webrtc {
 
 class RtcEventFrameDecoded final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::FrameDecoded;
+
   RtcEventFrameDecoded(int64_t render_time_ms,
                        uint32_t ssrc,
                        int width,
@@ -30,9 +32,8 @@ class RtcEventFrameDecoded final : public RtcEvent {
                        uint8_t qp);
   ~RtcEventFrameDecoded() override = default;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventFrameDecoded> Copy() const;
 

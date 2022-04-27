@@ -19,12 +19,13 @@ namespace webrtc {
 
 class RtcEventAlrState final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::AlrStateEvent;
+
   explicit RtcEventAlrState(bool in_alr);
   ~RtcEventAlrState() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventAlrState> Copy() const;
 

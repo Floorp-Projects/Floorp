@@ -21,12 +21,13 @@ namespace webrtc {
 
 class RtcEventProbeResultSuccess final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::ProbeResultSuccess;
+
   RtcEventProbeResultSuccess(int32_t id, int32_t bitrate_bps);
   ~RtcEventProbeResultSuccess() override = default;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventProbeResultSuccess> Copy() const;
 

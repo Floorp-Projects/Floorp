@@ -19,12 +19,13 @@ namespace webrtc {
 
 class RtcEventRouteChange final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::RouteChangeEvent;
+
   RtcEventRouteChange(bool connected, uint32_t overhead);
   ~RtcEventRouteChange() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventRouteChange> Copy() const;
 

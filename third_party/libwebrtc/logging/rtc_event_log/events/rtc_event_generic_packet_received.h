@@ -19,14 +19,15 @@ namespace webrtc {
 
 class RtcEventGenericPacketReceived final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::GenericPacketReceived;
+
   RtcEventGenericPacketReceived(int64_t packet_number, size_t packet_length);
   ~RtcEventGenericPacketReceived() override;
 
   std::unique_ptr<RtcEventGenericPacketReceived> Copy() const;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   // An identifier of the packet.
   int64_t packet_number() const { return packet_number_; }

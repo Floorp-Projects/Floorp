@@ -20,11 +20,14 @@ namespace webrtc {
 
 class RtcEventRemoteEstimate final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::RemoteEstimateEvent;
+
   RtcEventRemoteEstimate(DataRate link_capacity_lower,
                          DataRate link_capacity_upper)
       : link_capacity_lower_(link_capacity_lower),
         link_capacity_upper_(link_capacity_upper) {}
-  Type GetType() const override { return RtcEvent::Type::RemoteEstimateEvent; }
+
+  Type GetType() const override { return kType; }
   bool IsConfigEvent() const override { return false; }
 
   const DataRate link_capacity_lower_;

@@ -19,11 +19,13 @@ namespace webrtc {
 
 class RtcEventDtlsWritableState : public RtcEvent {
  public:
+  static constexpr Type kType = Type::DtlsWritableState;
+
   explicit RtcEventDtlsWritableState(bool writable);
   ~RtcEventDtlsWritableState() override;
 
-  Type GetType() const override;
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventDtlsWritableState> Copy() const;
 

@@ -19,6 +19,8 @@ namespace webrtc {
 
 class RtcEventGenericPacketSent final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::GenericPacketSent;
+
   RtcEventGenericPacketSent(int64_t packet_number,
                             size_t overhead_length,
                             size_t payload_length,
@@ -27,9 +29,8 @@ class RtcEventGenericPacketSent final : public RtcEvent {
 
   std::unique_ptr<RtcEventGenericPacketSent> Copy() const;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   // An identifier of the packet.
   int64_t packet_number() const { return packet_number_; }

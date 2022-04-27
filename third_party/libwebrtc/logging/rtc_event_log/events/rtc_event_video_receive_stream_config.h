@@ -20,13 +20,14 @@ namespace webrtc {
 
 class RtcEventVideoReceiveStreamConfig final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::VideoReceiveStreamConfig;
+
   explicit RtcEventVideoReceiveStreamConfig(
       std::unique_ptr<rtclog::StreamConfig> config);
   ~RtcEventVideoReceiveStreamConfig() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return true; }
 
   std::unique_ptr<RtcEventVideoReceiveStreamConfig> Copy() const;
 

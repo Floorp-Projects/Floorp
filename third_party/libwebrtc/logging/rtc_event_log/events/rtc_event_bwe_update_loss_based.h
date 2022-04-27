@@ -21,14 +21,15 @@ namespace webrtc {
 
 class RtcEventBweUpdateLossBased final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::BweUpdateLossBased;
+
   RtcEventBweUpdateLossBased(int32_t bitrate_bps_,
                              uint8_t fraction_loss_,
                              int32_t total_packets_);
   ~RtcEventBweUpdateLossBased() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventBweUpdateLossBased> Copy() const;
 

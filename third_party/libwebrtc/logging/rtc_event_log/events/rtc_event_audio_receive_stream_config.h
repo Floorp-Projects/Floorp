@@ -23,13 +23,14 @@ struct StreamConfig;
 
 class RtcEventAudioReceiveStreamConfig final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::AudioReceiveStreamConfig;
+
   explicit RtcEventAudioReceiveStreamConfig(
       std::unique_ptr<rtclog::StreamConfig> config);
   ~RtcEventAudioReceiveStreamConfig() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return true; }
 
   std::unique_ptr<RtcEventAudioReceiveStreamConfig> Copy() const;
 
