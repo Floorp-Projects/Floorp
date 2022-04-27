@@ -510,6 +510,15 @@ add_task(async function testFullDetails() {
     "The full description replaces newlines with <br>"
   );
 
+  let sitepermissionsRow = details.querySelector(
+    ".addon-detail-sitepermissions"
+  );
+  is(
+    sitepermissionsRow.hidden,
+    true,
+    "AddonSitePermissionsList should be hidden for this addon type"
+  );
+
   let contrib = details.querySelector(".addon-detail-contribute");
   ok(contrib, "The contribution section is visible");
 
@@ -820,6 +829,13 @@ add_task(async function testSitePermission() {
 
   let rows = getDetailRows(card);
   is(rows.length, 4, "There are 4 rows");
+
+  let sitepermissionsRow = card.querySelector(".addon-detail-sitepermissions");
+  is(
+    sitepermissionsRow.hidden,
+    false,
+    "AddonSitePermissionsList should be visible for this addon type"
+  );
 
   // Automatic updates.
   let row = rows.shift();
