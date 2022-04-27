@@ -148,6 +148,12 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
     video_codec.maxBitrate = kEncoderMinBitrateKbps;
 
   video_codec.maxFramerate = max_framerate;
+  video_codec.spatialLayers[0] = {0};
+  video_codec.spatialLayers[0].width = video_codec.width;
+  video_codec.spatialLayers[0].height = video_codec.height;
+  video_codec.spatialLayers[0].maxFramerate = max_framerate;
+  video_codec.spatialLayers[0].numberOfTemporalLayers =
+      streams[0].num_temporal_layers.value_or(1);
 
   // Set codec specific options
   if (config.encoder_specific_settings)
