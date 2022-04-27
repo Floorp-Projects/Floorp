@@ -33,12 +33,22 @@ const TEST_URI = `
 const DRAGGABLE_VALUE_CLASSNAME = "ruleview-propertyvalue-draggable";
 
 add_task(async function() {
+  await pushPref("devtools.inspector.draggable_properties", true);
+
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
   const { inspector, view } = await openRuleView();
   await selectNode("#test", inspector);
 
   testDraggingClassIsAddedWhenNeeded(view);
+
+  // Check that toggling the feature updates the UI immediately.
+  await pushPref("devtools.inspector.draggable_properties", false);
+  testDraggingClassIsRemovedAfterPrefChange(view);
+
+  await pushPref("devtools.inspector.draggable_properties", true);
+  testDraggingClassIsAddedWhenNeeded(view);
+
   await testIncrementAngleValue(view);
   await testPressingEscapeWhileDragging(view);
   await testUpdateDisabledValue(view);
@@ -46,71 +56,84 @@ add_task(async function() {
   await testDraggingClassIsAddedOnValueUpdate(view);
 });
 
+const PROPERTIES = [
+  {
+    name: "border",
+    value: "1px solid red",
+    shouldBeDraggable: false,
+  },
+  {
+    name: "line-height",
+    value: "2",
+    shouldBeDraggable: false,
+  },
+  {
+    name: "border-width",
+    value: "var(--12px)",
+    shouldBeDraggable: false,
+  },
+  {
+    name: "transform",
+    value: "rotate(45deg)",
+    shouldBeDraggable: false,
+  },
+  {
+    name: "max-height",
+    value: "+10.2e3vmin",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "min-height",
+    value: "1%",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "font-size",
+    value: "10Q",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "margin-left",
+    value: "28.3em",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "animation-delay",
+    value: "+15s",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "margin-right",
+    value: "-2px",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "padding-bottom",
+    value: ".9px",
+    shouldBeDraggable: true,
+  },
+  {
+    name: "rotate",
+    value: "90deg",
+    shouldBeDraggable: true,
+  },
+];
+
 function testDraggingClassIsAddedWhenNeeded(view) {
   info("Testing class is added or not on different property values");
-  const properties = [
-    {
-      name: "border",
-      value: "1px solid red",
-      shouldBeDraggable: false,
-    },
-    {
-      name: "line-height",
-      value: "2",
-      shouldBeDraggable: false,
-    },
-    {
-      name: "border-width",
-      value: "var(--12px)",
-      shouldBeDraggable: false,
-    },
-    {
-      name: "transform",
-      value: "rotate(45deg)",
-      shouldBeDraggable: false,
-    },
-    {
-      name: "max-height",
-      value: "+10.2e3vmin",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "min-height",
-      value: "1%",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "font-size",
-      value: "10Q",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "margin-left",
-      value: "28.3em",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "animation-delay",
-      value: "+15s",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "margin-right",
-      value: "-2px",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "padding-bottom",
-      value: ".9px",
-      shouldBeDraggable: true,
-    },
-    {
-      name: "rotate",
-      value: "90deg",
-      shouldBeDraggable: true,
-    },
-  ];
-  runIsDraggableTest(view, properties);
+  runIsDraggableTest(view, PROPERTIES);
+}
+
+function testDraggingClassIsRemovedAfterPrefChange(view) {
+  info("Testing class is removed if the feature is disabled");
+  runIsDraggableTest(
+    view,
+    // Create a temporary copy of the test PROPERTIES, where shouldBeDraggable is
+    // always false.
+    PROPERTIES.map(prop =>
+      Object.assign({}, prop, { shouldBeDraggable: false })
+    )
+  );
 }
 
 async function testIncrementAngleValue(view) {

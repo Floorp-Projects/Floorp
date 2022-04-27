@@ -71,6 +71,7 @@ loader.lazyRequireGetter(
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
+const PREF_DRAGGABLE = "devtools.inspector.draggable_properties";
 const FILTER_CHANGED_TIMEOUT = 150;
 // Removes the flash-out class from an element after 1 second.
 const PROPERTY_FLASHING_DURATION = 1000;
@@ -241,6 +242,7 @@ function CssRuleView(inspector, document, store) {
   this._handleDefaultColorUnitPrefChange = this._handleDefaultColorUnitPrefChange.bind(
     this
   );
+  this._handleDraggablePrefChange = this._handleDraggablePrefChange.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.");
   this._prefObserver.on(PREF_UA_STYLES, this._handleUAStylePrefChange);
@@ -248,6 +250,7 @@ function CssRuleView(inspector, document, store) {
     PREF_DEFAULT_COLOR_UNIT,
     this._handleDefaultColorUnitPrefChange
   );
+  this._prefObserver.on(PREF_DRAGGABLE, this._handleDraggablePrefChange);
 
   this.pseudoClassCheckboxes = this._createPseudoClassCheckboxes();
   this.showUserAgentStyles = Services.prefs.getBoolPref(PREF_UA_STYLES);
@@ -704,6 +707,13 @@ CssRuleView.prototype = {
     this._handlePrefChange(PREF_DEFAULT_COLOR_UNIT);
   },
 
+  _handleDraggablePrefChange: function() {
+    // This event is consumed by text-property-editor instances in order to
+    // update their draggable behavior. Preferences observer are costly, so
+    // we are forwarding the preference update via the EventEmitter.
+    this.emit("draggable-preference-updated");
+  },
+
   _handlePrefChange: function(pref) {
     // Reselect the currently selected element
     const refreshOnPrefs = [PREF_UA_STYLES, PREF_DEFAULT_COLOR_UNIT];
@@ -823,6 +833,7 @@ CssRuleView.prototype = {
       PREF_DEFAULT_COLOR_UNIT,
       this._handleDefaultColorUnitPrefChange
     );
+    this._prefObserver.off(PREF_DRAGGABLE, this._handleDraggablePrefChange);
     this._prefObserver.destroy();
 
     this._outputParser = null;
