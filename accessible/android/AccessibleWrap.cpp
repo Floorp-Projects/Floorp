@@ -12,7 +12,6 @@
 #include "AccEvent.h"
 #include "AndroidInputType.h"
 #include "DocAccessibleWrap.h"
-#include "IDSet.h"
 #include "SessionAccessibility.h"
 #include "TextLeafAccessible.h"
 #include "TraversalRule.h"
@@ -39,19 +38,12 @@
 
 using namespace mozilla::a11y;
 
-// IDs should be a positive 32bit integer.
-IDSet sIDSet(31UL);
-
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
-    : LocalAccessible(aContent, aDoc) {
-  if (aDoc) {
-    mID = AcquireID();
-    DocAccessibleWrap* doc = static_cast<DocAccessibleWrap*>(aDoc);
-    doc->AddID(mID, this);
-  }
+    : LocalAccessible(aContent, aDoc), mID(SessionAccessibility::kUnsetID) {
+  SessionAccessibility::RegisterAccessible(this);
 }
 
 //-----------------------------------------------------
@@ -247,16 +239,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 }
 
 void AccessibleWrap::Shutdown() {
-  if (mDoc) {
-    if (mID > 0) {
-      if (auto doc = static_cast<DocAccessibleWrap*>(mDoc.get())) {
-        doc->RemoveID(mID);
-      }
-      ReleaseID(mID);
-      mID = 0;
-    }
-  }
-
+  SessionAccessibility::UnregisterAccessible(this);
   LocalAccessible::Shutdown();
 }
 
@@ -274,10 +257,6 @@ bool AccessibleWrap::DoAction(uint8_t aIndex) const {
 
   return false;
 }
-
-int32_t AccessibleWrap::AcquireID() { return sIDSet.GetID(); }
-
-void AccessibleWrap::ReleaseID(int32_t aID) { sIDSet.ReleaseID(aID); }
 
 void AccessibleWrap::SetTextContents(const nsAString& aText) {
   if (IsHyperText()) {
@@ -595,6 +574,23 @@ void AccessibleWrap::GetRoleDescription(role aRole, AccAttributes* aAttributes,
 
   GetAccService()->GetStringRole(aRole, aGeckoRole);
   LocalizeString(NS_ConvertUTF16toUTF8(aGeckoRole).get(), aRoleDescription);
+}
+
+int32_t AccessibleWrap::GetVirtualViewID(Accessible* aAccessible) {
+  if (aAccessible->IsLocal()) {
+    return static_cast<AccessibleWrap*>(aAccessible)->mID;
+  }
+
+  return WrapperFor(aAccessible->AsRemote())->mID;
+}
+
+void AccessibleWrap::SetVirtualViewID(Accessible* aAccessible,
+                                      int32_t aVirtualViewID) {
+  if (aAccessible->IsLocal()) {
+    static_cast<AccessibleWrap*>(aAccessible)->mID = aVirtualViewID;
+  } else {
+    WrapperFor(aAccessible->AsRemote())->mID = aVirtualViewID;
+  }
 }
 
 int32_t AccessibleWrap::GetAndroidClass(role aRole) {
