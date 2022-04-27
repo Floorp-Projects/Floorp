@@ -27,6 +27,7 @@ compile_commands\.json
 \.projectile
 
 # User files that may appear at the root
+^\.clang-tidy
 ^\.mozconfig
 ^mozconfig*
 ^configure$

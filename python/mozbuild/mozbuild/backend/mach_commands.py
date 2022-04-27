@@ -249,10 +249,18 @@ def setup_vscode(command_context, vscode_cmd):
             "--pch-storage",
             "memory",
             "--clang-tidy",
-            "--clang-tidy-checks",
-            ",".join(clang_tidy_cfg.checks),
         ],
     }
+
+    clang_tidy = {}
+    clang_tidy["Checks"] = ",".join(clang_tidy_cfg.checks)
+    clang_tidy.update(clang_tidy_cfg.checks_config)
+
+    # Write .clang-tidy yml
+    import yaml
+
+    with open(".clang-tidy", "w") as file:
+        yaml.dump(clang_tidy, file)
 
     # Load the existing .vscode/settings.json file, to check if if needs to
     # be created or updated.
