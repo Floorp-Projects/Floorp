@@ -23,6 +23,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ConsoleAPI: "resource://gre/modules/Console.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
@@ -1806,6 +1807,7 @@ class SchemaAPIManager extends EventEmitter {
     );
 
     Object.assign(global, {
+      AppConstants,
       Cc,
       ChromeWorker,
       Ci,
@@ -1824,8 +1826,6 @@ class SchemaAPIManager extends EventEmitter {
       extensions: this,
       global,
     });
-
-    ChromeUtils.import("resource://gre/modules/AppConstants.jsm", global);
 
     XPCOMUtils.defineLazyGetter(global, "console", getConsole);
 
