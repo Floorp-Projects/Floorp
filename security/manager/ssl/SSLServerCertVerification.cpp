@@ -95,7 +95,6 @@
 
 #include <cstring>
 
-#include "BRNameMatchingPolicy.h"
 #include "CertVerifier.h"
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
@@ -372,10 +371,6 @@ SECStatus DetermineCertOverrideErrors(const nsCOMPtr<nsIX509Cert>& cert,
       PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
       return SECFailure;
     }
-    // Use a lax policy so as to not generate potentially spurious name
-    // mismatch "hints".
-    BRNameMatchingPolicy nameMatchingPolicy(
-        BRNameMatchingPolicy::Mode::DoNotEnforce);
     // CheckCertHostname expects that its input represents a certificate that
     // has already been successfully validated by BuildCertChain. This is
     // obviously not the case, however, because we're in the error path of
@@ -383,7 +378,7 @@ SECStatus DetermineCertOverrideErrors(const nsCOMPtr<nsIX509Cert>& cert,
     // would be nice to remove this optimistic additional error checking and
     // simply punt to the front-end, which can more easily (and safely) perform
     // extra checks to give the user hints as to why verification failed.
-    result = CheckCertHostname(certInput, hostnameInput, nameMatchingPolicy);
+    result = CheckCertHostname(certInput, hostnameInput);
     // Treat malformed name information as a domain mismatch.
     if (result == Result::ERROR_BAD_DER ||
         result == Result::ERROR_BAD_CERT_DOMAIN) {
