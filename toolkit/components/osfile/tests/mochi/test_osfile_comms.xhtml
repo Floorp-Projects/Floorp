@@ -20,8 +20,11 @@ SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
                                     true]]});
 let test = function test() {
   SimpleTest.info("test_osfile_comms.xhtml: Starting test");
-  ChromeUtils.import("resource://gre/modules/ctypes.jsm", window);
-  ChromeUtils.import("resource://gre/modules/osfile.jsm", window);
+  // These are used in the worker.
+  // eslint-disable-next-line no-unused-vars
+  let { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  // eslint-disable-next-line no-unused-vars
+  let { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
   worker = new ChromeWorker("worker_test_osfile_comms.js");
   SimpleTest.waitForExplicitFinish();
   try {
