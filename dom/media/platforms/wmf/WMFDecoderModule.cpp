@@ -170,6 +170,20 @@ int WMFDecoderModule::GetNumDecoderThreads() {
 /* static */
 HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
                                            RefPtr<MFTDecoder>& aDecoder) {
+  // Do not expose any video decoder on utility process which is only for audio
+  // decoding.
+  if (XRE_IsUtilityProcess()) {
+    switch (aType) {
+      case WMFStreamType::H264:
+      case WMFStreamType::VP8:
+      case WMFStreamType::VP9:
+      case WMFStreamType::AV1:
+        return E_FAIL;
+      default:
+        break;
+    }
+  }
+
   switch (aType) {
     case WMFStreamType::H264:
       return aDecoder->Create(CLSID_CMSH264DecoderMFT);
@@ -269,6 +283,20 @@ bool WMFDecoderModule::CanCreateMFTDecoder(const WMFStreamType& aType) {
       break;
     default:
       break;
+  }
+
+  // Do not expose any video decoder on utility process which is only for audio
+  // decoding.
+  if (XRE_IsUtilityProcess()) {
+    switch (aType) {
+      case WMFStreamType::H264:
+      case WMFStreamType::VP8:
+      case WMFStreamType::VP9:
+      case WMFStreamType::AV1:
+        return false;
+      default:
+        break;
+    }
   }
 
   return sSupportedTypes.contains(aType);
