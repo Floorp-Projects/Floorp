@@ -673,6 +673,12 @@ rtc_library("rtc_json") {
 }
 }
 
+rtc_source_set("async_resolver") {
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  # async_resolver source files (see
+  # https://webrtc-review.googlesource.com/c/src/+/196903).
+}
+
 rtc_source_set("net_helpers") {
   # TODO(bugs.webrtc.org/9987): This build target will soon contain
   #                             the following files:
