@@ -666,6 +666,8 @@ this.downloads = class extends ExtensionAPIPersistent {
     return {
       downloads: {
         download(options) {
+          const isHandlingUserInput =
+            context.callContextData?.isHandlingUserInput;
           let { filename } = options;
           if (filename && AppConstants.platform === "win") {
             // cross platform javascript code uses "/"
@@ -1014,6 +1016,9 @@ this.downloads = class extends ExtensionAPIPersistent {
               }
 
               return Downloads.createDownload({
+                // Only open the download panel if the method has been called
+                // while handling user input (See Bug 1759231).
+                openDownloadsListOnStart: isHandlingUserInput,
                 source,
                 target: {
                   path: target,
