@@ -84,6 +84,9 @@ class LibaomAv1Encoder final : public VideoEncoder {
   EncoderInfo GetEncoderInfo() const override;
 
  private:
+  // Determine number of encoder threads to use.
+  int NumberOfThreads(int width, int height, int number_of_cores);
+
   bool SvcEnabled() const { return svc_params_.has_value(); }
   // Fills svc_params_ memeber value. Returns false on error.
   bool SetSvcParams(ScalableVideoController::StreamLayersConfig svc_config);
@@ -197,7 +200,8 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
   // Overwrite default config with input encoder settings & RTC-relevant values.
   cfg_.g_w = encoder_settings_.width;
   cfg_.g_h = encoder_settings_.height;
-  cfg_.g_threads = settings.number_of_cores;
+  cfg_.g_threads =
+      NumberOfThreads(cfg_.g_w, cfg_.g_h, settings.number_of_cores);
   cfg_.g_timebase.num = 1;
   cfg_.g_timebase.den = kRtpTicksPerSecond;
   cfg_.rc_target_bitrate = encoder_settings_.maxBitrate;  // kilobits/sec.
@@ -303,7 +307,43 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  ret = aom_codec_control(&ctx_, AV1E_SET_TILE_COLUMNS, cfg_.g_threads >> 1);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_TILE_COLUMNS.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  ret = aom_codec_control(&ctx_, AV1E_SET_ROW_MT, 1);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_ROW_MT.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+int LibaomAv1Encoder::NumberOfThreads(int width,
+                                      int height,
+                                      int number_of_cores) {
+  // Keep the number of encoder threads equal to the possible number of column
+  // tiles, which is (1, 2, 4, 8). See comments below for AV1E_SET_TILE_COLUMNS.
+  if (width * height >= 1280 * 720 && number_of_cores > 4) {
+    return 4;
+  } else if (width * height >= 640 * 360 && number_of_cores > 2) {
+    return 2;
+  } else {
+// Use 2 threads for low res on ARM.
+#if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+    defined(WEBRTC_ANDROID)
+    if (width * height >= 320 * 180 && number_of_cores > 2) {
+      return 2;
+    }
+#endif
+    // 1 thread less than VGA.
+    return 1;
+  }
 }
 
 bool LibaomAv1Encoder::SetSvcParams(
