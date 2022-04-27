@@ -1773,34 +1773,6 @@ BrowserGlue.prototype = {
       "privacy.dfpi_rollout_enabledByDefault",
       dFPIEnabled ? 1 : 0
     );
-
-    if (dFPIEnabled) {
-      Services.prefs.setStringPref(
-        "browser.search.param.google_channel_us",
-        "tus7"
-      );
-      Services.prefs.setStringPref(
-        "browser.search.param.google_channel_row",
-        "trow7"
-      );
-      Services.prefs.setStringPref(
-        "browser.search.param.bing_ptag",
-        "MOZZ0000000031"
-      );
-    } else {
-      Services.prefs.setStringPref(
-        "browser.search.param.google_channel_us",
-        "tus7"
-      );
-      Services.prefs.setStringPref(
-        "browser.search.param.google_channel_row",
-        "trow7"
-      );
-      Services.prefs.setStringPref(
-        "browser.search.param.bing_ptag",
-        "MOZZ0000000031"
-      );
-    }
   },
 
   _setPrefExpectations() {
