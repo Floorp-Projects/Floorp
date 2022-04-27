@@ -38,6 +38,9 @@
  * modules in the same worker may be affected.
  */
 
+/* global require */
+/* exported require */
+
 (function(exports) {
   "use strict";
 
