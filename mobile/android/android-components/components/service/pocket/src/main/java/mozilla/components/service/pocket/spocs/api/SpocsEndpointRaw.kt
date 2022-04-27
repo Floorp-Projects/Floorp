@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.pocket.spocs
+package mozilla.components.service.pocket.spocs.api
 
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
@@ -15,7 +15,7 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.service.pocket.ext.fetchBodyOrNull
 import mozilla.components.service.pocket.logger
-import mozilla.components.service.pocket.spocs.SpocsEndpointRaw.Companion.newInstance
+import mozilla.components.service.pocket.spocs.api.SpocsEndpointRaw.Companion.newInstance
 import mozilla.components.service.pocket.stories.api.PocketEndpointRaw.Companion.newInstance
 import org.json.JSONObject
 import java.io.IOException

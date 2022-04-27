@@ -11,14 +11,16 @@ import mozilla.components.service.pocket.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
+import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -113,7 +115,7 @@ class SpocsUseCasesTest {
         val result = deleteProfileUsecase.invoke()
 
         verify(spocsProvider).deleteProfile()
-        Assert.assertTrue(result)
+        assertTrue(result)
     }
 
     @Test
@@ -128,7 +130,7 @@ class SpocsUseCasesTest {
         val result = deleteProfileUsecase.invoke()
 
         verify(spocsProvider).deleteProfile()
-        Assert.assertFalse(result)
+        assertFalse(result)
     }
 
     private fun getSuccessfulSponsoredStories() =

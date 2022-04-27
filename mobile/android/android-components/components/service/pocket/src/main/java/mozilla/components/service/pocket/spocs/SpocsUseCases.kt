@@ -11,6 +11,7 @@ import mozilla.components.service.pocket.PocketNetworkUseCases
 import mozilla.components.service.pocket.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.logger
+import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import java.util.UUID
@@ -76,7 +77,7 @@ internal class SpocsUseCases : PocketNetworkUseCase() {
             }
 
             val provider = getSpocsProvider(client, profileId, appId)
-            return when(provider.deleteProfile()) {
+            return when (provider.deleteProfile()) {
                 is Success -> true
                 is Failure -> false
             }
