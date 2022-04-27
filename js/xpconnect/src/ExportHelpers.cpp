@@ -39,7 +39,7 @@ bool IsReflector(JSObject* obj, JSContext* cx) {
   return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);
 }
 
-enum StackScopedCloneTags {
+enum StackScopedCloneTags : uint32_t {
   SCTAG_BASE = JS_SCTAG_USER_MIN,
   SCTAG_REFLECTOR,
   SCTAG_BLOB,
