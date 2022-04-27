@@ -329,12 +329,6 @@ WMFStreamType WMFDecoderModule::GetStreamTypeFromMimeType(
   return WMFStreamType::Unknown;
 }
 
-bool WMFDecoderModule::SupportsColorDepth(
-    gfx::ColorDepth aColorDepth, DecoderDoctorDiagnostics* aDiagnostics) const {
-  // Color depth support can be determined by creating DX decoders.
-  return true;
-}
-
 media::DecodeSupportSet WMFDecoderModule::Supports(
     const SupportDecoderParams& aParams,
     DecoderDoctorDiagnostics* aDiagnostics) const {
