@@ -314,7 +314,6 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
       mProcessingKeyEvent(nullptr),
       mCompositionState(eCompositionState_NotComposing),
       mIMContextID(IMContextID::Unknown),
-      mIsIMFocused(false),
       mFallbackToKeyEvent(false),
       mKeyboardEventWasDispatched(false),
       mKeyboardEventWasConsumed(false),
@@ -631,9 +630,7 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
     if (IsComposing()) {
       EndIMEComposition(aWindow);
     }
-    if (mIsIMFocused) {
-      Blur();
-    }
+    NotifyIMEOfFocusChange(IMEFocusState::Blurred);
     mLastFocusedWindow = nullptr;
   }
 
@@ -738,16 +735,17 @@ void IMContextWrapper::OnBlurWindow(nsWindow* aWindow) {
     return;
   }
 
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("0x%p OnBlurWindow(aWindow=0x%p), mLastFocusedWindow=0x%p, "
-           "mIsIMFocused=%s",
-           this, aWindow, mLastFocusedWindow, ToChar(mIsIMFocused)));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("0x%p OnBlurWindow(aWindow=0x%p), mLastFocusedWindow=0x%p, "
+       "mIMEFocusState=%s",
+       this, aWindow, mLastFocusedWindow, ToString(mIMEFocusState).c_str()));
 
-  if (!mIsIMFocused || mLastFocusedWindow != aWindow) {
+  if (mLastFocusedWindow != aWindow) {
     return;
   }
 
-  Blur();
+  NotifyIMEOfFocusChange(IMEFocusState::Blurred);
 }
 
 KeyHandlingState IMContextWrapper::OnKeyEvent(
@@ -1095,11 +1093,11 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
 
 void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("0x%p OnFocusChangeInGecko(aFocus=%s), "
-           "mCompositionState=%s, mIsIMFocused=%s, "
-           "mSetInputPurposeAndInputHints=%s",
+          ("0x%p OnFocusChangeInGecko(aFocus=%s),mCompositionState=%s, "
+           "mIMEFocusState=%s, mSetInputPurposeAndInputHints=%s",
            this, ToChar(aFocus), GetCompositionStateName(),
-           ToChar(mIsIMFocused), ToChar(mSetInputPurposeAndInputHints)));
+           ToString(mIMEFocusState).c_str(),
+           ToChar(mSetInputPurposeAndInputHints)));
 
   // We shouldn't carry over the removed string to another editor.
   mSelectedStringRemovedByComposition.Truncate();
@@ -1110,11 +1108,9 @@ void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
       mSetInputPurposeAndInputHints = false;
       SetInputPurposeAndInputHints();
     }
-    if (!mIsIMFocused) {
-      Focus();
-    }
-  } else if (mIsIMFocused) {
-    Blur();
+    NotifyIMEOfFocusChange(IMEFocusState::Focused);
+  } else {
+    NotifyIMEOfFocusChange(IMEFocusState::Blurred);
   }
 
   // When the focus changes, we need to inform IM about the new cursor
@@ -1127,8 +1123,8 @@ void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
 
 void IMContextWrapper::ResetIME() {
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("0x%p ResetIME(), mCompositionState=%s, mIsIMFocused=%s", this,
-           GetCompositionStateName(), ToChar(mIsIMFocused)));
+          ("0x%p ResetIME(), mCompositionState=%s, mIMEFocusState=%s", this,
+           GetCompositionStateName(), ToString(mIMEFocusState).c_str()));
 
   GtkIMContext* activeContext = GetActiveContext();
   if (MOZ_UNLIKELY(!activeContext)) {
@@ -1154,13 +1150,13 @@ void IMContextWrapper::ResetIME() {
   nsAutoString compositionString;
   GetCompositionString(activeContext, compositionString);
 
-  MOZ_LOG(
-      gIMELog, LogLevel::Debug,
-      ("0x%p   ResetIME() called gtk_im_context_reset(), "
-       "activeContext=0x%p, mCompositionState=%s, compositionString=%s, "
-       "mIsIMFocused=%s",
-       this, activeContext, GetCompositionStateName(),
-       NS_ConvertUTF16toUTF8(compositionString).get(), ToChar(mIsIMFocused)));
+  MOZ_LOG(gIMELog, LogLevel::Debug,
+          ("0x%p   ResetIME() called gtk_im_context_reset(), "
+           "activeContext=0x%p, mCompositionState=%s, compositionString=%s, "
+           "mIMEFocusState=%s",
+           this, activeContext, GetCompositionStateName(),
+           NS_ConvertUTF16toUTF8(compositionString).get(),
+           ToString(mIMEFocusState).c_str()));
 
   // XXX IIIMF (ATOK X3 which is one of the Language Engine of it is still
   //     used in Japan!) sends only "preedit_changed" signal with empty
@@ -1289,20 +1285,33 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
     if (IsComposing()) {
       EndIMEComposition(mLastFocusedWindow);
     }
-    if (mIsIMFocused) {
-      Blur();
+    if (mIMEFocusState == IMEFocusState::Focused) {
+      NotifyIMEOfFocusChange(IMEFocusState::BlurredWithoutFocusChange);
     }
   }
 
   mInputContext = *aContext;
+  mSetInputPurposeAndInputHints = false;
 
-  // Note that we cannot set input-purpose and input-hints right now because
+  if (!changingEnabledState || !mInputContext.mIMEState.IsEditable()) {
+    return;
+  }
+
+  // If the input context was temporarily disabled without a focus change,
+  // it must be ready to query content even if the focused content is in
+  // a remote process.  In this case, we should set IME focus right now.
+  if (mIMEFocusState == IMEFocusState::BlurredWithoutFocusChange) {
+    SetInputPurposeAndInputHints();
+    NotifyIMEOfFocusChange(IMEFocusState::Focused);
+    return;
+  }
+
+  // Otherwise, we cannot set input-purpose and input-hints right now because
   // setting them may require to set focus immediately for IME own's UI.
   // However, at this moment, `ContentCacheInParent` does not have content
   // cache, it'll be available after `NOTIFY_IME_OF_FOCUS` notification.
   // Therefore, we set them at receiving the notification.
-  mSetInputPurposeAndInputHints =
-      changingEnabledState && mInputContext.mIMEState.IsEditable();
+  mSetInputPurposeAndInputHints = true;
 }
 
 void IMContextWrapper::SetInputPurposeAndInputHints() {
@@ -1399,23 +1408,58 @@ bool IMContextWrapper::IsEnabled() const {
           mInputContext.mIMEState.mEnabled == IMEEnabled::Password);
 }
 
-void IMContextWrapper::Focus() {
-  MOZ_LOG(
-      gIMELog, LogLevel::Info,
-      ("0x%p Focus(), sLastFocusedContext=0x%p", this, sLastFocusedContext));
-  MOZ_ASSERT(!mIsIMFocused);
-  MOZ_ASSERT(!mSetInputPurposeAndInputHints);
-
-  GtkIMContext* currentContext = GetCurrentContext();
-  if (!currentContext) {
-    MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p   Focus(), FAILED, there are no context", this));
+void IMContextWrapper::NotifyIMEOfFocusChange(IMEFocusState aIMEFocusState) {
+  MOZ_ASSERT_IF(aIMEFocusState == IMEFocusState::BlurredWithoutFocusChange,
+                mIMEFocusState != IMEFocusState::Blurred);
+  if (mIMEFocusState == aIMEFocusState) {
     return;
   }
 
-  if (sLastFocusedContext && sLastFocusedContext != this &&
-      sLastFocusedContext->mIsIMFocused) {
-    sLastFocusedContext->Blur();
+  MOZ_LOG(gIMELog, LogLevel::Info,
+          ("0x%p NotifyIMEOfFocusChange(aIMEFocusState=%s), mIMEFocusState=%s, "
+           "sLastFocusedContext=0x%p",
+           this, ToString(aIMEFocusState).c_str(),
+           ToString(mIMEFocusState).c_str(), sLastFocusedContext));
+  MOZ_ASSERT(!mSetInputPurposeAndInputHints);
+
+  // If we've already made IME blurred at setting the input context disabled
+  // and it's now completely blurred by a focus move, we need only to update
+  // mIMEFocusState and when the input context gets enabled, we cannot set
+  // IME focus immediately.
+  if (aIMEFocusState == IMEFocusState::Blurred &&
+      mIMEFocusState == IMEFocusState::BlurredWithoutFocusChange) {
+    mIMEFocusState = IMEFocusState::Blurred;
+    return;
+  }
+
+  auto Blur = [&](IMEFocusState aInternalState) {
+    GtkIMContext* currentContext = GetCurrentContext();
+    if (MOZ_UNLIKELY(!currentContext)) {
+      MOZ_LOG(gIMELog, LogLevel::Error,
+              ("0x%p   NotifyIMEOfFocusChange()::Blur(), FAILED, "
+               "there is no context",
+               this));
+      return;
+    }
+    gtk_im_context_focus_out(currentContext);
+    mIMEFocusState = aInternalState;
+  };
+
+  if (aIMEFocusState != IMEFocusState::Focused) {
+    return Blur(aIMEFocusState);
+  }
+
+  GtkIMContext* currentContext = GetCurrentContext();
+  if (MOZ_UNLIKELY(!currentContext)) {
+    MOZ_LOG(gIMELog, LogLevel::Error,
+            ("0x%p   NotifyIMEOfFocusChange(), FAILED, "
+             "there is no context",
+             this));
+    return;
+  }
+
+  if (sLastFocusedContext && sLastFocusedContext != this) {
+    sLastFocusedContext->NotifyIMEOfFocusChange(IMEFocusState::Blurred);
   }
 
   sLastFocusedContext = this;
@@ -1426,30 +1470,14 @@ void IMContextWrapper::Focus() {
   mPostingKeyEvents.Clear();
 
   gtk_im_context_focus_in(currentContext);
-  mIsIMFocused = true;
+  mIMEFocusState = aIMEFocusState;
   mSetCursorPositionOnKeyEvent = true;
 
   if (!IsEnabled()) {
     // We should release IME focus for uim and scim.
     // These IMs are using snooper that is released at losing focus.
-    Blur();
+    Blur(IMEFocusState::BlurredWithoutFocusChange);
   }
-}
-
-void IMContextWrapper::Blur() {
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("0x%p Blur(), mIsIMFocused=%s", this, ToChar(mIsIMFocused)));
-  MOZ_ASSERT(mIsIMFocused);
-
-  GtkIMContext* currentContext = GetCurrentContext();
-  if (!currentContext) {
-    MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p   Blur(), FAILED, there are no context", this));
-    return;
-  }
-
-  gtk_im_context_focus_out(currentContext);
-  mIsIMFocused = false;
 }
 
 void IMContextWrapper::OnSelectionChange(
