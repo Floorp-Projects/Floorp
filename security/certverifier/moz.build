@@ -8,13 +8,11 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
 EXPORTS += [
-    "BRNameMatchingPolicy.h",
     "CertVerifier.h",
     "OCSPCache.h",
 ]
 
 UNIFIED_SOURCES += [
-    "BRNameMatchingPolicy.cpp",
     "CertVerifier.cpp",
     "NSSCertDBTrustDomain.cpp",
     "OCSPCache.cpp",
