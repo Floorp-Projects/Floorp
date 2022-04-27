@@ -29,15 +29,16 @@ enum class IceCandidatePairEventType {
 
 class RtcEventIceCandidatePair final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::IceCandidatePairEvent;
+
   RtcEventIceCandidatePair(IceCandidatePairEventType type,
                            uint32_t candidate_pair_id,
                            uint32_t transaction_id);
 
   ~RtcEventIceCandidatePair() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventIceCandidatePair> Copy() const;
 

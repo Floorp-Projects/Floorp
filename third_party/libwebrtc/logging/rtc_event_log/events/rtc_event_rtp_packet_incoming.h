@@ -22,12 +22,13 @@ class RtpPacketReceived;
 
 class RtcEventRtpPacketIncoming final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::RtpPacketIncoming;
+
   explicit RtcEventRtpPacketIncoming(const RtpPacketReceived& packet);
   ~RtcEventRtpPacketIncoming() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventRtpPacketIncoming> Copy() const;
 

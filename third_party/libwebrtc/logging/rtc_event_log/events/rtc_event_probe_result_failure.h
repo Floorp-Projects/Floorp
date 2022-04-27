@@ -28,12 +28,13 @@ enum class ProbeFailureReason {
 
 class RtcEventProbeResultFailure final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::ProbeResultFailure;
+
   RtcEventProbeResultFailure(int32_t id, ProbeFailureReason failure_reason);
   ~RtcEventProbeResultFailure() override = default;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventProbeResultFailure> Copy() const;
 

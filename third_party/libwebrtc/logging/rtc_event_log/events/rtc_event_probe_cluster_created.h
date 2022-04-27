@@ -21,15 +21,16 @@ namespace webrtc {
 
 class RtcEventProbeClusterCreated final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::ProbeClusterCreated;
+
   RtcEventProbeClusterCreated(int32_t id,
                               int32_t bitrate_bps,
                               uint32_t min_probes,
                               uint32_t min_bytes);
   ~RtcEventProbeClusterCreated() override = default;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventProbeClusterCreated> Copy() const;
 

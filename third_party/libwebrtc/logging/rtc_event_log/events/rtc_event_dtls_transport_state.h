@@ -20,11 +20,13 @@ namespace webrtc {
 
 class RtcEventDtlsTransportState : public RtcEvent {
  public:
+  static constexpr Type kType = Type::DtlsTransportState;
+
   explicit RtcEventDtlsTransportState(DtlsTransportState state);
   ~RtcEventDtlsTransportState() override;
 
-  Type GetType() const override;
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventDtlsTransportState> Copy() const;
 

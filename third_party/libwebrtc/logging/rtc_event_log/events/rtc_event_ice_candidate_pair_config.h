@@ -83,6 +83,8 @@ class IceCandidatePairDescription {
 
 class RtcEventIceCandidatePairConfig final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::IceCandidatePairConfig;
+
   RtcEventIceCandidatePairConfig(
       IceCandidatePairConfigType type,
       uint32_t candidate_pair_id,
@@ -90,9 +92,9 @@ class RtcEventIceCandidatePairConfig final : public RtcEvent {
 
   ~RtcEventIceCandidatePairConfig() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  // N.B. An ICE config event is not considered an RtcEventLog config event.
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventIceCandidatePairConfig> Copy() const;
 

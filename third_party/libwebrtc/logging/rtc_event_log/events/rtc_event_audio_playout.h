@@ -21,12 +21,13 @@ namespace webrtc {
 
 class RtcEventAudioPlayout final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::AudioPlayout;
+
   explicit RtcEventAudioPlayout(uint32_t ssrc);
   ~RtcEventAudioPlayout() override = default;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventAudioPlayout> Copy() const;
 

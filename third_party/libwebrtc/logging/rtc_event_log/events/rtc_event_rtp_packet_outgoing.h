@@ -22,13 +22,14 @@ class RtpPacketToSend;
 
 class RtcEventRtpPacketOutgoing final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::RtpPacketOutgoing;
+
   RtcEventRtpPacketOutgoing(const RtpPacketToSend& packet,
                             int probe_cluster_id);
   ~RtcEventRtpPacketOutgoing() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventRtpPacketOutgoing> Copy() const;
 

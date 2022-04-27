@@ -51,12 +51,4 @@ RtcEventGenericAckReceived::RtcEventGenericAckReceived(
 
 RtcEventGenericAckReceived::~RtcEventGenericAckReceived() = default;
 
-RtcEvent::Type RtcEventGenericAckReceived::GetType() const {
-  return RtcEvent::Type::GenericAckReceived;
-}
-
-bool RtcEventGenericAckReceived::IsConfigEvent() const {
-  return false;
-}
-
 }  // namespace webrtc

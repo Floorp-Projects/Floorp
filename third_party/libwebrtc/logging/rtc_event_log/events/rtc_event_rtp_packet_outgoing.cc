@@ -40,14 +40,6 @@ RtcEventRtpPacketOutgoing::RtcEventRtpPacketOutgoing(
 
 RtcEventRtpPacketOutgoing::~RtcEventRtpPacketOutgoing() = default;
 
-RtcEvent::Type RtcEventRtpPacketOutgoing::GetType() const {
-  return RtcEvent::Type::RtpPacketOutgoing;
-}
-
-bool RtcEventRtpPacketOutgoing::IsConfigEvent() const {
-  return false;
-}
-
 std::unique_ptr<RtcEventRtpPacketOutgoing> RtcEventRtpPacketOutgoing::Copy()
     const {
   return absl::WrapUnique<RtcEventRtpPacketOutgoing>(

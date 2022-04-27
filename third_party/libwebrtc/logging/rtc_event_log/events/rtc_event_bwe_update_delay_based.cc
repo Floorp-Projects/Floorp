@@ -28,14 +28,6 @@ RtcEventBweUpdateDelayBased::RtcEventBweUpdateDelayBased(
 
 RtcEventBweUpdateDelayBased::~RtcEventBweUpdateDelayBased() = default;
 
-RtcEvent::Type RtcEventBweUpdateDelayBased::GetType() const {
-  return RtcEvent::Type::BweUpdateDelayBased;
-}
-
-bool RtcEventBweUpdateDelayBased::IsConfigEvent() const {
-  return false;
-}
-
 std::unique_ptr<RtcEventBweUpdateDelayBased> RtcEventBweUpdateDelayBased::Copy()
     const {
   return absl::WrapUnique<RtcEventBweUpdateDelayBased>(

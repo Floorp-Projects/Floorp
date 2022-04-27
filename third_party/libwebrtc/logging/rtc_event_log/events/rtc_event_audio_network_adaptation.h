@@ -21,13 +21,14 @@ struct AudioEncoderRuntimeConfig;
 
 class RtcEventAudioNetworkAdaptation final : public RtcEvent {
  public:
+  static constexpr Type kType = Type::AudioNetworkAdaptation;
+
   explicit RtcEventAudioNetworkAdaptation(
       std::unique_ptr<AudioEncoderRuntimeConfig> config);
   ~RtcEventAudioNetworkAdaptation() override;
 
-  Type GetType() const override;
-
-  bool IsConfigEvent() const override;
+  Type GetType() const override { return kType; }
+  bool IsConfigEvent() const override { return false; }
 
   std::unique_ptr<RtcEventAudioNetworkAdaptation> Copy() const;
 
