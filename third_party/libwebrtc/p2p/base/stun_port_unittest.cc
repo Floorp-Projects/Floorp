@@ -223,7 +223,7 @@ TEST_F(StunPortTest, TestPrepareAddressFail) {
   EXPECT_EQ_SIMULATED_WAIT(error_event_.error_code,
                            cricket::SERVER_NOT_REACHABLE_ERROR, kTimeoutMs,
                            fake_clock);
-  ASSERT_NE(error_event_.error_text.find("."), std::string::npos);
+  ASSERT_NE(error_event_.error_text.find('.'), std::string::npos);
   ASSERT_NE(error_event_.address.find(kLocalAddr.HostAsSensitiveURIString()),
             std::string::npos);
   std::string server_url = "stun:" + kBadAddr.ToString();
