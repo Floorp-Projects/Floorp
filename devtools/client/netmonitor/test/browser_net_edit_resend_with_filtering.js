@@ -20,6 +20,7 @@ add_task(async function() {
     );
     return;
   }
+
   const { tab, monitor } = await initNetMonitor(POST_RAW_URL, {
     requestCount: 1,
   });
@@ -78,4 +79,84 @@ add_task(async function() {
   );
 
   await teardown(monitor);
+});
+
+/**
+ * Tests if resending an XHR request while XHR filtering is on, displays
+ * the correct requests
+ */
+add_task(async function() {
+  if (
+    Services.prefs.getBoolPref(
+      "devtools.netmonitor.features.newEditAndResend",
+      true
+    )
+  ) {
+    const { tab, monitor } = await initNetMonitor(POST_RAW_URL, {
+      requestCount: 1,
+    });
+    const { document, store, windowRequire } = monitor.panelWin;
+    const { getSelectedRequest } = windowRequire(
+      "devtools/client/netmonitor/src/selectors/index"
+    );
+    const Actions = windowRequire(
+      "devtools/client/netmonitor/src/actions/index"
+    );
+    store.dispatch(Actions.batchEnable(false));
+
+    // Execute XHR request and filter by XHR
+    await performRequests(monitor, tab, 1);
+    document.querySelector(".requests-list-filter-xhr-button").click();
+
+    // Confirm XHR request and click it
+    const xhrRequestItem = document.querySelectorAll(".request-list-item")[0];
+    EventUtils.sendMouseEvent({ type: "mousedown" }, xhrRequestItem);
+    const waitForHeaders = waitUntil(() =>
+      document.querySelector(".headers-overview")
+    );
+    await waitForHeaders;
+    const firstRequest = getSelectedRequest(store.getState());
+
+    // Open context menu and execute "Edit & Resend".
+    EventUtils.sendMouseEvent({ type: "contextmenu" }, xhrRequestItem);
+
+    info("Opening the new request panel");
+    const waitForPanels = waitForDOM(
+      document,
+      ".monitor-panel .network-action-bar"
+    );
+    const menuItem = getContextMenuItem(monitor, "request-list-context-resend");
+    getContextMenuItem(monitor, "request-list-context-resend").click();
+
+    const menuPopup = menuItem.parentNode;
+
+    const onHidden = new Promise(resolve => {
+      menuPopup.addEventListener("popuphidden", resolve, { once: true });
+    });
+
+    menuItem.click();
+    menuPopup.hidePopup();
+
+    await onHidden;
+    await waitForPanels;
+
+    // Click the "Send" button and wait till the new request appears in the list
+    document.querySelector("#http-custom-request-send-button").click();
+    await waitForNetworkEvents(monitor, 1);
+
+    // Filtering by "other" so the resent request is visible after completion
+    document.querySelector(".requests-list-filter-other-button").click();
+
+    // Select new request
+    const newRequest = document.querySelectorAll(".request-list-item")[1];
+    EventUtils.sendMouseEvent({ type: "mousedown" }, newRequest);
+    const resendRequest = getSelectedRequest(store.getState());
+
+    ok(
+      resendRequest.id !== firstRequest.id,
+      "The second XHR request was made and is unique"
+    );
+
+    await teardown(monitor);
+  }
 });

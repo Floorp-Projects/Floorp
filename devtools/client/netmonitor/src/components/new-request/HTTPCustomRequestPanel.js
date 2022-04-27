@@ -475,6 +475,7 @@ class HTTPCustomRequestPanel extends Component {
                 onClick: () => {
                   const customRequestDetails = {
                     ...this.state,
+                    cause: this.props.request?.cause,
                     urlQueryParams: urlQueryParams.map(
                       ({ checked, ...params }) => params
                     ),
