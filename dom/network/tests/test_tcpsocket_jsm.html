@@ -8,7 +8,13 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-    ChromeUtils.import("chrome://mochitests/content/chrome/dom/network/tests/tcpsocket_test.jsm", window);
+    // These are used in the loaded script file.
+    // eslint-disable-next-line no-unused-vars
+    let {
+      createSocket,
+      createServer,
+      socketCompartmentInstanceOfArrayBuffer
+    } = ChromeUtils.import("chrome://mochitests/content/chrome/dom/network/tests/tcpsocket_test.jsm");
   </script>
   <script type="application/javascript" src="test_tcpsocket_client_and_server_basics.js"></script>
 </head>
