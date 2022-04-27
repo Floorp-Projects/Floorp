@@ -1228,7 +1228,7 @@ void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
 //
 // For the time being, we always choose the integer interpretation when we are
 // forced to choose blind, but whether that is right or wrong depends on the
-// application.  This applies to moveSimd128, zeroSimd128, loadConstantSimd128,
+// application.  This applies to moveSimd128, loadConstantSimd128,
 // loadUnalignedSimd128, and storeUnalignedSimd128, at least.
 //
 // SSE4.1 or better is assumed.
@@ -1242,10 +1242,6 @@ void MacroAssembler::moveSimd128(FloatRegister src, FloatRegister dest) {
 }
 
 // Constants.  See comments above regarding integer operation.
-
-void MacroAssembler::zeroSimd128(FloatRegister dest) {
-  MacroAssemblerX86Shared::zeroSimd128Int(dest);
-}
 
 void MacroAssembler::loadConstantSimd128(const SimdConstant& v,
                                          FloatRegister dest) {
