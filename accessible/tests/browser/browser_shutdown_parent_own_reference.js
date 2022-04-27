@@ -25,7 +25,10 @@ add_task(async function() {
         "Creating a service in parent and waiting for service to be created " +
           "in content"
       );
-      await loadContentScripts(browser, "Common.jsm");
+      await loadContentScripts(browser, {
+        script: "Common.jsm",
+        symbol: "CommonUtils",
+      });
       // Create a11y service in the main process. This will trigger creating of
       // the a11y service in parent as well.
       const [parentA11yInitObserver, parentA11yInit] = initAccService();

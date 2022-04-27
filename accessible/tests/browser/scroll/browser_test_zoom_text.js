@@ -8,7 +8,10 @@
 loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 
 async function runTests(browser, accDoc) {
-  await loadContentScripts(browser, "Layout.jsm");
+  await loadContentScripts(browser, {
+    script: "Layout.jsm",
+    symbol: "Layout",
+  });
 
   let paragraph = findAccessibleChildByID(accDoc, "paragraph", [
     nsIAccessibleText,
