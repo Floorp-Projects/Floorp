@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <string>
 
 #include "base/logging.h"
@@ -405,13 +406,10 @@ bool PreProcessName(std::wstring* path) {
   // OBJECT_ATTRIBUTES from file names for brokering so they must be fully
   // qualified and we can just check for the parent directory double dot between
   // two backslashes. NtCreateFile doesn't seem to allow it anyway, but this is
-  // just an extra precaution. It also doesn't seem to allow the forward slash
-  // at least in fully qualified names so we rule out that as well, to simplify
-  // the combinations we might have to check.
-  if (path->find(L'/') != std::wstring::npos) {
-    return false;
-  }
-
+  // just an extra precaution. It also doesn't seem to allow the forward slash,
+  // but this is also used for checking policy rules, so we just replace forward
+  // slashes with backslashes.
+  std::replace(path->begin(), path->end(), L'/', L'\\');
   if (path->find(L"\\..\\") != std::wstring::npos) {
     return false;
   }
