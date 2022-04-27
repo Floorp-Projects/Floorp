@@ -53,19 +53,6 @@ class AccessibleWrap : public LocalAccessible {
 
   void ExploreByTouch(float aX, float aY);
 
-  mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
-
-  mozilla::java::GeckoBundle::LocalRef ToBundle(
-      const uint64_t aState, const LayoutDeviceIntRect& aBounds,
-      const uint8_t aActionCount, const nsString& aName,
-      const nsString& aTextValue, const nsString& aDOMNodeID,
-      const nsString& aDescription,
-      const double& aCurVal = UnspecifiedNaN<double>(),
-      const double& aMinVal = UnspecifiedNaN<double>(),
-      const double& aMaxVal = UnspecifiedNaN<double>(),
-      const double& aStep = UnspecifiedNaN<double>(),
-      AccAttributes* aAttributes = nullptr);
-
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
 
   int32_t AndroidClass() {
@@ -73,40 +60,40 @@ class AccessibleWrap : public LocalAccessible {
                         : GetAndroidClass(WrapperRole());
   }
 
+  virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal,
+                                double* aMaxVal, double* aStep);
+
+  virtual AccessibleWrap* WrapperParent() {
+    return static_cast<AccessibleWrap*>(LocalParent());
+  }
+
+  virtual role WrapperRole() { return Role(); }
+
   static const int32_t kNoID = -1;
+
+  static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
+
+  static int32_t GetInputType(const nsString& aInputTypeAttr);
+
+  static int32_t GetAndroidClass(role aRole);
+
+  static void GetRoleDescription(role aRole, AccAttributes* aAttributes,
+                                 nsAString& aGeckoRole,
+                                 nsAString& aRoleDescription);
 
  protected:
   // IDs should be a positive 32bit integer.
   static int32_t AcquireID();
   static void ReleaseID(int32_t aID);
 
-  static int32_t GetAndroidClass(role aRole);
-
-  static int32_t GetInputType(const nsString& aInputTypeAttr);
-
   int32_t mID;
 
  private:
-  virtual AccessibleWrap* WrapperParent() {
-    return static_cast<AccessibleWrap*>(LocalParent());
-  }
-
-  virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal,
-                                double* aMaxVal, double* aStep);
-
-  virtual role WrapperRole() { return Role(); }
-
   void GetTextEquiv(nsString& aText);
 
   bool HandleLiveRegionEvent(AccEvent* aEvent);
 
   void GetSelectionOrCaret(int32_t* aStartOffset, int32_t* aEndOffset);
-
-  static void GetRoleDescription(role aRole, AccAttributes* aAttributes,
-                                 nsAString& aGeckoRole,
-                                 nsAString& aRoleDescription);
-
-  static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 };
 
 static inline AccessibleWrap* WrapperFor(const RemoteAccessible* aProxy) {
