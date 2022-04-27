@@ -284,6 +284,13 @@ function initTCPRolloutSection() {
 
   let dfpiPref = Preferences.get(PREF_DFPI_ENABLED_BY_DEFAULT);
   let updateTCPRolloutSectionVisibilityState = () => {
+    // For phase 2 we always hide the TCP preferences section. TCP will be
+    // enabled by default in "standard" ETP mode.
+    if (NimbusFeatures.tcpByDefault.isEnabled()) {
+      document.getElementById("etpStandardTCPRolloutBox").hidden = true;
+      return;
+    }
+
     let onboardingEnabled =
       NimbusFeatures.tcpPreferences.isEnabled() ||
       (dfpiPref.value && dfpiPref.hasUserValue);
@@ -295,8 +302,10 @@ function initTCPRolloutSection() {
   NimbusFeatures.tcpPreferences.onUpdate(
     updateTCPRolloutSectionVisibilityState
   );
+  NimbusFeatures.tcpByDefault.onUpdate(updateTCPRolloutSectionVisibilityState);
   window.addEventListener("unload", () => {
     NimbusFeatures.tcpPreferences.off(updateTCPRolloutSectionVisibilityState);
+    NimbusFeatures.tcpByDefault.off(updateTCPRolloutSectionVisibilityState);
   });
 
   updateTCPRolloutSectionVisibilityState();
