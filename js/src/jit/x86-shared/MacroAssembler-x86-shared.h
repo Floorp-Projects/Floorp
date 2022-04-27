@@ -562,9 +562,6 @@ class MacroAssemblerX86Shared : public Assembler {
 
   // SIMD inline methods private to the implementation, that appear to be used.
 
-  void zeroSimd128Float(FloatRegister dest) { vxorps(dest, dest, dest); }
-  void zeroSimd128Int(FloatRegister dest) { vpxor(dest, dest, dest); }
-
   template <class T, class Reg>
   inline void loadScalar(const Operand& src, Reg dest);
   template <class T, class Reg>
@@ -832,7 +829,7 @@ class MacroAssemblerX86Shared : public Assembler {
 
   bool maybeInlineSimd128Int(const SimdConstant& v, const FloatRegister& dest) {
     if (v.isZeroBits()) {
-      zeroSimd128Int(dest);
+      vpxor(dest, dest, dest);
       return true;
     }
     if (v.isOneBits()) {
@@ -844,7 +841,7 @@ class MacroAssemblerX86Shared : public Assembler {
   bool maybeInlineSimd128Float(const SimdConstant& v,
                                const FloatRegister& dest) {
     if (v.isZeroBits()) {
-      zeroSimd128Float(dest);
+      vxorps(dest, dest, dest);
       return true;
     }
     return false;
