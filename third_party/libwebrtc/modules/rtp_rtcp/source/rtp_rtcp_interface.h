@@ -18,6 +18,7 @@
 #include "absl/types/optional.h"
 #include "api/frame_transformer_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
@@ -88,6 +89,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     RtcpStatisticsCallback* rtcp_statistics_callback = nullptr;
     RtcpCnameCallback* rtcp_cname_callback = nullptr;
     ReportBlockDataObserver* report_block_data_observer = nullptr;
+
+    // For RtpRtcpImpl2 only. Used for periodic RTT updates, when rtt_stats
+    // (above) is non-null. If provided, destruction of the RtpRtcp object must
+    // occur on this task queue, while construction is allowed on any thread.
+    TaskQueueBase* task_queue = nullptr;
 
     // Estimates the bandwidth available for a set of streams from the same
     // client.

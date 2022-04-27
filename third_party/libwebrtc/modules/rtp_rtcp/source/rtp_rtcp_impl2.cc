@@ -53,7 +53,7 @@ void ModuleRtpRtcpImpl2::RtpSenderContext::AssignSequenceNumber(
 }
 
 ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
-    : worker_queue_(TaskQueueBase::Current()),
+    : worker_queue_(configuration.task_queue),
       rtcp_sender_(configuration),
       rtcp_receiver_(configuration, this),
       clock_(configuration.clock),
@@ -66,7 +66,6 @@ ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
       remote_bitrate_(configuration.remote_bitrate_estimator),
       rtt_stats_(configuration.rtt_stats),
       rtt_ms_(0) {
-  RTC_DCHECK(worker_queue_);
   process_thread_checker_.Detach();
   if (!configuration.receiver_only) {
     rtp_sender_ = std::make_unique<RtpSenderContext>(configuration);
@@ -82,6 +81,7 @@ ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
   SetMaxRtpPacketSize(IP_PACKET_SIZE - kTcpOverIpv4HeaderSize);
 
   if (rtt_stats_) {
+    RTC_DCHECK(worker_queue_);
     rtt_update_task_ = RepeatingTaskHandle::DelayedStart(
         worker_queue_, kRttUpdateInterval, [this]() {
           PeriodicUpdate();
@@ -91,16 +91,10 @@ ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
 }
 
 ModuleRtpRtcpImpl2::~ModuleRtpRtcpImpl2() {
-  RTC_DCHECK_RUN_ON(worker_queue_);
-  rtt_update_task_.Stop();
-}
-
-// static
-std::unique_ptr<ModuleRtpRtcpImpl2> ModuleRtpRtcpImpl2::Create(
-    const Configuration& configuration) {
-  RTC_DCHECK(configuration.clock);
-  RTC_DCHECK(TaskQueueBase::Current());
-  return std::make_unique<ModuleRtpRtcpImpl2>(configuration);
+  if (worker_queue_) {
+    RTC_DCHECK_RUN_ON(worker_queue_);
+    rtt_update_task_.Stop();
+  }
 }
 
 // Returns the number of milliseconds until the module want a worker thread
