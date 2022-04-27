@@ -162,6 +162,13 @@ rtc_library("rnn_vad_with_level") {
     "vad_with_level.cc",
     "vad_with_level.h",
   ]
+
+  defines = []
+  if (rtc_build_with_neon && current_cpu != "arm64") {
+    suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [ "-mfpu=neon" ]
+  }
+
   deps = [
     ":common",
     ":cpu_features",
