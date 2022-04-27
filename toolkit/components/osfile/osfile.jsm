@@ -14,6 +14,7 @@ if (typeof Components != "undefined") {
   this.OS = OS;
 } else {
   /* eslint-env worker */
+  /* import-globals-from /toolkit/components/workerloader/require.js */
   importScripts("resource://gre/modules/workers/require.js");
 
   var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
