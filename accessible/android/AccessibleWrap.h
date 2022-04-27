@@ -83,6 +83,9 @@ class AccessibleWrap : public LocalAccessible {
 
   static void SetVirtualViewID(Accessible* aAccessible, int32_t aVirtualViewID);
 
+  static Accessible* DoPivot(Accessible* aAccessible, int32_t aGranularity,
+                             bool aForward, bool aInclusive);
+
  protected:
   int32_t mID;
 
