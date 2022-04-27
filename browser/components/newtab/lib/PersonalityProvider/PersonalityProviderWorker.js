@@ -7,6 +7,12 @@
 "use strict";
 
 // Order of these are important.
+/* import-globals-from /toolkit/components/workerloader/require.js */
+/* import-globals-from Tokenize.jsm */
+/* import-globals-from NaiveBayesTextTagger.jsm */
+/* import-globals-from NmfTextTagger.jsm */
+/* import-globals-from RecipeExecutor.jsm */
+/* import-globals-from PersonalityProviderWorkerClass.jsm */
 importScripts(
   "resource://gre/modules/workers/require.js",
   "resource://activity-stream/lib/PersonalityProvider/Tokenize.jsm",
@@ -18,7 +24,6 @@ importScripts(
 
 const PromiseWorker = require("resource://gre/modules/workers/PromiseWorker.js");
 
-// eslint-disable-next-line no-undef
 const personalityProviderWorker = new PersonalityProviderWorker();
 
 // This is boiler plate worker stuff that connects it to the main thread PromiseWorker.

@@ -4,6 +4,12 @@
 
 "use strict";
 
+// PersonalityProviderWorker.js imports the following scripts before this.
+/* import-globals-from Tokenize.jsm */
+/* import-globals-from NaiveBayesTextTagger.jsm */
+/* import-globals-from NmfTextTagger.jsm */
+/* import-globals-from RecipeExecutor.jsm */
+
 // We load this into a worker using importScripts, and in tests using import.
 // We use var to avoid name collision errors.
 // eslint-disable-next-line no-var
@@ -194,13 +200,10 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
           continue;
         }
         if (model.model_type === "nb") {
-          // eslint-disable-next-line no-undef
           nbTaggers.push(new NaiveBayesTextTagger(model, toksToTfIdfVector));
         } else if (model.model_type === "nmf") {
-          // eslint-disable-next-line no-undef
           nmfTaggers[model.parent_tag] = new NmfTextTagger(
             model,
-            // eslint-disable-next-line no-undef
             toksToTfIdfVector
           );
         }
@@ -215,11 +218,9 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
    * The Recipe determines the order and specifics of which the actions are called.
    */
   generateRecipeExecutor() {
-    // eslint-disable-next-line no-undef
     const recipeExecutor = new RecipeExecutor(
       this.taggers.nbTaggers,
       this.taggers.nmfTaggers,
-      // eslint-disable-next-line no-undef
       tokenize
     );
     this.recipeExecutor = recipeExecutor;
