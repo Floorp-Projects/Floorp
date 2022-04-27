@@ -80,6 +80,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StyleSheet.h"
@@ -643,6 +644,23 @@ static const char* sObserverTopics[] = {
     "network:socket-process-crashed",
 };
 
+static const char kFissionEnforceBlockList[] =
+    "fission.enforceBlocklistedPrefsInSubprocesses";
+static const char kFissionOmitBlockListValues[] =
+    "fission.omitBlocklistedPrefsInSubprocesses";
+
+static void OnFissionBlocklistPrefChange(const char* aPref, void* aData) {
+  if (strcmp(aPref, kFissionEnforceBlockList) == 0) {
+    sCrashOnBlocklistedPref =
+        StaticPrefs::fission_enforceBlocklistedPrefsInSubprocesses();
+  } else if (strcmp(aPref, kFissionOmitBlockListValues) == 0) {
+    sOmitBlocklistedPrefValues =
+        StaticPrefs::fission_omitBlocklistedPrefsInSubprocesses();
+  } else {
+    MOZ_CRASH("Unknown pref passed to callback");
+  }
+}
+
 // PreallocateProcess is called by the PreallocatedProcessManager.
 // ContentParent then takes this process back within GetNewOrUsedBrowserProcess.
 /*static*/ already_AddRefed<ContentParent>
@@ -668,6 +686,11 @@ void ContentParent::StartUp() {
 
   BackgroundChild::Startup();
   ClientManager::Startup();
+
+  Preferences::RegisterCallbackAndCall(&OnFissionBlocklistPrefChange,
+                                       kFissionEnforceBlockList);
+  Preferences::RegisterCallbackAndCall(&OnFissionBlocklistPrefChange,
+                                       kFissionOmitBlockListValues);
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sSandboxBrokerPolicyFactory = MakeUnique<SandboxBrokerPolicyFactory>();
