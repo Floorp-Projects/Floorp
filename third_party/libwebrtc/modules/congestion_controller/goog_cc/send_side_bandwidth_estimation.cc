@@ -20,6 +20,7 @@
 #include "api/rtc_event_log/rtc_event.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/transport/webrtc_key_value_config.h"
+#include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
@@ -224,7 +225,8 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
       last_rtc_event_log_(Timestamp::MinusInfinity()),
       low_loss_threshold_(kDefaultLowLossThreshold),
       high_loss_threshold_(kDefaultHighLossThreshold),
-      bitrate_threshold_(kDefaultBitrateThreshold) {
+      bitrate_threshold_(kDefaultBitrateThreshold),
+      receiver_limit_caps_only_("Enabled") {
   RTC_DCHECK(event_log);
   if (BweLossExperimentIsEnabled()) {
     uint32_t bitrate_threshold_kbps;
@@ -237,6 +239,8 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
       bitrate_threshold_ = DataRate::KilobitsPerSec(bitrate_threshold_kbps);
     }
   }
+  ParseFieldTrial({&receiver_limit_caps_only_},
+                  key_value_config->Lookup("WebRTC-Bwe-ReceiverLimitCapsOnly"));
 }
 
 SendSideBandwidthEstimation::~SendSideBandwidthEstimation() {}
@@ -308,7 +312,10 @@ int SendSideBandwidthEstimation::GetMinBitrate() const {
 }
 
 DataRate SendSideBandwidthEstimation::target_rate() const {
-  return std::max(min_bitrate_configured_, current_target_);
+  DataRate target = current_target_;
+  if (receiver_limit_caps_only_)
+    target = std::min(target, receiver_limit_);
+  return std::max(min_bitrate_configured_, target);
 }
 
 DataRate SendSideBandwidthEstimation::GetEstimatedLinkCapacity() const {
@@ -593,7 +600,9 @@ DataRate SendSideBandwidthEstimation::MaybeRampupOrBackoff(DataRate new_bitrate,
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  DataRate upper_limit = std::min(delay_based_limit_, receiver_limit_);
+  DataRate upper_limit = delay_based_limit_;
+  if (!receiver_limit_caps_only_)
+    upper_limit = std::min(upper_limit, receiver_limit_);
   upper_limit = std::min(upper_limit, max_bitrate_configured_);
   if (loss_based_bandwidth_estimation_.Enabled() &&
       loss_based_bandwidth_estimation_.GetEstimate() > DataRate::Zero()) {

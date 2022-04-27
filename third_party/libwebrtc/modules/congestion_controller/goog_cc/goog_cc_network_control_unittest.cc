@@ -11,6 +11,7 @@
 #include <queue>
 
 #include "api/transport/goog_cc_factory.h"
+#include "api/units/data_rate.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
@@ -842,6 +843,35 @@ TEST_F(GoogCcNetworkControllerTest, IsFairToTCP) {
   // quite a lot in this scenario. If this behavior is fixed, we should add a
   // lower bound to ensure it stays fixed.
   EXPECT_LT(client->send_bandwidth().kbps(), 750);
+}
+
+TEST(GoogCcScenario, RampupOnRembCapLifted) {
+  ScopedFieldTrials trial("WebRTC-Bwe-ReceiverLimitCapsOnly/Enabled/");
+  Scenario s("googcc_unit/rampup_ramb_cap_lifted");
+  NetworkSimulationConfig net_conf;
+  net_conf.bandwidth = DataRate::KilobitsPerSec(2000);
+  net_conf.delay = TimeDelta::Millis(50);
+  auto* client = s.CreateClient("send", [&](CallClientConfig* c) {
+    c->transport.rates.start_rate = DataRate::KilobitsPerSec(1000);
+  });
+  auto send_net = {s.CreateSimulationNode(net_conf)};
+  auto ret_net = {s.CreateSimulationNode(net_conf)};
+  auto* route = s.CreateRoutes(
+      client, send_net, s.CreateClient("return", CallClientConfig()), ret_net);
+  s.CreateVideoStream(route->forward(), VideoStreamConfig());
+
+  s.RunFor(TimeDelta::Seconds(10));
+  EXPECT_GT(client->send_bandwidth().kbps(), 1500);
+
+  DataRate RembLimit = DataRate::KilobitsPerSec(250);
+  client->SetRemoteBitrate(RembLimit);
+  s.RunFor(TimeDelta::Seconds(1));
+  EXPECT_EQ(client->send_bandwidth(), RembLimit);
+
+  DataRate RembLimitLifted = DataRate::KilobitsPerSec(10000);
+  client->SetRemoteBitrate(RembLimitLifted);
+  s.RunFor(TimeDelta::Seconds(10));
+  EXPECT_GT(client->send_bandwidth().kbps(), 1500);
 }
 
 }  // namespace test
