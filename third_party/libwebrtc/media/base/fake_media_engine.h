@@ -371,6 +371,7 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
                 size_t number_of_frames,
                 absl::optional<int64_t> absolute_capture_timestamp_ms) override;
     void OnClose() override;
+    int NumPreferredChannels() const override { return -1; }
     AudioSource* source() const;
 
    private:

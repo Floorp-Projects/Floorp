@@ -1114,6 +1114,14 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
         *audio_codec_spec_);
 
     UpdateAllowedBitrateRange();
+
+    // Encoder will only use two channels if the stereo parameter is set.
+    const auto& it = send_codec_spec.format.parameters.find("stereo");
+    if (it != send_codec_spec.format.parameters.end() && it->second == "1") {
+      num_encoded_channels_ = 2;
+    } else {
+      num_encoded_channels_ = 1;
+    }
   }
 
   void UpdateAudioNetworkAdaptorConfig() {
@@ -1132,6 +1140,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
     RTC_DCHECK(stream_);
     stream_->Reconfigure(config_);
   }
+
+  int NumPreferredChannels() const override { return num_encoded_channels_; }
 
   const AdaptivePtimeConfig adaptive_ptime_config_;
   rtc::ThreadChecker worker_thread_checker_;
@@ -1154,6 +1164,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
   // TODO(webrtc:11717): Remove this once audio_network_adaptor in AudioOptions
   // has been removed.
   absl::optional<std::string> audio_network_adaptor_config_from_options_;
+  int num_encoded_channels_ = -1;
 };
 
 class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
