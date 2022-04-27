@@ -3645,9 +3645,11 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    Pref pref(strData, /* isLocked */ false, /* isSanitized */ false, Nothing(),
-              Nothing());
-    Preferences::GetPreference(&pref);
+    Pref pref(strData, /* isLocked */ false,
+              /* isSanitized */ false, Nothing(), Nothing());
+
+    Preferences::GetPreference(&pref, GeckoProcessType_Content,
+                               GetRemoteType());
     if (IsInitialized()) {
       MOZ_ASSERT(mQueuedPrefs.IsEmpty());
       if (!SendPreferenceUpdate(pref)) {

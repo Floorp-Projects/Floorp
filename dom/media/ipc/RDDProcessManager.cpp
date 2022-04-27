@@ -102,7 +102,9 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
   mozilla::dom::Pref pref(strData, /* isLocked */ false,
                           /* isSanitized */ false, Nothing(), Nothing());
-  Preferences::GetPreference(&pref);
+
+  Preferences::GetPreference(&pref, GeckoProcessType_RDD,
+                             /* remoteType */ ""_ns);
   if (!!mRDDChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
     mRDDChild->SendPreferenceUpdate(pref);
