@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env mozilla/chrome-worker, node */
-/* global finish, log */
 
+/* import-globals-from /testing/mochitest/tests/SimpleTest/WorkerSimpleTest.js */
 importScripts("chrome://mochikit/content/tests/SimpleTest/WorkerSimpleTest.js");
 
 self.onmessage = function(msg) {
@@ -23,6 +23,7 @@ self.onmessage = function(msg) {
 
 function test_init() {
   info("Starting test_init");
+  /* import-globals-from /toolkit/components/osfile/osfile.jsm */
   importScripts("resource://gre/modules/osfile.jsm");
 }
 
