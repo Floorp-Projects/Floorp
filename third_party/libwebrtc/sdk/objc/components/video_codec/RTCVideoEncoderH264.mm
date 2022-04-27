@@ -802,10 +802,8 @@ NSUInteger GetMaxSampleRate(const webrtc::H264::ProfileLevelId &profile_level_id
                                                                   RTCVideoContentTypeUnspecified;
   frame.flags = webrtc::VideoSendTiming::kInvalid;
 
-  int qp;
-  _h264BitstreamParser.ParseBitstream(buffer->data(), buffer->size());
-  _h264BitstreamParser.GetLastSliceQp(&qp);
-  frame.qp = @(qp);
+  _h264BitstreamParser.ParseBitstream(*buffer);
+  frame.qp = @(_h264BitstreamParser.GetLastSliceQp().value_or(-1));
 
   BOOL res = _callback(frame, codecSpecificInfo);
   if (!res) {
