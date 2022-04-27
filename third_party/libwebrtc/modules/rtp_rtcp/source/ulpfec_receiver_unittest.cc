@@ -158,7 +158,7 @@ void UlpfecReceiverTest::InjectGarbagePacketLength(size_t fec_garbage_offset) {
   std::list<ForwardErrorCorrection::Packet*> fec_packets;
   EncodeFec(media_packets, kNumFecPackets, &fec_packets);
   ByteWriter<uint16_t>::WriteBigEndian(
-      &fec_packets.front()->data[fec_garbage_offset], 0x4711);
+      fec_packets.front()->data.MutableData() + fec_garbage_offset, 0x4711);
 
   // Inject first media packet, then first FEC packet, skipping the second media
   // packet to cause a recovery from the FEC packet.

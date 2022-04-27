@@ -96,7 +96,7 @@ class SctpTransport : public SctpTransportInternal,
   void set_debug_name_for_testing(const char* debug_name) override {
     debug_name_ = debug_name;
   }
-  int InjectDataOrNotificationFromSctpForTesting(void* data,
+  int InjectDataOrNotificationFromSctpForTesting(const void* data,
                                                  size_t length,
                                                  struct sctp_rcvinfo rcv,
                                                  int flags);
@@ -182,7 +182,7 @@ class SctpTransport : public SctpTransportInternal,
 
   // Called on the SCTP thread.
   // Flags are standard socket API flags (RFC 6458).
-  int OnDataOrNotificationFromSctp(void* data,
+  int OnDataOrNotificationFromSctp(const void* data,
                                    size_t length,
                                    struct sctp_rcvinfo rcv,
                                    int flags);
