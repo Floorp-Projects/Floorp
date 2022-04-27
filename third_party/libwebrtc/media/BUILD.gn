@@ -240,7 +240,6 @@ rtc_library("rtc_internal_video_codecs") {
     "../api/video_codecs:video_codecs_api",
     "../call:call_interfaces",
     "../call:video_stream_api",
-    "../modules:module_api",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_multiplex",
