@@ -1383,7 +1383,7 @@ privacy:
     description: >
       Records if a client is opted into dFPI in standard ETP mode as part of the
       rollout experiment. 0: opted out, 1: opted in, 2: not part of the
-      experiment
+      experiment, 3: part of the phase 2 rollout
     expires: "106"
     kind: uint
     notification_emails:
