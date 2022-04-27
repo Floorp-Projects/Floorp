@@ -88,6 +88,17 @@ class VideoCodecTestFixture {
 
     // Plain name of YUV file to process without file extension.
     std::string filename;
+    // Dimensions of test clip. Falls back to (codec_settings.width/height) if
+    // not set.
+    absl::optional<int> clip_width;
+    absl::optional<int> clip_height;
+    // Framerate of input clip. Defaults to 30fps if not set.
+    absl::optional<int> clip_fps;
+
+    // The resolution at which psnr/ssim comparisons should be made. Frames
+    // will be scaled to this size if different.
+    absl::optional<int> reference_width;
+    absl::optional<int> reference_height;
 
     // File to process. This must be a video file in the YUV format.
     std::string filepath;
