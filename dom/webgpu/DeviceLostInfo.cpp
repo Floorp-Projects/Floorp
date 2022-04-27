@@ -4,12 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeviceLostInfo.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(DeviceLostInfo, mParent)
+GPU_IMPL_CYCLE_COLLECTION(DeviceLostInfo, mGlobal)
 GPU_IMPL_JS_WRAP(DeviceLostInfo)
 
 }  // namespace webgpu
