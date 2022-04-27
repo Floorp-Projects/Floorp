@@ -67,6 +67,7 @@ using ::testing::Lt;
 using ::testing::Matcher;
 using ::testing::NiceMock;
 using ::testing::Return;
+using ::testing::SizeIs;
 using ::testing::StrictMock;
 
 namespace {
@@ -4118,6 +4119,44 @@ TEST_F(VideoStreamEncoderTest,
   EXPECT_GT(last_layer_allocation.active_spatial_layers[1]
                 .target_bitrate_per_temporal_layer[0],
             DataRate::Zero());
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       ReportsUpdatedVideoLayersAllocationWhenResolutionChanges) {
+  ResetEncoder("VP8", /*num_streams*/ 2, 1, 1, /*screenshare*/ false,
+               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+                   kVideoLayersAllocation);
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps),
+      DataRate::BitsPerSec(kSimulcastTargetBitrateBps), 0, 0, 0);
+
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(CurrentTimeMs(), codec_width_, codec_height_));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(sink_.number_of_layers_allocations(), 1);
+  ASSERT_THAT(sink_.GetLastVideoLayersAllocation().active_spatial_layers,
+              SizeIs(2));
+  EXPECT_EQ(sink_.GetLastVideoLayersAllocation().active_spatial_layers[1].width,
+            codec_width_);
+  EXPECT_EQ(
+      sink_.GetLastVideoLayersAllocation().active_spatial_layers[1].height,
+      codec_height_);
+
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(CurrentTimeMs(), codec_width_ / 2, codec_height_ / 2));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(sink_.number_of_layers_allocations(), 2);
+  ASSERT_THAT(sink_.GetLastVideoLayersAllocation().active_spatial_layers,
+              SizeIs(2));
+  EXPECT_EQ(sink_.GetLastVideoLayersAllocation().active_spatial_layers[1].width,
+            codec_width_ / 2);
+  EXPECT_EQ(
+      sink_.GetLastVideoLayersAllocation().active_spatial_layers[1].height,
+      codec_height_ / 2);
 
   video_stream_encoder_->Stop();
 }
