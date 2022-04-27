@@ -50,7 +50,7 @@ already_AddRefed<IPDLUnitTestParent> IPDLUnitTestParent::CreateCrossProcess() {
   std::vector<std::string> extraArgs;
 
   auto prefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
-      ShouldSyncPreference);
+      ShouldSanitizePreference);
   if (!prefSerializer->SerializeToSharedMemory()) {
     ADD_FAILURE()
         << "SharedPreferenceSerializer::SerializeToSharedMemory failed";
