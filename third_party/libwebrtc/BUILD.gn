@@ -88,6 +88,9 @@ if (!build_with_chromium && !build_with_mozilla) {
         ]
       }
     }
+    if (target_os == "android") {
+      deps += [ "tools_webrtc:binary_version_check" ]
+    }
   }
 }
 

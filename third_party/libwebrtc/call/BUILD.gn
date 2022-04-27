@@ -8,6 +8,14 @@
 
 import("../webrtc.gni")
 
+rtc_library("version") {
+  sources = [
+    "version.cc",
+    "version.h",
+  ]
+  visibility = [ ":*" ]
+}
+
 rtc_library("call_interfaces") {
   sources = [
     "audio_receive_stream.cc",
@@ -254,6 +262,7 @@ rtc_library("call") {
     ":rtp_receiver",
     ":rtp_sender",
     ":simulated_network",
+    ":version",
     ":video_stream_api",
     "../api:array_view",
     "../api:callfactory_api",
