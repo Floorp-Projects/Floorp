@@ -4,12 +4,12 @@
 
 package mozilla.components.service.pocket.spocs
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketNetworkUseCase
 import mozilla.components.service.pocket.PocketNetworkUseCases
 import mozilla.components.service.pocket.PocketSponsoredStory
-import mozilla.components.service.pocket.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.logger
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
@@ -22,8 +22,13 @@ import java.util.UUID
 internal class SpocsUseCases : PocketNetworkUseCase() {
     /**
      * Allows for querying the list of available Pocket sponsored stories.
+     *
+     * @param context [Context] used for various system interactions and libraries initializations.
+     * @param profileId Unique profile identifier which will be presented with sponsored stories.
+     * @param appId Unique identifier of the application using this feature.
      */
     internal inner class GetSponsoredStories(
+        private val context: Context,
         private val profileId: UUID,
         private val appId: String,
     ) {
@@ -31,38 +36,19 @@ internal class SpocsUseCases : PocketNetworkUseCase() {
          * Do an internet query for a list of Pocket sponsored stories.
          */
         suspend operator fun invoke(): List<PocketSponsoredStory> {
-            val client = fetchClient
-            if (client == null) {
-                logger.error("Cannot download new sponsored stories. Service has incomplete setup")
-                return emptyList()
-            }
-            val provider = getSpocsProvider(client, profileId, appId)
-            val stories = provider.getSponsoredStories()
-            return when (stories) {
-                is Success -> stories.data.map {
-                    PocketSponsoredStory(
-                        title = it.title,
-                        url = it.url,
-                        imageUrl = it.imageSrc,
-                        sponsor = it.sponsor,
-                        shim = PocketSponsoredStoryShim(
-                            click = it.shim.click,
-                            impression = it.shim.impression
-                        )
-                    )
-                }
-                is Failure -> {
-                    logger.error("Could not download new sponsored stories.")
-                    emptyList()
-                }
-            }
+            return getSpocsRepository(context).getAllSpocs()
         }
     }
 
     /**
      * Allows deleting all stored user data used for downloading sponsored stories.
+     *
+     * @param context [Context] used for various system interactions and libraries initializations.
+     * @param profileId Unique profile identifier previously used for downloading sponsored Pocket stories.
+     * @param appId Unique app identifier previously used for downloading sponsored Pocket stories.
      */
     internal inner class DeleteProfile(
+        private val context: Context,
         private val profileId: UUID,
         private val appId: String,
     ) {
@@ -78,11 +64,22 @@ internal class SpocsUseCases : PocketNetworkUseCase() {
 
             val provider = getSpocsProvider(client, profileId, appId)
             return when (provider.deleteProfile()) {
-                is Success -> true
-                is Failure -> false
+                is Success -> {
+                    getSpocsRepository(context).deleteAllSpocs()
+                    true
+                }
+                is Failure -> {
+                    // Don't attempt to delete locally persisted stories to prevent mismatching issues
+                    // with profile deletion failing - applications still "showing it" but
+                    // with no sponsored articles to show.
+                    false
+                }
             }
         }
     }
+
+    @VisibleForTesting
+    internal fun getSpocsRepository(context: Context) = SpocsRepository(context)
 
     @VisibleForTesting
     internal fun getSpocsProvider(client: Client, profileId: UUID, appId: String) =

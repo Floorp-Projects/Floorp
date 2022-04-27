@@ -26,6 +26,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    sourceSets {
+        test.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
 }
 
 dependencies {
@@ -49,6 +53,7 @@ dependencies {
     testImplementation Dependencies.testing_coroutines
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_robolectric
+    testImplementation Dependencies.androidx_room_testing
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')

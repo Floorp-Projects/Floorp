@@ -6,6 +6,10 @@ package mozilla.components.service.pocket.ext
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketSponsoredStoryShim
+import mozilla.components.service.pocket.spocs.api.ApiSpoc
+import mozilla.components.service.pocket.spocs.db.SpocEntity
 import mozilla.components.service.pocket.stories.api.PocketApiStory
 import mozilla.components.service.pocket.stories.db.PocketLocalStoryTimesShown
 import mozilla.components.service.pocket.stories.db.PocketStoryEntity
@@ -43,3 +47,31 @@ internal fun PocketStoryEntity.toPocketRecommendedStory(): PocketRecommendedStor
  */
 internal fun PocketRecommendedStory.toPartialTimeShownUpdate(): PocketLocalStoryTimesShown =
     PocketLocalStoryTimesShown(url, timesShown)
+
+/**
+ * Map sponsored Pocket stories to the object type that we persist locally.
+ */
+internal fun ApiSpoc.toLocalSpoc(): SpocEntity =
+    SpocEntity(
+        url = url,
+        title = title,
+        imageUrl = imageSrc,
+        sponsor = sponsor,
+        clickShim = shim.click,
+        impressionShim = shim.impression
+    )
+
+/**
+ * Map Room entities to the object type that we expose to service clients.
+ */
+internal fun SpocEntity.toPocketSponsoredStory(): PocketSponsoredStory =
+    PocketSponsoredStory(
+        title = title,
+        url = url,
+        imageUrl = imageUrl,
+        sponsor = sponsor,
+        shim = PocketSponsoredStoryShim(
+            click = clickShim,
+            impression = impressionShim
+        )
+    )

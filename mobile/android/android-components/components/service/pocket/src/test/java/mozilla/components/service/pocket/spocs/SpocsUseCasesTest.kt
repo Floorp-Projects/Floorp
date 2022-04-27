@@ -7,16 +7,15 @@ package mozilla.components.service.pocket.spocs
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import mozilla.components.service.pocket.PocketSponsoredStory
-import mozilla.components.service.pocket.PocketSponsoredStoryShim
+import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
-import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,6 +24,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.util.UUID
@@ -35,11 +35,14 @@ import kotlin.reflect.KVisibility
 class SpocsUseCasesTest {
     private val usecases = spy(SpocsUseCases())
     private val spocsProvider: SpocsEndpoint = mock()
+    private val spocsRepo: SpocsRepository = mock()
 
     @Before
     fun setup() {
         doReturn(spocsProvider).`when`(usecases).getSpocsProvider(any(), any(), any())
+        doReturn(spocsRepo).`when`(usecases).getSpocsRepository(any())
     }
+
     @After
     fun cleanup() {
         SpocsUseCases.reset()
@@ -61,53 +64,37 @@ class SpocsUseCasesTest {
     }
 
     @Test
-    fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is called THEN return the stories from provider`() = runTest {
-        SpocsUseCases.initialize(mock())
+    fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is called THEN return the stories from repository`() = runTest {
         val sponsoredStoriesUsecase = spy(
-            usecases.GetSponsoredStories(UUID.randomUUID(), "test")
+            usecases.GetSponsoredStories(testContext, UUID.randomUUID(), "test")
         )
-        val successfulResponse = getSuccessfulSponsoredStories()
-        doReturn(successfulResponse).`when`(spocsProvider).getSponsoredStories()
-        val expectedSponsoredStories = (successfulResponse as Success).data.map {
-            PocketSponsoredStory(
-                title = it.title,
-                url = it.url,
-                imageUrl = it.imageSrc,
-                sponsor = it.sponsor,
-                shim = PocketSponsoredStoryShim(
-                    click = it.shim.click,
-                    impression = it.shim.impression
-                )
-            )
-        }
+        val stories = listOf(PocketTestResources.clientExpectedPocketStory)
+        doReturn(stories).`when`(spocsRepo).getAllSpocs()
 
         val result = sponsoredStoriesUsecase.invoke()
 
-        verify(spocsProvider).getSponsoredStories()
-        assertEquals(expectedSponsoredStories, result)
+        verify(spocsRepo).getAllSpocs()
+        assertEquals(result, stories)
     }
 
     @Test
-    fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is called THEN return return an empty list if the provider fails`() = runTest {
-        SpocsUseCases.initialize(mock())
+    fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is called THEN return return an empty list if none are available in the repository`() = runTest {
         val sponsoredStoriesUsecase = spy(
-            usecases.GetSponsoredStories(UUID.randomUUID(), "test")
+            usecases.GetSponsoredStories(testContext, UUID.randomUUID(), "test")
         )
-        val unsuccessfulResponse = Failure<Any>()
-        doReturn(unsuccessfulResponse).`when`(spocsProvider).getSponsoredStories()
-        val expectedSponsoredStories = emptyList<List<PocketSponsoredStory>>()
+        doReturn(emptyList<PocketRecommendedStory>()).`when`(spocsRepo).getAllSpocs()
 
         val result = sponsoredStoriesUsecase.invoke()
 
-        verify(spocsProvider).getSponsoredStories()
-        assertEquals(expectedSponsoredStories, result)
+        verify(spocsRepo).getAllSpocs()
+        assertTrue(result.isEmpty())
     }
 
     @Test
     fun `GIVEN SpocsUseCases WHEN DeleteProfile is called THEN return true if profile deletion was successful`() = runTest {
         SpocsUseCases.initialize(mock())
         val deleteProfileUsecase = spy(
-            usecases.DeleteProfile(UUID.randomUUID(), "test")
+            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
         )
         val successfulResponse = Success(true)
         doReturn(successfulResponse).`when`(spocsProvider).deleteProfile()
@@ -122,7 +109,7 @@ class SpocsUseCasesTest {
     fun `GIVEN SpocsUseCases WHEN DeleteProfile is called THEN return false if profile deletion was not successful`() = runTest {
         SpocsUseCases.initialize(mock())
         val deleteProfileUsecase = spy(
-            usecases.DeleteProfile(UUID.randomUUID(), "test")
+            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
         )
         val unsuccessfulResponse = Failure<Any>()
         doReturn(unsuccessfulResponse).`when`(spocsProvider).deleteProfile()
@@ -133,6 +120,31 @@ class SpocsUseCasesTest {
         assertFalse(result)
     }
 
-    private fun getSuccessfulSponsoredStories() =
-        PocketResponse.wrap(PocketTestResources.apiExpectedPocketSpocs)
+    @Test
+    fun `GIVEN SpocsUseCases WHEN profile deletion is succesfull THEN delete all locally persisted spocs`() = runTest {
+        SpocsUseCases.initialize(mock())
+        val deleteProfileUsecase = spy(
+            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
+        )
+        val successfulResponse = Success(true)
+        doReturn(successfulResponse).`when`(spocsProvider).deleteProfile()
+
+        deleteProfileUsecase.invoke()
+
+        verify(spocsRepo).deleteAllSpocs()
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases WHEN profile deletion is not succesfull THEN keep all locally persisted spocs`() = runTest {
+        SpocsUseCases.initialize(mock())
+        val deleteProfileUsecase = spy(
+            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
+        )
+        val unsuccessfulResponse = Failure<Any>()
+        doReturn(unsuccessfulResponse).`when`(spocsProvider).deleteProfile()
+
+        deleteProfileUsecase.invoke()
+
+        verify(spocsRepo, never()).deleteAllSpocs()
+    }
 }

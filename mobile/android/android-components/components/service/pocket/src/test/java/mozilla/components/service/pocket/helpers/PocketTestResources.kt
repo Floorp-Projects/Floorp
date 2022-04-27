@@ -7,6 +7,7 @@ package mozilla.components.service.pocket.helpers
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.spocs.api.ApiSpoc
 import mozilla.components.service.pocket.spocs.api.ApiSpocShim
+import mozilla.components.service.pocket.spocs.db.SpocEntity
 import mozilla.components.service.pocket.stories.api.PocketApiStory
 import mozilla.components.service.pocket.stories.db.PocketStoryEntity
 
@@ -118,5 +119,14 @@ internal object PocketTestResources {
         category = "general",
         timeToRead = 11,
         timesShown = 3
+    )
+
+    val dbExpectedPocketSpoc = SpocEntity(
+        url = "https://i.geistm.com/l/GC_7ReasonsKetoV2_Journiest?bcid=601c567ac5b18a0414cce1d4&bhid=624f3ea9adad7604086ac6b3&utm_content=PKT_A_7ReasonsKetoV2_Journiest_40702022_RawMeatballUGC_130Off_601c567ac5b18a0414cce1d4_624f3ea9adad7604086ac6b3&tv=su4&ct=NAT-PK-PROS-130OFF5WEEK-037&utm_medium=DB&utm_source=pocket~geistm&utm_campaign=PKT_A_7ReasonsKetoV2_Journiest_40702022_RawMeatballUGC_130Off",
+        title = "Eating Keto Has Never Been So Easy With Green Chef",
+        imageUrl = "https://img-getpocket.cdn.mozilla.net/direct?url=realUrl.png&resize=w618-h310",
+        sponsor = "Green Chef",
+        clickShim = "193815086ClickShim",
+        impressionShim = "193815086ImpressionShim"
     )
 }

@@ -30,6 +30,7 @@ class PocketStoriesService(
             null
         }
         else -> spocsUseCases.GetSponsoredStories(
+            context = context,
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId
         )
@@ -40,6 +41,7 @@ class PocketStoriesService(
             null
         }
         else -> spocsUseCases.DeleteProfile(
+            context = context,
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId
         )
