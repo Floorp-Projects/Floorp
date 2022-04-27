@@ -5,6 +5,7 @@
 package mozilla.components.service.pocket
 
 import android.content.Context
+import mozilla.components.service.pocket.spocs.SpocsUseCases
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
 import mozilla.components.service.pocket.update.PocketStoriesRefreshScheduler
 
@@ -19,15 +20,16 @@ class PocketStoriesService(
     private val pocketStoriesConfig: PocketStoriesConfig
 ) {
     internal var scheduler = PocketStoriesRefreshScheduler(pocketStoriesConfig)
-    private val useCases = PocketStoriesUseCases()
-    internal var getStoriesUsecase = useCases.GetPocketStories(context)
-    internal var updateStoriesTimesShownUsecase = useCases.UpdateStoriesTimesShown(context)
+    private val storiesUseCases = PocketStoriesUseCases()
+    private val spocsUseCases = SpocsUseCases()
+    internal var getStoriesUsecase = storiesUseCases.GetPocketStories(context)
+    internal var updateStoriesTimesShownUsecase = storiesUseCases.UpdateStoriesTimesShown(context)
     internal val getSpocsUsecase = when (pocketStoriesConfig.profile) {
         null -> {
             logger.debug("Missing profile for sponsored stories")
             null
         }
-        else -> useCases.GetSponsoredStories(
+        else -> spocsUseCases.GetSponsoredStories(
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId
         )
@@ -37,7 +39,7 @@ class PocketStoriesService(
             logger.debug("Missing profile for sponsored stories")
             null
         }
-        else -> useCases.DeleteUserProfile(
+        else -> spocsUseCases.DeleteProfile(
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId
         )
