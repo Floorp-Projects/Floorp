@@ -2881,7 +2881,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetLocalSsrc(
   config_.rtp.local_ssrc = local_ssrc;
   flexfec_config_.local_ssrc = local_ssrc;
   RTC_LOG(LS_INFO)
-      << "RecreateWebRtcStream (recv) because of SetLocalSsrc; local_ssrc="
+      << "RecreateWebRtcVideoStream (recv) because of SetLocalSsrc; local_ssrc="
       << local_ssrc;
   MaybeRecreateWebRtcFlexfecStream();
   RecreateWebRtcVideoStream();
@@ -2912,9 +2912,9 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
   // based on the rtcp-fb for the FlexFEC codec, not the media codec.
   flexfec_config_.transport_cc = config_.rtp.transport_cc;
   flexfec_config_.rtcp_mode = config_.rtp.rtcp_mode;
-  RTC_LOG(LS_INFO)
-      << "RecreateWebRtcStream (recv) because of SetFeedbackParameters; nack="
-      << nack_enabled << ", transport_cc=" << transport_cc_enabled;
+  RTC_LOG(LS_INFO) << "RecreateWebRtcVideoStream (recv) because of "
+                      "SetFeedbackParameters; nack="
+                   << nack_enabled << ", transport_cc=" << transport_cc_enabled;
   MaybeRecreateWebRtcFlexfecStream();
   RecreateWebRtcVideoStream();
 }
