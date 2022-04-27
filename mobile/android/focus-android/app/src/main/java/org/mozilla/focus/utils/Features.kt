@@ -25,4 +25,9 @@ object Features {
      * has "firstrun" in their name should be renamed to use "onboarding"
      */
     var ONBOARDING = AppConstants.isDevOrNightlyBuild
+
+    /**
+     * Delete all shortcuts when New Session Button from FingerPrint LockScreen is clicked
+     */
+    var DELETE_TOP_SITES_WHEN_NEW_SESSION_BUTTON_CLICKED: Boolean = AppConstants.isDevOrNightlyBuild
 }
