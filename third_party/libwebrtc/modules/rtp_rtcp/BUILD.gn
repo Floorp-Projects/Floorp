@@ -319,6 +319,11 @@ rtc_library("rtp_rtcp") {
   ]
 }
 
+rtc_source_set("rtp_rtcp_legacy") {
+  # TODO(bugs.webrtc.org/11581): The files "source/rtp_rtcp_impl.cc"
+  # and "source/rtp_rtcp_impl.h" should be moved to this target.
+}
+
 rtc_library("rtcp_transceiver") {
   visibility = [ "*" ]
   public = [
@@ -526,6 +531,7 @@ if (rtc_include_tests) {
       ":rtcp_transceiver",
       ":rtp_rtcp",
       ":rtp_rtcp_format",
+      ":rtp_rtcp_legacy",
       "../../api:array_view",
       "../../api:libjingle_peerconnection_api",
       "../../api:mock_frame_encryptor",
