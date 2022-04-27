@@ -311,24 +311,6 @@ rtc_source_set("video_frame_metadata") {
   ]
 }
 
-rtc_library("video_stream_encoder_create") {
-  visibility = [ "*" ]
-  sources = [
-    "video_stream_encoder_create.cc",
-    "video_stream_encoder_create.h",
-  ]
-
-  deps = [
-    ":video_frame",
-    ":video_stream_encoder",
-    "../../api:scoped_refptr",
-    "../../video:video_stream_encoder_impl",
-    "../../video/adaptation:video_adaptation",
-    "../task_queue",
-    "../video_codecs:video_codecs_api",
-  ]
-}
-
 rtc_library("builtin_video_bitrate_allocator_factory") {
   visibility = [ "*" ]
   sources = [

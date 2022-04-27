@@ -429,12 +429,14 @@ VideoStreamEncoder::VideoStreamEncoder(
     VideoStreamEncoderObserver* encoder_stats_observer,
     const VideoStreamEncoderSettings& settings,
     std::unique_ptr<OveruseFrameDetector> overuse_detector,
-    TaskQueueFactory* task_queue_factory)
+    TaskQueueFactory* task_queue_factory,
+    BitrateAllocationCallbackType allocation_cb_type)
     : main_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),
       quality_scaling_experiment_enabled_(QualityScalingExperiment::Enabled()),
       sink_(nullptr),
       settings_(settings),
+      allocation_cb_type_(allocation_cb_type),
       rate_control_settings_(RateControlSettings::ParseFromFieldTrials()),
       encoder_selector_(settings.encoder_factory->GetEncoderSelector()),
       encoder_stats_observer_(encoder_stats_observer),
@@ -1276,21 +1278,18 @@ void VideoStreamEncoder::SetEncoderRates(
         static_cast<uint32_t>(rate_settings.rate_control.framerate_fps + 0.5));
     stream_resource_manager_.SetEncoderRates(rate_settings.rate_control);
     if (layer_allocation_changed &&
-        settings_.allocation_cb_type ==
-            VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-                kVideoLayersAllocation) {
+        allocation_cb_type_ ==
+            BitrateAllocationCallbackType::kVideoLayersAllocation) {
       sink_->OnVideoLayersAllocationUpdated(CreateVideoLayersAllocation(
           send_codec_, rate_settings.rate_control, encoder_->GetEncoderInfo()));
     }
   }
-  if ((settings_.allocation_cb_type ==
-       VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-           kVideoBitrateAllocation) ||
+  if ((allocation_cb_type_ ==
+       BitrateAllocationCallbackType::kVideoBitrateAllocation) ||
       (encoder_config_.content_type ==
            VideoEncoderConfig::ContentType::kScreen &&
-       settings_.allocation_cb_type ==
-           VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-               kVideoBitrateAllocationWhenScreenSharing)) {
+       allocation_cb_type_ == BitrateAllocationCallbackType::
+                                  kVideoBitrateAllocationWhenScreenSharing)) {
     sink_->OnBitrateAllocationUpdated(
         // Update allocation according to info from encoder. An encoder may
         // choose to not use all layers due to for example HW.

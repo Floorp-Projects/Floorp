@@ -68,6 +68,7 @@ rtc_library("video") {
 
   deps = [
     ":frame_dumping_decoder",
+    ":video_stream_encoder_impl",
     "../api:array_view",
     "../api:fec_controller_api",
     "../api:frame_transformer_interface",
@@ -88,7 +89,6 @@ rtc_library("video") {
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
     "../api/video:video_stream_encoder",
-    "../api/video:video_stream_encoder_create",
     "../api/video_codecs:video_codecs_api",
     "../call:bitrate_allocator",
     "../call:call_interfaces",
@@ -138,6 +138,7 @@ rtc_library("video") {
     "../system_wrappers",
     "../system_wrappers:field_trial",
     "../system_wrappers:metrics",
+    "./adaptation:video_adaptation",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
