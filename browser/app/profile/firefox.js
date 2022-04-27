@@ -2319,6 +2319,8 @@ pref("devtools.inspector.ruleview.inline-compatibility-warning.enabled", false);
 pref("devtools.inspector.compatibility.enabled", true);
 // Enable overflow debugging in the inspector.
 pref("devtools.overflow.debugging.enabled", true);
+// Enable drag to edit properties in the inspector rule view.
+pref("devtools.inspector.draggable_properties", true);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);

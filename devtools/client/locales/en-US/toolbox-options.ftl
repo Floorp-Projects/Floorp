@@ -39,6 +39,11 @@ options-collapse-attrs-label = Truncate DOM attributes
 options-collapse-attrs-tooltip =
     .title = Truncate long attributes in the inspector
 
+# The label for the checkbox option to enable the "drag to update" feature
+options-inspector-draggable-properties-label = Click and drag to edit size values
+options-inspector-draggable-properties-tooltip =
+    .title = Click and drag to edit size values in the inspector rules view.
+
 ## "Default Color Unit" options for the Inspector
 
 options-default-color-unit-label = Default color unit
