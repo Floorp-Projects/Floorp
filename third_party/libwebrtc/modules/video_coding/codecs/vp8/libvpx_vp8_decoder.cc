@@ -397,6 +397,13 @@ int LibvpxVp8Decoder::Release() {
   return ret_val;
 }
 
+VideoDecoder::DecoderInfo LibvpxVp8Decoder::GetDecoderInfo() const {
+  DecoderInfo info;
+  info.implementation_name = "libvpx";
+  info.is_hardware_accelerated = false;
+  return info;
+}
+
 const char* LibvpxVp8Decoder::ImplementationName() const {
   return "libvpx";
 }

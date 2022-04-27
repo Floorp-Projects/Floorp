@@ -72,6 +72,7 @@ class MockVideoDecoder : public VideoDecoder {
               (DecodedImageCallback*),
               (override));
   MOCK_METHOD(int32_t, Release, (), (override));
+  MOCK_METHOD(VideoDecoder::DecoderInfo, GetDetcoderInfo, (), (const override));
   const char* ImplementationName() const { return "MockVideoDecoder"; }
 };
 
