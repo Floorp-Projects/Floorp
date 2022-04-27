@@ -42,8 +42,6 @@ TimerThread::~TimerThread() {
   NS_ASSERTION(mTimers.IsEmpty(), "Timers remain in TimerThread::~TimerThread");
 }
 
-nsresult TimerThread::InitLocks() { return NS_OK; }
-
 namespace {
 
 class TimerObserverRunnable : public Runnable {
