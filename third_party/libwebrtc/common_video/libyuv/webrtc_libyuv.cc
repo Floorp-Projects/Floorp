@@ -15,7 +15,6 @@
 
 #include "api/video/i420_buffer.h"
 #include "common_video/include/video_frame_buffer.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "libyuv/include/libyuv.h"
 
@@ -140,10 +139,6 @@ int ConvertFromI420(const VideoFrame& src_frame,
       ConvertVideoType(dst_video_type));
 }
 
-// Helper functions for keeping references alive.
-void KeepBufferRefs(rtc::scoped_refptr<webrtc::VideoFrameBuffer>,
-                    rtc::scoped_refptr<webrtc::VideoFrameBuffer>) {}
-
 rtc::scoped_refptr<I420ABufferInterface> ScaleI420ABuffer(
     const I420ABufferInterface& buffer,
     int target_width,
@@ -162,7 +157,8 @@ rtc::scoped_refptr<I420ABufferInterface> ScaleI420ABuffer(
       yuv_buffer->StrideY(), yuv_buffer->DataU(), yuv_buffer->StrideU(),
       yuv_buffer->DataV(), yuv_buffer->StrideV(), axx_buffer->DataY(),
       axx_buffer->StrideY(),
-      rtc::Bind(&KeepBufferRefs, yuv_buffer, axx_buffer));
+      // To keep references alive.
+      [yuv_buffer, axx_buffer] {});
   return merged_buffer;
 }
 
