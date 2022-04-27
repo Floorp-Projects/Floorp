@@ -295,10 +295,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   Clock* clock() const { return clock_; }
 
-  // TODO(sprang): Remove when usage is gone.
-  DataRate SendRate() const;
-  DataRate NackOverheadRate() const;
-
  private:
   FRIEND_TEST_ALL_PREFIXES(RtpRtcpImplTest, Rtt);
   FRIEND_TEST_ALL_PREFIXES(RtpRtcpImplTest, RttForReceiverOnly);
