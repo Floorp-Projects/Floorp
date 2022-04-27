@@ -24,6 +24,10 @@
 
 namespace mozilla {
 
+// QP scaling thresholds.
+static const int kLowH264QpThreshold = 24;
+static const int kHighH264QpThreshold = 37;
+
 // Encoder.
 WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(std::string aPCHandle)
     : mGMP(nullptr),
@@ -457,6 +461,18 @@ int32_t WebrtcGmpVideoEncoder::SetRates(
       NS_DISPATCH_NORMAL);
 
   return WEBRTC_VIDEO_CODEC_OK;
+}
+
+WebrtcVideoEncoder::EncoderInfo WebrtcGmpVideoEncoder::GetEncoderInfo() const {
+
+  WebrtcVideoEncoder::EncoderInfo info;
+  info.supports_native_handle = false;
+  info.implementation_name = "GMPOpenH264";
+  info.scaling_settings =
+      WebrtcVideoEncoder::ScalingSettings(kLowH264QpThreshold, kHighH264QpThreshold);
+  info.is_hardware_accelerated = false;
+  info.supports_simulcast = false;
+  return info;
 }
 
 /* static */

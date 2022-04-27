@@ -145,6 +145,8 @@ class RefCountedWebrtcVideoEncoder {
 
   virtual MediaEventSource<uint64_t>* ReleasePluginEvent() = 0;
 
+  virtual WebrtcVideoEncoder::EncoderInfo GetEncoderInfo() const = 0;
+
  protected:
   virtual ~RefCountedWebrtcVideoEncoder() = default;
 };
@@ -170,6 +172,8 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
 
   int32_t SetRates(
       const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
+
+  WebrtcVideoEncoder::EncoderInfo GetEncoderInfo() const override;
 
   MediaEventSource<uint64_t>* InitPluginEvent() override {
     return &mInitPluginEvent;
@@ -339,6 +343,10 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
 
   void SetRates(const RateControlParameters& aParameters) override {
     mEncoderImpl->SetRates(aParameters);
+  }
+
+  EncoderInfo GetEncoderInfo() const override {
+    return mEncoderImpl->GetEncoderInfo();
   }
 
  private:
