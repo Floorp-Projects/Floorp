@@ -33,9 +33,10 @@ class nsHtml5Speculation final : public nsAHtml5TreeOpSink {
    * Flush the operations from the tree operations from the argument
    * queue unconditionally.
    */
-  virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
+  [[nodiscard]] virtual bool MoveOpsFrom(
+      nsTArray<nsHtml5TreeOperation>& aOpQueue) override;
 
-  void FlushToSink(nsAHtml5TreeOpSink* aSink);
+  [[nodiscard]] bool FlushToSink(nsAHtml5TreeOpSink* aSink);
 
  private:
   /**
