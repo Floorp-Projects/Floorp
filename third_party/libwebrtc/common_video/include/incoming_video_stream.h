@@ -19,6 +19,7 @@
 #include "common_video/video_render_frames.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/task_queue.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
 
 namespace webrtc {
@@ -37,7 +38,7 @@ class IncomingVideoStream : public rtc::VideoSinkInterface<VideoFrame> {
   rtc::ThreadChecker main_thread_checker_;
   rtc::RaceChecker decoder_race_checker_;
 
-  VideoRenderFrames render_buffers_;  // Only touched on the TaskQueue.
+  VideoRenderFrames render_buffers_ RTC_GUARDED_BY(&incoming_render_queue_);
   rtc::VideoSinkInterface<VideoFrame>* const callback_;
   rtc::TaskQueue incoming_render_queue_;
 };
