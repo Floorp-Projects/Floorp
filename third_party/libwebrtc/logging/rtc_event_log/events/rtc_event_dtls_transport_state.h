@@ -40,6 +40,14 @@ class RtcEventDtlsTransportState : public RtcEvent {
   const DtlsTransportState dtls_transport_state_;
 };
 
+struct LoggedDtlsTransportState {
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  DtlsTransportState dtls_transport_state;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_DTLS_TRANSPORT_STATE_H_

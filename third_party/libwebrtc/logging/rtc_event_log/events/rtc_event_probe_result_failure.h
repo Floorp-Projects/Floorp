@@ -48,6 +48,21 @@ class RtcEventProbeResultFailure final : public RtcEvent {
   const ProbeFailureReason failure_reason_;
 };
 
+struct LoggedBweProbeFailureEvent {
+  LoggedBweProbeFailureEvent() = default;
+  LoggedBweProbeFailureEvent(int64_t timestamp_us,
+                             int32_t id,
+                             ProbeFailureReason failure_reason)
+      : timestamp_us(timestamp_us), id(id), failure_reason(failure_reason) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  int32_t id;
+  ProbeFailureReason failure_reason;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_PROBE_RESULT_FAILURE_H_

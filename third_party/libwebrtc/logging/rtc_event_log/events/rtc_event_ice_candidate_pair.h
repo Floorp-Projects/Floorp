@@ -54,6 +54,26 @@ class RtcEventIceCandidatePair final : public RtcEvent {
   const uint32_t transaction_id_;
 };
 
+struct LoggedIceCandidatePairEvent {
+  LoggedIceCandidatePairEvent() = default;
+  LoggedIceCandidatePairEvent(int64_t timestamp_us,
+                              IceCandidatePairEventType type,
+                              uint32_t candidate_pair_id,
+                              uint32_t transaction_id)
+      : timestamp_us(timestamp_us),
+        type(type),
+        candidate_pair_id(candidate_pair_id),
+        transaction_id(transaction_id) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  IceCandidatePairEventType type;
+  uint32_t candidate_pair_id;
+  uint32_t transaction_id;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_ICE_CANDIDATE_PAIR_H_

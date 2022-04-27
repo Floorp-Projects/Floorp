@@ -48,6 +48,29 @@ class RtcEventProbeClusterCreated final : public RtcEvent {
   const uint32_t min_bytes_;
 };
 
+struct LoggedBweProbeClusterCreatedEvent {
+  LoggedBweProbeClusterCreatedEvent() = default;
+  LoggedBweProbeClusterCreatedEvent(int64_t timestamp_us,
+                                    int32_t id,
+                                    int32_t bitrate_bps,
+                                    uint32_t min_packets,
+                                    uint32_t min_bytes)
+      : timestamp_us(timestamp_us),
+        id(id),
+        bitrate_bps(bitrate_bps),
+        min_packets(min_packets),
+        min_bytes(min_bytes) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  int32_t id;
+  int32_t bitrate_bps;
+  uint32_t min_packets;
+  uint32_t min_bytes;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_PROBE_CLUSTER_CREATED_H_

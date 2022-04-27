@@ -14,12 +14,9 @@
 #include <memory>
 
 #include "api/rtc_event_log/rtc_event.h"
+#include "logging/rtc_event_log/rtc_stream_config.h"
 
 namespace webrtc {
-
-namespace rtclog {
-struct StreamConfig;
-}  // namespace rtclog
 
 class RtcEventAudioReceiveStreamConfig final : public RtcEvent {
  public:
@@ -41,6 +38,18 @@ class RtcEventAudioReceiveStreamConfig final : public RtcEvent {
       const RtcEventAudioReceiveStreamConfig& other);
 
   const std::unique_ptr<const rtclog::StreamConfig> config_;
+};
+
+struct LoggedAudioRecvConfig {
+  LoggedAudioRecvConfig() = default;
+  LoggedAudioRecvConfig(int64_t timestamp_us, const rtclog::StreamConfig config)
+      : timestamp_us(timestamp_us), config(config) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  rtclog::StreamConfig config;
 };
 
 }  // namespace webrtc

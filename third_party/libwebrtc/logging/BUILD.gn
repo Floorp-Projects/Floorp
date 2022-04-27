@@ -320,10 +320,16 @@ if (rtc_enable_protobuf) {
 
     deps = [
       ":ice_log",
+      ":rtc_event_audio",
       ":rtc_event_bwe",
+      ":rtc_event_frame_events",
+      ":rtc_event_generic_packet_events",
       ":rtc_event_log2_proto",
       ":rtc_event_log_impl_encoder",
       ":rtc_event_log_proto",
+      ":rtc_event_pacing",
+      ":rtc_event_rtp_rtcp",
+      ":rtc_event_video",
       ":rtc_stream_config",
       "../api:function_view",
       "../api:network_state_predictor_api",
