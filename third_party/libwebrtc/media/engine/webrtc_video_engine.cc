@@ -1349,21 +1349,6 @@ bool WebRtcVideoChannel::AddSendStream(const StreamParams& sp) {
       video_config_.periodic_alr_bandwidth_probing;
   config.encoder_settings.experiment_cpu_load_estimator =
       video_config_.experiment_cpu_load_estimator;
-  using TargetBitrateType =
-      webrtc::VideoStreamEncoderSettings::BitrateAllocationCallbackType;
-  if (send_rtp_extensions_ &&
-      webrtc::RtpExtension::FindHeaderExtensionByUri(
-          *send_rtp_extensions_,
-          webrtc::RtpExtension::kVideoLayersAllocationUri)) {
-    config.encoder_settings.allocation_cb_type =
-        TargetBitrateType::kVideoLayersAllocation;
-  } else if (IsEnabled(call_->trials(), "WebRTC-Target-Bitrate-Rtcp")) {
-    config.encoder_settings.allocation_cb_type =
-        TargetBitrateType::kVideoBitrateAllocation;
-  } else {
-    config.encoder_settings.allocation_cb_type =
-        TargetBitrateType::kVideoBitrateAllocationWhenScreenSharing;
-  }
   config.encoder_settings.encoder_factory = encoder_factory_;
   config.encoder_settings.bitrate_allocator_factory =
       bitrate_allocator_factory_;

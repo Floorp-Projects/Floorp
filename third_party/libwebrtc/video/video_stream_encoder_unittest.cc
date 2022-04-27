@@ -318,7 +318,9 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
   VideoStreamEncoderUnderTest(TimeController* time_controller,
                               TaskQueueFactory* task_queue_factory,
                               SendStatisticsProxy* stats_proxy,
-                              const VideoStreamEncoderSettings& settings)
+                              const VideoStreamEncoderSettings& settings,
+                              VideoStreamEncoder::BitrateAllocationCallbackType
+                                  allocation_callback_type)
       : VideoStreamEncoder(time_controller->GetClock(),
                            1 /* number_of_cores */,
                            stats_proxy,
@@ -326,7 +328,8 @@ class VideoStreamEncoderUnderTest : public VideoStreamEncoder {
                            std::unique_ptr<OveruseFrameDetector>(
                                overuse_detector_proxy_ =
                                    new CpuOveruseDetectorProxy(stats_proxy)),
-                           task_queue_factory),
+                           task_queue_factory,
+                           allocation_callback_type),
         time_controller_(time_controller),
         fake_cpu_resource_(FakeResource::Create("FakeResource[CPU]")),
         fake_quality_resource_(FakeResource::Create("FakeResource[QP]")),
@@ -628,12 +631,17 @@ class VideoStreamEncoderTest : public ::testing::Test {
     ConfigureEncoder(std::move(video_encoder_config));
   }
 
-  void ConfigureEncoder(VideoEncoderConfig video_encoder_config) {
+  void ConfigureEncoder(
+      VideoEncoderConfig video_encoder_config,
+      VideoStreamEncoder::BitrateAllocationCallbackType
+          allocation_callback_type =
+              VideoStreamEncoder::BitrateAllocationCallbackType::
+                  kVideoBitrateAllocationWhenScreenSharing) {
     if (video_stream_encoder_)
       video_stream_encoder_->Stop();
     video_stream_encoder_.reset(new VideoStreamEncoderUnderTest(
         &time_controller_, GetTaskQueueFactory(), stats_proxy_.get(),
-        video_send_config_.encoder_settings));
+        video_send_config_.encoder_settings, allocation_callback_type));
     video_stream_encoder_->SetSink(&sink_, false /* rotation_applied */);
     video_stream_encoder_->SetSource(
         &video_source_, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
@@ -643,18 +651,16 @@ class VideoStreamEncoderTest : public ::testing::Test {
     video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   }
 
-  void ResetEncoder(
-      const std::string& payload_name,
-      size_t num_streams,
-      size_t num_temporal_layers,
-      unsigned char num_spatial_layers,
-      bool screenshare,
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType
-          allocation_cb_type =
-              VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-                  kVideoBitrateAllocationWhenScreenSharing) {
+  void ResetEncoder(const std::string& payload_name,
+                    size_t num_streams,
+                    size_t num_temporal_layers,
+                    unsigned char num_spatial_layers,
+                    bool screenshare,
+                    VideoStreamEncoder::BitrateAllocationCallbackType
+                        allocation_callback_type =
+                            VideoStreamEncoder::BitrateAllocationCallbackType::
+                                kVideoBitrateAllocationWhenScreenSharing) {
     video_send_config_.rtp.payload_name = payload_name;
-    video_send_config_.encoder_settings.allocation_cb_type = allocation_cb_type;
 
     VideoEncoderConfig video_encoder_config;
     test::FillEncoderConfiguration(PayloadStringToCodecType(payload_name),
@@ -676,7 +682,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
           new rtc::RefCountedObject<
               VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
     }
-    ConfigureEncoder(std::move(video_encoder_config));
+    ConfigureEncoder(std::move(video_encoder_config), allocation_callback_type);
   }
 
   VideoFrame CreateFrame(int64_t ntp_time_ms,
@@ -3988,7 +3994,7 @@ TEST_F(VideoStreamEncoderTest,
 
 TEST_F(VideoStreamEncoderTest, ReportsVideoBitrateAllocation) {
   ResetEncoder("FAKE", 1, 1, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoBitrateAllocation);
 
   const int kDefaultFps = 30;
@@ -4034,7 +4040,7 @@ TEST_F(VideoStreamEncoderTest, ReportsVideoBitrateAllocation) {
 
 TEST_F(VideoStreamEncoderTest, ReportsVideoLayersAllocationForVP8Simulcast) {
   ResetEncoder("VP8", /*num_streams*/ 2, 1, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoLayersAllocation);
 
   const int kDefaultFps = 30;
@@ -4089,9 +4095,6 @@ TEST_F(VideoStreamEncoderTest,
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP8,
                                  /* num_streams*/ 3, &video_encoder_config);
@@ -4108,7 +4111,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.simulcast_layers[0].active = true;
   video_encoder_config.simulcast_layers[1].active = false;
   video_encoder_config.simulcast_layers[2].active = true;
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4135,9 +4140,6 @@ TEST_F(VideoStreamEncoderTest,
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP8,
                                  /* num_streams*/ 3, &video_encoder_config);
@@ -4154,7 +4156,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.simulcast_layers[0].active = true;
   video_encoder_config.simulcast_layers[1].active = false;
   video_encoder_config.simulcast_layers[2].active = false;
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4180,9 +4184,6 @@ TEST_F(VideoStreamEncoderTest,
        ReportsVideoLayersAllocationForV9SvcWithTemporalLayerSupport) {
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
                                  /* num_streams*/ 1, &video_encoder_config);
@@ -4197,7 +4198,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.encoder_specific_settings =
       new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4236,9 +4239,6 @@ TEST_F(VideoStreamEncoderTest,
        ReportsVideoLayersAllocationForV9SvcWithoutTemporalLayerSupport) {
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, false);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, false);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
                                  /* num_streams*/ 1, &video_encoder_config);
@@ -4253,7 +4253,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.encoder_specific_settings =
       new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4285,9 +4287,6 @@ TEST_F(VideoStreamEncoderTest,
        ReportsVideoLayersAllocationForVP9KSvcWithTemporalLayerSupport) {
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
                                  /* num_streams*/ 1, &video_encoder_config);
@@ -4302,7 +4301,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.encoder_specific_settings =
       new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4334,9 +4335,6 @@ TEST_F(VideoStreamEncoderTest,
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
                                  /* num_streams*/ 1, &video_encoder_config);
@@ -4356,7 +4354,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.simulcast_layers[0].active = false;
   video_encoder_config.simulcast_layers[1].active = true;
   video_encoder_config.simulcast_layers[2].active = true;
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4394,9 +4394,6 @@ TEST_F(VideoStreamEncoderTest,
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
                                  /* num_streams*/ 1, &video_encoder_config);
@@ -4414,7 +4411,9 @@ TEST_F(VideoStreamEncoderTest,
   // Simulcast layers are used for enabling/disabling streams.
   video_encoder_config.simulcast_layers.resize(3);
   video_encoder_config.simulcast_layers[2].active = false;
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4447,9 +4446,6 @@ TEST_F(VideoStreamEncoderTest,
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
-  video_send_config_.encoder_settings.allocation_cb_type =
-      VideoStreamEncoderSettings::BitrateAllocationCallbackType::
-          kVideoLayersAllocation;
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
                                  /* num_streams*/ 1, &video_encoder_config);
@@ -4469,7 +4465,9 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.simulcast_layers[0].active = false;
   video_encoder_config.simulcast_layers[1].active = false;
   video_encoder_config.simulcast_layers[2].active = true;
-  ConfigureEncoder(std::move(video_encoder_config));
+  ConfigureEncoder(std::move(video_encoder_config),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4496,7 +4494,7 @@ TEST_F(VideoStreamEncoderTest,
 
 TEST_F(VideoStreamEncoderTest, ReportsVideoLayersAllocationForH264) {
   ResetEncoder("H264", 1, 1, 1, false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoLayersAllocation);
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -4525,7 +4523,7 @@ TEST_F(VideoStreamEncoderTest, ReportsVideoLayersAllocationForH264) {
 TEST_F(VideoStreamEncoderTest,
        ReportsUpdatedVideoLayersAllocationWhenBweChanges) {
   ResetEncoder("VP8", /*num_streams*/ 2, 1, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
@@ -4566,7 +4564,7 @@ TEST_F(VideoStreamEncoderTest,
 TEST_F(VideoStreamEncoderTest,
        ReportsUpdatedVideoLayersAllocationWhenResolutionChanges) {
   ResetEncoder("VP8", /*num_streams*/ 2, 1, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoLayersAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
@@ -4605,7 +4603,7 @@ TEST_F(VideoStreamEncoderTest, TemporalLayersNotDisabledIfSupported) {
   // 2 TLs configured, temporal layers supported by encoder.
   const int kNumTemporalLayers = 2;
   ResetEncoder("VP8", 1, kNumTemporalLayers, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoBitrateAllocation);
   fake_encoder_.SetTemporalLayersSupported(0, true);
 
@@ -4629,7 +4627,7 @@ TEST_F(VideoStreamEncoderTest, TemporalLayersNotDisabledIfSupported) {
 TEST_F(VideoStreamEncoderTest, TemporalLayersDisabledIfNotSupported) {
   // 2 TLs configured, temporal layers not supported by encoder.
   ResetEncoder("VP8", 1, /*num_temporal_layers*/ 2, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoBitrateAllocation);
   fake_encoder_.SetTemporalLayersSupported(0, false);
 
@@ -4651,7 +4649,7 @@ TEST_F(VideoStreamEncoderTest, VerifyBitrateAllocationForTwoStreams) {
 
   // 2 TLs configured, temporal layers only supported for first stream.
   ResetEncoder("VP8", 2, /*num_temporal_layers*/ 2, 1, /*screenshare*/ false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoBitrateAllocation);
   fake_encoder_.SetTemporalLayersSupported(0, true);
   fake_encoder_.SetTemporalLayersSupported(1, false);
@@ -6154,7 +6152,7 @@ TEST_F(VideoStreamEncoderTest, DoesNotUpdateBitrateAllocationWhenSuspended) {
   const int kFrameHeight = 720;
   const int kTargetBitrateBps = 1000000;
   ResetEncoder("FAKE", 1, 1, 1, false,
-               VideoStreamEncoderSettings::BitrateAllocationCallbackType::
+               VideoStreamEncoder::BitrateAllocationCallbackType::
                    kVideoBitrateAllocation);
 
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
