@@ -39,5 +39,20 @@ class RtcEventRouteChange final : public RtcEvent {
   const uint32_t overhead_;
 };
 
+struct LoggedRouteChangeEvent {
+  LoggedRouteChangeEvent() = default;
+  LoggedRouteChangeEvent(int64_t timestamp_ms,
+                         bool connected,
+                         uint32_t overhead)
+      : timestamp_ms(timestamp_ms), connected(connected), overhead(overhead) {}
+
+  int64_t log_time_us() const { return timestamp_ms * 1000; }
+  int64_t log_time_ms() const { return timestamp_ms; }
+
+  int64_t timestamp_ms;
+  bool connected;
+  uint32_t overhead;
+};
+
 }  // namespace webrtc
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_ROUTE_CHANGE_H_

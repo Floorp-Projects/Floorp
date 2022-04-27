@@ -41,6 +41,21 @@ class RtcEventProbeResultSuccess final : public RtcEvent {
   const int32_t bitrate_bps_;
 };
 
+struct LoggedBweProbeSuccessEvent {
+  LoggedBweProbeSuccessEvent() = default;
+  LoggedBweProbeSuccessEvent(int64_t timestamp_us,
+                             int32_t id,
+                             int32_t bitrate_bps)
+      : timestamp_us(timestamp_us), id(id), bitrate_bps(bitrate_bps) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  int32_t id;
+  int32_t bitrate_bps;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_PROBE_RESULT_SUCCESS_H_

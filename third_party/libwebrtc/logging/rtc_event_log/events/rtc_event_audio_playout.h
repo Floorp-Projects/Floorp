@@ -39,6 +39,18 @@ class RtcEventAudioPlayout final : public RtcEvent {
   const uint32_t ssrc_;
 };
 
+struct LoggedAudioPlayoutEvent {
+  LoggedAudioPlayoutEvent() = default;
+  LoggedAudioPlayoutEvent(int64_t timestamp_us, uint32_t ssrc)
+      : timestamp_us(timestamp_us), ssrc(ssrc) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  uint32_t ssrc;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_AUDIO_PLAYOUT_H_

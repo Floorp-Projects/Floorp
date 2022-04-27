@@ -40,6 +40,18 @@ class RtcEventVideoReceiveStreamConfig final : public RtcEvent {
   const std::unique_ptr<const rtclog::StreamConfig> config_;
 };
 
+struct LoggedVideoRecvConfig {
+  LoggedVideoRecvConfig() = default;
+  LoggedVideoRecvConfig(int64_t timestamp_us, const rtclog::StreamConfig config)
+      : timestamp_us(timestamp_us), config(config) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  rtclog::StreamConfig config;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_VIDEO_RECEIVE_STREAM_CONFIG_H_

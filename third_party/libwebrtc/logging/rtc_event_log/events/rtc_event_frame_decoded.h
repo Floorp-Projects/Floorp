@@ -55,6 +55,19 @@ class RtcEventFrameDecoded final : public RtcEvent {
   const uint8_t qp_;
 };
 
+struct LoggedFrameDecoded {
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  int64_t render_time_ms;
+  uint32_t ssrc;
+  int width;
+  int height;
+  VideoCodecType codec;
+  uint8_t qp;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_FRAME_DECODED_H_

@@ -37,6 +37,17 @@ class RtcEventDtlsWritableState : public RtcEvent {
   const bool writable_;
 };
 
+struct LoggedDtlsWritableState {
+  LoggedDtlsWritableState() = default;
+  explicit LoggedDtlsWritableState(bool writable) : writable(writable) {}
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  bool writable;
+};
+
 }  // namespace webrtc
 
 #endif  // LOGGING_RTC_EVENT_LOG_EVENTS_RTC_EVENT_DTLS_WRITABLE_STATE_H_
