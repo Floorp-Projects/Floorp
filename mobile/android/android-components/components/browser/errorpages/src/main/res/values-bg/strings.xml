@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Проблем при зареждане на страница</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Повторен опит</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Връщане назад</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Заявката не може да бъде завършена</string>
@@ -49,7 +43,7 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">Времето за изчакване на връзка изтече</string>
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Страницата не отговаря на заявките за свързване и четецът спря да чака отговор.</p><ul><li>Дали сървърът не е претоварен или изключен? Опитайте отново по-късно.</li><li>Можете ли да разглеждате други страници? Проверете връзката си с интернет</li><li>Устройството намира ли се зад защитна стена или мрежов посредник? Неправилните настройки могат да попречат на разглеждането.</li><li>Ако все още има проблем, обърнете се за помощ към мрежовия администратор или доставчика си на интернет.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Страницата не отговаря на заявките за свързване и четецът спря да чака отговор.</p><ul><li>Дали сървърът не е претоварен, или изключен? Опитайте отново по-късно.</li><li>Можете ли да разглеждате други страници? Проверете връзката си с интернет.</li><li>Устройството намира ли се зад защитна стена, или мрежов посредник? Неправилните настройки могат да попречат на разглеждането.</li><li>Ако все още има проблем, обърнете се за помощ към мрежовия администратор или доставчика си на интернет.</li></ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Не е установена връзка</string>
@@ -144,8 +138,8 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Файлът не е намерен</string>
     <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[<ul>
-  <li>Дали ресурсът не е преименуван, премахнат или преместен?</li>
-  <li>Има ли грешка в правописа, регистъра на буквите или друга техническа грешка?</li>
+  <li>Дали ресурсът не е преименуван, премахнат, или преместен?</li>
+  <li>Има ли грешка в правописа, регистъра на буквите, или друга техническа грешка?</li>
   <li>Имате ли права за достъп до желания ресурс?</li>
 </ul>]]></string>
 
@@ -182,4 +176,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Измамническа страница</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Страницата %1$s е докладвана като измамническа и е блокирана спрямо вашите настройки за безопасност.</p>]]></string>
-</resources>
+
+    </resources>
