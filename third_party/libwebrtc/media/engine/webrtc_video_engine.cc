@@ -167,7 +167,8 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
   for (const webrtc::SdpVideoFormat& format : supported_formats) {
     VideoCodec codec(format);
     bool isCodecValidForLowerRange =
-        absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
+        absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName) ||
+        absl::EqualsIgnoreCase(codec.name, kAv1CodecName);
     if (!isCodecValidForLowerRange) {
       codec.id = payload_type_upper++;
     } else {
