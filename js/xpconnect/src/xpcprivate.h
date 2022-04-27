@@ -668,7 +668,7 @@ inline const char* XPCJSContext::GetStringName(unsigned index) const {
 
 class MOZ_STACK_CLASS XPCCallContext final {
  public:
-  enum { NO_ARGS = (unsigned)-1 };
+  enum : unsigned { NO_ARGS = (unsigned)-1 };
 
   explicit XPCCallContext(JSContext* cx, JS::HandleObject obj = nullptr,
                           JS::HandleObject funobj = nullptr,
