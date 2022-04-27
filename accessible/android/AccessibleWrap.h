@@ -56,8 +56,8 @@ class AccessibleWrap : public LocalAccessible {
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
 
   int32_t AndroidClass() {
-    return mID == kNoID ? java::SessionAccessibility::CLASSNAME_WEBVIEW
-                        : GetAndroidClass(WrapperRole());
+    return mID == -1 ? java::SessionAccessibility::CLASSNAME_WEBVIEW
+                     : GetAndroidClass(WrapperRole());
   }
 
   virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal,
@@ -69,8 +69,6 @@ class AccessibleWrap : public LocalAccessible {
 
   virtual role WrapperRole() { return Role(); }
 
-  static const int32_t kNoID = -1;
-
   static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 
   static int32_t GetInputType(const nsString& aInputTypeAttr);
@@ -81,11 +79,11 @@ class AccessibleWrap : public LocalAccessible {
                                  nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
 
- protected:
-  // IDs should be a positive 32bit integer.
-  static int32_t AcquireID();
-  static void ReleaseID(int32_t aID);
+  static int32_t GetVirtualViewID(Accessible* aAccessible);
 
+  static void SetVirtualViewID(Accessible* aAccessible, int32_t aVirtualViewID);
+
+ protected:
   int32_t mID;
 
  private:

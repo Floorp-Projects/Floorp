@@ -11,6 +11,7 @@
 #include "nsAppShell.h"
 #include "nsThreadUtils.h"
 #include "nsWindow.h"
+#include "AccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
@@ -102,6 +103,21 @@ class SessionAccessibility final
   void UpdateAccessibleFocusBoundaries(AccessibleWrap* aFirst,
                                        AccessibleWrap* aLast);
 
+  AccessibleWrap* GetAccessibleByID(int32_t aID) const {
+    if (Accessible* acc = mIDToAccessibleMap.Get(aID)) {
+      return acc->IsLocal() ? static_cast<AccessibleWrap*>(acc)
+                            : WrapperFor(acc->AsRemote());
+    }
+
+    return nullptr;
+  }
+
+  static const int32_t kNoID = -1;
+  static const int32_t kUnsetID = 0;
+
+  static void RegisterAccessible(Accessible* aAccessible);
+  static void UnregisterAccessible(Accessible* aAccessible);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
  private:
@@ -122,10 +138,14 @@ class SessionAccessibility final
       AccAttributes* aAttributes = nullptr);
 
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
-  RootAccessibleWrap* GetRoot();
 
   jni::NativeWeakPtr<widget::GeckoViewSupport> mWindow;  // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
+
+  /*
+   * This provides a mapping from 32 bit id to accessible objects.
+   */
+  nsTHashMap<nsUint32HashKey, Accessible*> mIDToAccessibleMap;
 };
 
 }  // namespace a11y

@@ -86,66 +86,6 @@ class RemoteAccessibleWrap : public AccessibleWrap {
                                 double* aMaxVal, double* aStep) override;
 };
 
-class DocRemoteAccessibleWrap : public RemoteAccessibleWrap {
- public:
-  explicit DocRemoteAccessibleWrap(DocAccessibleParent* aProxy)
-      : RemoteAccessibleWrap(aProxy) {
-    mGenericTypes |= eDocument;
-
-    if (aProxy->IsTopLevel()) {
-      mID = kNoID;
-    } else {
-      mID = AcquireID();
-    }
-  }
-
-  virtual void Shutdown() override {
-    if (mID) {
-      auto doc = static_cast<DocAccessibleParent*>(Proxy());
-      if (!doc->IsTopLevel()) {
-        MOZ_ASSERT(mID != kNoID, "A non root accessible must have an id");
-        ReleaseID(mID);
-      }
-    }
-    mID = 0;
-    mBits.proxy = nullptr;
-    mStateFlags |= eIsDefunct;
-  }
-
-  DocRemoteAccessibleWrap* ParentDocument() {
-    DocAccessibleParent* proxy = static_cast<DocAccessibleParent*>(Proxy());
-    MOZ_ASSERT(proxy);
-    if (DocAccessibleParent* parent = proxy->ParentDoc()) {
-      return reinterpret_cast<DocRemoteAccessibleWrap*>(parent->GetWrapper());
-    }
-
-    return nullptr;
-  }
-
-  DocRemoteAccessibleWrap* GetChildDocumentAt(uint32_t aIndex) {
-    auto doc = Proxy()->AsDoc();
-    if (doc && doc->ChildDocCount() > aIndex) {
-      return reinterpret_cast<DocRemoteAccessibleWrap*>(
-          doc->ChildDocAt(aIndex)->GetWrapper());
-    }
-
-    return nullptr;
-  }
-
-  void AddID(uint32_t aID, AccessibleWrap* aAcc) {
-    mIDToAccessibleMap.InsertOrUpdate(aID, aAcc);
-  }
-  void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
-  AccessibleWrap* GetAccessibleByID(uint32_t aID) const {
-    return mIDToAccessibleMap.Get(aID);
-  }
-
- private:
-  /*
-   * This provides a mapping from 32 bit id to accessible objects.
-   */
-  nsTHashMap<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
-};
 }  // namespace a11y
 }  // namespace mozilla
 
