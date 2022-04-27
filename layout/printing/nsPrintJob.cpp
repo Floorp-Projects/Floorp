@@ -383,14 +383,6 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   return NS_OK;
 }
 
-//-------------------------------------------------------
-nsresult nsPrintJob::Cancel() {
-  if (mPrt && mPrt->mPrintSettings) {
-    return mPrt->mPrintSettings->SetIsCancelled(true);
-  }
-  return NS_ERROR_FAILURE;
-}
-
 //-----------------------------------------------------------------
 std::tuple<nsPageSequenceFrame*, int32_t>
 nsPrintJob::GetSeqFrameAndCountSheets() const {
@@ -548,7 +540,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   MOZ_TRY(EnsureSettingsHasPrinterNameSet(printData->mPrintSettings));
 
-  printData->mPrintSettings->SetIsCancelled(false);
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
   // Create a print session and let the print settings know about it.
@@ -1958,11 +1949,6 @@ bool nsPrintJob::PrePrintSheet() {
   // FirePrintingErrorEvent().
   RefPtr<nsPrintData> printData = mPrt;
 
-  // Check setting to see if someone request it be cancelled
-  bool isCancelled = false;
-  printData->mPrintSettings->GetIsCancelled(&isCancelled);
-  if (isCancelled) return true;
-
   // Ask mPageSeqFrame if the sheet is ready to be printed.
   // If the sheet doesn't get printed at all, the |done| will be |true|.
   bool done = false;
@@ -2010,10 +1996,7 @@ bool nsPrintJob::PrintSheet(nsPrintObject* aPO, bool& aInRange) {
   PR_PL(("------ In DV::PrintSheet PO: %p (%s)\n", aPO,
          gFrameTypesStr[aPO->mFrameType]));
 
-  // Check setting to see if someone request it be cancelled
-  bool isCancelled = false;
-  printData->mPrintSettings->GetIsCancelled(&isCancelled);
-  if (isCancelled || printData->mIsAborted) {
+  if (printData->mIsAborted) {
     return true;
   }
 

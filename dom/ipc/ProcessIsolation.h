@@ -55,7 +55,8 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
     CanonicalBrowsingContext* aTopBC, WindowGlobalParent* aParentWindow,
     nsIURI* aChannelCreationURI, nsIChannel* aChannel,
     const nsACString& aCurrentRemoteType, bool aHasCOOPMismatch,
-    uint32_t aLoadStateLoadType, const Maybe<uint64_t>& aChannelId,
+    bool aForNewTab, uint32_t aLoadStateLoadType,
+    const Maybe<uint64_t>& aChannelId,
     const Maybe<nsCString>& aRemoteTypeOverride);
 
 /**

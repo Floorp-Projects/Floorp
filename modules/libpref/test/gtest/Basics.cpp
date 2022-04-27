@@ -43,12 +43,13 @@ TEST(PrefsBasics, Serialize)
             true);
 
   nsCString str;
-  Preferences::SerializePreferences(
-      str, [](const char* aPref) -> bool { return false; });
-  ASSERT_STREQ(str.Data(), "");
-
-  Preferences::SerializePreferences(str, [](const char* aPref) -> bool {
-    return strncmp(aPref, "foo.bool", 8) == 0;
-  });
-  ASSERT_STREQ(str.Data(), "B-:8/foo.bool:T:F\n");
+  Preferences::SerializePreferences(str, true);
+  fprintf(stderr, "%s\n", str.Data());
+  // Assert that some prefs were not sanitized
+  ASSERT_NE(nullptr, strstr(str.Data(), "B--:"));
+  ASSERT_NE(nullptr, strstr(str.Data(), "I--:"));
+  ASSERT_NE(nullptr, strstr(str.Data(), "S--:"));
+  // Assert that something was sanitized
+  ASSERT_NE(nullptr,
+            strstr(str.Data(), "I-S:56/datareporting.policy.dataSubmissionPolicyAcceptedVersion"));
 }

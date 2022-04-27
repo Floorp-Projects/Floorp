@@ -77,23 +77,20 @@ add_task(async function test_customizemode_doesnt_wreck_things() {
 });
 
 /**
- * Make sure the downloads panel _does not_ open automatically if we set the
- * pref telling it not to do that.
+ * Start a download and check that the downloads panel opens correctly according
+ * to the download parameter, openDownloadsListOnStart
+ * @param {boolean} [openDownloadsListOnStart]
+ *        true (default) - open downloads panel when download starts
+ *        false - no downloads panel; update indicator attention state
  */
-add_task(async function test_downloads_panel_opening_pref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-      ["browser.download.alwaysOpenPanel", false],
-    ],
-  });
-  registerCleanupFunction(async () => {
-    await SpecialPowers.popPrefEnv();
-  });
-
+async function downloadAndCheckPanel({ openDownloadsListOnStart = true } = {}) {
   info("creating a download and setting it to in progress");
-  await task_addDownloads([{ state: DownloadsCommon.DOWNLOAD_DOWNLOADING }]);
+  await task_addDownloads([
+    {
+      state: DownloadsCommon.DOWNLOAD_DOWNLOADING,
+      openDownloadsListOnStart,
+    },
+  ]);
   let publicList = await Downloads.getList(Downloads.PUBLIC);
   let downloads = await publicList.getAll();
   downloads[0].stopped = false;
@@ -116,7 +113,9 @@ add_task(async function test_downloads_panel_opening_pref() {
     };
   });
 
-  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start", {
+    openDownloadsListOnStart,
+  });
   is(
     DownloadsPanel.isPanelShowing,
     false,
@@ -126,12 +125,160 @@ add_task(async function test_downloads_panel_opening_pref() {
   info("waiting for download to start");
   await promiseDownloadStartedNotification;
 
+  DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+}
+
+/**
+ * Make sure the downloads panel _does not_ open automatically if we set the
+ * pref telling it not to do that.
+ */
+add_task(async function test_downloads_panel_opening_pref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+      ["browser.download.alwaysOpenPanel", false],
+    ],
+  });
+  registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+  });
+  await downloadAndCheckPanel();
   await SpecialPowers.popPrefEnv();
 });
 
 /**
- * Make sure the downloads panel opens automatically with new download, only if  no other downloads are in progress.
+ * Make sure the downloads panel _does not_ open automatically if we pass the
+ * parameter telling it not to do that to the download constructor.
+ */
+add_task(async function test_downloads_openDownloadsListOnStart_param() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+      ["browser.download.alwaysOpenPanel", true],
+    ],
+  });
+  registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+  });
+  await downloadAndCheckPanel({ openDownloadsListOnStart: false });
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * Make sure the downloads panel _does not_ open automatically when an
+ * extension calls the browser.downloads.download API method while it is
+ * not handling user input, but that we do open it automatically when
+ * the same WebExtensions API is called while handling user input
+ * (See Bug 1759231)
+ */
+add_task(async function test_downloads_panel_on_webext_download_api() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+      ["browser.download.alwaysOpenPanel", true],
+    ],
+  });
+  registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+  });
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["downloads"],
+    },
+    background() {
+      async function startDownload(downloadOptions) {
+        /* globals browser */
+        const downloadId = await browser.downloads.download(downloadOptions);
+        const downloadDone = new Promise(resolve => {
+          browser.downloads.onChanged.addListener(function listener(delta) {
+            browser.test.log(`downloads.onChanged = ${JSON.stringify(delta)}`);
+            if (
+              delta.id == downloadId &&
+              delta.state?.current !== "in_progress"
+            ) {
+              browser.downloads.onChanged.removeListener(listener);
+              resolve();
+            }
+          });
+        });
+
+        browser.test.sendMessage("start-download:done");
+        await downloadDone;
+        await browser.downloads.removeFile(downloadId);
+        browser.test.sendMessage("removed-download-file");
+      }
+
+      browser.test.onMessage.addListener(
+        (msg, { withHandlingUserInput, downloadOptions }) => {
+          if (msg !== "start-download") {
+            browser.test.fail(`Got unexpected test message: ${msg}`);
+            return;
+          }
+
+          if (withHandlingUserInput) {
+            browser.test.withHandlingUserInput(() =>
+              startDownload(downloadOptions)
+            );
+          } else {
+            startDownload(downloadOptions);
+          }
+        }
+      );
+    },
+  });
+
+  await extension.startup();
+
+  startServer();
+
+  async function testExtensionDownloadCall({ withHandlingUserInput }) {
+    mustInterruptResponses();
+    let rnd = Math.random();
+    let url = httpUrl(`interruptible.txt?q=${rnd}`);
+
+    extension.sendMessage("start-download", {
+      withHandlingUserInput,
+      downloadOptions: { url },
+    });
+    await extension.awaitMessage("start-download:done");
+
+    let publicList = await Downloads.getList(Downloads.PUBLIC);
+    let downloads = await publicList.getAll();
+
+    let download = downloads.find(d => d.source.url === url);
+    is(download.source.url, url, "download has the expected url");
+    is(
+      download.openDownloadsListOnStart,
+      withHandlingUserInput,
+      `download panel should ${withHandlingUserInput ? "open" : "stay closed"}`
+    );
+
+    continueResponses();
+    await extension.awaitMessage("removed-download-file");
+  }
+
+  info(
+    "Test extension downloads.download API method call without handling user input"
+  );
+  await testExtensionDownloadCall({ withHandlingUserInput: true });
+
+  info(
+    "Test extension downloads.download API method call while handling user input"
+  );
+  await testExtensionDownloadCall({ withHandlingUserInput: false });
+
+  await extension.unload();
+  await SpecialPowers.popPrefEnv();
+});
+
+/**
+ * Make sure the downloads panel opens automatically with new download, only if
+ * no other downloads are in progress.
  */
 add_task(async function test_downloads_panel_remains_closed() {
   await SpecialPowers.pushPrefEnv({

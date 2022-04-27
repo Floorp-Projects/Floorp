@@ -60,9 +60,9 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mUtilityProcessParent);
 
-  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>(
-      dom::ContentParent::ShouldSyncPreference);
-  if (!mPrefSerializer->SerializeToSharedMemory()) {
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+  if (!mPrefSerializer->SerializeToSharedMemory(GeckoProcessType_Utility,
+                                                /* remoteType */ ""_ns)) {
     return false;
   }
   mPrefSerializer->AddSharedPrefCmdLineArgs(*this, aExtraOpts);

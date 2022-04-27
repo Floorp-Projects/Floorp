@@ -797,7 +797,23 @@ add_task(async function test_check_open_with_internal_handler_noask() {
     false
   );
 
-  for (let expectDialog of [false, true]) {
+  // Build the matrix of tests to perform.
+  let matrix = {
+    expectDialog: [false, true],
+    file: ["file_pdf_application_pdf.pdf", "file_pdf_binary_octet_stream.pdf"],
+    where: ["top", "popup", "frame"],
+  };
+  let tests = [{}];
+  for (let [key, values] of Object.entries(matrix)) {
+    tests = tests.flatMap(test =>
+      values.map(value => ({ [key]: value, ...test }))
+    );
+  }
+
+  for (let test of tests) {
+    info(`test case: ${JSON.stringify(test)}`);
+    let { expectDialog, file, where } = test;
+
     await SpecialPowers.pushPrefEnv({
       set: [
         ["browser.helperApps.showOpenOptionForPdfJS", true],
@@ -807,68 +823,107 @@ add_task(async function test_check_open_with_internal_handler_noask() {
       ],
     });
 
-    for (let file of [
-      "file_pdf_application_pdf.pdf",
-      "file_pdf_binary_octet_stream.pdf",
-    ]) {
-      let openPDFDirectly =
-        !expectDialog && file == "file_pdf_application_pdf.pdf";
-      await BrowserTestUtils.withNewTab(
-        { gBrowser, url: "about:blank" },
-        async browser => {
-          let readyPromise;
-          if (expectDialog) {
-            let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-            await SpecialPowers.spawn(
-              browser,
-              [TEST_PATH + file],
-              async contentUrl => {
-                content.location = contentUrl;
-              }
-            );
-
-            let dialogWindow = await dialogWindowPromise;
-
-            readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-            let dialog = dialogWindow.document.querySelector(
-              "#unknownContentType"
-            );
-            dialog.getButton("accept").disabled = false;
-            dialog.acceptDialog();
-          } else {
-            if (openPDFDirectly) {
-              readyPromise = BrowserTestUtils.browserLoaded(
-                gBrowser.selectedBrowser
-              );
-            } else {
-              readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
-            }
-
-            await SpecialPowers.spawn(
-              browser,
-              [TEST_PATH + file],
-              async contentUrl => {
-                content.location = contentUrl;
-              }
-            );
-          }
-
-          await readyPromise;
-
-          let action = expectDialog ? "ask" : "internal";
-          checkTelemetry(
-            "open " + file + " internal",
-            openPDFDirectly ? "none" : action,
-            file.includes("octet") ? "octetstream" : "pdf",
-            "attachment"
-          );
-
-          if (!openPDFDirectly) {
-            await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    async function doNavigate(browser) {
+      await SpecialPowers.spawn(
+        browser,
+        [TEST_PATH + file, where],
+        async (contentUrl, where_) => {
+          switch (where_) {
+            case "top":
+              content.location = contentUrl;
+              break;
+            case "popup":
+              content.open(contentUrl);
+              break;
+            case "frame":
+              let frame = content.document.createElement("iframe");
+              frame.setAttribute("src", contentUrl);
+              content.document.body.appendChild(frame);
+              break;
+            default:
+              ok(false, "Unknown where value");
+              break;
           }
         }
       );
     }
+
+    let openPDFDirectly =
+      !expectDialog &&
+      file == "file_pdf_application_pdf.pdf" &&
+      where != "frame";
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: TEST_PATH + "blank.html" },
+      async browser => {
+        let readyPromise;
+        if (expectDialog) {
+          let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+          await doNavigate(browser);
+
+          let dialogWindow = await dialogWindowPromise;
+
+          readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+          let dialog = dialogWindow.document.querySelector(
+            "#unknownContentType"
+          );
+          dialog.getButton("accept").disabled = false;
+          dialog.acceptDialog();
+        } else {
+          readyPromise = BrowserTestUtils.waitForNewTab(
+            gBrowser,
+            null,
+            false,
+            !openPDFDirectly
+          );
+
+          await doNavigate(browser);
+        }
+
+        await readyPromise;
+
+        is(
+          gBrowser.selectedBrowser.currentURI.scheme,
+          openPDFDirectly ? "https" : "file",
+          "Loaded PDF uri has the correct scheme"
+        );
+
+        // intentionally don't bother checking session history without ship to
+        // keep complexity down.
+        if (Services.appinfo.sessionHistoryInParent) {
+          let shistory = browser.browsingContext.sessionHistory;
+          is(shistory.count, 1, "should a single shentry");
+          is(shistory.index, 0, "should be on the first entry");
+          let shentry = shistory.getEntryAtIndex(shistory.index);
+          is(shentry.URI.spec, TEST_PATH + "blank.html");
+        }
+
+        await SpecialPowers.spawn(
+          browser,
+          [TEST_PATH + "blank.html"],
+          async blankUrl => {
+            ok(
+              !docShell.isAttemptingToNavigate,
+              "should not still be attempting to navigate"
+            );
+            is(
+              content.location.href,
+              blankUrl,
+              "original browser hasn't navigated"
+            );
+          }
+        );
+
+        let action = expectDialog ? "ask" : "internal";
+        checkTelemetry(
+          "open " + file + " internal",
+          openPDFDirectly ? "none" : action,
+          file.includes("octet") ? "octetstream" : "pdf",
+          "attachment"
+        );
+
+        await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+      }
+    );
   }
 
   for (let mimeInfo of mimeInfosToRestore) {

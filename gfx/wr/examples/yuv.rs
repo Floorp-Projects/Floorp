@@ -189,7 +189,8 @@ impl Example for App {
 
     fn on_event(
         &mut self,
-        _event: winit::WindowEvent,
+        _event: winit::event::WindowEvent,
+        _window: &winit::window::Window,
         _api: &mut RenderApi,
         _document_id: DocumentId,
     ) -> bool {

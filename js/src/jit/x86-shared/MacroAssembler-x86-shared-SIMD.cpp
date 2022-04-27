@@ -25,7 +25,7 @@ void MacroAssemblerX86Shared::splatX16(Register input, FloatRegister output) {
     vbroadcastb(Operand(output), output);
     return;
   }
-  zeroSimd128Int(scratch);
+  vpxor(scratch, scratch, scratch);
   vpshufb(scratch, output, output);
 }
 

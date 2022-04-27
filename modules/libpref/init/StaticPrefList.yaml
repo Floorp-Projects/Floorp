@@ -1569,12 +1569,6 @@
   value: true
   mirror: always
 
-# Provide ability to turn on support for canvas mozGetAsFile API.
-- name: canvas.mozgetasfile.enabled
-  type: bool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "channelclassifier."
 #---------------------------------------------------------------------------
@@ -2638,18 +2632,6 @@
 - name: dom.forms.autocapitalize
   type: bool
   value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Support for input type=datetime-local.
-- name: dom.forms.datetime-local
-  type: bool
-  value: true
-  mirror: always
-
-# Support for input type=datetime-local widget. Disabled for now.
-- name: dom.forms.datetime-local.widget
-  type: bool
-  value: true
   mirror: always
 
 # Support for input type=month, type=week. By default, disabled.
@@ -4711,6 +4693,18 @@
 - name: fission.highValue.login.monitor
   type: bool
   value: @IS_ANDROID@
+  mirror: always
+
+# If true, do not send blocklisted preference values to the subprocess
+- name: fission.omitBlocklistedPrefsInSubprocesses
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# If true, crash when a blocklisted preference is accessed in a subprocess
+- name: fission.enforceBlocklistedPrefsInSubprocesses
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -9629,7 +9623,7 @@
 
 - name: media.webrtc.platformencoder
   type: RelaxedAtomicBool
-#if !defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
@@ -10899,7 +10893,7 @@
 
 - name: network.http.http2.websockets
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 - name: network.http.http2.enable-hpack-dump

@@ -72,6 +72,8 @@ class CacheEntry : public RefCounted<CacheEntry> {
   const IntRect& GetBounds() const { return mBounds; }
   HashNumber GetHash() const { return mHash; }
 
+  virtual bool IsValid() const { return true; }
+
  protected:
   virtual void RemoveFromList() = 0;
 
@@ -173,7 +175,9 @@ class TextureHandle : public RefCounted<TextureHandle>,
   void SetCacheEntry(const RefPtr<CacheEntry>& aEntry) { mCacheEntry = aEntry; }
 
   // Note as used if there is corresponding surface or cache entry.
-  bool IsUsed() const { return mSurface || mCacheEntry; }
+  bool IsUsed() const {
+    return mSurface || (mCacheEntry && mCacheEntry->IsValid());
+  }
 
  private:
   bool mValid = true;
@@ -359,6 +363,9 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
                              const Matrix& aTransform, const IntRect& aBounds);
 
   const Point& GetOrigin() const { return mOrigin; }
+
+  // Valid if either a mask (no pattern) or there is valid pattern.
+  bool IsValid() const override { return !mPattern || mPattern->IsValid(); }
 
  private:
   // The actual path geometry supplied

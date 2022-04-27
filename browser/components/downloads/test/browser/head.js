@@ -242,6 +242,7 @@ async function task_addDownloads(aItems) {
           : null,
       hasPartialData: item.state == DownloadsCommon.DOWNLOAD_PAUSED,
       hasBlockedData: item.hasBlockedData || false,
+      openDownloadsListOnStart: item.openDownloadsListOnStart ?? true,
       contentType: item.contentType,
       startTime: new Date(startTimeMs++),
     };

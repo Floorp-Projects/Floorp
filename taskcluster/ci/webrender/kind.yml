@@ -247,7 +247,7 @@ jobs:
             artifacts:
                 - type: file
                   name: public/build/wrench-debug.apk
-                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/debug/apk/wrench.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/debug/apk/wrench.apk
                 - type: file
                   name: public/build/reftests.tar.gz
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
@@ -290,7 +290,7 @@ jobs:
             artifacts:
                 - type: file
                   name: public/build/wrench-release.apk
-                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/release/apk/wrench.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/release/apk/wrench.apk
                 - type: file
                   name: public/build/reftests.tar.gz
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz

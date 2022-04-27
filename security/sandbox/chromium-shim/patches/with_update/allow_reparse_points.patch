@@ -104,7 +104,25 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_dispatcher.cc 
 diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
 --- a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
 +++ b/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc
-@@ -39,22 +39,16 @@ NTSTATUS NtCreateFileInTarget(HANDLE* ta
+@@ -1,16 +1,17 @@
+ // Copyright (c) 2011 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #include "sandbox/win/src/filesystem_policy.h"
+ 
+ #include <stdint.h>
+ 
++#include <algorithm>
+ #include <string>
+ 
+ #include "base/logging.h"
+ #include "base/stl_util.h"
+ #include "base/win/scoped_handle.h"
+ #include "base/win/windows_version.h"
+ #include "sandbox/win/src/ipc_tags.h"
+ #include "sandbox/win/src/policy_engine_opcodes.h"
+@@ -39,22 +40,16 @@ NTSTATUS NtCreateFileInTarget(HANDLE* ta
    NTSTATUS status =
        NtCreateFile(&local_handle, desired_access, obj_attributes,
                     io_status_block, nullptr, file_attributes, share_access,
@@ -127,7 +145,7 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/se
    return STATUS_SUCCESS;
  }
  
-@@ -400,23 +394,35 @@ bool FileSystemPolicy::SetInformationFil
+@@ -400,23 +395,32 @@ bool FileSystemPolicy::SetInformationFil
        static_cast<FILE_INFORMATION_CLASS>(info_class);
    *nt_status = NtSetInformationFile(local_handle, io_block, file_info, length,
                                      file_info_class);
@@ -143,19 +161,17 @@ diff --git a/security/sandbox/chromium/sandbox/win/src/filesystem_policy.cc b/se
 +  // OBJECT_ATTRIBUTES from file names for brokering so they must be fully
 +  // qualified and we can just check for the parent directory double dot between
 +  // two backslashes. NtCreateFile doesn't seem to allow it anyway, but this is
-+  // just an extra precaution. It also doesn't seem to allow the forward slash
-+  // at least in fully qualified names so we rule out that as well, to simplify
-+  // the combinations we might have to check.
-+  if (path->find(L'/') != std::wstring::npos) {
++  // just an extra precaution. It also doesn't seem to allow the forward slash,
++  // but this is also used for checking policy rules, so we just replace forward
++  // slashes with backslashes.
++  std::replace(path->begin(), path->end(), L'/', L'\\');
++  if (path->find(L"\\..\\") != std::wstring::npos) {
 +    return false;
 +  }
  
 -  if (ERROR_NOT_A_REPARSE_POINT == IsReparsePoint(*path))
 -    return true;
-+  if (path->find(L"\\..\\") != std::wstring::npos) {
-+    return false;
-+  }
- 
+-
 -  // We can't process a reparsed file.
 -  return false;
 +  ConvertToLongPath(path);

@@ -25,6 +25,7 @@
 #include "nsHashKeys.h"
 #include "nsISecureBrowserUI.h"
 
+class nsIBrowserDOMWindow;
 class nsISHistory;
 class nsIWidget;
 class nsIPrintSettings;
@@ -111,6 +112,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   WindowGlobalParent* GetTopWindowContext();
 
   already_AddRefed<nsIWidget> GetParentProcessWidgetContaining();
+  already_AddRefed<nsIBrowserDOMWindow> GetBrowserDOMWindow();
 
   // Same as `GetParentWindowContext`, but will also cross <browser> and
   // content/chrome boundaries.
@@ -439,7 +441,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // Called once DocumentLoadListener completes handling a load, and it
   // is either complete, or handed off to the final channel to deliver
   // data to the destination docshell.
-  void EndDocumentLoad(bool aForProcessSwitch);
+  // If aContinueNavigating it set, the reference to the DocumentLoadListener
+  // will be cleared to prevent it being cancelled, however the current load ID
+  // will be preserved until `EndDocumentLoad` is called again.
+  void EndDocumentLoad(bool aContinueNavigating);
 
   bool SupportsLoadingInParent(nsDocShellLoadState* aLoadState,
                                uint64_t* aOuterWindowId);

@@ -34,7 +34,8 @@ add_task(async function() {
   });
 
   // Top-Level scheme: HTTP
-  testSet.push(
+  // NOTE(freddyb): Test case temporarily disabled. See bug 1735565
+  /*testSet.push(
     runTest({
       queryString: "test1.1",
       topLevelScheme: "http",
@@ -43,7 +44,7 @@ add_task(async function() {
       expectedSameOrigin: "http",
       expectedCrossOrigin: "http",
     })
-  );
+  );*/
   // Top-Level scheme: HTTPS
   testSet.push(
     runTest({
