@@ -686,6 +686,9 @@ Result NSSCertDBTrustDomain::CheckCRLite(
     case nsICertStorage::STATE_NOT_COVERED:
       filterCoversCertificate = false;
       return Success;
+    case nsICertStorage::STATE_NO_FILTER:
+      filterCoversCertificate = false;
+      return Success;
     default:
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain::CheckCRLite: Unknown CRLite revocation "
