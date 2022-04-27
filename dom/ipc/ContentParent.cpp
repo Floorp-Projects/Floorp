@@ -2513,7 +2513,8 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // `LaunchSubprocessReject`/`LaunchSubprocessResolve`.
   mPrefSerializer = MakeUnique<mozilla::ipc::SharedPreferenceSerializer>(
       ShouldSanitizePreference);
-  if (!mPrefSerializer->SerializeToSharedMemory()) {
+  if (!mPrefSerializer->SerializeToSharedMemory(GeckoProcessType_Content,
+                                                GetRemoteType())) {
     NS_WARNING("SharedPreferenceSerializer::SerializeToSharedMemory failed");
     MarkAsDead();
     return false;
