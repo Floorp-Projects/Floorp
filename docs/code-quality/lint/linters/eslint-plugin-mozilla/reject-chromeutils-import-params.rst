@@ -1,13 +1,9 @@
 reject-chromeutils-import-params
 ================================
 
-``ChromeUtils.import`` can be called with two arguments, however these are now
-largely deprecated.
-
-The use of object destructuring is preferred over the second parameter being
-``this`` or ``{}``.
-
-Using explicit exports is preferred over the second parameter being ``null``.
+``ChromeUtils.import`` used to be able to be called with two arguments, however
+the second argument is no longer supported. Exports from modules should now be
+explicit, and the imported symbols being accessed from the returned object.
 
 Examples of incorrect code for this rule:
 -----------------------------------------

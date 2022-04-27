@@ -41,58 +41,20 @@ module.exports = {
           isIdentifier(callee.property, "import") &&
           node.arguments.length >= 2
         ) {
-          let targetObj = node.arguments[1];
-          if (targetObj.type == "Literal" && targetObj.raw == "null") {
-            context.report(
-              node,
-              "ChromeUtils.import should not be called with (..., null) to " +
-                "retrieve the JSM global object. Rely on explicit exports instead."
-            );
-          } else if (targetObj.type == "ThisExpression") {
-            context.report({
-              node,
-              message:
-                "ChromeUtils.import should not be called with (..., this) to " +
-                "retrieve the JSM global object. Use destructuring instead.",
-              suggest: [
-                {
-                  desc: "Use destructuring for imports.",
-                  fix: fixer => {
-                    let source = context.getSourceCode().getText(node);
-                    let match = source.match(
-                      /ChromeUtils.import\(\s*(".*\/(.*).jsm?")/m
-                    );
-
-                    return fixer.replaceText(
-                      node,
-                      `const { ${match[2]} } = ChromeUtils.import(${match[1]})`
-                    );
-                  },
+          context.report({
+            node,
+            message: "ChromeUtils.import only takes one argument.",
+            suggest: [
+              {
+                desc: "Remove the unnecessary parameters.",
+                fix: fixer => {
+                  return fixer.removeRange(
+                    getRangeAfterArgToEnd(context, 0, node.arguments)
+                  );
                 },
-              ],
-            });
-          } else if (
-            targetObj.type == "ObjectExpression" &&
-            targetObj.properties.length == 0
-          ) {
-            context.report({
-              node,
-              message:
-                "Passing an empty object to ChromeUtils.import is unnecessary",
-              suggest: [
-                {
-                  desc:
-                    "Passing an empty object to ChromeUtils.import is " +
-                    "unnecessary - remove the empty object",
-                  fix: fixer => {
-                    return fixer.removeRange(
-                      getRangeAfterArgToEnd(context, 0, node.arguments)
-                    );
-                  },
-                },
-              ],
-            });
-          }
+              },
+            ],
+          });
         }
       },
     };
