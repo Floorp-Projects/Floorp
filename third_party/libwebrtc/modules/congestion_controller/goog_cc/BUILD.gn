@@ -226,10 +226,10 @@ rtc_library("probe_controller") {
     "../../../rtc_base:macromagic",
     "../../../rtc_base:safe_conversions",
     "../../../rtc_base/experiments:field_trial_parser",
-    "../../../rtc_base/system:unused",
     "../../../system_wrappers:metrics",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
