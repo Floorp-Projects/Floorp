@@ -69,6 +69,7 @@ class QualityAnalyzingVideoDecoder : public VideoDecoder {
   int32_t RegisterDecodeCompleteCallback(
       DecodedImageCallback* callback) override;
   int32_t Release() override;
+  DecoderInfo GetDecoderInfo() const override;
   const char* ImplementationName() const override;
 
  private:

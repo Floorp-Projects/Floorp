@@ -40,6 +40,7 @@ class LibvpxVp9Decoder : public VP9Decoder {
 
   int Release() override;
 
+  DecoderInfo GetDecoderInfo() const override;
   const char* ImplementationName() const override;
 
  private:

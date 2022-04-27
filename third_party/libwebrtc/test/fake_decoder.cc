@@ -99,6 +99,12 @@ int32_t FakeDecoder::Release() {
 }
 
 const char* FakeDecoder::kImplementationName = "fake_decoder";
+VideoDecoder::DecoderInfo FakeDecoder::GetDecoderInfo() const {
+  DecoderInfo info;
+  info.implementation_name = kImplementationName;
+  info.is_hardware_accelerated = false;
+  return info;
+}
 const char* FakeDecoder::ImplementationName() const {
   return kImplementationName;
 }

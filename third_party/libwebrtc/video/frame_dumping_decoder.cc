@@ -32,6 +32,7 @@ class FrameDumpingDecoder : public VideoDecoder {
   int32_t RegisterDecodeCompleteCallback(
       DecodedImageCallback* callback) override;
   int32_t Release() override;
+  DecoderInfo GetDecoderInfo() const override;
   const char* ImplementationName() const override;
 
  private:
@@ -70,6 +71,10 @@ int32_t FrameDumpingDecoder::RegisterDecodeCompleteCallback(
 
 int32_t FrameDumpingDecoder::Release() {
   return decoder_->Release();
+}
+
+VideoDecoder::DecoderInfo FrameDumpingDecoder::GetDecoderInfo() const {
+  return decoder_->GetDecoderInfo();
 }
 
 const char* FrameDumpingDecoder::ImplementationName() const {

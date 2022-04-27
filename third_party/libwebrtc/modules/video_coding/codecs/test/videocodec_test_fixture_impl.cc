@@ -748,7 +748,7 @@ void VideoCodecTestFixtureImpl::PrintSettings(
   task_queue->SendTask(
       [this, &encoder_name, &decoder_name] {
         encoder_name = encoder_->GetEncoderInfo().implementation_name;
-        decoder_name = decoders_.at(0)->ImplementationName();
+        decoder_name = decoders_.at(0)->GetDecoderInfo().implementation_name;
       },
       RTC_FROM_HERE);
   RTC_LOG(LS_INFO) << "enc_impl_name: " << encoder_name;

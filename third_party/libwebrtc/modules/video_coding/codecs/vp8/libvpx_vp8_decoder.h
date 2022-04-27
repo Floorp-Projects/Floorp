@@ -38,6 +38,7 @@ class LibvpxVp8Decoder : public VideoDecoder {
   int RegisterDecodeCompleteCallback(DecodedImageCallback* callback) override;
   int Release() override;
 
+  DecoderInfo GetDecoderInfo() const override;
   const char* ImplementationName() const override;
 
   struct DeblockParams {

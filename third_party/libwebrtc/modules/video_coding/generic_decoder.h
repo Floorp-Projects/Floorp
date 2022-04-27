@@ -123,7 +123,7 @@ class VCMGenericDecoder {
   VideoCodecType _codecType;
   const bool _isExternal;
   VideoContentType _last_keyframe_content_type;
-  std::string implementation_name_;
+  VideoDecoder::DecoderInfo decoder_info_;
 };
 
 }  // namespace webrtc
