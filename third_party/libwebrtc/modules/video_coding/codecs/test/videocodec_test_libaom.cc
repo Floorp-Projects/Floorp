@@ -50,7 +50,7 @@ TEST(VideoCodecTestLibaom, HighBitrateAV1) {
   std::vector<RateControlThresholds> rc_thresholds = {
       {12, 1, 0, 1, 0.3, 0.1, 0, 1}};
 
-  std::vector<QualityThresholds> quality_thresholds = {{37, 34, 0.94, 0.92}};
+  std::vector<QualityThresholds> quality_thresholds = {{37, 34, 0.94, 0.915}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
 }
