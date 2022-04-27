@@ -218,12 +218,12 @@ VideoLayersAllocation CreateVideoLayersAllocation(
     return layers_allocation;
   }
 
-  if (encoder_config.numberOfSimulcastStreams > 0) {
+  if (encoder_config.numberOfSimulcastStreams > 1) {
     layers_allocation.resolution_and_frame_rate_is_valid = true;
     for (int si = 0; si < encoder_config.numberOfSimulcastStreams; ++si) {
       if (!target_bitrate.IsSpatialLayerUsed(si) ||
           target_bitrate.GetSpatialLayerSum(si) == 0) {
-        break;
+        continue;
       }
       layers_allocation.active_spatial_layers.emplace_back();
       VideoLayersAllocation::SpatialLayer& spatial_layer =
@@ -258,14 +258,80 @@ VideoLayersAllocation CreateVideoLayersAllocation(
         }
       }
       // Encoder may drop frames internally if `maxFramerate` is set.
-      spatial_layer.frame_rate_fps = std::min(
-          static_cast<uint8_t>(encoder_config.simulcastStream[si].maxFramerate),
-          static_cast<uint8_t>(
-              (current_rate.framerate_fps * frame_rate_fraction) /
-              VideoEncoder::EncoderInfo::kMaxFramerateFraction));
+      spatial_layer.frame_rate_fps = std::min<uint8_t>(
+          encoder_config.simulcastStream[si].maxFramerate,
+          (current_rate.framerate_fps * frame_rate_fraction) /
+              VideoEncoder::EncoderInfo::kMaxFramerateFraction);
     }
-  } else {
-    // TODO(bugs.webrtc.org/12000): Implement support for kSVC and full SVC.
+  } else if (encoder_config.numberOfSimulcastStreams == 1) {
+    // TODO(bugs.webrtc.org/12000): Implement support for AV1 with
+    // scalability.
+    const bool higher_spatial_depend_on_lower =
+        encoder_config.codecType == kVideoCodecVP9 &&
+        encoder_config.VP9().interLayerPred == InterLayerPredMode::kOn;
+    layers_allocation.resolution_and_frame_rate_is_valid = true;
+
+    std::vector<DataRate> aggregated_spatial_bitrate(
+        webrtc::kMaxTemporalStreams, DataRate::Zero());
+    for (int si = 0; si < webrtc::kMaxSpatialLayers; ++si) {
+      layers_allocation.resolution_and_frame_rate_is_valid = true;
+      if (!target_bitrate.IsSpatialLayerUsed(si) ||
+          target_bitrate.GetSpatialLayerSum(si) == 0) {
+        break;
+      }
+      layers_allocation.active_spatial_layers.emplace_back();
+      VideoLayersAllocation::SpatialLayer& spatial_layer =
+          layers_allocation.active_spatial_layers.back();
+      spatial_layer.width = encoder_config.spatialLayers[si].width;
+      spatial_layer.height = encoder_config.spatialLayers[si].height;
+      spatial_layer.rtp_stream_index = 0;
+      spatial_layer.spatial_id = si;
+      auto frame_rate_fraction =
+          VideoEncoder::EncoderInfo::kMaxFramerateFraction;
+      if (encoder_info.fps_allocation[si].size() == 1) {
+        // One TL is signalled to be used by the encoder. Do not distribute
+        // bitrate allocation across TLs (use sum at tl:0).
+        DataRate aggregated_temporal_bitrate =
+            DataRate::BitsPerSec(target_bitrate.GetSpatialLayerSum(si));
+        aggregated_spatial_bitrate[0] += aggregated_temporal_bitrate;
+        if (higher_spatial_depend_on_lower) {
+          spatial_layer.target_bitrate_per_temporal_layer.push_back(
+              aggregated_spatial_bitrate[0]);
+        } else {
+          spatial_layer.target_bitrate_per_temporal_layer.push_back(
+              aggregated_temporal_bitrate);
+        }
+        frame_rate_fraction = encoder_info.fps_allocation[si][0];
+      } else {  // Temporal layers are supported.
+        DataRate aggregated_temporal_bitrate = DataRate::Zero();
+        for (size_t ti = 0;
+             ti < encoder_config.spatialLayers[si].numberOfTemporalLayers;
+             ++ti) {
+          if (!target_bitrate.HasBitrate(si, ti)) {
+            break;
+          }
+          if (ti < encoder_info.fps_allocation[si].size()) {
+            // Use frame rate of the top used temporal layer.
+            frame_rate_fraction = encoder_info.fps_allocation[si][ti];
+          }
+          aggregated_temporal_bitrate +=
+              DataRate::BitsPerSec(target_bitrate.GetBitrate(si, ti));
+          if (higher_spatial_depend_on_lower) {
+            spatial_layer.target_bitrate_per_temporal_layer.push_back(
+                aggregated_temporal_bitrate + aggregated_spatial_bitrate[ti]);
+            aggregated_spatial_bitrate[ti] += aggregated_temporal_bitrate;
+          } else {
+            spatial_layer.target_bitrate_per_temporal_layer.push_back(
+                aggregated_temporal_bitrate);
+          }
+        }
+      }
+      // Encoder may drop frames internally if `maxFramerate` is set.
+      spatial_layer.frame_rate_fps = std::min<uint8_t>(
+          encoder_config.spatialLayers[si].maxFramerate,
+          (current_rate.framerate_fps * frame_rate_fraction) /
+              VideoEncoder::EncoderInfo::kMaxFramerateFraction);
+    }
   }
 
   return layers_allocation;
