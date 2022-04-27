@@ -98,9 +98,15 @@ class SettingsSubMenuSitePermissionsCommonRobot {
         mDevice.findObject(UiSelector().textContains("Permissions")).click()
     }
 
-    fun switchAppPermissionSystemSetting(permissionCategory: String) {
+    fun switchAppPermissionSystemSetting(permissionCategory: String, permission: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mDevice.findObject(UiSelector().textContains(permissionCategory)).click()
+
+        if (permission == "Allow") {
+            mDevice.findObject(UiSelector().textContains("Allow")).click()
+        } else {
+            mDevice.findObject(UiSelector().textContains("Deny")).click()
+        }
     }
 
     class Transition {

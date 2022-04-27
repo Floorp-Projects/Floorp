@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("DEPRECATION")
+
 package org.mozilla.fenix.ui
 
 import android.view.View
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.mediasession.MediaSession
@@ -83,12 +85,6 @@ class SmokeTest {
     @get: Rule
     val intentReceiverActivityTestRule = ActivityTestRule(
         IntentReceiverActivity::class.java, true, false
-    )
-
-    @get:Rule
-    var mGrantPermissions = GrantPermissionRule.grant(
-        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        android.Manifest.permission.READ_EXTERNAL_STORAGE
     )
 
     @Rule
@@ -379,6 +375,7 @@ class SmokeTest {
     }
 
     @Test
+    // Device or AVD requires a Google Services Android OS installation with Play Store installed
     // Verifies the Open in app button when an app is installed
     fun mainMenuOpenInAppTest() {
         val playStoreUrl = "play.google.com/store/apps/details?id=org.mozilla.fenix"
@@ -537,6 +534,7 @@ class SmokeTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 29)
     // Verifies that you can go to System settings and change app's permissions from inside the app
     fun redirectToAppPermissionsSystemSettingsTest() {
         homeScreen {
@@ -553,9 +551,12 @@ class SmokeTest {
             verifyBlockedByAndroid()
             clickGoToSettingsButton()
             openAppSystemPermissionsSettings()
-            switchAppPermissionSystemSetting("Camera")
-            switchAppPermissionSystemSetting("Location")
-            switchAppPermissionSystemSetting("Microphone")
+            switchAppPermissionSystemSetting("Camera", "Allow")
+            mDevice.pressBack()
+            switchAppPermissionSystemSetting("Location", "Allow")
+            mDevice.pressBack()
+            switchAppPermissionSystemSetting("Microphone", "Allow")
+            mDevice.pressBack()
             mDevice.pressBack()
             mDevice.pressBack()
             verifyUnblockedByAndroid()
@@ -1064,7 +1065,7 @@ class SmokeTest {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists(audioTestPage.title)
-            clickSystemNotificationControlButton("Pause")
+            clickMediaNotificationControlButton("Pause")
             verifyMediaSystemNotificationButtonState("Play")
         }
 
@@ -1111,10 +1112,12 @@ class SmokeTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            verifyDefaultBrowserIsDisaled()
+            verifyDefaultBrowserIsDisabled()
             clickDefaultBrowserSwitch()
             verifyAndroidDefaultAppsMenuAppears()
         }
+        // Dismiss the request
+        mDevice.pressBack()
     }
 
     @Test

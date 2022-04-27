@@ -68,7 +68,7 @@ class SettingsRobot {
     fun verifyHomepageButton() = assertHomepageButton()
     fun verifyCreditCardsButton() = assertCreditCardsButton()
     fun verifyLanguageButton() = assertLanguageButton()
-    fun verifyDefaultBrowserIsDisaled() = assertDefaultBrowserIsDisabled()
+    fun verifyDefaultBrowserIsDisabled() = assertDefaultBrowserIsDisabled()
     fun clickDefaultBrowserSwitch() = toggleDefaultBrowserSwitch()
     fun verifyAndroidDefaultAppsMenuAppears() = assertAndroidDefaultAppsMenuAppears()
 
@@ -187,10 +187,15 @@ class SettingsRobot {
         }
 
         fun openLanguageSubMenu(interact: SettingsSubMenuLanguageRobot.() -> Unit): SettingsSubMenuLanguageRobot.Transition {
-            scrollToElementByText("Language")
-
-            fun languageButton() = onView(withText("Language"))
-            languageButton().click()
+            onView(withId(R.id.recycler_view))
+                .perform(
+                    RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+                        hasDescendant(
+                            withText(R.string.preferences_language)
+                        ),
+                        ViewActions.click()
+                    )
+                )
 
             SettingsSubMenuLanguageRobot().interact()
             return SettingsSubMenuLanguageRobot.Transition()
@@ -295,7 +300,7 @@ class SettingsRobot {
     }
 
     companion object {
-        const val DEFAULT_APPS_SETTINGS_ACTION = "android.settings.MANAGE_DEFAULT_APPS_SETTINGS"
+        const val DEFAULT_APPS_SETTINGS_ACTION = "android.app.role.action.REQUEST_ROLE"
     }
 }
 

@@ -16,6 +16,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -41,6 +42,10 @@ class ContextMenusTest {
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
+
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
@@ -194,7 +199,6 @@ class ContextMenusTest {
         }
 
         downloadRobot {
-        }.clickAllowPermission {
             verifyDownloadNotificationPopup()
         }.clickOpen("image/jpeg") {} // verify open intent is matched with associated data type
         downloadRobot {

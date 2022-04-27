@@ -586,6 +586,7 @@ dependencies {
         exclude module: 'recyclerview-v7'
         exclude module: 'design'
         exclude module: 'espresso-core'
+        exclude module: 'protobuf-lite'
     }
 
     androidTestImplementation Deps.androidx_test_core
@@ -600,12 +601,14 @@ dependencies {
     }
 
     androidTestImplementation Deps.androidx_junit
+    androidTestImplementation Deps.androidx_test_extensions
     androidTestImplementation Deps.androidx_work_testing
     androidTestImplementation Deps.androidx_benchmark_junit4
     androidTestImplementation Deps.mockwebserver
     testImplementation Deps.mozilla_support_test
     testImplementation Deps.mozilla_support_test_libstate
     testImplementation Deps.androidx_junit
+    testImplementation Deps.androidx_test_extensions
     testImplementation Deps.androidx_work_testing
     testImplementation (Deps.robolectric) {
         exclude group: 'org.apache.maven'

@@ -4,20 +4,25 @@
 
 package org.mozilla.fenix.ui
 
+import android.os.Build
+import android.view.autofill.AutofillManager
 import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.addToHomeScreen
@@ -41,6 +46,10 @@ class SettingsPrivacyTest {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
 
+    @Rule
+    @JvmField
+    val retryTestRule = RetryTestRule(3)
+
     @Before
     fun setUp() {
         mockWebServer = MockWebServer().apply {
@@ -50,6 +59,12 @@ class SettingsPrivacyTest {
 
         val settings = activityTestRule.activity.applicationContext.settings()
         settings.shouldShowJumpBackInCFR = false
+
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            val autofillManager: AutofillManager =
+                appContext.getSystemService(AutofillManager::class.java)
+            autofillManager.disableAutofillServices()
+        }
     }
 
     @After
@@ -376,6 +391,7 @@ class SettingsPrivacyTest {
         }
     }
 
+    @Ignore("Failing with frequent ANR: https://bugzilla.mozilla.org/show_bug.cgi?id=1764605")
     @Test
     fun launchLinksInPrivateToggleOffStateDoesntChangeTest() {
         val settings = activityTestRule.activity.applicationContext.settings()

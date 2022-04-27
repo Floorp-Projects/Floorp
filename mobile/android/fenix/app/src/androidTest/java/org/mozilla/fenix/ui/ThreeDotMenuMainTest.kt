@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.settings
@@ -42,6 +43,7 @@ class ThreeDotMenuMainTest {
     }
 
     // Verifies the list of items in the homescreen's 3 dot main menu
+    @Ignore("Failing with frequent ANR: https://bugzilla.mozilla.org/show_bug.cgi?id=1764605")
     @Test
     fun homeThreeDotMenuItemsTest() {
         homeScreen {

@@ -4,14 +4,18 @@
 
 package org.mozilla.fenix.helpers
 
+import androidx.test.espresso.IdlingResourceTimeoutException
+import androidx.test.espresso.NoMatchingViewException
 import androidx.test.uiautomator.UiObjectNotFoundException
 import junit.framework.AssertionFailedError
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.lang.AssertionError
 
 class RetryTestRule(private val retryCount: Int = 5) : TestRule {
 
+    @Suppress("TooGenericExceptionCaught", "ComplexMethod")
     override fun apply(base: Statement, description: Description): Statement {
         return statement {
             for (i in 1..retryCount) {
@@ -27,6 +31,22 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: UiObjectNotFoundException) {
+                    if (i == retryCount) {
+                        throw t
+                    }
+                } catch (t: NoMatchingViewException) {
+                    if (i == retryCount) {
+                        throw t
+                    }
+                } catch (t: IdlingResourceTimeoutException) {
+                    if (i == retryCount) {
+                        throw t
+                    }
+                } catch (t: RuntimeException) {
+                    if (i == retryCount) {
+                        throw t
+                    }
+                } catch (t: NullPointerException) {
                     if (i == retryCount) {
                         throw t
                     }

@@ -1,8 +1,9 @@
+@file:Suppress("DEPRECATION")
+
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import androidx.test.rule.ActivityTestRule
-import androidx.test.rule.GrantPermissionRule
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -35,11 +36,6 @@ class CustomTabsTest {
     @get: Rule
     val intentReceiverActivityTestRule = ActivityTestRule(
         IntentReceiverActivity::class.java, true, false
-    )
-
-    @get:Rule
-    var mGrantPermissions = GrantPermissionRule.grant(
-        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
 
     @Before

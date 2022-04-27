@@ -43,6 +43,7 @@ import org.hamcrest.Matcher
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
@@ -228,15 +229,17 @@ class TabDrawerRobot {
         tabMediaControlButton().click()
     }
 
-    fun clickSelectTabs() {
+    private fun clickSelectTabs() {
         threeDotMenu().click()
 
         mDevice.waitNotNull(
-            Until.findObject(text("Select tabs")),
+            findObject(
+                text(getStringResource(R.string.tabs_tray_select_tabs))
+            ),
             waitingTime
         )
 
-        val selectTabsButton = mDevice.findObject(text("Select tabs"))
+        val selectTabsButton = mDevice.findObject(text(getStringResource(R.string.tabs_tray_select_tabs)))
         selectTabsButton.click()
     }
 

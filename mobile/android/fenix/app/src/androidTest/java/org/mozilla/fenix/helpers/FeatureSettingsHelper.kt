@@ -38,6 +38,10 @@ class FeatureSettingsHelper {
         settings.userKnowsAboutPwas = disable
     }
 
+    fun deleteSitePermissions(delete: Boolean) {
+        settings.deleteSitePermissions = delete
+    }
+
     // Important:
     // Use this after each test if you have modified these feature settings
     // to make sure the app goes back to the default state

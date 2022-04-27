@@ -665,9 +665,13 @@ private fun assertExistingTopSitesTabs(title: String) {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertNotExistingTopSitesList(title: String) =
+private fun assertNotExistingTopSitesList(title: String) {
+    mDevice.findObject(UiSelector().text(title))
+        .waitUntilGone(waitingTime)
+
     onView(allOf(withId(R.id.top_sites_list)))
         .check(matches(not(hasItem(hasDescendant(withText(title))))))
+}
 
 private fun assertTopSiteContextMenuItems() {
     val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())

@@ -4,12 +4,20 @@
 
 package org.mozilla.fenix.ui
 
+import android.Manifest
+import android.content.Context
 import androidx.core.net.toUri
+import androidx.test.rule.GrantPermissionRule
+import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
+import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -21,21 +29,43 @@ class SitePermissionsTest {
     /* Test page created and handled by the Mozilla mobile test-eng team */
     private val testPage = "https://mozilla-mobile.github.io/testapp/permissions"
     private val testPageSubstring = "https://mozilla-mobile.github.io:443"
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule()
+    val activityTestRule = HomeActivityTestRule()
+
+    @get:Rule
+    val grantPermissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.CAMERA
+    )
+
+    @Before
+    fun setUp() {
+        // disabling the new homepage pop-up that interferes with the tests.
+        featureSettingsHelper.setJumpBackCFREnabled(false)
+        featureSettingsHelper.deleteSitePermissions(true)
+    }
+
+    @After
+    fun tearDown() {
+        // Clearing all permission data after each test to avoid overlapping data
+        val applicationContext: Context = activityTestRule.activity.applicationContext
+        val permissionStorage = PermissionStorage(applicationContext)
+
+        runBlocking {
+            permissionStorage.deleteAllSitePermissions()
+        }
+    }
 
     @SmokeTest
     @Test
+    @Ignore("Firebase - No camera and microphone on AVD")
     fun audioVideoPermissionChoiceOnEachRequestTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartAudioVideoButton {
-            // allow app to record video
-            clickAppPermissionButton(true)
-            // allow app to record audio
-            clickAppPermissionButton(true)
             verifyAudioVideoPermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(false) {
             verifyPageContent("Camera and Microphone not allowed")
@@ -47,15 +77,12 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("Firebase - No camera and microphone on AVD, see also https://github.com/mozilla-mobile/fenix/issues/23298")
     fun rememberBlockAudioVideoPermissionChoiceTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartAudioVideoButton {
-            // allow app to record video
-            clickAppPermissionButton(true)
-            // allow app to record audio
-            clickAppPermissionButton(true)
             verifyAudioVideoPermissionPrompt(testPageSubstring)
             selectRememberPermissionDecision()
         }.clickPagePermissionButton(false) {
@@ -69,7 +96,7 @@ class SitePermissionsTest {
         }
     }
 
-    @Ignore("Failing, see https://github.com/mozilla-mobile/fenix/issues/23358")
+    @Ignore("Firebase - No camera and microphone on AVD, see also https://github.com/mozilla-mobile/fenix/issues/23298")
     @SmokeTest
     @Test
     fun rememberAllowAudioVideoPermissionChoiceTest() {
@@ -77,10 +104,6 @@ class SitePermissionsTest {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartAudioVideoButton {
-            // allow app to record video
-            clickAppPermissionButton(true)
-            // allow app to record audio
-            clickAppPermissionButton(true)
             verifyAudioVideoPermissionPrompt(testPageSubstring)
             selectRememberPermissionDecision()
         }.clickPagePermissionButton(true) {
@@ -94,29 +117,13 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
-    fun blockAppUsingAudioVideoTest() {
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(testPage.toUri()) {
-        }.clickStartAudioVideoButton {
-            // allow app to record video
-            clickAppPermissionButton(false)
-            // allow app to record audio
-            clickAppPermissionButton(false)
-        }
-        browserScreen {
-            verifyPageContent("Camera and Microphone not allowed")
-        }
-    }
-
-    @Test
+    @Ignore("Firebase - No camera and microphone on AVD")
     fun microphonePermissionChoiceOnEachRequestTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartMicrophoneButton {
-            clickAppPermissionButton(true)
             verifyMicrophonePermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(false) {
             verifyPageContent("Microphone not allowed")
@@ -127,12 +134,12 @@ class SitePermissionsTest {
     }
 
     @Test
+    @Ignore("Firebase - No camera and microphone on AVD")
     fun rememberBlockMicrophonePermissionChoiceTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartMicrophoneButton {
-            clickAppPermissionButton(true)
             verifyMicrophonePermissionPrompt(testPageSubstring)
             selectRememberPermissionDecision()
         }.clickPagePermissionButton(false) {
@@ -153,7 +160,6 @@ class SitePermissionsTest {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartMicrophoneButton {
-            clickAppPermissionButton(true)
             verifyMicrophonePermissionPrompt(testPageSubstring)
             selectRememberPermissionDecision()
         }.clickPagePermissionButton(true) {
@@ -168,24 +174,12 @@ class SitePermissionsTest {
     }
 
     @Test
-    fun blockAppUsingMicrophoneTest() {
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(testPage.toUri()) {
-        }.clickStartMicrophoneButton {
-            clickAppPermissionButton(false)
-        }
-        browserScreen {
-            verifyPageContent("Microphone not allowed")
-        }
-    }
-
-    @Test
+    @Ignore("Firebase - No camera and microphone on AVD")
     fun cameraPermissionChoiceOnEachRequestTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartCameraButton {
-            clickAppPermissionButton(true)
             verifyCameraPermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(false) {
             verifyPageContent("Camera not allowed")
@@ -196,12 +190,12 @@ class SitePermissionsTest {
     }
 
     @Test
+    @Ignore("Firebase - No camera and microphone on AVD")
     fun rememberBlockCameraPermissionChoiceTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartCameraButton {
-            clickAppPermissionButton(true)
             verifyCameraPermissionPrompt(testPageSubstring)
             selectRememberPermissionDecision()
         }.clickPagePermissionButton(false) {
@@ -216,12 +210,12 @@ class SitePermissionsTest {
     }
 
     @Test
+    @Ignore("Firebase - No camera and microphone on AVD")
     fun rememberAllowCameraPermissionChoiceTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
             waitForPageToLoad()
         }.clickStartCameraButton {
-            clickAppPermissionButton(true)
             verifyCameraPermissionPrompt(testPageSubstring)
             selectRememberPermissionDecision()
         }.clickPagePermissionButton(true) {
@@ -232,18 +226,6 @@ class SitePermissionsTest {
         }.clickStartCameraButton { }
         browserScreen {
             verifyPageContent("Camera allowed")
-        }
-    }
-
-    @Test
-    fun blockAppUsingCameraTest() {
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(testPage.toUri()) {
-        }.clickStartCameraButton {
-            clickAppPermissionButton(false)
-        }
-        browserScreen {
-            verifyPageContent("Camera not allowed")
         }
     }
 
@@ -280,7 +262,6 @@ class SitePermissionsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
         }.clickGetLocationButton {
-            clickAppPermissionButton(true)
             verifyLocationPermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(true) {
             verifyPageContent("longitude")
@@ -294,7 +275,6 @@ class SitePermissionsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
         }.clickGetLocationButton {
-            clickAppPermissionButton(true)
             verifyLocationPermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(false) {
             verifyPageContent("User denied geolocation prompt")

@@ -14,7 +14,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.By.textContains
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -23,6 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import java.util.regex.Pattern
 
 /**
  * Implementation of Robot Pattern for the Add to homescreen feature.
@@ -50,7 +50,14 @@ class AddToHomeScreenRobot {
 
     fun clickAddAutomaticallyButton() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mDevice.wait(Until.findObject(textContains("add automatically")), waitingTime)
+            mDevice.wait(
+                Until.findObject(
+                    By.text(
+                        Pattern.compile("Add Automatically", Pattern.CASE_INSENSITIVE)
+                    )
+                ),
+                waitingTime
+            )
             addAutomaticallyButton().click()
         }
     }
@@ -69,6 +76,7 @@ class AddToHomeScreenRobot {
 
         fun searchAndOpenHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.pressHome()
+            mDevice.waitForIdle()
 
             fun homeScreenView() = UiScrollable(UiSelector().scrollable(true))
             homeScreenView().setAsHorizontalList()

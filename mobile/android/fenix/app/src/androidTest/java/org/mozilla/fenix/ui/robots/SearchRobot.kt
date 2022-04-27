@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.os.Build
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -49,6 +50,7 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.helpers.Constants.PackageName
 
 /**
  * Implementation of Robot Pattern for the search fragment.
@@ -66,12 +68,29 @@ class SearchRobot {
         }
     }
 
+    // Device or AVD requires a Google Services Android OS installation
     fun startVoiceSearch() {
         voiceSearchButton.click()
-        assertTrue(
-            mDevice.findObject(UiSelector().packageName("com.google.android.googlequicksearchbox"))
-                .exists()
-        )
+
+        // Accept runtime permission (API 30) for Google Voice
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
+            val allowPermission = mDevice.findObject(
+                UiSelector().text(
+                    when {
+                        Build.VERSION.SDK_INT == Build.VERSION_CODES.R -> "Allow all the time"
+                        else -> "While using the app"
+                    }
+                )
+            )
+
+            if (allowPermission.exists()) {
+                allowPermission.click()
+            }
+
+            mDevice.waitNotNull(
+                Until.findObject(By.pkg(PackageName.GOOGLE_QUICK_SEARCH)), waitingTime
+            )
+        }
     }
 
     fun verifySearchEngineButton() = assertSearchButton()

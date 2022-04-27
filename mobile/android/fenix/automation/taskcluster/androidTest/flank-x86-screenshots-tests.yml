@@ -42,7 +42,7 @@ gcloud:
 
   device:
    - model: Pixel2
-     version: 28
+     version: 30
 
 flank:
   project: GOOGLE_PROJECT

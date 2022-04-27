@@ -6,7 +6,6 @@ package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.UiDevice
 import org.junit.After
 import org.junit.Before
@@ -15,7 +14,6 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.downloadRobot
@@ -40,28 +38,25 @@ class DownloadTest {
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule()
 
-    @Rule
-    @JvmField
-    val retryTestRule = RetryTestRule(3)
-
-    @get:Rule
-    var mGrantPermissions = GrantPermissionRule.grant(
-        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        android.Manifest.permission.READ_EXTERNAL_STORAGE
-    )
-
     @Before
     fun setUp() {
         // disabling the jump-back-in pop-up that interferes with the tests.
         featureSettingsHelper.setJumpBackCFREnabled(false)
         // disabling the PWA CFR on 3rd visit
         featureSettingsHelper.disablePwaCFR(true)
+        // clear all existing notifications
+        notificationShade {
+            mDevice.openNotification()
+            clearNotifications()
+        }
     }
 
     @After
     fun tearDown() {
-        deleteDownloadFromStorage(downloadFile)
         featureSettingsHelper.resetAllFeatureFlags()
+        notificationShade {
+            cancelAllShownNotifications()
+        }
     }
 
     @Test
@@ -70,6 +65,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
@@ -78,6 +74,7 @@ class DownloadTest {
         downloadRobot {
             verifyPhotosAppOpens()
         }
+        mDevice.pressBack()
     }
 
     @Test
@@ -86,6 +83,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.closePrompt {
@@ -101,11 +99,12 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
             verifyDownloadNotificationPopup()
-        }
+        }.closePrompt { }
         mDevice.openNotification()
         notificationShade {
             verifySystemNotificationExists("Download completed")
@@ -119,15 +118,17 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {}
         mDevice.openNotification()
         notificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
             expandNotificationMessage()
-            clickSystemNotificationControlButton("Pause")
-            clickSystemNotificationControlButton("Resume")
-            clickSystemNotificationControlButton("Cancel")
+            clickDownloadNotificationControlButton("PAUSE")
+            clickDownloadNotificationControlButton("RESUME")
+            clickDownloadNotificationControlButton("CANCEL")
             mDevice.pressBack()
         }
         browserScreen {
@@ -149,6 +150,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
         }.clickDownloadLink(downloadFile) {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
@@ -162,8 +164,8 @@ class DownloadTest {
             verifyDownloadedFileIcon()
             openDownloadedFile(downloadFile)
             verifyPhotosAppOpens()
-            mDevice.pressBack()
-            deleteDownloadFromStorage(downloadFile)
+            deleteDownloadFromStorage()
+            waitForDownloadsListToExist()
         }.exitDownloadsManagerToBrowser {
         }.openThreeDotMenu {
         }.openDownloadsManager {

@@ -71,7 +71,7 @@ class MediaNotificationTest {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists(videoTestPage.title)
-            clickSystemNotificationControlButton("Pause")
+            clickMediaNotificationControlButton("Pause")
             verifyMediaSystemNotificationButtonState("Play")
         }
 
@@ -93,6 +93,7 @@ class MediaNotificationTest {
         mDevice.pressBack()
     }
 
+    @Ignore("Failing with frequent ANR: https://bugzilla.mozilla.org/show_bug.cgi?id=1764605")
     @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
@@ -107,7 +108,7 @@ class MediaNotificationTest {
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openNotificationShade {
             verifySystemNotificationExists("A site is playing media")
-            clickSystemNotificationControlButton("Pause")
+            clickMediaNotificationControlButton("Pause")
             verifyMediaSystemNotificationButtonState("Play")
         }
 

@@ -8,6 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -151,7 +152,11 @@ private fun enhancedTrackingProtectionSwitch() =
     onView(ViewMatchers.withResourceName("switch_widget"))
 
 private fun trackingProtectionSettingsButton() =
-    onView(withId(R.id.protection_settings))
+    onView(withId(R.id.protection_settings)).inRoot(RootMatchers.isDialog()).check(
+        matches(
+            isDisplayed()
+        )
+    )
 
 private fun openEnhancedTrackingProtectionDetails() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/trackingProtectionDetails"))

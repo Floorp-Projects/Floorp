@@ -14,7 +14,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.view.View
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
@@ -22,9 +21,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.withChild
@@ -35,11 +32,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
+import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import java.io.File
-import kotlinx.coroutines.runBlocking
+import junit.framework.AssertionFailedError
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers
@@ -48,6 +45,7 @@ import org.hamcrest.Matcher
 import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -55,6 +53,7 @@ import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.ui.robots.mDevice
 import org.mozilla.fenix.utils.IntentUtils
+import java.util.regex.Pattern
 
 object TestHelper {
 
@@ -72,7 +71,7 @@ object TestHelper {
     fun longTapSelectItem(url: Uri) {
         mDevice.waitNotNull(
             Until.findObject(By.text(url.toString())),
-            TestAssetHelper.waitingTime
+            waitingTime
         )
         onView(
             allOf(
@@ -101,7 +100,7 @@ object TestHelper {
     fun waitUntilObjectIsFound(resourceName: String) {
         mDevice.waitNotNull(
             Until.findObjects(By.res(resourceName)),
-            TestAssetHelper.waitingTime
+            waitingTime
         )
     }
 
@@ -127,19 +126,21 @@ object TestHelper {
         }
     }
 
-    // Remove test file from the device Downloads folder
-    @Suppress("Deprecation")
-    fun deleteDownloadFromStorage(fileName: String) {
-        runBlocking {
-            val downloadedFile = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                fileName
-            )
+    // Remove test file from Google Photos (AOSP) on Firebase
+    fun deleteDownloadFromStorage() {
+        val deleteButton = mDevice.findObject(UiSelector().resourceId("$GOOGLE_APPS_PHOTOS:id/trash"))
+        deleteButton.click()
 
-            if (downloadedFile.exists()) {
-                downloadedFile.delete()
-            }
+        // Sometimes there's a secondary confirmation
+        try {
+            val deleteConfirm = mDevice.findObject(UiSelector().text("Got it"))
+            deleteConfirm.click()
+        } catch (e: UiObjectNotFoundException) {
+            // Do nothing
         }
+
+        val trashIt = mDevice.findObject(UiSelector().resourceId("$GOOGLE_APPS_PHOTOS:id/move_to_trash"))
+        trashIt.click()
     }
 
     fun setNetworkEnabled(enabled: Boolean) {
@@ -211,7 +212,11 @@ object TestHelper {
 
     fun assertExternalAppOpens(appPackageName: String) {
         if (isPackageInstalled(appPackageName)) {
-            Intents.intended(IntentMatchers.toPackage(appPackageName))
+            try {
+                intended(toPackage(appPackageName))
+            } catch (e: AssertionFailedError) {
+                e.printStackTrace()
+            }
         } else {
             val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
             mDevice.waitNotNull(
@@ -223,7 +228,11 @@ object TestHelper {
 
     fun assertNativeAppOpens(appPackageName: String, url: String) {
         if (isPackageInstalled(appPackageName)) {
-            intended(toPackage(appPackageName))
+            try {
+                intended(toPackage(appPackageName))
+            } catch (e: AssertionFailedError) {
+                e.printStackTrace()
+            }
         } else {
             BrowserRobot().verifyUrl(url)
         }
@@ -259,6 +268,38 @@ object TestHelper {
         with(appContext.components.useCases.searchUseCases) {
             addSearchEngine(searchEngine)
             selectSearchEngine(searchEngine)
+        }
+    }
+
+    fun grantPermission() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        if (Build.VERSION.SDK_INT >= 23) {
+            UiDevice.getInstance(instrumentation).findObject(
+                By.text(
+                    when (Build.VERSION.SDK_INT) {
+                        Build.VERSION_CODES.R -> Pattern.compile(
+                            "WHILE USING THE APP", Pattern.CASE_INSENSITIVE
+                        )
+                        else -> Pattern.compile("Allow", Pattern.CASE_INSENSITIVE)
+                    }
+                )
+            ).click()
+        }
+    }
+
+    fun denyPermission() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        if (Build.VERSION.SDK_INT >= 23) {
+            UiDevice.getInstance(instrumentation).findObject(
+                By.text(
+                    when (Build.VERSION.SDK_INT) {
+                        Build.VERSION_CODES.R -> Pattern.compile(
+                            "DENY", Pattern.CASE_INSENSITIVE
+                        )
+                        else -> Pattern.compile("Deny", Pattern.CASE_INSENSITIVE)
+                    }
+                )
+            ).click()
         }
     }
 }
