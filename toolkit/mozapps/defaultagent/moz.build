@@ -37,6 +37,9 @@ SOURCES += [
     "/toolkit/mozapps/update/common/readstrings.cpp",
 ]
 
+# Suppress warnings from third-party code.
+SOURCES["/third_party/WinToast/wintoastlib.cpp"].flags += ["-Wno-implicit-fallthrough"]
+
 USE_LIBS += [
     "defaultagent-static",
     "jsoncpp",
