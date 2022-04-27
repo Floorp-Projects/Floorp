@@ -968,7 +968,8 @@ rtc_library("rtc_base") {
     #"unique_id_generator.h",
   ]
 
-  if (rtc_openssl_is_boringssl) {
+  # If we are building the SSL library ourselves, we know it's BoringSSL.
+  if (rtc_build_ssl) {
     sources += [
       "boringssl_certificate.cc",
       "boringssl_certificate.h",
