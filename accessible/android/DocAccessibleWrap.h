@@ -20,13 +20,18 @@ class DocAccessibleWrap : public DocAccessible {
   DocAccessibleWrap(Document* aDocument, PresShell* aPresShell);
   virtual ~DocAccessibleWrap();
 
-  virtual void Shutdown() override;
-
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 
-  DocAccessibleWrap* GetTopLevelContentDoc(AccessibleWrap* aAccessible);
+  /**
+   * Manage the mapping from id to Accessible.
+   */
+  void AddID(uint32_t aID, AccessibleWrap* aAcc) {
+    mIDToAccessibleMap.InsertOrUpdate(aID, aAcc);
+  }
+  void RemoveID(uint32_t aID) { mIDToAccessibleMap.Remove(aID); }
+  AccessibleWrap* GetAccessibleByID(int32_t aID) const;
 
-  bool IsTopLevelContentDoc();
+  DocAccessibleWrap* GetTopLevelContentDoc(AccessibleWrap* aAccessible);
 
   void CacheFocusPath(AccessibleWrap* aAccessible);
 
@@ -39,6 +44,11 @@ class DocAccessibleWrap : public DocAccessible {
   };
 
  protected:
+  /*
+   * This provides a mapping from 32 bit id to accessible objects.
+   */
+  nsTHashMap<nsUint32HashKey, AccessibleWrap*> mIDToAccessibleMap;
+
   virtual void DoInitialUpdate() override;
 
  private:

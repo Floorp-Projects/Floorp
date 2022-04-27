@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace a11y {
 
-mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPivotTo(
+mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPivot(
     uint64_t aID, int32_t aGranularity, bool aForward, bool aInclusive) {
   if (auto acc = IdToAccessibleWrap(aID)) {
     acc->PivotTo(aGranularity, aForward, aInclusive);
