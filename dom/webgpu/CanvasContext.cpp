@@ -10,6 +10,7 @@
 #include "nsDisplayList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/CompositableInProcessManager.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"
@@ -124,6 +125,24 @@ void CanvasContext::SwapChainPresent() {
   if (mBridge && mBridge->IsOpen() && mHandle && mTexture) {
     mBridge->SwapChainPresent(mHandle, mTexture->mId);
   }
+}
+
+bool CanvasContext::InitializeCanvasRenderer(
+    nsDisplayListBuilder* aBuilder, layers::CanvasRenderer* aRenderer) {
+  // This path is only used for rendering when we use the fallback Paint path,
+  // used by reftest-snapshot, printing and Firefox Screenshot.
+  if (!mHandle) {
+    return false;
+  }
+
+  layers::CanvasRendererData data;
+  data.mContext = this;
+  data.mSize = mGfxSize;
+  data.mIsOpaque = false;
+
+  aRenderer->Initialize(data);
+  aRenderer->SetDirty();
+  return true;
 }
 
 mozilla::UniquePtr<uint8_t[]> CanvasContext::GetImageBuffer(int32_t* aFormat) {
