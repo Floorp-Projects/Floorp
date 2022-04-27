@@ -1,18 +1,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* global ChromeUtils*/
+
+/* eslint-env mozilla/chrome-worker */
 
 // This is a worker which reads offline heap snapshots into memory and performs
 // heavyweight analyses on them without blocking the main thread. A
 // HeapAnalysesWorker is owned and communicated with by a HeapAnalysesClient
 // instance. See HeapAnalysesClient.js.
 
-/* global importScripts, workerHelper, self */
-
 "use strict";
 
+/* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
+/* import-globals-from ../worker/helper.js */
 importScripts("resource://devtools/shared/worker/helper.js");
 const {
   censusReportToCensusTreeNode,
