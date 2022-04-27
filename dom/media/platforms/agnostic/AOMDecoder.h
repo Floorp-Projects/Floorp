@@ -82,7 +82,7 @@ class AOMDecoder : public MediaDataDecoder,
   struct OBUIterator {
    public:
     explicit OBUIterator(const Span<const uint8_t>& aData)
-        : mData(aData), mPosition(0), mGoNext(true) {}
+        : mData(aData), mPosition(0), mGoNext(true), mResult(NS_OK) {}
     bool HasNext() {
       UpdateNext();
       return !mGoNext;
@@ -92,12 +92,14 @@ class AOMDecoder : public MediaDataDecoder,
       mGoNext = true;
       return mCurrent;
     }
+    MediaResult GetResult() const { return mResult; }
 
    private:
     const Span<const uint8_t>& mData;
     size_t mPosition;
     OBUInfo mCurrent;
     bool mGoNext;
+    MediaResult mResult;
 
     // Used to fill mCurrent with the next OBU in the iterator.
     // mGoNext must be set to false if the next OBU is retrieved,
@@ -225,17 +227,33 @@ class AOMDecoder : public MediaDataDecoder,
   };
 
   // Get a sequence header's info from a sample.
-  // Returns false if the sample was not a sequence header.
-  static bool ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
-                                     AV1SequenceInfo& aDestInfo);
+  // Returns a MediaResult with codes:
+  //    NS_OK: Sequence header was successfully found and read.
+  //    NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA: Sequence header was not present.
+  //    Other errors will indicate that the data was corrupt.
+  static MediaResult ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
+                                            AV1SequenceInfo& aDestInfo);
   // Writes a sequence header OBU to the buffer.
   static already_AddRefed<MediaByteBuffer> CreateSequenceHeader(
       const AV1SequenceInfo& aInfo, nsresult& aResult);
 
   // Reads the raw data of an ISOBMFF-compatible av1 configuration box (av1C),
   // including any included sequence header.
+  static void TryReadAV1CBox(const MediaByteBuffer* aBox,
+                             AV1SequenceInfo& aDestInfo,
+                             MediaResult& aSeqHdrResult);
+  // Reads the raw data of an ISOBMFF-compatible av1 configuration box (av1C),
+  // including any included sequence header.
+  // This function should only be called for av1C boxes made by WriteAV1CBox, as
+  // it will assert that the box and its contained OBUs are not corrupted.
   static void ReadAV1CBox(const MediaByteBuffer* aBox,
-                          AV1SequenceInfo& aDestInfo, bool& aHadSeqHdr);
+                          AV1SequenceInfo& aDestInfo, bool& aHadSeqHdr) {
+    MediaResult seqHdrResult;
+    TryReadAV1CBox(aBox, aDestInfo, seqHdrResult);
+    nsresult code = seqHdrResult.Code();
+    MOZ_ASSERT(code == NS_OK || code == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
+    aHadSeqHdr = code == NS_OK;
+  }
   // Writes an ISOBMFF-compatible av1 configuration box (av1C) to the buffer.
   static void WriteAV1CBox(const AV1SequenceInfo& aInfo,
                            MediaByteBuffer* aDestBox, bool& aHasSeqHdr);

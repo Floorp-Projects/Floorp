@@ -417,6 +417,19 @@ CanonicalBrowsingContext::GetParentProcessWidgetContaining() {
   return widget.forget();
 }
 
+already_AddRefed<nsIBrowserDOMWindow>
+CanonicalBrowsingContext::GetBrowserDOMWindow() {
+  RefPtr<CanonicalBrowsingContext> chromeTop = TopCrossChromeBoundary();
+  if (nsCOMPtr<nsIDOMChromeWindow> chromeWin =
+          do_QueryInterface(chromeTop->GetDOMWindow())) {
+    nsCOMPtr<nsIBrowserDOMWindow> bdw;
+    if (NS_SUCCEEDED(chromeWin->GetBrowserDOMWindow(getter_AddRefs(bdw)))) {
+      return bdw.forget();
+    }
+  }
+  return nullptr;
+}
+
 already_AddRefed<WindowGlobalParent>
 CanonicalBrowsingContext::GetEmbedderWindowGlobal() const {
   uint64_t windowId = GetEmbedderInnerWindowId();
@@ -2162,10 +2175,10 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
   return true;
 }
 
-void CanonicalBrowsingContext::EndDocumentLoad(bool aForProcessSwitch) {
+void CanonicalBrowsingContext::EndDocumentLoad(bool aContinueNavigating) {
   mCurrentLoad = nullptr;
 
-  if (!aForProcessSwitch) {
+  if (!aContinueNavigating) {
     // Resetting the current load identifier on a discarded context
     // has no effect when a document load has finished.
     Unused << SetCurrentLoadIdentifier(Nothing());

@@ -2161,8 +2161,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Constants
 
-  inline void zeroSimd128(FloatRegister dest) DEFINED_ON(x86_shared, arm64);
-
   inline void loadConstantSimd128(const SimdConstant& v, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 

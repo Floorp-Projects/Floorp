@@ -1807,7 +1807,7 @@ already_AddRefed<PathCacheEntry> PathCache::FindOrInsertEntry(
   }
   Pattern* pattern = nullptr;
   if (aPattern) {
-    pattern = aPattern->Clone();
+    pattern = aPattern->CloneWeak();
     if (!pattern) {
       return nullptr;
     }

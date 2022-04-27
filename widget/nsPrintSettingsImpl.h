@@ -97,8 +97,6 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mPrintBGColors = false;
   bool mPrintBGImages = false;
 
-  bool mIsCancelled = false;
-  bool mSaveOnCancel = true;
   bool mPrintSilent = false;
   bool mShrinkToFit = true;
   bool mShowMarginGuides = false;

@@ -340,7 +340,8 @@ void AOMDecoder::OBUIterator::UpdateNext() {
   // begin obu_extension_header( ) (5.3.3)
   if (temp.mExtensionFlag) {
     if (br.BitsLeft() < 8) {
-      NS_WARNING("Not enough bits left for an OBU extension header");
+      mResult = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                            "Not enough bits left for an OBU extension header");
       return;
     }
     br.ReadBits(3);  // temporal_id
@@ -355,14 +356,16 @@ void AOMDecoder::OBUIterator::UpdateNext() {
   size_t size;
   if (hasSizeField) {
     if (br.BitsLeft() < 8) {
-      NS_WARNING("Not enough bits left for an OBU size field");
+      mResult = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                            "Not enough bits left for an OBU size field");
       return;
     }
     CheckedUint32 checkedSize = br.ReadULEB128().toChecked<uint32_t>();
     // Spec requires that the value ULEB128 reads is (1 << 32) - 1 or below.
     // See leb128(): https://aomediacodec.github.io/av1-spec/#leb128
     if (!checkedSize.isValid()) {
-      NS_WARNING("OBU size was too large");
+      mResult =
+          MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR, "OBU size was too large");
       return;
     }
     size = checkedSize.value();
@@ -375,10 +378,12 @@ void AOMDecoder::OBUIterator::UpdateNext() {
   }
 
   if (br.BitsLeft() / 8 < size) {
-    NS_WARNING(nsPrintfCString("Size specified by the OBU header (%zu) is more "
-                               "than the actual remaining OBU data (%zu)",
-                               size, br.BitsLeft() / 8)
-                   .get());
+    mResult = MediaResult(
+        NS_ERROR_DOM_MEDIA_DECODE_ERR,
+        nsPrintfCString("Size specified by the OBU header (%zu) is more "
+                        "than the actual remaining OBU data (%zu)",
+                        size, br.BitsLeft() / 8)
+            .get());
     return;
   }
 
@@ -391,6 +396,7 @@ void AOMDecoder::OBUIterator::UpdateNext() {
 
   mPosition += bytes + size;
   resetExit.release();
+  mResult = NS_OK;
 }
 
 /* static */
@@ -413,8 +419,8 @@ already_AddRefed<MediaByteBuffer> AOMDecoder::CreateOBU(
 }
 
 /* static */
-bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
-                                        AV1SequenceInfo& aDestInfo) {
+MediaResult AOMDecoder::ReadSequenceHeaderInfo(
+    const Span<const uint8_t>& aSample, AV1SequenceInfo& aDestInfo) {
   // We need to get the last sequence header OBU, the specification does not
   // limit a temporal unit to one sequence header.
   OBUIterator iter = ReadOBUs(aSample);
@@ -422,6 +428,11 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
 
   while (true) {
     if (!iter.HasNext()) {
+      // Pass along the error from parsing the OBU.
+      MediaResult result = iter.GetResult();
+      if (result.Code() != NS_OK) {
+        return result;
+      }
       break;
     }
     OBUInfo obu = iter.Next();
@@ -431,7 +442,7 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
   }
 
   if (seqOBU.mType != OBUType::SequenceHeader) {
-    return false;
+    return NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA;
   }
 
   // Sequence header syntax is specified here:
@@ -448,9 +459,11 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
   // https://aomediacodec.github.io/av1-spec/#general-sequence-header-obu-syntax
   tempInfo.mProfile = br.ReadBits(3);
   const bool stillPicture = br.ReadBit();
-  bool reducedStillPicture = br.ReadBit();
+  const bool reducedStillPicture = br.ReadBit();
   if (!stillPicture && reducedStillPicture) {
-    NS_WARNING("reduced_still_picture is true while still_picture is false");
+    return MediaResult(
+        NS_ERROR_DOM_MEDIA_DECODE_ERR,
+        "reduced_still_picture is true while still_picture is false");
   }
 
   if (reducedStillPicture) {
@@ -527,7 +540,7 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
 
   if (reducedStillPicture) {
     aDestInfo = tempInfo;
-    return true;
+    return NS_OK;
   }
 
   br.ReadBit();  // enable_interintra_compound
@@ -647,13 +660,13 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
     correct &= br.ReadBits(8) == 0;
   }
   if (!correct) {
-    NS_WARNING("AV1 sequence header was parsed incorrectly");
-    return false;
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                       "AV1 sequence header was parsed incorrectly");
   }
   // end trailing_bits( )
 
   aDestInfo = tempInfo;
-  return true;
+  return NS_OK;
 }
 
 /* static */
@@ -769,7 +782,7 @@ already_AddRefed<MediaByteBuffer> AOMDecoder::CreateSequenceHeader(
     NS_WARNING("Profile must be 2 for 12-bit");
     return nullptr;
   }
-  if (aInfo.mProfile == 2) {
+  if (aInfo.mProfile == 2 && highBitDepth) {
     bw.WriteBit(aInfo.mBitDepth == 12);  // twelve_bit
   }
 
@@ -873,10 +886,9 @@ already_AddRefed<MediaByteBuffer> AOMDecoder::CreateSequenceHeader(
 }
 
 /* static */
-void AOMDecoder::ReadAV1CBox(const MediaByteBuffer* aBox,
-                             AV1SequenceInfo& aDestInfo, bool& aHadSeqHdr) {
-  aHadSeqHdr = false;
-
+void AOMDecoder::TryReadAV1CBox(const MediaByteBuffer* aBox,
+                                AV1SequenceInfo& aDestInfo,
+                                MediaResult& aSeqHdrResult) {
   // See av1C specification:
   // https://aomediacodec.github.io/av1-isobmff/#av1codecconfigurationbox-section
   BitReader br(aBox);
@@ -912,12 +924,13 @@ void AOMDecoder::ReadAV1CBox(const MediaByteBuffer* aBox,
 
   // Minimum possible OBU header size
   if (obus.Length() < 1) {
+    aSeqHdrResult = NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA;
     return;
   }
 
   // If present, the sequence header will be redundant to some values, but any
   // values stored in it should be treated as more accurate than av1C.
-  aHadSeqHdr = ReadSequenceHeaderInfo(obus, aDestInfo);
+  aSeqHdrResult = ReadSequenceHeaderInfo(obus, aDestInfo);
 }
 
 /* static */

@@ -27,6 +27,9 @@ const statsExpectedByType = {
       "framesDecoded",
       "discardedPackets",
       "framesPerSecond",
+      "frameWidth",
+      "frameHeight",
+      "framesReceived",
     ],
     unimplemented: [
       "mediaTrackId",
@@ -62,7 +65,14 @@ const statsExpectedByType = {
       "retransmittedBytesSent",
     ],
     optional: ["nackCount", "qpSum"],
-    localVideoOnly: ["framesEncoded", "firCount", "pliCount"],
+    localVideoOnly: [
+      "framesEncoded",
+      "firCount",
+      "pliCount",
+      "frameWidth",
+      "frameHeight",
+      "framesSent",
+    ],
     unimplemented: ["mediaTrackId", "transportId", "sliCount", "targetBitrate"],
     deprecated: ["isRemote"],
   },
@@ -517,6 +527,27 @@ function pedanticChecks(report) {
           `${stat.type}.framesDecoded is a sane number for a short ` +
             `${stat.kind} test. value=${stat.framesDecoded}`
         );
+
+        // frameWidth
+        ok(
+          stat.frameWidth > 0 && stat.frameWidth < 100000,
+          `${stat.type}.frameWidth is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesSent}`
+        );
+
+        // frameHeight
+        ok(
+          stat.frameHeight > 0 && stat.frameHeight < 100000,
+          `${stat.type}.frameHeight is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.frameHeight}`
+        );
+
+        // framesReceived
+        ok(
+          stat.framesReceived >= 0 && stat.framesReceived < 100000,
+          `${stat.type}.framesReceived is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesReceived}`
+        );
       }
     } else if (stat.type == "remote-inbound-rtp") {
       // roundTripTime
@@ -663,6 +694,27 @@ function pedanticChecks(report) {
           stat.framesEncoded >= 0 && stat.framesEncoded < 100000,
           `${stat.type}.framesEncoded is a sane number for a short ` +
             `${stat.kind} test. value=${stat.framesEncoded}`
+        );
+
+        // frameWidth
+        ok(
+          stat.frameWidth >= 0 && stat.frameWidth < 100000,
+          `${stat.type}.frameWidth is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.frameWidth}`
+        );
+
+        // frameHeight
+        ok(
+          stat.frameHeight >= 0 && stat.frameHeight < 100000,
+          `${stat.type}.frameHeight is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.frameHeight}`
+        );
+
+        // framesSent
+        ok(
+          stat.framesSent >= 0 && stat.framesSent < 100000,
+          `${stat.type}.framesSent is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesSent}`
         );
       }
     } else if (stat.type == "remote-outbound-rtp") {

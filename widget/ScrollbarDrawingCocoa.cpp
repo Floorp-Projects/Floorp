@@ -10,6 +10,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsContainerFrame.h"
+#include "nsAlgorithm.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsLookAndFeel.h"
@@ -200,11 +201,18 @@ static ThumbRect GetThumbRect(const LayoutDeviceRect& aRect,
 
   // Overlay scrollbars have an additional stroke around the fill.
   if (aParams.isOverlay) {
-    strokeOutset = (aParams.isOnDarkBackground ? 0.3f : 0.5f) * aScale;
-    strokeWidth = (aParams.isOnDarkBackground ? 0.6f : 0.8f) * aScale;
+    // For the default alpha of 128 we want to end up with 48 in the outline.
+    constexpr float kAlphaScaling = 48.0f / 128.0f;
+    const uint8_t strokeAlpha =
+        uint8_t(clamped(NS_GET_A(faceColor) * kAlphaScaling, 0.0f, 48.0f));
+    if (strokeAlpha) {
+      strokeOutset = (aParams.isOnDarkBackground ? 0.3f : 0.5f) * aScale;
+      strokeWidth = (aParams.isOnDarkBackground ? 0.6f : 0.8f) * aScale;
 
-    strokeColor = aParams.isOnDarkBackground ? NS_RGBA(0, 0, 0, 48)
-                                             : NS_RGBA(255, 255, 255, 48);
+      strokeColor = aParams.isOnDarkBackground
+                        ? NS_RGBA(0, 0, 0, strokeAlpha)
+                        : NS_RGBA(255, 255, 255, strokeAlpha);
+    }
   }
 
   return {thumbRect, faceColor, strokeColor, strokeWidth, strokeOutset};

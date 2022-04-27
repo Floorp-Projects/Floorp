@@ -96,13 +96,11 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   // We know prefs are ASCII here.
   NS_LossyConvertUTF16toASCII strData(aData);
 
-  // A pref changed. If it is useful to do so, inform child processes.
-  if (!dom::ContentParent::ShouldSyncPreference(strData.Data())) {
-    return;
-  }
+  mozilla::dom::Pref pref(strData, /* isLocked */ false,
+                          /* isSanitized */ false, Nothing(), Nothing());
 
-  mozilla::dom::Pref pref(strData, /* isLocked */ false, Nothing(), Nothing());
-  Preferences::GetPreference(&pref);
+  Preferences::GetPreference(&pref, GeckoProcessType_RDD,
+                             /* remoteType */ ""_ns);
   if (!!mRDDChild) {
     MOZ_ASSERT(mQueuedPrefs.IsEmpty());
     mRDDChild->SendPreferenceUpdate(pref);

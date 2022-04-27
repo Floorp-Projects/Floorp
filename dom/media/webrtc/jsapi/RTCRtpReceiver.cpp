@@ -431,10 +431,13 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               local.mFramesDecoded.Construct(videoStats->frames_decoded);
 
               local.mFramesPerSecond.Construct(videoStats->decode_frame_rate);
+              local.mFrameWidth.Construct(videoStats->width);
+              local.mFrameHeight.Construct(videoStats->height);
+              // XXX: key_frames + delta_frames may undercount frames because they were dropped in FrameBuffer::InsertFrame. (bug 1766553)
+              local.mFramesReceived.Construct(videoStats->frame_counts.key_frames + videoStats->frame_counts.delta_frames);
+
               /*
                * Potential new stats that are now available upstream.
-              local.mFrameWidth.Construct(videoStats->width);
-              local.mFrameheight.Construct(videoStats->height);
               if (videoStats->qp_sum) {
                 local.mQpSum.Construct(*videoStats->qp_sum.value);
               }

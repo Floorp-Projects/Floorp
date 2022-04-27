@@ -279,10 +279,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
     result = ::PrintDlgExW(&prntdlg);
   }
 
-  auto cancelOnExit = mozilla::MakeScopeExit([&] {
-    ::SetFocus(aHWnd);
-    aPrintSettings->SetIsCancelled(true);
-  });
+  auto cancelOnExit = mozilla::MakeScopeExit([&] { ::SetFocus(aHWnd); });
 
   if (NS_WARN_IF(!SUCCEEDED(result))) {
 #ifdef DEBUG

@@ -275,8 +275,6 @@ interface nsIPrintSettings : nsISupports
   attribute AString footerStrCenter;
   attribute AString footerStrRight;
 
-  attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
-  readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
   attribute boolean printSilent;         /* print without putting up the dialog */
   [infallible] attribute boolean shrinkToFit; /* shrinks content to fit on page */
 

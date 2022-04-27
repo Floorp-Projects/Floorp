@@ -425,6 +425,12 @@ class BasePopup {
       if (this.destroyed) {
         return;
       }
+      // Only block the parser for the preloaded browser, initBrowser will be
+      // called again when the browserAction popup is navigated and we should
+      // not block the parser in that case, otherwise the navigating the popup
+      // to another extension page will never complete and the popup will
+      // stay stuck on the previous extension page. See Bug 1747813.
+      this.blockParser = false;
       this.browser.messageManager.sendAsyncMessage("Extension:UnblockParser");
     });
   }
@@ -580,6 +586,11 @@ class ViewPopup extends BasePopup {
     this.tempPanel = panel;
     this.tempBrowser = this.browser;
 
+    // NOTE: this class is added to the preload browser and never removed because
+    // the preload browser is then switched with a new browser once we are about to
+    // make the popup visible (this class is not actually used anywhere but it may
+    // be useful to keep it around to be able to identify the preload buffer while
+    // investigating issues).
     this.browser.classList.add("webextension-preload-browser");
   }
 

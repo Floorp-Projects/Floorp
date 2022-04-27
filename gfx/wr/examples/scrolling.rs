@@ -165,22 +165,28 @@ impl Example for App {
         builder.pop_stacking_context();
     }
 
-    fn on_event(&mut self, event: winit::WindowEvent, api: &mut RenderApi, document_id: DocumentId) -> bool {
+    fn on_event(
+        &mut self,
+        event: winit::event::WindowEvent,
+        window: &winit::window::Window,
+        api: &mut RenderApi,
+        document_id: DocumentId,
+    ) -> bool {
         let mut txn = Transaction::new();
         match event {
-            winit::WindowEvent::KeyboardInput {
-                input: winit::KeyboardInput {
-                    state: winit::ElementState::Pressed,
+            winit::event::WindowEvent::KeyboardInput {
+                input: winit::event::KeyboardInput {
+                    state: winit::event::ElementState::Pressed,
                     virtual_keycode: Some(key),
                     ..
                 },
                 ..
             } => {
                 let offset = match key {
-                    winit::VirtualKeyCode::Down => Some(LayoutVector2D::new(0.0, -10.0)),
-                    winit::VirtualKeyCode::Up => Some(LayoutVector2D::new(0.0, 10.0)),
-                    winit::VirtualKeyCode::Right => Some(LayoutVector2D::new(-10.0, 0.0)),
-                    winit::VirtualKeyCode::Left => Some(LayoutVector2D::new(10.0, 0.0)),
+                    winit::event::VirtualKeyCode::Down => Some(LayoutVector2D::new(0.0, -10.0)),
+                    winit::event::VirtualKeyCode::Up => Some(LayoutVector2D::new(0.0, 10.0)),
+                    winit::event::VirtualKeyCode::Right => Some(LayoutVector2D::new(-10.0, 0.0)),
+                    winit::event::VirtualKeyCode::Left => Some(LayoutVector2D::new(10.0, 0.0)),
                     _ => None,
                 };
 
@@ -197,14 +203,15 @@ impl Example for App {
                     txn.generate_frame(0, RenderReasons::empty());
                 }
             }
-            winit::WindowEvent::CursorMoved { position: LogicalPosition { x, y }, .. } => {
-                self.cursor_position = WorldPoint::new(x as f32, y as f32);
+            winit::event::WindowEvent::CursorMoved { position, .. } => {
+                let pos: LogicalPosition<f32> = position.to_logical(window.scale_factor());
+                self.cursor_position = WorldPoint::new(pos.x, pos.y);
             }
-            winit::WindowEvent::MouseWheel { delta, .. } => {
+            winit::event::WindowEvent::MouseWheel { delta, .. } => {
                 const LINE_HEIGHT: f32 = 38.0;
                 let (dx, dy) = match delta {
-                    winit::MouseScrollDelta::LineDelta(dx, dy) => (dx, dy * LINE_HEIGHT),
-                    winit::MouseScrollDelta::PixelDelta(pos) => (pos.x as f32, pos.y as f32),
+                    winit::event::MouseScrollDelta::LineDelta(dx, dy) => (dx, dy * LINE_HEIGHT),
+                    winit::event::MouseScrollDelta::PixelDelta(pos) => (pos.x as f32, pos.y as f32),
                 };
 
                 self.scroll_offset += LayoutVector2D::new(dx, dy);
@@ -219,7 +226,7 @@ impl Example for App {
 
                 txn.generate_frame(0, RenderReasons::empty());
             }
-            winit::WindowEvent::MouseInput { .. } => {
+            winit::event::WindowEvent::MouseInput { .. } => {
                 let results = api.hit_test(
                     document_id,
                     self.cursor_position,

@@ -163,10 +163,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
     SetHTMLBoolAttr(nsGkAtoms::moz_opaque, aValue, aRv);
   }
-  already_AddRefed<File> MozGetAsFile(const nsAString& aName,
-                                      const nsAString& aType,
-                                      nsIPrincipal& aSubjectPrincipal,
-                                      ErrorResult& aRv);
   already_AddRefed<nsISupports> MozGetIPCContext(const nsAString& aContextId,
                                                  ErrorResult& aRv);
   PrintCallback* GetMozPrintCallback() const;
@@ -325,8 +321,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   nsresult ToDataURLImpl(JSContext* aCx, nsIPrincipal& aSubjectPrincipal,
                          const nsAString& aMimeType,
                          const JS::Value& aEncoderOptions, nsAString& aDataURL);
-  nsresult MozGetAsFileImpl(const nsAString& aName, const nsAString& aType,
-                            nsIPrincipal& aSubjectPrincipal, File** aResult);
   MOZ_CAN_RUN_SCRIPT void CallPrintCallback();
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,

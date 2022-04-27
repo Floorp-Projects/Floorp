@@ -544,8 +544,9 @@ class MobileWindowTracker extends EventEmitter {
   setTabActive(aWindow, aActive) {
     const { browser, tab, docShell } = aWindow;
     tab.active = aActive;
-    if (browser.frameLoader.remoteTab) {
-      browser.frameLoader.remoteTab.priorityHint = aActive;
+    const { frameLoader } = browser;
+    if (frameLoader?.remoteTab) {
+      frameLoader.remoteTab.priorityHint = aActive;
     }
 
     if (aActive) {

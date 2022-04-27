@@ -64,7 +64,7 @@ async function checkDownloadWithExtensionState(
   // PDF should load using the internal viewer without downloading it.
   let waitForLoad;
   if (!shouldExpectDialog && type == "application/pdf") {
-    waitForLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    waitForLoad = BrowserTestUtils.waitForNewTab(gBrowser);
   }
 
   await task();
@@ -108,9 +108,7 @@ async function checkDownloadWithExtensionState(
       "url is correct for " + type
     );
 
-    let backPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-    gBrowser.goBack();
-    await backPromise;
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
   } else {
     // Wait for the download if it exists (may produce null).
     let download = await downloadFinishedPromise;

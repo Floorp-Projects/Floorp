@@ -5089,9 +5089,8 @@ bool HTMLInputElement::IsDateTimeTypeSupported(
   switch (aDateTimeInputType) {
     case FormControlType::InputDate:
     case FormControlType::InputTime:
-      return true;
     case FormControlType::InputDatetimeLocal:
-      return StaticPrefs::dom_forms_datetime_local();
+      return true;
     case FormControlType::InputMonth:
     case FormControlType::InputWeek:
       return StaticPrefs::dom_forms_datetime_others();
