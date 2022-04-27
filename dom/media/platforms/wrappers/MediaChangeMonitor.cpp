@@ -321,11 +321,12 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       // If we're passed AV1 codec configuration, store it so that we can
       // instantiate a decoder in MediaChangeMonitor::Create.
       AOMDecoder::AV1SequenceInfo seqInfo;
-      bool hadSeqHdr;
-      AOMDecoder::ReadAV1CBox(mCurrentConfig.mExtraData, seqInfo, hadSeqHdr);
+      MediaResult seqHdrResult;
+      AOMDecoder::TryReadAV1CBox(mCurrentConfig.mExtraData, seqInfo,
+                                 seqHdrResult);
       // If the av1C box doesn't include a sequence header specifying image
       // size, keep the one provided by VideoInfo.
-      if (hadSeqHdr) {
+      if (seqHdrResult.Code() != NS_OK) {
         seqInfo.mImage = mCurrentConfig.mImage;
       }
 
@@ -365,6 +366,14 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       mCurrentConfig.mDisplay = newDisplay;
       mCurrentConfig.ResetImageRect();
     }
+
+    bool wroteSequenceHeader = false;
+    // Our headers should all be around the same size.
+    mCurrentConfig.mExtraData->ClearAndRetainStorage();
+    AOMDecoder::WriteAV1CBox(aInfo, mCurrentConfig.mExtraData.get(),
+                             wroteSequenceHeader);
+    // Header should always be written ReadSequenceHeaderInfo succeeds.
+    MOZ_ASSERT(wroteSequenceHeader);
   }
 
   MediaResult CheckForChange(MediaRawData* aSample) override {
@@ -376,9 +385,16 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
     // We don't trust the keyframe flag as set on the MediaRawData.
     AOMDecoder::AV1SequenceInfo info;
-
-    if (!AOMDecoder::ReadSequenceHeaderInfo(dataSpan, info)) {
+    MediaResult seqHdrResult =
+        AOMDecoder::ReadSequenceHeaderInfo(dataSpan, info);
+    nsresult seqHdrCode = seqHdrResult.Code();
+    if (seqHdrCode == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
       return NS_OK;
+    }
+    if (seqHdrCode != NS_OK) {
+      LOG("AV1ChangeMonitor::CheckForChange read a corrupted sample: %s",
+          seqHdrResult.Description().get());
+      return seqHdrResult;
     }
 
     nsresult rv = NS_OK;
@@ -398,12 +414,6 @@ class AV1ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     }
 
-    bool wroteSequenceHeader = false;
-    // Our headers should all be around the same size.
-    mCurrentConfig.mExtraData->ClearAndRetainStorage();
-    AOMDecoder::WriteAV1CBox(info, mCurrentConfig.mExtraData.get(),
-                             wroteSequenceHeader);
-    MOZ_ASSERT(wroteSequenceHeader);
     UpdateConfig(info);
 
     if (rv == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
