@@ -12,12 +12,14 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/algorithm/container.h"
 #include "api/rtp_parameters.h"
 #include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
 #include "pc/rtp_parameters_conversion.h"
+#include "pc/session_description.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -453,6 +455,17 @@ RTCError RtpTransceiver::SetCodecPreferences(
 std::vector<RtpHeaderExtensionCapability>
 RtpTransceiver::HeaderExtensionsToOffer() const {
   return header_extensions_to_offer_;
+}
+
+std::vector<RtpHeaderExtensionCapability>
+RtpTransceiver::HeaderExtensionsNegotiated() const {
+  if (!channel_)
+    return {};
+  std::vector<RtpHeaderExtensionCapability> result;
+  for (const auto& ext : channel_->GetNegotiatedRtpHeaderExtensions()) {
+    result.emplace_back(ext.uri, ext.id, RtpTransceiverDirection::kSendRecv);
+  }
+  return result;
 }
 
 RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(

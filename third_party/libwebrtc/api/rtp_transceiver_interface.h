@@ -156,6 +156,12 @@ class RTC_EXPORT RtpTransceiverInterface : public rtc::RefCountInterface {
   virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer()
       const;
 
+  // Readonly attribute which is either empty if negotation has not yet
+  // happened, or a vector of the negotiated header extensions.
+  // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
+  virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsNegotiated()
+      const;
+
   // The SetOfferedRtpHeaderExtensions method modifies the next SDP negotiation
   // so that it negotiates use of header extensions which are not kStopped.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface

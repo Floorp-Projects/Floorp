@@ -14,6 +14,8 @@
 
 #include <memory>
 
+#include "absl/types/optional.h"
+#include "api/rtp_parameters.h"
 #include "media/base/fake_media_engine.h"
 #include "pc/test/mock_channel_interface.h"
 #include "pc/test/mock_rtp_receiver_internal.h"
@@ -22,9 +24,7 @@
 #include "test/gtest.h"
 
 using ::testing::ElementsAre;
-using ::testing::Eq;
-using ::testing::Field;
-using ::testing::Not;
+using ::testing::Optional;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::ReturnRef;
@@ -204,6 +204,64 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_THAT(transceiver_.SetOfferedRtpHeaderExtensions(modified_extensions),
               Property(&RTCError::type, RTCErrorType::INVALID_MODIFICATION));
   EXPECT_EQ(transceiver_.HeaderExtensionsToOffer(), extensions_);
+}
+
+TEST_F(RtpTransceiverTestForHeaderExtensions,
+       NoNegotiatedHdrExtsWithoutChannel) {
+  EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(), ElementsAre());
+}
+
+TEST_F(RtpTransceiverTestForHeaderExtensions,
+       NoNegotiatedHdrExtsWithChannelWithoutNegotiation) {
+  cricket::MockChannelInterface mock_channel;
+  sigslot::signal1<cricket::ChannelInterface*> signal;
+  ON_CALL(mock_channel, SignalFirstPacketReceived)
+      .WillByDefault(ReturnRef(signal));
+  transceiver_.SetChannel(&mock_channel);
+  EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(), ElementsAre());
+}
+
+TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
+  cricket::MockChannelInterface mock_channel;
+  sigslot::signal1<cricket::ChannelInterface*> signal;
+  ON_CALL(mock_channel, SignalFirstPacketReceived)
+      .WillByDefault(ReturnRef(signal));
+  cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
+                                             webrtc::RtpExtension("uri2", 2)};
+  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
+      .WillOnce(Return(extensions));
+  transceiver_.SetChannel(&mock_channel);
+  EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(),
+              ElementsAre(RtpHeaderExtensionCapability(
+                              "uri1", 1, RtpTransceiverDirection::kSendRecv),
+                          RtpHeaderExtensionCapability(
+                              "uri2", 2, RtpTransceiverDirection::kSendRecv)));
+}
+
+TEST_F(RtpTransceiverTestForHeaderExtensions,
+       ReturnsNegotiatedHdrExtsSecondTime) {
+  cricket::MockChannelInterface mock_channel;
+  sigslot::signal1<cricket::ChannelInterface*> signal;
+  ON_CALL(mock_channel, SignalFirstPacketReceived)
+      .WillByDefault(ReturnRef(signal));
+  cricket::RtpHeaderExtensions extensions = {webrtc::RtpExtension("uri1", 1),
+                                             webrtc::RtpExtension("uri2", 2)};
+
+  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
+      .WillOnce(Return(extensions));
+  transceiver_.SetChannel(&mock_channel);
+  transceiver_.HeaderExtensionsNegotiated();
+  testing::Mock::VerifyAndClearExpectations(&mock_channel);
+
+  extensions = {webrtc::RtpExtension("uri3", 4),
+                webrtc::RtpExtension("uri5", 6)};
+  EXPECT_CALL(mock_channel, GetNegotiatedRtpHeaderExtensions)
+      .WillOnce(Return(extensions));
+  EXPECT_THAT(transceiver_.HeaderExtensionsNegotiated(),
+              ElementsAre(RtpHeaderExtensionCapability(
+                              "uri3", 4, RtpTransceiverDirection::kSendRecv),
+                          RtpHeaderExtensionCapability(
+                              "uri5", 6, RtpTransceiverDirection::kSendRecv)));
 }
 
 }  // namespace webrtc

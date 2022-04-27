@@ -207,6 +207,8 @@ class RtpTransceiver final
   }
   std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer()
       const override;
+  std::vector<RtpHeaderExtensionCapability> HeaderExtensionsNegotiated()
+      const override;
   RTCError SetOfferedRtpHeaderExtensions(
       rtc::ArrayView<const RtpHeaderExtensionCapability>
           header_extensions_to_offer) override;
@@ -264,6 +266,8 @@ PROXY_METHOD1(webrtc::RTCError,
 PROXY_CONSTMETHOD0(std::vector<RtpCodecCapability>, codec_preferences)
 PROXY_CONSTMETHOD0(std::vector<RtpHeaderExtensionCapability>,
                    HeaderExtensionsToOffer)
+PROXY_CONSTMETHOD0(std::vector<RtpHeaderExtensionCapability>,
+                   HeaderExtensionsNegotiated)
 PROXY_METHOD1(webrtc::RTCError,
               SetOfferedRtpHeaderExtensions,
               rtc::ArrayView<const RtpHeaderExtensionCapability>)
