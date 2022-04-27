@@ -357,8 +357,8 @@ void SendSideBandwidthEstimation::IncomingPacketFeedbackVector(
   }
 }
 
-void SendSideBandwidthEstimation::UpdatePacketsLost(int packets_lost,
-                                                    int number_of_packets,
+void SendSideBandwidthEstimation::UpdatePacketsLost(int64_t packets_lost,
+                                                    int64_t number_of_packets,
                                                     Timestamp at_time) {
   last_loss_feedback_ = at_time;
   if (first_report_time_.IsInfinite())
@@ -366,21 +366,23 @@ void SendSideBandwidthEstimation::UpdatePacketsLost(int packets_lost,
 
   // Check sequence number diff and weight loss report
   if (number_of_packets > 0) {
-    // Accumulate reports.
-    lost_packets_since_last_loss_update_ += packets_lost;
-    expected_packets_since_last_loss_update_ += number_of_packets;
+    int64_t expected =
+        expected_packets_since_last_loss_update_ + number_of_packets;
 
     // Don't generate a loss rate until it can be based on enough packets.
-    if (expected_packets_since_last_loss_update_ < kLimitNumPackets)
+    if (expected < kLimitNumPackets) {
+      // Accumulate reports.
+      expected_packets_since_last_loss_update_ = expected;
+      lost_packets_since_last_loss_update_ += packets_lost;
       return;
+    }
 
     has_decreased_since_last_fraction_loss_ = false;
-    int64_t lost_q8 = lost_packets_since_last_loss_update_ << 8;
-    int64_t expected = expected_packets_since_last_loss_update_;
+    int64_t lost_q8 = (lost_packets_since_last_loss_update_ + packets_lost)
+                      << 8;
     last_fraction_loss_ = std::min<int>(lost_q8 / expected, 255);
 
     // Reset accumulators.
-
     lost_packets_since_last_loss_update_ = 0;
     expected_packets_since_last_loss_update_ = 0;
     last_loss_packet_report_ = at_time;
