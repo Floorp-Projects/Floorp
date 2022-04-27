@@ -4,8 +4,6 @@
 "use strict";
 
 add_task(async function json_version() {
-  await RemoteAgent.listen(`http://localhost:0`);
-
   const { userAgent } = Cc[
     "@mozilla.org/network/protocol;1?name=http"
   ].getService(Ci.nsIHttpProtocolHandler);

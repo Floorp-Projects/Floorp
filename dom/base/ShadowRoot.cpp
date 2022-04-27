@@ -101,6 +101,17 @@ JSObject* ShadowRoot::WrapNode(JSContext* aCx,
   return mozilla::dom::ShadowRoot_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+void ShadowRoot::NodeInfoChanged(Document* aOldDoc) {
+  DocumentFragment::NodeInfoChanged(aOldDoc);
+  Document* newDoc = OwnerDoc();
+  const bool fromOrToTemplate =
+      aOldDoc->GetTemplateContentsOwnerIfExists() == newDoc ||
+      newDoc->GetTemplateContentsOwnerIfExists() == aOldDoc;
+  if (!fromOrToTemplate) {
+    ClearAdoptedStyleSheets();
+  }
+}
+
 void ShadowRoot::CloneInternalDataFrom(ShadowRoot* aOther) {
   if (aOther->IsUAWidget()) {
     SetIsUAWidget();

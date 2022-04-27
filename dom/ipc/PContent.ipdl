@@ -19,6 +19,7 @@ include protocol PHeapSnapshotTempFileHelper;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PRemoteLazyInputStream;
+include protocol PRemotePrintJob;
 include protocol PLoginReputation;
 include protocol PMedia;
 include protocol PNecko;
@@ -26,7 +27,6 @@ include protocol PStreamFilter;
 include protocol PGMPContent;
 include protocol PGMPService;
 include protocol PGMP;
-include protocol PPrinting;
 include protocol PChildToParentStream;
 include protocol PParentToChildStream;
 #ifdef MOZ_WEBSPEECH
@@ -468,9 +468,9 @@ sync protocol PContent
     manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
     manages PRemoteLazyInputStream;
+    manages PRemotePrintJob;
     manages PMedia;
     manages PNecko;
-    manages PPrinting;
     manages PChildToParentStream;
     manages PParentToChildStream;
 #ifdef MOZ_WEBSPEECH
@@ -1035,6 +1035,8 @@ child:
   // details.
   async InitNextGenLocalStorageEnabled(bool enabled);
 
+  async PRemotePrintJob();
+
 parent:
 
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
@@ -1084,8 +1086,6 @@ parent:
     async PHeapSnapshotTempFileHelper();
 
     async PNecko();
-
-    async PPrinting();
 
     async PChildToParentStream();
 

@@ -16,8 +16,8 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 8 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidError() {
-  let message = "OS.File is deprecated. You should use IOUtils instead.";
+function invalidError(os, util) {
+  let message = `${os} is deprecated. You should use ${util} instead.`;
   return [{ message, type: "MemberExpression" }];
 }
 
@@ -26,7 +26,17 @@ ruleTester.run("reject-osfile", rule, {
   invalid: [
     {
       code: "OS.File.write()",
-      errors: invalidError(),
+      errors: invalidError("OS.File", "IOUtils"),
+    },
+  ],
+});
+
+ruleTester.run("reject-osfile", rule, {
+  valid: ["PathUtils.join()"],
+  invalid: [
+    {
+      code: "OS.Path.join()",
+      errors: invalidError("OS.Path", "PathUtils"),
     },
   ],
 });

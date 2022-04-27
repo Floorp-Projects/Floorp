@@ -144,8 +144,14 @@ JS_PUBLIC_API void js::gc::AssertGCThingHasType(js::gc::Cell* cell,
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
-JS::AutoAssertNoGC::AutoAssertNoGC(JSContext* maybecx)
-    : cx_(maybecx ? maybecx : TlsContext.get()) {
+JS::AutoAssertNoGC::AutoAssertNoGC(JSContext* maybecx) {
+  if (maybecx) {
+    cx_ = maybecx;
+  } else if (TlsContext.initialized()) {
+    cx_ = TlsContext.get();
+  } else {
+    cx_ = nullptr;
+  }
   if (cx_) {
     cx_->inUnsafeRegion++;
   }

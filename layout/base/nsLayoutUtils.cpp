@@ -9615,9 +9615,10 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
       aFontID == LookAndFeel::FontID::MozList) {
     const bool isWindowsOrNonNativeTheme =
 #ifdef XP_WIN
-        true ||
-#endif
+        true;
+#else
         aDocument->ShouldAvoidNativeTheme();
+#endif
 
     if (isWindowsOrNonNativeTheme) {
       // For textfields, buttons and selects, we use whatever font is defined by

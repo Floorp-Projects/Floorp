@@ -18,6 +18,18 @@ here = os.path.abspath(os.path.dirname(__file__))
 setup_args = [os.path.join(here, "files"), "mochitest", "testing/mochitest"]
 
 
+@pytest.fixture
+def create_manifest(tmpdir, build_obj):
+    def inner(string, name="manifest.ini"):
+        manifest = tmpdir.join(name)
+        manifest.write(string, ensure=True)
+        # pylint --py3k: W1612
+        path = six.text_type(manifest)
+        return TestManifest(manifests=(path,), strict=False, rootdir=tmpdir.strpath)
+
+    return inner
+
+
 @pytest.fixture(scope="function")
 def parser(request):
     parser = pytest.importorskip("mochitest_options")

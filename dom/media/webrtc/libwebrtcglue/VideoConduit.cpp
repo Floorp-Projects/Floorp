@@ -49,7 +49,6 @@
 #  include <netinet/in.h>
 #endif
 
-#define DEFAULT_VIDEO_MAX_FRAMERATE 30u
 #define INVALID_RTP_PAYLOAD 255  // valid payload types are 0 to 127
 
 namespace mozilla {
@@ -138,11 +137,12 @@ unsigned int SelectSendFrameRate(const VideoCodecConfig& codecConfig,
     cur_fs = mb_width * mb_height;
     if (cur_fs > 0) {  // in case no frames have been sent
       new_framerate = codecConfig.mEncodingConstraints.maxMbps / cur_fs;
-
-      new_framerate =
-          MinIgnoreZero(new_framerate, codecConfig.mEncodingConstraints.maxFps);
     }
   }
+
+  new_framerate =
+      std::min(new_framerate, WebrtcVideoConduit::ToLibwebrtcMaxFramerate(
+                                  codecConfig.mEncodingConstraints.maxFps));
   return new_framerate;
 }
 
@@ -242,7 +242,8 @@ bool operator==(const rtc::VideoSinkWants& aThis,
                 const rtc::VideoSinkWants& aOther) {
   // This would have to be expanded should we make use of more members of
   // rtc::VideoSinkWants.
-  return aThis.max_pixel_count == aOther.max_pixel_count;
+  return aThis.max_pixel_count == aOther.max_pixel_count &&
+         aThis.max_framerate_fps == aOther.max_framerate_fps;
 }
 
 // TODO: Make this a defaulted operator when we have c++20 (bug 1731036).
@@ -385,7 +386,7 @@ WebrtcVideoConduit::WebrtcVideoConduit(
       mBufferPool(false, SCALER_BUFFER_POOL_SIZE),
       mEngineTransmitting(false),
       mEngineReceiving(false),
-      mSendingFramerate(DEFAULT_VIDEO_MAX_FRAMERATE),
+      mMaxFramerateForAllStreams(std::numeric_limits<unsigned int>::max()),
       mVideoLatencyTestEnable(aOptions.mVideoLatencyTestEnable),
       mMinBitrate(aOptions.mMinBitrate),
       mStartBitrate(aOptions.mStartBitrate),
@@ -676,13 +677,12 @@ void WebrtcVideoConduit::OnControlConfigChange() {
                     this, streamCount);
 
         {
-          const unsigned max_framerate =
-              codecConfig->mEncodingConstraints.maxFps > 0
-                  ? codecConfig->mEncodingConstraints.maxFps
-                  : DEFAULT_VIDEO_MAX_FRAMERATE;
+          // maxFps inside codecConfig applies to all streams.
+          const unsigned maxFramerate =
+              ToLibwebrtcMaxFramerate(codecConfig->mEncodingConstraints.maxFps);
           // apply restrictions from maxMbps/etc
-          mSendingFramerate = SelectSendFrameRate(*codecConfig, max_framerate,
-                                                  mLastWidth, mLastHeight);
+          mMaxFramerateForAllStreams = SelectSendFrameRate(
+              *codecConfig, maxFramerate, mLastWidth, mLastHeight);
         }
 
         // So we can comply with b=TIAS/b=AS/maxbr=X when input resolution
@@ -702,7 +702,7 @@ void WebrtcVideoConduit::OnControlConfigChange() {
 
         mVideoStreamFactory = new rtc::RefCountedObject<VideoStreamFactory>(
             *codecConfig, mControl.mCodecMode, mMinBitrate, mStartBitrate,
-            mPrefMaxBitrate, mNegotiatedMaxBitrate, mSendingFramerate);
+            mPrefMaxBitrate, mNegotiatedMaxBitrate, mMaxFramerateForAllStreams);
         mEncoderConfig.video_stream_factory = mVideoStreamFactory.get();
 
         // Reset the VideoAdapter. SelectResolution will ensure limits are set.
@@ -1101,6 +1101,25 @@ void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t aSsrc) {
   SetRemoteSSRCAndRestartAsNeeded(our_ssrc, 0);
 }
 
+/*static*/
+unsigned WebrtcVideoConduit::ToLibwebrtcMaxFramerate(
+    const Maybe<double>& aMaxFramerate) {
+  Maybe<unsigned> negotiatedMaxFps;
+  if (aMaxFramerate.isSome()) {
+    // libwebrtc does not handle non-integer max framerate.
+    unsigned integerMaxFps = static_cast<unsigned>(std::round(*aMaxFramerate));
+    // libwebrtc crashes with a max framerate of 0, even though the
+    // spec says this is valid. For now, we treat this as no limit.
+    if (integerMaxFps) {
+      negotiatedMaxFps = Some(integerMaxFps);
+    }
+  }
+  // We do not use DEFAULT_VIDEO_MAX_FRAMERATE here; that is used at the very
+  // end in VideoStreamFactory, once codec-wide and per-encoding limits are
+  // known.
+  return negotiatedMaxFps.refOr(std::numeric_limits<unsigned int>::max());
+}
+
 Maybe<Ssrc> WebrtcVideoConduit::GetRemoteSSRC() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   // libwebrtc uses 0 to mean a lack of SSRC. That is not to spec.
@@ -1308,17 +1327,32 @@ void WebrtcVideoConduit::SelectSendResolution(unsigned short width,
           static_cast<int>(mCurSendCodecConfig->mEncodingConstraints.maxFs *
                            (16 * 16)));
     }
-    mVideoAdapter->OnOutputFormatRequest(absl::optional<std::pair<int, int>>(),
-                                         max_fs, absl::optional<int>());
-  }
 
-  unsigned int framerate = SelectSendFrameRate(
-      mCurSendCodecConfig.ref(), mSendingFramerate, width, height);
-  if (mSendingFramerate != framerate) {
-    CSFLogDebug(LOGTAG, "%s: framerate changing to %u (from %u)", __FUNCTION__,
-                framerate, mSendingFramerate);
-    mSendingFramerate = framerate;
-    mVideoStreamFactory->SetSendingFramerate(mSendingFramerate);
+    unsigned int framerate_all_streams = SelectSendFrameRate(
+        mCurSendCodecConfig.ref(), mMaxFramerateForAllStreams, width, height);
+    if (mMaxFramerateForAllStreams != framerate_all_streams) {
+      CSFLogDebug(LOGTAG, "%s: framerate changing to %u (from %u)",
+                  __FUNCTION__, framerate_all_streams,
+                  mMaxFramerateForAllStreams);
+      mMaxFramerateForAllStreams = framerate_all_streams;
+      mVideoStreamFactory->SetMaxFramerateForAllStreams(
+          mMaxFramerateForAllStreams);
+    }
+
+    int framerate_with_wants;
+    if (framerate_all_streams > std::numeric_limits<int>::max()) {
+      framerate_with_wants = std::numeric_limits<int>::max();
+    } else {
+      framerate_with_wants = static_cast<int>(framerate_all_streams);
+    }
+
+    framerate_with_wants = std::min(
+        framerate_with_wants, mVideoBroadcaster.wants().max_framerate_fps);
+    CSFLogDebug(LOGTAG,
+                "%s: Calling OnOutputFormatRequest, max_fs=%d, max_fps=%d",
+                __FUNCTION__, max_fs, framerate_with_wants);
+    mVideoAdapter->OnOutputFormatRequest(absl::optional<std::pair<int, int>>(),
+                                         max_fs, framerate_with_wants);
   }
 }
 
@@ -1821,8 +1855,10 @@ void WebrtcVideoConduit::DumpCodecDB() const {
     CSFLogDebug(LOGTAG, "Payload Type: %d", entry.mType);
     CSFLogDebug(LOGTAG, "Payload Max Frame Size: %d",
                 entry.mEncodingConstraints.maxFs);
-    CSFLogDebug(LOGTAG, "Payload Max Frame Rate: %d",
-                entry.mEncodingConstraints.maxFps);
+    if (entry.mEncodingConstraints.maxFps.isSome()) {
+      CSFLogDebug(LOGTAG, "Payload Max Frame Rate: %f",
+                  *entry.mEncodingConstraints.maxFps);
+    }
   }
 }
 

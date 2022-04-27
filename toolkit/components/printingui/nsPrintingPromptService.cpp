@@ -25,7 +25,7 @@ StaticRefPtr<nsPrintingPromptService> sSingleton;
 already_AddRefed<nsPrintingPromptService>
 nsPrintingPromptService::GetSingleton() {
   MOZ_ASSERT(XRE_IsParentProcess(),
-             "The content process must use nsPrintingProxy");
+             "The content process must not try to open printing prompts");
 
   if (!sSingleton) {
     sSingleton = new nsPrintingPromptService();

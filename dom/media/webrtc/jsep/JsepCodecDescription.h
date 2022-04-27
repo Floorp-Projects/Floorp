@@ -5,6 +5,7 @@
 #ifndef _JSEPCODECDESCRIPTION_H_
 #define _JSEPCODECDESCRIPTION_H_
 
+#include <cmath>
 #include <string>
 #include "sdp/SdpMediaSection.h"
 #include "sdp/SdpHelper.h"
@@ -369,7 +370,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     auto codec = MakeUnique<JsepVideoCodecDescription>("120", "VP8", 90000);
     // Defaults for mandatory params
     codec->mConstraints.maxFs = 12288;  // Enough for 2048x1536
-    codec->mConstraints.maxFps = 60;
+    codec->mConstraints.maxFps = Some(60);
     if (aUseRtx) {
       codec->EnableRtx("124");
     }
@@ -380,7 +381,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     auto codec = MakeUnique<JsepVideoCodecDescription>("121", "VP9", 90000);
     // Defaults for mandatory params
     codec->mConstraints.maxFs = 12288;  // Enough for 2048x1536
-    codec->mConstraints.maxFps = 60;
+    codec->mConstraints.maxFps = Some(60);
     if (aUseRtx) {
       codec->EnableRtx("125");
     }
@@ -526,7 +527,12 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
             GetVP8Parameters(mDefaultPt, msection));
 
         vp8Params.max_fs = mConstraints.maxFs;
-        vp8Params.max_fr = mConstraints.maxFps;
+        if (mConstraints.maxFps.isSome()) {
+          vp8Params.max_fr =
+              static_cast<unsigned int>(std::round(*mConstraints.maxFps));
+        } else {
+          vp8Params.max_fr = 60;
+        }
         msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, vp8Params));
       }
     }
@@ -736,7 +742,11 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
             GetVP8Parameters(mDefaultPt, remoteMsection));
 
         mConstraints.maxFs = vp8Params.max_fs;
-        mConstraints.maxFps = vp8Params.max_fr;
+        // Right now, we treat max-fr=0 (or the absence of max-fr) as no limit.
+        // We will eventually want to stop doing this (bug 1762600).
+        if (vp8Params.max_fr) {
+          mConstraints.maxFps = Some(vp8Params.max_fr);
+        }
       }
     }
 

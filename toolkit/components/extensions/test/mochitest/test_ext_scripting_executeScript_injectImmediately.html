@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+  <html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.executeScript() and injectImmediately</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+const MOCHITEST_HOST_PERMISSIONS = [
+  "*://mochi.test/",
+  "*://mochi.xorigin-test/",
+  "*://test1.example.com/",
+];
+
+const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["scripting"],
+      host_permissions: [
+        ...MOCHITEST_HOST_PERMISSIONS,
+        // Used in `file_contains_iframe.html`
+        "https://example.org/",
+      ],
+      granted_host_permissions: true,
+      ...manifestProps,
+    },
+    useAddonManager: "temporary",
+    ...otherProps,
+  });
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
+add_task(async function test_executeScript_injectImmediately() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      const tabId = tabs[0].id;
+
+      let onUpdatedPromise = (tabId, url, status) => {
+        return new Promise(resolve => {
+          browser.tabs.onUpdated.addListener(function listener(_, changed, tab) {
+            if (tabId == tab.id && changed.status == status && tab.url == url) {
+              browser.tabs.onUpdated.removeListener(listener);
+              resolve();
+            }
+          });
+        });
+      };
+
+      const url = [
+        "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/",
+        `file_slowed_document.sjs?with-iframe&r=${Math.random()}`,
+      ].join("");
+      const loadingPromise = onUpdatedPromise(tabId, url, "loading");
+      const completePromise = onUpdatedPromise(tabId, url, "complete");
+
+      await browser.tabs.update(tabId, { url });
+      await loadingPromise;
+
+      const func = () => {
+        window.counter = (window.counter || 0) + 1;
+
+        return window.counter;
+      };
+
+      let results = await Promise.all([
+        // counter = 1
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: true,
+        }),
+        // counter = 3
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: false,
+        }),
+        // counter = 4
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          // `injectImmediately` is `false` by default
+        }),
+        // counter = 2
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: true,
+        }),
+        // counter = 5
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: false,
+        }),
+      ]);
+      browser.test.assertEq(
+        5,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(
+        "1 3 4 2 5",
+        results.map(res => res[0].result).join(" "),
+        `got expected results: ${JSON.stringify(results)}`
+      );
+
+      await completePromise;
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_injectImmediately_after_document_idle() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const tabId = tabs[0].id;
+
+      const func = () => {
+        window.counter = (window.counter || 0) + 1;
+
+        return window.counter;
+      };
+
+      let results = await Promise.all([
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: true,
+        }),
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: false,
+        }),
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          // `injectImmediately` is `false` by default
+        }),
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: true,
+        }),
+        browser.scripting.executeScript({
+          target: { tabId },
+          func,
+          injectImmediately: false,
+        }),
+      ]);
+      browser.test.assertEq(
+        5,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(
+        "1 2 3 4 5",
+        results.map(res => res[0].result).join(" "),
+        `got expected results: ${JSON.stringify(results)}`
+      );
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+</script>
+
+</body>
+</html>

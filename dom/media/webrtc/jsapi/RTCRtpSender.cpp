@@ -430,6 +430,13 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
       }
       uniqueRids.insert(encoding.mRid.Value());
     }
+
+    if (encoding.mMaxFramerate.WasPassed()) {
+      if (encoding.mMaxFramerate.Value() < 0.0f) {
+        p->MaybeRejectWithRangeError("maxFramerate must be non-negative");
+        return p.forget();
+      }
+    }
   }
 
   // TODO(bug 1401592): transaction ids, timing changes
@@ -465,6 +472,9 @@ void RTCRtpSender::ApplyParameters(const RTCRtpParameters& aParameters) {
       }
       if (encoding.mMaxBitrate.WasPassed()) {
         constraint.constraints.maxBr = encoding.mMaxBitrate.Value();
+      }
+      if (encoding.mMaxFramerate.WasPassed()) {
+        constraint.constraints.maxFps = Some(encoding.mMaxFramerate.Value());
       }
       constraint.constraints.scaleDownBy = encoding.mScaleResolutionDownBy;
       constraints.push_back(constraint);

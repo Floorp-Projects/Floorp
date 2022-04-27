@@ -475,8 +475,6 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
 
     bytes_read = 0;  // Get more data.
   }
-
-  return true;
 }
 
 bool Channel::ChannelImpl::ProcessOutgoingMessages(

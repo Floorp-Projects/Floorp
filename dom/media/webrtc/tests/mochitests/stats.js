@@ -26,6 +26,7 @@ const statsExpectedByType = {
       "pliCount",
       "framesDecoded",
       "discardedPackets",
+      "framesPerSecond",
     ],
     unimplemented: [
       "mediaTrackId",
@@ -504,6 +505,12 @@ function pedanticChecks(report) {
           `${stat.type}.discardedPackets is a sane number for a short test. ` +
             `value=${stat.discardedPackets}`
         );
+        // framesPerSecond
+        ok(
+          stat.framesPerSecond > 0 && stat.framesPerSecond < 70,
+          `${stat.type}.framesPerSecond is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesPerSecond}`
+        );
         // framesDecoded
         ok(
           stat.framesDecoded > 0 && stat.framesDecoded < 1000000,
@@ -603,12 +610,27 @@ function pedanticChecks(report) {
       // qpSum
       // This is supported for all of our vpx codecs (on the encode side, see
       // bug 1519590)
-      if (report.get(stat.codecId).mimeType.includes("VP")) {
+      const mimeType = report.get(stat.codecId).mimeType;
+      if (mimeType.includes("VP")) {
         ok(
           stat.qpSum >= 0,
           `${stat.type}.qpSum is a sane number (${stat.kind}) ` +
             `for ${report.get(stat.codecId).mimeType}. value=${stat.qpSum}`
         );
+      } else if (mimeType.includes("H264")) {
+        // OpenH264 encoder records QP so we check for either condition.
+        if (!stat.qpSum && !("qpSum" in stat)) {
+          ok(
+            !stat.qpSum && !("qpSum" in stat),
+            `${stat.type}.qpSum absent for ${report.get(stat.codecId).mimeType}`
+          );
+        } else {
+          ok(
+            stat.qpSum >= 0,
+            `${stat.type}.qpSum is a sane number (${stat.kind}) ` +
+              `for ${report.get(stat.codecId).mimeType}. value=${stat.qpSum}`
+          );
+        }
       } else {
         ok(
           !stat.qpSum && !("qpSum" in stat),

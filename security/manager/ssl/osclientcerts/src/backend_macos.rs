@@ -917,6 +917,9 @@ impl ClientCertsBackend for Backend {
             let dict = CFDictionary::from_CFType_pairs(&vals);
             let mut result = std::ptr::null();
             let status = SecItemCopyMatching(dict.as_CFTypeRef() as CFDictionaryRef, &mut result);
+            if status == errSecItemNotFound {
+                return Ok((certs, keys));
+            }
             if status != errSecSuccess {
                 return Err(error_here!(ErrorType::ExternalError, status.to_string()));
             }
