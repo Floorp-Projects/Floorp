@@ -547,6 +547,7 @@ if CONFIG["MOZ_VTUNE"]:
     ]
     SOURCES["vtune/ittnotify_static.c"].flags += [
         "-Wno-varargs",
+        "-Wno-sign-compare",
         "-Wno-unknown-pragmas",
     ]
     if CONFIG["CC_TYPE"] == "gcc":

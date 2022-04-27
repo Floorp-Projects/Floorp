@@ -38,3 +38,6 @@ if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
         'Zydis/ZydisString.c',
         'ZydisAPI.cpp',
     ]
+
+    # Suppress warnings in third-party code.
+    SOURCES['Zydis/SharedData.c'].flags += ['-Wno-sign-compare']
