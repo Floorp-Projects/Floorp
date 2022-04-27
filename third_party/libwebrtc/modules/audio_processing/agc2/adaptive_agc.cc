@@ -33,11 +33,18 @@ constexpr int kGainApplierAdjacentSpeechFramesThreshold = 1;
 constexpr float kMaxGainChangePerSecondDb = 3.f;
 constexpr float kMaxOutputNoiseLevelDbfs = -50.f;
 
-// Detects the available CPU features and applies a kill-switch to AVX2.
-AvailableCpuFeatures GetAllowedCpuFeatures(bool avx2_allowed) {
+// Detects the available CPU features and applies any kill-switches.
+AvailableCpuFeatures GetAllowedCpuFeatures(
+    const AudioProcessing::Config::GainController2::AdaptiveDigital& config) {
   AvailableCpuFeatures features = GetAvailableCpuFeatures();
-  if (!avx2_allowed) {
+  if (!config.sse2_allowed) {
+    features.sse2 = false;
+  }
+  if (!config.avx2_allowed) {
     features.avx2 = false;
+  }
+  if (!config.neon_allowed) {
+    features.neon = false;
   }
   return features;
 }
@@ -65,7 +72,7 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
           config.adaptive_digital.initial_saturation_margin_db,
           config.adaptive_digital.extra_saturation_margin_db),
       vad_(config.adaptive_digital.vad_probability_attack,
-           GetAllowedCpuFeatures(config.adaptive_digital.avx2_allowed)),
+           GetAllowedCpuFeatures(config.adaptive_digital)),
       gain_applier_(
           apm_data_dumper,
           config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold,
