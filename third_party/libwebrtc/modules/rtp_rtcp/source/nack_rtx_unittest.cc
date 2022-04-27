@@ -136,7 +136,7 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
     configuration.retransmission_rate_limiter = &retransmission_rate_limiter_;
     configuration.local_media_ssrc = kTestSsrc;
     configuration.rtx_send_ssrc = kTestRtxSsrc;
-    rtp_rtcp_module_ = std::make_unique<ModuleRtpRtcpImpl2>(configuration);
+    rtp_rtcp_module_ = ModuleRtpRtcpImpl2::Create(configuration);
     FieldTrialBasedConfig field_trials;
     RTPSenderVideo::Config video_config;
     video_config.clock = &fake_clock;

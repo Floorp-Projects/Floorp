@@ -50,7 +50,8 @@ AudioChannel::AudioChannel(
   rtp_config.rtcp_report_interval_ms = kRtcpReportIntervalMs;
   rtp_config.outgoing_transport = transport;
   rtp_config.local_media_ssrc = local_ssrc;
-  rtp_rtcp_ = std::make_unique<ModuleRtpRtcpImpl2>(rtp_config);
+
+  rtp_rtcp_ = ModuleRtpRtcpImpl2::Create(rtp_config);
 
   rtp_rtcp_->SetSendingMediaStatus(false);
   rtp_rtcp_->SetRTCPStatus(RtcpMode::kCompound);

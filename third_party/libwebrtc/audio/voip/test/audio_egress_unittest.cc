@@ -37,7 +37,7 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpStack(Clock* clock,
   rtp_config.rtcp_report_interval_ms = 5000;
   rtp_config.outgoing_transport = transport;
   rtp_config.local_media_ssrc = remote_ssrc;
-  auto rtp_rtcp = std::make_unique<ModuleRtpRtcpImpl2>(rtp_config);
+  auto rtp_rtcp = ModuleRtpRtcpImpl2::Create(rtp_config);
   rtp_rtcp->SetSendingMediaStatus(false);
   rtp_rtcp->SetRTCPStatus(RtcpMode::kCompound);
   return rtp_rtcp;
