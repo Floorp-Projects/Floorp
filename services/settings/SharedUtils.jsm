@@ -50,7 +50,7 @@ var SharedUtils = {
       response = await fetch(fileURI);
     } catch (e) {
       // Return null if file is missing.
-      return { data: null };
+      return { data: null, timestamp: null };
     }
     // Will throw if JSON is invalid.
     return response.json();
