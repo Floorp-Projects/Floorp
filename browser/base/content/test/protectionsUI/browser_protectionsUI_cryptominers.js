@@ -300,4 +300,5 @@ add_task(async function test() {
   await testCategoryItem();
 
   Services.prefs.clearUserPref(CM_PROTECTION_PREF);
+  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
 });
