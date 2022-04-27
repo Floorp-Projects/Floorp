@@ -522,11 +522,10 @@ ChannelSend::ChannelSend(
       retransmission_rate_limiter_.get();
   configuration.extmap_allow_mixed = extmap_allow_mixed;
   configuration.rtcp_report_interval_ms = rtcp_report_interval_ms;
-  configuration.task_queue = TaskQueueBase::Current();
 
   configuration.local_media_ssrc = ssrc;
 
-  rtp_rtcp_ = std::make_unique<ModuleRtpRtcpImpl2>(configuration);
+  rtp_rtcp_ = ModuleRtpRtcpImpl2::Create(configuration);
   rtp_rtcp_->SetSendingMediaStatus(false);
 
   rtp_sender_audio_ = std::make_unique<RTPSenderAudio>(configuration.clock,

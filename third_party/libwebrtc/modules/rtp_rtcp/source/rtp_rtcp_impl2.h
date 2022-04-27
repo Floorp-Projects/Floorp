@@ -55,6 +55,13 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
       const RtpRtcpInterface::Configuration& configuration);
   ~ModuleRtpRtcpImpl2() override;
 
+  // This method is provided to easy with migrating away from the
+  // RtpRtcp::Create factory method. Since this is an internal implementation
+  // detail though, creating an instance of ModuleRtpRtcpImpl2 directly should
+  // be fine.
+  static std::unique_ptr<ModuleRtpRtcpImpl2> Create(
+      const Configuration& configuration);
+
   // Returns the number of milliseconds until the module want a worker thread to
   // call Process.
   int64_t TimeUntilNextProcess() override;
