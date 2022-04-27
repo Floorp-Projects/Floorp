@@ -439,6 +439,7 @@ webrtc_fuzzer_test("pseudotcp_parser_fuzzer") {
   deps = [
     "../../p2p:rtc_p2p",
     "../../rtc_base",
+    "../../rtc_base:threading",
   ]
 }
 

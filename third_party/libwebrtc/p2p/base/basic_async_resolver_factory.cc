@@ -10,7 +10,7 @@
 
 #include "p2p/base/basic_async_resolver_factory.h"
 
-#include "rtc_base/net_helpers.h"
+#include "rtc_base/async_resolver.h"
 
 namespace webrtc {
 

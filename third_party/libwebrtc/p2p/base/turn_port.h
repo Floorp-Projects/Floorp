@@ -25,6 +25,7 @@
 #include "p2p/client/basic_port_allocator.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/async_packet_socket.h"
+#include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/ssl_certificate.h"
 
 namespace webrtc {

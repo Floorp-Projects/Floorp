@@ -61,6 +61,7 @@ if (!build_with_chromium) {
       "../../../api/transport:webrtc_key_value_config",
       "../../../api/video_codecs:video_codecs_api",
       "../../../rtc_base",
+      "../../../rtc_base:threading",
     ]
   }
 
@@ -328,6 +329,7 @@ if (!build_with_chromium) {
         "../../../api/transport:network_control",
         "../../../api/video_codecs:video_codecs_api",
         "../../../rtc_base",
+        "../../../rtc_base:threading",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
     }
@@ -404,6 +406,7 @@ if (!build_with_chromium) {
         "../../../rtc_base:rtc_base_approved",
         "../../../rtc_base:safe_conversions",
         "../../../rtc_base:task_queue_for_test",
+        "../../../rtc_base:threading",
         "../../../rtc_base/synchronization:mutex",
         "../../../system_wrappers",
         "../../../system_wrappers:field_trial",
@@ -697,6 +700,7 @@ if (!build_with_chromium) {
       "../../../api/units:data_size",
       "../../../api/units:timestamp",
       "../../../rtc_base",
+      "../../../rtc_base:ip_address",
       "../../../rtc_base:rtc_event",
       "../../../rtc_base:stringutils",
       "../../../rtc_base/synchronization:mutex",

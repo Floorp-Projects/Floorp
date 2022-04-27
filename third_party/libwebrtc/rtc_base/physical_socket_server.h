@@ -21,8 +21,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "rtc_base/async_resolver.h"
+#include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
-#include "rtc_base/net_helpers.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
