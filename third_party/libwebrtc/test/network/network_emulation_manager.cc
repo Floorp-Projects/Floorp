@@ -63,8 +63,10 @@ NetworkEmulationManagerImpl::~NetworkEmulationManagerImpl() {
 }
 
 EmulatedNetworkNode* NetworkEmulationManagerImpl::CreateEmulatedNode(
-    BuiltInNetworkBehaviorConfig config) {
-  return CreateEmulatedNode(std::make_unique<SimulatedNetwork>(config));
+    BuiltInNetworkBehaviorConfig config,
+    uint64_t random_seed) {
+  return CreateEmulatedNode(
+      std::make_unique<SimulatedNetwork>(config, random_seed));
 }
 
 EmulatedNetworkNode* NetworkEmulationManagerImpl::CreateEmulatedNode(
