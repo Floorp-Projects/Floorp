@@ -65,7 +65,8 @@ const TESTCASES = [
     },
   },
   {
-    description: `"country" using @autocomplete shouldn't be identified aggressively`,
+    description:
+      '"country" using @autocomplete shouldn\'t be identified aggressively',
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
                 <input id="organization" autocomplete="organization">
@@ -83,7 +84,7 @@ const TESTCASES = [
     },
   },
   {
-    description: `"country" using heuristics should be identified aggressively`,
+    description: '"country" using heuristics should be identified aggressively',
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
                 <input id="organization" autocomplete="organization">
@@ -106,7 +107,7 @@ const TESTCASES = [
     },
   },
   {
-    description: `"tel" related fields should be concatenated`,
+    description: '"tel" related fields should be concatenated',
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
                 <input id="organization" autocomplete="organization">
@@ -131,7 +132,7 @@ const TESTCASES = [
     },
   },
   {
-    description: `"tel" should be removed if it's too short`,
+    description: '"tel" should be removed if it\'s too short',
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
                 <input id="organization" autocomplete="organization">
@@ -157,7 +158,7 @@ const TESTCASES = [
     },
   },
   {
-    description: `"tel" should be removed if it's too long`,
+    description: '"tel" should be removed if it\'s too long',
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
                 <input id="organization" autocomplete="organization">
@@ -183,7 +184,7 @@ const TESTCASES = [
     },
   },
   {
-    description: `"tel" should be removed if it contains invalid characters`,
+    description: '"tel" should be removed if it contains invalid characters',
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
                 <input id="organization" autocomplete="organization">
@@ -441,53 +442,6 @@ const TESTCASES = [
         {
           "cc-number": "5105105105105100",
           "cc-type": "amex",
-        },
-      ],
-    },
-  },
-  {
-    description:
-      "A credit card form with separate expiry fields should have normalized expiry data.",
-    document: `<form>
-                <input id="cc-number" autocomplete="cc-number">
-                <input id="cc-exp-month" autocomplete="cc-exp-month">
-                <input id="cc-exp-year" autocomplete="cc-exp-year">
-               </form>`,
-    formValue: {
-      "cc-number": "5105105105105100",
-      "cc-exp-month": "05",
-      "cc-exp-year": "26",
-    },
-    expectedRecord: {
-      address: [],
-      creditCard: [
-        {
-          "cc-number": "5105105105105100",
-          "cc-exp-month": "5",
-          "cc-exp-year": "2026",
-        },
-      ],
-    },
-  },
-  {
-    description:
-      "A credit card form with combined expiry fields should have normalized expiry data.",
-    document: `<form>
-                <input id="cc-number" autocomplete="cc-number">
-                <input id="cc-exp" autocomplete="cc-exp">
-               </form>`,
-    formValue: {
-      "cc-number": "5105105105105100",
-      "cc-exp": "07/27",
-    },
-    expectedRecord: {
-      address: [],
-      creditCard: [
-        {
-          "cc-number": "5105105105105100",
-          "cc-exp": "07/27",
-          "cc-exp-month": "7",
-          "cc-exp-year": "2027",
         },
       ],
     },
