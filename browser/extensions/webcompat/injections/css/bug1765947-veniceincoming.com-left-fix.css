@@ -1,0 +1,9 @@
+/**
+ * veniceincoming.com - site is not usable
+ * Bug #1765947 - https://bugzilla.mozilla.org/show_bug.cgi?id=1765947
+ * WebCompat issue #102133 - https://webcompat.com/issues/102133
+ */
+
+.tour-list .single-tour .mobile-link {
+  left: 0;
+}
