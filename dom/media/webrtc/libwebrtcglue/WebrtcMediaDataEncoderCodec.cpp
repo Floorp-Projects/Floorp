@@ -261,6 +261,15 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   return mFactory->CreateEncoder(params);
 }
 
+WebrtcVideoEncoder::EncoderInfo WebrtcMediaDataEncoder::GetEncoderInfo() const {
+  WebrtcVideoEncoder::EncoderInfo info;
+  info.supports_native_handle = false;
+  info.implementation_name = "MediaDataEncoder";
+  info.is_hardware_accelerated = false;
+  info.supports_simulcast = false;
+  return info;
+}
+
 int32_t WebrtcMediaDataEncoder::RegisterEncodeCompleteCallback(
     webrtc::EncodedImageCallback* aCallback) {
   MutexAutoLock lock(mCallbackMutex);
