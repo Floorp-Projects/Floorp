@@ -16,13 +16,15 @@
 
 ******************************************************************/
 
+#include "modules/audio_coding/codecs/ilbc/enhancer_interface.h"
+
 #include <string.h>
 
-#include "modules/audio_coding/codecs/ilbc/defines.h"
 #include "modules/audio_coding/codecs/ilbc/constants.h"
-#include "modules/audio_coding/codecs/ilbc/xcorr_coef.h"
+#include "modules/audio_coding/codecs/ilbc/defines.h"
 #include "modules/audio_coding/codecs/ilbc/enhancer.h"
 #include "modules/audio_coding/codecs/ilbc/hp_output.h"
+#include "modules/audio_coding/codecs/ilbc/xcorr_coef.h"
 
 
 
