@@ -28,6 +28,7 @@ if (typeof require == "undefined" || typeof module == "undefined") {
   );
 }
 
+/* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
 
 /**
