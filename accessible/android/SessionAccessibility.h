@@ -16,6 +16,7 @@ namespace mozilla {
 namespace a11y {
 
 class AccessibleWrap;
+class AccAttributes;
 class Accessible;
 class RootAccessibleWrap;
 class BatchData;
@@ -105,6 +106,20 @@ class SessionAccessibility final
 
  private:
   ~SessionAccessibility() {}
+
+  mozilla::java::GeckoBundle::LocalRef ToBundle(AccessibleWrap* aAccessible,
+                                                bool aSmall = false);
+
+  mozilla::java::GeckoBundle::LocalRef ToBundle(
+      AccessibleWrap* aAccessible, const uint64_t aState,
+      const LayoutDeviceIntRect& aBounds, const uint8_t aActionCount,
+      const nsString& aName, const nsString& aTextValue,
+      const nsString& aDOMNodeID, const nsString& aDescription,
+      const double& aCurVal = UnspecifiedNaN<double>(),
+      const double& aMinVal = UnspecifiedNaN<double>(),
+      const double& aMaxVal = UnspecifiedNaN<double>(),
+      const double& aStep = UnspecifiedNaN<double>(),
+      AccAttributes* aAttributes = nullptr);
 
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
   RootAccessibleWrap* GetRoot();

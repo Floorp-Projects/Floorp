@@ -78,7 +78,6 @@ class RemoteAccessibleWrap : public AccessibleWrap {
 
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
 
- private:
   virtual role WrapperRole() override;
 
   virtual AccessibleWrap* WrapperParent() override;
