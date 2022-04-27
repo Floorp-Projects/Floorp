@@ -506,6 +506,17 @@ html|button.ghost-button:not(.semi-transparent):enabled:hover:active {
   background-color: var(--in-content-button-background-active);
 }
 
+html|button.ghost-button.icon-button {
+  height: 16px;
+  width: 16px;
+  min-width: auto;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  background-position: center;
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
 html|input[type="color"] {
   padding: 6px;
   width: 50px;
