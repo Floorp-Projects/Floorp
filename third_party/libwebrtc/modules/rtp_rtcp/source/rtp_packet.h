@@ -30,6 +30,8 @@ class RtpPacket {
   // packet creating and used if available in Parse function.
   // Adding and getting extensions will fail until |extensions| is
   // provided via constructor or IdentifyExtensions function.
+  // |*extensions| is only accessed during construction; the pointer is not
+  // stored.
   RtpPacket();
   explicit RtpPacket(const ExtensionManager* extensions);
   RtpPacket(const RtpPacket&);
