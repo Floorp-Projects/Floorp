@@ -5673,6 +5673,38 @@ namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
 
+bool ShouldSyncPreference(const char* aPref) {
+#define PREF_LIST_ENTRY(s) \
+  { s, (sizeof(s) / sizeof(char)) - 1 }
+struct PrefListEntry {
+  const char* mPrefBranch;
+  size_t mLen;
+};
+
+// These prefs are not useful in child processes.
+static const PrefListEntry sParentOnlyPrefBranchList[] = {
+    PREF_LIST_ENTRY("app.update.lastUpdateTime."),
+    PREF_LIST_ENTRY("datareporting.policy."),
+      PREF_LIST_ENTRY("browser.safebrowsing.provider."),
+      PREF_LIST_ENTRY("browser.shell."),
+      PREF_LIST_ENTRY("browser.slowStartup."),
+      PREF_LIST_ENTRY("browser.startup."),
+      PREF_LIST_ENTRY("extensions.getAddons.cache."),
+      PREF_LIST_ENTRY("media.gmp-manager."),
+      PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
+      PREF_LIST_ENTRY("privacy.sanitize."),
+};
+#undef PREF_LIST_ENTRY
+
+  for (const auto& entry : sParentOnlyPrefBranchList) {
+    if (strncmp(entry.mPrefBranch, aPref, entry.mLen) == 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 }  // namespace mozilla
 
 // This file contains the C wrappers for the C++ static pref getters, as used
