@@ -117,6 +117,18 @@ class JsepSessionDescriptionTest : public ::testing::Test {
   std::unique_ptr<JsepSessionDescription> jsep_desc_;
 };
 
+TEST_F(JsepSessionDescriptionTest, CloneDefault) {
+  auto new_desc = jsep_desc_->Clone();
+  EXPECT_EQ(jsep_desc_->type(), new_desc->type());
+  std::string old_desc_string;
+  std::string new_desc_string;
+  EXPECT_TRUE(jsep_desc_->ToString(&old_desc_string));
+  EXPECT_TRUE(new_desc->ToString(&new_desc_string));
+  EXPECT_EQ(old_desc_string, new_desc_string);
+  EXPECT_EQ(jsep_desc_->session_id(), new_desc->session_id());
+  EXPECT_EQ(jsep_desc_->session_version(), new_desc->session_version());
+}
+
 // Test that number_of_mediasections() returns the number of media contents in
 // a session description.
 TEST_F(JsepSessionDescriptionTest, CheckSessionDescription) {

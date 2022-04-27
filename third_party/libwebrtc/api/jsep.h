@@ -136,6 +136,13 @@ class RTC_EXPORT SessionDescriptionInterface {
 
   virtual ~SessionDescriptionInterface() {}
 
+  // Create a new SessionDescriptionInterface object
+  // with the same values as the old object.
+  // TODO(bugs.webrtc.org:12215): Remove default implementation
+  virtual std::unique_ptr<SessionDescriptionInterface> Clone() {
+    return nullptr;
+  }
+
   // Only for use internally.
   virtual cricket::SessionDescription* description() = 0;
   virtual const cricket::SessionDescription* description() const = 0;
