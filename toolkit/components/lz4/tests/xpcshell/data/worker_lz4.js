@@ -1,6 +1,8 @@
 /* eslint-env mozilla/chrome-worker */
 
+/* import-globals-from /toolkit/components/workerloader/require.js */
 importScripts("resource://gre/modules/workers/require.js");
+/* import-globals-from /toolkit/components/osfile/osfile.jsm */
 importScripts("resource://gre/modules/osfile.jsm");
 
 function info(x) {
