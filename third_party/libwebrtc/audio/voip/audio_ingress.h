@@ -22,6 +22,7 @@
 #include "api/audio/audio_mixer.h"
 #include "api/rtp_headers.h"
 #include "api/scoped_refptr.h"
+#include "api/voip/voip_statistics.h"
 #include "audio/audio_level.h"
 #include "modules/audio_coding/acm2/acm_receiver.h"
 #include "modules/audio_coding/include/audio_coding_module.h"
@@ -86,6 +87,8 @@ class AudioIngress : public AudioMixer::Source {
     return stats;
   }
 
+  ChannelStatistics GetChannelStatistics();
+
   // Implementation of AudioMixer::Source interface.
   AudioMixer::Source::AudioFrameInfo GetAudioFrameWithInfo(
       int sampling_rate,
@@ -102,10 +105,6 @@ class AudioIngress : public AudioMixer::Source {
   }
 
  private:
-  // Returns network round trip time (RTT) measued by RTCP exchange with
-  // remote media endpoint. Returns absl::nullopt when it's not initialized.
-  absl::optional<int64_t> GetRoundTripTime();
-
   // Indicates AudioIngress status as caller invokes Start/StopPlaying.
   // If not playing, incoming RTP data processing is skipped, thus
   // producing no data to output device.
