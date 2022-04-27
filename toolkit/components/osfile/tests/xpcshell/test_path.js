@@ -178,11 +178,11 @@ function run_test() {
   );
 
   info("Testing the presence of ospath.jsm");
-  let Scope = {};
+  let scope;
   try {
-    ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm", Scope);
+    scope = ChromeUtils.import("resource://gre/modules/osfile/ospath.jsm");
   } catch (ex) {
     // Can't load ospath
   }
-  Assert.ok(!!Scope.basename);
+  Assert.ok(!!scope.basename);
 }
