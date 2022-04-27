@@ -36,7 +36,6 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   typedef mozilla::TimeDuration TimeDuration;
 
   TimerThread();
-  nsresult InitLocks();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE

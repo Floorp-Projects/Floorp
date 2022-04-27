@@ -286,7 +286,13 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     return nullptr;
   }
 
-  mTransactionsSinceGetDataSurface = 0;
+  // mTransactionsSinceGetDataSurface is used to determine if we want to prepare
+  // a DataSourceSurface in the GPU process up front at the end of the
+  // transaction, but that only makes sense if the canvas JS is requesting data
+  // in between transactions.
+  if (!mIsInTransaction) {
+    mTransactionsSinceGetDataSurface = 0;
+  }
   EnsureBeginTransaction();
   mRecorder->RecordEvent(RecordedPrepareDataForSurface(aSurface));
   uint32_t checkpoint = mRecorder->CreateCheckpoint();

@@ -5,6 +5,7 @@
 
 #include "nsPrintSettingsServiceX.h"
 
+#include "mozilla/embedding/PPrintingTypes.h"
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsPrintSettingsX.h"

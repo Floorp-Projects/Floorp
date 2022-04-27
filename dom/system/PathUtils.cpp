@@ -71,10 +71,12 @@ static bool DoWindowsPathCheck() {
 #ifdef XP_WIN
 #  ifdef DEBUG
   return true;
-#  endif  // DEBUG
+#  else   // DEBUG
   return xpc::IsInAutomation();
-#endif  // XP_WIN
+#  endif  // DEBUG
+#else     // XP_WIN
   return false;
+#endif    // XP_WIN
 }
 
 /* static */

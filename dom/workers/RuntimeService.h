@@ -22,7 +22,6 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 
-class nsITimer;
 class nsPIDOMWindowInner;
 
 namespace mozilla {
@@ -55,27 +54,16 @@ class RuntimeService final : public nsIObserver {
     }
   };
 
-  struct IdleThreadInfo {
-    SafeRefPtr<WorkerThread> mThread;
-    mozilla::TimeStamp mExpirationTime;
-  };
-
   mozilla::Mutex mMutex;
 
   // Protected by mMutex.
   nsClassHashtable<nsCStringHashKey, WorkerDomainInfo> mDomainMap
       GUARDED_BY(mMutex);
 
-  // Protected by mMutex.
-  nsTArray<IdleThreadInfo> mIdleThreadArray GUARDED_BY(mMutex);
-
   // *Not* protected by mMutex.
   nsClassHashtable<nsPtrHashKey<const nsPIDOMWindowInner>,
                    nsTArray<WorkerPrivate*> >
       mWindowMap;
-
-  // Only used on the main thread.
-  nsCOMPtr<nsITimer> mIdleThreadTimer;
 
   static UniquePtr<workerinternals::JSSettings> sDefaultJSSettings;
 
@@ -126,8 +114,6 @@ class RuntimeService final : public nsIObserver {
   const NavigatorProperties& GetNavigatorProperties() const {
     return mNavigatorProperties;
   }
-
-  void NoteIdleThread(SafeRefPtr<WorkerThread> aThread);
 
   static void GetDefaultJSSettings(workerinternals::JSSettings& aSettings) {
     AssertIsOnMainThread();
@@ -202,8 +188,6 @@ class RuntimeService final : public nsIObserver {
       const nsPIDOMWindowInner& aWindow) const;
 
   bool ScheduleWorker(WorkerPrivate& aWorkerPrivate);
-
-  static void ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
 
   template <typename Func>
   void BroadcastAllWorkers(const Func& aFunc);

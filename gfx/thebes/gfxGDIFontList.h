@@ -129,18 +129,14 @@ class GDIFontEntry final : public gfxFontEntry {
             mFontType == GFX_FONT_TYPE_TT_OPENTYPE);
   }
 
-  virtual bool SupportsRange(uint8_t range) {
-    return mUnicodeRanges.test(range);
-  }
-
-  virtual bool SkipDuringSystemFallback() {
+  bool SkipDuringSystemFallback() override {
     return !HasCmapTable();  // explicitly skip non-SFNT fonts
   }
 
-  virtual bool TestCharacterMap(uint32_t aCh);
+  bool TestCharacterMap(uint32_t aCh) override;
 
-  virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontListSizes* aSizes) const;
+  void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontListSizes* aSizes) const override;
 
   gfxFontEntry* Clone() const override;
 
@@ -159,8 +155,6 @@ class GDIFontEntry final : public gfxFontEntry {
 
   gfxWindowsFontType mFontType;
   bool mForceGDI;
-
-  gfxSparseBitSet mUnicodeRanges;
 
  protected:
   friend class gfxGDIFont;
@@ -193,8 +187,8 @@ class GDIFontFamily final : public gfxFontFamily {
         mWindowsPitch(0),
         mCharset() {}
 
-  void FindStyleVariationsLocked(
-      FontInfoData* aFontInfoData = nullptr) override;
+  void FindStyleVariationsLocked(FontInfoData* aFontInfoData = nullptr)
+      REQUIRES(mLock) override;
 
   bool FilterForFontList(nsAtom* aLangGroup,
                          const nsACString& aGeneric) const final {
@@ -300,7 +294,7 @@ class gfxGDIFontList final : public gfxPlatformFontList {
   }
 
   // initialize font lists
-  virtual nsresult InitFontListForPlatform() override;
+  nsresult InitFontListForPlatform() REQUIRES(mLock) override;
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName,
                                   FontVisibility aVisibility) const override;
@@ -309,43 +303,45 @@ class gfxGDIFontList final : public gfxPlatformFontList {
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
-      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0) override;
+      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0)
+      REQUIRES(mLock) override;
 
-  virtual gfxFontEntry* LookupLocalFont(nsPresContext* aPresContext,
-                                        const nsACString& aFontName,
-                                        WeightRange aWeightForEntry,
-                                        StretchRange aStretchForEntry,
-                                        SlantStyleRange aStyleForEntry);
+  gfxFontEntry* LookupLocalFont(nsPresContext* aPresContext,
+                                const nsACString& aFontName,
+                                WeightRange aWeightForEntry,
+                                StretchRange aStretchForEntry,
+                                SlantStyleRange aStyleForEntry) override;
 
-  virtual gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
-                                         WeightRange aWeightForEntry,
-                                         StretchRange aStretchForEntry,
-                                         SlantStyleRange aStyleForEntry,
-                                         const uint8_t* aFontData,
-                                         uint32_t aLength);
+  gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
+                                 WeightRange aWeightForEntry,
+                                 StretchRange aStretchForEntry,
+                                 SlantStyleRange aStyleForEntry,
+                                 const uint8_t* aFontData,
+                                 uint32_t aLength) override;
 
-  virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontListSizes* aSizes) const;
-  virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontListSizes* aSizes) const;
+  void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontListSizes* aSizes) const override;
+  void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontListSizes* aSizes) const override;
 
  protected:
   FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
                                        const gfxFontStyle* aStyle,
-                                       nsAtom* aLanguage = nullptr) override;
+                                       nsAtom* aLanguage = nullptr)
+      REQUIRES(mLock) override;
 
  private:
   friend class gfxWindowsPlatform;
 
   gfxGDIFontList();
 
-  nsresult GetFontSubstitutes();
+  nsresult GetFontSubstitutes() REQUIRES(mLock);
 
   static int CALLBACK EnumFontFamExProc(ENUMLOGFONTEXW* lpelfe,
                                         NEWTEXTMETRICEXW* lpntme,
                                         DWORD fontType, LPARAM lParam);
 
-  virtual already_AddRefed<FontInfoData> CreateFontInfoData();
+  already_AddRefed<FontInfoData> CreateFontInfoData() override;
 
 #ifdef MOZ_BUNDLED_FONTS
   void ActivateBundledFonts();

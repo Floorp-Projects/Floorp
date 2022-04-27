@@ -5,10 +5,79 @@
 
 import logging
 import sys
+from abc import ABC, abstractmethod
 
 import attr
 
+from taskgraph.config import GraphConfig
+from taskgraph.parameters import Parameters
+from taskgraph.taskgraph import TaskGraph
+from taskgraph.util.attributes import match_run_on_projects
+
 logger = logging.getLogger(__name__)
+
+
+@attr.s(frozen=True)
+class Verification(ABC):
+    func = attr.ib()
+
+    @abstractmethod
+    def verify(self, **kwargs) -> None:
+        pass
+
+
+@attr.s(frozen=True)
+class InitialVerification(Verification):
+    """Verification that doesn't depend on any generation state."""
+
+    def verify(self):
+        self.func()
+
+
+@attr.s(frozen=True)
+class GraphVerification(Verification):
+    """Verification for a TaskGraph object."""
+
+    run_on_projects = attr.ib(default=None)
+
+    def verify(
+        self, graph: TaskGraph, graph_config: GraphConfig, parameters: Parameters
+    ):
+        if self.run_on_projects and not match_run_on_projects(
+            parameters["project"], self.run_on_projects
+        ):
+            return
+
+        scratch_pad = {}
+        graph.for_each_task(
+            self.func,
+            scratch_pad=scratch_pad,
+            graph_config=graph_config,
+            parameters=parameters,
+        )
+        self.func(
+            None,
+            graph,
+            scratch_pad=scratch_pad,
+            graph_config=graph_config,
+            parameters=parameters,
+        )
+
+
+@attr.s(frozen=True)
+class ParametersVerification(Verification):
+    """Verification for a set of parameters."""
+
+    def verify(self, parameters: Parameters):
+        self.func(parameters)
+
+
+@attr.s(frozen=True)
+class KindsVerification(Verification):
+    """Verification for kinds."""
+
+    def verify(self, kinds: dict):
+        self.func(kinds)
 
 
 @attr.s(frozen=True)
@@ -22,21 +91,22 @@ class VerificationSequence:
     """
 
     _verifications = attr.ib(factory=dict)
+    _verification_types = {
+        "graph": GraphVerification,
+        "initial": InitialVerification,
+        "kinds": KindsVerification,
+        "parameters": ParametersVerification,
+    }
 
-    def __call__(self, graph_name, graph, graph_config):
-        for verification in self._verifications.get(graph_name, []):
-            scratch_pad = {}
-            graph.for_each_task(
-                verification, scratch_pad=scratch_pad, graph_config=graph_config
-            )
-            verification(
-                None, graph, scratch_pad=scratch_pad, graph_config=graph_config
-            )
-        return graph_name, graph
+    def __call__(self, name, *args, **kwargs):
+        for verification in self._verifications.get(name, []):
+            verification.verify(*args, **kwargs)
 
-    def add(self, graph_name):
+    def add(self, name, **kwargs):
+        cls = self._verification_types.get(name, GraphVerification)
+
         def wrap(func):
-            self._verifications.setdefault(graph_name, []).append(func)
+            self._verifications.setdefault(name, []).append(cls(func, **kwargs))
             return func
 
         return wrap
@@ -46,7 +116,7 @@ verifications = VerificationSequence()
 
 
 @verifications.add("full_task_graph")
-def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config):
+def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config, parameters):
     """
     This function verifies that tuple
     (collection.keys(), machine.platform, groupSymbol, symbol) is unique
@@ -77,7 +147,9 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add("full_task_graph")
-def verify_trust_domain_v2_routes(task, taskgraph, scratch_pad, graph_config):
+def verify_trust_domain_v2_routes(
+    task, taskgraph, scratch_pad, graph_config, parameters
+):
     """
     This function ensures that any two tasks have distinct ``index.{trust-domain}.v2`` routes.
     """
@@ -100,7 +172,9 @@ def verify_trust_domain_v2_routes(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add("full_task_graph")
-def verify_routes_notification_filters(task, taskgraph, scratch_pad, graph_config):
+def verify_routes_notification_filters(
+    task, taskgraph, scratch_pad, graph_config, parameters
+):
     """
     This function ensures that only understood filters for notifications are
     specified.
@@ -127,7 +201,7 @@ def verify_routes_notification_filters(task, taskgraph, scratch_pad, graph_confi
 
 
 @verifications.add("full_task_graph")
-def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config):
+def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config, parameters):
     tiers = scratch_pad
     if task is not None:
         tiers[task.label] = (
@@ -159,7 +233,7 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config):
 
 
 @verifications.add("optimized_task_graph")
-def verify_always_optimized(task, taskgraph, scratch_pad, graph_config):
+def verify_always_optimized(task, taskgraph, scratch_pad, graph_config, parameters):
     """
     This function ensures that always-optimized tasks have been optimized.
     """

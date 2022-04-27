@@ -349,8 +349,6 @@ bool WidgetEvent::IsKeyEventMessage(EventMessage aMessage) {
     case eKeyDown:
     case eKeyPress:
     case eKeyUp:
-    case eKeyDownOnPlugin:
-    case eKeyUpOnPlugin:
     case eAccessKeyNotFound:
       return true;
     default:
@@ -370,10 +368,6 @@ bool WidgetEvent::HasIMEEventMessage() const {
     default:
       return false;
   }
-}
-
-bool WidgetEvent::HasPluginActivationEventMessage() const {
-  return mMessage == ePluginActivate || mMessage == ePluginFocus;
 }
 
 /******************************************************************************
@@ -441,7 +435,7 @@ bool WidgetEvent::IsUsingCoordinates() const {
     return !mouseEvent->IsContextMenuKeyEvent();
   }
   return !HasKeyEventMessage() && !IsIMERelatedEvent() &&
-         !HasPluginActivationEventMessage() && !IsContentCommandEvent();
+         !IsContentCommandEvent();
 }
 
 bool WidgetEvent::IsTargetedAtFocusedWindow() const {

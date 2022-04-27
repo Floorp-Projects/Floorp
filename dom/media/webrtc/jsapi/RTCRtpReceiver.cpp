@@ -430,11 +430,11 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               // Lastly, fill in video decoder stats
               local.mFramesDecoded.Construct(videoStats->frames_decoded);
 
+              local.mFramesPerSecond.Construct(videoStats->decode_frame_rate);
               /*
                * Potential new stats that are now available upstream.
               local.mFrameWidth.Construct(videoStats->width);
               local.mFrameheight.Construct(videoStats->height);
-              local.mFramesPerSecond.Construct(videoStats->decode_frame_rate);
               if (videoStats->qp_sum) {
                 local.mQpSum.Construct(*videoStats->qp_sum.value);
               }

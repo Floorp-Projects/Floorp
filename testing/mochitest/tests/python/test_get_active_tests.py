@@ -54,6 +54,111 @@ def create_manifest(tmpdir, build_obj):
     return inner
 
 
+def test_args_validation(get_active_tests, create_manifest):
+    # Test args set in a single manifest.
+    manifest_relpath = "manifest.ini"
+    manifest = create_manifest(
+        dedent(
+            """
+    [DEFAULT]
+    args=
+      --cheese
+      --foo=bar
+      --foo1 bar1
+
+    [files/test_pass.html]
+    [files/test_fail.html]
+    """
+        )
+    )
+
+    options = {
+        "runByManifest": True,
+        "manifestFile": manifest,
+    }
+    md, tests = get_active_tests(**options)
+
+    assert len(tests) == 2
+    assert manifest_relpath in md.args_by_manifest
+
+    args = md.args_by_manifest[manifest_relpath]
+    assert len(args) == 1
+    assert args.pop() == "\n--cheese\n--foo=bar\n--foo1 bar1"
+
+    # Test args set with runByManifest disabled.
+    options["runByManifest"] = False
+    with pytest.raises(SystemExit):
+        get_active_tests(**options)
+
+    # Test args set in non-default section.
+    options["runByManifest"] = True
+    options["manifestFile"] = create_manifest(
+        dedent(
+            """
+    [files/test_pass.html]
+    args=--foo2=bar2
+    [files/test_fail.html]
+    """
+        )
+    )
+    with pytest.raises(SystemExit):
+        get_active_tests(**options)
+
+
+def test_args_validation_with_ancestor_manifest(get_active_tests, create_manifest):
+    # Test args set by an ancestor manifest.
+    create_manifest(
+        dedent(
+            """
+    [DEFAULT]
+    args=
+      --cheese
+
+    [files/test_pass.html]
+    [files/test_fail.html]
+    """
+        ),
+        name="subdir/manifest.ini",
+    )
+
+    manifest = create_manifest(
+        dedent(
+            """
+    [DEFAULT]
+    args =
+      --foo=bar
+
+    [include:manifest.ini]
+    [test_foo.html]
+    """
+        ),
+        name="subdir/ancestor-manifest.ini",
+    )
+
+    options = {
+        "runByManifest": True,
+        "manifestFile": manifest,
+    }
+
+    md, tests = get_active_tests(**options)
+    assert len(tests) == 3
+
+    key = os.path.join("subdir", "ancestor-manifest.ini")
+    assert key in md.args_by_manifest
+    args = md.args_by_manifest[key]
+    assert len(args) == 1
+    assert args.pop() == "\n--foo=bar"
+
+    key = "{}:{}".format(
+        os.path.join("subdir", "ancestor-manifest.ini"),
+        os.path.join("subdir", "manifest.ini"),
+    )
+    assert key in md.args_by_manifest
+    args = md.args_by_manifest[key]
+    assert len(args) == 1
+    assert args.pop() == "\n--foo=bar \n--cheese"
+
+
 def test_prefs_validation(get_active_tests, create_manifest):
     # Test prefs set in a single manifest.
     manifest_relpath = "manifest.ini"

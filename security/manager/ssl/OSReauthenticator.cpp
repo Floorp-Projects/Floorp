@@ -424,8 +424,9 @@ static nsresult ReauthenticateUser(const nsAString& prompt,
       prefLastChanged, isAutoAdminLogonEnabled, isRequireSignonEnabled);
 #elif defined(XP_MACOSX)
   return ReauthenticateUserMacOS(prompt, reauthenticated, isBlankPassword);
-#endif  // Reauthentication is not implemented for this platform.
+#else
   return NS_OK;
+#endif  // Reauthentication is not implemented for this platform.
 }
 
 static void BackgroundReauthenticateUser(RefPtr<Promise>& aPromise,

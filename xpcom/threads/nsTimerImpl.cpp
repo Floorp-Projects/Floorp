@@ -65,18 +65,12 @@ class TimerThreadWrapper {
 mozilla::StaticMutex TimerThreadWrapper::sMutex;
 
 nsresult TimerThreadWrapper::Init() {
-  nsresult rv;
   mozilla::StaticMutexAutoLock lock(sMutex);
   mThread = new TimerThread();
 
   NS_ADDREF(mThread);
-  rv = mThread->InitLocks();
 
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(mThread);
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 void TimerThreadWrapper::Shutdown() {

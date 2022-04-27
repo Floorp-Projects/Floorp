@@ -34,7 +34,7 @@ add_warning("-Wall", when=not_clang_cl)
 add_warning("-W3", when=depends(c_compiler)(lambda c: c.type == "clang-cl"))
 
 # catch implicit truncation of enum values assigned to smaller bit fields
-check_and_add_warning("-Wbitfield-enum-conversion", when=not_clang_cl)
+check_and_add_warning("-Wbitfield-enum-conversion")
 
 # catches deprecated implicit capture of `this` in lambdas.
 check_and_add_warning("-Wdeprecated-this-capture", cxx_compiler)
@@ -64,8 +64,8 @@ add_warning("-Wtype-limits")
 check_and_add_warning("-Wno-error=tautological-type-limit-compare")
 
 # catches some dead code
-add_warning("-Wunreachable-code", when=not_clang_cl)
-check_and_add_warning("-Wunreachable-code-return", when=not_clang_cl)
+add_warning("-Wunreachable-code")
+check_and_add_warning("-Wunreachable-code-return")
 
 # catches parameters that are set but not read
 # Only enable on clang because gcc reports false positives.

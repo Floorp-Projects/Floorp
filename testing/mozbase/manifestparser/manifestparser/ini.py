@@ -167,6 +167,7 @@ def combine_fields(global_vars, local_vars):
     if not local_vars:
         return global_vars.copy()
     field_patterns = {
+        "args": "%s %s",
         "prefs": "%s %s",
         "skip-if": "%s\n%s",
         "support-files": "%s %s",
@@ -179,4 +180,5 @@ def combine_fields(global_vars, local_vars):
         global_value = global_vars[field_name]
         pattern = field_patterns[field_name]
         final_mapping[field_name] = pattern % (global_value, value)
+
     return final_mapping
