@@ -26,10 +26,12 @@ add_task(async function setup() {
     bucketName: TEST_BUCKET,
   });
 
-  const dump = await SharedUtils.loadJSONDump(TEST_BUCKET, TEST_COLLECTION);
-  DUMP_RECORDS = dump.data;
-  DUMP_LAST_MODIFIED = dump.timestamp;
-
+  DUMP_RECORDS = (await SharedUtils.loadJSONDump(TEST_BUCKET, TEST_COLLECTION))
+    .data;
+  DUMP_LAST_MODIFIED = DUMP_RECORDS.reduce(
+    (max, { last_modified }) => Math.max(last_modified, max),
+    -Infinity
+  );
   // Dumps are fetched via the following, which sorts the records, newest first.
   // https://searchfox.org/mozilla-central/rev/5b3444ad300e244b5af4214212e22bd9e4b7088a/taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh#304
   equal(
@@ -44,7 +46,6 @@ async function importData(records) {
     TEST_BUCKET,
     TEST_COLLECTION,
     records,
-    records[0]?.last_modified || 0,
   ]);
 }
 

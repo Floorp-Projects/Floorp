@@ -381,10 +381,6 @@ class RemoteSettingsClient extends EventEmitter {
               );
               await this.sync({ loadDump: false });
             }
-            // Return `true` to indicate we don't need to `verifySignature`,
-            // since a trusted dump was loaded or a signature verification
-            // happened during synchronization.
-            return true;
           })();
         } else {
           console.debug(`${this.identifier} Awaiting existing import.`);
@@ -402,14 +398,7 @@ class RemoteSettingsClient extends EventEmitter {
           );
           if (!this._importingPromise) {
             // As part of importing, any existing data is wiped.
-            this._importingPromise = (async () => {
-              const importedFromDump = await this._importJSONDump();
-              // Return `true` to skip signature verification if a dump was found.
-              // The dump can be missing if a collection is listed in the timestamps summary file,
-              // because its dump is present in the source tree, but the dump was not
-              // included in the `package-manifest.in` file. (eg. android, thunderbird)
-              return importedFromDump >= 0;
-            })();
+            this._importingPromise = this._importJSONDump();
           } else {
             console.debug(`${this.identifier} Awaiting existing import.`);
           }
@@ -418,11 +407,10 @@ class RemoteSettingsClient extends EventEmitter {
 
       if (this._importingPromise) {
         try {
-          if (await this._importingPromise) {
-            // No need to verify signature, because either we've just loaded a trusted
-            // dump (here or in a parallel call), or it was verified during sync.
-            verifySignature = false;
-          }
+          await this._importingPromise;
+          // No need to verify signature, because either we've just load a trusted
+          // dump (here or in a parallel call), or it was verified during sync.
+          verifySignature = false;
         } catch (e) {
           // Report error, but continue because there could have been data
           // loaded from a parrallel call.
@@ -827,6 +815,9 @@ class RemoteSettingsClient extends EventEmitter {
     const result = await RemoteSettingsWorker.importJSONDump(
       this.bucketName,
       this.collectionName
+    );
+    console.info(
+      `${this.identifier} imported ${result} records from JSON dump`
     );
     if (gTimingEnabled) {
       const end = Cu.now() * 1000;
