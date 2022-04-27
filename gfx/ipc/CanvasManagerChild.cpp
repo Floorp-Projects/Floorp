@@ -144,13 +144,15 @@ RefPtr<webgpu::WebGPUChild> CanvasManagerChild::GetWebGPUChild() {
 }
 
 already_AddRefed<DataSourceSurface> CanvasManagerChild::GetSnapshot(
-    uint32_t aManagerId, int32_t aProtocolId, bool aHasAlpha) {
+    uint32_t aManagerId, int32_t aProtocolId,
+    const layers::CompositableHandle& aHandle, SurfaceFormat aFormat,
+    bool aPremultiply, bool aYFlip) {
   if (!CanSend()) {
     return nullptr;
   }
 
   webgl::FrontBufferSnapshotIpc res;
-  if (!SendGetSnapshot(aManagerId, aProtocolId, &res)) {
+  if (!SendGetSnapshot(aManagerId, aProtocolId, aHandle, &res)) {
     return nullptr;
   }
 
@@ -178,7 +180,7 @@ already_AddRefed<DataSourceSurface> CanvasManagerChild::GetSnapshot(
   }
 
   SurfaceFormat format =
-      aHasAlpha ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
+      IsOpaque(aFormat) ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
   RefPtr<DataSourceSurface> surface =
       Factory::CreateDataSourceSurfaceWithStride(size, format, stride.value(),
                                                  /* aZero */ false);
@@ -192,21 +194,32 @@ already_AddRefed<DataSourceSurface> CanvasManagerChild::GetSnapshot(
     return nullptr;
   }
 
-  // The buffer we read back from WebGL is R8G8B8A8, not premultiplied and has
-  // its rows inverted. For the general case, we want surfaces represented as
-  // premultiplied B8G8R8A8, with its rows ordered top to bottom. Given this
-  // path is used for screenshots/SurfaceFromElement, that's the representation
-  // we need.
-  if (aHasAlpha) {
-    if (!PremultiplyYFlipData(res.shmem->get<uint8_t>(), stride.value(),
-                              SurfaceFormat::R8G8B8A8, map.GetData(),
-                              map.GetStride(), format, size)) {
+  // The buffer we may readback from the canvas could be R8G8B8A8, not
+  // premultiplied, and/or has its rows iverted. For the general case, we want
+  // surfaces represented as premultiplied B8G8R8A8, with its rows ordered top
+  // to bottom. Given this path is used for screenshots/SurfaceFromElement,
+  // that's the representation we need.
+  if (aYFlip) {
+    if (aPremultiply) {
+      if (!PremultiplyYFlipData(res.shmem->get<uint8_t>(), stride.value(),
+                                aFormat, map.GetData(), map.GetStride(), format,
+                                size)) {
+        return nullptr;
+      }
+    } else {
+      if (!SwizzleYFlipData(res.shmem->get<uint8_t>(), stride.value(), aFormat,
+                            map.GetData(), map.GetStride(), format, size)) {
+        return nullptr;
+      }
+    }
+  } else if (aPremultiply) {
+    if (!PremultiplyData(res.shmem->get<uint8_t>(), stride.value(), aFormat,
+                         map.GetData(), map.GetStride(), format, size)) {
       return nullptr;
     }
   } else {
-    if (!SwizzleYFlipData(res.shmem->get<uint8_t>(), stride.value(),
-                          SurfaceFormat::R8G8B8X8, map.GetData(),
-                          map.GetStride(), format, size)) {
+    if (!SwizzleData(res.shmem->get<uint8_t>(), stride.value(), aFormat,
+                     map.GetData(), map.GetStride(), format, size)) {
       return nullptr;
     }
   }
