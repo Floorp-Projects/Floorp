@@ -283,7 +283,7 @@ void NodeController::DropPeer(NodeName aNodeName) {
 
   NODECONTROLLER_LOG(LogLevel::Info, "Dropping Peer %s (pid: %d)",
                      ToString(aNodeName).c_str(),
-                     channel ? channel->OtherPid() : -1);
+                     channel ? channel->OtherPid() : base::kInvalidProcessId);
 
   if (channel) {
     channel->Close();
@@ -670,7 +670,7 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
     // an invalid introduction to content to clean up any pending outbound
     // messages.
     NodeChannel::Introduction intro{aName, nullptr, IPC::Channel::MODE_SERVER,
-                                    peerA->OtherPid(), -1};
+                                    peerA->OtherPid(), base::kInvalidProcessId};
     peerA->Introduce(std::move(intro));
     return;
   }

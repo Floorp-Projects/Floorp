@@ -109,7 +109,7 @@ class GeckoChildProcessHost : public ChildProcessHost,
   bool SyncLaunch(StringVector aExtraOpts = StringVector(),
                   int32_t timeoutMs = 0);
 
-  virtual void OnChannelConnected(int32_t peer_pid) override;
+  virtual void OnChannelConnected(base::ProcessId peer_pid) override;
   virtual void OnMessageReceived(IPC::Message&& aMsg) override;
   virtual void OnChannelError() override;
   virtual void GetQueuedMessages(std::queue<IPC::Message>& queue) override;

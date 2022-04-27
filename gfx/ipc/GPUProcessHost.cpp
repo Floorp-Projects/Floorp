@@ -88,7 +88,7 @@ bool GPUProcessHost::WaitForLaunch() {
   return result;
 }
 
-void GPUProcessHost::OnChannelConnected(int32_t peer_pid) {
+void GPUProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);

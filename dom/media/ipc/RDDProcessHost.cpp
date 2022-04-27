@@ -127,7 +127,7 @@ RefPtr<GenericNonExclusivePromise> RDDProcessHost::LaunchPromise() {
   return mLaunchPromise;
 }
 
-void RDDProcessHost::OnChannelConnected(int32_t peer_pid) {
+void RDDProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);

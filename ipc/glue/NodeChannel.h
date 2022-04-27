@@ -9,6 +9,7 @@
 
 #include "mojo/core/ports/node.h"
 #include "mojo/core/ports/node_delegate.h"
+#include "base/process.h"
 #include "chrome/common/ipc_message.h"
 #include "chrome/common/ipc_channel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -37,8 +38,8 @@ class NodeChannel final : public IPC::Channel::Listener {
     NodeName mName;
     IPC::Channel::ChannelHandle mHandle;
     IPC::Channel::Mode mMode;
-    int32_t mMyPid = -1;
-    int32_t mOtherPid = -1;
+    base::ProcessId mMyPid = base::kInvalidProcessId;
+    base::ProcessId mOtherPid = base::kInvalidProcessId;
   };
 
   class Listener {
@@ -62,7 +63,7 @@ class NodeChannel final : public IPC::Channel::Listener {
   };
 
   NodeChannel(const NodeName& aName, UniquePtr<IPC::Channel> aChannel,
-              Listener* aListener, int32_t aPid = -1);
+              Listener* aListener, base::ProcessId aPid = base::kInvalidProcessId);
 
   // Send the given message over this peer channel link. May be called from any
   // thread.
@@ -82,7 +83,7 @@ class NodeChannel final : public IPC::Channel::Listener {
   void AcceptInvite(const NodeName& aRealName, const PortName& aInitialPort);
 
   // The PID of the remote process, once known. May be called from any thread.
-  int32_t OtherPid() const { return mOtherPid; }
+  base::ProcessId OtherPid() const { return mOtherPid; }
 
   // Start communicating with the remote process using this NodeChannel. MUST BE
   // CALLED FROM THE IO THREAD.
@@ -109,14 +110,14 @@ class NodeChannel final : public IPC::Channel::Listener {
   void FinalDestroy();
 
   // Update the known PID for the remote process. IO THREAD ONLY
-  void SetOtherPid(int32_t aNewPid);
+  void SetOtherPid(base::ProcessId aNewPid);
 
   void SendMessage(UniquePtr<IPC::Message> aMessage);
   void DoSendMessage(UniquePtr<IPC::Message> aMessage);
 
   // IPC::Channel::Listener implementation
   void OnMessageReceived(IPC::Message&& aMessage) override;
-  void OnChannelConnected(int32_t aPeerPid) override;
+  void OnChannelConnected(base::ProcessId aPeerPid) override;
   void OnChannelError() override;
 
   // NOTE: This strong reference will create a reference cycle between the
@@ -133,7 +134,7 @@ class NodeChannel final : public IPC::Channel::Listener {
   // NOTE: This won't change once the connection has been established, but may
   // be `-1` until then. This will only be written to on the IO thread, but may
   // be read from other threads.
-  std::atomic<int32_t> mOtherPid;
+  std::atomic<base::ProcessId> mOtherPid;
 
   // WARNING: This must only be accessed on the IO thread.
   mozilla::UniquePtr<IPC::Channel> mChannel;

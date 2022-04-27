@@ -141,7 +141,7 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
   return mLaunchPromise;
 }
 
-void UtilityProcessHost::OnChannelConnected(int32_t peer_pid) {
+void UtilityProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);
