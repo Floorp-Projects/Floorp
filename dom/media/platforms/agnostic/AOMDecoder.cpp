@@ -448,9 +448,10 @@ bool AOMDecoder::ReadSequenceHeaderInfo(const Span<const uint8_t>& aSample,
   // https://aomediacodec.github.io/av1-spec/#general-sequence-header-obu-syntax
   tempInfo.mProfile = br.ReadBits(3);
   const bool stillPicture = br.ReadBit();
-  bool reducedStillPicture = br.ReadBit();
+  const bool reducedStillPicture = br.ReadBit();
   if (!stillPicture && reducedStillPicture) {
     NS_WARNING("reduced_still_picture is true while still_picture is false");
+    return false;
   }
 
   if (reducedStillPicture) {
@@ -769,7 +770,7 @@ already_AddRefed<MediaByteBuffer> AOMDecoder::CreateSequenceHeader(
     NS_WARNING("Profile must be 2 for 12-bit");
     return nullptr;
   }
-  if (aInfo.mProfile == 2) {
+  if (aInfo.mProfile == 2 && highBitDepth) {
     bw.WriteBit(aInfo.mBitDepth == 12);  // twelve_bit
   }
 
