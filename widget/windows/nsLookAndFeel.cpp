@@ -184,13 +184,13 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
                                                    : COLOR_MENUTEXT;
         break;
       }
-      // Fall through
+      [[fallthrough]];
     case ColorID::MozMenuhovertext:
       if (mHasColorMenuHoverText) {
         aColor = mColorMenuHoverText;
         return NS_OK;
       }
-      // Fall through
+      [[fallthrough]];
     case ColorID::Highlighttext:
     case ColorID::Selecteditemtext:
     case ColorID::IMESelectedRawTextForeground:
@@ -465,7 +465,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
                 break;
               case ABE_TOP:
                 aResult = NS_ALERT_TOP;
-                // fall through for the right-to-left handling.
+                [[fallthrough]];
               case ABE_BOTTOM:
                 // If the task bar is right-to-left,
                 // move the origin to the left

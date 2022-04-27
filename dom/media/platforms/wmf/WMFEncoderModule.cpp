@@ -28,6 +28,7 @@ already_AddRefed<MediaDataEncoder> WMFEncoderModule::CreateVideoEncoder(
     case MediaDataEncoder::CodecType::VP8:
       encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP8Config>(
           aParams.ToVP8Config(), aParams.mTaskQueue);
+      break;
     case MediaDataEncoder::CodecType::VP9:
       encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP9Config>(
           aParams.ToVP9Config(), aParams.mTaskQueue);
