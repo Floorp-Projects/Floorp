@@ -405,6 +405,7 @@ void LocalAudioSinkAdapter::OnData(
   if (sink_) {
     sink_->OnData(audio_data, bits_per_sample, sample_rate, number_of_channels,
                   number_of_frames, absolute_capture_timestamp_ms);
+    num_preferred_channels_ = sink_->NumPreferredChannels();
   }
 }
 

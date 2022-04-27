@@ -237,12 +237,16 @@ class LocalAudioSinkAdapter : public AudioTrackSinkInterface,
            /*absolute_capture_timestamp_ms=*/absl::nullopt);
   }
 
+  // AudioSinkInterface implementation.
+  int NumPreferredChannels() const override { return num_preferred_channels_; }
+
   // cricket::AudioSource implementation.
   void SetSink(cricket::AudioSource::Sink* sink) override;
 
   cricket::AudioSource::Sink* sink_;
   // Critical section protecting |sink_|.
   Mutex lock_;
+  int num_preferred_channels_ = -1;
 };
 
 class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
