@@ -171,9 +171,19 @@ const tests = [
          "declaration from UA stylesheet html.css");
     },
   },
+  {
+    title: "Check adopted sheets",
+    async run(doc, win) {
+      checkRules(doc, [1]);
+      let sheet = new win.CSSStyleSheet();
+      sheet.replaceSync(`unknowntagname { z-index: 5 }`);
+      doc.adoptedStyleSheets.push(sheet);
+      checkRules(doc, [1, 5]);
+    },
+  },
 ];
 
-async function runTests() {
+add_task(async function runTests() {
   for (let i = 0; i < tests.length; i++) {
     let test = tests[i];
     info(`Test ${i}: ${test.title}`);
@@ -184,16 +194,12 @@ async function runTests() {
     iframe.src = `file_getCSSStyleRules-${test.base}.html`;
     await new Promise(resolve => { iframe.onload = resolve; });
     try {
-      await test.run(iframe.contentDocument);
+      await test.run(iframe.contentDocument, iframe.contentWindow);
     } catch (e) {
       ok(false, "JavaScript error: " + e);
     }
   }
-  SimpleTest.finish();
-}
-
-runTests();
-
+});
 </script>
 </pre>
 </body>
