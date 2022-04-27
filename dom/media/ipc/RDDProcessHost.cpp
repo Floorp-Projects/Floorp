@@ -48,7 +48,8 @@ bool RDDProcessHost::Launch(StringVector aExtraOpts) {
 
   mPrefSerializer =
       MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSanitizePreference);
-  if (!mPrefSerializer->SerializeToSharedMemory()) {
+  if (!mPrefSerializer->SerializeToSharedMemory(GeckoProcessType_RDD,
+                                                /* remoteType */ ""_ns)) {
     return false;
   }
   mPrefSerializer->AddSharedPrefCmdLineArgs(*this, aExtraOpts);
