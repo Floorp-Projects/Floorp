@@ -312,14 +312,18 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
 
     DestroyStreams();
 
-    video_send_transport.reset();
-    audio_send_transport.reset();
-    receive_transport.reset();
-
     sender_call_->DestroyAudioSendStream(audio_send_stream);
     receiver_call_->DestroyAudioReceiveStream(audio_receive_stream);
 
     DestroyCalls();
+    // Call may post periodic rtcp packet to the transport on the process
+    // thread, thus transport should be destroyed after the call objects.
+    // Though transports keep pointers to the call objects, transports handle
+    // packets on the task_queue() and thus wouldn't create a race while current
+    // destruction happens in the same task as destruction of the call objects.
+    video_send_transport.reset();
+    audio_send_transport.reset();
+    receive_transport.reset();
   });
 
   observer->PrintResults();
@@ -357,10 +361,8 @@ TEST_F(CallPerfTest,
                      DriftingClock::PercentsFaster(30.0f), "_audio_faster");
 }
 
-// TODO(bugs.webrtc.org/12199): Disabled because flaky.
-TEST_F(
-    CallPerfTest,
-    DISABLED_Synchronization_PlaysOutAudioAndVideoWithVideoFasterThanAudioDrift) {  // NOLINT(whitespace/line_length)
+TEST_F(CallPerfTest,
+       Synchronization_PlaysOutAudioAndVideoWithVideoFasterThanAudioDrift) {
   TestAudioVideoSync(FecMode::kOn, CreateOrder::kVideoFirst,
                      DriftingClock::kNoDrift,
                      DriftingClock::PercentsFaster(30.0f),
