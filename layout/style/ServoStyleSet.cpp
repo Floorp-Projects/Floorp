@@ -634,7 +634,7 @@ StyleSheet* ServoStyleSet::SheetAt(Origin aOrigin, size_t aIndex) const {
       Servo_StyleSet_GetSheetAt(mRawSet.get(), aOrigin, aIndex));
 }
 
-Maybe<StyleOrientation> ServoStyleSet::GetDefaultPageOrientation() {
+Maybe<StylePageOrientation> ServoStyleSet::GetDefaultPageOrientation() {
   const RefPtr<ComputedStyle> style =
       ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType::pageContent);
   const StylePageSize& pageSize = style->StylePage()->mSize;
@@ -645,10 +645,10 @@ Maybe<StyleOrientation> ServoStyleSet::GetDefaultPageOrientation() {
     const CSSCoord w = pageSize.AsSize().width.ToCSSPixels();
     const CSSCoord h = pageSize.AsSize().height.ToCSSPixels();
     if (w > h) {
-      return Some(StyleOrientation::Landscape);
+      return Some(StylePageOrientation::Landscape);
     }
     if (w < h) {
-      return Some(StyleOrientation::Portrait);
+      return Some(StylePageOrientation::Portrait);
     }
   } else {
     MOZ_ASSERT(pageSize.IsAuto(), "Impossible page size");
