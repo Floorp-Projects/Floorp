@@ -239,8 +239,6 @@ module.exports = {
   convertWorkerExpressionToGlobals(node, isGlobal, dirname) {
     var getGlobalsForFile = require("./globals").getGlobalsForFile;
 
-    let globalModules = this.modulesGlobalData;
-
     let results = [];
     let expr = node.expression;
 
@@ -259,15 +257,9 @@ module.exports = {
               let additionalGlobals = getGlobalsForFile(filePath);
               results = results.concat(additionalGlobals);
             }
-          } else if (match[2] in globalModules) {
-            results = results.concat(
-              globalModules[match[2]].map(name => {
-                return { name, writable: true };
-              })
-            );
-          } else {
-            results.push({ name: match[3], writable: true, explicit: true });
           }
+          // Import with relative/absolute path should explicitly use
+          // `import-globals-from` comment.
         }
       }
     }
