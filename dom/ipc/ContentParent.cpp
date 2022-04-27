@@ -2534,8 +2534,7 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
 
   // Instantiate the pref serializer. It will be cleaned up in
   // `LaunchSubprocessReject`/`LaunchSubprocessResolve`.
-  mPrefSerializer = MakeUnique<mozilla::ipc::SharedPreferenceSerializer>(
-      ShouldSanitizePreference);
+  mPrefSerializer = MakeUnique<mozilla::ipc::SharedPreferenceSerializer>();
   if (!mPrefSerializer->SerializeToSharedMemory(GeckoProcessType_Content,
                                                 GetRemoteType())) {
     NS_WARNING("SharedPreferenceSerializer::SerializeToSharedMemory failed");
