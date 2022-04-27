@@ -111,12 +111,12 @@ class FakeFile(object):
 
 TEST_CONFIG = """\
 {
-  'masters': {
+  'builder_groups': {
     'chromium': {},
-    'fake_master': {
+    'fake_group': {
       'fake_builder': 'rel_bot',
       'fake_debug_builder': 'debug_goma',
-      'fake_args_bot': '//build/args/bots/fake_master/fake_args_bot.gn',
+      'fake_args_bot': '//build/args/bots/fake_group/fake_args_bot.gn',
       'fake_multi_phase': { 'phase_1': 'phase_1', 'phase_2': 'phase_2'},
       'fake_android_bot': 'android_bot',
     },
@@ -169,7 +169,7 @@ class UnitTest(unittest.TestCase):
         },
       }''')
     mbw.files.setdefault(
-        mbw.ToAbsPath('//build/args/bots/fake_master/fake_args_bot.gn'),
+        mbw.ToAbsPath('//build/args/bots/fake_group/fake_args_bot.gn'),
         'is_debug = false\n')
     if files:
       for path, contents in files.items():
@@ -238,12 +238,12 @@ class UnitTest(unittest.TestCase):
                   '--check\n', mbw.out)
 
     mbw = self.fake_mbw()
-    self.check(['gen', '-m', 'fake_master', '-b', 'fake_args_bot',
+    self.check(['gen', '-m', 'fake_group', '-b', 'fake_args_bot',
                 '//out/Debug'],
                mbw=mbw, ret=0)
     self.assertEqual(
         mbw.files['/fake_src/out/Debug/args.gn'],
-        'import("//build/args/bots/fake_master/fake_args_bot.gn")\n\n')
+        'import("//build/args/bots/fake_group/fake_args_bot.gn")\n\n')
 
 
   def test_gen_fails(self):
@@ -801,26 +801,26 @@ class UnitTest(unittest.TestCase):
 
   def test_multiple_phases(self):
     # Check that not passing a --phase to a multi-phase builder fails.
-    mbw = self.check(['lookup', '-m', 'fake_master', '-b', 'fake_multi_phase'],
+    mbw = self.check(['lookup', '-m', 'fake_group', '-b', 'fake_multi_phase'],
                      ret=1)
     self.assertIn('Must specify a build --phase', mbw.out)
 
     # Check that passing a --phase to a single-phase builder fails.
-    mbw = self.check(['lookup', '-m', 'fake_master', '-b', 'fake_builder',
+    mbw = self.check(['lookup', '-m', 'fake_group', '-b', 'fake_builder',
                       '--phase', 'phase_1'], ret=1)
     self.assertIn('Must not specify a build --phase', mbw.out)
 
     # Check that passing a wrong phase key to a multi-phase builder fails.
-    mbw = self.check(['lookup', '-m', 'fake_master', '-b', 'fake_multi_phase',
+    mbw = self.check(['lookup', '-m', 'fake_group', '-b', 'fake_multi_phase',
                       '--phase', 'wrong_phase'], ret=1)
     self.assertIn('Phase wrong_phase doesn\'t exist', mbw.out)
 
     # Check that passing a correct phase key to a multi-phase builder passes.
-    mbw = self.check(['lookup', '-m', 'fake_master', '-b', 'fake_multi_phase',
+    mbw = self.check(['lookup', '-m', 'fake_group', '-b', 'fake_multi_phase',
                       '--phase', 'phase_1'], ret=0)
     self.assertIn('phase = 1', mbw.out)
 
-    mbw = self.check(['lookup', '-m', 'fake_master', '-b', 'fake_multi_phase',
+    mbw = self.check(['lookup', '-m', 'fake_group', '-b', 'fake_multi_phase',
                       '--phase', 'phase_2'], ret=0)
     self.assertIn('phase = 2', mbw.out)
 
