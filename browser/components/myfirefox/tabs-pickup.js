@@ -4,89 +4,217 @@
 
 /* eslint-env mozilla/frame-script */
 
-const tabsSetupFlowManager = new (class {
-  initialize(elem) {
-    this.elem = elem;
-    // placeholder initial value
-    // Bug 1763138 - Get the actual initial state for the setup flow
-    this.setupState = 0;
+const { switchToTabHavingURI } = window.docShell.chromeEventHandler.ownerGlobal;
 
-    this.elem.addEventListener("click", this);
-    this.elem.updateSetupState(this.setupState);
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+const tabsSetupFlowManager = new (class {
+  constructor() {
+    this.QueryInterface = ChromeUtils.generateQI(["nsIObserver"]);
+
+    this.setupState = new Map();
+    this._currentSetupStateName = "";
+    this.sync = {};
+
+    XPCOMUtils.defineLazyModuleGetters(this, {
+      Services: "resource://gre/modules/Services.jsm",
+      fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+    });
+    ChromeUtils.defineModuleGetter(
+      this.sync,
+      "UIState",
+      "resource://services-sync/UIState.jsm"
+    );
+
+    this.registerSetupState({
+      uiStateIndex: 0,
+      name: "not-signed-in",
+      exitConditions: () => {
+        return this.fxaSignedIn;
+      },
+    });
+    // TODO: handle offline, sync service not ready or available
+    this.registerSetupState({
+      uiStateIndex: 1,
+      name: "no-mobile-device",
+      exitConditions: () => {
+        return this.mobileDeviceConnected;
+      },
+    });
+    this.registerSetupState({
+      uiStateIndex: 2,
+      name: "disabled-tab-sync",
+      exitConditions: () => {
+        // Bug 1763139 - Implement the actual logic to advance to next step
+        // This will basically be a check for the pref to enable tab-syncing
+        return false;
+      },
+    });
+    this.registerSetupState({
+      uiStateIndex: 3,
+      name: "synced-tabs-not-ready",
+      exitConditions: () => {
+        // Bug 1763139 - Implement the actual logic to advance to next step
+        return false;
+      },
+    });
+    this.registerSetupState({
+      uiStateIndex: 4,
+      name: "show-synced-tabs-agreement",
+      exitConditions: () => {
+        // Bug 1763139 - Implement the actual logic to advance to next step
+        return false;
+      },
+    });
   }
+  async initialize(elem) {
+    this.elem = elem;
+    this.elem.addEventListener("click", this);
+    this.Services.obs.addObserver(this, this.sync.UIState.ON_UPDATE);
+    this.Services.obs.addObserver(this, "fxaccounts:device_connected");
+    this.Services.obs.addObserver(this, "fxaccounts:device_disconnected");
+
+    await this.fxAccounts.getSignedInUser();
+    this.maybeUpdateUI();
+  }
+  uninit() {
+    this.Services.obs.removeObserver(this, this.sync.UIState.ON_UPDATE);
+    this.Services.obs.removeObserver(this, "fxaccounts:device_connected");
+    this.Services.obs.removeObserver(this, "fxaccounts:device_disconnected");
+  }
+  get fxaSignedIn() {
+    return (
+      this.sync.UIState.get().status === this.sync.UIState.STATUS_SIGNED_IN
+    );
+  }
+  get mobileDeviceConnected() {
+    let mobileDevice = this.fxAccounts.device?.recentDeviceList?.find(
+      device => device.type == "mobile"
+    );
+    return !!mobileDevice;
+  }
+  registerSetupState(state) {
+    this.setupState.set(state.name, state);
+  }
+
+  async observe(subject, topic, data) {
+    switch (topic) {
+      case this.sync.UIState.ON_UPDATE:
+        this.maybeUpdateUI();
+        break;
+      case "fxaccounts:device_connected":
+      case "fxaccounts:device_disconnected":
+        await this.fxAccounts.device.refreshDeviceList();
+        this.maybeUpdateUI();
+        break;
+    }
+  }
+
   handleEvent(event) {
     if (event.type == "click" && event.target.dataset.action) {
       switch (event.target.dataset.action) {
         case "view0-primary-action": {
-          this.advanceToAddDeviceStep(event.target);
+          this.openFxASignup(event.target);
           break;
         }
         case "view1-primary-action": {
-          this.advanceToSyncTabsStep(event.target);
+          this.openSyncPreferences(event.target);
           break;
         }
         case "view2-primary-action": {
-          this.advanceToSetupComplete(event.target);
+          this.syncOpenTabs(event.target);
           break;
         }
         case "view3-primary-action": {
-          this.advanceToGetMyTabs(event.target);
+          this.confirmSetupComplete(event.target);
           break;
         }
       }
     }
   }
-  advanceToAddDeviceStep(containerElem) {
-    // Bug 1763138 - Implement the actual logic to advance to next step
-    this.setupState = 1;
-    this.elem.updateSetupState(this.setupState);
+
+  maybeUpdateUI() {
+    let nextSetupStateName = this._currentSetupStateName;
+
+    // state transition conditions
+    for (let state of this.setupState.values()) {
+      nextSetupStateName = state.name;
+      if (!state.exitConditions()) {
+        break;
+      }
+    }
+
+    if (nextSetupStateName !== this._currentSetupStateName) {
+      this.elem.updateSetupState(
+        this.setupState.get(nextSetupStateName).uiStateIndex
+      );
+      this._currentSetupStateName = nextSetupStateName;
+    }
   }
-  advanceToSyncTabsStep(containerElem) {
-    // Bug 1763138 - Implement the actual logic to advance to next step
-    this.setupState = 2;
-    this.elem.updateSetupState(this.setupState);
+
+  async openFxASignup() {
+    const url = await this.fxAccounts.constructor.config.promiseConnectAccountURI(
+      "myfirefox"
+    );
+    switchToTabHavingURI(url, true);
   }
-  advanceToSetupComplete(containerElem) {
-    // Bug 1763138 - Implement the actual logic to advance to next step
-    this.setupState = 3;
-    this.elem.updateSetupState(this.setupState);
+  openSyncPreferences(containerElem) {
+    const url = "about:preferences?action=pair#sync";
+    switchToTabHavingURI(url, true);
   }
-  advanceToGetMyTabs(containerElem) {
-    // Bug 1763138 - Implement the actual logic to advance to next step
-    this.setupState = 4;
-    this.elem.updateSetupState(this.setupState);
+  syncOpenTabs(containerElem) {
+    // Bug 1763139 - Implement the actual logic to advance to next step
+    this.elem.updateSetupState(
+      this.setupState.get("synced-tabs-not-ready").uiStateIndex
+    );
+  }
+  confirmSetupComplete(containerElem) {
+    // Bug 1763139 - Implement the actual logic to advance to next step
+    this.elem.updateSetupState(
+      this.setupState.get("show-synced-tabs-agreement").uiStateIndex
+    );
   }
 })();
 
-export class TabsPickupContainer extends HTMLElement {
+class TabsPickupContainer extends HTMLElement {
   constructor() {
     super();
     this.manager = null;
-    this._currentSetupState = -1;
+    this._currentSetupStateIndex = -1;
   }
   get setupContainerElem() {
-    return this.querySelector("#tabpickup-setup-steps");
+    return this.querySelector(".sync-setup-container");
   }
   get tabsContainerElem() {
-    return this.querySelector("#tabpickup-tabs-container");
+    return this.querySelector(".synced-tabs-container");
   }
   appendTemplatedElement(templateId, elementId) {
     const template = document.getElementById(templateId);
     const templateContent = template.content;
     const cloned = templateContent.cloneNode(true);
     if (elementId) {
-      cloned.firstElementChild.id = elementId;
+      // populate id-prefixed attributes on elements that need them
+      for (let elem of cloned.querySelectorAll("[data-prefix]")) {
+        let [name, value] = elem.dataset.prefix
+          .split(":")
+          .map(str => str.trim());
+        elem.setAttribute(name, elementId + value);
+        delete elem.dataset.prefix;
+      }
     }
     this.appendChild(cloned);
   }
   updateSetupState(stateIndex) {
+    const currStateIndex = this._currentSetupStateIndex;
     if (stateIndex === undefined) {
-      stateIndex = this._currentSetupState;
+      stateIndex = currStateIndex;
     }
-    if (stateIndex == this._currentSetupState) {
+    if (stateIndex === this._currentSetupStateIndex) {
       return;
     }
-    this._currentSetupState = stateIndex;
+    this._currentSetupStateIndex = stateIndex;
     this.render();
   }
   render() {
@@ -95,15 +223,12 @@ export class TabsPickupContainer extends HTMLElement {
     }
     let setupElem = this.setupContainerElem;
     let tabsElem = this.tabsContainerElem;
-    const stateIndex = this._currentSetupState;
+    const stateIndex = this._currentSetupStateIndex;
 
     // show/hide either the setup or tab list containers, creating each as necessary
     if (stateIndex < 4) {
       if (!setupElem) {
-        this.appendTemplatedElement(
-          "sync-setup-template",
-          "tabpickup-setup-steps"
-        );
+        this.appendTemplatedElement("sync-setup-template", "tabpickup-steps");
         setupElem = this.setupContainerElem;
       }
       if (tabsElem) {
