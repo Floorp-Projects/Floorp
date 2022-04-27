@@ -14,7 +14,7 @@ The ``get()`` method returns the list of entries for a specific key. Each entry 
 
 .. code-block:: js
 
-    const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js", {});
+    const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 
     const data = await RemoteSettings("a-key").get();
 
@@ -515,11 +515,11 @@ For example, they leverage advanced customization options (bucket, content-signa
     RemoteSecuritySettings.init();
 
 
-    const Blocklist = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
+    const {BlocklistPrivate} = ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
 
-    Blocklist.ExtensionBlocklistRS._ensureInitialized();
-    Blocklist.PluginBlocklistRS._ensureInitialized();
-    Blocklist.GfxBlocklistRS._ensureInitialized();
+    BlocklistPrivate.ExtensionBlocklistRS._ensureInitialized();
+    BlocklistPrivate.PluginBlocklistRS._ensureInitialized();
+    BlocklistPrivate.GfxBlocklistRS._ensureInitialized();
 
 Then, in order to access a specific client instance, the ``bucketName`` must be specified:
 
