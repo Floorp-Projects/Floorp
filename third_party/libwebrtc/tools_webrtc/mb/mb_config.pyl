@@ -12,12 +12,12 @@
 # easy to try different configurations of GN args in tryjob patches.
 
 {
-  # This is a map of buildbot master names -> buildbot builder names ->
+  # This is a map of buildbot builder group names -> buildbot builder names ->
   # config names (where each config name is a key in the 'configs' dict,
   # above). mb uses this dict to look up which config to use for a given bot.
   # The builders should be sorted by the order they appear in the /builders
   # page on the buildbots, *not* alphabetically.
-  'masters': {
+  'builder_groups': {
     'client.webrtc': {
       # iOS
       'iOS32 Debug': 'ios_debug_bot_arm',
