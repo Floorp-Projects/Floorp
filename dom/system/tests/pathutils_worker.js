@@ -2,10 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env mozilla/chrome-worker */
-/* global finish */
 
 "use strict";
 
+/* import-globals-from /testing/mochitest/tests/SimpleTest/WorkerSimpleTest.js */
 importScripts("chrome://mochikit/content/tests/SimpleTest/WorkerSimpleTest.js");
 
 self.onmessage = async function(message) {
