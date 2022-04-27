@@ -14,6 +14,9 @@
 // Defines WEBRTC_ARCH_X86_FAMILY, used below.
 #include "rtc_base/system/arch.h"
 
+#if defined(WEBRTC_HAS_NEON)
+#include <arm_neon.h>
+#endif
 #if defined(WEBRTC_ARCH_X86_FAMILY)
 #include <emmintrin.h>
 #endif
@@ -70,8 +73,31 @@ class VectorMath {
       }
       return dot_product;
     }
+#elif defined(WEBRTC_HAS_NEON) && defined(WEBRTC_ARCH_ARM64)
+    if (cpu_features_.neon) {
+      float32x4_t accumulator = vdupq_n_f32(0.f);
+      constexpr int kBlockSizeLog2 = 2;
+      constexpr int kBlockSize = 1 << kBlockSizeLog2;
+      const int incomplete_block_index = (x.size() >> kBlockSizeLog2)
+                                         << kBlockSizeLog2;
+      for (int i = 0; i < incomplete_block_index; i += kBlockSize) {
+        RTC_DCHECK_LE(i + kBlockSize, x.size());
+        const float32x4_t x_i = vld1q_f32(&x[i]);
+        const float32x4_t y_i = vld1q_f32(&y[i]);
+        accumulator = vfmaq_f32(accumulator, x_i, y_i);
+      }
+      // Reduce `accumulator` by addition.
+      const float32x2_t tmp =
+          vpadd_f32(vget_low_f32(accumulator), vget_high_f32(accumulator));
+      float dot_product = vget_lane_f32(vpadd_f32(tmp, vrev64_f32(tmp)), 0);
+      // Add the result for the last block if incomplete.
+      for (int i = incomplete_block_index;
+           i < rtc::dchecked_cast<int>(x.size()); ++i) {
+        dot_product += x[i] * y[i];
+      }
+      return dot_product;
+    }
 #endif
-    // TODO(bugs.webrtc.org/10480): Add NEON alternative implementation.
     return std::inner_product(x.begin(), x.end(), y.begin(), 0.f);
   }
 

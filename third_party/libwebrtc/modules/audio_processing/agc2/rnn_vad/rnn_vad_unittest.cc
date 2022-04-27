@@ -166,6 +166,9 @@ std::vector<AvailableCpuFeatures> GetCpuFeaturesToTest() {
   if (available.sse2) {
     v.push_back({/*sse2=*/true, /*avx2=*/false, /*neon=*/false});
   }
+  if (available.neon) {
+    v.push_back({/*sse2=*/false, /*avx2=*/false, /*neon=*/true});
+  }
   return v;
 }
 

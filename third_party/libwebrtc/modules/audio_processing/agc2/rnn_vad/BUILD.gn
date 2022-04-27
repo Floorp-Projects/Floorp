@@ -17,6 +17,7 @@ rtc_library("rnn_vad") {
     "rnn.h",
   ]
 
+  defines = []
   if (rtc_build_with_neon && target_cpu != "arm64") {
     suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
     cflags = [ "-mfpu=neon" ]
@@ -84,6 +85,13 @@ rtc_source_set("rnn_vad_layers") {
     "rnn_gru.cc",
     "rnn_gru.h",
   ]
+
+  defines = []
+  if (rtc_build_with_neon && current_cpu != "arm64") {
+    suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [ "-mfpu=neon" ]
+  }
+
   deps = [
     ":rnn_vad_common",
     ":vector_math",
@@ -138,6 +146,13 @@ rtc_library("rnn_vad_pitch") {
     "pitch_search_internal.cc",
     "pitch_search_internal.h",
   ]
+
+  defines = []
+  if (rtc_build_with_neon && current_cpu != "arm64") {
+    suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+    cflags = [ "-mfpu=neon" ]
+  }
+
   deps = [
     ":rnn_vad_auto_correlation",
     ":rnn_vad_common",
@@ -253,6 +268,13 @@ if (rtc_include_tests) {
       "symmetric_matrix_buffer_unittest.cc",
       "vector_math_unittest.cc",
     ]
+
+    defines = []
+    if (rtc_build_with_neon && current_cpu != "arm64") {
+      suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
+      cflags = [ "-mfpu=neon" ]
+    }
+
     deps = [
       ":rnn_vad",
       ":rnn_vad_auto_correlation",
