@@ -192,14 +192,15 @@ impl Example for App {
 
     fn on_event(
         &mut self,
-        event: winit::WindowEvent,
+        event: winit::event::WindowEvent,
+        _window: &winit::window::Window,
         api: &mut RenderApi,
         document_id: DocumentId,
     ) -> bool {
         match event {
-            winit::WindowEvent::KeyboardInput {
-                input: winit::KeyboardInput {
-                    state: winit::ElementState::Pressed,
+            winit::event::WindowEvent::KeyboardInput {
+                input: winit::event::KeyboardInput {
+                    state: winit::event::ElementState::Pressed,
                     virtual_keycode: Some(key),
                     ..
                 },
@@ -208,7 +209,7 @@ impl Example for App {
                 let mut txn = Transaction::new();
 
                 match key {
-                    winit::VirtualKeyCode::S => {
+                    winit::event::VirtualKeyCode::S => {
                         self.stress_keys.clear();
 
                         for _ in 0 .. 16 {
@@ -235,10 +236,10 @@ impl Example for App {
                             }
                         }
                     }
-                    winit::VirtualKeyCode::D => if let Some(image_key) = self.image_key.take() {
+                    winit::event::VirtualKeyCode::D => if let Some(image_key) = self.image_key.take() {
                         txn.delete_image(image_key);
                     },
-                    winit::VirtualKeyCode::U => if let Some(image_key) = self.image_key {
+                    winit::event::VirtualKeyCode::U => if let Some(image_key) = self.image_key {
                         let size = 128;
                         self.image_generator.generate_image(size);
 
@@ -249,7 +250,7 @@ impl Example for App {
                             &DirtyRect::All,
                         );
                     },
-                    winit::VirtualKeyCode::E => {
+                    winit::event::VirtualKeyCode::E => {
                         if let Some(image_key) = self.image_key.take() {
                             txn.delete_image(image_key);
                         }
@@ -272,7 +273,7 @@ impl Example for App {
 
                         self.image_key = Some(image_key);
                     }
-                    winit::VirtualKeyCode::R => {
+                    winit::event::VirtualKeyCode::R => {
                         if let Some(image_key) = self.image_key.take() {
                             txn.delete_image(image_key);
                         }
