@@ -5461,7 +5461,7 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
 }
 
 TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
-       ReegotiateManyAudioTransceivers) {
+       RenegotiateManyAudioTransceivers) {
   PeerConnectionInterface::RTCConfiguration config;
   config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   ASSERT_TRUE(CreatePeerConnectionWrappersWithConfig(config, config));
@@ -5525,6 +5525,75 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
     ASSERT_GT(1000, elapsed_time_ms)
         << "Video transceivers: Negotiation took too long after "
         << current_size << " tracks added";
+  }
+}
+
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       RenegotiateManyVideoTransceiversAndWatchAudioDelay) {
+  PeerConnectionInterface::RTCConfiguration config;
+  config.sdp_semantics = SdpSemantics::kUnifiedPlan;
+  ASSERT_TRUE(CreatePeerConnectionWrappersWithConfig(config, config));
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  // Wait until we can see the audio flowing.
+  MediaExpectations media_expectations;
+  media_expectations.CalleeExpectsSomeAudio();
+  ASSERT_TRUE(ExpectNewFrames(media_expectations));
+
+  // Get the baseline numbers for audio_packets and audio_delay.
+  auto received_stats = callee()->NewGetStats();
+  auto track_stats =
+      received_stats->GetStatsOfType<webrtc::RTCMediaStreamTrackStats>()[0];
+  ASSERT_TRUE(track_stats->relative_packet_arrival_delay.is_defined());
+  auto rtp_stats =
+      received_stats->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>()[0];
+  ASSERT_TRUE(rtp_stats->packets_received.is_defined());
+  ASSERT_TRUE(rtp_stats->track_id.is_defined());
+  auto audio_track_stats_id = track_stats->id();
+  ASSERT_TRUE(received_stats->Get(audio_track_stats_id));
+  auto rtp_stats_id = rtp_stats->id();
+  ASSERT_EQ(audio_track_stats_id, *rtp_stats->track_id);
+  auto audio_packets = *rtp_stats->packets_received;
+  auto audio_delay = *track_stats->relative_packet_arrival_delay;
+
+  int current_size = caller()->pc()->GetTransceivers().size();
+  // Add more tracks until we get close to having issues.
+  // Making this number very large makes the test very slow.
+  while (current_size < 32) {
+    // Double the number of tracks
+    for (int i = 0; i < current_size; i++) {
+      caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
+    }
+    current_size = caller()->pc()->GetTransceivers().size();
+    RTC_LOG(LS_INFO) << "Renegotiating with " << current_size << " tracks";
+    auto start_time_ms = rtc::TimeMillis();
+    caller()->CreateAndSetAndSignalOffer();
+    // We want to stop when the time exceeds one second.
+    ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+    auto elapsed_time_ms = rtc::TimeMillis() - start_time_ms;
+    RTC_LOG(LS_INFO) << "Renegotiating took " << elapsed_time_ms << " ms";
+    // This is a guard against the test using excessive amounts of time.
+    ASSERT_GT(5000, elapsed_time_ms)
+        << "Video transceivers: Negotiation took too long after "
+        << current_size << " tracks added";
+    auto report = callee()->NewGetStats();
+    track_stats =
+        report->GetAs<webrtc::RTCMediaStreamTrackStats>(audio_track_stats_id);
+    ASSERT_TRUE(track_stats);
+    rtp_stats = report->GetAs<webrtc::RTCInboundRTPStreamStats>(rtp_stats_id);
+    ASSERT_TRUE(rtp_stats);
+    auto delta_packets = *rtp_stats->packets_received - audio_packets;
+    auto delta_rpad = *track_stats->relative_packet_arrival_delay - audio_delay;
+    auto recent_delay = delta_packets > 0 ? delta_rpad / delta_packets : -1;
+    // An average relative packet arrival delay over the renegotiation of
+    // > 100 ms indicates that something is dramatically wrong, and will impact
+    // quality for sure.
+    ASSERT_GT(0.1, recent_delay);
+    // Increment trailing counters
+    audio_packets = *rtp_stats->packets_received;
+    audio_delay = *track_stats->relative_packet_arrival_delay;
   }
 }
 
