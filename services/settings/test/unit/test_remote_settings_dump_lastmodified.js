@@ -1,21 +1,27 @@
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
 
 Cu.importGlobalProperties(["fetch"]);
 
 async function getLocalDumpLastModified(bucket, collection) {
-  let res;
-  try {
-    res = await fetch(
-      `resource://app/defaults/settings/${bucket}/${collection}.json`
-    );
-  } catch (e) {
-    return -1;
+  let res = await fetch(
+    `resource://app/defaults/settings/${bucket}/${collection}.json`
+  );
+  let records = (await res.json()).data;
+
+  if (records.some(r => r.last_modified > records[0].last_modified)) {
+    // The dump importer should ensure that the newest record is at the front:
+    // https://searchfox.org/mozilla-central/rev/5b3444ad300e244b5af4214212e22bd9e4b7088a/taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh#304
+    ok(false, `${bucket}/${collection} - newest record should be in the front`);
   }
-  const { timestamp } = await res.json();
-  ok(timestamp >= 0, `${bucket}/${collection} dump has timestamp`);
-  return timestamp;
+  return records.reduce(
+    (max, { last_modified }) => Math.max(last_modified, max),
+    0
+  );
 }
 
 add_task(async function lastModified_of_non_existing_dump() {
@@ -32,24 +38,23 @@ add_task(async function lastModified_of_non_existing_dump() {
 });
 
 add_task(async function lastModified_summary_is_correct() {
+  if (AppConstants.platform == "android") {
+    // TODO bug 1719560: When implemented, remove this condition.
+    equal(JSON.stringify(Utils._dumpStats), "{}", "No dumps on Android yet");
+    return;
+  }
   ok(Object.keys(Utils._dumpStats).length > 0, "Contains summary of dumps");
 
-  let checked = 0;
   for (let [identifier, lastModified] of Object.entries(Utils._dumpStats)) {
-    let [bucket, collection] = identifier.split("/");
-    let actual = await getLocalDumpLastModified(bucket, collection);
-    if (actual < 0) {
-      info(`${identifier} has no dump, skip.`);
-      continue;
-    }
     info(`Checking correctness of ${identifier}`);
+    let [bucket, collection] = identifier.split("/");
     equal(
       await Utils.getLocalDumpLastModified(bucket, collection),
       lastModified,
       `Expected last_modified value for ${identifier}`
     );
+
+    let actual = await getLocalDumpLastModified(bucket, collection);
     equal(lastModified, actual, `last_modified should match collection`);
-    checked++;
   }
-  ok(checked > 0, "At least one dump was packaged and checked.");
 });
