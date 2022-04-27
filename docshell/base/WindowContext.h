@@ -13,6 +13,7 @@
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
 #include "mozilla/dom/UserActivation.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsILoadInfo.h"
 #include "nsWrapperCache.h"
 
@@ -187,6 +188,10 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   // activation and the transient user gesture activation haven't yet timed
   // out.
   bool HasValidTransientUserGestureActivation();
+
+  // Reture timestamp of last user gesture in milliseconds relative to
+  // navigation start timestamp.
+  DOMHighResTimeStamp LastUserGestureTimeStamp();
 
   // Return true if the corresponding window has valid transient user gesture
   // activation and the transient user gesture activation had been consumed

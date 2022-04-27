@@ -340,10 +340,11 @@ void WindowContext::DidSet(FieldIndex<IDX_UserActivationState>) {
     USER_ACTIVATION_LOG(
         "Set user gesture start time for %s browsing context 0x%08" PRIx64,
         XRE_IsParentProcess() ? "Parent" : "Child", Id());
-    mUserGestureStart =
-        (GetUserActivationState() == UserActivation::State::FullActivated)
-            ? TimeStamp::Now()
-            : TimeStamp();
+    if (GetUserActivationState() == UserActivation::State::FullActivated) {
+      mUserGestureStart = TimeStamp::Now();
+    } else if (GetUserActivationState() == UserActivation::State::None) {
+      mUserGestureStart = TimeStamp();
+    }
   }
 }
 
@@ -459,13 +460,26 @@ bool WindowContext::HasBeenUserGestureActivated() {
   return GetUserActivationState() != UserActivation::State::None;
 }
 
+DOMHighResTimeStamp WindowContext::LastUserGestureTimeStamp() {
+  MOZ_ASSERT(IsInProcess());
+  if (nsGlobalWindowInner* innerWindow = GetInnerWindow()) {
+    if (Performance* perf = innerWindow->GetPerformance()) {
+      return perf->GetDOMTiming()->TimeStampToDOMHighRes(mUserGestureStart);
+    }
+  }
+  NS_WARNING(
+      "Unable to calculate DOMHighResTimeStamp for LastUserGestureTimeStamp");
+  return 0;
+}
+
 bool WindowContext::HasValidTransientUserGestureActivation() {
   MOZ_ASSERT(IsInProcess());
 
   if (GetUserActivationState() != UserActivation::State::FullActivated) {
-    MOZ_ASSERT(mUserGestureStart.IsNull(),
-               "mUserGestureStart should be null if the document hasn't ever "
-               "been activated by user gesture");
+    // mUserGestureStart should be null if the document hasn't ever been
+    // activated by user gesture
+    MOZ_ASSERT_IF(GetUserActivationState() == UserActivation::State::None,
+                  mUserGestureStart.IsNull());
     return false;
   }
 

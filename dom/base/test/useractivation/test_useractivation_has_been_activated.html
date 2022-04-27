@@ -22,25 +22,32 @@ function waitForEvent(aTarget, aEvent, aCallback) {
 
 let [iframe0, iframe1] = document.querySelectorAll("iframe");
 
+function doCheck(aDocument, aName, aHasBeenUserGestureActivated) {
+  is(SpecialPowers.wrap(aDocument).hasBeenUserGestureActivated,
+     aHasBeenUserGestureActivated,
+     `check has-been-user-activated on the ${aName}`);
+  if (aHasBeenUserGestureActivated) {
+    ok(SpecialPowers.wrap(aDocument).lastUserGestureTimeStamp > 0,
+       `check last-user-gesture-timestamp on the ${aName}`);
+  } else {
+    is(SpecialPowers.wrap(aDocument).lastUserGestureTimeStamp, 0,
+       `check last-user-gesture-timestamp on the ${aName}`);
+  }
+}
+
 add_task(async function checkInitialStatus() {
-  ok(!SpecialPowers.wrap(document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on top-level document");
-  ok(!SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on first iframe");
-  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on second iframe");
+  doCheck(document, "top-level document", false);
+  doCheck(frames[0].document, "first iframe", false);
+  doCheck(frames[1].document, "second iframe", false);
 });
 
 add_task(async function triggerUserActivation() {
   // Trigger user activation on the first iframe.
   SpecialPowers.wrap(frames[0].document).notifyUserGestureActivation();
   // We should also propagate to all the ancestors.
-  ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the top-level document");
-  ok(SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the first iframe");
-  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the second iframe");
+  doCheck(document, "top-level document", true);
+  doCheck(frames[0].document, "first iframe", true);
+  doCheck(frames[1].document, "second iframe", false);
 });
 
 add_task(async function iframeNavigation() {
@@ -48,26 +55,22 @@ add_task(async function iframeNavigation() {
   await waitForEvent(frames[0].frameElement, "load", () => {});
   // We should reset the flag on iframe that navigates away from current page,
   // but the flag on its ancestor isn't changed.
-  ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the top-level document");
-  ok(!SpecialPowers.wrap(frames[0].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the first iframe");
-  ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the second iframe");
+  doCheck(document, "top-level document", true);
+  doCheck(frames[0].document, "first iframe", false);
+  doCheck(frames[1].document, "second iframe", false);
 });
 
 add_task(async function triggerUserActivationOnCrossOriginFrame() {
   // Reset the activation flag.
   SpecialPowers.wrap(document).clearUserGestureActivation();
+  doCheck(document, "top-level document", false);
 
   // load cross-origin test page on iframe.
   frames[0].frameElement.src = "https://example.com/tests/dom/base/test/useractivation/file_iframe_user_activated.html";
   await waitForEvent(window, "message", (event) => {
     if (event.data === "done") {
-      ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
-         "check has-been-user-activated on the top-level document");
-      ok(!SpecialPowers.wrap(frames[1].document).hasBeenUserGestureActivated,
-         "check has-been-user-activated on the second iframe");
+      doCheck(document, "top-level document", true);
+      doCheck(frames[1].document, "second iframe", false);
     } else {
       ok(false, "receive unexpected message: " + event.data);
     }
@@ -88,15 +91,14 @@ add_task(async function propagateToSameOriginConnectedSubframe() {
 
   // Trigger user activation on top-level document.
   SpecialPowers.wrap(document).notifyUserGestureActivation();
-  ok(SpecialPowers.wrap(document).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the top-level document");
-  ok(SpecialPowers.wrap(iframe1.contentDocument).hasBeenUserGestureActivated,
-     "check has-been-user-activated on the second iframe");
+  doCheck(document, "top-level document", true);
+  doCheck(iframe1.contentDocument, "second iframe", true);
 
   iframe0.contentWindow.postMessage("get", "*");
   await waitForEvent(window, "message", (event) => {
     if (typeof event.data === "object") {
       ok(!event.data.hasBeenActivated, "check has-been-user-activated on the first iframe");
+      is(event.data.lastActivationTimestamp, 0, "check last-user-gesture-timestamp on the first iframe");
     } else {
       ok(false, "receive unexpected message: " + event.data);
     }
