@@ -298,22 +298,28 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mRemoteId);
     WriteParam(aWriter, aParam.mFramesDecoded);
+    WriteParam(aWriter, aParam.mFrameWidth);
+    WriteParam(aWriter, aParam.mFrameHeight);
     WriteParam(aWriter, aParam.mBytesReceived);
     WriteParam(aWriter, aParam.mNackCount);
     WriteParam(aWriter, aParam.mFirCount);
     WriteParam(aWriter, aParam.mPliCount);
     WriteParam(aWriter, aParam.mFramesPerSecond);
+    WriteParam(aWriter, aParam.mFramesReceived);
     WriteRTCReceivedRtpStreamStats(aWriter, aParam);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &(aResult->mRemoteId)) &&
            ReadParam(aReader, &(aResult->mFramesDecoded)) &&
+           ReadParam(aReader, &(aResult->mFrameWidth)) &&
+           ReadParam(aReader, &(aResult->mFrameHeight)) &&
            ReadParam(aReader, &(aResult->mBytesReceived)) &&
            ReadParam(aReader, &(aResult->mNackCount)) &&
            ReadParam(aReader, &(aResult->mFirCount)) &&
            ReadParam(aReader, &(aResult->mPliCount)) &&
            ReadParam(aReader, &(aResult->mFramesPerSecond)) &&
+           ReadParam(aReader, &(aResult->mFramesReceived)) &&
            ReadRTCReceivedRtpStreamStats(aReader, aResult);
   }
 };
@@ -343,6 +349,9 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
     WriteParam(aWriter, aParam.mNackCount);
     WriteParam(aWriter, aParam.mFirCount);
     WriteParam(aWriter, aParam.mPliCount);
+    WriteParam(aWriter, aParam.mFrameWidth);
+    WriteParam(aWriter, aParam.mFrameHeight);
+    WriteParam(aWriter, aParam.mFramesSent);
     WriteRTCSentRtpStreamStats(aWriter, aParam);
   }
 
@@ -353,6 +362,9 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
            ReadParam(aReader, &(aResult->mNackCount)) &&
            ReadParam(aReader, &(aResult->mFirCount)) &&
            ReadParam(aReader, &(aResult->mPliCount)) &&
+           ReadParam(aReader, &(aResult->mFrameWidth)) &&
+           ReadParam(aReader, &(aResult->mFrameHeight)) &&
+           ReadParam(aReader, &(aResult->mFramesSent)) &&
            ReadRTCSentRtpStreamStats(aReader, aResult);
   }
 };
