@@ -914,7 +914,9 @@ DownloadsDataCtor.prototype = {
 
     if (!download.newDownloadNotified) {
       download.newDownloadNotified = true;
-      this._notifyDownloadEvent("start");
+      this._notifyDownloadEvent("start", {
+        openDownloadsListOnStart: download.openDownloadsListOnStart,
+      });
     }
   },
 
@@ -968,12 +970,15 @@ DownloadsDataCtor.prototype = {
   /**
    * Displays a new or finished download notification in the most recent browser
    * window, if one is currently available with the required privacy type.
-   *
-   * @param aType
+   * @param {string} aType
    *        Set to "start" for new downloads, "finish" for completed downloads,
    *        "error" for downloads that failed and need attention
+   * @param {boolean} [openDownloadsListOnStart]
+   *        (Only relevant when aType = "start")
+   *        true (default) - open the downloads panel.
+   *        false - only show an indicator notification.
    */
-  _notifyDownloadEvent(aType) {
+  _notifyDownloadEvent(aType, { openDownloadsListOnStart = true } = {}) {
     DownloadsCommon.log(
       "Attempting to notify that a new download has started or finished."
     );
@@ -987,6 +992,7 @@ DownloadsDataCtor.prototype = {
     }
 
     let shouldOpenDownloadsPanel =
+      openDownloadsListOnStart &&
       aType == "start" &&
       Services.prefs.getBoolPref(
         "browser.download.improvements_to_download_panel"
