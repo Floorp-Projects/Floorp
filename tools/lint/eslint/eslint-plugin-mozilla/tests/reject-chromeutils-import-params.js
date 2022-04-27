@@ -16,11 +16,19 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 8 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidError() {
-  let message =
-    "ChromeUtils.import should not be called with (..., null) to " +
-    "retrieve the JSM global object. Rely on explicit exports instead.";
-  return [{ message, type: "CallExpression" }];
+function invalidError(suggested) {
+  return [
+    {
+      message: "ChromeUtils.import only takes one argument.",
+      type: "CallExpression",
+      suggestions: [
+        {
+          desc: "Remove the unnecessary parameters.",
+          output: suggested,
+        },
+      ],
+    },
+  ];
 }
 
 ruleTester.run("reject-chromeutils-import-params", rule, {
@@ -28,7 +36,9 @@ ruleTester.run("reject-chromeutils-import-params", rule, {
   invalid: [
     {
       code: 'ChromeUtils.import("resource://some/path/to/My.jsm", null)',
-      errors: invalidError(),
+      errors: invalidError(
+        `ChromeUtils.import("resource://some/path/to/My.jsm")`
+      ),
     },
     {
       code: `
@@ -36,65 +46,22 @@ ChromeUtils.import(
   "resource://some/path/to/My.jsm",
   null
 );`,
-      errors: invalidError(),
+      errors: invalidError(`
+ChromeUtils.import(
+  "resource://some/path/to/My.jsm"
+);`),
     },
     {
       code: 'ChromeUtils.import("resource://some/path/to/My.jsm", this)',
-      errors: [
-        {
-          suggestions: [
-            {
-              desc: "Use destructuring for imports.",
-              output: `const { My } = ChromeUtils.import("resource://some/path/to/My.jsm")`,
-            },
-          ],
-        },
-      ],
+      errors: invalidError(
+        `ChromeUtils.import("resource://some/path/to/My.jsm")`
+      ),
     },
     {
-      code: 'ChromeUtils.import("resource://some/path/to/My.js", this)',
-      errors: [
-        {
-          suggestions: [
-            {
-              desc: "Use destructuring for imports.",
-              output: `const { My } = ChromeUtils.import("resource://some/path/to/My.js")`,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      code: `
-ChromeUtils.import(
-  "resource://some/path/to/My.jsm",
-  this
-);`,
-      errors: [
-        {
-          suggestions: [
-            {
-              desc: "Use destructuring for imports.",
-              output: `
-const { My } = ChromeUtils.import("resource://some/path/to/My.jsm");`,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      code: 'ChromeUtils.import("resource://some/path/to/My.js", {})',
-      errors: [
-        {
-          suggestions: [
-            {
-              desc:
-                "Passing an empty object to ChromeUtils.import is unnecessary - remove the empty object",
-              output: `ChromeUtils.import("resource://some/path/to/My.js")`,
-            },
-          ],
-        },
-      ],
+      code: 'ChromeUtils.import("resource://some/path/to/My.jsm", foo, bar)',
+      errors: invalidError(
+        `ChromeUtils.import("resource://some/path/to/My.jsm")`
+      ),
     },
   ],
 });
