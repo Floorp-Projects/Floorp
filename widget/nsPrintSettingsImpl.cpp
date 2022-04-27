@@ -577,21 +577,6 @@ NS_IMETHODIMP nsPrintSettings::SetPaperId(const nsAString& aPaperId) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetIsCancelled(bool* aIsCancelled) {
-  NS_ENSURE_ARG_POINTER(aIsCancelled);
-  *aIsCancelled = mIsCancelled;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetIsCancelled(bool aIsCancelled) {
-  mIsCancelled = aIsCancelled;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsPrintSettings::GetSaveOnCancel(bool* aSaveOnCancel) {
-  *aSaveOnCancel = mSaveOnCancel;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetPaperWidth(double* aPaperWidth) {
   NS_ENSURE_ARG_POINTER(aPaperWidth);
   *aPaperWidth = mPaperWidth;
@@ -912,8 +897,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mPrintBGImages = rhs.mPrintBGImages;
   mTitle = rhs.mTitle;
   mURL = rhs.mURL;
-  mIsCancelled = rhs.mIsCancelled;
-  mSaveOnCancel = rhs.mSaveOnCancel;
   mPrintSilent = rhs.mPrintSilent;
   mShrinkToFit = rhs.mShrinkToFit;
   mShowMarginGuides = rhs.mShowMarginGuides;
