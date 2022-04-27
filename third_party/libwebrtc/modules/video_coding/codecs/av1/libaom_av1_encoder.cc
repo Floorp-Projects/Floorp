@@ -663,6 +663,15 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
   info.is_hardware_accelerated = false;
   info.scaling_settings = VideoEncoder::ScalingSettings(kMinQindex, kMaxQindex);
   info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420};
+  if (SvcEnabled()) {
+    for (int sid = 0; sid < svc_params_->number_spatial_layers; ++sid) {
+      info.fps_allocation[sid].resize(svc_params_->number_temporal_layers);
+      for (int tid = 0; tid < svc_params_->number_temporal_layers; ++tid) {
+        info.fps_allocation[sid][tid] =
+            encoder_settings_.maxFramerate / svc_params_->framerate_factor[tid];
+      }
+    }
+  }
   return info;
 }
 

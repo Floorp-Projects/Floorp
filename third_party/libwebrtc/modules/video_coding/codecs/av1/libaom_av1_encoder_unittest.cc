@@ -25,6 +25,8 @@
 namespace webrtc {
 namespace {
 
+using ::testing::ElementsAre;
+using ::testing::IsEmpty;
 using ::testing::SizeIs;
 
 VideoCodec DefaultCodecSettings() {
@@ -100,6 +102,21 @@ TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
   EXPECT_FALSE(encoded_frames[3].codec_specific_info.end_of_picture);
   EXPECT_FALSE(encoded_frames[4].codec_specific_info.end_of_picture);
   EXPECT_TRUE(encoded_frames[5].codec_specific_info.end_of_picture);
+}
+
+TEST(LibaomAv1EncoderTest, EncoderInfoProvidesFpsAllocation) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode("L3T3");
+  codec_settings.maxFramerate = 60;
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  const auto& encoder_info = encoder->GetEncoderInfo();
+  EXPECT_THAT(encoder_info.fps_allocation[0], ElementsAre(15, 30, 60));
+  EXPECT_THAT(encoder_info.fps_allocation[1], ElementsAre(15, 30, 60));
+  EXPECT_THAT(encoder_info.fps_allocation[2], ElementsAre(15, 30, 60));
+  EXPECT_THAT(encoder_info.fps_allocation[3], IsEmpty());
 }
 
 }  // namespace
