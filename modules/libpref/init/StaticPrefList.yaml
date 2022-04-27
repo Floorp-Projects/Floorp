@@ -7330,7 +7330,7 @@
 # Whether Constructable Stylesheets are enabled in script.
 - name: layout.css.constructable-stylesheets.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether trigonometric constants and functions are enabled in calc().
