@@ -215,7 +215,8 @@ bool JsepSessionDescription::Initialize(
   return true;
 }
 
-std::unique_ptr<SessionDescriptionInterface> JsepSessionDescription::Clone() {
+std::unique_ptr<SessionDescriptionInterface> JsepSessionDescription::Clone()
+    const {
   auto new_description = std::make_unique<JsepSessionDescription>(type_);
   new_description->Initialize(description_->Clone(), session_id_,
                               session_version_);
