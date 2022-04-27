@@ -1969,6 +1969,7 @@ uint32_t NativeKey::GetKeyLocation() const {
     case VK_CONTROL:
     case VK_MENU:
       NS_WARNING("Failed to decide the key location?");
+      [[fallthrough]];
 
     default:
       return eKeyLocationStandard;
