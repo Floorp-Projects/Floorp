@@ -752,28 +752,40 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     }
 
     let state = this.docState;
-    let { clientX, clientY } = event;
-    let winUtils = this.contentWindow.windowUtils;
-    // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
-    // since document.elementsFromPoint always flushes layout. The 1's in that
-    // function call are for the size of the rect that we want, which is 1x1.
-    //
-    // We pass the aOnlyVisible boolean argument to check that the video isn't
-    // occluded by anything visible at the point of mousedown. If it is, we'll
-    // ignore the mousedown.
-    let elements = winUtils.nodesFromRect(
-      clientX,
-      clientY,
-      1,
-      1,
-      1,
-      1,
-      true,
-      false,
-      true /* aOnlyVisible */,
-      state.toggleVisibilityThreshold
-    );
-    if (!Array.from(elements).includes(video)) {
+
+    let overVideo = (() => {
+      let { clientX, clientY } = event;
+      let winUtils = this.contentWindow.windowUtils;
+      // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
+      // since document.elementsFromPoint always flushes layout. The 1's in that
+      // function call are for the size of the rect that we want, which is 1x1.
+      //
+      // We pass the aOnlyVisible boolean argument to check that the video isn't
+      // occluded by anything visible at the point of mousedown. If it is, we'll
+      // ignore the mousedown.
+      let elements = winUtils.nodesFromRect(
+        clientX,
+        clientY,
+        1,
+        1,
+        1,
+        1,
+        true,
+        false,
+        /* aOnlyVisible = */ true,
+        state.toggleVisibilityThreshold
+      );
+
+      for (let element of elements) {
+        if (element == video || element.containingShadowRoot == shadowRoot) {
+          return true;
+        }
+      }
+
+      return false;
+    })();
+
+    if (!overVideo) {
       return;
     }
 
@@ -923,7 +935,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       1,
       true,
       false,
-      true
+      /* aOnlyVisible = */ true
     );
 
     for (let element of elements) {
@@ -938,13 +950,14 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       );
       logConsole.debug("PiP window is open:", element.isCloningElementVisually);
 
-      if (
-        state.weakVisibleVideos.has(element) &&
-        !element.isCloningElementVisually
-      ) {
-        logConsole.debug("Found supported element");
-        this.onMouseOverVideo(element, event);
-        return;
+      // Check for hovering over the video controls or so too, not only
+      // directly over the video.
+      for (let el = element; el; el = el.containingShadowRoot?.host) {
+        if (state.weakVisibleVideos.has(el) && !el.isCloningElementVisually) {
+          logConsole.debug("Found supported element");
+          this.onMouseOverVideo(el, event);
+          return;
+        }
       }
     }
 
