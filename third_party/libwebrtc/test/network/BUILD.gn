@@ -92,31 +92,33 @@ rtc_library("network_emulation_unittest") {
   ]
 }
 
-rtc_library("network_emulation_pc_unittest") {
-  testonly = true
-  sources = [ "network_emulation_pc_unittest.cc" ]
-  deps = [
-    ":emulated_network",
-    "../:test_support",
-    "../../api:callfactory_api",
-    "../../api:libjingle_peerconnection_api",
-    "../../api:scoped_refptr",
-    "../../api:simulated_network_api",
-    "../../api/rtc_event_log:rtc_event_log_factory",
-    "../../api/task_queue:default_task_queue_factory",
-    "../../api/transport:field_trial_based_config",
-    "../../call:simulated_network",
-    "../../media:rtc_audio_video",
-    "../../media:rtc_media_engine_defaults",
-    "../../modules/audio_device:audio_device_impl",
-    "../../p2p:rtc_p2p",
-    "../../pc:pc_test_utils",
-    "../../pc:peerconnection_wrapper",
-    "../../rtc_base",
-    "../../rtc_base:gunit_helpers",
-    "../../rtc_base:logging",
-    "../../rtc_base:rtc_event",
-  ]
+if (rtc_include_tests) {
+  rtc_library("network_emulation_pc_unittest") {
+    testonly = true
+    sources = [ "network_emulation_pc_unittest.cc" ]
+    deps = [
+      ":emulated_network",
+      "../:test_support",
+      "../../api:callfactory_api",
+      "../../api:libjingle_peerconnection_api",
+      "../../api:scoped_refptr",
+      "../../api:simulated_network_api",
+      "../../api/rtc_event_log:rtc_event_log_factory",
+      "../../api/task_queue:default_task_queue_factory",
+      "../../api/transport:field_trial_based_config",
+      "../../call:simulated_network",
+      "../../media:rtc_audio_video",
+      "../../media:rtc_media_engine_defaults",
+      "../../modules/audio_device:audio_device_impl",
+      "../../p2p:rtc_p2p",
+      "../../pc:pc_test_utils",
+      "../../pc:peerconnection_wrapper",
+      "../../rtc_base",
+      "../../rtc_base:gunit_helpers",
+      "../../rtc_base:logging",
+      "../../rtc_base:rtc_event",
+    ]
+  }
 }
 
 rtc_library("cross_traffic_unittest") {
@@ -132,42 +134,44 @@ rtc_library("cross_traffic_unittest") {
     "../../rtc_base:logging",
     "../../rtc_base:network_constants",
     "../../rtc_base:rtc_event",
-    "//test/time_controller:time_controller",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
-}
-
-rtc_library("feedback_generator") {
-  testonly = true
-  sources = [
-    "feedback_generator.cc",
-    "feedback_generator.h",
-  ]
-  deps = [
-    ":emulated_network",
-    "../../api/transport:test_feedback_generator_interface",
-    "../../call:simulated_network",
-    "../../rtc_base:checks",
     "../time_controller",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
-rtc_library("feedback_generator_unittest") {
-  testonly = true
-  sources = [ "feedback_generator_unittest.cc" ]
-  deps = [
-    "../:test_support",
-    "../../api/transport:test_feedback_generator",
-  ]
-}
+if (rtc_include_tests) {
+  rtc_library("feedback_generator") {
+    testonly = true
+    sources = [
+      "feedback_generator.cc",
+      "feedback_generator.h",
+    ]
+    deps = [
+      ":emulated_network",
+      "../../api/transport:test_feedback_generator_interface",
+      "../../call:simulated_network",
+      "../../rtc_base:checks",
+      "../time_controller",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  }
 
-rtc_library("network_emulation_unittests") {
-  testonly = true
-  deps = [
-    ":cross_traffic_unittest",
-    ":feedback_generator_unittest",
-    ":network_emulation_pc_unittest",
-    ":network_emulation_unittest",
-  ]
+  rtc_library("feedback_generator_unittest") {
+    testonly = true
+    sources = [ "feedback_generator_unittest.cc" ]
+    deps = [
+      "../:test_support",
+      "../../api/transport:test_feedback_generator",
+    ]
+  }
+
+  rtc_library("network_emulation_unittests") {
+    testonly = true
+    deps = [
+      ":cross_traffic_unittest",
+      ":feedback_generator_unittest",
+      ":network_emulation_pc_unittest",
+      ":network_emulation_unittest",
+    ]
+  }
 }
