@@ -91,7 +91,7 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 
 static constexpr uint32_t kVideoFramesPerSec = 30;
-static constexpr uint32_t kVideoDroppedRatio = 1;
+static constexpr uint32_t kVideoDroppedRatio = 5;
 
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
