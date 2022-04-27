@@ -193,11 +193,13 @@ def expected_eslint_modules():
 
     # Also read the in-tree ESLint plugin mozilla information, to ensure the
     # dependencies are up to date.
-    mozilla_json_path = os.path.join(
-        get_eslint_module_path(), "eslint-plugin-mozilla", "package.json"
-    )
-    with open(mozilla_json_path, "r", encoding="utf-8") as f:
-        expected_modules.update(json.load(f).get("dependencies", {}))
+    # Bug 1766659: This is disabled for now due to sub-dependencies at the top
+    # level providing different module versions to those in eslint-plugin-mozilla.
+    # mozilla_json_path = os.path.join(
+    #     get_eslint_module_path(), "eslint-plugin-mozilla", "package.json"
+    # )
+    # with open(mozilla_json_path, "r", encoding="utf-8") as f:
+    #     expected_modules.update(json.load(f).get("dependencies", {}))
 
     # Also read the in-tree ESLint plugin spidermonkey information, to ensure the
     # dependencies are up to date.
