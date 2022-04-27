@@ -644,22 +644,20 @@ void VideoReceiveStream2::StartNextDecode() {
       [this](std::unique_ptr<EncodedFrame> frame, ReturnReason res) {
         RTC_DCHECK_EQ(frame == nullptr, res == ReturnReason::kTimeout);
         RTC_DCHECK_EQ(frame != nullptr, res == ReturnReason::kFrameFound);
-        decode_queue_.PostTask([this, frame = std::move(frame)]() mutable {
-          RTC_DCHECK_RUN_ON(&decode_queue_);
-          if (decoder_stopped_)
-            return;
-          if (frame) {
-            HandleEncodedFrame(std::move(frame));
-          } else {
-            int64_t now_ms = clock_->TimeInMilliseconds();
-            worker_thread_->PostTask(ToQueuedTask(
-                task_safety_, [this, now_ms, wait_ms = GetMaxWaitMs()]() {
-                  RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-                  HandleFrameBufferTimeout(now_ms, wait_ms);
-                }));
-          }
-          StartNextDecode();
-        });
+        RTC_DCHECK_RUN_ON(&decode_queue_);
+        if (decoder_stopped_)
+          return;
+        if (frame) {
+          HandleEncodedFrame(std::move(frame));
+        } else {
+          int64_t now_ms = clock_->TimeInMilliseconds();
+          worker_thread_->PostTask(ToQueuedTask(
+              task_safety_, [this, now_ms, wait_ms = GetMaxWaitMs()]() {
+                RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
+                HandleFrameBufferTimeout(now_ms, wait_ms);
+              }));
+        }
+        StartNextDecode();
       });
 }
 
