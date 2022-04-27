@@ -81,7 +81,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
 
         abs_dirs["abs_blob_upload_dir"] = os.path.join(abs_dirs["abs_work_dir"], "logs")
         abs_dirs["abs_apk_path"] = os.environ.get(
-            "WRENCH_APK", "gfx/wr/target/android-artifacts/debug/apk/wrench.apk"
+            "WRENCH_APK", "gfx/wr/target/debug/apk/wrench.apk"
         )
         abs_dirs["abs_reftests_path"] = os.environ.get(
             "WRENCH_REFTESTS", "gfx/wr/wrench/reftests"
@@ -157,11 +157,12 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         # Note that we hard-code /sdcard/wrench as the path here, rather than
         # using something like self.device.test_root, because it needs to be
         # kept in sync with the path hard-coded inside the wrench source code.
-        self.device.rm("/sdcard/wrench", recursive=True, force=True)
-        self.device.mkdir("/sdcard/wrench", parents=True)
+        wrench_root = "/storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench"
+        self.device.rm(wrench_root, recursive=True, force=True)
+        self.device.mkdir(wrench_root, parents=True)
         if test_mode == TestMode.REFTEST:
             self.device.push(
-                self.query_abs_dirs()["abs_reftests_path"], "/sdcard/wrench/reftests"
+                self.query_abs_dirs()["abs_reftests_path"], wrench_root + "/reftests"
             )
         args_file = os.path.join(self.query_abs_dirs()["abs_work_dir"], "wrench_args")
         with open(args_file, "w") as argfile:
@@ -177,7 +178,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
                 argfile.write("--precache test_shaders")
             elif test_mode == TestMode.REFTEST:
                 argfile.write("reftest")
-        self.device.push(args_file, "/sdcard/wrench/args")
+        self.device.push(args_file, wrench_root + "/args")
 
     def run_tests(self, timeout):
         self.timed_screenshots(None)
@@ -196,7 +197,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         """Wrench will dump the test output to logcat, but for convenience we
         want it to show up in the main log. So we scrape it out of the logcat
         and dump it to our own log. Note that all output from wrench goes
-        through the cargo-apk glue stuff, which uses the RustAndroidGlueStdouterr
+        through the cargo-apk glue stuff, which uses the RustStdoutStderr
         tag on the output. Also it limits the line length to 512 bytes
         (including the null terminator). For reftest unexpected-fail output
         this means that the base64 image dump gets wrapped over multiple
@@ -205,7 +206,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
 
         with open(self.logcat_path(), "r", encoding="utf-8") as f:
             self.info("=== scraped logcat output ===")
-            tag = "RustAndroidGlueStdouterr: "
+            tag = "RustStdoutStderr: "
             long_line = None
             for line in f:
                 tag_index = line.find(tag)
