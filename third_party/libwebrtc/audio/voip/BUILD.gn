@@ -78,6 +78,7 @@ rtc_library("audio_ingress") {
     "../../rtc_base/synchronization:mutex",
     "../utility:audio_frame_operations",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("audio_egress") {

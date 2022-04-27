@@ -184,8 +184,8 @@ void AudioIngress::ReceivedRTCPPacket(
   // Deliver RTCP packet to RTP/RTCP module for parsing.
   rtp_rtcp_->IncomingRtcpPacket(rtcp_packet.data(), rtcp_packet.size());
 
-  int64_t rtt = GetRoundTripTime();
-  if (rtt == -1) {
+  absl::optional<int64_t> rtt = GetRoundTripTime();
+  if (!rtt.has_value()) {
     // Waiting for valid RTT.
     return;
   }
@@ -199,18 +199,18 @@ void AudioIngress::ReceivedRTCPPacket(
 
   {
     MutexLock lock(&lock_);
-    ntp_estimator_.UpdateRtcpTimestamp(rtt, ntp_secs, ntp_frac, rtp_timestamp);
+    ntp_estimator_.UpdateRtcpTimestamp(*rtt, ntp_secs, ntp_frac, rtp_timestamp);
   }
 }
 
-int64_t AudioIngress::GetRoundTripTime() {
+absl::optional<int64_t> AudioIngress::GetRoundTripTime() {
   const std::vector<ReportBlockData>& report_data =
       rtp_rtcp_->GetLatestReportBlockData();
 
   // If we do not have report block which means remote RTCP hasn't be received
   // yet, return -1 as to indicate uninitialized value.
   if (report_data.empty()) {
-    return -1;
+    return absl::nullopt;
   }
 
   // We don't know in advance the remote SSRC used by the other end's receiver
@@ -226,7 +226,11 @@ int64_t AudioIngress::GetRoundTripTime() {
     rtp_rtcp_->SetRemoteSSRC(sender_ssrc);
   }
 
-  return (block_data.has_rtt() ? block_data.last_rtt_ms() : -1);
+  if (!block_data.has_rtt()) {
+    return absl::nullopt;
+  }
+
+  return block_data.last_rtt_ms();
 }
 
 }  // namespace webrtc
