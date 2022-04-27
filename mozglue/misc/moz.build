@@ -130,7 +130,7 @@ SOURCES += [
     "decimal/Decimal.cpp",
 ]
 
-if CONFIG["CC_TYPE"] == "clang":
+if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     # Suppress warnings from third-party V8 Decimal code.
     SOURCES["decimal/Decimal.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
