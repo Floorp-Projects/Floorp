@@ -238,7 +238,7 @@ NS_IMETHODIMP ParentProcessDocumentChannel::AsyncOpen(
         // and notify them of the failure. If this is a process switch, then we
         // can just ignore it silently, and trust that the switch will shut down
         // our docshell and cancel us when it's ready.
-        if (!aRejectValue.mSwitchedProcess) {
+        if (!aRejectValue.mContinueNavigating) {
           self->DisconnectChildListeners(aRejectValue.mStatus,
                                          aRejectValue.mLoadGroupStatus);
         }

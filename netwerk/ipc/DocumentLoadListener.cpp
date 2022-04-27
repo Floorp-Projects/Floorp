@@ -988,7 +988,7 @@ static void SetNavigating(CanonicalBrowsingContext* aBrowsingContext,
         MOZ_ASSERT(aValue.IsReject());
         DocumentLoadListener::OpenPromiseFailedType& rejectValue =
             aValue.RejectValue();
-        if (!rejectValue.mSwitchedProcess) {
+        if (!rejectValue.mContinueNavigating) {
           // If we're not switching the load to a new process, then it is
           // finished (and failed), and we should fire a state change to notify
           // observers. Normally the docshell would fire this, and it would get
@@ -1093,8 +1093,9 @@ void DocumentLoadListener::NotifyDocumentChannelFailed() {
   Cancel(NS_BINDING_ABORTED);
 }
 
-void DocumentLoadListener::Disconnect() {
-  LOG(("DocumentLoadListener Disconnect [this=%p]", this));
+void DocumentLoadListener::Disconnect(bool aContinueNavigating) {
+  LOG(("DocumentLoadListener Disconnect [this=%p, aContinueNavigating=%d]",
+       this, aContinueNavigating));
   // The nsHttpChannel may have a reference to this parent, release it
   // to avoid circular references.
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
@@ -1106,7 +1107,7 @@ void DocumentLoadListener::Disconnect() {
   mEarlyHintsService.Cancel();
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
-    ctx->EndDocumentLoad(mDoingProcessSwitch);
+    ctx->EndDocumentLoad(aContinueNavigating);
   }
 }
 
@@ -1127,27 +1128,26 @@ void DocumentLoadListener::Cancel(const nsresult& aStatusCode) {
 
 void DocumentLoadListener::DisconnectListeners(nsresult aStatus,
                                                nsresult aLoadGroupStatus,
-                                               bool aSwitchedProcess) {
+                                               bool aContinueNavigating) {
   LOG(
       ("DocumentLoadListener DisconnectListener [this=%p, "
-       "aStatus=%" PRIx32 " aLoadGroupStatus=%" PRIx32 " ]",
+       "aStatus=%" PRIx32 ", aLoadGroupStatus=%" PRIx32
+       ", aContinueNavigating=%d]",
        this, static_cast<uint32_t>(aStatus),
-       static_cast<uint32_t>(aLoadGroupStatus)));
+       static_cast<uint32_t>(aLoadGroupStatus), aContinueNavigating));
 
-  RejectOpenPromise(aStatus, aLoadGroupStatus, aSwitchedProcess, __func__);
+  RejectOpenPromise(aStatus, aLoadGroupStatus, aContinueNavigating, __func__);
 
-  Disconnect();
+  Disconnect(aContinueNavigating);
 
-  if (!aSwitchedProcess) {
-    // If we're not going to send anything else to the content process, and
-    // we haven't yet consumed a stream filter promise, then we're never going
-    // to. If we're disconnecting the old content process due to a proces
-    // switch, then we can rely on FinishReplacementChannelSetup being called
-    // (even if the switch failed), so we clear at that point instead.
-    // TODO: This might be because we retargeted the stream to the download
-    // handler or similar. Do we need to attach a stream filter to that?
-    mStreamFilterRequests.Clear();
-  }
+  // Clear any pending stream filter requests. If we're going to be sending a
+  // response to the content process due to a navigation, our caller will have
+  // already stashed the array to be passed to `TriggerRedirectToRealChannel`,
+  // so it's safe for us to clear here.
+  // TODO: If we retargeted the stream to a non-default handler (e.g. to trigger
+  // a download), we currently never attach a stream filter. Should we attach a
+  // stream filter in those situations as well?
+  mStreamFilterRequests.Clear();
 }
 
 void DocumentLoadListener::RedirectToRealChannelFinished(nsresult aRv) {
@@ -1380,9 +1380,7 @@ bool DocumentLoadListener::ResumeSuspendedChannel(
 
   mChannel->Resume();
 
-  if (auto* ctx = GetDocumentBrowsingContext()) {
-    ctx->EndDocumentLoad(mDoingProcessSwitch);
-  }
+  // Our caller will invoke `EndDocumentLoad` for us.
 
   return !mIsFinished;
 }
@@ -1686,14 +1684,12 @@ static RefPtr<dom::BrowsingContextCallbackReceivedPromise> SwitchToNewTab(
 bool DocumentLoadListener::MaybeTriggerProcessSwitch(
     bool* aWillSwitchToRemote) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_DIAGNOSTIC_ASSERT(!mDoingProcessSwitch,
-                        "Already in the middle of switching?");
   MOZ_DIAGNOSTIC_ASSERT(mChannel);
   MOZ_DIAGNOSTIC_ASSERT(mParentChannelListener);
   MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
 
   MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
-          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s"
+          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s, "
            "browserid=%" PRIx64 "]",
            this, GetChannelCreationURI()->GetSpecOrDefault().get(),
            GetLoadingBrowsingContext()->Top()->BrowserId()));
@@ -1908,10 +1904,16 @@ void DocumentLoadListener::TriggerProcessSwitch(
              currentRemoteType.get(), aOptions.mRemoteType.get()));
   }
 
+  // Stash our stream filter requests to pass to TriggerRedirectToRealChannel,
+  // as the call to `DisconnectListeners` will clear our list.
+  nsTArray<StreamFilterRequest> streamFilterRequests =
+      std::move(mStreamFilterRequests);
+
   // We're now committing to a process switch, so we can disconnect from
   // the listeners in the old process.
-  mDoingProcessSwitch = !aIsNewTab;
-
+  // As the navigation is continuing, we don't actually want to cancel the
+  // request in the old process unless we're redirecting the load into a new
+  // tab.
   DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, !aIsNewTab);
 
   MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
@@ -1919,11 +1921,13 @@ void DocumentLoadListener::TriggerProcessSwitch(
   aContext->ChangeRemoteness(aOptions, mLoadIdentifier)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self = RefPtr{this}](BrowserParent* aBrowserParent) {
+          [self = RefPtr{this}, requests = std::move(streamFilterRequests)](
+              BrowserParent* aBrowserParent) mutable {
             MOZ_ASSERT(self->mChannel,
                        "Something went wrong, channel got cancelled");
             self->TriggerRedirectToRealChannel(
-                Some(aBrowserParent ? aBrowserParent->Manager() : nullptr));
+                Some(aBrowserParent ? aBrowserParent->Manager() : nullptr),
+                std::move(requests));
           },
           [self = RefPtr{this}](nsresult aStatusCode) {
             MOZ_ASSERT(NS_FAILED(aStatusCode), "Status should be error");
@@ -2066,7 +2070,8 @@ DocumentLoadListener::RedirectToRealChannel(
 }
 
 void DocumentLoadListener::TriggerRedirectToRealChannel(
-    const Maybe<ContentParent*>& aDestinationProcess) {
+    const Maybe<ContentParent*>& aDestinationProcess,
+    nsTArray<StreamFilterRequest> aStreamFilterRequests) {
   LOG((
       "DocumentLoadListener::TriggerRedirectToRealChannel [this=%p] "
       "aDestinationProcess=%" PRId64,
@@ -2082,12 +2087,12 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
   // the registrar and copy across any needed state to the replacing
   // IPDL parent object.
 
-  nsTArray<ParentEndpoint> parentEndpoints(mStreamFilterRequests.Length());
-  if (!mStreamFilterRequests.IsEmpty()) {
+  nsTArray<ParentEndpoint> parentEndpoints(aStreamFilterRequests.Length());
+  if (!aStreamFilterRequests.IsEmpty()) {
     ContentParent* cp = aDestinationProcess.valueOr(mContentParent);
     base::ProcessId pid = cp ? cp->OtherPid() : base::ProcessId{0};
 
-    for (StreamFilterRequest& request : mStreamFilterRequests) {
+    for (StreamFilterRequest& request : aStreamFilterRequests) {
       if (!pid) {
         request.mPromise->Reject(false, __func__);
         request.mPromise = nullptr;
@@ -2143,7 +2148,7 @@ void DocumentLoadListener::TriggerRedirectToRealChannel(
                         std::move(parentEndpoints))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [self, requests = std::move(mStreamFilterRequests)](
+          [self, requests = std::move(aStreamFilterRequests)](
               const nsresult& aResponse) mutable {
             for (StreamFilterRequest& request : requests) {
               if (request.mPromise) {
@@ -2426,6 +2431,10 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   bool willBeRemote = false;
   if (!DocShellWillDisplayContent(status) ||
       !MaybeTriggerProcessSwitch(&willBeRemote)) {
+    // We're not going to be doing a process switch, so redirect to the real
+    // channel within our current process.
+    nsTArray<StreamFilterRequest> streamFilterRequests =
+        std::move(mStreamFilterRequests);
     if (!mSupportsRedirectToRealChannel) {
       RefPtr<BrowserParent> browserParent = loadingContext->GetBrowserParent();
       if (browserParent->Manager() != mContentParent) {
@@ -2442,9 +2451,8 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
       // If the existing process is right for this load, but the bridge doesn't
       // support redirects, then we need to do it manually, by faking a process
       // switch.
-      mDoingProcessSwitch = true;
-
-      DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
+      DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED,
+                          /* aContinueNavigating */ true);
 
       // Notify the docshell that it should load using the newly connected
       // channel
@@ -2452,9 +2460,10 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
 
       // Use the current process ID to run the 'process switch' path and connect
       // the channel into the current process.
-      TriggerRedirectToRealChannel(Some(mContentParent));
+      TriggerRedirectToRealChannel(Some(mContentParent),
+                                   std::move(streamFilterRequests));
     } else {
-      TriggerRedirectToRealChannel(Nothing());
+      TriggerRedirectToRealChannel(Nothing(), std::move(streamFilterRequests));
     }
 
     // If we're not switching, then check if we're currently remote.

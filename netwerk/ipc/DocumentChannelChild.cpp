@@ -196,10 +196,10 @@ IPCResult DocumentChannelChild::RecvFailedAsyncOpen(
 
 IPCResult DocumentChannelChild::RecvDisconnectChildListeners(
     const nsresult& aStatus, const nsresult& aLoadGroupStatus,
-    bool aSwitchedProcess) {
+    bool aContinueNavigating) {
   // If this disconnect is not due to a process switch, perform the disconnect
   // immediately.
-  if (!aSwitchedProcess) {
+  if (!aContinueNavigating) {
     DisconnectChildListeners(aStatus, aLoadGroupStatus);
     return IPC_OK();
   }
