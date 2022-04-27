@@ -8,6 +8,7 @@
 #include "WMFUtils.h"
 #include "mozilla/Logging.h"
 #include "nsThreadUtils.h"
+#include "mozilla/mscom/COMWrappers.h"
 #include "mozilla/mscom/Utils.h"
 #include "PlatformDecoderModule.h"
 
@@ -30,7 +31,7 @@ MFTDecoder::~MFTDecoder() {
 HRESULT MFTDecoder::Create(const GUID& aCLSID) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
 
-  HRESULT hr = CoCreateInstance(
+  HRESULT hr = mscom::wrapped::CoCreateInstance(
       aCLSID, nullptr, CLSCTX_INPROC_SERVER,
       IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
   NS_WARNING_ASSERTION(SUCCEEDED(hr), "Failed to create MFT by CLSID");

@@ -38,6 +38,11 @@ void UtilityAudioDecoderParent::PreloadForSandbox() {
   ::LoadLibraryW(L"mfplat.dll");
   ::LoadLibraryW(L"mf.dll");
 
+#  if defined(DEBUG)
+  // WMF Shutdown on debug build somehow requires this
+  ::LoadLibraryW(L"ole32.dll");
+#  endif  // defined(DEBUG)
+
   auto rv = wmf::MediaFoundationInitializer::HasInitialized();
   if (!rv) {
     NS_WARNING("Failed to init Media Foundation in the Utility process");

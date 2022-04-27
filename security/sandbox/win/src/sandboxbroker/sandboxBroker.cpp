@@ -1328,7 +1328,13 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
   SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                sandbox::MITIGATION_DLL_SEARCH_ORDER;
+                sandbox::MITIGATION_DLL_SEARCH_ORDER
+// TODO: Bug 1766432 - Investigate why this crashes in MSAudDecMFT.dll during
+// Utility AudioDecoder process startup only on 32-bits systems.
+#if defined(_M_X64)
+                | sandbox::MITIGATION_DYNAMIC_CODE_DISABLE
+#endif  // defined(_M_X64)
+      ;
 
   if (exceptionModules.isNothing()) {
     mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
