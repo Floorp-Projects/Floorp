@@ -135,7 +135,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetFooterStrCenter(data->footerStrCenter());
   aSettings->GetFooterStrRight(data->footerStrRight());
 
-  aSettings->GetIsCancelled(&data->isCancelled());
   aSettings->GetPrintSilent(&data->printSilent());
   aSettings->GetShrinkToFit(&data->shrinkToFit());
 
@@ -224,7 +223,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetFooterStrCenter(data.footerStrCenter());
   settings->SetFooterStrRight(data.footerStrRight());
 
-  settings->SetIsCancelled(data.isCancelled());
   settings->SetPrintSilent(data.printSilent());
   settings->SetShrinkToFit(data.shrinkToFit());
 
