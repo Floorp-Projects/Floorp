@@ -1199,6 +1199,7 @@ BrowserGlue.prototype = {
       PREF_DFPI_ENABLED_BY_DEFAULT,
       this._setDefaultCookieBehavior
     );
+    NimbusFeatures.tcpByDefault.off(this._setDefaultCookieBehavior);
   },
 
   // runs on startup, before the first command line handler is invoked
@@ -1718,6 +1719,7 @@ BrowserGlue.prototype = {
       PREF_DFPI_ENABLED_BY_DEFAULT,
       this._setDefaultCookieBehavior
     );
+    NimbusFeatures.tcpByDefault.onUpdate(this._setDefaultCookieBehavior);
   },
 
   _updateAutoplayPref() {
@@ -1731,16 +1733,32 @@ BrowserGlue.prototype = {
     }
   },
 
-  // For the initial rollout of dFPI, set the default cookieBehavior based on the pref
-  // set during onboarding when the user chooses to enable protections or not.
   _setDefaultCookieBehavior() {
+    let defaultPrefs = Services.prefs.getDefaultBranch("");
+
+    // For phase 2 we enable dFPI / TCP for all clients which are part of the
+    // rollout.
+    if (NimbusFeatures.tcpByDefault.isEnabled()) {
+      Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 3);
+
+      // Enable TCP by updating the default pref state for cookie behaviour. This
+      // means we won't override user choice.
+      defaultPrefs.setIntPref(
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+      );
+
+      return;
+    }
+
+    // For the initial rollout of dFPI, set the default cookieBehavior based on the pref
+    // set during onboarding when the user chooses to enable protections or not.
     if (!Services.prefs.prefHasUserValue(PREF_DFPI_ENABLED_BY_DEFAULT)) {
       Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 2);
       return;
     }
     let dFPIEnabled = Services.prefs.getBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT);
 
-    let defaultPrefs = Services.prefs.getDefaultBranch("");
     defaultPrefs.setIntPref(
       "network.cookie.cookieBehavior",
       dFPIEnabled
