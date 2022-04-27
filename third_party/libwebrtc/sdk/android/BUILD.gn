@@ -425,6 +425,7 @@ if (is_android) {
     visibility = [ "*" ]
     sources = [
       "api/org/webrtc/audio/JavaAudioDeviceModule.java",
+      "src/java/org/webrtc/audio/LowLatencyAudioBufferManager.java",
       "src/java/org/webrtc/audio/VolumeLogger.java",
       "src/java/org/webrtc/audio/WebRtcAudioEffects.java",
       "src/java/org/webrtc/audio/WebRtcAudioManager.java",
@@ -1534,12 +1535,14 @@ if (is_android) {
       "tests/src/org/webrtc/IceCandidateTest.java",
       "tests/src/org/webrtc/RefCountDelegateTest.java",
       "tests/src/org/webrtc/ScalingSettingsTest.java",
+      "tests/src/org/webrtc/audio/LowLatencyAudioBufferManagerTest.java",
     ]
 
     deps = [
       ":base_java",
       ":camera_java",
       ":hwcodecs_java",
+      ":java_audio_device_module_java",
       ":libjingle_peerconnection_java",
       ":peerconnection_java",
       ":video_api_java",
