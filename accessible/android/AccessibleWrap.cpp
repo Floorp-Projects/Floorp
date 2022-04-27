@@ -258,31 +258,6 @@ bool AccessibleWrap::DoAction(uint8_t aIndex) const {
   return false;
 }
 
-void AccessibleWrap::SetTextContents(const nsAString& aText) {
-  if (IsHyperText()) {
-    AsHyperText()->ReplaceText(aText);
-  }
-}
-
-void AccessibleWrap::GetTextContents(nsAString& aText) {
-  // For now it is a simple wrapper for getting entire range of TextSubstring.
-  // In the future this may be smarter and retrieve a flattened string.
-  if (IsHyperText()) {
-    AsHyperText()->TextSubstring(0, -1, aText);
-  } else if (IsTextLeaf()) {
-    aText = AsTextLeaf()->Text();
-  }
-}
-
-bool AccessibleWrap::GetSelectionBounds(int32_t* aStartOffset,
-                                        int32_t* aEndOffset) {
-  if (IsHyperText()) {
-    return AsHyperText()->SelectionBoundsAt(0, aStartOffset, aEndOffset);
-  }
-
-  return false;
-}
-
 Accessible* AccessibleWrap::DoPivot(Accessible* aAccessible,
                                     int32_t aGranularity, bool aForward,
                                     bool aInclusive) {
@@ -575,12 +550,18 @@ void AccessibleWrap::GetRoleDescription(role aRole, AccAttributes* aAttributes,
   LocalizeString(NS_ConvertUTF16toUTF8(aGeckoRole).get(), aRoleDescription);
 }
 
+int32_t AccessibleWrap::AndroidClass(Accessible* aAccessible) {
+  return GetVirtualViewID(aAccessible) == SessionAccessibility::kNoID
+             ? java::SessionAccessibility::CLASSNAME_WEBVIEW
+             : GetAndroidClass(aAccessible->Role());
+}
+
 int32_t AccessibleWrap::GetVirtualViewID(Accessible* aAccessible) {
   if (aAccessible->IsLocal()) {
     return static_cast<AccessibleWrap*>(aAccessible)->mID;
   }
 
-  return WrapperFor(aAccessible->AsRemote())->mID;
+  return static_cast<int32_t>(aAccessible->AsRemote()->GetWrapper());
 }
 
 void AccessibleWrap::SetVirtualViewID(Accessible* aAccessible,
@@ -588,7 +569,7 @@ void AccessibleWrap::SetVirtualViewID(Accessible* aAccessible,
   if (aAccessible->IsLocal()) {
     static_cast<AccessibleWrap*>(aAccessible)->mID = aVirtualViewID;
   } else {
-    WrapperFor(aAccessible->AsRemote())->mID = aVirtualViewID;
+    aAccessible->AsRemote()->SetWrapper(static_cast<uintptr_t>(aVirtualViewID));
   }
 }
 
@@ -637,23 +618,6 @@ int32_t AccessibleWrap::GetInputType(const nsString& aInputTypeAttr) {
   }
 
   return 0;
-}
-
-void AccessibleWrap::WrapperDOMNodeID(nsString& aDOMNodeID) {
-  DOMNodeID(aDOMNodeID);
-}
-
-bool AccessibleWrap::WrapperRangeInfo(double* aCurVal, double* aMinVal,
-                                      double* aMaxVal, double* aStep) {
-  if (HasNumericValue()) {
-    *aCurVal = CurValue();
-    *aMinVal = MinValue();
-    *aMaxVal = MaxValue();
-    *aStep = Step();
-    return true;
-  }
-
-  return false;
 }
 
 void AccessibleWrap::GetTextEquiv(nsString& aText) {
