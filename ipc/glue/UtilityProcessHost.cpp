@@ -61,7 +61,7 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(!mUtilityProcessParent);
 
   mPrefSerializer =
-      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSyncPreference);
+      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSanitizePreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }

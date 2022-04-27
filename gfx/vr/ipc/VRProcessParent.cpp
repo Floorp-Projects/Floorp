@@ -56,7 +56,7 @@ bool VRProcessParent::Launch() {
   ProcessChild::AddPlatformBuildID(extraArgs);
 
   mPrefSerializer =
-      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSyncPreference);
+      MakeUnique<ipc::SharedPreferenceSerializer>(ShouldSanitizePreference);
   if (!mPrefSerializer->SerializeToSharedMemory()) {
     return false;
   }
