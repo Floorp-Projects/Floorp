@@ -102,24 +102,28 @@ void FrameBuffer::StartWaitForNextFrameOnQueue() {
         RTC_DCHECK_RUN_ON(&callback_checker_);
         // If this task has not been cancelled, we did not get any new frames
         // while waiting. Continue with frame delivery.
-        MutexLock lock(&mutex_);
-        if (!frames_to_decode_.empty()) {
-          // We have frames, deliver!
-          frame_handler_(absl::WrapUnique(GetNextFrame()), kFrameFound);
+        std::unique_ptr<EncodedFrame> frame;
+        std::function<void(std::unique_ptr<EncodedFrame>, ReturnReason)>
+            frame_handler;
+        {
+          MutexLock lock(&mutex_);
+          if (!frames_to_decode_.empty()) {
+            // We have frames, deliver!
+            frame = absl::WrapUnique(GetNextFrame());
+          } else if (clock_->TimeInMilliseconds() < latest_return_time_ms_) {
+            // If there's no frames to decode and there is still time left, it
+            // means that the frame buffer was cleared between creation and
+            // execution of this task. Continue waiting for the remaining time.
+            int64_t wait_ms = FindNextFrame(clock_->TimeInMilliseconds());
+            return TimeDelta::Millis(wait_ms);
+          }
+          frame_handler = std::move(frame_handler_);
           CancelCallback();
-          return TimeDelta::Zero();  // Ignored.
-        } else if (clock_->TimeInMilliseconds() >= latest_return_time_ms_) {
-          // We have timed out, signal this and stop repeating.
-          frame_handler_(nullptr, kTimeout);
-          CancelCallback();
-          return TimeDelta::Zero();  // Ignored.
-        } else {
-          // If there's no frames to decode and there is still time left, it
-          // means that the frame buffer was cleared between creation and
-          // execution of this task. Continue waiting for the remaining time.
-          int64_t wait_ms = FindNextFrame(clock_->TimeInMilliseconds());
-          return TimeDelta::Millis(wait_ms);
         }
+        // Deliver frame, if any. Otherwise signal timeout.
+        ReturnReason reason = frame ? kFrameFound : kTimeout;
+        frame_handler(std::move(frame), reason);
+        return TimeDelta::Zero();  // Ignored.
       });
 }
 
