@@ -140,12 +140,15 @@ dictionary CollectedClientData {
     required DOMString           type;
     required DOMString           challenge;
     required DOMString           origin;
-    required DOMString           hashAlgorithm;
-    DOMString                    tokenBindingId;
-    // FIXME: bug 1493860: should this "= {}" be here?
-    AuthenticationExtensionsClientInputs clientExtensions = {};
-    AuthenticationExtensionsAuthenticatorInputs authenticatorExtensions;
+    TokenBinding                 tokenBinding;
 };
+
+dictionary TokenBinding {
+    required DOMString status;
+    DOMString id;
+};
+
+enum TokenBindingStatus { "present", "supported" };
 
 enum PublicKeyCredentialType {
     "public-key"
