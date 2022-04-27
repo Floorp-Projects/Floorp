@@ -47,6 +47,7 @@ use std::mem::size_of;
 use std::path::{Path, PathBuf};
 use std::str;
 use std::sync::{Arc, RwLock};
+use std::time::{SystemTime, UNIX_EPOCH};
 use storage_variant::VariantType;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
@@ -62,6 +63,8 @@ const PREFIX_REV_SPK: &str = "spk";
 const PREFIX_SUBJECT: &str = "subject";
 const PREFIX_CERT: &str = "cert";
 const PREFIX_DATA_TYPE: &str = "datatype";
+
+const LAST_CRLITE_UPDATE_KEY: &str = "last_crlite_update";
 
 const COVERAGE_SERIALIZATION_VERSION: u8 = 1;
 const COVERAGE_V1_ENTRY_BYTES: usize = 48;
@@ -404,6 +407,47 @@ impl SecurityState {
         return false;
     }
 
+    fn note_crlite_update_time(&mut self) -> Result<(), SecurityStateError> {
+        let seconds_since_epoch = Value::U64(
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(|_| SecurityStateError::from("could not get current time"))?
+                .as_secs(),
+        );
+        let env_and_store = match self.env_and_store.as_mut() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let mut writer = env_and_store.env.write()?;
+        env_and_store
+            .store
+            .put(&mut writer, LAST_CRLITE_UPDATE_KEY, &seconds_since_epoch)
+            .map_err(|_| SecurityStateError::from("could not store timestamp"))?;
+        writer.commit()?;
+        Ok(())
+    }
+
+    fn is_crlite_fresh(&self) -> bool {
+        let now = match SystemTime::now().duration_since(UNIX_EPOCH) {
+            Ok(t) => t.as_secs(),
+            _ => return false,
+        };
+        let env_and_store = match self.env_and_store.as_ref() {
+            Some(env_and_store) => env_and_store,
+            None => return false,
+        };
+        let reader = match env_and_store.env.read() {
+            Ok(reader) => reader,
+            _ => return false,
+        };
+        match env_and_store.store.get(&reader, LAST_CRLITE_UPDATE_KEY) {
+            Ok(Some(Value::U64(last_update))) if last_update < u64::MAX / 2 => {
+                now < last_update + 60 * 60 * 24 * 10
+            }
+            _ => false,
+        }
+    }
+
     pub fn set_full_crlite_filter(
         &mut self,
         filter: Vec<u8>,
@@ -483,6 +527,7 @@ impl SecurityState {
             enrollment_file.write_all(&enrollment_bytes)?;
         }
 
+        self.note_crlite_update_time()?;
         self.load_crlite_filter()?;
         Ok(())
     }
@@ -599,6 +644,7 @@ impl SecurityState {
         stash_file.write_all(&stash)?;
         let crlite_stash = self.crlite_stash.get_or_insert(HashMap::new());
         load_crlite_stash_from_reader_into_map(&mut stash.as_slice(), crlite_stash)?;
+        self.note_crlite_update_time()?;
         Ok(())
     }
 
@@ -628,6 +674,9 @@ impl SecurityState {
         serial_number: &[u8],
         timestamps: &[CRLiteTimestamp],
     ) -> i16 {
+        if !self.is_crlite_fresh() {
+            return nsICertStorage::STATE_NO_FILTER;
+        }
         if !self.issuer_is_enrolled(issuer, issuer_spki) {
             return nsICertStorage::STATE_NOT_ENROLLED;
         }
@@ -643,7 +692,7 @@ impl SecurityState {
             Some(crlite_filter) => crlite_filter.has(&lookup_key),
             // This can only happen if the backing file was deleted or if it or our database has
             // become corrupted. In any case, we have no information.
-            None => return nsICertStorage::STATE_NOT_COVERED,
+            None => return nsICertStorage::STATE_NO_FILTER,
         };
         match result {
             true => nsICertStorage::STATE_ENFORCE,

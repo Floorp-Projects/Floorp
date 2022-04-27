@@ -37,6 +37,14 @@ add_task(async function test_crlite_stash_corrupted() {
     Ci.nsICertStorage
   );
 
+  // Add an empty stash to ensure the filter is considered to be fresh.
+  await new Promise(resolve => {
+    certStorage.addCRLiteStash(new Uint8Array([]), (rv, _) => {
+      Assert.equal(rv, Cr.NS_OK, "marked filter as fresh");
+      resolve();
+    });
+  });
+
   // Await a task that ensures the stash loading task has completed.
   await new Promise(resolve => {
     certStorage.hasPriorData(
@@ -80,15 +88,4 @@ add_task(async function test_crlite_stash_corrupted() {
     );
   });
   Assert.equal(hasFilter, true, "CRLite should have a filter");
-
-  let hasStash = await new Promise(resolve => {
-    certStorage.hasPriorData(
-      Ci.nsICertStorage.DATA_TYPE_CRLITE_FILTER_INCREMENTAL,
-      (rv, result) => {
-        Assert.equal(rv, Cr.NS_OK, "hasPriorData should succeed");
-        resolve(result);
-      }
-    );
-  });
-  Assert.equal(hasStash, false, "CRLite should not have a stash");
 });
