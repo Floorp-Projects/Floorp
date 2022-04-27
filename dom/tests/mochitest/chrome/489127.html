@@ -1,14 +1,13 @@
 <!DOCTYPE HTML>
-<html>
-<head>
-  <title>nsIDOMWindowUtils::nodesFromRect test - bug 489127</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
-<script type="application/javascript">
-
+<title>nsIDOMWindowUtils::nodesFromRect test - bug 489127</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script>
   var SimpleTest = window.opener.SimpleTest;
   function ok() { window.opener.ok.apply(window.opener, arguments); }
   function done() { window.opener.done.apply(window.opener, arguments); }
+  function info() { window.opener.info.apply(window.opener, arguments); }
+
   let e = {};
 
   let dwu = window.windowUtils;
@@ -30,9 +29,8 @@
 
     for (var i = 0; i < nodes.length; i++) {
       if (nodes[i] != list[i]) {
-        ok(false, "Unexpected node #" + i + " for rect " +
-                  "[" + x + "," + y + "], " +
-                  "[" + top + "," + right + "," + bottom + "," + left + "]");
+        ok(false, `Unexpected node #${i} (${nodes[i].id} vs. ${list[i].id}) ` +
+                  `[${x}, ${y}] [${top}, ${right}, ${bottom}, ${left}]`);
         return;
       }
     }
@@ -42,13 +40,20 @@
   }
 
   function doTest() {
-
     // Set up shortcut access to elements
-    e.html = document.getElementsByTagName("html")[0];
+    e.html = document.documentElement;
     ['h1', 'd1', 'd2', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'span',
-     'a1', 'a2', 'a3', 'transf', 'iframe1', 'body', 'opacity'].forEach(function(a) {
+     'a1', 'a2', 'a3', 'transf', 'iframe1', 'body', 'opacity', 'host'].forEach(function(a) {
       e[a] = document.getElementById(a);
     });
+
+    let shadow = e.host.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+      <style>
+      #host-inner { height: 100px; width: 100px; background-color: blue }
+      </style>
+      <div id="host-inner"></div>
+    `;
 
     window.scrollTo(0, 0);
 
@@ -102,8 +107,8 @@
     check(61, 671, 0, 30, 0,  10, false, [e.transf]);
     check(61, 671, 0, 30, 90, 10, false, [e.transf.firstChild, e.transf]);
 
-    // opacity: with and without aVisibleOnly = true
     {
+      info("opacity: with and without aVisibleOnly = true");
       let [x, y] = getCenterFor(e.opacity);
       check(x, y, 1, 1, 1, 1, false, [e.opacity]);
       check(x, y, 1, 1, 1, 1, true, []);
@@ -112,6 +117,7 @@
     // Check elements behind opaque backgrounds of other elements don't show up
     // in the list when aVisibleOnly = true.
     {
+      info("elements behind opaque backgrounds of other elements with aVisibleOnly=true");
       let container = document.getElementById('obscured-test');
       let fg = document.getElementById('obscured-test-foreground');
       let bg = document.getElementById('obscured-test-background');
@@ -124,8 +130,7 @@
       check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete);
       check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete, 0.5);
 
-      // Occluded with different opacity thresholds, with background colors and
-      // opacity.
+      info("Occluded with different opacity thresholds, with background colors and opacity");
       fg.style.backgroundColor = "rgba(0, 255, 0, 0.5)";
       check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete, 0.4);
       check(x, y, 1, 1, 1, 1, true, [fg, bg], kListIsComplete, 0.6);
@@ -135,6 +140,14 @@
 
       check(x, y, 1, 1, 1, 1, true, [fg], kListIsComplete, 0.4);
       check(x, y, 1, 1, 1, 1, true, [fg, bg], kListIsComplete, 0.6);
+    }
+
+    {
+      info("Shadow DOM retargeting");
+
+      let [x, y] = getCenterFor(e.host);
+      let inner = shadow.getElementById("host-inner");
+      check(x, y, 1, 1, 1, 1, false, [inner, e.host]);
     }
 
     done();
@@ -147,8 +160,7 @@
 
   addLoadEvent(doTest);
 </script>
-<style type="text/css">
-
+<style>
 body {
   margin: 8px;
   padding: 0;
@@ -215,7 +227,6 @@ span {
   background: green;
 }
 </style>
-</head>
 <body id="body">
   <h1 id="h1"></h1>
   <div id="d1"></div>
@@ -248,9 +259,10 @@ span {
 
   <div id="opacity">text</div>
 
+  <div id="host"></div>
+
   <div id="obscured-test">
     <div id="obscured-test-background"></div>
     <div id="obscured-test-foreground"></div>
   </div>
 </body>
-</html>
