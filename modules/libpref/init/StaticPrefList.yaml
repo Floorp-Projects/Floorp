@@ -9623,7 +9623,7 @@
 
 - name: media.webrtc.platformencoder
   type: RelaxedAtomicBool
-#if !defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
