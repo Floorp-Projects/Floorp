@@ -116,9 +116,10 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   struct OpenPromiseFailedType {
     nsresult mStatus;
     nsresult mLoadGroupStatus;
-    // This is set to true if we're rejecting the promise because we
-    // switched to load away to a new process.
-    bool mSwitchedProcess = false;
+    // This is set to true if the navigation in the content process should not
+    // be cancelled, as the load is logically continuing within the current
+    // browsing session, just within a different process or browsing context.
+    bool mContinueNavigating = false;
   };
 
   using OpenPromise =
@@ -320,9 +321,14 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                                    bool aSupportsRedirectToRealChannel);
 
   friend class ParentProcessDocumentOpenInfo;
+
   // Will reject the promise to notify the DLL consumer that we are done.
+  //
+  // If `aContinueNavigating` is true, the navigation in the content process
+  // will not be aborted, as navigation is logically continuing in the existing
+  // browsing session (e.g. due to a process switch or entering the bfcache).
   void DisconnectListeners(nsresult aStatus, nsresult aLoadGroupStatus,
-                           bool aSwitchedProcess = false);
+                           bool aContinueNavigating = false);
 
   // Called when we were created without a document channel, and creation has
   // failed, and won't ever be attached.
@@ -332,7 +338,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // channel, and ensures that RedirectToRealChannelFinished is called when
   // this is complete.
   void TriggerRedirectToRealChannel(
-      const Maybe<dom::ContentParent*>& aDestinationProcess);
+      const Maybe<dom::ContentParent*>& aDestinationProcess,
+      nsTArray<StreamFilterRequest> aStreamFilterRequests);
 
   // Called once the content-process side on setting up a replacement
   // channel is complete. May wait for the new parent channel to
@@ -399,7 +406,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   bool HasCrossOriginOpenerPolicyMismatch() const;
   void ApplyPendingFunctions(nsIParentChannel* aChannel) const;
 
-  void Disconnect();
+  void Disconnect(bool aContinueNavigating);
 
   void MaybeReportBlockedByURLClassifier(nsresult aStatus);
 
@@ -536,6 +543,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // True when we have seen at least one non-interal redirect.
   bool mHaveVisibleRedirect = false;
 
+  // Pending stream filter requests which should be attached when redirecting to
+  // the real channel. Moved into `TriggerRedirectToRealChannel` when the
+  // connection is ready.
   nsTArray<StreamFilterRequest> mStreamFilterRequests;
 
   nsString mSrcdocData;
@@ -566,9 +576,6 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // via a process switch or a same-process redirect, and Suspend the
   // underlying channel.
   bool mInitiatedRedirectToRealChannel = false;
-  // Set to true if we're currently in the middle of replacing this with
-  // a new channel connected a different process.
-  bool mDoingProcessSwitch = false;
   // The value of GetApplyConversion on mChannel when OnStartRequest
   // was called. We override it to false to prevent a conversion
   // helper from being installed, but we need to restore the value
@@ -598,13 +605,13 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   RefPtr<dom::ContentParent> mContentParent;
 
   void RejectOpenPromise(nsresult aStatus, nsresult aLoadGroupStatus,
-                         bool aSwitchedProcess, const char* aLocation) {
+                         bool aContinueNavigating, const char* aLocation) {
     // It is possible for mOpenPromise to not be set if AsyncOpen failed and
     // the DocumentChannel got canceled.
     if (!mOpenPromiseResolved && mOpenPromise) {
-      mOpenPromise->Reject(
-          OpenPromiseFailedType({aStatus, aLoadGroupStatus, aSwitchedProcess}),
-          aLocation);
+      mOpenPromise->Reject(OpenPromiseFailedType({aStatus, aLoadGroupStatus,
+                                                  aContinueNavigating}),
+                           aLocation);
       mOpenPromiseResolved = true;
     }
   }

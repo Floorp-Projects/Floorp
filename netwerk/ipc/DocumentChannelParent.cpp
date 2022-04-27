@@ -108,7 +108,7 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
         if (self->CanSend()) {
           Unused << self->SendDisconnectChildListeners(
               aRejectValue.mStatus, aRejectValue.mLoadGroupStatus,
-              aRejectValue.mSwitchedProcess);
+              aRejectValue.mContinueNavigating);
         }
         self->mDocumentLoadListener = nullptr;
       });
