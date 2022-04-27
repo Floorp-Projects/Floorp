@@ -22,6 +22,7 @@
 #include "mozilla/StaticPrefs_view_source.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/css/Loader.h"
+#include "mozilla/fallible.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsError.h"
@@ -140,7 +141,8 @@ nsHtml5TreeOpExecutor::~nsHtml5TreeOpExecutor() {
       }
     }
   }
-  NS_ASSERTION(mOpQueue.IsEmpty(), "Somehow there's stuff in the op queue.");
+  NS_ASSERTION(NS_FAILED(mBroken) || mOpQueue.IsEmpty(),
+               "Somehow there's stuff in the op queue.");
 }
 
 // nsIContentSink
@@ -609,7 +611,12 @@ void nsHtml5TreeOpExecutor::RunFlushLoop() {
       nsTArray<nsHtml5SpeculativeLoad> speculativeLoadQueue;
       MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
                          "mOpQueue modified during flush.");
-      mStage.MoveOpsAndSpeculativeLoadsTo(mOpQueue, speculativeLoadQueue);
+      if (!mStage.MoveOpsAndSpeculativeLoadsTo(mOpQueue,
+                                               speculativeLoadQueue)) {
+        MarkAsBroken(nsresult::NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+
       // Make sure speculative loads never start after the corresponding
       // normal loads for the same URLs.
       nsHtml5SpeculativeLoad* start = speculativeLoadQueue.Elements();
@@ -843,7 +850,9 @@ void nsHtml5TreeOpExecutor::CommitToInternalEncoding() {
                                                           false);
 }
 
-void nsHtml5TreeOpExecutor::TakeOpsFromStage() { mStage.MoveOpsTo(mOpQueue); }
+[[nodiscard]] bool nsHtml5TreeOpExecutor::TakeOpsFromStage() {
+  return mStage.MoveOpsTo(mOpQueue);
+}
 
 // copied from HTML content sink
 bool nsHtml5TreeOpExecutor::IsScriptEnabled() {
@@ -1037,11 +1046,11 @@ nsHtml5Parser* nsHtml5TreeOpExecutor::GetParser() {
   return static_cast<nsHtml5Parser*>(mParser.get());
 }
 
-void nsHtml5TreeOpExecutor::MoveOpsFrom(
+[[nodiscard]] bool nsHtml5TreeOpExecutor::MoveOpsFrom(
     nsTArray<nsHtml5TreeOperation>& aOpQueue) {
   MOZ_RELEASE_ASSERT(mFlushState == eNotFlushing,
                      "Ops added to mOpQueue during tree op execution.");
-  mOpQueue.AppendElements(std::move(aOpQueue));
+  return !!mOpQueue.AppendElements(std::move(aOpQueue), mozilla::fallible_t());
 }
 
 void nsHtml5TreeOpExecutor::ClearOpQueue() {

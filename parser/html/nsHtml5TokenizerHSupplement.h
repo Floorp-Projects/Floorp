@@ -34,13 +34,15 @@ void StartPlainText();
 
 void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
-bool FlushViewSource();
+bool ShouldFlushViewSource();
+
+mozilla::Result<bool, nsresult> FlushViewSource();
 
 void StartViewSource(const nsAutoString& aTitle);
 
 void StartViewSourceCharacters();
 
-void EndViewSource();
+[[nodiscard]] bool EndViewSource();
 
 void RewindViewSource();
 
