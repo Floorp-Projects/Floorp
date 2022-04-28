@@ -487,7 +487,7 @@ void DarwinGamepadService::RunEventLoopOnce() {
 
   // This timer must be created in monitor thread
   if (!mPollingTimer) {
-    mPollingTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mPollingTimer = NS_NewTimer();
   }
   mPollingTimer->Cancel();
   if (mIsRunning) {
