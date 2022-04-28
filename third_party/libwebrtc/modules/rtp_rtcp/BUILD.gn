@@ -117,7 +117,6 @@ rtc_library("rtp_rtcp_format") {
     "../../rtc_base:deprecation",
     "../../rtc_base:divide_round",
     "../../rtc_base:rtc_base_approved",
-    "../../rtc_base/system:unused",
     "../../system_wrappers",
     "../video_coding:codec_globals_headers",
   ]
@@ -353,6 +352,7 @@ rtc_library("rtcp_transceiver") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
