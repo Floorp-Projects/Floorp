@@ -1276,7 +1276,9 @@ void TurnPort::ScheduleEntryDestruction(TurnEntry* entry) {
   entry->set_destruction_timestamp(timestamp);
   invoker_.AsyncInvokeDelayed<void>(
       RTC_FROM_HERE, thread(),
-      rtc::Bind(&TurnPort::DestroyEntryIfNotCancelled, this, entry, timestamp),
+      [this, entry, timestamp] {
+        DestroyEntryIfNotCancelled(entry, timestamp);
+      },
       TURN_PERMISSION_TIMEOUT);
 }
 
