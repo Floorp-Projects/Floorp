@@ -9,7 +9,6 @@
 #include "nsAHttpTransaction.h"
 #include "ARefBase.h"
 #include "mozilla/WeakPtr.h"
-#include "nsIClassOfService.h"
 
 namespace mozilla {
 namespace net {
@@ -26,8 +25,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
   // for RefPtr
   NS_INLINE_DECL_REFCOUNTING(Http3Stream, override)
 
-  Http3Stream(nsAHttpTransaction*, Http3Session*, const ClassOfService&,
-              uint64_t);
+  Http3Stream(nsAHttpTransaction*, Http3Session*, uint32_t, uint64_t);
 
   bool HasStreamId() const { return mStreamId != UINT64_MAX; }
   uint64_t StreamId() const { return mStreamId; }
@@ -72,7 +70,6 @@ class Http3Stream final : public nsAHttpSegmentReader,
   nsresult StartRequest();
 
   void SetPriority(uint32_t aCos);
-  void SetIncremental(bool incremental);
 
   /**
    * SendStreamState:

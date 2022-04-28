@@ -17,7 +17,8 @@
 #include "nsHttpHandler.h"
 #include "nsISpeculativeConnect.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 HttpConnectionMgrChild::HttpConnectionMgrChild()
     : mConnMgr(gHttpHandler->ConnMgr()) {
@@ -88,7 +89,7 @@ mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvRescheduleTransaction(
 
 mozilla::ipc::IPCResult
 HttpConnectionMgrChild::RecvUpdateClassOfServiceOnTransaction(
-    PHttpTransactionChild* aTrans, const ClassOfService& aClassOfService) {
+    PHttpTransactionChild* aTrans, const uint32_t& aClassOfService) {
   mConnMgr->UpdateClassOfServiceOnTransaction(ToRealHttpTransaction(aTrans),
                                               aClassOfService);
   return IPC_OK();
@@ -189,4 +190,5 @@ mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvStartWebSocketConnection(
   return IPC_OK();
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

@@ -45,7 +45,8 @@
 #include "HttpConnectionUDP.h"
 #include "SpeculativeTransaction.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 //-----------------------------------------------------------------------------
 
@@ -348,28 +349,14 @@ nsresult nsHttpConnectionMgr::RescheduleTransaction(HttpTransactionShell* trans,
 }
 
 void nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction(
-    HttpTransactionShell* trans, const ClassOfService& classOfService) {
+    HttpTransactionShell* trans, uint32_t classOfService) {
   LOG(
       ("nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction [trans=%p "
-       "classOfService flags=%" PRIu32 " inc=%d]\n",
-       trans, static_cast<uint32_t>(classOfService.Flags()),
-       classOfService.Incremental()));
-
-  Unused << EnsureSocketThreadTarget();
-
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (!mSocketThreadTarget) {
-    NS_WARNING("cannot post event if not initialized");
-  }
-
-  RefPtr<nsHttpConnectionMgr> self(this);
-  Unused << mSocketThreadTarget->Dispatch(NS_NewRunnableFunction(
-      "nsHttpConnectionMgr::CallUpdateClassOfServiceOnTransaction",
-      [cos{classOfService}, self{std::move(self)}, trans = RefPtr{trans}]() {
-        self->OnMsgUpdateClassOfServiceOnTransaction(
-            cos, trans->AsHttpTransaction());
-      }));
+       "classOfService=%" PRIu32 "]\n",
+       trans, static_cast<uint32_t>(classOfService)));
+  Unused << PostEvent(
+      &nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction,
+      static_cast<int32_t>(classOfService), trans->AsHttpTransaction());
 }
 
 nsresult nsHttpConnectionMgr::CancelTransaction(HttpTransactionShell* trans,
@@ -1269,7 +1256,7 @@ nsresult nsHttpConnectionMgr::MakeNewConnection(
 
   nsresult rv = ent->CreateDnsAndConnectSocket(
       trans, trans->Caps(), false, false,
-      trans->GetClassOfService().Flags() & nsIClassOfService::UrgentStart, true,
+      trans->ClassOfService() & nsIClassOfService::UrgentStart, true,
       pendingTransInfo);
   if (NS_FAILED(rv)) {
     /* hard failure */
@@ -1453,8 +1440,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
     // don't respect urgency so that non-urgent transaction will be allowed
     // to dispatch on an urgent-start-only marked connection to avoid
     // dispatch deadlocks
-    if (!(trans->GetClassOfService().Flags() &
-          nsIClassOfService::UrgentStart) &&
+    if (!(trans->ClassOfService() & nsIClassOfService::UrgentStart) &&
         idleConnsAllUrgent &&
         ent->ActiveConnsLength() < MaxPersistConnections(ent)) {
       rv = TryDispatchTransactionOnIdleConn(ent, pendingTransInfo, false);
@@ -1492,8 +1478,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransactionOnIdleConn(
   bool onlyUrgent = !!ent->IdleConnectionsLength();
 
   nsHttpTransaction* trans = pendingTransInfo->Transaction();
-  bool urgentTrans =
-      trans->GetClassOfService().Flags() & nsIClassOfService::UrgentStart;
+  bool urgentTrans = trans->ClassOfService() & nsIClassOfService::UrgentStart;
 
   LOG(
       ("nsHttpConnectionMgr::TryDispatchTransactionOnIdleConn, ent=%p, "
@@ -2066,21 +2051,20 @@ void nsHttpConnectionMgr::OnMsgReschedTransaction(int32_t priority,
 }
 
 void nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction(
-    ClassOfService cos, ARefBase* param) {
+    int32_t arg, ARefBase* param) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(
       ("nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction "
        "[trans=%p]\n",
        param));
 
+  uint32_t cos = static_cast<uint32_t>(arg);
   nsHttpTransaction* trans = static_cast<nsHttpTransaction*>(param);
 
-  ClassOfService previous = trans->GetClassOfService();
+  uint32_t previous = trans->ClassOfService();
   trans->SetClassOfService(cos);
 
-  // incremental change alone will not trigger a reschedule
-  if ((previous.Flags() ^ cos.Flags()) &
-      (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED)) {
+  if ((previous ^ cos) & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED)) {
     Unused << RescheduleTransaction(trans, trans->Priority());
   }
 }
@@ -3649,4 +3633,5 @@ void nsHttpConnectionMgr::CheckTransInPendingQueue(nsHttpTransaction* aTrans) {
 #endif
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
