@@ -284,6 +284,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void HistoryCommitIndexAndLength();
 
+  void SynchronizeLayoutHistoryState();
+
   void ResetScalingZoom();
 
   void SetContainerFeaturePolicy(FeaturePolicy* aContainerFeaturePolicy);
