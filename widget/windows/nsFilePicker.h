@@ -90,9 +90,9 @@ class nsFilePicker : public nsBaseWinFilePicker {
     ComDlgFilterSpec() {}
     ~ComDlgFilterSpec() {}
 
-    const uint32_t Length() { return mSpecList.Length(); }
+    uint32_t Length() { return mSpecList.Length(); }
 
-    const bool IsEmpty() { return (mSpecList.Length() == 0); }
+    bool IsEmpty() { return (mSpecList.Length() == 0); }
 
     const COMDLG_FILTERSPEC* get() { return mSpecList.Elements(); }
 
