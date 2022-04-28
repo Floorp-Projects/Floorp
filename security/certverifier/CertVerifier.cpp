@@ -105,7 +105,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
                            mozilla::TimeDuration ocspTimeoutSoft,
                            mozilla::TimeDuration ocspTimeoutHard,
                            uint32_t certShortLifetimeInDays, SHA1Mode sha1Mode,
-                           BRNameMatchingPolicy::Mode nameMatchingMode,
                            NetscapeStepUpPolicy netscapeStepUpPolicy,
                            CertificateTransparencyMode ctMode,
                            CRLiteMode crliteMode,
@@ -116,7 +115,6 @@ CertVerifier::CertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
       mOCSPTimeoutHard(ocspTimeoutHard),
       mCertShortLifetimeInDays(certShortLifetimeInDays),
       mSHA1Mode(sha1Mode),
-      mNameMatchingMode(nameMatchingMode),
       mNetscapeStepUpPolicy(netscapeStepUpPolicy),
       mCTMode(ctMode),
       mCRLiteMode(crliteMode) {
@@ -990,11 +988,7 @@ Result CertVerifier::VerifySSLServerCert(
     return Result::FATAL_ERROR_INVALID_ARGS;
   }
 
-  BRNameMatchingPolicy nameMatchingPolicy(
-      isBuiltChainRootBuiltInRootLocal
-          ? mNameMatchingMode
-          : BRNameMatchingPolicy::Mode::DoNotEnforce);
-  rv = CheckCertHostname(peerCertInput, hostnameInput, nameMatchingPolicy);
+  rv = CheckCertHostname(peerCertInput, hostnameInput);
   if (rv != Success) {
     // Treat malformed name information as a domain mismatch.
     if (rv == Result::ERROR_BAD_DER) {
