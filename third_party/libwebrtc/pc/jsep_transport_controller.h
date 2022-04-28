@@ -192,41 +192,90 @@ class JsepTransportController : public sigslot::has_slots<> {
   // and deletes unused transports, but doesn't consider anything more complex.
   void RollbackTransports();
 
-  // All of these signals are fired on the signaling thread.
+  sigslot::signal1<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
+
+  // F: void(const std::string&, const std::vector<cricket::Candidate>&)
+  template <typename F>
+  void SubscribeIceCandidateGathered(F&& callback) {
+    signal_ice_candidates_gathered_.AddReceiver(std::forward<F>(callback));
+  }
+
+  // F: void(cricket::IceConnectionState)
+  template <typename F>
+  void SubscribeIceConnectionState(F&& callback) {
+    signal_ice_connection_state_.AddReceiver(std::forward<F>(callback));
+  }
+
+  // F: void(PeerConnectionInterface::PeerConnectionState)
+  template <typename F>
+  void SubscribeConnectionState(F&& callback) {
+    signal_connection_state_.AddReceiver(std::forward<F>(callback));
+  }
+
+  // F: void(PeerConnectionInterface::IceConnectionState)
+  template <typename F>
+  void SubscribeStandardizedIceConnectionState(F&& callback) {
+    signal_standardized_ice_connection_state_.AddReceiver(
+        std::forward<F>(callback));
+  }
+
+  // F: void(cricket::IceGatheringState)
+  template <typename F>
+  void SubscribeIceGatheringState(F&& callback) {
+    signal_ice_gathering_state_.AddReceiver(std::forward<F>(callback));
+  }
+
+  // F: void(const cricket::IceCandidateErrorEvent&)
+  template <typename F>
+  void SubscribeIceCandidateError(F&& callback) {
+    signal_ice_candidate_error_.AddReceiver(std::forward<F>(callback));
+  }
+
+  // F: void(const std::vector<cricket::Candidate>&)
+  template <typename F>
+  void SubscribeIceCandidatesRemoved(F&& callback) {
+    signal_ice_candidates_removed_.AddReceiver(std::forward<F>(callback));
+  }
+
+  // F: void(const cricket::CandidatePairChangeEvent&)
+  template <typename F>
+  void SubscribeIceCandidatePairChanged(F&& callback) {
+    signal_ice_candidate_pair_changed_.AddReceiver(std::forward<F>(callback));
+  }
+
+ private:
+  // All of these callbacks are fired on the signaling thread.
 
   // If any transport failed => failed,
   // Else if all completed => completed,
   // Else if all connected => connected,
   // Else => connecting
-  CallbackList<cricket::IceConnectionState> SignalIceConnectionState;
+  CallbackList<cricket::IceConnectionState> signal_ice_connection_state_;
 
-  sigslot::signal1<PeerConnectionInterface::PeerConnectionState>
-      SignalConnectionState;
+  CallbackList<PeerConnectionInterface::PeerConnectionState>
+      signal_connection_state_;
 
-  sigslot::signal1<PeerConnectionInterface::IceConnectionState>
-      SignalStandardizedIceConnectionState;
+  CallbackList<PeerConnectionInterface::IceConnectionState>
+      signal_standardized_ice_connection_state_;
 
   // If all transports done gathering => complete,
   // Else if any are gathering => gathering,
   // Else => new
-  sigslot::signal1<cricket::IceGatheringState> SignalIceGatheringState;
+  CallbackList<cricket::IceGatheringState> signal_ice_gathering_state_;
 
-  // (mid, candidates)
-  sigslot::signal2<const std::string&, const std::vector<cricket::Candidate>&>
-      SignalIceCandidatesGathered;
+  // [mid, candidates]
+  CallbackList<const std::string&, const std::vector<cricket::Candidate>&>
+      signal_ice_candidates_gathered_;
 
-  sigslot::signal1<const cricket::IceCandidateErrorEvent&>
-      SignalIceCandidateError;
+  CallbackList<const cricket::IceCandidateErrorEvent&>
+      signal_ice_candidate_error_;
 
-  sigslot::signal1<const std::vector<cricket::Candidate>&>
-      SignalIceCandidatesRemoved;
+  CallbackList<const std::vector<cricket::Candidate>&>
+      signal_ice_candidates_removed_;
 
-  sigslot::signal1<const cricket::CandidatePairChangeEvent&>
-      SignalIceCandidatePairChanged;
+  CallbackList<const cricket::CandidatePairChangeEvent&>
+      signal_ice_candidate_pair_changed_;
 
-  sigslot::signal1<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
-
- private:
   RTCError ApplyDescription_n(bool local,
                               SdpType type,
                               const cricket::SessionDescription* description)
