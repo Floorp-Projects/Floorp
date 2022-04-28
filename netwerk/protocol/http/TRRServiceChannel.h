@@ -18,7 +18,8 @@
 
 class nsDNSPrefetch;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 class HttpTransactionShell;
 class nsHttpHandler;
@@ -81,8 +82,6 @@ class TRRServiceChannel : public HttpBaseChannel,
   NS_IMETHOD SetClassFlags(uint32_t inFlags) override;
   NS_IMETHOD AddClassFlags(uint32_t inFlags) override;
   NS_IMETHOD ClearClassFlags(uint32_t inFlags) override;
-  NS_IMETHOD SetIncremental(bool inFlag) override;
-  NS_IMETHOD SetClassOfService(ClassOfService cos) override;
   // nsIResumableChannel
   NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID) override;
   NS_IMETHOD SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) override {
@@ -159,6 +158,7 @@ class TRRServiceChannel : public HttpBaseChannel,
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TRRServiceChannel, NS_TRRSERVICECHANNEL_IID)
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // mozilla_net_TRRServiceChannel_h

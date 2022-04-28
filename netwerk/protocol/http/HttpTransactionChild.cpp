@@ -29,7 +29,8 @@
 
 using mozilla::ipc::BackgroundParent;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 NS_IMPL_ISUPPORTS(HttpTransactionChild, nsIRequestObserver, nsIStreamListener,
                   nsITransportEventSink, nsIThrottledInputChannel,
@@ -69,8 +70,8 @@ nsresult HttpTransactionChild::InitInternal(
     nsHttpRequestHead* requestHead, nsIInputStream* requestBody,
     uint64_t requestContentLength, bool requestBodyHasHeaders,
     uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
-    uint64_t requestContextID, ClassOfService classOfService,
-    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
+    uint64_t requestContextID, uint32_t classOfService, uint32_t initialRwin,
+    bool responseTimeoutEnabled, uint64_t channelId,
     bool aHasTransactionObserver,
     const Maybe<H2PushedStreamArg>& aPushedStreamArg) {
   LOG(("HttpTransactionChild::InitInternal [this=%p caps=%x]\n", this, caps));
@@ -172,7 +173,7 @@ mozilla::ipc::IPCResult HttpTransactionChild::RecvInit(
     const uint64_t& aReqContentLength, const bool& aReqBodyIncludesHeaders,
     const uint64_t& aTopLevelOuterContentWindowId,
     const uint8_t& aHttpTrafficCategory, const uint64_t& aRequestContextID,
-    const ClassOfService& aClassOfService, const uint32_t& aInitialRwin,
+    const uint32_t& aClassOfService, const uint32_t& aInitialRwin,
     const bool& aResponseTimeoutEnabled, const uint64_t& aChannelId,
     const bool& aHasTransactionObserver,
     const Maybe<H2PushedStreamArg>& aPushedStreamArg,
@@ -647,4 +648,5 @@ HttpTransactionChild::EarlyHint(const nsACString& value) {
   return NS_OK;
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

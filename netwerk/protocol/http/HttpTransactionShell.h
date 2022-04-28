@@ -7,7 +7,6 @@
 
 #include <functional>
 #include "nsISupports.h"
-#include "nsIClassOfService.h"
 #include "TimingStruct.h"
 #include "nsInputStreamPump.h"
 #include "nsIEarlyHintObserver.h"
@@ -21,7 +20,8 @@ class nsIRequest;
 class nsIRequestContext;
 class nsITransportEventSink;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 enum HttpTrafficCategory : uint8_t;
 class Http2PushedStreamWrapper;
@@ -81,7 +81,7 @@ class HttpTransactionShell : public nsISupports {
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,
       nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
-      ClassOfService classOfService, uint32_t initialRwin,
+      uint32_t classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,
       TransactionObserverFunc&& transactionObserver,
       OnPushCallback&& aOnPushCallback,
@@ -173,7 +173,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,        \
       nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,         \
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
-      ClassOfService classOfService, uint32_t initialRwin,                     \
+      uint32_t classOfService, uint32_t initialRwin,                           \
       bool responseTimeoutEnabled, uint64_t channelId,                         \
       TransactionObserverFunc&& transactionObserver,                           \
       OnPushCallback&& aOnPushCallback,                                        \
@@ -222,7 +222,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual bool Http3Disabled() const override;                                 \
   virtual already_AddRefed<nsHttpConnectionInfo> GetConnInfo() const override; \
   virtual bool GetSupportsHTTP3() override;
-
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // HttpTransactionShell_h__

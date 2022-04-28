@@ -19,7 +19,8 @@
 #include "mozilla/WeakPtr.h"
 #include "nsDeque.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 class HttpConnectionUDP;
 class Http3Stream;
@@ -228,6 +229,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Http3Session, NS_HTTP3SESSION_IID);
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // Http3Session_H__
