@@ -299,7 +299,9 @@ describe("ASRouter", () => {
         }
       },
       RemoteL10n: {
-        isLocaleSupported: () => true,
+        // This is just a subset of supported locales that happen to be used in
+        // the test.
+        isLocaleSupported: locale => ["en-US", "ja-JP-mac"].includes(locale),
       },
     });
     await createRouterAndInit();
@@ -2822,7 +2824,6 @@ describe("ASRouter", () => {
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
-      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(true);
 
       await MessageLoaderUtils._remoteSettingsLoader(provider, {});
 
@@ -2838,7 +2839,6 @@ describe("ASRouter", () => {
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
-      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(true);
 
       await MessageLoaderUtils._remoteSettingsLoader(provider, {});
 
@@ -2846,7 +2846,6 @@ describe("ASRouter", () => {
     });
     it("should fallback to 'en-US' for locale 'und' ", async () => {
       sandbox.stub(global.Services.locale, "appLocaleAsBCP47").get(() => "und");
-      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(false);
       const getRecordSpy = sandbox.spy(
         global.KintoHttpClient.prototype,
         "getRecord"
@@ -2857,11 +2856,24 @@ describe("ASRouter", () => {
       assert.ok(getRecordSpy.args[0][0].includes("en-US"));
       assert.calledOnce(spy);
     });
+    it("should fallback to 'ja-JP-mac' for locale 'ja-JP-macos'", async () => {
+      sandbox
+        .stub(global.Services.locale, "appLocaleAsBCP47")
+        .get(() => "ja-JP-macos");
+      const getRecordSpy = sandbox.spy(
+        global.KintoHttpClient.prototype,
+        "getRecord"
+      );
+
+      await MessageLoaderUtils._remoteSettingsLoader(provider, {});
+
+      assert.ok(getRecordSpy.args[0][0].includes("ja-JP-mac"));
+      assert.calledOnce(spy);
+    });
     it("should not allow fetch for unsupported locales", async () => {
       sandbox
         .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "unkown");
-      sandbox.stub(global.RemoteL10n, "isLocaleSupported").returns(false);
 
       await MessageLoaderUtils._remoteSettingsLoader(provider, {});
 
