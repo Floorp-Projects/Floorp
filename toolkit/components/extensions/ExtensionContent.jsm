@@ -822,6 +822,16 @@ class ContentScriptContextChild extends BaseContext {
         addonId: extensionPrincipal.addonId,
       };
 
+      let isMV2 = extension.manifestVersion == 2;
+      let wantGlobalProperties;
+      if (isMV2) {
+        // In MV2, fetch/XHR support cross-origin requests.
+        // WebSocket was also included to avoid CSP effects (bug 1676024).
+        wantGlobalProperties = ["XMLHttpRequest", "fetch", "WebSocket"];
+      } else {
+        // In MV3, fetch/XHR have the same capabilities as the web page.
+        wantGlobalProperties = [];
+      }
       this.sandbox = Cu.Sandbox(principal, {
         metadata,
         sandboxName: `Content Script ${extension.policy.debugName}`,
@@ -830,7 +840,7 @@ class ContentScriptContextChild extends BaseContext {
         wantXrays: true,
         isWebExtensionContentScript: true,
         wantExportHelpers: true,
-        wantGlobalProperties: ["XMLHttpRequest", "fetch", "WebSocket"],
+        wantGlobalProperties,
         originAttributes: attrs,
       });
 
@@ -840,25 +850,32 @@ class ContentScriptContextChild extends BaseContext {
       this.cloneScopePromise = this.sandbox.Promise;
       this.cloneScopeError = this.sandbox.Error;
 
-      // Preserve a copy of the original window's XMLHttpRequest and fetch
-      // in a content object (fetch is manually binded to the window
-      // to prevent it from raising a TypeError because content object is not
-      // a real window).
-      Cu.evalInSandbox(
-        `
-        this.content = {
-          XMLHttpRequest: window.XMLHttpRequest,
-          fetch: window.fetch.bind(window),
-          WebSocket: window.WebSocket,
-        };
+      if (isMV2) {
+        // Preserve a copy of the original window's XMLHttpRequest and fetch
+        // in a content object (fetch is manually binded to the window
+        // to prevent it from raising a TypeError because content object is not
+        // a real window).
+        Cu.evalInSandbox(
+          `
+          this.content = {
+            XMLHttpRequest: window.XMLHttpRequest,
+            fetch: window.fetch.bind(window),
+            WebSocket: window.WebSocket,
+          };
 
-        window.JSON = JSON;
-        window.XMLHttpRequest = XMLHttpRequest;
-        window.fetch = fetch;
-        window.WebSocket = WebSocket;
-      `,
-        this.sandbox
-      );
+          window.JSON = JSON;
+          window.XMLHttpRequest = XMLHttpRequest;
+          window.fetch = fetch;
+          window.WebSocket = WebSocket;
+        `,
+          this.sandbox
+        );
+      } else {
+        // The sandbox's JSON API can deal with values from the sandbox and the
+        // contentWindow, but window.JSON cannot (and it could potentially be
+        // spoofed by the web page). jQuery.parseJSON relies on window.JSON.
+        Cu.evalInSandbox("window.JSON = JSON;", this.sandbox);
+      }
     }
 
     Object.defineProperty(this, "principal", {

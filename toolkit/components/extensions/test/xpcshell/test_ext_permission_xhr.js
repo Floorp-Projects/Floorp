@@ -1,5 +1,10 @@
 "use strict";
 
+// This file tests the behavior of fetch/XMLHttpRequest in content scripts, in
+// relation to permissions, in MV2.
+// In MV3, the expectations are different, test coverage for that is in
+// test_ext_xhr_cors.js (along with CORS tests that also apply to MV2).
+
 const server = createHttpServer({
   hosts: ["xpcshell.test", "example.com", "example.org"],
 });
