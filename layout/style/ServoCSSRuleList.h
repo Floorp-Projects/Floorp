@@ -48,7 +48,13 @@ class ServoCSSRuleList final : public dom::CSSRuleList {
   nsresult InsertRule(const nsACString& aRule, uint32_t aIndex);
   nsresult DeleteRule(uint32_t aIndex);
 
-  void SetRawAfterClone(RefPtr<ServoCssRules>);
+  // aFromClone says whether this comes from a clone of the stylesheet (and thus
+  // we should also fix up the wrappers for the individual rules in the rule
+  // lists).
+  void SetRawContents(RefPtr<ServoCssRules>, bool aFromClone);
+  void SetRawAfterClone(RefPtr<ServoCssRules> aRules) {
+    SetRawContents(std::move(aRules), /* aFromClone = */ true);
+  }
 
  private:
   virtual ~ServoCSSRuleList();
@@ -69,6 +75,7 @@ class ServoCSSRuleList final : public dom::CSSRuleList {
   void EnumerateInstantiatedRules(Func aCallback);
 
   void DropAllRules();
+  void ResetRules();
 
   bool IsReadOnly() const;
 
