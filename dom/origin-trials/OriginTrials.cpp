@@ -93,7 +93,7 @@ bool MatchesOrigin(const uint8_t* aOrigin, size_t aOriginLen, bool aIsSubdomain,
   LOG("MatchesOrigin(%d, %d, %d, %s)\n", aIsThirdParty, aIsSubdomain,
       aIsUsageSubset, nsCString(origin).get());
 
-  if (aIsThirdParty || aIsSubdomain || aIsUsageSubset) {
+  if (aIsThirdParty || aIsUsageSubset) {
     // TODO(emilio): Support third-party tokens and so on.
     return false;
   }
@@ -104,10 +104,26 @@ bool MatchesOrigin(const uint8_t* aOrigin, size_t aOriginLen, bool aIsSubdomain,
     return false;
   }
 
-  if (NS_WARN_IF(!principal->IsSameOrigin(originURI))) {
+  const bool originMatches = [&] {
+    if (principal->IsSameOrigin(originURI)) {
+      return true;
+    }
+    if (aIsSubdomain) {
+      for (nsCOMPtr<nsIPrincipal> prin = principal->GetNextSubDomainPrincipal();
+           prin; prin = prin->GetNextSubDomainPrincipal()) {
+        if (prin->IsSameOrigin(originURI)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }();
+
+  if (NS_WARN_IF(!originMatches)) {
     LOG("Origin doesn't match\n");
     return false;
   }
+
   return true;
 }
 
