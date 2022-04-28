@@ -36,7 +36,9 @@ ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
                                    StyleSheet* aSheet,
                                    css::GroupRule* aParentRule)
     : mStyleSheet(aSheet), mParentRule(aParentRule), mRawRules(aRawRules) {
-  ResetRules();
+  if (mRawRules) {
+    Servo_CssRules_ListTypes(mRawRules, &mRules);
+  }
 }
 
 // QueryInterface implementation for ServoCSSRuleList
@@ -132,7 +134,10 @@ static void DropRule(already_AddRefed<css::Rule> aRule) {
   rule->DropReferences();
 }
 
-void ServoCSSRuleList::ResetRules() {
+void ServoCSSRuleList::DropAllRules() {
+  mStyleSheet = nullptr;
+  mParentRule = nullptr;
+  mRawRules = nullptr;
   // DropRule could reenter here via the cycle collector.
   auto rules = std::move(mRules);
   for (uintptr_t rule : rules) {
@@ -141,17 +146,6 @@ void ServoCSSRuleList::ResetRules() {
     }
   }
   MOZ_ASSERT(mRules.IsEmpty());
-  if (mRawRules) {
-    Servo_CssRules_ListTypes(mRawRules, &mRules);
-  }
-}
-
-void ServoCSSRuleList::DropAllRules() {
-  mStyleSheet = nullptr;
-  mParentRule = nullptr;
-  mRawRules = nullptr;
-
-  ResetRules();
 }
 
 void ServoCSSRuleList::DropSheetReference() {
@@ -227,14 +221,8 @@ nsresult ServoCSSRuleList::DeleteRule(uint32_t aIndex) {
   return rv;
 }
 
-void ServoCSSRuleList::SetRawContents(RefPtr<ServoCssRules> aNewRules,
-                                      bool aFromClone) {
+void ServoCSSRuleList::SetRawAfterClone(RefPtr<ServoCssRules> aNewRules) {
   mRawRules = std::move(aNewRules);
-  if (!aFromClone) {
-    ResetRules();
-    return;
-  }
-
   EnumerateInstantiatedRules([&](css::Rule* aRule, uint32_t aIndex) {
 #define CASE_FOR(constant_, type_)                                           \
   case StyleCssRuleType::constant_: {                                        \
