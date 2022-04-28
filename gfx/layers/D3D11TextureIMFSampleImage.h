@@ -8,7 +8,6 @@
 #define GFX_D311_TEXTURE_IMF_SAMPLE_IMAGE_H
 
 #include "ImageContainer.h"
-#include "d3d11.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/TextureClient.h"
