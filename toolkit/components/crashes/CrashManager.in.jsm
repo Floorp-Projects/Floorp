@@ -350,7 +350,7 @@ CrashManager.prototype = Object.freeze({
                 );
             }
           } catch (ex) {
-            if (ex instanceof DOMException) {
+            if (DOMException.isInstance(ex)) {
               this._log.warn("I/O error reading " + entry.path, ex);
             } else {
               // We should never encounter an exception. This likely represents
@@ -450,9 +450,11 @@ CrashManager.prototype = Object.freeze({
     let promise = (async () => {
       if (!this.isValidProcessType(processType)) {
         Cu.reportError(
-          "Unhandled process type. Please file a bug: '" + processType +
-          "'. Ignore in the context of " +
-	  "test_crash_manager.js:test_addCrashWrong().");
+          "Unhandled process type. Please file a bug: '" +
+            processType +
+            "'. Ignore in the context of " +
+            "test_crash_manager.js:test_addCrashWrong()."
+        );
         return;
       }
 
@@ -486,7 +488,7 @@ CrashManager.prototype = Object.freeze({
    * @return boolean True or false depending whether it is a legit one
    */
   isValidProcessType(processType) {
-    if (typeof(processType) !== "string") {
+    if (typeof processType !== "string") {
       return false;
     }
 
@@ -509,7 +511,9 @@ CrashManager.prototype = Object.freeze({
   isPingAllowed(processType) {
     // gen_CrashManager.py will input the proper process pings informations.
 
-    /* SUBST: CRASH_MANAGER_PROCESS_PINGS */
+    let processPings = {
+      /* SUBST: CRASH_MANAGER_PROCESS_PINGS */
+    };
 
     // Should not even reach this because of isValidProcessType() but just in
     // case we try to be cautious
@@ -772,7 +776,12 @@ CrashManager.prototype = Object.freeze({
           // If CrashPingUUID is not present then a ping was not generated
           // by the crashreporter for this crash so we need to send one from
           // here.
-          this._sendCrashPing(crashID, this.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT], date, metadata);
+          this._sendCrashPing(
+            crashID,
+            this.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
+            date,
+            metadata
+          );
         }
 
         break;
@@ -1089,7 +1098,7 @@ CrashStore.prototype = Object.freeze({
         }
       } catch (ex) {
         // Missing files (first use) are allowed.
-        if (!(ex instanceof DOMException) || ex.name != "NotFoundError") {
+        if (!DOMException.isInstance(ex) || ex.name != "NotFoundError") {
           // If we can't load for any reason, mark a corrupt date in the instance
           // and swallow the error.
           //
@@ -1320,7 +1329,10 @@ CrashStore.prototype = Object.freeze({
 
       if (
         count > this.HIGH_WATER_DAILY_THRESHOLD &&
-        processType != CrashManager.prototype.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT]
+        processType !=
+          CrashManager.prototype.processTypes[
+            Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
+          ]
       ) {
         return null;
       }
