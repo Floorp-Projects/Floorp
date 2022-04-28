@@ -27,12 +27,8 @@ static void getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
           ? nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
-  if (accWrap && accWrap->IsImage()) {
-    ImageAccessible* image = accWrap->AsImage();
-    pos = image->Position(geckoCoordType);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aImage))) {
-    pos = proxy->ImagePosition(geckoCoordType);
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aImage))) {
+    pos = acc->Position(geckoCoordType);
   }
 
   *aAccX = pos.x;
@@ -46,11 +42,8 @@ static const gchar* getImageDescriptionCB(AtkImage* aImage) {
 static void getImageSizeCB(AtkImage* aImage, gint* aAccWidth,
                            gint* aAccHeight) {
   LayoutDeviceIntSize size(-1, -1);
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
-  if (accWrap && accWrap->IsImage()) {
-    size = accWrap->AsImage()->Size();
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aImage))) {
-    size = proxy->ImageSize();
+  if (Accessible* acc = GetInternalObj(ATK_OBJECT(aImage))) {
+    size = acc->Size();
   }
 
   *aAccWidth = size.width;

@@ -390,18 +390,6 @@ bool RemoteAccessible::PasteText(int32_t aPosition) {
   return valid;
 }
 
-LayoutDeviceIntPoint RemoteAccessible::ImagePosition(uint32_t aCoordType) {
-  LayoutDeviceIntPoint retVal;
-  Unused << mDoc->SendImagePosition(mID, aCoordType, &retVal);
-  return retVal;
-}
-
-LayoutDeviceIntSize RemoteAccessible::ImageSize() {
-  LayoutDeviceIntSize retVal;
-  Unused << mDoc->SendImageSize(mID, &retVal);
-  return retVal;
-}
-
 uint32_t RemoteAccessible::StartOffset() {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::StartOffset();

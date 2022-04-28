@@ -18,11 +18,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-ImageAccessible* ia2AccessibleImage::ImageAcc() {
-  AccessibleWrap* acc = static_cast<MsaaAccessible*>(this)->LocalAcc();
-  return static_cast<ImageAccessible*>(acc);
-}
-
 // IUnknown
 IMPL_IUNKNOWN_QUERY_HEAD(ia2AccessibleImage)
 IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleImage)
@@ -36,7 +31,7 @@ ia2AccessibleImage::get_description(BSTR* aDescription) {
 
   *aDescription = nullptr;
 
-  ImageAccessible* acc = ImageAcc();
+  Accessible* acc = Acc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   nsAutoString description;
@@ -55,15 +50,15 @@ ia2AccessibleImage::get_imagePosition(enum IA2CoordinateType aCoordType,
   *aX = 0;
   *aY = 0;
 
-  ImageAccessible* imageAcc = ImageAcc();
-  if (!imageAcc) return CO_E_OBJNOTCONNECTED;
+  Accessible* acc = Acc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
   uint32_t geckoCoordType =
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  LayoutDeviceIntPoint pos = imageAcc->Position(geckoCoordType);
+  LayoutDeviceIntPoint pos = acc->Position(geckoCoordType);
   *aX = pos.x;
   *aY = pos.y;
   return S_OK;
@@ -76,10 +71,10 @@ ia2AccessibleImage::get_imageSize(long* aHeight, long* aWidth) {
   *aHeight = 0;
   *aWidth = 0;
 
-  ImageAccessible* imageAcc = ImageAcc();
-  if (!imageAcc) return CO_E_OBJNOTCONNECTED;
+  Accessible* acc = Acc();
+  if (!acc) return CO_E_OBJNOTCONNECTED;
 
-  LayoutDeviceIntSize size = imageAcc->Size();
+  LayoutDeviceIntSize size = acc->Size();
   *aHeight = size.width;
   *aWidth = size.height;
   return S_OK;
