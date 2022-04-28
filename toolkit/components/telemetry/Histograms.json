@@ -11258,6 +11258,46 @@
     "n_values": 8,
     "description": "Type of call: (Bitmask) Audio = 1, Video = 2, DataChannels = 4"
   },
+  "WEBRTC_SOFTWARE_H264_ENABLED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1766509],
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether hardware H264 is enabled"
+  },
+  "WEBRTC_HAS_H264_HARDWARE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1766509],
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the user has H264 hardware"
+  },
+  "WEBRTC_HARDWARE_H264_ENABLED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1766509],
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether software H264 is enabled"
+  },
+  "WEBRTC_H264_ENABLED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1766509],
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether any kind of H264 is enabled"
+  },
   "MEDIA_RECORDER_RECORDING_DURATION": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],

@@ -587,11 +587,18 @@ class ConfigureCodec {
     mSoftwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
 
     if (WebrtcVideoConduit::HasH264Hardware()) {
+      Telemetry::Accumulate(Telemetry::WEBRTC_HAS_H264_HARDWARE, true);
       branch->GetBoolPref("media.webrtc.hw.h264.enabled",
                           &mHardwareH264Enabled);
     }
 
     mH264Enabled = mHardwareH264Enabled || mSoftwareH264Enabled;
+    Telemetry::Accumulate(Telemetry::WEBRTC_SOFTWARE_H264_ENABLED,
+                          mSoftwareH264Enabled);
+    Telemetry::Accumulate(Telemetry::WEBRTC_HARDWARE_H264_ENABLED,
+                          mHardwareH264Enabled);
+    Telemetry::Accumulate(Telemetry::WEBRTC_H264_ENABLED,
+                          mH264Enabled);
 
     branch->GetIntPref("media.navigator.video.h264.level", &mH264Level);
     mH264Level &= 0xFF;
