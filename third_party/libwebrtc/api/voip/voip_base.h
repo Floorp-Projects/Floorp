@@ -13,7 +13,6 @@
 
 #include "absl/base/attributes.h"
 #include "absl/types/optional.h"
-#include "rtc_base/system/unused.h"
 
 namespace webrtc {
 
