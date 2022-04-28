@@ -332,6 +332,8 @@ rtc_library("rtc_audio_video") {
     "../rtc_base/experiments:rate_control_settings",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:rtc_export",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/base64",
     "../system_wrappers",
     "../system_wrappers:metrics",

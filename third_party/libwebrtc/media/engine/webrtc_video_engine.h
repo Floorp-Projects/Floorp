@@ -34,6 +34,7 @@
 #include "media/engine/unhandled_packets_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/thread_checker.h"
 
@@ -554,11 +555,13 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
   rtc::Thread* const worker_thread_;
+  webrtc::ScopedTaskSafety task_safety_;
+  rtc::ThreadChecker network_thread_checker_;
   rtc::ThreadChecker thread_checker_;
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);
   bool sending_ RTC_GUARDED_BY(thread_checker_);
-  webrtc::Call* const call_ RTC_GUARDED_BY(thread_checker_);
+  webrtc::Call* const call_;
 
   DefaultUnsignalledSsrcHandler default_unsignalled_ssrc_handler_
       RTC_GUARDED_BY(thread_checker_);

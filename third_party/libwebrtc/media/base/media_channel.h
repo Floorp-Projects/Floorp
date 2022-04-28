@@ -179,7 +179,7 @@ class MediaChannel : public sigslot::has_slots<> {
   // Sets the abstract interface class for sending RTP/RTCP data.
   virtual void SetInterface(NetworkInterface* iface)
       RTC_LOCKS_EXCLUDED(network_interface_mutex_);
-  // Called when a RTP packet is received.
+  // Called on the network when an RTP packet is received.
   virtual void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
                                 int64_t packet_time_us) = 0;
   // Called when the socket's ability to send has changed.
