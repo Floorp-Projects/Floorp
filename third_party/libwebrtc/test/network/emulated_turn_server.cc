@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "api/packet_socket_factory.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace {
 
