@@ -1356,13 +1356,11 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
       const PeerConnectionFactory::Options* options,
       const RTCConfiguration* config,
       webrtc::PeerConnectionDependencies dependencies) {
-    std::unique_ptr<webrtc::FakeRtcEventLogFactory> event_log_factory(
-        new webrtc::FakeRtcEventLogFactory(rtc::Thread::Current()));
-    return CreatePeerConnectionWrapper(debug_name, options, config,
-                                       std::move(dependencies),
-                                       std::move(event_log_factory),
-                                       /*reset_encoder_factory=*/false,
-                                       /*reset_decoder_factory=*/false);
+    return CreatePeerConnectionWrapper(
+        debug_name, options, config, std::move(dependencies),
+        std::make_unique<webrtc::FakeRtcEventLogFactory>(),
+        /*reset_encoder_factory=*/false,
+        /*reset_decoder_factory=*/false);
   }
 
   bool CreatePeerConnectionWrappers() {
@@ -5238,11 +5236,9 @@ TEST_P(PeerConnectionIntegrationTest,
   ASSERT_NE(nullptr, caller()->event_log_factory());
   ASSERT_NE(nullptr, callee()->event_log_factory());
   webrtc::FakeRtcEventLog* caller_event_log =
-      static_cast<webrtc::FakeRtcEventLog*>(
-          caller()->event_log_factory()->last_log_created());
+      caller()->event_log_factory()->last_log_created();
   webrtc::FakeRtcEventLog* callee_event_log =
-      static_cast<webrtc::FakeRtcEventLog*>(
-          callee()->event_log_factory()->last_log_created());
+      callee()->event_log_factory()->last_log_created();
   ASSERT_NE(nullptr, caller_event_log);
   ASSERT_NE(nullptr, callee_event_log);
   int caller_ice_config_count = caller_event_log->GetEventCount(

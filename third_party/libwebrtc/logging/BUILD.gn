@@ -285,11 +285,9 @@ rtc_library("fake_rtc_event_log") {
   ]
 
   deps = [
-    ":ice_log",
     "../api/rtc_event_log",
     "../rtc_base",
-    "../rtc_base:checks",
-    "../rtc_base:threading",
+    "../rtc_base/synchronization:mutex",
   ]
 }
 }
