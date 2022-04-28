@@ -23,14 +23,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "absl/base/attributes.h"
 #include "modules/audio_coding/codecs/ilbc/defines.h"
-#include "rtc_base/system/unused.h"
 
 /*----------------------------------------------------------------*
  *  Construct decoded vector from codebook and gains.
  *---------------------------------------------------------------*/
 
 // Returns true on success, false on failure.
+ABSL_MUST_USE_RESULT
 bool WebRtcIlbcfix_CbConstruct(
     int16_t* decvector,        /* (o) Decoded vector */
     const int16_t* index,      /* (i) Codebook indices */
@@ -38,6 +39,6 @@ bool WebRtcIlbcfix_CbConstruct(
     int16_t* mem,              /* (i) Buffer for codevector construction */
     size_t lMem,               /* (i) Length of buffer */
     size_t veclen              /* (i) Length of vector */
-    ) RTC_WARN_UNUSED_RESULT;
+);
 
 #endif
