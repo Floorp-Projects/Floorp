@@ -220,16 +220,14 @@ class SctpDataSender final {
       case cricket::SDR_BLOCK:
         // retry after timeout
         invoker_.AsyncInvokeDelayed<void>(
-            RTC_FROM_HERE, thread_,
-            rtc::Bind(&SctpDataSender::SendNextMessage, this), 500);
+            RTC_FROM_HERE, thread_, [this] { SendNextMessage(); }, 500);
         break;
       case cricket::SDR_SUCCESS:
         // send next
         num_bytes_sent_ += payload_.size();
         ++num_messages_sent_;
-        invoker_.AsyncInvoke<void>(
-            RTC_FROM_HERE, thread_,
-            rtc::Bind(&SctpDataSender::SendNextMessage, this));
+        invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_,
+                                   [this] { SendNextMessage(); });
         break;
       case cricket::SDR_ERROR:
         // give up
