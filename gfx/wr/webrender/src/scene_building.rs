@@ -402,6 +402,7 @@ impl PictureChainBuilder {
     }
 
     /// Returns true if this builder wraps a picture
+    #[allow(dead_code)]
     fn has_picture(&self) -> bool {
         match self.current {
             PictureSource::WrappedPicture { .. } => true,
@@ -1672,9 +1673,10 @@ impl<'a> SceneBuilder<'a> {
                     &clips,
                 );
             },
-            DisplayItem::BackdropFilter(ref info) => {
+            DisplayItem::BackdropFilter(ref _info) => {
                 profile_scope!("backdrop");
 
+                /*
                 let (layout, _, spatial_node_index, clip_chain_id) = self.process_common_properties(
                     &info.common,
                     None,
@@ -1692,6 +1694,7 @@ impl<'a> SceneBuilder<'a> {
                     filter_datas,
                     filter_primitives,
                 );
+                */
             }
 
             // Do nothing; these are dummy items for the display list parser
@@ -3561,6 +3564,7 @@ impl<'a> SceneBuilder<'a> {
         }
     }
 
+    #[allow(dead_code)]
     pub fn add_backdrop_filter(
         &mut self,
         spatial_node_index: SpatialNodeIndex,

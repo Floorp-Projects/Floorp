@@ -176,18 +176,33 @@ class WindowManager {
   /**
    * Open a new browser window.
    *
-   * @param {window} openerWindow
-   *     The window from which the new window should be opened.
-   * @param {Boolean} [focus=false]
-   *     If true, the opened window will receive the focus.
-   * @param {Boolean} [isPrivate=false]
-   *     If true, the opened window will be a private window.
+   * @param {Object=} options
+   * @param {Boolean=} options.focus
+   *     If true, the opened window will receive the focus. Defaults to false.
+   * @param {Boolean=} options.isPrivate
+   *     If true, the opened window will be a private window. Defaults to false.
+   * @param {ChromeWindow=} options.openerWindow
+   *     Use this window as the opener of the new window. Defaults to the
+   *     topmost window.
    * @return {Promise}
    *     A promise resolving to the newly created chrome window.
    */
-  async openBrowserWindow(openerWindow, focus = false, isPrivate = false) {
+  async openBrowserWindow(options = {}) {
+    let { focus = false, isPrivate = false, openerWindow = null } = options;
+
     switch (AppInfo.name) {
       case "Firefox":
+        if (openerWindow === null) {
+          // If no opener was provided, fallback to the topmost window.
+          openerWindow = Services.wm.getMostRecentBrowserWindow();
+        }
+
+        if (!openerWindow) {
+          throw new error.UnsupportedOperationError(
+            `openWindow() could not find a valid opener window`
+          );
+        }
+
         // Open new browser window, and wait until it is fully loaded.
         // Also wait for the window to be focused and activated to prevent a
         // race condition when promptly focusing to the original window again.
@@ -202,7 +217,11 @@ class WindowManager {
           }
         );
 
+        // TODO: Both for WebDriver BiDi and classic, opening a new window
+        // should not run the focus steps. When focus is false we should avoid
+        // focusing the new window completely. See Bug 1766329
         win.focus();
+
         await Promise.all([activated, focused, startup]);
 
         // The new window shouldn't get focused. As such set the

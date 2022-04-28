@@ -13,6 +13,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
   assert: "chrome://remote/content/shared/webdriver/Assert.jsm",
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.jsm",
@@ -27,11 +28,27 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/Navigate.jsm",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
+  windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.get(Log.TYPES.WEBDRIVER_BIDI)
 );
+
+/**
+ * @typedef {Object} CreateType
+ **/
+
+/**
+ * Enum of types supported by the browsingContext.create command.
+ *
+ * @readonly
+ * @enum {CreateType}
+ **/
+const CreateType = {
+  tab: "tab",
+  window: "window",
+};
 
 /**
  * @typedef {string} WaitCondition
@@ -115,6 +132,52 @@ class BrowsingContextModule extends Module {
     const tabBrowser = TabManager.getTabBrowser(browser.ownerGlobal);
     const tab = tabBrowser.getTabForBrowser(browser);
     TabManager.removeTab(tab);
+  }
+
+  /**
+   * Create a new browsing context using the provided type "tab" or "window".
+   *
+   * @param {Object=} options
+   * @param {CreateType} options.type
+   *     Type of browsing context to create.
+   *
+   * @throws {InvalidArgumentError}
+   *     If the browsing context is not a top-level one.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  async create(options = {}) {
+    const { type } = options;
+    if (type !== CreateType.tab && type !== CreateType.window) {
+      throw new error.InvalidArgumentError(
+        `Expected "type" to be one of ${Object.values(CreateType)}, got ${type}`
+      );
+    }
+
+    let browser;
+    switch (type) {
+      case "window":
+        let newWindow = await windowManager.openBrowserWindow();
+        browser = TabManager.getTabBrowser(newWindow).selectedBrowser;
+        break;
+
+      case "tab":
+        if (!TabManager.supportsTabs()) {
+          throw new error.UnsupportedOperationError(
+            `browsingContext.create with type "tab" not supported in ${AppInfo.name}`
+          );
+        }
+        let tab = TabManager.addTab({ focus: false });
+        browser = TabManager.getBrowserForTab(tab);
+    }
+
+    await waitForInitialNavigationCompleted(
+      browser.browsingContext.webProgress
+    );
+
+    return {
+      context: TabManager.getIdForBrowser(browser),
+    };
   }
 
   /**

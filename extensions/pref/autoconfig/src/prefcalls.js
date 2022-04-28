@@ -10,18 +10,17 @@ const nsILDAPURL = Ci.nsILDAPURL;
 const LDAPURLContractID = "@mozilla.org/network/ldap-url;1";
 const nsILDAPSyncQuery = Ci.nsILDAPSyncQuery;
 const LDAPSyncQueryContractID = "@mozilla.org/ldapsyncquery;1";
-const nsIPrefService = Ci.nsIPrefService;
-const PrefServiceContractID = "@mozilla.org/preferences-service;1";
-
-// ChromeUtils isn't available here, so we can't use Services.*
-/* eslint-disable mozilla/use-services */
 
 var gVersion;
 var gIsUTF8;
 
 function getPrefBranch() {
-  var prefService = Cc[PrefServiceContractID].getService(nsIPrefService);
-  return prefService.getBranch(null);
+  // NOTE: Import Services.jsm locally to avoid polluting the global variables
+  //       for non-sandbox case.
+  const { Services } = ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  return Services.prefs.getBranch(null);
 }
 
 function pref(prefName, value) {
@@ -46,8 +45,10 @@ function pref(prefName, value) {
 
 function defaultPref(prefName, value) {
   try {
-    var prefService = Cc[PrefServiceContractID].getService(nsIPrefService);
-    var prefBranch = prefService.getDefaultBranch(null);
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+    var prefBranch = Services.prefs.getDefaultBranch(null);
     if (typeof value == "string") {
       if (gIsUTF8) {
         prefBranch.setStringPref(prefName, value);
@@ -140,10 +141,10 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
       "?sub?" +
       filter;
 
-    var url = Cc["@mozilla.org/network/io-service;1"]
-      .getService(Ci.nsIIOService)
-      .newURI(urlSpec)
-      .QueryInterface(Ci.nsILDAPURL);
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+    var url = Services.io.newURI(urlSpec).QueryInterface(Ci.nsILDAPURL);
 
     var ldapquery = Cc[LDAPSyncQueryContractID].createInstance(
       nsILDAPSyncQuery
@@ -192,16 +193,16 @@ function getLDAPValue(str, key) {
 
 function displayError(funcname, message) {
   try {
-    var promptService = Cc[
-      "@mozilla.org/embedcomp/prompt-service;1"
-    ].getService(Ci.nsIPromptService);
-    var bundle = Cc["@mozilla.org/intl/stringbundle;1"]
-      .getService(Ci.nsIStringBundleService)
-      .createBundle("chrome://autoconfig/locale/autoconfig.properties");
+    const { Services } = ChromeUtils.import(
+      "resource://gre/modules/Services.jsm"
+    );
+    var bundle = Services.strings.createBundle(
+      "chrome://autoconfig/locale/autoconfig.properties"
+    );
 
     var title = bundle.GetStringFromName("autoConfigTitle");
     var msg = bundle.formatStringFromName("autoConfigMsg", [funcname]);
-    promptService.alert(null, title, msg + " " + message);
+    Services.prompt.alert(null, title, msg + " " + message);
   } catch (e) {}
 }
 

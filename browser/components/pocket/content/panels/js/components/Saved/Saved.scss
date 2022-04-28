@@ -1,3 +1,9 @@
+body {
+  &.stp_saved_body {
+    overflow: hidden;
+  }
+}
+
 .stp_panel_error {
   margin: 23px 0 32px;
   .stp_panel_error_icon {

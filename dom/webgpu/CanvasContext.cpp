@@ -69,6 +69,11 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   mHandle = layers::CompositableInProcessManager::GetNextHandle();
   mTexture =
       aDesc.mDevice->InitSwapChain(aDesc, mHandle, mGfxFormat, &actualSize);
+  if (!mTexture) {
+    Unconfigure();
+    return;
+  }
+
   mTexture->mTargetContext = this;
   mBridge = aDesc.mDevice->GetBridge();
   mGfxSize = actualSize;

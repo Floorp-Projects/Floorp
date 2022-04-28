@@ -17,6 +17,7 @@
 #include "Adapter.h"
 #include "Buffer.h"
 #include "ComputePipeline.h"
+#include "DeviceLostInfo.h"
 #include "Queue.h"
 #include "RenderBundleEncoder.h"
 #include "RenderPipeline.h"
@@ -35,7 +36,7 @@ mozilla::LazyLogModule gWebGPULog("WebGPU");
 
 GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(Device, DOMEventTargetHelper,
                                                  mBridge, mQueue, mFeatures,
-                                                 mLimits);
+                                                 mLimits, mLostPromise);
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
@@ -69,9 +70,21 @@ Device::Device(Adapter* const aParent, RawId aId,
 Device::~Device() { Cleanup(); }
 
 void Device::Cleanup() {
-  if (mValid && mBridge) {
-    mValid = false;
+  if (!mValid) {
+    return;
+  }
+
+  mValid = false;
+
+  if (mBridge) {
     mBridge->UnregisterDevice(mId);
+  }
+
+  if (mLostPromise) {
+    auto info = MakeRefPtr<DeviceLostInfo>(GetParentObject(),
+                                           dom::GPUDeviceLostReason::Destroyed,
+                                           u"Device destroyed"_ns);
+    mLostPromise->MaybeResolve(info);
   }
 }
 
@@ -85,8 +98,25 @@ void Device::CleanupUnregisteredInParent() {
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 
+dom::Promise* Device::GetLost(ErrorResult& aRv) {
+  if (!mLostPromise) {
+    mLostPromise = dom::Promise::Create(GetParentObject(), aRv);
+    if (mLostPromise && !mBridge->CanSend()) {
+      auto info = MakeRefPtr<DeviceLostInfo>(GetParentObject(),
+                                             u"WebGPUChild destroyed"_ns);
+      mLostPromise->MaybeResolve(info);
+    }
+  }
+  return mLostPromise;
+}
+
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
+  if (!mBridge->CanSend()) {
+    RefPtr<Buffer> buffer = new Buffer(this, 0, aDesc.mSize, false);
+    return buffer.forget();
+  }
+
   ipc::Shmem shmem;
   bool hasMapFlags = aDesc.mUsage & (dom::GPUBufferUsage_Binding::MAP_WRITE |
                                      dom::GPUBufferUsage_Binding::MAP_READ);
@@ -157,26 +187,37 @@ RefPtr<MappingPromise> Device::MapBufferAsync(RawId aId, uint32_t aMode,
 
 void Device::UnmapBuffer(RawId aId, ipc::Shmem&& aShmem, bool aFlush,
                          bool aKeepShmem) {
-  mBridge->SendBufferUnmap(aId, std::move(aShmem), aFlush, aKeepShmem);
+  if (mBridge->CanSend()) {
+    mBridge->SendBufferUnmap(aId, std::move(aShmem), aFlush, aKeepShmem);
+  }
 }
 
 already_AddRefed<Texture> Device::CreateTexture(
     const dom::GPUTextureDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateTexture(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateTexture(mId, aDesc);
+  }
   RefPtr<Texture> texture = new Texture(this, id, aDesc);
   return texture.forget();
 }
 
 already_AddRefed<Sampler> Device::CreateSampler(
     const dom::GPUSamplerDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateSampler(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateSampler(mId, aDesc);
+  }
   RefPtr<Sampler> sampler = new Sampler(this, id);
   return sampler.forget();
 }
 
 already_AddRefed<CommandEncoder> Device::CreateCommandEncoder(
     const dom::GPUCommandEncoderDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateCommandEncoder(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateCommandEncoder(mId, aDesc);
+  }
   RefPtr<CommandEncoder> encoder = new CommandEncoder(this, mBridge, id);
   return encoder.forget();
 }
@@ -190,19 +231,28 @@ already_AddRefed<RenderBundleEncoder> Device::CreateRenderBundleEncoder(
 
 already_AddRefed<BindGroupLayout> Device::CreateBindGroupLayout(
     const dom::GPUBindGroupLayoutDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateBindGroupLayout(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateBindGroupLayout(mId, aDesc);
+  }
   RefPtr<BindGroupLayout> object = new BindGroupLayout(this, id, true);
   return object.forget();
 }
 already_AddRefed<PipelineLayout> Device::CreatePipelineLayout(
     const dom::GPUPipelineLayoutDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreatePipelineLayout(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreatePipelineLayout(mId, aDesc);
+  }
   RefPtr<PipelineLayout> object = new PipelineLayout(this, id);
   return object.forget();
 }
 already_AddRefed<BindGroup> Device::CreateBindGroup(
     const dom::GPUBindGroupDescriptor& aDesc) {
-  RawId id = mBridge->DeviceCreateBindGroup(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateBindGroup(mId, aDesc);
+  }
   RefPtr<BindGroup> object = new BindGroup(this, id);
   return object.forget();
 }
@@ -210,7 +260,10 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
 already_AddRefed<ShaderModule> Device::CreateShaderModule(
     JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc) {
   Unused << aCx;
-  RawId id = mBridge->DeviceCreateShaderModule(mId, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateShaderModule(mId, aDesc);
+  }
   RefPtr<ShaderModule> object = new ShaderModule(this, id);
   return object.forget();
 }
@@ -218,7 +271,10 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
   PipelineCreationContext context = {mId};
-  RawId id = mBridge->DeviceCreateComputePipeline(&context, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateComputePipeline(&context, aDesc);
+  }
   RefPtr<ComputePipeline> object =
       new ComputePipeline(this, id, context.mImplicitPipelineLayoutId,
                           std::move(context.mImplicitBindGroupLayoutIds));
@@ -228,7 +284,10 @@ already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
 already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
     const dom::GPURenderPipelineDescriptor& aDesc) {
   PipelineCreationContext context = {mId};
-  RawId id = mBridge->DeviceCreateRenderPipeline(&context, aDesc);
+  RawId id = 0;
+  if (mBridge->CanSend()) {
+    id = mBridge->DeviceCreateRenderPipeline(&context, aDesc);
+  }
   RefPtr<RenderPipeline> object =
       new RenderPipeline(this, id, context.mImplicitPipelineLayoutId,
                          std::move(context.mImplicitBindGroupLayoutIds));
@@ -240,6 +299,11 @@ already_AddRefed<dom::Promise> Device::CreateComputePipelineAsync(
   RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (!mBridge->CanSend()) {
+    promise->MaybeRejectWithOperationError("Internal communication error");
+    return promise.forget();
   }
 
   std::shared_ptr<PipelineCreationContext> context(
@@ -269,6 +333,11 @@ already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
     return nullptr;
   }
 
+  if (!mBridge->CanSend()) {
+    promise->MaybeRejectWithOperationError("Internal communication error");
+    return promise.forget();
+  }
+
   std::shared_ptr<PipelineCreationContext> context(
       new PipelineCreationContext());
   context->mParentId = mId;
@@ -293,6 +362,10 @@ already_AddRefed<Texture> Device::InitSwapChain(
     const dom::GPUCanvasConfiguration& aDesc,
     const layers::CompositableHandle& aHandle, gfx::SurfaceFormat aFormat,
     gfx::IntSize* aCanvasSize) {
+  if (!mBridge->CanSend()) {
+    return nullptr;
+  }
+
   gfx::IntSize size = *aCanvasSize;
   if (aDesc.mSize.WasPassed()) {
     const auto& descSize = aDesc.mSize.Value();
@@ -338,13 +411,20 @@ void Device::Destroy() {
 }
 
 void Device::PushErrorScope(const dom::GPUErrorFilter& aFilter) {
-  mBridge->SendDevicePushErrorScope(mId);
+  if (mBridge->CanSend()) {
+    mBridge->SendDevicePushErrorScope(mId);
+  }
 }
 
 already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
   RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (!mBridge->CanSend()) {
+    promise->MaybeRejectWithOperationError("Internal communication error");
+    return promise.forget();
   }
 
   auto errorPromise = mBridge->SendDevicePopErrorScope(mId);

@@ -2540,6 +2540,7 @@ bool nsNativeThemeWin::ClassicThemeSupportsWidget(nsIFrame* aFrame,
     case StyleAppearance::Menupopup:
       // Classic non-flat menus are handled almost entirely through CSS.
       if (!nsUXThemeData::AreFlatMenusEnabled()) return false;
+      [[fallthrough]];
     case StyleAppearance::Button:
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
@@ -3275,7 +3276,7 @@ RENDER_AGAIN:
         if (brush) ::FrameRect(hdc, &widgetRect, brush);
         InflateRect(&widgetRect, -1, -1);
       }
-      // fall-through...
+      [[fallthrough]];
     }
     // Draw controls supported by DrawFrameControl
     case StyleAppearance::Checkbox:
@@ -3331,7 +3332,7 @@ RENDER_AGAIN:
       // Draw 3D border
       ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
       InflateRect(&widgetRect, -1, -1);
-      // fall through
+      [[fallthrough]];
     case StyleAppearance::Tabpanel:
     case StyleAppearance::Statusbar:
     case StyleAppearance::Resizerpanel: {
@@ -3461,6 +3462,7 @@ RENDER_AGAIN:
     case StyleAppearance::Menucheckbox:
     case StyleAppearance::Menuradio:
       if (!(state & DFCS_CHECKED)) break;  // nothin' to do
+      [[fallthrough]];
     case StyleAppearance::Menuarrow: {
       uint32_t color = COLOR_MENUTEXT;
       if ((state & DFCS_INACTIVE))

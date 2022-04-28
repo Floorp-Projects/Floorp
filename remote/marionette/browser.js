@@ -193,8 +193,12 @@ browser.Context = class {
    * @return {Promise}
    *     A promise resolving to the newly created chrome window.
    */
-  async openBrowserWindow(focus = false, isPrivate = false) {
-    return windowManager.openBrowserWindow(this.window, focus, isPrivate);
+  openBrowserWindow(focus = false, isPrivate = false) {
+    return windowManager.openBrowserWindow({
+      openerWindow: this.window,
+      focus,
+      isPrivate,
+    });
   }
 
   /**

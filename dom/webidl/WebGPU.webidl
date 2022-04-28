@@ -188,9 +188,14 @@ GPUDevice includes GPUObjectBase;
 // ERROR HANDLING
 // ****************************************************************************
 
+enum GPUDeviceLostReason {
+    "destroyed",
+};
+
 [Pref="dom.webgpu.enabled",
  Exposed=(Window,DedicatedWorker)]
 interface GPUDeviceLostInfo {
+    readonly attribute any reason; // GPUDeviceLostReason or undefined
     readonly attribute DOMString message;
 };
 
@@ -216,7 +221,8 @@ interface GPUValidationError {
 typedef (GPUOutOfMemoryError or GPUValidationError) GPUError;
 
 partial interface GPUDevice {
-    //readonly attribute Promise<GPUDeviceLostInfo> lost;
+    [Throws]
+    readonly attribute Promise<GPUDeviceLostInfo> lost;
     void pushErrorScope(GPUErrorFilter filter);
     [NewObject]
     Promise<GPUError?> popErrorScope();

@@ -64,8 +64,7 @@ class WMFVideoMFTManager : public MFTManager {
 
   HRESULT SetDecoderMediaTypes();
 
-  bool CanUseDXVA(IMFMediaType* aInputType, IMFMediaType* aOutputType,
-                  float aFramerate);
+  bool CanUseDXVA(IMFMediaType* aInputType, IMFMediaType* aOutputType);
 
   // Gets the duration from aSample, and if an unknown or invalid duration is
   // returned from WMF, this instead returns the last known input duration.

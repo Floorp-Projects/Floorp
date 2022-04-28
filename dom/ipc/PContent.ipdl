@@ -1016,24 +1016,27 @@ child:
                                       uint32_t aIndex, uint32_t aLength,
                                       nsID aChangeID);
 
-   async DispatchLocationChangeEvent(MaybeDiscardedBrowsingContext aContext);
+    async GetLayoutHistoryState(MaybeDiscardedBrowsingContext aContext)
+        returns (nsILayoutHistoryState aState);
 
-  // Dispatches a "beforeunload" event to each in-process content window in the
-  // subtree beginning at `aStartingAt`, and returns the result as documented in
-  // the `PermitUnloadResult` enum.
-  async DispatchBeforeUnloadToSubtree(MaybeDiscardedBrowsingContext aStartingAt)
-      returns (PermitUnloadResult result);
+    async DispatchLocationChangeEvent(MaybeDiscardedBrowsingContext aContext);
 
-  // Update the cached list of codec supported in the given process.
-  async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
+    // Dispatches a "beforeunload" event to each in-process content window in the
+    // subtree beginning at `aStartingAt`, and returns the result as documented in
+    // the `PermitUnloadResult` enum.
+    async DispatchBeforeUnloadToSubtree(MaybeDiscardedBrowsingContext aStartingAt)
+        returns (PermitUnloadResult result);
 
-  // Send the list of the supported mimetypes in the given process. GeckoView-specific
-  async DecoderSupportedMimeTypes(nsCString[] supportedTypes);
+    // Update the cached list of codec supported in the given process.
+    async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
 
-  // Used to initialize the global variable in content processes with the
-  // latched value in the parent process. See dom/LocalStorageCommon.h for more
-  // details.
-  async InitNextGenLocalStorageEnabled(bool enabled);
+    // Send the list of the supported mimetypes in the given process. GeckoView-specific
+    async DecoderSupportedMimeTypes(nsCString[] supportedTypes);
+
+    // Used to initialize the global variable in content processes with the
+    // latched value in the parent process. See dom/LocalStorageCommon.h for more
+    // details.
+    async InitNextGenLocalStorageEnabled(bool enabled);
 
   async PRemotePrintJob();
 

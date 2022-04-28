@@ -22,9 +22,15 @@ module.exports = {
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
   ],
+  HTMLMediaElement: [["prototype", "mozPreservesPitch"]],
   IDBDatabase: [["prototype", "createMutableFile"]],
   IDBMutableFile: [["prototype", "open"]],
   ImageBitmapRenderingContext: [["prototype", "transferImageBitmap"]],
+  InstallTriggerImpl: [
+    ["prototype", "install"],
+    ["prototype", "installChrome"],
+    ["prototype", "startSoftwareUpdate"],
+  ],
   MathMLElement: [
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
@@ -41,6 +47,7 @@ module.exports = {
     ["prototype", "onmozfullscreenerror"],
   ],
   Window: [
+    ["prototype", "InstallTrigger"],
     ["prototype", "onmozfullscreenchange"],
     ["prototype", "onmozfullscreenerror"],
   ],

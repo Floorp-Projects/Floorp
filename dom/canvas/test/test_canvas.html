@@ -20555,8 +20555,8 @@ var ctx = canvas.getContext('2d');
 is(ctx.font, '10px sans-serif', "default font is not '10px sans-serif'");
 
 ctx.save();
-ctx.font = '20pt serif';
-is(ctx.font, '20pt serif', 'font getter returns incorrect value');
+ctx.font = '18pt serif';
+is(ctx.font, '24px serif', 'font getter returns incorrect value');
 
 ctx.restore();
 is(ctx.font, '10px sans-serif', 'font not being stored in the context state');

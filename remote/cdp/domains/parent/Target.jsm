@@ -87,7 +87,10 @@ class Target extends Domain {
     const { browserContextId } = options;
     const { targetList } = this.session.target;
     const onTarget = targetList.once("target-created");
-    const tab = TabManager.addTab({ userContextId: browserContextId });
+    const tab = TabManager.addTab({
+      focus: true,
+      userContextId: browserContextId,
+    });
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
       throw new Error(

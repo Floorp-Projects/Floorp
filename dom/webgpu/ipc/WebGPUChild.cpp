@@ -6,12 +6,14 @@
 #include "WebGPUChild.h"
 #include "js/Warnings.h"  // JS::WarnUTF8
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/dom/GPUUncapturedErrorEvent.h"
 #include "mozilla/webgpu/ValidationError.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "Adapter.h"
+#include "DeviceLostInfo.h"
 #include "Sampler.h"
 
 namespace mozilla {
@@ -1048,6 +1050,35 @@ void WebGPUChild::UnregisterDevice(RawId aId) {
 void WebGPUChild::FreeUnregisteredInParentDevice(RawId aId) {
   ffi::wgpu_client_kill_device_id(mClient.get(), aId);
   mDeviceMap.erase(aId);
+}
+
+void WebGPUChild::ActorDestroy(ActorDestroyReason) {
+  // Resolving the promise could cause us to update the original map if the
+  // callee frees the Device objects immediately. Since any remaining entries
+  // in the map are no longer valid, we can just move the map onto the stack.
+  const auto deviceMap = std::move(mDeviceMap);
+  mDeviceMap.clear();
+
+  for (const auto& targetIter : deviceMap) {
+    RefPtr<Device> device = targetIter.second.get();
+    if (!device) {
+      // The Device may have gotten freed when we resolved the Promise for
+      // another Device in the map.
+      continue;
+    }
+
+    RefPtr<dom::Promise> promise = device->MaybeGetLost();
+    if (!promise) {
+      continue;
+    }
+
+    auto info = MakeRefPtr<DeviceLostInfo>(device->GetParentObject(),
+                                           u"WebGPUChild destroyed"_ns);
+
+    // We have strong references to both the Device and the DeviceLostInfo and
+    // the Promise objects on the stack which keeps them alive for long enough.
+    promise->MaybeResolve(info);
+  }
 }
 
 }  // namespace webgpu

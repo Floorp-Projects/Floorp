@@ -106,7 +106,7 @@ check_and_add_warning("-Wduplicated-cond")
 check_and_add_warning("-Wenum-compare-conditional")
 
 # catches unintentional switch case fallthroughs
-check_and_add_warning("-Wimplicit-fallthrough", cxx_compiler, when=not_clang_cl)
+check_and_add_warning("-Wimplicit-fallthrough", cxx_compiler)
 
 # Enable some ObjC diagnostics that are only relevant when targeting macOS:
 with only_when(depends(target)(lambda t: t.kernel == "Darwin")):
@@ -308,7 +308,9 @@ check_and_add_warning(
 # Older clangs don't support AutoUnlock, and have other issues
 check_and_add_warning(
     "-Wthread-safety",
-    when=depends(c_compiler)(lambda c: c.type == "clang" and c.version >= "8.0"),
+    when=depends(c_compiler)(
+        lambda c: c.type in ("clang", "clang-cl") and c.version >= "8.0"
+    ),
 )
 
 # Please keep these last in this file

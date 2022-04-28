@@ -175,8 +175,7 @@ TEST_DIRS += [
 ]
 
 # Suppress warnings from third-party code.
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    SOURCES["MurmurHash3.cpp"].flags += ["-Wno-implicit-fallthrough"]
+SOURCES["MurmurHash3.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
 LOCAL_INCLUDES += [
     "/js/xpconnect/wrappers",

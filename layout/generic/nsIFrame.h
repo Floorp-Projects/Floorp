@@ -1300,6 +1300,23 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedPaddingProperty, nsMargin)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(UsedBorderProperty, nsMargin)
 
+  // This tracks the start and end page value for a frame.
+  //
+  // https://www.w3.org/TR/css-page-3/#using-named-pages
+  //
+  // This is only tracked during paginated frame construction when
+  // layout.css.named-pages.enabled has been set to true.
+  // This is used to implement fragmentation based on CSS page names. During
+  // frame construction, we insert page breaks when we begin a new page box and
+  // the previous page box had a different name.
+  struct PageValues {
+    // mFirstChildPageName of null is used to indicate that no child has been
+    // constructed yet.
+    RefPtr<const nsAtom> mStartPageValue = nullptr;
+    RefPtr<const nsAtom> mEndPageValue = nullptr;
+  };
+  NS_DECLARE_FRAME_PROPERTY_DELETABLE(PageValuesProperty, PageValues)
+
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(LineBaselineOffset, nscoord)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(InvalidationRect, nsRect)
