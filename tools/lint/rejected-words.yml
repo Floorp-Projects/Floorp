@@ -329,7 +329,7 @@ avoid-blacklist-and-whitelist:
         - toolkit/components/antitracking/test/browser/browser_siteSpecificWorkArounds.js
         - toolkit/components/antitracking/test/browser/browser_socialtracking_save_image.js
         - toolkit/components/antitracking/test/xpcshell/test_rejectForeignAllowList.js
-        - toolkit/components/crashes/CrashManager.jsm.in
+        - toolkit/components/crashes/CrashManager.in.jsm
         - toolkit/components/crashes/tests/xpcshell/test_crash_manager.js
         - toolkit/components/extensions/Extension.jsm
         - toolkit/components/extensions/test/xpcshell/test_WebExtensionPolicy.js
