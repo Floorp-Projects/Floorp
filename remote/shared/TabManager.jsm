@@ -121,15 +121,35 @@ var TabManager = {
     return null;
   },
 
-  addTab({ userContextId }) {
-    const window = Services.wm.getMostRecentWindow(null);
+  /**
+   * Create a new tab.
+   *
+   * @param {Object} options
+   * @param {Boolean=} options.focus
+   *     Set to true if the new tab should be focused (selected). Defaults to
+   *     false.
+   * @param {Number} options.userContextId
+   *     The user context (container) id.
+   * @param {window=} options.window
+   *     The window where the new tab will open. Defaults to Services.wm.getMostRecentWindow
+   *     if no window is provided.
+   */
+  addTab(options = {}) {
+    const {
+      focus = false,
+      userContextId,
+      window = Services.wm.getMostRecentWindow(null),
+    } = options;
     const tabBrowser = this.getTabBrowser(window);
 
     const tab = tabBrowser.addTab("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
-    this.selectTab(tab);
+
+    if (focus) {
+      this.selectTab(tab);
+    }
 
     return tab;
   },
