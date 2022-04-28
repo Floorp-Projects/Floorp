@@ -352,7 +352,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   // nsIClassOfService
   NS_IMETHOD GetClassFlags(uint32_t* outFlags) override {
-    *outFlags = mClassOfService;
+    *outFlags = mClassOfService.Flags();
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetIncremental(bool* outIncremental) override {
+    *outIncremental = mClassOfService.Incremental();
     return NS_OK;
   }
 
@@ -499,7 +504,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
         const dom::ReplacementChannelConfigInit& aInit);
 
     uint32_t redirectFlags = 0;
-    uint32_t classOfService = 0;
+    ClassOfServiceStruct classOfService = {0, false};
     Maybe<bool> privateBrowsing = Nothing();
     Maybe<nsCString> method;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
@@ -770,7 +775,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   uint32_t mLoadFlags;
   uint32_t mCaps;
-  uint32_t mClassOfService;
+
+  ClassOfServiceStruct mClassOfService;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields1, 32, (
