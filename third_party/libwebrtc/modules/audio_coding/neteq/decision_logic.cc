@@ -50,8 +50,8 @@ DecisionLogic::DecisionLogic(
       disallow_time_stretching_(!config.allow_time_stretching),
       timescale_countdown_(
           tick_timer_->GetNewCountdown(kMinTimescaleInterval + 1)),
-      estimate_dtx_delay_("estimate_dtx_delay", false),
-      time_stretch_cn_("time_stretch_cn", false),
+      estimate_dtx_delay_("estimate_dtx_delay", true),
+      time_stretch_cn_("time_stretch_cn", true),
       target_level_window_ms_("target_level_window",
                               kDefaultTargetLevelWindowMs,
                               0,
