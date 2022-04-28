@@ -32,7 +32,6 @@ class FakeRtcEventLog : public RtcEventLog {
   int GetEventCount(RtcEvent::Type event_type) { return count_[event_type]; }
 
  private:
-  void IncrementEventCount(RtcEvent::Type event_type) { ++count_[event_type]; }
   std::map<RtcEvent::Type, int> count_;
   rtc::Thread* thread_;
   rtc::AsyncInvoker invoker_;
