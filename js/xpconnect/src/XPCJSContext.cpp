@@ -1180,7 +1180,7 @@ class HelperThreadTaskHandler : public Task {
   ~HelperThreadTaskHandler() = default;
 };
 
-static void DispatchOffThreadTask() {
+static void DispatchOffThreadTask(JS::DispatchReason) {
   TaskController::Get()->AddTask(MakeAndAddRef<HelperThreadTaskHandler>());
 }
 
