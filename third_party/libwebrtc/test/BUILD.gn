@@ -146,6 +146,7 @@ if (!build_with_chromium) {
         "../api:scoped_refptr",
         "../modules/video_capture:video_capture_module",
         "../rtc_base",
+        "../rtc_base:threading",
         "../sdk:base_objc",
         "../sdk:native_api",
         "../sdk:native_video",
@@ -418,6 +419,7 @@ if (rtc_include_tests) {
       "../rtc_base:checks",
       "../rtc_base:logging",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base:threading",
       "../system_wrappers:field_trial",
       "../system_wrappers:metrics",
     ]
@@ -868,6 +870,7 @@ rtc_library("test_common") {
     "../rtc_base:rtc_base",
     "../rtc_base:rtc_event",
     "../rtc_base:task_queue_for_test",
+    "../rtc_base:threading",
     "../rtc_base/task_utils:to_queued_task",
     "../system_wrappers",
     "../system_wrappers:field_trial",

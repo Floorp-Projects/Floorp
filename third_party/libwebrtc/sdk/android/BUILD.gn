@@ -559,7 +559,9 @@ if (current_os == "linux" || is_android) {
       "../../api:scoped_refptr",
       "../../rtc_base",
       "../../rtc_base:checks",
+      "../../rtc_base:ip_address",
       "../../rtc_base:rtc_base_approved",
+      "../../rtc_base:threading",
       "../../rtc_base/synchronization:sequence_checker",
       "../../system_wrappers:field_trial",
       "../../system_wrappers:metrics",
@@ -656,6 +658,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_task_queue",
+      "../../rtc_base:threading",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/task_utils:to_queued_task",
       "//third_party/libyuv",
@@ -746,6 +749,7 @@ if (current_os == "linux" || is_android) {
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:rtc_task_queue",
+      "../../rtc_base:threading",
       "../../rtc_base/system:thread_registry",
       "../../system_wrappers:field_trial",
     ]
@@ -916,6 +920,7 @@ if (current_os == "linux" || is_android) {
 
     deps = [
       ":base_jni",
+      "../../rtc_base:threading",
       "//rtc_base",
     ]
   }
@@ -930,6 +935,7 @@ if (current_os == "linux" || is_android) {
     deps = [
       ":base_jni",
       ":peerconnection_jni",
+      "../../rtc_base:threading",
       "//api:libjingle_peerconnection_api",
       "//api/video_codecs:video_codecs_api",
       "//rtc_base",
@@ -968,6 +974,7 @@ if (current_os == "linux" || is_android) {
       ":native_api_jni",
       ":video_jni",
       ":videoframe_jni",
+      "../../rtc_base:threading",
       "//api:libjingle_peerconnection_api",
       "//api:media_stream_interface",
       "//api/video:video_frame",
@@ -1471,6 +1478,7 @@ if (is_android) {
       "../../modules/utility",
       "../../pc:libjingle_peerconnection",
       "../../rtc_base:checks",
+      "../../rtc_base:ip_address",
       "../../rtc_base:rtc_base",
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/system:inline",

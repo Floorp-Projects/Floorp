@@ -686,6 +686,8 @@ if (is_linux || is_chromeos || is_win) {
       "../p2p:rtc_p2p",
       "../pc:video_track_source",
       "../rtc_base:checks",
+      "../rtc_base:net_helpers",
+      "../rtc_base:threading",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:field_trial",
       "../test:field_trial",
@@ -777,7 +779,11 @@ if (is_linux || is_chromeos || is_win) {
       "../p2p:rtc_p2p",
       "../pc:rtc_pc",
       "../rtc_base",
+      "../rtc_base:ip_address",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base:socket_address",
+      "../rtc_base:socket_server",
+      "../rtc_base:threading",
     ]
   }
   rtc_executable("stunserver") {
@@ -789,6 +795,9 @@ if (is_linux || is_chromeos || is_win) {
       "../pc:rtc_pc",
       "../rtc_base",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base:socket_address",
+      "../rtc_base:socket_server",
+      "../rtc_base:threading",
     ]
   }
 }
@@ -912,6 +921,8 @@ if (!build_with_chromium) {
       "../rtc_base",
       "../rtc_base:checks",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base:socket_address",
+      "../rtc_base:threading",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
     ]

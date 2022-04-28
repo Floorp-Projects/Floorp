@@ -122,14 +122,6 @@ class ScopedSetTrue {
 
 namespace rtc {
 
-std::unique_ptr<SocketServer> SocketServer::CreateDefault() {
-#if defined(__native_client__)
-  return std::unique_ptr<SocketServer>(new rtc::NullSocketServer);
-#else
-  return std::unique_ptr<SocketServer>(new rtc::PhysicalSocketServer);
-#endif
-}
-
 PhysicalSocket::PhysicalSocket(PhysicalSocketServer* ss, SOCKET s)
     : ss_(ss),
       s_(s),

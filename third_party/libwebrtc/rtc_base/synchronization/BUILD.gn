@@ -88,6 +88,7 @@ if (rtc_include_tests) {
       "..:macromagic",
       "..:rtc_base",
       "..:rtc_event",
+      "..:threading",
       "../../test:test_support",
       "//third_party/google_benchmark",
     ]
