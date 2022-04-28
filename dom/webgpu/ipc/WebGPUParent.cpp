@@ -19,8 +19,17 @@ const uint64_t POLL_TIME_MS = 100;
 
 static mozilla::LazyLogModule sLogger("WebGPU");
 
-// A helper class to force error checks coming across FFI.
-// It will assert in destructor if unchecked.
+// A fixed-capacity buffer for receiving textual error messages from
+// `wgpu_bindings`.
+//
+// The `ToFFI` method returns an `ffi::WGPUErrorBuffer` pointing to our
+// buffer, for you to pass to fallible FFI-visible `wgpu_bindings`
+// functions. These indicate failure by storing an error message in the
+// buffer, which you can retrieve by calling `GetError`.
+//
+// If you call `ToFFI` on this type, you must also call `GetError` to check for
+// an error. Otherwise, the destructor asserts.
+//
 // TODO: refactor this to avoid stack-allocating the buffer all the time.
 class ErrorBuffer {
   // if the message doesn't fit, it will be truncated
