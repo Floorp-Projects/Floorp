@@ -92,8 +92,10 @@ JsepTransportController::JsepTransportController(
 JsepTransportController::~JsepTransportController() {
   // Channel destructors may try to send packets, so this needs to happen on
   // the network thread.
-  network_thread_->Invoke<void>(RTC_FROM_HERE,
-                                [this] { DestroyAllJsepTransports_n(); });
+  network_thread_->Invoke<void>(RTC_FROM_HERE, [this] {
+    RTC_DCHECK_RUN_ON(network_thread_);
+    DestroyAllJsepTransports_n();
+  });
 }
 
 RTCError JsepTransportController::SetLocalDescription(
@@ -104,6 +106,7 @@ RTCError JsepTransportController::SetLocalDescription(
         RTC_FROM_HERE, [=] { return SetLocalDescription(type, description); });
   }
 
+  RTC_DCHECK_RUN_ON(network_thread_);
   if (!initial_offerer_.has_value()) {
     initial_offerer_.emplace(type == SdpType::kOffer);
     if (*initial_offerer_) {
@@ -123,6 +126,7 @@ RTCError JsepTransportController::SetRemoteDescription(
         RTC_FROM_HERE, [=] { return SetRemoteDescription(type, description); });
   }
 
+  RTC_DCHECK_RUN_ON(network_thread_);
   return ApplyDescription_n(/*local=*/false, type, description);
 }
 
@@ -558,7 +562,6 @@ RTCError JsepTransportController::ApplyDescription_n(
     bool local,
     SdpType type,
     const cricket::SessionDescription* description) {
-  RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(description);
 
   if (local) {
@@ -955,7 +958,6 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
     bool local,
     const cricket::ContentInfo& content_info,
     const cricket::SessionDescription& description) {
-  RTC_DCHECK(network_thread_->IsCurrent());
   cricket::JsepTransport* transport = GetJsepTransportByName(content_info.name);
   if (transport) {
     return RTCError::OK();

@@ -229,7 +229,8 @@ class JsepTransportController : public sigslot::has_slots<> {
  private:
   RTCError ApplyDescription_n(bool local,
                               SdpType type,
-                              const cricket::SessionDescription* description);
+                              const cricket::SessionDescription* description)
+      RTC_RUN_ON(network_thread_);
   RTCError ValidateAndMaybeUpdateBundleGroup(
       bool local,
       SdpType type,
@@ -237,8 +238,10 @@ class JsepTransportController : public sigslot::has_slots<> {
   RTCError ValidateContent(const cricket::ContentInfo& content_info);
 
   void HandleRejectedContent(const cricket::ContentInfo& content_info,
-                             const cricket::SessionDescription* description);
-  bool HandleBundledContent(const cricket::ContentInfo& content_info);
+                             const cricket::SessionDescription* description)
+      RTC_RUN_ON(network_thread_);
+  bool HandleBundledContent(const cricket::ContentInfo& content_info)
+      RTC_RUN_ON(network_thread_);
 
   bool SetTransportForMid(const std::string& mid,
                           cricket::JsepTransport* jsep_transport);
@@ -295,12 +298,14 @@ class JsepTransportController : public sigslot::has_slots<> {
   RTCError MaybeCreateJsepTransport(
       bool local,
       const cricket::ContentInfo& content_info,
-      const cricket::SessionDescription& description);
+      const cricket::SessionDescription& description)
+      RTC_RUN_ON(network_thread_);
 
-  void MaybeDestroyJsepTransport(const std::string& mid);
-  void DestroyAllJsepTransports_n();
+  void MaybeDestroyJsepTransport(const std::string& mid)
+      RTC_RUN_ON(network_thread_);
+  void DestroyAllJsepTransports_n() RTC_RUN_ON(network_thread_);
 
-  void SetIceRole_n(cricket::IceRole ice_role);
+  void SetIceRole_n(cricket::IceRole ice_role) RTC_RUN_ON(network_thread_);
 
   cricket::IceRole DetermineIceRole(
       cricket::JsepTransport* jsep_transport,
@@ -334,24 +339,33 @@ class JsepTransportController : public sigslot::has_slots<> {
   std::vector<cricket::DtlsTransportInternal*> GetDtlsTransports();
 
   // Handlers for signals from Transport.
-  void OnTransportWritableState_n(rtc::PacketTransportInternal* transport);
-  void OnTransportReceivingState_n(rtc::PacketTransportInternal* transport);
-  void OnTransportGatheringState_n(cricket::IceTransportInternal* transport);
+  void OnTransportWritableState_n(rtc::PacketTransportInternal* transport)
+      RTC_RUN_ON(network_thread_);
+  void OnTransportReceivingState_n(rtc::PacketTransportInternal* transport)
+      RTC_RUN_ON(network_thread_);
+  void OnTransportGatheringState_n(cricket::IceTransportInternal* transport)
+      RTC_RUN_ON(network_thread_);
   void OnTransportCandidateGathered_n(cricket::IceTransportInternal* transport,
-                                      const cricket::Candidate& candidate);
-  void OnTransportCandidateError_n(
-      cricket::IceTransportInternal* transport,
-      const cricket::IceCandidateErrorEvent& event);
+                                      const cricket::Candidate& candidate)
+      RTC_RUN_ON(network_thread_);
+  void OnTransportCandidateError_n(cricket::IceTransportInternal* transport,
+                                   const cricket::IceCandidateErrorEvent& event)
+      RTC_RUN_ON(network_thread_);
   void OnTransportCandidatesRemoved_n(cricket::IceTransportInternal* transport,
-                                      const cricket::Candidates& candidates);
-  void OnTransportRoleConflict_n(cricket::IceTransportInternal* transport);
-  void OnTransportStateChanged_n(cricket::IceTransportInternal* transport);
+                                      const cricket::Candidates& candidates)
+      RTC_RUN_ON(network_thread_);
+  void OnTransportRoleConflict_n(cricket::IceTransportInternal* transport)
+      RTC_RUN_ON(network_thread_);
+  void OnTransportStateChanged_n(cricket::IceTransportInternal* transport)
+      RTC_RUN_ON(network_thread_);
   void OnTransportCandidatePairChanged_n(
-      const cricket::CandidatePairChangeEvent& event);
-  void UpdateAggregateStates_n();
+      const cricket::CandidatePairChangeEvent& event)
+      RTC_RUN_ON(network_thread_);
+  void UpdateAggregateStates_n() RTC_RUN_ON(network_thread_);
 
   void OnRtcpPacketReceived_n(rtc::CopyOnWriteBuffer* packet,
-                              int64_t packet_time_us);
+                              int64_t packet_time_us)
+      RTC_RUN_ON(network_thread_);
 
   void OnDtlsHandshakeError(rtc::SSLHandshakeError error);
 
