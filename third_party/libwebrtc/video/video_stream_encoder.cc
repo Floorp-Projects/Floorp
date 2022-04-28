@@ -726,12 +726,16 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   // Possibly adjusts scale_resolution_down_by in |encoder_config_| to limit the
   // alignment value.
-  int alignment = AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
-      encoder_->GetEncoderInfo(), &encoder_config_);
+  AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
+      encoder_->GetEncoderInfo(), &encoder_config_, absl::nullopt);
 
   std::vector<VideoStream> streams =
       encoder_config_.video_stream_factory->CreateEncoderStreams(
           last_frame_info_->width, last_frame_info_->height, encoder_config_);
+
+  // Get alignment when actual number of layers are known.
+  int alignment = AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
+      encoder_->GetEncoderInfo(), &encoder_config_, streams.size());
 
   // Check that the higher layers do not try to set number of temporal layers
   // to less than 1.
