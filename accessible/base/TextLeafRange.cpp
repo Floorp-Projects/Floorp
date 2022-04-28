@@ -523,7 +523,8 @@ TextLeafPoint TextLeafPoint::FindLineStartSameRemoteAcc(
     }
   }
   MOZ_ASSERT(index <= lines->Length());
-  if ((aDirection == eDirNext && index == lines->Length()) || index == 0) {
+  if ((aDirection == eDirNext && index == lines->Length()) ||
+      (aDirection == eDirPrevious && index == 0)) {
     return TextLeafPoint();
   }
   // index points at the line start after mOffset.
