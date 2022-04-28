@@ -22,7 +22,6 @@
 #include "p2p/base/packet_transport_internal.h"
 #include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
@@ -39,7 +38,6 @@
 namespace cricket {
 namespace {
 
-using ::rtc::Bind;
 using ::rtc::UniqueRandomIdGenerator;
 using ::webrtc::PendingTaskSafetyFlag;
 using ::webrtc::SdpType;
@@ -273,10 +271,14 @@ bool BaseChannel::SetRtpTransport(webrtc::RtpTransportInternal* rtp_transport) {
 }
 
 bool BaseChannel::Enable(bool enable) {
-  worker_thread_->Invoke<void>(
-      RTC_FROM_HERE,
-      Bind(enable ? &BaseChannel::EnableMedia_w : &BaseChannel::DisableMedia_w,
-           this));
+  worker_thread_->Invoke<void>(RTC_FROM_HERE, [this, enable] {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    if (enable) {
+      EnableMedia_w();
+    } else {
+      DisableMedia_w();
+    }
+  });
   return true;
 }
 
@@ -284,25 +286,26 @@ bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
                                   SdpType type,
                                   std::string* error_desc) {
   TRACE_EVENT0("webrtc", "BaseChannel::SetLocalContent");
-  return InvokeOnWorker<bool>(
-      RTC_FROM_HERE,
-      Bind(&BaseChannel::SetLocalContent_w, this, content, type, error_desc));
+  return InvokeOnWorker<bool>(RTC_FROM_HERE, [this, content, type, error_desc] {
+    return SetLocalContent_w(content, type, error_desc);
+  });
 }
 
 bool BaseChannel::SetRemoteContent(const MediaContentDescription* content,
                                    SdpType type,
                                    std::string* error_desc) {
   TRACE_EVENT0("webrtc", "BaseChannel::SetRemoteContent");
-  return InvokeOnWorker<bool>(
-      RTC_FROM_HERE,
-      Bind(&BaseChannel::SetRemoteContent_w, this, content, type, error_desc));
+  return InvokeOnWorker<bool>(RTC_FROM_HERE, [this, content, type, error_desc] {
+    return SetRemoteContent_w(content, type, error_desc);
+  });
 }
 
 void BaseChannel::SetPayloadTypeDemuxingEnabled(bool enabled) {
   TRACE_EVENT0("webrtc", "BaseChannel::SetPayloadTypeDemuxingEnabled");
-  InvokeOnWorker<void>(
-      RTC_FROM_HERE,
-      Bind(&BaseChannel::SetPayloadTypeDemuxingEnabled_w, this, enabled));
+  InvokeOnWorker<void>(RTC_FROM_HERE, [this, enabled] {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    SetPayloadTypeDemuxingEnabled_w(enabled);
+  });
 }
 
 bool BaseChannel::UpdateRtpTransport(std::string* error_desc) {
@@ -362,8 +365,10 @@ bool BaseChannel::SendRtcp(rtc::CopyOnWriteBuffer* packet,
 int BaseChannel::SetOption(SocketType type,
                            rtc::Socket::Option opt,
                            int value) {
-  return network_thread_->Invoke<int>(
-      RTC_FROM_HERE, Bind(&BaseChannel::SetOption_n, this, type, opt, value));
+  return network_thread_->Invoke<int>(RTC_FROM_HERE, [this, type, opt, value] {
+    RTC_DCHECK_RUN_ON(network_thread());
+    return SetOption_n(type, opt, value);
+  });
 }
 
 int BaseChannel::SetOption_n(SocketType type,
@@ -1062,8 +1067,9 @@ void VideoChannel::UpdateMediaSendRecvState_w() {
 }
 
 void VideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
-  InvokeOnWorker<void>(RTC_FROM_HERE, Bind(&VideoMediaChannel::FillBitrateInfo,
-                                           media_channel(), bwe_info));
+  VideoMediaChannel* mc = media_channel();
+  InvokeOnWorker<void>(RTC_FROM_HERE,
+                       [mc, bwe_info] { mc->FillBitrateInfo(bwe_info); });
 }
 
 bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
@@ -1292,9 +1298,10 @@ void RtpDataChannel::Init_w(webrtc::RtpTransportInternal* rtp_transport) {
 bool RtpDataChannel::SendData(const SendDataParams& params,
                               const rtc::CopyOnWriteBuffer& payload,
                               SendDataResult* result) {
-  return InvokeOnWorker<bool>(
-      RTC_FROM_HERE, Bind(&DataMediaChannel::SendData, media_channel(), params,
-                          payload, result));
+  DataMediaChannel* mc = media_channel();
+  return InvokeOnWorker<bool>(RTC_FROM_HERE, [mc, &params, &payload, result] {
+    return mc->SendData(params, payload, result);
+  });
 }
 
 bool RtpDataChannel::CheckDataChannelTypeFromContent(

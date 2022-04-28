@@ -13,8 +13,6 @@
 #include <algorithm>
 #include <utility>
 
-#include "rtc_base/bind.h"
-
 namespace webrtc {
 
 SctpTransport::SctpTransport(
@@ -117,8 +115,9 @@ void SctpTransport::Start(int local_port,
     }
   } else {
     owner_thread_->Invoke<void>(
-        RTC_FROM_HERE, rtc::Bind(&SctpTransport::Start, this, local_port,
-                                 remote_port, max_message_size));
+        RTC_FROM_HERE, [this, local_port, remote_port, max_message_size] {
+          Start(local_port, remote_port, max_message_size);
+        });
   }
 }
 

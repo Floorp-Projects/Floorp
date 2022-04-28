@@ -1060,9 +1060,30 @@ void RTCStatsCollector::GetStatsReportInternal(
     // reentrancy problems.
     std::vector<RequestInfo> requests;
     requests.swap(requests_);
-    signaling_thread_->PostTask(
-        RTC_FROM_HERE, rtc::Bind(&RTCStatsCollector::DeliverCachedReport, this,
-                                 cached_report_, std::move(requests)));
+
+    // Task subclass to take ownership of the requests.
+    // TODO(nisse): Delete when we can use C++14, and do lambda capture with
+    // std::move.
+    class DeliveryTask : public QueuedTask {
+     public:
+      DeliveryTask(rtc::scoped_refptr<RTCStatsCollector> collector,
+                   rtc::scoped_refptr<const RTCStatsReport> cached_report,
+                   std::vector<RequestInfo> requests)
+          : collector_(collector),
+            cached_report_(cached_report),
+            requests_(std::move(requests)) {}
+      bool Run() override {
+        collector_->DeliverCachedReport(cached_report_, std::move(requests_));
+        return true;
+      }
+
+     private:
+      rtc::scoped_refptr<RTCStatsCollector> collector_;
+      rtc::scoped_refptr<const RTCStatsReport> cached_report_;
+      std::vector<RequestInfo> requests_;
+    };
+    signaling_thread_->PostTask(std::make_unique<DeliveryTask>(
+        this, cached_report_, std::move(requests)));
   } else if (!num_pending_partial_reports_) {
     // Only start gathering stats if we're not already gathering stats. In the
     // case of already gathering stats, |callback_| will be invoked when there
@@ -1088,10 +1109,10 @@ void RTCStatsCollector::GetStatsReportInternal(
     // ProducePartialResultsOnNetworkThread() has signaled the
     // |network_report_event_|.
     network_report_event_.Reset();
-    network_thread_->PostTask(
-        RTC_FROM_HERE,
-        rtc::Bind(&RTCStatsCollector::ProducePartialResultsOnNetworkThread,
-                  this, timestamp_us));
+    rtc::scoped_refptr<RTCStatsCollector> collector(this);
+    network_thread_->PostTask(RTC_FROM_HERE, [collector, timestamp_us] {
+      collector->ProducePartialResultsOnNetworkThread(timestamp_us);
+    });
     ProducePartialResultsOnSignalingThread(timestamp_us);
   }
 }
@@ -1160,8 +1181,9 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
   // Signal that it is now safe to touch |network_report_| on the signaling
   // thread, and post a task to merge it into the final results.
   network_report_event_.Set();
+  rtc::scoped_refptr<RTCStatsCollector> collector(this);
   signaling_thread_->PostTask(
-      RTC_FROM_HERE, rtc::Bind(&RTCStatsCollector::MergeNetworkReport_s, this));
+      RTC_FROM_HERE, [collector] { collector->MergeNetworkReport_s(); });
 }
 
 void RTCStatsCollector::ProducePartialResultsOnNetworkThreadImpl(
