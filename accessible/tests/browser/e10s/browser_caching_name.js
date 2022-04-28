@@ -503,3 +503,19 @@ markupTests.forEach(({ id, ruleset, markup, expected }) =>
     { iframe: true, remoteIframe: true }
   )
 );
+
+/**
+ * Test caching of the document title.
+ */
+addAccessibleTask(
+  ``,
+  async function(browser, docAcc) {
+    let nameChanged = waitForEvent(EVENT_NAME_CHANGE, docAcc);
+    await invokeContentTask(browser, [], () => {
+      content.document.title = "new title";
+    });
+    await nameChanged;
+    testName(docAcc, "new title");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
