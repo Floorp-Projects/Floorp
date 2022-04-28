@@ -22,7 +22,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         "CrashManager.jsm",
         script="gen_CrashManager.py",
         entry_point="main",
-        inputs=["CrashManager.jsm.in"],
+        inputs=["CrashManager.in.jsm"],
     )
 
     EXTRA_JS_MODULES += [
