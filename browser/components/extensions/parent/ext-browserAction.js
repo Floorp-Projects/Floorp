@@ -465,9 +465,11 @@ this.browserAction = class extends ExtensionAPIPersistent {
           return;
         }
 
-        let { gBrowser } = window;
-        if (this.action.getProperty(gBrowser.selectedTab, "enabled")) {
-          this.action.dispatchClick(gBrowser.selectedTab, {
+        let tab = window.gBrowser.selectedTab;
+        if (this.action.getProperty(tab, "enabled")) {
+          this.action.setActiveTabForPreload(null);
+          this.tabManager.addActiveTabPermission(tab);
+          this.action.dispatchClick(tab, {
             button: 1,
             modifiers: clickModifiersFromEvent(event),
           });

@@ -118,6 +118,7 @@ this.pageAction = class extends ExtensionAPIPersistent {
           }
           let window = event.target.ownerGlobal;
           let tab = window.gBrowser.selectedTab;
+          this.tabManager.addActiveTabPermission(tab);
           this.action.dispatchClick(tab, {
             button: event.button,
             modifiers: clickModifiersFromEvent(event),

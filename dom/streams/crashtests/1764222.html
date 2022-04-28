@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script>
+  // This can't be in WPT because of bug 1766711.
+  let a = new AbortController()
+  a.abort()
+  let b = new File(['ó ¬a'], 'a', {})
+  let c = new WritableStream()
+  b.stream().tee()[0].pipeTo(c, { 'signal': a.signal })
+</script>

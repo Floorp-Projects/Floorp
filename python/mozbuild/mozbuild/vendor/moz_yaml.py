@@ -489,18 +489,26 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
     if "vendoring" in manifest and "vendor-directory" in manifest["vendoring"]:
         vendor_directory = manifest["vendoring"]["vendor-directory"]
 
-    # LICENSE file must exist.
+    # LICENSE file must exist, except for Rust crates which are exempted
+    # because the license is required to be specified in the Cargo.toml file
     if require_license_file and "origin" in manifest:
         files = [f.lower() for f in os.listdir(vendor_directory)]
-        if not (
-            "license-file" in manifest["origin"]
-            and manifest["origin"]["license-file"].lower() in files
-        ) and not (
-            "license" in files
-            or "license.txt" in files
-            or "license.rst" in files
-            or "license.html" in files
-            or "license.md" in files
+        if (
+            not (
+                "license-file" in manifest["origin"]
+                and manifest["origin"]["license-file"].lower() in files
+            )
+            and not (
+                "license" in files
+                or "license.txt" in files
+                or "license.rst" in files
+                or "license.html" in files
+                or "license.md" in files
+            )
+            and not (
+                "vendoring" in manifest
+                and manifest["vendoring"].get("flavor", "regular") == "rust"
+            )
         ):
             license = manifest["origin"]["license"]
             if isinstance(license, list):

@@ -12,6 +12,19 @@ use wgc::{gfx_select, id};
 use std::{error::Error, os::raw::c_char, ptr, slice};
 use std::sync::atomic::{AtomicU32, Ordering};
 
+/// A fixed-capacity, null-terminated error buffer owned by C++.
+///
+/// This type points to space owned by a C++ `mozilla::webgpu::ErrorBuffer`
+/// object, owned by our callers in `WebGPUParent.cpp`. If we catch a
+/// `Result::Err` here, we convert the error to a string, copy as much of that
+/// string as fits into this buffer, and null-terminate it. The caller
+/// determines whether a error occurred by simply checking if there's any text
+/// before the first null byte.
+///
+/// C++ callers of Rust functions that expect one of these structs can create a
+/// `mozilla::webgpu::ErrorBuffer` object, and call its `ToFFI` method to
+/// construct a value of this type, available to C++ as
+/// `mozilla::webgpu::ffi::WGPUErrorBuffer`.
 #[repr(C)]
 pub struct ErrorBuffer {
     string: *mut c_char,
@@ -19,6 +32,16 @@ pub struct ErrorBuffer {
 }
 
 impl ErrorBuffer {
+    /// Fill this buffer with the textual representation of `error`.
+    ///
+    /// If the error message is too long, truncate it as needed. In either case,
+    /// the error message is always terminated by a zero byte.
+    ///
+    /// Note that there is no explicit indication of the message's length, only
+    /// the terminating zero byte. If the textual form of `error` itself
+    /// includes a zero byte (as Rust strings can), then the C++ code receiving
+    /// this error message has no way to distinguish that from the terminating
+    /// zero byte, and will see the message as shorter than it is.
     fn init(&mut self, error: impl Error) {
         use std::fmt::Write;
 
@@ -245,28 +268,7 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
     gfx_select!(self_id => global.buffer_drop(self_id, false));
 }
 
-trait GlobalExt {
-    fn device_action<A: wgc::hub::HalApi>(
-        &self,
-        self_id: id::DeviceId,
-        action: DeviceAction,
-        error_buf: ErrorBuffer,
-    );
-    fn texture_action<A: wgc::hub::HalApi>(
-        &self,
-        self_id: id::TextureId,
-        action: TextureAction,
-        error_buf: ErrorBuffer,
-    );
-    fn command_encoder_action<A: wgc::hub::HalApi>(
-        &self,
-        self_id: id::CommandEncoderId,
-        action: CommandEncoderAction,
-        error_buf: ErrorBuffer,
-    );
-}
-
-impl GlobalExt for Global {
+impl Global {
     fn device_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::DeviceId,

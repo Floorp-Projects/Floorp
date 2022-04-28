@@ -33,3 +33,73 @@ add_task(async function test_getBrowsingContextById() {
   const childContextId = TabManager.getIdForBrowsingContext(contexts[1]);
   is(TabManager.getBrowsingContextById(childContextId), contexts[1]);
 });
+
+add_task(async function test_addTab_focus() {
+  let tabsCount = gBrowser.tabs.length;
+
+  let newTab1, newTab2, newTab3;
+  try {
+    newTab1 = TabManager.addTab({ focus: true });
+
+    ok(gBrowser.tabs.includes(newTab1), "A new tab was created");
+    is(gBrowser.tabs.length, tabsCount + 1);
+    is(gBrowser.selectedTab, newTab1, "Tab added with focus: true is selected");
+
+    newTab2 = TabManager.addTab({ focus: false });
+
+    ok(gBrowser.tabs.includes(newTab2), "A new tab was created");
+    is(gBrowser.tabs.length, tabsCount + 2);
+    is(
+      gBrowser.selectedTab,
+      newTab1,
+      "Tab added with focus: false is not selected"
+    );
+
+    newTab3 = TabManager.addTab();
+
+    ok(gBrowser.tabs.includes(newTab3), "A new tab was created");
+    is(gBrowser.tabs.length, tabsCount + 3);
+    is(
+      gBrowser.selectedTab,
+      newTab1,
+      "Tab added with no focus parameter is not selected (defaults to false)"
+    );
+  } finally {
+    gBrowser.removeTab(newTab1);
+    gBrowser.removeTab(newTab2);
+    gBrowser.removeTab(newTab3);
+  }
+});
+
+add_task(async function test_addTab_window() {
+  const win1 = await BrowserTestUtils.openNewBrowserWindow();
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  try {
+    // openNewBrowserWindow should ensure the new window is focused.
+    is(Services.wm.getMostRecentBrowserWindow(null), win2);
+
+    const newTab1 = TabManager.addTab({ window: win1 });
+    is(
+      newTab1.ownerGlobal,
+      win1,
+      "The new tab was opened in the specified window"
+    );
+
+    const newTab2 = TabManager.addTab({ window: win2 });
+    is(
+      newTab2.ownerGlobal,
+      win2,
+      "The new tab was opened in the specified window"
+    );
+
+    const newTab3 = TabManager.addTab();
+    is(
+      newTab3.ownerGlobal,
+      win2,
+      "The new tab was opened in the foreground window"
+    );
+  } finally {
+    await BrowserTestUtils.closeWindow(win1);
+    await BrowserTestUtils.closeWindow(win2);
+  }
+});

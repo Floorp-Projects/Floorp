@@ -2503,10 +2503,20 @@ static already_AddRefed<ComputedStyle> GetFontStyleForServo(
   RefPtr<ComputedStyle> sc =
       styleSet->ResolveForDeclarations(parentStyle, declarations);
 
+  // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-font
+  // The font-size component must be converted to CSS px for reserialization,
+  // so we update the declarations with the value from the computed style.
+  if (!sc->StyleFont()->mFont.family.is_system_font) {
+    nsAutoCString computedFontSize;
+    sc->GetComputedPropertyValue(eCSSProperty_font_size, computedFontSize);
+    Servo_DeclarationBlock_SetPropertyById(
+        declarations, eCSSProperty_font_size, &computedFontSize, false, nullptr,
+        ParsingMode::Default, eCompatibility_FullStandards, nullptr,
+        StyleCssRuleType::Style, {});
+  }
+
   // The font getter is required to be reserialized based on what we
-  // parsed (including having line-height removed).  (Older drafts of
-  // the spec required font sizes be converted to pixels, but that no
-  // longer seems to be required.)
+  // parsed (including having line-height removed).
   Servo_SerializeFontValueForCanvas(declarations, &aOutUsedFont);
   return sc.forget();
 }

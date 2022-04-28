@@ -516,6 +516,11 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // correctly to `aPrimarySheet`.
   void FixUpAfterInnerClone();
 
+  // aFromClone says whether this comes from a clone of the stylesheet (and thus
+  // we should also fix up the wrappers for the individual rules in the rule
+  // lists).
+  void FixUpRuleListAfterContentsChangeIfNeeded(bool aFromClone = false);
+
   void DropRuleList();
 
   // Called when a rule is removed from the sheet from CSSOM.

@@ -11,12 +11,9 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIProtocolHandler.h"
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ContentParent.h"
 
 namespace mozilla {
 namespace browser {

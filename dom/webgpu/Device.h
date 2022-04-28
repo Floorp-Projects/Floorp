@@ -118,12 +118,15 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   RefPtr<WebGPUChild> mBridge;
   bool mValid = true;
   nsString mLabel;
+  RefPtr<dom::Promise> mLostPromise;
   RefPtr<Queue> mQueue;
   nsTHashSet<nsCString> mKnownWarnings;
 
  public:
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
+  dom::Promise* GetLost(ErrorResult& aRv);
+  dom::Promise* MaybeGetLost() const { return mLostPromise; }
 
   const RefPtr<SupportedFeatures>& Features() const { return mFeatures; }
   const RefPtr<SupportedLimits>& Limits() const { return mLimits; }

@@ -31,6 +31,10 @@ void ScopedFfiBundleTraits::release(ffi::WGPURenderBundleEncoder* raw) {
 ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
     RawId aDeviceId, const dom::GPURenderBundleEncoderDescriptor& aDesc,
     WebGPUChild* const aBridge) {
+  if (!aBridge->CanSend()) {
+    return nullptr;
+  }
+
   ffi::WGPURenderBundleEncoderDescriptor desc = {};
   desc.sample_count = aDesc.mSampleCount;
 
@@ -183,7 +187,7 @@ already_AddRefed<RenderBundle> RenderBundleEncoder::Finish(
   if (mValid) {
     mValid = false;
     auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
+    if (bridge && bridge->CanSend()) {
       auto* encoder = mEncoder.forget();
       MOZ_ASSERT(encoder);
       id = bridge->RenderBundleEncoderFinish(*encoder, mParent->mId, aDesc);

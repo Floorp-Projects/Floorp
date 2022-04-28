@@ -66,6 +66,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1754473-m.intl.taobao.com-number-arrow-buttons-overlapping-fix.css",
     "injections/css/bug1756054-tataplayrecharge.com-clear-float.css",
     "injections/css/bug1756915-efectococuyo.com-shifted-content-fix.css",
+    "injections/css/bug1765947-veniceincoming.com-left-fix.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [

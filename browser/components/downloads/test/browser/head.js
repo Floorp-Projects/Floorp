@@ -284,6 +284,7 @@ async function setDownloadDir() {
 }
 
 let gHttpServer = null;
+let gShouldServeInterruptibleFileAsDownload = false;
 function startServer() {
   gHttpServer = new HttpServer();
   gHttpServer.start(-1);
@@ -330,6 +331,9 @@ function startServer() {
     // Process the first part of the response.
     aResponse.processAsync();
     aResponse.setHeader("Content-Type", "text/plain", false);
+    if (gShouldServeInterruptibleFileAsDownload) {
+      aResponse.setHeader("Content-Disposition", "attachment");
+    }
     aResponse.setHeader(
       "Content-Length",
       "" + TEST_DATA_SHORT.length * 2,
@@ -346,6 +350,13 @@ function startServer() {
       })
       .catch(Cu.reportError);
   });
+}
+
+function serveInterruptibleAsDownload() {
+  gShouldServeInterruptibleFileAsDownload = true;
+  registerCleanupFunction(
+    () => (gShouldServeInterruptibleFileAsDownload = false)
+  );
 }
 
 function httpUrl(aFileName) {

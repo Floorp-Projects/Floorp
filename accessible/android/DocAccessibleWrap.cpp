@@ -36,30 +36,20 @@ const uint32_t kCacheRefreshInterval = 500;
 
 DocAccessibleWrap::DocAccessibleWrap(Document* aDocument, PresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell) {
-  if (aDocument->GetBrowsingContext()->IsTopContent()) {
-    // The top-level content document gets this special ID.
-    mID = kNoID;
-  } else {
-    mID = AcquireID();
-  }
+  // We need an nsINode associated with this accessible to register it with the
+  // right SessionAccessibility instance. When the base AccessibleWrap
+  // constructor is called we don't have one yet because null is passed as the
+  // content node. So we do it here after a Document is associated with the
+  // accessible.
+  SessionAccessibility::RegisterAccessible(this);
 }
 
 DocAccessibleWrap::~DocAccessibleWrap() {}
 
-AccessibleWrap* DocAccessibleWrap::GetAccessibleByID(int32_t aID) const {
-  if (AccessibleWrap* acc = mIDToAccessibleMap.Get(aID)) {
-    return acc;
-  }
-
-  // If the ID is not in the hash table, check the IDs of the child docs.
-  for (uint32_t i = 0; i < ChildDocumentCount(); i++) {
-    auto childDoc = static_cast<AccessibleWrap*>(GetChildDocumentAt(i));
-    if (childDoc->VirtualViewID() == aID) {
-      return childDoc;
-    }
-  }
-
-  return nullptr;
+void DocAccessibleWrap::Shutdown() {
+  // Unregister here before disconnecting from PresShell.
+  SessionAccessibility::RegisterAccessible(this);
+  DocAccessible::Shutdown();
 }
 
 void DocAccessibleWrap::DoInitialUpdate() {
@@ -142,7 +132,7 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
       nsAutoString textValue;
       accessible->Value(textValue);
       nsAutoString nodeID;
-      static_cast<AccessibleWrap*>(accessible)->WrapperDOMNodeID(nodeID);
+      accessible->DOMNodeID(nodeID);
       nsAutoString description;
       accessible->Description(description);
 
@@ -157,9 +147,9 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
     ipcDoc->SendBatch(eBatch_Viewport, cacheData);
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(docAcc)) {
-    nsTArray<AccessibleWrap*> accessibles(inViewAccs.Count());
+    nsTArray<Accessible*> accessibles(inViewAccs.Count());
     for (const auto& entry : inViewAccs) {
-      accessibles.AppendElement(static_cast<AccessibleWrap*>(entry.GetWeak()));
+      accessibles.AppendElement(entry.GetWeak());
     }
 
     sessionAcc->ReplaceViewportCache(accessibles);
@@ -167,7 +157,8 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
 
   if (docAcc->mCachePivotBoundaries) {
     a11y::Pivot pivot(docAcc);
-    TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT);
+    TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
+                       true);
     Accessible* maybeFirst = pivot.First(rule);
     Accessible* maybeLast = pivot.Last(rule);
     LocalAccessible* first = maybeFirst ? maybeFirst->AsLocal() : nullptr;
@@ -206,7 +197,7 @@ void DocAccessibleWrap::CacheViewport(bool aCachePivotBoundaries) {
     return;
   }
   mCachePivotBoundaries |= aCachePivotBoundaries;
-  if (VirtualViewID() == kNoID && !mCacheRefreshTimer) {
+  if (IsTopLevelContentDoc() && !mCacheRefreshTimer) {
     NS_NewTimerWithFuncCallback(getter_AddRefs(mCacheRefreshTimer),
                                 CacheViewportCallback, this,
                                 kCacheRefreshInterval, nsITimer::TYPE_ONE_SHOT,
@@ -221,11 +212,17 @@ DocAccessibleWrap* DocAccessibleWrap::GetTopLevelContentDoc(
     AccessibleWrap* aAccessible) {
   DocAccessibleWrap* doc =
       static_cast<DocAccessibleWrap*>(aAccessible->Document());
-  while (doc && doc->VirtualViewID() != kNoID) {
+  while (doc && !doc->IsTopLevelContentDoc()) {
     doc = static_cast<DocAccessibleWrap*>(doc->ParentDocument());
   }
 
   return doc;
+}
+
+bool DocAccessibleWrap::IsTopLevelContentDoc() {
+  DocAccessible* parentDoc = ParentDocument();
+  return DocumentNode()->IsContentDocument() &&
+         (!parentDoc || !parentDoc->DocumentNode()->IsContentDocument());
 }
 
 void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
@@ -244,7 +241,7 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
       nsAutoString textValue;
       acc->Value(textValue);
       nsAutoString nodeID;
-      acc->WrapperDOMNodeID(nodeID);
+      acc->DOMNodeID(nodeID);
       nsAutoString description;
       acc->Description(description);
       RefPtr<AccAttributes> attributes = acc->Attributes();
@@ -259,9 +256,9 @@ void DocAccessibleWrap::CacheFocusPath(AccessibleWrap* aAccessible) {
     ipcDoc->SendBatch(eBatch_FocusPath, cacheData);
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
-    nsTArray<AccessibleWrap*> accessibles;
-    for (AccessibleWrap* acc = aAccessible; acc && acc != this->LocalParent();
-         acc = static_cast<AccessibleWrap*>(acc->LocalParent())) {
+    nsTArray<Accessible*> accessibles;
+    for (LocalAccessible* acc = aAccessible; acc && acc != this->LocalParent();
+         acc = acc->LocalParent()) {
       accessibles.AppendElement(acc);
       mFocusPath.InsertOrUpdate(acc->UniqueID(), RefPtr{acc});
     }
@@ -299,7 +296,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
     ipcDoc->SendBatch(eBatch_BoundsUpdate, boundsData);
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(this)) {
-    nsTArray<AccessibleWrap*> accessibles(mFocusPath.Count());
+    nsTArray<Accessible*> accessibles(mFocusPath.Count());
     for (auto iter = mFocusPath.Iter(); !iter.Done(); iter.Next()) {
       LocalAccessible* accessible = iter.Data();
       if (!accessible || accessible->IsDefunct()) {
@@ -307,7 +304,7 @@ void DocAccessibleWrap::UpdateFocusPathBounds() {
         continue;
       }
 
-      accessibles.AppendElement(static_cast<AccessibleWrap*>(accessible));
+      accessibles.AppendElement(accessible);
     }
 
     sessionAcc->UpdateCachedBounds(accessibles);

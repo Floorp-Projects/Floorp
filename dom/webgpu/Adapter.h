@@ -56,7 +56,8 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   const bool mIsFallbackAdapter = false;
 
  public:
-  Adapter(Instance* const aParent, const ffi::WGPUAdapterInformation& aInfo);
+  Adapter(Instance* const aParent, WebGPUChild* const aBridge,
+          const ffi::WGPUAdapterInformation& aInfo);
   void GetName(nsString& out) const { out = mName; }
   const RefPtr<SupportedFeatures>& Features() const;
   const RefPtr<SupportedLimits>& Limits() const;

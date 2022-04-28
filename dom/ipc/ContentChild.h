@@ -803,6 +803,10 @@ class ContentChild final : public PContentChild,
       const MaybeDiscarded<BrowsingContext>& aContext, const uint32_t& aIndex,
       const uint32_t& aLength, const nsID& aChangeID);
 
+  mozilla::ipc::IPCResult RecvGetLayoutHistoryState(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      GetLayoutHistoryStateResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvDispatchLocationChangeEvent(
       const MaybeDiscarded<BrowsingContext>& aContext);
 

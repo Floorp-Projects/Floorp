@@ -53,11 +53,9 @@ const tests = [
       let link = doc.createElement("link");
       link.rel = "stylesheet";
       link.href = "getCSSStyleRules-2.css";
+      let load = new Promise(resolve => { link.onload = resolve; });
       doc.head.appendChild(link);
-      // Check the rules synchronously when the stylesheet has not been
-      // loaded, there should still be no rule matches.
-      checkRules(doc, [1]);
-      await new Promise(resolve => { link.onload = resolve; });
+      await load;
       checkRules(doc, [1, 2]);
     },
   },
