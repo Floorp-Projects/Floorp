@@ -214,6 +214,16 @@ CustomizeMode.prototype = {
     if (this._canDrawInTitlebar()) {
       Services.prefs.removeObserver(kDrawInTitlebarPref, this);
     }
+    if (this._languageSwitchObserver) {
+      Services.obs.removeObserver(
+        this._languageSwitchObserver,
+        "intl:app-locales-changed"
+      );
+      Services.prefs.removeObserver(
+        "intl.l10n.pseudo",
+        this._languageSwitchObserver
+      );
+    }
     Services.prefs.removeObserver(kBookmarksToolbarPref, this);
   },
 
@@ -271,6 +281,29 @@ CustomizeMode.prototype = {
   },
 
   enter() {
+    if (!this._languageSwitchObserver && !this._awaitTranslations) {
+      // We need to observe any time the app locale changes, because otherwise moving
+      // translated strings between elements will not be translated properly.
+      this._languageSwitchObserver = () => {
+        Services.obs.removeObserver(
+          this._languageSwitchObserver,
+          "intl:app-locales-changed"
+        );
+        Services.prefs.removeObserver(
+          "intl.l10n.pseudo",
+          this._languageSwitchObserver
+        );
+        this._awaitTranslations = true;
+      };
+      Services.obs.addObserver(
+        this._languageSwitchObserver,
+        "intl:app-locales-changed"
+      );
+      Services.prefs.addObserver(
+        "intl.l10n.pseudo",
+        this._languageSwitchObserver
+      );
+    }
     if (!this.window.toolbar.visible) {
       let w = this.window.getTopWin({ skipPopups: true });
       if (w) {
@@ -946,7 +979,14 @@ CustomizeMode.prototype = {
    * Helper to set the label, either directly or to set up the translation
    * observer so we can set the label once it's available.
    */
-  _updateWrapperLabel(aNode, aIsUpdate, aWrapper = aNode.parentElement) {
+  async _updateWrapperLabel(aNode, aIsUpdate, aWrapper = aNode.parentElement) {
+    if (this._awaitTranslations) {
+      // The language switched since this was viewed. Awaiting here will ensure
+      // the `aNode` element is properly translated. Note this this has the side
+      // effect of re-translating the node, but should be a fairly rare event.
+      await this.document.l10n.translateElements([aNode]);
+    }
+
     if (aNode.hasAttribute("label")) {
       aWrapper.setAttribute("title", aNode.getAttribute("label"));
       aWrapper.setAttribute("tooltiptext", aNode.getAttribute("label"));
