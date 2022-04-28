@@ -51,6 +51,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    hotstar: {
+      "https://*.hotstar.com/*": {
+        videoWrapperScriptPath: "video-wrappers/hotstar.js",
+      },
+    },
+
     instagram: {
       "https://www.instagram.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
