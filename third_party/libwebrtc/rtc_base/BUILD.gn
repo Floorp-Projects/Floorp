@@ -676,216 +676,139 @@ rtc_library("rtc_json") {
 }
 
 rtc_source_set("async_resolver") {
-  # TODO(bugs.webrtc.org/9987): Remove when downstream clients have
-  # been redirected on //rtc_base:threading.
-  sources = []
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  # async_resolver source files (see
+  # https://webrtc-review.googlesource.com/c/src/+/196903).
+  sources = [ "async_resolver.h" ]
 }
 
-rtc_library("net_helpers") {
-  sources = [
-    "net_helpers.cc",
-    "net_helpers.h",
-  ]
-  deps = []
-  if (is_android) {
-    deps += [ ":ifaddrs_android" ]
-  }
-  if (is_win) {
-    deps += [ ":win32" ]
-  }
+rtc_source_set("net_helpers") {
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "net_helpers.cc",
+  #   "net_helpers.h",
+  # ]
 }
 
-rtc_library("async_resolver_interface") {
+rtc_source_set("async_resolver_interface") {
   visibility = [ "*" ]
-  sources = [
-    "async_resolver_interface.cc",
-    "async_resolver_interface.h",
-  ]
-  deps = [
-    ":socket_address",
-    "system:rtc_export",
-    "third_party/sigslot",
-  ]
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "async_resolver_interface.cc",
+  #   "async_resolver_interface.h",
+  # ]
 }
 
-rtc_library("ip_address") {
+rtc_source_set("ip_address") {
   visibility = [ "*" ]
-  sources = [
-    "ip_address.cc",
-    "ip_address.h",
-  ]
-  deps = [
-    ":net_helpers",
-    ":rtc_base_approved",
-    ":stringutils",
-    "system:rtc_export",
-  ]
-  if (is_win) {
-    deps += [ ":win32" ]
-  }
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "ip_address.cc",
+  #   "ip_address.h",
+  # ]
 }
 
-rtc_library("socket_address") {
+rtc_source_set("socket_address") {
   visibility = [ "*" ]
-  sources = [
-    "socket_address.cc",
-    "socket_address.h",
-  ]
-  deps = [
-    ":checks",
-    ":ip_address",
-    ":logging",
-    ":net_helpers",
-    ":rtc_base_approved",
-    ":safe_conversions",
-    ":stringutils",
-    "system:rtc_export",
-  ]
-  if (is_win) {
-    deps += [ ":win32" ]
-  }
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "socket_address.cc",
+  #   "socket_address.h",
+  # ]
 }
 
-rtc_library("null_socket_server") {
-  sources = [
-    "null_socket_server.cc",
-    "null_socket_server.h",
-  ]
-  deps = [
-    ":async_socket",
-    ":checks",
-    ":rtc_event",
-    ":socket",
-    ":socket_server",
-    "system:rtc_export",
-  ]
+rtc_source_set("null_socket_server") {
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "null_socket_server.cc",
+  #   "null_socket_server.h",
+  # ]
 }
 
 rtc_source_set("socket_server") {
-  sources = [ "socket_server.h" ]
-  deps = [ ":socket_factory" ]
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "socket_server.h",
+  # ]
 }
 
-rtc_library("threading") {
+rtc_source_set("threading") {
   visibility = [ "*" ]
-
-  sources = [
-    "async_resolver.cc",
-    "async_resolver.h",
-    "internal/default_socket_server.cc",
-    "internal/default_socket_server.h",
-    "message_handler.cc",
-    "message_handler.h",
-    "network_monitor.cc",
-    "network_monitor.h",
-    "network_monitor_factory.cc",
-    "network_monitor_factory.h",
-    "physical_socket_server.cc",
-    "physical_socket_server.h",
-
-    #   "signal_thread.cc",
-    #   "signal_thread.h",
-    "thread.cc",
-    "thread.h",
-    "thread_message.h",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
-  deps = [
-    ":async_resolver_interface",
-    ":atomicops",
-    ":checks",
-    ":criticalsection",
-    ":ip_address",
-    ":logging",
-    ":macromagic",
-    ":network_constants",
-    ":null_socket_server",
-    ":platform_thread_types",
-    ":rtc_base_approved",
-    ":rtc_event",
-    ":rtc_task_queue",
-    ":socket_address",
-    ":socket_server",
-    ":timeutils",
-    "../api:function_view",
-    "../api:scoped_refptr",
-    "../api/task_queue",
-    "synchronization:sequence_checker",
-    "system:no_unique_address",
-    "system:rtc_export",
-    "task_utils:pending_task_safety_flag",
-    "task_utils:to_queued_task",
-    "third_party/sigslot",
-  ]
-  if (is_android) {
-    deps += [ ":ifaddrs_android" ]
-  }
-  if (is_win) {
-    deps += [ ":win32" ]
-  }
-  if (is_mac || is_ios) {
-    deps += [ "system:cocoa_threading" ]
-  }
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "asyncresolver.cc",
+  #   "asyncresolver.h",
+  #   "defaultsocketserver.cc",
+  #   "defaultsocketserver.h",
+  #   "message_handler.cc",
+  #   "message_handler.h",
+  #   "network_monitor.cc",
+  #   "network_monitor.h",
+  #   "network_monitor_factory.cc",
+  #   "network_monitor_factory.h",
+  #   "physical_socket_server.cc",
+  #   "physical_socket_server.h",
+  #   "signal_thread.cc",
+  #   "signal_thread.h",
+  #   "thread.cc",
+  #   "thread.h",
+  # ]
 }
 
 rtc_source_set("socket_factory") {
-  sources = [ "socket_factory.h" ]
-  deps = [
-    ":async_socket",
-    ":socket",
-  ]
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "socket_factory.h",
+  # ]
 }
 
-rtc_library("async_socket") {
-  sources = [
-    "async_socket.cc",
-    "async_socket.h",
-  ]
-  deps = [
-    ":checks",
-    ":socket",
-    ":socket_address",
-    "third_party/sigslot",
-  ]
+rtc_source_set("async_socket") {
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "async_socket.cc",
+  #   "async_socket.h",
+  # ]
 }
 
-rtc_library("socket") {
-  sources = [
-    "socket.cc",
-    "socket.h",
-  ]
-  deps = [
-    ":macromagic",
-    ":socket_address",
-  ]
-  if (is_win) {
-    deps += [ ":win32" ]
-  }
+rtc_source_set("socket") {
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "socket.cc",
+  #   "socket.h",
+  # ]
 }
 
 rtc_source_set("network_constants") {
-  sources = [
-    "network_constants.cc",
-    "network_constants.h",
-  ]
-  deps = [ ":checks" ]
+  # TODO(bugs.webrtc.org/9987): This build target will soon contain
+  #                             the following files:
+  # sources = [
+  #   "network_constants.h",
+  # ]
 }
 
 if (is_android) {
-  rtc_library("ifaddrs_android") {
-    sources = [
-      "ifaddrs_android.cc",
-      "ifaddrs_android.h",
-    ]
-    libs = [
-      "log",
-      "GLESv2",
-    ]
+  rtc_source_set("ifaddrs_android") {
+    # TODO(bugs.webrtc.org/9987): This build target will soon contain
+    #                             the following files:
+    # sources = [
+    #   "ifaddrs_android.cc",
+    #   "ifaddrs_android.h",
+    # ]
   }
 }
 
 if (is_win) {
-  rtc_library("win32") {
+  rtc_source_set("win32") {
     sources = [
       "win32.cc",
       "win32.h",
@@ -916,20 +839,10 @@ rtc_library("rtc_base") {
   libs = []
   defines = []
   deps = [
-    ":async_resolver_interface",
-    ":async_socket",
     ":checks",
     ":deprecation",
-    ":ip_address",
-    ":network_constants",
-    ":null_socket_server",
     ":rtc_task_queue",
-    ":socket",
-    ":socket_address",
-    ":socket_factory",
-    ":socket_server",
     ":stringutils",
-    ":threading",
     "../api:array_view",
     "../api:function_view",
     "../api:scoped_refptr",
@@ -965,6 +878,10 @@ rtc_library("rtc_base") {
     #"async_invoker_inl.h",
     #"async_packet_socket.cc",
     #"async_packet_socket.h",
+    "async_resolver_interface.cc",
+    "async_resolver_interface.h",
+    "async_socket.cc",
+    "async_socket.h",
     #"async_tcp_socket.cc",
     #"async_tcp_socket.h",
     #"async_udp_socket.cc",
@@ -984,16 +901,30 @@ rtc_library("rtc_base") {
     #"helpers.h",
     #"http_common.cc",
     #"http_common.h",
+    "ip_address.cc",
+    "ip_address.h",
     "keep_ref_until_done.h",
     #"mdns_responder_interface.h",
     #"message_digest.cc",
     #"message_digest.h",
+    "message_handler.cc",
+    "message_handler.h",
     #"net_helper.cc",
     #"net_helper.h",
+    "net_helpers.cc",
+    "net_helpers.h",
     #"network.cc",
     #"network.h",
+    "network_constants.cc",
+    "network_constants.h",
+    #"network_monitor.cc",
+    #"network_monitor.h",
+    #"network_monitor_factory.cc",
+    #"network_monitor_factory.h",
     "network_route.cc",
     "network_route.h",
+    "null_socket_server.cc",
+    "null_socket_server.h",
     #"openssl.h",
     #"openssl_adapter.cc",
     #"openssl_adapter.h",
@@ -1007,6 +938,8 @@ rtc_library("rtc_base") {
     #"openssl_stream_adapter.h",
     #"openssl_utility.cc",
     #"openssl_utility.h",
+    "physical_socket_server.cc",
+    "physical_socket_server.h",
     #"proxy_info.cc",
     #"proxy_info.h",
     #"rtc_certificate.cc",
@@ -1015,10 +948,16 @@ rtc_library("rtc_base") {
     #"rtc_certificate_generator.h",
     #"signal_thread.h",
     "sigslot_repeater.h",
+    #"socket.cc",
+    #"socket.h",
     #"socket_adapters.cc",
     #"socket_adapters.h",
+    "socket_address.cc",
+    "socket_address.h",
     #"socket_address_pair.cc",
     #"socket_address_pair.h",
+    #"socket_factory.h",
+    "socket_server.h",
     #"ssl_adapter.cc",
     #"ssl_adapter.h",
     #"ssl_certificate.cc",
@@ -1031,6 +970,9 @@ rtc_library("rtc_base") {
     #"ssl_stream_adapter.h",
     "stream.cc",
     "stream.h",
+    "thread.cc",
+    "thread.h",
+    #"thread_message.h",
     #"unique_id_generator.cc",
     #"unique_id_generator.h",
   ]
@@ -1084,11 +1026,20 @@ rtc_library("rtc_base") {
   }
 
   if (is_android) {
-    deps += [ ":ifaddrs_android" ]
+    sources += [
+      "ifaddrs_android.cc",
+      "ifaddrs_android.h",
+    ]
+
+    libs += [
+      "log",
+      "GLESv2",
+    ]
   }
 
   if (is_ios || is_mac) {
     sources += [ "mac_ifaddrs_converter.cc" ]
+    deps += [ "system:cocoa_threading" ]
   }
 
   if (is_linux || is_chromeos) {
@@ -1144,7 +1095,6 @@ rtc_library("gunit_helpers") {
     ":rtc_base",
     ":rtc_base_tests_utils",
     ":stringutils",
-    ":threading",
     "../test:test_support",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
@@ -1161,7 +1111,6 @@ rtc_library("testclient") {
     ":gunit_helpers",
     ":rtc_base",
     ":rtc_base_tests_utils",
-    ":threading",
     ":timeutils",
     "synchronization:mutex",
   ]
@@ -1220,15 +1169,8 @@ rtc_library("rtc_base_tests_utils") {
     "virtual_socket_server.h",
   ]
   deps = [
-    ":async_socket",
     ":checks",
-    ":ip_address",
     ":rtc_base",
-    ":socket",
-    ":socket_address",
-    ":socket_factory",
-    ":socket_server",
-    ":threading",
     "../api/units:time_delta",
     "../api/units:timestamp",
     "memory:fifo_buffer",
@@ -1297,19 +1239,11 @@ if (rtc_include_tests) {
       "socket_unittest.h",
     ]
     deps = [
-      ":async_socket",
       ":checks",
       ":gunit_helpers",
-      ":ip_address",
-      ":net_helpers",
-      ":null_socket_server",
       ":rtc_base",
       ":rtc_base_tests_utils",
-      ":socket",
-      ":socket_address",
-      ":socket_server",
       ":testclient",
-      ":threading",
       "../system_wrappers",
       "../test:fileutils",
       "../test:test_main",
@@ -1373,13 +1307,10 @@ if (rtc_include_tests) {
       sources += [ "win/windows_version_unittest.cc" ]
     }
     deps = [
-      ":async_socket",
       ":bounded_inline_vector",
       ":checks",
       ":divide_round",
       ":gunit_helpers",
-      ":ip_address",
-      ":null_socket_server",
       ":rate_limiter",
       ":rtc_base",
       ":rtc_base_approved",
@@ -1389,12 +1320,8 @@ if (rtc_include_tests) {
       ":safe_compare",
       ":safe_minmax",
       ":sanitizer",
-      ":socket",
-      ":socket_address",
-      ":socket_server",
       ":stringutils",
       ":testclient",
-      ":threading",
       "../api:array_view",
       "../api:scoped_refptr",
       "../api/numerics",
@@ -1441,7 +1368,6 @@ if (rtc_include_tests) {
       ":rtc_base_approved",
       ":rtc_event",
       ":rtc_operations_chain",
-      ":threading",
       "../test:test_support",
     ]
   }
@@ -1523,19 +1449,11 @@ if (rtc_include_tests) {
       "unique_id_generator_unittest.cc",
     ]
     deps = [
-      ":async_socket",
       ":checks",
       ":gunit_helpers",
-      ":ip_address",
-      ":net_helpers",
-      ":null_socket_server",
       ":rtc_base_tests_utils",
-      ":socket_address",
-      ":socket_factory",
-      ":socket_server",
       ":stringutils",
       ":testclient",
-      ":threading",
       "../api:array_view",
       "../api/task_queue",
       "../api/task_queue:task_queue_test",
