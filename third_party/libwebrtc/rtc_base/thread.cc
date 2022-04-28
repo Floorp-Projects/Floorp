@@ -33,7 +33,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/event.h"
-#include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/synchronization/sequence_checker.h"
@@ -258,7 +257,7 @@ Thread* Thread::Current() {
 #ifndef NO_MAIN_THREAD_WRAPPING
   // Only autowrap the thread which instantiated the ThreadManager.
   if (!thread && manager->IsMainThread()) {
-    thread = new Thread(CreateDefaultSocketServer());
+    thread = new Thread(SocketServer::CreateDefault());
     thread->WrapCurrentWithThreadManager(manager, true);
   }
 #endif
@@ -327,7 +326,7 @@ void rtc::ThreadManager::ChangeCurrentThreadForTest(rtc::Thread* thread) {
 Thread* ThreadManager::WrapCurrentThread() {
   Thread* result = CurrentThread();
   if (nullptr == result) {
-    result = new Thread(CreateDefaultSocketServer());
+    result = new Thread(SocketServer::CreateDefault());
     result->WrapCurrentWithThreadManager(this, true);
   }
   return result;
@@ -697,7 +696,7 @@ bool Thread::IsCurrent() const {
 }
 
 std::unique_ptr<Thread> Thread::CreateWithSocketServer() {
-  return std::unique_ptr<Thread>(new Thread(CreateDefaultSocketServer()));
+  return std::unique_ptr<Thread>(new Thread(SocketServer::CreateDefault()));
 }
 
 std::unique_ptr<Thread> Thread::Create() {
@@ -1138,7 +1137,7 @@ MessageHandler* Thread::GetPostTaskMessageHandler() {
 }
 
 AutoThread::AutoThread()
-    : Thread(CreateDefaultSocketServer(), /*do_init=*/false) {
+    : Thread(SocketServer::CreateDefault(), /*do_init=*/false) {
   if (!ThreadManager::Instance()->CurrentThread()) {
     // DoInit registers with ThreadManager. Do that only if we intend to
     // be rtc::Thread::Current(), otherwise ProcessAllMessageQueuesInternal will

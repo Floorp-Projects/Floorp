@@ -19,7 +19,6 @@
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/event.h"
 #include "rtc_base/gunit.h"
-#include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/null_socket_server.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/socket_address.h"
@@ -506,7 +505,7 @@ TEST(ThreadTest, SetNameOnSignalQueueDestroyed) {
 
 class ThreadQueueTest : public ::testing::Test, public Thread {
  public:
-  ThreadQueueTest() : Thread(CreateDefaultSocketServer(), true) {}
+  ThreadQueueTest() : Thread(SocketServer::CreateDefault(), true) {}
   bool IsLocked_Worker() {
     if (!CritForTest()->TryEnter()) {
       return true;
@@ -556,7 +555,7 @@ static void DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(Thread* q) {
 }
 
 TEST_F(ThreadQueueTest, DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder) {
-  Thread q(CreateDefaultSocketServer(), true);
+  Thread q(SocketServer::CreateDefault(), true);
   DelayedPostsWithIdenticalTimesAreProcessedInFifoOrder(&q);
 
   NullSocketServer nullss;
