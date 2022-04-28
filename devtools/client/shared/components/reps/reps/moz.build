@@ -24,6 +24,7 @@ DevToolsModules(
     "grip-map.js",
     "grip.js",
     "infinity.js",
+    "jsonml.js",
     "nan.js",
     "null.js",
     "number.js",

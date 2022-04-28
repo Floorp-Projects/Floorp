@@ -89,9 +89,72 @@ define(function(require, exports, module) {
    */
   const Rep = function(props) {
     const { object, defaultRep } = props;
-    const rep = getRep(object, defaultRep, props.noGrip);
+    const rep = getRep(
+      object,
+      defaultRep,
+      props.noGrip,
+      props.mayUseCustomFormatter
+    );
     return rep(props);
   };
+
+  const exportedReps = {
+    Accessible,
+    Accessor,
+    ArrayRep,
+    Attribute,
+    BigInt,
+    CommentNode,
+    DateTime,
+    Document,
+    DocumentType,
+    ElementNode,
+    ErrorRep,
+    Event,
+    Func,
+    Grip,
+    GripArray,
+    GripMap,
+    GripMapEntry,
+    InfinityRep,
+    NaNRep,
+    Null,
+    Number,
+    Obj,
+    ObjectWithText,
+    ObjectWithURL,
+    PromiseRep,
+    RegExp,
+    Rep,
+    StringRep,
+    StyleSheet,
+    SymbolRep,
+    TextNode,
+    Undefined,
+    Window,
+  };
+
+  // Custom Formatters
+  // ToDo: This preference can be removed once the custom formatters feature is stable enough
+  const Services = require("Services");
+  // Services.prefs isn't available in jsonviewer. It doesn't matter as we don't want to use
+  // custom formatters there
+  if (Services?.prefs) {
+    const customFormattersExperimentallyEnabled = Services.prefs.getBoolPref(
+      "devtools.custom-formatters",
+      false
+    );
+
+    const useCustomFormatters =
+      customFormattersExperimentallyEnabled &&
+      Services.prefs.getBoolPref("devtools.custom-formatters.enabled", false);
+
+    if (useCustomFormatters) {
+      const JsonMl = require("devtools/client/shared/components/reps/reps/jsonml");
+      reps.unshift(JsonMl);
+      exportedReps.JsonMl = JsonMl;
+    }
+  }
 
   // Helpers
 
@@ -108,10 +171,22 @@ define(function(require, exports, module) {
    *
    * @param noGrip {Boolean} If true, will only check reps not made for remote
    *                         objects.
+   *
+   * @param mayUseCustomFormatter {Boolean} If true, custom formatters are
+   * allowed to be used as rep.
    */
-  function getRep(object, defaultRep = Grip, noGrip = false) {
+  function getRep(
+    object,
+    defaultRep = Grip,
+    noGrip = false,
+    mayUseCustomFormatter = false
+  ) {
     const repsList = noGrip ? noGripReps : reps;
     for (const rep of repsList) {
+      if (rep === exportedReps.JsonMl && !mayUseCustomFormatter) {
+        continue;
+      }
+
       try {
         // supportsObject could return weight (not only true/false
         // but a number), which would allow to priorities templates and
@@ -129,41 +204,7 @@ define(function(require, exports, module) {
 
   module.exports = {
     Rep,
-    REPS: {
-      Accessible,
-      Accessor,
-      ArrayRep,
-      Attribute,
-      BigInt,
-      CommentNode,
-      DateTime,
-      Document,
-      DocumentType,
-      ElementNode,
-      ErrorRep,
-      Event,
-      Func,
-      Grip,
-      GripArray,
-      GripMap,
-      GripMapEntry,
-      InfinityRep,
-      NaNRep,
-      Null,
-      Number,
-      Obj,
-      ObjectWithText,
-      ObjectWithURL,
-      PromiseRep,
-      RegExp,
-      Rep,
-      StringRep,
-      StyleSheet,
-      SymbolRep,
-      TextNode,
-      Undefined,
-      Window,
-    },
+    REPS: exportedReps,
     // Exporting for tests
     getRep,
   };
