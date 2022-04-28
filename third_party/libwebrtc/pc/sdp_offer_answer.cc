@@ -54,7 +54,6 @@
 #include "pc/stats_collector.h"
 #include "pc/usage_pattern.h"
 #include "pc/webrtc_session_description_factory.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
@@ -1941,8 +1940,7 @@ void SdpOfferAnswerHandler::DoSetLocalDescription(
     // TODO(deadbeef): We already had to hop to the network thread for
     // MaybeStartGathering...
     pc_->network_thread()->Invoke<void>(
-        RTC_FROM_HERE, rtc::Bind(&cricket::PortAllocator::DiscardCandidatePool,
-                                 port_allocator()));
+        RTC_FROM_HERE, [this] { port_allocator()->DiscardCandidatePool(); });
     // Make UMA notes about what was agreed to.
     ReportNegotiatedSdpSemantics(*local_description());
   }
@@ -2200,8 +2198,7 @@ void SdpOfferAnswerHandler::DoSetRemoteDescription(
     // TODO(deadbeef): We already had to hop to the network thread for
     // MaybeStartGathering...
     pc_->network_thread()->Invoke<void>(
-        RTC_FROM_HERE, rtc::Bind(&cricket::PortAllocator::DiscardCandidatePool,
-                                 port_allocator()));
+        RTC_FROM_HERE, [this] { port_allocator()->DiscardCandidatePool(); });
     // Make UMA notes about what was agreed to.
     ReportNegotiatedSdpSemantics(*remote_description());
   }
@@ -3539,8 +3536,7 @@ void SdpOfferAnswerHandler::GetOptionsForOffer(
   session_options->pooled_ice_credentials =
       pc_->network_thread()->Invoke<std::vector<cricket::IceParameters>>(
           RTC_FROM_HERE,
-          rtc::Bind(&cricket::PortAllocator::GetPooledIceCredentials,
-                    port_allocator()));
+          [this] { return port_allocator()->GetPooledIceCredentials(); });
   session_options->offer_extmap_allow_mixed =
       pc_->configuration()->offer_extmap_allow_mixed;
 
@@ -3804,8 +3800,7 @@ void SdpOfferAnswerHandler::GetOptionsForAnswer(
   session_options->pooled_ice_credentials =
       pc_->network_thread()->Invoke<std::vector<cricket::IceParameters>>(
           RTC_FROM_HERE,
-          rtc::Bind(&cricket::PortAllocator::GetPooledIceCredentials,
-                    port_allocator()));
+          [this] { return port_allocator()->GetPooledIceCredentials(); });
 }
 
 void SdpOfferAnswerHandler::GetOptionsForPlanBAnswer(
@@ -4242,9 +4237,11 @@ RTCError SdpOfferAnswerHandler::PushdownMediaDescription(
 
   RTCError error = pc_->worker_thread()->Invoke<RTCError>(
       RTC_FROM_HERE,
-      rtc::Bind(&SdpOfferAnswerHandler::ApplyChannelUpdates, this, type, source,
-                std::move(payload_type_demuxing_updates),
-                std::move(content_updates)));
+      [this, type, source, &payload_type_demuxing_updates, &content_updates] {
+        return ApplyChannelUpdates(type, source,
+                                   std::move(payload_type_demuxing_updates),
+                                   std::move(content_updates));
+      });
   if (!error.ok()) {
     return error;
   }
@@ -4691,10 +4688,10 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   switch (pc_->data_channel_type()) {
     case cricket::DCT_SCTP:
-      if (pc_->network_thread()->Invoke<bool>(
-              RTC_FROM_HERE,
-              rtc::Bind(&PeerConnection::SetupDataChannelTransport_n, pc_,
-                        mid))) {
+      if (pc_->network_thread()->Invoke<bool>(RTC_FROM_HERE, [this, &mid] {
+            RTC_DCHECK_RUN_ON(pc_->network_thread());
+            return pc_->SetupDataChannelTransport_n(mid);
+          })) {
         pc_->SetSctpDataMid(mid);
       } else {
         return false;

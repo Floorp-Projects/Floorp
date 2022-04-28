@@ -45,7 +45,6 @@
 #include "pc/sctp_transport.h"
 #include "pc/simulcast_description.h"
 #include "pc/webrtc_session_description_factory.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/location.h"
@@ -529,9 +528,10 @@ RTCError PeerConnection::Initialize(
   // there.
   const auto pa_result =
       network_thread()->Invoke<InitializePortAllocatorResult>(
-          RTC_FROM_HERE,
-          rtc::Bind(&PeerConnection::InitializePortAllocator_n, this,
-                    stun_servers, turn_servers, configuration));
+          RTC_FROM_HERE, [this, &stun_servers, &turn_servers, &configuration] {
+            return InitializePortAllocator_n(stun_servers, turn_servers,
+                                             configuration);
+          });
 
   // Note if STUN or TURN servers were supplied.
   if (!stun_servers.empty()) {
@@ -1344,16 +1344,20 @@ RTCError PeerConnection::SetConfiguration(
     NoteUsageEvent(UsageEvent::TURN_SERVER_ADDED);
   }
 
+  const bool has_local_description = local_description() != nullptr;
+
   // In theory this shouldn't fail.
   if (!network_thread()->Invoke<bool>(
-          RTC_FROM_HERE,
-          rtc::Bind(&PeerConnection::ReconfigurePortAllocator_n, this,
-                    stun_servers, turn_servers, modified_config.type,
-                    modified_config.ice_candidate_pool_size,
-                    modified_config.GetTurnPortPrunePolicy(),
-                    modified_config.turn_customizer,
-                    modified_config.stun_candidate_keepalive_interval,
-                    static_cast<bool>(local_description())))) {
+          RTC_FROM_HERE, [this, &stun_servers, &turn_servers, &modified_config,
+                          has_local_description] {
+            return ReconfigurePortAllocator_n(
+                stun_servers, turn_servers, modified_config.type,
+                modified_config.ice_candidate_pool_size,
+                modified_config.GetTurnPortPrunePolicy(),
+                modified_config.turn_customizer,
+                modified_config.stun_candidate_keepalive_interval,
+                has_local_description);
+          })) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                          "Failed to apply configuration to PortAllocator.");
   }
@@ -1468,8 +1472,7 @@ RTCError PeerConnection::SetBitrate(const BitrateSettings& bitrate) {
 void PeerConnection::SetAudioPlayout(bool playout) {
   if (!worker_thread()->IsCurrent()) {
     worker_thread()->Invoke<void>(
-        RTC_FROM_HERE,
-        rtc::Bind(&PeerConnection::SetAudioPlayout, this, playout));
+        RTC_FROM_HERE, [this, playout] { SetAudioPlayout(playout); });
     return;
   }
   auto audio_state =
@@ -1480,8 +1483,7 @@ void PeerConnection::SetAudioPlayout(bool playout) {
 void PeerConnection::SetAudioRecording(bool recording) {
   if (!worker_thread()->IsCurrent()) {
     worker_thread()->Invoke<void>(
-        RTC_FROM_HERE,
-        rtc::Bind(&PeerConnection::SetAudioRecording, this, recording));
+        RTC_FROM_HERE, [this, recording] { SetAudioRecording(recording); });
     return;
   }
   auto audio_state =
@@ -1524,8 +1526,7 @@ bool PeerConnection::StartRtcEventLog(
 }
 
 void PeerConnection::StopRtcEventLog() {
-  worker_thread()->Invoke<void>(
-      RTC_FROM_HERE, rtc::Bind(&PeerConnection::StopRtcEventLog_w, this));
+  worker_thread()->Invoke<void>(RTC_FROM_HERE, [this] { StopRtcEventLog_w(); });
 }
 
 rtc::scoped_refptr<DtlsTransportInterface>
@@ -1631,8 +1632,7 @@ void PeerConnection::Close() {
   rtp_manager_->Close();
 
   network_thread()->Invoke<void>(
-      RTC_FROM_HERE, rtc::Bind(&cricket::PortAllocator::DiscardCandidatePool,
-                               port_allocator_.get()));
+      RTC_FROM_HERE, [this] { port_allocator_->DiscardCandidatePool(); });
 
   worker_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
     RTC_DCHECK_RUN_ON(worker_thread());
@@ -1990,10 +1990,10 @@ absl::optional<std::string> PeerConnection::sctp_transport_name() const {
 
 cricket::CandidateStatsList PeerConnection::GetPooledCandidateStats() const {
   cricket::CandidateStatsList candidate_states_list;
-  network_thread()->Invoke<void>(
-      RTC_FROM_HERE,
-      rtc::Bind(&cricket::PortAllocator::GetCandidateStatsFromPooledSessions,
-                port_allocator_.get(), &candidate_states_list));
+  network_thread()->Invoke<void>(RTC_FROM_HERE, [this, &candidate_states_list] {
+    port_allocator_->GetCandidateStatsFromPooledSessions(
+        &candidate_states_list);
+  });
   return candidate_states_list;
 }
 
@@ -2196,7 +2196,7 @@ bool PeerConnection::GetLocalCandidateMediaIndex(
 Call::Stats PeerConnection::GetCallStats() {
   if (!worker_thread()->IsCurrent()) {
     return worker_thread()->Invoke<Call::Stats>(
-        RTC_FROM_HERE, rtc::Bind(&PeerConnection::GetCallStats, this));
+        RTC_FROM_HERE, [this] { return GetCallStats(); });
   }
   RTC_DCHECK_RUN_ON(worker_thread());
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;

@@ -897,8 +897,7 @@ class PeerConnectionWrapper : public webrtc::PeerConnectionObserver,
     } else {
       invoker_.AsyncInvokeDelayed<void>(
           RTC_FROM_HERE, rtc::Thread::Current(),
-          rtc::Bind(&PeerConnectionWrapper::RelaySdpMessageIfReceiverExists,
-                    this, type, msg),
+          [this, type, msg] { RelaySdpMessageIfReceiverExists(type, msg); },
           signaling_delay_ms_);
     }
   }
@@ -919,8 +918,9 @@ class PeerConnectionWrapper : public webrtc::PeerConnectionObserver,
     } else {
       invoker_.AsyncInvokeDelayed<void>(
           RTC_FROM_HERE, rtc::Thread::Current(),
-          rtc::Bind(&PeerConnectionWrapper::RelayIceMessageIfReceiverExists,
-                    this, sdp_mid, sdp_mline_index, msg),
+          [this, sdp_mid, sdp_mline_index, msg] {
+            RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index, msg);
+          },
           signaling_delay_ms_);
     }
   }
@@ -1593,12 +1593,12 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
   }
 
   void SetPortAllocatorFlags(uint32_t caller_flags, uint32_t callee_flags) {
-    network_thread()->Invoke<void>(
-        RTC_FROM_HERE, rtc::Bind(&cricket::PortAllocator::set_flags,
-                                 caller()->port_allocator(), caller_flags));
-    network_thread()->Invoke<void>(
-        RTC_FROM_HERE, rtc::Bind(&cricket::PortAllocator::set_flags,
-                                 callee()->port_allocator(), callee_flags));
+    network_thread()->Invoke<void>(RTC_FROM_HERE, [this, caller_flags] {
+      caller()->port_allocator()->set_flags(caller_flags);
+    });
+    network_thread()->Invoke<void>(RTC_FROM_HERE, [this, callee_flags] {
+      callee()->port_allocator()->set_flags(callee_flags);
+    });
   }
 
   rtc::FirewallSocketServer* firewall() const { return fss_.get(); }

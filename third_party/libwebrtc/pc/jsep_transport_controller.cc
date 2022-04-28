@@ -18,7 +18,6 @@
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/port.h"
 #include "pc/srtp_filter.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/thread.h"
 
@@ -93,9 +92,8 @@ JsepTransportController::JsepTransportController(
 JsepTransportController::~JsepTransportController() {
   // Channel destructors may try to send packets, so this needs to happen on
   // the network thread.
-  network_thread_->Invoke<void>(
-      RTC_FROM_HERE,
-      rtc::Bind(&JsepTransportController::DestroyAllJsepTransports_n, this));
+  network_thread_->Invoke<void>(RTC_FROM_HERE,
+                                [this] { DestroyAllJsepTransports_n(); });
 }
 
 RTCError JsepTransportController::SetLocalDescription(

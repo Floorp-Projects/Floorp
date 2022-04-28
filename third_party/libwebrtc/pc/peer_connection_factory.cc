@@ -42,7 +42,6 @@
 #include "pc/rtp_parameters_conversion.h"
 #include "pc/session_description.h"
 #include "pc/video_track.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/field_trial_units.h"
@@ -256,12 +255,11 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
 
   std::unique_ptr<RtcEventLog> event_log =
       worker_thread()->Invoke<std::unique_ptr<RtcEventLog>>(
-          RTC_FROM_HERE,
-          rtc::Bind(&PeerConnectionFactory::CreateRtcEventLog_w, this));
+          RTC_FROM_HERE, [this] { return CreateRtcEventLog_w(); });
 
   std::unique_ptr<Call> call = worker_thread()->Invoke<std::unique_ptr<Call>>(
       RTC_FROM_HERE,
-      rtc::Bind(&PeerConnectionFactory::CreateCall_w, this, event_log.get()));
+      [this, &event_log] { return CreateCall_w(event_log.get()); });
 
   auto result = PeerConnection::Create(context_, options_, std::move(event_log),
                                        std::move(call), configuration,
