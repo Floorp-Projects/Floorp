@@ -109,7 +109,9 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#ifdef NS_PRINTING
 #include "mozilla/layout/RemotePrintJobChild.h"
+#endif
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/net/CaptivePortalService.h"
@@ -2018,7 +2020,11 @@ mozilla::ipc::IPCResult ContentChild::RecvSocketProcessCrashed() {
 }
 
 PRemotePrintJobChild* ContentChild::AllocPRemotePrintJobChild() {
+#ifdef NS_PRINTING
   return new RemotePrintJobChild();
+#else
+  return nullptr;
+#endif
 }
 
 PChildToParentStreamChild* ContentChild::SendPChildToParentStreamConstructor(
