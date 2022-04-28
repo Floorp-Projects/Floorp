@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ChromeUtilsBinding.h"
 #include "nsContentUtils.h"
 #include "nsJSPrincipals.h"
 #include "nsIScriptError.h"
@@ -72,6 +73,11 @@ nsresult CentralizedAdminPrefManagerInit(bool aSandboxEnabled) {
   if (!JS_WrapValue(cx, &value) ||
       !JS_DefineProperty(cx, autoconfigSystemSb, "gSandbox", value,
                          JSPROP_ENUMERATE)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Define ChromeUtils for ChromeUtils.import.
+  if (!mozilla::dom::ChromeUtils_Binding::GetConstructorObject(cx)) {
     return NS_ERROR_FAILURE;
   }
 
