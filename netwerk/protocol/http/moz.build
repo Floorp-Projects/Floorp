@@ -49,6 +49,7 @@ EXPORTS.mozilla.net += [
     "ClassifierDummyChannel.h",
     "ClassifierDummyChannelChild.h",
     "ClassifierDummyChannelParent.h",
+    "ClassOfService.h",
     "EarlyHintsService.h",
     "HttpAuthUtils.h",
     "HttpBackgroundChannelChild.h",

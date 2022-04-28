@@ -45,8 +45,7 @@
 #include "HttpConnectionUDP.h"
 #include "SpeculativeTransaction.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 //-----------------------------------------------------------------------------
 
@@ -349,7 +348,7 @@ nsresult nsHttpConnectionMgr::RescheduleTransaction(HttpTransactionShell* trans,
 }
 
 void nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction(
-    HttpTransactionShell* trans, const ClassOfServiceStruct& classOfService) {
+    HttpTransactionShell* trans, const ClassOfService& classOfService) {
   LOG(
       ("nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction [trans=%p "
        "classOfService flags=%" PRIu32 " inc=%d]\n",
@@ -367,8 +366,7 @@ void nsHttpConnectionMgr::UpdateClassOfServiceOnTransaction(
   RefPtr<nsHttpConnectionMgr> self(this);
   Unused << mSocketThreadTarget->Dispatch(NS_NewRunnableFunction(
       "nsHttpConnectionMgr::CallUpdateClassOfServiceOnTransaction",
-      [cos{std::move(classOfService)}, self{std::move(self)},
-       trans{std::move(trans)}]() {
+      [cos{classOfService}, self{std::move(self)}, trans = RefPtr{trans}]() {
         self->OnMsgUpdateClassOfServiceOnTransaction(
             cos, trans->AsHttpTransaction());
       }));
@@ -1271,7 +1269,7 @@ nsresult nsHttpConnectionMgr::MakeNewConnection(
 
   nsresult rv = ent->CreateDnsAndConnectSocket(
       trans, trans->Caps(), false, false,
-      trans->ClassOfService().Flags() & nsIClassOfService::UrgentStart, true,
+      trans->GetClassOfService().Flags() & nsIClassOfService::UrgentStart, true,
       pendingTransInfo);
   if (NS_FAILED(rv)) {
     /* hard failure */
@@ -1455,7 +1453,8 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
     // don't respect urgency so that non-urgent transaction will be allowed
     // to dispatch on an urgent-start-only marked connection to avoid
     // dispatch deadlocks
-    if (!(trans->ClassOfService().Flags() & nsIClassOfService::UrgentStart) &&
+    if (!(trans->GetClassOfService().Flags() &
+          nsIClassOfService::UrgentStart) &&
         idleConnsAllUrgent &&
         ent->ActiveConnsLength() < MaxPersistConnections(ent)) {
       rv = TryDispatchTransactionOnIdleConn(ent, pendingTransInfo, false);
@@ -1494,7 +1493,7 @@ nsresult nsHttpConnectionMgr::TryDispatchTransactionOnIdleConn(
 
   nsHttpTransaction* trans = pendingTransInfo->Transaction();
   bool urgentTrans =
-      trans->ClassOfService().Flags() & nsIClassOfService::UrgentStart;
+      trans->GetClassOfService().Flags() & nsIClassOfService::UrgentStart;
 
   LOG(
       ("nsHttpConnectionMgr::TryDispatchTransactionOnIdleConn, ent=%p, "
@@ -2067,7 +2066,7 @@ void nsHttpConnectionMgr::OnMsgReschedTransaction(int32_t priority,
 }
 
 void nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction(
-    ClassOfServiceStruct cos, ARefBase* param) {
+    ClassOfService cos, ARefBase* param) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(
       ("nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction "
@@ -2076,7 +2075,7 @@ void nsHttpConnectionMgr::OnMsgUpdateClassOfServiceOnTransaction(
 
   nsHttpTransaction* trans = static_cast<nsHttpTransaction*>(param);
 
-  ClassOfServiceStruct previous = trans->ClassOfService();
+  ClassOfService previous = trans->GetClassOfService();
   trans->SetClassOfService(cos);
 
   // incremental change alone will not trigger a reschedule
@@ -3650,5 +3649,4 @@ void nsHttpConnectionMgr::CheckTransInPendingQueue(nsHttpTransaction* aTrans) {
 #endif
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
