@@ -10,6 +10,8 @@
 
 #include <queue>
 
+#include "api/test/network_emulation/create_cross_traffic.h"
+#include "api/test/network_emulation/cross_traffic.h"
 #include "api/transport/goog_cc_factory.h"
 #include "api/units/data_rate.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
@@ -547,8 +549,9 @@ DataRate AverageBitrateAfterCrossInducedLoss(std::string name) {
   s.RunFor(TimeDelta::Seconds(10));
   for (int i = 0; i < 4; ++i) {
     // Sends TCP cross traffic inducing loss.
-    auto* tcp_traffic =
-        s.net()->StartFakeTcpCrossTraffic(send_net, ret_net, FakeTcpConfig());
+    auto* tcp_traffic = s.net()->StartCrossTraffic(CreateFakeTcpCrossTraffic(
+        s.net()->CreateRoute(send_net), s.net()->CreateRoute(ret_net),
+        FakeTcpConfig()));
     s.RunFor(TimeDelta::Seconds(2));
     // Allow the ccongestion controller to recover.
     s.net()->StopCrossTraffic(tcp_traffic);
@@ -836,7 +839,9 @@ TEST_F(GoogCcNetworkControllerTest, IsFairToTCP) {
   auto* route = s.CreateRoutes(
       client, send_net, s.CreateClient("return", CallClientConfig()), ret_net);
   s.CreateVideoStream(route->forward(), VideoStreamConfig());
-  s.net()->StartFakeTcpCrossTraffic(send_net, ret_net, FakeTcpConfig());
+  s.net()->StartCrossTraffic(CreateFakeTcpCrossTraffic(
+      s.net()->CreateRoute(send_net), s.net()->CreateRoute(ret_net),
+      FakeTcpConfig()));
   s.RunFor(TimeDelta::Seconds(10));
 
   // Currently only testing for the upper limit as we in practice back out

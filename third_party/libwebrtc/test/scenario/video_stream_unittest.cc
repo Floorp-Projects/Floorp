@@ -9,6 +9,8 @@
  */
 #include <atomic>
 
+#include "api/test/network_emulation/create_cross_traffic.h"
+#include "api/test/network_emulation/cross_traffic.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/scenario/scenario.h"
@@ -217,8 +219,9 @@ TEST(VideoStreamTest, ResolutionAdaptsToAvailableBandwidth) {
 
   // Trigger cross traffic, run until we have seen 3 consecutive
   // seconds with no VGA frames due to reduced available bandwidth.
-  auto cross_traffic =
-      s.net()->StartFakeTcpCrossTraffic(send_net, ret_net, FakeTcpConfig());
+  auto cross_traffic = s.net()->StartCrossTraffic(CreateFakeTcpCrossTraffic(
+      s.net()->CreateRoute(send_net), s.net()->CreateRoute(ret_net),
+      FakeTcpConfig()));
 
   int num_seconds_without_vga = 0;
   int num_iterations = 0;
