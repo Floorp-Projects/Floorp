@@ -33,6 +33,7 @@
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
+#include "nsILayoutHistoryState.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
 #include "nsISupports.h"
@@ -2239,6 +2240,33 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
     Unused << aParent->SendHistoryCommitIndexAndLength(this, index, length,
                                                        aChangeID);
   });
+}
+
+void CanonicalBrowsingContext::SynchronizeLayoutHistoryState() {
+  if (mActiveEntry) {
+    if (IsInProcess()) {
+      nsIDocShell* docShell = GetDocShell();
+      if (docShell) {
+        docShell->PersistLayoutHistoryState();
+
+        nsCOMPtr<nsILayoutHistoryState> state;
+        docShell->GetLayoutHistoryState(getter_AddRefs(state));
+        if (state) {
+          mActiveEntry->SetLayoutHistoryState(state);
+        }
+      }
+    } else if (ContentParent* cp = GetContentParent()) {
+      cp->SendGetLayoutHistoryState(this)->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [activeEntry =
+               mActiveEntry](const RefPtr<nsILayoutHistoryState>& aState) {
+            if (aState) {
+              activeEntry->SetLayoutHistoryState(aState);
+            }
+          },
+          []() {});
+    }
+  }
 }
 
 void CanonicalBrowsingContext::ResetScalingZoom() {
