@@ -16,16 +16,18 @@ server.registerPathHandler("/plain.html", (request, response) => {
   response.write("<!DOCTYPE html><html></html>");
 });
 
-async function testWebSocketInFrameUpgraded(data = {}) {
+async function testWebSocketInFrameUpgraded() {
   const frame = document.createElement("iframe");
   frame.src = browser.runtime.getURL("frame.html");
   document.documentElement.appendChild(frame);
 }
 
-async function test_webSocket(version) {
+// testIframe = true: open WebSocket from iframe (original test case).
+// testIframe = false: open WebSocket from content script.
+async function test_webSocket({ manifest_version, useIframe }) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      manifest_version: version,
+      manifest_version,
       permissions: ["webRequest", "webRequestBlocking"],
       host_permissions: ["<all_urls>"],
       granted_host_permissions: true,
@@ -33,24 +35,22 @@ async function test_webSocket(version) {
         {
           matches: ["http://*/plain.html"],
           run_at: "document_idle",
-          js: ["content_script.js"],
+          js: [useIframe ? "content_script.js" : "load_WebSocket.js"],
         },
       ],
     },
     temporarilyInstalled: true,
     background() {
-      browser.webRequest.onBeforeRequest.addListener(
+      browser.webRequest.onBeforeSendHeaders.addListener(
         details => {
-          // the websockets should not be upgraded
-          browser.test.assertEq(
-            "ws:",
-            new URL(details.url).protocol,
-            "ws protocol worked"
-          );
-          browser.test.notifyPass("websocket");
+          let header = details.requestHeaders.find(h => h.name === "Origin");
+          browser.test.sendMessage("ws_request", {
+            ws_scheme: new URL(details.url).protocol,
+            originHeader: header?.value,
+          });
         },
         { urls: ["wss://example.com/*", "ws://example.com/*"] },
-        ["blocking"]
+        ["requestHeaders", "blocking"]
       );
     },
     files: {
@@ -58,13 +58,13 @@ async function test_webSocket(version) {
 <html>
     <head>
         <meta charset="utf-8"/>
-        <script type="application/javascript" src="frame_script.js"></script>
+        <script src="load_WebSocket.js"></script>
     </head>
     <body>
     </body>
 </html>
 	  `,
-      "frame_script.js": `new WebSocket("ws://example.com/ws_dummy");`,
+      "load_WebSocket.js": `new WebSocket("ws://example.com/ws_dummy");`,
       "content_script.js": `
       (${testWebSocketInFrameUpgraded})()
       `,
@@ -74,12 +74,42 @@ async function test_webSocket(version) {
   await extension.startup();
 
   let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);
-  await extension.awaitFinish("websocket");
+  let { ws_scheme, originHeader } = await extension.awaitMessage("ws_request");
+  if (useIframe || manifest_version == 2) {
+    Assert.equal(ws_scheme, "ws:", "ws:-request should not have been upgraded");
+  } else {
+    Assert.equal(ws_scheme, "wss:", "WebSocket affected by page CSP in MV3");
+  }
+
+  if (useIframe) {
+    Assert.equal(
+      originHeader,
+      `moz-extension://${extension.uuid}`,
+      "Origin header of WebSocket request from extension page"
+    );
+  } else {
+    Assert.equal(
+      originHeader,
+      manifest_version == 2 ? "null" : "http://example.com",
+      "Origin header of WebSocket request from content script"
+    );
+  }
   await contentPage.close();
   await extension.unload();
 }
 
-add_task(async function test_webSocket_upgrade_iframe() {
-  await test_webSocket(2);
-  await test_webSocket(3);
+add_task(async function test_webSocket_upgrade_iframe_mv2() {
+  await test_webSocket({ manifest_version: 2, useIframe: true });
+});
+
+add_task(async function test_webSocket_upgrade_iframe_mv3() {
+  await test_webSocket({ manifest_version: 3, useIframe: true });
+});
+
+add_task(async function test_webSocket_upgrade_in_contentscript_mv2() {
+  await test_webSocket({ manifest_version: 2, useIframe: false });
+});
+
+add_task(async function test_webSocket_upgrade_in_contentscript_mv3() {
+  await test_webSocket({ manifest_version: 3, useIframe: false });
 });
