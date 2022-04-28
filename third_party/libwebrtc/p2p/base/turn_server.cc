@@ -18,7 +18,6 @@
 #include "api/packet_socket_factory.h"
 #include "api/transport/stun.h"
 #include "p2p/base/async_stun_tcp_socket.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
@@ -575,7 +574,7 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
     sockets_to_delete_.push_back(
         std::unique_ptr<rtc::AsyncPacketSocket>(socket));
     invoker_.AsyncInvoke<void>(RTC_FROM_HERE, rtc::Thread::Current(),
-                               rtc::Bind(&TurnServer::FreeSockets, this));
+                               [this] { FreeSockets(); });
   }
 }
 

@@ -241,7 +241,7 @@ class FakeIceTransport : public IceTransportInternal {
       if (async_) {
         invoker_.AsyncInvokeDelayed<void>(
             RTC_FROM_HERE, rtc::Thread::Current(),
-            rtc::Bind(&FakeIceTransport::SendPacketInternal, this, packet),
+            [this, packet] { FakeIceTransport::SendPacketInternal(packet); },
             async_delay_ms_);
       } else {
         SendPacketInternal(packet);

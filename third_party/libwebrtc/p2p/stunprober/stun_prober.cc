@@ -20,7 +20,6 @@
 #include "api/transport/stun.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_resolver_interface.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/helpers.h"
@@ -358,9 +357,8 @@ void StunProber::OnServerResolved(rtc::AsyncResolverInterface* resolver) {
 
   // Deletion of AsyncResolverInterface can't be done in OnResolveResult which
   // handles SignalDone.
-  invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, thread_,
-      rtc::Bind(&rtc::AsyncResolverInterface::Destroy, resolver, false));
+  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_,
+                             [resolver] { resolver->Destroy(false); });
   servers_.pop_back();
 
   if (servers_.size()) {
@@ -458,8 +456,8 @@ void StunProber::MaybeScheduleStunRequests() {
 
   if (Done()) {
     invoker_.AsyncInvokeDelayed<void>(
-        RTC_FROM_HERE, thread_,
-        rtc::Bind(&StunProber::ReportOnFinished, this, SUCCESS), timeout_ms_);
+        RTC_FROM_HERE, thread_, [this] { ReportOnFinished(SUCCESS); },
+        timeout_ms_);
     return;
   }
   if (should_send_next_request(now)) {
@@ -470,8 +468,7 @@ void StunProber::MaybeScheduleStunRequests() {
     next_request_time_ms_ = now + interval_ms_;
   }
   invoker_.AsyncInvokeDelayed<void>(
-      RTC_FROM_HERE, thread_,
-      rtc::Bind(&StunProber::MaybeScheduleStunRequests, this),
+      RTC_FROM_HERE, thread_, [this] { MaybeScheduleStunRequests(); },
       get_wake_up_interval_ms());
 }
 
