@@ -188,7 +188,6 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
         // No frame reference top layer frame, so no need save it into a buffer.
         if (num_temporal_layers_ > 2 || sid < num_spatial_layers_ - 1) {
           config.Update(BufferIndex(sid, /*tid=*/1));
-          can_reference_t1_frame_for_spatial_id_.set(sid);
         }
         spatial_dependency_buffer_id = BufferIndex(sid, /*tid=*/1);
       }
@@ -246,6 +245,10 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
 
 GenericFrameInfo ScalabilityStructureFullSvc::OnEncodeDone(
     const LayerFrameConfig& config) {
+  if (config.TemporalId() == 1) {
+    can_reference_t1_frame_for_spatial_id_.set(config.SpatialId());
+  }
+
   GenericFrameInfo frame_info;
   frame_info.spatial_id = config.SpatialId();
   frame_info.temporal_id = config.TemporalId();
