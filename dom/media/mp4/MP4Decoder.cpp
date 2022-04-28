@@ -149,30 +149,45 @@ bool MP4Decoder::IsSupportedType(const MediaContainerType& aType,
     return false;
   }
 
-  if (tracks.IsEmpty()) {
-    // No codecs specified. Assume H.264 or AAC
-    if (aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
-        aType.Type() == MEDIAMIMETYPE("audio/x-m4a")) {
+  if (!tracks.IsEmpty()) {
+    // Look for exact match as we know used codecs.
+    RefPtr<PDMFactory> platform = new PDMFactory();
+    for (const auto& track : tracks) {
+      if (!track ||
+          !platform->Supports(SupportDecoderParams(*track), aDiagnostics)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // We have only container info so try to guess the content type.
+  // Assume H.264/AV1 or AAC
+  if (aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
+      aType.Type() == MEDIAMIMETYPE("audio/x-m4a")) {
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "audio/mp4a-latm"_ns, aType));
+  } else {
+    tracks.AppendElement(
+        CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
+            "video/avc"_ns, aType));
+    if (StaticPrefs::media_av1_enabled()) {
       tracks.AppendElement(
           CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              "audio/mp4a-latm"_ns, aType));
-    } else {
-      tracks.AppendElement(
-          CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
-              "video/avc"_ns, aType));
+              "video/av1"_ns, aType));
     }
   }
 
-  // Verify that we have a PDM that supports the whitelisted types.
+  // Check that something is supported at least.
   RefPtr<PDMFactory> platform = new PDMFactory();
   for (const auto& track : tracks) {
-    if (!track ||
-        !platform->Supports(SupportDecoderParams(*track), aDiagnostics)) {
-      return false;
+    if (track &&
+        platform->Supports(SupportDecoderParams(*track), aDiagnostics)) {
+      return true;
     }
   }
-
-  return true;
+  return false;
 }
 
 /* static */
