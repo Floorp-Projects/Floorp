@@ -23,6 +23,7 @@
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/experiments/min_video_bitrate_experiment.h"
 #include "rtc_base/experiments/normalize_simulcast_size_experiment.h"
 #include "rtc_base/experiments/rate_control_settings.h"
@@ -61,7 +62,7 @@ struct SimulcastFormat {
   int width;
   int height;
   // The maximum number of simulcast layers can be used for
-  // resolutions at |widthxheigh| for legacy applications.
+  // resolutions at |widthxheight| for legacy applications.
   size_t max_layers;
   // The maximum bitrate for encoding stream at |widthxheight|, when we are
   // not sending the next higher spatial stream.
@@ -162,7 +163,10 @@ int NormalizeSimulcastSize(int size, size_t simulcast_layers) {
   return ((size >> base2_exponent) << base2_exponent);
 }
 
-SimulcastFormat InterpolateSimulcastFormat(int width, int height) {
+SimulcastFormat InterpolateSimulcastFormat(
+    int width,
+    int height,
+    absl::optional<double> max_roundup_rate) {
   const int index = FindSimulcastFormatIndex(width, height);
   if (index == 0)
     return kSimulcastFormats[index];
@@ -174,7 +178,10 @@ SimulcastFormat InterpolateSimulcastFormat(int width, int height) {
   const float rate = (total_pixels_up - total_pixels) /
                      static_cast<float>(total_pixels_up - total_pixels_down);
 
-  size_t max_layers = kSimulcastFormats[index].max_layers;
+  // Use upper resolution if |rate| is below the configured threshold.
+  size_t max_layers = (max_roundup_rate && rate < max_roundup_rate.value())
+                          ? kSimulcastFormats[index - 1].max_layers
+                          : kSimulcastFormats[index].max_layers;
   webrtc::DataRate max_bitrate =
       Interpolate(kSimulcastFormats[index - 1].max_bitrate,
                   kSimulcastFormats[index].max_bitrate, rate);
@@ -186,6 +193,10 @@ SimulcastFormat InterpolateSimulcastFormat(int width, int height) {
                   kSimulcastFormats[index].min_bitrate, rate);
 
   return {width, height, max_layers, max_bitrate, target_bitrate, min_bitrate};
+}
+
+SimulcastFormat InterpolateSimulcastFormat(int width, int height) {
+  return InterpolateSimulcastFormat(width, height, absl::nullopt);
 }
 
 webrtc::DataRate FindSimulcastMaxBitrate(int width, int height) {
@@ -235,9 +246,18 @@ size_t LimitSimulcastLayerCount(int width,
                                 const webrtc::WebRtcKeyValueConfig& trials) {
   if (!absl::StartsWith(trials.Lookup(kUseLegacySimulcastLayerLimitFieldTrial),
                         "Disabled")) {
+    // Max layers from one higher resolution in kSimulcastFormats will be used
+    // if the ratio (pixels_up - pixels) / (pixels_up - pixels_down) is less
+    // than configured |max_ratio|. pixels_down is the selected index in
+    // kSimulcastFormats based on pixels.
+    webrtc::FieldTrialOptional<double> max_ratio("max_ratio");
+    webrtc::ParseFieldTrial({&max_ratio},
+                            trials.Lookup("WebRTC-SimulcastLayerLimitRoundUp"));
+
     size_t adaptive_layer_count = std::max(
         need_layers,
-        kSimulcastFormats[FindSimulcastFormatIndex(width, height)].max_layers);
+        InterpolateSimulcastFormat(width, height, max_ratio.GetOptional())
+            .max_layers);
     if (layer_count > adaptive_layer_count) {
       RTC_LOG(LS_WARNING) << "Reducing simulcast layer count from "
                           << layer_count << " to " << adaptive_layer_count;
