@@ -4,8 +4,10 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize("type_hint", ["window", "tab"])
-async def test_top_level_context(bidi_session, current_session, type_hint):
-    top_level_context_id = current_session.new_window(type_hint=type_hint)
+async def test_top_level_context(bidi_session, type_hint):
+    top_level_context_id = await bidi_session.browsing_context.create(
+        type_hint=type_hint
+    )
 
     contexts = await bidi_session.browsing_context.get_tree()
     assert len(contexts) == 2
