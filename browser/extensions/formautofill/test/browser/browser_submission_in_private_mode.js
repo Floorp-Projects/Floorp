@@ -12,20 +12,21 @@ add_task(async function test_add_address() {
   await BrowserTestUtils.withNewTab(
     { gBrowser: privateWin.gBrowser, url: FORM_URL },
     async function(privateBrowser) {
-      await SpecialPowers.spawn(privateBrowser, [], async function() {
-        content.document.getElementById("organization").focus();
-        content.document.getElementById("organization").value = "Mozilla";
-        content.document.getElementById("street-address").value =
-          "331 E. Evelyn Avenue";
-        content.document.getElementById("tel").value = "1-650-903-0800";
-
-        content.document.querySelector("input[type=submit]").click();
+      await focusUpdateSubmitForm(privateBrowser, {
+        focusSelector: "#organization",
+        newValues: {
+          "#organization": "Mozilla",
+          "#street-address": "331 E. Evelyn Avenue",
+          "#tel": "1-650-903-0800",
+        },
       });
     }
   );
 
   // Wait 1 second to make sure the profile has not been saved
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve =>
+    setTimeout(resolve, TIMEOUT_ENSURE_PROFILE_NOT_SAVED)
+  );
   addresses = await getAddresses();
   is(addresses.length, 0, "No address saved in private browsing mode");
 
