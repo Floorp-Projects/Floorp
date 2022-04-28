@@ -47,19 +47,19 @@ ok(w_at_66 > w_at_20, "text should be wider at 66px than at 20px");
 
 canvas.style.fontSize = "33px";
 cx.font = "2em serif";
-is(cx.font, "2em serif", "serialization of em");
+is(cx.font, "66px serif", "font size set using em units serializes to px");
 is(textmeas(), w_at_66, "em should be relative to canvas font size");
 canvas.style.fontSize = "16px";
-is(cx.font, "2em serif", "serialization of em");
+is(cx.font, "66px serif", "font size set using em units serializes to px");
 is(textmeas(), w_at_66,
    "em should be relative to canvas font size at time of setting");
 document.body.removeChild(canvas);
-is(cx.font, "2em serif", "serialization of em");
+is(cx.font, "66px serif", "font size set using em units serializes to px");
 is(textmeas(), w_at_66,
    "em should be relative to canvas font size at time of setting");
 canvas.style.fontSize = "33px";
 cx.font = "2em serif";
-is(cx.font, "2em serif", "serialization of em");
+is(cx.font, "20px serif", "font size set using em units serializes to px");
 is(textmeas(), w_at_20,
    "em should be relative to 10px when canvas not in document");
 document.body.appendChild(canvas);
