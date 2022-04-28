@@ -25,7 +25,9 @@
 #include "mozilla/dom/ContentPlaybackController.h"
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#ifdef NS_PRINTING
 #include "mozilla/layout/RemotePrintJobParent.h"
+#endif
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_docshell.h"
