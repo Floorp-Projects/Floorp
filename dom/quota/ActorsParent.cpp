@@ -8501,7 +8501,7 @@ mozilla::ipc::IPCResult Quota::RecvStartIdleMaintenance() {
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
     MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Wrong actor");
   }
 
   if (QuotaManager::IsShuttingDown()) {
@@ -8526,7 +8526,7 @@ mozilla::ipc::IPCResult Quota::RecvStopIdleMaintenance() {
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
     MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Wrong actor");
   }
 
   if (QuotaManager::IsShuttingDown()) {
@@ -8552,7 +8552,7 @@ mozilla::ipc::IPCResult Quota::RecvAbortOperationsForProcess(
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
     MOZ_CRASH_UNLESS_FUZZING();
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Wrong actor");
   }
 
   if (QuotaManager::IsShuttingDown()) {
@@ -8714,7 +8714,7 @@ mozilla::ipc::IPCResult QuotaUsageRequestBase::RecvCancel() {
 
   if (mCanceled.exchange(true)) {
     NS_WARNING("Canceled more than once?!");
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "Request canceled more than once");
   }
 
   return IPC_OK();
