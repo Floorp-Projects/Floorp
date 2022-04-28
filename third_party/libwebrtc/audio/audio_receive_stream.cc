@@ -175,6 +175,11 @@ void AudioReceiveStream::Stop() {
   audio_state()->RemoveReceivingStream(this);
 }
 
+bool AudioReceiveStream::IsRunning() const {
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  return playing_;
+}
+
 webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
     bool get_and_clear_legacy_stats) const {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);

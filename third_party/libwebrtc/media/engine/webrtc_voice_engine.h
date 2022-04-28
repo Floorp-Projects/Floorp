@@ -276,7 +276,6 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   bool MuteStream(uint32_t ssrc, bool mute);
 
   WebRtcVoiceEngine* engine() { return engine_; }
-  void ChangePlayout(bool playout);
   int CreateVoEChannel();
   bool DeleteVoEChannel(int channel);
   bool SetMaxSendBitrate(int bps);
@@ -301,7 +300,6 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   int dtmf_payload_freq_ = -1;
   bool recv_transport_cc_enabled_ = false;
   bool recv_nack_enabled_ = false;
-  bool desired_playout_ = false;
   bool playout_ = false;
   bool send_ = false;
   webrtc::Call* const call_ = nullptr;

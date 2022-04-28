@@ -178,6 +178,9 @@ class AudioReceiveStream {
   // When a stream is stopped, it can't receive, process or deliver packets.
   virtual void Stop() = 0;
 
+  // Returns true if the stream has been started.
+  virtual bool IsRunning() const = 0;
+
   virtual Stats GetStats(bool get_and_clear_legacy_stats) const = 0;
   Stats GetStats() { return GetStats(/*get_and_clear_legacy_stats=*/true); }
 

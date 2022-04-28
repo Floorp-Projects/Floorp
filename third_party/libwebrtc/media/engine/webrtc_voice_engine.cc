@@ -1304,7 +1304,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
     } else {
       stream_->Stop();
     }
-    playout_ = playout;
   }
 
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) {
@@ -1355,13 +1354,16 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
  private:
   void RecreateAudioReceiveStream() {
     RTC_DCHECK(worker_thread_checker_.IsCurrent());
+    bool was_running = false;
     if (stream_) {
+      was_running = stream_->IsRunning();
       call_->DestroyAudioReceiveStream(stream_);
     }
     stream_ = call_->CreateAudioReceiveStream(config_);
     RTC_CHECK(stream_);
     stream_->SetGain(output_volume_);
-    SetPlayout(playout_);
+    if (was_running)
+      SetPlayout(was_running);
     stream_->SetSink(raw_audio_sink_.get());
   }
 
@@ -1377,7 +1379,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
   // The stream is owned by WebRtcAudioReceiveStream and may be reallocated if
   // configuration changes.
   webrtc::AudioReceiveStream* stream_ = nullptr;
-  bool playout_ = false;
   float output_volume_ = 1.0;
   std::unique_ptr<webrtc::AudioSinkInterface> raw_audio_sink_;
 };
@@ -1689,21 +1690,22 @@ bool WebRtcVoiceMediaChannel::SetRecvCodecs(
     return true;
   }
 
-  if (playout_) {
-    // Receive codecs can not be changed while playing. So we temporarily
-    // pause playout.
-    ChangePlayout(false);
-  }
+  bool playout_enabled = playout_;
+  // Receive codecs can not be changed while playing. So we temporarily
+  // pause playout.
+  SetPlayout(false);
+  RTC_DCHECK(!playout_);
 
   decoder_map_ = std::move(decoder_map);
   for (auto& kv : recv_streams_) {
     kv.second->SetDecoderMap(decoder_map_);
   }
+
   recv_codecs_ = codecs;
 
-  if (desired_playout_ && !playout_) {
-    ChangePlayout(desired_playout_);
-  }
+  SetPlayout(playout_enabled);
+  RTC_DCHECK_EQ(playout_, playout_enabled);
+
   return true;
 }
 
@@ -1858,12 +1860,7 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
 }
 
 void WebRtcVoiceMediaChannel::SetPlayout(bool playout) {
-  desired_playout_ = playout;
-  return ChangePlayout(desired_playout_);
-}
-
-void WebRtcVoiceMediaChannel::ChangePlayout(bool playout) {
-  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::ChangePlayout");
+  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetPlayout");
   RTC_DCHECK(worker_thread_checker_.IsCurrent());
   if (playout_ == playout) {
     return;
