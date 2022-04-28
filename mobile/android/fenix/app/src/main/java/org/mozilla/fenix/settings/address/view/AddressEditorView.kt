@@ -53,8 +53,8 @@ class AddressEditorView(
                 addressLevel1 = "",
                 postalCode = binding.zipInput.text.toString(),
                 country = "",
-                tel = binding.phoneInput.toString(),
-                email = binding.emailInput.toString()
+                tel = binding.phoneInput.text.toString(),
+                email = binding.emailInput.text.toString()
             )
         )
     }
