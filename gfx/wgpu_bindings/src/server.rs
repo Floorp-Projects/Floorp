@@ -245,28 +245,7 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
     gfx_select!(self_id => global.buffer_drop(self_id, false));
 }
 
-trait GlobalExt {
-    fn device_action<A: wgc::hub::HalApi>(
-        &self,
-        self_id: id::DeviceId,
-        action: DeviceAction,
-        error_buf: ErrorBuffer,
-    );
-    fn texture_action<A: wgc::hub::HalApi>(
-        &self,
-        self_id: id::TextureId,
-        action: TextureAction,
-        error_buf: ErrorBuffer,
-    );
-    fn command_encoder_action<A: wgc::hub::HalApi>(
-        &self,
-        self_id: id::CommandEncoderId,
-        action: CommandEncoderAction,
-        error_buf: ErrorBuffer,
-    );
-}
-
-impl GlobalExt for Global {
+impl Global {
     fn device_action<A: wgc::hub::HalApi>(
         &self,
         self_id: id::DeviceId,
