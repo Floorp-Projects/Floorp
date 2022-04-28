@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.res.Configuration
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -39,10 +38,8 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.normalTabs
@@ -65,7 +62,6 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounterMenu
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Events
@@ -75,12 +71,10 @@ import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
-import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
-import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -111,19 +105,13 @@ import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
-import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.settings.SupportUtils.SumoTopic.HELP
-import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHOLD
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wallpapers.WallpaperManager
-import org.mozilla.fenix.whatsnew.WhatsNew
 import java.lang.ref.WeakReference
 import kotlin.math.min
-import org.mozilla.fenix.GleanMetrics.HomeMenu as HomeMenuMetrics
 
 @Suppress("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
@@ -493,15 +481,18 @@ class HomeFragment : Fragment() {
 
         observeSearchEngineChanges()
         observeSearchEngineNameChanges()
-        createHomeMenu(requireContext(), WeakReference(binding.menuButton))
-        createTabCounterMenu()
 
-        binding.menuButton.setColorFilter(
-            ContextCompat.getColor(
-                requireContext(),
-                ThemeManager.resolveAttribute(R.attr.textPrimary, requireContext())
-            )
-        )
+        HomeMenuBuilder(
+            view = view,
+            context = view.context,
+            lifecycleOwner = viewLifecycleOwner,
+            homeActivity = activity as HomeActivity,
+            navController = findNavController(),
+            menuButton = WeakReference(binding.menuButton),
+            hideOnboardingIfNeeded = ::hideOnboardingIfNeeded,
+        ).build()
+
+        createTabCounterMenu()
 
         binding.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
@@ -913,115 +904,6 @@ class HomeFragment : Fragment() {
 
         Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
     }
-
-    @SuppressWarnings("ComplexMethod", "LongMethod")
-    private fun createHomeMenu(context: Context, menuButtonView: WeakReference<MenuButton>) =
-        HomeMenu(
-            this.viewLifecycleOwner,
-            context,
-            onItemTapped = {
-                if (it !is HomeMenu.Item.DesktopMode) {
-                    hideOnboardingIfNeeded()
-                }
-
-                when (it) {
-                    HomeMenu.Item.Settings -> {
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalSettingsFragment()
-                        )
-                        HomeMenuMetrics.settingsItemClicked.record(NoExtras())
-                    }
-                    HomeMenu.Item.CustomizeHome -> {
-                        HomeScreen.customizeHomeClicked.record(NoExtras())
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalHomeSettingsFragment()
-                        )
-                    }
-                    is HomeMenu.Item.SyncAccount -> {
-                        val directions = when (it.accountState) {
-                            AccountState.AUTHENTICATED ->
-                                BrowserFragmentDirections.actionGlobalAccountSettingsFragment()
-                            AccountState.NEEDS_REAUTHENTICATION ->
-                                BrowserFragmentDirections.actionGlobalAccountProblemFragment()
-                            AccountState.NO_ACCOUNT ->
-                                BrowserFragmentDirections.actionGlobalTurnOnSync()
-                        }
-                        nav(
-                            R.id.homeFragment,
-                            directions
-                        )
-                    }
-                    HomeMenu.Item.Bookmarks -> {
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id)
-                        )
-                    }
-                    HomeMenu.Item.History -> {
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalHistoryFragment()
-                        )
-                    }
-                    HomeMenu.Item.Downloads -> {
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalDownloadsFragment()
-                        )
-                    }
-                    HomeMenu.Item.Help -> {
-                        (activity as HomeActivity).openToBrowserAndLoad(
-                            searchTermOrURL = SupportUtils.getSumoURLForTopic(context, HELP),
-                            newTab = true,
-                            from = BrowserDirection.FromHome
-                        )
-                    }
-                    HomeMenu.Item.WhatsNew -> {
-                        WhatsNew.userViewedWhatsNew(context)
-                        Events.whatsNewTapped.record(NoExtras())
-                        (activity as HomeActivity).openToBrowserAndLoad(
-                            searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
-                            newTab = true,
-                            from = BrowserDirection.FromHome
-                        )
-                    }
-                    // We need to show the snackbar while the browsing data is deleting(if "Delete
-                    // browsing data on quit" is activated). After the deletion is over, the snackbar
-                    // is dismissed.
-                    HomeMenu.Item.Quit -> activity?.let { activity ->
-                        deleteAndQuit(
-                            activity,
-                            viewLifecycleOwner.lifecycleScope,
-                            view?.let { view ->
-                                FenixSnackbar.make(
-                                    view = view,
-                                    isDisplayedWithBrowserToolbar = false
-                                )
-                            }
-                        )
-                    }
-                    HomeMenu.Item.ReconnectSync -> {
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalAccountProblemFragment()
-                        )
-                    }
-                    HomeMenu.Item.Extensions -> {
-                        nav(
-                            R.id.homeFragment,
-                            HomeFragmentDirections.actionGlobalAddonsManagementFragment()
-                        )
-                    }
-                    is HomeMenu.Item.DesktopMode -> {
-                        context.settings().openNextTabInDesktopMode = it.checked
-                    }
-                }
-            },
-            onHighlightPresent = { menuButtonView.get()?.setHighlight(it) },
-            onMenuBuilderChanged = { menuButtonView.get()?.menuBuilder = it }
-        )
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
         return Observer<List<TabCollection>> {
