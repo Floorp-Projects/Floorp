@@ -50,7 +50,7 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.Robolectric
-import org.robolectric.Shadows
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarTest {
@@ -169,10 +169,12 @@ class BrowserToolbarTest {
     fun `displayProgress will send accessibility events`() {
         val toolbar = BrowserToolbar(testContext)
         val root = mock(ViewParent::class.java)
-        Shadows.shadowOf(toolbar).setMyParent(root)
+        shadowOf(toolbar).setMyParent(root)
         `when`(root.requestSendAccessibilityEvent(any(), any())).thenReturn(false)
 
-        Shadows.shadowOf(testContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager).setEnabled(true)
+        val shadowAccessibilityManager = shadowOf(testContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager)
+        shadowAccessibilityManager.setEnabled(true)
+        shadowAccessibilityManager.setTouchExplorationEnabled(true)
 
         toolbar.displayProgress(10)
         toolbar.displayProgress(50)
@@ -205,6 +207,31 @@ class BrowserToolbarTest {
         assertEquals(100, captor.allValues[3].maxScrollY)
     }
 
+    @Test
+    fun `displayProgress will not send send view scrolled accessibility events if touch exploration is disabled`() {
+        val toolbar = BrowserToolbar(testContext)
+        val root = mock(ViewParent::class.java)
+        shadowOf(toolbar).setMyParent(root)
+        `when`(root.requestSendAccessibilityEvent(any(), any())).thenReturn(false)
+
+        val shadowAccessibilityManager = shadowOf(testContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager)
+        shadowAccessibilityManager.setEnabled(true)
+        shadowAccessibilityManager.setTouchExplorationEnabled(false)
+
+        toolbar.displayProgress(10)
+        toolbar.displayProgress(50)
+        toolbar.displayProgress(100)
+
+        // make sure multiple calls to 100% does not trigger "loading" announcement
+        toolbar.displayProgress(100)
+
+        val captor = ArgumentCaptor.forClass(AccessibilityEvent::class.java)
+
+        verify(root, times(1)).requestSendAccessibilityEvent(any(), captor.capture())
+
+        assertEquals(AccessibilityEvent.TYPE_ANNOUNCEMENT, captor.allValues[0].eventType)
+        assertEquals(testContext.getString(R.string.mozac_browser_toolbar_progress_loading), captor.allValues[0].text[0])
+    }
     @Test
     fun `displayProgress will be forwarded to display toolbar`() {
         val toolbar = BrowserToolbar(testContext)

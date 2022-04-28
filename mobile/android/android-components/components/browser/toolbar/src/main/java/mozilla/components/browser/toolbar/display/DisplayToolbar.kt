@@ -27,6 +27,7 @@ import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.internal.ActionContainer
 import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.ktx.android.content.isScreenReaderEnabled
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls ("display mode").
@@ -560,7 +561,9 @@ class DisplayToolbar internal constructor(
             maxScrollY = views.progress.max
         }
 
-        views.progress.parent.requestSendAccessibilityEvent(views.progress, event)
+        if (context.isScreenReaderEnabled) {
+            views.progress.parent.requestSendAccessibilityEvent(views.progress, event)
+        }
 
         if (progress >= views.progress.max) {
             // Loading is done, hide progress bar.
