@@ -26,6 +26,7 @@ ef gh</pre>
 <p id="linksStartEnd"><a href="https://example.com/">a</a>b<a href="https://example.com/">c</a></p>
 <p id="linksBreaking">a<a href="https://example.com/">b<br>c</a>d</p>
 <p id="p">a<br role="presentation">b</p>
+<p id="leafThenWrap" style="font-family: monospace; width: 2ch; word-break: break-word;"><span>a</span>bc</p>
   `,
   async function(browser, docAcc) {
     for (const id of ["br", "pre"]) {
@@ -157,6 +158,11 @@ ef gh</pre>
       [1, 2, "b", 1, 2],
     ]);
     testTextAtOffset(p, BOUNDARY_PARAGRAPH, [[0, 2, "ab", 0, 2]]);
+    const leafThenWrap = findAccessibleChildByID(docAcc, "leafThenWrap");
+    testTextAtOffset(leafThenWrap, BOUNDARY_LINE_START, [
+      [0, 1, "ab", 0, 2],
+      [2, 3, "c", 2, 3],
+    ]);
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
