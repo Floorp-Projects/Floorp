@@ -248,6 +248,12 @@
         /* returned start offset */ okIfCache,
         /* returned end offset */ okIfCache);
 
+      // A line which wraps, followed by a br, followed by another line.
+      testTextAtOffset([ "brAfterWrapped" ], BOUNDARY_LINE_START,
+                       [ [0, 1, "a ", 0, 2],
+                         [2, 3, "b\n", 2, 4],
+                         [4, 5, "c", 4, 5] ]);
+
       SimpleTest.finish();
     }
 
@@ -366,5 +372,6 @@ two words
 <span>Line 4<br/>
 </span></div><!-- OK to indent again -->
   <div id="displayContents">a<ul style="display: contents;"><li style="display: contents;"></li></ul>b</div>
+  <div id="brAfterWrapped" style="width: 10px;">a b<br>c</div>
 </body>
 </html>

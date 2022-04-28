@@ -159,7 +159,6 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
   if (!prevFrame) {
     return false;
   }
-  nsIFrame::GetLastLeaf(&prevFrame);
   auto [thisBlock, thisLineFrame] = thisFrame->GetContainingBlockForLine(
       /* aLockScroll */ false);
   if (!thisBlock) {
@@ -167,6 +166,10 @@ static bool IsLocalAccAtLineStart(LocalAccessible* aAcc) {
     // play it safe and assume this is the beginning of a new line.
     return true;
   }
+  nsIFrame::GetLastLeaf(&prevFrame);
+  // The previous leaf might cross lines. We want to compare against the last
+  // line.
+  prevFrame = prevFrame->LastContinuation();
   auto [prevBlock, prevLineFrame] = prevFrame->GetContainingBlockForLine(
       /* aLockScroll */ false);
   if (thisBlock != prevBlock) {
