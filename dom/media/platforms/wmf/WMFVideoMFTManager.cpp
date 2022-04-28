@@ -9,18 +9,13 @@
 #include <psapi.h>
 #include <winsdkver.h>
 #include <algorithm>
-#ifdef MOZ_AV1
-#  include "AOMDecoder.h"
-#endif
 #include "DXVA2Manager.h"
 #include "GMPUtils.h"  // For SplitAt. TODO: Move SplitAt to a central place.
 #include "IMFYCbCrImage.h"
 #include "ImageContainer.h"
 #include "Layers.h"
-#include "MP4Decoder.h"
 #include "MediaInfo.h"
 #include "MediaTelemetryConstants.h"
-#include "VPXDecoder.h"
 #include "VideoUtils.h"
 #include "WMFDecoderModule.h"
 #include "WMFUtils.h"
@@ -267,47 +262,6 @@ MediaResult WMFVideoMFTManager::ValidateVideoInfo() {
         }
       }
       break;
-    case WMFStreamType::VP9:
-      if (mVideoInfo.mExtraData && !mVideoInfo.mExtraData->IsEmpty()) {
-        // Read VP codec configuration to allow us to fail before decoding an
-        // unsupported sample.
-        VPXDecoder::VPXStreamInfo vpxInfo;
-        VPXDecoder::ReadVPCCBox(vpxInfo, mVideoInfo.mExtraData);
-
-        // Check for VPX MFT's supported profiles.
-        if (vpxInfo.mProfile != 0 && vpxInfo.mProfile != 2) {
-          return MediaResult(
-              NS_ERROR_DOM_MEDIA_FATAL_ERR,
-              RESULT_DETAIL("Can only decode VP9 streams in profiles 0 or 2."));
-        }
-
-        // Profiles 0 and 2 should always use 4:2:0, but in case we somehow get
-        // a compatible profile with incompatible subsampling, fail here.
-        if (!vpxInfo.mSubSampling_x || !vpxInfo.mSubSampling_y) {
-          return MediaResult(
-              NS_ERROR_DOM_MEDIA_FATAL_ERR,
-              RESULT_DETAIL(
-                  "Can't decode VP9 stream encoded in YUV 4:2:2 or 4:4:4."));
-        }
-      }
-      break;
-#ifdef MOZ_AV1
-    case WMFStreamType::AV1:
-      if (mVideoInfo.mExtraData && !mVideoInfo.mExtraData->IsEmpty()) {
-        // Read AV1 codec configuration and check support for profiles and pixel
-        // formats.
-        AOMDecoder::AV1SequenceInfo av1Info;
-        bool hadSeqHdr;
-        AOMDecoder::ReadAV1CBox(mVideoInfo.mExtraData, av1Info, hadSeqHdr);
-
-        if (av1Info.mProfile != 0) {
-          return MediaResult(
-              NS_ERROR_DOM_MEDIA_FATAL_ERR,
-              RESULT_DETAIL("Can only decode AV1 streams in profile 0"));
-        }
-      }
-      break;
-#endif
     default:
       break;
   }
@@ -464,7 +418,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                   RESULT_DETAIL("Fail to get the output media type.")));
 
-  if (mUseHwAccel && !CanUseDXVA(inputType, outputType, mFramerate)) {
+  if (mUseHwAccel && !CanUseDXVA(inputType, outputType)) {
     LOG("DXVA manager determined that the input type was unsupported in "
         "hardware, retrying init without DXVA.");
     mDXVAEnabled = false;
@@ -552,7 +506,19 @@ WMFVideoMFTManager::SetDecoderMediaTypes() {
                            fpsDenominator);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  GUID outputSubType = mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
+  GUID outputSubType = [&]() {
+    switch (mVideoInfo.mColorDepth) {
+      case gfx::ColorDepth::COLOR_8:
+        return mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12;
+      case gfx::ColorDepth::COLOR_10:
+        return MFVideoFormat_P010;
+      case gfx::ColorDepth::COLOR_12:
+      case gfx::ColorDepth::COLOR_16:
+        return MFVideoFormat_P016;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected color depth");
+    }
+  }();
   hr = outputType->SetGUID(MF_MT_SUBTYPE, outputSubType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -580,16 +546,6 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
   if (!mDecoder) {
     // This can happen during shutdown.
     return E_FAIL;
-  }
-
-  if (mStreamType == WMFStreamType::VP9 && aSample->mKeyframe) {
-    // Check the VP9 profile. the VP9 MFT can only handle correctly profile 0
-    // and 2 (yuv420 8/10/12 bits)
-    int profile =
-        VPXDecoder::GetVP9Profile(Span(aSample->Data(), aSample->Size()));
-    if (profile != 0 && profile != 2) {
-      return E_FAIL;
-    }
   }
 
   RefPtr<IMFSample> inputSample;
@@ -629,16 +585,10 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
 // that new decoders are created if the resolution changes. Then we could move
 // this check into Init and consolidate the main thread blocking code.
 bool WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aInputType,
-                                    IMFMediaType* aOutputType,
-                                    float aFramerate) {
+                                    IMFMediaType* aOutputType) {
   MOZ_ASSERT(mDXVA2Manager);
-  // Check if we're able to use hardware decoding with H264 or AV1.
-  // TODO: Do the same for VPX, if the VPX MFT has a slow software fallback?
-  if (mStreamType == WMFStreamType::H264 || mStreamType == WMFStreamType::AV1) {
-    return mDXVA2Manager->SupportsConfig(aInputType, aOutputType, aFramerate);
-  }
-
-  return true;
+  // Check if we're able to use hardware decoding for the current codec config.
+  return mDXVA2Manager->SupportsConfig(mVideoInfo, aInputType, aOutputType);
 }
 
 TimeUnit WMFVideoMFTManager::GetSampleDurationOrLastKnownDuration(
