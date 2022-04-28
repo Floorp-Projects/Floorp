@@ -153,6 +153,7 @@ static const char kSdpFullString[] =
     "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
     "s=-\r\n"
     "t=0 0\r\n"
+    "a=extmap-allow-mixed\r\n"
     "a=msid-semantic: WMS local_stream_1\r\n"
     "m=audio 2345 RTP/SAVPF 111 103 104\r\n"
     "c=IN IP4 74.125.127.126\r\n"
@@ -223,6 +224,7 @@ static const char kSdpString[] =
     "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
     "s=-\r\n"
     "t=0 0\r\n"
+    "a=extmap-allow-mixed\r\n"
     "a=msid-semantic: WMS local_stream_1\r\n"
     "m=audio 9 RTP/SAVPF 111 103 104\r\n"
     "c=IN IP4 0.0.0.0\r\n"
@@ -373,6 +375,7 @@ static const char kBundleOnlySdpFullString[] =
     "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
     "s=-\r\n"
     "t=0 0\r\n"
+    "a=extmap-allow-mixed\r\n"
     "a=group:BUNDLE audio_content_name video_content_name\r\n"
     "a=msid-semantic: WMS local_stream_1\r\n"
     "m=audio 2345 RTP/SAVPF 111 103 104\r\n"
@@ -433,6 +436,7 @@ static const char kPlanBSdpFullString[] =
     "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
     "s=-\r\n"
     "t=0 0\r\n"
+    "a=extmap-allow-mixed\r\n"
     "a=msid-semantic: WMS local_stream_1 local_stream_2\r\n"
     "m=audio 2345 RTP/SAVPF 111 103 104\r\n"
     "c=IN IP4 74.125.127.126\r\n"
@@ -516,6 +520,7 @@ static const char kUnifiedPlanSdpFullString[] =
     "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
     "s=-\r\n"
     "t=0 0\r\n"
+    "a=extmap-allow-mixed\r\n"
     "a=msid-semantic: WMS local_stream_1\r\n"
     // Audio track 1, stream 1 (with candidates).
     "m=audio 2345 RTP/SAVPF 111 103 104\r\n"
@@ -628,6 +633,7 @@ static const char kUnifiedPlanSdpFullStringWithSpecialMsid[] =
     "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
     "s=-\r\n"
     "t=0 0\r\n"
+    "a=extmap-allow-mixed\r\n"
     "a=msid-semantic: WMS local_stream_1\r\n"
     // Audio track 1, with 1 stream id.
     "m=audio 2345 RTP/SAVPF 111 103 104\r\n"
@@ -2752,10 +2758,9 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutMsid) {
 TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithExtmapAllowMixed) {
   jdesc_.description()->set_extmap_allow_mixed(true);
   std::string sdp_with_extmap_allow_mixed = kSdpFullString;
-  InjectAfter("t=0 0\r\n", kExtmapAllowMixed, &sdp_with_extmap_allow_mixed);
   // Deserialize
   JsepSessionDescription jdesc_deserialized(kDummyType);
-  EXPECT_TRUE(SdpDeserialize(sdp_with_extmap_allow_mixed, &jdesc_deserialized));
+  ASSERT_TRUE(SdpDeserialize(sdp_with_extmap_allow_mixed, &jdesc_deserialized));
   // Verify
   EXPECT_TRUE(CompareSessionDescription(jdesc_, jdesc_deserialized));
 }
@@ -2763,9 +2768,10 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithExtmapAllowMixed) {
 TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutExtmapAllowMixed) {
   jdesc_.description()->set_extmap_allow_mixed(false);
   std::string sdp_without_extmap_allow_mixed = kSdpFullString;
+  Replace(kExtmapAllowMixed, "", &sdp_without_extmap_allow_mixed);
   // Deserialize
   JsepSessionDescription jdesc_deserialized(kDummyType);
-  EXPECT_TRUE(
+  ASSERT_TRUE(
       SdpDeserialize(sdp_without_extmap_allow_mixed, &jdesc_deserialized));
   // Verify
   EXPECT_TRUE(CompareSessionDescription(jdesc_, jdesc_deserialized));
