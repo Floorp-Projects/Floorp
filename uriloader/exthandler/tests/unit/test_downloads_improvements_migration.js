@@ -95,8 +95,8 @@ add_task(async function test_migration_pref_enabled() {
         mimeTypes: ["application/pdf"],
       },
       {
-        extension: "svg",
-        mimeTypes: ["image/svg+xml"],
+        extension: "webp",
+        mimeTypes: ["image/webp"],
       },
     ];
 
@@ -133,14 +133,14 @@ add_task(async function test_migration_pref_enabled() {
   );
   pdfHandlerInfo.preferredAction = Ci.nsIHandlerInfo.alwaysAsk;
   pdfHandlerInfo.alwaysAskBeforeHandling = true;
-  // SVG file
-  let svgHandlerInfo = mimeSvc.getFromTypeAndExtension("image/svg+xml", "svg");
-  svgHandlerInfo.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
-  svgHandlerInfo.alwaysAskBeforeHandling = false;
+  // WebP file
+  let webpHandlerInfo = mimeSvc.getFromTypeAndExtension("image/webp", "webp");
+  webpHandlerInfo.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+  webpHandlerInfo.alwaysAskBeforeHandling = false;
 
   handlerSvc.store(txtHandlerInfo);
   handlerSvc.store(pdfHandlerInfo);
-  handlerSvc.store(svgHandlerInfo);
+  handlerSvc.store(webpHandlerInfo);
 
   Services.prefs.setBoolPref(
     "browser.download.improvements_to_download_panel",
@@ -150,7 +150,7 @@ add_task(async function test_migration_pref_enabled() {
 
   txtHandlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", "txt");
   pdfHandlerInfo = mimeSvc.getFromTypeAndExtension("application/pdf", "pdf");
-  svgHandlerInfo = mimeSvc.getFromTypeAndExtension("image/svg+xml", "svg");
+  webpHandlerInfo = mimeSvc.getFromTypeAndExtension("image/webp", "webp");
   let data = gHandlerService.wrappedJSObject._store.data;
   Assert.equal(
     data.isDownloadsImprovementsAlreadyMigrated,
@@ -168,14 +168,14 @@ add_task(async function test_migration_pref_enabled() {
     "application/pdf - alwaysAskBeforeHandling should be false"
   );
   Assert.equal(
-    svgHandlerInfo.preferredAction,
+    webpHandlerInfo.preferredAction,
     Ci.nsIHandlerInfo.useSystemDefault,
-    "image/svg+xml - preferredAction should be useSystemDefault"
+    "image/webp - preferredAction should be useSystemDefault"
   );
   Assert.equal(
-    pdfHandlerInfo.alwaysAskBeforeHandling,
+    webpHandlerInfo.alwaysAskBeforeHandling,
     false,
-    "image/svg+xml - alwaysAskBeforeHandling should be false"
+    "image/webp - alwaysAskBeforeHandling should be false"
   );
   Assert.equal(
     txtHandlerInfo.preferredAction,
@@ -247,5 +247,80 @@ add_task(async function test_migration_pref_enabled_already_run() {
     txtHandlerInfo.alwaysAskBeforeHandling,
     true,
     "text/plain - alwaysAskBeforeHandling should be true"
+  );
+});
+
+/**
+ * Test migration of SVG and XML info.
+ */
+add_task(async function test_migration_pref_enabled_xml_svg() {
+  registerCleanupFunction(async function() {
+    Services.prefs.clearUserPref(
+      "browser.download.improvements_to_download_panel"
+    );
+  });
+
+  Services.prefs.setBoolPref(
+    "browser.download.improvements_to_download_panel",
+    true
+  );
+  let data = gHandlerService.wrappedJSObject._store.data;
+  // Plain text file
+  let txtHandlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", "txt");
+  txtHandlerInfo.preferredAction = Ci.nsIHandlerInfo.alwaysAsk;
+  txtHandlerInfo.alwaysAskBeforeHandling = true;
+  // SVG file
+  let svgHandlerInfo = mimeSvc.getFromTypeAndExtension("image/svg+xml", "svg");
+  svgHandlerInfo.preferredAction = Ci.nsIHandlerInfo.handleInternally;
+  svgHandlerInfo.alwaysAskBeforeHandling = false;
+  // XML file
+  let xmlHandlerInfo = mimeSvc.getFromTypeAndExtension("text/xml", "xml");
+  xmlHandlerInfo.preferredAction = Ci.nsIHandlerInfo.handleInternally;
+  xmlHandlerInfo.alwaysAskBeforeHandling = false;
+
+  handlerSvc.store(txtHandlerInfo);
+  handlerSvc.store(svgHandlerInfo);
+  handlerSvc.store(xmlHandlerInfo);
+
+  gHandlerService.wrappedJSObject._migrateSVGXMLIfNeeded();
+
+  txtHandlerInfo = mimeSvc.getFromTypeAndExtension("text/plain", "txt");
+  svgHandlerInfo = mimeSvc.getFromTypeAndExtension("image/svg+xml", "svg");
+  xmlHandlerInfo = mimeSvc.getFromTypeAndExtension("text/xml", "xml");
+  data = gHandlerService.wrappedJSObject._store.data;
+  Assert.equal(
+    svgHandlerInfo.preferredAction,
+    Ci.nsIHandlerInfo.saveToDisk,
+    "image/svg+xml - preferredAction should be saveToDisk"
+  );
+  Assert.equal(
+    svgHandlerInfo.alwaysAskBeforeHandling,
+    false,
+    "image/svg+xml - alwaysAskBeforeHandling should be false"
+  );
+  Assert.equal(
+    xmlHandlerInfo.preferredAction,
+    Ci.nsIHandlerInfo.saveToDisk,
+    "text/xml - preferredAction should be saveToDisk"
+  );
+  Assert.equal(
+    xmlHandlerInfo.alwaysAskBeforeHandling,
+    false,
+    "text/xml - alwaysAskBeforeHandling should be false"
+  );
+  Assert.equal(
+    txtHandlerInfo.preferredAction,
+    Ci.nsIHandlerInfo.alwaysAsk,
+    "text/plain - preferredAction should be alwaysAsk"
+  );
+  Assert.equal(
+    txtHandlerInfo.alwaysAskBeforeHandling,
+    true,
+    "text/plain - alwaysAskBeforeHandling should be true"
+  );
+
+  ok(
+    data.isSVGXMLAlreadyMigrated,
+    "Should have stored migration state on the data object."
   );
 });
