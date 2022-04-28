@@ -290,9 +290,9 @@ function compare_remote_settings_files {
   # 1. List remote settings collections from server.
   echo "INFO: fetch remote settings list from server"
   ${WGET} -qO- "${REMOTE_SETTINGS_SERVER}/buckets/monitor/collections/changes/records" |\
-    ${JQ} -r '.data[] | .bucket+"/"+.collection' |\
-    # 2. For each entry ${bucket, collection}
-  while IFS="/" read -r bucket collection; do
+    ${JQ} -r '.data[] | .bucket+"/"+.collection+"/"+(.last_modified|tostring)' |\
+    # 2. For each entry ${bucket, collection, last_modified}
+  while IFS="/" read -r bucket collection last_modified; do
 
     # 3. Download the dump from HG into REMOTE_SETTINGS_INPUT folder
     hg_dump_url="${HGREPO}/raw-file/default${REMOTE_SETTINGS_DIR}/${bucket}/${collection}.json"
@@ -307,10 +307,10 @@ function compare_remote_settings_files {
     fi
 
     # 4. Download server version into REMOTE_SETTINGS_OUTPUT folder
-    remote_records_url="$REMOTE_SETTINGS_SERVER/buckets/${bucket}/collections/${collection}/records"
+    remote_records_url="$REMOTE_SETTINGS_SERVER/buckets/${bucket}/collections/${collection}/changeset?_expected=${last_modified}"
     local_location_output="$REMOTE_SETTINGS_OUTPUT/${bucket}/${collection}.json"
     mkdir -p "$REMOTE_SETTINGS_OUTPUT/${bucket}"
-    ${WGET} -qO- "$remote_records_url" | ${JQ} . > "${local_location_output}"
+    ${WGET} -qO- "$remote_records_url" | ${JQ} '{"data": .changes, "timestamp": .timestamp}' > "${local_location_output}"
 
     # 5. Download attachments if needed.
     if [ "${bucket}" = "blocklists" ] && [ "${collection}" = "addons-bloomfilters" ]; then
