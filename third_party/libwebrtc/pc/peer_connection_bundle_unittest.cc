@@ -755,7 +755,7 @@ TEST_P(PeerConnectionBundleTest, RejectDescriptionChangingBundleTag) {
 // (https://bugs.chromium.org/p/chromium/issues/detail?id=827917)
 TEST_P(PeerConnectionBundleTest, RemovingContentAndRejectBundleGroup) {
   RTCConfiguration config;
-#ifndef HAVE_SCTP
+#ifndef WEBRTC_HAVE_SCTP
   config.enable_rtp_data_channel = true;
 #endif
   config.bundle_policy = BundlePolicy::kBundlePolicyMaxBundle;

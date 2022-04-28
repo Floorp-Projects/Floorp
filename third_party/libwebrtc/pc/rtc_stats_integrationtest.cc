@@ -1091,7 +1091,7 @@ class RTCStatsReportVerifier {
   rtc::scoped_refptr<const RTCStatsReport> report_;
 };
 
-#ifdef HAVE_SCTP
+#ifdef WEBRTC_HAVE_SCTP
 TEST_F(RTCStatsIntegrationTest, GetStatsFromCaller) {
   StartCall();
 
@@ -1254,7 +1254,7 @@ TEST_F(RTCStatsIntegrationTest, GetStatsReferencedIds) {
     }
   }
 }
-#endif  // HAVE_SCTP
+#endif  // WEBRTC_HAVE_SCTP
 
 }  // namespace
 

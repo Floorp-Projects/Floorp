@@ -19,7 +19,7 @@ group("pc") {
 config("rtc_pc_config") {
   defines = []
   if (rtc_enable_sctp) {
-    defines += [ "HAVE_SCTP" ]
+    defines += [ "WEBRTC_HAVE_SCTP" ]
   }
 }
 
@@ -1031,7 +1031,7 @@ if (rtc_include_tests) {
     ]
 
     if (rtc_enable_sctp) {
-      defines = [ "HAVE_SCTP" ]
+      defines = [ "WEBRTC_HAVE_SCTP" ]
     }
 
     deps = [

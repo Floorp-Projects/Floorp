@@ -264,7 +264,7 @@ config("common_config") {
   }
 
   if (rtc_enable_sctp) {
-    defines += [ "HAVE_SCTP" ]
+    defines += [ "WEBRTC_HAVE_SCTP" ]
   }
 
   if (rtc_enable_external_auth) {
