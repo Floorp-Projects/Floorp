@@ -35,8 +35,7 @@ class nsIOutputStream;
 class nsIRequestContext;
 class nsISVCBRecord;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 class HTTPSRecordResolver;
 class nsHttpChunkedDecoder;
@@ -167,7 +166,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo);
 
-  void SetClassOfService(ClassOfServiceStruct cos);
+  void SetClassOfService(ClassOfService cos);
 
   virtual nsresult OnHTTPSRRAvailable(
       nsIDNSHTTPSSVCRecord* aHTTPSSVCRecord,
@@ -486,7 +485,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void CollectTelemetryForUploads();
 
  public:
-  ClassOfServiceStruct ClassOfService() {
+  ClassOfService GetClassOfService() {
     return {mClassOfServiceFlags, mClassOfServiceIncremental};
   }
 
@@ -566,7 +565,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCString mHashKeyOfConnectionEntry;
 };
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // nsHttpTransaction_h__

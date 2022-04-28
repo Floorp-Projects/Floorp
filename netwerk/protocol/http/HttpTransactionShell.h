@@ -21,8 +21,7 @@ class nsIRequest;
 class nsIRequestContext;
 class nsITransportEventSink;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 enum HttpTrafficCategory : uint8_t;
 class Http2PushedStreamWrapper;
@@ -82,7 +81,7 @@ class HttpTransactionShell : public nsISupports {
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,
       nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
-      ClassOfServiceStruct classOfService, uint32_t initialRwin,
+      ClassOfService classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,
       TransactionObserverFunc&& transactionObserver,
       OnPushCallback&& aOnPushCallback,
@@ -174,7 +173,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,        \
       nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,         \
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
-      ClassOfServiceStruct classOfService, uint32_t initialRwin,               \
+      ClassOfService classOfService, uint32_t initialRwin,                     \
       bool responseTimeoutEnabled, uint64_t channelId,                         \
       TransactionObserverFunc&& transactionObserver,                           \
       OnPushCallback&& aOnPushCallback,                                        \
@@ -223,7 +222,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
   virtual bool Http3Disabled() const override;                                 \
   virtual already_AddRefed<nsHttpConnectionInfo> GetConnInfo() const override; \
   virtual bool GetSupportsHTTP3() override;
-}  // namespace net
-}  // namespace mozilla
+
+}  // namespace mozilla::net
 
 #endif  // HttpTransactionShell_h__

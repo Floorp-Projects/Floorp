@@ -504,7 +504,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
         const dom::ReplacementChannelConfigInit& aInit);
 
     uint32_t redirectFlags = 0;
-    ClassOfServiceStruct classOfService = {0, false};
+    ClassOfService classOfService = {0, false};
     Maybe<bool> privateBrowsing = Nothing();
     Maybe<nsCString> method;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
@@ -776,7 +776,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   uint32_t mLoadFlags;
   uint32_t mCaps;
 
-  ClassOfServiceStruct mClassOfService;
+  ClassOfService mClassOfService;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields1, 32, (

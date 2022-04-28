@@ -46,8 +46,7 @@ class nsIRequestContextService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 bool OnSocketThread();
 
@@ -271,8 +270,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   [[nodiscard]] nsresult RescheduleTransaction(HttpTransactionShell* trans,
                                                int32_t priority);
 
-  void UpdateClassOfServiceOnTransaction(
-      HttpTransactionShell* trans, const ClassOfServiceStruct& classOfService);
+  void UpdateClassOfServiceOnTransaction(HttpTransactionShell* trans,
+                                         const ClassOfService& classOfService);
 
   // Called to cancel a transaction, which may or may not be assigned to
   // a connection.  Callable from any thread.
@@ -892,7 +891,6 @@ class HSTSDataCallbackWrapper final {
   std::function<void(bool)> mCallback;
 };
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // nsHttpHandler_h__

@@ -1,16 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #ifndef __ClassOfService_h__
 #define __ClassOfService_h__
 
 #include "ipc/IPCMessageUtils.h"
-// namespace IPC {}
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
-class ClassOfServiceStruct {
+class ClassOfService {
  public:
-  ClassOfServiceStruct() : mClassFlags(0), mIncremental(false) {}
-  ClassOfServiceStruct(unsigned long flags, bool incremental)
+  ClassOfService() : mClassFlags(0), mIncremental(false) {}
+  ClassOfService(unsigned long flags, bool incremental)
       : mClassFlags(flags), mIncremental(incremental) {}
 
   // class flags (priority)
@@ -24,31 +26,26 @@ class ClassOfServiceStruct {
  private:
   unsigned long mClassFlags;
   bool mIncremental;
-  friend IPC::ParamTraits<mozilla::net::ClassOfServiceStruct>;
-  friend bool operator==(const ClassOfServiceStruct& lhs,
-                         const ClassOfServiceStruct& rhs);
-  friend bool operator!=(const ClassOfServiceStruct& lhs,
-                         const ClassOfServiceStruct& rhs);
+  friend IPC::ParamTraits<mozilla::net::ClassOfService>;
+  friend bool operator==(const ClassOfService& lhs, const ClassOfService& rhs);
+  friend bool operator!=(const ClassOfService& lhs, const ClassOfService& rhs);
 };
 
-inline bool operator==(const ClassOfServiceStruct& lhs,
-                       const ClassOfServiceStruct& rhs) {
+inline bool operator==(const ClassOfService& lhs, const ClassOfService& rhs) {
   return lhs.mClassFlags == rhs.mClassFlags &&
          lhs.mIncremental == rhs.mIncremental;
 }
 
-inline bool operator!=(const ClassOfServiceStruct& lhs,
-                       const ClassOfServiceStruct& rhs) {
+inline bool operator!=(const ClassOfService& lhs, const ClassOfService& rhs) {
   return !(lhs == rhs);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 namespace IPC {
 template <>
-struct ParamTraits<mozilla::net::ClassOfServiceStruct> {
-  typedef mozilla::net::ClassOfServiceStruct paramType;
+struct ParamTraits<mozilla::net::ClassOfService> {
+  typedef mozilla::net::ClassOfService paramType;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mClassFlags);
