@@ -1366,6 +1366,8 @@ class PictureInPictureChild extends JSWindowActorChild {
     this.setActiveTextTrack(originatingVideo.textTracks);
 
     if (!this._currentWebVTTTrack) {
+      // If WebVTT track is invalid, try using a video wrapper
+      this.setUpCaptionChangeListener(originatingVideo);
       return;
     }
 
@@ -1787,7 +1789,7 @@ class PictureInPictureChild extends JSWindowActorChild {
     for (let i = 0; i < textTrackList.length; i++) {
       let track = textTrackList[i];
       let isCCText = track.kind === "subtitles" || track.kind === "captions";
-      if (isCCText && track.mode === "showing") {
+      if (isCCText && track.mode === "showing" && track.cues) {
         this._currentWebVTTTrack = track;
         break;
       }
