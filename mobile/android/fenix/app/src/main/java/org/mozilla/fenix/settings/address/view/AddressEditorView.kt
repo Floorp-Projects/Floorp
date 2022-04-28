@@ -23,7 +23,7 @@ class AddressEditorView(
      * Binds the view.
      */
     fun bind() {
-        binding.fullNameInput.apply {
+        binding.firstNameInput.apply {
             requestFocus()
             placeCursorAtEnd()
             showKeyboard()
@@ -43,9 +43,9 @@ class AddressEditorView(
 
         interactor.onSaveAddress(
             UpdatableAddressFields(
-                givenName = binding.fullNameInput.text.toString(),
-                additionalName = "",
-                familyName = "",
+                givenName = binding.firstNameInput.text.toString(),
+                additionalName = binding.middleNameInput.text.toString(),
+                familyName = binding.lastNameInput.text.toString(),
                 organization = "",
                 streetAddress = binding.streetAddressInput.text.toString(),
                 addressLevel3 = "",

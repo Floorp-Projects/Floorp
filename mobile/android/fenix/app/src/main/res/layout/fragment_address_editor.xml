@@ -14,25 +14,25 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp">
 
-        <!-- Full Name -->
+        <!-- First Name -->
         <TextView
-            android:id="@+id/full_name_title"
+            android:id="@+id/first_name_title"
             android:layout_width="wrap_content"
             android:layout_height="16dp"
             android:gravity="center_vertical"
+            android:labelFor="@id/first_name_input"
             android:letterSpacing="0.05"
             android:paddingStart="3dp"
             android:paddingEnd="0dp"
-            android:text="@string/addresses_full_name"
+            android:text="@string/addresses_first_name"
             android:textColor="?attr/textPrimary"
             android:textSize="12sp"
-            android:labelFor="@id/card_number_input"
             app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/full_name_layout"
+            android:id="@+id/first_name_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="?attr/textPrimary"
@@ -40,10 +40,98 @@
             app:hintEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/full_name_title">
+            app:layout_constraintTop_toBottomOf="@+id/first_name_title">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/full_name_input"
+                android:id="@+id/first_name_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Middle Name -->
+        <TextView
+            android:id="@+id/middle_name_title"
+            android:layout_width="wrap_content"
+            android:layout_height="16dp"
+            android:gravity="center_vertical"
+            android:labelFor="@id/middle_name_input"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_middle_name"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/first_name_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/middle_name_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:errorEnabled="true"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/middle_name_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/middle_name_input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:imeOptions="flagNoExtractUi"
+                android:letterSpacing="0.01"
+                android:lineSpacingExtra="8sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="?attr/textPrimary"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Last Name -->
+        <TextView
+            android:id="@+id/last_name_title"
+            android:layout_width="wrap_content"
+            android:layout_height="16dp"
+            android:gravity="center_vertical"
+            android:labelFor="@id/last_name_input"
+            android:letterSpacing="0.05"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/addresses_last_name"
+            android:textColor="?attr/textPrimary"
+            android:textSize="12sp"
+            app:fontFamily="@font/metropolis_semibold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/middle_name_layout" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/last_name_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            app:errorEnabled="true"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/last_name_title">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/last_name_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
@@ -74,7 +162,7 @@
             android:labelFor="@id/street_address_input"
             app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/full_name_layout" />
+            app:layout_constraintTop_toBottomOf="@+id/last_name_layout" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/street_address_layout"

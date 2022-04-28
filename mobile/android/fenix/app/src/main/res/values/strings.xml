@@ -1549,7 +1549,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Manage addresses</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Full Name</string>
+    <string name="addresses_full_name" moz:removedIn="102" tools:ignore="UnusedResources">Full Name</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">First Name</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Middle Name</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Last Name</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Street Address</string>
     <!-- The header for the city of an address -->
