@@ -36,10 +36,10 @@
 #include "pc/rtp_transport.h"
 #include "pc/srtp_filter.h"
 #include "pc/srtp_transport.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/network.h"
 #include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
@@ -325,7 +325,7 @@ class BaseChannel : public ChannelInterface,
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
   rtc::Thread* const signaling_thread_;
-  rtc::AsyncInvoker invoker_;
+  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_;
   sigslot::signal1<ChannelInterface*> SignalFirstPacketReceived_
       RTC_GUARDED_BY(signaling_thread_);
   sigslot::signal1<const rtc::SentPacket&> SignalSentPacket_
