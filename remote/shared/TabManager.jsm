@@ -13,6 +13,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.jsm",
 });
 
@@ -270,5 +271,11 @@ var TabManager = {
   selectTab(tab) {
     const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
     tabBrowser.selectedTab = tab;
+  },
+
+  supportsTabs() {
+    // TODO: Only Firefox supports adding tabs at the moment.
+    // Geckoview support should be added via Bug 1506782.
+    return AppInfo.name === "Firefox";
   },
 };
