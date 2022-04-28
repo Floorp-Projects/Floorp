@@ -257,6 +257,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">주소 표시줄에서 직접 검색</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">검색 설정</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox의 새 기능</string>
@@ -807,6 +810,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">기록 없음</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">다른 기기에서 동기화됨</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">다른 기기에서</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">다운로드 삭제됨</string>
@@ -1216,6 +1224,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">탐색 데이터 삭제 중…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">모든 항목이 삭제됩니다.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">취소</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">삭제</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">그룹 삭제됨</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview는 이제 Firefox Nightly입니다</string>
@@ -1569,7 +1586,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">로그인 정렬 메뉴</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">자동 채우기</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">주소</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">신용 카드</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1585,6 +1606,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">저장된 카드 관리</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">주소 추가</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">주소 관리</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">카드 추가</string>
     <!-- Title of the "Edit card" screen -->
@@ -1638,6 +1663,31 @@
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">저장된 신용 카드 정보를 사용하려면 잠금 해제</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">주소 추가</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">주소 관리</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">이름</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">도로 주소</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">도시</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">주</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">우편 번호</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">전화</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">이메일</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">저장</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">취소</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">주소 삭제</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">검색 엔진 추가</string>
