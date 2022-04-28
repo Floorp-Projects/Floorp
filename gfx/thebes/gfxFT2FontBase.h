@@ -14,18 +14,13 @@
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
 
+class gfxFT2FontBase;
+
 class gfxFT2FontEntryBase : public gfxFontEntry {
  public:
   explicit gfxFT2FontEntryBase(const nsACString& aName) : gfxFontEntry(aName) {}
 
-  struct CmapCacheSlot {
-    CmapCacheSlot() : mCharCode(0), mGlyphIndex(0) {}
-
-    uint32_t mCharCode;
-    uint32_t mGlyphIndex;
-  };
-
-  CmapCacheSlot* GetCmapCacheSlot(uint32_t aCharCode);
+  uint32_t GetGlyph(uint32_t aCharCode, gfxFT2FontBase* aFont);
 
   static bool FaceHasTable(mozilla::gfx::SharedFTFace*, uint32_t aTableTag);
   static nsresult CopyFaceTable(mozilla::gfx::SharedFTFace*, uint32_t aTableTag,
@@ -34,7 +29,14 @@ class gfxFT2FontEntryBase : public gfxFontEntry {
  private:
   enum { kNumCmapCacheSlots = 256 };
 
-  mozilla::UniquePtr<CmapCacheSlot[]> mCmapCache;
+  struct CmapCacheSlot {
+    CmapCacheSlot() : mCharCode(0), mGlyphIndex(0) {}
+
+    uint32_t mCharCode;
+    uint32_t mGlyphIndex;
+  };
+
+  mozilla::UniquePtr<CmapCacheSlot[]> mCmapCache GUARDED_BY(mLock);
 };
 
 class gfxFT2FontBase : public gfxFont {
@@ -45,12 +47,20 @@ class gfxFT2FontBase : public gfxFont {
       const gfxFontStyle* aFontStyle, int aLoadFlags, bool aEmbolden);
   virtual ~gfxFT2FontBase();
 
-  uint32_t GetGlyph(uint32_t aCharCode);
+  uint32_t GetGlyph(uint32_t aCharCode) {
+    auto* entry = static_cast<gfxFT2FontEntryBase*>(mFontEntry.get());
+    return entry->GetGlyph(aCharCode, this);
+  }
+
   bool ProvidesGetGlyph() const override { return true; }
   virtual uint32_t GetGlyph(uint32_t unicode,
                             uint32_t variation_selector) override;
+
   bool ProvidesGlyphWidths() const override { return true; }
-  int32_t GetGlyphWidth(uint16_t aGID) override;
+  int32_t GetGlyphWidth(uint16_t aGID) override {
+    return GetCachedGlyphMetrics(aGID).mAdvance;
+  }
+
   bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds,
                       bool aTight) const override;
 
