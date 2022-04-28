@@ -302,9 +302,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
 already_AddRefed<Promise> DOMLocalization::TranslateElements(
     const Sequence<OwningNonNull<Element>>& aElements,
     nsXULPrototypeDocument* aProto, ErrorResult& aRv) {
-  JS::RootingContext* rcx = RootingCx();
   Sequence<OwningUTF8StringOrL10nIdArgs> l10nKeys;
-  SequenceRooter<OwningUTF8StringOrL10nIdArgs> rooter(rcx, &l10nKeys);
   RefPtr<ElementTranslationHandler> nativeHandler =
       new ElementTranslationHandler(this, aProto);
   nsTArray<nsCOMPtr<Element>>& domElements = nativeHandler->Elements();
