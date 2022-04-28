@@ -784,6 +784,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing: https://github.com/mozilla-mobile/fenix/issues/24994")
     @Test
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
     fun deleteNonEmptyBookmarkFolderTest() {
