@@ -70,12 +70,6 @@ class RTC_EXPORT VideoDecoder {
 
   virtual DecoderInfo GetDecoderInfo() const;
 
-  // Deprecated, use GetDecoderInfo().prefers_late_decoding instead.
-  // Returns true if the decoder prefer to decode frames late.
-  // That is, it can not decode infinite number of frames before the decoded
-  // frame is consumed.
-  // TODO(bugs.webrtc.org/12271): Remove when downstream has been updated.
-  virtual bool PrefersLateDecoding() const;
   // Deprecated, use GetDecoderInfo().implementation_name instead.
   virtual const char* ImplementationName() const;
 };
