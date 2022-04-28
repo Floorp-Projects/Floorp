@@ -283,6 +283,8 @@ if (rtc_include_tests) {
       ":probe_controller",
       ":pushback_controller",
       "../../../api/rtc_event_log",
+      "../../../api/test/network_emulation",
+      "../../../api/test/network_emulation:create_cross_traffic",
       "../../../api/transport:field_trial_based_config",
       "../../../api/transport:goog_cc",
       "../../../api/transport:network_control",

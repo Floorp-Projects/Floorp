@@ -46,6 +46,8 @@ if (rtc_include_tests) {
     sources = [ "receive_side_congestion_controller_unittest.cc" ]
     deps = [
       ":congestion_controller",
+      "../../api/test/network_emulation",
+      "../../api/test/network_emulation:create_cross_traffic",
       "../../system_wrappers",
       "../../test:test_support",
       "../../test/scenario",

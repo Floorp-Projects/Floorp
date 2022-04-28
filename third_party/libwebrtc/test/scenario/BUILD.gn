@@ -174,6 +174,8 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":scenario",
+      "../../api/test/network_emulation",
+      "../../api/test/network_emulation:create_cross_traffic",
       "../../logging:mocks",
       "../../rtc_base:checks",
       "../../rtc_base:rtc_base_approved",

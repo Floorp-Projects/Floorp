@@ -10,6 +10,8 @@
 
 #include "modules/congestion_controller/include/receive_side_congestion_controller.h"
 
+#include "api/test/network_emulation/create_cross_traffic.h"
+#include "api/test/network_emulation/cross_traffic.h"
 #include "modules/pacing/packet_router.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gmock.h"
@@ -109,7 +111,9 @@ TEST(ReceiveSideCongestionControllerTest, IsFairToTCP) {
   VideoStreamConfig video;
   video.stream.packet_feedback = false;
   s.CreateVideoStream(route->forward(), video);
-  s.net()->StartFakeTcpCrossTraffic(send_net, ret_net, FakeTcpConfig());
+  s.net()->StartCrossTraffic(CreateFakeTcpCrossTraffic(
+      s.net()->CreateRoute(send_net), s.net()->CreateRoute(ret_net),
+      FakeTcpConfig()));
   s.RunFor(TimeDelta::Seconds(30));
   // For some reason we get outcompeted by TCP here, this should probably be
   // fixed and a lower bound should be added to the test.

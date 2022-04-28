@@ -12,6 +12,7 @@ rtc_library("emulated_network") {
   visibility = [
     ":*",
     "../../api:create_network_emulation_manager",
+    "../../api/test/network_emulation:create_cross_traffic",
   ]
   if (rtc_include_tests) {
     visibility += [
