@@ -196,11 +196,11 @@ const ONBOARDING_MESSAGES = () => [
     frequency: {
       custom: [
         {
-          cap: 1,
-          period: 604800000, // Max 1 per week
+          cap: 3,
+          period: 604800000, // Max 3 per week
         },
       ],
-      lifetime: 3,
+      lifetime: 12,
     },
     targeting: "!(region in [ 'DE', 'AT', 'CH'] && localeLanguageCode == 'en')",
   },
@@ -301,11 +301,11 @@ const ONBOARDING_MESSAGES = () => [
     frequency: {
       custom: [
         {
-          cap: 1,
-          period: 604800000, // Max 1 per week
+          cap: 3,
+          period: 604800000, // Max 3 per week
         },
       ],
-      lifetime: 3,
+      lifetime: 12,
     },
     targeting: "region in [ 'DE', 'AT', 'CH'] && localeLanguageCode == 'en'",
   },
