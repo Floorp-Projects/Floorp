@@ -2931,10 +2931,6 @@ TEST(AudioProcessing, GainController1ConfigEqual) {
   b_analog.clipped_level_min = a_analog.clipped_level_min;
   EXPECT_EQ(a, b);
 
-  Toggle(a_analog.enable_agc2_level_estimator);
-  b_analog.enable_agc2_level_estimator = a_analog.enable_agc2_level_estimator;
-  EXPECT_EQ(a, b);
-
   Toggle(a_analog.enable_digital_adaptive);
   b_analog.enable_digital_adaptive = a_analog.enable_digital_adaptive;
   EXPECT_EQ(a, b);
@@ -2988,10 +2984,6 @@ TEST(AudioProcessing, GainController1ConfigNotEqual) {
   a_analog.clipped_level_min++;
   EXPECT_NE(a, b);
   a_analog.clipped_level_min = b_analog.clipped_level_min;
-
-  Toggle(a_analog.enable_agc2_level_estimator);
-  EXPECT_NE(a, b);
-  a_analog.enable_agc2_level_estimator = b_analog.enable_agc2_level_estimator;
 
   Toggle(a_analog.enable_digital_adaptive);
   EXPECT_NE(a, b);

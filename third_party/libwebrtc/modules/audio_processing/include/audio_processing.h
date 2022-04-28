@@ -71,32 +71,13 @@ static constexpr int kClippedLevelMin = 70;
 struct ExperimentalAgc {
   ExperimentalAgc() = default;
   explicit ExperimentalAgc(bool enabled) : enabled(enabled) {}
-  ExperimentalAgc(bool enabled,
-                  bool enabled_agc2_level_estimator,
-                  bool digital_adaptive_disabled)
-      : enabled(enabled),
-        enabled_agc2_level_estimator(enabled_agc2_level_estimator),
-        digital_adaptive_disabled(digital_adaptive_disabled) {}
-  // Deprecated constructor: will be removed.
-  ExperimentalAgc(bool enabled,
-                  bool enabled_agc2_level_estimator,
-                  bool digital_adaptive_disabled,
-                  bool analyze_before_aec)
-      : enabled(enabled),
-        enabled_agc2_level_estimator(enabled_agc2_level_estimator),
-        digital_adaptive_disabled(digital_adaptive_disabled) {}
   ExperimentalAgc(bool enabled, int startup_min_volume)
       : enabled(enabled), startup_min_volume(startup_min_volume) {}
-  ExperimentalAgc(bool enabled, int startup_min_volume, int clipped_level_min)
-      : enabled(enabled),
-        startup_min_volume(startup_min_volume),
-        clipped_level_min(clipped_level_min) {}
   static const ConfigOptionID identifier = ConfigOptionID::kExperimentalAgc;
   bool enabled = true;
   int startup_min_volume = kAgcStartupMinVolume;
   // Lowest microphone level that will be applied in response to clipping.
   int clipped_level_min = kClippedLevelMin;
-  bool enabled_agc2_level_estimator = false;
   bool digital_adaptive_disabled = false;
 };
 
@@ -330,7 +311,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         // Lowest analog microphone level that will be applied in response to
         // clipping.
         int clipped_level_min = kClippedLevelMin;
-        bool enable_agc2_level_estimator = false;
         bool enable_digital_adaptive = true;
       } analog_gain_controller;
     } gain_controller1;

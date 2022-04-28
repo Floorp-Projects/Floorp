@@ -38,7 +38,6 @@ class AgcManagerDirect final {
   AgcManagerDirect(int num_capture_channels,
                    int startup_min_level,
                    int clipped_level_min,
-                   bool use_agc2_level_estimation,
                    bool disable_digital_adaptive,
                    int sample_rate_hz);
 
@@ -73,6 +72,16 @@ class AgcManagerDirect final {
                            DisableDigitalDisablesDigital);
   FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
                            AgcMinMicLevelExperiment);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+                           AgcMinMicLevelExperimentDisabled);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+                           AgcMinMicLevelExperimentOutOfRangeAbove);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+                           AgcMinMicLevelExperimentOutOfRangeBelow);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+                           AgcMinMicLevelExperimentEnabled50);
+  FRIEND_TEST_ALL_PREFIXES(AgcManagerDirectStandaloneTest,
+                           AgcMinMicLevelExperimentEnabledAboveStartupLevel);
 
   // Dependency injection for testing. Don't delete |agc| as the memory is owned
   // by the manager.
@@ -106,7 +115,6 @@ class MonoAgc {
   MonoAgc(ApmDataDumper* data_dumper,
           int startup_min_level,
           int clipped_level_min,
-          bool use_agc2_level_estimation,
           bool disable_digital_adaptive,
           int min_mic_level);
   ~MonoAgc();

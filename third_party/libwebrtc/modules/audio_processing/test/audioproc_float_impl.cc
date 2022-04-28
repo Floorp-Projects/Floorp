@@ -125,11 +125,6 @@ ABSL_FLAG(int,
           "Force-deactivate (1) digital adaptation in "
           "experimental AGC. Digital adaptation is active by default (0).");
 ABSL_FLAG(int,
-          analog_agc_agc2_level_estimator,
-          kParameterNotSpecifiedValue,
-          "AGC2 level estimation"
-          " in the experimental AGC. AGC1 level estimation is the default (0)");
-ABSL_FLAG(int,
           agc_mode,
           kParameterNotSpecifiedValue,
           "Specify the AGC mode (0-2)");
@@ -387,8 +382,6 @@ SimulationSettings CreateSettings() {
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_le), &settings.use_le);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_analog_agc_disable_digital_adaptive),
                       &settings.analog_agc_disable_digital_adaptive);
-  SetSettingIfFlagSet(absl::GetFlag(FLAGS_analog_agc_agc2_level_estimator),
-                      &settings.use_analog_agc_agc2_level_estimator);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_agc_mode), &settings.agc_mode);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_agc_target_level),
                         &settings.agc_target_level);
