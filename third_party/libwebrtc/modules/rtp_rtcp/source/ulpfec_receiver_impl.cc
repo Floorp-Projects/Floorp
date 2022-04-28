@@ -37,12 +37,13 @@ UlpfecReceiverImpl::UlpfecReceiverImpl(
       fec_(ForwardErrorCorrection::CreateUlpfec(ssrc_)) {}
 
 UlpfecReceiverImpl::~UlpfecReceiverImpl() {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
   received_packets_.clear();
   fec_->ResetState(&recovered_packets_);
 }
 
 FecPacketCounter UlpfecReceiverImpl::GetPacketCounter() const {
-  MutexLock lock(&mutex_);
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
   return packet_counter_;
 }
 
@@ -77,6 +78,10 @@ FecPacketCounter UlpfecReceiverImpl::GetPacketCounter() const {
 bool UlpfecReceiverImpl::AddReceivedRedPacket(
     const RtpPacketReceived& rtp_packet,
     uint8_t ulpfec_payload_type) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  // TODO(bugs.webrtc.org/11993): We get here via Call::DeliverRtp, so should be
+  // moved to the network thread.
+
   if (rtp_packet.Ssrc() != ssrc_) {
     RTC_LOG(LS_WARNING)
         << "Received RED packet with different SSRC than expected; dropping.";
@@ -87,7 +92,6 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
                            "packet size; dropping.";
     return false;
   }
-  MutexLock lock(&mutex_);
 
   static constexpr uint8_t kRedHeaderLength = 1;
 
@@ -151,7 +155,7 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
 
 // TODO(nisse): Drop always-zero return value.
 int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
-  mutex_.Lock();
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   // If we iterate over |received_packets_| and it contains a packet that cause
   // us to recurse back to this function (for example a RED packet encapsulating
@@ -168,10 +172,8 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
     // Send received media packet to VCM.
     if (!received_packet->is_fec) {
       ForwardErrorCorrection::Packet* packet = received_packet->pkt;
-      mutex_.Unlock();
       recovered_packet_callback_->OnRecoveredPacket(packet->data.data(),
                                                     packet->data.size());
-      mutex_.Lock();
       // Create a packet with the buffer to modify it.
       RtpPacketReceived rtp_packet;
       const uint8_t* const original_data = packet->data.cdata();
@@ -208,13 +210,10 @@ int32_t UlpfecReceiverImpl::ProcessReceivedFec() {
     // Set this flag first; in case the recovered packet carries a RED
     // header, OnRecoveredPacket will recurse back here.
     recovered_packet->returned = true;
-    mutex_.Unlock();
     recovered_packet_callback_->OnRecoveredPacket(packet->data.data(),
                                                   packet->data.size());
-    mutex_.Lock();
   }
 
-  mutex_.Unlock();
   return 0;
 }
 
