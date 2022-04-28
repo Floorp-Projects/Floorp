@@ -1,13 +1,25 @@
 # [Android Components](../../../README.md) > Service > Pocket
 
 A library for easily getting Pocket recommendations that transparently handles downloading, caching and periodically refreshing Pocket data.
-Currently this supports Pocket recommended stories.
+
+Currently this supports:
+
+- Pocket recommended stories.
+- Pocket sponsored stories.
 
 ## Usage
-- Use PocketStoriesService#startPeriodicStoriesRefresh and PocketStoriesService#stopPeriodicStoriesRefresh
-as high up in the client app as possible (preferably in the Application object or in a single Activity) to ensure the
-background story refresh functionality works for the entirety of the app lifetime.
-- Use PocketStoriesService.getStories to get the current list of Pocket recommended stories.
+1. For Pocket recommended stories:
+    - Use `PocketStoriesService#startPeriodicStoriesRefresh` and `PocketStoriesService#stopPeriodicStoriesRefresh`
+      as high up in the client app as possible (preferably in the Application object or in a single Activity) to ensure the
+      background story refresh functionality works for the entirety of the app lifetime.
+    - Use `PocketStoriesService.getStories` to get the current list of Pocket recommended stories.
+
+2. For Pocket sponsored stories:
+    - Use `PocketStoriesService#startPeriodicSponsoredStoriesRefresh` and `PocketStoriesService#stopPeriodicSponsoredStoriesRefresh`
+      as high up in the client app as possible (preferably in the Application object or in a single Activity) to ensure the
+      background story refresh functionality works for the entirety of the app lifetime.
+    - Use `PocketStoriesService.getSponsoredStories` to get the current list of Pocket recommended stories.
+    - Use `PocketStoriesService.deleteProfile` to delete all server stored information about the device to which sponsored stories were previously downloaded. This may include data like network ip and application tokens.
 
 ### Setting up the dependency
 
