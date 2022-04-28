@@ -9,6 +9,8 @@
  */
 #include "modules/video_coding/svc/scalability_structure_l3t3.h"
 
+#include <vector>
+
 #include "modules/video_coding/svc/scalability_structure_test_helpers.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -42,6 +44,28 @@ TEST(ScalabilityStructureL3T3Test, SkipS1T1FrameKeepsStructureValid) {
   frames = wrapper.GenerateFrames(/*num_temporal_units=*/1);
   EXPECT_THAT(frames, SizeIs(2));
   EXPECT_EQ(frames[0].temporal_id, 2);
+}
+
+TEST(ScalabilityStructureL3T3Test, SkipT1FrameByEncoderKeepsReferencesValid) {
+  std::vector<GenericFrameInfo> frames;
+  ScalabilityStructureL3T3 structure;
+  ScalabilityStructureWrapper wrapper(structure);
+
+  // 1st 2 temporal units (T0 and T2)
+  wrapper.GenerateFrames(/*num_temporal_units=*/2, frames);
+  // Simulate T1 frame dropped by the encoder,
+  // i.e. retrieve config, but skip calling OnEncodeDone.
+  structure.NextFrameConfig(/*restart=*/false);
+  // one more temporal units (T2)
+  wrapper.GenerateFrames(/*num_temporal_units=*/1, frames);
+
+  ASSERT_THAT(frames, SizeIs(9));
+  EXPECT_EQ(frames[0].temporal_id, 0);
+  EXPECT_EQ(frames[3].temporal_id, 2);
+  // T1 frame was dropped by the encoder.
+  EXPECT_EQ(frames[6].temporal_id, 2);
+
+  EXPECT_TRUE(wrapper.FrameReferencesAreValid(frames));
 }
 
 TEST(ScalabilityStructureL3T3Test, SwitchSpatialLayerBeforeT1Frame) {

@@ -148,7 +148,6 @@ ScalabilityStructureKeySvc::T1Config() {
     config.Id(kDelta).S(sid).T(1).Reference(BufferIndex(sid, /*tid=*/0));
     if (num_temporal_layers_ > 2) {
       config.Update(BufferIndex(sid, /*tid=*/1));
-      can_reference_t1_frame_for_spatial_id_.set(sid);
     }
   }
   return configs;
@@ -223,6 +222,10 @@ ScalabilityStructureKeySvc::NextFrameConfig(bool restart) {
 
 GenericFrameInfo ScalabilityStructureKeySvc::OnEncodeDone(
     const LayerFrameConfig& config) {
+  if (config.TemporalId() == 1) {
+    can_reference_t1_frame_for_spatial_id_.set(config.SpatialId());
+  }
+
   GenericFrameInfo frame_info;
   frame_info.spatial_id = config.SpatialId();
   frame_info.temporal_id = config.TemporalId();

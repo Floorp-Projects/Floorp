@@ -52,6 +52,29 @@ TEST(ScalabilityStructureL3T3KeyTest,
 }
 
 TEST(ScalabilityStructureL3T3KeyTest,
+     SkipT1FrameByEncoderKeepsReferencesValid) {
+  std::vector<GenericFrameInfo> frames;
+  ScalabilityStructureL3T3Key structure;
+  ScalabilityStructureWrapper wrapper(structure);
+
+  // 1st 2 temporal units (T0 and T2)
+  wrapper.GenerateFrames(/*num_temporal_units=*/2, frames);
+  // Simulate T1 frame dropped by the encoder,
+  // i.e. retrieve config, but skip calling OnEncodeDone.
+  structure.NextFrameConfig(/*restart=*/false);
+  // one more temporal units (T2)
+  wrapper.GenerateFrames(/*num_temporal_units=*/1, frames);
+
+  ASSERT_THAT(frames, SizeIs(9));
+  EXPECT_EQ(frames[0].temporal_id, 0);
+  EXPECT_EQ(frames[3].temporal_id, 2);
+  // T1 frames were dropped by the encoder.
+  EXPECT_EQ(frames[6].temporal_id, 2);
+
+  EXPECT_TRUE(wrapper.FrameReferencesAreValid(frames));
+}
+
+TEST(ScalabilityStructureL3T3KeyTest,
      ReenablingSpatialLayerBeforeMissedT0FrameDoesntTriggerAKeyFrame) {
   ScalabilityStructureL3T3Key structure;
   ScalabilityStructureWrapper wrapper(structure);
