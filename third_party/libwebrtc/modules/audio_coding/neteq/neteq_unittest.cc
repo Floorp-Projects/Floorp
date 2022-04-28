@@ -84,16 +84,16 @@ TEST_F(NetEqDecodingTest, MAYBE_TestBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_universal_new", "rtp");
 
   const std::string output_checksum =
-      PlatformChecksum("68ec266d2d152dfc0d938484e7936f6af4f803e3",
-                       "1c243feb35e3e9ab37039eddf5b3c3ecfca3c60c", "not used",
-                       "68ec266d2d152dfc0d938484e7936f6af4f803e3",
-                       "f68c546a43bb25743297c9c0c9027e8424b8e10b");
+      PlatformChecksum("6c35140ce4d75874bdd60aa1872400b05fd05ca2",
+                       "ab451bb8301d9a92fbf4de91556b56f1ea38b4ce", "not used",
+                       "6c35140ce4d75874bdd60aa1872400b05fd05ca2",
+                       "64b46bb3c1165537a880ae8404afce2efba456c0");
 
   const std::string network_stats_checksum =
-      PlatformChecksum("2a5516cdc1c6af9f1d9d3c2f95ed292f509311c7",
-                       "e96a7f081ebc111f49c7373d3728274057012ae9", "not used",
-                       "2a5516cdc1c6af9f1d9d3c2f95ed292f509311c7",
-                       "2a5516cdc1c6af9f1d9d3c2f95ed292f509311c7");
+      PlatformChecksum("90594d85fa31d3d9584d79293bf7aa4ee55ed751",
+                       "77b9c3640b81aff6a38d69d07dd782d39c15321d", "not used",
+                       "90594d85fa31d3d9584d79293bf7aa4ee55ed751",
+                       "90594d85fa31d3d9584d79293bf7aa4ee55ed751");
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
@@ -110,18 +110,18 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_opus", "rtp");
 
   const std::string maybe_sse =
-      "554ad4133934e3920f97575579a46f674683d77c"
-      "|de316e2bfb15192edb820fe5fb579d11ff5a524b";
+      "c7887ff60eecf460332c6c7a28c81561f9e8a40f"
+      "|673dd422cfc174152536d3b13af64f9722520ab5";
   const std::string output_checksum = PlatformChecksum(
-      maybe_sse, "b3fac4ad4f6ea384aff676ee1ea816bd70415490",
-      "373ccd99c147cd3fcef0e7dcad6f87d0f8e5a1c0", maybe_sse, maybe_sse);
+      maybe_sse, "e39283dd61a89cead3786ef8642d2637cc447296",
+      "53d8073eb848b70974cba9e26424f4946508fd19", maybe_sse, maybe_sse);
 
   const std::string network_stats_checksum =
-      PlatformChecksum("ec29e047b019a86ec06e2c40643143dc1975c69f",
-                       "ce6f519bc1220b003944ac5d9db077665a06834e",
-                       "abb686d3ac6fac0001ca8d45a6ca6f5aefb2f9d6",
-                       "ec29e047b019a86ec06e2c40643143dc1975c69f",
-                       "ec29e047b019a86ec06e2c40643143dc1975c69f");
+      PlatformChecksum("c438bfa3b018f77691279eb9c63730569f54585c",
+                       "8a474ed0992591e0c84f593824bb05979c3de157",
+                       "9a05378dbf7e6edd56cdeb8ec45bcd6d8589623c",
+                       "c438bfa3b018f77691279eb9c63730569f54585c",
+                       "c438bfa3b018f77691279eb9c63730569f54585c");
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));
