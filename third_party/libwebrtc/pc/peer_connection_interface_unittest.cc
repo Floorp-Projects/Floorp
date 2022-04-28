@@ -2255,7 +2255,7 @@ TEST_P(PeerConnectionInterfaceTest, TestRejectRtpDataChannelInAnswer) {
   EXPECT_EQ(DataChannelInterface::kClosed, offer_channel->state());
 }
 
-#ifdef HAVE_SCTP
+#ifdef WEBRTC_HAVE_SCTP
 // This tests that SCTP data channels can be rejected in an answer.
 TEST_P(PeerConnectionInterfaceTest, TestRejectSctpDataChannelInAnswer)
 #else
@@ -2310,7 +2310,7 @@ TEST_P(PeerConnectionInterfaceTest, ReceiveFireFoxOffer) {
       cricket::GetFirstVideoContent(pc_->local_description()->description());
   ASSERT_TRUE(content != NULL);
   EXPECT_FALSE(content->rejected);
-#ifdef HAVE_SCTP
+#ifdef WEBRTC_HAVE_SCTP
   content =
       cricket::GetFirstDataContent(pc_->local_description()->description());
   ASSERT_TRUE(content != NULL);
@@ -3593,12 +3593,12 @@ TEST_F(PeerConnectionInterfaceTestPlanB,
 
 // Test that negotiation can succeed with a data channel only, and with the max
 // bundle policy. Previously there was a bug that prevented this.
-#ifdef HAVE_SCTP
+#ifdef WEBRTC_HAVE_SCTP
 TEST_P(PeerConnectionInterfaceTest, DataChannelOnlyOfferWithMaxBundlePolicy) {
 #else
 TEST_P(PeerConnectionInterfaceTest,
        DISABLED_DataChannelOnlyOfferWithMaxBundlePolicy) {
-#endif  // HAVE_SCTP
+#endif  // WEBRTC_HAVE_SCTP
   PeerConnectionInterface::RTCConfiguration config;
   config.bundle_policy = PeerConnectionInterface::kBundlePolicyMaxBundle;
   CreatePeerConnection(config);

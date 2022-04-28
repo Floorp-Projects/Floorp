@@ -63,7 +63,7 @@ std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
   if (factory) {
     return factory;
   }
-#ifdef HAVE_SCTP
+#ifdef WEBRTC_HAVE_SCTP
   return std::make_unique<cricket::SctpTransportFactory>(network_thread);
 #else
   return nullptr;

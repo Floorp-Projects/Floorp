@@ -1844,7 +1844,7 @@ TEST_F(PeerConnectionMsidSignalingTest, PureUnifiedPlanToUs) {
 
 class SdpFormatReceivedTest : public PeerConnectionRtpTestUnifiedPlan {};
 
-#ifdef HAVE_SCTP
+#ifdef WEBRTC_HAVE_SCTP
 TEST_F(SdpFormatReceivedTest, DataChannelOnlyIsReportedAsNoTracks) {
   auto caller = CreatePeerConnectionWithUnifiedPlan();
   caller->CreateDataChannel("dc");
@@ -1856,7 +1856,7 @@ TEST_F(SdpFormatReceivedTest, DataChannelOnlyIsReportedAsNoTracks) {
       metrics::Samples("WebRTC.PeerConnection.SdpFormatReceived"),
       ElementsAre(Pair(kSdpFormatReceivedNoTracks, 1)));
 }
-#endif  // HAVE_SCTP
+#endif  // WEBRTC_HAVE_SCTP
 
 TEST_F(SdpFormatReceivedTest, SimpleUnifiedPlanIsReportedAsSimple) {
   auto caller = CreatePeerConnectionWithUnifiedPlan();
