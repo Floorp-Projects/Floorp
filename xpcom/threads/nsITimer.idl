@@ -350,7 +350,6 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
                             const char* aNameString,
                             nsIEventTarget* aTarget = nullptr);
 
-#define NS_TIMER_CONTRACTID "@mozilla.org/timer;1"
 #define NS_TIMER_CALLBACK_TOPIC "timer-callback"
 
 #ifndef RELEASE_OR_BETA
