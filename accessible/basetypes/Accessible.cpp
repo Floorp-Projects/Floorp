@@ -6,6 +6,7 @@
 #include "Accessible.h"
 #include "AccGroupInfo.h"
 #include "ARIAMap.h"
+#include "nsAccUtils.h"
 #include "States.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
 #include "mozilla/Components.h"
@@ -94,6 +95,14 @@ bool Accessible::HasGenericType(AccGenericType aType) const {
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   return (mGenericTypes & aType) ||
          (roleMapEntry && roleMapEntry->IsOfType(aType));
+}
+
+LayoutDeviceIntSize Accessible::Size() const { return Bounds().Size(); }
+
+LayoutDeviceIntPoint Accessible::Position(uint32_t aCoordType) {
+  LayoutDeviceIntPoint point = Bounds().TopLeft();
+  nsAccUtils::ConvertScreenCoordsTo(&point.x, &point.y, aCoordType, this);
+  return point;
 }
 
 bool Accessible::IsTextRole() {

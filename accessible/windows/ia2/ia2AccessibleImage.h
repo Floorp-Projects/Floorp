@@ -43,9 +43,6 @@ class ia2AccessibleImage : public IAccessibleImage, public MsaaAccessible {
 
  protected:
   using MsaaAccessible::MsaaAccessible;
-
- private:
-  ImageAccessible* ImageAcc();
 };
 
 }  // namespace a11y
