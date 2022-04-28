@@ -61,6 +61,8 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
 
   void Stop() override {}
 
+  bool IsRunning() const override { return true; }
+
   Stats GetStats(bool get_and_clear_legacy_stats) const override {
     return mStats;
   }
