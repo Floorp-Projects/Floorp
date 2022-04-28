@@ -621,12 +621,8 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     absl::optional<CryptoOptions> crypto_options;
 
     // Configure if we should include the SDP attribute extmap-allow-mixed in
-    // our offer. Although we currently do support this, it's not included in
-    // our offer by default due to a previous bug that caused the SDP parser to
-    // abort parsing if this attribute was present. This is fixed in Chrome 71.
-    // TODO(webrtc:9985): Change default to true once sufficient time has
-    // passed.
-    bool offer_extmap_allow_mixed = false;
+    // our offer on session level.
+    bool offer_extmap_allow_mixed = true;
 
     // TURN logging identifier.
     // This identifier is added to a TURN allocation

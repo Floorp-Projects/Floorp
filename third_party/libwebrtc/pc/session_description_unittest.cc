@@ -17,7 +17,8 @@ namespace cricket {
 
 TEST(MediaContentDescriptionTest, ExtmapAllowMixedDefaultValue) {
   VideoContentDescription video_desc;
-  EXPECT_EQ(MediaContentDescription::kNo, video_desc.extmap_allow_mixed_enum());
+  EXPECT_EQ(MediaContentDescription::kMedia,
+            video_desc.extmap_allow_mixed_enum());
 }
 
 TEST(MediaContentDescriptionTest, SetExtmapAllowMixed) {
