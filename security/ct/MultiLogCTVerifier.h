@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace ct {
 
-void DecodeSCTs(pkix::Input encodedSctList,
+void DecodeSCTs(Input encodedSctList,
                 std::vector<SignedCertificateTimestamp>& decodedSCTs,
                 size_t& decodingErrors);
 

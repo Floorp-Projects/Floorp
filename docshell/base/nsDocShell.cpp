@@ -234,6 +234,7 @@
 #include "nsXULAppAPI.h"
 
 #include "ThirdPartyUtil.h"
+#include "BRNameMatchingPolicy.h"
 #include "GeckoProfiler.h"
 #include "mozilla/NullPrincipal.h"
 #include "Navigator.h"
@@ -6089,7 +6090,10 @@ already_AddRefed<nsIURI> nsDocShell::MaybeFixBadCertDomainErrorURI(
 
   // Check if adding a "www." prefix to the request's hostname will
   // cause the response's certificate to match.
-  rv1 = mozilla::pkix::CheckCertHostname(serverCertInput, newHostInput);
+  mozilla::psm::BRNameMatchingPolicy nameMatchingPolicy(
+      mozilla::psm::BRNameMatchingPolicy::Mode::Enforce);
+  rv1 = mozilla::pkix::CheckCertHostname(serverCertInput, newHostInput,
+                                         nameMatchingPolicy);
   if (rv1 != mozilla::pkix::Success) {
     return nullptr;
   }
