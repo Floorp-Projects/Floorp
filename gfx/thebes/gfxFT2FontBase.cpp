@@ -713,6 +713,18 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
  */
 const gfxFT2FontBase::GlyphMetrics& gfxFT2FontBase::GetCachedGlyphMetrics(
     uint16_t aGID, IntRect* aBounds) const {
+  {
+    // Try to read cached metrics without exclusive locking.
+    AutoReadLock lock(mLock);
+    if (mGlyphMetrics) {
+      if (auto metrics = mGlyphMetrics->Lookup(aGID)) {
+        return metrics.Data();
+      }
+    }
+  }
+
+  // We need to create/update the cache.
+  AutoWriteLock lock(mLock);
   if (!mGlyphMetrics) {
     mGlyphMetrics =
         mozilla::MakeUnique<nsTHashMap<nsUint32HashKey, GlyphMetrics>>(128);
