@@ -129,7 +129,8 @@ function ensureLangPackInstalled(langPack) {
  * @returns {boolean} Success or failure.
  */
 async function _ensureLangPackInstalledImpl(langPack) {
-  if (mockable.getAvailableLocales().includes(langPack.target_locale)) {
+  const availablelocales = await getAvailableLocales();
+  if (availablelocales.includes(langPack.target_locale)) {
     // The langpack is already installed.
     return true;
   }
@@ -184,10 +185,27 @@ const mockable = {
   },
 
   /**
+   * Returns the available locales, including the fallback locale, which may not include
+   * all of the resources, in cases where the defaultLocale is not "en-US".
+   *
    * @returns {string[]}
    */
-  getAvailableLocales() {
+  getAvailableLocalesIncludingFallback() {
     return Services.locale.availableLocales;
+  },
+
+  /**
+   * @returns {string}
+   */
+  getDefaultLocale() {
+    return Services.locale.defaultLocale;
+  },
+
+  /**
+   * @returns {string}
+   */
+  getLastFallbackLocale() {
+    return Services.locale.lastFallbackLocale;
   },
 
   /**
@@ -337,11 +355,36 @@ function getAppAndSystemLocaleInfo() {
   };
 }
 
+/**
+ * Filter the lastFallbackLocale from availableLocales if it doesn't have all
+ * of the needed strings.
+ *
+ * When the lastFallbackLocale isn't the defaultLocale, then by default only
+ * fluent strings are included. To fully use that locale you need the langpack
+ * to be installed, so if it isn't installed remove it from availableLocales.
+ */
+async function getAvailableLocales() {
+  const availableLocales = mockable.getAvailableLocalesIncludingFallback();
+  const defaultLocale = mockable.getDefaultLocale();
+  const lastFallbackLocale = mockable.getLastFallbackLocale();
+  // If defaultLocale isn't lastFallbackLocale, then we still need the langpack
+  // for lastFallbackLocale for it to be useful.
+  if (defaultLocale != lastFallbackLocale) {
+    let lastFallbackId = `langpack-${lastFallbackLocale}@firefox.mozilla.org`;
+    let lastFallbackInstalled = await AddonManager.getAddonByID(lastFallbackId);
+    if (!lastFallbackInstalled) {
+      return availableLocales.filter(locale => locale != lastFallbackLocale);
+    }
+  }
+  return availableLocales;
+}
+
 var LangPackMatcher = {
   negotiateLangPackForLanguageMismatch,
   ensureLangPackInstalled,
   getAppAndSystemLocaleInfo,
   setRequestedAppLocales,
+  getAvailableLocales,
   mockable,
 };
 
