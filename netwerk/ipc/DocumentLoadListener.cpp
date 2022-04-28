@@ -1546,10 +1546,8 @@ static DocumentLoadListener::ProcessBehavior GetProcessSwitchBehavior(
   bool isRemoteBrowser = false;
   browser->GetIsRemoteBrowser(&isRemoteBrowser);
   if (isRemoteBrowser) {
-    return mozilla::BFCacheInParent() ? DocumentLoadListener::ProcessBehavior::
-                                            PROCESS_BEHAVIOR_STANDARD
-                                      : DocumentLoadListener::ProcessBehavior::
-                                            PROCESS_BEHAVIOR_SUBFRAME_ONLY;
+    return DocumentLoadListener::ProcessBehavior::
+        PROCESS_BEHAVIOR_SUBFRAME_ONLY;
   }
   return DocumentLoadListener::ProcessBehavior::PROCESS_BEHAVIOR_DISABLED;
 }
