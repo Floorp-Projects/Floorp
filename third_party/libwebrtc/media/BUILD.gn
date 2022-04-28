@@ -199,7 +199,10 @@ rtc_library("rtc_simulcast_encoder_adapter") {
     "../system_wrappers",
     "../system_wrappers:field_trial",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("rtc_encoder_simulcast_proxy") {
