@@ -69,8 +69,17 @@ function getAddonAndLocalAPIsMocker(testScope, sandbox) {
 
     const { mockable } = LangPackMatcher;
     if (appLocale) {
-      sandbox.stub(mockable, "getAvailableLocales").returns([appLocale]);
+      const availableLocales = [appLocale];
+      if (appLocale !== "en-US") {
+        // Ensure the fallback behavior is accurately simulated for Firefox.
+        availableLocales.push("en-US");
+      }
+      sandbox
+        .stub(mockable, "getAvailableLocalesIncludingFallback")
+        .returns(availableLocales);
+      sandbox.stub(mockable, "getDefaultLocale").returns(appLocale);
       sandbox.stub(mockable, "getAppLocaleAsBCP47").returns(appLocale);
+      sandbox.stub(mockable, "getLastFallbackLocale").returns("en-US");
     }
     if (systemLocale) {
       sandbox.stub(mockable, "getSystemLocale").returns(systemLocale);
