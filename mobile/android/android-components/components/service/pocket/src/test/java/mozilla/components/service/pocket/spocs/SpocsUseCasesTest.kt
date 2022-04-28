@@ -10,7 +10,9 @@ import kotlinx.coroutines.test.runTest
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
+import mozilla.components.service.pocket.spocs.SpocsUseCases.RefreshSponsoredStories
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
+import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import mozilla.components.support.test.any
@@ -54,6 +56,11 @@ class SpocsUseCasesTest {
     }
 
     @Test
+    fun `GIVEN a RefreshSponsoredStories THEN its visibility is internal`() {
+        assertClassVisibility(RefreshSponsoredStories::class, KVisibility.INTERNAL)
+    }
+
+    @Test
     fun `GIVEN a GetSponsoredStories THEN its visibility is internal`() {
         assertClassVisibility(SpocsUseCases.GetSponsoredStories::class, KVisibility.INTERNAL)
     }
@@ -61,6 +68,38 @@ class SpocsUseCasesTest {
     @Test
     fun `GIVEN a DeleteProfile THEN its visibility is internal`() {
         assertClassVisibility(SpocsUseCases.DeleteProfile::class, KVisibility.INTERNAL)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases WHEN RefreshSponsoredStories is called THEN download stories from API and return early if unsuccessful response`() = runTest {
+        SpocsUseCases.initialize(mock(), mock(), "test")
+        val refreshUsecase = spy(
+            usecases.RefreshSponsoredStories(testContext)
+        )
+        val unsuccessfulResponse = getFailedSponsoredStories()
+        doReturn(unsuccessfulResponse).`when`(spocsProvider).getSponsoredStories()
+
+        val result = refreshUsecase.invoke()
+
+        assertFalse(result)
+        verify(spocsProvider).getSponsoredStories()
+        verify(spocsRepo, never()).addSpocs(any())
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases WHEN RefreshSponsoredStories is called THEN download stories from API and save a successful response locally`() = runTest {
+        SpocsUseCases.initialize(mock(), mock(), "test")
+        val refreshUsecase = spy(
+            usecases.RefreshSponsoredStories(testContext)
+        )
+        val successfulResponse = getSuccessfulSponsoredStories()
+        doReturn(successfulResponse).`when`(spocsProvider).getSponsoredStories()
+
+        val result = refreshUsecase.invoke()
+
+        assertTrue(result)
+        verify(spocsProvider).getSponsoredStories()
+        verify(spocsRepo).addSpocs((successfulResponse as Success).data)
     }
 
     @Test
@@ -147,4 +186,9 @@ class SpocsUseCasesTest {
 
         verify(spocsRepo, never()).deleteAllSpocs()
     }
+
+    private fun getSuccessfulSponsoredStories() =
+        PocketResponse.wrap(PocketTestResources.apiExpectedPocketSpocs)
+
+    private fun getFailedSponsoredStories() = PocketResponse.wrap(null)
 }

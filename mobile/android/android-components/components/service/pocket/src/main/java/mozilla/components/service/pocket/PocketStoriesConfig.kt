@@ -10,15 +10,20 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 internal const val DEFAULT_REFRESH_INTERVAL = 4L
+internal const val DEFAULT_SPONSORED_STORIES_REFRESH_INTERVAL = 4L
 @Suppress("TopLevelPropertyNaming")
 internal val DEFAULT_REFRESH_TIMEUNIT = TimeUnit.HOURS
+@Suppress("TopLevelPropertyNaming")
+internal val DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT = TimeUnit.HOURS
 
 /**
  * Indicating all details for how the pocket stories should be refreshed.
  *
  * @param client [Client] implementation used for downloading the Pocket stories.
- * @param frequency Optional - The interval at which to try and refresh items. Defaults to 1 hour.
+ * @param frequency Optional - The interval at which to try and refresh items. Defaults to 4 hours.
  * @param profile Optional - The profile used for downloading sponsored Pocket stories.
+ * @param sponsoredStoriesRefreshFrequency Optional - The interval at which to try and refresh sponsored stories.
+ * Defaults to 4 hours.
  */
 class PocketStoriesConfig(
     val client: Client,
@@ -27,6 +32,10 @@ class PocketStoriesConfig(
         DEFAULT_REFRESH_TIMEUNIT
     ),
     val profile: Profile? = null,
+    val sponsoredStoriesRefreshFrequency: Frequency = Frequency(
+        DEFAULT_SPONSORED_STORIES_REFRESH_INTERVAL,
+        DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT
+    )
 )
 
 /**

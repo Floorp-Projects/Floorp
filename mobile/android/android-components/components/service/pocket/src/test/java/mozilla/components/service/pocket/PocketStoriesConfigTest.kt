@@ -31,6 +31,18 @@ class PocketStoriesConfigTest {
     }
 
     @Test
+    fun `WHEN instantiating a PocketStoriesConfig THEN sponsored stories refresh frequency has a default value`() {
+        val config = PocketStoriesConfig(mock())
+
+        val defaultFrequency = Frequency(
+            DEFAULT_SPONSORED_STORIES_REFRESH_INTERVAL,
+            DEFAULT_SPONSORED_STORIES_REFRESH_TIMEUNIT
+        )
+        assertEquals(defaultFrequency.repeatInterval, config.sponsoredStoriesRefreshFrequency.repeatInterval)
+        assertEquals(defaultFrequency.repeatIntervalTimeUnit, config.sponsoredStoriesRefreshFrequency.repeatIntervalTimeUnit)
+    }
+
+    @Test
     fun `WHEN instantiating a PocketStoriesConfig THEN profile is by default null`() {
         val config = PocketStoriesConfig(mock())
 

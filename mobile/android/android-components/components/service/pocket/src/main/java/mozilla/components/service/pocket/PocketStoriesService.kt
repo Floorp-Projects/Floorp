@@ -8,6 +8,7 @@ import android.content.Context
 import mozilla.components.service.pocket.spocs.SpocsUseCases
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
 import mozilla.components.service.pocket.update.PocketStoriesRefreshScheduler
+import mozilla.components.service.pocket.update.SpocsRefreshScheduler
 
 /**
  * Allows for getting a list of pocket stories based on the provided [PocketStoriesConfig]
@@ -19,7 +20,8 @@ class PocketStoriesService(
     private val context: Context,
     private val pocketStoriesConfig: PocketStoriesConfig
 ) {
-    internal var scheduler = PocketStoriesRefreshScheduler(pocketStoriesConfig)
+    internal var storiesRefreshScheduler = PocketStoriesRefreshScheduler(pocketStoriesConfig)
+    internal var spocsRefreshscheduler = SpocsRefreshScheduler(pocketStoriesConfig)
     private val storiesUseCases = PocketStoriesUseCases()
     private val spocsUseCases = SpocsUseCases()
     internal var getStoriesUsecase = storiesUseCases.GetPocketStories(context)
@@ -58,7 +60,7 @@ class PocketStoriesService(
      */
     fun startPeriodicStoriesRefresh() {
         PocketStoriesUseCases.initialize(pocketStoriesConfig.client)
-        scheduler.schedulePeriodicRefreshes(context)
+        storiesRefreshScheduler.schedulePeriodicRefreshes(context)
     }
 
     /**
@@ -70,7 +72,7 @@ class PocketStoriesService(
      * This stops the process of downloading and caching Pocket stories in the background.
      */
     fun stopPeriodicStoriesRefresh() {
-        scheduler.stopPeriodicRefreshes(context)
+        storiesRefreshScheduler.stopPeriodicRefreshes(context)
         PocketStoriesUseCases.reset()
     }
 
@@ -83,6 +85,44 @@ class PocketStoriesService(
      */
     suspend fun getStories(): List<PocketRecommendedStory> {
         return getStoriesUsecase.invoke()
+    }
+
+    /**
+     * Entry point to start fetching Pocket sponsored stories in the background.
+     *
+     * Use this at an as high as possible level in your application.
+     * Must be paired in a similar way with the [stopPeriodicSponsoredStoriesRefresh] method.
+     *
+     * This starts the process of downloading and caching Pocket sponsored stories in the background,
+     * making them available for the [getSponsoredStories] method.
+     */
+    fun startPeriodicSponsoredStoriesRefresh() {
+        val profileId = pocketStoriesConfig.profile?.profileId
+        val appId = pocketStoriesConfig.profile?.appId
+        if (profileId == null || appId == null) {
+            logger.warn("Cannot start sponsored stories refresh. Service has incomplete setup")
+            return
+        }
+
+        SpocsUseCases.initialize(
+            client = pocketStoriesConfig.client,
+            profileId = profileId,
+            appId = appId
+        )
+        spocsRefreshscheduler.schedulePeriodicRefreshes(context)
+    }
+
+    /**
+     * Single stopping point for the "refresh sponsored Pocket stories" functionality.
+     *
+     * Use this at an as high as possible level in your application.
+     * Must be paired in a similar way with the [startPeriodicSponsoredStoriesRefresh] method.
+     *
+     * This stops the process of downloading and caching Pocket sponsored stories in the background.
+     */
+    fun stopPeriodicSponsoredStoriesRefresh() {
+        spocsRefreshscheduler.stopPeriodicRefreshes(context)
+        SpocsUseCases.reset()
     }
 
     /**

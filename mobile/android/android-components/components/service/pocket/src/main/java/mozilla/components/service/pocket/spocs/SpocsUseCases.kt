@@ -12,6 +12,7 @@ import mozilla.components.service.pocket.PocketNetworkUseCases
 import mozilla.components.service.pocket.PocketSponsoredStory
 import mozilla.components.service.pocket.logger
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
+import mozilla.components.service.pocket.stories.api.PocketEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import java.util.UUID
@@ -20,6 +21,46 @@ import java.util.UUID
  * Possible actions regarding the list of sponsored stories.
  */
 internal class SpocsUseCases : PocketNetworkUseCase() {
+
+    /**
+     * Allows for refreshing the list of Pocket sponsored stories we have cached.
+     *
+     * @param context Android Context. Prefer sending application context to limit the possibility of even small leaks.
+     */
+    internal inner class RefreshSponsoredStories(
+        @get:VisibleForTesting
+        internal val context: Context
+    ) {
+        /**
+         * Do a full download from Pocket -> persist locally cycle for sponsored stories.
+         */
+        @Suppress("ReturnCount")
+        suspend operator fun invoke(): Boolean {
+            val client = SpocsUseCases.fetchClient
+            if (client == null) {
+                logger.error("Cannot download new stories. Service has incomplete setup")
+                return false
+            }
+
+            val profileId = SpocsUseCases.profileId
+            val appId = SpocsUseCases.appId
+            if (profileId == null || appId == null) {
+                logger.info("Not refreshing sponsored stories. Service has incomplete setup")
+                return false
+            }
+
+            val provider = getSpocsProvider(client, profileId, appId)
+            val response = provider.getSponsoredStories()
+
+            if (response is Success) {
+                getSpocsRepository(context).addSpocs(response.data)
+                return true
+            }
+
+            return false
+        }
+    }
+
     /**
      * Allows for querying the list of available Pocket sponsored stories.
      *
@@ -85,5 +126,39 @@ internal class SpocsUseCases : PocketNetworkUseCase() {
     internal fun getSpocsProvider(client: Client, profileId: UUID, appId: String) =
         SpocsEndpoint.newInstance(client, profileId, appId)
 
-    internal companion object : PocketNetworkUseCases by PocketNetworkUseCase.Companion
+    @VisibleForTesting
+    internal fun getPocketEndpoint(client: Client) = PocketEndpoint.newInstance(client)
+
+    internal companion object : PocketNetworkUseCases by PocketNetworkUseCase.Companion {
+        /**
+         * Unique user identifier previously used for downloading sponsored Pocket stories.
+         * May be `null` if the Sponsored Pocket stories feature is disabled.
+         */
+        var profileId: UUID? = null
+
+        /**
+         * Unique app identifier previously used for downloading sponsored Pocket stories.
+         * May be `null` if the Sponsored Pocket stories feature is disabled.
+         */
+        var appId: String? = null
+
+        /**
+         * Convenience method for setting all details used when communicating with the Pocket server.
+         *
+         * @param client the HTTP client to use for network requests.
+         * @param profileId Unique user identifier previously used for downloading sponsored Pocket stories.
+         * @param appId Unique app identifier previously used for downloading sponsored Pocket stories.
+         */
+        fun initialize(client: Client, profileId: UUID, appId: String) {
+            initialize(client)
+            this.profileId = profileId
+            this.appId = appId
+        }
+
+        override fun reset() {
+            this.fetchClient = null
+            this.profileId = null
+            this.appId = null
+        }
+    }
 }
