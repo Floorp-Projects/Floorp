@@ -30,10 +30,6 @@ class xpcAccessibleImage : public xpcAccessibleGeneric,
   virtual ~xpcAccessibleImage() {}
 
  private:
-  ImageAccessible* Intl() {
-    return mIntl->IsLocal() ? mIntl->AsLocal()->AsImage() : nullptr;
-  }
-
   xpcAccessibleImage(const xpcAccessibleImage&) = delete;
   xpcAccessibleImage& operator=(const xpcAccessibleImage&) = delete;
 };
