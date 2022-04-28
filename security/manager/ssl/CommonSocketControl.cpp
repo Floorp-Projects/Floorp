@@ -6,6 +6,7 @@
 
 #include "CommonSocketControl.h"
 
+#include "BRNameMatchingPolicy.h"
 #include "PublicKeyPinningService.h"
 #include "SharedCertVerifier.h"
 #include "nsNSSComponent.h"
@@ -191,7 +192,11 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
     return NS_OK;
   }
 
-  rv = CheckCertHostname(serverCertInput, hostnameInput);
+  mozilla::psm::BRNameMatchingPolicy nameMatchingPolicy(
+      mIsBuiltCertChainRootBuiltInRoot
+          ? mozilla::psm::PublicSSLState()->NameMatchingMode()
+          : mozilla::psm::BRNameMatchingPolicy::Mode::DoNotEnforce);
+  rv = CheckCertHostname(serverCertInput, hostnameInput, nameMatchingPolicy);
   if (rv != Success) {
     return NS_OK;
   }
