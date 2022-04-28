@@ -27,6 +27,9 @@ const PREF_TEST_NOTIFICATIONS =
 
 let loggingEnabled = false;
 
+// Variables imported from library.
+let BindToObject, RequestBackoffV4;
+
 // Log only if browser.safebrowsing.debug is true
 this.log = function log(...stuff) {
   if (!loggingEnabled) {
@@ -801,17 +804,19 @@ PROT_ListManager.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsITimerCallback",
 ]);
 
-var modScope = this;
+let initialized = false;
 function Init() {
+  if (initialized) {
+    return;
+  }
+
   // Pull the library in.
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"].getService()
     .wrappedJSObject;
-  /* global BindToObject, RequestBackoffV4 */
-  modScope.BindToObject = jslib.BindToObject;
-  modScope.RequestBackoffV4 = jslib.RequestBackoffV4;
+  BindToObject = jslib.BindToObject;
+  RequestBackoffV4 = jslib.RequestBackoffV4;
 
-  // We only need to call Init once.
-  modScope.Init = function() {};
+  initialized = true;
 }
 
 function RegistrationData() {
