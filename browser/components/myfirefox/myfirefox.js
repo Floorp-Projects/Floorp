@@ -26,3 +26,7 @@ window.addEventListener("load", () => {
   );
   document.getElementById("recently-closed-tabs-container").onLoad();
 });
+
+window.addEventListener("unload", () => {
+  tabsSetupFlowManager?.uninit();
+});
