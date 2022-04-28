@@ -7,7 +7,6 @@
 #ifndef CertVerifier_h
 #define CertVerifier_h
 
-#include "BRNameMatchingPolicy.h"
 #include "CTPolicyEnforcer.h"
 #include "CTVerifyResult.h"
 #include "EnterpriseRoots.h"
@@ -220,7 +219,6 @@ class CertVerifier {
                mozilla::TimeDuration ocspTimeoutSoft,
                mozilla::TimeDuration ocspTimeoutHard,
                uint32_t certShortLifetimeInDays, SHA1Mode sha1Mode,
-               BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode, CRLiteMode crliteMode,
                const Vector<EnterpriseCert>& thirdPartyCerts);
@@ -234,7 +232,6 @@ class CertVerifier {
   const mozilla::TimeDuration mOCSPTimeoutHard;
   const uint32_t mCertShortLifetimeInDays;
   const SHA1Mode mSHA1Mode;
-  const BRNameMatchingPolicy::Mode mNameMatchingMode;
   const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   const CertificateTransparencyMode mCTMode;
   const CRLiteMode mCRLiteMode;

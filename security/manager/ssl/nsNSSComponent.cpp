@@ -1340,23 +1340,6 @@ void SetValidationOptionsCommon() {
       ctMode != CertVerifier::CertificateTransparencyMode::Disabled;
   PublicSSLState()->SetSignedCertTimestampsEnabled(sctsEnabled);
   PrivateSSLState()->SetSignedCertTimestampsEnabled(sctsEnabled);
-
-  BRNameMatchingPolicy::Mode nameMatchingMode =
-      static_cast<BRNameMatchingPolicy::Mode>(Preferences::GetInt(
-          "security.pki.name_matching_mode",
-          static_cast<int32_t>(BRNameMatchingPolicy::Mode::DoNotEnforce)));
-  switch (nameMatchingMode) {
-    case BRNameMatchingPolicy::Mode::Enforce:
-    case BRNameMatchingPolicy::Mode::EnforceAfter23August2015:
-    case BRNameMatchingPolicy::Mode::EnforceAfter23August2016:
-    case BRNameMatchingPolicy::Mode::DoNotEnforce:
-      break;
-    default:
-      nameMatchingMode = BRNameMatchingPolicy::Mode::DoNotEnforce;
-      break;
-  }
-  PublicSSLState()->SetNameMatchingMode(nameMatchingMode);
-  PrivateSSLState()->SetNameMatchingMode(nameMatchingMode);
 }
 
 namespace {
@@ -1558,8 +1541,7 @@ void nsNSSComponent::setValidationOptions(
 
   mDefaultCertVerifier = new SharedCertVerifier(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, sha1Mode,
-      PublicSSLState()->NameMatchingMode(), netscapeStepUpPolicy, ctMode,
-      crliteMode, mEnterpriseCerts);
+      netscapeStepUpPolicy, ctMode, crliteMode, mEnterpriseCerts);
 }
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
@@ -1576,7 +1558,6 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
                                    : CertVerifier::ocspRelaxed,
       oldCertVerifier->mOCSPTimeoutSoft, oldCertVerifier->mOCSPTimeoutHard,
       oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mSHA1Mode,
-      oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
       oldCertVerifier->mCRLiteMode, mEnterpriseCerts);
 }
@@ -2384,7 +2365,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                prefName.EqualsLiteral(
                    "security.pki.certificate_transparency.mode") ||
                prefName.EqualsLiteral("security.pki.sha1_enforcement_level") ||
-               prefName.EqualsLiteral("security.pki.name_matching_mode") ||
                prefName.EqualsLiteral("security.pki.netscape_step_up_policy") ||
                prefName.EqualsLiteral(
                    "security.OCSP.timeoutMilliseconds.soft") ||

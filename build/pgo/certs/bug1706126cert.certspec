@@ -1,2 +1,3 @@
 subject:www.redirect-example.com
+extension:subjectAlternativeName:www.redirect-example.com
 issuer:printableString/CN=Temporary Certificate Authority/O=Mozilla Testing/OU=Profile Guided Optimization
