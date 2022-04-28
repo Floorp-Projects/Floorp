@@ -512,6 +512,15 @@ int32_t LibaomAv1Encoder::Encode(
     if (SvcEnabled()) {
       SetSvcLayerId(layer_frame);
       SetSvcRefFrameConfig(layer_frame);
+
+      aom_codec_err_t ret =
+          aom_codec_control(&ctx_, AV1E_SET_ERROR_RESILIENT_MODE,
+                            layer_frame.TemporalId() > 0 ? 1 : 0);
+      if (ret != AOM_CODEC_OK) {
+        RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::Encode returned " << ret
+                            << " on control AV1E_SET_ERROR_RESILIENT_MODE.";
+        return WEBRTC_VIDEO_CODEC_ERROR;
+      }
     }
 
     // Encode a frame.
