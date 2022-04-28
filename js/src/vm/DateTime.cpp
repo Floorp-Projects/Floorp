@@ -45,7 +45,9 @@ static bool ComputeLocalTime(time_t local, struct tm* ptm) {
   _tzset();
   return localtime_s(ptm, &local) == 0;
 #elif defined(HAVE_LOCALTIME_R)
+#  ifndef __wasi__
   tzset();
+#  endif
   return localtime_r(&local, ptm);
 #else
   struct tm* otm = localtime(&local);
