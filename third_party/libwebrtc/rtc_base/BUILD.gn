@@ -675,12 +675,6 @@ rtc_library("rtc_json") {
 }
 }
 
-rtc_source_set("async_resolver") {
-  # TODO(bugs.webrtc.org/9987): Remove when downstream clients have
-  # been redirected on //rtc_base:threading.
-  sources = []
-}
-
 rtc_library("net_helpers") {
   sources = [
     "net_helpers.cc",
