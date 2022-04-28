@@ -2269,12 +2269,13 @@ bool PeerConnection::ValidateBundleSettings(const SessionDescription* desc) {
 }
 
 void PeerConnection::ReportSdpFormatReceived(
-    const SessionDescriptionInterface& remote_offer) {
+    const SessionDescriptionInterface& remote_description) {
   int num_audio_mlines = 0;
   int num_video_mlines = 0;
   int num_audio_tracks = 0;
   int num_video_tracks = 0;
-  for (const ContentInfo& content : remote_offer.description()->contents()) {
+  for (const ContentInfo& content :
+       remote_description.description()->contents()) {
     cricket::MediaType media_type = content.media_description()->type();
     int num_tracks = std::max(
         1, static_cast<int>(content.media_description()->streams().size()));
@@ -2294,7 +2295,7 @@ void PeerConnection::ReportSdpFormatReceived(
   } else if (num_audio_tracks > 0 || num_video_tracks > 0) {
     format = kSdpFormatReceivedSimple;
   }
-  switch (remote_offer.GetType()) {
+  switch (remote_description.GetType()) {
     case SdpType::kOffer:
       // Historically only offers were counted.
       RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.SdpFormatReceived",
@@ -2306,7 +2307,7 @@ void PeerConnection::ReportSdpFormatReceived(
       break;
     default:
       RTC_LOG(LS_ERROR) << "Can not report SdpFormatReceived for "
-                        << SdpTypeToString(remote_offer.GetType());
+                        << SdpTypeToString(remote_description.GetType());
       break;
   }
 }
