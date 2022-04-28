@@ -19,7 +19,6 @@
 #include "nsITimer.h"
 #include "nsIEarlyHintObserver.h"
 #include "nsTHashMap.h"
-#include "nsIClassOfService.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
@@ -35,7 +34,8 @@ class nsIOutputStream;
 class nsIRequestContext;
 class nsISVCBRecord;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 class HTTPSRecordResolver;
 class nsHttpChunkedDecoder;
@@ -166,7 +166,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void UpdateConnectionInfo(nsHttpConnectionInfo* aConnInfo);
 
-  void SetClassOfService(ClassOfService cos);
+  void SetClassOfService(uint32_t cos);
 
   virtual nsresult OnHTTPSRRAvailable(
       nsIDNSHTTPSSVCRecord* aHTTPSSVCRecord,
@@ -485,13 +485,10 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void CollectTelemetryForUploads();
 
  public:
-  ClassOfService GetClassOfService() {
-    return {mClassOfServiceFlags, mClassOfServiceIncremental};
-  }
+  uint32_t ClassOfService() { return mClassOfService; }
 
  private:
-  Atomic<uint32_t, Relaxed> mClassOfServiceFlags{0};
-  Atomic<bool, Relaxed> mClassOfServiceIncremental{false};
+  Atomic<uint32_t, Relaxed> mClassOfService{0};
 
  public:
   // setting TunnelProvider to non-null means the transaction should only
@@ -565,6 +562,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   nsCString mHashKeyOfConnectionEntry;
 };
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // nsHttpTransaction_h__

@@ -18,7 +18,8 @@
 #include "nsStreamUtils.h"
 #include "nsQueryObject.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 NS_IMPL_ISUPPORTS_INHERITED(InterceptedHttpChannel, HttpBaseChannel,
                             nsIInterceptedChannel, nsICacheInfoChannel,
@@ -615,31 +616,19 @@ InterceptedHttpChannel::SetPriority(int32_t aPriority) {
 
 NS_IMETHODIMP
 InterceptedHttpChannel::SetClassFlags(uint32_t aClassFlags) {
-  mClassOfService.SetFlags(aClassFlags);
+  mClassOfService = aClassFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedHttpChannel::ClearClassFlags(uint32_t aClassFlags) {
-  mClassOfService.SetFlags(~aClassFlags & mClassOfService.Flags());
+  mClassOfService &= ~aClassFlags;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 InterceptedHttpChannel::AddClassFlags(uint32_t aClassFlags) {
-  mClassOfService.SetFlags(aClassFlags | mClassOfService.Flags());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::SetClassOfService(ClassOfService cos) {
-  mClassOfService = cos;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedHttpChannel::SetIncremental(bool incremental) {
-  mClassOfService.SetIncremental(incremental);
+  mClassOfService |= aClassFlags;
   return NS_OK;
 }
 
@@ -1550,4 +1539,5 @@ void InterceptedHttpChannel::InterceptionTimeStamps::SaveTimeStamps() {
   }
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

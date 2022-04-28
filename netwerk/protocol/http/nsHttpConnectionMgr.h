@@ -27,7 +27,8 @@
 
 class nsIHttpUpgradeListener;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 class EventTokenBucket;
 class NullHttpTransaction;
 struct HttpRetParams;
@@ -312,7 +313,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgNewTransaction(int32_t, ARefBase*);
   void OnMsgNewTransactionWithStickyConn(int32_t, ARefBase*);
   void OnMsgReschedTransaction(int32_t, ARefBase*);
-  void OnMsgUpdateClassOfServiceOnTransaction(ClassOfService, ARefBase*);
+  void OnMsgUpdateClassOfServiceOnTransaction(int32_t, ARefBase*);
   void OnMsgCancelTransaction(int32_t, ARefBase*);
   void OnMsgCancelTransactions(int32_t, ARefBase*);
   void OnMsgProcessPendingQ(int32_t, ARefBase*);
@@ -459,6 +460,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void CheckTransInPendingQueue(nsHttpTransaction* aTrans);
 };
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla
 
 #endif  // !nsHttpConnectionMgr_h__
