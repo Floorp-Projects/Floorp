@@ -94,7 +94,7 @@ class RtpDemuxer {
   // relevant for demuxing.
   static std::string DescribePacket(const RtpPacketReceived& packet);
 
-  RtpDemuxer();
+  explicit RtpDemuxer(bool use_mid = true);
   ~RtpDemuxer();
 
   RtpDemuxer(const RtpDemuxer&) = delete;
@@ -131,10 +131,6 @@ class RtpDemuxer {
   // Demuxes the given packet and forwards it to the chosen sink. Returns true
   // if the packet was forwarded and false if the packet was dropped.
   bool OnRtpPacket(const RtpPacketReceived& packet);
-
-  // Configure whether to look at the MID header extension when demuxing
-  // incoming RTP packets. By default this is enabled.
-  void set_use_mid(bool use_mid) { use_mid_ = use_mid; }
 
  private:
   // Returns true if adding a sink with the given criteria would cause conflicts
@@ -191,7 +187,7 @@ class RtpDemuxer {
   // Adds a binding from the SSRC to the given sink.
   void AddSsrcSinkBinding(uint32_t ssrc, RtpPacketSinkInterface* sink);
 
-  bool use_mid_ = true;
+  const bool use_mid_;
 };
 
 }  // namespace webrtc
