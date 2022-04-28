@@ -268,6 +268,10 @@ class Call final : public webrtc::Call,
   DeliveryStatus DeliverPacket(MediaType media_type,
                                rtc::CopyOnWriteBuffer packet,
                                int64_t packet_time_us) override;
+  void DeliverPacketAsync(MediaType media_type,
+                          rtc::CopyOnWriteBuffer packet,
+                          int64_t packet_time_us,
+                          PacketCallback callback) override;
 
   // Implements RecoveredPacketReceiver.
   void OnRecoveredPacket(const uint8_t* packet, size_t length) override;
@@ -321,6 +325,7 @@ class Call final : public webrtc::Call,
   Clock* const clock_;
   TaskQueueFactory* const task_queue_factory_;
   TaskQueueBase* const worker_thread_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker network_thread_;
 
   const int num_cpu_cores_;
   const rtc::scoped_refptr<SharedModuleThread> module_process_thread_;
@@ -613,6 +618,8 @@ Call::Call(Clock* clock,
   RTC_DCHECK(config.event_log != nullptr);
   RTC_DCHECK(config.trials != nullptr);
   RTC_DCHECK(worker_thread_->IsCurrent());
+
+  network_thread_.Detach();
 
   // Do not remove this call; it is here to convince the compiler that the
   // WebRTC source timestamp string needs to be in the final binary.
@@ -1405,6 +1412,30 @@ PacketReceiver::DeliveryStatus Call::DeliverPacket(
     return DeliverRtcp(media_type, packet.cdata(), packet.size());
 
   return DeliverRtp(media_type, std::move(packet), packet_time_us);
+}
+
+void Call::DeliverPacketAsync(MediaType media_type,
+                              rtc::CopyOnWriteBuffer packet,
+                              int64_t packet_time_us,
+                              PacketCallback callback) {
+  RTC_DCHECK_RUN_ON(&network_thread_);
+
+  TaskQueueBase* network_thread = rtc::Thread::Current();
+  RTC_DCHECK(network_thread);
+
+  worker_thread_->PostTask(ToQueuedTask(
+      task_safety_, [this, network_thread, media_type, p = std::move(packet),
+                     packet_time_us, cb = std::move(callback)] {
+        RTC_DCHECK_RUN_ON(worker_thread_);
+        DeliveryStatus status = DeliverPacket(media_type, p, packet_time_us);
+        if (cb) {
+          network_thread->PostTask(
+              ToQueuedTask([cb = std::move(cb), status, media_type,
+                            p = std::move(p), packet_time_us]() {
+                cb(status, media_type, std::move(p), packet_time_us);
+              }));
+        }
+      }));
 }
 
 void Call::OnRecoveredPacket(const uint8_t* packet, size_t length) {
