@@ -60,7 +60,8 @@ class SurfaceFactory_DMABUF : public SurfaceFactory {
   }
 
   bool CanCreateSurface() {
-    UniquePtr<SharedSurface> test = CreateShared(gfx::IntSize(1, 1));
+    UniquePtr<SharedSurface> test =
+        CreateShared(gfx::IntSize(1, 1), gfx::ColorSpace2::SRGB);
     return test != nullptr;
   }
 };

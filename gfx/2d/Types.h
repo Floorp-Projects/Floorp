@@ -365,7 +365,7 @@ enum class ColorRange : uint8_t {
   _Last = FULL,
 };
 
-// Really "YcbcrColorSpace"
+// Really "YcbcrColorColorSpace"
 enum class YUVRangedColorSpace : uint8_t {
   BT601_Narrow = 0,
   BT601_Full,
@@ -378,6 +378,23 @@ enum class YUVRangedColorSpace : uint8_t {
   _First = BT601_Narrow,
   _Last = GbrIdentity,
   Default = BT709_Narrow,
+};
+
+// I can either come up with a longer "very clever" name that doesn't conflict
+// with FilterSupport.h, embrace and expand FilterSupport, or rename the old
+// one.
+// Some times Worse Is Better.
+enum class ColorSpace2 : uint8_t {
+  UNKNOWN,  // Eventually we will remove this.
+  SRGB,
+  BT601_525,  // aka smpte170m NTSC
+  BT709,      // Same gamut as SRGB, but different gamma.
+  BT601_625 =
+      BT709,  // aka bt470bg PAL. Basically BT709, just Xg is 0.290 not 0.300.
+  BT2020,
+  DISPLAY_P3,
+  _First = UNKNOWN,
+  _Last = DISPLAY_P3,
 };
 
 struct FromYUVRangedColorSpaceT final {
