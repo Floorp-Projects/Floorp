@@ -1004,8 +1004,6 @@ function cookiesAllowedForDomainOrSubDomain(principal, permissions) {
 
     // We don't care about scheme, port, and anything else.
     if (Services.eTLD.hasRootDomain(perm.principal.host, principal.host)) {
-      // Remove the permissions we already checked
-      permissions.delete(perm.principal.origin);
       log("Cookie check on principal: " + perm.principal.asciiSpec);
       let rootDomainCookiePermission = checkIfCookiePermissionIsSet(
         perm.principal
