@@ -7,7 +7,7 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // This is exported by preferences.js but we can't import that in a subdialog.
-let { getAvailableLocales } = window.top;
+let { LangPackMatcher } = window.top;
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -349,7 +349,7 @@ class SortedItemSelectList {
  * @returns {Array<LocaleDisplayInfo>}
  */
 async function getLocaleDisplayInfo(localeCodes) {
-  let availableLocales = new Set(await getAvailableLocales());
+  let availableLocales = new Set(await LangPackMatcher.getAvailableLocales());
   let packagedLocales = new Set(Services.locale.packagedLocales);
   let localeNames = Services.intl.getLocaleDisplayNames(
     undefined,
@@ -464,7 +464,7 @@ var gBrowserLanguagesDialog = {
     let selectedLocales =
       selectedLocalesForRestart || Services.locale.appLocalesAsBCP47;
     let selectedLocaleSet = new Set(selectedLocales);
-    let available = await getAvailableLocales();
+    let available = await LangPackMatcher.getAvailableLocales();
     let availableSet = new Set(available);
 
     // Filter selectedLocales since the user may select a locale when it is
@@ -566,7 +566,7 @@ var gBrowserLanguagesDialog = {
     }
 
     // Remove the installed locales from the available ones.
-    let installedLocales = new Set(await getAvailableLocales());
+    let installedLocales = new Set(await LangPackMatcher.getAvailableLocales());
     let notInstalledLocales = availableLangpacks
       .filter(({ target_locale }) => !installedLocales.has(target_locale))
       .map(lang => lang.target_locale);
@@ -618,7 +618,7 @@ var gBrowserLanguagesDialog = {
    * @param {LocaleDisplayInfo} item
    */
   async availableLanguageSelected(item) {
-    if ((await getAvailableLocales()).includes(item.value)) {
+    if ((await LangPackMatcher.getAvailableLocales()).includes(item.value)) {
       this.recordTelemetry("add");
       await this.requestLocalLanguage(item);
     } else if (this.availableLangpacks.has(item.value)) {
@@ -635,7 +635,7 @@ var gBrowserLanguagesDialog = {
   async requestLocalLanguage(item) {
     this._selectedLocalesUI.addItem(item);
     let selectedCount = this._selectedLocalesUI.items.length;
-    let availableCount = (await getAvailableLocales()).length;
+    let availableCount = (await LangPackMatcher.getAvailableLocales()).length;
     if (selectedCount == availableCount) {
       // Remove the installed label, they're all installed.
       this._availableLocalesUI.items.shift();

@@ -499,6 +499,41 @@ add_task(async function test_aboutwelcome_languageSwitcher_asyncCalls() {
 });
 
 /**
+ * Test that the "en-US" langpack is installed, if it's already available as the last
+ * fallback locale.
+ */
+add_task(async function test_aboutwelcome_fallback_locale() {
+  sandbox.restore();
+  const {
+    resolveLangPacks,
+    resolveInstaller,
+    mockable,
+  } = mockAddonAndLocaleAPIs({
+    systemLocale: "en-US",
+    appLocale: "it",
+  });
+
+  await openAboutWelcome();
+
+  info("Waiting for getAvailableLangpacks to be called.");
+  await TestUtils.waitForCondition(
+    () => mockable.getAvailableLangpacks.called,
+    "getAvailableLangpacks called once"
+  );
+  ok(mockable.installLangPack.notCalled);
+
+  resolveLangPacks(["en-US"]);
+
+  await TestUtils.waitForCondition(
+    () => mockable.installLangPack.called,
+    "installLangPack was called once"
+  );
+  ok(mockable.getAvailableLangpacks.called);
+
+  resolveInstaller();
+});
+
+/**
  * Test when AMO does not have a matching language.
  */
 add_task(async function test_aboutwelcome_languageSwitcher_noMatch() {
