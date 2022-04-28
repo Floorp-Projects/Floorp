@@ -148,7 +148,7 @@ class ChildProcess final {
     }
 
     auto getDependentModulePaths =
-        reinterpret_cast<const wchar_t (*)()>(::GetProcAddress(
+        reinterpret_cast<const wchar_t* (*)()>(::GetProcAddress(
             ::GetModuleHandleW(nullptr), "GetDependentModulePaths"));
     if (!getDependentModulePaths) {
       printf(
