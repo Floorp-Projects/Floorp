@@ -314,8 +314,6 @@ class BaseChannel : public ChannelInterface,
   // ChannelInterface overrides
   RtpHeaderExtensions GetNegotiatedRtpHeaderExtensions() const override;
 
-  bool has_received_packet_ = false;
-
  private:
   bool ConnectToRtpTransport();
   void DisconnectFromRtpTransport();
@@ -332,6 +330,8 @@ class BaseChannel : public ChannelInterface,
       RTC_GUARDED_BY(worker_thread_);
 
   const std::string content_name_;
+
+  bool has_received_packet_ = false;
 
   // Won't be set when using raw packet transports. SDP-specific thing.
   // TODO(bugs.webrtc.org/12230): Written on network thread, read on
