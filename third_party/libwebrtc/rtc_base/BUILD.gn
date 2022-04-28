@@ -126,8 +126,6 @@ rtc_library("rtc_base_approved") {
 
   if (is_win) {
     sources += [
-      "win/create_direct3d_device.cc",
-      "win/create_direct3d_device.h",
       "win/get_activation_factory.cc",
       "win/get_activation_factory.h",
       "win/hstring.cc",

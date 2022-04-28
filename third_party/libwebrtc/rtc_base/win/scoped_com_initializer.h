@@ -13,6 +13,8 @@
 
 #include <comdef.h>
 
+#include "rtc_base/logging.h"
+
 namespace webrtc {
 
 // Initializes COM in the constructor (STA or MTA), and uninitializes COM in the
