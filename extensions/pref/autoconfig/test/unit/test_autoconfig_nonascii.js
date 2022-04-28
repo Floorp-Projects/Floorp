@@ -44,6 +44,7 @@ function run_test() {
         filename: "autoconfig-chromecheck.cfg",
         prefs: {
           "_test.string.typeofComponents": "undefined",
+          "_test.string.typeofChromeUtils": "undefined",
         },
       },
     ];
