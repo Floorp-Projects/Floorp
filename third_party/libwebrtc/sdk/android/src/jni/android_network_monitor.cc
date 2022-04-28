@@ -16,7 +16,6 @@
 #define RTLD_NOLOAD 4
 #endif
 
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -548,19 +547,18 @@ void AndroidNetworkMonitor::NotifyOfNetworkConnect(
     const JavaRef<jobject>& j_network_info) {
   NetworkInformation network_info =
       GetNetworkInformationFromJava(env, j_network_info);
-  network_thread_->Invoke<void>(
-      RTC_FROM_HERE, rtc::Bind(&AndroidNetworkMonitor::OnNetworkConnected_n,
-                               this, network_info));
+  network_thread_->Invoke<void>(RTC_FROM_HERE, [this, &network_info] {
+    OnNetworkConnected_n(network_info);
+  });
 }
 
 void AndroidNetworkMonitor::NotifyOfNetworkDisconnect(
     JNIEnv* env,
     const JavaRef<jobject>& j_caller,
     jlong network_handle) {
-  network_thread_->Invoke<void>(
-      RTC_FROM_HERE,
-      rtc::Bind(&AndroidNetworkMonitor::OnNetworkDisconnected_n, this,
-                static_cast<NetworkHandle>(network_handle)));
+  network_thread_->Invoke<void>(RTC_FROM_HERE, [this, network_handle] {
+    OnNetworkDisconnected_n(static_cast<NetworkHandle>(network_handle));
+  });
 }
 
 void AndroidNetworkMonitor::NotifyOfNetworkPreference(
@@ -572,9 +570,9 @@ void AndroidNetworkMonitor::NotifyOfNetworkPreference(
   rtc::NetworkPreference preference =
       static_cast<rtc::NetworkPreference>(jpreference);
 
-  network_thread_->Invoke<void>(
-      RTC_FROM_HERE, rtc::Bind(&AndroidNetworkMonitor::OnNetworkPreference_n,
-                               this, type, preference));
+  network_thread_->Invoke<void>(RTC_FROM_HERE, [this, type, preference] {
+    OnNetworkPreference_n(type, preference);
+  });
 }
 
 }  // namespace jni
