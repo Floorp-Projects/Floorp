@@ -496,6 +496,29 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">Добро пожаловать в %1$s!</string>
 
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Приватный просмотр высшего уровня в любое время</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Где встречаются режимы инкогнито и невидимости</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s — это браузер, ставящий на первое место приватность с надежной встроенной защитой от отслеживания и кук.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Веб-сёрфинг без оставления следов</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Одно касание стирает вашу историю просмотров и куки и не даёт рекламе следовать за вами по пятам.</string>
+    <string name="onboarding_history_description2">Одно касание стирает вашу историю просмотров и куки и не даёт рекламе следовать за вами по пятам.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Приватность в любой ситуации</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Если нужно сменить режим веб-сёрфинга, вы можете легко усилить или ослабить настройки приватности.</string>
+
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">Начните веб-сёрфинг</string>
 
@@ -950,13 +973,21 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Закрыть вкладку</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon">Похоже, этот сайт пытался за вами следить. Нажмите на щит, чтобы открыть настройки сайта и статистику блокировки трекеров.</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Закрыть всплывающее окно</string>
 
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Вы защищены!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Эти настройки по умолчанию обеспечивают надежную защиту. Но вы можете легко изменить их под ваши конкретные потребности.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Убрать</string>
 
-    </resources>
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon">Избавьтесь от своих личных данных, истории посещения страниц и многого другого из этого сеанса, нажав на кнопку корзины. Попробуйте!</string>
+
+</resources>

@@ -277,6 +277,9 @@
     <string name="preference_category_privacy">Privasi</string>
     <string name="preference_privacy_block_ads">Tham peulacak iklan</string>
 
+    <string name="preference_privacy_block_ads_summary">Ladôm iklan jiseutöt seunaweue situs, bahpih meunyo hana neuteugön iklan nyan</string>
+    <string name="preference_privacy_block_social">Tham peulacak sosial</string>
+
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Han</string>
