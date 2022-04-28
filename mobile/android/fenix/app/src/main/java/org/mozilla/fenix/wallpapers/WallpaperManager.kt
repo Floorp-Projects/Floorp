@@ -247,12 +247,6 @@ class WallpaperManager(
             Wallpaper.Local.Firefox("sunrise", R.drawable.sunrise),
         )
         private val remoteWallpapers: List<Wallpaper.Remote> = listOf(
-            Wallpaper.Remote.House(
-                "panda",
-            ),
-            Wallpaper.Remote.House(
-                "mei",
-            ),
             Wallpaper.Remote.Firefox(
                 "twilight-hills"
             ),
