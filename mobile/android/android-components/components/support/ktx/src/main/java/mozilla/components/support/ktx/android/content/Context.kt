@@ -264,7 +264,7 @@ fun Context.addContact(
  * (via https://stackoverflow.com/a/12362545/512580)
  */
 inline val Context.isScreenReaderEnabled: Boolean
-    get() = getSystemService<AccessibilityManager>()!!.isTouchExplorationEnabled
+    get() = getSystemService<AccessibilityManager>()?.isTouchExplorationEnabled ?: false
 
 @VisibleForTesting
 internal var isMainProcess: Boolean? = null
