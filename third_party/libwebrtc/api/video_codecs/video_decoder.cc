@@ -32,10 +32,6 @@ VideoDecoder::DecoderInfo VideoDecoder::GetDecoderInfo() const {
   return info;
 }
 
-bool VideoDecoder::PrefersLateDecoding() const {
-  return true;
-}
-
 const char* VideoDecoder::ImplementationName() const {
   return "unknown";
 }
