@@ -368,8 +368,8 @@ rtc_library("ilbc_c") {
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:sanitizer",
     "../../rtc_base/system:arch",
-    "../../rtc_base/system:unused",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
 }
 
 rtc_source_set("isac_common") {
