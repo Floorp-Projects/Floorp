@@ -228,6 +228,11 @@ SimulcastEncoderAdapter::SimulcastEncoderAdapter(
           "WebRTC-Video-PreferTemporalSupportOnBaseLayer")) {
   RTC_DCHECK(primary_factory);
 
+  ParseFieldTrial({&requested_resolution_alignment_override_,
+                   &apply_alignment_to_all_simulcast_layers_override_},
+                  field_trial::FindFullName(
+                      "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride"));
+
   // The adapter is typically created on the worker thread, but operated on
   // the encoder task queue.
   encoder_queue_.Detach();
@@ -423,6 +428,27 @@ int SimulcastEncoderAdapter::Encode(
   }
   if (encoded_complete_callback_ == nullptr) {
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+  }
+
+  if (requested_resolution_alignment_override_) {
+    const int alignment = *requested_resolution_alignment_override_;
+    if (input_image.width() % alignment != 0 ||
+        input_image.height() % alignment != 0) {
+      RTC_LOG(LS_WARNING) << "Frame " << input_image.width() << "x"
+                          << input_image.height() << " not divisible by "
+                          << alignment;
+      return WEBRTC_VIDEO_CODEC_ERROR;
+    }
+    if (apply_alignment_to_all_simulcast_layers_override_.Get()) {
+      for (const auto& layer : encoder_contexts_) {
+        if (layer.width() % alignment != 0 || layer.height() % alignment != 0) {
+          RTC_LOG(LS_WARNING)
+              << "Codec " << layer.width() << "x" << layer.height()
+              << " not divisible by " << alignment;
+          return WEBRTC_VIDEO_CODEC_ERROR;
+        }
+      }
+    }
   }
 
   // All active streams should generate a key frame if
@@ -713,10 +739,23 @@ void SimulcastEncoderAdapter::DestroyStoredEncoders() {
   }
 }
 
+void SimulcastEncoderAdapter::OverrideFromFieldTrial(
+    VideoEncoder::EncoderInfo* info) const {
+  if (requested_resolution_alignment_override_) {
+    info->requested_resolution_alignment =
+        *requested_resolution_alignment_override_;
+    info->apply_alignment_to_all_simulcast_layers =
+        apply_alignment_to_all_simulcast_layers_override_.Get();
+  }
+}
+
 VideoEncoder::EncoderInfo SimulcastEncoderAdapter::GetEncoderInfo() const {
   if (encoder_contexts_.size() == 1) {
     // Not using simulcast adapting functionality, just pass through.
-    return encoder_contexts_.front().encoder().GetEncoderInfo();
+    VideoEncoder::EncoderInfo info =
+        encoder_contexts_.front().encoder().GetEncoderInfo();
+    OverrideFromFieldTrial(&info);
+    return info;
   }
 
   VideoEncoder::EncoderInfo encoder_info;
@@ -726,6 +765,7 @@ VideoEncoder::EncoderInfo SimulcastEncoderAdapter::GetEncoderInfo() const {
   encoder_info.supports_native_handle = true;
   encoder_info.scaling_settings.thresholds = absl::nullopt;
   if (encoder_contexts_.empty()) {
+    OverrideFromFieldTrial(&encoder_info);
     return encoder_info;
   }
 
@@ -783,6 +823,8 @@ VideoEncoder::EncoderInfo SimulcastEncoderAdapter::GetEncoderInfo() const {
     }
   }
   encoder_info.implementation_name += ")";
+
+  OverrideFromFieldTrial(&encoder_info);
 
   return encoder_info;
 }

@@ -28,6 +28,7 @@
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/utility/simulcast_test_fixture_impl.h"
 #include "rtc_base/checks.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -1288,6 +1289,42 @@ TEST_F(TestSimulcastEncoderAdapterFake,
       ->set_apply_alignment_to_all_simulcast_layers(true);
   EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
   EXPECT_TRUE(
+      adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
+}
+
+TEST_F(TestSimulcastEncoderAdapterFake, AlignmentFromFieldTrial) {
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride/"
+      "requested_resolution_alignment:8,"
+      "apply_alignment_to_all_simulcast_layers/");
+  SetUp();
+  SimulcastTestFixtureImpl::DefaultSettings(
+      &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
+      kVideoCodecVP8);
+  codec_.numberOfSimulcastStreams = 3;
+  EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
+  ASSERT_EQ(3u, helper_->factory()->encoders().size());
+
+  EXPECT_EQ(8, adapter_->GetEncoderInfo().requested_resolution_alignment);
+  EXPECT_TRUE(
+      adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
+}
+
+TEST_F(TestSimulcastEncoderAdapterFake,
+       AlignmentFromFieldTrialForSingleStream) {
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride/"
+      "requested_resolution_alignment:9/");
+  SetUp();
+  SimulcastTestFixtureImpl::DefaultSettings(
+      &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
+      kVideoCodecVP8);
+  codec_.numberOfSimulcastStreams = 1;
+  EXPECT_EQ(0, adapter_->InitEncode(&codec_, kSettings));
+  ASSERT_EQ(1u, helper_->factory()->encoders().size());
+
+  EXPECT_EQ(9, adapter_->GetEncoderInfo().requested_resolution_alignment);
+  EXPECT_FALSE(
       adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
 }
 
