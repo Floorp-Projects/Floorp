@@ -135,7 +135,6 @@ rtc_library("rtp_rtcp") {
     "include/flexfec_sender.h",
     "include/receive_statistics.h",
     "include/remote_ntp_time_estimator.h",
-    "include/rtp_rtcp.h",  # deprecated
     "include/ulpfec_receiver.h",
     "source/absolute_capture_time_receiver.cc",
     "source/absolute_capture_time_receiver.h",
@@ -145,8 +144,6 @@ rtc_library("rtp_rtcp") {
     "source/active_decode_targets_helper.h",
     "source/create_video_rtp_depacketizer.cc",
     "source/create_video_rtp_depacketizer.h",
-    "source/deprecated/deprecated_rtp_sender_egress.cc",
-    "source/deprecated/deprecated_rtp_sender_egress.h",
     "source/dtmf_queue.cc",
     "source/dtmf_queue.h",
     "source/fec_private_tables_bursty.cc",
@@ -191,8 +188,6 @@ rtc_library("rtp_rtcp") {
     "source/rtp_packetizer_av1.cc",
     "source/rtp_packetizer_av1.h",
     "source/rtp_rtcp_config.h",
-    "source/rtp_rtcp_impl.cc",
-    "source/rtp_rtcp_impl.h",
     "source/rtp_rtcp_impl2.cc",
     "source/rtp_rtcp_impl2.h",
     "source/rtp_rtcp_interface.h",
@@ -248,7 +243,6 @@ rtc_library("rtp_rtcp") {
   deps = [
     ":rtp_rtcp_format",
     ":rtp_video_header",
-    "..:module_api",
     "..:module_api_public",
     "..:module_fec_api",
     "../../api:array_view",
@@ -319,8 +313,36 @@ rtc_library("rtp_rtcp") {
 }
 
 rtc_source_set("rtp_rtcp_legacy") {
-  # TODO(bugs.webrtc.org/11581): The files "source/rtp_rtcp_impl.cc"
-  # and "source/rtp_rtcp_impl.h" should be moved to this target.
+  sources = [
+    "include/rtp_rtcp.h",
+    "source/deprecated/deprecated_rtp_sender_egress.cc",
+    "source/deprecated/deprecated_rtp_sender_egress.h",
+    "source/rtp_rtcp_impl.cc",
+    "source/rtp_rtcp_impl.h",
+  ]
+  deps = [
+    ":rtp_rtcp",
+    ":rtp_rtcp_format",
+    "..:module_api",
+    "..:module_fec_api",
+    "../../api:rtp_headers",
+    "../../api:transport_api",
+    "../../api/rtc_event_log",
+    "../../api/transport:field_trial_based_config",
+    "../../api/units:data_rate",
+    "../../api/video:video_bitrate_allocation",
+    "../../logging:rtc_event_rtp_rtcp",
+    "../../rtc_base:checks",
+    "../../rtc_base:deprecation",
+    "../../rtc_base:gtest_prod",
+    "../../rtc_base:rtc_base_approved",
+    "../../rtc_base/synchronization:mutex",
+    "../remote_bitrate_estimator",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("rtcp_transceiver") {

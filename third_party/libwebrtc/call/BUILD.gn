@@ -427,6 +427,7 @@ if (rtc_include_tests) {
       "../api/video:video_frame",
       "../api/video:video_rtp_headers",
       "../audio",
+      "../modules:module_api",
       "../modules/audio_device:mock_audio_device",
       "../modules/audio_mixer",
       "../modules/audio_mixer:audio_mixer_impl",

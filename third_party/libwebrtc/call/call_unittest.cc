@@ -30,6 +30,7 @@
 #include "call/audio_state.h"
 #include "modules/audio_device/include/mock_audio_device.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
+#include "modules/include/module.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "test/fake_encoder.h"
 #include "test/gtest.h"
