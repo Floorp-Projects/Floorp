@@ -469,6 +469,58 @@ define(function(require, exports, module) {
     ELLIPSIS
   );
 
+  /**
+   * Removes any unallowed CSS properties from a string of CSS declarations
+   *
+   * @param {String} userProvidedStyle CSS declarations
+   * @param {Function} createElement Method to create a dummy element the styles get applied to
+   * @returns {Object} Filtered CSS properties as JavaScript object in camelCase notation
+   */
+  function cleanupStyle(userProvidedStyle, createElement) {
+    // Regular expression that matches the allowed CSS property names.
+    const allowedStylesRegex = new RegExp(
+      "^(?:-moz-)?(?:background|border|box|clear|color|cursor|display|float|font|line|" +
+        "margin|padding|text|transition|outline|white-space|word|writing|" +
+        "(?:min-|max-)?width|(?:min-|max-)?height)"
+    );
+
+    // Regular expression that matches the forbidden CSS property values.
+    const forbiddenValuesRegexs = [
+      // -moz-element()
+      /\b((?:-moz-)?element)[\s('"]+/gi,
+
+      // various URL protocols
+      /['"(]*(?:chrome|resource|about|app|https?|ftp|file):+\/*/gi,
+    ];
+
+    // Use a dummy element to parse the style string.
+    const dummy = createElement("div");
+    dummy.style = userProvidedStyle;
+
+    // Return a style object as expected by React DOM components, e.g.
+    // {color: "red"}
+    // without forbidden properties and values.
+    return Array.from(dummy.style)
+      .filter(name => {
+        return (
+          allowedStylesRegex.test(name) &&
+          !forbiddenValuesRegexs.some(regex => regex.test(dummy.style[name]))
+        );
+      })
+      .reduce((object, name) => {
+        // React requires CSS properties to be provided in JavaScript form, i.e. camelCased.
+        const jsName = name.replace(/-([a-z])/g, (_, char) =>
+          char.toUpperCase()
+        );
+        return Object.assign(
+          {
+            [jsName]: dummy.style.getPropertyValue(name),
+          },
+          object
+        );
+      }, {});
+  }
+
   module.exports = {
     interleave,
     isURL,
@@ -490,5 +542,6 @@ define(function(require, exports, module) {
     ELLIPSIS,
     uneatLastUrlCharsRegex,
     urlRegex,
+    cleanupStyle,
   };
 });
