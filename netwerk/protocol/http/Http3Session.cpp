@@ -750,7 +750,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   // reset the read timers to wash away any idle time
   mLastWriteTime = PR_IntervalNow();
 
-  uint32_t cos = 0;
+  ClassOfServiceStruct cos;
   if (trans) {
     cos = trans->ClassOfService();
   }

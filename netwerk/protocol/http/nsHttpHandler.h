@@ -271,8 +271,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   [[nodiscard]] nsresult RescheduleTransaction(HttpTransactionShell* trans,
                                                int32_t priority);
 
-  void UpdateClassOfServiceOnTransaction(HttpTransactionShell* trans,
-                                         uint32_t classOfService);
+  void UpdateClassOfServiceOnTransaction(
+      HttpTransactionShell* trans, const ClassOfServiceStruct& classOfService);
 
   // Called to cancel a transaction, which may or may not be assigned to
   // a connection.  Callable from any thread.

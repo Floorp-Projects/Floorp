@@ -7,6 +7,7 @@
 
 #include <functional>
 #include "nsISupports.h"
+#include "nsIClassOfService.h"
 #include "TimingStruct.h"
 #include "nsInputStreamPump.h"
 #include "nsIEarlyHintObserver.h"
@@ -81,7 +82,7 @@ class HttpTransactionShell : public nsISupports {
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,
       nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,
-      uint32_t classOfService, uint32_t initialRwin,
+      ClassOfServiceStruct classOfService, uint32_t initialRwin,
       bool responseTimeoutEnabled, uint64_t channelId,
       TransactionObserverFunc&& transactionObserver,
       OnPushCallback&& aOnPushCallback,
@@ -173,7 +174,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)
       nsIEventTarget* consumerTarget, nsIInterfaceRequestor* callbacks,        \
       nsITransportEventSink* eventsink, uint64_t topBrowsingContextId,         \
       HttpTrafficCategory trafficCategory, nsIRequestContext* requestContext,  \
-      uint32_t classOfService, uint32_t initialRwin,                           \
+      ClassOfServiceStruct classOfService, uint32_t initialRwin,               \
       bool responseTimeoutEnabled, uint64_t channelId,                         \
       TransactionObserverFunc&& transactionObserver,                           \
       OnPushCallback&& aOnPushCallback,                                        \

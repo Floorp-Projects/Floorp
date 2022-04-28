@@ -1250,7 +1250,7 @@ void Http2Stream::SetPriorityDependency(uint32_t newPriority,
 static uint32_t GetPriorityDependencyFromTransaction(nsHttpTransaction* trans) {
   MOZ_ASSERT(trans);
 
-  uint32_t classFlags = trans->ClassOfService();
+  uint32_t classFlags = trans->ClassOfService().Flags();
 
   if (classFlags & nsIClassOfService::UrgentStart) {
     return Http2Session::kUrgentStartGroupID;

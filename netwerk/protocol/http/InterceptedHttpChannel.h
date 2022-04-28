@@ -269,6 +269,12 @@ class InterceptedHttpChannel final
   AddClassFlags(uint32_t flags) override;
 
   NS_IMETHOD
+  SetClassOfService(ClassOfServiceStruct cos) override;
+
+  NS_IMETHOD
+  SetIncremental(bool incremental) override;
+
+  NS_IMETHOD
   ResumeAt(uint64_t startPos, const nsACString& entityID) override;
 
   NS_IMETHOD
