@@ -417,7 +417,14 @@ class HomeFragment : Fragment() {
             frecencyConfig = FrecencyThresholdOption.SKIP_ONE_TIME_PAGES,
             providerConfig = TopSitesProviderConfig(
                 showProviderTopSites = settings.showContileFeature,
-                maxThreshold = TOP_SITES_PROVIDER_MAX_THRESHOLD
+                maxThreshold = TOP_SITES_PROVIDER_MAX_THRESHOLD,
+                providerFilter = { topSite ->
+                    when (store.state.search.selectedOrDefaultSearchEngine?.name) {
+                        AMAZON_SEARCH_ENGINE_NAME -> topSite.title != AMAZON_SPONSORED_TITLE
+                        EBAY_SPONSORED_TITLE -> topSite.title != EBAY_SPONSORED_TITLE
+                        else -> true
+                    }
+                }
             )
         )
     }
@@ -487,6 +494,7 @@ class HomeFragment : Fragment() {
         HomeScreen.homeScreenViewCount.add()
 
         observeSearchEngineChanges()
+        observeSearchEngineNameChanges()
         createHomeMenu(requireContext(), WeakReference(binding.menuButton))
         createTabCounterMenu()
 
@@ -565,6 +573,27 @@ class HomeFragment : Fragment() {
                         binding.searchEngineIcon.setImageDrawable(searchIcon)
                     } else {
                         binding.searchEngineIcon.setImageDrawable(null)
+                    }
+                }
+        }
+    }
+
+    /**
+     * Method used to listen to search engine name changes and trigger a top sites update accordingly
+     */
+    private fun observeSearchEngineNameChanges() {
+        consumeFlow(store) { flow ->
+            flow.map { state ->
+                when (state.search.selectedOrDefaultSearchEngine?.name) {
+                    AMAZON_SEARCH_ENGINE_NAME -> AMAZON_SPONSORED_TITLE
+                    EBAY_SPONSORED_TITLE -> EBAY_SPONSORED_TITLE
+                    else -> null
+                }
+            }
+                .ifChanged()
+                .collect {
+                    topSitesFeature.withFeature {
+                        it.storage.notifyObservers { onStorageUpdated() }
                     }
                 }
         }
@@ -1083,6 +1112,11 @@ class HomeFragment : Fragment() {
 
         private const val CFR_WIDTH_DIVIDER = 1.7
         private const val CFR_Y_OFFSET = -20
+
+        // Sponsored top sites titles and search engine names used for filtering
+        const val AMAZON_SPONSORED_TITLE = "Amazon"
+        const val AMAZON_SEARCH_ENGINE_NAME = "Amazon.com"
+        const val EBAY_SPONSORED_TITLE = "eBay"
 
         // Elevation for undo toasts
         internal const val TOAST_ELEVATION = 80f
