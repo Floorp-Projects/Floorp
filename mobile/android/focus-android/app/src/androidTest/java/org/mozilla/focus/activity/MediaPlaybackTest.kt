@@ -52,10 +52,8 @@ class MediaPlaybackTest {
             waitForPlaybackToStart()
             // need this alert hack to check the video is playing,
             // currently the test cannot verify the text in the page
-            dismissMediaPlayingAlert()
             clickPauseButton()
             verifyPlaybackStopped()
-            dismissMediaPlayingAlert()
         }
     }
 
@@ -70,10 +68,8 @@ class MediaPlaybackTest {
             waitForPlaybackToStart()
             // need this alert hack to check the video is playing,
             // currently the test cannot verify the text in the page
-            dismissMediaPlayingAlert()
             clickPauseButton()
             verifyPlaybackStopped()
-            dismissMediaPlayingAlert()
         }
     }
 
@@ -87,7 +83,6 @@ class MediaPlaybackTest {
         }.loadPage(audioPageUrl) {
             clickPlayButton()
             waitForPlaybackToStart()
-            dismissMediaPlayingAlert()
         }
         mDevice.openNotification()
         notificationTray {
@@ -98,7 +93,6 @@ class MediaPlaybackTest {
         mDevice.pressBack()
         browserScreen {
             verifyPlaybackStopped()
-            dismissMediaPlayingAlert()
         }.clearBrowsingData {}
         mDevice.openNotification()
         notificationTray {

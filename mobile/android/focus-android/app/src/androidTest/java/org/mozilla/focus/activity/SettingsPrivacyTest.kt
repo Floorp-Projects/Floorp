@@ -51,10 +51,6 @@ class SettingsPrivacyTest {
             clickBlockCookies()
             verifyBlockCookiesPrompt()
             clickCancelBlockCookiesPrompt()
-            clickSitePermissionsButton()
-            verifySitePermissionsSection()
-            clickAutoPlayOption()
-            verifyAutoplaySection()
         }
     }
 

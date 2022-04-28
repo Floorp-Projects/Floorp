@@ -88,21 +88,6 @@ class SettingsPrivacyMenuRobot {
         assertTrue(cancelBlockCookiesPrompt.waitForExists(waitingTimeShort))
     }
 
-    fun verifySitePermissionsSection() {
-        privacySettingsList.waitForExists(waitingTime)
-        autoplayOption().check(matches(isDisplayed()))
-        autoplayDefaultOption().check(matches(isDisplayed()))
-    }
-
-    fun verifyAutoplaySection() {
-        privacySettingsList.waitForExists(waitingTime)
-        assertTrue(autoplayAllowAudioAndVideoOption.exists())
-        assertTrue(autoplayBlockAudioOnlyOption.exists())
-        assertTrue(recommendedDescription.exists())
-        assertBlockAudioOnlyIsChecked()
-        assertTrue(blockAudioAndVideoOption.exists())
-    }
-
     fun verifyBlockAdTrackersEnabled(enabled: Boolean) {
         if (enabled) {
             adTrackersBlockSwitch()
@@ -230,10 +215,6 @@ class SettingsPrivacyMenuRobot {
         mDevice.waitForIdle(waitingTimeShort)
     }
 
-    fun clickSitePermissionsButton() = sitePermissions().perform(click())
-
-    fun clickAutoPlayOption() = autoplayOption().perform(click())
-
     fun clickYesPleaseOption() = blockCookiesYesPleaseOption.click()
 
     fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
@@ -274,6 +255,13 @@ class SettingsPrivacyMenuRobot {
 
             SettingsRobot().interact()
             return SettingsRobot.Transition()
+        }
+
+        fun clickSitePermissionsSettings(interact: SettingsSitePermissionsRobot.() -> Unit): SettingsSitePermissionsRobot.Transition {
+            sitePermissions().perform(click())
+
+            SettingsSitePermissionsRobot().interact()
+            return SettingsSitePermissionsRobot.Transition()
         }
     }
 }
@@ -694,30 +682,6 @@ private fun exceptionsList(): ViewInteraction {
     val exceptionsTitle = getStringResource(R.string.preference_exceptions)
     privacySettingsList.scrollTextIntoView(exceptionsTitle)
     return onView(withText(exceptionsTitle))
-}
-
-private fun autoplayOption() = onView(withText(R.string.preference_autoplay))
-
-private fun autoplayDefaultOption() = onView(withText(R.string.preference_block_autoplay_audio_only))
-
-private val autoplayAllowAudioAndVideoOption =
-    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_allow_audio_video_autoplay)))
-
-private val autoplayBlockAudioOnlyOption =
-    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only)))
-
-private val recommendedDescription =
-    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only_summary)))
-
-private val blockAudioAndVideoOption =
-    mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_video)))
-
-private fun assertBlockAudioOnlyIsChecked() {
-    val radioButton =
-        mDevice.findObject(UiSelector().text(getStringResource(R.string.preference_block_autoplay_audio_only)))
-            .getFromParent(UiSelector().className("android.widget.RadioButton"))
-
-    assertTrue(radioButton.isChecked)
 }
 
 private val blockCookiesPromptHeading =

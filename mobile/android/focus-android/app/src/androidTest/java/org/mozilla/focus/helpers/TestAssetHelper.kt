@@ -51,14 +51,6 @@ object TestAssetHelper {
         return TestAsset(url, content, pageTitle)
     }
 
-    fun getPermissionsPageAsset(server: MockWebServer): TestAsset {
-        val url = server.url("permissionsPage.html").toString()
-        val content = "Location Menu"
-        val title = ""
-
-        return TestAsset(url, content, title)
-    }
-
     fun getImageTestAsset(server: MockWebServer): TestAsset {
         val url = server.url("image_test.html").toString()
 

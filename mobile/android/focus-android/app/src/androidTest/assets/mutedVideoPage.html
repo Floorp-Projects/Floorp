@@ -1,9 +1,9 @@
 <html>
 <head>
-    <title>Video_Test_Page</title>
+    <title>Muted_Video_Test_Page</title>
 </head>
 <body>
-<p id="testContent">Page content: video player</p>
+<p id="testContent">Page content: muted video player</p>
 <div class="playbackState">
 </div>
 <div id="video-container" style="text-align:center">
@@ -11,40 +11,40 @@
     <button onclick="pause()">Pause</button>
     <button onclick="fullscreen()">Full Screen</button>
     <br><br>
-    <video id="video" width="420" autoplay controls loop>
+    <video id="mutedVideo" width="420" autoplay muted controls loop>
         <source src="resources/videoSample.webm" type="video/webm">
         Your browser does not support HTML video.
     </video>
 </div>
 
 <script>
-    const video = document.getElementById("video");
+    const mutedVideo = document.getElementById("mutedVideo");
 
     function play() {
-        video.play();
+        mutedVideo.play();
     }
 
     function pause() {
-        video.pause();
+        mutedVideo.pause();
     }
 
     function fullscreen() {
-        video.requestFullscreen();
+        mutedVideo.requestFullscreen();
     }
 
-    var showPlayingAlert=true;
+    var showPlayAlert=true;
 
-    video.addEventListener('playing', (event) => {
+    mutedVideo.addEventListener('playing', (event) => {
     <!-- document.querySelector('.playbackState').innerHTML="Media file is playing";-->
     <!-- Need this hack to verify that the video is playing, -->
     <!-- the test cannot currently verify the text displayed on the page-->
-          if(showPlayingAlert===true){
-            showPlayingAlert=false;
+          if(showPlayAlert===true){
+            showPlayAlert=false;
             alert("Media file is playing");
           }
     });
 
-    video.addEventListener('pause', (event) => {
+    mutedVideo.addEventListener('pause', (event) => {
     // document.querySelector('.playbackState').innerHTML="Media file is paused";
           alert("Media file is paused");
     });

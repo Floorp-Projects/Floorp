@@ -82,7 +82,37 @@ class BrowserRobot {
     }
 
     fun clickGetLocationButton() {
+        mDevice.findObject(UiSelector().textContains("Get Location")).waitForExists(waitingTime)
         mDevice.findObject(UiSelector().textContains("Get Location")).click()
+    }
+
+    fun clickGetCameraButton() {
+        mDevice.findObject(UiSelector().textContains("Open camera")).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains("Open camera")).click()
+    }
+
+    fun verifyCameraPermissionPrompt(url: String) {
+        assertTrue(
+            mDevice.findObject(UiSelector().text("Allow $url to use your camera?"))
+                .waitForExists(waitingTime)
+        )
+    }
+
+    fun verifyLocationPermissionPrompt(url: String) {
+        assertTrue(
+            mDevice.findObject(UiSelector().text("Allow $url to use your location?"))
+                .waitForExists(waitingTime)
+        )
+    }
+
+    fun allowSitePermissionRequest() {
+        if (permissionAllowBtn.waitForExists(waitingTime))
+            permissionAllowBtn.click()
+    }
+
+    fun denySitePermissionRequest() {
+        if (permissionDenyBtn.waitForExists(waitingTime))
+            permissionDenyBtn.click()
     }
 
     fun verifyEraseBrowsingButton(): ViewInteraction =
@@ -122,29 +152,29 @@ class BrowserRobot {
     fun clickPlayButton() {
         val playButton =
             mDevice.findObject(UiSelector().text("Play"))
-        playButton.waitForExists(waitingTime)
+        playButton.waitForExists(pageLoadingTime)
         playButton.click()
     }
 
     fun clickPauseButton() {
         val pauseButton =
             mDevice.findObject(UiSelector().text("Pause"))
-        pauseButton.waitForExists(waitingTime)
+        pauseButton.waitForExists(pageLoadingTime)
         pauseButton.click()
     }
 
     fun waitForPlaybackToStart() {
         val playStateMessage = mDevice.findObject(UiSelector().text("Media file is playing"))
-        assertTrue(playStateMessage.waitForExists(waitingTime))
+        assertTrue(playStateMessage.waitForExists(pageLoadingTime))
+        // dismiss the js alert
+        mDevice.findObject(UiSelector().textContains("ok")).click()
     }
 
     fun verifyPlaybackStopped() {
         val playStateMessage = mDevice.findObject(UiSelector().text("Media file is paused"))
         assertTrue(playStateMessage.waitForExists(waitingTime))
-    }
-
-    fun dismissMediaPlayingAlert() {
-        mDevice.findObject(UiSelector().textContains("OK")).click()
+        // dismiss the js alert
+        mDevice.findObject(UiSelector().textContains("ok")).click()
     }
 
     fun verifySiteTrackingProtectionIconShown() = assertTrue(securityIcon.waitForExists(waitingTime))
@@ -600,3 +630,13 @@ val submitDateButton =
             .textContains("Submit date")
             .resourceId("submitDate")
     )
+
+private val permissionAllowBtn = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/allow_button")
+)
+
+private val permissionDenyBtn = mDevice.findObject(
+    UiSelector()
+        .resourceId("$packageName:id/deny_button")
+)
