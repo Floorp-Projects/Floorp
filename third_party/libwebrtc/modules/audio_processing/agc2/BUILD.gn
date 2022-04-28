@@ -15,31 +15,6 @@ group("agc2") {
   ]
 }
 
-rtc_library("level_estimation_agc") {
-  sources = [
-    "adaptive_mode_level_estimator_agc.cc",
-    "adaptive_mode_level_estimator_agc.h",
-  ]
-  configs += [ "..:apm_debug_dump" ]
-  deps = [
-    ":adaptive_digital",
-    ":common",
-    ":gain_applier",
-    ":noise_level_estimator",
-    ":rnn_vad_with_level",
-    "..:api",
-    "..:apm_logging",
-    "..:audio_frame_view",
-    "../../../api:array_view",
-    "../../../common_audio",
-    "../../../rtc_base:checks",
-    "../../../rtc_base:rtc_base_approved",
-    "../../../rtc_base:safe_minmax",
-    "../agc:level_estimation",
-    "../vad",
-  ]
-}
-
 rtc_library("adaptive_digital") {
   sources = [
     "adaptive_agc.cc",

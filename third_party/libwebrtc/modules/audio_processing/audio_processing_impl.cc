@@ -304,8 +304,6 @@ AudioProcessingImpl::AudioProcessingImpl(
       config.Get<ExperimentalAgc>().startup_min_volume;
   config_.gain_controller1.analog_gain_controller.clipped_level_min =
       config.Get<ExperimentalAgc>().clipped_level_min;
-  config_.gain_controller1.analog_gain_controller.enable_agc2_level_estimator =
-      config.Get<ExperimentalAgc>().enabled_agc2_level_estimator;
   config_.gain_controller1.analog_gain_controller.enable_digital_adaptive =
       !config.Get<ExperimentalAgc>().digital_adaptive_disabled;
 #endif
@@ -1782,8 +1780,6 @@ void AudioProcessingImpl::InitializeGainController1() {
         num_proc_channels(),
         config_.gain_controller1.analog_gain_controller.startup_min_volume,
         config_.gain_controller1.analog_gain_controller.clipped_level_min,
-        config_.gain_controller1.analog_gain_controller
-            .enable_agc2_level_estimator,
         !config_.gain_controller1.analog_gain_controller
              .enable_digital_adaptive,
         capture_nonlocked_.split_rate));

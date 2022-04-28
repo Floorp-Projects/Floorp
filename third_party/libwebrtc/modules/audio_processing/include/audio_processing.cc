@@ -87,8 +87,6 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
          analog_lhs.enabled == analog_rhs.enabled &&
          analog_lhs.startup_min_volume == analog_rhs.startup_min_volume &&
          analog_lhs.clipped_level_min == analog_rhs.clipped_level_min &&
-         analog_lhs.enable_agc2_level_estimator ==
-             analog_rhs.enable_agc2_level_estimator &&
          analog_lhs.enable_digital_adaptive ==
              analog_rhs.enable_digital_adaptive;
 }
