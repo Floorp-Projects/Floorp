@@ -56,6 +56,9 @@ if (is_android) {
 
     deps = [
       ":generated_jni",
+      "../../rtc_base:socket_address",
+      "../../rtc_base:socket_server",
+      "../../rtc_base:threading",
       "//api:transport_api",
       "//api/audio_codecs:audio_codecs_api",
       "//api/audio_codecs:builtin_audio_decoder_factory",
