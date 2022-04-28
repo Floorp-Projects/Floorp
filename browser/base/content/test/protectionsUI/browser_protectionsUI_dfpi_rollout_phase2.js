@@ -24,6 +24,9 @@ const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
 const defaultPrefs = Services.prefs.getDefaultBranch("");
 const previousDefaultCB = defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF);
 
+// Avoid timeouts on test-macosx1015-64-qr/opt-test-verify-fis-e10s
+requestLongerTimeout(2);
+
 function cleanup() {
   BrowserGlue._defaultCookieBehaviorAtStartup = previousDefaultCB;
   defaultPrefs.setIntPref(COOKIE_BEHAVIOR_PREF, previousDefaultCB);
