@@ -379,8 +379,9 @@ class PeerConnection : public PeerConnectionInternal,
   void SetIceConnectionState(IceConnectionState new_state);
   void NoteUsageEvent(UsageEvent event);
 
-  // Report the UMA metric SdpFormatReceived for the given remote offer.
-  void ReportSdpFormatReceived(const SessionDescriptionInterface& remote_offer);
+  // Report the UMA metric SdpFormatReceived for the given remote description.
+  void ReportSdpFormatReceived(
+      const SessionDescriptionInterface& remote_description);
 
   // Returns true if the PeerConnection is configured to use Unified Plan
   // semantics for creating offers/answers and setting local/remote
