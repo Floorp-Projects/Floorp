@@ -773,8 +773,8 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
           .Consume();
 
   // 5. Set sheet's rules to the new rules.
+  DropRuleList();
   Inner().mContents = std::move(rawContent);
-  FixUpRuleListAfterContentsChangeIfNeeded();
   FinishParse();
   RuleChanged(nullptr, StyleRuleChangeKind::Generic);
 }
@@ -1109,25 +1109,18 @@ JSObject* StyleSheet::WrapObject(JSContext* aCx,
   return dom::CSSStyleSheet_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void StyleSheet::FixUpRuleListAfterContentsChangeIfNeeded(bool aFromClone) {
-  if (!mRuleList) {
-    return;
-  }
-
-  RefPtr<ServoCssRules> rules =
-      Servo_StyleSheet_GetRules(Inner().mContents.get()).Consume();
-  mRuleList->SetRawContents(std::move(rules), aFromClone);
-}
-
 void StyleSheet::FixUpAfterInnerClone() {
   MOZ_ASSERT(Inner().mSheets.Length() == 1, "Should've just cloned");
   MOZ_ASSERT(Inner().mSheets[0] == this);
   MOZ_ASSERT(Inner().mChildren.IsEmpty());
 
-  FixUpRuleListAfterContentsChangeIfNeeded(/* aFromClone = */ true);
+  auto* contents = Inner().mContents.get();
+  RefPtr<ServoCssRules> rules = Servo_StyleSheet_GetRules(contents).Consume();
 
-  RefPtr<ServoCssRules> rules =
-      Servo_StyleSheet_GetRules(Inner().mContents.get()).Consume();
+  if (mRuleList) {
+    mRuleList->SetRawAfterClone(rules);
+  }
+
   uint32_t index = 0;
   while (true) {
     uint32_t line, column;  // Actually unused.
@@ -1336,10 +1329,10 @@ void StyleSheet::ReparseSheet(const nsACString& aInput, ErrorResult& aRv) {
     }
   }
 
+  DropRuleList();
+
   ParseSheetSync(loader, aInput, /* aLoadData = */ nullptr, lineNumber,
                  &reusableSheets);
-
-  FixUpRuleListAfterContentsChangeIfNeeded();
 
   // Notify the stylesets about the new rules.
   {
