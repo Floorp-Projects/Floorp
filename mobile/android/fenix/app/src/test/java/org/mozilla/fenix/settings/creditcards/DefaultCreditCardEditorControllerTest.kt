@@ -29,7 +29,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.CreditCards
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.creditcards.controller.DefaultCreditCardEditorController
 
@@ -41,7 +40,6 @@ class DefaultCreditCardEditorControllerTest {
 
     private val storage: AutofillCreditCardsAddressesStorage = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
     private val showDeleteDialog = mockk<(DialogInterface.OnClickListener) -> Unit>()
 
     private lateinit var controller: DefaultCreditCardEditorController
@@ -65,7 +63,6 @@ class DefaultCreditCardEditorControllerTest {
                 lifecycleScope = testCoroutineScope,
                 navController = navController,
                 ioDispatcher = testDispatcher,
-                metrics = metrics,
                 showDeleteDialog = showDeleteDialog
             )
         )

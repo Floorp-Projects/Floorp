@@ -63,7 +63,6 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
                 storage = storage,
                 lifecycleScope = lifecycleScope,
                 navController = findNavController(),
-                requireContext().components.analytics.metrics,
                 showDeleteDialog = ::showDeleteDialog
             )
         )
