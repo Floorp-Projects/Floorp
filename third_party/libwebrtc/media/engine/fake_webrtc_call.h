@@ -104,6 +104,7 @@ class FakeAudioReceiveStream final : public webrtc::AudioReceiveStream {
   void Reconfigure(const webrtc::AudioReceiveStream::Config& config) override;
   void Start() override { started_ = true; }
   void Stop() override { started_ = false; }
+  bool IsRunning() const override { return started_; }
 
   webrtc::AudioReceiveStream::Stats GetStats(
       bool get_and_clear_legacy_stats) const override;
