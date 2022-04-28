@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
@@ -176,7 +177,9 @@ class DefaultHistoryMetadataGroupController(
             )
             GleanHistory.searchTermGroupRemoveAll.record(NoExtras())
             allDeletedSnackbar.invoke()
-            navController.popBackStack()
+            launch(Main) {
+                navController.popBackStack()
+            }
         }
     }
 }
