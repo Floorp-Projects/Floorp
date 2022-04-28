@@ -1244,9 +1244,15 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     // nsFrameLoader in the current SessionHistoryEntry.
     RefPtr<SessionHistoryEntry> currentSHEntry =
         aBrowsingContext->GetActiveSessionHistoryEntry();
-    if (aCanSave && currentSHEntry) {
-      currentSHEntry->SetFrameLoader(currentFrameLoader);
-      Unused << aBrowsingContext->SetIsInBFCache(true);
+    if (currentSHEntry) {
+      // Update layout history state now, before we change the IsInBFCache flag
+      // and the active session history entry.
+      aBrowsingContext->SynchronizeLayoutHistoryState();
+
+      if (aCanSave) {
+        currentSHEntry->SetFrameLoader(currentFrameLoader);
+        Unused << aBrowsingContext->SetIsInBFCache(true);
+      }
     }
 
     if (aBrowsingContext->IsActive()) {
@@ -1279,10 +1285,6 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     // The old page can't be stored in the bfcache,
     // destroy the nsFrameLoader.
     if (!aCanSave && currentFrameLoader) {
-      // Since destroying the browsing context may need to update layout
-      // history state, the browsing context needs to have still access to the
-      // correct entry.
-      aBrowsingContext->SetActiveSessionHistoryEntry(currentSHEntry);
       currentFrameLoader->Destroy();
     }
 

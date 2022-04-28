@@ -234,7 +234,7 @@ add_task(async function navigate_around() {
       // The following sandbox pref is covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1600189
       knownProblematicPrefs["security.sandbox.content.force-namespace"] = {
-        min: 49,
+        min: 45,
         max: 55,
       };
       // This was previously being read in the content process, but
@@ -243,7 +243,7 @@ add_task(async function navigate_around() {
       // more problematic than the pref read.  These issues are covered
       // by https://bugzilla.mozilla.org/show_bug.cgi?id=1729080
       knownProblematicPrefs["gfx.color_management.display_profile"] = {
-        min: 49,
+        min: 45,
         max: 50,
       };
     } else if (AppConstants.platform == "win") {

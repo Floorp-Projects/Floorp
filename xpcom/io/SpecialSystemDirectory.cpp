@@ -568,6 +568,7 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         return NS_NewLocalFile(nsDependentString(path, len), true, aFile);
       }
+      break;
     }
     case Win_Programs: {
       return GetWindowsFolder(CSIDL_PROGRAMS, aFile);

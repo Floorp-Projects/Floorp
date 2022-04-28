@@ -1021,7 +1021,7 @@ var gMainPane = {
    * @param {string} selected - The selected BCP 47 locale.
    */
   async updatePrimaryBrowserLanguageUI(selected) {
-    let available = await getAvailableLocales();
+    let available = await LangPackMatcher.getAvailableLocales();
     let localeNames = Services.intl.getLocaleDisplayNames(
       undefined,
       available,

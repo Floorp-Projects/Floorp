@@ -37,9 +37,17 @@
 #include "vm/MutexIDs.h"
 
 static bool ComputeLocalTime(time_t local, struct tm* ptm) {
+  // Neither localtime_s nor localtime_r are required to act as if tzset has
+  // been called, therefore we need to explicitly call it to ensure any time
+  // zone changes are correctly picked up.
+
 #if defined(_WIN32)
+  _tzset();
   return localtime_s(ptm, &local) == 0;
 #elif defined(HAVE_LOCALTIME_R)
+#  ifndef __wasi__
+  tzset();
+#  endif
   return localtime_r(&local, ptm);
 #else
   struct tm* otm = localtime(&local);

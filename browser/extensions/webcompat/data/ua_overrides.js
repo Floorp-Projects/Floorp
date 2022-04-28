@@ -719,6 +719,8 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://bethesda.net/*", // #94607
         "*://cdn-vzn.yottaa.net/*", // Bug 1764795
         "*://citoyens.telerecours.fr/*", // #101066
+        "*://www.connexus.com/*", // Bug 1765925
+        "*://dsae.co.za/*", // Bug 1765925
         "*://genehmigung.ahs-vwa.at/*", // #100063
         "*://moje.pzu.pl/*", // #99772
         "*://mon.allianzbanque.fr/*", // #101074
@@ -809,6 +811,7 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://www.southportvisiter.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.staffordshire-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.stokesentinel.co.uk/*", // Bug 1762928 (Reach Plc)
+        "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://www.sussexlive.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.tm-awx.com/*", // Bug 1762928 (Reach Plc)
         "*://www.twitch.tv/*", // Bug 1764591
@@ -868,25 +871,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://nordjyske.dk/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA("97.0.4692.9", "Pixel 4");
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1177298 - UA overrides for expertflyer.com
-     * Webcompat issue #96685 - https://webcompat.com/issues/96685
-     *
-     * The site does not offer a stylesheet unless AppleWebKit
-     * is part of the user-agent string.
-     */
-    id: "bug1753631",
-    platform: "android",
-    domain: "expertflyer.com",
-    bug: "1753631",
-    config: {
-      matches: ["*://*.expertflyer.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " AppleWebKit";
       },
     },
   },

@@ -58,6 +58,7 @@ using mozilla::TimeStamp;
 using mozilla::Utf8Unit;
 
 using JS::CompileOptions;
+using JS::DispatchReason;
 using JS::ReadOnlyCompileOptions;
 
 namespace js {
@@ -177,7 +178,7 @@ bool GlobalHelperThreadState::submitTask(wasm::CompileTask* task,
     return false;
   }
 
-  dispatch(lock);
+  dispatch(DispatchReason::NewTask, lock);
   return true;
 }
 
@@ -205,7 +206,7 @@ bool GlobalHelperThreadState::submitTask(wasm::UniqueTier2GeneratorTask task) {
   }
   (void)task.release();
 
-  dispatch(lock);
+  dispatch(DispatchReason::NewTask, lock);
   return true;
 }
 
@@ -278,7 +279,7 @@ bool GlobalHelperThreadState::submitTask(
   // unwanted mutations.
   task->alloc().lifoAlloc()->setReadOnly();
 
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
   return true;
 }
 
@@ -301,7 +302,7 @@ bool GlobalHelperThreadState::submitTask(
     return false;
   }
 
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
   return true;
 }
 
@@ -1250,14 +1251,14 @@ bool GlobalHelperThreadState::submitTask(
 
   parseWorklist(locked).back()->activate(rt);
 
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
   return true;
 }
 
 void GlobalHelperThreadState::submitTask(
     DelazifyTask* task, const AutoLockHelperThreadState& locked) {
   delazifyWorklist(locked).insertBack(task);
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
 }
 
 bool GlobalHelperThreadState::submitTask(
@@ -1265,7 +1266,7 @@ bool GlobalHelperThreadState::submitTask(
   if (!freeDelazifyTaskVector(locked).append(std::move(task))) {
     return false;
   }
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
   return true;
 }
 
@@ -1520,7 +1521,7 @@ void GlobalHelperThreadState::assertIsLockedByCurrentThread() const {
 #endif  // DEBUG
 
 void GlobalHelperThreadState::dispatch(
-    const AutoLockHelperThreadState& locked) {
+    DispatchReason reason, const AutoLockHelperThreadState& locked) {
   if (canStartTasks(locked) && tasksPending_ < threadCount) {
     // This doesn't guarantee that we don't dispatch more tasks to the external
     // pool than necessary if tasks are taking a long time to start, but it does
@@ -1530,7 +1531,7 @@ void GlobalHelperThreadState::dispatch(
     // The hazard analysis can't tell that the callback doesn't GC.
     JS::AutoSuppressGCAnalysis nogc;
 
-    dispatchTaskCallback();
+    dispatchTaskCallback(reason);
   }
 }
 
@@ -2098,14 +2099,14 @@ bool GlobalHelperThreadState::submitTask(
     return false;
   }
 
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
   return true;
 }
 
 bool GlobalHelperThreadState::submitTask(
     GCParallelTask* task, const AutoLockHelperThreadState& locked) {
   gcParallelWorklist(locked).insertBack(task);
-  dispatch(locked);
+  dispatch(DispatchReason::NewTask, locked);
   return true;
 }
 
@@ -2514,7 +2515,7 @@ bool GlobalHelperThreadState::submitTask(PromiseHelperTask* task) {
     return false;
   }
 
-  dispatch(lock);
+  dispatch(DispatchReason::NewTask, lock);
   return true;
 }
 
@@ -2620,7 +2621,7 @@ void GlobalHelperThreadState::runOneTask(AutoLockHelperThreadState& lock) {
   HelperThreadTask* task = findHighestPriorityTask(lock);
   if (task) {
     runTaskLocked(task, lock);
-    dispatch(lock);
+    dispatch(DispatchReason::FinishedTask, lock);
   }
 
   notifyAll(lock);

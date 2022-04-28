@@ -40,7 +40,7 @@ preference = "layout.css.constructable-stylesheets.enabled"
 type = "boolean"
 bug-numbers = [1520690]
 is-public = {default = false, nightly = true}
-default-value = false
+default-value = true
 
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"

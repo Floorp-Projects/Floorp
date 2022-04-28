@@ -35,10 +35,8 @@ class Instance final : public nsWrapperCache {
   already_AddRefed<dom::Promise> RequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions, ErrorResult& aRv);
 
-  RefPtr<WebGPUChild> mBridge;
-
  private:
-  explicit Instance(nsIGlobalObject* aOwner, WebGPUChild* aBridge);
+  explicit Instance(nsIGlobalObject* aOwner);
   virtual ~Instance();
   void Cleanup();
 

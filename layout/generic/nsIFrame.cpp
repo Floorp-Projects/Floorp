@@ -8076,6 +8076,25 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     aTo += nsPrintfCString(" next-%s=%p", fluid ? "in-flow" : "continuation",
                            static_cast<void*>(GetNextContinuation()));
   }
+  if (const nsIFrame::PageValues* const pageValues =
+          GetProperty(PageValuesProperty())) {
+    nsAutoCString name;
+    aTo += " PageValues={";
+    if (pageValues->mStartPageValue) {
+      pageValues->mStartPageValue->ToUTF8String(name);
+      aTo += name;
+    } else {
+      aTo += "<null>";
+    }
+    aTo += ", ";
+    if (pageValues->mEndPageValue) {
+      pageValues->mEndPageValue->ToUTF8String(name);
+      aTo += name;
+    } else {
+      aTo += "<null>";
+    }
+    aTo += "}";
+  }
   void* IBsibling = GetProperty(IBSplitSibling());
   if (IBsibling) {
     aTo += nsPrintfCString(" IBSplitSibling=%p", IBsibling);

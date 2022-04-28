@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Platform.h"
-#include "RemoteAccessibleWrap.h"
 #include "DocAccessibleWrap.h"
 #include "SessionAccessibility.h"
 #include "mozilla/a11y/RemoteAccessible.h"
@@ -27,31 +26,11 @@ void a11y::PlatformInit() {}
 void a11y::PlatformShutdown() { NS_IF_RELEASE(sStringBundle); }
 
 void a11y::ProxyCreated(RemoteAccessible* aProxy) {
-  AccessibleWrap* wrapper = nullptr;
-  if (aProxy->IsDoc()) {
-    wrapper = new DocRemoteAccessibleWrap(aProxy->AsDoc());
-  } else {
-    wrapper = new RemoteAccessibleWrap(aProxy);
-  }
-
-  wrapper->AddRef();
-  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
+  SessionAccessibility::RegisterAccessible(aProxy);
 }
 
 void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
-  AccessibleWrap* wrapper =
-      reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
-
-  // If aProxy is a document that was created, but
-  // RecvPDocAccessibleConstructor failed then aProxy->GetWrapper() will be
-  // null.
-  if (!wrapper) {
-    return;
-  }
-
-  wrapper->Shutdown();
-  aProxy->SetWrapper(0);
-  wrapper->Release();
+  SessionAccessibility::UnregisterAccessible(aProxy);
 }
 
 void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
@@ -63,7 +42,7 @@ void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
 
   switch (aEventType) {
     case nsIAccessibleEvent::EVENT_FOCUS:
-      sessionAcc->SendFocusEvent(WrapperFor(aTarget));
+      sessionAcc->SendFocusEvent(aTarget);
       break;
     case nsIAccessibleEvent::EVENT_REORDER:
       if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
@@ -86,24 +65,23 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
 
   if (aState & states::CHECKED) {
     sessionAcc->SendClickedEvent(
-        WrapperFor(aTarget),
-        java::SessionAccessibility::FLAG_CHECKABLE |
-            (aEnabled ? java::SessionAccessibility::FLAG_CHECKED : 0));
+        aTarget, java::SessionAccessibility::FLAG_CHECKABLE |
+                     (aEnabled ? java::SessionAccessibility::FLAG_CHECKED : 0));
   }
 
   if (aState & states::EXPANDED) {
     sessionAcc->SendClickedEvent(
-        WrapperFor(aTarget),
+        aTarget,
         java::SessionAccessibility::FLAG_EXPANDABLE |
             (aEnabled ? java::SessionAccessibility::FLAG_EXPANDED : 0));
   }
 
   if (aState & states::SELECTED) {
-    sessionAcc->SendSelectedEvent(WrapperFor(aTarget), aEnabled);
+    sessionAcc->SendSelectedEvent(aTarget, aEnabled);
   }
 
   if (aState & states::BUSY) {
-    sessionAcc->SendWindowStateChangedEvent(WrapperFor(aTarget));
+    sessionAcc->SendWindowStateChangedEvent(aTarget);
     if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
       sessionAcc->SendWindowContentChangedEvent();
     }
@@ -117,7 +95,7 @@ void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
-    sessionAcc->SendTextSelectionChangedEvent(WrapperFor(aTarget), aOffset);
+    sessionAcc->SendTextSelectionChangedEvent(aTarget, aOffset);
   }
 }
 
@@ -128,8 +106,8 @@ void a11y::ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsString& aStr,
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
-    sessionAcc->SendTextChangedEvent(WrapperFor(aTarget), aStr, aStart, aLen,
-                                     aIsInsert, aFromUser);
+    sessionAcc->SendTextChangedEvent(aTarget, aStr, aStart, aLen, aIsInsert,
+                                     aFromUser);
   }
 }
 
@@ -161,15 +139,14 @@ void a11y::ProxyVirtualCursorChangeEvent(
   }
 
   if (aReason == nsIAccessiblePivot::REASON_POINT) {
-    sessionAcc->SendHoverEnterEvent(WrapperFor(aNewPosition));
+    sessionAcc->SendHoverEnterEvent(aNewPosition);
   } else if (aBoundaryType == nsIAccessiblePivot::NO_BOUNDARY) {
-    RefPtr<AccessibleWrap> wrapperForNewPosition = WrapperFor(aNewPosition);
-    sessionAcc->SendAccessibilityFocusedEvent(wrapperForNewPosition);
+    sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
   }
 
   if (aBoundaryType != nsIAccessiblePivot::NO_BOUNDARY) {
-    sessionAcc->SendTextTraversedEvent(WrapperFor(aNewPosition),
-                                       aNewStartOffset, aNewEndOffset);
+    sessionAcc->SendTextTraversedEvent(aNewPosition, aNewStartOffset,
+                                       aNewEndOffset);
   }
 }
 
@@ -181,8 +158,8 @@ void a11y::ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,
         SessionAccessibility::GetInstanceFor(aTarget);
 
     if (sessionAcc) {
-      sessionAcc->SendScrollingEvent(WrapperFor(aTarget), aScrollX, aScrollY,
-                                     aMaxScrollX, aMaxScrollY);
+      sessionAcc->SendScrollingEvent(aTarget, aScrollX, aScrollY, aMaxScrollX,
+                                     aMaxScrollY);
     }
   }
 }
@@ -194,8 +171,7 @@ void a11y::ProxyAnnouncementEvent(RemoteAccessible* aTarget,
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (sessionAcc) {
-    sessionAcc->SendAnnouncementEvent(WrapperFor(aTarget), aAnnouncement,
-                                      aPriority);
+    sessionAcc->SendAnnouncementEvent(aTarget, aAnnouncement, aPriority);
   }
 }
 
@@ -208,20 +184,20 @@ void a11y::ProxyBatch(RemoteAccessible* aDocument, const uint64_t aBatchType,
     return;
   }
 
-  nsTArray<AccessibleWrap*> accWraps(aAccessibles.Length());
+  nsTArray<Accessible*> accessibles(aAccessibles.Length());
   for (size_t i = 0; i < aAccessibles.Length(); i++) {
-    accWraps.AppendElement(WrapperFor(aAccessibles.ElementAt(i)));
+    accessibles.AppendElement(aAccessibles.ElementAt(i));
   }
 
   switch (aBatchType) {
     case DocAccessibleWrap::eBatch_Viewport:
-      sessionAcc->ReplaceViewportCache(accWraps, aData);
+      sessionAcc->ReplaceViewportCache(accessibles, aData);
       break;
     case DocAccessibleWrap::eBatch_FocusPath:
-      sessionAcc->ReplaceFocusPathCache(accWraps, aData);
+      sessionAcc->ReplaceFocusPathCache(accessibles, aData);
       break;
     case DocAccessibleWrap::eBatch_BoundsUpdate:
-      sessionAcc->UpdateCachedBounds(accWraps, aData);
+      sessionAcc->UpdateCachedBounds(accessibles, aData);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown batch type.");

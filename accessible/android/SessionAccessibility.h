@@ -11,11 +11,13 @@
 #include "nsAppShell.h"
 #include "nsThreadUtils.h"
 #include "nsWindow.h"
+#include "AccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
 
 class AccessibleWrap;
+class AccAttributes;
 class Accessible;
 class RootAccessibleWrap;
 class BatchData;
@@ -64,53 +66,80 @@ class SessionAccessibility final
   void StartNativeAccessibility();
 
   // Event methods
-  void SendFocusEvent(AccessibleWrap* aAccessible);
-  void SendScrollingEvent(AccessibleWrap* aAccessible, int32_t aScrollX,
+  void SendFocusEvent(Accessible* aAccessible);
+  void SendScrollingEvent(Accessible* aAccessible, int32_t aScrollX,
                           int32_t aScrollY, int32_t aMaxScrollX,
                           int32_t aMaxScrollY);
-  MOZ_CAN_RUN_SCRIPT
-  void SendAccessibilityFocusedEvent(AccessibleWrap* aAccessible);
-  void SendHoverEnterEvent(AccessibleWrap* aAccessible);
-  void SendTextSelectionChangedEvent(AccessibleWrap* aAccessible,
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  void SendAccessibilityFocusedEvent(Accessible* aAccessible);
+  void SendHoverEnterEvent(Accessible* aAccessible);
+  void SendTextSelectionChangedEvent(Accessible* aAccessible,
                                      int32_t aCaretOffset);
-  void SendTextTraversedEvent(AccessibleWrap* aAccessible, int32_t aStartOffset,
+  void SendTextTraversedEvent(Accessible* aAccessible, int32_t aStartOffset,
                               int32_t aEndOffset);
-  void SendTextChangedEvent(AccessibleWrap* aAccessible, const nsString& aStr,
+  void SendTextChangedEvent(Accessible* aAccessible, const nsString& aStr,
                             int32_t aStart, uint32_t aLen, bool aIsInsert,
                             bool aFromUser);
-  void SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected);
-  void SendClickedEvent(AccessibleWrap* aAccessible, uint32_t aFlags);
+  void SendSelectedEvent(Accessible* aAccessible, bool aSelected);
+  void SendClickedEvent(Accessible* aAccessible, uint32_t aFlags);
   void SendWindowContentChangedEvent();
-  void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
-  void SendAnnouncementEvent(AccessibleWrap* aAccessible,
+  void SendWindowStateChangedEvent(Accessible* aAccessible);
+  void SendAnnouncementEvent(Accessible* aAccessible,
                              const nsString& aAnnouncement, uint16_t aPriority);
 
   // Cache methods
   void ReplaceViewportCache(
-      const nsTArray<AccessibleWrap*>& aAccessibles,
+      const nsTArray<Accessible*>& aAccessibles,
       const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
   void ReplaceFocusPathCache(
-      const nsTArray<AccessibleWrap*>& aAccessibles,
+      const nsTArray<Accessible*>& aAccessibles,
       const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
   void UpdateCachedBounds(
-      const nsTArray<AccessibleWrap*>& aAccessibles,
+      const nsTArray<Accessible*>& aAccessibles,
       const nsTArray<BatchData>& aData = nsTArray<BatchData>());
 
-  void UpdateAccessibleFocusBoundaries(AccessibleWrap* aFirst,
-                                       AccessibleWrap* aLast);
+  void UpdateAccessibleFocusBoundaries(Accessible* aFirst, Accessible* aLast);
+
+  Accessible* GetAccessibleByID(int32_t aID) const {
+    return mIDToAccessibleMap.Get(aID);
+  }
+
+  static const int32_t kNoID = -1;
+  static const int32_t kUnsetID = 0;
+
+  static void RegisterAccessible(Accessible* aAccessible);
+  static void UnregisterAccessible(Accessible* aAccessible);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SessionAccessibility)
 
  private:
   ~SessionAccessibility() {}
 
+  mozilla::java::GeckoBundle::LocalRef ToBundle(Accessible* aAccessible,
+                                                bool aSmall = false);
+
+  mozilla::java::GeckoBundle::LocalRef ToBundle(
+      Accessible* aAccessible, const uint64_t aState,
+      const LayoutDeviceIntRect& aBounds, const uint8_t aActionCount,
+      const nsString& aName, const nsString& aTextValue,
+      const nsString& aDOMNodeID, const nsString& aDescription,
+      const double& aCurVal = UnspecifiedNaN<double>(),
+      const double& aMinVal = UnspecifiedNaN<double>(),
+      const double& aMaxVal = UnspecifiedNaN<double>(),
+      const double& aStep = UnspecifiedNaN<double>(),
+      AccAttributes* aAttributes = nullptr);
+
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
-  RootAccessibleWrap* GetRoot();
 
   jni::NativeWeakPtr<widget::GeckoViewSupport> mWindow;  // Parent only
   java::SessionAccessibility::NativeProvider::GlobalRef mSessionAccessibility;
+
+  /*
+   * This provides a mapping from 32 bit id to accessible objects.
+   */
+  nsTHashMap<nsUint32HashKey, Accessible*> mIDToAccessibleMap;
 };
 
 }  // namespace a11y

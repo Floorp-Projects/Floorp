@@ -1,0 +1,28 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<iframe></iframe>
+<script>
+  async function testFrame(file, expectEnabled) {
+    let reply = new Promise(resolve => {
+      window.addEventListener("message", function(e) {
+        resolve(e.data);
+      }, { once: true });
+    });
+
+    let iframe = document.querySelector("iframe");
+    let load = new Promise(resolve => {
+      iframe.addEventListener("load", resolve, { once: true });
+    });
+
+    iframe.src = "https://www.example.com/" + location.pathname.replace("test_subdomain.html", file);
+    info("loading " + iframe.src);
+    await load;
+    let data = await reply;
+    is(data.testTrialInterfaceExposed, expectEnabled);
+  }
+
+  add_task(async function test_subdomain() {
+    await testFrame("file_subdomain_good_frame.html", true);
+    await testFrame("file_subdomain_bad_frame.html", false);
+  });
+</script>

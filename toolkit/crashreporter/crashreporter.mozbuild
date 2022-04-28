@@ -27,9 +27,8 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
          '-Wno-c++11-narrowing',
      ]
 
-if CONFIG['CC_TYPE'] != 'clang-cl':
-     CXXFLAGS += [
-         '-Wno-implicit-fallthrough',
-     ]
+CXXFLAGS += [
+    '-Wno-implicit-fallthrough',
+]
 
 DEFINES['NO_STABS_SUPPORT'] = True

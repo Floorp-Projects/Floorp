@@ -20,7 +20,7 @@ class Accessible;
 class TraversalRule : public PivotRule {
  public:
   TraversalRule();
-  explicit TraversalRule(int32_t aGranularity);
+  explicit TraversalRule(int32_t aGranularity, bool aIsLocal);
 
   ~TraversalRule() = default;
 
@@ -48,10 +48,8 @@ class TraversalRule : public PivotRule {
   uint16_t LandmarkMatch(Accessible* aAccessible);
 
   int32_t mGranularity;
-};
 
-class ExploreByTouchRule final : public TraversalRule {
-  virtual uint16_t Match(Accessible* aAcc) override;
+  bool mIsLocal;
 };
 
 }  // namespace a11y

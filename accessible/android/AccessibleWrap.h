@@ -28,14 +28,6 @@ class AccessibleWrap : public LocalAccessible {
 
   virtual bool DoAction(uint8_t aIndex) const override;
 
-  int32_t VirtualViewID() const { return mID; }
-
-  virtual void SetTextContents(const nsAString& aText);
-
-  virtual void GetTextContents(nsAString& aText);
-
-  virtual bool GetSelectionBounds(int32_t* aStartOffset, int32_t* aEndOffset);
-
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool PivotTo(int32_t aGranularity, bool aForward, bool aInclusive);
 
@@ -53,65 +45,35 @@ class AccessibleWrap : public LocalAccessible {
 
   void ExploreByTouch(float aX, float aY);
 
-  mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
-
-  mozilla::java::GeckoBundle::LocalRef ToBundle(
-      const uint64_t aState, const LayoutDeviceIntRect& aBounds,
-      const uint8_t aActionCount, const nsString& aName,
-      const nsString& aTextValue, const nsString& aDOMNodeID,
-      const nsString& aDescription,
-      const double& aCurVal = UnspecifiedNaN<double>(),
-      const double& aMinVal = UnspecifiedNaN<double>(),
-      const double& aMaxVal = UnspecifiedNaN<double>(),
-      const double& aStep = UnspecifiedNaN<double>(),
-      AccAttributes* aAttributes = nullptr);
-
-  virtual void WrapperDOMNodeID(nsString& aDOMNodeID);
-
-  int32_t AndroidClass() {
-    return mID == kNoID ? java::SessionAccessibility::CLASSNAME_WEBVIEW
-                        : GetAndroidClass(WrapperRole());
-  }
-
-  static const int32_t kNoID = -1;
-
- protected:
-  // IDs should be a positive 32bit integer.
-  static int32_t AcquireID();
-  static void ReleaseID(int32_t aID);
-
-  static int32_t GetAndroidClass(role aRole);
+  static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 
   static int32_t GetInputType(const nsString& aInputTypeAttr);
 
-  int32_t mID;
-
- private:
-  virtual AccessibleWrap* WrapperParent() {
-    return static_cast<AccessibleWrap*>(LocalParent());
-  }
-
-  virtual bool WrapperRangeInfo(double* aCurVal, double* aMinVal,
-                                double* aMaxVal, double* aStep);
-
-  virtual role WrapperRole() { return Role(); }
-
-  void GetTextEquiv(nsString& aText);
-
-  bool HandleLiveRegionEvent(AccEvent* aEvent);
-
-  void GetSelectionOrCaret(int32_t* aStartOffset, int32_t* aEndOffset);
+  static int32_t GetAndroidClass(role aRole);
 
   static void GetRoleDescription(role aRole, AccAttributes* aAttributes,
                                  nsAString& aGeckoRole,
                                  nsAString& aRoleDescription);
 
-  static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
-};
+  static int32_t AndroidClass(Accessible* aAccessible);
 
-static inline AccessibleWrap* WrapperFor(const RemoteAccessible* aProxy) {
-  return reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
-}
+  static int32_t GetVirtualViewID(Accessible* aAccessible);
+
+  static void SetVirtualViewID(Accessible* aAccessible, int32_t aVirtualViewID);
+
+  static Accessible* DoPivot(Accessible* aAccessible, int32_t aGranularity,
+                             bool aForward, bool aInclusive);
+
+ protected:
+  int32_t mID;
+
+ private:
+  void GetTextEquiv(nsString& aText);
+
+  bool HandleLiveRegionEvent(AccEvent* aEvent);
+
+  void GetSelectionOrCaret(int32_t* aStartOffset, int32_t* aEndOffset);
+};
 
 }  // namespace a11y
 }  // namespace mozilla

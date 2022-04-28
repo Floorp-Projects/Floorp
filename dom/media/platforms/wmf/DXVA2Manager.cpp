@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifdef MOZ_AV1
+#  include "AOMDecoder.h"
+#endif
 #include "DXVA2Manager.h"
 #include <d3d11.h>
 #include "D3D9SurfaceImage.h"
@@ -14,6 +17,7 @@
 #include "MediaTelemetryConstants.h"
 #include "PerformanceRecorder.h"
 #include "VideoUtils.h"
+#include "VPXDecoder.h"
 #include "WMFUtils.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxWindowsPlatform.h"
@@ -143,12 +147,11 @@ class D3D9DXVA2Manager : public DXVA2Manager {
   HRESULT CopyToImage(IMFSample* aVideoSample, const gfx::IntRect& aRegion,
                       Image** aOutImage) override;
 
-  bool SupportsConfig(IMFMediaType* aInputType, IMFMediaType* aOutputType,
-                      float aFramerate) override;
+  bool SupportsConfig(const VideoInfo& aInfo, IMFMediaType* aInputType,
+                      IMFMediaType* aOutputType) override;
 
  private:
-  bool CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
-                        const float aFramerate) const;
+  bool CanCreateDecoder(const DXVA2_VideoDesc& aDesc) const;
 
   already_AddRefed<IDirectXVideoDecoder> CreateDecoder(
       const DXVA2_VideoDesc& aDesc) const;
@@ -228,46 +231,84 @@ HRESULT ConvertMFTypeToDXVAType(IMFMediaType* pType, DXVA2_VideoDesc* pDesc) {
   return S_OK;
 }
 
-static const GUID DXVA2_ModeH264_E = {
+// All GUIDs other than Intel ClearVideo can be found here:
+// https://docs.microsoft.com/en-us/windows/win32/medfound/direct3d-12-video-guids
+// VLD = Variable-length decoder, FGT = Film grain technology
+static const GUID DXVA2_ModeH264_VLD_NoFGT = {
     0x1b81be68,
     0xa0c7,
     0x11d3,
     {0xb9, 0x84, 0x00, 0xc0, 0x4f, 0x2e, 0x73, 0xc5}};
 
-static const GUID DXVA2_Intel_ModeH264_E = {
+// Also known as DXVADDI_Intel_ModeH264_E here:
+// https://www.intel.com/content/dam/develop/external/us/en/documents/h264-avc-x4500-acceration-esardell-157713.pdf
+// Named based on the fact that this is only supported on older ClearVideo
+// Intel decoding hardware.
+static const GUID DXVA2_Intel_ClearVideo_ModeH264_VLD_NoFGT = {
     0x604F8E68,
     0x4951,
     0x4c54,
     {0x88, 0xFE, 0xAB, 0xD2, 0x5C, 0x15, 0xB3, 0xD6}};
 
-// VP8, VP9 and AV1 from:
-// https://docs.microsoft.com/en-us/windows/win32/medfound/direct3d-12-video-guids
+// VP8 profiles
 static const GUID DXVA2_ModeVP8_VLD = {
     0x90b899ea,
     0x3a62,
     0x4705,
     {0x88, 0xb3, 0x8d, 0xf0, 0x4b, 0x27, 0x44, 0xe7}};
 
+// VP9 profiles
 static const GUID DXVA2_ModeVP9_VLD_Profile0 = {
     0x463707f8,
     0xa1d0,
     0x4585,
     {0x87, 0x6d, 0x83, 0xaa, 0x6d, 0x60, 0xb8, 0x9e}};
 
-static const GUID DXVA2_ModeAV1_Profile0 = {
+static const GUID DXVA2_ModeVP9_VLD_10bit_Profile2 = {
+    0xa4c749ef,
+    0x6ecf,
+    0x48aa,
+    {0x84, 0x48, 0x50, 0xa7, 0xa1, 0x16, 0x5f, 0xf7}};
+
+// AV1 profiles
+static const GUID DXVA2_ModeAV1_VLD_Profile0 = {
     0xb8be4ccb,
     0xcf53,
     0x46ba,
     {0x8d, 0x59, 0xd6, 0xb8, 0xa6, 0xda, 0x5d, 0x2a}};
+
+static const GUID DXVA2_ModeAV1_VLD_Profile1 = {
+    0x6936ff0f,
+    0x45b1,
+    0x4163,
+    {0x9c, 0xc1, 0x64, 0x6e, 0xf6, 0x94, 0x61, 0x08}};
+
+static const GUID DXVA2_ModeAV1_VLD_Profile2 = {
+    0x0c5f2aa1,
+    0xe541,
+    0x4089,
+    {0xbb, 0x7b, 0x98, 0x11, 0x0a, 0x19, 0xd7, 0xc8}};
+
+static const GUID DXVA2_ModeAV1_VLD_12bit_Profile2 = {
+    0x17127009,
+    0xa00f,
+    0x4ce1,
+    {0x99, 0x4e, 0xbf, 0x40, 0x81, 0xf6, 0xf3, 0xf0}};
+
+static const GUID DXVA2_ModeAV1_VLD_12bit_Profile2_420 = {
+    0x2d80bed6,
+    0x9cac,
+    0x4835,
+    {0x9e, 0x91, 0x32, 0x7b, 0xbc, 0x4f, 0x9e, 0xe8}};
 
 // This tests if a DXVA video decoder can be created for the given media
 // type/resolution. It uses the same decoder device (DXVA2_ModeH264_E -
 // DXVA2_ModeH264_VLD_NoFGT) as the H264 decoder MFT provided by windows
 // (CLSID_CMSH264DecoderMFT) uses, so we can use it to determine if the MFT will
 // use software fallback or not.
-bool D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aInputType,
-                                      IMFMediaType* aOutputType,
-                                      float aFramerate) {
+bool D3D9DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
+                                      IMFMediaType* aInputType,
+                                      IMFMediaType* aOutputType) {
   GUID inputSubtype;
   HRESULT hr = aInputType->GetGUID(MF_MT_SUBTYPE, &inputSubtype);
   if (FAILED(hr) || inputSubtype != MFVideoFormat_H264) {
@@ -277,7 +318,7 @@ bool D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aInputType,
   DXVA2_VideoDesc desc;
   hr = ConvertMFTypeToDXVAType(aInputType, &desc);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-  return CanCreateDecoder(desc, aFramerate);
+  return CanCreateDecoder(desc);
 }
 
 D3D9DXVA2Manager::D3D9DXVA2Manager() { MOZ_COUNT_CTOR(D3D9DXVA2Manager); }
@@ -409,8 +450,8 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
 
   bool found = false;
   for (UINT i = 0; i < deviceCount; i++) {
-    if (decoderDevices[i] == DXVA2_ModeH264_E ||
-        decoderDevices[i] == DXVA2_Intel_ModeH264_E) {
+    if (decoderDevices[i] == DXVA2_ModeH264_VLD_NoFGT ||
+        decoderDevices[i] == DXVA2_Intel_ClearVideo_ModeH264_VLD_NoFGT) {
       mDecoderGUID = decoderDevices[i];
       found = true;
       break;
@@ -538,10 +579,11 @@ DXVA2Manager* DXVA2Manager::CreateD3D9DXVA(
   return nullptr;
 }
 
-bool D3D9DXVA2Manager::CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
-                                        const float aFramerate) const {
+bool D3D9DXVA2Manager::CanCreateDecoder(const DXVA2_VideoDesc& aDesc) const {
+  float framerate = static_cast<float>(aDesc.OutputFrameFreq.Numerator) /
+                    aDesc.OutputFrameFreq.Denominator;
   if (IsUnsupportedResolution(aDesc.SampleWidth, aDesc.SampleHeight,
-                              aFramerate)) {
+                              framerate)) {
     return false;
   }
   RefPtr<IDirectXVideoDecoder> decoder = CreateDecoder(aDesc);
@@ -610,15 +652,14 @@ class D3D11DXVA2Manager : public DXVA2Manager {
 
   bool IsD3D11() override { return true; }
 
-  bool SupportsConfig(IMFMediaType* aInputType, IMFMediaType* aOutputType,
-                      float aFramerate) override;
+  bool SupportsConfig(const VideoInfo& aInfo, IMFMediaType* aInputType,
+                      IMFMediaType* aOutputType) override;
 
  private:
   HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
                              ID3D11Texture2D* aTexture);
 
-  bool CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc,
-                        const float aFramerate) const;
+  bool CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc) const;
 
   already_AddRefed<ID3D11VideoDecoder> CreateDecoder(
       const D3D11_VIDEO_DECODER_DESC& aDesc) const;
@@ -631,7 +672,6 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<ID3D11VideoDecoder> mDecoder;
   RefPtr<layers::SyncObjectClient> mSyncObject;
-  GUID mDecoderGUID;
   uint32_t mWidth = 0;
   uint32_t mHeight = 0;
   UINT mDeviceManagerToken = 0;
@@ -641,11 +681,10 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
 };
 
-bool D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aInputType,
-                                       IMFMediaType* aOutputType,
-                                       float aFramerate) {
-  D3D11_VIDEO_DECODER_DESC desc = {.OutputFormat = DXGI_FORMAT_NV12};
-  GUID subtype;
+bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
+                                       IMFMediaType* aInputType,
+                                       IMFMediaType* aOutputType) {
+  D3D11_VIDEO_DECODER_DESC desc = {GUID_NULL, 0, 0, DXGI_FORMAT_UNKNOWN};
 
   HRESULT hr = MFGetAttributeSize(aInputType, MF_MT_FRAME_SIZE,
                                   &desc.SampleWidth, &desc.SampleHeight);
@@ -653,29 +692,132 @@ bool D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aInputType,
   NS_ENSURE_TRUE(desc.SampleWidth <= MAX_VIDEO_WIDTH, false);
   NS_ENSURE_TRUE(desc.SampleHeight <= MAX_VIDEO_HEIGHT, false);
 
+  GUID subtype;
   hr = aInputType->GetGUID(MF_MT_SUBTYPE, &subtype);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   if (subtype == MFVideoFormat_H264) {
     // IsUnsupportedResolution is only used to work around an AMD H264 issue.
-    NS_ENSURE_FALSE(IsUnsupportedResolution(desc.SampleWidth, desc.SampleHeight,
-                                            aFramerate),
-                    false);
-    // Use the GUID defined earlier since some systems use an Intel-provided
-    // decoder.
-    // TODO: Move Intel-specific check from ::InitInternal to here.
-    desc.Guid = mDecoderGUID;
+    const float framerate = [&]() {
+      UINT32 numerator;
+      UINT32 denominator;
+      if (SUCCEEDED(MFGetAttributeRatio(aInputType, MF_MT_FRAME_RATE,
+                                        &numerator, &denominator))) {
+        return static_cast<float>(numerator) / denominator;
+      }
+      return 30.0f;
+    }();
+    NS_ENSURE_FALSE(
+        IsUnsupportedResolution(desc.SampleWidth, desc.SampleHeight, framerate),
+        false);
+    NS_ENSURE_TRUE(aInfo.mColorDepth == ColorDepth::COLOR_8, false);
+
+    RefPtr<ID3D11VideoDevice> videoDevice;
+    hr = mDevice->QueryInterface(
+        static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
+
+    GUID guids[] = {DXVA2_ModeH264_VLD_NoFGT,
+                    DXVA2_Intel_ClearVideo_ModeH264_VLD_NoFGT};
+    for (const GUID& guid : guids) {
+      BOOL supported = false;
+      hr = videoDevice->CheckVideoDecoderFormat(&DXVA2_ModeH264_VLD_NoFGT,
+                                                DXGI_FORMAT_NV12, &supported);
+      if (SUCCEEDED(hr) && supported) {
+        desc.Guid = guid;
+      }
+    }
   } else if (subtype == MFVideoFormat_VP80) {
+    NS_ENSURE_TRUE(aInfo.mColorDepth == ColorDepth::COLOR_8, false);
     desc.Guid = DXVA2_ModeVP8_VLD;
   } else if (subtype == MFVideoFormat_VP90) {
-    desc.Guid = DXVA2_ModeVP9_VLD_Profile0;
+    NS_ENSURE_TRUE(aInfo.mColorDepth == ColorDepth::COLOR_8 ||
+                       aInfo.mColorDepth == ColorDepth::COLOR_10,
+                   false);
+    uint8_t profile;
+
+    if (aInfo.mExtraData && !aInfo.mExtraData->IsEmpty()) {
+      VPXDecoder::VPXStreamInfo vp9Info;
+      VPXDecoder::ReadVPCCBox(vp9Info, aInfo.mExtraData);
+      profile = vp9Info.mProfile;
+    } else {
+      // If no vpcC is present, we can't know the profile, which limits the
+      // subsampling mode, but 4:2:0 is most supported so default to profiles 0
+      // and 2:
+      // Profile 0 = 8bit, 4:2:0
+      // Profile 2 = 10/12bit, 4:2:0
+      profile = aInfo.mColorDepth == ColorDepth::COLOR_8 ? 0 : 2;
+    }
+
+    switch (profile) {
+      case 0:
+        desc.Guid = DXVA2_ModeVP9_VLD_Profile0;
+        break;
+      case 2:
+        desc.Guid = DXVA2_ModeVP9_VLD_10bit_Profile2;
+        break;
+      default:
+        break;
+    }
   } else if (subtype == MFVideoFormat_AV1) {
-    desc.Guid = DXVA2_ModeAV1_Profile0;
-  } else {
+    uint8_t profile;
+    bool yuv420;
+
+    if (aInfo.mExtraData && !aInfo.mExtraData->IsEmpty()) {
+      AOMDecoder::AV1SequenceInfo av1Info;
+      bool hadSeqHdr;
+      AOMDecoder::ReadAV1CBox(aInfo.mExtraData, av1Info, hadSeqHdr);
+      profile = av1Info.mProfile;
+      yuv420 = av1Info.mSubsamplingX && av1Info.mSubsamplingY;
+    } else {
+      // If no av1C is present, we can't get profile or subsampling mode. 4:2:0
+      // subsampling is most likely to be supported in hardware, so set av1Info
+      // accordingly.
+      // 8bit/10bit = Main profile, 4:2:0
+      // 12bit = Professional, 4:2:0
+      profile = aInfo.mColorDepth == ColorDepth::COLOR_12 ? 2 : 0;
+      yuv420 = true;
+    }
+
+    switch (profile) {
+      case 0:
+        desc.Guid = DXVA2_ModeAV1_VLD_Profile0;
+        break;
+      case 1:
+        desc.Guid = DXVA2_ModeAV1_VLD_Profile1;
+        break;
+      case 2:
+        MOZ_ASSERT(aInfo.mColorDepth < ColorDepth::COLOR_16);
+        if (aInfo.mColorDepth == ColorDepth::COLOR_12) {
+          if (yuv420) {
+            desc.Guid = DXVA2_ModeAV1_VLD_12bit_Profile2_420;
+          } else {
+            desc.Guid = DXVA2_ModeAV1_VLD_12bit_Profile2;
+          }
+        } else {
+          desc.Guid = DXVA2_ModeAV1_VLD_Profile2;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  hr = aOutputType->GetGUID(MF_MT_SUBTYPE, &subtype);
+  if (SUCCEEDED(hr)) {
+    if (subtype == MFVideoFormat_NV12) {
+      desc.OutputFormat = DXGI_FORMAT_NV12;
+    } else if (subtype == MFVideoFormat_P010) {
+      desc.OutputFormat = DXGI_FORMAT_P010;
+    } else if (subtype == MFVideoFormat_P016) {
+      desc.OutputFormat = DXGI_FORMAT_P016;
+    }
+  }
+
+  if (desc.Guid == GUID_NULL || desc.OutputFormat == DXGI_FORMAT_UNKNOWN) {
     return false;
   }
 
-  return CanCreateDecoder(desc, aFramerate);
+  return CanCreateDecoder(desc);
 }
 
 D3D11DXVA2Manager::~D3D11DXVA2Manager() {}
@@ -811,45 +953,6 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
   mTransform = mft;
-
-  RefPtr<ID3D11VideoDevice> videoDevice;
-  hr = mDevice->QueryInterface(
-      static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
-  if (!SUCCEEDED(hr)) {
-    aFailureReason =
-        nsPrintfCString("QI to ID3D11VideoDevice failed with code %X", hr);
-    return hr;
-  }
-
-  bool found = false;
-  UINT profileCount = videoDevice->GetVideoDecoderProfileCount();
-  for (UINT i = 0; i < profileCount; i++) {
-    GUID id;
-    hr = videoDevice->GetVideoDecoderProfile(i, &id);
-    if (SUCCEEDED(hr) &&
-        (id == DXVA2_ModeH264_E || id == DXVA2_Intel_ModeH264_E)) {
-      mDecoderGUID = id;
-      found = true;
-      break;
-    }
-  }
-  if (!found) {
-    aFailureReason.AssignLiteral("Failed to find an appropriate decoder GUID");
-    return E_FAIL;
-  }
-
-  BOOL nv12Support = false;
-  hr = videoDevice->CheckVideoDecoderFormat(&mDecoderGUID, DXGI_FORMAT_NV12,
-                                            &nv12Support);
-  if (!SUCCEEDED(hr)) {
-    aFailureReason =
-        nsPrintfCString("CheckVideoDecoderFormat failed with code %X", hr);
-    return hr;
-  }
-  if (!nv12Support) {
-    aFailureReason.AssignLiteral("Decoder doesn't support NV12 surfaces");
-    return E_FAIL;
-  }
 
   RefPtr<IDXGIDevice> dxgiDevice;
   hr = mDevice->QueryInterface(
@@ -1248,8 +1351,8 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
   return S_OK;
 }
 
-bool D3D11DXVA2Manager::CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc,
-                                         const float aFramerate) const {
+bool D3D11DXVA2Manager::CanCreateDecoder(
+    const D3D11_VIDEO_DECODER_DESC& aDesc) const {
   RefPtr<ID3D11VideoDecoder> decoder = CreateDecoder(aDesc);
   return decoder.get() != nullptr;
 }

@@ -1245,6 +1245,34 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   };
 
   /**
+   * Updates the nsFrameConstructorState auto page-name value, adding page
+   * breaks between frames when the end page value of the previous frame is
+   * different from the start page value of the next frame.
+   * See https://drafts.csswg.org/css-page-3/#using-named-pages
+   *
+   * To track this, this will automatically add PageValuesProperty to
+   * the frame.
+   *
+   * Note that this does not add any page breaks or PageValuesProperty
+   * to the frame when not in a paginated context, or if
+   * layout.css.named_pages.enabled is set to false.
+   */
+  class MOZ_RAII AutoFrameConstructionPageName final {
+    nsCSSFrameConstructor& mFCtor;
+    nsFrameConstructorState& mState;
+    FrameConstructionItemList& mItems;
+    const nsIFrame* const mFrame;
+    const nsAtom* mNameToRestore;
+
+   public:
+    AutoFrameConstructionPageName(nsCSSFrameConstructor& aFCtor,
+                                  nsFrameConstructorState& aState,
+                                  FrameConstructionItemList& aItems,
+                                  nsIFrame* const aFrame);
+    ~AutoFrameConstructionPageName();
+  };
+
+  /**
    * Function to create the anonymous flex or grid items that we need.
    * If aParentFrame is not a nsFlexContainerFrame or nsGridContainerFrame then
    * this method is a NOP.
@@ -1392,8 +1420,18 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // for it.
   void ReframeTextIfNeeded(nsIContent* aContent);
 
-  void AddPageBreakItem(nsIContent* aContent,
-                        FrameConstructionItemList& aItems);
+  enum InsertPageBreakLocation { eBefore, eAfter };
+  inline void AppendPageBreakItem(nsIContent* aContent,
+                                  FrameConstructionItemList& aItems) {
+    InsertPageBreakItem(aContent, aItems, InsertPageBreakLocation::eAfter);
+  }
+  inline void PrependPageBreakItem(nsIContent* aContent,
+                                   FrameConstructionItemList& aItems) {
+    InsertPageBreakItem(aContent, aItems, InsertPageBreakLocation::eBefore);
+  }
+  void InsertPageBreakItem(nsIContent* aContent,
+                           FrameConstructionItemList& aItems,
+                           InsertPageBreakLocation location);
 
   // Function to find FrameConstructionData for aElement.  Will return
   // null if aElement is not HTML.

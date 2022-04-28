@@ -109,7 +109,9 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#ifdef NS_PRINTING
 #include "mozilla/layout/RemotePrintJobChild.h"
+#endif
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/net/CaptivePortalService.h"
@@ -125,6 +127,7 @@
 #include "nsHttpHandler.h"
 #include "nsIConsoleService.h"
 #include "nsIInputStreamChannel.h"
+#include "nsILayoutHistoryState.h"
 #include "nsILoadGroup.h"
 #include "nsIOpenWindowInfo.h"
 #include "nsISimpleEnumerator.h"
@@ -2018,7 +2021,11 @@ mozilla::ipc::IPCResult ContentChild::RecvSocketProcessCrashed() {
 }
 
 PRemotePrintJobChild* ContentChild::AllocPRemotePrintJobChild() {
+#ifdef NS_PRINTING
   return new RemotePrintJobChild();
+#else
+  return nullptr;
+#endif
 }
 
 PChildToParentStreamChild* ContentChild::SendPChildToParentStreamConstructor(
@@ -4443,6 +4450,20 @@ mozilla::ipc::IPCResult ContentChild::RecvHistoryCommitIndexAndLength(
       shistory->SetIndexAndLength(aIndex, aLength, aChangeID);
     }
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvGetLayoutHistoryState(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    GetLayoutHistoryStateResolver&& aResolver) {
+  nsCOMPtr<nsILayoutHistoryState> state;
+  nsIDocShell* docShell;
+  if (!aContext.IsNullOrDiscarded() &&
+      (docShell = aContext.get()->GetDocShell())) {
+    docShell->PersistLayoutHistoryState();
+    docShell->GetLayoutHistoryState(getter_AddRefs(state));
+  }
+  aResolver(state);
   return IPC_OK();
 }
 

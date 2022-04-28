@@ -129,7 +129,6 @@ class DocAccessibleParent : public RemoteAccessible,
       const uint64_t& aID, const uint64_t& aWidgetID,
       const uint32_t& aType) override;
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvVirtualCursorChangeEvent(
       const uint64_t& aID, const uint64_t& aOldPositionID,
       const int32_t& aOldStartOffset, const int32_t& aOldEndOffset,

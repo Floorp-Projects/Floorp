@@ -28,7 +28,12 @@ static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
 #if defined(NS_PRINTING)
-    {NS_PRINTINGPROMPTSERVICE_CONTRACTID, &kNS_PRINTINGPROMPTSERVICE_CID},
+    {NS_PRINTINGPROMPTSERVICE_CONTRACTID, &kNS_PRINTINGPROMPTSERVICE_CID
+#  ifdef PROXY_PRINTING
+     ,
+     mozilla::Module::MAIN_PROCESS_ONLY
+#  endif
+    },
 #endif
     {nullptr}};
 

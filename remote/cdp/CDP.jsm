@@ -75,11 +75,14 @@ class CDP {
       return;
     }
 
-    // Starting CDP too early can cause issues with clients like Puppeteer.
-    // Especially when closing the browser while it's still starting up, which
-    // can cause shutdown hangs. As such CDP will be started when all the
-    // browser windows are restored (workaround for bug 1764420).
-    logger.debug(`Delay start-up until all windows have been restored`);
+    // Starting CDP too early can cause issues with clients in not being able
+    // to find any available target. Also when closing the application while
+    // it's still starting up can cause shutdown hangs. As such CDP will be
+    // started when all the initial application windows have been fully
+    // restored (workaround for bug 1764420).
+    logger.debug(
+      `Awaiting all initial windows to be restored before enabling the protocol`
+    );
     await this.agent.browserStartupFinished;
 
     // Note: Ideally this would only be set at the end of the method. However

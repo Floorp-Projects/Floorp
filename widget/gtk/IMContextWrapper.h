@@ -400,9 +400,29 @@ class IMContextWrapper final : public TextEventDispatcherListener {
    */
   bool EnsureToCacheContentSelection(nsAString* aSelectedString = nullptr);
 
-  // mIsIMFocused is set to TRUE when we call gtk_im_context_focus_in(). And
-  // it's set to FALSE when we call gtk_im_context_focus_out().
-  bool mIsIMFocused;
+  enum class IMEFocusState : uint8_t {
+    // IME has focus
+    Focused,
+    // IME was blurred
+    Blurred,
+    // IME was blurred without a focus change
+    BlurredWithoutFocusChange,
+  };
+  friend std::ostream& operator<<(std::ostream& aStream, IMEFocusState aState) {
+    switch (aState) {
+      case IMEFocusState::Focused:
+        return aStream << "IMEFocusState::Focused";
+      case IMEFocusState::Blurred:
+        return aStream << "IMEFocusState::Blurred";
+      case IMEFocusState::BlurredWithoutFocusChange:
+        return aStream << "IMEFocusState::BlurredWithoutFocusChange";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Invalid value");
+        return aStream << "<illegal value>";
+    }
+  }
+  IMEFocusState mIMEFocusState = IMEFocusState::Blurred;
+
   // mFallbackToKeyEvent is set to false when this class starts to handle
   // a native key event (at that time, mProcessingKeyEvent is set to the
   // native event).  If active IME just commits composition with a character
@@ -518,11 +538,7 @@ class IMContextWrapper final : public TextEventDispatcherListener {
   // If the owner window and IM context have been destroyed, returns TRUE.
   bool IsDestroyed() { return !mOwnerWindow; }
 
-  // Sets focus to the instance of this class.
-  void Focus();
-
-  // Steals focus from the instance of this class.
-  void Blur();
+  void NotifyIMEOfFocusChange(IMEFocusState aIMEFocusState);
 
   // Initializes the instance.
   void Init();

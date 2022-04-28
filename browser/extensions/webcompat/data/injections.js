@@ -608,6 +608,20 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1765947",
+    platform: "android",
+    domain: "veniceincoming.com",
+    bug: "1765947",
+    contentScripts: {
+      matches: ["*://veniceincoming.com/*"],
+      js: [
+        {
+          file: "injections/css/bug1765947-veniceincoming.com-left-fix.css",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;

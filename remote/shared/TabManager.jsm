@@ -13,6 +13,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
+  AppInfo: "chrome://remote/content/marionette/appinfo.js",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.jsm",
 });
 
@@ -121,15 +122,35 @@ var TabManager = {
     return null;
   },
 
-  addTab({ userContextId }) {
-    const window = Services.wm.getMostRecentWindow(null);
+  /**
+   * Create a new tab.
+   *
+   * @param {Object} options
+   * @param {Boolean=} options.focus
+   *     Set to true if the new tab should be focused (selected). Defaults to
+   *     false.
+   * @param {Number} options.userContextId
+   *     The user context (container) id.
+   * @param {window=} options.window
+   *     The window where the new tab will open. Defaults to Services.wm.getMostRecentWindow
+   *     if no window is provided.
+   */
+  addTab(options = {}) {
+    const {
+      focus = false,
+      userContextId,
+      window = Services.wm.getMostRecentWindow(null),
+    } = options;
     const tabBrowser = this.getTabBrowser(window);
 
     const tab = tabBrowser.addTab("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
-    this.selectTab(tab);
+
+    if (focus) {
+      this.selectTab(tab);
+    }
 
     return tab;
   },
@@ -250,5 +271,11 @@ var TabManager = {
   selectTab(tab) {
     const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
     tabBrowser.selectedTab = tab;
+  },
+
+  supportsTabs() {
+    // TODO: Only Firefox supports adding tabs at the moment.
+    // Geckoview support should be added via Bug 1506782.
+    return AppInfo.name === "Firefox";
   },
 };
