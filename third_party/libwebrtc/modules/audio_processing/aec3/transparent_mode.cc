@@ -23,10 +23,8 @@ bool DeactivateTransparentMode() {
   return field_trial::IsEnabled("WebRTC-Aec3TransparentModeKillSwitch");
 }
 
-bool DeactivateTransparentModeHmm() {
-  // HMM based classifier is temporarily disabled (https://crbug.com/1155071).
-  return true;
-  // return field_trial::IsEnabled("WebRTC-Aec3TransparentModeHmmKillSwitch");
+bool ActivateTransparentModeHmm() {
+  return field_trial::IsEnabled("WebRTC-Aec3TransparentModeHmm");
 }
 
 }  // namespace
@@ -232,10 +230,10 @@ std::unique_ptr<TransparentMode> TransparentMode::Create(
   if (config.ep_strength.bounded_erl || DeactivateTransparentMode()) {
     return nullptr;
   }
-  if (DeactivateTransparentModeHmm()) {
-    return std::make_unique<LegacyTransparentModeImpl>(config);
+  if (ActivateTransparentModeHmm()) {
+    return std::make_unique<TransparentModeImpl>();
   }
-  return std::make_unique<TransparentModeImpl>();
+  return std::make_unique<LegacyTransparentModeImpl>(config);
 }
 
 }  // namespace webrtc
