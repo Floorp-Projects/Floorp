@@ -27,7 +27,8 @@ async function http3_setup_tests(http3version) {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+  // `../unit/` so that unit_ipc tests can use as well
+  addCertFromFile(certdb, "../unit/http2-ca.pem", "CTu,u,u");
 
   await setup_altsvc("https://foo.example.com/", h3Route, http3version);
 }

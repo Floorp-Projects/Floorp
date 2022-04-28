@@ -68,8 +68,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 //-----------------------------------------------------------------------------
 // HttpChannelChild
@@ -2618,7 +2617,7 @@ HttpChannelChild::ClearClassFlags(uint32_t inFlags) {
 }
 
 NS_IMETHODIMP
-HttpChannelChild::SetClassOfService(ClassOfServiceStruct inCos) {
+HttpChannelChild::SetClassOfService(ClassOfService inCos) {
   mClassOfService = inCos;
   LOG(("HttpChannelChild %p ClassOfService flags=%lu inc=%d", this,
        mClassOfService.Flags(), mClassOfService.Incremental()));
@@ -3080,5 +3079,4 @@ HttpChannelChild::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
   return NS_OK;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

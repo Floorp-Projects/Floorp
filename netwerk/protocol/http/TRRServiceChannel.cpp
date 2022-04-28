@@ -28,8 +28,7 @@
 #include "TRR.h"
 #include "TRRService.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 NS_IMPL_ADDREF(TRRServiceChannel)
 
@@ -1307,8 +1306,8 @@ TRRServiceChannel::SetIncremental(bool inFlag) {
 }
 
 NS_IMETHODIMP
-TRRServiceChannel::SetClassOfService(ClassOfServiceStruct cos) {
-  ClassOfServiceStruct previous = mClassOfService;
+TRRServiceChannel::SetClassOfService(ClassOfService cos) {
+  ClassOfService previous = mClassOfService;
   mClassOfService = cos;
   if (previous != mClassOfService) {
     OnClassOfServiceUpdated();
@@ -1541,5 +1540,4 @@ TRRServiceChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* aResult) {
 
 bool TRRServiceChannel::SameOriginWithOriginalUri(nsIURI* aURI) { return true; }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

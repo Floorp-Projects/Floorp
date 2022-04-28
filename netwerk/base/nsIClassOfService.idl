@@ -16,9 +16,11 @@
 
 // convenience class for passing around the class of service 
 %{C++
-#include "../../../netwerk/protocol/http/ClassOfService.h"
+namespace mozilla::net {
+class ClassOfService;
+}
 %}
-native ClassOfServiceStruct(mozilla::net::ClassOfServiceStruct);
+native ClassOfService(mozilla::net::ClassOfService);
 
 [scriptable, uuid(1ccb58ec-5e07-4cf9-a30d-ac5490d23b41)]
 interface nsIClassOfService : nsISupports
@@ -28,7 +30,7 @@ interface nsIClassOfService : nsISupports
  
   void clearClassFlags(in unsigned long flags);
   void addClassFlags(in unsigned long flags);
-  void setClassOfService(in ClassOfServiceStruct s);
+  void setClassOfService(in ClassOfService s);
 
   // All these flags have a (de)prioritization effect.
 
