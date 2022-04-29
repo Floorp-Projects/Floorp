@@ -680,8 +680,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
   mDocument->ProcessPendingUpdates();
 
-  nsTArray<CacheData> cache;
-
   // Process rendered text change notifications.
   for (nsIContent* textNode : mTextHash) {
     LocalAccessible* textAcc = mDocument->GetAccessible(textNode);
@@ -747,10 +745,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text.mString);
       if (IPCAccessibilityActive() &&
           StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-        RefPtr<AccAttributes> fields = textAcc->BundleFieldsForCache(
-            CacheDomain::Text, CacheUpdateType::Update);
-        uint64_t id = reinterpret_cast<uint64_t>(textAcc->UniqueID());
-        cache.AppendElement(CacheData(id, fields));
+        mDocument->QueueCacheUpdate(textAcc, CacheDomain::Text);
       }
       continue;
     }
@@ -780,12 +775,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     }
   }
   mTextHash.Clear();
-
-  if (!cache.IsEmpty()) {
-    DocAccessibleChild* ipcDoc = mDocument->IPCDoc();
-    MOZ_ASSERT(ipcDoc);
-    ipcDoc->SendCache(CacheUpdateType::Update, cache, true);
-  }
 
   // Process content inserted notifications to update the tree.
   // Processing an insertion can indirectly run script (e.g. querying a XUL
@@ -893,6 +882,14 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
   mDocument->SendAccessiblesWillMove();
 
+  // Send any queued cache updates before we fire any mutation events so the
+  // cache is up to date when mutation events are fired. We do this after
+  // insertions (but not their events) so that cache updates dependent on the
+  // tree work correctly; e.g. line start calculation.
+  if (IPCAccessibilityActive() && mDocument) {
+    mDocument->ProcessQueuedCacheUpdates();
+  }
+
   CoalesceMutationEvents();
   ProcessMutationEvents();
   mEventGeneration = 0;
@@ -971,10 +968,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       }
 #endif
     }
-  }
-
-  if (IPCAccessibilityActive() && mDocument) {
-    mDocument->ProcessQueuedCacheUpdates();
   }
 
   mObservingState = eRefreshObserving;
