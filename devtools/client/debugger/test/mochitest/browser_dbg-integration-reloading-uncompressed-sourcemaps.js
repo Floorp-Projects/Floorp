@@ -10,6 +10,8 @@
 
 "use strict";
 
+requestLongerTimeout(10);
+
 add_task(async function() {
   const testFolder = "sourcemaps-reload-uncompressed";
   const isCompressed = false;
