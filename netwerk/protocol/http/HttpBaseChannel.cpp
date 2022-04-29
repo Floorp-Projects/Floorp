@@ -197,7 +197,7 @@ HttpBaseChannel::HttpBaseChannel()
       mFlashPluginState(nsIHttpChannel::FlashPluginUnknown),
       mLoadFlags(LOAD_NORMAL),
       mCaps(0),
-      mClassOfService(0),
+      mClassOfService(0, false),
       mTlsFlags(0),
       mSuspendCount(0),
       mInitialRwin(0),
@@ -4191,7 +4191,7 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     ReplacementReason aReason) {
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(newChannel));
   if (cos) {
-    cos->SetClassFlags(config.classOfService);
+    cos->SetClassOfService(config.classOfService);
   }
 
   // Try to preserve the privacy bit if it has been overridden

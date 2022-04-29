@@ -183,7 +183,7 @@ nsresult HttpConnectionMgrParent::RescheduleTransaction(
 }
 
 void HttpConnectionMgrParent::UpdateClassOfServiceOnTransaction(
-    HttpTransactionShell* aTrans, uint32_t aClassOfService) {
+    HttpTransactionShell* aTrans, const ClassOfServiceStruct& aClassOfService) {
   MOZ_ASSERT(gIOService->SocketProcessReady());
 
   if (!CanSend()) {

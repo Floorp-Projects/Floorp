@@ -10,6 +10,7 @@
 class nsIEventTarget;
 class nsIHttpUpgradeListener;
 class nsIInterfaceRequestor;
+struct ClassOfServiceStruct;
 
 namespace mozilla {
 namespace net {
@@ -113,8 +114,8 @@ class HttpConnectionMgrShell : public nsISupports {
   [[nodiscard]] virtual nsresult RescheduleTransaction(HttpTransactionShell*,
                                                        int32_t priority) = 0;
 
-  void virtual UpdateClassOfServiceOnTransaction(HttpTransactionShell*,
-                                                 uint32_t classOfService) = 0;
+  void virtual UpdateClassOfServiceOnTransaction(
+      HttpTransactionShell*, const ClassOfServiceStruct& classOfService) = 0;
 
   // cancels a transaction w/ the given reason.
   [[nodiscard]] virtual nsresult CancelTransaction(HttpTransactionShell*,
@@ -204,7 +205,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
   virtual nsresult RescheduleTransaction(HttpTransactionShell*,                \
                                          int32_t priority) override;           \
   void virtual UpdateClassOfServiceOnTransaction(                              \
-      HttpTransactionShell*, uint32_t classOfService) override;                \
+      HttpTransactionShell*, const ClassOfServiceStruct& classOfService)       \
+      override;                                                                \
   virtual nsresult CancelTransaction(HttpTransactionShell*, nsresult reason)   \
       override;                                                                \
   virtual nsresult ReclaimConnection(HttpConnectionBase* conn) override;       \

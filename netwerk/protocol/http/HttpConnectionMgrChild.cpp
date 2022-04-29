@@ -89,7 +89,8 @@ mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvRescheduleTransaction(
 
 mozilla::ipc::IPCResult
 HttpConnectionMgrChild::RecvUpdateClassOfServiceOnTransaction(
-    PHttpTransactionChild* aTrans, const uint32_t& aClassOfService) {
+    PHttpTransactionChild* aTrans,
+    const ClassOfServiceStruct& aClassOfService) {
   mConnMgr->UpdateClassOfServiceOnTransaction(ToRealHttpTransaction(aTrans),
                                               aClassOfService);
   return IPC_OK();
