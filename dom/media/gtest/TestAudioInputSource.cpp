@@ -214,6 +214,9 @@ TEST(TestAudioInputSource, ErrorCallback)
 
   DispatchFunction([&] { stream->ForceError(); });
   WaitFor(stream->ErrorForcedEvent());
+  // Make sure the stream has been stopped by the error-state's backgroud thread
+  // task, to avoid getting a stopped state callback by `ais->Stop` below.
+  WaitFor(stream->ErrorStoppedEvent());
 
   DispatchFunction([&] { ais->Stop(); });
   Unused << WaitFor(cubeb->StreamDestroyEvent());
