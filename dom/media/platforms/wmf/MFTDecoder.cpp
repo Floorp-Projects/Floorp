@@ -83,7 +83,7 @@ MFTDecoder::Create(const GUID& aCategory, const GUID& aInSubtype,
   }
   auto guard = MakeScopeExit([&] {
     // Start from index 1, acts[0] will be stored as a RefPtr to release later.
-    for (int i = 1; i < actsNum; i++) {
+    for (UINT32 i = 1; i < actsNum; i++) {
       acts[i]->Release();
     }
     CoTaskMemFree(acts);
