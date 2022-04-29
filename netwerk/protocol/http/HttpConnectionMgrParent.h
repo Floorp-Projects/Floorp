@@ -10,8 +10,7 @@
 #include "mozilla/net/PHttpConnectionMgrParent.h"
 #include "mozilla/StaticMutex.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 // HttpConnectionMgrParent plays the role of nsHttpConnectionMgr and delegates
 // the work to the nsHttpConnectionMgr in socket process.
@@ -39,7 +38,6 @@ class HttpConnectionMgrParent final : public PHttpConnectionMgrParent,
       sHttpUpgradeListenerMap;
 };
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // HttpConnectionMgrParent_h__

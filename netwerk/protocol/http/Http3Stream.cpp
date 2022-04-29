@@ -24,7 +24,7 @@ namespace mozilla {
 namespace net {
 
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
-                         Http3Session* session, const ClassOfServiceStruct& cos,
+                         Http3Session* session, const ClassOfService& cos,
                          uint64_t bcId)
     : mSession(session),
       mTransaction(httpTransaction),

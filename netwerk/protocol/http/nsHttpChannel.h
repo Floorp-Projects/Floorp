@@ -159,7 +159,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD SetClassFlags(uint32_t inFlags) override;
   NS_IMETHOD AddClassFlags(uint32_t inFlags) override;
   NS_IMETHOD ClearClassFlags(uint32_t inFlags) override;
-  NS_IMETHOD SetClassOfService(ClassOfServiceStruct cos) override;
+  NS_IMETHOD SetClassOfService(ClassOfService cos) override;
   NS_IMETHOD SetIncremental(bool incremental) override;
 
   // nsIResumableChannel

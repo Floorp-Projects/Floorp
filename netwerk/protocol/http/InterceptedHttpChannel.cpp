@@ -18,8 +18,7 @@
 #include "nsStreamUtils.h"
 #include "nsQueryObject.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 NS_IMPL_ISUPPORTS_INHERITED(InterceptedHttpChannel, HttpBaseChannel,
                             nsIInterceptedChannel, nsICacheInfoChannel,
@@ -633,7 +632,7 @@ InterceptedHttpChannel::AddClassFlags(uint32_t aClassFlags) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::SetClassOfService(ClassOfServiceStruct cos) {
+InterceptedHttpChannel::SetClassOfService(ClassOfService cos) {
   mClassOfService = cos;
   return NS_OK;
 }
@@ -1551,5 +1550,4 @@ void InterceptedHttpChannel::InterceptionTimeStamps::SaveTimeStamps() {
   }
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

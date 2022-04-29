@@ -6509,8 +6509,8 @@ nsHttpChannel::ClearClassFlags(uint32_t inFlags) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetClassOfService(ClassOfServiceStruct cos) {
-  ClassOfServiceStruct previous = mClassOfService;
+nsHttpChannel::SetClassOfService(ClassOfService cos) {
+  ClassOfService previous = mClassOfService;
   mClassOfService = cos;
   if (previous != mClassOfService) {
     OnClassOfServiceUpdated();
