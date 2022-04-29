@@ -230,7 +230,7 @@ static UniquePtr<wchar_t[]> HashString(const wchar_t* inputString) {
   DWORD h1Acc = 0;
 
   for (int i = 0; i < blockCount; ++i) {
-    for (int j = 0; j < DWORDS_PER_BLOCK; ++j) {
+    for (size_t j = 0; j < DWORDS_PER_BLOCK; ++j) {
       const DWORD* C0 = C0s[j];
       const DWORD* C1 = C1s[j];
 
@@ -385,7 +385,7 @@ bool CheckBrowserUserChoiceHashes() {
 
   const wchar_t* exts[] = {L"https", L"http", L".html", L".htm"};
 
-  for (int i = 0; i < ArrayLength(exts); ++i) {
+  for (size_t i = 0; i < ArrayLength(exts); ++i) {
     switch (CheckUserChoiceHash(exts[i], userSid.get())) {
       case CheckUserChoiceHashResult::OK_V1:
         break;

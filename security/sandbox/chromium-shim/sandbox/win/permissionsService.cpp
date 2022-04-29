@@ -36,7 +36,7 @@ IsFlashTempFile(std::wstring aFilename, std::wstring* aFolder=nullptr)
 {
   // Assume its a flash file if the base name begins with "FlashTmp",
   // ends with ".tmp" and has an int in-between them.
-  int slashIdx = aFilename.find_last_of(L'\\');
+  size_t slashIdx = aFilename.find_last_of(L'\\');
   if (slashIdx != std::wstring::npos) {
     if (aFolder) {
       *aFolder = aFilename.substr(0, slashIdx + 1);

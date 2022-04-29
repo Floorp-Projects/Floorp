@@ -1,0 +1,11 @@
+--- a/src/client/windows/crash_generation/crash_generation_server.cc
++++ b/src/client/windows/crash_generation/crash_generation_server.cc
+@@ -954,7 +954,7 @@ bool CrashGenerationServer::GenerateDump(const ClientInfo& client,
+     }
+ 
+     // Allocate AppMemory instances for exception context.
+-    for (int i = 0; i < kExceptionAppMemoryRegions; i++) {
++    for (size_t i = 0; i < kExceptionAppMemoryRegions; i++) {
+       AppMemory app_memory;
+       app_memory.ptr = reinterpret_cast<ULONG64>(nullptr);
+       app_memory.length = 0;

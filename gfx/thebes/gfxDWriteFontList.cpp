@@ -1247,7 +1247,7 @@ void gfxDWriteFontList::AppendFamiliesFromCollection(
         sysLocIndex = 1;
       }
       for (unsigned index = 0; index < names.Length(); ++index) {
-        addFamily(names[index], index != sysLocIndex);
+        addFamily(names[index], index != static_cast<unsigned>(sysLocIndex));
       }
     }
   }
