@@ -10,6 +10,7 @@ import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import mozilla.components.lib.state.Action
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -59,6 +60,10 @@ sealed class AppAction : Action {
     data class DeselectPocketStoriesCategory(val categoryName: String) : AppAction()
     data class PocketStoriesShown(val storiesShown: List<PocketStory>) : AppAction()
     data class PocketStoriesChange(val pocketStories: List<PocketRecommendedStory>) : AppAction()
+    /**
+     * Replaces the current list of Pocket sponsored stories.
+     */
+    data class PocketSponsoredStoriesChange(val sponsoredStories: List<PocketSponsoredStory>) : AppAction()
     /**
      * Adds a set of items marked for removal to the app state, to be hidden in the UI.
      */

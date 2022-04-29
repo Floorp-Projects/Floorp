@@ -16,6 +16,7 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -355,6 +356,22 @@ class AppStoreTest {
         val updatedStories = listOf(story2.copy("title3"))
         appStore.dispatch(AppAction.PocketStoriesChange(updatedStories)).join()
         assertTrue(updatedStories.containsAll(appStore.state.pocketStories))
+    }
+
+    @Test
+    fun `Test updating the list of Pocket sponsored stories`() = runTest {
+        val story1 = PocketSponsoredStory("title", "url", "imageUrl", "sponsor", mockk())
+        val story2 = story1.copy(imageUrl = "imageUrl2")
+
+        appStore = AppStore(AppState())
+
+        appStore.dispatch(AppAction.PocketSponsoredStoriesChange(listOf(story1, story2)))
+            .join()
+        assertTrue(appStore.state.pocketSponsoredStories.containsAll(listOf(story1, story2)))
+
+        val updatedStories = listOf(story2.copy("title3"))
+        appStore.dispatch(AppAction.PocketSponsoredStoriesChange(updatedStories)).join()
+        assertTrue(updatedStories.containsAll(appStore.state.pocketSponsoredStories))
     }
 
     @Test

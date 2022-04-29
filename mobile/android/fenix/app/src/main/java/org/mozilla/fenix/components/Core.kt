@@ -68,6 +68,7 @@ import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.pocket.PocketStoriesConfig
 import mozilla.components.service.pocket.PocketStoriesService
+import mozilla.components.service.pocket.Profile
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.worker.Frequency
@@ -94,6 +95,7 @@ import org.mozilla.fenix.tabstray.SearchTermTabGroupMiddleware
 import org.mozilla.fenix.telemetry.TelemetryMiddleware
 import org.mozilla.fenix.utils.getUndoDelay
 import org.mozilla.geckoview.GeckoRuntime
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
@@ -360,7 +362,12 @@ class Core(
 
     @Suppress("MagicNumber")
     val pocketStoriesConfig by lazyMonitored {
-        PocketStoriesConfig(client, Frequency(4, TimeUnit.HOURS))
+        PocketStoriesConfig(
+            client,
+            Frequency(4, TimeUnit.HOURS),
+            // These need to be updated. See https://mozilla-hub.atlassian.net/browse/FNXV2-20329.
+            Profile(UUID.randomUUID(), "fenix")
+        )
     }
     val pocketStoriesService by lazyMonitored { PocketStoriesService(context, pocketStoriesConfig) }
 

@@ -145,6 +145,9 @@ internal object AppStoreReducer {
         is AppAction.PocketStoriesChange -> state.copy(
             pocketStories = action.pocketStories
         )
+        is AppAction.PocketSponsoredStoriesChange -> state.copy(
+            pocketSponsoredStories = action.sponsoredStories
+        )
         is AppAction.PocketStoriesShown -> {
             var updatedCategories = state.pocketStoriesCategories
             action.storiesShown.filterIsInstance<PocketRecommendedStory>().forEach { shownStory ->
