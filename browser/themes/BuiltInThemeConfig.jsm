@@ -6,12 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["BuiltInThemeConfig"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-});
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
  * A Map of themes built in to the browser, alongwith a Map of collections those themes belong to. Params for the objects contained
@@ -244,17 +242,27 @@ const _BuiltInThemeConfig = new Map([
   ],
 ]);
 
+const colorwayClosetEnabled = Services.prefs.getBoolPref(
+  "browser.theme.colorway-closet"
+);
+
 const ColorwayCollections = new Map([
   [
     "life-in-color",
     {
-      expiry: AppConstants.NIGHTLY_BUILD ? "2022-08-03" : "2022-02-08",
+      expiry:
+        colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
+          ? "2022-08-03"
+          : "2022-02-08",
     },
   ],
   [
     "true-colors",
     {
-      expiry: AppConstants.NIGHTLY_BUILD ? "2022-4-20" : "2022-05-03",
+      expiry:
+        colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
+          ? "2022-04-20"
+          : "2022-05-03",
     },
   ],
 ]);

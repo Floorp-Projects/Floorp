@@ -342,6 +342,8 @@ pref("browser.warnOnQuit", true);
 
 pref("browser.overlink-delay", 80);
 
+pref("browser.theme.colorway-closet", false);
+
 // Whether using `ctrl` when hitting return/enter in the URL bar
 // (or clicking 'go') should prefix 'www.' and suffix
 // browser.fixup.alternate.suffix to the URL bar value prior to
