@@ -712,8 +712,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   UniquePtr<nsTArray<nsCString>> mRedirectedCachekeys;
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
-  RefPtr<OpaqueResponseBlockingInfo> mOpaqueResponseBlockingInfo;
-
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
 
@@ -977,11 +975,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void RemoveAsNonTailRequest();
 
   void EnsureTopBrowsingContextId();
-
-  void InitiateORBTelemetry();
-
-  void ReportORBTelemetry(const nsCString& aKey);
-  void ReportORBTelemetry(int64_t aContentLength);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)

@@ -9313,27 +9313,23 @@ void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
 
         if (!isInitialRequest) {
           mBlockOpaqueResponseAfterSniff = true;
-          ReportORBTelemetry("Blocked_NotAnInitialRequest"_ns);
           return;
         }
 
         if (mResponseHead->Status() != 200 && mResponseHead->Status() != 206) {
           mBlockOpaqueResponseAfterSniff = true;
-          ReportORBTelemetry("Blocked_Not200Or206"_ns);
           return;
         }
 
         if (mResponseHead->Status() == 206 &&
             !IsFirstPartialResponse(*mResponseHead)) {
           mBlockOpaqueResponseAfterSniff = true;
-          ReportORBTelemetry("Blocked_InvaliidPartialResponse"_ns);
           return;
         }
       }
     }
 
     mCheckIsOpaqueResponseAllowedAfterSniff = false;
-    ReportORBTelemetry("Allowed_SniffAsImageOrAudioOrVideo"_ns);
   }
 }
 
