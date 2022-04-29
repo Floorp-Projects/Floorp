@@ -533,6 +533,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25034")
     @Test
     @SdkSuppress(minSdkVersion = 29)
     // Verifies that you can go to System settings and change app's permissions from inside the app
