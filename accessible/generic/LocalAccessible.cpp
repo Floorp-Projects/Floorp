@@ -3509,7 +3509,8 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
       mDoc->QueueCacheUpdate(this, CacheDomain::Style);
     }
 
-    bool newHasValidTransformStyle = newStyle->StyleDisplay()->HasTransform(frame);
+    bool newHasValidTransformStyle =
+        newStyle->StyleDisplay()->HasTransform(frame);
     bool oldHasValidTransformStyle =
         (mStateFlags & eOldFrameHasValidTransformStyle) != 0;
 
