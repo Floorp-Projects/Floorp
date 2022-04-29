@@ -15,14 +15,9 @@ namespace dom {
 // http://www.w3.org/TR/user-timing/#performancemeasure
 class PerformanceMeasure final : public PerformanceEntry {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PerformanceMeasure,
-                                                         PerformanceEntry);
-
   PerformanceMeasure(nsISupports* aParent, const nsAString& aName,
                      DOMHighResTimeStamp aStartTime,
-                     DOMHighResTimeStamp aEndTime,
-                     const JS::Handle<JS::Value>& aDetail);
+                     DOMHighResTimeStamp aEndTime);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -31,8 +26,6 @@ class PerformanceMeasure final : public PerformanceEntry {
 
   virtual DOMHighResTimeStamp Duration() const override { return mDuration; }
 
-  void GetDetail(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval);
-
   size_t SizeOfIncludingThis(
       mozilla::MallocSizeOf aMallocSizeOf) const override;
 
@@ -40,9 +33,6 @@ class PerformanceMeasure final : public PerformanceEntry {
   virtual ~PerformanceMeasure();
   DOMHighResTimeStamp mStartTime;
   DOMHighResTimeStamp mDuration;
-
- private:
-  JS::Heap<JS::Value> mDetail;
 };
 
 }  // namespace dom

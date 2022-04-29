@@ -21,13 +21,9 @@ class ErrorResult;
 
 namespace dom {
 
-class OwningStringOrDouble;
-class StringOrPerformanceMeasureOptions;
 class PerformanceEntry;
 class PerformanceMark;
 struct PerformanceMarkOptions;
-struct PerformanceMeasureOptions;
-class PerformanceMeasure;
 class PerformanceNavigation;
 class PerformancePaintTiming;
 class PerformanceObserver;
@@ -88,10 +84,8 @@ class Performance : public DOMEventTargetHelper {
 
   void ClearMarks(const Optional<nsAString>& aName);
 
-  already_AddRefed<PerformanceMeasure> Measure(
-      JSContext* aCx, const nsAString& aName,
-      const StringOrPerformanceMeasureOptions& aStartOrMeasureOptions,
-      const Optional<nsAString>& aEndMark, ErrorResult& aRv);
+  void Measure(const nsAString& aName, const Optional<nsAString>& aStartMark,
+               const Optional<nsAString>& aEndMark, ErrorResult& aRv);
 
   void ClearMeasures(const Optional<nsAString>& aName);
 
@@ -167,6 +161,9 @@ class Performance : public DOMEventTargetHelper {
   void ClearUserEntries(const Optional<nsAString>& aEntryName,
                         const nsAString& aEntryType);
 
+  DOMHighResTimeStamp ResolveTimestampFromName(const nsAString& aName,
+                                               ErrorResult& aRv);
+
   virtual void DispatchBufferFullEvent() = 0;
 
   virtual DOMHighResTimeStamp CreationTime() const = 0;
@@ -209,28 +206,6 @@ class Performance : public DOMEventTargetHelper {
  private:
   MOZ_ALWAYS_INLINE bool CanAddResourceTimingEntry();
   void BufferEvent();
-
-  // The attributes of a PerformanceMeasureOptions that we call
-  // ResolveTimestamp* on.
-  enum class ResolveTimestampAttribute;
-
-  DOMHighResTimeStamp ConvertMarkToTimestampWithString(const nsAString& aName,
-                                                       ErrorResult& aRv);
-  DOMHighResTimeStamp ConvertMarkToTimestampWithDOMHighResTimeStamp(
-      const ResolveTimestampAttribute aAttribute, const double aTimestamp,
-      ErrorResult& aRv);
-  DOMHighResTimeStamp ConvertMarkToTimestamp(
-      const ResolveTimestampAttribute aAttribute,
-      const OwningStringOrDouble& aMarkNameOrTimestamp, ErrorResult& aRv);
-
-  DOMHighResTimeStamp ResolveEndTimeForMeasure(
-      const Optional<nsAString>& aEndMark,
-      const Maybe<const PerformanceMeasureOptions&>& aOptions,
-      ErrorResult& aRv);
-  DOMHighResTimeStamp ResolveStartTimeForMeasure(
-      const Maybe<const nsAString&>& aStartMark,
-      const Maybe<const PerformanceMeasureOptions&>& aOptions,
-      ErrorResult& aRv);
 };
 
 }  // namespace dom
