@@ -980,7 +980,7 @@ fn remove_local_items(
          ops(guid, level) AS (VALUES {})
          INSERT INTO itemsRemoved(itemId, parentId, position, type, title,
                                   placeId, guid, parentGuid, level)
-         SELECT b.id, b.parent, b.position, b.type, b.title, b.fk,
+         SELECT b.id, b.parent, b.position, b.type, IFNULL(b.title, \"\"), b.fk,
                 b.guid, p.guid, n.level
          FROM ops n
          JOIN moz_bookmarks b ON b.guid = n.guid
