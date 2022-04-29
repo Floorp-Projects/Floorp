@@ -583,6 +583,10 @@ rtc_library("transport_api") {
     "call/transport.cc",
     "call/transport.h",
   ]
+  deps = [
+    ":refcountedbase",
+    ":scoped_refptr",
+  ]
 }
 
 rtc_source_set("bitrate_allocation") {
