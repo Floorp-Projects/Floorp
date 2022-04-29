@@ -72,7 +72,7 @@ const Agent = {
    * @returns {int} Number of records loaded from dump or -1 if no dump found.
    */
   async importJSONDump(bucket, collection) {
-    const { data: records } = await SharedUtils.loadJSONDump(
+    const { data: records, timestamp } = await SharedUtils.loadJSONDump(
       bucket,
       collection
     );
@@ -83,7 +83,7 @@ const Agent = {
     if (gShutdown) {
       throw new Error("Can't import when we've started shutting down.");
     }
-    await importDumpIDB(bucket, collection, records);
+    await importDumpIDB(bucket, collection, records, timestamp);
     return records.length;
   },
 
@@ -121,8 +121,8 @@ const Agent = {
     }
   },
 
-  _test_only_import(bucket, collection, records) {
-    return importDumpIDB(bucket, collection, records);
+  _test_only_import(bucket, collection, records, timestamp) {
+    return importDumpIDB(bucket, collection, records, timestamp);
   },
 };
 
@@ -153,8 +153,9 @@ let gPendingTransactions = new Set();
  * @param {String} bucket
  * @param {String} collection
  * @param {Array<Object>} records
+ * @param {Number} timestamp
  */
-async function importDumpIDB(bucket, collection, records) {
+async function importDumpIDB(bucket, collection, records, timestamp) {
   // Open the DB. It will exist since if we are running this, it means
   // we already tried to read the timestamp in `remote-settings.js`
   const db = await IDBHelpers.openIDB(false /* do not allow upgrades */);
@@ -172,11 +173,7 @@ async function importDumpIDB(bucket, collection, records) {
     records.forEach(item => {
       item._cid = cid;
     });
-    // Store the highest timestamp as the collection timestamp (or zero if dump is empty).
-    const timestamp =
-      records.length === 0
-        ? 0
-        : Math.max(...records.map(record => record.last_modified));
+    // Store the collection timestamp.
     let { transaction, promise } = IDBHelpers.executeIDB(
       db,
       [IDB_RECORDS_STORE, IDB_TIMESTAMPS_STORE],
