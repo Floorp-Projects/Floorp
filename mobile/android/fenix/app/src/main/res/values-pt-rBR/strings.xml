@@ -251,6 +251,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Pesquisar diretamente na barra de endereços</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Configurações da pesquisa</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Novidades no Firefox</string>
@@ -1178,6 +1181,13 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Excluindo dados de navegação…</string>
 
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Cancelar</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Excluir</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Grupo excluído</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview agora é Firefox Nightly</string>
@@ -1531,7 +1541,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu de ordenação de contas</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Preenchimento automático</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Endereços</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Cartões de crédito</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1547,6 +1561,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Gerenciar cartões salvos</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Adicionar endereço</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Gerenciar endereços</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Adicionar cartão</string>
     <!-- Title of the "Edit card" screen -->
@@ -1599,6 +1617,13 @@
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Desbloqueie para usar informações armazenadas de cartões de crédito</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Adicionar endereço</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Gerenciar endereços</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Nome completo</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar mecanismo de pesquisa</string>

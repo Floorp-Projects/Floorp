@@ -252,6 +252,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Keresés közvetlenül a címsávból</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Keresési beállítások</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Újdonságok a Firefoxban</string>
@@ -800,6 +803,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nincsenek előzmények</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Másik eszközről szinkronizálva</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Más eszközről</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Letöltések eltávolítva</string>
@@ -1185,6 +1193,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Böngészési adatok törlése…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Ezzel törli az összes elemet.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Mégse</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Törlés</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Csoport törölve</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">A Firefox Preview most már a Firefox Nightly</string>
@@ -1538,7 +1555,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Bejelentkezések menü rendezése</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Automatikus kitöltés</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Címek</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Bankkártyák</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1554,6 +1575,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Mentett kártyák kezelése</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Cím hozzáadása</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Címek kezelése</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kártya hozzáadása</string>
     <!-- Title of the "Edit card" screen -->
@@ -1606,6 +1631,31 @@
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Oldja fel, hogy a tárolt bankkártya-információkat használja</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Cím hozzáadása</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Címek kezelése</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Teljes név</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Utca, hászszám</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Város</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Állam</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Irányítószám</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telefon</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">E-mail</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Mentés</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Mégse</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Cím törlése</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Keresőszolgáltatás hozzáadása</string>

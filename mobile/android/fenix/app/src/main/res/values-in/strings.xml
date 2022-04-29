@@ -254,6 +254,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Cari langsung dari bilah alamat</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Setelan pencarian</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Apa yang baru di Firefox</string>
@@ -800,6 +803,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Tidak ada riwayat di sini</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Disinkronkan dari perangkat lain</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Dari perangkat lainnya</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Unduhan Dihapus</string>
@@ -1186,6 +1194,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Menghapus data penjelajahan…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Ini akan menghapus semua item.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Batal</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Hapus</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Grup dihapus</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Sekarang, Firefox Preview adalah Firefox Nightly</string>
@@ -1536,7 +1553,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Sortir menu info masuk</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Isi Otomatis</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Alamat</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kartu kredit</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1551,6 +1572,10 @@
     <string name="preferences_credit_cards_add_credit_card">Tambahkan kartu kredit</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Kelola kartu tersimpan</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Tambahkan alamat</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Kelola alamat</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Tambah kartu</string>
     <!-- Title of the "Edit card" screen -->
@@ -1600,6 +1625,31 @@
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Buka kunci untuk menggunakan informasi kartu kredit tersimpan</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Tambahkan alamat</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Kelola alamat</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Nama Lengkap</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Jalan</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Kota</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Provinsi</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Kode Pos</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telepon</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Surel</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Simpan</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Batal</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Hapus alamat</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pencari</string>

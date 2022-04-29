@@ -18,7 +18,7 @@
     <string name="no_open_tabs_description">Opnu fliparnir þínir verða sýndir hér.</string>
 
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Opnu einkafliparnir þínir verða sýndir hér.</string>
+    <string name="no_private_tabs_description">Opnu huliðsfliparnir þínir verða sýndir hér.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d valið</string>
@@ -56,7 +56,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
- · %1$s hreinsar leitar- og vafraferilinn þinn þegar þú lokar forritinu eða lokar öllum einkaflipum og gluggum. Þó að þetta sé ekki nafnlaust gagnvart vefsíðum eða þjónustuveitanda þínum, þá gerir þetta þér auðveldara að halda því sem þú gerir á netinu huldu gagnvart einkaaðilum sem nota þetta tæki.</string>
+ · %1$s hreinsar leitar- og vafraferilinn þinn þegar þú lokar forritinu eða lokar öllum huliðsflipum og gluggum. Þó að þetta sé ekki nafnlaust gagnvart vefsíðum eða þjónustuveitanda þínum, þá gerir þetta þér auðveldara að halda því sem þú gerir á netinu huldu gagnvart einkaaðilum sem nota þetta tæki.</string>
     <string name="private_browsing_common_myths">
       Algengar mýtur um huliðsleit</string>
 
@@ -114,7 +114,7 @@
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nýr flipi</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">Nýr einkaflipi</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nýr huliðsflipi</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -247,6 +247,9 @@
 
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Leita beint úr veffangastikunni</string>
+
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Leitarstillingar</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
@@ -699,7 +702,7 @@
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Bæta við flipa</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_private_tab">Bæta við einkaflipa</string>
+    <string name="add_private_tab">Bæta við huliðsflipa</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Einka</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
@@ -789,6 +792,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Ekkert ferli hér</string>
 
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Samstillt frá öðrum tækjum</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Frá öðrum tækjum</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1168,6 +1176,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Eyði vafragögnum…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Þetta mun eyða öllum atriðum.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Hætta við</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Eyða</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Hópi eytt</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview heitir nú Firefox Nightly</string>
@@ -1523,7 +1540,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Raða innskráningarvalmyndinni</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Sjálfvirk útfylling</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Tölvupóstföng</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Greiðslukort</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1538,6 +1559,10 @@
     <string name="preferences_credit_cards_add_credit_card">Bæta við greiðslukorti</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Sýsla með vistuð greiðslukort</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Bæta við tölvupóstfangi</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Sýsla með tölvupóstföng</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Bæta við korti</string>
     <!-- Title of the "Edit card" screen -->
@@ -1587,6 +1612,31 @@
     <string name="credit_cards_biometric_prompt_message_pin">Aflæstu tækinu þínu</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Aflæstu til að nota geymdar kreditkortaupplýsingar</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Bæta við tölvupóstfangi</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Sýsla með tölvupóstföng</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Fullt nafn</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Heimilisfang</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Borg/Sveitarfélag</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Ríki/Hérað</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Póstnúmer</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Sími</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Tölvupóstur</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Vista</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Hætta við</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Eyða tölvupóstfangi</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Bæta við leitarvél</string>

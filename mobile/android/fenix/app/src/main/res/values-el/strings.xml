@@ -257,6 +257,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Αναζήτηση απευθείας από τη γραμμή διευθύνσεων</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Ρυθμίσεις αναζήτησης</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Τι νέο υπάρχει στο Firefox</string>
@@ -802,6 +805,9 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Δεν υπάρχει ιστορικό</string>
 
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Από άλλες συσκευές</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Οι λήψεις διαγράφηκαν</string>
@@ -1186,6 +1192,13 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Διαγραφή δεδομένων περιήγησης…</string>
 
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Ακύρωση</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Διαγραφή</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Η ομάδα διαγράφηκε</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Το Firefox Preview είναι πλέον το Firefox Nightly</string>
@@ -1545,7 +1558,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ταξινόμηση μενού σύνδεσης</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Αυτόματη συμπλήρωση</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Διευθύνσεις</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Πιστωτικές κάρτες</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1561,6 +1578,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Διαχείριση αποθηκευμένων καρτών</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Προσθήκη διεύθυνσης</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Διαχείριση διευθύνσεων</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
     <!-- Title of the "Edit card" screen -->
@@ -1613,6 +1634,25 @@
     <string name="credit_cards_biometric_prompt_message_pin">Ξεκλειδώστε τη συσκευή σας</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Ξεκλειδώστε για χρήση των στοιχείων πιστωτικής κάρτας</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Προσθήκη διεύθυνσης</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Διαχείριση διευθύνσεων</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Πλήρες όνομα</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Πόλη</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Τηλέφωνο</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Email</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Αποθήκευση</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Ακύρωση</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Διαγραφή διεύθυνσης</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Προσθήκη μηχανής αναζήτησης</string>
