@@ -713,6 +713,61 @@ TEST(RtpVideoSenderTest, SupportsDependencyDescriptor) {
       sent_packets.back().HasExtension<RtpDependencyDescriptorExtension>());
 }
 
+TEST(RtpVideoSenderTest, SupportsDependencyDescriptorForVp9) {
+  RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
+  test.router()->SetActive(true);
+
+  RtpHeaderExtensionMap extensions;
+  extensions.Register<RtpDependencyDescriptorExtension>(
+      kDependencyDescriptorExtensionId);
+  std::vector<RtpPacket> sent_packets;
+  ON_CALL(test.transport(), SendRtp)
+      .WillByDefault([&](const uint8_t* packet, size_t length,
+                         const PacketOptions& options) {
+        sent_packets.emplace_back(&extensions);
+        EXPECT_TRUE(sent_packets.back().Parse(packet, length));
+        return true;
+      });
+
+  const uint8_t kPayload[1] = {'a'};
+  EncodedImage encoded_image;
+  encoded_image.SetTimestamp(1);
+  encoded_image.capture_time_ms_ = 2;
+  encoded_image._frameType = VideoFrameType::kVideoFrameKey;
+  encoded_image.SetEncodedData(
+      EncodedImageBuffer::Create(kPayload, sizeof(kPayload)));
+
+  CodecSpecificInfo codec_specific;
+  codec_specific.codecType = VideoCodecType::kVideoCodecVP9;
+  codec_specific.template_structure.emplace();
+  codec_specific.template_structure->num_decode_targets = 2;
+  codec_specific.template_structure->templates = {
+      FrameDependencyTemplate().S(0).Dtis("SS"),
+      FrameDependencyTemplate().S(1).Dtis("-S").FrameDiffs({1}),
+  };
+
+  // Send two tiny images, each mapping to single RTP packet.
+  // Send in key frame for the base spatial layer.
+  codec_specific.generic_frame_info =
+      GenericFrameInfo::Builder().S(0).Dtis("SS").Build();
+  codec_specific.generic_frame_info->encoder_buffers = {{0, false, true}};
+  EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
+            EncodedImageCallback::Result::OK);
+  // Send in 2nd spatial layer.
+  codec_specific.template_structure = absl::nullopt;
+  codec_specific.generic_frame_info =
+      GenericFrameInfo::Builder().S(1).Dtis("-S").Build();
+  codec_specific.generic_frame_info->encoder_buffers = {{0, true, false},
+                                                        {1, false, true}};
+  EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
+            EncodedImageCallback::Result::OK);
+
+  test.AdvanceTime(TimeDelta::Millis(33));
+  ASSERT_THAT(sent_packets, SizeIs(2));
+  EXPECT_TRUE(sent_packets[0].HasExtension<RtpDependencyDescriptorExtension>());
+  EXPECT_TRUE(sent_packets[1].HasExtension<RtpDependencyDescriptorExtension>());
+}
+
 TEST(RtpVideoSenderTest, SupportsStoppingUsingDependencyDescriptor) {
   RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
   test.router()->SetActive(true);
