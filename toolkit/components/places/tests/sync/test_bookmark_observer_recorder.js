@@ -161,7 +161,7 @@ add_task(async function test_update_frecencies() {
       id: "bookmarkDDDD",
       parentid: "unfiled",
       type: "bookmark",
-      title: "D",
+      title: null,
       bmkUri: "http://example.com/d",
     },
     {
@@ -286,7 +286,7 @@ async function setupLocalTree(localTimeSeconds) {
       },
       {
         guid: "bookmarkDDDD",
-        title: "D",
+        title: null,
         url: "http://example.com/d",
         dateAdded,
         lastModified,
@@ -441,7 +441,7 @@ add_task(async function test_apply_then_revert() {
         index: 1,
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         urlHref: "http://example.com/d",
-        title: "D",
+        title: "", // null titles get turned into empty strings.
         guid: "bookmarkDDDD",
         parentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
