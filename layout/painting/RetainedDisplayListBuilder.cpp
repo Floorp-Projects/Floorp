@@ -968,6 +968,12 @@ static void GetModifiedAndFramesWithProps(
 
 static nsDisplayItem* GetFirstDisplayItemWithChildren(nsIFrame* aFrame) {
   for (nsDisplayItem* i : aFrame->DisplayItems()) {
+    if (i->HasDeletedFrame() || i->Frame() != aFrame) {
+      // The main frame for the display item has been deleted or the display
+      // item belongs to another frame.
+      continue;
+    }
+
     if (i->HasChildren()) {
       return static_cast<nsDisplayItem*>(i);
     }

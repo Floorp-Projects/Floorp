@@ -168,6 +168,57 @@ ef gh</pre>
 );
 
 /**
+ * Test line offsets after text mutation.
+ */
+addAccessibleTask(
+  `
+<p id="initBr"><br></p>
+<p id="rewrap" style="font-family: monospace; width: 2ch; word-break: break-word;"><span id="rewrap1">ac</span>def</p>
+  `,
+  async function(browser, docAcc) {
+    const initBr = findAccessibleChildByID(docAcc, "initBr");
+    testTextAtOffset(initBr, BOUNDARY_LINE_START, [
+      [0, 0, "\n", 0, 1],
+      [1, 1, "", 1, 1],
+    ]);
+    info("initBr: Inserting text before br");
+    let reordered = waitForEvent(EVENT_REORDER, initBr);
+    await invokeContentTask(browser, [], () => {
+      const initBrNode = content.document.getElementById("initBr");
+      initBrNode.insertBefore(
+        content.document.createTextNode("a"),
+        initBrNode.firstElementChild
+      );
+    });
+    await reordered;
+    testTextAtOffset(initBr, BOUNDARY_LINE_START, [
+      [0, 1, "a\n", 0, 2],
+      [2, 2, "", 2, 2],
+    ]);
+
+    const rewrap = findAccessibleChildByID(docAcc, "rewrap");
+    testTextAtOffset(rewrap, BOUNDARY_LINE_START, [
+      [0, 1, "ac", 0, 2],
+      [2, 3, "de", 2, 4],
+      [4, 5, "f", 4, 5],
+    ]);
+    info("rewrap: Changing ac to abc");
+    reordered = waitForEvent(EVENT_REORDER, rewrap);
+    await invokeContentTask(browser, [], () => {
+      const rewrap1 = content.document.getElementById("rewrap1");
+      rewrap1.textContent = "abc";
+    });
+    await reordered;
+    testTextAtOffset(rewrap, BOUNDARY_LINE_START, [
+      [0, 1, "ab", 0, 2],
+      [2, 3, "cd", 2, 4],
+      [4, 6, "ef", 4, 6],
+    ]);
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
+
+/**
  * Test HyperText embedded object methods.
  */
 addAccessibleTask(

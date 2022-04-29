@@ -119,6 +119,8 @@ function getObjectInspector(
     onDOMNodeMouseOut,
     onInspectIconClick,
     defaultRep: REPS.Grip,
+    createElement: serviceContainer?.createElement,
+    mayUseCustomFormatter: true,
     ...override,
   };
 

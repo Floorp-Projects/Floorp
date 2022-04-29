@@ -17,16 +17,6 @@ add_task(async function test_defaultdownload() {
       true,
       "alwaysAsk should be disabled."
     );
-    is(
-      browser.contentDocument.getElementById("saveTo").selected,
-      true,
-      "saveTo should be selected."
-    );
-    is(
-      browser.contentDocument.getElementById("saveTo").disabled,
-      true,
-      "saveTo should be disabled."
-    );
     let home = Services.dirsvc.get("Home", Ci.nsIFile).path;
     is(
       Services.prefs.getStringPref("browser.download.dir"),
@@ -58,16 +48,6 @@ add_task(async function test_download() {
       browser.contentDocument.getElementById("alwaysAsk").disabled,
       true,
       "alwaysAsk should be disabled."
-    );
-    is(
-      browser.contentDocument.getElementById("saveTo").selected,
-      true,
-      "saveTo should be selected."
-    );
-    is(
-      browser.contentDocument.getElementById("saveTo").disabled,
-      true,
-      "saveTo should be disabled."
     );
     is(
       browser.contentDocument.getElementById("downloadFolder").disabled,

@@ -27,9 +27,9 @@ xpcAccessibleImage::GetImagePosition(uint32_t aCoordType, int32_t* aX,
   NS_ENSURE_ARG_POINTER(aY);
   *aY = 0;
 
-  if (!Intl()) return NS_ERROR_FAILURE;
+  if (!mIntl) return NS_ERROR_FAILURE;
 
-  LayoutDeviceIntPoint point = Intl()->Position(aCoordType);
+  LayoutDeviceIntPoint point = mIntl->Position(aCoordType);
   *aX = point.x;
   *aY = point.y;
   return NS_OK;
@@ -42,9 +42,9 @@ xpcAccessibleImage::GetImageSize(int32_t* aWidth, int32_t* aHeight) {
   NS_ENSURE_ARG_POINTER(aHeight);
   *aHeight = 0;
 
-  if (!Intl()) return NS_ERROR_FAILURE;
+  if (!mIntl) return NS_ERROR_FAILURE;
 
-  LayoutDeviceIntSize size = Intl()->Size();
+  LayoutDeviceIntSize size = mIntl->Size();
   *aWidth = size.width;
   *aHeight = size.height;
   return NS_OK;

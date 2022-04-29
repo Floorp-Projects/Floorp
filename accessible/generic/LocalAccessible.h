@@ -995,7 +995,10 @@ class LocalAccessible : public nsISupports, public Accessible {
   LocalAccessible* mParent;
   nsTArray<LocalAccessible*> mChildren;
   int32_t mIndexInParent;
+
+  // These are used to determine whether to send cache updates.
   Maybe<nsRect> mBounds;
+  int32_t mFirstLineStart;
 
   /**
    * Maintain a reference to the ComputedStyle of our frame so we can

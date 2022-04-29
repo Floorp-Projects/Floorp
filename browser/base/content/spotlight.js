@@ -146,7 +146,7 @@ function renderMultistage(ready) {
   document.body.id = "root";
 
   // The content handles styling including its own modal shadowing.
-  const { classList } = gDoc.getElementById("window-modal-dialog");
+  const { classList } = browser.closest(".dialogBox");
   classList.add("noShadow");
   addEventListener("pagehide", () => classList.remove("noShadow"));
 

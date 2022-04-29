@@ -202,7 +202,11 @@ class ObjectInspector extends Component {
   }
 
   isNodeExpandable(item) {
-    if (nodeIsPrimitive(item)) {
+    if (
+      nodeIsPrimitive(item) ||
+      (Array.isArray(item.contents?.value?.header) &&
+        !item.contents?.value?.hasBody)
+    ) {
       return false;
     }
 

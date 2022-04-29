@@ -19,6 +19,7 @@
 #include "nsIMutableArray.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
+#include "nsITimer.h"
 #include "nsSupportsPrimitives.h"
 #include "nsXPCOM.h"
 
@@ -208,9 +209,12 @@ void StorageActivityService::MaybeStartTimer() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mTimer) {
-    mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    mTimer->InitWithCallback(this, 1000 * 5 * 60 /* any 5 minutes */,
-                             nsITimer::TYPE_REPEATING_SLACK);
+    nsresult rv = NS_NewTimerWithCallback(
+        getter_AddRefs(mTimer), this, 1000 * 5 * 60 /* any 5 minutes */,
+        nsITimer::TYPE_REPEATING_SLACK, nullptr);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Could not start StorageActivityService timer");
+    }
   }
 }
 
