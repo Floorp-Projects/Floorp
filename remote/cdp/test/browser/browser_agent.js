@@ -9,6 +9,6 @@ const remoteAgentInstance = Cc["@mozilla.org/remote/agent;1"].createInstance(
   Ci.nsIRemoteAgent
 );
 
-add_task(async function listening() {
-  is(remoteAgentInstance.listening, true, "Agent is listening");
+add_task(async function running() {
+  is(remoteAgentInstance.running, true, "Agent is running");
 });

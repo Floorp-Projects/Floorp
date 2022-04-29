@@ -130,7 +130,7 @@ class RemoteAgentClass {
     return this.server?._host;
   }
 
-  get listening() {
+  get running() {
     return !!this.server && !this.server.isStopped();
   }
 
@@ -188,7 +188,7 @@ class RemoteAgentClass {
       );
     }
 
-    if (this.listening) {
+    if (this.running) {
       return;
     }
 
@@ -223,7 +223,7 @@ class RemoteAgentClass {
   }
 
   async #stop() {
-    if (!this.listening) {
+    if (!this.running) {
       return;
     }
 
