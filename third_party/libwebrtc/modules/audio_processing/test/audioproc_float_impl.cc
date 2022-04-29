@@ -247,6 +247,11 @@ ABSL_FLAG(std::string,
           dump_data_output_dir,
           "",
           "Internal data dump output directory");
+ABSL_FLAG(int,
+          dump_set_to_use,
+          kParameterNotSpecifiedValue,
+          "Specifies the dump set to use (if not all the dump sets will "
+          "be used");
 ABSL_FLAG(bool,
           float_wav_output,
           false,
@@ -436,6 +441,8 @@ SimulationSettings CreateSettings() {
   settings.dump_internal_data = absl::GetFlag(FLAGS_dump_data);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_dump_data_output_dir),
                         &settings.dump_internal_data_output_dir);
+  SetSettingIfSpecified(absl::GetFlag(FLAGS_dump_set_to_use),
+                        &settings.dump_set_to_use);
   settings.wav_output_format = absl::GetFlag(FLAGS_float_wav_output)
                                    ? WavFile::SampleFormat::kFloat
                                    : WavFile::SampleFormat::kInt16;
