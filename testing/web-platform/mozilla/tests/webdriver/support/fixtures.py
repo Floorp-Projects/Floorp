@@ -1,6 +1,7 @@
 import os
 import socket
 import time
+from contextlib import suppress
 from urllib.parse import urlparse
 
 import pytest
@@ -59,8 +60,9 @@ def browser(full_configuration):
     yield _browser
 
     # Stop firefox at the end of the test module.
-    current_browser.quit()
-    current_browser = None
+    if current_browser is not None:
+        current_browser.quit()
+        current_browser = None
 
 
 @pytest.fixture
@@ -94,7 +96,9 @@ class Browser:
         extra_prefs=None,
     ):
         self.use_bidi = use_bidi
+        self.bidi_port_file = None
         self.use_cdp = use_cdp
+        self.cdp_port_file = None
         self.extra_args = extra_args
         self.extra_prefs = extra_prefs
 
@@ -107,12 +111,25 @@ class Browser:
         if self.extra_prefs is not None:
             self.profile.set_preferences(self.extra_prefs)
 
+        if use_cdp:
+            self.cdp_port_file = os.path.join(
+                self.profile.profile, "DevToolsActivePort"
+            )
+            with suppress(FileNotFoundError):
+                os.remove(self.cdp_port_file)
+        if use_bidi:
+            self.bidi_port_file = os.path.join(
+                self.profile.profile, "WebDriverBiDiActivePort"
+            )
+            with suppress(FileNotFoundError):
+                os.remove(self.bidi_port_file)
+
         # Prepare Firefox runner
         binary = firefox_options["binary"]
 
         cmdargs = ["-no-remote"]
         if self.use_bidi or self.use_cdp:
-            cmdargs.append("--remote-debugging-port")
+            cmdargs.extend(["--remote-debugging-port", "0"])
         if self.extra_args is not None:
             cmdargs.extend(self.extra_args)
         self.runner = FirefoxRunner(
@@ -129,26 +146,24 @@ class Browser:
 
         if self.use_bidi:
             # Wait until the WebDriverBiDiActivePort file is ready
-            port_file = os.path.join(self.profile.profile, "WebDriverBiDiActivePort")
-            while not os.path.exists(port_file):
+            while not os.path.exists(self.bidi_port_file):
                 time.sleep(0.1)
 
             # Read the port from the WebDriverBiDiActivePort file
-            self.remote_agent_port = open(port_file).read()
+            self.remote_agent_port = int(open(self.bidi_port_file).read())
 
         if self.use_cdp:
             # Wait until the DevToolsActivePort file is ready
-            port_file = os.path.join(self.profile.profile, "DevToolsActivePort")
-            while not os.path.exists(port_file):
+            while not os.path.exists(self.cdp_port_file):
                 time.sleep(0.1)
 
             # Read the port if needed and the debugger address from the
             # DevToolsActivePort file
-            lines = open(port_file).readlines()
+            lines = open(self.cdp_port_file).readlines()
             assert len(lines) == 2
 
             if self.remote_agent_port is None:
-                self.remote_agent_port = lines[0].strip()
+                self.remote_agent_port = int(lines[0].strip())
             self.debugger_address = lines[1].strip()
 
     def quit(self, clean_profile=True):
