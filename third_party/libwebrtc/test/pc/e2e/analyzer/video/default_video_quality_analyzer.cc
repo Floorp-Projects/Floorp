@@ -140,7 +140,6 @@ void DefaultVideoQualityAnalyzer::Start(
     rtc::ArrayView<const std::string> peer_names,
     int max_threads_count) {
   test_label_ = std::move(test_case_name);
-  peers_ = std::make_unique<NamesCollection>(peer_names);
   for (int i = 0; i < max_threads_count; i++) {
     auto thread = std::make_unique<rtc::PlatformThread>(
         &DefaultVideoQualityAnalyzer::ProcessComparisonsThread, this,
@@ -151,6 +150,7 @@ void DefaultVideoQualityAnalyzer::Start(
   }
   {
     MutexLock lock(&lock_);
+    peers_ = std::make_unique<NamesCollection>(peer_names);
     RTC_CHECK(start_time_.IsMinusInfinity());
 
     state_ = State::kActive;
@@ -166,19 +166,22 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
   // |next_frame_id| is atomic, so we needn't lock here.
   uint16_t frame_id = next_frame_id_++;
   Timestamp start_time = Timestamp::MinusInfinity();
-  size_t peer_index = peers_->index(peer_name);
+  size_t peer_index = -1;
+  size_t peers_count = -1;
   size_t stream_index;
   {
     MutexLock lock(&lock_);
-    // Create a local copy of start_time_ to access it under
-    // |comparison_lock_| without holding a |lock_|
+    // Create a local copy of |start_time_|, peer's index and total peers count
+    // to access it under |comparison_lock_| without holding a |lock_|
     start_time = start_time_;
+    peer_index = peers_->index(peer_name);
+    peers_count = peers_->size();
     stream_index = streams_.AddIfAbsent(stream_label);
   }
   {
     // Ensure stats for this stream exists.
     MutexLock lock(&comparison_lock_);
-    for (size_t i = 0; i < peers_->size(); ++i) {
+    for (size_t i = 0; i < peers_count; ++i) {
       if (i == peer_index) {
         continue;
       }
@@ -956,7 +959,7 @@ StatsKey DefaultVideoQualityAnalyzer::ToStatsKey(
 }
 
 std::string DefaultVideoQualityAnalyzer::StatsKeyToMetricName(
-    const StatsKey& key) {
+    const StatsKey& key) const {
   if (peers_->size() <= 2) {
     return key.stream_label;
   }
