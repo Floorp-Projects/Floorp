@@ -54,6 +54,7 @@ TEST(LibaomAv1EncoderTest, InitAndRelease) {
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   ASSERT_TRUE(encoder);
   VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode("NONE");
   EXPECT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
   EXPECT_EQ(encoder->Release(), WEBRTC_VIDEO_CODEC_OK);
@@ -61,9 +62,9 @@ TEST(LibaomAv1EncoderTest, InitAndRelease) {
 
 TEST(LibaomAv1EncoderTest, NoBitrateOnTopLayerRefecltedInActiveDecodeTargets) {
   // Configure encoder with 2 temporal layers.
-  std::unique_ptr<VideoEncoder> encoder =
-      CreateLibaomAv1Encoder(std::make_unique<ScalabilityStructureL1T2>());
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode("L1T2");
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
 

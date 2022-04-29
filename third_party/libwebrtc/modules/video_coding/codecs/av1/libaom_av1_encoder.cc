@@ -64,8 +64,7 @@ int GetCpuSpeed(int width, int height, int number_of_cores) {
 
 class LibaomAv1Encoder final : public VideoEncoder {
  public:
-  explicit LibaomAv1Encoder(
-      std::unique_ptr<ScalableVideoController> svc_controller);
+  LibaomAv1Encoder();
   ~LibaomAv1Encoder();
 
   int InitEncode(const VideoCodec* codec_settings,
@@ -132,14 +131,10 @@ int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-LibaomAv1Encoder::LibaomAv1Encoder(
-    std::unique_ptr<ScalableVideoController> svc_controller)
-    : svc_controller_(std::move(svc_controller)),
-      inited_(false),
+LibaomAv1Encoder::LibaomAv1Encoder()
+    : inited_(false),
       frame_for_encode_(nullptr),
-      encoded_image_callback_(nullptr) {
-  RTC_DCHECK(svc_controller_);
-}
+      encoded_image_callback_(nullptr) {}
 
 LibaomAv1Encoder::~LibaomAv1Encoder() {
   Release();
@@ -173,11 +168,11 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     return result;
   }
   absl::string_view scalability_mode = encoder_settings_.ScalabilityMode();
-  // When scalability_mode is not set, keep using svc_controller_ created
-  // at construction of the encoder.
-  if (!scalability_mode.empty()) {
-    svc_controller_ = CreateScalabilityStructure(scalability_mode);
+  if (scalability_mode.empty()) {
+    RTC_LOG(LS_WARNING) << "Scalability mode is not set.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
+  svc_controller_ = CreateScalabilityStructure(scalability_mode);
   if (svc_controller_ == nullptr) {
     RTC_LOG(LS_WARNING) << "Failed to set scalability mode "
                         << scalability_mode;
@@ -689,13 +684,7 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
 const bool kIsLibaomAv1EncoderSupported = true;
 
 std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder() {
-  return std::make_unique<LibaomAv1Encoder>(
-      std::make_unique<ScalableVideoControllerNoLayering>());
-}
-
-std::unique_ptr<VideoEncoder> CreateLibaomAv1Encoder(
-    std::unique_ptr<ScalableVideoController> svc_controller) {
-  return std::make_unique<LibaomAv1Encoder>(std::move(svc_controller));
+  return std::make_unique<LibaomAv1Encoder>();
 }
 
 }  // namespace webrtc
