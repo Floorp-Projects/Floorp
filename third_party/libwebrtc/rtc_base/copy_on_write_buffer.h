@@ -95,14 +95,6 @@ class RTC_EXPORT CopyOnWriteBuffer {
     return buffer_->data<T>() + offset_;
   }
 
-  // TODO(bugs.webrtc.org/12334): Delete when all usage updated to MutableData()
-  template <typename T = uint8_t,
-            typename std::enable_if<
-                internal::BufferCompat<uint8_t, T>::value>::type* = nullptr>
-  T* data() {
-    return MutableData<T>();
-  }
-
   // Get const pointer to the data. This will not create a copy of the
   // underlying data if it is shared with other buffers.
   template <typename T = uint8_t,
@@ -152,12 +144,6 @@ class RTC_EXPORT CopyOnWriteBuffer {
 
   bool operator!=(const CopyOnWriteBuffer& buf) const {
     return !(*this == buf);
-  }
-
-  // TODO(bugs.webrtc.org/12334): Delete when all usage updated to MutableData()
-  uint8_t& operator[](size_t index) {
-    RTC_DCHECK_LT(index, size());
-    return MutableData()[index];
   }
 
   uint8_t operator[](size_t index) const {
