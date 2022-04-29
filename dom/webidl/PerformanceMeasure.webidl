@@ -10,4 +10,5 @@
 [Exposed=(Window,Worker)]
 interface PerformanceMeasure : PerformanceEntry
 {
+  readonly attribute any detail;
 };
