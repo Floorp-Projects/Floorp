@@ -2216,9 +2216,9 @@ bool Navigator::Webdriver() {
 
   nsCOMPtr<nsIRemoteAgent> agent = do_GetService(NS_REMOTEAGENT_CONTRACTID);
   if (agent) {
-    bool remoteAgentListening = false;
-    agent->GetListening(&remoteAgentListening);
-    if (remoteAgentListening) {
+    bool remoteAgentRunning = false;
+    agent->GetRunning(&remoteAgentRunning);
+    if (remoteAgentRunning) {
       return true;
     }
   }

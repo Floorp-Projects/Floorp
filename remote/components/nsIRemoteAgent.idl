@@ -23,10 +23,9 @@ interface nsIRemoteAgent : nsISupports
   readonly attribute AString debuggerAddress;
 
   /**
-   * Whether the remote agent is currently listening for new,
-   * incoming connections.
+   * Indicates whether the Remote Agent is running.
    */
-  readonly attribute boolean listening;
+  readonly attribute boolean running;
 };
 
 %{C++
