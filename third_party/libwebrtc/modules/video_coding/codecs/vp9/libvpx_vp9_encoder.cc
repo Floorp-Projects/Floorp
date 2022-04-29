@@ -761,7 +761,7 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
     libvpx_->codec_control(encoder_, VP9E_SET_SVC, 1);
     libvpx_->codec_control(encoder_, VP9E_SET_SVC_PARAMETERS, &svc_params_);
   }
-  if (!performance_flags_.use_per_layer_speed) {
+  if (!is_svc_ || !performance_flags_.use_per_layer_speed) {
     libvpx_->codec_control(
         encoder_, VP8E_SET_CPUUSED,
         performance_flags_by_spatial_index_.rbegin()->base_layer_speed);

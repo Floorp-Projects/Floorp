@@ -8,18 +8,25 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "absl/memory/memory.h"
 #include "api/test/create_frame_generator.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/test/mock_video_encoder.h"
 #include "api/video/color_space.h"
 #include "api/video/i420_buffer.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/base/vp9_profile.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/video_coding/codecs/interface/libvpx_interface.h"
+#include "modules/video_coding/codecs/interface/mock_libvpx_interface.h"
 #include "modules/video_coding/codecs/test/encoded_video_frame_producer.h"
 #include "modules/video_coding/codecs/test/video_codec_unittest.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
+#include "rtc_base/strings/string_builder.h"
+#include "test/explicit_key_value_config.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -28,11 +35,28 @@
 namespace webrtc {
 namespace {
 
+using ::testing::_;
+using ::testing::A;
+using ::testing::AllOf;
+using ::testing::An;
+using ::testing::AnyNumber;
+using ::testing::ByRef;
+using ::testing::DoAll;
+using ::testing::Each;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
+using ::testing::Field;
 using ::testing::IsEmpty;
+using ::testing::Mock;
+using ::testing::NiceMock;
+using ::testing::Return;
+using ::testing::SafeMatcherCast;
+using ::testing::SaveArgPointee;
+using ::testing::SetArgPointee;
 using ::testing::SizeIs;
+using ::testing::TypedEq;
 using ::testing::UnorderedElementsAreArray;
+using ::testing::WithArg;
 using EncoderInfo = webrtc::VideoEncoder::EncoderInfo;
 using FramerateFractions =
     absl::InlinedVector<uint8_t, webrtc::kMaxTemporalStreams>;
@@ -1644,7 +1668,7 @@ TEST_F(TestVp9Impl, EncoderInfoFpsAllocation) {
   expected_fps_allocation[1] = expected_fps_allocation[0];
   expected_fps_allocation[2] = expected_fps_allocation[0];
   EXPECT_THAT(encoder_->GetEncoderInfo().fps_allocation,
-              ::testing::ElementsAreArray(expected_fps_allocation));
+              ElementsAreArray(expected_fps_allocation));
 }
 
 TEST_F(TestVp9Impl, EncoderInfoFpsAllocationFlexibleMode) {
@@ -2057,4 +2081,288 @@ INSTANTIATE_TEST_SUITE_P(
     [](const auto& info) {
       return test::FrameGeneratorInterface::OutputTypeToString(info.param);
     });
+
+// Helper function to populate an vpx_image_t instance with dimensions and
+// potential image data.
+std::function<vpx_image_t*(vpx_image_t*,
+                           vpx_img_fmt_t,
+                           unsigned int,
+                           unsigned int,
+                           unsigned int,
+                           unsigned char* img_data)>
+GetWrapImageFunction(vpx_image_t* img) {
+  return [img](vpx_image_t* /*img*/, vpx_img_fmt_t fmt, unsigned int d_w,
+               unsigned int d_h, unsigned int /*stride_align*/,
+               unsigned char* img_data) {
+    img->fmt = fmt;
+    img->d_w = d_w;
+    img->d_h = d_h;
+    img->img_data = img_data;
+    return img;
+  };
+}
+
+TEST(Vp9SpeedSettingsTrialsTest, SvcExtraCfgNotPopulatedByDefault) {
+  test::ExplicitKeyValueConfig trials("");
+
+  // Keep a raw pointer for EXPECT calls and the like. Ownership is otherwise
+  // passed on to LibvpxVp9Encoder.
+  auto* const vpx = new NiceMock<MockLibvpxInterface>();
+  LibvpxVp9Encoder encoder(cricket::VideoCodec(),
+                           absl::WrapUnique<LibvpxInterface>(vpx), trials);
+
+  VideoCodec settings = DefaultCodecSettings();
+  // Configure 3 spatial and three temporal ayers.
+  ConfigureSvc(settings, 3, 3);
+  vpx_image_t img;
+
+  ON_CALL(*vpx, img_wrap).WillByDefault(GetWrapImageFunction(&img));
+  ON_CALL(*vpx, codec_enc_config_default)
+      .WillByDefault(DoAll(WithArg<1>([](vpx_codec_enc_cfg_t* cfg) {
+                             memset(cfg, 0, sizeof(vpx_codec_enc_cfg_t));
+                           }),
+                           Return(VPX_CODEC_OK)));
+  EXPECT_CALL(*vpx,
+              codec_control(
+                  _, VP9E_SET_SVC_PARAMETERS,
+                  SafeMatcherCast<vpx_svc_extra_cfg_t*>(AllOf(
+                      Field(&vpx_svc_extra_cfg_t::speed_per_layer, Each(0)),
+                      Field(&vpx_svc_extra_cfg_t::loopfilter_ctrl, Each(0))))));
+
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder.InitEncode(&settings, kSettings));
+}
+
+TEST(Vp9SpeedSettingsTrialsTest, NoSvcUsesGlobalSpeedFromTl0InLayerConfig) {
+  // TL0 speed 8 at >= 480x270, 5 if below that.
+  test::ExplicitKeyValueConfig trials(
+      "WebRTC-VP9-PerformanceFlags/"
+      "use_per_layer_speed,"
+      "min_pixel_count:0|129600,"
+      "base_layer_speed:4|8,"
+      "high_layer_speed:5|9,"
+      "deblock_mode:1|0/");
+
+  // Keep a raw pointer for EXPECT calls and the like. Ownership is otherwise
+  // passed on to LibvpxVp9Encoder.
+  auto* const vpx = new NiceMock<MockLibvpxInterface>();
+  LibvpxVp9Encoder encoder(cricket::VideoCodec(),
+                           absl::WrapUnique<LibvpxInterface>(vpx), trials);
+
+  VideoCodec settings = DefaultCodecSettings();
+  settings.width = 480;
+  settings.height = 270;
+  vpx_image_t img;
+
+  ON_CALL(*vpx, img_wrap).WillByDefault(GetWrapImageFunction(&img));
+  ON_CALL(*vpx, codec_enc_config_default)
+      .WillByDefault(DoAll(WithArg<1>([](vpx_codec_enc_cfg_t* cfg) {
+                             memset(cfg, 0, sizeof(vpx_codec_enc_cfg_t));
+                           }),
+                           Return(VPX_CODEC_OK)));
+  EXPECT_CALL(*vpx, codec_control(_, _, An<int>())).Times(AnyNumber());
+
+  EXPECT_CALL(*vpx, codec_control(_, VP9E_SET_SVC_PARAMETERS,
+                                  A<vpx_svc_extra_cfg_t*>()))
+      .Times(0);
+
+  EXPECT_CALL(*vpx, codec_control(_, VP8E_SET_CPUUSED, TypedEq<int>(8)));
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder.InitEncode(&settings, kSettings));
+
+  encoder.Release();
+  settings.width = 352;
+  settings.height = 216;
+
+  EXPECT_CALL(*vpx, codec_control(_, VP8E_SET_CPUUSED, TypedEq<int>(4)));
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder.InitEncode(&settings, kSettings));
+}
+
+TEST(Vp9SpeedSettingsTrialsTest,
+     NoPerLayerFlagUsesGlobalSpeedFromTopLayerInConfig) {
+  // TL0 speed 8 at >= 480x270, 5 if below that.
+  test::ExplicitKeyValueConfig trials(
+      "WebRTC-VP9-PerformanceFlags/"
+      "min_pixel_count:0|129600,"
+      "base_layer_speed:4|8,"
+      "high_layer_speed:5|9,"
+      "deblock_mode:1|0/");
+
+  // Keep a raw pointer for EXPECT calls and the like. Ownership is otherwise
+  // passed on to LibvpxVp9Encoder.
+  auto* const vpx = new NiceMock<MockLibvpxInterface>();
+  LibvpxVp9Encoder encoder(cricket::VideoCodec(),
+                           absl::WrapUnique<LibvpxInterface>(vpx), trials);
+
+  VideoCodec settings = DefaultCodecSettings();
+  settings.width = 480;
+  settings.height = 270;
+  ConfigureSvc(settings, 2, 3);
+  vpx_image_t img;
+
+  ON_CALL(*vpx, img_wrap).WillByDefault(GetWrapImageFunction(&img));
+  ON_CALL(*vpx, codec_enc_config_default)
+      .WillByDefault(DoAll(WithArg<1>([](vpx_codec_enc_cfg_t* cfg) {
+                             memset(cfg, 0, sizeof(vpx_codec_enc_cfg_t));
+                           }),
+                           Return(VPX_CODEC_OK)));
+  EXPECT_CALL(*vpx, codec_control(_, _, An<int>())).Times(AnyNumber());
+
+  // Speed settings not populated when 'use_per_layer_speed' flag is absent.
+  EXPECT_CALL(*vpx,
+              codec_control(
+                  _, VP9E_SET_SVC_PARAMETERS,
+                  SafeMatcherCast<vpx_svc_extra_cfg_t*>(AllOf(
+                      Field(&vpx_svc_extra_cfg_t::speed_per_layer, Each(0)),
+                      Field(&vpx_svc_extra_cfg_t::loopfilter_ctrl, Each(0))))))
+      .Times(2);
+
+  EXPECT_CALL(*vpx, codec_control(_, VP8E_SET_CPUUSED, TypedEq<int>(8)));
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder.InitEncode(&settings, kSettings));
+
+  encoder.Release();
+  settings.width = 476;
+  settings.height = 268;
+  settings.spatialLayers[0].width = settings.width / 2;
+  settings.spatialLayers[0].height = settings.height / 2;
+  settings.spatialLayers[1].width = settings.width;
+  settings.spatialLayers[1].height = settings.height;
+
+  EXPECT_CALL(*vpx, codec_control(_, VP8E_SET_CPUUSED, TypedEq<int>(4)));
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder.InitEncode(&settings, kSettings));
+}
+
+TEST(Vp9SpeedSettingsTrialsTest, PerLayerFlagsWithSvc) {
+  // Per-temporal and satial layer speed settings:
+  // SL0:   TL0 = speed 5, TL1/TL2 = speed 8.
+  // SL1/2: TL0 = speed 7, TL1/TL2 = speed 9.
+  // Deblocking-mode per spatial layer:
+  // SL0: mode 1, SL1/2: mode 0.
+  test::ExplicitKeyValueConfig trials(
+      "WebRTC-VP9-PerformanceFlags/"
+      "use_per_layer_speed,"
+      "min_pixel_count:0|129600,"
+      "base_layer_speed:5|7,"
+      "high_layer_speed:8|9,"
+      "deblock_mode:1|0/");
+
+  // Keep a raw pointer for EXPECT calls and the like. Ownership is otherwise
+  // passed on to LibvpxVp9Encoder.
+  auto* const vpx = new NiceMock<MockLibvpxInterface>();
+  LibvpxVp9Encoder encoder(cricket::VideoCodec(),
+                           absl::WrapUnique<LibvpxInterface>(vpx), trials);
+
+  VideoCodec settings = DefaultCodecSettings();
+  const int kNumSpatialLayers = 3;
+  ConfigureSvc(settings, kNumSpatialLayers, /*num_temporal_layers=*/3);
+  vpx_image_t img;
+
+  // Speed settings per spatial layer, for TL0.
+  const int kBaseTlSpeed[VPX_MAX_LAYERS] = {5, 7, 7};
+  // Speed settings per spatial layer, for TL1, TL2.
+  const int kHighTlSpeed[VPX_MAX_LAYERS] = {8, 9, 9};
+  // Loopfilter settings are handled within libvpx, so this array is valid for
+  // both TL0 and higher.
+  const int kLoopFilter[VPX_MAX_LAYERS] = {1, 0, 0};
+
+  ON_CALL(*vpx, img_wrap).WillByDefault(GetWrapImageFunction(&img));
+  ON_CALL(*vpx, codec_enc_config_default)
+      .WillByDefault(DoAll(WithArg<1>([](vpx_codec_enc_cfg_t* cfg) {
+                             memset(cfg, 0, sizeof(vpx_codec_enc_cfg_t));
+                           }),
+                           Return(VPX_CODEC_OK)));
+  EXPECT_CALL(
+      *vpx, codec_control(_, VP9E_SET_SVC_PARAMETERS,
+                          SafeMatcherCast<vpx_svc_extra_cfg_t*>(
+                              AllOf(Field(&vpx_svc_extra_cfg_t::speed_per_layer,
+                                          ElementsAreArray(kBaseTlSpeed)),
+                                    Field(&vpx_svc_extra_cfg_t::loopfilter_ctrl,
+                                          ElementsAreArray(kLoopFilter))))));
+
+  // Capture the callback into the vp9 wrapper.
+  vpx_codec_priv_output_cx_pkt_cb_pair_t callback_pointer = {};
+  EXPECT_CALL(*vpx, codec_control(_, VP9E_REGISTER_CX_CALLBACK, A<void*>()))
+      .WillOnce(WithArg<2>([&](void* cbp) {
+        callback_pointer =
+            *reinterpret_cast<vpx_codec_priv_output_cx_pkt_cb_pair_t*>(cbp);
+        return VPX_CODEC_OK;
+      }));
+
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder.InitEncode(&settings, kSettings));
+
+  MockEncodedImageCallback callback;
+  encoder.RegisterEncodeCompleteCallback(&callback);
+  auto frame_generator = test::CreateSquareFrameGenerator(
+      kWidth, kHeight, test::FrameGeneratorInterface::OutputType::kI420, 10);
+  Mock::VerifyAndClearExpectations(vpx);
+
+  uint8_t data[1] = {0};
+  vpx_codec_cx_pkt encoded_data = {};
+  encoded_data.data.frame.buf = &data;
+  encoded_data.data.frame.sz = 1;
+
+  const auto kImageOk =
+      EncodedImageCallback::Result(EncodedImageCallback::Result::OK);
+
+  int spatial_id = 0;
+  int temporal_id = 0;
+  EXPECT_CALL(*vpx,
+              codec_control(_, VP9E_SET_SVC_LAYER_ID, A<vpx_svc_layer_id_t*>()))
+      .Times(AnyNumber());
+  EXPECT_CALL(*vpx,
+              codec_control(_, VP9E_GET_SVC_LAYER_ID, A<vpx_svc_layer_id_t*>()))
+      .WillRepeatedly(WithArg<2>([&](vpx_svc_layer_id_t* layer_id) {
+        layer_id->spatial_layer_id = spatial_id;
+        layer_id->temporal_layer_id = temporal_id;
+        return VPX_CODEC_OK;
+      }));
+  vpx_svc_ref_frame_config_t stored_refs = {};
+  ON_CALL(*vpx, codec_control(_, VP9E_SET_SVC_REF_FRAME_CONFIG,
+                              A<vpx_svc_ref_frame_config_t*>()))
+      .WillByDefault(
+          DoAll(SaveArgPointee<2>(&stored_refs), Return(VPX_CODEC_OK)));
+  ON_CALL(*vpx, codec_control(_, VP9E_GET_SVC_REF_FRAME_CONFIG,
+                              A<vpx_svc_ref_frame_config_t*>()))
+      .WillByDefault(
+          DoAll(SetArgPointee<2>(ByRef(stored_refs)), Return(VPX_CODEC_OK)));
+
+  // First frame is keyframe.
+  encoded_data.data.frame.flags = VPX_FRAME_IS_KEY;
+
+  // Default 3-layer temporal pattern: 0-2-1-2, then repeat and do two more.
+  for (int ti : {0, 2, 1, 2, 0, 2}) {
+    EXPECT_CALL(*vpx, codec_encode).WillOnce(Return(VPX_CODEC_OK));
+    // No update expected if flags haven't changed, and they change we we move
+    // between base temporal layer and non-base temporal layer.
+    if ((ti > 0) != (temporal_id > 0)) {
+      EXPECT_CALL(*vpx, codec_control(
+                            _, VP9E_SET_SVC_PARAMETERS,
+                            SafeMatcherCast<vpx_svc_extra_cfg_t*>(AllOf(
+                                Field(&vpx_svc_extra_cfg_t::speed_per_layer,
+                                      ElementsAreArray(ti == 0 ? kBaseTlSpeed
+                                                               : kHighTlSpeed)),
+                                Field(&vpx_svc_extra_cfg_t::loopfilter_ctrl,
+                                      ElementsAreArray(kLoopFilter))))));
+    } else {
+      EXPECT_CALL(*vpx, codec_control(_, VP9E_SET_SVC_PARAMETERS,
+                                      A<vpx_svc_extra_cfg_t*>()))
+          .Times(0);
+    }
+
+    VideoFrame frame =
+        VideoFrame::Builder()
+            .set_video_frame_buffer(frame_generator->NextFrame().buffer)
+            .build();
+    encoder.Encode(frame, nullptr);
+
+    temporal_id = ti;
+    for (int si = 0; si < kNumSpatialLayers; ++si) {
+      spatial_id = si;
+
+      EXPECT_CALL(callback, OnEncodedImage).WillOnce(Return(kImageOk));
+      callback_pointer.output_cx_pkt(&encoded_data, callback_pointer.user_priv);
+    }
+
+    encoded_data.data.frame.flags = 0;  // Following frames are delta frames.
+  }
+}
+
 }  // namespace webrtc
