@@ -55,6 +55,11 @@ EncodedImage SingleProcessEncodedImageDataInjector::InjectData(
   return out;
 }
 
+void SingleProcessEncodedImageDataInjector::AddParticipantInCall() {
+  MutexLock crit(&lock_);
+  expected_receivers_count_++;
+}
+
 EncodedImageExtractionResult SingleProcessEncodedImageDataInjector::ExtractData(
     const EncodedImage& source,
     int coding_entity_id) {
