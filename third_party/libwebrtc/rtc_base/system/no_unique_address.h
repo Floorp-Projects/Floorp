@@ -11,8 +11,6 @@
 #ifndef RTC_BASE_SYSTEM_NO_UNIQUE_ADDRESS_H_
 #define RTC_BASE_SYSTEM_NO_UNIQUE_ADDRESS_H_
 
-#include "rtc_base/sanitizer.h"
-
 // RTC_NO_UNIQUE_ADDRESS is a portable annotation to tell the compiler that
 // a data member need not have an address distinct from all other non-static
 // data members of its class.
@@ -26,10 +24,7 @@
 // should add support for it starting from C++20. Among clang compilers,
 // clang-cl doesn't support it yet and support is unclear also when the target
 // platform is iOS.
-//
-// TODO(bugs.webrtc.org/12218): Re-enable on MSan builds.
-#if !RTC_HAS_MSAN &&                                                       \
-    ((defined(__clang__) && !defined(_MSC_VER) && !defined(WEBRTC_IOS)) || \
+#if ((defined(__clang__) && !defined(_MSC_VER) && !defined(WEBRTC_IOS)) || \
      __cplusplus > 201703L)
 // NOLINTNEXTLINE(whitespace/braces)
 #define RTC_NO_UNIQUE_ADDRESS [[no_unique_address]]
