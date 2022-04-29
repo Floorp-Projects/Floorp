@@ -165,18 +165,15 @@ static StorageAccess InternalStorageAllowedCheck(
 
   // We want to have a partitioned storage only for trackers.
   if (aRejectedReason ==
-          static_cast<uint32_t>(
-              nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) ||
+          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
       aRejectedReason ==
-          static_cast<uint32_t>(
-              nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER)) {
+          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) {
     return StorageAccess::ePartitionTrackersOrDeny;
   }
 
   // We want to have a partitioned storage for all third parties.
   if (aRejectedReason ==
-      static_cast<uint32_t>(
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN)) {
+      nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) {
     return StorageAccess::ePartitionForeignOrDeny;
   }
 
@@ -412,14 +409,11 @@ bool ShouldPartitionStorage(StorageAccess aAccess) {
 
 bool ShouldPartitionStorage(uint32_t aRejectedReason) {
   return aRejectedReason ==
-             static_cast<uint32_t>(
-                 nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) ||
+             nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
          aRejectedReason ==
-             static_cast<uint32_t>(
-                 nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) ||
+             nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
          aRejectedReason ==
-             static_cast<uint32_t>(
-                 nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN);
+             nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN;
 }
 
 bool StoragePartitioningEnabled(StorageAccess aAccess,
@@ -432,8 +426,7 @@ bool StoragePartitioningEnabled(StorageAccess aAccess,
 bool StoragePartitioningEnabled(uint32_t aRejectedReason,
                                 nsICookieJarSettings* aCookieJarSettings) {
   return aRejectedReason ==
-             static_cast<uint32_t>(
-                 nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) &&
+             nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN &&
          aCookieJarSettings->GetCookieBehavior() ==
              nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN;
 }
