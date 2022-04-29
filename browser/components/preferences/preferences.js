@@ -347,7 +347,14 @@ async function gotoPref(
     subcategory
   ) {
     let friendlyName = internalPrefCategoryNameToFriendlyName(category);
-    document.location.hash = friendlyName;
+    // Overwrite the hash, unless there is no hash and we're switching to the
+    // default category, e.g. by using the 'back' button after navigating to
+    // a different category.
+    if (
+      !(!document.location.hash && category == kDefaultCategoryInternalName)
+    ) {
+      document.location.hash = friendlyName;
+    }
   }
   // Need to set the gLastCategory before setting categories.selectedItem since
   // the categories 'select' event will re-enter the gotoPref codepath.
