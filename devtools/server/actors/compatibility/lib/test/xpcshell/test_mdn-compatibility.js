@@ -86,14 +86,13 @@ const TEST_DATA = [
   },
   {
     description: "Test for a property having some issues",
-    declarations: [{ name: "-moz-context-properties" }],
+    declarations: [{ name: "ruby-align" }],
     browsers: [FIREFOX_1],
     expectedIssues: [
       {
         type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-        property: "-moz-context-properties",
-        url:
-          "https://developer.mozilla.org/docs/Web/CSS/-moz-context-properties",
+        property: "ruby-align",
+        url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
         deprecated: false,
         experimental: true,
         unsupportedBrowsers: [FIREFOX_1],
