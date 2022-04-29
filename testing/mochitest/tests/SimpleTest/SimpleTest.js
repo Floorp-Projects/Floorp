@@ -2100,9 +2100,16 @@ var add_task = (function() {
             }
           } catch (ex) {
             try {
+              let serializedEx;
+              if (ex instanceof Error) {
+                serializedEx = `${ex}`;
+              } else {
+                serializedEx = JSON.stringify(ex);
+              }
+
               SimpleTest.record(
                 false,
-                "" + ex,
+                serializedEx,
                 "Should not throw any errors",
                 ex.stack
               );
