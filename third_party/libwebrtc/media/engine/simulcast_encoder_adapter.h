@@ -26,7 +26,7 @@
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/utility/framerate_controller.h"
 #include "rtc_base/atomic_ops.h"
-#include "rtc_base/experiments/field_trial_parser.h"
+#include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/system/rtc_export.h"
@@ -162,13 +162,7 @@ class RTC_EXPORT SimulcastEncoderAdapter : public VideoEncoder {
   const bool boost_base_layer_quality_;
   const bool prefer_temporal_support_on_base_layer_;
 
-  // Overrides from field trial.
-  // EncoderInfo::requested_resolution_alignment.
-  FieldTrialOptional<int> requested_resolution_alignment_override_{
-      "requested_resolution_alignment"};
-  // EncoderInfo::apply_alignment_to_all_simulcast_layers.
-  FieldTrialFlag apply_alignment_to_all_simulcast_layers_override_{
-      "apply_alignment_to_all_simulcast_layers"};
+  const SimulcastEncoderAdapterEncoderInfoSettings encoder_info_override_;
 };
 
 }  // namespace webrtc

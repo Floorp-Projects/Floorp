@@ -2009,6 +2009,201 @@ TEST_F(VideoStreamEncoderTest, EncoderRecommendedMaxBitrateCapsTargetBitrate) {
   video_stream_encoder_->Stop();
 }
 
+TEST_F(VideoStreamEncoderTest,
+       EncoderMaxAndMinBitratesUsedForTwoStreamsHighestActive) {
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits270p(
+      480 * 270, 34 * 1000, 12 * 1000, 1234 * 1000);
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits360p(
+      640 * 360, 43 * 1000, 21 * 1000, 2345 * 1000);
+  fake_encoder_.SetResolutionBitrateLimits(
+      {kEncoderLimits270p, kEncoderLimits360p});
+
+  // Two streams, highest stream active.
+  VideoEncoderConfig config;
+  const int kNumStreams = 2;
+  test::FillEncoderConfiguration(kVideoCodecVP8, kNumStreams, &config);
+  config.max_bitrate_bps = 0;
+  config.simulcast_layers[0].active = false;
+  config.simulcast_layers[1].active = true;
+  config.video_stream_factory =
+      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+
+  // The encoder bitrate limits for 270p should be used.
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 480, 270));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, kNumStreams);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  // The encoder bitrate limits for 360p should be used.
+  video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  // Resolution b/w 270p and 360p. The encoder limits for 360p should be used.
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(3, (640 + 480) / 2, (360 + 270) / 2));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  // Resolution higher than 360p. Encoder limits should be ignored.
+  video_source_.IncomingCapturedFrame(CreateFrame(4, 960, 540));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+  EXPECT_NE(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_NE(static_cast<uint32_t>(kEncoderLimits360p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  // Resolution lower than 270p. The encoder limits for 270p should be used.
+  video_source_.IncomingCapturedFrame(CreateFrame(5, 320, 180));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       EncoderMaxAndMinBitratesUsedForThreeStreamsMiddleActive) {
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits270p(
+      480 * 270, 34 * 1000, 12 * 1000, 1234 * 1000);
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits360p(
+      640 * 360, 43 * 1000, 21 * 1000, 2345 * 1000);
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits720p(
+      1280 * 720, 54 * 1000, 31 * 1000, 3456 * 1000);
+  fake_encoder_.SetResolutionBitrateLimits(
+      {kEncoderLimits270p, kEncoderLimits360p, kEncoderLimits720p});
+
+  // Three streams, middle stream active.
+  VideoEncoderConfig config;
+  const int kNumStreams = 3;
+  test::FillEncoderConfiguration(kVideoCodecVP8, kNumStreams, &config);
+  config.simulcast_layers[0].active = false;
+  config.simulcast_layers[1].active = true;
+  config.simulcast_layers[2].active = false;
+  config.video_stream_factory =
+      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+
+  // The encoder bitrate limits for 360p should be used.
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, kNumStreams);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  // The encoder bitrate limits for 270p should be used.
+  video_source_.IncomingCapturedFrame(CreateFrame(2, 960, 540));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       EncoderMaxAndMinBitratesNotUsedForThreeStreamsLowestActive) {
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits270p(
+      480 * 270, 34 * 1000, 12 * 1000, 1234 * 1000);
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits360p(
+      640 * 360, 43 * 1000, 21 * 1000, 2345 * 1000);
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits720p(
+      1280 * 720, 54 * 1000, 31 * 1000, 3456 * 1000);
+  fake_encoder_.SetResolutionBitrateLimits(
+      {kEncoderLimits270p, kEncoderLimits360p, kEncoderLimits720p});
+
+  // Three streams, lowest stream active.
+  VideoEncoderConfig config;
+  const int kNumStreams = 3;
+  test::FillEncoderConfiguration(kVideoCodecVP8, kNumStreams, &config);
+  config.simulcast_layers[0].active = true;
+  config.simulcast_layers[1].active = false;
+  config.simulcast_layers[2].active = false;
+  config.video_stream_factory =
+      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+
+  // Resolution on lowest stream lower than 270p. The encoder limits not applied
+  // on lowest stream, limits for 270p should not be used
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, kNumStreams);
+  EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_NE(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       EncoderMaxBitrateCappedByConfigForTwoStreamsHighestActive) {
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits270p(
+      480 * 270, 34 * 1000, 12 * 1000, 1234 * 1000);
+  const VideoEncoder::ResolutionBitrateLimits kEncoderLimits360p(
+      640 * 360, 43 * 1000, 21 * 1000, 2345 * 1000);
+  fake_encoder_.SetResolutionBitrateLimits(
+      {kEncoderLimits270p, kEncoderLimits360p});
+  const int kMaxBitrateBps = kEncoderLimits360p.max_bitrate_bps - 100 * 1000;
+
+  // Two streams, highest stream active.
+  VideoEncoderConfig config;
+  const int kNumStreams = 2;
+  test::FillEncoderConfiguration(kVideoCodecVP8, kNumStreams, &config);
+  config.simulcast_layers[0].active = false;
+  config.simulcast_layers[1].active = true;
+  config.simulcast_layers[1].max_bitrate_bps = kMaxBitrateBps;
+  config.video_stream_factory =
+      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false);
+  video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
+
+  // The encoder bitrate limits for 270p should be used.
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 480, 270));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, kNumStreams);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits270p.max_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  // The max configured bitrate is less than the encoder limit for 360p.
+  video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
+  EXPECT_FALSE(WaitForFrame(1000));
+  EXPECT_EQ(static_cast<uint32_t>(kEncoderLimits360p.min_bitrate_bps),
+            fake_encoder_.video_codec().simulcastStream[1].minBitrate * 1000);
+  EXPECT_EQ(static_cast<uint32_t>(kMaxBitrateBps),
+            fake_encoder_.video_codec().simulcastStream[1].maxBitrate * 1000);
+
+  video_stream_encoder_->Stop();
+}
+
 TEST_F(VideoStreamEncoderTest, SwitchSourceDeregisterEncoderAsSink) {
   EXPECT_TRUE(video_source_.has_sinks());
   test::FrameForwarder new_video_source;
@@ -4091,7 +4286,7 @@ TEST_F(VideoStreamEncoderTest, ReportsVideoLayersAllocationForVP8Simulcast) {
 }
 
 TEST_F(VideoStreamEncoderTest,
-       ReportsVideoLayersAllocationForVP8WithMidleLayerDisabled) {
+       ReportsVideoLayersAllocationForVP8WithMiddleLayerDisabled) {
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
@@ -4136,7 +4331,7 @@ TEST_F(VideoStreamEncoderTest,
 }
 
 TEST_F(VideoStreamEncoderTest,
-       ReportsVideoLayersAllocationForVP8WithMidleAndHighestLayerDisabled) {
+       ReportsVideoLayersAllocationForVP8WithMiddleAndHighestLayerDisabled) {
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
   fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 2, true);
