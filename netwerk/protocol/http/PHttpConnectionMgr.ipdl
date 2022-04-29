@@ -10,6 +10,7 @@ include protocol PSocketProcess;
 include protocol PHttpTransaction;
 
 include NeckoChannelParams;
+using mozilla::net::ClassOfServiceStruct from "nsIClassOfService.h";
 
 namespace mozilla {
 namespace net {
@@ -28,7 +29,7 @@ child:
                                      PHttpTransaction aTransWithStickyConn);
   async RescheduleTransaction(PHttpTransaction aTrans, int32_t aPriority);
   async UpdateClassOfServiceOnTransaction(PHttpTransaction aTrans,
-                                          uint32_t aClassOfService);
+                                          ClassOfServiceStruct aClassOfService);
   async CancelTransaction(PHttpTransaction aTrans, nsresult aReason);
   async SpeculativeConnect(HttpConnectionInfoCloneArgs aConnInfo,
                            SpeculativeConnectionOverriderArgs? aOverriderArgs,

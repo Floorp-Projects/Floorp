@@ -17,6 +17,7 @@ include "mozilla/net/NeckoMessageUtils.h";
 using class mozilla::net::nsHttpRequestHead from "nsHttpRequestHead.h";
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
+using mozilla::net::ClassOfServiceStruct from "nsIClassOfService.h";
 
 namespace mozilla {
 namespace net {
@@ -83,7 +84,7 @@ child:
              uint64_t topLevelOuterContentWindowId,
              uint8_t httpTrafficCategory,
              uint64_t requestContextID,
-             uint32_t classOfService,
+             ClassOfServiceStruct classOfService,
              uint32_t initialRwin,
              bool responseTimeoutEnabled,
              uint64_t channelId,
