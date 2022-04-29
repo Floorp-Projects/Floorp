@@ -228,11 +228,6 @@ SimulcastEncoderAdapter::SimulcastEncoderAdapter(
           "WebRTC-Video-PreferTemporalSupportOnBaseLayer")) {
   RTC_DCHECK(primary_factory);
 
-  ParseFieldTrial({&requested_resolution_alignment_override_,
-                   &apply_alignment_to_all_simulcast_layers_override_},
-                  field_trial::FindFullName(
-                      "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride"));
-
   // The adapter is typically created on the worker thread, but operated on
   // the encoder task queue.
   encoder_queue_.Detach();
@@ -430,8 +425,9 @@ int SimulcastEncoderAdapter::Encode(
     return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
   }
 
-  if (requested_resolution_alignment_override_) {
-    const int alignment = *requested_resolution_alignment_override_;
+  if (encoder_info_override_.requested_resolution_alignment()) {
+    const int alignment =
+        *encoder_info_override_.requested_resolution_alignment();
     if (input_image.width() % alignment != 0 ||
         input_image.height() % alignment != 0) {
       RTC_LOG(LS_WARNING) << "Frame " << input_image.width() << "x"
@@ -439,7 +435,7 @@ int SimulcastEncoderAdapter::Encode(
                           << alignment;
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
-    if (apply_alignment_to_all_simulcast_layers_override_.Get()) {
+    if (encoder_info_override_.apply_alignment_to_all_simulcast_layers()) {
       for (const auto& layer : encoder_contexts_) {
         if (layer.width() % alignment != 0 || layer.height() % alignment != 0) {
           RTC_LOG(LS_WARNING)
@@ -741,11 +737,15 @@ void SimulcastEncoderAdapter::DestroyStoredEncoders() {
 
 void SimulcastEncoderAdapter::OverrideFromFieldTrial(
     VideoEncoder::EncoderInfo* info) const {
-  if (requested_resolution_alignment_override_) {
+  if (encoder_info_override_.requested_resolution_alignment()) {
     info->requested_resolution_alignment =
-        *requested_resolution_alignment_override_;
+        *encoder_info_override_.requested_resolution_alignment();
     info->apply_alignment_to_all_simulcast_layers =
-        apply_alignment_to_all_simulcast_layers_override_.Get();
+        encoder_info_override_.apply_alignment_to_all_simulcast_layers();
+  }
+  if (!encoder_info_override_.resolution_bitrate_limits().empty()) {
+    info->resolution_bitrate_limits =
+        encoder_info_override_.resolution_bitrate_limits();
   }
 }
 

@@ -337,6 +337,78 @@ VideoLayersAllocation CreateVideoLayersAllocation(
   return layers_allocation;
 }
 
+int NumActiveStreams(const std::vector<VideoStream>& streams) {
+  int num_active = 0;
+  for (const auto& stream : streams) {
+    if (stream.active)
+      ++num_active;
+  }
+  return num_active;
+}
+
+void ApplyEncoderBitrateLimitsIfSingleActiveStream(
+    const VideoEncoder::EncoderInfo& encoder_info,
+    const std::vector<VideoStream>& encoder_config_layers,
+    std::vector<VideoStream>* streams) {
+  // Apply limits if simulcast with one active stream (expect lowest).
+  bool single_active_stream =
+      streams->size() > 1 && NumActiveStreams(*streams) == 1 &&
+      !streams->front().active && NumActiveStreams(encoder_config_layers) == 1;
+  if (!single_active_stream) {
+    return;
+  }
+
+  // Index for the active stream.
+  size_t index = 0;
+  for (size_t i = 0; i < encoder_config_layers.size(); ++i) {
+    if (encoder_config_layers[i].active)
+      index = i;
+  }
+  if (streams->size() < (index + 1) || !(*streams)[index].active) {
+    return;
+  }
+
+  // Get bitrate limits for active stream.
+  absl::optional<VideoEncoder::ResolutionBitrateLimits> encoder_bitrate_limits =
+      encoder_info.GetEncoderBitrateLimitsForResolution(
+          (*streams)[index].width * (*streams)[index].height);
+  if (!encoder_bitrate_limits) {
+    return;
+  }
+
+  // If bitrate limits are set by RtpEncodingParameters, use intersection.
+  int min_bitrate_bps;
+  if (encoder_config_layers[index].min_bitrate_bps <= 0) {
+    min_bitrate_bps = encoder_bitrate_limits->min_bitrate_bps;
+  } else {
+    min_bitrate_bps = std::max(encoder_bitrate_limits->min_bitrate_bps,
+                               (*streams)[index].min_bitrate_bps);
+  }
+  int max_bitrate_bps;
+  if (encoder_config_layers[index].max_bitrate_bps <= 0) {
+    max_bitrate_bps = encoder_bitrate_limits->max_bitrate_bps;
+  } else {
+    max_bitrate_bps = std::min(encoder_bitrate_limits->max_bitrate_bps,
+                               (*streams)[index].max_bitrate_bps);
+  }
+  if (min_bitrate_bps >= max_bitrate_bps) {
+    RTC_LOG(LS_WARNING) << "Encoder bitrate limits"
+                        << " (min=" << encoder_bitrate_limits->min_bitrate_bps
+                        << ", max=" << encoder_bitrate_limits->max_bitrate_bps
+                        << ") do not intersect with stream limits"
+                        << " (min=" << (*streams)[index].min_bitrate_bps
+                        << ", max=" << (*streams)[index].max_bitrate_bps
+                        << "). Encoder bitrate limits not used.";
+    return;
+  }
+
+  (*streams)[index].min_bitrate_bps = min_bitrate_bps;
+  (*streams)[index].max_bitrate_bps = max_bitrate_bps;
+  (*streams)[index].target_bitrate_bps =
+      std::min((*streams)[index].target_bitrate_bps,
+               encoder_bitrate_limits->max_bitrate_bps);
+}
+
 }  //  namespace
 
 VideoStreamEncoder::EncoderRateSettings::EncoderRateSettings()
@@ -769,46 +841,51 @@ void VideoStreamEncoder::ReconfigureEncoder() {
       encoder_->GetEncoderInfo().GetEncoderBitrateLimitsForResolution(
           last_frame_info_->width * last_frame_info_->height);
 
-  if (streams.size() == 1 && encoder_bitrate_limits_) {
-    // Bitrate limits can be set by app (in SDP or RtpEncodingParameters) or/and
-    // can be provided by encoder. In presence of both set of limits, the final
-    // set is derived as their intersection.
-    int min_bitrate_bps;
-    if (encoder_config_.simulcast_layers.empty() ||
-        encoder_config_.simulcast_layers[0].min_bitrate_bps <= 0) {
-      min_bitrate_bps = encoder_bitrate_limits_->min_bitrate_bps;
-    } else {
-      min_bitrate_bps = std::max(encoder_bitrate_limits_->min_bitrate_bps,
-                                 streams.back().min_bitrate_bps);
-    }
+  if (encoder_bitrate_limits_) {
+    if (streams.size() == 1 && encoder_config_.simulcast_layers.size() == 1) {
+      // Bitrate limits can be set by app (in SDP or RtpEncodingParameters)
+      // or/and can be provided by encoder. In presence of both set of limits,
+      // the final set is derived as their intersection.
+      int min_bitrate_bps;
+      if (encoder_config_.simulcast_layers.empty() ||
+          encoder_config_.simulcast_layers[0].min_bitrate_bps <= 0) {
+        min_bitrate_bps = encoder_bitrate_limits_->min_bitrate_bps;
+      } else {
+        min_bitrate_bps = std::max(encoder_bitrate_limits_->min_bitrate_bps,
+                                   streams.back().min_bitrate_bps);
+      }
 
-    int max_bitrate_bps;
-    // We don't check encoder_config_.simulcast_layers[0].max_bitrate_bps
-    // here since encoder_config_.max_bitrate_bps is derived from it (as
-    // well as from other inputs).
-    if (encoder_config_.max_bitrate_bps <= 0) {
-      max_bitrate_bps = encoder_bitrate_limits_->max_bitrate_bps;
-    } else {
-      max_bitrate_bps = std::min(encoder_bitrate_limits_->max_bitrate_bps,
-                                 streams.back().max_bitrate_bps);
-    }
+      int max_bitrate_bps;
+      // We don't check encoder_config_.simulcast_layers[0].max_bitrate_bps
+      // here since encoder_config_.max_bitrate_bps is derived from it (as
+      // well as from other inputs).
+      if (encoder_config_.max_bitrate_bps <= 0) {
+        max_bitrate_bps = encoder_bitrate_limits_->max_bitrate_bps;
+      } else {
+        max_bitrate_bps = std::min(encoder_bitrate_limits_->max_bitrate_bps,
+                                   streams.back().max_bitrate_bps);
+      }
 
-    if (min_bitrate_bps < max_bitrate_bps) {
-      streams.back().min_bitrate_bps = min_bitrate_bps;
-      streams.back().max_bitrate_bps = max_bitrate_bps;
-      streams.back().target_bitrate_bps =
-          std::min(streams.back().target_bitrate_bps,
-                   encoder_bitrate_limits_->max_bitrate_bps);
+      if (min_bitrate_bps < max_bitrate_bps) {
+        streams.back().min_bitrate_bps = min_bitrate_bps;
+        streams.back().max_bitrate_bps = max_bitrate_bps;
+        streams.back().target_bitrate_bps =
+            std::min(streams.back().target_bitrate_bps,
+                     encoder_bitrate_limits_->max_bitrate_bps);
+      } else {
+        RTC_LOG(LS_WARNING)
+            << "Bitrate limits provided by encoder"
+            << " (min=" << encoder_bitrate_limits_->min_bitrate_bps
+            << ", max=" << encoder_bitrate_limits_->min_bitrate_bps
+            << ") do not intersect with limits set by app"
+            << " (min=" << streams.back().min_bitrate_bps
+            << ", max=" << encoder_config_.max_bitrate_bps
+            << "). The app bitrate limits will be used.";
+      }
     } else {
-      RTC_LOG(LS_WARNING) << "Bitrate limits provided by encoder"
-                          << " (min="
-                          << encoder_bitrate_limits_->min_bitrate_bps
-                          << ", max="
-                          << encoder_bitrate_limits_->min_bitrate_bps
-                          << ") do not intersect with limits set by app"
-                          << " (min=" << streams.back().min_bitrate_bps
-                          << ", max=" << encoder_config_.max_bitrate_bps
-                          << "). The app bitrate limits will be used.";
+      ApplyEncoderBitrateLimitsIfSingleActiveStream(
+          encoder_->GetEncoderInfo(), encoder_config_.simulcast_layers,
+          &streams);
     }
   }
 

@@ -1292,7 +1292,7 @@ TEST_F(TestSimulcastEncoderAdapterFake,
       adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
 }
 
-TEST_F(TestSimulcastEncoderAdapterFake, AlignmentFromFieldTrial) {
+TEST_F(TestSimulcastEncoderAdapterFake, EncoderInfoFromFieldTrial) {
   test::ScopedFieldTrials field_trials(
       "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride/"
       "requested_resolution_alignment:8,"
@@ -1308,13 +1308,18 @@ TEST_F(TestSimulcastEncoderAdapterFake, AlignmentFromFieldTrial) {
   EXPECT_EQ(8, adapter_->GetEncoderInfo().requested_resolution_alignment);
   EXPECT_TRUE(
       adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
+  EXPECT_TRUE(adapter_->GetEncoderInfo().resolution_bitrate_limits.empty());
 }
 
 TEST_F(TestSimulcastEncoderAdapterFake,
-       AlignmentFromFieldTrialForSingleStream) {
+       EncoderInfoFromFieldTrialForSingleStream) {
   test::ScopedFieldTrials field_trials(
       "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride/"
-      "requested_resolution_alignment:9/");
+      "requested_resolution_alignment:9,"
+      "frame_size_pixels:123|456|789,"
+      "min_start_bitrate_bps:11000|22000|33000,"
+      "min_bitrate_bps:44000|55000|66000,"
+      "max_bitrate_bps:77000|88000|99000/");
   SetUp();
   SimulcastTestFixtureImpl::DefaultSettings(
       &codec_, static_cast<const int*>(kTestTemporalLayerProfile),
@@ -1326,6 +1331,12 @@ TEST_F(TestSimulcastEncoderAdapterFake,
   EXPECT_EQ(9, adapter_->GetEncoderInfo().requested_resolution_alignment);
   EXPECT_FALSE(
       adapter_->GetEncoderInfo().apply_alignment_to_all_simulcast_layers);
+  EXPECT_THAT(
+      adapter_->GetEncoderInfo().resolution_bitrate_limits,
+      ::testing::ElementsAre(
+          VideoEncoder::ResolutionBitrateLimits{123, 11000, 44000, 77000},
+          VideoEncoder::ResolutionBitrateLimits{456, 22000, 55000, 88000},
+          VideoEncoder::ResolutionBitrateLimits{789, 33000, 66000, 99000}));
 }
 
 TEST_F(TestSimulcastEncoderAdapterFake, ReportsInternalSource) {
