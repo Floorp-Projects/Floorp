@@ -647,21 +647,6 @@ TEST_F(RtcpSenderTest, SendsTmmbnIfSetAndEmpty) {
   EXPECT_EQ(0U, parser()->tmmbn()->items().size());
 }
 
-TEST_F(RtcpSenderTest, SendCompoundPliRemb) {
-  const int kBitrate = 261011;
-  auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-  std::vector<uint32_t> ssrcs;
-  ssrcs.push_back(kRemoteSsrc);
-  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
-  rtcp_sender->SetRemb(kBitrate, ssrcs);
-  std::set<RTCPPacketType> packet_types;
-  packet_types.insert(kRtcpRemb);
-  packet_types.insert(kRtcpPli);
-  EXPECT_EQ(0, rtcp_sender->SendCompoundRTCP(feedback_state(), packet_types));
-  EXPECT_EQ(1, parser()->remb()->num_packets());
-  EXPECT_EQ(1, parser()->pli()->num_packets());
-}
-
 // This test is written to verify that BYE is always the last packet
 // type in a RTCP compoud packet.  The rtcp_sender is recreated with
 // mock_transport, which is used to check for whether BYE at the end
