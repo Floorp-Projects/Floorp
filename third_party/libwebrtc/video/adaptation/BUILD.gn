@@ -75,6 +75,7 @@ if (rtc_include_tests) {
 
     defines = []
     sources = [
+      "bitrate_constraint_unittest.cc",
       "overuse_frame_detector_unittest.cc",
       "pixel_limit_resource_unittest.cc",
       "quality_scaler_resource_unittest.cc",
