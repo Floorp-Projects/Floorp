@@ -6427,6 +6427,45 @@ TEST_F(VideoStreamEncoderTest,
   video_stream_encoder_->Stop();
 }
 
+TEST_F(VideoStreamEncoderTest,
+       CpuAdaptationThresholdsUpdatesWhenHardwareAccelerationChange) {
+  const int kFrameWidth = 1280;
+  const int kFrameHeight = 720;
+
+  const CpuOveruseOptions default_options;
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(1, kFrameWidth, kFrameHeight));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(video_stream_encoder_->overuse_detector_proxy_->GetOptions()
+                .low_encode_usage_threshold_percent,
+            default_options.low_encode_usage_threshold_percent);
+  EXPECT_EQ(video_stream_encoder_->overuse_detector_proxy_->GetOptions()
+                .high_encode_usage_threshold_percent,
+            default_options.high_encode_usage_threshold_percent);
+
+  CpuOveruseOptions hardware_options;
+  hardware_options.low_encode_usage_threshold_percent = 150;
+  hardware_options.high_encode_usage_threshold_percent = 200;
+  fake_encoder_.SetIsHardwareAccelerated(true);
+
+  video_source_.IncomingCapturedFrame(
+      CreateFrame(2, kFrameWidth, kFrameHeight));
+  WaitForEncodedFrame(2);
+
+  EXPECT_EQ(video_stream_encoder_->overuse_detector_proxy_->GetOptions()
+                .low_encode_usage_threshold_percent,
+            hardware_options.low_encode_usage_threshold_percent);
+  EXPECT_EQ(video_stream_encoder_->overuse_detector_proxy_->GetOptions()
+                .high_encode_usage_threshold_percent,
+            hardware_options.high_encode_usage_threshold_percent);
+
+  video_stream_encoder_->Stop();
+}
+
 TEST_F(VideoStreamEncoderTest, DropsFramesWhenEncoderOvershoots) {
   const int kFrameWidth = 320;
   const int kFrameHeight = 240;
