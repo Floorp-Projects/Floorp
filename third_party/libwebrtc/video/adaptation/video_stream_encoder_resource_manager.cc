@@ -292,7 +292,7 @@ VideoStreamEncoderResourceManager::degradation_preference() const {
   return degradation_preference_;
 }
 
-void VideoStreamEncoderResourceManager::EnsureEncodeUsageResourceStarted() {
+void VideoStreamEncoderResourceManager::ConfigureEncodeUsageResource() {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   RTC_DCHECK(encoder_settings_.has_value());
   if (encode_usage_resource_->is_started()) {
