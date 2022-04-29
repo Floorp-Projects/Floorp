@@ -163,7 +163,7 @@ bool IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
   // behavior without native caret.  Therefore, we shouldn't put native caret
   // as far as possible.
   if (!sHasNativeCaretBeenRequested && aMessage == WM_GETOBJECT &&
-      static_cast<DWORD>(aLParam) == OBJID_CARET) {
+      static_cast<LONG>(aLParam) == OBJID_CARET) {
     // So, when we receive first WM_GETOBJECT for OBJID_CARET, let's start to
     // create native caret for such applications.
     sHasNativeCaretBeenRequested = true;
