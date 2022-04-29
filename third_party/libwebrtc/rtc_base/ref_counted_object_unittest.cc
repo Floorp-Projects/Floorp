@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "api/scoped_refptr.h"
@@ -93,6 +94,21 @@ TEST(RefCountedObject, SupportMixedTypesInCtor) {
   EXPECT_TRUE(a.get() == nullptr);
   EXPECT_EQ(b, ref->b_);
   EXPECT_EQ(c, ref->c_);
+}
+
+TEST(FinalRefCountedObject, CanWrapIntoScopedRefptr) {
+  using WrappedTyped = FinalRefCountedObject<A>;
+  static_assert(!std::is_polymorphic<WrappedTyped>::value, "");
+  scoped_refptr<WrappedTyped> ref(new WrappedTyped());
+  EXPECT_TRUE(ref.get());
+  EXPECT_TRUE(ref->HasOneRef());
+  // Test reference counter is updated on some simple operations.
+  scoped_refptr<WrappedTyped> ref2 = ref;
+  EXPECT_FALSE(ref->HasOneRef());
+  EXPECT_FALSE(ref2->HasOneRef());
+
+  ref = nullptr;
+  EXPECT_TRUE(ref2->HasOneRef());
 }
 
 }  // namespace rtc

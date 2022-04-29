@@ -159,9 +159,9 @@ class RTC_EXPORT CopyOnWriteBuffer {
   void SetData(const T* data, size_t size) {
     RTC_DCHECK(IsConsistent());
     if (!buffer_) {
-      buffer_ = size > 0 ? new RefCountedObject<Buffer>(data, size) : nullptr;
+      buffer_ = size > 0 ? new RefCountedBuffer(data, size) : nullptr;
     } else if (!buffer_->HasOneRef()) {
-      buffer_ = new RefCountedObject<Buffer>(data, size, capacity());
+      buffer_ = new RefCountedBuffer(data, size, capacity());
     } else {
       buffer_->SetData(data, size);
     }
@@ -196,7 +196,7 @@ class RTC_EXPORT CopyOnWriteBuffer {
   void AppendData(const T* data, size_t size) {
     RTC_DCHECK(IsConsistent());
     if (!buffer_) {
-      buffer_ = new RefCountedObject<Buffer>(data, size);
+      buffer_ = new RefCountedBuffer(data, size);
       offset_ = 0;
       size_ = size;
       RTC_DCHECK(IsConsistent());
@@ -242,7 +242,7 @@ class RTC_EXPORT CopyOnWriteBuffer {
 
   // Swaps two buffers.
   friend void swap(CopyOnWriteBuffer& a, CopyOnWriteBuffer& b) {
-    std::swap(a.buffer_, b.buffer_);
+    a.buffer_.swap(b.buffer_);
     std::swap(a.offset_, b.offset_);
     std::swap(a.size_, b.size_);
   }
@@ -257,6 +257,7 @@ class RTC_EXPORT CopyOnWriteBuffer {
   }
 
  private:
+  using RefCountedBuffer = FinalRefCountedObject<Buffer>;
   // Create a copy of the underlying data if it is referenced from other Buffer
   // objects or there is not enough capacity.
   void UnshareAndEnsureCapacity(size_t new_capacity);
@@ -272,7 +273,7 @@ class RTC_EXPORT CopyOnWriteBuffer {
   }
 
   // buffer_ is either null, or points to an rtc::Buffer with capacity > 0.
-  scoped_refptr<RefCountedObject<Buffer>> buffer_;
+  scoped_refptr<RefCountedBuffer> buffer_;
   // This buffer may represent a slice of a original data.
   size_t offset_;  // Offset of a current slice in the original data in buffer_.
                    // Should be 0 if the buffer_ is empty.
