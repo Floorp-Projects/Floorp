@@ -138,7 +138,10 @@ rtc_library("cross_traffic_unittest") {
     "../../rtc_base:rtc_event",
     "../time_controller",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 if (rtc_include_tests) {
