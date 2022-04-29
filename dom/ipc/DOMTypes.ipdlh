@@ -13,6 +13,7 @@ include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/ipc/URIUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
+include "mozilla/net/ClassOfService.h";
 
 include IPCBlob;
 include IPCStream;
@@ -27,7 +28,8 @@ using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using struct mozilla::dom::LoadingSessionHistoryInfo
   from "mozilla/dom/SessionHistoryEntry.h";
 
-using mozilla::net::ClassOfServiceStruct from "nsIClassOfService.h";
+using mozilla::net::ClassOfService from "mozilla/net/ClassOfService.h";
+
 
 using hal::ScreenOrientation from "mozilla/HalIPCUtils.h";
 using LayoutDeviceIntRect from "Units.h";
@@ -336,7 +338,7 @@ struct TimedChannelInfo
 struct ReplacementChannelConfigInit
 {
   uint32_t redirectFlags;
-  ClassOfServiceStruct classOfService;
+  ClassOfService classOfService;
   bool? privateBrowsing;
   nsCString? method;
   nsIReferrerInfo referrerInfo;

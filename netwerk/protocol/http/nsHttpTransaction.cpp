@@ -67,8 +67,7 @@
 
 using namespace mozilla::net;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction <public>
@@ -118,7 +117,7 @@ bool nsHttpTransaction::EligibleForThrottling() const {
          nsIClassOfService::Throttleable;
 }
 
-void nsHttpTransaction::SetClassOfService(ClassOfServiceStruct cos) {
+void nsHttpTransaction::SetClassOfService(ClassOfService cos) {
   if (mClosed) {
     return;
   }
@@ -206,7 +205,7 @@ nsresult nsHttpTransaction::Init(
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
     uint64_t topBrowsingContextId, HttpTrafficCategory trafficCategory,
-    nsIRequestContext* requestContext, ClassOfServiceStruct classOfService,
+    nsIRequestContext* requestContext, ClassOfService classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
     TransactionObserverFunc&& transactionObserver,
     OnPushCallback&& aOnPushCallback,
@@ -3452,5 +3451,4 @@ void nsHttpTransaction::GetHashKeyOfConnectionEntry(nsACString& aResult) {
   aResult.Assign(mHashKeyOfConnectionEntry);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

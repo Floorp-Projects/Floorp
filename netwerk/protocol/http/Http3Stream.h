@@ -26,7 +26,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
   // for RefPtr
   NS_INLINE_DECL_REFCOUNTING(Http3Stream, override)
 
-  Http3Stream(nsAHttpTransaction*, Http3Session*, const ClassOfServiceStruct&,
+  Http3Stream(nsAHttpTransaction*, Http3Session*, const ClassOfService&,
               uint64_t);
 
   bool HasStreamId() const { return mStreamId != UINT64_MAX; }
