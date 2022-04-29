@@ -489,6 +489,15 @@ template("rtc_test") {
         xctest_module_target = "//base/test:google_test_runner"
       }
     }
+    if (using_sanitizer) {
+      if (is_linux) {
+        if (!defined(invoker.data)) {
+          data = []
+        }
+        data +=
+            [ "//third_party/llvm-build/Release+Asserts/lib/libstdc++.so.6" ]
+      }
+    }
   }
 }
 
