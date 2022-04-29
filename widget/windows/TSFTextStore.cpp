@@ -3451,10 +3451,8 @@ TSFTextStore::RecordCompositionUpdateAction() {
       TextRange& range = action->mRanges->ElementAt(0);
       LONG start = selectionForTSF->MinOffset();
       LONG end = selectionForTSF->MaxOffset();
-      if (static_cast<LONG>(range.mStartOffset) ==
-              start - mComposition->StartOffset() &&
-          static_cast<LONG>(range.mEndOffset) ==
-              end - mComposition->StartOffset() &&
+      if (range.mStartOffset == start - mComposition->StartOffset() &&
+          range.mEndOffset == end - mComposition->StartOffset() &&
           range.mRangeStyle.IsNoChangeStyle()) {
         range.mRangeStyle.Clear();
         // The looks of selected type is better than others.

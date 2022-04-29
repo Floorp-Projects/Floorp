@@ -1897,7 +1897,7 @@ nsresult AppWindow::MaybeSaveEarlyWindowPersistentValues(
     return NS_ERROR_FAILURE;
   }
   mozilla::Vector<CSSPixelSpan> springs;
-  for (size_t i = 0; i < toolbarSprings->Length(); i++) {
+  for (int i = 0; i < toolbarSprings->Length(); i++) {
     RefPtr<Element> springEl = toolbarSprings->Item(i);
     RefPtr<dom::DOMRect> springRect;
     rv = utils->GetBoundsWithoutFlushing(springEl, getter_AddRefs(springRect));

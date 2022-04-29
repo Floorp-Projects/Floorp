@@ -315,7 +315,7 @@ static bool ProfileDbHasStartWithLastProfile(IFStream& iniContents) {
   bool inGeneral = false;
   std::string line;
   while (std::getline(iniContents, line)) {
-    size_t whitespace = 0;
+    int whitespace = 0;
     while (line.length() > whitespace &&
            (line[whitespace] == ' ' || line[whitespace] == '\t')) {
       whitespace++;
@@ -1000,7 +1000,7 @@ Result<Ok, PreXULSkeletonUIError> DrawSkeletonUI(
     }
   }
 
-  for (size_t i = 1; i < noPlaceholderSpans.length(); i++) {
+  for (int i = 1; i < noPlaceholderSpans.length(); i++) {
     int start = noPlaceholderSpans[i - 1].end + placeholderMargin;
     int end = noPlaceholderSpans[i].start - placeholderMargin;
     if (start + 2 * placeholderBorderRadius >= end) {
@@ -1705,7 +1705,7 @@ static Result<Vector<CSSPixelSpan>, PreXULSkeletonUIError> ReadRegCSSPixelSpans(
 
   Vector<CSSPixelSpan> resultVector;
   double* asDoubles = reinterpret_cast<double*>(buffer.get());
-  for (size_t i = 0; i < dataLen / (2 * sizeof(double)); i++) {
+  for (int i = 0; i < dataLen / (2 * sizeof(double)); i++) {
     CSSPixelSpan span = {};
     span.start = *(asDoubles++);
     span.end = *(asDoubles++);
