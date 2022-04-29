@@ -18,7 +18,6 @@
 #include "PerformanceWorker.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryEvent.h"
 #include "mozilla/dom/PerformanceNavigationBinding.h"
@@ -33,12 +32,6 @@
 #define PERFLOG(msg, ...) printf_stderr(msg, ##__VA_ARGS__)
 
 namespace mozilla::dom {
-
-enum class Performance::ResolveTimestampAttribute {
-  Start,
-  End,
-  Duration,
-};
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Performance)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -394,7 +387,7 @@ void Performance::ClearMarks(const Optional<nsAString>& aName) {
   ClearUserEntries(aName, u"mark"_ns);
 }
 
-DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithString(
+DOMHighResTimeStamp Performance::ResolveTimestampFromName(
     const nsAString& aName, ErrorResult& aRv) {
   AutoTArray<RefPtr<PerformanceEntry>, 1> arr;
   Optional<nsAString> typeParam;
@@ -407,9 +400,7 @@ DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithString(
   }
 
   if (!IsPerformanceTimingAttribute(aName)) {
-    nsPrintfCString errorMsg("Given mark name, %s, is unknown",
-                             NS_ConvertUTF16toUTF8(aName).get());
-    aRv.ThrowSyntaxError(errorMsg);
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return 0;
   }
 
@@ -422,189 +413,42 @@ DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithString(
   return ts - CreationTime();
 }
 
-DOMHighResTimeStamp Performance::ConvertMarkToTimestampWithDOMHighResTimeStamp(
-    const ResolveTimestampAttribute aAttribute,
-    const DOMHighResTimeStamp aTimestamp, ErrorResult& aRv) {
-  if (aTimestamp < 0) {
-    nsAutoCString attributeName;
-    switch (aAttribute) {
-      case ResolveTimestampAttribute::Start:
-        attributeName = "start";
-        break;
-      case ResolveTimestampAttribute::End:
-        attributeName = "end";
-        break;
-      case ResolveTimestampAttribute::Duration:
-        attributeName = "duration";
-        break;
-    }
-
-    nsPrintfCString errorMsg("Given attribute %s cannot be negative",
-                             attributeName.BeginReading());
-    aRv.ThrowTypeError(errorMsg);
-  }
-  return aTimestamp;
-}
-
-DOMHighResTimeStamp Performance::ConvertMarkToTimestamp(
-    const ResolveTimestampAttribute aAttribute,
-    const OwningStringOrDouble& aMarkNameOrTimestamp, ErrorResult& aRv) {
-  if (aMarkNameOrTimestamp.IsString()) {
-    return ConvertMarkToTimestampWithString(aMarkNameOrTimestamp.GetAsString(),
-                                            aRv);
+void Performance::Measure(const nsAString& aName,
+                          const Optional<nsAString>& aStartMark,
+                          const Optional<nsAString>& aEndMark,
+                          ErrorResult& aRv) {
+  // We add nothing when 'privacy.resistFingerprinting' is on.
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
   }
 
-  return ConvertMarkToTimestampWithDOMHighResTimeStamp(
-      aAttribute, aMarkNameOrTimestamp.GetAsDouble(), aRv);
-}
-
-DOMHighResTimeStamp Performance::ResolveEndTimeForMeasure(
-    const Optional<nsAString>& aEndMark,
-    const Maybe<const PerformanceMeasureOptions&>& aOptions, ErrorResult& aRv) {
+  DOMHighResTimeStamp startTime;
   DOMHighResTimeStamp endTime;
+
+  if (aStartMark.WasPassed()) {
+    startTime = ResolveTimestampFromName(aStartMark.Value(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  } else {
+    // Navigation start is used in this case, but since DOMHighResTimeStamp is
+    // in relation to navigation start, this will be zero if a name is not
+    // passed.
+    startTime = 0;
+  }
+
   if (aEndMark.WasPassed()) {
-    endTime = ConvertMarkToTimestampWithString(aEndMark.Value(), aRv);
-  } else if (aOptions && aOptions->mEnd.WasPassed()) {
-    endTime = ConvertMarkToTimestamp(ResolveTimestampAttribute::End,
-                                     aOptions->mEnd.Value(), aRv);
-  } else if (aOptions && aOptions->mStart.WasPassed() &&
-             aOptions->mDuration.WasPassed()) {
-    const DOMHighResTimeStamp start = ConvertMarkToTimestamp(
-        ResolveTimestampAttribute::Start, aOptions->mStart.Value(), aRv);
-    if (aRv.Failed()) {
-      return 0;
+    endTime = ResolveTimestampFromName(aEndMark.Value(), aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
     }
-
-    const DOMHighResTimeStamp duration =
-        ConvertMarkToTimestampWithDOMHighResTimeStamp(
-            ResolveTimestampAttribute::Duration, aOptions->mDuration.Value(),
-            aRv);
-    if (aRv.Failed()) {
-      return 0;
-    }
-
-    endTime = start + duration;
   } else {
     endTime = Now();
   }
 
-  return endTime;
-}
-
-DOMHighResTimeStamp Performance::ResolveStartTimeForMeasure(
-    const Maybe<const nsAString&>& aStartMark,
-    const Maybe<const PerformanceMeasureOptions&>& aOptions, ErrorResult& aRv) {
-  DOMHighResTimeStamp startTime;
-  if (aOptions && aOptions->mStart.WasPassed()) {
-    startTime = ConvertMarkToTimestamp(ResolveTimestampAttribute::Start,
-                                       aOptions->mStart.Value(), aRv);
-  } else if (aOptions && aOptions->mDuration.WasPassed() &&
-             aOptions->mEnd.WasPassed()) {
-    const DOMHighResTimeStamp duration =
-        ConvertMarkToTimestampWithDOMHighResTimeStamp(
-            ResolveTimestampAttribute::Duration, aOptions->mDuration.Value(),
-            aRv);
-    if (aRv.Failed()) {
-      return 0;
-    }
-
-    const DOMHighResTimeStamp end = ConvertMarkToTimestamp(
-        ResolveTimestampAttribute::End, aOptions->mEnd.Value(), aRv);
-    if (aRv.Failed()) {
-      return 0;
-    }
-
-    startTime = end - duration;
-  } else if (aStartMark) {
-    startTime = ConvertMarkToTimestampWithString(*aStartMark, aRv);
-  } else {
-    startTime = 0;
-  }
-
-  return startTime;
-}
-
-already_AddRefed<PerformanceMeasure> Performance::Measure(
-    JSContext* aCx, const nsAString& aName,
-    const StringOrPerformanceMeasureOptions& aStartOrMeasureOptions,
-    const Optional<nsAString>& aEndMark, ErrorResult& aRv) {
-  // Maybe is more readable than using the union type directly.
-  Maybe<const PerformanceMeasureOptions&> options;
-  if (aStartOrMeasureOptions.IsPerformanceMeasureOptions()) {
-    options.emplace(aStartOrMeasureOptions.GetAsPerformanceMeasureOptions());
-  }
-
-  const bool isOptionsNotEmpty =
-      options.isSome() &&
-      (!options->mDetail.isUndefined() || options->mStart.WasPassed() ||
-       options->mEnd.WasPassed() || options->mDuration.WasPassed());
-  if (isOptionsNotEmpty) {
-    if (aEndMark.WasPassed()) {
-      aRv.ThrowTypeError(
-          "Cannot provide separate endMark argument if "
-          "PerformanceMeasureOptions argument is given");
-      return nullptr;
-    }
-
-    if (!options->mStart.WasPassed() && !options->mEnd.WasPassed()) {
-      aRv.ThrowTypeError(
-          "PerformanceMeasureOptions must have start and/or end member");
-      return nullptr;
-    }
-
-    if (options->mStart.WasPassed() && options->mDuration.WasPassed() &&
-        options->mEnd.WasPassed()) {
-      aRv.ThrowTypeError(
-          "PerformanceMeasureOptions cannot have all of the following members: "
-          "start, duration, and end");
-      return nullptr;
-    }
-  }
-
-  const DOMHighResTimeStamp endTime =
-      ResolveEndTimeForMeasure(aEndMark, options, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  // Convert to Maybe for consistency with options.
-  Maybe<const nsAString&> startMark;
-  if (aStartOrMeasureOptions.IsString()) {
-    startMark.emplace(aStartOrMeasureOptions.GetAsString());
-  }
-  const DOMHighResTimeStamp startTime =
-      ResolveStartTimeForMeasure(startMark, options, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  JS::Rooted<JS::Value> detail(aCx);
-  if (options && !options->mDetail.isNullOrUndefined()) {
-    StructuredSerializeOptions serializeOptions;
-    JS::Rooted<JS::Value> valueToClone(aCx, options->mDetail);
-    nsContentUtils::StructuredClone(aCx, GetParentObject(), valueToClone,
-                                    serializeOptions, &detail, aRv);
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  } else {
-    detail.setNull();
-  }
-
-  RefPtr<PerformanceMeasure> performanceMeasure = new PerformanceMeasure(
-      GetParentObject(), aName, startTime, endTime, detail);
-
-  // To avoid fingerprinting in User Timing L2, we didn't add measures to the
-  // buffer so the user could not get timing data (which can be used to
-  // fingerprint) from the API. This may no longer be necessary (since
-  // performance.now() has reduced precision to protect against fingerprinting
-  // and performance.measures's primary fingerprinting issue is probably this
-  // timing // data) but we need to do a more thorough reanalysis before we
-  // remove the fingerprinting protection. For now, we preserve the User Timing
-  // L2 behavior while supporting User Timing L3.
-  if (!nsContentUtils::ShouldResistFingerprinting()) {
-    InsertUserEntry(performanceMeasure);
-  }
+  RefPtr<PerformanceMeasure> performanceMeasure =
+      new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
+  InsertUserEntry(performanceMeasure);
 
   if (profiler_thread_is_being_profiled_for_markers()) {
     TimeStamp startTimeStamp =
@@ -612,6 +456,12 @@ already_AddRefed<PerformanceMeasure> Performance::Measure(
     TimeStamp endTimeStamp =
         CreationTimeStamp() + TimeDuration::FromMilliseconds(endTime);
 
+    // Convert to Maybe values so that Optional types do not need to be used in
+    // the profiler.
+    Maybe<nsString> startMark;
+    if (aStartMark.WasPassed()) {
+      startMark.emplace(aStartMark.Value());
+    }
     Maybe<nsString> endMark;
     if (aEndMark.WasPassed()) {
       endMark.emplace(aEndMark.Value());
@@ -627,8 +477,6 @@ already_AddRefed<PerformanceMeasure> Performance::Measure(
                         UserTimingMarker{}, aName, /* aIsMeasure */ true,
                         startMark, endMark);
   }
-
-  return performanceMeasure.forget();
 }
 
 void Performance::ClearMeasures(const Optional<nsAString>& aName) {
