@@ -14020,7 +14020,7 @@
   "SERVICE_WORKER_LIFE_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "102",
+    "expires_in_version": "105",
     "kind": "exponential",
     "high": 120000,
     "n_buckets": 20,
