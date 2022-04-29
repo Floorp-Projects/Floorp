@@ -301,6 +301,38 @@ bool TransportSeqNumExtensionConfigured(const RtpConfig& config) {
     return ext.uri == RtpExtension::kTransportSequenceNumberUri;
   });
 }
+
+// Returns true when some coded video sequence can be decoded starting with
+// this frame without requiring any previous frames.
+// e.g. it is the same as a key frame when spatial scalability is not used.
+// When spatial scalability is used, then it is true for layer frames of
+// a key frame without inter-layer dependencies.
+bool IsFirstFrameOfACodedVideoSequence(
+    const EncodedImage& encoded_image,
+    const CodecSpecificInfo* codec_specific_info) {
+  if (encoded_image._frameType != VideoFrameType::kVideoFrameKey) {
+    return false;
+  }
+
+  if (codec_specific_info != nullptr &&
+      codec_specific_info->generic_frame_info.has_value()) {
+    // This function is used before
+    // `codec_specific_info->generic_frame_info->frame_diffs` are calculated, so
+    // need to use more complicated way to check for presence of dependencies.
+    return absl::c_none_of(
+        codec_specific_info->generic_frame_info->encoder_buffers,
+        [](const CodecBufferUsage& buffer) { return buffer.referenced; });
+  }
+
+  // Without depenedencies described in generic format do an educated guess.
+  // It might be wrong for VP9 with spatial layer 0 skipped or higher spatial
+  // layer not depending on the spatial layer 0. This corner case is unimportant
+  // for current usage of this helper function.
+
+  // Use <= to accept both 0 (i.e. the first) and nullopt (i.e. the only).
+  return encoded_image.SpatialIndex() <= 0;
+}
+
 }  // namespace
 
 RtpVideoSender::RtpVideoSender(
@@ -526,7 +558,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
         rtp_streams_[stream_index].rtp_rtcp->ExpectedRetransmissionTimeMs();
   }
 
-  if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
+  if (IsFirstFrameOfACodedVideoSequence(encoded_image, codec_specific_info)) {
     // If encoder adapter produce FrameDependencyStructure, pass it so that
     // dependency descriptor rtp header extension can be used.
     // If not supported, disable using dependency descriptor by passing nullptr.
