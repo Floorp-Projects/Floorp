@@ -39,11 +39,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.ListItemTabLarge
 import org.mozilla.fenix.compose.ListItemTabLargePlaceholder
+import org.mozilla.fenix.compose.ListItemTabSurface
 import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.StaggeredHorizontalGrid
 import org.mozilla.fenix.compose.PrimaryText
@@ -115,6 +118,63 @@ fun PocketStory(
 }
 
 /**
+ * Displays a single [PocketSponsoredStory].
+ *
+ * @param story The [PocketSponsoredStory] to be displayed.
+ * @param onStoryClick Callback for when the user taps on this story.
+ */
+@Composable
+fun PocketSponsoredStory(
+    story: PocketSponsoredStory,
+    onStoryClick: (PocketSponsoredStory) -> Unit
+) {
+    val (imageWidth, imageHeight) = with(LocalDensity.current) {
+        116.dp.toPx().roundToInt() to 84.dp.toPx().roundToInt()
+    }
+    val imageUrl = story.imageUrl.replace(
+        "&resize=w[0-9]+-h[0-9]+".toRegex(),
+        "&resize=w$imageWidth-h$imageHeight"
+    )
+
+    ListItemTabSurface(imageUrl, { onStoryClick(story) }) {
+        PrimaryText(
+            text = story.title,
+            fontSize = 14.sp,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2,
+        )
+
+        Spacer(Modifier.height(9.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(id = R.drawable.pocket_star_stroke),
+                contentDescription = null,
+                tint = FirefoxTheme.colors.iconSecondary,
+            )
+
+            Spacer(Modifier.width(8.dp))
+
+            SecondaryText(
+                text = stringResource(R.string.pocket_stories_sponsor_indication),
+                fontSize = 12.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+        }
+
+        Spacer(Modifier.height(7.dp))
+
+        SecondaryText(
+            text = story.sponsor,
+            fontSize = 12.sp,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
  * Displays a list of [PocketStory]es on 3 by 3 grid.
  * If there aren't enough stories to fill all columns placeholders containing an external link
  * to go to Pocket for more recommendations are added.
@@ -159,6 +219,10 @@ fun PocketStories(
                                 .appendQueryParameter(URI_PARAM_UTM_KEY, POCKET_STORIES_UTM_VALUE)
                                 .build().toString()
                             onStoryClicked(it.copy(url = uri), rowIndex to columnIndex)
+                        }
+                    } else if (story is PocketSponsoredStory) {
+                        PocketSponsoredStory(story) {
+                            onStoryClicked(story, rowIndex to columnIndex)
                         }
                     }
                 }
@@ -291,19 +355,30 @@ private class PocketStoryProvider : PreviewParameterProvider<PocketStory> {
 }
 
 internal fun getFakePocketStories(limit: Int = 1): List<PocketStory> {
-    return mutableListOf<PocketRecommendedStory>().apply {
+    return mutableListOf<PocketStory>().apply {
         for (index in 0 until limit) {
-            add(
-                PocketRecommendedStory(
-                    title = "This is a ${"very ".repeat(index)} long title",
-                    publisher = "Publisher",
-                    url = "https://story$index.com",
-                    imageUrl = "",
-                    timeToRead = index,
-                    category = "Category #$index",
-                    timesShown = index.toLong()
+            when (index % 2 == 0) {
+                true -> add(
+                    PocketRecommendedStory(
+                        title = "This is a ${"very ".repeat(index)} long title",
+                        publisher = "Publisher",
+                        url = "https://story$index.com",
+                        imageUrl = "",
+                        timeToRead = index,
+                        category = "Category #$index",
+                        timesShown = index.toLong()
+                    )
                 )
-            )
+                false -> add(
+                    PocketSponsoredStory(
+                        title = "This is a ${"very ".repeat(index)} long title",
+                        url = "https://sponsored-story$index.com",
+                        imageUrl = "",
+                        sponsor = "Mozilla",
+                        shim = PocketSponsoredStoryShim("", "")
+                    )
+                )
+            }
         }
     }
 }

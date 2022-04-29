@@ -112,7 +112,7 @@ fun ListItemTabLarge(
  * @param tabDetails [Composable] Displayed to the the end of the image. Allows for variation in the item text style.
  */
 @Composable
-private fun ListItemTabSurface(
+fun ListItemTabSurface(
     imageUrl: String,
     onClick: (() -> Unit)? = null,
     tabDetails: @Composable () -> Unit
@@ -157,5 +157,20 @@ private fun ListItemTabLargePreview() {
             title = "This is a very long title for a tab but needs to be so for this preview",
             caption = "And this is a caption"
         ) { }
+    }
+}
+
+@Composable
+@Preview
+private fun ListItemTabSurfacePreview() {
+    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
+        ListItemTabSurface(
+            imageUrl = ""
+        ) {
+            PrimaryText(
+                text = "This can be anything",
+                fontSize = 22.sp
+            )
+        }
     }
 }
