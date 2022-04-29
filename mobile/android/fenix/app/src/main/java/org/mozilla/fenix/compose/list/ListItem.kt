@@ -41,6 +41,7 @@ private val ICON_SIZE = 24.dp
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param onClick Called when the user clicks on the item.
  * @param iconPainter [Painter] used to display a [ListItemIcon] after the list item.
  * @param iconDescription Content description of the icon.
@@ -51,6 +52,7 @@ fun TextListItem(
     label: String,
     modifier: Modifier = Modifier,
     description: String? = null,
+    maxDescriptionLines: Int = 1,
     onClick: (() -> Unit)? = null,
     iconPainter: Painter? = null,
     iconDescription: String? = null,
@@ -60,6 +62,7 @@ fun TextListItem(
         label = label,
         modifier = modifier,
         description = description,
+        maxDescriptionLines = maxDescriptionLines,
         onClick = onClick,
         afterListAction = {
             iconPainter?.let {
@@ -172,6 +175,7 @@ fun IconListItem(
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param onClick Called when the user clicks on the item.
  * @param beforeListAction Optional Composable for adding UI before the list item.
  * @param afterListAction Optional Composable for adding UI to the end of the list item.
@@ -181,6 +185,7 @@ private fun ListItem(
     label: String,
     modifier: Modifier = Modifier,
     description: String? = null,
+    maxDescriptionLines: Int = 1,
     onClick: (() -> Unit)? = null,
     beforeListAction: @Composable RowScope.() -> Unit = {},
     afterListAction: @Composable RowScope.() -> Unit = {},
@@ -211,7 +216,7 @@ private fun ListItem(
                 SecondaryText(
                     text = description,
                     fontSize = 14.sp,
-                    maxLines = 1,
+                    maxLines = maxDescriptionLines,
                 )
             }
         }

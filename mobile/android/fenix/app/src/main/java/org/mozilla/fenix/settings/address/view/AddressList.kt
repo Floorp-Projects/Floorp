@@ -19,6 +19,8 @@ import mozilla.components.concept.storage.Address
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.compose.list.TextListItem
+import org.mozilla.fenix.settings.address.ext.getAddressLabel
+import org.mozilla.fenix.settings.address.ext.getFullName
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -38,9 +40,10 @@ fun AddressList(
     LazyColumn {
         items(addresses) { address ->
             TextListItem(
-                label = address.givenName + " " + address.familyName,
+                label = address.getFullName(),
                 modifier = Modifier.padding(start = 56.dp),
-                description = address.streetAddress,
+                description = address.getAddressLabel(),
+                maxDescriptionLines = 2,
                 onClick = { onAddressClick(address) },
             )
         }
