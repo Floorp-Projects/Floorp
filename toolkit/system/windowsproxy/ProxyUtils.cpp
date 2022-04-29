@@ -23,7 +23,7 @@ static void NormalizeAddr(const nsACString& aAddr, nsCString& aNormalized) {
   nsTArray<nsCString> addr;
   ParseString(aAddr, '.', addr);
   aNormalized = StringJoin("."_ns, IntegerRange(4),
-                           [&addr](nsACString& dst, const int i) {
+                           [&addr](nsACString& dst, size_t i) {
                              if (i < addr.Length()) {
                                dst.Append(addr[i]);
                              } else {
