@@ -8,12 +8,13 @@ package org.mozilla.fenix.ui.robots
 
 import android.os.Build
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.android.ComposeNotIdleException
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -43,6 +44,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.PackageName
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -50,7 +52,6 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.helpers.Constants.PackageName
 
 /**
  * Implementation of Robot Pattern for the search fragment.
@@ -95,8 +96,8 @@ class SearchRobot {
 
     fun verifySearchEngineButton() = assertSearchButton()
     fun verifySearchWithText() = assertSearchWithText()
-    fun verifySearchEngineResults(count: Int) =
-        assertSearchEngineResults(count)
+    fun verifySearchEngineResults(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String) =
+        assertSearchEngineResults(rule, searchSuggestion, searchEngineName)
     fun verifySearchEngineSuggestionResults(rule: ComposeTestRule, searchSuggestion: String) =
         assertSearchEngineSuggestionResults(rule, searchSuggestion)
     fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, searchSuggestion: String) =
@@ -164,14 +165,13 @@ class SearchRobot {
             .performClick()
     }
 
-    fun clickSearchEngineResult(rule: ComposeTestRule, searchEngineName: String) {
+    fun clickSearchEngineResult(rule: ComposeTestRule, searchSuggestion: String) {
         mDevice.waitNotNull(
-            Until.findObjects(By.text(searchEngineName)),
+            Until.findObjects(By.text(searchSuggestion)),
             waitingTime
         )
 
-        rule.onAllNodesWithText(searchEngineName)
-            .onFirst()
+        rule.onNodeWithText(searchSuggestion)
             .assertIsDisplayed()
             .assertHasClickAction()
             .performClick()
@@ -309,13 +309,18 @@ private fun assertSearchEngineURL(searchEngineName: String) {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 
-private fun assertSearchEngineResults(minCount: Int) {
-    mDevice.waitForObjects(
-        searchSuggestionsList.getChild(UiSelector().index(minCount))
-    )
-
-    assertTrue(searchSuggestionsList.childCount >= minCount)
+private fun assertSearchEngineResults(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String) {
+    rule.waitUntil(waitingTime, waitForSearchSuggestions(rule, searchSuggestion, searchEngineName))
+    rule.onNodeWithText(searchSuggestion).assertIsDisplayed()
 }
+
+private fun waitForSearchSuggestions(rule: ComposeTestRule, searchSuggestion: String, searchEngineName: String): () -> Boolean =
+    {
+        rule.waitForIdle()
+        mDevice.waitForObjects(mDevice.findObject(UiSelector().textContains(searchSuggestion)))
+        rule.onAllNodesWithTag("mozac.awesomebar.suggestion").assertAny(hasText(searchSuggestion) and hasText(searchEngineName))
+        mDevice.findObject(UiSelector().textContains(searchSuggestion)).waitForExists(waitingTime)
+    }
 
 private fun assertSearchEngineSuggestionResults(rule: ComposeTestRule, searchResult: String) {
     rule.waitForIdle()

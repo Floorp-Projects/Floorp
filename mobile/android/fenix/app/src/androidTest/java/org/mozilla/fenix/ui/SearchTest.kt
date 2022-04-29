@@ -88,7 +88,6 @@ class SearchTest {
     }
 
     @Test
-    @Ignore("Flaky. See https://github.com/mozilla-mobile/fenix/issues/20973")
     fun shortcutButtonTest() {
         homeScreen {
         }.openThreeDotMenu {
@@ -101,8 +100,8 @@ class SearchTest {
             verifySearchBarEmpty()
             clickSearchEngineButton(activityTestRule, "DuckDuckGo")
             typeSearch("mozilla")
-            verifySearchEngineResults(2)
-            clickSearchEngineResult(activityTestRule, "DuckDuckGo")
+            verifySearchEngineResults(activityTestRule, "mozilla firefox", "DuckDuckGo")
+            clickSearchEngineResult(activityTestRule, "mozilla firefox")
             verifySearchEngineURL("DuckDuckGo")
         }
     }
