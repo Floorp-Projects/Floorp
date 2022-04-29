@@ -300,6 +300,10 @@ MediaEventSource<void>& MockCubebStream::ErrorForcedEvent() {
   return mErrorForcedEvent;
 }
 
+MediaEventSource<void>& MockCubebStream::ErrorStoppedEvent() {
+  return mErrorStoppedEvent;
+}
+
 MediaEventSource<void>& MockCubebStream::DeviceChangeForcedEvent() {
   return mDeviceChangedForcedEvent;
 }
@@ -344,9 +348,12 @@ void MockCubebStream::Process10Ms() {
     mForceErrorState = false;
     // Let the audio thread (this thread!) run to completion before
     // being released, by joining and releasing on main.
-    NS_DispatchBackgroundTask(
-        NS_NewRunnableFunction(__func__, [cubeb = MockCubeb::AsMock(context),
-                                          this] { cubeb->StopStream(this); }));
+    NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+        __func__, [cubeb = MockCubeb::AsMock(context), this,
+                   self = RefPtr<SmartMockCubebStream>(mSelf)] {
+          cubeb->StopStream(this);
+          self->mErrorStoppedEvent.Notify();
+        }));
     NotifyStateChanged(CUBEB_STATE_ERROR);
     mErrorForcedEvent.Notify();
     mStreamStop = true;
