@@ -2866,18 +2866,24 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     return true;
   }
 
+  InitiateORBTelemetry();
+
   switch (GetOpaqueResponseBlockedReason(*mResponseHead)) {
     case OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED:
+      ReportORBTelemetry("Allowed_SafeListed"_ns);
       return true;
     case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
       // XXXtt: Report To Console.
+      ReportORBTelemetry("Blocked_BlockListedNeverSniffed"_ns);
       return false;
     case OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED:
       // XXXtt: Report To Console.
+      ReportORBTelemetry("Blocked_206AndBlockListed"_ns);
       return false;
     case OpaqueResponseBlockedReason::
         BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN:
       // XXXtt: Report To Console.
+      ReportORBTelemetry("Blocked_NosniffAndEitherBlockListedOrTextPlain"_ns);
       return false;
     default:
       break;
@@ -2891,6 +2897,7 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     bool isMediaInitialRequest;
     mLoadInfo->GetIsMediaInitialRequest(&isMediaInitialRequest);
     if (!isMediaInitialRequest) {
+      ReportORBTelemetry("Allowed_SubsequentMediaRequest"_ns);
       return true;
     }
   }
@@ -2937,16 +2944,19 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   mLoadInfo->GetIsMediaRequest(&isMediaRequest);
   if (isMediaRequest) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_UnexpectedMediaRequest"_ns);
     return false;
   }
 
   nsAutoCString contentType;
   nsresult rv = GetContentType(contentType);
   if (NS_FAILED(rv)) {
+    ReportORBTelemetry("Blocked_UnexpectedContentType"_ns);
     return Err(rv);
   }
 
   if (!mResponseHead) {
+    ReportORBTelemetry("Allowed_UnexpectedResponseHead"_ns);
     return true;
   }
 
@@ -2954,16 +2964,19 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   if (mResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
       contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_NoSniffHeaderAfterSniff"_ns);
     return false;
   }
 
   if (mResponseHead->Status() < 200 || mResponseHead->Status() > 299) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_ResponseNotOk"_ns);
     return false;
   }
 
   if (contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
       contentType.EqualsLiteral(APPLICATION_OCTET_STREAM)) {
+    ReportORBTelemetry("Allowed_FailtoGetMIMEType"_ns);
     return true;
   }
 
@@ -2971,6 +2984,7 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
       StringBeginsWith(contentType, "video/"_ns) ||
       StringBeginsWith(contentType, "audio/"_ns)) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_ContentTypeBeginsWithImageOrVideoOrAudio"_ns);
     return false;
   }
 
@@ -2981,8 +2995,12 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   rv = GetContentLength(&contentLength);
   if (NS_FAILED(rv)) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_GetContentLengthFailed"_ns);
     return false;
   }
+
+  ReportORBTelemetry(contentLength);
+  ReportORBTelemetry("Allowed_NotImplementOrPass"_ns);
 
   return true;
 }
@@ -5229,6 +5247,27 @@ void HttpBaseChannel::EnsureTopBrowsingContextId() {
   if (bc && bc->Top()) {
     mTopBrowsingContextId = bc->Top()->Id();
   }
+}
+
+void HttpBaseChannel::InitiateORBTelemetry() {
+  MOZ_ASSERT(!mOpaqueResponseBlockingInfo);
+  MOZ_RELEASE_ASSERT(mLoadInfo);
+
+  mOpaqueResponseBlockingInfo = MakeRefPtr<OpaqueResponseBlockingInfo>(
+      mLoadInfo->GetExternalContentPolicyType());
+}
+
+void HttpBaseChannel::ReportORBTelemetry(const nsCString& aKey) {
+  MOZ_ASSERT(mOpaqueResponseBlockingInfo);
+
+  mOpaqueResponseBlockingInfo->Report(aKey);
+  mOpaqueResponseBlockingInfo = nullptr;
+}
+
+void HttpBaseChannel::ReportORBTelemetry(int64_t aContentLength) {
+  MOZ_ASSERT(mOpaqueResponseBlockingInfo);
+
+  mOpaqueResponseBlockingInfo->ReportContentLength(aContentLength);
 }
 
 void HttpBaseChannel::SetCorsPreflightParameters(
