@@ -5,19 +5,14 @@
     <ID>ConstructorParameterNaming:BrowsingModeManager.kt$DefaultBrowsingModeManager$private var _mode: BrowsingMode</ID>
     <ID>FunctionOnlyReturningConstant:MetricsUtils.kt$MetricsUtils$ @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) internal fun getHashingSalt(): String</ID>
     <ID>FunctionOnlyReturningConstant:SupportUtils.kt$SupportUtils$fun getFirefoxAccountSumoUrl(): String</ID>
-    <ID>FunctionParameterNaming:Event.kt$Event.ContextMenuItemTapped.Companion$context_item: String</ID>
     <ID>FunctionParameterNaming:FenixSnackbar.kt$FenixSnackbar.Companion$_view: View?</ID>
-    <ID>LongParameterList:BookmarkController.kt$DefaultBookmarkController$( private val activity: HomeActivity, private val navController: NavController, private val clipboardManager: ClipboardManager?, private val scope: CoroutineScope, private val store: BookmarkFragmentStore, private val sharedViewModel: BookmarksSharedViewModel, private val tabsUseCases: TabsUseCases?, private val loadBookmarkNode: suspend (String) -&gt; BookmarkNode?, private val showSnackbar: (String) -&gt; Unit, private val deleteBookmarkNodes: (Set&lt;BookmarkNode&gt;, Event) -&gt; Unit, private val deleteBookmarkFolder: (Set&lt;BookmarkNode&gt;) -&gt; Unit, private val invokePendingDeletion: () -&gt; Unit, private val showTabTray: () -&gt; Unit )</ID>
     <ID>LongParameterList:BrowserToolbarController.kt$DefaultBrowserToolbarController$( private val store: BrowserStore, private val tabsUseCases: TabsUseCases, private val activity: HomeActivity, private val navController: NavController, private val metrics: MetricController, private val readerModeController: ReaderModeController, private val engineView: EngineView, private val homeViewModel: HomeScreenViewModel, private val customTabSessionId: String?, private val browserAnimator: BrowserAnimator, private val onTabCounterClicked: () -&gt; Unit, private val onCloseTab: (SessionState) -&gt; Unit )</ID>
     <ID>LongParameterList:BrowserToolbarMenuController.kt$DefaultBrowserToolbarMenuController$( private val store: BrowserStore, private val activity: HomeActivity, private val navController: NavController, private val metrics: MetricController, private val settings: Settings, private val readerModeController: ReaderModeController, private val sessionFeature: ViewBoundFeatureWrapper&lt;SessionFeature&gt;, private val findInPageLauncher: () -&gt; Unit, private val browserAnimator: BrowserAnimator, private val swipeRefresh: SwipeRefreshLayout, private val customTabSessionId: String?, private val openInFenixIntent: Intent, private val bookmarkTapped: (String, String) -&gt; Unit, private val scope: CoroutineScope, private val tabCollectionStorage: TabCollectionStorage, private val topSitesStorage: DefaultTopSitesStorage, private val pinnedSiteStorage: PinnedSiteStorage, private val browserStore: BrowserStore )</ID>
     <ID>LongParameterList:CrashContentIntegration.kt$CrashContentIntegration$( private val browserStore: BrowserStore, private val appStore: AppStore, private val toolbar: BrowserToolbar, private val isToolbarPlacedAtTop: Boolean, private val crashReporterView: CrashContentView, private val components: Components, private val settings: Settings, private val navController: NavController, private val sessionId: String? )</ID>
     <ID>LongParameterList:CustomTabsIntegration.kt$CustomTabsIntegration$( store: BrowserStore, useCases: CustomTabsUseCases, toolbar: BrowserToolbar, sessionId: String, activity: Activity, onItemTapped: (ToolbarMenu.Item) -&gt; Unit = {}, shouldReverseItems: Boolean, isPrivate: Boolean )</ID>
     <ID>LongParameterList:DeleteBrowsingDataController.kt$DefaultDeleteBrowsingDataController$( private val removeAllTabs: TabsUseCases.RemoveAllTabsUseCase, private val removeAllDownloads: DownloadsUseCases.RemoveAllDownloadsUseCase, private val historyStorage: HistoryStorage, private val permissionStorage: PermissionStorage, private val store: BrowserStore, private val iconsStorage: BrowserIcons, private val engine: Engine, private val coroutineContext: CoroutineContext = Dispatchers.Main )</ID>
     <ID>LongParameterList:HistoryController.kt$DefaultHistoryController$( private val store: HistoryFragmentStore, private val navController: NavController, private val scope: CoroutineScope, private val openToBrowser: (item: History.Regular) -&gt; Unit, private val displayDeleteAll: () -&gt; Unit, private val invalidateOptionsMenu: () -&gt; Unit, private val deleteHistoryItems: (Set&lt;History&gt;) -&gt; Unit, private val syncHistory: suspend () -&gt; Unit, private val metrics: MetricController )</ID>
-    <ID>LongParameterList:HistoryMetadataGroupController.kt$DefaultHistoryMetadataGroupController$( private val historyStorage: PlacesHistoryStorage, private val browserStore: BrowserStore, private val store: HistoryMetadataGroupFragmentStore, private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase, private val metrics: MetricController, private val navController: NavController, private val scope: CoroutineScope, private val searchTerm: String, )</ID>
     <ID>LongParameterList:QuickSettingsController.kt$DefaultQuickSettingsController$( private val context: Context, private val quickSettingsStore: QuickSettingsFragmentStore, private val browserStore: BrowserStore, private val ioScope: CoroutineScope, private val navController: NavController, @VisibleForTesting internal val sessionId: String, @VisibleForTesting internal var sitePermissions: SitePermissions?, private val settings: Settings, private val permissionStorage: PermissionStorage, private val reload: ReloadUrlUseCase, private val requestRuntimePermissions: OnNeedToRequestPermissions = { }, private val displayPermissions: () -&gt; Unit, private val engine: Engine = context.components.core.engine, )</ID>
-    <ID>LongParameterList:RecentVisitsController.kt$DefaultRecentVisitsController$( private val store: BrowserStore, private val appStore: AppStore, private val selectOrAddTabUseCase: SelectOrAddUseCase, private val navController: NavController, private val storage: HistoryMetadataStorage, private val scope: CoroutineScope, private val metrics: MetricController )</ID>
-    <ID>LongParameterList:RecentlyClosedController.kt$DefaultRecentlyClosedController$( private val navController: NavController, private val browserStore: BrowserStore, private val recentlyClosedStore: RecentlyClosedFragmentStore, private val recentlyClosedTabsStorage: RecentlyClosedTabsStorage, private val tabsUseCases: TabsUseCases, private val activity: HomeActivity, private val metrics: MetricController, private val lifecycleScope: CoroutineScope, private val openToBrowser: (url: String, mode: BrowsingMode?) -&gt; Unit )</ID>
     <ID>LongParameterList:ShareController.kt$DefaultShareController$( private val context: Context, private val shareSubject: String?, private val shareData: List&lt;ShareData&gt;, private val sendTabUseCases: SendTabUseCases, private val snackbar: FenixSnackbar, private val navController: NavController, private val recentAppsStorage: RecentAppsStorage, private val viewLifecycleScope: CoroutineScope, private val dispatcher: CoroutineDispatcher = Dispatchers.IO, private val dismiss: (ShareController.Result) -&gt; Unit )</ID>
     <ID>LongParameterList:TabsTrayController.kt$DefaultTabsTrayController$( private val trayStore: TabsTrayStore, private val browserStore: BrowserStore, private val browsingModeManager: BrowsingModeManager, private val navController: NavController, private val navigateToHomeAndDeleteSession: (String) -&gt; Unit, private val profiler: Profiler?, private val navigationInteractor: NavigationInteractor, private val metrics: MetricController, private val tabsUseCases: TabsUseCases, private val selectTabPosition: (Int, Boolean) -&gt; Unit, private val dismissTray: () -&gt; Unit, private val showUndoSnackbarForTab: (Boolean) -&gt; Unit, @VisibleForTesting internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -&gt; Unit, )</ID>
     <ID>LongParameterList:ToolbarIntegration.kt$DefaultToolbarIntegration$( context: Context, toolbar: BrowserToolbar, toolbarMenu: ToolbarMenu, domainAutocompleteProvider: DomainAutocompleteProvider, historyStorage: HistoryStorage, lifecycleOwner: LifecycleOwner, sessionId: String? = null, isPrivate: Boolean, interactor: BrowserToolbarInteractor, engine: Engine )</ID>
@@ -184,265 +179,7 @@
     <ID>UndocumentedPublicClass:DropDownListPreference.kt$DropDownListPreference : DropDownPreference</ID>
     <ID>UndocumentedPublicClass:DynamicDownloadDialogBehavior.kt$DynamicDownloadDialogBehavior&lt;V : View&gt; : Behavior</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AddBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AddBookmarkFolder : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AddonInstalled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AddonOpenSetting : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AddonsOpenInSettings : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AddonsOpenInToolbarMenu : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillConfirmationCanceled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillConfirmationSuccessful : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillRequestWithLogins : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillRequestWithoutLogins : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillSearchDisplayed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillSearchItemSelected : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillUnlockCanceled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AndroidAutofillUnlockSuccessful : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$AverageTabsPerSearchTermGroup : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$BaiduTopSiteRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$BookmarkClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$BookmarkSuggestionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$BrowserMenuItemTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$BrowserToolbarHomeButtonClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ChangeWallpaperWithLogoToggled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ChangedToDefaultBrowser : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ClearedPrivateData : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ClipboardSuggestionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionAddTabPressed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionAllTabsRestored : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionRenamePressed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionRenamed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionSaveButtonPressed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionSaved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionShared : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionTabLongPressed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionTabRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionTabRestored : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionTabSelectOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CollectionTabsAdded : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ContextMenuCopyTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ContextMenuItemTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ContextMenuSearchTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ContextMenuSelectAllTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ContextMenuShareTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CopyBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CopyLogin : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CopyUrlUsed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardAutofillPromptDismissed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardAutofillPromptExpanded : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardAutofillPromptShown : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardAutofilled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardDeleted : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardFormDetected : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardManagementAddTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardManagementCardTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardModified : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CreditCardSaved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CustomTabsActionTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CustomTabsClosed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CustomTabsMenuOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$CustomizeHomePreferenceToggled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$DarkThemeSelected : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$DefaultBrowserNotifTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$DeleteLogin : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$DismissedOnboarding : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$EditLogin : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$EditLoginSave : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$EditedBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$EnteredUrl : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ErrorPageVisited : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$GoogleTopSiteRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HaveNoOpenTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HaveOpenTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryAllItemsRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryHighlightOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryItemOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryItemRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryItemShared : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryOpenedInNewTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryOpenedInNewTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryOpenedInPrivateTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryOpenedInPrivateTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistoryRecentSearchesTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchGroupOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchIconTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchResultTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchTermGroupOpenTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchTermGroupRemoveAll : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchTermGroupRemoveTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySearchTermGroupTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HistorySuggestionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HomeMenuSettingsItemClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HomeScreenCustomizedHomeClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HomeScreenDisplayed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$HomeScreenViewCount : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$InteractWithSearchURLArea : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$JumpBackInGroupTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$LoginDialogPromptCancelled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$LoginDialogPromptDisplayed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$LoginDialogPromptNeverSave : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$LoginDialogPromptSave : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$MediaFullscreenState : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$MediaPauseState : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$MediaPictureInPictureState : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$MediaPlayState : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$MediaStopState : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$Messaging : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$MovedBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$NormalAndPrivateUriOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$NotificationMediaPause : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$NotificationMediaPlay : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingAutoSignIn : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingFinish : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingManualSignIn : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingPrivacyNotice : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingThemePicker : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingToolbarPosition : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OnboardingTrackingProtection : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenInProgressMediaTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenLogins : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenOneLogin : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenRecentTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedApp : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedAppFirstRun : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedBookmarkInNewTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedBookmarkInPrivateTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedBookmarksInNewTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedBookmarksInPrivateTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedLink : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$OpenedTabSuggestionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PerformedSearch : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketHomeRecsCategoryClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketHomeRecsDiscoverMoreClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketHomeRecsLearnMoreClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketHomeRecsShown : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketHomeRecsStoryClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketTopSiteClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PocketTopSiteRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$PreferenceToggled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeAppearanceOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeAvailable : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeClosed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ReaderModeOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentBookmarkCount : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentBookmarksShown : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentSearchesGroupDeleted : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentTabsSectionIsNotVisible : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentTabsSectionIsVisible : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsClosed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsDeleteTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsEnterMultiselect : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsExitMultiselect : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsMenuClose : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsMenuDelete : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsMenuOpenInNormalTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsMenuOpenInPrivateTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsMenuShare : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsOpenTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsOpenedOld : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RecentlyClosedTabsShowFullHistory : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RemoveBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RemoveBookmarkFolder : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$RemoveBookmarks : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SaveLoginsSettingChanged : Event</ID>
     <ID>UndocumentedPublicClass:Event.kt$Event$Search</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchActionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchAdClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchBarTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchInContent : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchShortcutSelected : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchSuggestionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchTermGroupCount : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchTermGroupSizeDistribution : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchWidgetInstalled : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchWidgetNewTabPressed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchWidgetVoiceSearchPressed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SearchWithAds : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SendTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ShareBookmark : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ShowAllBookmarks : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ShowAllRecentTabs : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SignInToSendTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$StartOnHomeEnterHomeScreen : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$StartOnHomeOpenTabsTray : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$StudiesSettings : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAccountOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAccountSyncNow : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthClosed : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthFromSharedCopy : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthFromSharedReuse : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthOtherExternal : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthPaired : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthRecovered : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthScanPairing : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthSignIn : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthSignOut : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthSignUp : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthUseEmail : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncAuthUseEmailProblem : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncedTabOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$SyncedTabSuggestionClicked : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TabMediaPause : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TabMediaPlay : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TabSettingsOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TabViewSettingChanged : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ToolbarMenuShown : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ToolbarPositionChanged : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteContileClick : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteContileImpression : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteContilePrivacy : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteContileSettings : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteLongPress : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenBaidu : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenContileInPrivateTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenDefault : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenFrecent : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenGoogle : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenInNewTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenInPrivateTab : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenPinned : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteOpenProvided : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteRemoved : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$TopSiteSwipeCarousel : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$ViewLoginPassword : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$VoiceSearchTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$WallpaperSelected : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$WallpaperSettingsOpened : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$WallpaperSwitched : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event$WhatsNewTapped : Event</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.BrowserMenuItemTapped$Item</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.DarkThemeSelected$Source</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.Messaging$MessageClicked : Messaging</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.Messaging$MessageDismissed : Messaging</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.Messaging$MessageExpired : Messaging</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.Messaging$MessageMalformed : Messaging</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.Messaging$MessageShown : Messaging</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.OnboardingThemePicker$Theme</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.OnboardingToolbarPosition$Position</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.OnboardingTrackingProtection$Setting</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.OpenedApp$Source</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.OpenedLink$Mode</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch$EngineSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch$EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EngineSource$Default : EngineSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EngineSource$Shortcut : EngineSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$Action : EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$Other : EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$Shortcut : EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$Suggestion : EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$TopSite : EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.PerformedSearch.EventSource$Widget : EventSource</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.SaveLoginsSettingChanged$Setting</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.SearchBarTapped$Source</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.TabViewSettingChanged$Type</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.ToolbarPositionChanged$Position</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.TopSiteContileClick$Source</ID>
-    <ID>UndocumentedPublicClass:Event.kt$Event.TopSiteContileImpression$Source</ID>
     <ID>UndocumentedPublicClass:ExceptionsAdapter.kt$ExceptionsAdapter.AdapterItem$DeleteButton : AdapterItem</ID>
     <ID>UndocumentedPublicClass:ExceptionsAdapter.kt$ExceptionsAdapter.AdapterItem$Header : AdapterItem</ID>
     <ID>UndocumentedPublicClass:ExceptionsDeleteButtonViewHolder.kt$ExceptionsDeleteButtonViewHolder : ViewHolder</ID>
@@ -504,7 +241,6 @@
     <ID>UndocumentedPublicClass:HomeMenu.kt$HomeMenu.Item$SyncAccount : Item</ID>
     <ID>UndocumentedPublicClass:HomeMenu.kt$HomeMenu.Item$WhatsNew : Item</ID>
     <ID>UndocumentedPublicClass:HomeScreenViewModel.kt$HomeScreenViewModel : ViewModel</ID>
-    <ID>UndocumentedPublicClass:HomeSettingsFragment.kt$HomeSettingsFragment$CustomizeHomeMetricsUpdater : SharedPreferenceUpdater</ID>
     <ID>UndocumentedPublicClass:InactiveTabViewHolder.kt$InactiveTabViewHolder : ViewHolder</ID>
     <ID>UndocumentedPublicClass:InactiveTabViewHolder.kt$InactiveTabViewHolder$AutoCloseDialogHolder : InactiveTabViewHolder</ID>
     <ID>UndocumentedPublicClass:InactiveTabViewHolder.kt$InactiveTabViewHolder$FooterHolder : InactiveTabViewHolder</ID>
@@ -853,7 +589,6 @@
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleAllBookmarksDeselected()</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBackPressed()</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBookmarkChanged(item: BookmarkNode)</ID>
-    <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBookmarkDeletion(nodes: Set&lt;BookmarkNode&gt;, eventType: Event)</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBookmarkDeselected(node: BookmarkNode)</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBookmarkEdit(node: BookmarkNode)</ID>
     <ID>UndocumentedPublicFunction:BookmarkController.kt$BookmarkController$fun handleBookmarkExpand(folder: BookmarkNode)</ID>
@@ -970,7 +705,6 @@
     <ID>UndocumentedPublicFunction:DynamicDownloadDialogBehavior.kt$DynamicDownloadDialogBehavior$fun forceExpand(view: View)</ID>
     <ID>UndocumentedPublicFunction:EditLoginInteractor.kt$EditLoginInteractor$fun findDuplicate(loginId: String, usernameText: String, passwordText: String)</ID>
     <ID>UndocumentedPublicFunction:EditLoginInteractor.kt$EditLoginInteractor$fun onSaveLogin(loginId: String, usernameText: String, passwordText: String)</ID>
-    <ID>UndocumentedPublicFunction:Event.kt$Event.ContextMenuItemTapped.Companion$fun create(context_item: String)</ID>
     <ID>UndocumentedPublicFunction:ExceptionsListItemViewHolder.kt$ExceptionsListItemViewHolder$fun bind(item: T, url: String)</ID>
     <ID>UndocumentedPublicFunction:ExceptionsView.kt$ExceptionsView$fun update(items: List&lt;T&gt;)</ID>
     <ID>UndocumentedPublicFunction:Extensions.kt$fun SitePermissions.get(field: PhoneFeature)</ID>
