@@ -146,6 +146,9 @@ class VideoStreamEncoderResourceManager
   // QualityRampUpExperimentListener implementation.
   void OnQualityRampUp() override;
 
+  static absl::optional<uint32_t> GetSingleActiveLayerPixels(
+      const VideoCodec& codec);
+
  private:
   class InitialFrameDropper;
 
