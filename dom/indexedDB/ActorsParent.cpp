@@ -3796,13 +3796,15 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 #if defined(NS_BUILD_REFCNT_LOGGING)
     // Only for MOZ_COUNT_CTOR.
     StoredFileInfo(StoredFileInfo&& aOther)
-        : mFileInfo{std::move(aOther.mFileInfo)}, mFileActorOrInputStream {
-      std::move(aOther.mFileActorOrInputStream)
-    }
+        : mFileInfo{std::move(aOther.mFileInfo)},
+          mFileActorOrInputStream{std::move(aOther.mFileActorOrInputStream)}
 #  ifdef DEBUG
-    , mType { aOther.mType }
+          ,
+          mType{aOther.mType}
 #  endif
-    { MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo); }
+    {
+      MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
+    }
 #else
     StoredFileInfo(StoredFileInfo&&) = default;
 #endif
@@ -3915,11 +3917,11 @@ void ObjectStoreAddOrPutRequestOp::StoredFileInfo::AssertInvariants() const {
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<DatabaseFileInfo> aFileInfo)
-    : mFileInfo{WrapNotNull(std::move(aFileInfo))}, mFileActorOrInputStream {
-  Nothing {}
-}
+    : mFileInfo{WrapNotNull(std::move(aFileInfo))},
+      mFileActorOrInputStream{Nothing{}}
 #ifdef DEBUG
-, mType { StructuredCloneFileBase::eMutableFile }
+      ,
+      mType{StructuredCloneFileBase::eMutableFile}
 #endif
 {
   AssertIsOnBackgroundThread();
@@ -3930,11 +3932,11 @@ ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<DatabaseFileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
-    : mFileInfo{WrapNotNull(std::move(aFileInfo))}, mFileActorOrInputStream {
-  std::move(aFileActor)
-}
+    : mFileInfo{WrapNotNull(std::move(aFileInfo))},
+      mFileActorOrInputStream{std::move(aFileActor)}
 #ifdef DEBUG
-, mType { StructuredCloneFileBase::eBlob }
+      ,
+      mType{StructuredCloneFileBase::eBlob}
 #endif
 {
   AssertIsOnBackgroundThread();
@@ -3946,11 +3948,11 @@ ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<DatabaseFileInfo> aFileInfo,
     nsCOMPtr<nsIInputStream> aInputStream)
-    : mFileInfo{WrapNotNull(std::move(aFileInfo))}, mFileActorOrInputStream {
-  std::move(aInputStream)
-}
+    : mFileInfo{WrapNotNull(std::move(aFileInfo))},
+      mFileActorOrInputStream{std::move(aInputStream)}
 #ifdef DEBUG
-, mType { StructuredCloneFileBase::eStructuredClone }
+      ,
+      mType{StructuredCloneFileBase::eStructuredClone}
 #endif
 {
   AssertIsOnBackgroundThread();
@@ -10148,9 +10150,11 @@ mozilla::ipc::IPCResult Database::RecvBlocked() {
 
   DatabaseActorInfo* info;
   MOZ_ALWAYS_TRUE(gLiveDatabaseHashtable->Get(Id(), &info));
-
   MOZ_ASSERT(info->mLiveDatabases.Contains(this));
-  MOZ_ASSERT(info->mWaitingFactoryOp);
+
+  if (NS_WARN_IF(!info->mWaitingFactoryOp)) {
+    return IPC_FAIL(this, "Database info has no mWaitingFactoryOp!");
+  }
 
   info->mWaitingFactoryOp->NoteDatabaseBlocked(this);
 
