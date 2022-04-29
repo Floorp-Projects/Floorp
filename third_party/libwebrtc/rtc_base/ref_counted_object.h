@@ -59,6 +59,37 @@ class RefCountedObject : public T {
   RTC_DISALLOW_COPY_AND_ASSIGN(RefCountedObject);
 };
 
+template <class T>
+class FinalRefCountedObject final : public T {
+ public:
+  using T::T;
+  // Until c++17 compilers are allowed not to inherit the default constructor,
+  // and msvc doesn't. Thus the default constructor is forwarded explicitly.
+  FinalRefCountedObject() = default;
+  FinalRefCountedObject(const FinalRefCountedObject&) = delete;
+  FinalRefCountedObject& operator=(const FinalRefCountedObject&) = delete;
+
+  void AddRef() const { ref_count_.IncRef(); }
+  void Release() const {
+    if (ref_count_.DecRef() == RefCountReleaseStatus::kDroppedLastRef) {
+      delete this;
+    }
+  }
+  bool HasOneRef() const { return ref_count_.HasOneRef(); }
+
+ private:
+  ~FinalRefCountedObject() = default;
+
+  // gcc v7.1 requires default contructors for members of
+  // `FinalRefCountedObject` to be able to use inherited constructors.
+  // TODO(danilchap): Replace with simpler braced initialization when
+  // bot support for that version of gcc is dropped.
+  class ZeroBasedRefCounter : public webrtc::webrtc_impl::RefCounter {
+   public:
+    ZeroBasedRefCounter() : RefCounter(0) {}
+  } mutable ref_count_;
+};
+
 }  // namespace rtc
 
 #endif  // RTC_BASE_REF_COUNTED_OBJECT_H_
