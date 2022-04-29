@@ -100,10 +100,9 @@ JSObject* PerformanceMark::WrapObject(JSContext* aCx,
 
 void PerformanceMark::GetDetail(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aRetval) {
-  // Return a copy so that this method always returns the value it is set to
-  // (i.e. it'll return the same value even if the caller assigns to it). Note
-  // that if detail is an object, its contents can be mutated and this is
-  // expected.
+  // Return a copy so that the PerformanceMark.detail reference always returns
+  // the same value. However, the contents of detail can be mutated. The spec
+  // isn't clear if this is okay but it matches Chrome's behavior.
   aRetval.set(mDetail);
 }
 
