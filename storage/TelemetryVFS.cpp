@@ -576,7 +576,7 @@ int xFullPathname(sqlite3_vfs* vfs, const char* zName, int nOut, char* zOut) {
        (zName[0] == '\\' && zName[1] == '\\' && zName[2] == '?' &&
         zName[3] == '\\'))) {
     MOZ_ASSERT(nOut >= vfs->mxPathname);
-    MOZ_ASSERT(nOut > strlen(zName));
+    MOZ_ASSERT(static_cast<size_t>(nOut) > strlen(zName));
 
     size_t index = 0;
     while (zName[index] != '\0') {

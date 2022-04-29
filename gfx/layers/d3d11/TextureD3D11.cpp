@@ -1274,8 +1274,8 @@ bool DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
       mTexture->GetDesc(&currentDesc);
 
       // Make sure there's no size mismatch, if there is, recreate.
-      if (currentDesc.Width != mSize.width ||
-          currentDesc.Height != mSize.height ||
+      if (static_cast<int32_t>(currentDesc.Width) != mSize.width ||
+          static_cast<int32_t>(currentDesc.Height) != mSize.height ||
           currentDesc.Format != dxgiFormat) {
         mTexture = nullptr;
         // Make sure we upload the whole surface.

@@ -120,7 +120,7 @@ bool D3D11Checks::DoesRenderTargetViewNeedRecreating(ID3D11Device* aDevice) {
       gfxCriticalNote << "DoesRecreatingMapFailed " << hexa(hr);
       return false;
     }
-    int resultColor = *(int*)mapped.pData;
+    uint32_t resultColor = *(uint32_t*)mapped.pData;
     deviceContext->Unmap(cpuTexture, 0);
     cpuTexture = nullptr;
 
@@ -151,7 +151,7 @@ bool D3D11Checks::DoesDeviceWork() {
   if (GetModuleHandleW(L"igd10umd32.dll")) {
     const wchar_t* checkModules[] = {L"dlumd32.dll", L"dlumd11.dll",
                                      L"dlumd10.dll"};
-    for (int i = 0; i < PR_ARRAY_SIZE(checkModules); i += 1) {
+    for (size_t i = 0; i < PR_ARRAY_SIZE(checkModules); i += 1) {
       if (GetModuleHandleW(checkModules[i])) {
         nsString displayLinkModuleVersionString;
         gfxWindowsPlatform::GetDLLVersion(checkModules[i],
@@ -406,7 +406,7 @@ void D3D11Checks::WarnOnAdapterMismatch(ID3D11Device* device) {
   gfxInfo->GetAdapterVendorID(vendorID);
   nsresult ec;
   int32_t vendor = vendorID.ToInteger(&ec, 16);
-  if (vendor != desc.VendorId) {
+  if (vendor != static_cast<int32_t>(desc.VendorId)) {
     gfxCriticalNote << "VendorIDMismatch V " << hexa(vendor) << " "
                     << hexa(desc.VendorId);
   }
