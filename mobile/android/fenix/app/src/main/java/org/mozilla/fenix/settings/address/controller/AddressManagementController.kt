@@ -37,17 +37,19 @@ class DefaultAddressManagementController(
 ) : AddressManagementController {
 
     override fun handleAddressClicked(address: Address) {
-        navigateToAddressEditor()
+        navigateToAddressEditor(address)
     }
 
     override fun handleAddAddressButtonClicked() {
         navigateToAddressEditor()
     }
 
-    private fun navigateToAddressEditor() {
+    private fun navigateToAddressEditor(address: Address? = null) {
         navController.navigate(
             AddressManagementFragmentDirections
-                .actionAddressManagementFragmentToAddressEditorFragment()
+                .actionAddressManagementFragmentToAddressEditorFragment(
+                    address = address
+                )
         )
     }
 }

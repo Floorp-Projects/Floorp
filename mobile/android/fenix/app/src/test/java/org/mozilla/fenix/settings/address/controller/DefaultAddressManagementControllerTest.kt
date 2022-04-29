@@ -37,7 +37,9 @@ class DefaultAddressManagementControllerTest {
         verify {
             navController.navigate(
                 AddressManagementFragmentDirections
-                    .actionAddressManagementFragmentToAddressEditorFragment()
+                    .actionAddressManagementFragmentToAddressEditorFragment(
+                        address = address
+                    )
             )
         }
     }

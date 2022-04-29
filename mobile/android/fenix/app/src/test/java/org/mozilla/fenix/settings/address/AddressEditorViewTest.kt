@@ -6,10 +6,13 @@ package org.mozilla.fenix.settings.address
 
 import android.view.LayoutInflater
 import android.view.View
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.concept.storage.Address
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,12 +29,15 @@ class AddressEditorViewTest {
     private lateinit var interactor: AddressEditorInteractor
     private lateinit var addressEditorView: AddressEditorView
     private lateinit var binding: FragmentAddressEditorBinding
+    private lateinit var address: Address
 
     @Before
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(R.layout.fragment_address_editor, null)
         binding = FragmentAddressEditorBinding.bind(view)
         interactor = mockk(relaxed = true)
+        address = mockk(relaxed = true)
+        every { address.guid } returns "123"
 
         addressEditorView = spyk(AddressEditorView(binding, interactor))
     }
@@ -43,5 +49,41 @@ class AddressEditorViewTest {
         binding.cancelButton.performClick()
 
         verify { interactor.onCancelButtonClicked() }
+    }
+
+    @Test
+    fun `GIVEN an existing address WHEN editor is opened THEN the form fields are correctly mapped to the address fields`() {
+        val address = Address(
+            guid = "123",
+            givenName = "Given",
+            additionalName = "Additional",
+            familyName = "Family",
+            organization = "Organization",
+            streetAddress = "Street",
+            addressLevel3 = "Suburb",
+            addressLevel2 = "City",
+            addressLevel1 = "State",
+            postalCode = "PostalCode",
+            country = "Country",
+            tel = "Telephone",
+            email = "email@mozilla.com",
+            timeCreated = 0L,
+            timeLastUsed = 1L,
+            timeLastModified = 1L,
+            timesUsed = 2L
+        )
+
+        val addressEditorView = spyk(AddressEditorView(binding, interactor, address))
+        addressEditorView.bind()
+
+        assertEquals("PostalCode", binding.zipInput.text.toString())
+        assertEquals("State", binding.stateInput.text.toString())
+        assertEquals("City", binding.cityInput.text.toString())
+        assertEquals("Street", binding.streetAddressInput.text.toString())
+        assertEquals("Family", binding.lastNameInput.text.toString())
+        assertEquals("Given", binding.firstNameInput.text.toString())
+        assertEquals("Additional", binding.middleNameInput.text.toString())
+        assertEquals("email@mozilla.com", binding.emailInput.text.toString())
+        assertEquals("Telephone", binding.phoneInput.text.toString())
     }
 }
