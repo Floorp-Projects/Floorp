@@ -441,7 +441,7 @@ class Capabilities extends Map {
       [
         "moz:debuggerAddress",
         // With bug 1715481 fixed always use the Remote Agent instance
-        RemoteAgent.running && RemoteAgent.cdp
+        RemoteAgent.listening && RemoteAgent.cdp
           ? remoteAgent.debuggerAddress
           : null,
       ],
