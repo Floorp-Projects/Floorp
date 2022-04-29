@@ -46,7 +46,8 @@ std::unique_ptr<TimeController> CreateTimeController(TimeMode mode) {
 }  // namespace
 
 NetworkEmulationManagerImpl::NetworkEmulationManagerImpl(TimeMode mode)
-    : time_controller_(CreateTimeController(mode)),
+    : time_mode_(mode),
+      time_controller_(CreateTimeController(mode)),
       clock_(time_controller_->GetClock()),
       next_node_id_(1),
       next_ip4_address_(kMinIPv4Address),

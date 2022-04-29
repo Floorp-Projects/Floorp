@@ -82,6 +82,8 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
 
   TimeController* time_controller() override { return time_controller_.get(); }
 
+  TimeMode time_mode() const override { return time_mode_; }
+
   Timestamp Now() const;
 
   EmulatedTURNServerInterface* CreateTURNServer(
@@ -92,6 +94,8 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
       std::pair<std::unique_ptr<CrossTrafficGenerator>, RepeatingTaskHandle>;
 
   absl::optional<rtc::IPAddress> GetNextIPv4Address();
+
+  const TimeMode time_mode_;
   const std::unique_ptr<TimeController> time_controller_;
   Clock* const clock_;
   int next_node_id_;
