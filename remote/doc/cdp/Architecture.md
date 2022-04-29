@@ -48,8 +48,7 @@ To do that this component glue together three main high level components:
 Connecting to Websocket endpoints
 ---------------------------------
 
-Each target's websocket URL will be registered as a HTTP endpoint via `server/HTTPD:registerPathHandler`.
-(This registration is done from `RemoteAgentClass:listen`)
+Each target's websocket URL will be registered as a HTTP endpoint via `server/HTTPD:registerPathHandler` (This registration is done from `RemoteAgentParentProcess:#listen`).
 Once a HTTP request happens, `server/HTTPD` will call the `handle` method on the object passed to `registerPathHandler`.
 For static endpoints registered by `JSONHandler`, this will call `JSONHandler:handle` and return a JSON string as http body.
 For target's endpoint, it is slightly more complicated as it requires a special handshake to morph the HTTP connection into a WebSocket one.
