@@ -377,8 +377,7 @@ ProcessOrDeferMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #if defined(ACCESSIBILITY)
     case WM_GETOBJECT: {
       if (!::GetPropW(hwnd, k3rdPartyWindowProp)) {
-        DWORD objId = static_cast<DWORD>(lParam);
-        if (objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT) {
+        if (lParam == OBJID_CLIENT || lParam == MOZOBJID_UIAROOT) {
           WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
           if (oldWndProc) {
             return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);

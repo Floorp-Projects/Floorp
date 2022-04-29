@@ -48,5 +48,5 @@ TEST(MaintenanceServiceTest, ServiceStartInteractiveOnly)
   // Automatically close the SCM when we are done with it.
   nsAutoServiceHandle uniqueServiceHandle(serviceHandle);
   ASSERT_FALSE(serviceHandle);
-  ASSERT_EQ(GetLastError(), ERROR_ACCESS_DENIED);
+  ASSERT_EQ(GetLastError(), static_cast<DWORD>(ERROR_ACCESS_DENIED));
 }
