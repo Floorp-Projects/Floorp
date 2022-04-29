@@ -55,7 +55,7 @@ add_warning("-Wpointer-arith")
 check_and_add_warning("-Wshadow-field-in-constructor-modified")
 
 # catches comparing signed/unsigned ints
-add_warning("-Wsign-compare")
+add_warning("-Wsign-compare", when=not_clang_cl)
 
 # catches overflow bugs, few false positives
 add_warning("-Wtype-limits")

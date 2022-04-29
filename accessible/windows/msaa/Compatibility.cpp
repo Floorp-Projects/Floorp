@@ -117,8 +117,7 @@ static DWORD WINAPI InSendMessageExHook(LPVOID lpReserved) {
 static LONG CALLBACK
 DetectInSendMessageExCompat(PEXCEPTION_POINTERS aExceptionInfo) {
   DWORD exceptionCode = aExceptionInfo->ExceptionRecord->ExceptionCode;
-  if (exceptionCode == static_cast<DWORD>(RPC_E_CANTCALLOUT_ININPUTSYNCCALL) &&
-      NS_IsMainThread()) {
+  if (exceptionCode == RPC_E_CANTCALLOUT_ININPUTSYNCCALL && NS_IsMainThread()) {
     sInSendMessageExHackEnabled = true;
     // We don't need this exception handler anymore, so remove it
     if (RemoveVectoredExceptionHandler(sVectoredExceptionHandler)) {
