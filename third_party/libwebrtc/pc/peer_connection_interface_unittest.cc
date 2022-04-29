@@ -3908,7 +3908,7 @@ TEST_P(PeerConnectionInterfaceTest, ExtmapAllowMixedIsConfigurable) {
   // Possible to set to false.
   config.offer_extmap_allow_mixed = false;
   CreatePeerConnection(config);
-  offer.release();
+  offer = nullptr;
   ASSERT_TRUE(DoCreateOffer(&offer, nullptr));
   EXPECT_FALSE(offer->description()->extmap_allow_mixed());
 }
