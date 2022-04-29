@@ -21,6 +21,7 @@
 #include <unordered_map>
 #endif
 
+#include "absl/types/optional.h"
 #include "api/array_view.h"
 #if WEBRTC_APM_DEBUG_DUMP == 1
 #include "common_audio/wav_file.h"
@@ -64,6 +65,18 @@ class ApmDataDumper {
 #endif
   }
 
+  // Default dump set.
+  static constexpr size_t kDefaultDumpSet = 0;
+
+  // Specifies what dump set to use. All dump commands with a different dump set
+  // than the one specified will be discarded. If not specificed, all dump sets
+  // will be used.
+  static void SetDumpSetToUse(int dump_set_to_use) {
+#if WEBRTC_APM_DEBUG_DUMP == 1
+    dump_set_to_use_ = dump_set_to_use;
+#endif
+  }
+
   // Set an optional output directory.
   static void SetOutputDirectory(const std::string& output_dir) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
@@ -83,8 +96,11 @@ class ApmDataDumper {
 
   // Methods for performing dumping of data of various types into
   // various formats.
-  void DumpRaw(const char* name, double v) {
+  void DumpRaw(const char* name, double v, int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -94,8 +110,14 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v_length, const double* v) {
+  void DumpRaw(const char* name,
+               size_t v_length,
+               const double* v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -105,16 +127,24 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, rtc::ArrayView<const double> v) {
+  void DumpRaw(const char* name,
+               rtc::ArrayView<const double> v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpRaw(name, v.size(), v.data());
     }
 #endif
   }
 
-  void DumpRaw(const char* name, float v) {
+  void DumpRaw(const char* name, float v, int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -124,8 +154,14 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v_length, const float* v) {
+  void DumpRaw(const char* name,
+               size_t v_length,
+               const float* v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -135,24 +171,38 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, rtc::ArrayView<const float> v) {
+  void DumpRaw(const char* name,
+               rtc::ArrayView<const float> v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpRaw(name, v.size(), v.data());
     }
 #endif
   }
 
-  void DumpRaw(const char* name, bool v) {
+  void DumpRaw(const char* name, bool v, int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpRaw(name, static_cast<int16_t>(v));
     }
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v_length, const bool* v) {
+  void DumpRaw(const char* name,
+               size_t v_length,
+               const bool* v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -165,16 +215,24 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, rtc::ArrayView<const bool> v) {
+  void DumpRaw(const char* name,
+               rtc::ArrayView<const bool> v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpRaw(name, v.size(), v.data());
     }
 #endif
   }
 
-  void DumpRaw(const char* name, int16_t v) {
+  void DumpRaw(const char* name, int16_t v, int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -184,8 +242,14 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v_length, const int16_t* v) {
+  void DumpRaw(const char* name,
+               size_t v_length,
+               const int16_t* v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -195,16 +259,24 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, rtc::ArrayView<const int16_t> v) {
+  void DumpRaw(const char* name,
+               rtc::ArrayView<const int16_t> v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpRaw(name, v.size(), v.data());
     }
 #endif
   }
 
-  void DumpRaw(const char* name, int32_t v) {
+  void DumpRaw(const char* name, int32_t v, int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -214,8 +286,14 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v_length, const int32_t* v) {
+  void DumpRaw(const char* name,
+               size_t v_length,
+               const int32_t* v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -225,8 +303,11 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v) {
+  void DumpRaw(const char* name, size_t v, int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -236,8 +317,14 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, size_t v_length, const size_t* v) {
+  void DumpRaw(const char* name,
+               size_t v_length,
+               const size_t* v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       FILE* file = GetRawFile(name);
       if (file) {
@@ -247,16 +334,26 @@ class ApmDataDumper {
 #endif
   }
 
-  void DumpRaw(const char* name, rtc::ArrayView<const int32_t> v) {
+  void DumpRaw(const char* name,
+               rtc::ArrayView<const int32_t> v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpRaw(name, v.size(), v.data());
     }
 #endif
   }
 
-  void DumpRaw(const char* name, rtc::ArrayView<const size_t> v) {
+  void DumpRaw(const char* name,
+               rtc::ArrayView<const size_t> v,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     DumpRaw(name, v.size(), v.data());
 #endif
   }
@@ -265,8 +362,12 @@ class ApmDataDumper {
                size_t v_length,
                const float* v,
                int sample_rate_hz,
-               int num_channels) {
+               int num_channels,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels,
                                    WavFile::SampleFormat::kFloat);
@@ -284,8 +385,12 @@ class ApmDataDumper {
   void DumpWav(const char* name,
                rtc::ArrayView<const float> v,
                int sample_rate_hz,
-               int num_channels) {
+               int num_channels,
+               int dump_set = kDefaultDumpSet) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
+    if (dump_set_to_use_ && *dump_set_to_use_ != dump_set)
+      return;
+
     if (recording_activated_) {
       DumpWav(name, v.size(), v.data(), sample_rate_hz, num_channels);
     }
@@ -295,6 +400,7 @@ class ApmDataDumper {
  private:
 #if WEBRTC_APM_DEBUG_DUMP == 1
   static bool recording_activated_;
+  static absl::optional<int> dump_set_to_use_;
   static constexpr size_t kOutputDirMaxLength = 1024;
   static char output_dir_[kOutputDirMaxLength];
   const int instance_index_;

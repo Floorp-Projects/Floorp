@@ -291,6 +291,7 @@ rtc_library("apm_logging") {
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   defines = []
 }
 
