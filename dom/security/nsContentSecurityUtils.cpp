@@ -812,6 +812,12 @@ void nsContentSecurityUtils::DetectJsHacks() {
   if (!NS_IsMainThread()) {
     return;
   }
+
+  // If the pref service isn't available, do nothing and re-do this later.
+  if (!Preferences::IsServiceAvailable()) {
+    return;
+  }
+
   // No need to check again.
   if (MOZ_LIKELY(sJSHacksChecked || sJSHacksPresent)) {
     return;
@@ -893,6 +899,12 @@ void nsContentSecurityUtils::DetectCssHacks() {
   if (!NS_IsMainThread()) {
     return;
   }
+
+  // If the pref service isn't available, do nothing and re-do this later.
+  if (!Preferences::IsServiceAvailable()) {
+    return;
+  }
+
   // No need to check again.
   if (MOZ_LIKELY(sCSSHacksChecked || sCSSHacksPresent)) {
     return;
