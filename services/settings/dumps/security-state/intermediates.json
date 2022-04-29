@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1651200582692,
+      "derHash": "Fed8WUBAFWWe4m+SVh8Aeq9TmGonkm8OcHWFwqfzAbg=",
+      "subject": "CN=DigiCert Global G3 TLS EE\\+ ECC384 SHA384 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGIxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE6MDgGA1UEAxMxRGlnaUNlcnQgR2xvYmFsIEczIFRMUyBFRSsgRUNDMzg0IFNIQTM4NCAyMDIyIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d698eb7c871e953a2d52f5a3e37a7c94099ce9cd6e5e351f175434f9b4647831",
+        "size": 1276,
+        "filename": "qX0VkaXNOTvb_iR2T3sjz2frmsxWXSBKxeCVlcqFpuM=.pem",
+        "location": "security-state-staging/intermediates/b22276db-4c8e-4141-a014-1fe8448280d6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qX0VkaXNOTvb/iR2T3sjz2frmsxWXSBKxeCVlcqFpuM=",
+      "crlite_enrolled": false,
+      "id": "3504d097-0f0d-4eb1-bcab-f8c9cff23a8e",
+      "last_modified": 1651201056425
+    },
+    {
+      "schema": 1651200581750,
+      "derHash": "uRW4Bqi3vi44CfLpMplufBDMgmkYZKiWBr1QCA3C6rM=",
+      "subject": "CN=DigiCert Global G2 TLS EE\\+ RSA4096 SHA256 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MGMxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE7MDkGA1UEAxMyRGlnaUNlcnQgR2xvYmFsIEcyIFRMUyBFRSsgUlNBNDA5NiBTSEEyNTYgMjAyMiBDQTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2770a30970c5f0e28e817c1788eb2c06bff044a066ecca40a7a2b96211daf4fc",
+        "size": 2077,
+        "filename": "nfWaEttE0IGAYQsFsn8KzN13pSJzWY96Gu0Dlx4QYig=.pem",
+        "location": "security-state-staging/intermediates/4916e83a-41de-416d-910e-e4d6d8f4f953.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "nfWaEttE0IGAYQsFsn8KzN13pSJzWY96Gu0Dlx4QYig=",
+      "crlite_enrolled": false,
+      "id": "168daeb9-d058-4d6b-946a-87f8af07577f",
+      "last_modified": 1651201056418
+    },
+    {
+      "schema": 1651200580812,
+      "derHash": "9dTK1Ts/LvOYENptPNX/dmP0q7h3OIJ8zsr/b8w+r8Q=",
+      "subject": "CN=MSFT RS256 CA-1,O=Microsoft Corporation,C=US",
+      "subjectDN": "MEcxCzAJBgNVBAYTAlVTMR4wHAYDVQQKExVNaWNyb3NvZnQgQ29ycG9yYXRpb24xGDAWBgNVBAMTD01TRlQgUlMyNTYgQ0EtMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a023fc76ccc16c88e584716119317138d7bdceaf8896157e4bb9aa525e227e9b",
+        "size": 1695,
+        "filename": "4dcjodQDXb57s8lG7TLWD3Xe9ytnPSATT61TJbQtAwI=.pem",
+        "location": "security-state-staging/intermediates/dbe4ae7c-598c-423b-a4f2-aa6674a8ec18.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4dcjodQDXb57s8lG7TLWD3Xe9ytnPSATT61TJbQtAwI=",
+      "crlite_enrolled": false,
+      "id": "50064930-2d6a-442e-8edb-9151ed42396b",
+      "last_modified": 1651201056411
+    },
+    {
+      "schema": 1651200583442,
+      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
+      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
+        "size": 1727,
+        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
+        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
+      "crlite_enrolled": false,
+      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
+      "last_modified": 1651201056399
+    },
+    {
       "schema": 1650962920282,
       "derHash": "Ocdjqc8Z2SP5d9I2JquJBEmkRKuLeVyBXvHvgf68Hjg=",
       "subject": "CN=Amazon,OU=Server CA 1A,O=Amazon,C=US",
@@ -2105,24 +2177,6 @@
       "crlite_enrolled": true,
       "id": "3ef3ce19-bcfb-484b-9e2e-253adcc956b5",
       "last_modified": 1647701842304
-    },
-    {
-      "schema": 1647701328071,
-      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
-      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
-        "size": 1727,
-        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
-        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": true,
-      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1647701842291
     },
     {
       "schema": 1647680259122,
@@ -24552,5 +24606,6 @@
       "id": "586b6f01-c7f7-4a5e-ba71-e7dca3e77add",
       "last_modified": 1559865863642
     }
-  ]
+  ],
+  "timestamp": 1651201056425
 }

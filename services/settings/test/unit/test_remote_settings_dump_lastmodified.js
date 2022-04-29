@@ -11,17 +11,9 @@ async function getLocalDumpLastModified(bucket, collection) {
   let res = await fetch(
     `resource://app/defaults/settings/${bucket}/${collection}.json`
   );
-  let records = (await res.json()).data;
-
-  if (records.some(r => r.last_modified > records[0].last_modified)) {
-    // The dump importer should ensure that the newest record is at the front:
-    // https://searchfox.org/mozilla-central/rev/5b3444ad300e244b5af4214212e22bd9e4b7088a/taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh#304
-    ok(false, `${bucket}/${collection} - newest record should be in the front`);
-  }
-  return records.reduce(
-    (max, { last_modified }) => Math.max(last_modified, max),
-    0
-  );
+  const { timestamp } = await res.json();
+  ok(timestamp >= 0, `${bucket}/${collection} dump has timestamp`);
+  return timestamp;
 }
 
 add_task(async function lastModified_of_non_existing_dump() {
