@@ -1092,8 +1092,8 @@ bool CompositorD3D11::VerifyBufferSize() {
     return false;
   }
 
-  if (((swapDesc.BufferDesc.Width == mSize.width &&
-        swapDesc.BufferDesc.Height == mSize.height) ||
+  if (((static_cast<int32_t>(swapDesc.BufferDesc.Width) == mSize.width &&
+        static_cast<int32_t>(swapDesc.BufferDesc.Height) == mSize.height) ||
        mSize.width <= 0 || mSize.height <= 0) &&
       !mVerifyBuffersFailed) {
     return true;

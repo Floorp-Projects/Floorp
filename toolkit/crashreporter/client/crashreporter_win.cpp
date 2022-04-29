@@ -370,7 +370,7 @@ static void MaybeResizeProgressText(HWND hwndDlg) {
 
   StretchDialog(hwndDlg, diff);
 
-  for (int i = 0; i < sizeof(kDefaultAttachedBottom) / sizeof(UINT); i++) {
+  for (size_t i = 0; i < sizeof(kDefaultAttachedBottom) / sizeof(UINT); i++) {
     gAttachedBottom.insert(kDefaultAttachedBottom[i]);
   }
 }
@@ -668,7 +668,7 @@ static void StretchControlsToFit(HWND hwndDlg) {
   RECT dlgRect;
   GetClientRect(hwndDlg, &dlgRect);
 
-  for (int i = 0; i < sizeof(controls) / sizeof(controls[0]); i++) {
+  for (size_t i = 0; i < sizeof(controls) / sizeof(controls[0]); i++) {
     RECT r;
     HWND hwndControl = GetDlgItem(hwndDlg, controls[i]);
     GetRelativeRect(hwndControl, hwndDlg, &r);
@@ -1045,7 +1045,7 @@ string WideToUTF8(const wstring& wide, bool* success) {
 /* === Crashreporter UI Functions === */
 
 bool UIInit() {
-  for (int i = 0; i < sizeof(kDefaultAttachedBottom) / sizeof(UINT); i++) {
+  for (size_t i = 0; i < sizeof(kDefaultAttachedBottom) / sizeof(UINT); i++) {
     gAttachedBottom.insert(kDefaultAttachedBottom[i]);
   }
 

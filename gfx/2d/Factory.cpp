@@ -1273,7 +1273,7 @@ bool Factory::ReadbackTexture(uint8_t* aDestData, int32_t aDestStride,
   uint32_t width = srcDesc.Width;
   uint32_t height = srcDesc.Height;
   int bpp = BytesPerPixel(gfx::ToPixelFormat(srcDesc.Format));
-  for (int y = 0; y < height; y++) {
+  for (uint32_t y = 0; y < height; y++) {
     memcpy(aDestData + aDestStride * y,
            (unsigned char*)(srcMap.pData) + srcMap.RowPitch * y, width * bpp);
   }
