@@ -784,7 +784,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Failing: https://github.com/mozilla-mobile/fenix/issues/24994")
     @Test
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
     fun deleteNonEmptyBookmarkFolderTest() {
@@ -794,13 +793,9 @@ class SmokeTest {
             createBookmark(website.url)
         }.openThreeDotMenu {
         }.openBookmarks {
-            bookmarksListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1)
-            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
             verifyBookmarkTitle("Test_Page_1")
             createFolder("My Folder")
             verifyFolderTitle("My Folder")
-            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
         }.openThreeDotMenu("Test_Page_1") {
         }.clickEdit {
             clickParentFolderSelector()
@@ -808,11 +803,7 @@ class SmokeTest {
             navigateUp()
             saveEditBookmark()
             createFolder("My Folder 2")
-            bookmarksListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1)
-            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
             verifyFolderTitle("My Folder 2")
-            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
         }.openThreeDotMenu("My Folder 2") {
         }.clickEdit {
             clickParentFolderSelector()
