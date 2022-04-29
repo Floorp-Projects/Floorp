@@ -171,7 +171,7 @@ inline static Maybe<uint32_t> BuildUnconditionalBranchImm(
     return Nothing();
   }
 
-  int32_t signbits = offset.value() & 0xFE000000;
+  uint32_t signbits = static_cast<uint32_t>(offset.value()) & 0xFE000000;
   // Ensure that offset is small enough to fit into the 26 bit region.
   // We check that the sign bits are either all ones or all zeros.
   MOZ_ASSERT(signbits == 0xFE000000 || !signbits);
@@ -179,7 +179,7 @@ inline static Maybe<uint32_t> BuildUnconditionalBranchImm(
     return Nothing();
   }
 
-  int32_t masked = offset.value() & 0x03FFFFFF;
+  uint32_t masked = static_cast<uint32_t>(offset.value()) & 0x03FFFFFF;
 
   // B imm26
   return Some(0x14000000U | masked);

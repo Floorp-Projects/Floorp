@@ -1272,7 +1272,7 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
   int shortcutCSIDLs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS,
                           CSIDL_COMMON_DESKTOPDIRECTORY,
                           CSIDL_DESKTOPDIRECTORY};
-  for (int i = 0; i < ArrayLength(shortcutCSIDLs); ++i) {
+  for (size_t i = 0; i < ArrayLength(shortcutCSIDLs); ++i) {
     // GetMatchingShortcut may fail when the exe path doesn't match, even
     // if it refers to the same file. This should be rare, and the worst
     // outcome would be failure to pin, so the risk is acceptable.
@@ -1539,7 +1539,7 @@ nsWindowsShellService::ClassifyShortcut(const nsAString& aPath,
                  {FOLDERID_UserPinned, u"\\TaskBar\\", u"Taskbar"},
                  {FOLDERID_UserPinned, u"\\StartMenu\\", u"StartMenu"}};
 
-  for (int i = 0; i < ArrayLength(folders); ++i) {
+  for (size_t i = 0; i < ArrayLength(folders); ++i) {
     nsAutoString knownPath;
 
     // These flags are chosen to avoid I/O, see bug 1363398.

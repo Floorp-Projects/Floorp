@@ -135,8 +135,8 @@ TEST(WinRemoteMessage, SendReceive)
 
   receiver.Parse(v0.CopyData());
   EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetLength(&len)));
-  EXPECT_EQ(len, ArrayLength(kExpectedArgsW));
-  for (int i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
+  EXPECT_EQ(static_cast<size_t>(len), ArrayLength(kExpectedArgsW));
+  for (size_t i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
     EXPECT_TRUE(
         NS_SUCCEEDED(receiver.CommandLineRunner()->GetArgument(i, arg)));
     EXPECT_STREQ(arg.get(), kExpectedArgsW[i]);
@@ -147,8 +147,8 @@ TEST(WinRemoteMessage, SendReceive)
 
   receiver.Parse(v1.CopyData());
   EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetLength(&len)));
-  EXPECT_EQ(len, ArrayLength(kExpectedArgsW));
-  for (int i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
+  EXPECT_EQ(static_cast<size_t>(len), ArrayLength(kExpectedArgsW));
+  for (size_t i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
     EXPECT_TRUE(
         NS_SUCCEEDED(receiver.CommandLineRunner()->GetArgument(i, arg)));
     EXPECT_STREQ(arg.get(), kExpectedArgsW[i]);
@@ -160,8 +160,8 @@ TEST(WinRemoteMessage, SendReceive)
 
   receiver.Parse(v2.CopyData());
   EXPECT_TRUE(NS_SUCCEEDED(receiver.CommandLineRunner()->GetLength(&len)));
-  EXPECT_EQ(len, ArrayLength(kExpectedArgsW));
-  for (int i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
+  EXPECT_EQ(static_cast<size_t>(len), ArrayLength(kExpectedArgsW));
+  for (size_t i = 0; i < ArrayLength(kExpectedArgsW); ++i) {
     EXPECT_TRUE(
         NS_SUCCEEDED(receiver.CommandLineRunner()->GetArgument(i, arg)));
     EXPECT_STREQ(arg.get(), kExpectedArgsW[i]);

@@ -22,15 +22,15 @@ class ModuleLoadCounter final {
   nsTHashMap<nsStringCaseInsensitiveHashKey, int> mCounters;
 
  public:
-  template <int N>
+  template <size_t N>
   ModuleLoadCounter(const nsString (&aNames)[N], const int (&aCounts)[N])
       : mCounters(N) {
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       mCounters.InsertOrUpdate(aNames[i], aCounts[i]);
     }
   }
 
-  template <int N>
+  template <size_t N>
   bool Remains(const nsString (&aNames)[N], const int (&aCounts)[N]) {
     EXPECT_EQ(mCounters.Count(), N);
     if (mCounters.Count() != N) {
@@ -38,7 +38,7 @@ class ModuleLoadCounter final {
     }
 
     bool result = true;
-    for (int i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       auto entry = mCounters.Lookup(aNames[i]);
       if (!entry) {
         wprintf(L"%s is not registered.\n", aNames[i].get());

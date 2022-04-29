@@ -245,7 +245,7 @@ HRESULT SetDefaultBrowserUserChoice(
                       {L"http", urlProgID.get()},
                       {L".html", htmlProgID.get()},
                       {L".htm", htmlProgID.get()}};
-  for (int i = 0; i < mozilla::ArrayLength(associations); ++i) {
+  for (size_t i = 0; i < mozilla::ArrayLength(associations); ++i) {
     if (!SetUserChoice(associations[i].ext, sid.get(),
                        associations[i].progID)) {
       ok = false;
