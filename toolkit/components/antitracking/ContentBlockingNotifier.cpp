@@ -115,15 +115,23 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
   MOZ_ASSERT(
       aRejectedReason == 0 ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) ||
+      aRejectedReason ==
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) ||
+      aRejectedReason ==
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN));
 
   if (aURI->SchemeIs("chrome") || aURI->SchemeIs("about")) {
     return;
@@ -409,15 +417,23 @@ void ContentBlockingNotifier::OnDecision(nsIChannel* aChannel,
   MOZ_ASSERT(
       aRejectedReason == 0 ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) ||
+      aRejectedReason ==
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) ||
+      aRejectedReason ==
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN));
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
              aDecision == BlockingDecision::eAllow);
 
@@ -440,15 +456,23 @@ void ContentBlockingNotifier::OnDecision(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(
       aRejectedReason == 0 ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
-      aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN) ||
+      aRejectedReason ==
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) ||
+      aRejectedReason ==
+          static_cast<uint32_t>(
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN));
   MOZ_ASSERT(aDecision == BlockingDecision::eBlock ||
              aDecision == BlockingDecision::eAllow);
 
