@@ -13,7 +13,6 @@ if (!build_with_chromium) {
     testonly = true
 
     deps = [
-      ":default_encoded_image_data_injector",
       ":encoded_image_data_injector_api",
       ":example_video_quality_analyzer",
       ":id_generator",
@@ -35,7 +34,6 @@ if (!build_with_chromium) {
       testonly = true
 
       deps = [
-        ":default_encoded_image_data_injector_unittest",
         ":default_video_quality_analyzer_test",
         ":multi_head_queue_test",
         ":peer_connection_e2e_smoke_test",
@@ -71,23 +69,6 @@ if (!build_with_chromium) {
     sources = [ "analyzer/video/encoded_image_data_injector.h" ]
 
     deps = [ "../../../api/video:encoded_image" ]
-  }
-
-  rtc_library("default_encoded_image_data_injector") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "analyzer/video/default_encoded_image_data_injector.cc",
-      "analyzer/video/default_encoded_image_data_injector.h",
-    ]
-
-    deps = [
-      ":encoded_image_data_injector_api",
-      "../../../api/video:encoded_image",
-      "../../../rtc_base:checks",
-      "../../../rtc_base:criticalsection",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
   }
 
   rtc_library("single_process_encoded_image_data_injector") {
@@ -421,18 +402,6 @@ if (!build_with_chromium) {
       ]
       deps = [
         ":single_process_encoded_image_data_injector",
-        "../../../api/video:encoded_image",
-        "../../../rtc_base:rtc_base_approved",
-        "../../../test:test_support",
-      ]
-    }
-
-    rtc_library("default_encoded_image_data_injector_unittest") {
-      testonly = true
-      sources =
-          [ "analyzer/video/default_encoded_image_data_injector_unittest.cc" ]
-      deps = [
-        ":default_encoded_image_data_injector",
         "../../../api/video:encoded_image",
         "../../../rtc_base:rtc_base_approved",
         "../../../test:test_support",

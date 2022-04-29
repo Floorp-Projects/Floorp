@@ -50,6 +50,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   // The method should be called before the participant is actually added.
   void RegisterParticipantInCall(absl::string_view peer_name) {
     analyzer_->RegisterParticipantInCall(peer_name);
+    extractor_->AddParticipantInCall();
   }
 
   // Wraps video encoder factory to give video quality analyzer access to frames

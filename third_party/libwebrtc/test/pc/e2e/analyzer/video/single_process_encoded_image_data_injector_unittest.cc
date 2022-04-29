@@ -37,7 +37,7 @@ EncodedImage CreateEncodedImageOfSizeNFilledWithValuesFromX(size_t n,
   return image;
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectExtractDiscardFalse) {
+TEST(SingleProcessEncodedImageDataInjectorTest, InjectExtractDiscardFalse) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(1);
 
@@ -55,7 +55,7 @@ TEST(SingleProcessEncodedImageDataInjector, InjectExtractDiscardFalse) {
   }
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectExtractDiscardTrue) {
+TEST(SingleProcessEncodedImageDataInjectorTest, InjectExtractDiscardTrue) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(1);
 
@@ -70,7 +70,8 @@ TEST(SingleProcessEncodedImageDataInjector, InjectExtractDiscardTrue) {
   EXPECT_EQ(out.image.SpatialLayerFrameSize(0).value_or(0), 0ul);
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectWithUnsetSpatialLayerSizes) {
+TEST(SingleProcessEncodedImageDataInjectorTest,
+     InjectWithUnsetSpatialLayerSizes) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(1);
 
@@ -93,7 +94,8 @@ TEST(SingleProcessEncodedImageDataInjector, InjectWithUnsetSpatialLayerSizes) {
   }
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectWithZeroSpatialLayerSizes) {
+TEST(SingleProcessEncodedImageDataInjectorTest,
+     InjectWithZeroSpatialLayerSizes) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(1);
 
@@ -119,7 +121,7 @@ TEST(SingleProcessEncodedImageDataInjector, InjectWithZeroSpatialLayerSizes) {
   }
 }
 
-TEST(SingleProcessEncodedImageDataInjector, Inject3Extract3) {
+TEST(SingleProcessEncodedImageDataInjectorTest, Inject3Extract3) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(1);
 
@@ -162,7 +164,7 @@ TEST(SingleProcessEncodedImageDataInjector, Inject3Extract3) {
   }
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectExtractFromConcatenated) {
+TEST(SingleProcessEncodedImageDataInjectorTest, InjectExtractFromConcatenated) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(1);
 
@@ -255,7 +257,7 @@ TEST(SingleProcessEncodedImageDataInjector,
   }
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectOnceExtractTwice) {
+TEST(SingleProcessEncodedImageDataInjectorTest, InjectOnceExtractTwice) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(2);
 
@@ -286,6 +288,52 @@ TEST(SingleProcessEncodedImageDataInjector, InjectOnceExtractTwice) {
   }
 }
 
+TEST(SingleProcessEncodedImageDataInjectorTest, Add1stReceiverAfterStart) {
+  SingleProcessEncodedImageDataInjector injector;
+  injector.Start(0);
+
+  EncodedImage source = CreateEncodedImageOfSizeNFilledWithValuesFromX(10, 1);
+  source.SetTimestamp(123456789);
+  EncodedImage modified_image = injector.InjectData(
+      /*id=*/512, /*discard=*/false, source, /*coding_entity_id=*/1);
+
+  injector.AddParticipantInCall();
+  EncodedImageExtractionResult out =
+      injector.ExtractData(modified_image, /*coding_entity_id=*/2);
+
+  EXPECT_EQ(out.id, 512);
+  EXPECT_FALSE(out.discard);
+  EXPECT_EQ(out.image.size(), 10ul);
+  EXPECT_EQ(out.image.SpatialLayerFrameSize(0).value_or(0), 0ul);
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(out.image.data()[i], i + 1);
+  }
+}
+
+TEST(SingleProcessEncodedImageDataInjectorTest, Add3rdReceiverAfterStart) {
+  SingleProcessEncodedImageDataInjector injector;
+  injector.Start(2);
+
+  EncodedImage source = CreateEncodedImageOfSizeNFilledWithValuesFromX(10, 1);
+  source.SetTimestamp(123456789);
+  EncodedImage modified_image = injector.InjectData(
+      /*id=*/512, /*discard=*/false, source, /*coding_entity_id=*/1);
+  injector.ExtractData(modified_image, /*coding_entity_id=*/2);
+
+  injector.AddParticipantInCall();
+  injector.ExtractData(modified_image, /*coding_entity_id=*/2);
+  EncodedImageExtractionResult out =
+      injector.ExtractData(modified_image, /*coding_entity_id=*/2);
+
+  EXPECT_EQ(out.id, 512);
+  EXPECT_FALSE(out.discard);
+  EXPECT_EQ(out.image.size(), 10ul);
+  EXPECT_EQ(out.image.SpatialLayerFrameSize(0).value_or(0), 0ul);
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(out.image.data()[i], i + 1);
+  }
+}
+
 // Death tests.
 // Disabled on Android because death tests misbehave on Android, see
 // base/test/gtest_util.h.
@@ -296,7 +344,8 @@ EncodedImage DeepCopyEncodedImage(const EncodedImage& source) {
   return copy;
 }
 
-TEST(SingleProcessEncodedImageDataInjector, InjectOnceExtractMoreThenExpected) {
+TEST(SingleProcessEncodedImageDataInjectorTest,
+     InjectOnceExtractMoreThenExpected) {
   SingleProcessEncodedImageDataInjector injector;
   injector.Start(2);
 

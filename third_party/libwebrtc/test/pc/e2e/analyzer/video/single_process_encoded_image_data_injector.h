@@ -55,6 +55,7 @@ class SingleProcessEncodedImageDataInjector : public EncodedImageDataInjector,
     MutexLock crit(&lock_);
     expected_receivers_count_ = expected_receivers_count;
   }
+  void AddParticipantInCall() override;
   EncodedImageExtractionResult ExtractData(const EncodedImage& source,
                                            int coding_entity_id) override;
 
