@@ -205,9 +205,9 @@ size_t  // (o) Estimated lag in end of in[]
 
     /* scaling */
     // Note that this is not abs-max, so we will take the absolute value below.
-    max16 = regressor[WebRtcSpl_MaxAbsIndexW16(regressor, plc_blockl + 3 - 1)];
+    max16 = WebRtcSpl_MaxAbsElementW16(regressor, plc_blockl + 3 - 1);
     const int16_t max_target =
-        target[WebRtcSpl_MaxAbsIndexW16(target, plc_blockl + 3 - 1)];
+        WebRtcSpl_MaxAbsElementW16(target, plc_blockl + 3 - 1);
     const int64_t max_val = plc_blockl * abs(max16 * max_target);
     const int32_t factor = max_val >> 31;
     shifts = factor == 0 ? 0 : 31 - WebRtcSpl_NormW32(factor);
