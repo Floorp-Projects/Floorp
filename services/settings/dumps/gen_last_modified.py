@@ -13,23 +13,21 @@ def get_last_modified(full_path_to_remote_settings_dump_file):
     """
     Get the last_modified for the given file name.
     - File must exist
-    - Must be a JSON dictionary with a data list, e.g. `{"data": []}`
+    - Must be a JSON dictionary with a data list and a timestamp,
+      e.g. `{"data": [], "timestamp": 42}`
     - Every element in `data` should contain a "last_modified" key.
     - The first element must have the highest "last_modified" value.
     """
     with open(full_path_to_remote_settings_dump_file, "r") as f:
-        records = json.load(f)["data"]
-        assert isinstance(records, list)
+        changeset = json.load(f)
 
-    # Various RemoteSettings client code default to 0 when the set of
-    # records is empty (-1 is reserved for failures / non-existing files).
-    last_modified = 0
-    if records:
-        # Records in dumps are sorted by last_modified, newest first:
-        # https://searchfox.org/mozilla-central/rev/5b3444ad300e244b5af4214212e22bd9e4b7088a/taskcluster/docker/periodic-updates/scripts/periodic_file_updates.sh#304 # NOQA: E501
-        last_modified = records[0]["last_modified"]
+    records = changeset["data"]
+    assert isinstance(records, list)
+    last_modified = changeset.get("timestamp")
+    assert isinstance(
+        last_modified, int
+    ), f"{full_path_to_remote_settings_dump_file} is missing the timestamp. See Bug 1725660"
 
-    assert isinstance(last_modified, int)
     return last_modified
 
 

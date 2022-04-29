@@ -108,7 +108,7 @@ add_task(async function test_shutdown_worker() {
   let records = [{}];
   let importPromise = RemoteSettingsWorker._execute(
     "_test_only_import",
-    ["main", "language-dictionaries", records],
+    ["main", "language-dictionaries", records, 0],
     { mustComplete: true }
   );
   let stringifyPromise = RemoteSettingsWorker.canonicalStringify(

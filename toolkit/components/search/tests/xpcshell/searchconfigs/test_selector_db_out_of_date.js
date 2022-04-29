@@ -35,6 +35,7 @@ add_task(async function test_selector_db_out_of_date() {
         last_modified: 1606227264000,
       },
     ],
+    1606227264000,
   ]);
 
   // Now load the configuration and check we get what we expect.
