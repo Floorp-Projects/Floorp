@@ -447,7 +447,7 @@ uint32_t gfxGDIFont::GetGlyph(uint32_t aUnicode, uint32_t aVarSelector) {
 
   wchar_t ch = aUnicode;
   WORD glyph;
-  DWORD ret = ScriptGetCMap(nullptr, &mScriptCache, &ch, 1, 0, &glyph);
+  HRESULT ret = ScriptGetCMap(nullptr, &mScriptCache, &ch, 1, 0, &glyph);
   if (ret != S_OK) {
     AutoDC dc;
     AutoSelectFont fs(dc.GetDC(), GetHFONT());
@@ -458,8 +458,8 @@ uint32_t gfxGDIFont::GetGlyph(uint32_t aUnicode, uint32_t aVarSelector) {
     if (ret != S_OK) {
       // If ScriptGetCMap still failed, fall back to GetGlyphIndicesW
       // (see bug 1105807).
-      ret = GetGlyphIndicesW(dc.GetDC(), &ch, 1, &glyph,
-                             GGI_MARK_NONEXISTING_GLYPHS);
+      DWORD ret = GetGlyphIndicesW(dc.GetDC(), &ch, 1, &glyph,
+                                   GGI_MARK_NONEXISTING_GLYPHS);
       if (ret == GDI_ERROR || glyph == 0xFFFF) {
         glyph = 0;
       }

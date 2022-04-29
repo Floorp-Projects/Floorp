@@ -49,7 +49,7 @@ TEST(TestUCRTDepends, AppDir)
   HANDLE hFind = FindFirstFileW(path, &wfd);
 #if defined(_M_ARM64)  // We do not ship Universal CRT DLLs on aarch64.
   if (hFind == INVALID_HANDLE_VALUE) {
-    EXPECT_EQ(GetLastError(), ERROR_FILE_NOT_FOUND);
+    EXPECT_EQ(GetLastError(), static_cast<DWORD>(ERROR_FILE_NOT_FOUND));
     return;
   }
 #else
@@ -89,7 +89,7 @@ TEST(TestUCRTDepends, AppDir)
     // Files must be loaded from appdir
     EXPECT_TRUE(!wcsicmp(path, appdir));
   } while (FindNextFileW(hFind, &wfd));
-  EXPECT_EQ(GetLastError(), ERROR_NO_MORE_FILES);
+  EXPECT_EQ(GetLastError(), static_cast<DWORD>(ERROR_NO_MORE_FILES));
   BOOL ret = FindClose(hFind);
   EXPECT_TRUE(ret);
 }
@@ -109,7 +109,7 @@ TEST(TestUCRTDepends, SystemDir)
   WIN32_FIND_DATAW wfd;
   HANDLE hFind = FindFirstFileW(path, &wfd);
   if (hFind == INVALID_HANDLE_VALUE) {
-    EXPECT_EQ(GetLastError(), ERROR_FILE_NOT_FOUND);
+    EXPECT_EQ(GetLastError(), static_cast<DWORD>(ERROR_FILE_NOT_FOUND));
     EXPECT_TRUE(IsWin8OrLater());
     return;  // Not found in the system directory, OK.
   }
@@ -136,7 +136,7 @@ TEST(TestUCRTDepends, SystemDir)
       EXPECT_TRUE(!wcsicmp(path, appdir));
     }
   } while (FindNextFileW(hFind, &wfd));
-  EXPECT_EQ(GetLastError(), ERROR_NO_MORE_FILES);
+  EXPECT_EQ(GetLastError(), static_cast<DWORD>(ERROR_NO_MORE_FILES));
   BOOL ret = FindClose(hFind);
   EXPECT_TRUE(ret);
 }
