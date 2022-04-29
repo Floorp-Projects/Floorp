@@ -6,6 +6,11 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
+
 const SUGGESTIONS = [
   {
     id: 1,
@@ -3089,14 +3094,7 @@ add_task(async function intervalsElapsedButCapNotHit() {
         },
         // 10s
         10: async () => {
-          // Impression counter resets are only triggered by `startQuery()` in
-          // the provider, so we need to do a search to trigger the events.
-          await checkSearch({
-            name: "reset trigger",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
-
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           let expectedEvents = [
             // 1s: reset with count = 0
             {
@@ -3161,11 +3159,7 @@ add_task(async function restart_1() {
       await doTimedCallbacks({
         // 10s: 6 batched resets for periods starting at 4s
         10: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3215,11 +3209,7 @@ add_task(async function restart_2() {
       await doTimedCallbacks({
         // 10s: 5 batched resets for periods starting at 5s
         10: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3269,11 +3259,7 @@ add_task(async function restart_3() {
       await doTimedCallbacks({
         // 10s: 5 batched resets for periods starting at 5s
         10: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3324,20 +3310,12 @@ add_task(async function restart_4() {
       await doTimedCallbacks({
         // 9s: no resets
         9: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([]);
         },
         // 10s: 1 reset for period starting at 0s
         10: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3356,20 +3334,12 @@ add_task(async function restart_4() {
         },
         // 19s: no resets
         19: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([]);
         },
         // 20s: 1 reset for period starting at 10s
         20: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3419,11 +3389,7 @@ add_task(async function restart_5() {
       await doTimedCallbacks({
         // 20s: 2 batches resets for periods starting at 0s
         20: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3474,20 +3440,12 @@ add_task(async function restart_6() {
       await doTimedCallbacks({
         // 19s: no resets
         19: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([]);
         },
         // 20s: 1 reset for period starting at 10s
         20: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3506,20 +3464,12 @@ add_task(async function restart_6() {
         },
         // 29s: no resets
         29: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([]);
         },
         // 30s: 1 reset for period starting at 20s
         30: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3569,11 +3519,7 @@ add_task(async function restart_7() {
       await doTimedCallbacks({
         // 30s: 2 batched resets for periods starting at 10s
         30: async () => {
-          await checkSearch({
-            name: "Search to trigger reset of elapsed impression counters",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           await checkTelemetryEvents([
             {
               object: "reset",
@@ -3593,6 +3539,128 @@ add_task(async function restart_7() {
       });
     },
   });
+  gStartupDateMsStub.returns(0);
+});
+
+// Tests reset telemetry recorded on shutdown.
+add_task(async function shutdown() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      let spy = gSandbox.spy(
+        UrlbarProviderQuickSuggest,
+        "_resetElapsedImpressionCounters"
+      );
+
+      // Make `Date.now()` return 10s. Since the cap's `interval_s` is 1s and
+      // before this `Date.now()` returned 0s, 10 reset events should be
+      // recorded on shutdown.
+      gDateNowStub.returns(10000);
+
+      // Simulate shutdown.
+      Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
+      AsyncShutdown.profileChangeTeardown._trigger();
+
+      Assert.ok(spy.calledOnce, "_resetElapsedImpressionCounters called once");
+      await checkTelemetryEvents([
+        {
+          object: "reset",
+          extra: {
+            eventDate: "10000",
+            intervalSeconds: "1",
+            maxCount: "1",
+            startDate: "0",
+            impressionDate: "0",
+            count: "0",
+            type: "sponsored",
+            eventCount: "10",
+          },
+        },
+      ]);
+
+      spy.restore();
+      gDateNowStub.returns(0);
+      Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
+    },
+  });
+});
+
+// Tests the reset interval in realtime.
+add_task(async function resetInterval() {
+  // Remove the test stubs so we can test in realtime.
+  gDateNowStub.restore();
+  gStartupDateMsStub.restore();
+
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 0.1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      let spy = gSandbox.spy(
+        UrlbarProviderQuickSuggest,
+        "_resetElapsedImpressionCounters"
+      );
+
+      // Restart the reset interval now with a 1s period. Since the cap's
+      // `interval_s` is 0.1s, at least 10 reset events should be recorded the
+      // first time the reset interval fires. The exact number depends on timing
+      // and the machine running the test: how many 0.1s intervals elapse
+      // between when the config is set to when the reset interval fires. For
+      // that reason, we allow some leeway when checking `eventCount` below to
+      // avoid intermittent failures.
+      UrlbarProviderQuickSuggest._setImpressionCountersResetInterval(1000);
+
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 1100));
+
+      // Restore the reset interval to its default.
+      UrlbarProviderQuickSuggest._setImpressionCountersResetInterval();
+
+      Assert.ok(spy.calledOnce, "_resetElapsedImpressionCounters called once");
+      await checkTelemetryEvents([
+        {
+          object: "reset",
+          extra: {
+            eventDate: /^[0-9]+$/,
+            intervalSeconds: "0.1",
+            maxCount: "1",
+            startDate: /^[0-9]+$/,
+            impressionDate: "0",
+            count: "0",
+            type: "sponsored",
+            // See comment above on allowing leeway for `eventCount`.
+            eventCount: str => {
+              info(`Checking 'eventCount': ${str}`);
+              let count = parseInt(str);
+              return 10 <= count && count < 20;
+            },
+          },
+        },
+      ]);
+
+      spy.restore();
+    },
+  });
+
+  // Recreate the test stubs.
+  gDateNowStub = gSandbox.stub(
+    Cu.getGlobalForObject(UrlbarProviderQuickSuggest).Date,
+    "now"
+  );
+  gStartupDateMsStub = gSandbox.stub(
+    UrlbarProviderQuickSuggest,
+    "_getStartupDateMs"
+  );
   gStartupDateMsStub.returns(0);
 });
 
@@ -3625,7 +3693,6 @@ async function doTest({ config, callback }) {
  *
  * @param {string} searchString
  * @param {object} expectedBySecond
-
  *   An object that maps from seconds to objects that describe the searches to
  *   perform, their expected results, and the expected telemetry. For a given
  *   entry `S -> E` in this object, searches are performed S seconds after this
