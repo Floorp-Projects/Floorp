@@ -15,17 +15,17 @@
 // eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
-    // We do not wish osfile_unix_front.jsm to be used directly as a main thread
+    // We do not wish osfile_unix_front.js to be used directly as a main thread
     // module yet.
 
     throw new Error(
-      "osfile_unix_front.jsm cannot be used from the main thread yet"
+      "osfile_unix_front.js cannot be used from the main thread yet"
     );
   }
   (function(exports) {
     "use strict";
 
-    // exports.OS.Unix is created by osfile_unix_back.jsm
+    // exports.OS.Unix is created by osfile_unix_back.js
     if (exports.OS && exports.OS.File) {
       return; // Avoid double-initialization
     }
