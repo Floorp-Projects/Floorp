@@ -1285,6 +1285,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
         let intervalMs = 1000 * stat.intervalSeconds;
         let elapsedIntervalCount = Math.floor(elapsedMs / intervalMs);
         if (elapsedIntervalCount) {
+          // At least one interval period elapsed for the stat, so reset it. We
+          // may also need to record a telemetry event for the reset.
           this.logger.info(
             `Resetting impression counter for interval ${stat.intervalSeconds}s`
           );
@@ -1292,30 +1294,44 @@ class ProviderQuickSuggest extends UrlbarProvider {
             JSON.stringify({ type, stat, elapsedMs, elapsedIntervalCount })
           );
 
-          // Record a telemetry event for each elapsed interval period.
-          let startDateMs = stat.startDateMs;
-          for (let i = 0; i < elapsedIntervalCount; i++) {
-            let endDateMs = startDateMs + intervalMs;
+          let newStartDateMs =
+            stat.startDateMs + elapsedIntervalCount * intervalMs;
+
+          // Compute the portion of `elapsedIntervalCount` that happened after
+          // startup. This will be the interval count we report in the telemetry
+          // event. By design we don't report intervals that elapsed while the
+          // app wasn't running. For example, if the user stopped using Firefox
+          // for a year, we don't want to report a year's worth of intervals.
+          //
+          // First, compute the count of intervals that elapsed before startup.
+          // This is the same arithmetic used above except here it's based on
+          // the startup date instead of `now`. Keep in mind that startup may be
+          // before the stat's start date. Then subtract that count from
+          // `elapsedIntervalCount` to get the portion after startup.
+          let startupDateMs = this._getStartupDateMs();
+          let elapsedIntervalCountBeforeStartup = Math.floor(
+            Math.max(0, startupDateMs - stat.startDateMs) / intervalMs
+          );
+          let elapsedIntervalCountAfterStartup =
+            elapsedIntervalCount - elapsedIntervalCountBeforeStartup;
+
+          if (elapsedIntervalCountAfterStartup) {
             this._recordImpressionCapEvent({
               eventType: "reset",
               suggestionType: type,
-              eventDateMs: endDateMs,
+              eventDateMs: newStartDateMs,
+              eventCount: elapsedIntervalCountAfterStartup,
               stat: {
                 ...stat,
-                startDateMs,
-                // There were `stat.count` impressions in the first elapsed
-                // period and zero in all subsequent periods because if that
-                // were not the case then we would have recorded telemetry for
-                // the subsequent impression(s).
-                count: i == 0 ? stat.count : 0,
+                startDateMs:
+                  stat.startDateMs +
+                  elapsedIntervalCountBeforeStartup * intervalMs,
               },
             });
-            startDateMs += intervalMs;
           }
 
           // Reset the stat.
-          let remainderMs = elapsedMs - elapsedIntervalCount * intervalMs;
-          stat.startDateMs = now - remainderMs;
+          stat.startDateMs = newStartDateMs;
           stat.count = 0;
         }
       }
@@ -1343,13 +1359,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
     eventType,
     suggestionType,
     stat,
+    eventCount = 1,
     eventDateMs = Date.now(),
   }) {
     // All `extra` object values must be strings.
     let extra = {
       type: suggestionType,
       eventDate: String(eventDateMs),
-      endDate: String(stat.startDateMs + 1000 * stat.intervalSeconds),
+      eventCount: String(eventCount),
     };
     for (let [statKey, value] of Object.entries(stat)) {
       let extraKey = TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS[statKey];
@@ -1365,6 +1382,18 @@ class ProviderQuickSuggest extends UrlbarProvider {
       "",
       extra
     );
+  }
+
+  /**
+   * Gets the timestamp of app startup in ms since Unix epoch. This is only
+   * defined as its own method so tests can override it to simulate arbitrary
+   * startups.
+   *
+   * @returns {number}
+   *   Startup timestamp in ms since Unix epoch.
+   */
+  _getStartupDateMs() {
+    return Services.startup.getStartupInfo().process.getTime();
   }
 
   /**
