@@ -236,6 +236,10 @@ class Accessible {
 
   virtual Maybe<float> Opacity() const = 0;
 
+  LayoutDeviceIntSize Size() const;
+
+  LayoutDeviceIntPoint Position(uint32_t aCoordType);
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;

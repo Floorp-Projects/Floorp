@@ -101,6 +101,10 @@ async function getProxySlots(objectFront) {
   return objectFront.getProxySlots();
 }
 
+async function getCustomFormatterBody(objectFront) {
+  return objectFront.customFormatterBody();
+}
+
 function iteratorSlice(iterator, start, end) {
   start = start || 0;
   const count = end ? end - start + 1 : iterator.count;
@@ -121,4 +125,5 @@ module.exports = {
   getFullText,
   getPromiseState,
   getProxySlots,
+  getCustomFormatterBody,
 };

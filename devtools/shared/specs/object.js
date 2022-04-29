@@ -89,6 +89,10 @@ types.addDictType("object.proxySlots", {
   proxyHandler: "object.descriptor",
 });
 
+types.addDictType("object.customFormatterBody", {
+  customFormatterBody: "json",
+});
+
 const objectSpec = generateActorSpec({
   typeName: "obj",
   methods: {
@@ -175,6 +179,10 @@ const objectSpec = generateActorSpec({
     proxySlots: {
       request: {},
       response: RetVal("object.proxySlots"),
+    },
+    customFormatterBody: {
+      request: {},
+      response: RetVal("object.customFormatterBody"),
     },
     addWatchpoint: {
       request: {

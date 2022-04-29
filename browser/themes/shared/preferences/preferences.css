@@ -331,6 +331,14 @@ checkbox {
   padding: 0.3em;
 }
 
+#saveWhere {
+  -moz-box-align: center;
+}
+
+#saveTo {
+  margin-inline-end: 1em;
+}
+
 #downloadFolder {
   -moz-box-flex: 1;
   margin-block: 4px;

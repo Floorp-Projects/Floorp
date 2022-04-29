@@ -33,10 +33,25 @@ class ObjectBase : public nsWrapperCache {
 
  protected:
   virtual ~ObjectBase() = default;
-  // Internal mutability model for WebGPU objects.
+
+  // False if this object is definitely invalid.
+  //
+  // See WebGPU §3.2, "Invalid Internal Objects & Contagious Invalidity".
+  //
+  // There could also be state in the GPU process indicating that our
+  // counterpart object there is invalid; certain GPU process operations will
+  // report an error back to use if we try to use it. But if it's useful to know
+  // whether the object is "definitely invalid", this should suffice.
   bool mValid = true;
 
  public:
+  // Return true if this WebGPU object may be valid.
+  //
+  // This is used by methods that want to know whether somebody other than
+  // `this` is valid. Generally, WebGPU object methods check `this->mValid`
+  // directly.
+  bool IsValid() const { return mValid; }
+
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
 };

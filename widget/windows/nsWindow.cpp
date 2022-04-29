@@ -1872,7 +1872,7 @@ BOOL CALLBACK nsWindow::RegisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
 
 void nsWindow::LockAspectRatio(bool aShouldLock) {
   if (aShouldLock) {
-    mAspectRatio = (float)mBounds.Height() / (float)mBounds.Width();
+    mAspectRatio = (float)mBounds.Width() / (float)mBounds.Height();
   } else {
     mAspectRatio = 0.0;
   }
@@ -5835,23 +5835,23 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         if (wParam == WMSZ_LEFT || wParam == WMSZ_RIGHT ||
             wParam == WMSZ_TOPLEFT || wParam == WMSZ_BOTTOMLEFT) {
           newWidth = rect->right - rect->left;
-          newHeight = newWidth * mAspectRatio;
+          newHeight = newWidth / mAspectRatio;
           if (newHeight < mSizeConstraints.mMinSize.height) {
             newHeight = mSizeConstraints.mMinSize.height;
-            newWidth = newHeight / mAspectRatio;
+            newWidth = newHeight * mAspectRatio;
           } else if (newHeight > mSizeConstraints.mMaxSize.height) {
             newHeight = mSizeConstraints.mMaxSize.height;
-            newWidth = newHeight / mAspectRatio;
+            newWidth = newHeight * mAspectRatio;
           }
         } else {
           newHeight = rect->bottom - rect->top;
-          newWidth = newHeight / mAspectRatio;
+          newWidth = newHeight * mAspectRatio;
           if (newWidth < mSizeConstraints.mMinSize.width) {
             newWidth = mSizeConstraints.mMinSize.width;
-            newHeight = newWidth * mAspectRatio;
+            newHeight = newWidth / mAspectRatio;
           } else if (newWidth > mSizeConstraints.mMaxSize.width) {
             newWidth = mSizeConstraints.mMaxSize.width;
-            newHeight = newWidth * mAspectRatio;
+            newHeight = newWidth / mAspectRatio;
           }
         }
 
@@ -6857,7 +6857,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
       // has changed such that it violates the aspect ratio constraint. If so,
       // queue up an event to enforce the aspect ratio constraint and repaint.
       // When resized with Windows Aero Snap, we are in the NOT_RESIZING state.
-      float newAspectRatio = (float)newHeight / newWidth;
+      float newAspectRatio = (float)newWidth / newHeight;
       if (mResizeState == NOT_RESIZING && mAspectRatio != newAspectRatio) {
         // Hold a reference to self alive and pass it into the lambda to make
         // sure this nsIWidget stays alive long enough to run this function.
@@ -6865,7 +6865,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
         NS_DispatchToMainThread(NS_NewRunnableFunction(
             "EnforceAspectRatio", [self, this, newWidth]() -> void {
               if (mWnd) {
-                Resize(newWidth, newWidth * mAspectRatio, true);
+                Resize(newWidth, newWidth / mAspectRatio, true);
               }
             }));
       }

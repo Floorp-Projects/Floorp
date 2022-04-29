@@ -650,6 +650,9 @@ RawId WebGPUChild::DeviceCreatePipelineLayout(
   nsTArray<ffi::WGPUBindGroupLayoutId> bindGroupLayouts(
       aDesc.mBindGroupLayouts.Length());
   for (const auto& layout : aDesc.mBindGroupLayouts) {
+    if (!layout->IsValid()) {
+      return 0;
+    }
     bindGroupLayouts.AppendElement(layout->mId);
   }
 
@@ -673,6 +676,10 @@ RawId WebGPUChild::DeviceCreatePipelineLayout(
 
 RawId WebGPUChild::DeviceCreateBindGroup(
     RawId aSelfId, const dom::GPUBindGroupDescriptor& aDesc) {
+  if (!aDesc.mLayout->IsValid()) {
+    return 0;
+  }
+
   nsTArray<ffi::WGPUBindGroupEntry> entries(aDesc.mEntries.Length());
   for (const auto& entry : aDesc.mEntries) {
     ffi::WGPUBindGroupEntry e = {};

@@ -187,7 +187,7 @@ module.exports = {
     "no-useless-constructor": 2,
     "no-useless-rename": 2,
     "no-var": 2,
-    "no-void": 2,
+    "no-void": [2, { allowAsStatement: true }],
     "no-warning-comments": 0, // TODO: Change to `1`?
     "one-var": [2, "never"],
     "operator-assignment": [2, "always"],

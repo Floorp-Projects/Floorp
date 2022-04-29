@@ -11,6 +11,7 @@
 #include "base/message_loop.h"
 #include "base/histogram.h"
 #include "base/win_util.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerThreadSleep.h"
 #include "WinUtils.h"
@@ -485,7 +486,12 @@ bool MessagePumpForIO::GetIOItem(DWORD timeout, IOItem* item) {
   BOOL success;
   {
     AUTO_PROFILER_LABEL("MessagePumpForIO::GetIOItem::Wait", IDLE);
-    AUTO_PROFILER_THREAD_SLEEP;
+#ifdef MOZ_GECKO_PROFILER
+    mozilla::Maybe<mozilla::AutoProfilerThreadSleep> profilerThreadSleep;
+    if (timeout != 0) {
+      profilerThreadSleep.emplace();
+    }
+#endif
     success = GetQueuedCompletionStatus(port_.Get(), &item->bytes_transfered,
                                         &key, &overlapped, timeout);
   }

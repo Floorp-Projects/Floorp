@@ -3613,8 +3613,11 @@ JS_PUBLIC_API bool JS_ReadString(JSStructuredCloneReader* r,
   }
 
   if (tag == SCTAG_STRING) {
-    str.set(r->readString(data));
-    return true;
+    if (JSString* s = r->readString(data)) {
+      str.set(s);
+      return true;
+    }
+    return false;
   }
 
   JS_ReportErrorNumberASCII(r->context(), GetErrorMessage, nullptr,
