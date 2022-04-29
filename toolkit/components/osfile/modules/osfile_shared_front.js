@@ -13,9 +13,7 @@
 /* global OS */
 
 if (typeof Components != "undefined") {
-  throw new Error(
-    "osfile_shared_front.jsm cannot be used from the main thread"
-  );
+  throw new Error("osfile_shared_front.js cannot be used from the main thread");
 }
 (function(exports) {
   var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");

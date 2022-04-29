@@ -8,13 +8,13 @@
 // eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
-    // We do not wish osfile_unix_back.jsm to be used directly as a main thread
+    // We do not wish osfile_unix_back.js to be used directly as a main thread
     // module yet. When time comes, it will be loaded by a combination of
     // a main thread front-end/worker thread implementation that makes sure
     // that we are not executing synchronous IO code in the main thread.
 
     throw new Error(
-      "osfile_unix_back.jsm cannot be used from the main thread yet"
+      "osfile_unix_back.js cannot be used from the main thread yet"
     );
   }
   (function(exports) {
