@@ -261,46 +261,33 @@ TEST(CopyOnWriteBufferTest, ClearDoesntChangeCapacity) {
   EXPECT_EQ(10u, buf2.capacity());
 }
 
-TEST(CopyOnWriteBufferTest, TestConstDataAccessor) {
+TEST(CopyOnWriteBufferTest, DataAccessorDoesntCloneData) {
   CopyOnWriteBuffer buf1(kTestData, 3, 10);
   CopyOnWriteBuffer buf2(buf1);
 
-  // .cdata() doesn't clone data.
-  const uint8_t* cdata1 = buf1.cdata();
-  const uint8_t* cdata2 = buf2.cdata();
-  EXPECT_EQ(cdata1, cdata2);
-
-  // Non-const .data() clones data if shared.
-  const uint8_t* data1 = buf1.data();
-  const uint8_t* data2 = buf2.data();
-  EXPECT_NE(data1, data2);
-  // buf1 was cloned above.
-  EXPECT_NE(data1, cdata1);
-  // Therefore buf2 was no longer sharing data and was not cloned.
-  EXPECT_EQ(data2, cdata1);
+  EXPECT_EQ(buf1.data(), buf2.data());
 }
 
-// TODO(bugs.webrtc.org/12334): Delete when all reads become const
+TEST(CopyOnWriteBufferTest, MutableDataClonesDataWhenShared) {
+  CopyOnWriteBuffer buf1(kTestData, 3, 10);
+  CopyOnWriteBuffer buf2(buf1);
+  const uint8_t* cdata = buf1.data();
+
+  uint8_t* data1 = buf1.MutableData();
+  uint8_t* data2 = buf2.MutableData();
+  // buf1 was cloned above.
+  EXPECT_NE(data1, cdata);
+  // Therefore buf2 was no longer sharing data and was not cloned.
+  EXPECT_EQ(data2, cdata);
+}
+
 TEST(CopyOnWriteBufferTest, SeveralReads) {
   CopyOnWriteBuffer buf1(kTestData, 3, 10);
   CopyOnWriteBuffer buf2(buf1);
 
   EnsureBuffersShareData(buf1, buf2);
-  // Non-const reads clone the data if shared.
   for (size_t i = 0; i != 3u; ++i) {
     EXPECT_EQ(buf1[i], kTestData[i]);
-  }
-  EnsureBuffersDontShareData(buf1, buf2);
-}
-
-TEST(CopyOnWriteBufferTest, SeveralConstReads) {
-  CopyOnWriteBuffer buf1(kTestData, 3, 10);
-  CopyOnWriteBuffer buf2(buf1);
-
-  EnsureBuffersShareData(buf1, buf2);
-  const CopyOnWriteBuffer& cbuf1 = buf1;
-  for (size_t i = 0; i != 3u; ++i) {
-    EXPECT_EQ(cbuf1[i], kTestData[i]);
   }
   EnsureBuffersShareData(buf1, buf2);
 }
