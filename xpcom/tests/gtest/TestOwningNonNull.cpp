@@ -14,9 +14,6 @@ struct OwnedRefCounted : public RefCounted<OwnedRefCounted> {
   MOZ_DECLARE_REFCOUNTED_TYPENAME(OwnedRefCounted)
 
   OwnedRefCounted() = default;
-
- private:
-  ~OwnedRefCounted() = default;
 };
 
 TEST(OwningNonNull, Move)
