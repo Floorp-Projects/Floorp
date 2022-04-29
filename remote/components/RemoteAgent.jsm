@@ -38,10 +38,7 @@ const DEFAULT_PORT = 9222;
 // By default force local connections only
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
-const isRemote =
-  Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT;
-
-class RemoteAgentParentProcess {
+class RemoteAgentClass {
   #allowHosts;
   #allowOrigins;
   #classID;
@@ -65,8 +62,6 @@ class RemoteAgentParentProcess {
     // Supported protocols
     this.#cdp = null;
     this.#webDriverBiDi = null;
-
-    Services.ppmm.addMessageListener("RemoteAgent:IsRunning", this);
   }
 
   get allowHosts() {
@@ -135,7 +130,7 @@ class RemoteAgentParentProcess {
     return this.server?._host;
   }
 
-  get running() {
+  get listening() {
     return !!this.server && !this.server.isStopped();
   }
 
@@ -193,7 +188,7 @@ class RemoteAgentParentProcess {
       );
     }
 
-    if (this.running) {
+    if (this.listening) {
       return;
     }
 
@@ -228,7 +223,7 @@ class RemoteAgentParentProcess {
   }
 
   async #stop() {
-    if (!this.running) {
+    if (!this.listening) {
       return;
     }
 
@@ -375,17 +370,6 @@ class RemoteAgentParentProcess {
     }
   }
 
-  receiveMessage({ name }) {
-    switch (name) {
-      case "RemoteAgent:IsRunning":
-        return this.running;
-
-      default:
-        logger.warn("Unknown IPC message to parent process: " + name);
-        return null;
-    }
-  }
-
   // XPCOM
 
   get classID() {
@@ -409,33 +393,7 @@ class RemoteAgentParentProcess {
   }
 }
 
-class RemoteAgentContentProcess {
-  #classID;
-
-  constructor() {
-    this.#classID = Components.ID("{8f685a9d-8181-46d6-a71d-869289099c6d}");
-  }
-
-  get running() {
-    let reply = Services.cpmm.sendSyncMessage("RemoteAgent:IsRunning");
-    if (reply.length == 0) {
-      logger.warn("No reply from parent process");
-      return false;
-    }
-    return reply[0];
-  }
-
-  get QueryInterface() {
-    return ChromeUtils.generateQI(["nsIRemoteAgent"]);
-  }
-}
-
-var RemoteAgent;
-if (isRemote) {
-  RemoteAgent = new RemoteAgentContentProcess();
-} else {
-  RemoteAgent = new RemoteAgentParentProcess();
-}
+var RemoteAgent = new RemoteAgentClass();
 
 // This is used by the XPCOM codepath which expects a constructor
 var RemoteAgentFactory = function() {
