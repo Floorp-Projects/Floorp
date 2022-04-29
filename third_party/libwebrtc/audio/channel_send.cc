@@ -268,6 +268,8 @@ class ChannelSend : public ChannelSendInterface,
   // Defined last to ensure that there are no running tasks when the other
   // members are destroyed.
   rtc::TaskQueue encoder_queue_;
+
+  const bool fixing_timestamp_stall_;
 };
 
 const int kTelephoneEventAttenuationdB = 10;
@@ -499,7 +501,9 @@ ChannelSend::ChannelSend(
       crypto_options_(crypto_options),
       encoder_queue_(task_queue_factory->CreateTaskQueue(
           "AudioEncoder",
-          TaskQueueFactory::Priority::NORMAL)) {
+          TaskQueueFactory::Priority::NORMAL)),
+      fixing_timestamp_stall_(
+          !field_trial::IsDisabled("WebRTC-Audio-FixTimestampStall")) {
   RTC_DCHECK(module_process_thread);
   module_process_thread_checker_.Detach();
 
@@ -839,6 +843,10 @@ void ChannelSend::ProcessAndEncodeAudio(
       [this, audio_frame = std::move(audio_frame)]() mutable {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
         if (!encoder_queue_is_active_) {
+          if (fixing_timestamp_stall_) {
+            _timeStamp +=
+                static_cast<uint32_t>(audio_frame->samples_per_channel_);
+          }
           return;
         }
         // Measure time between when the audio frame is added to the task queue
