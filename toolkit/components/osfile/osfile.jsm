@@ -26,15 +26,15 @@ if (typeof Components != "undefined") {
   // what looks like a nested event loop bug (see bug 794091).
   if (SharedAll.Constants.Win) {
     importScripts(
-      "resource://gre/modules/osfile/osfile_win_back.jsm",
-      "resource://gre/modules/osfile/osfile_shared_front.jsm",
-      "resource://gre/modules/osfile/osfile_win_front.jsm"
+      "resource://gre/modules/osfile/osfile_win_back.js",
+      "resource://gre/modules/osfile/osfile_shared_front.js",
+      "resource://gre/modules/osfile/osfile_win_front.js"
     );
   } else {
     importScripts(
-      "resource://gre/modules/osfile/osfile_unix_back.jsm",
-      "resource://gre/modules/osfile/osfile_shared_front.jsm",
-      "resource://gre/modules/osfile/osfile_unix_front.jsm"
+      "resource://gre/modules/osfile/osfile_unix_back.js",
+      "resource://gre/modules/osfile/osfile_shared_front.js",
+      "resource://gre/modules/osfile/osfile_unix_front.js"
     );
   }
 

@@ -15,17 +15,17 @@
 // eslint-disable-next-line no-lone-blocks
 {
   if (typeof Components != "undefined") {
-    // We do not wish osfile_win_front.jsm to be used directly as a main thread
+    // We do not wish osfile_win_front.js to be used directly as a main thread
     // module yet.
     throw new Error(
-      "osfile_win_front.jsm cannot be used from the main thread yet"
+      "osfile_win_front.js cannot be used from the main thread yet"
     );
   }
 
   (function(exports) {
     "use strict";
 
-    // exports.OS.Win is created by osfile_win_back.jsm
+    // exports.OS.Win is created by osfile_win_back.js
     if (exports.OS && exports.OS.File) {
       return; // Avoid double-initialization
     }
