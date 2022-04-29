@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.history
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -17,7 +17,7 @@ class HistoryFragmentStoreTest {
     private val pendingDeletionItem = historyItem.toPendingDeletionHistory()
 
     @Test
-    fun exitEditMode() = runBlocking {
+    fun exitEditMode() = runTest {
         val initialState = oneItemEditState()
         val store = HistoryFragmentStore(initialState)
 
@@ -27,7 +27,7 @@ class HistoryFragmentStoreTest {
     }
 
     @Test
-    fun itemAddedForRemoval() = runBlocking {
+    fun itemAddedForRemoval() = runTest {
         val initialState = emptyDefaultState()
         val store = HistoryFragmentStore(initialState)
 
@@ -40,7 +40,7 @@ class HistoryFragmentStoreTest {
     }
 
     @Test
-    fun removeItemForRemoval() = runBlocking {
+    fun removeItemForRemoval() = runTest {
         val initialState = twoItemEditState()
         val store = HistoryFragmentStore(initialState)
 
@@ -50,7 +50,7 @@ class HistoryFragmentStoreTest {
     }
 
     @Test
-    fun startSync() = runBlocking {
+    fun startSync() = runTest {
         val initialState = emptyDefaultState()
         val store = HistoryFragmentStore(initialState)
 
@@ -60,7 +60,7 @@ class HistoryFragmentStoreTest {
     }
 
     @Test
-    fun finishSync() = runBlocking {
+    fun finishSync() = runTest {
         val initialState = HistoryFragmentState(
             items = listOf(),
             mode = HistoryFragmentState.Mode.Syncing,
@@ -76,7 +76,7 @@ class HistoryFragmentStoreTest {
     }
 
     @Test
-    fun changeEmptyState() = runBlocking {
+    fun changeEmptyState() = runTest {
         val initialState = emptyDefaultState()
         val store = HistoryFragmentStore(initialState)
 
@@ -90,7 +90,7 @@ class HistoryFragmentStoreTest {
     }
 
     @Test
-    fun updatePendingDeletionItems() = runBlocking {
+    fun updatePendingDeletionItems() = runTest {
         val initialState = emptyDefaultState()
         val store = HistoryFragmentStore(initialState)
 

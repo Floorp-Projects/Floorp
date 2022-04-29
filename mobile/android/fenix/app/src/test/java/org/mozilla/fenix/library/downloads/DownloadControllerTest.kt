@@ -7,9 +7,7 @@ package org.mozilla.fenix.library.downloads
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.state.content.DownloadState
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -27,7 +25,6 @@ class DownloadControllerTest {
         contentType = "jpg",
         status = DownloadState.Status.COMPLETED
     )
-    private val scope = TestCoroutineScope()
     private val store: DownloadFragmentStore = mockk(relaxed = true)
     private val state: DownloadFragmentState = mockk(relaxed = true)
 
@@ -54,11 +51,6 @@ class DownloadControllerTest {
     @Before
     fun setUp() {
         every { store.state } returns state
-    }
-
-    @After
-    fun cleanUp() {
-        scope.cleanupTestCoroutines()
     }
 
     @Test

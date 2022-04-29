@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -84,7 +84,7 @@ class QuickSettingsFragmentReducerTest {
     }
 
     @Test
-    fun `TrackingProtectionAction - ToggleTrackingProtectionEnabled`() = runBlocking {
+    fun `TrackingProtectionAction - ToggleTrackingProtectionEnabled`() = runTest {
         val state = QuickSettingsFragmentState(
             webInfoState = WebsiteInfoState("", "", WebsiteSecurityUiValues.SECURE, ""),
             websitePermissionsState = emptyMap(),

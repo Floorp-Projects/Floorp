@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.downloads
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.content.DownloadState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
@@ -31,7 +31,7 @@ class DownloadFragmentStoreTest {
     )
 
     @Test
-    fun exitEditMode() = runBlocking {
+    fun exitEditMode() = runTest {
         val initialState = oneItemEditState()
         val store = DownloadFragmentStore(initialState)
 
@@ -41,7 +41,7 @@ class DownloadFragmentStoreTest {
     }
 
     @Test
-    fun itemAddedForRemoval() = runBlocking {
+    fun itemAddedForRemoval() = runTest {
         val initialState = emptyDefaultState()
         val store = DownloadFragmentStore(initialState)
 
@@ -54,7 +54,7 @@ class DownloadFragmentStoreTest {
     }
 
     @Test
-    fun removeItemForRemoval() = runBlocking {
+    fun removeItemForRemoval() = runTest {
         val initialState = twoItemEditState()
         val store = DownloadFragmentStore(initialState)
 

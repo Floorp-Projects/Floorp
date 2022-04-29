@@ -15,7 +15,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -68,7 +68,7 @@ class MetricsUtilsTest {
     }
 
     @Test
-    fun `getHashedIdentifier() returns a hashed identifier`() {
+    fun `getHashedIdentifier() returns a hashed identifier`() = runTest {
         val testId = "test-value-id"
         val testPackageName = "org.mozilla-test.fenix"
         val mockedHexReturn = "mocked-HEX"
@@ -87,9 +87,7 @@ class MetricsUtilsTest {
         mockkObject(MetricsUtils)
         every { MetricsUtils.getAdvertisingID(context) } returns testId
         every { MetricsUtils.getHashingSalt() } returns testPackageName
-        runBlocking {
-            assertEquals(mockedHexReturn, MetricsUtils.getHashedIdentifier(context))
-        }
+        assertEquals(mockedHexReturn, MetricsUtils.getHashedIdentifier(context))
 
         // Check that the digest of the identifier matches with what we expect.
         // Please note that in the real world, Base64.encodeToString would encode

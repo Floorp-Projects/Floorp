@@ -11,14 +11,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.downloads.DownloadsUseCases.RemoveAllDownloadsUseCase
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -27,12 +27,12 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.TABS
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.CACHE
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.COOKIES
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.DOWNLOADS
-import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.PERMISSIONS
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.HISTORY
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.PERMISSIONS
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType.TABS
 import org.mozilla.fenix.utils.Settings
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -64,20 +64,15 @@ class DeleteAndQuitTest {
         every { activity.components.core.icons } returns iconsStorage
     }
 
-    @After
-    fun cleanUp() {
-        coroutinesTestRule.testDispatcher.cleanupTestCoroutines()
-    }
-
     @Ignore("Failing test; need more investigation.")
     @Test
-    fun `delete only tabs and quit`() = runBlockingTest {
+    fun `delete only tabs and quit`() = runTestOnMain {
         // When
         every { settings.getDeleteDataOnQuit(TABS) } returns true
 
         deleteAndQuit(activity, this, snackbar)
 
-        coroutinesTestRule.testDispatcher.advanceUntilIdle()
+        advanceUntilIdle()
 
         verifyOrder {
             snackbar.show()
@@ -105,7 +100,7 @@ class DeleteAndQuitTest {
 
     @Ignore("Failing test; need more investigation.")
     @Test
-    fun `delete everything and quit`() = runBlockingTest {
+    fun `delete everything and quit`() = runTestOnMain {
         // When
         every { settings.getDeleteDataOnQuit(TABS) } returns true
         every { settings.getDeleteDataOnQuit(HISTORY) } returns true
@@ -116,7 +111,7 @@ class DeleteAndQuitTest {
 
         deleteAndQuit(activity, this, snackbar)
 
-        coroutinesTestRule.testDispatcher.advanceUntilIdle()
+        advanceUntilIdle()
 
         coVerify(exactly = 1) {
             snackbar.show()

@@ -12,12 +12,12 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -95,7 +95,7 @@ class DefaultRecentBookmarksControllerTest {
     }
 
     @Test
-    fun `WHEN show all recently saved bookmark is clicked THEN the bookmarks root is opened`() = runBlockingTest {
+    fun `WHEN show all recently saved bookmark is clicked THEN the bookmarks root is opened`() = runTestOnMain {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
         }

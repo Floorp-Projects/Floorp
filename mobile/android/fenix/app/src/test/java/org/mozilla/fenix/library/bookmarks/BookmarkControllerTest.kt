@@ -22,16 +22,17 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.tabs.TabsUseCases
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -44,9 +45,12 @@ import org.mozilla.fenix.ext.components
 @Suppress("TooManyFunctions", "LargeClass")
 class BookmarkControllerTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     private val bookmarkStore = spyk(BookmarkFragmentStore(BookmarkFragmentState(null)))
     private val context: Context = mockk(relaxed = true)
-    private val scope = TestCoroutineScope()
     private val clipboardManager: ClipboardManager = mockk(relaxUnitFun = true)
     private val navController: NavController = mockk(relaxed = true)
     private val sharedViewModel: BookmarksSharedViewModel = mockk()
@@ -97,11 +101,6 @@ class BookmarkControllerTest {
         every { bookmarkStore.dispatch(any()) } returns mockk()
         every { sharedViewModel.selectedFolder = any() } just runs
         every { tabsUseCases.addTab } returns addNewTabUseCase
-    }
-
-    @After
-    fun cleanUp() {
-        scope.cleanupTestCoroutines()
     }
 
     @Test
@@ -182,7 +181,7 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBookmarkExpand should refresh and change the active bookmark node`() {
+    fun `handleBookmarkExpand should refresh and change the active bookmark node`() = runTestOnMain {
         var loadBookmarkNodeInvoked = false
         createController(
             loadBookmarkNode = {
@@ -381,7 +380,7 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleRequestSync dispatches actions in the correct order`() {
+    fun `handleRequestSync dispatches actions in the correct order`() = runTestOnMain {
         every { homeActivity.components.backgroundServices.accountManager } returns mockk(relaxed = true)
         coEvery { homeActivity.bookmarkStorage.getBookmark(any()) } returns tree
 
@@ -394,7 +393,7 @@ class BookmarkControllerTest {
     }
 
     @Test
-    fun `handleBackPressed with one item in backstack should trigger handleBackPressed in NavController`() {
+    fun `handleBackPressed with one item in backstack should trigger handleBackPressed in NavController`() = runTestOnMain {
         every { bookmarkStore.state.guidBackstack } returns listOf(tree.guid)
         every { bookmarkStore.state.tree } returns tree
 

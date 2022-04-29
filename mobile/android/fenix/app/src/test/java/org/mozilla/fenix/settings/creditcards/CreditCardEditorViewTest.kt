@@ -10,7 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
@@ -103,7 +103,7 @@ class CreditCardEditorViewTest {
     }
 
     @Test
-    fun `GIVEN a credit card THEN credit card form inputs are displaying the provided credit card information`() = runBlocking {
+    fun `GIVEN a credit card THEN credit card form inputs are displaying the provided credit card information`() = runTest {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
         assertEquals(cardNumber, fragmentCreditCardEditorBinding.cardNumberInput.text.toString())
@@ -124,7 +124,7 @@ class CreditCardEditorViewTest {
     }
 
     @Test
-    fun `GIVEN a credit card WHEN the delete card button is clicked THEN interactor is called`() = runBlocking {
+    fun `GIVEN a credit card WHEN the delete card button is clicked THEN interactor is called`() = runTest {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
         assertEquals(View.VISIBLE, fragmentCreditCardEditorBinding.deleteButton.visibility)
@@ -324,7 +324,7 @@ class CreditCardEditorViewTest {
     }
 
     @Test
-    fun `GIVEN a valid credit card WHEN the save button is clicked THEN interactor is called`() = runBlocking {
+    fun `GIVEN a valid credit card WHEN the save button is clicked THEN interactor is called`() = runTest {
         creditCardEditorView.bind(creditCard.toCreditCardEditorState(storage))
 
         fragmentCreditCardEditorBinding.saveButton.performClick()

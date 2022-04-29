@@ -11,8 +11,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
@@ -22,7 +20,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -51,8 +49,7 @@ class HistoryMetadataGroupControllerTest {
     val gleanTestRule = GleanTestRule(testContext)
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
-    private val scope = TestCoroutineScope(testDispatcher)
+    private val scope = coroutinesTestRule.scope
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
@@ -112,11 +109,6 @@ class HistoryMetadataGroupControllerTest {
         every { context.components.core.store } returns browserStore
         every { context.components.core.historyStorage } returns historyStorage
         every { store.state.items } returns getMetadataItemsList()
-    }
-
-    @After
-    fun cleanUp() {
-        scope.cleanupTestCoroutines()
     }
 
     @Test
@@ -195,7 +187,7 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    fun handleDeleteSingle() = testDispatcher.runBlockingTest {
+    fun handleDeleteSingle() = runTestOnMain {
         assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
 
         controller.handleDelete(setOf(mozillaHistoryMetadataItem))
@@ -223,7 +215,7 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    fun handleDeleteMultiple() = testDispatcher.runBlockingTest {
+    fun handleDeleteMultiple() = runTestOnMain {
         assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
         controller.handleDelete(getMetadataItemsList().toSet())
 
@@ -248,7 +240,7 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    fun handleDeleteAbnormal() = testDispatcher.runBlockingTest {
+    fun handleDeleteAbnormal() = runTestOnMain {
         val abnormalList = listOf(
             mozillaHistoryMetadataItem,
             firefoxHistoryMetadataItem,
@@ -292,7 +284,7 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
-    fun handleDeleteAll() = testDispatcher.runBlockingTest {
+    fun handleDeleteAll() = runTestOnMain {
         assertFalse(GleanHistory.searchTermGroupRemoveAll.testHasValue())
 
         controller.handleDeleteAll()

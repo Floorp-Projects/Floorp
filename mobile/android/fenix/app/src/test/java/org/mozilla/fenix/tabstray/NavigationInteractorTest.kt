@@ -14,7 +14,6 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.BrowserState
@@ -26,6 +25,7 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -203,7 +203,7 @@ class NavigationInteractorTest {
     }
 
     @Test
-    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runBlockingTest {
+    fun `onBookmarkTabs calls navigation on DefaultNavigationInteractor`() = runTestOnMain {
         var showBookmarkSnackbarInvoked = false
         createInteractor(
             showBookmarkSnackbar = {

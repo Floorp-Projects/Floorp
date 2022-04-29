@@ -6,7 +6,7 @@ package org.mozilla.fenix.search
 
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.search.SearchEngine
 import org.junit.Before
 import org.junit.Test
@@ -35,7 +35,7 @@ class SearchDialogInteractorTest {
     }
 
     @Test
-    fun onEditingCanceled() = runBlockingTest {
+    fun onEditingCanceled() = runTest {
         interactor.onEditingCanceled()
 
         verify {

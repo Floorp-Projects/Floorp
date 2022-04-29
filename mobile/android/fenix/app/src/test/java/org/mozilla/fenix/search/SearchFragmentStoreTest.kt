@@ -8,7 +8,7 @@ import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.search.RegionState
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.BrowserState
@@ -141,7 +141,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun updateQuery() = runBlocking {
+    fun updateQuery() = runTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
         val query = "test query"
@@ -152,7 +152,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun selectSearchShortcutEngine() = runBlocking {
+    fun selectSearchShortcutEngine() = runTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
 
@@ -163,7 +163,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun showSearchShortcutEnginePicker() = runBlocking {
+    fun showSearchShortcutEnginePicker() = runTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
 
@@ -173,7 +173,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun showSearchSuggestions() = runBlocking {
+    fun showSearchSuggestions() = runTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
 
@@ -186,7 +186,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun allowSearchInPrivateMode() = runBlocking {
+    fun allowSearchInPrivateMode() = runTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
 
@@ -213,7 +213,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun `Updating SearchFragmentState from SearchState`() = runBlocking {
+    fun `Updating SearchFragmentState from SearchState`() = runTest {
         val store = SearchFragmentStore(
             emptyDefaultState(
                 searchEngineSource = SearchEngineSource.None,
@@ -270,7 +270,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() = runBlocking {
+    fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() = runTest {
         val store = SearchFragmentStore(
             emptyDefaultState(
                 searchEngineSource = SearchEngineSource.None,

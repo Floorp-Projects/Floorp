@@ -15,8 +15,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
@@ -28,7 +27,8 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -57,7 +57,6 @@ class DefaultQuickSettingsControllerTest {
 
     @MockK
     private lateinit var store: QuickSettingsFragmentStore
-    private val coroutinesScope = TestCoroutineScope()
 
     @MockK(relaxed = true)
     private lateinit var navController: NavController
@@ -85,6 +84,10 @@ class DefaultQuickSettingsControllerTest {
     @get:Rule
     val gleanRule = GleanTestRule(testContext)
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
@@ -99,7 +102,7 @@ class DefaultQuickSettingsControllerTest {
                 quickSettingsStore = store,
                 browserStore = browserStore,
                 sessionId = tab.id,
-                ioScope = coroutinesScope,
+                ioScope = scope,
                 navController = navController,
                 sitePermissions = sitePermissions,
                 settings = appSettings,
@@ -112,13 +115,8 @@ class DefaultQuickSettingsControllerTest {
         )
     }
 
-    @After
-    fun cleanUp() {
-        coroutinesScope.cleanupTestCoroutines()
-    }
-
     @Test
-    fun `handlePermissionsShown should delegate to an injected parameter`() {
+    fun `handlePermissionsShown should delegate to an injected parameter`() = runTestOnMain {
         every { testContext.components.core.engine } returns mockk(relaxed = true)
         var displayPermissionsInvoked = false
         createController(
@@ -131,7 +129,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handlePermissionToggled blocked by Android should handleAndroidPermissionRequest`() {
+    fun `handlePermissionToggled blocked by Android should handleAndroidPermissionRequest`() = runTestOnMain {
         val cameraFeature = PhoneFeature.CAMERA
         val websitePermission = mockk<WebsitePermission>()
         every { websitePermission.phoneFeature } returns cameraFeature
@@ -145,7 +143,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handlePermissionToggled allowed by Android should toggle the permissions and modify View's state`() {
+    fun `handlePermissionToggled allowed by Android should toggle the permissions and modify View's state`() = runTestOnMain {
         val websitePermission = mockk<WebsitePermission>()
         every { websitePermission.phoneFeature } returns PhoneFeature.CAMERA
         every { websitePermission.isBlockedByAndroid } returns false
@@ -169,14 +167,14 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handlePermissionToggled blocked by user should navigate to site permission manager`() {
+    fun `handlePermissionToggled blocked by user should navigate to site permission manager`() = runTestOnMain {
         every { testContext.components.core.engine } returns mockk(relaxed = true)
         val websitePermission = mockk<WebsitePermission>()
         val invalidSitePermissionsController = DefaultQuickSettingsController(
             context = context,
             quickSettingsStore = store,
             browserStore = BrowserStore(),
-            ioScope = coroutinesScope,
+            ioScope = scope,
             navController = navController,
             sessionId = "123",
             sitePermissions = null,
@@ -205,7 +203,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handleAutoplayChanged will add autoplay permission`() {
+    fun `handleAutoplayChanged will add autoplay permission`() = runTestOnMain {
         val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
 
         every { store.dispatch(any()) } returns mockk()
@@ -222,7 +220,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handleAutoplayChanged will update autoplay permission`() {
+    fun `handleAutoplayChanged will update autoplay permission`() = runTestOnMain {
         val autoplayValue = mockk<AutoplayValue.AllowAll>(relaxed = true)
 
         every { store.dispatch(any()) } returns mockk()
@@ -239,7 +237,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handleAndroidPermissionGranted should update the View's state`() {
+    fun `handleAndroidPermissionGranted should update the View's state`() = runTestOnMain {
         val featureGranted = PhoneFeature.CAMERA
         val permissionStatus = featureGranted.getActionLabel(context, sitePermissions, appSettings)
         val permissionEnabled =
@@ -261,7 +259,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handleAndroidPermissionRequest should request from the injected callback`() {
+    fun `handleAndroidPermissionRequest should request from the injected callback`() = runTestOnMain {
         every { testContext.components.core.engine } returns mockk(relaxed = true)
         val testPermissions = arrayOf("TestPermission")
 
@@ -278,7 +276,7 @@ class DefaultQuickSettingsControllerTest {
 
     @Test
     fun `handlePermissionsChange should store the updated permission and reload webpage`() =
-        coroutinesScope.runBlockingTest {
+        runTestOnMain {
             val testPermissions = mockk<SitePermissions>()
 
             controller.handlePermissionsChange(testPermissions)
@@ -292,7 +290,7 @@ class DefaultQuickSettingsControllerTest {
 
     @Test
     fun `handleAutoplayAdd should store the updated permission and reload webpage`() =
-        coroutinesScope.runBlockingTest {
+        runTestOnMain {
             val testPermissions = mockk<SitePermissions>()
 
             controller.handleAutoplayAdd(testPermissions)
@@ -305,7 +303,7 @@ class DefaultQuickSettingsControllerTest {
         }
 
     @Test
-    fun `handleTrackingProtectionToggled should call the right use cases`() {
+    fun `handleTrackingProtectionToggled should call the right use cases`() = runTestOnMain {
         val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
         val sessionUseCases: SessionUseCases = mockk(relaxed = true)
 
@@ -338,7 +336,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `handleBlockedItemsClicked should call popBackStack and navigate to the tracking protection panel dialog`() {
+    fun `handleBlockedItemsClicked should call popBackStack and navigate to the tracking protection panel dialog`() = runTestOnMain {
         every { context.components.core.store } returns browserStore
         every { context.components.settings } returns appSettings
         every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
@@ -363,7 +361,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `WHEN handleConnectionDetailsClicked THEN call popBackStack and navigate to the connection details dialog`() {
+    fun `WHEN handleConnectionDetailsClicked THEN call popBackStack and navigate to the connection details dialog`() = runTestOnMain {
         every { context.components.core.store } returns browserStore
         every { context.components.settings } returns appSettings
         every { context.components.settings.toolbarPosition.androidGravity } returns mockk(relaxed = true)
@@ -387,7 +385,7 @@ class DefaultQuickSettingsControllerTest {
     }
 
     @Test
-    fun `WHEN handleClearSiteData THEN call clearSite`() {
+    fun `WHEN handleClearSiteData THEN call clearSite`() = runTestOnMain {
         controller.handleClearSiteDataClicked("mozilla.org")
 
         verify {
@@ -411,7 +409,7 @@ class DefaultQuickSettingsControllerTest {
                 quickSettingsStore = store,
                 browserStore = browserStore,
                 sessionId = tab.id,
-                ioScope = coroutinesScope,
+                ioScope = scope,
                 navController = navController,
                 sitePermissions = sitePermissions,
                 settings = appSettings,

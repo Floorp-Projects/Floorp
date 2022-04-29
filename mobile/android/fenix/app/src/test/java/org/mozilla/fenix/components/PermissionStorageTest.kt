@@ -9,7 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import mozilla.components.support.test.robolectric.testContext
@@ -23,7 +23,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 class PermissionStorageTest {
 
     @Test
-    fun `add permission`() = runBlockingTest {
+    fun `add permission`() = runTest {
         val sitePermissions: SitePermissions = mockk(relaxed = true)
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
@@ -34,7 +34,7 @@ class PermissionStorageTest {
     }
 
     @Test
-    fun `find sitePermissions by origin`() = runBlockingTest {
+    fun `find sitePermissions by origin`() = runTest {
         val sitePermissions: SitePermissions = mockk(relaxed = true)
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
@@ -49,7 +49,7 @@ class PermissionStorageTest {
     }
 
     @Test
-    fun `update SitePermissions`() = runBlockingTest {
+    fun `update SitePermissions`() = runTest {
         val sitePermissions: SitePermissions = mockk(relaxed = true)
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
@@ -60,7 +60,7 @@ class PermissionStorageTest {
     }
 
     @Test
-    fun `get sitePermissions paged`() = runBlockingTest {
+    fun `get sitePermissions paged`() = runTest {
         val dataSource: DataSource.Factory<Int, SitePermissions> = mockk(relaxed = true)
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
@@ -75,7 +75,7 @@ class PermissionStorageTest {
     }
 
     @Test
-    fun `delete sitePermissions`() = runBlockingTest {
+    fun `delete sitePermissions`() = runTest {
         val sitePermissions: SitePermissions = mockk(relaxed = true)
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
@@ -86,7 +86,7 @@ class PermissionStorageTest {
     }
 
     @Test
-    fun `delete all sitePermissions`() = runBlockingTest {
+    fun `delete all sitePermissions`() = runTest {
         val sitePermissionsStorage: SitePermissionsStorage = mockk(relaxed = true)
         val storage = PermissionStorage(testContext, this.coroutineContext, sitePermissionsStorage)
 

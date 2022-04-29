@@ -5,7 +5,7 @@
 package org.mozilla.fenix.trackingprotection
 
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import org.junit.Assert.assertEquals
@@ -17,7 +17,7 @@ class TrackingProtectionStoreTest {
     val tab: SessionState = mockk(relaxed = true)
 
     @Test
-    fun enterDetailsMode() = runBlocking {
+    fun enterDetailsMode() = runTest {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)
 
@@ -37,7 +37,7 @@ class TrackingProtectionStoreTest {
     }
 
     @Test
-    fun exitDetailsMode() = runBlocking {
+    fun exitDetailsMode() = runTest {
         val initialState = detailsState()
         val store = TrackingProtectionStore(initialState)
 
@@ -51,7 +51,7 @@ class TrackingProtectionStoreTest {
     }
 
     @Test
-    fun trackerListChanged() = runBlocking {
+    fun trackerListChanged() = runTest {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)
         val tracker = TrackerLog("url", listOf())
@@ -65,7 +65,7 @@ class TrackingProtectionStoreTest {
     }
 
     @Test
-    fun urlChanged() = runBlocking {
+    fun urlChanged() = runTest {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)
 
@@ -78,7 +78,7 @@ class TrackingProtectionStoreTest {
     }
 
     @Test
-    fun onChange() = runBlocking {
+    fun onChange() = runTest {
         val initialState = defaultState()
         val store = TrackingProtectionStore(initialState)
         val tracker = TrackerLog("url", listOf(), listOf(), cookiesHasBeenBlocked = false)

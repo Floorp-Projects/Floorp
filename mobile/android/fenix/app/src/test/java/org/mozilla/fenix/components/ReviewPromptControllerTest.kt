@@ -6,7 +6,7 @@ package org.mozilla.fenix.components
 
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.Assert.assertEquals
@@ -37,7 +37,7 @@ class ReviewPromptControllerTest {
     }
 
     @Test
-    fun promptReviewDoesNotSetMillis() = runBlockingTest {
+    fun promptReviewDoesNotSetMillis() = runTest {
         var promptWasCalled = false
         val settings = TestReviewSettings(
             numberOfAppLaunches = 5,
@@ -60,7 +60,7 @@ class ReviewPromptControllerTest {
     }
 
     @Test
-    fun promptReviewSetsMillisIfSuccessful() = runBlockingTest {
+    fun promptReviewSetsMillisIfSuccessful() = runTest {
         var promptWasCalled = false
         val settings = TestReviewSettings(
             numberOfAppLaunches = 5,
@@ -82,7 +82,7 @@ class ReviewPromptControllerTest {
     }
 
     @Test
-    fun promptReviewWillNotBeCalledIfNotReady() = runBlockingTest {
+    fun promptReviewWillNotBeCalledIfNotReady() = runTest {
         var promptWasCalled = false
         val settings = TestReviewSettings(
             numberOfAppLaunches = 5,
@@ -102,7 +102,7 @@ class ReviewPromptControllerTest {
     }
 
     @Test
-    fun promptReviewWillUnreadyPromptAfterCalled() = runBlockingTest {
+    fun promptReviewWillUnreadyPromptAfterCalled() = runTest {
         var promptWasCalled = false
         val settings = TestReviewSettings(
             numberOfAppLaunches = 5,

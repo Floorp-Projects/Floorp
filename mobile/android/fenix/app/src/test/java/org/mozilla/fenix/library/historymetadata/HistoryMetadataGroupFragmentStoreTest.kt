@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.historymetadata
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -52,7 +52,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test updating the items in HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test updating the items in HistoryMetadataGroupFragmentStore`() = runTest {
         assertEquals(0, store.state.items.size)
 
         val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
@@ -62,7 +62,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test selecting and deselecting an item in HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test selecting and deselecting an item in HistoryMetadataGroupFragmentStore`() = runTest {
         val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
 
         store.dispatch(HistoryMetadataGroupFragmentAction.UpdateHistoryItems(items)).join()
@@ -82,7 +82,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test deselecting all items in HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test deselecting all items in HistoryMetadataGroupFragmentStore`() = runTest {
         val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
 
         store.dispatch(HistoryMetadataGroupFragmentAction.UpdateHistoryItems(items)).join()
@@ -94,7 +94,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test deleting an item in HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test deleting an item in HistoryMetadataGroupFragmentStore`() = runTest {
         val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
 
         store.dispatch(HistoryMetadataGroupFragmentAction.UpdateHistoryItems(items)).join()
@@ -105,7 +105,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test deleting all items in HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test deleting all items in HistoryMetadataGroupFragmentStore`() = runTest {
         val items = listOf(mozillaHistoryMetadataItem, firefoxHistoryMetadataItem)
 
         store.dispatch(HistoryMetadataGroupFragmentAction.UpdateHistoryItems(items)).join()
@@ -115,7 +115,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test changing the empty state of HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test changing the empty state of HistoryMetadataGroupFragmentStore`() = runTest {
         store.dispatch(HistoryMetadataGroupFragmentAction.ChangeEmptyState(false)).join()
         assertFalse(store.state.isEmpty)
 
@@ -124,7 +124,7 @@ class HistoryMetadataGroupFragmentStoreTest {
     }
 
     @Test
-    fun `Test updating pending deletion items in HistoryMetadataGroupFragmentStore`() = runBlocking {
+    fun `Test updating pending deletion items in HistoryMetadataGroupFragmentStore`() = runTest {
         store.dispatch(HistoryMetadataGroupFragmentAction.UpdatePendingDeletionItems(setOf(pendingDeletionItem))).join()
         assertEquals(setOf(pendingDeletionItem), store.state.pendingDeletionItems)
 

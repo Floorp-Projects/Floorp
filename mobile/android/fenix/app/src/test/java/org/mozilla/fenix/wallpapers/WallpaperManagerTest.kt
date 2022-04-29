@@ -7,7 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -45,7 +45,7 @@ class WallpaperManagerTest {
     }
 
     @Test
-    fun `GIVEN no remote wallpapers expired and locale in promo WHEN downloading remote wallpapers THEN all downloaded`() = runBlockingTest {
+    fun `GIVEN no remote wallpapers expired and locale in promo WHEN downloading remote wallpapers THEN all downloaded`() = runTest {
         every { mockSettings.currentWallpaper } returns ""
         val fakeRemoteWallpapers = listOf("first", "second", "third").map { name ->
             makeFakeRemoteWallpaper(TimeRelation.LATER, name)
@@ -65,7 +65,7 @@ class WallpaperManagerTest {
     }
 
     @Test
-    fun `GIVEN no remote wallpapers expired and locale not in promo WHEN downloading remote wallpapers THEN none downloaded`() = runBlockingTest {
+    fun `GIVEN no remote wallpapers expired and locale not in promo WHEN downloading remote wallpapers THEN none downloaded`() = runTest {
         every { mockSettings.currentWallpaper } returns ""
         val fakeRemoteWallpapers = listOf("first", "second", "third").map { name ->
             makeFakeRemoteWallpaper(TimeRelation.LATER, name)
@@ -85,7 +85,7 @@ class WallpaperManagerTest {
     }
 
     @Test
-    fun `GIVEN no remote wallpapers expired and locale not in promo WHEN downloading remote wallpapers THEN non-promo wallpapers downloaded`() = runBlockingTest {
+    fun `GIVEN no remote wallpapers expired and locale not in promo WHEN downloading remote wallpapers THEN non-promo wallpapers downloaded`() = runTest {
         every { mockSettings.currentWallpaper } returns ""
         val fakePromoWallpapers = listOf("first", "second", "third").map { name ->
             makeFakeRemoteWallpaper(TimeRelation.LATER, name)

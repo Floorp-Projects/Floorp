@@ -8,7 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 class BookmarksUseCaseTest {
 
     @Test
-    fun `WHEN adding existing bookmark THEN no new item is stored`() = runBlockingTest {
+    fun `WHEN adding existing bookmark THEN no new item is stored`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>()
         val historyStorage = mockk<HistoryStorage>()
         val bookmarkNode = mockk<BookmarkNode>()
@@ -41,7 +41,7 @@ class BookmarksUseCaseTest {
     }
 
     @Test
-    fun `WHEN adding bookmark THEN new item is stored`() = runBlockingTest {
+    fun `WHEN adding bookmark THEN new item is stored`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>(relaxed = true)
         val historyStorage = mockk<HistoryStorage>(relaxed = true)
         val useCase = BookmarksUseCase(bookmarksStorage, historyStorage)
@@ -56,7 +56,7 @@ class BookmarksUseCaseTest {
     }
 
     @Test
-    fun `WHEN recently saved bookmarks exist THEN retrieve the list from storage`() = runBlockingTest {
+    fun `WHEN recently saved bookmarks exist THEN retrieve the list from storage`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>(relaxed = true)
         val historyStorage = mockk<HistoryStorage>(relaxed = true)
         val useCase = BookmarksUseCase(bookmarksStorage, historyStorage)
@@ -115,7 +115,7 @@ class BookmarksUseCaseTest {
     }
 
     @Test
-    fun `WHEN there are no recently saved bookmarks THEN retrieve the empty list from storage`() = runBlockingTest {
+    fun `WHEN there are no recently saved bookmarks THEN retrieve the empty list from storage`() = runTest {
         val bookmarksStorage = mockk<BookmarksStorage>(relaxed = true)
         val historyStorage = mockk<HistoryStorage>(relaxed = true)
         val useCase = BookmarksUseCase(bookmarksStorage, historyStorage)

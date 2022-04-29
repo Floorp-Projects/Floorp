@@ -10,7 +10,7 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.intent.ext.getSessionId
@@ -28,7 +28,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
     private val addNewTabUseCase = mockk<TabsUseCases.AddNewTabUseCase>(relaxed = true)
 
     @Test
-    fun `do not process blank Intents`() = runBlocking {
+    fun `do not process blank Intents`() = runTest {
         val processor = FennecBookmarkShortcutsIntentProcessor(addNewTabUseCase)
         val fennecShortcutsIntent = Intent(ACTION_FENNEC_HOMESCREEN_SHORTCUT)
         fennecShortcutsIntent.data = Uri.parse("http://mozilla.org")
@@ -42,7 +42,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
     }
 
     @Test
-    fun `processing a Fennec shortcut Intent results in loading it's URL in a new Session`() = runBlocking {
+    fun `processing a Fennec shortcut Intent results in loading it's URL in a new Session`() = runTest {
         val expectedSessionId = "test"
         val processor = FennecBookmarkShortcutsIntentProcessor(addNewTabUseCase)
         val fennecShortcutsIntent = Intent(ACTION_FENNEC_HOMESCREEN_SHORTCUT)

@@ -7,7 +7,7 @@ package org.mozilla.fenix.components.history
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
@@ -28,7 +28,7 @@ class PagedHistoryProviderTest {
     }
 
     @Test
-    fun `getHistory uses getVisitsPaginated`() = runBlockingTest {
+    fun `getHistory uses getVisitsPaginated`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
             historyImprovementFeatures = false,
@@ -145,7 +145,7 @@ class PagedHistoryProviderTest {
     }
 
     @Test
-    fun `history metadata matching lower bound`() = runBlockingTest {
+    fun `history metadata matching lower bound`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
             historyImprovementFeatures = false,
@@ -215,7 +215,7 @@ class PagedHistoryProviderTest {
     }
 
     @Test
-    fun `history metadata matching upper bound`() = runBlockingTest {
+    fun `history metadata matching upper bound`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
             historyImprovementFeatures = false,
@@ -285,7 +285,7 @@ class PagedHistoryProviderTest {
     }
 
     @Test
-    fun `redirects are filtered out from history metadata groups`() = runBlockingTest {
+    fun `redirects are filtered out from history metadata groups`() = runTest {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
             historyImprovementFeatures = false,

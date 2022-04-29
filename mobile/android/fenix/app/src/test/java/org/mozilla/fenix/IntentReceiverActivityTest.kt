@@ -18,7 +18,7 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.intent.processing.IntentProcessor
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
@@ -77,7 +77,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process intent with flag launched from history`() = runBlockingTest {
+    fun `process intent with flag launched from history`() = runTest {
         val intent = Intent()
         intent.flags = FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
         assertFalse(Events.openedLink.testHasValue())
@@ -96,7 +96,7 @@ class IntentReceiverActivityTest {
 
     @Test
     fun `GIVEN a deeplink intent WHEN processing the intent THEN add the className HomeActivity`() =
-        runBlockingTest {
+        runTest {
             val uri = Uri.parse(BuildConfig.DEEP_LINK_SCHEME + "://settings_wallpapers")
             val intent = Intent("", uri)
             assertFalse(Events.openedLink.testHasValue())
@@ -117,7 +117,7 @@ class IntentReceiverActivityTest {
         }
 
     @Test
-    fun `process intent with action OPEN_PRIVATE_TAB`() = runBlockingTest {
+    fun `process intent with action OPEN_PRIVATE_TAB`() = runTest {
         val intent = Intent()
         intent.action = NewTabShortcutIntentProcessor.ACTION_OPEN_PRIVATE_TAB
         assertFalse(Events.openedLink.testHasValue())
@@ -138,7 +138,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process intent with action OPEN_TAB`() = runBlockingTest {
+    fun `process intent with action OPEN_TAB`() = runTest {
         assertFalse(Events.openedLink.testHasValue())
         val intent = Intent()
         intent.action = NewTabShortcutIntentProcessor.ACTION_OPEN_TAB
@@ -156,7 +156,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process intent starts Activity`() = runBlockingTest {
+    fun `process intent starts Activity`() = runTest {
         assertFalse(Events.openedLink.testHasValue())
         val intent = Intent()
         val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
@@ -172,7 +172,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process intent with launchLinksInPrivateTab set to true`() = runBlockingTest {
+    fun `process intent with launchLinksInPrivateTab set to true`() = runTest {
         assertFalse(Events.openedLink.testHasValue())
 
         every { settings.openLinksInAPrivateTab } returns true
@@ -197,7 +197,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process intent with launchLinksInPrivateTab set to false`() = runBlockingTest {
+    fun `process intent with launchLinksInPrivateTab set to false`() = runTest {
         assertFalse(Events.openedLink.testHasValue())
         val intent = Intent()
 
@@ -211,7 +211,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process custom tab intent`() = runBlockingTest {
+    fun `process custom tab intent`() = runTest {
         assertFalse(Events.openedLink.testHasValue())
         val intent = Intent()
         coEvery { intentProcessors.intentProcessor.process(intent) } returns false
@@ -231,7 +231,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process private custom tab intent`() = runBlockingTest {
+    fun `process private custom tab intent`() = runTest {
         assertFalse(Events.openedLink.testHasValue())
         every { settings.openLinksInAPrivateTab } returns true
 

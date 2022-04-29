@@ -11,8 +11,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -20,7 +19,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -39,7 +39,10 @@ class DefaultCollectionCreationControllerTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
-    private val testCoroutineScope = TestCoroutineScope()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     private lateinit var state: CollectionCreationState
     private lateinit var controller: DefaultCollectionCreationController
     private var dismissed = false
@@ -68,13 +71,8 @@ class DefaultCollectionCreationControllerTest {
                 dismissed = true
             },
             tabCollectionStorage,
-            testCoroutineScope
+            scope
         )
-    }
-
-    @After
-    fun cleanUp() {
-        testCoroutineScope.cleanupTestCoroutines()
     }
 
     @Test
@@ -146,7 +144,7 @@ class DefaultCollectionCreationControllerTest {
     }
 
     @Test
-    fun `GIVEN collection WHEN renameCollection is called THEN collection should be renamed`() = testCoroutineScope.runBlockingTest {
+    fun `GIVEN collection WHEN renameCollection is called THEN collection should be renamed`() = runTestOnMain {
         val collection = mockk<TabCollection>()
 
         controller.renameCollection(collection, "name")

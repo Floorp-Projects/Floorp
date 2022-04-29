@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.wallpapers
 
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -22,7 +22,7 @@ class WallpaperFileManagerTest {
     private lateinit var landscapeLightFolder: File
     private lateinit var landscapeDarkFolder: File
 
-    private val dispatcher = TestCoroutineDispatcher()
+    private val dispatcher = UnconfinedTestDispatcher()
 
     private lateinit var fileManager: WallpaperFileManager
 

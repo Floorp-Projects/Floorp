@@ -11,7 +11,7 @@ import io.mockk.MockKAnnotations
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verifyOrder
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.TestScope
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
@@ -25,7 +25,6 @@ class ClearSiteDataViewTest {
     private lateinit var binding: QuicksettingsClearSiteDataBinding
     private lateinit var interactor: ClearSiteDataViewInteractor
     private lateinit var navController: NavController
-    private val coroutinesScope = TestCoroutineScope()
 
     @Before
     fun setup() {
@@ -35,7 +34,7 @@ class ClearSiteDataViewTest {
         view = spyk(
             ClearSiteDataView(
                 testContext,
-                coroutinesScope,
+                TestScope(),
                 FrameLayout(testContext),
                 View(testContext),
                 interactor,

@@ -20,15 +20,15 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.share.RecentApp
 import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.ext.application
@@ -44,8 +44,11 @@ import org.robolectric.shadows.ShadowLooper
 @RunWith(FenixRobolectricTestRunner::class)
 class ShareViewModelTest {
 
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testIoDispatcher = coroutinesTestRule.testDispatcher
+
     private val packageName = "org.mozilla.fenix"
-    private val testIoDispatcher = TestCoroutineDispatcher()
     private lateinit var application: Application
     private lateinit var packageManager: PackageManager
     private lateinit var connectivityManager: ConnectivityManager
@@ -75,11 +78,6 @@ class ShareViewModelTest {
         )
     }
 
-    @After
-    fun cleanUp() {
-        testIoDispatcher.cleanupTestCoroutines()
-    }
-
     @Test
     fun `liveData should be initialized as empty list`() {
         assertEquals(emptyList<SyncShareOption>(), viewModel.devicesList.value)
@@ -87,7 +85,7 @@ class ShareViewModelTest {
     }
 
     @Test
-    fun `loadDevicesAndApps`() = runBlockingTest {
+    fun `loadDevicesAndApps`() = runTestOnMain {
         val appOptions = listOf(
             AppShareOption("Label", mockk(), "Package", "Activity")
         )
@@ -164,7 +162,7 @@ class ShareViewModelTest {
     }
 
     @Test
-    fun `GIVEN only one app THEN show copy to clipboard before the app`() = runBlockingTest {
+    fun `GIVEN only one app THEN show copy to clipboard before the app`() = runTestOnMain {
         val appOptions = listOf(
             AppShareOption("Label", mockk(), "Package", "Activity")
         )
@@ -186,7 +184,7 @@ class ShareViewModelTest {
     }
 
     @Test
-    fun `WHEN no app THEN at least have copy to clipboard as app`() = runBlockingTest {
+    fun `WHEN no app THEN at least have copy to clipboard as app`() = runTestOnMain {
         val appEntity = mockk<RecentApp>()
         every { appEntity.activityName } returns "Activity"
         every { storage.getRecentAppsUpTo(RECENT_APPS_LIMIT) } returns emptyList()

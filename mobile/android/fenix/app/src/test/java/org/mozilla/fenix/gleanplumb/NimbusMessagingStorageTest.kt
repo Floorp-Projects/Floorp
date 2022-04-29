@@ -9,7 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -62,7 +62,7 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `WHEN calling getMessages THEN provide a list of available messages`() = runBlockingTest {
+    fun `WHEN calling getMessages THEN provide a list of available messages`() = runTest {
         val message = storage.getMessages().first()
 
         assertEquals("message-1", message.id)
@@ -71,7 +71,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `WHEN calling getMessages THEN provide a list of sorted messages by priority`() =
-        runBlockingTest {
+        runTest {
             val messages = mapOf(
                 "low-message" to createMessageData(style = "low-priority"),
                 "high-message" to createMessageData(style = "high-priority"),
@@ -111,7 +111,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN pressed message WHEN calling getMessages THEN filter out the pressed message`() =
-        runBlockingTest {
+        runTest {
             val metadataList = mapOf(
                 "pressed-message" to Message.Metadata(id = "pressed-message", pressed = true),
                 "normal-message" to Message.Metadata(id = "normal-message", pressed = false)
@@ -147,7 +147,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN dismissed message WHEN calling getMessages THEN filter out the dismissed message`() =
-        runBlockingTest {
+        runTest {
             val metadataList = mapOf(
                 "dismissed-message" to Message.Metadata(id = "dismissed-message", dismissed = true),
                 "normal-message" to Message.Metadata(id = "normal-message", dismissed = false)
@@ -183,7 +183,7 @@ class NimbusMessagingStorageTest {
 
     @Test
     fun `GIVEN a message that the maxDisplayCount WHEN calling getMessages THEN filter out the message`() =
-        runBlockingTest {
+        runTest {
             val metadataList = mapOf(
                 "shown-many-times-message" to Message.Metadata(
                     id = "shown-many-times-message",
@@ -223,7 +223,7 @@ class NimbusMessagingStorageTest {
         }
 
     @Test
-    fun `GIVEN a malformed message WHEN calling getMessages THEN provide a list of messages ignoring the malformed one`() = runBlockingTest {
+    fun `GIVEN a malformed message WHEN calling getMessages THEN provide a list of messages ignoring the malformed one`() = runTest {
         val messages = storage.getMessages()
         val firstMessage = messages.first()
 
@@ -271,7 +271,7 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `WHEN calling updateMetadata THEN delegate to metadataStorage`() = runBlockingTest {
+    fun `WHEN calling updateMetadata THEN delegate to metadataStorage`() = runTest {
 
         storage.updateMetadata(mockk(relaxed = true))
 

@@ -5,7 +5,7 @@
 package org.mozilla.fenix.settings.autofill
 
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import org.junit.Assert.assertEquals
@@ -26,7 +26,7 @@ class AutofillFragmentStoreTest {
     }
 
     @Test
-    fun testUpdateCreditCards() = runBlocking {
+    fun testUpdateCreditCards() = runTest {
         assertTrue(store.state.isLoading)
 
         val creditCards: List<CreditCard> = listOf(mockk(), mockk())
@@ -37,7 +37,7 @@ class AutofillFragmentStoreTest {
     }
 
     @Test
-    fun `GIVEN a list of addresses WHEN update addresses action is dispatched THEN addresses state is updated`() = runBlocking {
+    fun `GIVEN a list of addresses WHEN update addresses action is dispatched THEN addresses state is updated`() = runTest {
         assertTrue(store.state.isLoading)
 
         val addresses: List<Address> = listOf(mockk(), mockk())

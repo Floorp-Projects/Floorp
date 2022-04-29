@@ -5,7 +5,7 @@
 package org.mozilla.fenix.nimbus
 
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -25,7 +25,7 @@ class NimbusBranchesStoreTest {
     }
 
     @Test
-    fun `GIVEN a new branch and selected branch WHEN UpdateBranches action is dispatched THEN state is updated`() = runBlocking {
+    fun `GIVEN a new branch and selected branch WHEN UpdateBranches action is dispatched THEN state is updated`() = runTest {
         assertTrue(nimbusBranchesStore.state.isLoading)
 
         val branches: List<Branch> = listOf(mockk(), mockk())
@@ -40,7 +40,7 @@ class NimbusBranchesStoreTest {
     }
 
     @Test
-    fun `GIVEN a new selected branch WHEN UpdateSelectedBranch action is dispatched THEN selectedBranch state is updated`() = runBlocking {
+    fun `GIVEN a new selected branch WHEN UpdateSelectedBranch action is dispatched THEN selectedBranch state is updated`() = runTest {
         assertEquals("", nimbusBranchesStore.state.selectedBranch)
 
         val selectedBranch = "control"

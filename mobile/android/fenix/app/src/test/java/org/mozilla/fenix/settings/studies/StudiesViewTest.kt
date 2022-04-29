@@ -15,11 +15,10 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -48,7 +47,7 @@ class StudiesViewTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testCoroutineScope = TestCoroutineScope(coroutinesTestRule.testDispatcher)
+    private val testCoroutineScope = coroutinesTestRule.scope
 
     @Before
     fun setup() {
@@ -66,13 +65,8 @@ class StudiesViewTest {
         )
     }
 
-    @After
-    fun cleanUp() {
-        testCoroutineScope.cleanupTestCoroutines()
-    }
-
     @Test
-    fun `WHEN calling bind THEN bind all the related information`() {
+    fun `WHEN calling bind THEN bind all the related information`() = runTestOnMain {
         val studiesTitle = mockk<TextView>(relaxed = true)
         val studiesSwitch = mockk<SwitchCompat>(relaxed = true)
         val studiesList = mockk<RecyclerView>(relaxed = true)
@@ -95,7 +89,7 @@ class StudiesViewTest {
     }
 
     @Test
-    fun `WHEN calling onRemoveButtonClicked THEN delegate to the interactor`() {
+    fun `WHEN calling onRemoveButtonClicked THEN delegate to the interactor`() = runTestOnMain {
         val experiment = mockk<EnrolledExperiment>()
         val adapter = mockk<StudiesAdapter>(relaxed = true)
 

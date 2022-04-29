@@ -15,7 +15,8 @@ import io.mockk.just
 import io.mockk.Runs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
@@ -245,11 +246,12 @@ class DefaultRecentlyClosedControllerTest {
     }
 
     @Test
-    fun handleRestore() = runBlocking {
+    fun handleRestore() = runTest {
         val item: TabState = mockk(relaxed = true)
         assertFalse(RecentlyClosedTabs.openTab.testHasValue())
 
         createController(scope = this).handleRestore(item)
+        runCurrent()
 
         coVerify { tabsUseCases.restore.invoke(eq(item), any(), true) }
         assertTrue(RecentlyClosedTabs.openTab.testHasValue())

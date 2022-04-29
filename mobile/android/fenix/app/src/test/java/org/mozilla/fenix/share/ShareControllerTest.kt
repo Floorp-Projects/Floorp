@@ -18,8 +18,7 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
@@ -29,7 +28,7 @@ import mozilla.components.feature.share.RecentAppsStorage
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
@@ -72,16 +71,11 @@ class ShareControllerTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val testDispatcher = coroutinesTestRule.testDispatcher
-    private val testCoroutineScope = TestCoroutineScope(testDispatcher)
+    private val testCoroutineScope = coroutinesTestRule.scope
     private val controller = DefaultShareController(
         context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
         recentAppStorage, testCoroutineScope, testDispatcher, dismiss
     )
-
-    @After
-    fun cleanUp() {
-        testCoroutineScope.cleanupTestCoroutines()
-    }
 
     @Test
     fun `handleShareClosed should call a passed in delegate to close this`() {
@@ -91,7 +85,7 @@ class ShareControllerTest {
     }
 
     @Test
-    fun `handleShareToApp should start a new sharing activity and close this`() = runBlocking {
+    fun `handleShareToApp should start a new sharing activity and close this`() = runTestOnMain {
         val appPackageName = "package"
         val appClassName = "activity"
         val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
@@ -108,7 +102,7 @@ class ShareControllerTest {
         every { recentAppStorage.updateRecentApp(appShareOption.activityName) } just Runs
 
         testController.handleShareToApp(appShareOption)
-        testDispatcher.advanceUntilIdle()
+        advanceUntilIdle()
 
         // Check that the Intent used for querying apps has the expected structure
         assertTrue(shareIntent.isCaptured)

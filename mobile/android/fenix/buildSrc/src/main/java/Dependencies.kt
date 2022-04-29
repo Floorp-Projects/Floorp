@@ -7,7 +7,7 @@
 
 object Versions {
     const val kotlin = "1.6.10"
-    const val coroutines = "1.5.2"
+    const val coroutines = "1.6.1"
 
     // These versions are linked: lint should be X+23.Y.Z of gradle_plugin version, according to:
     // https://github.com/alexjlockwood/android-lint-checks-demo/blob/0245fc027463137b1b4afb97c5295d60dce998b6/dependencies.gradle#L3

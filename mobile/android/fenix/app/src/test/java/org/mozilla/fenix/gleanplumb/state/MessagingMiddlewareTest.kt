@@ -12,10 +12,11 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -41,8 +42,9 @@ import org.mozilla.fenix.nimbus.StyleData
 
 @RunWith(FenixRobolectricTestRunner::class)
 class MessagingMiddlewareTest {
-
-    private val coroutineScope = TestCoroutineScope()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val coroutineScope = coroutinesTestRule.scope
     private lateinit var store: AppStore
     private lateinit var middleware: MessagingMiddleware
     private lateinit var messagingStorage: NimbusMessagingStorage
@@ -65,7 +67,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN Restore THEN get messages from the storage and UpdateMessages`() {
+    fun `WHEN Restore THEN get messages from the storage and UpdateMessages`() = runTestOnMain {
         val messages: List<Message> = emptyList()
 
         coEvery { messagingStorage.getMessages() } returns messages
@@ -76,7 +78,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN Restore THEN getNextMessage from the storage and UpdateMessageToShow`() {
+    fun `WHEN Restore THEN getNextMessage from the storage and UpdateMessageToShow`() = runTestOnMain {
         val message: Message = mockk(relaxed = true)
         val appState: AppState = mockk(relaxed = true)
         val messagingState: MessagingState = mockk(relaxed = true)
@@ -92,7 +94,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN MessageClicked THEN update storage`() {
+    fun `WHEN MessageClicked THEN update storage`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -115,7 +117,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN MessageDismissed THEN update storage`() {
+    fun `WHEN MessageDismissed THEN update storage`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -141,7 +143,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN MessageDisplayed THEN update storage`() {
+    fun `WHEN MessageDisplayed THEN update storage`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -169,7 +171,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN onMessageDismissed THEN updateMetadata,removeMessage , UpdateMessages and removeMessageToShowIfNeeded`() {
+    fun `WHEN onMessageDismissed THEN updateMetadata,removeMessage , UpdateMessages and removeMessageToShowIfNeeded`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -192,7 +194,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN removeMessage THEN remove the message`() {
+    fun `WHEN removeMessage THEN remove the message`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -215,7 +217,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN consumeMessageToShowIfNeeded THEN consume the message`() {
+    fun `WHEN consumeMessageToShowIfNeeded THEN consume the message`() = runTestOnMain {
         val message = Message(
             "control-id",
             mockk(relaxed = true),
@@ -237,7 +239,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `WHEN updateMessage THEN update available messages`() {
+    fun `WHEN updateMessage THEN update available messages`() = runTestOnMain {
         val oldMessage = Message(
             "oldMessage",
             mockk(relaxed = true),
@@ -276,7 +278,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a message with that not surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN update the available messages and the updateMetadata`() {
+    fun `GIVEN a message with that not surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN update the available messages and the updateMetadata`() = runTestOnMain {
         val style: StyleData = mockk(relaxed = true)
         val oldMessageData: MessageData = mockk(relaxed = true)
         val oldMessage = Message(
@@ -308,7 +310,7 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a message with that surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN remove the message and consume it`() {
+    fun `GIVEN a message with that surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN remove the message and consume it`() = runTestOnMain {
         val style: StyleData = mockk(relaxed = true)
         val oldMessageData: MessageData = mockk(relaxed = true)
         val oldMessage = Message(

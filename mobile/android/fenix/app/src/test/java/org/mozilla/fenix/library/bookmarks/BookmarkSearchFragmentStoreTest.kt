@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Test
@@ -22,7 +22,7 @@ class BookmarkSearchFragmentStoreTest {
     }
 
     @Test
-    fun updateQuery() = runBlocking {
+    fun updateQuery() = runTest {
         val initialState = BookmarkSearchFragmentState(query = "")
         val store = BookmarkSearchFragmentStore(initialState)
         val query = "test query"

@@ -9,7 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
@@ -84,7 +84,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test toggling the mode in AppStore`() = runBlocking {
+    fun `Test toggling the mode in AppStore`() = runTest {
         // Verify that the default mode and tab states of the HomeFragment are correct.
         assertEquals(Mode.Normal, appStore.state.mode)
 
@@ -99,7 +99,7 @@ class AppStoreTest {
 
     @Test
     fun `GIVEN a new value for messageToShow WHEN NimbusMessageChange is called THEN update the current value`() =
-        runBlocking {
+        runTest {
             assertNull(appStore.state.messaging.messageToShow)
 
             appStore.dispatch(UpdateMessageToShow(mockk())).join()
@@ -108,7 +108,7 @@ class AppStoreTest {
         }
 
     @Test
-    fun `Test changing the collections in AppStore`() = runBlocking {
+    fun `Test changing the collections in AppStore`() = runTest {
         assertEquals(0, appStore.state.collections.size)
 
         // Add 2 TabCollections to the AppStore.
@@ -119,7 +119,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test changing the top sites in AppStore`() = runBlocking {
+    fun `Test changing the top sites in AppStore`() = runTest {
         assertEquals(0, appStore.state.topSites.size)
 
         // Add 2 TopSites to the AppStore.
@@ -130,7 +130,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test changing the recent tabs in AppStore`() = runBlocking {
+    fun `Test changing the recent tabs in AppStore`() = runTest {
         val group1 = RecentHistoryGroup(title = "title1")
         val group2 = RecentHistoryGroup(title = "title2")
         val group3 = RecentHistoryGroup(title = "title3")
@@ -154,7 +154,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `GIVEN initial state WHEN recent synced tab state is changed THEN state updated`() = runBlocking {
+    fun `GIVEN initial state WHEN recent synced tab state is changed THEN state updated`() = runTest {
         appStore = AppStore(
             AppState(
                 recentSyncedTabState = RecentSyncedTabState.None
@@ -173,7 +173,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test changing the history metadata in AppStore`() = runBlocking {
+    fun `Test changing the history metadata in AppStore`() = runTest {
         assertEquals(0, appStore.state.recentHistory.size)
 
         val historyMetadata: List<RecentHistoryGroup> = listOf(mockk(), mockk())
@@ -183,7 +183,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test removing a history highlight from AppStore`() = runBlocking {
+    fun `Test removing a history highlight from AppStore`() = runTest {
         val g1 = RecentHistoryGroup(title = "group One")
         val g2 = RecentHistoryGroup(title = "grup two")
         val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
@@ -207,7 +207,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test disbanding search group in AppStore`() = runBlocking {
+    fun `Test disbanding search group in AppStore`() = runTest {
         val g1 = RecentHistoryGroup(title = "test One")
         val g2 = RecentHistoryGroup(title = "test two")
         val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
@@ -221,7 +221,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test changing hiding collections placeholder`() = runBlocking {
+    fun `Test changing hiding collections placeholder`() = runTest {
         assertTrue(appStore.state.showCollectionPlaceholder)
 
         appStore.dispatch(AppAction.RemoveCollectionsPlaceholder).join()
@@ -230,7 +230,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test changing the expanded collections in AppStore`() = runBlocking {
+    fun `Test changing the expanded collections in AppStore`() = runTest {
         val collection: TabCollection = mockk<TabCollection>().apply {
             every { id } returns 0
         }
@@ -245,7 +245,7 @@ class AppStoreTest {
 
     @Test
     fun `Test changing the collections, mode, recent tabs and bookmarks, history metadata and top sites in the AppStore`() =
-        runBlocking {
+        runTest {
             // Verify that the default state of the HomeFragment is correct.
             assertEquals(0, appStore.state.collections.size)
             assertEquals(0, appStore.state.topSites.size)
@@ -286,7 +286,7 @@ class AppStoreTest {
         }
 
     @Test
-    fun `Test selecting a Pocket recommendations category`() = runBlocking {
+    fun `Test selecting a Pocket recommendations category`() = runTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         val filteredStories = listOf(mockk<PocketRecommendedStory>())
@@ -314,7 +314,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test deselecting a Pocket recommendations category`() = runBlocking {
+    fun `Test deselecting a Pocket recommendations category`() = runTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         val filteredStories = listOf(mockk<PocketRecommendedStory>())
@@ -343,7 +343,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test updating the list of Pocket recommended stories`() = runBlocking {
+    fun `Test updating the list of Pocket recommended stories`() = runTest {
         val story1 = PocketRecommendedStory("title1", "url", "imageUrl", "publisher", "category", 1, 1)
         val story2 = story1.copy("title2")
         appStore = AppStore(AppState())
@@ -358,7 +358,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test updating the list of Pocket recommendations categories`() = runBlocking {
+    fun `Test updating the list of Pocket recommendations categories`() = runTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         appStore = AppStore(AppState())
@@ -393,7 +393,7 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test updating the list of selected Pocket recommendations categories`() = runBlocking {
+    fun `Test updating the list of selected Pocket recommendations categories`() = runTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
         val selectedCategory = PocketRecommendedStoriesSelectedCategory("selected")

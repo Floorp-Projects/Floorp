@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.bookmarks
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Assert.assertEquals
@@ -16,7 +16,7 @@ import org.junit.Test
 class BookmarkFragmentStoreTest {
 
     @Test
-    fun `change the tree of bookmarks starting from an empty tree`() = runBlocking {
+    fun `change the tree of bookmarks starting from an empty tree`() = runTest {
         val initialState = BookmarkFragmentState(null)
         val store = BookmarkFragmentStore(initialState)
 
@@ -29,7 +29,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `change the tree of bookmarks starting from an existing tree`() = runBlocking {
+    fun `change the tree of bookmarks starting from an existing tree`() = runTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
@@ -42,7 +42,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `changing the tree of bookmarks adds the tree to the visited nodes`() = runBlocking {
+    fun `changing the tree of bookmarks adds the tree to the visited nodes`() = runTest {
         val initialState = BookmarkFragmentState(null)
         val store = BookmarkFragmentStore(initialState)
 
@@ -53,7 +53,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `changing to a node that is in the backstack removes backstack items after that node`() = runBlocking {
+    fun `changing to a node that is in the backstack removes backstack items after that node`() = runTest {
         val initialState = BookmarkFragmentState(
             null,
             guidBackstack = listOf(tree.guid, subfolder.guid, item.guid)
@@ -66,7 +66,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `change the tree of bookmarks to the same value`() = runBlocking {
+    fun `change the tree of bookmarks to the same value`() = runTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
@@ -79,7 +79,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `ensure selected items remain selected after a tree change`() = runBlocking {
+    fun `ensure selected items remain selected after a tree change`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(item, subfolder)))
         val store = BookmarkFragmentStore(initialState)
 
@@ -90,7 +90,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `select and deselect a single bookmark changes the mode`() = runBlocking {
+    fun `select and deselect a single bookmark changes the mode`() = runTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
@@ -104,7 +104,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `selecting the same item twice does nothing`() = runBlocking {
+    fun `selecting the same item twice does nothing`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(item, subfolder)))
         val store = BookmarkFragmentStore(initialState)
 
@@ -114,7 +114,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `deselecting an unselected bookmark does nothing`() = runBlocking {
+    fun `deselecting an unselected bookmark does nothing`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(childItem)))
         val store = BookmarkFragmentStore(initialState)
 
@@ -124,7 +124,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `deselecting while not in selecting mode does nothing`() = runBlocking {
+    fun `deselecting while not in selecting mode does nothing`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())
         val store = BookmarkFragmentStore(initialState)
 
@@ -134,7 +134,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `deselect all bookmarks changes the mode`() = runBlocking {
+    fun `deselect all bookmarks changes the mode`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(item, childItem)))
         val store = BookmarkFragmentStore(initialState)
 
@@ -144,7 +144,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `deselect all bookmarks when none are selected`() = runBlocking {
+    fun `deselect all bookmarks when none are selected`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Normal())
         val store = BookmarkFragmentStore(initialState)
 
@@ -154,7 +154,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `deleting bookmarks changes the mode`() = runBlocking {
+    fun `deleting bookmarks changes the mode`() = runTest {
         val initialState = BookmarkFragmentState(tree, BookmarkFragmentState.Mode.Selecting(setOf(item, childItem)))
         val store = BookmarkFragmentStore(initialState)
 
@@ -167,7 +167,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `selecting and deselecting bookmarks does not affect loading state`() = runBlocking {
+    fun `selecting and deselecting bookmarks does not affect loading state`() = runTest {
         val initialState = BookmarkFragmentState(tree, isLoading = true)
         val store = BookmarkFragmentStore(initialState)
 
@@ -182,7 +182,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `changing bookmarks disables loading state`() = runBlocking {
+    fun `changing bookmarks disables loading state`() = runTest {
         val initialState = BookmarkFragmentState(tree, isLoading = true)
         val store = BookmarkFragmentStore(initialState)
 
@@ -191,7 +191,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `switching to Desktop Bookmarks folder sets showMenu state to false`() = runBlocking {
+    fun `switching to Desktop Bookmarks folder sets showMenu state to false`() = runTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 
@@ -202,7 +202,7 @@ class BookmarkFragmentStoreTest {
     }
 
     @Test
-    fun `changing the tree or deselecting in Syncing mode should stay in Syncing mode`() = runBlocking {
+    fun `changing the tree or deselecting in Syncing mode should stay in Syncing mode`() = runTest {
         val initialState = BookmarkFragmentState(tree)
         val store = BookmarkFragmentStore(initialState)
 

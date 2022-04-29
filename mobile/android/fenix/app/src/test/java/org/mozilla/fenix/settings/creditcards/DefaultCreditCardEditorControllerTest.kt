@@ -11,17 +11,15 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.utils.CreditCardNetworkType
 import mozilla.telemetry.glean.testing.GleanTestRule
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -47,7 +45,7 @@ class DefaultCreditCardEditorControllerTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val testDispatcher = coroutinesTestRule.testDispatcher
-    private val testCoroutineScope = TestCoroutineScope(testDispatcher)
+    private val testCoroutineScope = coroutinesTestRule.scope
 
     @Before
     fun setup() {
@@ -68,11 +66,6 @@ class DefaultCreditCardEditorControllerTest {
         )
     }
 
-    @After
-    fun cleanUp() {
-        testCoroutineScope.cleanupTestCoroutines()
-    }
-
     @Test
     fun handleCancelButtonClicked() {
         controller.handleCancelButtonClicked()
@@ -83,7 +76,7 @@ class DefaultCreditCardEditorControllerTest {
     }
 
     @Test
-    fun handleDeleteCreditCard() = testCoroutineScope.runBlockingTest {
+    fun handleDeleteCreditCard() = runTestOnMain {
         val creditCardId = "id"
         assertFalse(CreditCards.deleted.testHasValue())
 
@@ -97,7 +90,7 @@ class DefaultCreditCardEditorControllerTest {
     }
 
     @Test
-    fun handleSaveCreditCard() = testCoroutineScope.runBlockingTest {
+    fun handleSaveCreditCard() = runTestOnMain {
         val creditCardFields = NewCreditCardFields(
             billingName = "Banana Apple",
             plaintextCardNumber = CreditCardNumber.Plaintext("4111111111111112"),
@@ -118,7 +111,7 @@ class DefaultCreditCardEditorControllerTest {
     }
 
     @Test
-    fun handleUpdateCreditCard() = testCoroutineScope.runBlockingTest {
+    fun handleUpdateCreditCard() = runTestOnMain {
         val creditCardId = "id"
         val creditCardFields = UpdatableCreditCardFields(
             billingName = "Banana Apple",

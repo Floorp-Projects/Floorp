@@ -17,7 +17,7 @@ import io.mockk.mockkObject
 import io.mockk.spyk
 import io.mockk.unmockkObject
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.search.SearchEngine
@@ -184,7 +184,7 @@ class SearchDialogControllerTest {
     }
 
     @Test
-    fun handleEditingCancelled() = runBlockingTest {
+    fun handleEditingCancelled() = runTest {
         var clearToolbarFocusInvoked = false
         createController(
             clearToolbarFocus = {

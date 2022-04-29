@@ -7,7 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import io.mockk.MockKAnnotations
 import io.mockk.impl.annotations.MockK
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -26,7 +26,7 @@ class BookmarkSearchControllerTest {
     }
 
     @Test
-    fun `WHEN editing is cancelled THEN clearToolbarFocus is called`() = runBlockingTest {
+    fun `WHEN editing is cancelled THEN clearToolbarFocus is called`() = runTest {
         var clearToolbarFocusInvoked = false
         createController(
             clearToolbarFocus = {

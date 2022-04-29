@@ -17,8 +17,9 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webpush.WebPushDelegate
 import mozilla.components.concept.engine.webpush.WebPushHandler
@@ -38,7 +39,7 @@ import org.mozilla.fenix.helpers.MockkRetryTestRule
 
 class WebPushEngineIntegrationTest {
 
-    private val scope = TestCoroutineScope()
+    private val scope = TestScope(UnconfinedTestDispatcher())
     @MockK private lateinit var engine: Engine
     @MockK private lateinit var pushFeature: AutoPushFeature
     @MockK(relaxed = true) private lateinit var handler: WebPushHandler
@@ -65,11 +66,10 @@ class WebPushEngineIntegrationTest {
     @After
     fun teardown() {
         unmockkStatic(Base64::class)
-        scope.cleanupTestCoroutines()
     }
 
     @Test
-    fun `methods are no-op before calling start`() = scope.runBlockingTest {
+    fun `methods are no-op before calling start`() = scope.runTest {
         integration.onMessageReceived("push", null)
         integration.onSubscriptionChanged("push")
         verify { handler wasNot Called }

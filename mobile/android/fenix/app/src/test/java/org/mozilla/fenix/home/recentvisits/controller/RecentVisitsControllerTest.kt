@@ -14,7 +14,7 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.DocumentType
@@ -25,7 +25,7 @@ import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -49,7 +49,7 @@ class RecentVisitsControllerTest {
     val gleanTestRule = GleanTestRule(testContext)
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
-    private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
 
     private val selectOrAddTabUseCase: SelectOrAddUseCase = mockk(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
@@ -57,7 +57,6 @@ class RecentVisitsControllerTest {
     private lateinit var storage: HistoryMetadataStorage
     private lateinit var appStore: AppStore
     private lateinit var store: BrowserStore
-    private val scope = TestCoroutineScope()
 
     private lateinit var controller: DefaultRecentVisitsController
 
@@ -82,13 +81,8 @@ class RecentVisitsControllerTest {
         )
     }
 
-    @After
-    fun cleanUp() {
-        scope.cleanupTestCoroutines()
-    }
-
     @Test
-    fun handleHistoryShowAllClicked() {
+    fun handleHistoryShowAllClicked() = runTestOnMain {
         controller.handleHistoryShowAllClicked()
 
         verify {
@@ -100,7 +94,7 @@ class RecentVisitsControllerTest {
     }
 
     @Test
-    fun handleRecentHistoryGroupClicked() {
+    fun handleRecentHistoryGroupClicked() = runTestOnMain {
         val historyEntry = HistoryMetadata(
             key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
             title = "mozilla",
@@ -125,7 +119,7 @@ class RecentVisitsControllerTest {
     }
 
     @Test
-    fun handleRemoveGroup() {
+    fun handleRemoveGroup() = runTestOnMain {
         val historyMetadataKey = HistoryMetadataKey(
             "http://www.mozilla.com",
             "mozilla",
@@ -150,7 +144,7 @@ class RecentVisitsControllerTest {
 
         controller.handleRemoveRecentHistoryGroup(historyGroup.title)
 
-        testDispatcher.advanceUntilIdle()
+        advanceUntilIdle()
         verify {
             store.dispatch(HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
             appStore.dispatch(AppAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
@@ -163,7 +157,7 @@ class RecentVisitsControllerTest {
     }
 
     @Test
-    fun handleRecentHistoryHighlightClicked() {
+    fun handleRecentHistoryHighlightClicked() = runTestOnMain {
         val historyHighlight = RecentHistoryHighlight("title", "url")
 
         controller.handleRecentHistoryHighlightClicked(historyHighlight)
@@ -175,7 +169,7 @@ class RecentVisitsControllerTest {
     }
 
     @Test
-    fun handleRemoveRecentHistoryHighlight() {
+    fun handleRemoveRecentHistoryHighlight() = runTestOnMain {
         val highlightUrl = "highlightUrl"
         controller.handleRemoveRecentHistoryHighlight(highlightUrl)
 

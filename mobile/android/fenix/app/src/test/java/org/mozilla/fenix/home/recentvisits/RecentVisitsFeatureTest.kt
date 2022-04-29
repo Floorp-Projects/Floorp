@@ -10,9 +10,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryHighlight
@@ -23,6 +22,7 @@ import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -49,6 +49,7 @@ class RecentVisitsFeatureTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val testDispatcher = coroutinesTestRule.testDispatcher
+    private val scope = coroutinesTestRule.scope
 
     @Before
     fun setup() {
@@ -58,7 +59,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN no recent visits WHEN feature starts THEN fetch history metadata and highlights then notify store`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val historyEntry = HistoryMetadata(
                 key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
                 title = "mozilla",
@@ -92,7 +93,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `WHEN asking for history highlights THEN use a specific query`() {
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val highlightWeights = slot<HistoryHighlightWeights>()
             val highlightsAskedForNumber = slot<Int>()
 
@@ -113,7 +114,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN groups containing history metadata items with the same url WHEN they are added to store THEN entries are deduped`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val historyEntry1 = HistoryMetadata(
                 key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
                 title = "mozilla",
@@ -171,7 +172,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN different groups containing history metadata items with the same url WHEN they are added to store THEN entries are not deduped`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val now = System.currentTimeMillis()
             val historyEntry1 = HistoryMetadata(
                 key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
@@ -228,7 +229,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN history groups WHEN they are added to store THEN they are sorted descending by last updated timestamp`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val now = System.currentTimeMillis()
             val historyEntry1 = HistoryMetadata(
                 key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
@@ -285,7 +286,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN multiple groups exist but no highlights WHEN they are added to store THEN only MAX_RESULTS_TOTAL are sent`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val visitsFromSearch = getSearchFromHistoryMetadataItems(10)
             val expectedRecentHistoryGroups = visitsFromSearch
                 // Expect to only have the last accessed 9 groups.
@@ -306,7 +307,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN multiple highlights exist but no history groups WHEN they are added to store THEN only MAX_RESULTS_TOTAL are sent`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val highlights = getHistoryHighlightsItems(10)
             val expectedRecentHighlights = highlights
                 // Expect to only have 9 highlights
@@ -326,7 +327,7 @@ class RecentVisitsFeatureTest {
 
     @Test
     fun `GIVEN multiple history highlights and history groups WHEN they are added to store THEN only last accessed are added`() =
-        testDispatcher.runBlockingTest {
+        runTestOnMain {
             val visitsFromSearch = getSearchFromHistoryMetadataItems(10)
             val directVisits = getDirectVisitsHistoryMetadataItems(10)
             val expectedRecentHistoryGroups = visitsFromSearch
@@ -644,7 +645,7 @@ class RecentVisitsFeatureTest {
             appStore,
             historyMetadataStorage,
             lazy { historyHightlightsStorage },
-            CoroutineScope(testDispatcher),
+            scope,
             testDispatcher,
             false
         )
@@ -653,7 +654,7 @@ class RecentVisitsFeatureTest {
 
         feature.start()
 
-        testDispatcher.advanceUntilIdle()
+        scope.advanceUntilIdle()
         appStore.waitUntilIdle()
 
         coVerify {

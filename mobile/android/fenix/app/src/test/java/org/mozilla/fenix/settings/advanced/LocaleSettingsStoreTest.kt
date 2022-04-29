@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.settings.advanced
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -29,14 +29,14 @@ class LocaleSettingsStoreTest {
     }
 
     @Test
-    fun `change selected locale`() = runBlocking {
+    fun `change selected locale`() = runTest {
         localeSettingsStore.dispatch(LocaleSettingsAction.Select(otherLocale)).join()
 
         assertEquals(otherLocale, localeSettingsStore.state.selectedLocale)
     }
 
     @Test
-    fun `change selected list by search query`() = runBlocking {
+    fun `change selected list by search query`() = runTest {
         localeSettingsStore.dispatch(LocaleSettingsAction.Search("Eng")).join()
 
         assertEquals(2, (localeSettingsStore.state.searchedLocaleList as ArrayList).size)

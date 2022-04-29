@@ -10,7 +10,7 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -43,7 +43,7 @@ class OnDiskMessageMetadataStorageTest {
 
     @Test
     fun `GIVEN metadata is not loaded from disk WHEN calling getMetadata THEN load it`() =
-        runBlockingTest {
+        runTest {
             val spiedStorage = spyk(storage)
 
             coEvery { spiedStorage.readFromDisk() } returns emptyMap()
@@ -55,7 +55,7 @@ class OnDiskMessageMetadataStorageTest {
 
     @Test
     fun `GIVEN metadata is loaded from disk WHEN calling getMetadata THEN do not load it from disk`() =
-        runBlockingTest {
+        runTest {
             val spiedStorage = spyk(storage)
 
             spiedStorage.metadataMap = hashMapOf("" to Message.Metadata("id"))
@@ -66,7 +66,7 @@ class OnDiskMessageMetadataStorageTest {
         }
 
     @Test
-    fun `WHEN calling addMetadata THEN add in memory and disk`() = runBlockingTest {
+    fun `WHEN calling addMetadata THEN add in memory and disk`() = runTest {
         val spiedStorage = spyk(storage)
 
         assertTrue(spiedStorage.metadataMap.isEmpty())
@@ -80,7 +80,7 @@ class OnDiskMessageMetadataStorageTest {
     }
 
     @Test
-    fun `WHEN calling updateMetadata THEN delegate to addMetadata`() = runBlockingTest {
+    fun `WHEN calling updateMetadata THEN delegate to addMetadata`() = runTest {
         val spiedStorage = spyk(storage)
         val metadata = Message.Metadata("id")
         coEvery { spiedStorage.writeToDisk() } just Runs

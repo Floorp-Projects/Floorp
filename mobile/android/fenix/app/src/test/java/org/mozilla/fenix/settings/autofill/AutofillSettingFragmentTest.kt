@@ -10,14 +10,17 @@ import androidx.preference.Preference
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -29,12 +32,14 @@ import org.robolectric.Robolectric
 @RunWith(FenixRobolectricTestRunner::class)
 class AutofillSettingFragmentTest {
 
-    private val testDispatcher = TestCoroutineDispatcher()
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val testDispatcher = coroutinesTestRule.testDispatcher
     private lateinit var autofillSettingFragment: AutofillSettingFragment
     private val navController: NavController = mockk(relaxed = true)
 
     @Before
-    fun setUp() {
+    fun setUp() = runTestOnMain {
         every { testContext.components.settings } returns mockk(relaxed = true)
         every { testContext.components.settings.addressFeature } returns true
         every { testContext.components.settings.shouldAutofillCreditCardDetails } returns true
@@ -46,11 +51,11 @@ class AutofillSettingFragmentTest {
         activity.supportFragmentManager.beginTransaction()
             .add(autofillSettingFragment, "CreditCardsSettingFragmentTest")
             .commitNow()
-        testDispatcher.advanceUntilIdle()
+        advanceUntilIdle()
     }
 
     @Test
-    fun `GIVEN the list of credit cards is not empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Manage saved cards'`() {
+    fun `GIVEN the list of credit cards is not empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Manage saved cards'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_credit_cards_manage_saved_cards)
         val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
@@ -72,7 +77,7 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the list of credit cards is empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Add card'`() {
+    fun `GIVEN the list of credit cards is empty, WHEN fragment is displayed THEN the manage credit cards pref is 'Add card'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_credit_cards_add_credit_card)
         val manageCardsPreference = autofillSettingFragment.findPreference<Preference>(
@@ -100,7 +105,7 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the list of addresses is not empty WHEN fragment is displayed THEN the manage addresses preference label is 'Manage addresses'`() {
+    fun `GIVEN the list of addresses is not empty WHEN fragment is displayed THEN the manage addresses preference label is 'Manage addresses'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_addresses_manage_addresses)
         val manageAddressesPreference = autofillSettingFragment.findPreference<Preference>(
@@ -131,7 +136,7 @@ class AutofillSettingFragmentTest {
     }
 
     @Test
-    fun `GIVEN the list of addresses is empty WHEN fragment is displayed THEN the manage addresses preference label is 'Add address'`() {
+    fun `GIVEN the list of addresses is empty WHEN fragment is displayed THEN the manage addresses preference label is 'Add address'`() = runTestOnMain {
         val preferenceTitle =
             testContext.getString(R.string.preferences_addresses_add_address)
         val manageAddressesPreference = autofillSettingFragment.findPreference<Preference>(

@@ -9,12 +9,12 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.test.TestCoroutineScope
-import org.junit.After
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -32,7 +32,11 @@ class HistoryControllerTest {
         0.toLong(),
         HistoryItemTimeGroup.timeGroupForTimestamp(0)
     )
-    private val scope = TestCoroutineScope()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+    private val scope = coroutinesTestRule.scope
+
     private val store: HistoryFragmentStore = mockk(relaxed = true)
     private val appStore: AppStore = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)
@@ -42,11 +46,6 @@ class HistoryControllerTest {
     @Before
     fun setUp() {
         every { store.state } returns state
-    }
-
-    @After
-    fun cleanUp() {
-        scope.cleanupTestCoroutines()
     }
 
     @Test
