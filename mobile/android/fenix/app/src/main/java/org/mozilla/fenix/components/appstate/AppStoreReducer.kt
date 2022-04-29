@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components.appstate
 
 import androidx.annotation.VisibleForTesting
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
@@ -141,10 +142,12 @@ internal object AppStoreReducer {
                 pocketStories = updatedCategoriesState.getFilteredStories()
             )
         }
-        is AppAction.PocketStoriesChange -> state.copy(pocketStories = action.pocketStories)
+        is AppAction.PocketStoriesChange -> state.copy(
+            pocketStories = action.pocketStories
+        )
         is AppAction.PocketStoriesShown -> {
             var updatedCategories = state.pocketStoriesCategories
-            action.storiesShown.forEach { shownStory ->
+            action.storiesShown.filterIsInstance<PocketRecommendedStory>().forEach { shownStory ->
                 updatedCategories = updatedCategories.map { category ->
                     when (category.name == shownStory.category) {
                         true -> {

@@ -8,7 +8,8 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import mozilla.components.lib.state.Action
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -56,7 +57,7 @@ sealed class AppAction : Action {
     data class DisbandSearchGroupAction(val searchTerm: String) : AppAction()
     data class SelectPocketStoriesCategory(val categoryName: String) : AppAction()
     data class DeselectPocketStoriesCategory(val categoryName: String) : AppAction()
-    data class PocketStoriesShown(val storiesShown: List<PocketRecommendedStory>) : AppAction()
+    data class PocketStoriesShown(val storiesShown: List<PocketStory>) : AppAction()
     data class PocketStoriesChange(val pocketStories: List<PocketRecommendedStory>) : AppAction()
     /**
      * Adds a set of items marked for removal to the app state, to be hidden in the UI.

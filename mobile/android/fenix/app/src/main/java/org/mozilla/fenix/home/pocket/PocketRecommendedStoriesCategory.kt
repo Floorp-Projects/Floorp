@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.home.pocket
 
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 
 /**
  * Category name of the default category from which stories are to be shown

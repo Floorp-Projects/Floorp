@@ -14,8 +14,8 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
-import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStoriesService
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
@@ -68,9 +68,11 @@ class PocketUpdatesMiddleware(
                 persistStories(
                     coroutineScope = coroutineScope,
                     pocketStoriesService = pocketStoriesService,
-                    updatedStories = action.storiesShown.map {
-                        it.copy(timesShown = it.timesShown.inc())
-                    }
+                    updatedStories = action.storiesShown
+                        .filterIsInstance<PocketRecommendedStory>()
+                        .map {
+                            it.copy(timesShown = it.timesShown.inc())
+                        }
                 )
             }
             is AppAction.SelectPocketStoriesCategory,

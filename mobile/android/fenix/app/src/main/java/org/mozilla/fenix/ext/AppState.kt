@@ -5,11 +5,14 @@
 package org.mozilla.fenix.ext
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.home.blocklist.BlocklistHandler
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
+import org.mozilla.fenix.home.pocket.PocketStory
 import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
 
 @VisibleForTesting
@@ -18,16 +21,21 @@ internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
 /**
  * Get the list of stories to be displayed based on the user selected categories.
  *
- * @return a list of [PocketRecommendedStory]es from the currently selected categories.
+ * @return a list of [PocketStory]es from the currently selected categories.
  */
-fun AppState.getFilteredStories(): List<PocketRecommendedStory> {
+fun AppState.getFilteredStories(): List<PocketStory> {
     if (pocketStoriesCategoriesSelections.isEmpty()) {
-        return pocketStoriesCategories
+        val recommendedStories = pocketStoriesCategories
             .find {
                 it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME
             }?.stories
             ?.sortedBy { it.timesShown }
             ?.take(POCKET_STORIES_TO_SHOW_COUNT) ?: emptyList()
+
+        return combineRecommendedAndSponsoredStories(
+            recommendedStories = recommendedStories,
+            sponsoredStories = pocketSponsoredStories,
+        )
     }
 
     val oldestSortedCategories = pocketStoriesCategoriesSelections
@@ -46,6 +54,18 @@ fun AppState.getFilteredStories(): List<PocketRecommendedStory> {
         .flatMap { category ->
             category.stories.sortedBy { it.timesShown }.take(filteredStoriesCount[category.name]!!)
         }.take(POCKET_STORIES_TO_SHOW_COUNT)
+}
+
+private fun combineRecommendedAndSponsoredStories(
+    recommendedStories: List<PocketRecommendedStory>,
+    sponsoredStories: List<PocketSponsoredStory>,
+): List<PocketStory> {
+    val recommendedStoriesToShow = POCKET_STORIES_TO_SHOW_COUNT - sponsoredStories.size.coerceAtMost(2)
+
+    return recommendedStories.take(1) +
+        sponsoredStories.take(1) +
+        recommendedStories.take(recommendedStoriesToShow).drop(1) +
+        sponsoredStories.take(2).drop(1)
 }
 
 /**

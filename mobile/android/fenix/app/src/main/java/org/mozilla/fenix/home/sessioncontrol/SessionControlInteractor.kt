@@ -7,7 +7,7 @@ package org.mozilla.fenix.home.sessioncontrol
 import mozilla.components.feature.tab.collections.Tab
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.gleanplumb.Message
@@ -18,11 +18,11 @@ import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
+import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
+import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
-import org.mozilla.fenix.home.recentsyncedtabs.controller.RecentSyncedTabController
 import org.mozilla.fenix.home.recenttabs.interactor.RecentTabInteractor
-import org.mozilla.fenix.home.recentsyncedtabs.interactor.RecentSyncedTabInteractor
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
@@ -435,7 +435,7 @@ class SessionControlInteractor(
         controller.handleCustomizeHomeTapped()
     }
 
-    override fun onStoriesShown(storiesShown: List<PocketRecommendedStory>) {
+    override fun onStoriesShown(storiesShown: List<PocketStory>) {
         pocketStoriesController.handleStoriesShown(storiesShown)
     }
 
@@ -443,7 +443,7 @@ class SessionControlInteractor(
         pocketStoriesController.handleCategoryClick(categoryClicked)
     }
 
-    override fun onStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>) {
+    override fun onStoryClicked(storyClicked: PocketStory, storyPosition: Pair<Int, Int>) {
         pocketStoriesController.handleStoryClicked(storyClicked, storyPosition)
     }
 

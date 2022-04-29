@@ -37,7 +37,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ClickableSubstringLink
 import org.mozilla.fenix.compose.EagerFlingBehavior
@@ -57,7 +58,7 @@ private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
 private const val POCKET_FEATURE_UTM_KEY_VALUE = "utm_source=ff_android"
 
 /**
- * Placeholder [PocketRecommendedStory] allowing to combine other items in the same list that shows stories.
+ * Placeholder [PocketStory] allowing to combine other items in the same list that shows stories.
  * It uses empty values for it's properties ensuring that no conflict is possible since real stories have
  * mandatory values.
  */
@@ -114,11 +115,11 @@ fun PocketStory(
 }
 
 /**
- * Displays a list of [PocketRecommendedStory]es on 3 by 3 grid.
+ * Displays a list of [PocketStory]es on 3 by 3 grid.
  * If there aren't enough stories to fill all columns placeholders containing an external link
  * to go to Pocket for more recommendations are added.
  *
- * @param stories The list of [PocketRecommendedStory]ies to be displayed. Expect a list with 8 items.
+ * @param stories The list of [PocketStory]ies to be displayed. Expect a list with 8 items.
  * @param contentPadding Dimension for padding the content after it has been clipped.
  * This space will be used for shadows and also content rendering when the list is scrolled.
  * @param onStoryClicked Callback for when the user taps on a recommended story.
@@ -126,9 +127,9 @@ fun PocketStory(
  */
 @Composable
 fun PocketStories(
-    @PreviewParameter(PocketStoryProvider::class) stories: List<PocketRecommendedStory>,
+    @PreviewParameter(PocketStoryProvider::class) stories: List<PocketStory>,
     contentPadding: Dp,
-    onStoryClicked: (PocketRecommendedStory, Pair<Int, Int>) -> Unit,
+    onStoryClicked: (PocketStory, Pair<Int, Int>) -> Unit,
     onDiscoverMoreClicked: (String) -> Unit
 ) {
     // Show stories in at most 3 rows but on any number of columns depending on the data received.
@@ -151,7 +152,7 @@ fun PocketStories(
                         ListItemTabLargePlaceholder(stringResource(R.string.pocket_stories_placeholder_text)) {
                             onDiscoverMoreClicked("https://getpocket.com/explore?$POCKET_FEATURE_UTM_KEY_VALUE")
                         }
-                    } else {
+                    } else if (story is PocketRecommendedStory) {
                         PocketStory(story) {
                             val uri = Uri.parse(story.url)
                                 .buildUpon()
@@ -284,12 +285,12 @@ private fun PocketStoriesComposablesPreview() {
     }
 }
 
-private class PocketStoryProvider : PreviewParameterProvider<PocketRecommendedStory> {
+private class PocketStoryProvider : PreviewParameterProvider<PocketStory> {
     override val values = getFakePocketStories(7).asSequence()
     override val count = 8
 }
 
-internal fun getFakePocketStories(limit: Int = 1): List<PocketRecommendedStory> {
+internal fun getFakePocketStories(limit: Int = 1): List<PocketStory> {
     return mutableListOf<PocketRecommendedStory>().apply {
         for (index in 0 until limit) {
             add(

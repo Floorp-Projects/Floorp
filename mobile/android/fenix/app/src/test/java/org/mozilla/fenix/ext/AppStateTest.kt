@@ -5,7 +5,9 @@
 package org.mozilla.fenix.ext
 
 import io.mockk.mockk
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -29,7 +31,7 @@ class AppStateTest {
     )
 
     @Test
-    fun `GIVEN no category is selected WHEN getFilteredStories is called THEN only Pocket stories from the default category are returned`() {
+    fun `GIVEN no category is selected and no sponsored stories are available WHEN getFilteredStories is called THEN only Pocket stories from the default category are returned`() {
         val state = AppState(
             pocketStoriesCategories = listOf(
                 otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory
@@ -38,11 +40,15 @@ class AppStateTest {
 
         val result = state.getFilteredStories()
 
-        assertNull(result.firstOrNull { it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME })
+        assertNull(
+            result.firstOrNull {
+                it is PocketRecommendedStory && it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME
+            }
+        )
     }
 
     @Test
-    fun `GIVEN no category is selected WHEN getFilteredStories is called THEN no more than the default stories number are returned from the default category`() {
+    fun `GIVEN no category is selected and no sponsored stories are available WHEN getFilteredStories is called THEN no more than the default stories number are returned from the default category`() {
         val defaultStoriesCategoryWithManyStories = PocketRecommendedStoriesCategory(
             POCKET_STORIES_DEFAULT_CATEGORY_NAME,
             getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT + 2)
@@ -59,6 +65,63 @@ class AppStateTest {
     }
 
     @Test
+    fun `GIVEN no category is selected and 1 sponsored story available WHEN getFilteredStories is called THEN get stories from the default category combined with the sponsored one`() {
+        val defaultStoriesCategoryWithManyStories = PocketRecommendedStoriesCategory(
+            POCKET_STORIES_DEFAULT_CATEGORY_NAME,
+            getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT)
+        )
+        val sponsoredStories = getFakeSponsoredStories(1)
+        val state = AppState(
+            pocketStoriesCategories = listOf(
+                otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategoryWithManyStories
+            ),
+            pocketSponsoredStories = sponsoredStories
+        )
+
+        val result = state.getFilteredStories().toMutableList()
+
+        assertEquals(POCKET_STORIES_TO_SHOW_COUNT, result.size)
+        assertEquals(sponsoredStories[0], result[1]) // second story should be a sponsored one
+        result.removeAt(1) // remove the sponsored story to hopefully only remain with general recommendations
+        assertNull(
+            result.firstOrNull {
+                it is PocketRecommendedStory && it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME
+            }
+        )
+    }
+
+    @Test
+    fun `GIVEN no category is selected and 2 sponsored stories available WHEN getFilteredStories is called THEN get stories from the default category combined with the sponsored stories`() {
+        val defaultStoriesCategoryWithManyStories = PocketRecommendedStoriesCategory(
+            POCKET_STORIES_DEFAULT_CATEGORY_NAME,
+            getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT)
+        )
+        val sponsoredStories = getFakeSponsoredStories(2)
+        val state = AppState(
+            pocketStoriesCategories = listOf(
+                otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategoryWithManyStories
+            ),
+            pocketSponsoredStories = sponsoredStories
+        )
+
+        val result = state.getFilteredStories().toMutableList()
+
+        assertEquals(POCKET_STORIES_TO_SHOW_COUNT, result.size)
+        // second story should be a sponsored one
+        assertEquals(sponsoredStories[0], result[1])
+        // last story should be a sponsored one
+        assertEquals(sponsoredStories[1], result[POCKET_STORIES_TO_SHOW_COUNT - 1])
+        // remove the sponsored stories to hopefully only remain with general recommendations
+        result.removeAt(7)
+        result.removeAt(1)
+        assertNull(
+            result.firstOrNull {
+                it is PocketRecommendedStory && it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME
+            }
+        )
+    }
+
+    @Test
     fun `GIVEN a category is selected WHEN getFilteredStories is called THEN only stories from that category are returned`() {
         val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
@@ -67,7 +130,11 @@ class AppStateTest {
 
         val result = state.getFilteredStories()
 
-        assertNull(result.firstOrNull { it.category != otherStoriesCategory.name })
+        assertNull(
+            result.firstOrNull {
+                it is PocketRecommendedStory && it.category != otherStoriesCategory.name
+            }
+        )
     }
 
     @Test
@@ -103,7 +170,9 @@ class AppStateTest {
         assertEquals(6, result.size)
         assertNull(
             result.firstOrNull {
-                it.category != otherStoriesCategory.name && it.category != anotherStoriesCategory.name
+                it is PocketRecommendedStory &&
+                    it.category != otherStoriesCategory.name &&
+                    it.category != anotherStoriesCategory.name
             }
         )
     }
@@ -262,7 +331,11 @@ class AppStateTest {
         val result = state.getFilteredStories()
 
         assertEquals(3, result.size)
-        assertNull(result.firstOrNull { it.category != anotherStoriesCategory.name })
+        assertNull(
+            result.firstOrNull {
+                it is PocketRecommendedStory && it.category != anotherStoriesCategory.name
+            }
+        )
     }
 
     @Test
@@ -304,5 +377,22 @@ private fun getFakePocketStories(
                 )
             )
         }
+    }
+}
+
+private fun getFakeSponsoredStories(limit: Int) = mutableListOf<PocketSponsoredStory>().apply {
+    for (index in 0 until limit) {
+        add(
+            PocketSponsoredStory(
+                title = "Story title $index",
+                url = "https://sponsored.story",
+                imageUrl = "https://sponsored.image",
+                sponsor = "Sponsor $index",
+                shim = PocketSponsoredStoryShim(
+                    click = "Story title $index click shim",
+                    impression = "Story title $index impression shim"
+                )
+            )
+        )
     }
 }

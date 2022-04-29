@@ -4,7 +4,8 @@
 
 package org.mozilla.fenix.home.pocket
 
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 
 /**
  * Contract for all possible user interactions with the Pocket recommended stories feature.
@@ -15,7 +16,7 @@ interface PocketStoriesInteractor {
      *
      * @param storiesShown The new list of [PocketRecommendedStory]es shown to the user.
      */
-    fun onStoriesShown(storiesShown: List<PocketRecommendedStory>)
+    fun onStoriesShown(storiesShown: List<PocketStory>)
 
     /**
      * Callback for when the user clicks a specific category.
@@ -27,10 +28,10 @@ interface PocketStoriesInteractor {
     /**
      * Callback for when the user clicks on a specific story.
      *
-     * @param storyClicked The just clicked [PocketRecommendedStory] URL.
+     * @param storyClicked The just clicked [PocketStory].
      * @param storyPosition `row x column` matrix representing the grid position of the clicked story.
      */
-    fun onStoryClicked(storyClicked: PocketRecommendedStory, storyPosition: Pair<Int, Int>)
+    fun onStoryClicked(storyClicked: PocketStory, storyPosition: Pair<Int, Int>)
 
     /**
      * Callback for when the user clicks the "Learn more" link.

@@ -13,8 +13,8 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStoriesService
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -34,7 +34,9 @@ class PocketUpdatesMiddlewareTest {
 
     @Test
     fun `WHEN PocketStoriesShown is dispatched THEN update PocketStoriesService`() = runTestOnMain {
-        val story1 = PocketRecommendedStory("title", "url1", "imageUrl", "publisher", "category", 0, timesShown = 0)
+        val story1 = PocketRecommendedStory(
+            "title", "url1", "imageUrl", "publisher", "category", 0, timesShown = 0
+        )
         val story2 = story1.copy("title2", "url2")
         val story3 = story1.copy("title3", "url3")
         val pocketService: PocketStoriesService = mockk(relaxed = true)

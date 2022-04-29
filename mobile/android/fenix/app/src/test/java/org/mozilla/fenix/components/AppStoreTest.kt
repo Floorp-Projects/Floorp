@@ -14,7 +14,8 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -288,7 +289,7 @@ class AppStoreTest {
     fun `Test selecting a Pocket recommendations category`() = runTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
-        val filteredStories = listOf(mockk<PocketRecommendedStory>())
+        val filteredStories = listOf(mockk<PocketStory>())
         appStore = AppStore(
             AppState(
                 pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory),
@@ -316,7 +317,7 @@ class AppStoreTest {
     fun `Test deselecting a Pocket recommendations category`() = runTest {
         val otherStoriesCategory = PocketRecommendedStoriesCategory("other")
         val anotherStoriesCategory = PocketRecommendedStoriesCategory("another")
-        val filteredStories = listOf(mockk<PocketRecommendedStory>())
+        val filteredStories = listOf(mockk<PocketStory>())
         appStore = AppStore(
             AppState(
                 pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory),
@@ -363,7 +364,7 @@ class AppStoreTest {
         appStore = AppStore(AppState())
 
         mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
-            val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
+            val firstFilteredStories = listOf(mockk<PocketStory>())
             every { any<AppState>().getFilteredStories() } returns firstFilteredStories
 
             appStore.dispatch(
@@ -378,7 +379,7 @@ class AppStoreTest {
             assertSame(firstFilteredStories, appStore.state.pocketStories)
 
             val updatedCategories = listOf(PocketRecommendedStoriesCategory("yetAnother"))
-            val secondFilteredStories = listOf(mockk<PocketRecommendedStory>())
+            val secondFilteredStories = listOf(mockk<PocketStory>())
             every { any<AppState>().getFilteredStories() } returns secondFilteredStories
             appStore.dispatch(
                 AppAction.PocketStoriesCategoriesChange(
@@ -399,7 +400,7 @@ class AppStoreTest {
         appStore = AppStore(AppState())
 
         mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
-            val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
+            val firstFilteredStories = listOf(mockk<PocketStory>())
             every { any<AppState>().getFilteredStories() } returns firstFilteredStories
 
             appStore.dispatch(
