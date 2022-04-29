@@ -9,8 +9,13 @@
 #define mozilla_net_OpaqueResponseUtils_h
 
 #include "nsIContentPolicy.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
+
+namespace Telemetry {
+enum class LABELS_OPAQUE_RESPONSE_BLOCKING : uint32_t;
+}
 
 namespace net {
 
@@ -33,6 +38,24 @@ Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
 ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
 
 bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead);
+
+class OpaqueResponseBlockingInfo final {
+  const TimeStamp mStartTime;
+  Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING mDestination;
+
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OpaqueResponseBlockingInfo);
+
+  explicit OpaqueResponseBlockingInfo(ExtContentPolicyType aContentPolicyType);
+
+  void Report(const nsCString& aKey);
+
+  void ReportContentLength(int64_t aContentLength);
+
+ private:
+  ~OpaqueResponseBlockingInfo() = default;
+};
+
 }  // namespace net
 }  // namespace mozilla
 
