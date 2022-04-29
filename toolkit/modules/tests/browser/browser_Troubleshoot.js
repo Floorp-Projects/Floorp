@@ -1115,7 +1115,7 @@ const SNAPSHOT_SCHEMA = {
     remoteAgent: {
       type: "object",
       properties: {
-        listening: {
+        running: {
           required: true,
           type: "boolean",
         },
