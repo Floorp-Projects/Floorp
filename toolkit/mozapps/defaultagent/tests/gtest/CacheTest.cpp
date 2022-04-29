@@ -64,7 +64,7 @@ TEST_F(WDBACacheTest, BasicFunctionality) {
   ASSERT_TRUE(entry.isNothing());
 
   // Test that the cache stops accepting items when it is full.
-  ASSERT_EQ(Cache::kDefaultCapacity, 2);
+  ASSERT_EQ(Cache::kDefaultCapacity, 2U);
   Cache::Entry toWrite = Cache::Entry{
       .notificationType = "string1",
       .notificationShown = "string2",
@@ -96,7 +96,7 @@ TEST_F(WDBACacheTest, BasicFunctionality) {
   ASSERT_TRUE(entryResult.isOk());
   entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 2);
+  ASSERT_EQ(entry.value().entryVersion, 2U);
   ASSERT_EQ(entry.value().notificationType, "string1");
   ASSERT_EQ(entry.value().notificationShown, "string2");
   ASSERT_EQ(entry.value().notificationAction, "string3");
@@ -107,7 +107,7 @@ TEST_F(WDBACacheTest, BasicFunctionality) {
   ASSERT_TRUE(entryResult.isOk());
   entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 2);
+  ASSERT_EQ(entry.value().entryVersion, 2U);
   ASSERT_EQ(entry.value().notificationType, "string5");
   ASSERT_EQ(entry.value().notificationShown, "string6");
   ASSERT_EQ(entry.value().notificationAction, "string7");
@@ -149,7 +149,7 @@ TEST_F(WDBACacheTest, Version1Migration) {
   ASSERT_TRUE(entryResult.isOk());
   Cache::MaybeEntry entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 1);
+  ASSERT_EQ(entry.value().entryVersion, 1U);
   ASSERT_EQ(entry.value().notificationType, "string1");
   ASSERT_EQ(entry.value().notificationShown, "string2");
   ASSERT_EQ(entry.value().notificationAction, "string3");
@@ -169,7 +169,7 @@ TEST_F(WDBACacheTest, Version1Migration) {
   ASSERT_TRUE(entryResult.isOk());
   entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 1);
+  ASSERT_EQ(entry.value().entryVersion, 1U);
   ASSERT_EQ(entry.value().notificationType, "string4");
   ASSERT_EQ(entry.value().notificationShown, "string5");
   ASSERT_EQ(entry.value().notificationAction, "string6");
@@ -179,7 +179,7 @@ TEST_F(WDBACacheTest, Version1Migration) {
   ASSERT_TRUE(entryResult.isOk());
   entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 2);
+  ASSERT_EQ(entry.value().entryVersion, 2U);
   ASSERT_EQ(entry.value().notificationType, "string7");
   ASSERT_EQ(entry.value().notificationShown, "string8");
   ASSERT_EQ(entry.value().notificationAction, "string9");
@@ -263,7 +263,7 @@ TEST_F(WDBACacheTest, ForwardsCompatibility) {
   ASSERT_TRUE(entryResult.isOk());
   Cache::MaybeEntry entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 9999);
+  ASSERT_EQ(entry.value().entryVersion, 9999U);
   ASSERT_EQ(entry.value().notificationType, "string1");
   ASSERT_EQ(entry.value().notificationShown, "string2");
   ASSERT_EQ(entry.value().notificationAction, "string3");
@@ -274,7 +274,7 @@ TEST_F(WDBACacheTest, ForwardsCompatibility) {
   ASSERT_TRUE(entryResult.isOk());
   entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 2);
+  ASSERT_EQ(entry.value().entryVersion, 2U);
   ASSERT_EQ(entry.value().notificationType, "string6");
   ASSERT_EQ(entry.value().notificationShown, "string7");
   ASSERT_EQ(entry.value().notificationAction, "string8");
@@ -285,7 +285,7 @@ TEST_F(WDBACacheTest, ForwardsCompatibility) {
   ASSERT_TRUE(entryResult.isOk());
   entry = entryResult.unwrap();
   ASSERT_TRUE(entry.isSome());
-  ASSERT_EQ(entry.value().entryVersion, 2);
+  ASSERT_EQ(entry.value().entryVersion, 2U);
   ASSERT_EQ(entry.value().notificationType, "string10");
   ASSERT_EQ(entry.value().notificationShown, "string11");
   ASSERT_EQ(entry.value().notificationAction, "string12");

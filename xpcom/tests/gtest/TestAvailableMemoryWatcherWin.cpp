@@ -480,8 +480,8 @@ class MemoryWatcherTelemetryEvent {
     for (const nsAString& token : eventValues.LastElement().Split(',')) {
       tokens.AppendElement(token);
     }
-    EXPECT_EQ(tokens.Length(), 3);
-    if (tokens.Length() != 3) {
+    EXPECT_EQ(tokens.Length(), 3U);
+    if (tokens.Length() != 3U) {
       const wchar_t* valueStr = eventValues.LastElement().get();
       fprintf(stderr, "Unexpected event value: %S\n", valueStr);
       return;
