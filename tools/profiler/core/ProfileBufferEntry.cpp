@@ -1733,8 +1733,8 @@ void ProfileBuffer::StreamCountersToJSON(
           ERROR_AND_CONTINUE("expected a Time entry");
         }
         double time = e.Get().GetDouble();
+        e.Next();
         if (time >= aSinceTime) {
-          e.Next();
           while (e.Has() && e.Get().IsCounterKey()) {
             uint64_t key = e.Get().GetUint64();
             CounterKeyedSamples& data = LookupOrAdd(counter, key);
@@ -1749,6 +1749,7 @@ void ProfileBuffer::StreamCountersToJSON(
               number = 0;
             } else {
               number = e.Get().GetInt64();
+              e.Next();
             }
             CounterKeyedSample sample = {time, number, count};
             MOZ_RELEASE_ASSERT(data.append(sample));
@@ -1757,8 +1758,9 @@ void ProfileBuffer::StreamCountersToJSON(
           // skip counter sample - only need to skip the initial counter
           // id, then let the loop at the top skip the rest
         }
+      } else {
+        e.Next();
       }
-      e.Next();
     }
     // we have a map of a map of counter entries; dump them to JSON
     if (counters.count() == 0) {
