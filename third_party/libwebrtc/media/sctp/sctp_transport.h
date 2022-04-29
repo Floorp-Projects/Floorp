@@ -281,6 +281,8 @@ class SctpTransport : public SctpTransportInternal,
   // various callbacks.
   uintptr_t id_ = 0;
 
+  friend class SctpTransportMap;
+
   RTC_DISALLOW_COPY_AND_ASSIGN(SctpTransport);
 };
 
@@ -298,6 +300,8 @@ class SctpTransportFactory : public webrtc::SctpTransportFactoryInterface {
  private:
   rtc::Thread* network_thread_;
 };
+
+class SctpTransportMap;
 
 }  // namespace cricket
 
