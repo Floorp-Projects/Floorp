@@ -140,6 +140,14 @@ rtc_library("rtc_base_approved") {
     data_deps = [ "//build/win:runtime_libs" ]
   }
 
+  # These files add a dependency on the Win10 SDK v10.0.10240.
+  if (rtc_enable_win_wgc) {
+    sources += [
+      "win/create_direct3d_device.cc",
+      "win/create_direct3d_device.h",
+    ]
+  }
+
   if (is_nacl) {
     public_deps +=  # no-presubmit-check TODO(webrtc:8603)
         [ "//native_client_sdk/src/libraries/nacl_io" ]
