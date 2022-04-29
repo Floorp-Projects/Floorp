@@ -14,6 +14,7 @@
 #include <limits>
 #include <memory>
 
+#include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/units/data_size.h"
 #include "rtc_base/bind.h"
@@ -417,6 +418,7 @@ EmulatedNetworkNode::~EmulatedNetworkNode() = default;
 
 EmulatedEndpointImpl::EmulatedEndpointImpl(
     uint64_t id,
+    absl::optional<std::string> name,
     const rtc::IPAddress& ip,
     EmulatedEndpointConfig::StatsGatheringMode stats_gathering_mode,
     bool is_enabled,
@@ -424,6 +426,7 @@ EmulatedEndpointImpl::EmulatedEndpointImpl(
     rtc::TaskQueue* task_queue,
     Clock* clock)
     : id_(id),
+      log_name_(ip.ToString() + " (" + name.value_or("") + ")"),
       peer_local_addr_(ip),
       stats_gathering_mode_(stats_gathering_mode),
       is_enabled_(is_enabled),
@@ -449,6 +452,7 @@ EmulatedEndpointImpl::EmulatedEndpointImpl(
   network_->AddIP(ip);
 
   enabled_state_checker_.Detach();
+  RTC_LOG(INFO) << "Created emulated endpoint " << log_name_ << "; id=" << id_;
 }
 EmulatedEndpointImpl::~EmulatedEndpointImpl() = default;
 
@@ -496,15 +500,15 @@ absl::optional<uint16_t> EmulatedEndpointImpl::BindReceiver(
     }
   }
   RTC_CHECK(port != 0) << "Can't find free port for receiver in endpoint "
-                       << id_;
+                       << log_name_ << "; id=" << id_;
   bool result = port_to_receiver_.insert({port, receiver}).second;
   if (!result) {
     RTC_LOG(INFO) << "Can't bind receiver to used port " << desired_port
-                  << " in endpoint " << id_;
+                  << " in endpoint " << log_name_ << "; id=" << id_;
     return absl::nullopt;
   }
-  RTC_LOG(INFO) << "New receiver is binded to endpoint " << id_ << " on port "
-                << port;
+  RTC_LOG(INFO) << "New receiver is binded to endpoint " << log_name_
+                << "; id=" << id_ << " on port " << port;
   return port;
 }
 
@@ -542,8 +546,8 @@ void EmulatedEndpointImpl::OnPacketReceived(EmulatedIpPacket packet) {
     // It can happen, that remote peer closed connection, but there still some
     // packets, that are going to it. It can happen during peer connection close
     // process: one peer closed connection, second still sending data.
-    RTC_LOG(INFO) << "Drop packet: no receiver registered in " << id_
-                  << " on port " << packet.to.port();
+    RTC_LOG(INFO) << "Drop packet: no receiver registered in " << log_name_
+                  << "; id=" << id_ << " on port " << packet.to.port();
     stats_builder_.OnPacketDropped(packet.from.ipaddr(),
                                    DataSize::Bytes(packet.ip_packet_size()),
                                    stats_gathering_mode_);

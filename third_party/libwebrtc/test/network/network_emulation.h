@@ -484,6 +484,7 @@ class EmulatedEndpointImpl : public EmulatedEndpoint {
  public:
   EmulatedEndpointImpl(
       uint64_t id,
+      absl::optional<std::string> name,
       const rtc::IPAddress& ip,
       EmulatedEndpointConfig::StatsGatheringMode stats_gathering_mode,
       bool is_enabled,
@@ -527,6 +528,7 @@ class EmulatedEndpointImpl : public EmulatedEndpoint {
   rtc::ThreadChecker enabled_state_checker_;
 
   const uint64_t id_;
+  const std::string log_name_;
   // Peer's local IP address for this endpoint network interface.
   const rtc::IPAddress peer_local_addr_;
   const EmulatedEndpointConfig::StatsGatheringMode stats_gathering_mode_;

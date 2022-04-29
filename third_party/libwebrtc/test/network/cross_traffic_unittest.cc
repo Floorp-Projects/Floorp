@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "absl/types/optional.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/simulated_network.h"
 #include "call/simulated_network.h"
@@ -50,6 +51,7 @@ struct TrafficCounterFixture {
   TaskQueueForTest task_queue_;
   EmulatedEndpointImpl endpoint{
       /*id=*/1,
+      absl::nullopt,
       rtc::IPAddress(kTestIpAddress),
       EmulatedEndpointConfig::StatsGatheringMode::kDefault,
       /*is_enabled=*/true,
