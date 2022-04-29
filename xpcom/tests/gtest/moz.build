@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
     "TestNSPRLogModulesParser.cpp",
     "TestObserverArray.cpp",
     "TestObserverService.cpp",
+    "TestOwningNonNull.cpp",
     "TestPLDHash.cpp",
     "TestPriorityQueue.cpp",
     "TestQueue.cpp",
