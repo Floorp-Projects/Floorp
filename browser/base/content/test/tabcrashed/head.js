@@ -146,42 +146,26 @@ function prepareNoDump() {
 }
 
 const kBuildidMatchEnv = "MOZ_BUILDID_MATCH_DONTSEND";
+const envService = Cc["@mozilla.org/process/environment;1"].getService(
+  Ci.nsIEnvironment
+);
 
 function setBuildidMatchDontSendEnv() {
-  const envService = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   info("Setting " + kBuildidMatchEnv + "=1");
   envService.set(kBuildidMatchEnv, "1");
-  info("Set " + kBuildidMatchEnv + "=1");
 }
 
 function unsetBuildidMatchDontSendEnv() {
-  const envService = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
   info("Setting " + kBuildidMatchEnv + "=0");
   envService.set(kBuildidMatchEnv, "0");
-  info("Set " + kBuildidMatchEnv + "=0");
 }
 
-function getEventPromise(eventName, eventKind, kTimeout) {
+function getEventPromise(eventName, eventKind) {
   return new Promise(function(resolve, reject) {
-    /* eslint-disable mozilla/no-arbitrary-setTimeout */
-    let maybeTimeout = setTimeout(() => {
-      ok(
-        false,
-        "Timed out waiting " + eventName + " (" + eventKind + ") event"
-      );
-      reject();
-    }, kTimeout);
-
     info("Installing event listener (" + eventKind + ")");
     window.addEventListener(
       eventName,
       event => {
-        info("Clear timeout for " + eventKind + " event");
-        clearTimeout(maybeTimeout);
         ok(true, "Received " + eventName + " (" + eventKind + ") event");
         info("Call resolve() for " + eventKind + " event");
         resolve();
@@ -190,6 +174,15 @@ function getEventPromise(eventName, eventKind, kTimeout) {
     );
     info("Installed event listener (" + eventKind + ")");
   });
+}
+
+async function ensureBuildID() {
+  let profD = Services.dirsvc.get("GreD", Ci.nsIFile);
+  let platformIniOrig = await IOUtils.readUTF8(
+    PathUtils.join(profD.path, "platform.ini")
+  );
+  let buildID = Services.appinfo.platformBuildID;
+  return platformIniOrig.indexOf(buildID) > 0;
 }
 
 async function openNewTab(forceCrash) {
@@ -205,18 +198,46 @@ async function openNewTab(forceCrash) {
   };
 
   let tab = await BrowserTestUtils.openNewForegroundTab(options);
-
   if (forceCrash === true) {
     let browser = tab.linkedBrowser;
-    await BrowserTestUtils.crashFrame(browser, true, true, null);
+    await BrowserTestUtils.crashFrame(
+      browser,
+      /* shouldShowTabCrashPage */ false,
+      /* shouldClearMinidumps */ true,
+      /* BrowsingContext */ null
+    );
   }
 
-  // Since we crashed early, we expect to have some about:blank
-  // Remove it to clean up
+  return tab;
+}
+
+async function closeTab(tab) {
+  await TestUtils.waitForTick();
   BrowserTestUtils.removeTab(tab);
 }
 
 function getFalsePositiveTelemetry() {
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
   return scalars["dom.contentprocess.buildID_mismatch_false_positive"];
+}
+
+// The logic bound to dom.ipc.processPrelaunch.enabled will react to value
+// changes: https://searchfox.org/mozilla-central/rev/ecd91b104714a8b2584a4c03175be50ccb3a7c67/dom/ipc/PreallocatedProcessManager.cpp#171-195
+// So we force flip to ensure we have no dangling process.
+async function forceCleanProcesses() {
+  const origPrefValue = SpecialPowers.getBoolPref(
+    "dom.ipc.processPrelaunch.enabled"
+  );
+  await SpecialPowers.setBoolPref(
+    "dom.ipc.processPrelaunch.enabled",
+    !origPrefValue
+  );
+  await SpecialPowers.setBoolPref(
+    "dom.ipc.processPrelaunch.enabled",
+    origPrefValue
+  );
+  const currPrefValue = SpecialPowers.getBoolPref(
+    "dom.ipc.processPrelaunch.enabled"
+  );
+  ok(currPrefValue === origPrefValue, "processPrelaunch properly re-enabled");
 }

@@ -873,8 +873,6 @@ bool MessageChannel::SendBuildIDsMatchMessage(const char* aParentBuildID) {
       // tooling to avoid intermittent missing leakcheck
       NoteIntentionalCrash(XRE_GetProcessTypeString());
       if (XRE_IsContentProcess()) {
-        // Make sure we do not die too early, as this causes weird behavior
-        PR_Sleep(PR_MillisecondsToInterval(1000));
         return false;
       }
     }
