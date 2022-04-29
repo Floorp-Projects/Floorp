@@ -4,6 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
+import glob
+import os
 
 import buildconfig
 import mozpack.path as mozpath
@@ -18,7 +20,7 @@ def get_last_modified(full_path_to_remote_settings_dump_file):
     - Every element in `data` should contain a "last_modified" key.
     - The first element must have the highest "last_modified" value.
     """
-    with open(full_path_to_remote_settings_dump_file, "r") as f:
+    with open(full_path_to_remote_settings_dump_file, "r", encoding="utf-8") as f:
         changeset = json.load(f)
 
     records = changeset["data"]
@@ -52,31 +54,30 @@ def main(output):
         "mobile/android",
         "comm/mail",
         "comm/suite",
+    ), (
+        "Cannot determine location of Remote Settings "
+        f"dumps for platform {buildconfig.substs['MOZ_BUILD_APP']}"
     )
 
-    remotesettings_dumps = {}
-
-    # For simplicity, let's hardcode the path of the RemoteSettings dumps whose
-    # last_modified date is looked up.
-    # TODO bug 1719560: Replace hardcoded values with something more generic.
-    if buildconfig.substs["MOZ_BUILD_APP"] != "mobile/android":
-        # Until bug 1639050 is resolved, the dump isn't packaged with Android.
-        remotesettings_dumps["blocklists/addons-bloomfilters"] = mozpath.join(
-            buildconfig.topsrcdir,
-            "services/settings/dumps/blocklists/addons-bloomfilters.json",
-        )
+    dumps_locations = []
     if buildconfig.substs["MOZ_BUILD_APP"] == "browser":
-        # This is only packaged with browser.
-        remotesettings_dumps["main/search-config"] = mozpath.join(
-            buildconfig.topsrcdir,
-            "services/settings/dumps/main/search-config.json",
-        )
-    if buildconfig.substs["MOZ_BUILD_APP"] == "comm/mail":
-        # This is only packaged with Thunderbird.
-        remotesettings_dumps["main/search-config"] = mozpath.join(
-            buildconfig.topsrcdir,
-            "comm/mail/app/settings/dumps/thunderbird/search-config.json",
-        )
+        dumps_locations += ["services/settings/dumps/"]
+    elif buildconfig.substs["MOZ_BUILD_APP"] == "mobile/android":
+        dumps_locations += ["services/settings/dumps/"]
+    elif buildconfig.substs["MOZ_BUILD_APP"] == "comm/mail":
+        dumps_locations += ["mozilla/services/settings/dumps/"]
+        dumps_locations += ["mail/app/settings/dumps/"]
+    elif buildconfig.substs["MOZ_BUILD_APP"] == "comm/suite":
+        dumps_locations += ["mozilla/services/settings/dumps/"]
+
+    remotesettings_dumps = {}
+    for dumps_location in dumps_locations:
+        dumps_root_dir = mozpath.join(buildconfig.topsrcdir, *dumps_location.split("/"))
+        for path in glob.iglob(mozpath.join(dumps_root_dir, "*", "*.json")):
+            folder, filename = os.path.split(path)
+            bucket = os.path.basename(folder)
+            collection, _ = os.path.splitext(filename)
+            remotesettings_dumps[f"{bucket}/{collection}"] = path
 
     output_dict = {}
     input_files = set()
