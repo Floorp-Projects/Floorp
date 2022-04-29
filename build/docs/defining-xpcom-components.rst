@@ -4,6 +4,11 @@
 Defining XPCOM C++-implemented Components
 =========================================
 
+This document explains how to write a :code:`components.conf` file. For
+documentation on the idl format see :ref:`XPIDL`. For a tutorial on writing
+a new XPCOM interface, see
+:ref:`writing_xpcom_interface`.
+
 Native XPCOM components are registered at build time, and compiled into static
 data structures which allow them to be accessed with little runtime overhead.
 Each module which wishes to register components must provide a manifest
