@@ -87,7 +87,7 @@
   background-color: var(--theme-selection-background);
 }
 
-.treeTable .treeRow.selected *,
+.treeTable .treeRow.selected :where(:not(.objectBox-jsonml)),
 .treeTable .treeRow.selected .treeLabelCell::after {
   color: var(--theme-selection-color);
   fill: currentColor;

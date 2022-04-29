@@ -1500,11 +1500,15 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogBox {
   background-clip: content-box;
-  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
   display: -moz-box;
   margin: 0;
   padding: 0;
   overflow-x: auto;
+}
+
+.dialogBox:not(.noShadow) {
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
 }
 
 /*
@@ -1523,10 +1527,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 .dialogBox {
   border: 1px solid WindowText;
 }
-}
-
-.dialogBox {
-  border-radius: 8px;
 }
 
 .dialogBox[resizable="true"] {
@@ -1625,14 +1625,6 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 .dialogOverlay[topmost="true"],
 #window-modal-dialog::backdrop {
   background-color: rgba(28, 27, 34, 0.45);
-}
-
-#window-modal-dialog.showToolbar::backdrop {
-  background: linear-gradient(transparent, rgba(28, 27, 34, 0.45) 50%);
-}
-
-#window-modal-dialog.noShadow .dialogBox {
-  box-shadow: none;
 }
 
 /* For the window-modal dialog, the background is supplied by the HTML dialog

@@ -786,7 +786,7 @@ var gMainPane = {
       () => this.writeCheckSpelling()
     );
     Preferences.addSyncFromPrefListener(
-      document.getElementById("saveWhere"),
+      document.getElementById("alwaysAsk"),
       () => this.readUseDownloadDir()
     );
     Preferences.addSyncFromPrefListener(
@@ -2936,22 +2936,18 @@ var gMainPane = {
    */
 
   /**
-   * Enables/disables the folder field and Browse button based on whether a
-   * default download directory is being used.
+   * Disables the downloads folder field and Browse button if the default
+   * download directory pref is locked (e.g., by the DownloadDirectory or
+   * DefaultDownloadDirectory policies)
    */
   readUseDownloadDir() {
-    var downloadFolder = document.getElementById("downloadFolder");
-    var chooseFolder = document.getElementById("chooseFolder");
-    var useDownloadDirPreference = Preferences.get(
-      "browser.download.useDownloadDir"
-    );
-    var dirPreference = Preferences.get("browser.download.dir");
-
-    downloadFolder.disabled =
-      !useDownloadDirPreference.value || dirPreference.locked;
-    chooseFolder.disabled =
-      !useDownloadDirPreference.value || dirPreference.locked;
-
+    document.getElementById(
+      "downloadFolder"
+    ).disabled = document.getElementById(
+      "chooseFolder"
+    ).disabled = document.getElementById("saveTo").disabled =
+      Preferences.get("browser.download.dir").locked ||
+      Preferences.get("browser.download.folderList").locked;
     // don't override the preference's value in UI
     return undefined;
   },

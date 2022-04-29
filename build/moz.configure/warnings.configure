@@ -46,7 +46,7 @@ add_warning("-Wempty-body")
 check_and_add_warning("-Wformat-type-confusion")
 
 # catches return types with qualifiers like const
-add_warning("-Wignored-qualifiers", when=not_clang_cl)
+add_warning("-Wignored-qualifiers")
 
 # catches pointer arithmetic using NULL or sizeof(void)
 add_warning("-Wpointer-arith")

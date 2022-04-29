@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* import-globals-from head.js */
+
+add_task(async function test_default_promo() {
+  ASRouter.resetMessageState();
+
+  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [], async function() {
+    const promoContainer = content.document.querySelector(".promo"); // container which is present if promo is enabled and should show
+    const promoHeader = content.document.getElementById("promo-header");
+
+    ok(promoContainer, "Focus promo is shown");
+    is(
+      promoHeader.textContent,
+      "Next-level privacy on mobile",
+      "Correct default values are shown"
+    );
+  });
+
+  let { win: win2 } = await openTabAndWaitForRender();
+  let { win: win3 } = await openTabAndWaitForRender();
+
+  let { win: win4, tab: tab4 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab4, [], async function() {
+    is(
+      content.document.querySelector(".promo button"),
+      null,
+      "should no longer render the promo after 3 impressions"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win3);
+  await BrowserTestUtils.closeWindow(win4);
+});

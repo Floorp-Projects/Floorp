@@ -371,7 +371,7 @@ class nsWindow final : public nsBaseWidget {
   void PickerOpen();
   void PickerClosed();
 
-  bool const DestroyCalled() { return mDestroyCalled; }
+  bool DestroyCalled() { return mDestroyCalled; }
 
   bool IsPopup();
   bool ShouldUseOffMainThreadCompositing() override;

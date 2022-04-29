@@ -23,6 +23,7 @@ const NODE_TYPES = {
   ENTRIES: Symbol("<entries>"),
   GET: Symbol("<get>"),
   GRIP: Symbol("GRIP"),
+  JSONML: Symbol("JsonML"),
   MAP_ENTRY_KEY: Symbol("<key>"),
   MAP_ENTRY_VALUE: Symbol("<value>"),
   PROMISE_REASON: Symbol("<reason>"),
@@ -98,6 +99,14 @@ function nodeIsMapEntry(item) {
 
 function nodeHasChildren(item) {
   return Array.isArray(item.contents);
+}
+
+function nodeHasCustomFormatter(item) {
+  return item?.contents?.value?.useCustomFormatter === true && Array.isArray(item?.contents?.value?.header);
+}
+
+function nodeHasCustomFormattedBody(item) {
+  return item?.contents?.value?.hasBody === true;
 }
 
 function nodeHasValue(item) {
@@ -358,6 +367,22 @@ function makeNodesForProxyProperties(loadedProps, item) {
       name: "<handler>",
       contents: { value: proxyHandlerGrip, front: proxyHandlerFront },
       type: NODE_TYPES.PROXY_HANDLER,
+    }),
+  ];
+}
+
+function makeJsonMlNode(loadedProps, item) {
+  return [
+    createNode({
+      parent: item,
+      path: "body",
+      contents: {
+        value: {
+          header: loadedProps.customFormatterBody,
+          useCustomFormatter: true,
+        },
+      },
+      type: NODE_TYPES.JSONML,
     }),
   ];
 }
@@ -819,6 +844,10 @@ function getChildren(options) {
     return children;
   };
 
+  if (nodeHasCustomFormattedBody(item) && hasLoadedProps) {
+    return addToCache(makeJsonMlNode(loadedProps, item));
+  }
+
   // Nodes can either have children already, or be an object with
   // properties that we need to go and fetch.
   if (nodeHasChildren(item)) {
@@ -993,12 +1022,15 @@ module.exports = {
   getNonPrototypeParentGripValue,
   getNumericalPropertiesCount,
   getValue,
+  makeJsonMlNode,
   makeNodesForEntries,
   makeNodesForPromiseProperties,
   makeNodesForProperties,
   makeNumericalBuckets,
   nodeHasAccessors,
   nodeHasChildren,
+  nodeHasCustomFormattedBody,
+  nodeHasCustomFormatter,
   nodeHasEntries,
   nodeHasProperties,
   nodeHasGetter,

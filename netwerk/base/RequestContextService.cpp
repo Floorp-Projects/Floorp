@@ -9,6 +9,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIDocumentLoader.h"
 #include "nsIObserverService.h"
+#include "nsITimer.h"
 #include "nsIXULRuntime.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -297,8 +298,12 @@ void RequestContext::RescheduleUntailTimer(TimeStamp const& now) {
   }
 
   uint32_t delay = interval.ToMilliseconds();
-  mUntailTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mUntailTimer->InitWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT);
+  nsresult rv =
+      NS_NewTimerWithCallback(getter_AddRefs(mUntailTimer), this, delay,
+                              nsITimer::TYPE_ONE_SHOT, nullptr);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Could not reschedule untail timer");
+  }
 
   LOG(("RequestContext::RescheduleUntailTimer %p in %d", this, delay));
 }

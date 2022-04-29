@@ -410,25 +410,23 @@
 <groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
   <label><html:h2 data-l10n-id="download-header"/></label>
 
-  <radiogroup id="saveWhere"
-              preference="browser.download.useDownloadDir">
-    <hbox>
-      <radio id="saveTo"
-             value="true"
-             data-l10n-id="download-save-to"/>
-      <html:input id="downloadFolder"
-                  type="text"
-                  readonly="readonly"
-                  aria-labelledby="saveTo"/>
-      <button id="chooseFolder"
-              is="highlightable-button"
-              class="accessory-button"
-              data-l10n-id="download-choose-folder"/>
-    </hbox>
-    <radio id="alwaysAsk"
-           value="false"
-           data-l10n-id="download-always-ask-where"/>
-  </radiogroup>
+  <hbox id="saveWhere">
+    <label id="saveTo"
+           control="downloadFolder"
+           data-l10n-id="download-save-where"/>
+    <html:input id="downloadFolder"
+                type="text"
+                readonly="readonly"
+                aria-labelledby="saveTo"/>
+    <button id="chooseFolder"
+            is="highlightable-button"
+            class="accessory-button"
+            data-l10n-id="download-choose-folder"/>
+  </hbox>
+  <checkbox id="alwaysAsk"
+            value="false"
+            data-l10n-id="download-always-ask-where"
+            preference="browser.download.useDownloadDir"/>
 </groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">

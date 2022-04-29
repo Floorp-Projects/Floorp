@@ -149,6 +149,16 @@
   cursor: pointer;
 }
 
+/* JsonML reps can be nested, though only the top-level rep needs layout
+ * adjustments to align it with the toggle arrow and fit its width to its
+ * contents. */
+:not(.objectBox-jsonml) > .objectBox-jsonml {
+  display: inline-block;
+  vertical-align: bottom;
+  width: fit-content;
+  word-break: break-word;
+  line-height: normal;
+}
 /******************************************************************************/
 
 .objectBox-event,

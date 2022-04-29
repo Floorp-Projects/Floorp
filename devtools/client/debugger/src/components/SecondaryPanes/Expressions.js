@@ -142,6 +142,10 @@ class Expressions extends Component {
     this.props.clearExpressionError();
   };
 
+  createElement = element => {
+    return document.createElement(element);
+  };
+
   onFocus = () => {
     this.setState({ focused: true });
   };
@@ -222,6 +226,7 @@ class Expressions extends Component {
             autoExpandDepth={0}
             disableWrap={true}
             openLink={openLink}
+            createElement={this.createElement}
             onDoubleClick={(items, { depth }) => {
               if (depth === 0) {
                 this.editExpression(expression, index);
@@ -232,6 +237,7 @@ class Expressions extends Component {
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}
             onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
             shouldRenderTooltip={true}
+            mayUseCustomFormatter={true}
           />
           <div className="expression-container__close-btn">
             <CloseButton

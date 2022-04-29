@@ -277,18 +277,9 @@ const MessageLoaderUtils = {
           );
         } else if (
           RS_PROVIDERS_WITH_L10N.includes(provider.id) &&
-          (RemoteL10n.isLocaleSupported(Services.locale.appLocaleAsBCP47) ||
-            // While it's not a valid locale, "und" is commonly observed on
-            // Linux platforms. Per l10n team, it's reasonable to fallback to
-            // "en-US", therefore, we should allow the fetch for it.
-            Services.locale.appLocaleAsBCP47 === "und")
+          RemoteL10n.isLocaleSupported(MessageLoaderUtils.locale)
         ) {
-          let locale = Services.locale.appLocaleAsBCP47;
-          // Fallback to "en-US" if locale is "und"
-          if (locale === "und") {
-            locale = "en-US";
-          }
-          const recordId = `${RS_FLUENT_RECORD_PREFIX}-${locale}`;
+          const recordId = `${RS_FLUENT_RECORD_PREFIX}-${MessageLoaderUtils.locale}`;
           const kinto = new KintoHttpClient(
             Services.prefs.getStringPref(RS_SERVER_PREF)
           );
@@ -497,6 +488,26 @@ const MessageLoaderUtils = {
     if (dirty) {
       await storage.set(MessageLoaderUtils.REMOTE_LOADER_CACHE_KEY, cache);
     }
+  },
+
+  /**
+   * The locale to use for RemoteL10n.
+   *
+   * This may map the app's actual locale into something that RemoteL10n
+   * supports.
+   */
+  get locale() {
+    const localeMap = {
+      "ja-JP-macos": "ja-JP-mac",
+
+      // While it's not a valid locale, "und" is commonly observed on
+      // Linux platforms. Per l10n team, it's reasonable to fallback to
+      // "en-US", therefore, we should allow the fetch for it.
+      und: "en-US",
+    };
+
+    const locale = Services.locale.appLocaleAsBCP47;
+    return localeMap[locale] ?? locale;
   },
 };
 

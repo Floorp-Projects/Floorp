@@ -18,6 +18,8 @@
 #include "States.h"
 #include "TextLeafAccessible.h"
 
+#include "nsIBaseWindow.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDOMXULContainerElement.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/a11y/PDocAccessibleChild.h"
@@ -251,16 +253,17 @@ HyperTextAccessible* nsAccUtils::GetTextContainer(nsINode* aNode) {
 }
 
 LayoutDeviceIntPoint nsAccUtils::ConvertToScreenCoords(
-    int32_t aX, int32_t aY, uint32_t aCoordinateType,
-    LocalAccessible* aAccessible) {
+    int32_t aX, int32_t aY, uint32_t aCoordinateType, Accessible* aAccessible) {
   LayoutDeviceIntPoint coords(aX, aY);
 
   switch (aCoordinateType) {
+    // Regardless of coordinate type, the coords returned
+    // are in dev pixels.
     case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
       break;
 
     case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE: {
-      coords += nsCoreUtils::GetScreenCoordsForWindow(aAccessible->GetNode());
+      coords += GetScreenCoordsForWindow(aAccessible);
       break;
     }
 
@@ -278,14 +281,15 @@ LayoutDeviceIntPoint nsAccUtils::ConvertToScreenCoords(
 
 void nsAccUtils::ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
                                        uint32_t aCoordinateType,
-                                       LocalAccessible* aAccessible) {
+                                       Accessible* aAccessible) {
   switch (aCoordinateType) {
+    // Regardless of coordinate type, the values returned for
+    // aX and aY are in dev pixels.
     case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
       break;
 
     case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE: {
-      LayoutDeviceIntPoint coords =
-          nsCoreUtils::GetScreenCoordsForWindow(aAccessible->GetNode());
+      LayoutDeviceIntPoint coords = GetScreenCoordsForWindow(aAccessible);
       *aX -= coords.x;
       *aY -= coords.y;
       break;
@@ -304,17 +308,41 @@ void nsAccUtils::ConvertScreenCoordsTo(int32_t* aX, int32_t* aY,
 }
 
 LayoutDeviceIntPoint nsAccUtils::GetScreenCoordsForParent(
-    LocalAccessible* aAccessible) {
-  LocalAccessible* parent = aAccessible->LocalParent();
-  if (!parent) return LayoutDeviceIntPoint(0, 0);
+    Accessible* aAccessible) {
+  if (!aAccessible) return LayoutDeviceIntPoint();
 
-  nsIFrame* parentFrame = parent->GetFrame();
-  if (!parentFrame) return LayoutDeviceIntPoint(0, 0);
+  if (Accessible* parent = aAccessible->Parent()) {
+    LayoutDeviceIntRect parentBounds = parent->Bounds();
+    // The rect returned from Bounds() is already in dev
+    // pixels, so we don't need to do any conversion here.
+    return parentBounds.TopLeft();
+  }
 
-  nsRect rect = parentFrame->GetScreenRectInAppUnits();
-  nscoord appUnitsRatio = parentFrame->PresContext()->AppUnitsPerDevPixel();
-  return LayoutDeviceIntPoint::FromAppUnitsToNearest(
-      nsPoint(rect.X(), rect.Y()), appUnitsRatio);
+  return LayoutDeviceIntPoint();
+}
+
+LayoutDeviceIntPoint nsAccUtils::GetScreenCoordsForWindow(
+    Accessible* aAccessible) {
+  a11y::LocalAccessible* localAcc = aAccessible->AsLocal();
+  if (!localAcc) {
+    localAcc = aAccessible->AsRemote()->OuterDocOfRemoteBrowser();
+  }
+
+  LayoutDeviceIntPoint coords(0, 0);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(
+      nsCoreUtils::GetDocShellFor(localAcc->GetNode()));
+  if (!treeItem) return coords;
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  if (!treeOwner) return coords;
+
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(treeOwner);
+  if (baseWindow) {
+    baseWindow->GetPosition(&coords.x, &coords.y);  // in device pixels
+  }
+
+  return coords;
 }
 
 bool nsAccUtils::GetLiveAttrValue(uint32_t aRule, nsAString& aValue) {

@@ -71,6 +71,10 @@ export class Popup extends Component {
     return 250;
   };
 
+  createElement(element) {
+    return document.createElement(element);
+  }
+
   renderFunctionPreview() {
     const {
       cx,
@@ -127,10 +131,12 @@ export class Popup extends Component {
           disableWrap={true}
           focusable={false}
           openLink={openLink}
+          createElement={this.createElement}
           onDOMNodeClick={grip => openElementInInspector(grip)}
           onInspectIconClick={grip => openElementInInspector(grip)}
           onDOMNodeMouseOver={grip => highlightDomElement(grip)}
           onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
+          mayUseCustomFormatter={true}
         />
       </div>
     );

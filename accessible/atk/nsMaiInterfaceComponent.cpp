@@ -9,7 +9,6 @@
 #include "LocalAccessible-inl.h"
 #include "AccessibleWrap.h"
 #include "nsAccUtils.h"
-#include "nsCoreUtils.h"
 #include "nsMai.h"
 #include "mozilla/Likely.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
@@ -89,18 +88,8 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
 
   // Accessible::ChildAtPoint(x,y) is in screen pixels.
   if (aCoordType == ATK_XY_WINDOW) {
-    nsINode* node = nullptr;
-    if (acc->IsLocal()) {
-      node = acc->AsLocal()->GetNode();
-    } else {
-      // Use the XUL browser embedding this remote document.
-      auto browser = static_cast<mozilla::dom::BrowserParent*>(
-          acc->AsRemote()->Document()->Manager());
-      node = browser->GetOwnerElement();
-    }
-    MOZ_ASSERT(node);
     mozilla::LayoutDeviceIntPoint winCoords =
-        nsCoreUtils::GetScreenCoordsForWindow(node);
+        nsAccUtils::GetScreenCoordsForWindow(acc);
     aX += winCoords.x;
     aY += winCoords.y;
   }
@@ -138,7 +127,7 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
 
     if (aCoordType == ATK_XY_WINDOW) {
       mozilla::LayoutDeviceIntPoint winCoords =
-          nsCoreUtils::GetScreenCoordsForWindow(accWrap->GetNode());
+          nsAccUtils::GetScreenCoordsForWindow(accWrap);
       screenRect.x -= winCoords.x;
       screenRect.y -= winCoords.y;
     }

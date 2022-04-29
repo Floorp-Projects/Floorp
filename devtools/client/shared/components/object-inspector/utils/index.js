@@ -5,10 +5,12 @@
 const client = require("devtools/client/shared/components/object-inspector/utils/client");
 const loadProperties = require("devtools/client/shared/components/object-inspector/utils/load-properties");
 const node = require("devtools/client/shared/components/object-inspector/utils/node");
-const { nodeIsError, nodeIsPrimitive } = node;
+const { nodeIsError, nodeIsPrimitive, nodeHasCustomFormatter, nodeHasCustomFormattedBody } = node;
 const selection = require("devtools/client/shared/components/object-inspector/utils/selection");
 
-const { MODE } = require("devtools/client/shared/components/reps/reps/constants");
+const {
+  MODE,
+} = require("devtools/client/shared/components/reps/reps/constants");
 const {
   REPS: { Rep, Grip },
 } = require("devtools/client/shared/components/reps/reps/rep");
@@ -20,9 +22,10 @@ function shouldRenderRootsInReps(roots, props = {}) {
 
   const root = roots[0];
   const name = root && root.name;
+
   return (
     (name === null || typeof name === "undefined") &&
-    (nodeIsPrimitive(root) ||
+    (nodeIsPrimitive(root) || (nodeHasCustomFormatter(root) && !nodeHasCustomFormattedBody(root)) ||
       (nodeIsError(root) && props?.customFormat === true))
   );
 }
