@@ -33,7 +33,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.home.CurrentMode
 import org.mozilla.fenix.home.Mode
-import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -300,11 +299,11 @@ class AppStoreTest {
         )
 
         mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
-            every { any<AppState>().getFilteredStories(any()) } returns filteredStories
+            every { any<AppState>().getFilteredStories() } returns filteredStories
 
             appStore.dispatch(AppAction.SelectPocketStoriesCategory("another")).join()
 
-            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories() }
         }
 
         val selectedCategories = appStore.state.pocketStoriesCategoriesSelections
@@ -329,11 +328,11 @@ class AppStoreTest {
         )
 
         mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
-            every { any<AppState>().getFilteredStories(any()) } returns filteredStories
+            every { any<AppState>().getFilteredStories() } returns filteredStories
 
             appStore.dispatch(AppAction.DeselectPocketStoriesCategory("other")).join()
 
-            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories() }
         }
 
         val selectedCategories = appStore.state.pocketStoriesCategoriesSelections
@@ -365,12 +364,12 @@ class AppStoreTest {
 
         mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
             val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
-            every { any<AppState>().getFilteredStories(any()) } returns firstFilteredStories
+            every { any<AppState>().getFilteredStories() } returns firstFilteredStories
 
             appStore.dispatch(
                 AppAction.PocketStoriesCategoriesChange(listOf(otherStoriesCategory, anotherStoriesCategory))
             ).join()
-            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories() }
             assertTrue(
                 appStore.state.pocketStoriesCategories.containsAll(
                     listOf(otherStoriesCategory, anotherStoriesCategory)
@@ -380,13 +379,13 @@ class AppStoreTest {
 
             val updatedCategories = listOf(PocketRecommendedStoriesCategory("yetAnother"))
             val secondFilteredStories = listOf(mockk<PocketRecommendedStory>())
-            every { any<AppState>().getFilteredStories(any()) } returns secondFilteredStories
+            every { any<AppState>().getFilteredStories() } returns secondFilteredStories
             appStore.dispatch(
                 AppAction.PocketStoriesCategoriesChange(
                     updatedCategories
                 )
             ).join()
-            verify(exactly = 2) { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify(exactly = 2) { any<AppState>().getFilteredStories() }
             assertTrue(updatedCategories.containsAll(appStore.state.pocketStoriesCategories))
             assertSame(secondFilteredStories, appStore.state.pocketStories)
         }
@@ -401,7 +400,7 @@ class AppStoreTest {
 
         mockkStatic("org.mozilla.fenix.ext.AppStateKt") {
             val firstFilteredStories = listOf(mockk<PocketRecommendedStory>())
-            every { any<AppState>().getFilteredStories(any()) } returns firstFilteredStories
+            every { any<AppState>().getFilteredStories() } returns firstFilteredStories
 
             appStore.dispatch(
                 AppAction.PocketStoriesCategoriesSelectionsChange(
@@ -409,7 +408,7 @@ class AppStoreTest {
                     categoriesSelected = listOf(selectedCategory)
                 )
             ).join()
-            verify { any<AppState>().getFilteredStories(POCKET_STORIES_TO_SHOW_COUNT) }
+            verify { any<AppState>().getFilteredStories() }
             assertTrue(
                 appStore.state.pocketStoriesCategories.containsAll(
                     listOf(otherStoriesCategory, anotherStoriesCategory)

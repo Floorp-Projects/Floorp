@@ -12,24 +12,22 @@ import org.mozilla.fenix.home.pocket.POCKET_STORIES_DEFAULT_CATEGORY_NAME
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
 
+@VisibleForTesting
+internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
+
 /**
  * Get the list of stories to be displayed based on the user selected categories.
  *
- * @param neededStoriesCount how many stories are intended to be displayed.
- * This only impacts filtered results guaranteeing an even spread of stories from each category.
- *
  * @return a list of [PocketRecommendedStory]es from the currently selected categories.
  */
-fun AppState.getFilteredStories(
-    neededStoriesCount: Int
-): List<PocketRecommendedStory> {
+fun AppState.getFilteredStories(): List<PocketRecommendedStory> {
     if (pocketStoriesCategoriesSelections.isEmpty()) {
         return pocketStoriesCategories
             .find {
                 it.name == POCKET_STORIES_DEFAULT_CATEGORY_NAME
             }?.stories
             ?.sortedBy { it.timesShown }
-            ?.take(neededStoriesCount) ?: emptyList()
+            ?.take(POCKET_STORIES_TO_SHOW_COUNT) ?: emptyList()
     }
 
     val oldestSortedCategories = pocketStoriesCategoriesSelections
@@ -41,13 +39,13 @@ fun AppState.getFilteredStories(
         }
 
     val filteredStoriesCount = getFilteredStoriesCount(
-        oldestSortedCategories, neededStoriesCount
+        oldestSortedCategories, POCKET_STORIES_TO_SHOW_COUNT
     )
 
     return oldestSortedCategories
         .flatMap { category ->
             category.stories.sortedBy { it.timesShown }.take(filteredStoriesCount[category.name]!!)
-        }.take(neededStoriesCount)
+        }.take(POCKET_STORIES_TO_SHOW_COUNT)
 }
 
 /**

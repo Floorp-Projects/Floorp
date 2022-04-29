@@ -32,8 +32,6 @@ import org.mozilla.fenix.compose.SectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
-internal const val POCKET_STORIES_TO_SHOW_COUNT = 8
-
 /**
  * [RecyclerView.ViewHolder] for displaying the list of [PocketRecommendedStory]s from [AppStore].
  *
@@ -102,8 +100,9 @@ fun PocketStoriesViewHolderPreview() {
 
             Spacer(Modifier.height(16.dp))
 
+            @Suppress("MagicNumber")
             PocketStories(
-                stories = getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT),
+                stories = getFakePocketStories(8),
                 contentPadding = 0.dp,
                 onStoryClicked = { _, _ -> },
                 onDiscoverMoreClicked = {}

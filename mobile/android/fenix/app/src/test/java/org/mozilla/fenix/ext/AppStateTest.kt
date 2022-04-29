@@ -36,48 +36,61 @@ class AppStateTest {
             )
         )
 
-        var result = state.getFilteredStories(2)
-        assertNull(result.firstOrNull { it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME })
+        val result = state.getFilteredStories()
 
-        result = state.getFilteredStories(5)
         assertNull(result.firstOrNull { it.category != POCKET_STORIES_DEFAULT_CATEGORY_NAME })
     }
 
     @Test
-    fun `GIVEN no category is selected WHEN getFilteredStories is called THEN no more than the indicated number of stories are returned`() {
+    fun `GIVEN no category is selected WHEN getFilteredStories is called THEN no more than the default stories number are returned from the default category`() {
+        val defaultStoriesCategoryWithManyStories = PocketRecommendedStoriesCategory(
+            POCKET_STORIES_DEFAULT_CATEGORY_NAME,
+            getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT + 2)
+        )
         val state = AppState(
             pocketStoriesCategories = listOf(
-                otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory
+                otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategoryWithManyStories
             )
         )
 
-        // Asking for fewer than available
-        var result = state.getFilteredStories(2)
-        assertEquals(2, result.size)
+        val result = state.getFilteredStories()
 
-        // Asking for more than available
-        result = state.getFilteredStories(5)
-        assertEquals(3, result.size)
+        assertEquals(POCKET_STORIES_TO_SHOW_COUNT, result.size)
     }
 
     @Test
-    fun `GIVEN a category is selected WHEN getFilteredStories is called for fewer than in the category THEN only stories from that category are returned`() {
+    fun `GIVEN a category is selected WHEN getFilteredStories is called THEN only stories from that category are returned`() {
         val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
             pocketStoriesCategoriesSelections = listOf(PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name))
         )
 
-        var result = state.getFilteredStories(2)
-        assertEquals(2, result.size)
-        assertNull(result.firstOrNull { it.category != otherStoriesCategory.name })
+        val result = state.getFilteredStories()
 
-        result = state.getFilteredStories(3)
-        assertEquals(3, result.size)
         assertNull(result.firstOrNull { it.category != otherStoriesCategory.name })
     }
 
     @Test
-    fun `GIVEN two categories are selected WHEN getFilteredStories is called for fewer than in both THEN only stories from those categories are returned`() {
+    fun `GIVEN a category is selected WHEN getFilteredStories is called THEN no more than the default stories number are returned from the selected category`() {
+        val otherStoriesCategoryWithManyStories =
+            PocketRecommendedStoriesCategory(
+                "other",
+                getFakePocketStories(POCKET_STORIES_TO_SHOW_COUNT + 2, "other")
+            )
+        val state = AppState(
+            pocketStoriesCategories =
+            listOf(otherStoriesCategoryWithManyStories, anotherStoriesCategory, defaultStoriesCategory),
+            pocketStoriesCategoriesSelections =
+            listOf(PocketRecommendedStoriesSelectedCategory(otherStoriesCategoryWithManyStories.name))
+        )
+
+        val result = state.getFilteredStories()
+
+        assertEquals(POCKET_STORIES_TO_SHOW_COUNT, result.size)
+    }
+
+    @Test
+    fun `GIVEN two categories are selected WHEN getFilteredStories is called THEN only stories from those categories are returned`() {
         val state = AppState(
             pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
             pocketStoriesCategoriesSelections = listOf(
@@ -86,38 +99,13 @@ class AppStateTest {
             )
         )
 
-        var result = state.getFilteredStories(2)
-        assertEquals(2, result.size)
-        assertNull(
-            result.firstOrNull {
-                it.category != otherStoriesCategory.name && it.category != anotherStoriesCategory.name
-            }
-        )
-
-        result = state.getFilteredStories(6)
+        val result = state.getFilteredStories()
         assertEquals(6, result.size)
         assertNull(
             result.firstOrNull {
                 it.category != otherStoriesCategory.name && it.category != anotherStoriesCategory.name
             }
         )
-    }
-
-    @Test
-    fun `GIVEN two categories are selected WHEN getFilteredStories is called for an odd number of stories THEN there are more by one stories from the newest category`() {
-        val state = AppState(
-            pocketStoriesCategories = listOf(otherStoriesCategory, anotherStoriesCategory, defaultStoriesCategory),
-            pocketStoriesCategoriesSelections = listOf(
-                PocketRecommendedStoriesSelectedCategory(otherStoriesCategory.name, selectionTimestamp = 0),
-                PocketRecommendedStoriesSelectedCategory(anotherStoriesCategory.name, selectionTimestamp = 1)
-            )
-        )
-
-        val result = state.getFilteredStories(5)
-
-        assertEquals(5, result.size)
-        assertEquals(2, result.filter { it.category == otherStoriesCategory.name }.size)
-        assertEquals(3, result.filter { it.category == anotherStoriesCategory.name }.size)
     }
 
     @Test
@@ -250,7 +238,7 @@ class AppStateTest {
             )
         )
 
-        val result = state.getFilteredStories(6)
+        val result = state.getFilteredStories()
 
         assertEquals(6, result.size)
         assertSame(secondCategory.stories[2], result.first())
@@ -271,7 +259,7 @@ class AppStateTest {
             )
         )
 
-        val result = state.getFilteredStories(6)
+        val result = state.getFilteredStories()
 
         assertEquals(3, result.size)
         assertNull(result.firstOrNull { it.category != anotherStoriesCategory.name })

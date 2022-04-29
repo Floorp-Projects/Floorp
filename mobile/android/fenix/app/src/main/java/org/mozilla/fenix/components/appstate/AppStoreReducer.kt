@@ -9,7 +9,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.ext.recentSearchGroup
-import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
@@ -110,9 +109,7 @@ internal object AppStoreReducer {
 
             // Selecting a category means the stories to be displayed needs to also be changed.
             updatedCategoriesState.copy(
-                pocketStories = updatedCategoriesState.getFilteredStories(
-                    POCKET_STORIES_TO_SHOW_COUNT
-                )
+                pocketStories = updatedCategoriesState.getFilteredStories()
             )
         }
         is AppAction.DeselectPocketStoriesCategory -> {
@@ -124,18 +121,14 @@ internal object AppStoreReducer {
 
             // Deselecting a category means the stories to be displayed needs to also be changed.
             updatedCategoriesState.copy(
-                pocketStories = updatedCategoriesState.getFilteredStories(
-                    POCKET_STORIES_TO_SHOW_COUNT
-                )
+                pocketStories = updatedCategoriesState.getFilteredStories()
             )
         }
         is AppAction.PocketStoriesCategoriesChange -> {
             val updatedCategoriesState = state.copy(pocketStoriesCategories = action.storiesCategories)
             // Whenever categories change stories to be displayed needs to also be changed.
             updatedCategoriesState.copy(
-                pocketStories = updatedCategoriesState.getFilteredStories(
-                    POCKET_STORIES_TO_SHOW_COUNT
-                )
+                pocketStories = updatedCategoriesState.getFilteredStories()
             )
         }
         is AppAction.PocketStoriesCategoriesSelectionsChange -> {
@@ -145,9 +138,7 @@ internal object AppStoreReducer {
             )
             // Whenever categories change stories to be displayed needs to also be changed.
             updatedCategoriesState.copy(
-                pocketStories = updatedCategoriesState.getFilteredStories(
-                    POCKET_STORIES_TO_SHOW_COUNT
-                )
+                pocketStories = updatedCategoriesState.getFilteredStories()
             )
         }
         is AppAction.PocketStoriesChange -> state.copy(pocketStories = action.pocketStories)
