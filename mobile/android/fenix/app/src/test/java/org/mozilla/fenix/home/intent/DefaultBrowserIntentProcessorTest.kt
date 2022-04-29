@@ -19,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -45,14 +44,12 @@ class DefaultBrowserIntentProcessorTest {
         val navController: NavController = mockk(relaxed = true)
         val out: Intent = mockk()
         val activity: HomeActivity = mockk()
-        val metrics: MetricController = mockk()
 
         val intent = Intent().apply {
             putExtra("org.mozilla.fenix.default.browser.intent", true)
         }
         every { activity.startActivity(any()) } returns Unit
         every { activity.applicationContext } returns testContext
-        every { metrics.track(any()) } returns Unit
 
         assertFalse(Events.defaultBrowserNotifTapped.testHasValue())
 

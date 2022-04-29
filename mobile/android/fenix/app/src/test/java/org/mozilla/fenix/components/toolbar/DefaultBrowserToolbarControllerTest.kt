@@ -49,7 +49,6 @@ import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.SimpleBrowsingModeManager
 import org.mozilla.fenix.browser.readermode.ReaderModeController
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -68,9 +67,6 @@ class DefaultBrowserToolbarControllerTest {
 
     @MockK(relaxUnitFun = true)
     private lateinit var engineView: EngineView
-
-    @RelaxedMockK
-    private lateinit var metrics: MetricController
 
     @RelaxedMockK
     private lateinit var searchUseCases: SearchUseCases
@@ -377,7 +373,6 @@ class DefaultBrowserToolbarControllerTest {
         tabsUseCases = tabsUseCases,
         activity = activity,
         navController = navController,
-        metrics = metrics,
         engineView = engineView,
         homeViewModel = homeViewModel,
         customTabSessionId = customTabSessionId,

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import io.mockk.mockk
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -14,13 +13,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class RemoveTabUseCaseWrapperTest {
-
-    val metricController = mockk<MetricController>(relaxed = true)
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)

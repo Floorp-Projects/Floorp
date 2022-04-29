@@ -40,10 +40,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
@@ -310,12 +308,10 @@ class DefaultQuickSettingsControllerTest {
     fun `handleTrackingProtectionToggled should call the right use cases`() {
         val trackingProtectionUseCases: TrackingProtectionUseCases = mockk(relaxed = true)
         val sessionUseCases: SessionUseCases = mockk(relaxed = true)
-        val metrics: MetricController = mockk(relaxed = true)
 
         every { context.components.core.store } returns browserStore
         every { context.components.useCases.trackingProtectionUseCases } returns trackingProtectionUseCases
         every { context.components.useCases.sessionUseCases } returns sessionUseCases
-        every { context.metrics } returns metrics
         every { store.dispatch(any()) } returns mockk()
 
         var isEnabled = true

@@ -10,16 +10,11 @@ import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.components.metrics.MetricController
 
 /**
  * [Middleware] that reacts to various [TabsTrayAction]s.
- *
- * @property metrics reference to the configured [MetricController] to record general page load events.
  */
-class TabsTrayMiddleware(
-    private val metrics: MetricController
-) : Middleware<TabsTrayState, TabsTrayAction> {
+class TabsTrayMiddleware : Middleware<TabsTrayState, TabsTrayAction> {
 
     private var shouldReportInactiveTabMetrics: Boolean = true
     private var shouldReportSearchGroupMetrics: Boolean = true

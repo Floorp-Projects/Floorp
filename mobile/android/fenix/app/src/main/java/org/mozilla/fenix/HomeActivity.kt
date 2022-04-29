@@ -172,8 +172,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private val externalSourceIntentProcessors by lazy {
         listOf(
             HomeDeepLinkIntentProcessor(this),
-            SpeechProcessingIntentProcessor(this, components.core.store, components.analytics.metrics),
-            StartSearchIntentProcessor(components.analytics.metrics),
+            SpeechProcessingIntentProcessor(this, components.core.store),
+            StartSearchIntentProcessor(),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId),
             OpenSpecificTabIntentProcessor(this),
             DefaultBrowserIntentProcessor(this)

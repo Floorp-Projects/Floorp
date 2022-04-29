@@ -21,7 +21,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SearchTerms
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
@@ -29,17 +28,13 @@ class TabsTrayMiddlewareTest {
 
     private lateinit var store: TabsTrayStore
     private lateinit var tabsTrayMiddleware: TabsTrayMiddleware
-    private lateinit var metrics: MetricController
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
     @Before
     fun setUp() {
-        metrics = mockk(relaxed = true)
-        tabsTrayMiddleware = TabsTrayMiddleware(
-            metrics
-        )
+        tabsTrayMiddleware = TabsTrayMiddleware()
         store = TabsTrayStore(
             middlewares = listOf(tabsTrayMiddleware),
             initialState = TabsTrayState()

@@ -44,7 +44,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.ComponentTabstrayFabBinding
 import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
@@ -239,8 +238,6 @@ class TabsTrayFragmentTest {
         try {
             mockkStatic("org.mozilla.fenix.tabstray.ext.BrowserMenuKt")
             val navigationInteractor: NavigationInteractor = mockk()
-            val metrics: MetricController = mockk(relaxed = true)
-            every { context.components.analytics.metrics } returns metrics
             every { context.components.core.store } returns mockk()
             every { fragment.tabsTrayStore } returns mockk()
             val menu: BrowserMenu = mockk {
@@ -351,8 +348,6 @@ class TabsTrayFragmentTest {
     @Test
     fun `WHEN dismissTabsTray is called THEN it dismisses the tray`() {
         every { fragment.dismissAllowingStateLoss() } just Runs
-        val metrics: MetricController = mockk(relaxed = true)
-        every { context.components.analytics.metrics } returns metrics
 
         fragment.dismissTabsTray()
 

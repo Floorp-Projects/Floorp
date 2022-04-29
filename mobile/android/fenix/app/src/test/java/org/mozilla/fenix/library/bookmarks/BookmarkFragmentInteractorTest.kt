@@ -19,7 +19,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -32,7 +31,6 @@ class BookmarkFragmentInteractorTest {
     private lateinit var interactor: BookmarkFragmentInteractor
 
     private val bookmarkController: DefaultBookmarkController = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
 
     private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0u, "Mozilla", "http://mozilla.org", 0, null)
     private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1u, null, null, 0, null)
@@ -44,10 +42,7 @@ class BookmarkFragmentInteractorTest {
     @Before
     fun setup() {
         interactor =
-            BookmarkFragmentInteractor(
-                bookmarksController = bookmarkController,
-                metrics = metrics
-            )
+            BookmarkFragmentInteractor(bookmarksController = bookmarkController)
     }
 
     @Test

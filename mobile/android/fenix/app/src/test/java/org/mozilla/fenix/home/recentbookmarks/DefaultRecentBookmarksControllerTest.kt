@@ -29,8 +29,6 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.RecentBookmarks
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.recentbookmarks.controller.DefaultRecentBookmarksController
@@ -46,14 +44,12 @@ class DefaultRecentBookmarksControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxUnitFun = true)
-    private val metrics: MetricController = mockk(relaxed = true)
 
     private lateinit var controller: DefaultRecentBookmarksController
 
     @Before
     fun setup() {
         every { activity.openToBrowserAndLoad(any(), any(), any()) } just Runs
-        every { activity.components.core.metrics } returns metrics
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment

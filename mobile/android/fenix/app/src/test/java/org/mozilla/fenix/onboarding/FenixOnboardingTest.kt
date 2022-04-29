@@ -15,7 +15,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.helpers.perf.TestStrictModeManager
@@ -29,17 +28,13 @@ class FenixOnboardingTest {
     private lateinit var onboarding: FenixOnboarding
     private lateinit var preferences: SharedPreferences
     private lateinit var preferencesEditor: SharedPreferences.Editor
-    private lateinit var metrics: MetricController
 
     @Before
     fun setup() {
         preferences = mockk()
         preferencesEditor = mockk(relaxed = true)
-        metrics = mockk()
         val context = mockk<Context>()
         every { preferences.edit() } returns preferencesEditor
-        every { metrics.track(any()) } returns Unit
-        every { context.components.analytics.metrics } returns metrics
         every { context.components.strictMode } returns TestStrictModeManager() as StrictModeManager
         every { context.getSharedPreferences(any(), MODE_PRIVATE) } returns preferences
 

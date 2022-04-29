@@ -17,7 +17,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.GleanMetrics.History as GleanHistory
@@ -56,7 +55,6 @@ class DefaultHistoryController(
         delete: (Set<History>) -> suspend (context: Context) -> Unit
     ) -> Unit,
     private val syncHistory: suspend () -> Unit,
-    private val metrics: MetricController
 ) : HistoryController {
 
     override fun handleOpen(item: History) {

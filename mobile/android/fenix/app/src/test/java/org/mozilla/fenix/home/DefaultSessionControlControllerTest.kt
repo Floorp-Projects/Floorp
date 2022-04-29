@@ -64,7 +64,6 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gleanplumb.Message
@@ -89,7 +88,6 @@ class DefaultSessionControlControllerTest {
     private val activity: HomeActivity = mockk(relaxed = true)
     private val appStore: AppStore = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
     private val messageController: MessageController = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val tabCollectionStorage: TabCollectionStorage = mockk(relaxed = true)
@@ -154,7 +152,6 @@ class DefaultSessionControlControllerTest {
         every { activity.components.settings } returns settings
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns analytics
-        every { analytics.metrics } returns metrics
     }
 
     @After

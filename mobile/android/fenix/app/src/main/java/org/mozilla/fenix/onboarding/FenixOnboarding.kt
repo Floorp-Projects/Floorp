@@ -14,7 +14,6 @@ import org.mozilla.fenix.ext.components
 
 class FenixOnboarding(context: Context) : PreferencesHolder {
 
-    private val metrics = context.components.analytics.metrics
     private val strictMode = context.components.strictMode
     override val preferences: SharedPreferences = strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
         context.getSharedPreferences(

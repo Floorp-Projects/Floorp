@@ -43,7 +43,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionGlobalAddonsManagementFragment
@@ -59,7 +58,6 @@ class SearchDialogControllerTest {
     @MockK(relaxed = true) private lateinit var store: SearchDialogFragmentStore
     @MockK(relaxed = true) private lateinit var navController: NavController
     @MockK private lateinit var searchEngine: SearchEngine
-    @MockK(relaxed = true) private lateinit var metrics: MetricController
     @MockK(relaxed = true) private lateinit var settings: Settings
 
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
@@ -418,7 +416,6 @@ class SearchDialogControllerTest {
             fragmentStore = store,
             navController = navController,
             settings = settings,
-            metrics = metrics,
             dismissDialog = dismissDialog,
             clearToolbarFocus = clearToolbarFocus,
             focusToolbar = focusToolbar,

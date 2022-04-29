@@ -24,8 +24,6 @@ import org.junit.runner.RunWith
 import org.mozilla.experiments.nimbus.Branch
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -44,7 +42,6 @@ class NimbusBranchesControllerTest {
     private lateinit var settings: Settings
     private lateinit var activity: Context
     private lateinit var components: Components
-    private lateinit var metrics: MetricController
     private lateinit var snackbar: FenixSnackbar
     private lateinit var rootView: View
 
@@ -52,7 +49,6 @@ class NimbusBranchesControllerTest {
     fun setup() {
         components = mockk(relaxed = true)
         settings = mockk(relaxed = true)
-        metrics = mockk(relaxed = true)
         snackbar = mockk(relaxed = true)
         navController = mockk(relaxed = true)
 
@@ -66,7 +62,6 @@ class NimbusBranchesControllerTest {
         every { FenixSnackbar.make(any(), any(), any(), any()) } returns snackbar
 
         every { activity.settings() } returns settings
-        every { activity.components.analytics.metrics } returns metrics
 
         every { navController.currentDestination } returns mockk {
             every { id } returns org.mozilla.fenix.R.id.nimbusBranchesFragment

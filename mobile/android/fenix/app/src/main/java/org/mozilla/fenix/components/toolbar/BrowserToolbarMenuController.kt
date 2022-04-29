@@ -42,7 +42,6 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
@@ -64,7 +63,6 @@ class DefaultBrowserToolbarMenuController(
     private val store: BrowserStore,
     private val activity: HomeActivity,
     private val navController: NavController,
-    private val metrics: MetricController,
     private val settings: Settings,
     private val readerModeController: ReaderModeController,
     private val sessionFeature: ViewBoundFeatureWrapper<SessionFeature>,

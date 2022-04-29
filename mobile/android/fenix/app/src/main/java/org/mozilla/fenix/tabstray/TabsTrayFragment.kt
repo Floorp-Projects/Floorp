@@ -43,7 +43,6 @@ import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
 import org.mozilla.fenix.databinding.TabsTrayTabCounter2Binding
 import org.mozilla.fenix.databinding.TabstrayMultiselectItemsBinding
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
@@ -152,9 +151,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     focusGroupTabId = args.focusGroupTabId
                 ),
                 middlewares = listOf(
-                    TabsTrayMiddleware(
-                        metrics = requireContext().metrics
-                    )
+                    TabsTrayMiddleware()
                 )
             )
         }
@@ -194,7 +191,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 tabsTrayStore = tabsTrayStore,
                 browserStore = requireComponents.core.store,
                 navController = findNavController(),
-                metrics = requireComponents.analytics.metrics,
                 dismissTabTray = ::dismissTabsTray,
                 dismissTabTrayAndNavigateHome = ::dismissTabsTrayAndNavigateHome,
                 bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
@@ -214,7 +210,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             navigateToHomeAndDeleteSession = ::navigateToHomeAndDeleteSession,
             navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
-            metrics = requireComponents.analytics.metrics,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
             selectTabPosition = ::selectTabPosition,
             dismissTray = ::dismissTabsTray,

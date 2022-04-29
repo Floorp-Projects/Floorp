@@ -24,7 +24,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.TopSites
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.databinding.TopSiteItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -39,7 +38,6 @@ class TopSiteItemViewHolderTest {
     private lateinit var binding: TopSiteItemBinding
     private lateinit var interactor: TopSiteInteractor
     private lateinit var lifecycleOwner: LifecycleOwner
-    private lateinit var metrics: MetricController
 
     private val pocket = TopSite.Default(
         id = 1L,
@@ -53,10 +51,8 @@ class TopSiteItemViewHolderTest {
         binding = TopSiteItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
         lifecycleOwner = mockk(relaxed = true)
-        metrics = mockk(relaxed = true)
 
         every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
-        every { testContext.components.analytics.metrics } returns metrics
     }
 
     @Test

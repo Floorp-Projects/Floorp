@@ -23,7 +23,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
@@ -63,7 +62,6 @@ class SearchDialogController(
     private val fragmentStore: SearchFragmentStore,
     private val navController: NavController,
     private val settings: Settings,
-    private val metrics: MetricController,
     private val dismissDialog: () -> Unit,
     private val clearToolbarFocus: () -> Unit,
     private val focusToolbar: () -> Unit,

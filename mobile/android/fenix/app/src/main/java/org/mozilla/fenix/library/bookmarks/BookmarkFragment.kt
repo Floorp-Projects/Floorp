@@ -77,9 +77,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     private var _binding: FragmentBookmarkBinding? = null
     private val binding get() = _binding!!
 
-    private val metrics
-        get() = context?.components?.analytics?.metrics
-
     override val selectedItems get() = bookmarkStore.state.mode.selectedItems
 
     override fun onCreateView(
@@ -107,8 +104,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 deleteBookmarkNodes = ::deleteMulti,
                 deleteBookmarkFolder = ::showRemoveFolderDialog,
                 showTabTray = ::showTabTray
-            ),
-            metrics = metrics!!
+            )
         )
 
         bookmarkView = BookmarkView(binding.bookmarkLayout, bookmarkInteractor, findNavController())

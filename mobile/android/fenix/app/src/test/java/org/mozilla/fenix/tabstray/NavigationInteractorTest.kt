@@ -42,7 +42,6 @@ import org.mozilla.fenix.collections.CollectionsDialog
 import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import mozilla.components.browser.state.state.createTab as createStateTab
 import mozilla.components.browser.storage.sync.Tab as SyncTab
@@ -53,7 +52,6 @@ class NavigationInteractorTest {
     private lateinit var tabsTrayStore: TabsTrayStore
     private val testTab: TabSessionState = createStateTab(url = "https://mozilla.org")
     private val navController: NavController = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
     private val bookmarksUseCase: BookmarksUseCase = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
     private val collectionStorage: TabCollectionStorage = mockk(relaxed = true)
@@ -264,7 +262,6 @@ class NavigationInteractorTest {
             activity,
             browserStore,
             navController,
-            metrics,
             dismissTabTray,
             dismissTabTrayAndNavigateHome,
             bookmarksUseCase,

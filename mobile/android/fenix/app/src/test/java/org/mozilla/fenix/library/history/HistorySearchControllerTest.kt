@@ -21,7 +21,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.History
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -32,7 +31,6 @@ class HistorySearchControllerTest {
 
     @MockK(relaxed = true) private lateinit var activity: HomeActivity
     @MockK(relaxed = true) private lateinit var store: HistorySearchFragmentStore
-    @MockK(relaxed = true) private lateinit var metrics: MetricController
 
     @Before
     fun setUp() {

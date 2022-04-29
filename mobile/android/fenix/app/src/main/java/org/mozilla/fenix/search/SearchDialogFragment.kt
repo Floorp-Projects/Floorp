@@ -180,7 +180,6 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 fragmentStore = store,
                 navController = findNavController(),
                 settings = requireContext().settings(),
-                metrics = requireComponents.analytics.metrics,
                 dismissDialog = {
                     dialogHandledAction = true
                     dismissAllowingStateLoss()

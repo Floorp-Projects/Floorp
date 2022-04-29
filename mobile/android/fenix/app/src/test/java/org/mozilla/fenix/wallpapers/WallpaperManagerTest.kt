@@ -12,7 +12,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.utils.Settings
 import java.util.Calendar
 import java.util.Date
@@ -24,7 +23,6 @@ class WallpaperManagerTest {
     private val fakeCalendar = Calendar.getInstance()
 
     private val mockSettings: Settings = mockk()
-    private val mockMetrics: MetricController = mockk()
     private val mockDownloader: WallpaperDownloader = mockk {
         coEvery { downloadWallpaper(any()) } just runs
     }
@@ -34,8 +32,6 @@ class WallpaperManagerTest {
 
     @Test
     fun `WHEN wallpaper set THEN current wallpaper updated in settings`() {
-        every { mockMetrics.track(any()) } just runs
-
         val currentCaptureSlot = slot<String>()
         every { mockSettings.currentWallpaper } returns ""
         every { mockSettings.currentWallpaper = capture(currentCaptureSlot) } just runs

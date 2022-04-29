@@ -8,7 +8,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import io.mockk.mockk
 import io.mockk.coEvery
-import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.verify
 import io.mockk.coVerify
@@ -37,7 +36,6 @@ import org.mozilla.fenix.GleanMetrics.RecentlyClosedTabs
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.ext.optionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -49,7 +47,6 @@ class DefaultRecentlyClosedControllerTest {
     private val browserStore: BrowserStore = mockk(relaxed = true)
     private val recentlyClosedStore: RecentlyClosedFragmentStore = mockk(relaxed = true)
     private val tabsUseCases: TabsUseCases = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
@@ -111,7 +108,6 @@ class DefaultRecentlyClosedControllerTest {
         assertEquals(BrowsingMode.Normal, actualBrowsingModes[1])
         assertTrue(RecentlyClosedTabs.menuOpenInNormalTab.testHasValue())
         assertNull(RecentlyClosedTabs.menuOpenInNormalTab.testGetValue().last().extra)
-        clearMocks(metrics)
 
         tabUrls.clear()
         actualBrowsingModes.clear()

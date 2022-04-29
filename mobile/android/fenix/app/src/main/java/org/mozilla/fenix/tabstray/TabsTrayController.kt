@@ -21,7 +21,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.ext.potentialInactiveTabs
@@ -115,7 +114,6 @@ class DefaultTabsTrayController(
     private val navigateToHomeAndDeleteSession: (String) -> Unit,
     private val profiler: Profiler?,
     private val navigationInteractor: NavigationInteractor,
-    private val metrics: MetricController,
     private val tabsUseCases: TabsUseCases,
     private val selectTabPosition: (Int, Boolean) -> Unit,
     private val dismissTray: () -> Unit,

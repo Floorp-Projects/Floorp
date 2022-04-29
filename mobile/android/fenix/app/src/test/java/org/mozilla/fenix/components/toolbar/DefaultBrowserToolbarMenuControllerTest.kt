@@ -72,7 +72,6 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.AccountState
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -92,7 +91,6 @@ class DefaultBrowserToolbarMenuControllerTest {
     @RelaxedMockK private lateinit var activity: HomeActivity
     @RelaxedMockK private lateinit var navController: NavController
     @RelaxedMockK private lateinit var openInFenixIntent: Intent
-    @RelaxedMockK private lateinit var metrics: MetricController
     @RelaxedMockK private lateinit var settings: Settings
     @RelaxedMockK private lateinit var searchUseCases: SearchUseCases
     @RelaxedMockK private lateinit var sessionUseCases: SessionUseCases
@@ -814,7 +812,6 @@ class DefaultBrowserToolbarMenuControllerTest {
         store = store,
         activity = activity,
         navController = navController,
-        metrics = metrics,
         settings = settings,
         findInPageLauncher = findInPageLauncher,
         browserAnimator = browserAnimator,

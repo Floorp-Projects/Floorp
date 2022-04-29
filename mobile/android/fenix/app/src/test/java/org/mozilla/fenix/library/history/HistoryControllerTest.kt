@@ -20,7 +20,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.history.DefaultPagedHistoryProvider
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -38,7 +37,6 @@ class HistoryControllerTest {
     private val appStore: AppStore = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val metrics: MetricController = mockk(relaxed = true)
     private val historyProvider: DefaultPagedHistoryProvider = mockk(relaxed = true)
 
     @Before
@@ -202,7 +200,6 @@ class HistoryControllerTest {
             invalidateOptionsMenu,
             { items, _, _ -> deleteHistoryItems.invoke(items) },
             syncHistory,
-            metrics
         )
     }
 }

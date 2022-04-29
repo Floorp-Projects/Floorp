@@ -25,7 +25,6 @@ import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.ReaderModeController
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -55,7 +54,6 @@ class DefaultBrowserToolbarController(
     private val tabsUseCases: TabsUseCases,
     private val activity: HomeActivity,
     private val navController: NavController,
-    private val metrics: MetricController,
     private val readerModeController: ReaderModeController,
     private val engineView: EngineView,
     private val homeViewModel: HomeScreenViewModel,

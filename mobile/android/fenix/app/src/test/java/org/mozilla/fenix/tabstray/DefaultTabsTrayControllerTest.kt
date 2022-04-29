@@ -36,7 +36,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.potentialInactiveTabs
@@ -61,9 +60,6 @@ class DefaultTabsTrayControllerTest {
 
     @MockK(relaxed = true)
     private lateinit var navigationInteractor: NavigationInteractor
-
-    @MockK(relaxed = true)
-    private lateinit var metrics: MetricController
 
     @MockK(relaxed = true)
     private lateinit var tabsUseCases: TabsUseCases
@@ -551,7 +547,6 @@ class DefaultTabsTrayControllerTest {
             navigateToHomeAndDeleteSession,
             profiler,
             navigationInteractor,
-            metrics,
             tabsUseCases,
             selectTabPosition,
             dismissTray,

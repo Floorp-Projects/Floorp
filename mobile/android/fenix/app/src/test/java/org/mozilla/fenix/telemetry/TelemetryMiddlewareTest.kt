@@ -30,7 +30,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.GleanMetrics.EngineTab as EngineMetrics
@@ -41,7 +40,6 @@ class TelemetryMiddlewareTest {
     private lateinit var store: BrowserStore
     private lateinit var settings: Settings
     private lateinit var telemetryMiddleware: TelemetryMiddleware
-    private lateinit var metrics: MetricController
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -56,11 +54,7 @@ class TelemetryMiddlewareTest {
         Clock.delegate = clock
 
         settings = Settings(testContext)
-        metrics = mockk(relaxed = true)
-        telemetryMiddleware = TelemetryMiddleware(
-            settings,
-            metrics
-        )
+        telemetryMiddleware = TelemetryMiddleware(settings,)
         store = BrowserStore(
             middleware = listOf(telemetryMiddleware) + EngineMiddleware.create(engine = mockk()),
             initialState = BrowserState()

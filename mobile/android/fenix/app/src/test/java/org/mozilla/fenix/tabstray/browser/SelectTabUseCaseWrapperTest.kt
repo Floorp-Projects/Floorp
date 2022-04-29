@@ -16,13 +16,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class) // for gleanTestRule
 class SelectTabUseCaseWrapperTest {
 
-    val metricController = mockk<MetricController>(relaxed = true)
     val selectUseCase: TabsUseCases.SelectTabUseCase = mockk(relaxed = true)
 
     @get:Rule

@@ -34,15 +34,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.share.listadapters.AppShareOption
@@ -51,7 +48,6 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 class ShareControllerTest {
     // Need a valid context to retrieve Strings for example, but we also need it to return our "metrics"
     private val context: Context = spyk(testContext)
-    private val metrics: MetricController = mockk(relaxed = true)
     private val shareSubject = "shareSubject"
     private val shareData = listOf(
         ShareData(url = "url0", title = "title0"),
@@ -81,11 +77,6 @@ class ShareControllerTest {
         context, shareSubject, shareData, sendTabUseCases, snackbar, navController,
         recentAppStorage, testCoroutineScope, testDispatcher, dismiss
     )
-
-    @Before
-    fun setUp() {
-        every { context.metrics } returns metrics
-    }
 
     @After
     fun cleanUp() {
