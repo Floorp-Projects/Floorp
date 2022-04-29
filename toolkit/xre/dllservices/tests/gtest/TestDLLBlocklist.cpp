@@ -120,7 +120,7 @@ TEST(TestDllBlocklist, BlocklistIntegrity)
 
     // Validate name
     EXPECT_TRUE(!!pEntry->mName);
-    EXPECT_GT(strlen(pEntry->mName), 3);
+    EXPECT_GT(strlen(pEntry->mName), 3U);
 
     // Check the filename for valid characters.
     for (auto pch = pEntry->mName; *pch != 0; ++pch) {

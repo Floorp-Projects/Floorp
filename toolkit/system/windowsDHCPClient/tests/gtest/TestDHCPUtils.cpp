@@ -229,7 +229,7 @@ TEST_F(TestDHCPUtils, TestGetAbsentOption) {
   nsresult retVal = RetrieveOption(mDefaultAdapterName, 252, optionValue, &size,
                                    mMockWindowsFunctions);
 
-  ASSERT_EQ(0, size);
+  ASSERT_EQ(0U, size);
   ASSERT_EQ(NS_ERROR_NOT_AVAILABLE, retVal);
 }
 
