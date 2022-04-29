@@ -121,6 +121,7 @@ LocalAccessible::LocalAccessible(nsIContent* aContent, DocAccessible* aDoc)
       mParent(nullptr),
       mIndexInParent(-1),
       mBounds(),
+      mFirstLineStart(-1),
       mStateFlags(0),
       mContextFlags(0),
       mReorderEventTarget(false),
@@ -3205,6 +3206,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  bool boundsChanged = false;
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
 
@@ -3217,8 +3219,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     // do an initial cache push.
     MOZ_ASSERT(aUpdateType == CacheUpdateType::Initial || mBounds.isSome(),
                "Incremental cache push but mBounds is not set!");
-    if (aUpdateType == CacheUpdateType::Initial ||
-        !newBoundsRect.IsEqualEdges(mBounds.value())) {
+    boundsChanged = aUpdateType == CacheUpdateType::Initial ||
+                    !newBoundsRect.IsEqualEdges(mBounds.value());
+    if (boundsChanged) {
       mBounds = Some(newBoundsRect);
 
       nsTArray<int32_t> boundsArray(4);
@@ -3245,25 +3248,51 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             /* aIncludeDefaults */ false);
         fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
       }
-      // We cache line start offsets for both text and non-text leaf Accessibles
-      // because non-text leaf Accessibles can still start a line.
-      nsTArray<int32_t> lineStarts;
-      for (TextLeafPoint lineStart =
-               TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
-                   /* aIncludeOrigin */ true);
-           lineStart;
-           lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
-        lineStarts.AppendElement(lineStart.mOffset);
-      }
-      if (!lineStarts.IsEmpty()) {
-        fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
-      }
     }
     if (HyperTextAccessible* ht = AsHyperText()) {
       RefPtr<AccAttributes> attrs = ht->DefaultTextAttributes();
       fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
     }
   }
+
+  if (aCacheDomain & (CacheDomain::Text | CacheDomain::Bounds) &&
+      !HasChildren()) {
+    // We cache line start offsets for both text and non-text leaf Accessibles
+    // because non-text leaf Accessibles can still start a line.
+    TextLeafPoint lineStart =
+        TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
+            /* aIncludeOrigin */ true);
+    int32_t lineStartOffset = lineStart ? lineStart.mOffset : -1;
+    // We push line starts in two cases:
+    // 1. Text or bounds changed, which means it's very likely that line starts
+    // changed too.
+    // 2. CacheDomain::Bounds was requested (indicating that the frame was
+    // reflowed) but the bounds  didn't actually change. This can happen when
+    // the spanned text is non-rectangular. For example, an Accessible might
+    // cover two characters on one line and a single character on another line.
+    // An insertion in a previous text node might cause it to shift such that it
+    // now covers a single character on the first line and two characters on the
+    // second line. Its bounding rect will be the same both before and after the
+    // insertion. In this case, we use the first line start to determine whether
+    // there was a change. This should be safe because the text didn't change in
+    // this Accessible, so if the first line start doesn't shift, none of them
+    // should shift.
+    if (aCacheDomain & CacheDomain::Text || boundsChanged ||
+        mFirstLineStart != lineStartOffset) {
+      mFirstLineStart = lineStartOffset;
+      nsTArray<int32_t> lineStarts;
+      for (; lineStart;
+           lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
+        lineStarts.AppendElement(lineStart.mOffset);
+      }
+      if (!lineStarts.IsEmpty()) {
+        fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+      } else if (aUpdateType == CacheUpdateType::Update) {
+        fields->SetAttribute(nsGkAtoms::line, DeleteEntry());
+      }
+    }
+  }
+
   nsIFrame* frame = GetFrame();
   if (aCacheDomain & CacheDomain::TransformMatrix) {
     if (frame && frame->IsTransformed()) {
