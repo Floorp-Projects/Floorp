@@ -73,7 +73,7 @@ def make_task_description(config, jobs):
         # Override shipping-phase for release: push to the Store early to
         # allow time for certification.
         if job["worker"]["publish-mode"] == "Manual":
-            job["shipping-phase"] = "build"
+            job["shipping-phase"] = "promote"
 
         yield job
 
