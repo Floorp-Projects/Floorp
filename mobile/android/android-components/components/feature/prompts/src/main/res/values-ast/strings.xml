@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Text for confirmation for a positive action in dialog  -->
-    <string name="mozac_feature_prompts_ok">Aceutar</string>
+    <string name="mozac_feature_prompts_ok">D\'acuerdu</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">Encaboxar</string>
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
@@ -27,15 +27,15 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">Anovar</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">El campu Contraseña nun ha tar baleru</string>
+    <string name="mozac_feature_prompt_error_empty_password">El campu «Contraseña» nun ha tar baleru</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">Nun ye posible guardar l\'aniciu de sesión</string>
+    <string name="mozac_feature_prompt_error_unknown_cause">Nun ye posible guardar la cuenta</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">¿Guardar esti aniciu de sesión?</string>
+    <string name="mozac_feature_prompt_login_save_headline">¿Quies guardar esta cuenta?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">¿Anovar esti aniciu de sesión?</string>
+    <string name="mozac_feature_prompt_login_update_headline">¿Quies anovar esta cuenta?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_add_username_headline">¿Amestar el nome d\'usuariu a la contraseña guardada?</string>
+    <string name="mozac_feature_prompt_login_add_username_headline">¿Quies amestar el nome d\'usuariu a la contraseña guardada?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
     <string name="mozac_feature_prompts_content_description_input_label">Etiqueta pa introducir un campu d\'entrada de testu</string>
@@ -44,11 +44,11 @@
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Permitir</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
-    <string name="mozac_feature_prompts_deny">Ñegar</string>
+    <string name="mozac_feature_prompts_deny">Negar</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">¿De xuru?</string>
     <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
-    <string name="mozac_feature_prompt_before_unload_dialog_body">¿Quies colar d\'esti sitiu? Los datos qu\'introduxeres nun van guardase</string>
+    <string name="mozac_feature_prompt_before_unload_dialog_body">¿Quies colar d\'esti sitiu? Ye posible que nun se guarden los datos introducíos</string>
     <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
     <string name="mozac_feature_prompts_before_unload_stay">Quedar</string>
     <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
@@ -80,19 +80,29 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Avi</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">Xestión d\'anicios de sesión</string>
+    <string name="mozac_feature_prompts_manage_logins">Xestión de cuentes</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Espander los anicios de sesión suxeríos</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description">Espander les cuentes suxeríes</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Recoyer los anicios de sesión suxeríos</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Recoyer les cuentes suxeríes</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">Anicios de sesión suxeríos</string>
+    <string name="mozac_feature_prompts_saved_logins">Cuentes suxeríes</string>
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
-    <string name="mozac_feature_prompt_repost_title">¿Reunviar los datos a esti sitiu?</string>
-    <string name="mozac_feature_prompt_repost_message">Refrescar esta páxina podría duplicar les aiciones de recién como l\'unviu d\'un pagu o l\'espublizamientu d\'un artículu.</string>
+    <string name="mozac_feature_prompt_repost_title">¿Quies volver unviar los datos a esti sitiu?</string>
+    <string name="mozac_feature_prompt_repost_message">Refrescar esta páxina podría duplicar les aiciones de recién como l\'unviu d\'un pagu o l\'espublizamientu d\'un artículu dos vegaes.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
-    <string name="mozac_feature_prompt_repost_positive_button_text">Reunviar los datos</string>
+    <string name="mozac_feature_prompt_repost_positive_button_text">Volver unviar</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">Encaboxar</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Esbilla una tarxeta de creitu</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Espander les tarxetes de creitu</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Recoyer les tarxetes de creitu</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Xestión de tarxetes de creitu</string>
 </resources>

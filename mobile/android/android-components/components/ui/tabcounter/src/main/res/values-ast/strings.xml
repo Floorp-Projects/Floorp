@@ -10,6 +10,8 @@
     <string name="mozac_browser_menu_new_private_tab">Llingüeta privada nueva</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Zarrar la llingüeta</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Duplicar la llingüeta</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">El botón del contador de llingüetes de la barra de ferramientes.</string>
 </resources>

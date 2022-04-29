@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_media_notification_channel">Multimedia</string>
+    <string name="mozac_feature_media_notification_channel">Conteníu multimedia</string>
 
     <!-- Title of notification shown when the device's camera is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera">La cámara ta activada</string>
@@ -18,5 +18,5 @@
     <string name="mozac_feature_media_notification_action_pause">Posar</string>
 
     <!-- Neutral title of the media notification for when a website that is open in private mode. -->
-    <string name="mozac_feature_media_notification_private_mode">Un sitiu ta reproduciendo multimedia</string>
+    <string name="mozac_feature_media_notification_private_mode">Un sitiu ta reproduciendo conteníu multimedia</string>
 </resources>

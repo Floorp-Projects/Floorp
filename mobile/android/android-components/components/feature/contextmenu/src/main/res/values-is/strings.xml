@@ -3,7 +3,7 @@
     <!-- Text for context menu item to open the link in a new tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">Opna tengil í nýjum flipa</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Opna tengil í einkaflipa</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Opna tengil í huliðsflipa</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Opna mynd í nýjum flipa</string>
     <!-- Text for context menu item to save / download the link. -->
@@ -23,7 +23,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Nýr flipi opnaður</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
-    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nýr einkaflipi opnaður</string>
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Nýr huliðsflipi opnaður</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Tengill afritaður á klippispjald</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
