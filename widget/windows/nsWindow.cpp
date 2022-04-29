@@ -538,7 +538,7 @@ class TIPMessageHandler {
     // want to block, and the aHwnd is a nsWindow that belongs to the current
     // thread.
     if (!aMsgResult || aMsgCode != WM_GETOBJECT ||
-        static_cast<DWORD>(aLParam) != OBJID_CLIENT ||
+        static_cast<LONG>(aLParam) != OBJID_CLIENT ||
         !WinUtils::GetNSWindowPtr(aHwnd) ||
         ::GetWindowThreadProcessId(aHwnd, nullptr) != ::GetCurrentThreadId() ||
         !IsA11yBlocked()) {
