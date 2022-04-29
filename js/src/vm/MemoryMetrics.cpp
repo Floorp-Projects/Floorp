@@ -745,7 +745,9 @@ JS_PUBLIC_API bool JS::CollectGlobalStats(GlobalStats* gStats) {
 
   // HelperThreadState holds data that is not part of a Runtime. This does
   // not include data is is currently being processed by a HelperThread.
-  HelperThreadState().addSizeOfIncludingThis(gStats, lock);
+  if (IsHelperThreadStateInitialized()) {
+    HelperThreadState().addSizeOfIncludingThis(gStats, lock);
+  }
 
 #ifdef JS_TRACE_LOGGING
   // Global data used by TraceLogger
