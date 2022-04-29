@@ -86,7 +86,7 @@ class nsJSContext : public nsIScriptContext {
 
   static void BeginCycleCollectionCallback(mozilla::CCReason aReason);
   static void EndCycleCollectionCallback(
-      mozilla::CycleCollectorResults& aResults);
+      const mozilla::CycleCollectorResults& aResults);
 
   // Return the longest CC slice time since ClearMaxCCSliceTime() was last
   // called.
