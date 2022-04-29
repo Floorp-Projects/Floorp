@@ -105,7 +105,7 @@ void FileOpAsync(const wchar_t* aPath) {
   Overlapped writeOp;
   if (!::WriteFileGather(file.get(), segments.begin(), kNumPages * kPageSize,
                          nullptr, writeOp)) {
-    EXPECT_EQ(::GetLastError(), ERROR_IO_PENDING);
+    EXPECT_EQ(::GetLastError(), static_cast<DWORD>(ERROR_IO_PENDING));
     EXPECT_TRUE(writeOp.Wait(file.get()));
   }
 
@@ -116,7 +116,7 @@ void FileOpAsync(const wchar_t* aPath) {
   Overlapped readOp;
   if (!::ReadFileScatter(file.get(), segments.begin(), kNumPages * kPageSize,
                          nullptr, readOp)) {
-    EXPECT_EQ(::GetLastError(), ERROR_IO_PENDING);
+    EXPECT_EQ(::GetLastError(), static_cast<DWORD>(ERROR_IO_PENDING));
     EXPECT_TRUE(readOp.Wait(file.get()));
   }
 
