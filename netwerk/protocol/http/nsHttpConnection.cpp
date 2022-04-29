@@ -453,7 +453,7 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
       nsHttpTransaction* hTrans = trans->QueryHttpTransaction();
       if (hTrans) {
         hTrans->BootstrapTimings(mBootstrappedTimings);
-        SetUrgentStartPreferred(hTrans->ClassOfService() &
+        SetUrgentStartPreferred(hTrans->ClassOfService().Flags() &
                                 nsIClassOfService::UrgentStart);
       }
     }

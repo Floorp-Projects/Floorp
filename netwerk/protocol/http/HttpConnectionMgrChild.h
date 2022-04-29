@@ -33,7 +33,8 @@ class HttpConnectionMgrChild final : public PHttpConnectionMgrChild {
   mozilla::ipc::IPCResult RecvRescheduleTransaction(
       PHttpTransactionChild* aTrans, const int32_t& aPriority);
   mozilla::ipc::IPCResult RecvUpdateClassOfServiceOnTransaction(
-      PHttpTransactionChild* aTrans, const uint32_t& aClassOfService);
+      PHttpTransactionChild* aTrans,
+      const ClassOfServiceStruct& aClassOfService);
   mozilla::ipc::IPCResult RecvCancelTransaction(PHttpTransactionChild* aTrans,
                                                 const nsresult& aReason);
   mozilla::ipc::IPCResult RecvSpeculativeConnect(

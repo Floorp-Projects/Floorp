@@ -88,7 +88,7 @@ nsresult HttpTransactionParent::Init(
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
     uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
-    nsIRequestContext* requestContext, uint32_t classOfService,
+    nsIRequestContext* requestContext, ClassOfServiceStruct classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
     TransactionObserverFunc&& transactionObserver,
     OnPushCallback&& aOnPushCallback,
