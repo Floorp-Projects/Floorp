@@ -115,8 +115,7 @@ INSTANTIATE_TEST_SUITE_P(
     FieldTrials,
     QualityScalerTest,
     ::testing::Values(
-        "WebRTC-Video-QualityScaling/Enabled-1,2,3,4,5,6,7,8,0.9,0.99,1/",
-        ""));
+        "WebRTC-Video-QualityScaling/Enabled-1,2,3,4,5,6,7,8,0.9,0.99,1/"));
 
 TEST_P(QualityScalerTest, DownscalesAfterContinuousFramedrop) {
   task_queue_.SendTask([this] { TriggerScale(kScaleDown); }, RTC_FROM_HERE);

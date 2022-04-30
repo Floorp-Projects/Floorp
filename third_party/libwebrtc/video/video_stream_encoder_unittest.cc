@@ -5517,6 +5517,8 @@ TEST_F(VideoStreamEncoderTest, RampsUpInQualityWhenBwIsHigh) {
 
 TEST_F(VideoStreamEncoderTest,
        QualityScalerAdaptationsRemovedWhenQualityScalingDisabled) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-Video-QualityScaling/Disabled/");
   AdaptingFrameForwarder source(&time_controller_);
   source.set_adaptation_enabled(true);
   video_stream_encoder_->SetSource(&source,
