@@ -546,6 +546,7 @@ if (rtc_include_tests) {
       "api/transport:stun_unittest",
       "api/video/test:rtc_api_video_unittests",
       "api/video_codecs/test:video_codecs_api_unittests",
+      "api/voip:compile_all_headers",
       "call:fake_network_pipe_unittests",
       "p2p:libstunprober_unittests",
       "p2p:rtc_p2p_unittests",
@@ -705,6 +706,7 @@ if (rtc_include_tests) {
   rtc_test("voip_unittests") {
     testonly = true
     deps = [
+      "api/voip:compile_all_headers",
       "api/voip:voip_engine_factory_unittests",
       "audio/voip/test:audio_channel_unittests",
       "audio/voip/test:audio_egress_unittests",
