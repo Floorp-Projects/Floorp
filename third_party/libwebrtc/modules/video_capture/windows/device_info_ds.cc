@@ -108,10 +108,10 @@ DeviceInfoDS::DeviceInfoDS()
       // Details: hr = 0x80010106 <=> "Cannot change thread mode after it is
       // set".
       //
-      RTC_LOG(LS_INFO) << __FUNCTION__
-                       << ": CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)"
-                          " => RPC_E_CHANGED_MODE, error 0x"
-                       << rtc::ToHex(hr);
+      RTC_DLOG(LS_INFO) << __FUNCTION__
+                        << ": CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)"
+                           " => RPC_E_CHANGED_MODE, error 0x"
+                        << rtc::ToHex(hr);
     }
   }
 
@@ -268,7 +268,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(uint32_t deviceNumber,
     }
   }
   if (deviceNameLength) {
-    RTC_LOG(LS_INFO) << __FUNCTION__ << " " << deviceNameUTF8;
+    RTC_DLOG(LS_INFO) << __FUNCTION__ << " " << deviceNameUTF8;
   }
   return index;
 }

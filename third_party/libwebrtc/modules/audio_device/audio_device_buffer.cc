@@ -78,7 +78,7 @@ AudioDeviceBuffer::~AudioDeviceBuffer() {
 int32_t AudioDeviceBuffer::RegisterAudioCallback(
     AudioTransport* audio_callback) {
   RTC_DCHECK_RUN_ON(&main_thread_checker_);
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   if (playing_ || recording_) {
     RTC_LOG(LS_ERROR) << "Failed to set audio transport since media was active";
     return -1;
@@ -95,7 +95,7 @@ void AudioDeviceBuffer::StartPlayout() {
   if (playing_) {
     return;
   }
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   // Clear members tracking playout stats and do it on the task queue.
   task_queue_.PostTask([this] { ResetPlayStats(); });
   // Start a periodic timer based on task queue if not already done by the
@@ -114,7 +114,7 @@ void AudioDeviceBuffer::StartRecording() {
   if (recording_) {
     return;
   }
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   // Clear members tracking recording stats and do it on the task queue.
   task_queue_.PostTask([this] { ResetRecStats(); });
   // Start a periodic timer based on task queue if not already done by the
@@ -136,7 +136,7 @@ void AudioDeviceBuffer::StopPlayout() {
   if (!playing_) {
     return;
   }
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   playing_ = false;
   // Stop periodic logging if no more media is active.
   if (!recording_) {
@@ -150,7 +150,7 @@ void AudioDeviceBuffer::StopRecording() {
   if (!recording_) {
     return;
   }
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   recording_ = false;
   // Stop periodic logging if no more media is active.
   if (!playing_) {

@@ -150,7 +150,7 @@ AudioDeviceMac::AudioDeviceMac()
       _captureBufSizeSamples(0),
       _renderBufSizeSamples(0),
       prev_key_state_() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " created";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " created";
 
   memset(_renderConvertData, 0, sizeof(_renderConvertData));
   memset(&_outStreamFormat, 0, sizeof(AudioStreamBasicDescription));
@@ -160,7 +160,7 @@ AudioDeviceMac::AudioDeviceMac()
 }
 
 AudioDeviceMac::~AudioDeviceMac() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " destroyed";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " destroyed";
 
   if (!_isShutDown) {
     Terminate();

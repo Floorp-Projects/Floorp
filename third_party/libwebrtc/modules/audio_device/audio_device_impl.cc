@@ -73,7 +73,7 @@ namespace webrtc {
 rtc::scoped_refptr<AudioDeviceModule> AudioDeviceModule::Create(
     AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory) {
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   return AudioDeviceModule::CreateForTest(audio_layer, task_queue_factory);
 }
 
@@ -81,7 +81,7 @@ rtc::scoped_refptr<AudioDeviceModule> AudioDeviceModule::Create(
 rtc::scoped_refptr<AudioDeviceModuleForTest> AudioDeviceModule::CreateForTest(
     AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory) {
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
 
   // The "AudioDeviceModule::kWindowsCoreAudio2" audio layer has its own
   // dedicated factory method which should be used instead.
@@ -119,11 +119,11 @@ AudioDeviceModuleImpl::AudioDeviceModuleImpl(
     AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory)
     : audio_layer_(audio_layer), audio_device_buffer_(task_queue_factory) {
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
 }
 
 int32_t AudioDeviceModuleImpl::CheckPlatform() {
-  RTC_LOG(INFO) << __FUNCTION__;
+  RTC_DLOG(INFO) << __FUNCTION__;
   // Ensure that the current platform is supported
   PlatformType platform(kPlatformNotSupported);
 #if defined(_WIN32)
