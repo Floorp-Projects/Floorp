@@ -314,14 +314,24 @@ bool IsFirstFrameOfACodedVideoSequence(
     return false;
   }
 
-  if (codec_specific_info != nullptr &&
-      codec_specific_info->generic_frame_info.has_value()) {
-    // This function is used before
-    // `codec_specific_info->generic_frame_info->frame_diffs` are calculated, so
-    // need to use more complicated way to check for presence of dependencies.
-    return absl::c_none_of(
-        codec_specific_info->generic_frame_info->encoder_buffers,
-        [](const CodecBufferUsage& buffer) { return buffer.referenced; });
+  if (codec_specific_info != nullptr) {
+    if (codec_specific_info->generic_frame_info.has_value()) {
+      // This function is used before
+      // `codec_specific_info->generic_frame_info->frame_diffs` are calculated,
+      // so need to use a more complicated way to check for presence of the
+      // dependencies.
+      return absl::c_none_of(
+          codec_specific_info->generic_frame_info->encoder_buffers,
+          [](const CodecBufferUsage& buffer) { return buffer.referenced; });
+    }
+
+    if (codec_specific_info->codecType == VideoCodecType::kVideoCodecVP8 ||
+        codec_specific_info->codecType == VideoCodecType::kVideoCodecH264 ||
+        codec_specific_info->codecType == VideoCodecType::kVideoCodecGeneric) {
+      // These codecs do not support intra picture dependencies, so a frame
+      // marked as a key frame should be a key frame.
+      return true;
+    }
   }
 
   // Without depenedencies described in generic format do an educated guess.
