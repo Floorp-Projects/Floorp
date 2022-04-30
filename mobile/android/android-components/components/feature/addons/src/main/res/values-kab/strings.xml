@@ -39,7 +39,7 @@
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Sekcem isefka ɣer tkatut Ɣef afus</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">Sider-d ifuyla, ɣeṛ daɣen beddel amazray n usider deg iminig</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">Sader-d ifuyla, ɣeṛ daɣen beddel amazray n usader deg iminig</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Ldi ifuya i d-yudren deg yibenk-ik</string>
     <!-- Description for find permission. -->

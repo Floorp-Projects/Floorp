@@ -6,14 +6,14 @@
     <!-- Text shown on the second row of a paused download notification. -->
     <string name="mozac_feature_downloads_paused_notification_text">Asader yesteɛfa</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text2">Asider yemmed</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">Asader yemmed</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_failed_notification_text2">Ifuyla ittwazedmen</string>
 
     <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_dialog_title2">Asider (%1$s)</string>
+    <string name="mozac_feature_downloads_dialog_title2">Asader (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
-    <string name="mozac_feature_downloads_dialog_download">Sider</string>
+    <string name="mozac_feature_downloads_dialog_download">Sader</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Sefsex</string>
 

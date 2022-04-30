@@ -5,7 +5,7 @@
     <string name="mozac_browser_errorpages_page_refresh">Retentar</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_title">Nun pue completase la solicitú</string>
+    <string name="mozac_browser_errorpages_generic_title">Nun se pue completar la solicitú</string>
 
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>La información adicional tocante a esti problema o fallu nun ta disponible anguaño.</p>]]></string>
@@ -238,4 +238,7 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sitiu engañosu</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Informóse de que la páxina web de %1$s ye engañosa y bloquióse según les tos preferencies de seguranza.</p>]]></string>
-</resources>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">El sitiu seguru nun ta disponible</string>
+    </resources>

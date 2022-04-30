@@ -9,7 +9,7 @@
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">Afitar</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
-    <string name="mozac_feature_prompts_clear">Llimpiar</string>
+    <string name="mozac_feature_prompts_clear">Borrar</string>
     <!-- Text for the title of an authentication dialog. -->
     <string name="mozac_feature_prompt_sign_in">Aniciu de sesión</string>
     <!-- Text for username field in an authentication dialog. -->
