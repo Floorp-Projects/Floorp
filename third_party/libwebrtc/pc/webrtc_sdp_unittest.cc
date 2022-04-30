@@ -944,8 +944,8 @@ static void Replace(const std::string& line,
   absl::StrReplaceAll({{line, newlines}}, message);
 }
 
-// Expect fail to parase |bad_sdp| and expect |bad_part| be part of the error
-// message.
+// Expect a parse failure on the line containing |bad_part| when attempting to
+// parse |bad_sdp|.
 static void ExpectParseFailure(const std::string& bad_sdp,
                                const std::string& bad_part) {
   JsepSessionDescription desc(kDummyType);
@@ -4058,24 +4058,6 @@ TEST_F(WebRtcSdpTest, SerializeBothMediaSectionAndSsrcAttributeMsid) {
   EXPECT_NE(std::string::npos, sdp.find(kSsrcAttributeMsidLine));
 }
 
-// Regression test for heap overflow bug:
-// https://bugs.chromium.org/p/chromium/issues/detail?id=647916
-TEST_F(WebRtcSdpTest, DeserializeSctpPortInVideoDescription) {
-  // The issue occurs when the sctp-port attribute is found in a video
-  // description. The actual heap overflow occurs when parsing the fmtp line.
-  static const char kSdpWithSctpPortInVideoDescription[] =
-      "v=0\r\n"
-      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
-      "s=-\r\n"
-      "t=0 0\r\n"
-      "m=video 9 UDP/DTLS/SCTP 120\r\n"
-      "a=sctp-port 5000\r\n"
-      "a=fmtp:108 foo=10\r\n";
-
-  ExpectParseFailure(std::string(kSdpWithSctpPortInVideoDescription),
-                     "sctp-port");
-}
-
 // Regression test for integer overflow bug:
 // https://bugs.chromium.org/p/chromium/issues/detail?id=648071
 TEST_F(WebRtcSdpTest, DeserializeLargeBandwidthLimit) {
@@ -4760,4 +4742,21 @@ TEST_F(WebRtcSdpTest, DeserializeSdpWithUnsupportedMediaType) {
 
   EXPECT_EQ(jdesc_output.description()->contents()[0].name, "bogusmid");
   EXPECT_EQ(jdesc_output.description()->contents()[1].name, "somethingmid");
+}
+
+TEST_F(WebRtcSdpTest, MediaTypeProtocolMismatch) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n";
+
+  ExpectParseFailure(std::string(sdp + "m=audio 9 UDP/DTLS/SCTP 120\r\n"),
+                     "m=audio");
+  ExpectParseFailure(std::string(sdp + "m=video 9 UDP/DTLS/SCTP 120\r\n"),
+                     "m=video");
+  ExpectParseFailure(std::string(sdp + "m=video 9 SOMETHING 120\r\n"),
+                     "m=video");
+  ExpectParseFailure(std::string(sdp + "m=application 9 SOMETHING 120\r\n"),
+                     "m=application");
 }
