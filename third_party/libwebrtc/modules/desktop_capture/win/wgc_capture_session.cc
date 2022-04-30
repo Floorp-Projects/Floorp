@@ -116,10 +116,8 @@ HRESULT WgcCaptureSession::StartCapture() {
     return hr;
 
   hr = session_->StartCapture();
-  if (FAILED(hr)) {
-    RTC_LOG(LS_ERROR) << "Failed to start CaptureSession: " << hr;
+  if (FAILED(hr))
     return hr;
-  }
 
   is_capture_started_ = true;
   return hr;
@@ -138,10 +136,8 @@ HRESULT WgcCaptureSession::GetFrame(
 
   ComPtr<WGC::IDirect3D11CaptureFrame> capture_frame;
   HRESULT hr = frame_pool_->TryGetNextFrame(&capture_frame);
-  if (FAILED(hr)) {
-    RTC_LOG(LS_ERROR) << "TryGetNextFrame failed: " << hr;
+  if (FAILED(hr))
     return hr;
-  }
 
   if (!capture_frame)
     return hr;

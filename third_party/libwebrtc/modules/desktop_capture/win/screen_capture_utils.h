@@ -19,7 +19,7 @@
 
 namespace webrtc {
 
-// Output the HMONITOR values of all display monitors into |monitors|. Returns
+// Outputs the HMONITOR values of all display monitors into |monitors|. Returns
 // true if succeeded, or false if it fails to enumerate the display monitors.
 bool GetMonitorList(DesktopCapturer::SourceList* monitors);
 
