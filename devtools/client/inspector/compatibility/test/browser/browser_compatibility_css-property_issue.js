@@ -15,7 +15,7 @@ const TEST_URI = `
     user-modify: read-only;
   }
   div {
-    -moz-context-properties: fill;
+    ruby-align: center;
   }
   </style>
   <body>
@@ -45,8 +45,8 @@ const TEST_DATA_ALL = [
   ...TEST_DATA_SELECTED,
   {
     type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-    property: "-moz-context-properties",
-    url: "https://developer.mozilla.org/docs/Web/CSS/-moz-context-properties",
+    property: "ruby-align",
+    url: "https://developer.mozilla.org/docs/Web/CSS/ruby-align",
     deprecated: false,
     experimental: true,
   },

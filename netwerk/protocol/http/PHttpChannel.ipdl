@@ -16,8 +16,10 @@ include HttpChannelParams;
 
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/net/ClassOfService.h";
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using mozilla::net::ClassOfService from "mozilla/net/ClassOfService.h";
 
 namespace mozilla {
 namespace net {
@@ -32,7 +34,7 @@ parent:
   // Note: channels are opened during construction, so no open method here:
   // see PNecko.ipdl
 
-  async SetClassOfService(uint32_t cos);
+  async SetClassOfService(ClassOfService cos);
 
   async Suspend();
   async Resume();

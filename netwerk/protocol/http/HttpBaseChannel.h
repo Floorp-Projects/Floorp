@@ -352,7 +352,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   // nsIClassOfService
   NS_IMETHOD GetClassFlags(uint32_t* outFlags) override {
-    *outFlags = mClassOfService;
+    *outFlags = mClassOfService.Flags();
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetIncremental(bool* outIncremental) override {
+    *outIncremental = mClassOfService.Incremental();
     return NS_OK;
   }
 
@@ -499,7 +504,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
         const dom::ReplacementChannelConfigInit& aInit);
 
     uint32_t redirectFlags = 0;
-    uint32_t classOfService = 0;
+    ClassOfService classOfService = {0, false};
     Maybe<bool> privateBrowsing = Nothing();
     Maybe<nsCString> method;
     nsCOMPtr<nsIReferrerInfo> referrerInfo;
@@ -707,8 +712,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   UniquePtr<nsTArray<nsCString>> mRedirectedCachekeys;
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
-  RefPtr<OpaqueResponseBlockingInfo> mOpaqueResponseBlockingInfo;
-
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
 
@@ -770,7 +773,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   uint32_t mLoadFlags;
   uint32_t mCaps;
-  uint32_t mClassOfService;
+
+  ClassOfService mClassOfService;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields1, 32, (
@@ -971,11 +975,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void RemoveAsNonTailRequest();
 
   void EnsureTopBrowsingContextId();
-
-  void InitiateORBTelemetry();
-
-  void ReportORBTelemetry(const nsCString& aKey);
-  void ReportORBTelemetry(int64_t aContentLength);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)

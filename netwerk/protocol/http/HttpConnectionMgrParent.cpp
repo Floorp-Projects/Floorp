@@ -19,8 +19,7 @@
 #include "nsIOService.h"
 #include "nsQueryObject.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 nsTHashMap<uint32_t, nsCOMPtr<nsIHttpUpgradeListener>>
     HttpConnectionMgrParent::sHttpUpgradeListenerMap;
@@ -183,7 +182,7 @@ nsresult HttpConnectionMgrParent::RescheduleTransaction(
 }
 
 void HttpConnectionMgrParent::UpdateClassOfServiceOnTransaction(
-    HttpTransactionShell* aTrans, uint32_t aClassOfService) {
+    HttpTransactionShell* aTrans, const ClassOfService& aClassOfService) {
   MOZ_ASSERT(gIOService->SocketProcessReady());
 
   if (!CanSend()) {
@@ -315,5 +314,4 @@ HttpConnectionMgrParent* HttpConnectionMgrParent::AsHttpConnectionMgrParent() {
   return this;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

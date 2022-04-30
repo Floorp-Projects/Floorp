@@ -12,6 +12,6 @@
 [scriptable, uuid(13fa7d76-f976-4711-a00c-29ac9c1881e1)]
 interface nsIMarionette : nsISupports
 {
-  /** Indicates whether the remote protocol is enabled. */
+  /** Indicates whether Marionette is running. */
   readonly attribute boolean running;
 };

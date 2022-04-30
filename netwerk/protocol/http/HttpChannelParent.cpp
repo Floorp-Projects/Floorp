@@ -361,7 +361,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const Maybe<URIParams>& aTopWindowURI, const uint32_t& aLoadFlags,
     const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
     const Maybe<IPCStream>& uploadStream, const bool& uploadStreamHasHeaders,
-    const int16_t& priority, const uint32_t& classOfService,
+    const int16_t& priority, const ClassOfService& classOfService,
     const uint8_t& redirectionLimit, const bool& allowSTS,
     const uint32_t& thirdPartyFlags, const bool& doResumeAt,
     const uint64_t& startPos, const nsCString& entityID, const bool& allowSpdy,
@@ -536,8 +536,8 @@ bool HttpChannelParent::DoAsyncOpen(
   if (priority != nsISupportsPriority::PRIORITY_NORMAL) {
     httpChannel->SetPriority(priority);
   }
-  if (classOfService) {
-    httpChannel->SetClassFlags(classOfService);
+  if (classOfService.Flags() || classOfService.Incremental()) {
+    httpChannel->SetClassOfService(classOfService);
   }
   httpChannel->SetRedirectionLimit(redirectionLimit);
   httpChannel->SetAllowSTS(allowSTS);
@@ -692,9 +692,9 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetPriority(
 }
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvSetClassOfService(
-    const uint32_t& cos) {
+    const ClassOfService& cos) {
   if (mChannel) {
-    mChannel->SetClassFlags(cos);
+    mChannel->SetClassOfService(cos);
   }
   return IPC_OK();
 }

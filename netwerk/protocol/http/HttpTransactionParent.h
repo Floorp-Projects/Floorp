@@ -17,8 +17,7 @@
 #include "nsITransport.h"
 #include "nsIRequest.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 class ChannelEventQueue;
 class nsHttpConnectionInfo;
@@ -166,7 +165,6 @@ class HttpTransactionParent final : public PHttpTransactionParent,
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionParent,
                               HTTP_TRANSACTION_PARENT_IID)
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // nsHttpTransactionParent_h__

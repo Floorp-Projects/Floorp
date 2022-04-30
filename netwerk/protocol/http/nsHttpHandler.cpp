@@ -2662,7 +2662,7 @@ nsresult nsHttpHandler::RescheduleTransaction(HttpTransactionShell* trans,
 }
 
 void nsHttpHandler::UpdateClassOfServiceOnTransaction(
-    HttpTransactionShell* trans, uint32_t classOfService) {
+    HttpTransactionShell* trans, const ClassOfService& classOfService) {
   mConnMgr->UpdateClassOfServiceOnTransaction(trans, classOfService);
 }
 

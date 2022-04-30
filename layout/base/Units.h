@@ -237,6 +237,7 @@ typedef gfx::ScaleFactors2D<RenderTargetPixel, ScreenPixel>
 typedef gfx::ScaleFactors2D<ScreenPixel, CSSPixel> ScreenToCSSScale2D;
 typedef gfx::ScaleFactors2D<ScreenPixel, LayoutDevicePixel>
     ScreenToLayoutDeviceScale2D;
+typedef gfx::ScaleFactors2D<ScreenPixel, ScreenPixel> ScreenToScreenScale2D;
 typedef gfx::ScaleFactors2D<ScreenPixel, LayerPixel> ScreenToLayerScale2D;
 typedef gfx::ScaleFactors2D<ScreenPixel, ParentLayerPixel>
     ScreenToParentLayerScale2D;

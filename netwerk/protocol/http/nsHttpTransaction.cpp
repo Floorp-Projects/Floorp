@@ -67,8 +67,7 @@
 
 using namespace mozilla::net;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction <public>
@@ -112,19 +111,20 @@ void nsHttpTransaction::ResumeReading() {
 }
 
 bool nsHttpTransaction::EligibleForThrottling() const {
-  return (mClassOfService &
+  return (mClassOfServiceFlags &
           (nsIClassOfService::Throttleable | nsIClassOfService::DontThrottle |
            nsIClassOfService::Leader | nsIClassOfService::Unblocked)) ==
          nsIClassOfService::Throttleable;
 }
 
-void nsHttpTransaction::SetClassOfService(uint32_t cos) {
+void nsHttpTransaction::SetClassOfService(ClassOfService cos) {
   if (mClosed) {
     return;
   }
 
   bool wasThrottling = EligibleForThrottling();
-  mClassOfService = cos;
+  mClassOfServiceFlags = cos.Flags();
+  mClassOfServiceIncremental = cos.Incremental();
   bool isThrottling = EligibleForThrottling();
 
   if (mConnection && wasThrottling != isThrottling) {
@@ -205,7 +205,7 @@ nsresult nsHttpTransaction::Init(
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
     uint64_t topBrowsingContextId, HttpTrafficCategory trafficCategory,
-    nsIRequestContext* requestContext, uint32_t classOfService,
+    nsIRequestContext* requestContext, ClassOfService classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
     TransactionObserverFunc&& transactionObserver,
     OnPushCallback&& aOnPushCallback,
@@ -831,7 +831,7 @@ nsresult nsHttpTransaction::WritePipeSegment(nsIOutputStream* stream,
 }
 
 bool nsHttpTransaction::ShouldThrottle() {
-  if (mClassOfService & nsIClassOfService::DontThrottle) {
+  if (mClassOfServiceFlags & nsIClassOfService::DontThrottle) {
     // We deliberately don't touch the throttling window here since
     // DontThrottle requests are expected to be long-standing media
     // streams and would just unnecessarily block running downloads.
@@ -854,7 +854,7 @@ bool nsHttpTransaction::ShouldThrottle() {
     return false;
   }
 
-  if (!(mClassOfService & nsIClassOfService::Throttleable) &&
+  if (!(mClassOfServiceFlags & nsIClassOfService::Throttleable) &&
       gHttpHandler->ConnMgr()->IsConnEntryUnderPressure(mConnInfo)) {
     LOG(("nsHttpTransaction::ShouldThrottle entry pressure this=%p", this));
     // This is expensive to check (two hashtable lookups) but may help
@@ -3451,5 +3451,4 @@ void nsHttpTransaction::GetHashKeyOfConnectionEntry(nsACString& aResult) {
   aResult.Assign(mHashKeyOfConnectionEntry);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

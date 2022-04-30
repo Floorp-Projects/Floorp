@@ -489,6 +489,11 @@ class GlobalHelperThreadState {
       const AutoLockHelperThreadState& locked);
 };
 
+static inline bool IsHelperThreadStateInitialized() {
+  extern GlobalHelperThreadState* gHelperThreadState;
+  return gHelperThreadState;
+}
+
 static inline GlobalHelperThreadState& HelperThreadState() {
   extern GlobalHelperThreadState* gHelperThreadState;
 

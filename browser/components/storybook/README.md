@@ -14,8 +14,6 @@ non-chrome:// paths) should automatically reflect changes in the opened browser.
 If you make a change to a chrome:// referenced file then you'll need to do a
 hard refresh (Cmd+Shift+R/Ctrl+Shift+R) to notice the changes.
 
-Currently Windows is only supported through WSL/Linux VM.
-
 == Running Storybook
 
 Installing the npm dependencies and running the `storybook` npm script should be
@@ -41,14 +39,28 @@ installed):
 # Install the package-lock.json exactly so lockfileVersion won't change.
 # Using the `install` command may affect package-lock.json.
 ./mach npm --prefix=browser/components/storybook ci
-./mach npm --prefix=browser/components/storybook run storybook
 # or
-npm-storybook install
-npm-storybook run storybook
+npm-storybook ci
 ```
 
-If the storybook dependencies haven't changed since your last install, then you
-can skip the install step.
+Once you've got your dependencies installed you can start storybook. You should
+run your local build to test in storybook since chrome:// URLs are currently
+being pulled from the running browser, so any changes to common-shared.css for
+example will come from your build.
+
+```
+# Start the Storybook server.
+./mach npm --prefix=browser/components/storybook run start-storybook
+# or
+npm-storybook run start-storybook
+# In another terminal:
+./mach run http://localhost:5703/
+
+# On MacOS/Linux, there's a command to start storybook and launch your browser.
+./mach npm --prefix=browser/components/storybook run storybook
+# or
+npm-storybook run storybook
+```
 
 === Personal npm
 

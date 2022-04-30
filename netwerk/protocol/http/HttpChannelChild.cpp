@@ -68,8 +68,7 @@
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 //-----------------------------------------------------------------------------
 // HttpChannelChild
@@ -2564,7 +2563,6 @@ HttpChannelChild::ResumeAt(uint64_t startPos, const nsACString& entityID) {
 NS_IMETHODIMP
 HttpChannelChild::SetPriority(int32_t aPriority) {
   LOG(("HttpChannelChild::SetPriority %p p=%d", this, aPriority));
-
   int16_t newValue = clamped<int32_t>(aPriority, INT16_MIN, INT16_MAX);
   if (mPriority == newValue) return NS_OK;
   mPriority = newValue;
@@ -2577,13 +2575,14 @@ HttpChannelChild::SetPriority(int32_t aPriority) {
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
 HttpChannelChild::SetClassFlags(uint32_t inFlags) {
-  if (mClassOfService == inFlags) {
+  if (mClassOfService.Flags() == inFlags) {
     return NS_OK;
   }
 
-  mClassOfService = inFlags;
+  mClassOfService.SetFlags(inFlags);
 
-  LOG(("HttpChannelChild %p ClassOfService=%u", this, mClassOfService));
+  LOG(("HttpChannelChild %p ClassOfService flags=%lu inc=%d", this,
+       mClassOfService.Flags(), mClassOfService.Incremental()));
 
   if (RemoteChannelExists()) {
     SendSetClassOfService(mClassOfService);
@@ -2593,9 +2592,10 @@ HttpChannelChild::SetClassFlags(uint32_t inFlags) {
 
 NS_IMETHODIMP
 HttpChannelChild::AddClassFlags(uint32_t inFlags) {
-  mClassOfService |= inFlags;
+  mClassOfService.SetFlags(inFlags | mClassOfService.Flags());
 
-  LOG(("HttpChannelChild %p ClassOfService=%u", this, mClassOfService));
+  LOG(("HttpChannelChild %p ClassOfService flags=%lu inc=%d", this,
+       mClassOfService.Flags(), mClassOfService.Incremental()));
 
   if (RemoteChannelExists()) {
     SendSetClassOfService(mClassOfService);
@@ -2605,10 +2605,32 @@ HttpChannelChild::AddClassFlags(uint32_t inFlags) {
 
 NS_IMETHODIMP
 HttpChannelChild::ClearClassFlags(uint32_t inFlags) {
-  mClassOfService &= ~inFlags;
+  mClassOfService.SetFlags(~inFlags & mClassOfService.Flags());
 
-  LOG(("HttpChannelChild %p ClassOfService=%u", this, mClassOfService));
+  LOG(("HttpChannelChild %p ClassOfService=%lu", this,
+       mClassOfService.Flags()));
 
+  if (RemoteChannelExists()) {
+    SendSetClassOfService(mClassOfService);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::SetClassOfService(ClassOfService inCos) {
+  mClassOfService = inCos;
+  LOG(("HttpChannelChild %p ClassOfService flags=%lu inc=%d", this,
+       mClassOfService.Flags(), mClassOfService.Incremental()));
+  if (RemoteChannelExists()) {
+    SendSetClassOfService(mClassOfService);
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP
+HttpChannelChild::SetIncremental(bool inIncremental) {
+  mClassOfService.SetIncremental(inIncremental);
+  LOG(("HttpChannelChild %p ClassOfService flags=%lu inc=%d", this,
+       mClassOfService.Flags(), mClassOfService.Incremental()));
   if (RemoteChannelExists()) {
     SendSetClassOfService(mClassOfService);
   }
@@ -3057,5 +3079,4 @@ HttpChannelChild::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
   return NS_OK;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

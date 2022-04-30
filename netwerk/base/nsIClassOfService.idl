@@ -14,13 +14,23 @@
  * information in different ways.
  */
 
+// convenience class for passing around the class of service 
+%{C++
+namespace mozilla::net {
+class ClassOfService;
+}
+%}
+native ClassOfService(mozilla::net::ClassOfService);
+
 [scriptable, uuid(1ccb58ec-5e07-4cf9-a30d-ac5490d23b41)]
 interface nsIClassOfService : nsISupports
 {
   attribute unsigned long classFlags;
-
+  attribute bool incremental;
+ 
   void clearClassFlags(in unsigned long flags);
   void addClassFlags(in unsigned long flags);
+  void setClassOfService(in ClassOfService s);
 
   // All these flags have a (de)prioritization effect.
 
@@ -29,7 +39,7 @@ interface nsIClassOfService : nsISupports
   // belonging to a single top level window (RequestContextService). Requests
   // marked with the Leader flag are blocking (preventing from being sent to the
   // server) all other resource loads except those marked with the Unblocked
-  // flag.  Other classes run in parallel - neither being blocked nor blocking.
+  // flag.  Other classes run in parallel - neither being blocked no ;r blocking.
   // The Leader flag is used only for <head> blocking resources (sync and
   // defer javascript resources and stylesheets.) Purpose is to deliver these
   // first-paint and domcontentloaded blocking resources as soon as possbile.

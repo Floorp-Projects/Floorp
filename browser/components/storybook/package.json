@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "storybook": "concurrently 'start-storybook -p 5703 --no-open' '../../../mach run http://localhost:5703'",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "start-storybook": "start-storybook -p 5703 --no-open"
   },
   "author": "",
   "license": "MPL-2.0",

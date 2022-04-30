@@ -138,7 +138,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const Maybe<URIParams>& topWindowUri, const uint32_t& loadFlags,
       const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
       const Maybe<IPCStream>& uploadStream, const bool& uploadStreamHasHeaders,
-      const int16_t& priority, const uint32_t& classOfService,
+      const int16_t& priority, const ClassOfService& classOfService,
       const uint8_t& redirectionLimit, const bool& allowSTS,
       const uint32_t& thirdPartyFlags, const bool& doResumeAt,
       const uint64_t& startPos, const nsCString& entityID,
@@ -168,7 +168,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   virtual mozilla::ipc::IPCResult RecvSetPriority(
       const int16_t& priority) override;
   virtual mozilla::ipc::IPCResult RecvSetClassOfService(
-      const uint32_t& cos) override;
+      const ClassOfService& cos) override;
   virtual mozilla::ipc::IPCResult RecvSuspend() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;
   virtual mozilla::ipc::IPCResult RecvCancel(
