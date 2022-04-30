@@ -10,7 +10,6 @@
 
 #include "rtc_base/callback.h"
 
-#include "rtc_base/bind.h"
 #include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/ref_count.h"
 #include "test/gtest.h"
@@ -29,11 +28,6 @@ int h(int x) {
 void i(int& x) {
   x *= x;
 }  // NOLINT: Testing refs
-
-struct BindTester {
-  int a() { return 24; }
-  int b(int x) const { return x * x; }
-};
 
 class RefCountedBindTester : public RefCountInterface {
  public:
@@ -87,19 +81,6 @@ TEST(CallbackTest, OneParam) {
   EXPECT_EQ(9, x);
   cb2(x);
   EXPECT_EQ(81, x);
-}
-
-TEST(CallbackTest, WithBind) {
-  BindTester t;
-  Callback0<int> cb1 = Bind(&BindTester::a, &t);
-  EXPECT_EQ(24, cb1());
-  EXPECT_EQ(24, cb1());
-  cb1 = Bind(&BindTester::b, &t, 10);
-  EXPECT_EQ(100, cb1());
-  EXPECT_EQ(100, cb1());
-  cb1 = Bind(&BindTester::b, &t, 5);
-  EXPECT_EQ(25, cb1());
-  EXPECT_EQ(25, cb1());
 }
 
 TEST(KeepRefUntilDoneTest, simple) {

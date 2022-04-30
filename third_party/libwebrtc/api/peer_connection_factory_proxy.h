@@ -17,7 +17,6 @@
 
 #include "api/peer_connection_interface.h"
 #include "api/proxy.h"
-#include "rtc_base/bind.h"
 
 namespace webrtc {
 

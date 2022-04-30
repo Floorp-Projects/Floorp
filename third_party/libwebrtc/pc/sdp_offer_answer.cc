@@ -4744,12 +4744,6 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport() {
     data_channel_controller()->set_rtp_data_channel(nullptr);
   }
 
-  // Note: Cannot use rtc::Bind to create a functor to invoke because it will
-  // grab a reference to this PeerConnection. If this is called from the
-  // PeerConnection destructor, the RefCountedObject vtable will have already
-  // been destroyed (since it is a subclass of PeerConnection) and using
-  // rtc::Bind will cause "Pure virtual function called" error to appear.
-
   if (pc_->sctp_mid()) {
     RTC_DCHECK_RUN_ON(pc_->signaling_thread());
     data_channel_controller()->OnTransportChannelClosed();

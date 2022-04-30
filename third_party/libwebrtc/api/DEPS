@@ -120,10 +120,6 @@ specific_include_rules = {
     "+rtc_base/async_packet_socket.h",
   ],
 
-  "peer_connection_factory_proxy\.h": [
-    "+rtc_base/bind.h",
-  ],
-
   "peer_connection_interface\.h": [
     "+media/base/media_config.h",
     "+media/base/media_engine.h",

@@ -73,8 +73,7 @@ class FakePacketTransport : public PacketTransportInternal {
     if (async_) {
       invoker_.AsyncInvokeDelayed<void>(
           RTC_FROM_HERE, Thread::Current(),
-          Bind(&FakePacketTransport::SendPacketInternal, this, packet),
-          async_delay_ms_);
+          [this, packet] { SendPacketInternal(packet); }, async_delay_ms_);
     } else {
       SendPacketInternal(packet);
     }

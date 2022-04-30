@@ -11,7 +11,6 @@
 #include <type_traits>
 
 #include "api/function_view.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/callback_list.h"
 #include "test/gtest.h"
 
@@ -209,8 +208,6 @@ TEST(CallbackList, MemberFunctionTest) {
 }
 
 // todo(glahiru): Add a test case to catch some error for Karl's first fix
-// todo(glahiru): Add a test for rtc::Bind
-// which used the following code in the Send
 
 TEST(CallbackList, RemoveOneReceiver) {
   int removal_tag[2];

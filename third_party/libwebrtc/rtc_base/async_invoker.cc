@@ -55,7 +55,7 @@ void AsyncInvoker::Flush(Thread* thread, uint32_t id /*= MQID_ANY*/) {
   // Run this on |thread| to reduce the number of context switches.
   if (Thread::Current() != thread) {
     thread->Invoke<void>(RTC_FROM_HERE,
-                         Bind(&AsyncInvoker::Flush, this, thread, id));
+                         [this, thread, id] { Flush(thread, id); });
     return;
   }
 

@@ -19,7 +19,6 @@
 
 #include "api/audio/audio_mixer.h"
 #include "modules/audio_mixer/default_output_rate_calculator.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_queue_for_test.h"

@@ -12,7 +12,6 @@
 #define RTC_BASE_ASYNC_INVOKER_INL_H_
 
 #include "api/scoped_refptr.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/event.h"
 #include "rtc_base/message_handler.h"
 #include "rtc_base/ref_counted_object.h"
