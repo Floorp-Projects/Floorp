@@ -2156,6 +2156,7 @@ void SdpOfferAnswerHandler::DoSetRemoteDescription(
       desc->GetType() == SdpType::kAnswer) {
     // Report to UMA the format of the received offer or answer.
     pc_->ReportSdpFormatReceived(*desc);
+    pc_->ReportSdpBundleUsage(*desc);
   }
 
   // Handle remote descriptions missing a=mid lines for interop with legacy end
