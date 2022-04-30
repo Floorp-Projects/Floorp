@@ -825,6 +825,64 @@ TEST(RtpVideoSenderTest, SupportsStoppingUsingDependencyDescriptor) {
       sent_packets.back().HasExtension<RtpDependencyDescriptorExtension>());
 }
 
+TEST(RtpVideoSenderTest,
+     SupportsStoppingUsingDependencyDescriptorForVp8Simulcast) {
+  RtpVideoSenderTestFixture test({kSsrc1, kSsrc2}, {}, kPayloadType, {});
+  test.router()->SetActive(true);
+
+  RtpHeaderExtensionMap extensions;
+  extensions.Register<RtpDependencyDescriptorExtension>(
+      kDependencyDescriptorExtensionId);
+  std::vector<RtpPacket> sent_packets;
+  ON_CALL(test.transport(), SendRtp)
+      .WillByDefault([&](const uint8_t* packet, size_t length,
+                         const PacketOptions& options) {
+        sent_packets.emplace_back(&extensions);
+        EXPECT_TRUE(sent_packets.back().Parse(packet, length));
+        return true;
+      });
+
+  const uint8_t kPayload[1] = {'a'};
+  EncodedImage encoded_image;
+  encoded_image.SetTimestamp(1);
+  encoded_image.capture_time_ms_ = 2;
+  encoded_image.SetEncodedData(
+      EncodedImageBuffer::Create(kPayload, sizeof(kPayload)));
+  // VP8 simulcast uses spatial index to communicate simulcast stream.
+  encoded_image.SetSpatialIndex(1);
+
+  CodecSpecificInfo codec_specific;
+  codec_specific.codecType = VideoCodecType::kVideoCodecVP8;
+  codec_specific.template_structure.emplace();
+  codec_specific.template_structure->num_decode_targets = 1;
+  codec_specific.template_structure->templates = {
+      FrameDependencyTemplate().T(0).Dtis("S")};
+
+  // Send two tiny images, mapping to single RTP packets.
+  // Send in a key frame.
+  encoded_image._frameType = VideoFrameType::kVideoFrameKey;
+  codec_specific.generic_frame_info =
+      GenericFrameInfo::Builder().T(0).Dtis("S").Build();
+  codec_specific.generic_frame_info->encoder_buffers = {{0, false, true}};
+  EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
+            EncodedImageCallback::Result::OK);
+  test.AdvanceTime(TimeDelta::Millis(33));
+  ASSERT_THAT(sent_packets, SizeIs(1));
+  EXPECT_TRUE(
+      sent_packets.back().HasExtension<RtpDependencyDescriptorExtension>());
+
+  // Send in a new key frame without the support for the dependency descriptor.
+  encoded_image._frameType = VideoFrameType::kVideoFrameKey;
+  codec_specific.template_structure = absl::nullopt;
+  codec_specific.generic_frame_info = absl::nullopt;
+  EXPECT_EQ(test.router()->OnEncodedImage(encoded_image, &codec_specific).error,
+            EncodedImageCallback::Result::OK);
+  test.AdvanceTime(TimeDelta::Millis(33));
+  ASSERT_THAT(sent_packets, SizeIs(2));
+  EXPECT_FALSE(
+      sent_packets.back().HasExtension<RtpDependencyDescriptorExtension>());
+}
+
 TEST(RtpVideoSenderTest, CanSetZeroBitrate) {
   RtpVideoSenderTestFixture test({kSsrc1}, {kRtxSsrc1}, kPayloadType, {});
   test.router()->OnBitrateUpdated(CreateBitrateAllocationUpdate(0),
