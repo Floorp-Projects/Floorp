@@ -98,7 +98,7 @@ AudioDeviceLinuxALSA::AudioDeviceLinuxALSA()
       _recordingDelay(0),
       _playoutDelay(0) {
   memset(_oldKeyState, 0, sizeof(_oldKeyState));
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " created";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " created";
 }
 
 // ----------------------------------------------------------------------------
@@ -106,7 +106,7 @@ AudioDeviceLinuxALSA::AudioDeviceLinuxALSA()
 // ----------------------------------------------------------------------------
 
 AudioDeviceLinuxALSA::~AudioDeviceLinuxALSA() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " destroyed";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " destroyed";
 
   Terminate();
 

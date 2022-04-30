@@ -78,7 +78,7 @@ AudioDeviceLinuxPulse::AudioDeviceLinuxPulse()
       _playStream(NULL),
       _recStreamFlags(0),
       _playStreamFlags(0) {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " created";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " created";
 
   memset(_paServerVersion, 0, sizeof(_paServerVersion));
   memset(&_playBufferAttr, 0, sizeof(_playBufferAttr));
@@ -87,7 +87,7 @@ AudioDeviceLinuxPulse::AudioDeviceLinuxPulse()
 }
 
 AudioDeviceLinuxPulse::~AudioDeviceLinuxPulse() {
-  RTC_LOG(LS_INFO) << __FUNCTION__ << " destroyed";
+  RTC_DLOG(LS_INFO) << __FUNCTION__ << " destroyed";
   RTC_DCHECK(thread_checker_.IsCurrent());
   Terminate();
 

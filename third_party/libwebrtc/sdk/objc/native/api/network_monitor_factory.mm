@@ -19,7 +19,7 @@
 namespace webrtc {
 
 std::unique_ptr<rtc::NetworkMonitorFactory> CreateNetworkMonitorFactory() {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
 #if defined(WEBRTC_IOS)
   return std::make_unique<ObjCNetworkMonitorFactory>();
 #else
