@@ -1059,7 +1059,7 @@ var snapshotFormatters = {
     if (!AppConstants.ENABLE_WEBDRIVER) {
       return;
     }
-    $("remote-debugging-accepting-connections").textContent = data.listening;
+    $("remote-debugging-accepting-connections").textContent = data.running;
     $("remote-debugging-url").textContent = data.url;
   },
 

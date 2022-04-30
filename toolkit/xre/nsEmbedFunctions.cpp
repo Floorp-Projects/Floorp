@@ -536,6 +536,13 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   }
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+  // The parent process already did this, but Gecko child processes on
+  // Android aren't descendants of the parent process, so they don't
+  // inherit its rlimits.
+  mozilla::startup::IncreaseDescriptorLimits();
+#endif
+
   // child processes launched by GeckoChildProcessHost get this magic
   // argument appended to their command lines
   const char* const parentPIDString = aArgv[aArgc - 1];

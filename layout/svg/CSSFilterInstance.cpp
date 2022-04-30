@@ -280,10 +280,13 @@ Size CSSFilterInstance::BlurRadiusToFilterSpace(nscoord aRadiusInFrameSpace) {
   // Convert the radius to filter space.
   Size radiusInFilterSpace(radiusInFrameSpaceInCSSPx,
                            radiusInFrameSpaceInCSSPx);
-  gfxSize frameSpaceInCSSPxToFilterSpaceScale =
-      mFrameSpaceInCSSPxToFilterSpaceTransform.ScaleFactors();
-  radiusInFilterSpace.Scale(frameSpaceInCSSPxToFilterSpaceScale.width,
-                            frameSpaceInCSSPxToFilterSpaceScale.height);
+  // Narrow the scale factors. They will only be used with types containing
+  // floating point types.
+  auto frameSpaceInCSSPxToFilterSpaceScale =
+      mFrameSpaceInCSSPxToFilterSpaceTransform.ScaleFactors()
+          .ConvertTo<float>();
+  radiusInFilterSpace =
+      radiusInFilterSpace * frameSpaceInCSSPxToFilterSpaceScale;
 
   // Check the radius limits.
   if (radiusInFilterSpace.width < 0 || radiusInFilterSpace.height < 0) {
@@ -309,10 +312,10 @@ IntPoint CSSFilterInstance::OffsetToFilterSpace(nscoord aXOffsetInFrameSpace,
       nsPresContext::AppUnitsToFloatCSSPixels(aYOffsetInFrameSpace));
 
   // Convert the radius to filter space.
-  gfxSize frameSpaceInCSSPxToFilterSpaceScale =
+  auto frameSpaceInCSSPxToFilterSpaceScale =
       mFrameSpaceInCSSPxToFilterSpaceTransform.ScaleFactors();
-  offsetInFilterSpace.x *= frameSpaceInCSSPxToFilterSpaceScale.width;
-  offsetInFilterSpace.y *= frameSpaceInCSSPxToFilterSpaceScale.height;
+  offsetInFilterSpace.x *= frameSpaceInCSSPxToFilterSpaceScale.xScale;
+  offsetInFilterSpace.y *= frameSpaceInCSSPxToFilterSpaceScale.yScale;
 
   return IntPoint(int32_t(offsetInFilterSpace.x),
                   int32_t(offsetInFilterSpace.y));

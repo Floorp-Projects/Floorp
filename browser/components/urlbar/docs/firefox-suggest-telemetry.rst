@@ -440,22 +440,32 @@ event's objects are the following possible values:
   Recorded when an impression cap is hit.
 :reset:
   Recorded when a cap's counter is reset because its interval period has
-  elapsed.
+  elapsed. The implementation may batch multiple consecutive reset events for a
+  cap in a single telemetry event; see the ``eventCount`` discussion below.
+  Reset events are reported only when a cap's interval period elapses while
+  Firefox is running.
 
 The event's ``extra`` contains the following properties:
 
 :count:
   The number of impressions during the cap's interval period.
-:endDate:
-  The timestamp at which the cap's interval period will end (for "hit" events)
-  or did end (for "reset" events), in number of milliseconds since Unix epoch.
-  For lifetime caps, this value will be "Infinity".
+:eventCount:
+  The number of impression cap events reported in the telemetry event. This is
+  necessary because the implementation may batch multiple consecutive "reset"
+  events for a cap in a single telemetry event. When that occurs, this value
+  will be greater than 1, ``startDate`` will be the timestamp at which the
+  first event's interval period started, ``eventDate`` will be the timestamp at
+  which the last event's interval period ended, and ``count`` will be the number
+  of impressions during the first event's interval period. (The implementation
+  guarantees that reset events are batched only when the number of impressions
+  for all subsequent interval periods is zero.) For "hit" events,
+  ``eventCount`` will always be 1.
 :eventDate:
   The event's timestamp, in number of milliseconds since Unix epoch. For "reset"
-  events, this may be earlier than the timestamp on the event itself because the
-  implementation sometimes batches and records these events at a later date.
-  This ``eventDate`` value should be preferred over the timestamp on the event
-  itself.
+  events, this is the timestamp at which the cap's interval period ended. If
+  ``eventCount`` is greater than 1, it's the timestamp at which the last
+  interval period ended. For "hit" events, this is the timestamp at which the
+  cap was hit.
 :impressionDate:
   The timestamp of the most recent impression, in number of milliseconds since
   Unix epoch.
@@ -472,9 +482,10 @@ The event's ``extra`` contains the following properties:
 
 Changelog
   Firefox 101.0
-    Introduced. [Bug 1761058_]
+    Introduced. [Bug 1761058_, 1765881_]
 
 .. _1761058: https://bugzilla.mozilla.org/show_bug.cgi?id=1761058
+.. _1765881: https://bugzilla.mozilla.org/show_bug.cgi?id=1765881
 
 contextservices.quicksuggest.opt_in_dialog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -58,13 +58,14 @@ add_task(async function test_open_add_bookmark_for_frame() {
     let folderPicker = dialogWin.document.getElementById(
       "editBMPanel_folderMenuList"
     );
+
     await TestUtils.waitForCondition(
       () => folderPicker.selectedItem.label == expectedFolderName,
-      "The folder is the expected one."
+      "Dialog: The folder is the expected one."
     );
 
     let tagsField = dialogWin.document.getElementById("editBMPanel_tagsField");
-    Assert.equal(tagsField.value, "", "The tags field should be empty");
+    Assert.equal(tagsField.value, "", "Dialog: The tags field should be empty");
   });
 });
 
@@ -198,5 +199,6 @@ add_task(
     );
 
     BrowserTestUtils.removeTab(tab);
+    await PlacesUtils.bookmarks.eraseEverything();
   }
 );

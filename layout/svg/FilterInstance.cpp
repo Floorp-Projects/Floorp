@@ -70,12 +70,12 @@ void FilterInstance::PaintFilteredFrame(
       UserSpaceMetricsForFrame(aFilteredFrame);
 
   gfxContextMatrixAutoSaveRestore autoSR(aCtx);
-  gfxSize scaleFactors = aCtx->CurrentMatrixDouble().ScaleFactors();
-  if (scaleFactors.IsEmpty()) {
+  auto scaleFactors = aCtx->CurrentMatrixDouble().ScaleFactors();
+  if (scaleFactors.xScale == 0 || scaleFactors.yScale == 0) {
     return;
   }
 
-  gfxMatrix scaleMatrix(scaleFactors.width, 0.0f, 0.0f, scaleFactors.height,
+  gfxMatrix scaleMatrix(scaleFactors.xScale, 0.0f, 0.0f, scaleFactors.yScale,
                         0.0f, 0.0f);
 
   gfxMatrix reverseScaleMatrix = scaleMatrix;
@@ -526,7 +526,7 @@ bool FilterInstance::ComputeTargetBBoxInFilterSpace() {
 
 bool FilterInstance::ComputeUserSpaceToFilterSpaceScale() {
   if (mTargetFrame) {
-    mUserSpaceToFilterSpaceScale = mPaintTransform.ScaleFactors();
+    mUserSpaceToFilterSpaceScale = mPaintTransform.ScaleFactors().ToSize();
     if (mUserSpaceToFilterSpaceScale.width <= 0.0f ||
         mUserSpaceToFilterSpaceScale.height <= 0.0f) {
       // Nothing should be rendered.

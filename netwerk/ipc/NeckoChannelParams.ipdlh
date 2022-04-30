@@ -21,6 +21,7 @@ include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
 include "mozilla/net/CacheInfoIPCTypes.h";
 include "mozilla/AntiTrackingIPCUtils.h";
+include "mozilla/net/ClassOfService.h";
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
@@ -289,7 +290,7 @@ struct HttpChannelOpenArgs
   IPCStream?                  uploadStream;
   bool                        uploadStreamHasHeaders;
   int16_t                     priority;
-  uint32_t                    classOfService;
+  ClassOfService              classOfService;
   uint8_t                     redirectionLimit;
   bool                        allowSTS;
   uint32_t                    thirdPartyFlags;

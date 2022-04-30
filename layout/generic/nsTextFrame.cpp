@@ -7866,12 +7866,24 @@ nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
     if (mTextRun->IsVertical()) {
       rect.width = mRect.width;
       rect.height = iSize;
+      if (mTextRun->IsInlineReversed()) {
+        // The iterator above returns a point with the origin at the
+        // bottom left instead of the top left. Move the origin to the top left
+        // by subtracting the character's height.
+        rect.y -= rect.height;
+      }
     } else {
       rect.width = iSize;
       rect.height = mRect.height;
-
       if (Style()->IsTextCombined()) {
         rect.width *= GetTextCombineScaleFactor(this);
+      }
+      if (mTextRun->IsInlineReversed()) {
+        // The iterator above returns a point with the origin at the
+        // top right instead of the top left. Move the origin to the top left by
+        // subtracting the character's width. This is intentionally done after
+        // GetTextCombineScaleFactor() so we use the final, scaled width.
+        rect.x -= rect.width;
       }
     }
     aRects.AppendElement(rect);

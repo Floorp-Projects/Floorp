@@ -3869,7 +3869,7 @@ static bool CheckForUserMismatch() {
 static bool CheckForUserMismatch() { return false; }
 #endif
 
-static void IncreaseDescriptorLimits() {
+void mozilla::startup::IncreaseDescriptorLimits() {
 #ifdef XP_UNIX
   // Increase the fd limit to accomodate IPC resources like shared memory.
   // See also the Darwin case in config/external/nspr/pr/moz.build
@@ -4006,7 +4006,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   if (PR_GetEnv("XRE_MAIN_BREAK")) NS_BREAK();
 #endif
 
-  IncreaseDescriptorLimits();
+  mozilla::startup::IncreaseDescriptorLimits();
 
 #ifdef USE_GLX_TEST
   // bug 639842 - it's very important to fire this process BEFORE we set up

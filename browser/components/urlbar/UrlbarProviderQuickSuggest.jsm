@@ -11,11 +11,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  clearInterval: "resource://gre/modules/Timer.jsm",
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  setInterval: "resource://gre/modules/Timer.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   TaskQueue: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
@@ -38,6 +41,8 @@ const TIMESTAMP_REGEXP = /^\d{10}$/;
 const MERINO_ENDPOINT_PARAM_QUERY = "q";
 const MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS = "client_variants";
 const MERINO_ENDPOINT_PARAM_PROVIDERS = "providers";
+
+const IMPRESSION_COUNTERS_RESET_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
@@ -107,6 +112,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
     NimbusFeatures.urlbar.onUpdate(() => this._updateFeatureState());
 
     UrlbarPrefs.addObserver(this);
+
+    // Periodically record impression counters reset telemetry.
+    this._setImpressionCountersResetInterval();
+
+    // On shutdown, record any final impression counters reset telemetry.
+    AsyncShutdown.profileChangeTeardown.addBlocker(
+      "UrlbarProviderQuickSuggest: Record impression counters reset telemetry",
+      () => this._resetElapsedImpressionCounters()
+    );
   }
 
   /**
@@ -219,16 +233,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     ) {
       promises.push(this._fetchMerinoSuggestions(queryContext, searchString));
     }
-
-    // While we're waiting on suggestions, opportunistically reset elapsed
-    // impression counters and record "reset" telemetry as appropriate. If we
-    // didn't need to record telemetry for periods with no impressions, then we
-    // could simply reset elapsed counters on each impression instead of doing
-    // it here. But since we do need to record telemetry for periods with no
-    // impressions, we need to reset counters more often. Doing it here means no
-    // telemetry will be recorded as long as the user doesn't do any searches,
-    // but the alternative is to use one or more long-lived timers.
-    this._resetElapsedImpressionCounters();
 
     // Wait for both sources to finish before adding a suggestion.
     let allSuggestions = await Promise.all(promises);
@@ -987,8 +991,9 @@ class ProviderQuickSuggest extends UrlbarProvider {
       (!suggestion.is_sponsored &&
         UrlbarPrefs.get("quickSuggestImpressionCapsNonSponsoredEnabled"))
     ) {
+      this._resetElapsedImpressionCounters();
       let type = suggestion.is_sponsored ? "sponsored" : "nonsponsored";
-      let stats = this._impressionStats?.[type];
+      let stats = this._impressionStats[type];
       if (stats) {
         let hitStats = stats.filter(s => s.maxCount <= s.count);
         if (hitStats.length) {
@@ -1084,7 +1089,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // stats don't exist then the caps don't exist, and don't bother recording
     // anything in that case.
     let type = isSponsored ? "sponsored" : "nonsponsored";
-    let stats = this._impressionStats?.[type];
+    let stats = this._impressionStats[type];
     if (!stats) {
       this.logger.info("Impression caps undefined, skipping update");
       return;
@@ -1128,7 +1133,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   _loadImpressionStats() {
     let json = UrlbarPrefs.get("quicksuggest.impressionCaps.stats");
     if (!json) {
-      this._impressionStats = null;
+      this._impressionStats = {};
     } else {
       try {
         this._impressionStats = JSON.parse(
@@ -1285,6 +1290,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
         let intervalMs = 1000 * stat.intervalSeconds;
         let elapsedIntervalCount = Math.floor(elapsedMs / intervalMs);
         if (elapsedIntervalCount) {
+          // At least one interval period elapsed for the stat, so reset it. We
+          // may also need to record a telemetry event for the reset.
           this.logger.info(
             `Resetting impression counter for interval ${stat.intervalSeconds}s`
           );
@@ -1292,30 +1299,44 @@ class ProviderQuickSuggest extends UrlbarProvider {
             JSON.stringify({ type, stat, elapsedMs, elapsedIntervalCount })
           );
 
-          // Record a telemetry event for each elapsed interval period.
-          let startDateMs = stat.startDateMs;
-          for (let i = 0; i < elapsedIntervalCount; i++) {
-            let endDateMs = startDateMs + intervalMs;
+          let newStartDateMs =
+            stat.startDateMs + elapsedIntervalCount * intervalMs;
+
+          // Compute the portion of `elapsedIntervalCount` that happened after
+          // startup. This will be the interval count we report in the telemetry
+          // event. By design we don't report intervals that elapsed while the
+          // app wasn't running. For example, if the user stopped using Firefox
+          // for a year, we don't want to report a year's worth of intervals.
+          //
+          // First, compute the count of intervals that elapsed before startup.
+          // This is the same arithmetic used above except here it's based on
+          // the startup date instead of `now`. Keep in mind that startup may be
+          // before the stat's start date. Then subtract that count from
+          // `elapsedIntervalCount` to get the portion after startup.
+          let startupDateMs = this._getStartupDateMs();
+          let elapsedIntervalCountBeforeStartup = Math.floor(
+            Math.max(0, startupDateMs - stat.startDateMs) / intervalMs
+          );
+          let elapsedIntervalCountAfterStartup =
+            elapsedIntervalCount - elapsedIntervalCountBeforeStartup;
+
+          if (elapsedIntervalCountAfterStartup) {
             this._recordImpressionCapEvent({
               eventType: "reset",
               suggestionType: type,
-              eventDateMs: endDateMs,
+              eventDateMs: newStartDateMs,
+              eventCount: elapsedIntervalCountAfterStartup,
               stat: {
                 ...stat,
-                startDateMs,
-                // There were `stat.count` impressions in the first elapsed
-                // period and zero in all subsequent periods because if that
-                // were not the case then we would have recorded telemetry for
-                // the subsequent impression(s).
-                count: i == 0 ? stat.count : 0,
+                startDateMs:
+                  stat.startDateMs +
+                  elapsedIntervalCountBeforeStartup * intervalMs,
               },
             });
-            startDateMs += intervalMs;
           }
 
           // Reset the stat.
-          let remainderMs = elapsedMs - elapsedIntervalCount * intervalMs;
-          stat.startDateMs = now - remainderMs;
+          stat.startDateMs = newStartDateMs;
           stat.count = 0;
         }
       }
@@ -1343,13 +1364,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
     eventType,
     suggestionType,
     stat,
+    eventCount = 1,
     eventDateMs = Date.now(),
   }) {
     // All `extra` object values must be strings.
     let extra = {
       type: suggestionType,
       eventDate: String(eventDateMs),
-      endDate: String(stat.startDateMs + 1000 * stat.intervalSeconds),
+      eventCount: String(eventCount),
     };
     for (let [statKey, value] of Object.entries(stat)) {
       let extraKey = TELEMETRY_IMPRESSION_CAP_EXTRA_KEYS[statKey];
@@ -1365,6 +1387,39 @@ class ProviderQuickSuggest extends UrlbarProvider {
       "",
       extra
     );
+  }
+
+  /**
+   * Creates a repeating timer that resets impression counters and records
+   * related telemetry. Since counters are also reset when suggestions are
+   * triggered, the only point of this is to make sure we record reset telemetry
+   * events in a timely manner during periods when suggestions aren't triggered.
+   *
+   * @param {number} ms
+   *   The number of milliseconds in the interval.
+   */
+  _setImpressionCountersResetInterval(
+    ms = IMPRESSION_COUNTERS_RESET_INTERVAL_MS
+  ) {
+    if (this._impressionCountersResetInterval) {
+      clearInterval(this._impressionCountersResetInterval);
+    }
+    this._impressionCountersResetInterval = setInterval(
+      () => this._resetElapsedImpressionCounters(),
+      ms
+    );
+  }
+
+  /**
+   * Gets the timestamp of app startup in ms since Unix epoch. This is only
+   * defined as its own method so tests can override it to simulate arbitrary
+   * startups.
+   *
+   * @returns {number}
+   *   Startup timestamp in ms since Unix epoch.
+   */
+  _getStartupDateMs() {
+    return Services.startup.getStartupInfo().process.getTime();
   }
 
   /**
@@ -1485,7 +1540,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   //
   // Impression caps are stored in the remote settings config. See
   // `UrlbarQuickSuggest.confg.impression_caps`.
-  _impressionStats = null;
+  _impressionStats = {};
 
   // Whether impression stats are currently being updated.
   _updatingImpressionStats = false;

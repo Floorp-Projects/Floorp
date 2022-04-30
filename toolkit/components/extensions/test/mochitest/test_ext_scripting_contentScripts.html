@@ -817,10 +817,13 @@ add_task(async function test_registerContentScripts_with_wrong_matches() {
     true
   );
   await anotherExtension.awaitMessage("script-ran");
-  await AppTestDelegate.removeTab(window, tab);
 
   await extension.unload();
   await anotherExtension.unload();
+
+  // We remove the tab after having unloaded the extensions to avoid failures
+  // on Windows, see: Bug 1761550.
+  await AppTestDelegate.removeTab(window, tab);
 });
 
 add_task(async function test_registerContentScripts_twice_with_same_id() {

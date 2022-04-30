@@ -25,7 +25,7 @@ const DEFAULT_WELCOME_CONTENT = {
     true
   ),
   backdrop:
-    "#F9F9FB url('chrome://activity-stream/content/data/content/assets/fx100-noodles.svg') center/cover no-repeat fixed",
+    "#212121 url('chrome://activity-stream/content/data/content/assets/proton-bkg.avif') center/cover no-repeat fixed",
   screens: [
     {
       id: "AW_PIN_FIREFOX",
@@ -33,21 +33,18 @@ const DEFAULT_WELCOME_CONTENT = {
         position: "corner",
         logo: {},
         title: {
-          string_id: "onboarding-welcome-header",
-        },
-        subtitle: {
-          string_id: "fx100-thank-you-subtitle",
+          string_id: "mr1-onboarding-pin-header",
         },
         hero_text: {
-          string_id: "fx100-thank-you-hero-text",
-          color: "#321C64",
-          zap: true,
-          fontSize: "clamp(48px, 7vw, 137px)",
+          string_id: "mr1-welcome-screen-hero-text",
+        },
+        help_text: {
+          string_id: "mr1-onboarding-welcome-image-caption",
         },
         has_noodles: true,
         primary_button: {
           label: {
-            string_id: "fx100-thank-you-pin-primary-button-label",
+            string_id: "mr1-onboarding-pin-primary-button-label",
           },
           action: {
             navigate: true,
@@ -65,7 +62,6 @@ const DEFAULT_WELCOME_CONTENT = {
         secondary_button_top: {
           label: {
             string_id: "mr1-onboarding-sign-in-button-label",
-            color: "#321C64",
           },
           action: {
             data: {
