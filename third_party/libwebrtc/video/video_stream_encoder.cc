@@ -260,8 +260,9 @@ VideoLayersAllocation CreateVideoLayersAllocation(
       // Encoder may drop frames internally if `maxFramerate` is set.
       spatial_layer.frame_rate_fps = std::min<uint8_t>(
           encoder_config.simulcastStream[si].maxFramerate,
-          (current_rate.framerate_fps * frame_rate_fraction) /
-              VideoEncoder::EncoderInfo::kMaxFramerateFraction);
+          rtc::saturated_cast<uint8_t>(
+              (current_rate.framerate_fps * frame_rate_fraction) /
+              VideoEncoder::EncoderInfo::kMaxFramerateFraction));
     }
   } else if (encoder_config.numberOfSimulcastStreams == 1) {
     // TODO(bugs.webrtc.org/12000): Implement support for AV1 with
@@ -329,8 +330,9 @@ VideoLayersAllocation CreateVideoLayersAllocation(
       // Encoder may drop frames internally if `maxFramerate` is set.
       spatial_layer.frame_rate_fps = std::min<uint8_t>(
           encoder_config.spatialLayers[si].maxFramerate,
-          (current_rate.framerate_fps * frame_rate_fraction) /
-              VideoEncoder::EncoderInfo::kMaxFramerateFraction);
+          rtc::saturated_cast<uint8_t>(
+              (current_rate.framerate_fps * frame_rate_fraction) /
+              VideoEncoder::EncoderInfo::kMaxFramerateFraction));
     }
   }
 
