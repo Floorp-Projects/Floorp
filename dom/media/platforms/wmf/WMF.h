@@ -148,6 +148,24 @@ HRESULT MFTGetInfo(CLSID clsidMFT, LPWSTR* pszName,
                    MFT_REGISTER_TYPE_INFO** ppOutputTypes,
                    UINT32* pcOutputTypes, IMFAttributes** ppAttributes);
 
+HRESULT MFCreateAttributes(IMFAttributes** ppMFAttributes, UINT32 cInitialSize);
+
+HRESULT MFCreateEventQueue(IMFMediaEventQueue** ppMediaEventQueue);
+
+HRESULT MFCreateStreamDescriptor(DWORD dwStreamIdentifier, DWORD cMediaTypes,
+                                 IMFMediaType** apMediaTypes,
+                                 IMFStreamDescriptor** ppDescriptor);
+
+HRESULT MFCreateAsyncResult(IUnknown* punkObject, IMFAsyncCallback* pCallback,
+                            IUnknown* punkState,
+                            IMFAsyncResult** ppAsyncResult);
+
+HRESULT MFCreatePresentationDescriptor(
+    DWORD cStreamDescriptors, IMFStreamDescriptor** apStreamDescriptors,
+    IMFPresentationDescriptor** ppPresentationDescriptor);
+
+HRESULT MFCreateMemoryBuffer(DWORD cbMaxLength, IMFMediaBuffer** ppBuffer);
+
 }  // end namespace wmf
 }  // end namespace mozilla
 
