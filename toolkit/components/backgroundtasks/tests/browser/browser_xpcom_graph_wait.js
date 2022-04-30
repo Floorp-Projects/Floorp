@@ -100,6 +100,7 @@ const backgroundtaskPhases = {
         },
         "@mozilla.org/xpcom/debug;1",
         "@mozilla.org/xre/app-info;1",
+        "@mozilla.org/mime;1",
       ],
     },
   },
