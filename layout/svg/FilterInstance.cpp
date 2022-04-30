@@ -71,7 +71,7 @@ void FilterInstance::PaintFilteredFrame(
 
   gfxContextMatrixAutoSaveRestore autoSR(aCtx);
   gfxSize scaleFactors = aCtx->CurrentMatrixDouble().ScaleFactors();
-  if (scaleFactors.IsEmpty()) {
+  if (scaleFactors.width == 0 || scaleFactors.height == 0) {
     return;
   }
 
