@@ -298,6 +298,7 @@ xul|tabpanels {
   padding: 0;
   background-color: transparent;
   color: inherit;
+  color-scheme: unset;
 }
 
 xul|tabs {
@@ -316,6 +317,7 @@ xul|tab {
   background-color: transparent;
   border-bottom: 2px solid transparent;
   transition: background-color 50ms ease 0s;
+  color-scheme: unset;
 }
 
 xul|tab:hover {
