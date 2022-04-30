@@ -21,7 +21,7 @@
 #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 
 #if defined(RTC_ENABLE_WIN_WGC)
-#include "modules/desktop_capture/win/window_capturer_win_wgc.h"
+#include "modules/desktop_capture/win/wgc_capturer_win.h"
 #include "rtc_base/win/windows_version.h"
 
 const bool kUseWinWgcCapturer = false;
@@ -66,7 +66,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
   // fully implemented.
   if (kUseWinWgcCapturer &&
       rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
-    return WindowCapturerWinWgc::CreateRawWindowCapturer(options);
+    return WgcCapturerWin::CreateRawWindowCapturer(options);
   }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
 
@@ -87,6 +87,16 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
     const DesktopCaptureOptions& options) {
+#if defined(RTC_ENABLE_WIN_WGC)
+  // TODO(bugs.webrtc.org/11760): Add a WebRTC field trial (or similar
+  // mechanism) check here that leads to use of the WGC capturer once it is
+  // fully implemented.
+  if (kUseWinWgcCapturer &&
+      rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
+    return WgcCapturerWin::CreateRawScreenCapturer(options);
+  }
+#endif  // defined(RTC_ENABLE_WIN_WGC)
+
   std::unique_ptr<DesktopCapturer> capturer = CreateRawScreenCapturer(options);
   if (capturer && options.detect_updated_region()) {
     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));

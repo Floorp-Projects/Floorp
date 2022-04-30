@@ -29,4 +29,24 @@ TEST(ScreenCaptureUtilsTest, GetScreenList) {
   ASSERT_EQ(screens.size(), device_names.size());
 }
 
+TEST(ScreenCaptureUtilsTest, GetMonitorList) {
+  DesktopCapturer::SourceList monitors;
+
+  ASSERT_TRUE(GetMonitorList(&monitors));
+  ASSERT_GT(monitors.size(), 0ULL);
+}
+
+TEST(ScreenCaptureUtilsTest, IsMonitorValid) {
+  DesktopCapturer::SourceList monitors;
+
+  ASSERT_TRUE(GetMonitorList(&monitors));
+  ASSERT_GT(monitors.size(), 0ULL);
+
+  ASSERT_TRUE(IsMonitorValid(monitors[0].id));
+}
+
+TEST(ScreenCaptureUtilsTest, InvalidMonitor) {
+  ASSERT_FALSE(IsMonitorValid(NULL));
+}
+
 }  // namespace webrtc

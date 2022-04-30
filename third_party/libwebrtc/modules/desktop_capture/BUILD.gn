@@ -138,6 +138,9 @@ if (rtc_include_tests) {
       if (is_mac) {
         sources += [ "screen_capturer_mac_unittest.cc" ]
       }
+      if (rtc_enable_win_wgc) {
+        sources += [ "win/wgc_capturer_win_unittest.cc" ]
+      }
       deps += [ ":desktop_capture_mock" ]
       public_configs = [ ":x11_config" ]
     }
@@ -541,8 +544,12 @@ rtc_library("desktop_capture_generic") {
     sources += [
       "win/wgc_capture_session.cc",
       "win/wgc_capture_session.h",
-      "win/window_capturer_win_wgc.cc",
-      "win/window_capturer_win_wgc.h",
+      "win/wgc_capture_source.cc",
+      "win/wgc_capture_source.h",
+      "win/wgc_capturer_win.cc",
+      "win/wgc_capturer_win.h",
+      "win/wgc_desktop_frame.cc",
+      "win/wgc_desktop_frame.h",
     ]
 
     defines += [ "RTC_ENABLE_WIN_WGC" ]
