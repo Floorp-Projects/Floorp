@@ -431,7 +431,7 @@ static bool PrescaleAndTileDrawable(gfxDrawable* aDrawable,
 
   // If we aren't scaling or translating, don't go down this path
   if ((FuzzyEqual(scaleFactor.width, 1.0, fuzzFactor) &&
-       FuzzyEqual(scaleFactor.width, 1.0, fuzzFactor)) ||
+       FuzzyEqual(scaleFactor.height, 1.0f, fuzzFactor)) ||
       aContext->CurrentMatrix().HasNonAxisAlignedTransform()) {
     return false;
   }
