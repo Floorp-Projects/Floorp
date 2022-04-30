@@ -24,7 +24,8 @@ namespace mozilla {
 namespace net {
 
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
-                         Http3Session* session, uint32_t aCos, uint64_t bcId)
+                         Http3Session* session, const ClassOfService& cos,
+                         uint64_t bcId)
     : mSession(session),
       mTransaction(httpTransaction),
       mCurrentTopBrowsingContextId(bcId) {
@@ -36,7 +37,8 @@ Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
     mTransactionTabId = trans->TopBrowsingContextId();
   }
 
-  SetPriority(aCos);
+  SetPriority(cos.Flags());
+  SetIncremental(cos.Incremental());
 }
 
 void Http3Stream::Close(nsresult aResult) {
@@ -94,6 +96,10 @@ void Http3Stream::SetPriority(uint32_t aCos) {
     // all others get a lower priority than the main html document
     mPriorityUrgency = 4;
   }
+}
+
+void Http3Stream::SetIncremental(bool incremental) {
+  mPriorityIncremental = incremental;
 }
 
 nsresult Http3Stream::TryActivating() {

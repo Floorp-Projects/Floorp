@@ -6,8 +6,6 @@
 
 #include "mozilla/net/OpaqueResponseUtils.h"
 
-#include "mozilla/Telemetry.h"
-#include "mozilla/TelemetryHistogramEnums.h"
 #include "nsContentUtils.h"
 #include "nsHttpResponseHead.h"
 #include "nsMimeTypes.h"
@@ -170,87 +168,5 @@ bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead) {
   return responseFirstBytePos == 0;
 }
 
-OpaqueResponseBlockingInfo::OpaqueResponseBlockingInfo(
-    ExtContentPolicyType aContentPolicyType)
-    : mStartTime(TimeStamp::Now()) {
-  switch (aContentPolicyType) {
-    case ExtContentPolicy::TYPE_OTHER:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Other;
-      break;
-    case ExtContentPolicy::TYPE_SCRIPT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Script;
-      break;
-    case ExtContentPolicy::TYPE_IMAGE:
-    case ExtContentPolicy::TYPE_IMAGESET:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Image;
-      break;
-    case ExtContentPolicy::TYPE_STYLESHEET:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Style;
-      break;
-    case ExtContentPolicy::TYPE_OBJECT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Object;
-      break;
-    case ExtContentPolicy::TYPE_DOCUMENT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Document;
-      break;
-    case ExtContentPolicy::TYPE_SUBDOCUMENT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Subdocument;
-      break;
-    case ExtContentPolicy::TYPE_PING:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Ping;
-      break;
-    case ExtContentPolicy::TYPE_XMLHTTPREQUEST:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::XHR;
-      break;
-    case ExtContentPolicy::TYPE_OBJECT_SUBREQUEST:
-      mDestination =
-          Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::ObjectSubrequest;
-      break;
-    case ExtContentPolicy::TYPE_DTD:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::DTD;
-      break;
-    case ExtContentPolicy::TYPE_FONT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Font;
-      break;
-    case ExtContentPolicy::TYPE_MEDIA:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Media;
-      break;
-    case ExtContentPolicy::TYPE_WEBSOCKET:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Websocket;
-      break;
-    case ExtContentPolicy::TYPE_CSP_REPORT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::CspReport;
-      break;
-    case ExtContentPolicy::TYPE_XSLT:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::XSLT;
-      break;
-    case ExtContentPolicy::TYPE_BEACON:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Beacon;
-      break;
-    case ExtContentPolicy::TYPE_FETCH:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Fetch;
-      break;
-    case ExtContentPolicy::TYPE_WEB_MANIFEST:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::WebManifest;
-      break;
-    default:
-      mDestination = Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING::Unexpected;
-      break;
-  }
-}
-
-void OpaqueResponseBlockingInfo::Report(const nsCString& aKey) {
-  Telemetry::AccumulateCategoricalKeyed(aKey, mDestination);
-
-  AccumulateTimeDelta(Telemetry::OPAQUE_RESPONSE_BLOCKING_TIME_MS, mStartTime);
-}
-
-void OpaqueResponseBlockingInfo::ReportContentLength(int64_t aContentLength) {
-  // XXX: We might want to filter negative cases (when the content length is
-  // unknown).
-  Telemetry::ScalarAdd(
-      Telemetry::ScalarID::OPAQUE_RESPONSE_BLOCKING_PARSING_SIZE_KB,
-      aContentLength > 0 ? aContentLength >> 10 : aContentLength);
-}
 }  // namespace net
 }  // namespace mozilla

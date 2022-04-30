@@ -134,7 +134,7 @@ HDC gfxWindowsNativeDrawing::BeginNativeDrawing() {
                                    (int32_t)ceil(mNativeRect.Height() + 1));
       } else {
         // figure out the scale factors
-        mScale = m.ScaleFactors();
+        mScale = m.ScaleFactors().ToSize();
 
         mWorldTransform.eM11 = (FLOAT)mScale.width;
         mWorldTransform.eM12 = 0.0f;

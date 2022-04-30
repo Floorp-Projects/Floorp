@@ -68,7 +68,7 @@ if (AppConstants.ENABLE_WEBDRIVER) {
   );
 } else {
   this.Marionette = { running: false };
-  this.RemoteAgent = { listening: false };
+  this.RemoteAgent = { running: false };
 }
 
 const UPDATESERVICE_CID = Components.ID(
@@ -3595,7 +3595,7 @@ UpdateService.prototype = {
 
   get disabledForTesting() {
     return (
-      (Cu.isInAutomation || Marionette.running || RemoteAgent.listening) &&
+      (Cu.isInAutomation || Marionette.running || RemoteAgent.running) &&
       Services.prefs.getBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false)
     );
   },

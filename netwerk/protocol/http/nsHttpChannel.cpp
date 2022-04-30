@@ -717,8 +717,9 @@ nsresult nsHttpChannel::Connect() {
   }
 
   bool isTrackingResource = IsThirdPartyTrackingResource();
-  LOG(("nsHttpChannel %p tracking resource=%d, cos=%u", this,
-       isTrackingResource, mClassOfService));
+  LOG(("nsHttpChannel %p tracking resource=%d, cos=%lu, inc=%d", this,
+       isTrackingResource, mClassOfService.Flags(),
+       mClassOfService.Incremental()));
 
   if (isTrackingResource) {
     AddClassFlags(nsIClassOfService::Tail);
@@ -1076,8 +1077,9 @@ void nsHttpChannel::HandleAsyncNotModified() {
 }
 
 nsresult nsHttpChannel::SetupTransaction() {
-  LOG(("nsHttpChannel::SetupTransaction [this=%p, cos=%u, prio=%d]\n", this,
-       mClassOfService, mPriority));
+  LOG(("nsHttpChannel::SetupTransaction [this=%p, cos=%lu, inc=%d prio=%d]\n",
+       this, mClassOfService.Flags(), mClassOfService.Incremental(),
+       mPriority));
 
   NS_ENSURE_TRUE(!mTransaction, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -1368,7 +1370,7 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
 
   HttpTrafficAnalyzer::ClassOfService cos;
   {
-    if ((mClassOfService & nsIClassOfService::Leader) &&
+    if ((mClassOfService.Flags() & nsIClassOfService::Leader) &&
         mLoadInfo->GetExternalContentPolicyType() ==
             ExtContentPolicy::TYPE_SCRIPT) {
       cos = HttpTrafficAnalyzer::ClassOfService::eLeader;
@@ -3485,7 +3487,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(bool isHttps) {
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if ((mClassOfService & nsIClassOfService::Leader) ||
+  if ((mClassOfService.Flags() & nsIClassOfService::Leader) ||
       (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)) {
     cacheEntryOpenFlags |= nsICacheStorage::OPEN_PRIORITY;
   }
@@ -6178,13 +6180,13 @@ nsresult nsHttpChannel::BeginConnect() {
   }
 
   if (gHttpHandler->CriticalRequestPrioritization()) {
-    if (mClassOfService & nsIClassOfService::Leader) {
+    if (mClassOfService.Flags() & nsIClassOfService::Leader) {
       mCaps |= NS_HTTP_LOAD_AS_BLOCKING;
     }
-    if (mClassOfService & nsIClassOfService::Unblocked) {
+    if (mClassOfService.Flags() & nsIClassOfService::Unblocked) {
       mCaps |= NS_HTTP_LOAD_UNBLOCKED;
     }
-    if (mClassOfService & nsIClassOfService::UrgentStart &&
+    if (mClassOfService.Flags() & nsIClassOfService::UrgentStart &&
         gHttpHandler->IsUrgentStartEnabled()) {
       mCaps |= NS_HTTP_URGENT_START;
       SetPriority(nsISupportsPriority::PRIORITY_HIGHEST);
@@ -6462,8 +6464,8 @@ nsHttpChannel::SetPriority(int32_t value) {
 //-----------------------------------------------------------------------------
 
 void nsHttpChannel::OnClassOfServiceUpdated() {
-  LOG(("nsHttpChannel::OnClassOfServiceUpdated this=%p, cos=%u", this,
-       mClassOfService));
+  LOG(("nsHttpChannel::OnClassOfServiceUpdated this=%p, cos=%lu, inc=%d", this,
+       mClassOfService.Flags(), mClassOfService.Incremental()));
 
   if (mTransaction) {
     gHttpHandler->UpdateClassOfServiceOnTransaction(mTransaction,
@@ -6478,9 +6480,9 @@ void nsHttpChannel::OnClassOfServiceUpdated() {
 
 NS_IMETHODIMP
 nsHttpChannel::SetClassFlags(uint32_t inFlags) {
-  uint32_t previous = mClassOfService;
-  mClassOfService = inFlags;
-  if (previous != mClassOfService) {
+  uint32_t previous = mClassOfService.Flags();
+  mClassOfService.SetFlags(inFlags);
+  if (previous != mClassOfService.Flags()) {
     OnClassOfServiceUpdated();
   }
   return NS_OK;
@@ -6488,9 +6490,9 @@ nsHttpChannel::SetClassFlags(uint32_t inFlags) {
 
 NS_IMETHODIMP
 nsHttpChannel::AddClassFlags(uint32_t inFlags) {
-  uint32_t previous = mClassOfService;
-  mClassOfService |= inFlags;
-  if (previous != mClassOfService) {
+  uint32_t previous = mClassOfService.Flags();
+  mClassOfService.SetFlags(inFlags | mClassOfService.Flags());
+  if (previous != mClassOfService.Flags()) {
     OnClassOfServiceUpdated();
   }
   return NS_OK;
@@ -6498,9 +6500,29 @@ nsHttpChannel::AddClassFlags(uint32_t inFlags) {
 
 NS_IMETHODIMP
 nsHttpChannel::ClearClassFlags(uint32_t inFlags) {
-  uint32_t previous = mClassOfService;
-  mClassOfService &= ~inFlags;
+  uint32_t previous = mClassOfService.Flags();
+  mClassOfService.SetFlags(~inFlags & mClassOfService.Flags());
+  if (previous != mClassOfService.Flags()) {
+    OnClassOfServiceUpdated();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetClassOfService(ClassOfService cos) {
+  ClassOfService previous = mClassOfService;
+  mClassOfService = cos;
   if (previous != mClassOfService) {
+    OnClassOfServiceUpdated();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetIncremental(bool incremental) {
+  bool previous = mClassOfService.Incremental();
+  mClassOfService.SetIncremental(incremental);
+  if (previous != mClassOfService.Incremental()) {
     OnClassOfServiceUpdated();
   }
   return NS_OK;
@@ -9161,18 +9183,18 @@ nsHttpChannel::TimerCallback::Notify(nsITimer* aTimer) {
 }
 
 bool nsHttpChannel::EligibleForTailing() {
-  if (!(mClassOfService & nsIClassOfService::Tail)) {
+  if (!(mClassOfService.Flags() & nsIClassOfService::Tail)) {
     return false;
   }
 
-  if (mClassOfService &
+  if (mClassOfService.Flags() &
       (nsIClassOfService::UrgentStart | nsIClassOfService::Leader |
        nsIClassOfService::TailForbidden)) {
     return false;
   }
 
-  if (mClassOfService & nsIClassOfService::Unblocked &&
-      !(mClassOfService & nsIClassOfService::TailAllowed)) {
+  if (mClassOfService.Flags() & nsIClassOfService::Unblocked &&
+      !(mClassOfService.Flags() & nsIClassOfService::TailAllowed)) {
     return false;
   }
 
@@ -9291,27 +9313,23 @@ void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
 
         if (!isInitialRequest) {
           mBlockOpaqueResponseAfterSniff = true;
-          ReportORBTelemetry("Blocked_NotAnInitialRequest"_ns);
           return;
         }
 
         if (mResponseHead->Status() != 200 && mResponseHead->Status() != 206) {
           mBlockOpaqueResponseAfterSniff = true;
-          ReportORBTelemetry("Blocked_Not200Or206"_ns);
           return;
         }
 
         if (mResponseHead->Status() == 206 &&
             !IsFirstPartialResponse(*mResponseHead)) {
           mBlockOpaqueResponseAfterSniff = true;
-          ReportORBTelemetry("Blocked_InvaliidPartialResponse"_ns);
           return;
         }
       }
     }
 
     mCheckIsOpaqueResponseAllowedAfterSniff = false;
-    ReportORBTelemetry("Allowed_SniffAsImageOrAudioOrVideo"_ns);
   }
 }
 

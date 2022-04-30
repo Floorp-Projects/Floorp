@@ -6,6 +6,11 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
+
 const SUGGESTIONS = [
   {
     id: 1,
@@ -77,6 +82,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
 
 let gSandbox;
 let gDateNowStub;
+let gStartupDateMsStub;
 
 add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
@@ -99,6 +105,14 @@ add_task(async function init() {
     Cu.getGlobalForObject(UrlbarProviderQuickSuggest).Date,
     "now"
   );
+
+  // Set up a sinon stub for `UrlbarProviderQuickSuggest._getStartupDateMs()` to
+  // let the test override the startup date.
+  gStartupDateMsStub = gSandbox.stub(
+    UrlbarProviderQuickSuggest,
+    "_getStartupDateMs"
+  );
+  gStartupDateMsStub.returns(0);
 });
 
 // Tests a single interval.
@@ -124,10 +138,10 @@ add_task(async function oneInterval() {
                   intervalSeconds: "3",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "3000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -150,10 +164,10 @@ add_task(async function oneInterval() {
                   intervalSeconds: "3",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "3000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               {
@@ -163,10 +177,10 @@ add_task(async function oneInterval() {
                   intervalSeconds: "3",
                   maxCount: "1",
                   startDate: "3000",
-                  endDate: "6000",
                   impressionDate: "3000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -212,10 +226,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -234,10 +248,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -248,10 +262,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -270,10 +284,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -284,10 +298,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 5, max_count: 3
@@ -298,10 +312,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -320,10 +334,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -342,10 +356,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "3000",
-                  endDate: "4000",
                   impressionDate: "2000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -364,10 +378,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "4000",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 5, max_count: 3
@@ -378,10 +392,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -392,10 +406,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "5000",
-                  endDate: "6000",
                   impressionDate: "5000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -414,10 +428,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "5000",
-                  endDate: "6000",
                   impressionDate: "5000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -428,10 +442,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "6000",
-                  endDate: "7000",
                   impressionDate: "6000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 10, max_count: 5
@@ -442,10 +456,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "10",
                   maxCount: "5",
                   startDate: "0",
-                  endDate: "10000",
                   impressionDate: "6000",
                   count: "5",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -464,10 +478,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "6000",
-                  endDate: "7000",
                   impressionDate: "6000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -486,10 +500,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "7000",
-                  endDate: "8000",
                   impressionDate: "6000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -508,10 +522,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "8000",
-                  endDate: "9000",
                   impressionDate: "6000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -530,10 +544,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "9000",
-                  endDate: "10000",
                   impressionDate: "6000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 5, max_count: 3
@@ -544,10 +558,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "5000",
-                  endDate: "10000",
                   impressionDate: "6000",
                   count: "2",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 10, max_count: 5
@@ -558,10 +572,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "10",
                   maxCount: "5",
                   startDate: "0",
-                  endDate: "10000",
                   impressionDate: "6000",
                   count: "5",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -572,10 +586,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "10000",
-                  endDate: "11000",
                   impressionDate: "10000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -594,10 +608,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "10000",
-                  endDate: "11000",
                   impressionDate: "10000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -608,10 +622,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "11000",
-                  endDate: "12000",
                   impressionDate: "11000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -630,10 +644,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "11000",
-                  endDate: "12000",
                   impressionDate: "11000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -644,10 +658,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "12000",
-                  endDate: "13000",
                   impressionDate: "12000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 5, max_count: 3
@@ -658,10 +672,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "10000",
-                  endDate: "15000",
                   impressionDate: "12000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -680,10 +694,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "12000",
-                  endDate: "13000",
                   impressionDate: "12000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -702,10 +716,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "13000",
-                  endDate: "14000",
                   impressionDate: "12000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -724,10 +738,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "14000",
-                  endDate: "15000",
                   impressionDate: "12000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 5, max_count: 3
@@ -738,10 +752,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "10000",
-                  endDate: "15000",
                   impressionDate: "12000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -752,10 +766,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "15000",
-                  endDate: "16000",
                   impressionDate: "15000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -774,10 +788,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "15000",
-                  endDate: "16000",
                   impressionDate: "15000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -788,10 +802,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "16000",
-                  endDate: "17000",
                   impressionDate: "16000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 10, max_count: 5
@@ -802,10 +816,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "10",
                   maxCount: "5",
                   startDate: "10000",
-                  endDate: "20000",
                   impressionDate: "16000",
                   count: "5",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -824,10 +838,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "16000",
-                  endDate: "17000",
                   impressionDate: "16000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -846,10 +860,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "17000",
-                  endDate: "18000",
                   impressionDate: "16000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -868,10 +882,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "18000",
-                  endDate: "19000",
                   impressionDate: "16000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -890,10 +904,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "19000",
-                  endDate: "20000",
                   impressionDate: "16000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 5, max_count: 3
@@ -904,10 +918,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "15000",
-                  endDate: "20000",
                   impressionDate: "16000",
                   count: "2",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 10, max_count: 5
@@ -918,10 +932,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "10",
                   maxCount: "5",
                   startDate: "10000",
-                  endDate: "20000",
                   impressionDate: "16000",
                   count: "5",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -932,10 +946,10 @@ add_task(async function multipleIntervals() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "20000",
-                  endDate: "21000",
                   impressionDate: "20000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -974,10 +988,10 @@ add_task(async function lifetime() {
                   intervalSeconds: "Infinity",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "Infinity",
                   impressionDate: "0",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1017,10 +1031,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1039,10 +1053,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1053,10 +1067,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1075,10 +1089,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1089,10 +1103,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: Infinity, max_count: 3
@@ -1103,10 +1117,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "Infinity",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "Infinity",
                   impressionDate: "2000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1124,10 +1138,10 @@ add_task(async function intervalAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1167,10 +1181,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1189,10 +1203,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1203,10 +1217,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1225,10 +1239,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1239,10 +1253,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 5, max_count: 3
@@ -1253,10 +1267,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1275,10 +1289,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1297,10 +1311,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "3000",
-                  endDate: "4000",
                   impressionDate: "2000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1319,10 +1333,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "4000",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 5, max_count: 3
@@ -1333,10 +1347,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "3",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1347,10 +1361,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "5000",
-                  endDate: "6000",
                   impressionDate: "5000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: Infinity, max_count: 4
@@ -1361,10 +1375,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "Infinity",
                   maxCount: "4",
                   startDate: "0",
-                  endDate: "Infinity",
                   impressionDate: "5000",
                   count: "4",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1383,10 +1397,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "5000",
-                  endDate: "6000",
                   impressionDate: "5000",
                   count: "1",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1405,10 +1419,10 @@ add_task(async function multipleIntervalsAndLifetime() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "6000",
-                  endDate: "7000",
                   impressionDate: "5000",
                   count: "0",
                   type: "sponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1450,10 +1464,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1472,10 +1486,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "0",
-                  endDate: "1000",
                   impressionDate: "0",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1486,10 +1500,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1508,10 +1522,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "1000",
-                  endDate: "2000",
                   impressionDate: "1000",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1522,10 +1536,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 5, max_count: 3
@@ -1536,10 +1550,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "3",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1558,10 +1572,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "2000",
-                  endDate: "3000",
                   impressionDate: "2000",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1580,10 +1594,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "3000",
-                  endDate: "4000",
                   impressionDate: "2000",
                   count: "0",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1602,10 +1616,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "4000",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "0",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
               // reset: interval_s: 5, max_count: 3
@@ -1616,10 +1630,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "5",
                   maxCount: "3",
                   startDate: "0",
-                  endDate: "5000",
                   impressionDate: "2000",
                   count: "3",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: 1, max_count: 1
@@ -1630,10 +1644,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "5000",
-                  endDate: "6000",
                   impressionDate: "5000",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
               // hit: interval_s: Infinity, max_count: 4
@@ -1644,10 +1658,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "Infinity",
                   maxCount: "4",
                   startDate: "0",
-                  endDate: "Infinity",
                   impressionDate: "5000",
                   count: "4",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1666,10 +1680,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "5000",
-                  endDate: "6000",
                   impressionDate: "5000",
                   count: "1",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1688,10 +1702,10 @@ add_task(async function nonsponsored() {
                   intervalSeconds: "1",
                   maxCount: "1",
                   startDate: "6000",
-                  endDate: "7000",
                   impressionDate: "5000",
                   count: "0",
                   type: "nonsponsored",
+                  eventCount: "1",
                 },
               },
             ],
@@ -1750,10 +1764,10 @@ add_task(async function sponsoredAndNonsponsored() {
             intervalSeconds: "Infinity",
             maxCount: "2",
             startDate: "0",
-            endDate: "Infinity",
             impressionDate: "0",
             count: "2",
             type: "sponsored",
+            eventCount: "1",
           },
         },
       ]);
@@ -1777,10 +1791,10 @@ add_task(async function sponsoredAndNonsponsored() {
             intervalSeconds: "Infinity",
             maxCount: "3",
             startDate: "0",
-            endDate: "Infinity",
             impressionDate: "0",
             count: "3",
             type: "nonsponsored",
+            eventCount: "1",
           },
         },
       ]);
@@ -1858,10 +1872,10 @@ add_task(async function sponsoredCapsDisabled() {
             intervalSeconds: "Infinity",
             maxCount: "3",
             startDate: "0",
-            endDate: "Infinity",
             impressionDate: "0",
             count: "3",
             type: "nonsponsored",
+            eventCount: "1",
           },
         },
       ]);
@@ -1917,10 +1931,10 @@ add_task(async function nonsponsoredCapsDisabled() {
             intervalSeconds: "Infinity",
             maxCount: "3",
             startDate: "0",
-            endDate: "Infinity",
             impressionDate: "0",
             count: "3",
             type: "sponsored",
+            eventCount: "1",
           },
         },
       ]);
@@ -1975,10 +1989,10 @@ add_task(async function configChange_sameIntervalLowerCap_1() {
                 intervalSeconds: "3",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2017,10 +2031,10 @@ add_task(async function configChange_sameIntervalLowerCap_1() {
                 intervalSeconds: "3",
                 maxCount: "1",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2030,10 +2044,10 @@ add_task(async function configChange_sameIntervalLowerCap_1() {
                 intervalSeconds: "3",
                 maxCount: "1",
                 startDate: "3000",
-                endDate: "6000",
                 impressionDate: "3000",
                 count: "1",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2099,10 +2113,10 @@ add_task(async function configChange_sameIntervalLowerCap_2() {
                 intervalSeconds: "3",
                 maxCount: "1",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "0",
                 count: "2",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2112,10 +2126,10 @@ add_task(async function configChange_sameIntervalLowerCap_2() {
                 intervalSeconds: "3",
                 maxCount: "1",
                 startDate: "3000",
-                endDate: "6000",
                 impressionDate: "3000",
                 count: "1",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2158,10 +2172,10 @@ add_task(async function configChange_sameIntervalHigherCap() {
                 intervalSeconds: "3",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2194,10 +2208,10 @@ add_task(async function configChange_sameIntervalHigherCap() {
                 intervalSeconds: "3",
                 maxCount: "5",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "1000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2223,10 +2237,10 @@ add_task(async function configChange_sameIntervalHigherCap() {
                 intervalSeconds: "3",
                 maxCount: "5",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "1000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2236,10 +2250,10 @@ add_task(async function configChange_sameIntervalHigherCap() {
                 intervalSeconds: "3",
                 maxCount: "5",
                 startDate: "3000",
-                endDate: "6000",
                 impressionDate: "3000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2279,10 +2293,10 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
                 intervalSeconds: "3",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2334,10 +2348,10 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
                 intervalSeconds: "5",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "5000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2347,10 +2361,10 @@ add_task(async function configChange_1IntervalTo2NewIntervalsHigher() {
                 intervalSeconds: "10",
                 maxCount: "5",
                 startDate: "0",
-                endDate: "10000",
                 impressionDate: "5000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2393,10 +2407,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "2",
                 maxCount: "2",
                 startDate: "0",
-                endDate: "2000",
                 impressionDate: "0",
                 count: "2",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2417,10 +2431,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "2",
                 maxCount: "2",
                 startDate: "0",
-                endDate: "2000",
                 impressionDate: "0",
                 count: "2",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2430,10 +2444,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "2",
                 maxCount: "2",
                 startDate: "2000",
-                endDate: "4000",
                 impressionDate: "2000",
                 count: "2",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2443,10 +2457,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "4",
                 maxCount: "4",
                 startDate: "0",
-                endDate: "4000",
                 impressionDate: "2000",
                 count: "4",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2477,10 +2491,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "6",
                 maxCount: "5",
                 startDate: "0",
-                endDate: "6000",
                 impressionDate: "4000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2514,10 +2528,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "6",
                 maxCount: "5",
                 startDate: "0",
-                endDate: "6000",
                 impressionDate: "4000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
             {
@@ -2527,10 +2541,10 @@ add_task(async function configChange_2IntervalsTo1NewIntervalHigher() {
                 intervalSeconds: "6",
                 maxCount: "5",
                 startDate: "6000",
-                endDate: "12000",
                 impressionDate: "6000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2570,10 +2584,10 @@ add_task(async function configChange_1IntervalTo1NewIntervalLower() {
                 intervalSeconds: "5",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "5000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2606,10 +2620,10 @@ add_task(async function configChange_1IntervalTo1NewIntervalLower() {
                 intervalSeconds: "3",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "1000",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2649,10 +2663,10 @@ add_task(async function configChange_1IntervalToLifetime() {
                 intervalSeconds: "3",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "3000",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2710,10 +2724,10 @@ add_task(async function configChange_lifetimeCapHigher() {
                 intervalSeconds: "Infinity",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "Infinity",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2746,10 +2760,10 @@ add_task(async function configChange_lifetimeCapHigher() {
                 intervalSeconds: "Infinity",
                 maxCount: "5",
                 startDate: "0",
-                endDate: "Infinity",
                 impressionDate: "1000",
                 count: "5",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -2792,10 +2806,10 @@ add_task(async function configChange_lifetimeCapLower() {
                 intervalSeconds: "Infinity",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "Infinity",
                 impressionDate: "0",
                 count: "3",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
           ]);
@@ -3080,14 +3094,7 @@ add_task(async function intervalsElapsedButCapNotHit() {
         },
         // 10s
         10: async () => {
-          // Impression counter resets are only triggered by `startQuery()` in
-          // the provider, so we need to do a search to trigger the events.
-          await checkSearch({
-            name: "reset trigger",
-            searchString: "this shouldn't match any suggestion",
-            expectedResults: [],
-          });
-
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
           let expectedEvents = [
             // 1s: reset with count = 0
             {
@@ -3097,48 +3104,564 @@ add_task(async function intervalsElapsedButCapNotHit() {
                 intervalSeconds: "1",
                 maxCount: "3",
                 startDate: "0",
-                endDate: "1000",
                 impressionDate: "0",
                 count: "0",
                 type: "sponsored",
+                eventCount: "1",
               },
             },
-            // 2s: reset with count = 1
+            // 2-10s: reset with count = 1, eventCount = 9
             {
               object: "reset",
               extra: {
-                eventDate: "2000",
+                eventDate: "10000",
                 intervalSeconds: "1",
                 maxCount: "3",
                 startDate: "1000",
-                endDate: "2000",
                 impressionDate: "1000",
                 count: "1",
                 type: "sponsored",
+                eventCount: "9",
               },
             },
           ];
-          // 3s to 10s: reset with count = 0
-          for (let i = 3; i <= 10; i++) {
-            expectedEvents.push({
-              object: "reset",
-              extra: {
-                eventDate: String(1000 * i),
-                intervalSeconds: "1",
-                maxCount: "3",
-                startDate: String(1000 * (i - 1)),
-                endDate: String(1000 * i),
-                impressionDate: "1000",
-                count: "0",
-                type: "sponsored",
-              },
-            });
-          }
           await checkTelemetryEvents(expectedEvents);
         },
       });
     },
   });
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S                      S                          R
+//   >----|----|----|----|----|----|----|----|----|----|
+//   0s   1    2    3    4    5    6    7    8    9   10
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 1
+//   3. Startup at 4.5s
+//   4. Reset triggered at 10s
+//
+// Expected:
+//   At 10s: 6 batched resets for periods starting at 4s
+add_task(async function restart_1() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(4500);
+      await doTimedCallbacks({
+        // 10s: 6 batched resets for periods starting at 4s
+        10: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "10000",
+                intervalSeconds: "1",
+                maxCount: "1",
+                startDate: "4000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "6",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S                        S                        R
+//   >----|----|----|----|----|----|----|----|----|----|
+//   0s   1    2    3    4    5    6    7    8    9   10
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 1
+//   3. Startup at 5s
+//   4. Reset triggered at 10s
+//
+// Expected:
+//   At 10s: 5 batched resets for periods starting at 5s
+add_task(async function restart_2() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(5000);
+      await doTimedCallbacks({
+        // 10s: 5 batched resets for periods starting at 5s
+        10: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "10000",
+                intervalSeconds: "1",
+                maxCount: "1",
+                startDate: "5000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "5",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S                           S                     R
+//   >----|----|----|----|----|----|----|----|----|----|
+//   0s   1    2    3    4    5    6    7    8    9   10
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 1
+//   3. Startup at 5.5s
+//   4. Reset triggered at 10s
+//
+// Expected:
+//   At 10s: 5 batched resets for periods starting at 5s
+add_task(async function restart_3() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(5500);
+      await doTimedCallbacks({
+        // 10s: 5 batched resets for periods starting at 5s
+        10: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "10000",
+                intervalSeconds: "1",
+                maxCount: "1",
+                startDate: "5000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "5",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S    S   RR        RR
+//   >---------|---------|
+//   0s       10        20
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 10
+//   3. Startup at 5s
+//   4. Resets triggered at 9s, 10s, 19s, 20s
+//
+// Expected:
+//   At 10s: 1 reset for period starting at 0s
+//   At 20s: 1 reset for period starting at 10s
+add_task(async function restart_4() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 10, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(5000);
+      await doTimedCallbacks({
+        // 9s: no resets
+        9: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([]);
+        },
+        // 10s: 1 reset for period starting at 0s
+        10: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "10000",
+                intervalSeconds: "10",
+                maxCount: "1",
+                startDate: "0",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "1",
+              },
+            },
+          ]);
+        },
+        // 19s: no resets
+        19: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([]);
+        },
+        // 20s: 1 reset for period starting at 10s
+        20: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "20000",
+                intervalSeconds: "10",
+                maxCount: "1",
+                startDate: "10000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "1",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S    S              R
+//   >---------|---------|
+//   0s       10        20
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 10
+//   3. Startup at 5s
+//   4. Reset triggered at 20s
+//
+// Expected:
+//   At 20s: 2 batched resets for periods starting at 0s
+add_task(async function restart_5() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 10, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(5000);
+      await doTimedCallbacks({
+        // 20s: 2 batches resets for periods starting at 0s
+        20: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "20000",
+                intervalSeconds: "10",
+                maxCount: "1",
+                startDate: "0",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "2",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S              S   RR        RR
+//   >---------|---------|---------|
+//   0s       10        20        30
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 10
+//   3. Startup at 15s
+//   4. Resets triggered at 19s, 20s, 29s, 30s
+//
+// Expected:
+//   At 20s: 1 reset for period starting at 10s
+//   At 30s: 1 reset for period starting at 20s
+add_task(async function restart_6() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 10, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(15000);
+      await doTimedCallbacks({
+        // 19s: no resets
+        19: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([]);
+        },
+        // 20s: 1 reset for period starting at 10s
+        20: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "20000",
+                intervalSeconds: "10",
+                maxCount: "1",
+                startDate: "10000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "1",
+              },
+            },
+          ]);
+        },
+        // 29s: no resets
+        29: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([]);
+        },
+        // 30s: 1 reset for period starting at 20s
+        30: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "30000",
+                intervalSeconds: "10",
+                maxCount: "1",
+                startDate: "20000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "1",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Simulates reset events across a restart with the following:
+//
+//   S              S              R
+//   >---------|---------|---------|
+//   0s       10        20        30
+//
+//   1. Startup at 0s
+//   2. Caps and stats initialized with interval_s: 10
+//   3. Startup at 15s
+//   4. Reset triggered at 30s
+//
+// Expected:
+//   At 30s: 2 batched resets for periods starting at 10s
+add_task(async function restart_7() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 10, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      gStartupDateMsStub.returns(15000);
+      await doTimedCallbacks({
+        // 30s: 2 batched resets for periods starting at 10s
+        30: async () => {
+          UrlbarProviderQuickSuggest._resetElapsedImpressionCounters();
+          await checkTelemetryEvents([
+            {
+              object: "reset",
+              extra: {
+                eventDate: "30000",
+                intervalSeconds: "10",
+                maxCount: "1",
+                startDate: "10000",
+                impressionDate: "0",
+                count: "0",
+                type: "sponsored",
+                eventCount: "2",
+              },
+            },
+          ]);
+        },
+      });
+    },
+  });
+  gStartupDateMsStub.returns(0);
+});
+
+// Tests reset telemetry recorded on shutdown.
+add_task(async function shutdown() {
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      let spy = gSandbox.spy(
+        UrlbarProviderQuickSuggest,
+        "_resetElapsedImpressionCounters"
+      );
+
+      // Make `Date.now()` return 10s. Since the cap's `interval_s` is 1s and
+      // before this `Date.now()` returned 0s, 10 reset events should be
+      // recorded on shutdown.
+      gDateNowStub.returns(10000);
+
+      // Simulate shutdown.
+      Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
+      AsyncShutdown.profileChangeTeardown._trigger();
+
+      Assert.ok(spy.calledOnce, "_resetElapsedImpressionCounters called once");
+      await checkTelemetryEvents([
+        {
+          object: "reset",
+          extra: {
+            eventDate: "10000",
+            intervalSeconds: "1",
+            maxCount: "1",
+            startDate: "0",
+            impressionDate: "0",
+            count: "0",
+            type: "sponsored",
+            eventCount: "10",
+          },
+        },
+      ]);
+
+      spy.restore();
+      gDateNowStub.returns(0);
+      Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
+    },
+  });
+});
+
+// Tests the reset interval in realtime.
+add_task(async function resetInterval() {
+  // Remove the test stubs so we can test in realtime.
+  gDateNowStub.restore();
+  gStartupDateMsStub.restore();
+
+  await doTest({
+    config: {
+      impression_caps: {
+        sponsored: {
+          custom: [{ interval_s: 0.1, max_count: 1 }],
+        },
+      },
+    },
+    callback: async () => {
+      let spy = gSandbox.spy(
+        UrlbarProviderQuickSuggest,
+        "_resetElapsedImpressionCounters"
+      );
+
+      // Restart the reset interval now with a 1s period. Since the cap's
+      // `interval_s` is 0.1s, at least 10 reset events should be recorded the
+      // first time the reset interval fires. The exact number depends on timing
+      // and the machine running the test: how many 0.1s intervals elapse
+      // between when the config is set to when the reset interval fires. For
+      // that reason, we allow some leeway when checking `eventCount` below to
+      // avoid intermittent failures.
+      UrlbarProviderQuickSuggest._setImpressionCountersResetInterval(1000);
+
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(r => setTimeout(r, 1100));
+
+      // Restore the reset interval to its default.
+      UrlbarProviderQuickSuggest._setImpressionCountersResetInterval();
+
+      Assert.ok(spy.calledOnce, "_resetElapsedImpressionCounters called once");
+      await checkTelemetryEvents([
+        {
+          object: "reset",
+          extra: {
+            eventDate: /^[0-9]+$/,
+            intervalSeconds: "0.1",
+            maxCount: "1",
+            startDate: /^[0-9]+$/,
+            impressionDate: "0",
+            count: "0",
+            type: "sponsored",
+            // See comment above on allowing leeway for `eventCount`.
+            eventCount: str => {
+              info(`Checking 'eventCount': ${str}`);
+              let count = parseInt(str);
+              return 10 <= count && count < 20;
+            },
+          },
+        },
+      ]);
+
+      spy.restore();
+    },
+  });
+
+  // Recreate the test stubs.
+  gDateNowStub = gSandbox.stub(
+    Cu.getGlobalForObject(UrlbarProviderQuickSuggest).Date,
+    "now"
+  );
+  gStartupDateMsStub = gSandbox.stub(
+    UrlbarProviderQuickSuggest,
+    "_getStartupDateMs"
+  );
+  gStartupDateMsStub.returns(0);
 });
 
 /**
@@ -3157,8 +3680,10 @@ async function doTest({ config, callback }) {
   // `Date.now()`.
   gDateNowStub.returns(0);
 
-  await QuickSuggestTestUtils.withConfig({ config, callback });
+  info(`Clearing stats and setting config`);
   UrlbarPrefs.clear("quicksuggest.impressionCaps.stats");
+  UrlbarProviderQuickSuggest._impressionStats = null;
+  await QuickSuggestTestUtils.withConfig({ config, callback });
 }
 
 /**
@@ -3168,7 +3693,6 @@ async function doTest({ config, callback }) {
  *
  * @param {string} searchString
  * @param {object} expectedBySecond
-
  *   An object that maps from seconds to objects that describe the searches to
  *   perform, their expected results, and the expected telemetry. For a given
  *   entry `S -> E` in this object, searches are performed S seconds after this

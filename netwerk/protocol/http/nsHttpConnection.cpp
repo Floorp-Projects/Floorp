@@ -41,8 +41,7 @@
 #include "TLSFilterTransaction.h"
 #include "mozilla/StaticPrefs_network.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 enum TlsHandshakeResult : uint32_t {
   EchConfigSuccessful = 0,
@@ -453,7 +452,7 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
       nsHttpTransaction* hTrans = trans->QueryHttpTransaction();
       if (hTrans) {
         hTrans->BootstrapTimings(mBootstrappedTimings);
-        SetUrgentStartPreferred(hTrans->ClassOfService() &
+        SetUrgentStartPreferred(hTrans->GetClassOfService().Flags() &
                                 nsIClassOfService::UrgentStart);
       }
     }
@@ -2478,5 +2477,4 @@ nsresult nsHttpConnection::SendConnectRequest(void* closure,
                                            transactionBytes);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

@@ -26,8 +26,7 @@
 #include "HttpConnectionUDP.h"
 #include "sslerr.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 const uint64_t HTTP3_APP_ERROR_NO_ERROR = 0x100;
 // const uint64_t HTTP3_APP_ERROR_GENERAL_PROTOCOL_ERROR = 0x101;
@@ -750,9 +749,9 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   // reset the read timers to wash away any idle time
   mLastWriteTime = PR_IntervalNow();
 
-  uint32_t cos = 0;
+  ClassOfService cos;
   if (trans) {
-    cos = trans->ClassOfService();
+    cos = trans->GetClassOfService();
   }
 
   LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
@@ -1898,5 +1897,4 @@ nsresult Http3Session::GetTransactionSecurityInfo(nsISupports** secinfo) {
 
 PRIntervalTime Http3Session::LastWriteTime() { return mLastWriteTime; }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

@@ -31,8 +31,7 @@
 #include "nsStandardURL.h"
 #include "prnetdb.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
                          Http2Session* session, int32_t priority, uint64_t bcId)
@@ -1250,7 +1249,7 @@ void Http2Stream::SetPriorityDependency(uint32_t newPriority,
 static uint32_t GetPriorityDependencyFromTransaction(nsHttpTransaction* trans) {
   MOZ_ASSERT(trans);
 
-  uint32_t classFlags = trans->ClassOfService();
+  uint32_t classFlags = trans->GetClassOfService().Flags();
 
   if (classFlags & nsIClassOfService::UrgentStart) {
     return Http2Session::kUrgentStartGroupID;
@@ -1702,5 +1701,4 @@ nsresult Http2Stream::GetOriginAttributes(mozilla::OriginAttributes* oa) {
   return mSocketTransport->GetOriginAttributes(oa);
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

@@ -13,10 +13,12 @@ include IPCStream;
 include NeckoChannelParams;
 
 include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/net/ClassOfService.h";
 
 using class mozilla::net::nsHttpRequestHead from "nsHttpRequestHead.h";
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
+using mozilla::net::ClassOfService from "mozilla/net/ClassOfService.h";
 
 namespace mozilla {
 namespace net {
@@ -83,7 +85,7 @@ child:
              uint64_t topLevelOuterContentWindowId,
              uint8_t httpTrafficCategory,
              uint64_t requestContextID,
-             uint32_t classOfService,
+             ClassOfService classOfService,
              uint32_t initialRwin,
              bool responseTimeoutEnabled,
              uint64_t channelId,

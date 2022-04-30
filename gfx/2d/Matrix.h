@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/gfx/ScaleFactors2D.h"
 #include "mozilla/Span.h"
 
 namespace mozilla {
@@ -32,6 +33,12 @@ Span<Point4DTyped<UnknownUnits, F>> IntersectPolygon(
     Span<Point4DTyped<UnknownUnits, F>> aPoints,
     const Point4DTyped<UnknownUnits, F>& aPlaneNormal,
     Span<Point4DTyped<UnknownUnits, F>> aDestBuffer);
+
+template <class T>
+using BaseMatrixScales = BaseScaleFactors2D<UnknownUnits, UnknownUnits, T>;
+
+using MatrixScales = BaseMatrixScales<float>;
+using MatrixScalesDouble = BaseMatrixScales<double>;
 
 template <class T>
 class BaseMatrix {
@@ -444,11 +451,11 @@ class BaseMatrix {
    * The xMajor parameter indicates if the larger scale is
    * to be assumed to be in the X direction or not.
    */
-  MatrixSize ScaleFactors() const {
+  BaseMatrixScales<T> ScaleFactors() const {
     T det = Determinant();
 
     if (det == 0.0) {
-      return MatrixSize(0.0, 0.0);
+      return BaseMatrixScales<T>(0.0, 0.0);
     }
 
     MatrixSize sz = MatrixSize(1.0, 0.0);
@@ -466,7 +473,7 @@ class BaseMatrix {
       minor = det / major;
     }
 
-    return MatrixSize(major, minor);
+    return BaseMatrixScales<T>(major, minor);
   }
 
   /**

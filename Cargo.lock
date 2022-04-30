@@ -482,7 +482,7 @@ version = "0.1.0"
 dependencies = [
  "bits_client",
  "comedy",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "libc",
  "log",
  "moz_task",
@@ -553,7 +553,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8e3ff9db740167616e528c509b3618046fc05d337f8f3182d300f4aa977d2bb"
 dependencies = [
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "jobserver",
  "num_cpus",
 ]
@@ -627,7 +627,7 @@ version = "0.0.1"
 dependencies = [
  "base64 0.10.1",
  "byteorder",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "cstr",
  "log",
  "moz_task",
@@ -978,7 +978,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aaa7bd5fb665c6864b5f963dd9097905c54125909c7aa94c9e18507cdbe6c53"
 dependencies = [
  "cfg-if 1.0.0",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
 ]
 
 [[package]]
@@ -1000,7 +1000,7 @@ checksum = "6455c0ca19f0d2fbf751b908d5c55c1f5cbc65e03c4225427254b46890bdde1e"
 dependencies = [
  "cfg-if 1.0.0",
  "crossbeam-epoch 0.9.6",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
 ]
 
 [[package]]
@@ -1025,7 +1025,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97242a70df9b89a65d0b6df3c4bf5b9ce03c5b7309019777fbde37e7537f8762"
 dependencies = [
  "cfg-if 1.0.0",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "lazy_static",
  "memoffset 0.6.5",
  "scopeguard",
@@ -1063,9 +1063,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.6"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfcae03edb34f947e64acdb1c33ec169824e20657e9ecb61cef6c8c74dcb8120"
+checksum = "0bf124c720b7686e3c2663cf54062ab0f68a88af2fb6a030e87e30bf721fcb38"
 dependencies = [
  "cfg-if 1.0.0",
  "lazy_static",
@@ -2740,7 +2740,7 @@ name = "kvstore"
 version = "0.1.0"
 dependencies = [
  "atomic_refcell",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "cstr",
  "lazy_static",
  "libc",
@@ -4248,7 +4248,7 @@ checksum = "d78120e2c850279833f1dd3582f730c4ab53ed95aeaaaa862a2a5c71b1656d8e"
 dependencies = [
  "crossbeam-channel",
  "crossbeam-deque 0.8.1",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "lazy_static",
  "num_cpus",
 ]
@@ -4419,7 +4419,7 @@ dependencies = [
  "base64 0.13.0",
  "blake2b_simd",
  "constant_time_eq",
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
 ]
 
 [[package]]
@@ -6106,7 +6106,7 @@ dependencies = [
 name = "xulstore"
 version = "0.1.0"
 dependencies = [
- "crossbeam-utils 0.8.6",
+ "crossbeam-utils 0.8.8",
  "cstr",
  "libc",
  "log",
