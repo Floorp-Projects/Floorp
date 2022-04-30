@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/ScaleFactor.h"
+#include "mozilla/gfx/Point.h"
 
 #include "gfxPoint.h"
 
@@ -61,6 +62,12 @@ struct BaseScaleFactors2D {
     static_assert(std::is_same_v<T, float>);
     MOZ_ASSERT(AreScalesSame());
     return ScaleFactor<src, dst>(xScale);
+  }
+
+  // Convert to a SizeTyped. Eventually, we should replace all uses of SizeTyped
+  // to represent scales with ScaleFactors2D, and remove this function.
+  SizeTyped<UnknownUnits, T> ToSize() const {
+    return SizeTyped<UnknownUnits, T>(xScale, yScale);
   }
 
   BaseScaleFactors2D& operator=(const BaseScaleFactors2D&) = default;

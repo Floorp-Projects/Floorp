@@ -75,7 +75,7 @@ Size ChooseScale(nsIFrame* aContainerFrame, nsDisplayItem* aContainerItem,
     } else {
       // Scale factors are normalized to a power of 2 to reduce the number of
       // resolution changes
-      scale = aTransform2d.ScaleFactors();
+      scale = aTransform2d.ScaleFactors().ToSize();
       // For frames with a changing scale transform round scale factors up to
       // nearest power-of-2 boundary so that we don't keep having to redraw
       // the content as it scales up and down. Rounding up to nearest
