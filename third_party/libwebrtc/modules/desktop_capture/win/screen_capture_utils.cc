@@ -21,6 +21,41 @@
 #include "rtc_base/win32.h"
 
 namespace webrtc {
+namespace {
+
+BOOL CALLBACK GetMonitorListHandler(HMONITOR monitor,
+                                    HDC hdc,
+                                    LPRECT rect,
+                                    LPARAM data) {
+  auto monitor_list = reinterpret_cast<DesktopCapturer::SourceList*>(data);
+
+  // Get the name of the monitor.
+  MONITORINFOEXA monitor_info;
+  monitor_info.cbSize = sizeof(MONITORINFOEXA);
+  if (!GetMonitorInfoA(monitor, &monitor_info))
+    return FALSE;
+
+  DesktopCapturer::Source monitor_source;
+  monitor_source.id = reinterpret_cast<intptr_t>(monitor);
+  monitor_source.title = monitor_info.szDevice;
+  monitor_list->push_back(monitor_source);
+  return TRUE;
+}
+
+}  // namespace
+
+// |monitors| is populated with HMONITOR values for each display monitor found.
+// This is in contrast to |GetScreenList| which returns the display indices.
+bool GetMonitorList(DesktopCapturer::SourceList* monitors) {
+  RTC_DCHECK_EQ(monitors->size(), 0U);
+  // |EnumDisplayMonitors| accepts a display context and a rectangle, which
+  // allows us to specify a certain region and return only the monitors that
+  // intersect that region. We, however, want all the monitors, so we pass in
+  // NULL parameters.
+  return EnumDisplayMonitors(/*hdc=*/NULL, /*clip_rect=*/NULL,
+                             GetMonitorListHandler,
+                             reinterpret_cast<LPARAM>(monitors));
+}
 
 bool GetScreenList(DesktopCapturer::SourceList* screens,
                    std::vector<std::string>* device_names /* = nullptr */) {
@@ -49,6 +84,12 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
     }
   }
   return true;
+}
+
+bool IsMonitorValid(DesktopCapturer::SourceId monitor) {
+  MONITORINFO monitor_info;
+  monitor_info.cbSize = sizeof(MONITORINFO);
+  return GetMonitorInfoA(reinterpret_cast<HMONITOR>(monitor), &monitor_info);
 }
 
 bool IsScreenValid(DesktopCapturer::SourceId screen, std::wstring* device_key) {

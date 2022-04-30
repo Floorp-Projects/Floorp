@@ -8,34 +8,52 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/win/window_capturer_win_wgc.h"
+#include "modules/desktop_capture/win/wgc_capturer_win.h"
 
 #include <utility>
 
+#include "modules/desktop_capture/win/wgc_desktop_frame.h"
 #include "rtc_base/logging.h"
+
+namespace WGC = ABI::Windows::Graphics::Capture;
+using Microsoft::WRL::ComPtr;
 
 namespace webrtc {
 
-WindowCapturerWinWgc::WindowCapturerWinWgc
-    (bool enumerate_current_process_windows)
-    : enumerate_current_process_windows_(enumerate_current_process_windows) {}
-WindowCapturerWinWgc::~WindowCapturerWinWgc() = default;
+WgcCapturerWin::WgcCapturerWin(
+    std::unique_ptr<WgcCaptureSourceFactory> source_factory,
+    std::unique_ptr<SourceEnumerator> source_enumerator)
+    : source_factory_(std::move(source_factory)),
+      source_enumerator_(std::move(source_enumerator)) {}
+WgcCapturerWin::~WgcCapturerWin() = default;
 
-bool WindowCapturerWinWgc::GetSourceList(SourceList* sources) {
-  return window_capture_helper_.EnumerateCapturableWindows(
-      sources, enumerate_current_process_windows_);
+// static
+std::unique_ptr<DesktopCapturer> WgcCapturerWin::CreateRawWindowCapturer(
+    const DesktopCaptureOptions& options) {
+  return std::make_unique<WgcCapturerWin>(
+      std::make_unique<WgcWindowSourceFactory>(),
+      std::make_unique<WindowEnumerator>(
+          options.enumerate_current_process_windows()));
 }
 
-bool WindowCapturerWinWgc::SelectSource(SourceId id) {
-  HWND window = reinterpret_cast<HWND>(id);
-  if (!IsWindowValidAndVisible(window))
-    return false;
-
-  window_ = window;
-  return true;
+// static
+std::unique_ptr<DesktopCapturer> WgcCapturerWin::CreateRawScreenCapturer(
+    const DesktopCaptureOptions& options) {
+  return std::make_unique<WgcCapturerWin>(
+      std::make_unique<WgcScreenSourceFactory>(),
+      std::make_unique<ScreenEnumerator>());
 }
 
-void WindowCapturerWinWgc::Start(Callback* callback) {
+bool WgcCapturerWin::GetSourceList(SourceList* sources) {
+  return source_enumerator_->FindAllSources(sources);
+}
+
+bool WgcCapturerWin::SelectSource(DesktopCapturer::SourceId id) {
+  capture_source_ = source_factory_->CreateCaptureSource(id);
+  return capture_source_->IsCapturable();
+}
+
+void WgcCapturerWin::Start(Callback* callback) {
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
 
@@ -65,11 +83,11 @@ void WindowCapturerWinWgc::Start(Callback* callback) {
   }
 }
 
-void WindowCapturerWinWgc::CaptureFrame() {
+void WgcCapturerWin::CaptureFrame() {
   RTC_DCHECK(callback_);
 
-  if (!window_) {
-    RTC_LOG(LS_ERROR) << "Window hasn't been selected";
+  if (!capture_source_) {
+    RTC_LOG(LS_ERROR) << "Source hasn't been selected";
     callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_PERMANENT,
                                /*frame=*/nullptr);
     return;
@@ -82,29 +100,36 @@ void WindowCapturerWinWgc::CaptureFrame() {
     return;
   }
 
+  HRESULT hr;
   WgcCaptureSession* capture_session = nullptr;
-  auto iter = ongoing_captures_.find(window_);
-  if (iter == ongoing_captures_.end()) {
-    auto iter_success_pair = ongoing_captures_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(window_),
-        std::forward_as_tuple(d3d11_device_, window_));
-    if (iter_success_pair.second) {
-      capture_session = &iter_success_pair.first->second;
-    } else {
-      RTC_LOG(LS_ERROR) << "Failed to create new WgcCaptureSession.";
+  std::map<SourceId, WgcCaptureSession>::iterator session_iter =
+      ongoing_captures_.find(capture_source_->GetSourceId());
+  if (session_iter == ongoing_captures_.end()) {
+    ComPtr<WGC::IGraphicsCaptureItem> item;
+    hr = capture_source_->GetCaptureItem(&item);
+    if (FAILED(hr)) {
+      RTC_LOG(LS_ERROR) << "Failed to create a GraphicsCaptureItem: " << hr;
       callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_PERMANENT,
                                  /*frame=*/nullptr);
       return;
     }
+
+    std::pair<std::map<SourceId, WgcCaptureSession>::iterator, bool>
+        iter_success_pair = ongoing_captures_.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(capture_source_->GetSourceId()),
+            std::forward_as_tuple(d3d11_device_, item));
+    RTC_DCHECK(iter_success_pair.second);
+    capture_session = &iter_success_pair.first->second;
   } else {
-    capture_session = &iter->second;
+    capture_session = &session_iter->second;
   }
 
-  HRESULT hr;
   if (!capture_session->IsCaptureStarted()) {
     hr = capture_session->StartCapture();
     if (FAILED(hr)) {
       RTC_LOG(LS_ERROR) << "Failed to start capture: " << hr;
+      ongoing_captures_.erase(capture_source_->GetSourceId());
       callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_PERMANENT,
                                  /*frame=*/nullptr);
       return;
@@ -112,16 +137,16 @@ void WindowCapturerWinWgc::CaptureFrame() {
   }
 
   std::unique_ptr<DesktopFrame> frame;
-  hr = capture_session->GetMostRecentFrame(&frame);
+  hr = capture_session->GetFrame(&frame);
   if (FAILED(hr)) {
-    RTC_LOG(LS_ERROR) << "GetMostRecentFrame failed: " << hr;
+    RTC_LOG(LS_ERROR) << "GetFrame failed: " << hr;
+    ongoing_captures_.erase(capture_source_->GetSourceId());
     callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_PERMANENT,
                                /*frame=*/nullptr);
     return;
   }
 
   if (!frame) {
-    RTC_LOG(LS_WARNING) << "GetMostRecentFrame returned an empty frame.";
     callback_->OnCaptureResult(DesktopCapturer::Result::ERROR_TEMPORARY,
                                /*frame=*/nullptr);
     return;
@@ -131,11 +156,13 @@ void WindowCapturerWinWgc::CaptureFrame() {
                              std::move(frame));
 }
 
-// static
-std::unique_ptr<DesktopCapturer> WindowCapturerWinWgc::CreateRawWindowCapturer(
-    const DesktopCaptureOptions& options) {
-  return std::unique_ptr<DesktopCapturer>(
-      new WindowCapturerWinWgc(options.enumerate_current_process_windows()));
+bool WgcCapturerWin::IsSourceBeingCaptured(DesktopCapturer::SourceId id) {
+  std::map<DesktopCapturer::SourceId, WgcCaptureSession>::iterator
+      session_iter = ongoing_captures_.find(id);
+  if (session_iter == ongoing_captures_.end())
+    return false;
+
+  return session_iter->second.IsCaptureStarted();
 }
 
 }  // namespace webrtc

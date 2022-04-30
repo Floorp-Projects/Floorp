@@ -19,6 +19,10 @@
 
 namespace webrtc {
 
+// Output the HMONITOR values of all display monitors into |monitors|. Returns
+// true if succeeded, or false if it fails to enumerate the display monitors.
+bool GetMonitorList(DesktopCapturer::SourceList* monitors);
+
 // Output the list of active screens into |screens|. Returns true if succeeded,
 // or false if it fails to enumerate the display devices. If the |device_names|
 // is provided, it will be filled with the DISPLAY_DEVICE.DeviceName in UTF-8
@@ -26,6 +30,11 @@ namespace webrtc {
 // |screens|[i] and |device_names|[i] indicate the same monitor on the system.
 bool GetScreenList(DesktopCapturer::SourceList* screens,
                    std::vector<std::string>* device_names = nullptr);
+
+// Returns true if |monitor| is an HMONITOR that represents a valid display
+// monitor. Consumers should check that the results of |GetMonitorList| are
+// valid before use if a WM_DISPLAYCHANGE message has been received.
+bool IsMonitorValid(DesktopCapturer::SourceId monitor);
 
 // Returns true if |screen| is a valid screen. The screen device key is
 // returned through |device_key| if the screen is valid. The device key can be
