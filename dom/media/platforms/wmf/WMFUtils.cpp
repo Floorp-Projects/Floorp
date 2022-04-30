@@ -5,6 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WMFUtils.h"
+
+#include <Mfidl.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+#include <initguid.h>
+#include <stdint.h>
+
 #include "VideoUtils.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
@@ -14,10 +21,6 @@
 #include "nsThreadUtils.h"
 #include "nsWindowsHelpers.h"
 #include "prenv.h"
-#include <shlobj.h>
-#include <shlwapi.h>
-#include <initguid.h>
-#include <stdint.h>
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/WindowsVersion.h"
 
@@ -371,6 +374,47 @@ HRESULT MFTGetInfo(CLSID clsidMFT, LPWSTR* pszName,
   ENSURE_FUNCTION_PTR(MFTGetInfo, mfplat.dll)
   return (MFTGetInfoPtr)(clsidMFT, pszName, ppInputTypes, pcInputTypes,
                          ppOutputTypes, pcOutputTypes, ppAttributes);
+}
+
+HRESULT
+MFCreateAttributes(IMFAttributes** ppMFAttributes, UINT32 cInitialSize) {
+  ENSURE_FUNCTION_PTR(MFCreateAttributes, mfplat.dll)
+  return (MFCreateAttributesPtr)(ppMFAttributes, cInitialSize);
+}
+
+HRESULT MFCreateEventQueue(IMFMediaEventQueue** ppMediaEventQueue) {
+  ENSURE_FUNCTION_PTR(MFCreateEventQueue, mfplat.dll)
+  return (MFCreateEventQueuePtr)(ppMediaEventQueue);
+}
+
+HRESULT MFCreateStreamDescriptor(DWORD dwStreamIdentifier, DWORD cMediaTypes,
+                                 IMFMediaType** apMediaTypes,
+                                 IMFStreamDescriptor** ppDescriptor) {
+  ENSURE_FUNCTION_PTR(MFCreateStreamDescriptor, mfplat.dll)
+  return (MFCreateStreamDescriptorPtr)(dwStreamIdentifier, cMediaTypes,
+                                       apMediaTypes, ppDescriptor);
+}
+
+HRESULT MFCreateAsyncResult(IUnknown* punkObject, IMFAsyncCallback* pCallback,
+                            IUnknown* punkState,
+                            IMFAsyncResult** ppAsyncResult) {
+  ENSURE_FUNCTION_PTR(MFCreateAsyncResult, mfplat.dll)
+  return (MFCreateAsyncResultPtr)(punkObject, pCallback, punkState,
+                                  ppAsyncResult);
+}
+
+HRESULT MFCreatePresentationDescriptor(
+    DWORD cStreamDescriptors, IMFStreamDescriptor** apStreamDescriptors,
+    IMFPresentationDescriptor** ppPresentationDescriptor) {
+  ENSURE_FUNCTION_PTR(MFCreatePresentationDescriptor, mfplat.dll)
+  return (MFCreatePresentationDescriptorPtr)(cStreamDescriptors,
+                                             apStreamDescriptors,
+                                             ppPresentationDescriptor);
+}
+
+HRESULT MFCreateMemoryBuffer(DWORD cbMaxLength, IMFMediaBuffer** ppBuffer) {
+  ENSURE_FUNCTION_PTR(MFCreateMemoryBuffer, mfplat.dll);
+  return (MFCreateMemoryBufferPtr)(cbMaxLength, ppBuffer);
 }
 
 }  // end namespace wmf
