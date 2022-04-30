@@ -692,6 +692,8 @@ class PeerConnection : public PeerConnectionInternal,
   // Administration of senders, receivers and transceivers
   // Accessed on both signaling and network thread. Const after Initialize().
   std::unique_ptr<RtpTransmissionManager> rtp_manager_;
+
+  rtc::WeakPtrFactory<PeerConnection> weak_factory_;
 };
 
 }  // namespace webrtc

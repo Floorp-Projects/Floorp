@@ -103,6 +103,7 @@ class JsepTransportController : public sigslot::has_slots<> {
 
     // Factory for SCTP transports.
     SctpTransportFactoryInterface* sctp_factory = nullptr;
+    std::function<void(const rtc::SSLHandshakeError)> on_dtls_handshake_error_;
   };
 
   // The ICE related events are signaled on the |signaling_thread|.
@@ -191,8 +192,6 @@ class JsepTransportController : public sigslot::has_slots<> {
   // For now the rollback only removes mid to transport mappings
   // and deletes unused transports, but doesn't consider anything more complex.
   void RollbackTransports();
-
-  sigslot::signal1<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
 
   // F: void(const std::string&, const std::vector<cricket::Candidate>&)
   template <typename F>

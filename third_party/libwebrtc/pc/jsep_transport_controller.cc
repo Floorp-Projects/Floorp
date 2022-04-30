@@ -87,6 +87,7 @@ JsepTransportController::JsepTransportController(
   RTC_DCHECK(config_.transport_observer);
   RTC_DCHECK(config_.rtcp_handler);
   RTC_DCHECK(config_.ice_transport_factory);
+  RTC_DCHECK(config_.on_dtls_handshake_error_);
 }
 
 JsepTransportController::~JsepTransportController() {
@@ -1411,7 +1412,7 @@ void JsepTransportController::OnRtcpPacketReceived_n(
 
 void JsepTransportController::OnDtlsHandshakeError(
     rtc::SSLHandshakeError error) {
-  SignalDtlsHandshakeError(error);
+  config_.on_dtls_handshake_error_(error);
 }
 
 }  // namespace webrtc

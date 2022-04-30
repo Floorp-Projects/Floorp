@@ -453,7 +453,8 @@ PeerConnection::PeerConnection(
       call_(std::move(call)),
       call_ptr_(call_.get()),
       data_channel_controller_(this),
-      message_handler_(signaling_thread()) {}
+      message_handler_(signaling_thread()),
+      weak_factory_(this) {}
 
 PeerConnection::~PeerConnection() {
   TRACE_EVENT0("webrtc", "PeerConnection::~PeerConnection");
@@ -602,18 +603,22 @@ RTCError PeerConnection::Initialize(
   }
 
   config.ice_transport_factory = ice_transport_factory_.get();
+  config.on_dtls_handshake_error_ =
+      [weak_ptr = weak_factory_.GetWeakPtr()](rtc::SSLHandshakeError s) {
+        if (weak_ptr) {
+          weak_ptr->OnTransportControllerDtlsHandshakeError(s);
+        }
+      };
 
   transport_controller_.reset(new JsepTransportController(
       signaling_thread(), network_thread(), port_allocator_.get(),
       async_resolver_factory_.get(), config));
 
-  transport_controller_->SignalDtlsHandshakeError.connect(
-      this, &PeerConnection::OnTransportControllerDtlsHandshakeError);
-
-  // Following RTC_DCHECKs are added by looking at the caller thread.
+  // The following RTC_DCHECKs are added by looking at the caller thread.
   // If this is incorrect there might not be test failures
   // due to lack of unit tests which trigger these scenarios.
   // TODO(bugs.webrtc.org/12160): Remove above comments.
+  // callbacks for signaling_thread.
   transport_controller_->SubscribeIceConnectionState(
       [this](cricket::IceConnectionState s) {
         RTC_DCHECK_RUN_ON(signaling_thread());
