@@ -2111,7 +2111,7 @@ gfxSize nsLayoutUtils::GetTransformToAncestorScale(const nsIFrame* aFrame) {
       RelativeTo{nsLayoutUtils::GetDisplayRootFrame(aFrame)});
   Matrix transform2D;
   if (transform.CanDraw2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors();
+    return ThebesMatrix(transform2D).ScaleFactors().ToSize();
   }
   return gfxSize(1, 1);
 }
@@ -2147,7 +2147,7 @@ gfxSize nsLayoutUtils::GetTransformToAncestorScaleExcludingAnimated(
       aFrame, nsLayoutUtils::GetDisplayRootFrame(aFrame));
   Matrix transform2D;
   if (transform.Is2D(&transform2D)) {
-    return ThebesMatrix(transform2D).ScaleFactors();
+    return ThebesMatrix(transform2D).ScaleFactors().ToSize();
   }
   return gfxSize(1, 1);
 }
@@ -6151,9 +6151,9 @@ static SnappedImageDrawingParameters ComputeSnappedImageDrawingParameters(
   // scale and has integer coordinates. If not, we need these properties to
   // compute the optimal drawn image size, so compute |snappedDestSize| here.
   gfxSize snappedDestSize = dest.Size();
-  gfxSize scaleFactors = currentMatrix.ScaleFactors();
+  auto scaleFactors = currentMatrix.ScaleFactors();
   if (!didSnap) {
-    snappedDestSize.Scale(scaleFactors.width, scaleFactors.height);
+    snappedDestSize.Scale(scaleFactors.xScale, scaleFactors.yScale);
     snappedDestSize.width = NS_round(snappedDestSize.width);
     snappedDestSize.height = NS_round(snappedDestSize.height);
   }
@@ -6173,7 +6173,7 @@ static SnappedImageDrawingParameters ComputeSnappedImageDrawingParameters(
       aImageFlags);
 
   nsIntSize svgViewportSize;
-  if (scaleFactors.width == 1.0 && scaleFactors.height == 1.0) {
+  if (scaleFactors.xScale == 1.0 && scaleFactors.yScale == 1.0) {
     // intImageSize is scaled by currentMatrix. But since there are no scale
     // factors in currentMatrix, it is safe to assign intImageSize to
     // svgViewportSize directly.
@@ -6242,7 +6242,7 @@ static SnappedImageDrawingParameters ComputeSnappedImageDrawingParameters(
     // follow the pattern that we take |currentMatrix| into account only if
     // |didSnap| is true.
     gfxSize unsnappedDestSize =
-        didSnap ? devPixelDest.Size() * currentMatrix.ScaleFactors()
+        didSnap ? devPixelDest.Size() * currentMatrix.ScaleFactors().ToSize()
                 : devPixelDest.Size();
 
     gfxRect anchoredDestRect(anchorPoint, unsnappedDestSize);
@@ -9222,10 +9222,10 @@ static nsSize ComputeMaxSizeForPartialPrerender(nsIFrame* aFrame,
   }
 
   gfx::Rect result(0, 0, aMaxSize.width, aMaxSize.height);
-  gfx::Size scale = transform2D.ScaleFactors();
-  if (scale.width != 0 && scale.height != 0) {
-    result.width /= scale.width;
-    result.height /= scale.height;
+  auto scale = transform2D.ScaleFactors();
+  if (scale.xScale != 0 && scale.yScale != 0) {
+    result.width /= scale.xScale;
+    result.height /= scale.yScale;
   }
 
   // Don't apply translate.
@@ -9233,11 +9233,11 @@ static nsSize ComputeMaxSizeForPartialPrerender(nsIFrame* aFrame,
   transform2D._32 = 0.0f;
 
   // Don't apply scale.
-  if (scale.width != 0 && scale.height != 0) {
-    transform2D._11 /= scale.width;
-    transform2D._12 /= scale.width;
-    transform2D._21 /= scale.height;
-    transform2D._22 /= scale.height;
+  if (scale.xScale != 0 && scale.yScale != 0) {
+    transform2D._11 /= scale.xScale;
+    transform2D._12 /= scale.xScale;
+    transform2D._21 /= scale.yScale;
+    transform2D._22 /= scale.yScale;
   }
 
   // Theoretically we should use transform2D.Inverse() here but in this case
@@ -9803,10 +9803,10 @@ bool nsLayoutUtils::FrameIsMostlyScrolledOutOfViewInCrossProcess(
   BrowserChild* browserChild = BrowserChild::GetFrom(docShell);
   MOZ_ASSERT(browserChild);
 
-  Size scale =
+  auto scale =
       browserChild->GetChildToParentConversionMatrix().As2D().ScaleFactors();
-  ScreenSize margin(scale.width * CSSPixel::FromAppUnits(aMargin),
-                    scale.height * CSSPixel::FromAppUnits(aMargin));
+  ScreenSize margin(scale.xScale * CSSPixel::FromAppUnits(aMargin),
+                    scale.yScale * CSSPixel::FromAppUnits(aMargin));
 
   return visibleRect->width < margin.width ||
          visibleRect->height < margin.height;
