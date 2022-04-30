@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "rtc_base/logging.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -33,14 +34,16 @@ TEST(ScreenCaptureUtilsTest, GetMonitorList) {
   DesktopCapturer::SourceList monitors;
 
   ASSERT_TRUE(GetMonitorList(&monitors));
-  ASSERT_GT(monitors.size(), 0ULL);
 }
 
 TEST(ScreenCaptureUtilsTest, IsMonitorValid) {
   DesktopCapturer::SourceList monitors;
 
   ASSERT_TRUE(GetMonitorList(&monitors));
-  ASSERT_GT(monitors.size(), 0ULL);
+  if (monitors.size() == 0) {
+    RTC_LOG(LS_INFO) << "Skip screen capture test on systems with no monitors.";
+    GTEST_SKIP();
+  }
 
   ASSERT_TRUE(IsMonitorValid(monitors[0].id));
 }

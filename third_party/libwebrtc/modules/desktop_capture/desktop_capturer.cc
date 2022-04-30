@@ -23,8 +23,6 @@
 #if defined(RTC_ENABLE_WIN_WGC)
 #include "modules/desktop_capture/win/wgc_capturer_win.h"
 #include "rtc_base/win/windows_version.h"
-
-const bool kUseWinWgcCapturer = false;
 #endif  // defined(RTC_ENABLE_WIN_WGC)
 
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
@@ -64,8 +62,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
   // TODO(bugs.webrtc.org/11760): Add a WebRTC field trial (or similar
   // mechanism) check here that leads to use of the WGC capturer once it is
   // fully implemented.
-  if (kUseWinWgcCapturer &&
-      rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
+  if (rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
     return WgcCapturerWin::CreateRawWindowCapturer(options);
   }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
@@ -91,8 +88,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
   // TODO(bugs.webrtc.org/11760): Add a WebRTC field trial (or similar
   // mechanism) check here that leads to use of the WGC capturer once it is
   // fully implemented.
-  if (kUseWinWgcCapturer &&
-      rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
+  if (rtc::rtc_win::GetVersion() >= rtc::rtc_win::Version::VERSION_WIN10_RS5) {
     return WgcCapturerWin::CreateRawScreenCapturer(options);
   }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
