@@ -1097,16 +1097,17 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(
           aBuilder);
       if (IsStackingContext()) {
-	// The col/colgroup items we create below will be inserted directly into the
-	// BorderBackgrounds list of the table frame. That means that they'll be moved
-	// *outside* of any wrapper items from this table cell, and will not participate in
-	// this table cell's opacity / transform / filter / mask effects.
-	// If this cell is a stacking context, then we may have one or more of those
-	// wrapper items, and one of them may have captured a clip. In order to ensure
-	// correct clipping and scrolling of the col/colgroup items, restore the clip and ASR
-	// that we observed when we entered the table frame.
-	// If this cell is a stacking context but doesn't have any clip capturing wrapper items,
-	// then we'll double-apply the clip. That's ok.
+        // The col/colgroup items we create below will be inserted directly into
+        // the BorderBackgrounds list of the table frame. That means that
+        // they'll be moved *outside* of any wrapper items from this table cell,
+        // and will not participate in this table cell's opacity / transform /
+        // filter / mask effects. If this cell is a stacking context, then we
+        // may have one or more of those wrapper items, and one of them may have
+        // captured a clip. In order to ensure correct clipping and scrolling of
+        // the col/colgroup items, restore the clip and ASR that we observed
+        // when we entered the table frame. If this cell is a stacking context
+        // but doesn't have any clip capturing wrapper items, then we'll
+        // double-apply the clip. That's ok.
         clipState.SetClipChainForContainingBlockDescendants(
             backgrounds->GetTableClipChain());
         asrSetter.SetCurrentActiveScrolledRoot(backgrounds->GetTableASR());
