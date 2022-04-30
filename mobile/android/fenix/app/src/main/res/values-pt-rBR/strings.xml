@@ -798,6 +798,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nenhum histórico aqui</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Sincronizado de outros dispositivos</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">De outros dispositivos</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Downloads removidos</string>
@@ -1181,6 +1186,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Excluindo dados de navegação…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Isso exclui todos os itens.</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Cancelar</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1624,6 +1631,25 @@
     <string name="addresses_manage_addresses">Gerenciar endereços</string>
     <!-- The header for the full name of an address -->
     <string name="addresses_full_name">Nome completo</string>
+
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Endereço</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Cidade</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Estado</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">CEP</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telefone</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Email</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Salvar</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Cancelar</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Excluir endereço</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adicionar mecanismo de pesquisa</string>
