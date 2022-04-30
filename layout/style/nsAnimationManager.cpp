@@ -224,13 +224,12 @@ static already_AddRefed<dom::AnimationTimeline> GetTimeline(
       // We do intentionally use the pres context's document for the owner of
       // ScrollTimeline since it's consistent with what we do for
       // KeyframeEffect instance.
-      return ScrollTimeline::FromRule(*rule, aPresContext->Document(),
-                                      aTarget);
+      return ScrollTimeline::FromRule(*rule, aPresContext->Document(), aTarget);
     }
     case StyleAnimationTimeline::Tag::Scroll: {
       const auto& scroll = aStyleTimeline.AsScroll();
-      return ScrollTimeline::FromAnonymousScroll(
-          aPresContext->Document(), aTarget, scroll._0, scroll._1);
+      return ScrollTimeline::FromAnonymousScroll(aPresContext->Document(),
+                                                 aTarget, scroll._0, scroll._1);
       break;
     }
     case StyleAnimationTimeline::Tag::Auto:
