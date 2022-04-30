@@ -16,7 +16,6 @@
 #include "api/video/i010_buffer.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/nv12_buffer.h"
-#include "rtc_base/bind.h"
 #include "rtc_base/time_utils.h"
 #include "test/fake_texture_frame.h"
 #include "test/frame_utils.h"
