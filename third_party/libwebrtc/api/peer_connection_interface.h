@@ -1056,7 +1056,10 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
 
   // Removes a group of remote candidates from the ICE agent. Needed mainly for
   // continual gathering, to avoid an ever-growing list of candidates as
-  // networks come and go.
+  // networks come and go. Note that the candidates' transport_name must be set
+  // to the MID of the m= section that generated the candidate.
+  // TODO(bugs.webrtc.org/8395): Use IceCandidateInterface instead of
+  // cricket::Candidate, which would avoid the transport_name oddity.
   virtual bool RemoveIceCandidates(
       const std::vector<cricket::Candidate>& candidates) = 0;
 
