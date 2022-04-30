@@ -70,11 +70,9 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
-import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
-import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -84,7 +82,6 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
@@ -510,7 +507,12 @@ class HomeFragment : Fragment() {
             hideOnboardingIfNeeded = ::hideOnboardingIfNeeded,
         ).build()
 
-        createTabCounterMenu()
+        TabCounterBuilder(
+            context = requireContext(),
+            browsingModeManager = browsingModeManager,
+            navController = findNavController(),
+            tabCounter = binding.tabButton,
+        ).build()
 
         binding.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
@@ -526,11 +528,6 @@ class HomeFragment : Fragment() {
                 copyVisible = false
             )
             true
-        }
-
-        binding.tabButton.setOnClickListener {
-            StartOnHome.openTabsTray.record(NoExtras())
-            openTabsTray()
         }
 
         PrivateBrowsingButtonView(binding.privateBrowsingButton, browsingModeManager) { newMode ->
@@ -624,40 +621,6 @@ class HomeFragment : Fragment() {
                         it.storage.notifyObservers { onStorageUpdated() }
                     }
                 }
-        }
-    }
-
-    private fun createTabCounterMenu() {
-        val browsingModeManager = (activity as HomeActivity).browsingModeManager
-        val mode = browsingModeManager.mode
-
-        val onItemTapped: (TabCounterMenu.Item) -> Unit = {
-            if (it is TabCounterMenu.Item.NewTab) {
-                browsingModeManager.mode = BrowsingMode.Normal
-            } else if (it is TabCounterMenu.Item.NewPrivateTab) {
-                browsingModeManager.mode = BrowsingMode.Private
-            }
-        }
-
-        val tabCounterMenu = FenixTabCounterMenu(
-            requireContext(),
-            onItemTapped,
-            iconColor = if (mode == BrowsingMode.Private) {
-                ContextCompat.getColor(requireContext(), R.color.fx_mobile_private_text_color_primary)
-            } else {
-                null
-            }
-        )
-
-        val inverseBrowsingMode = when (mode) {
-            BrowsingMode.Normal -> BrowsingMode.Private
-            BrowsingMode.Private -> BrowsingMode.Normal
-        }
-
-        tabCounterMenu.updateMenu(showOnly = inverseBrowsingMode)
-        binding.tabButton.setOnLongClickListener {
-            tabCounterMenu.menuController.show(anchor = it)
-            true
         }
     }
 
