@@ -2344,6 +2344,52 @@ void PeerConnection::ReportSdpFormatReceived(
   }
 }
 
+void PeerConnection::ReportSdpBundleUsage(
+    const SessionDescriptionInterface& remote_description) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+
+  bool using_bundle =
+      remote_description.description()->HasGroup(cricket::GROUP_TYPE_BUNDLE);
+  int num_audio_mlines = 0;
+  int num_video_mlines = 0;
+  int num_data_mlines = 0;
+  for (const ContentInfo& content :
+       remote_description.description()->contents()) {
+    cricket::MediaType media_type = content.media_description()->type();
+    if (media_type == cricket::MEDIA_TYPE_AUDIO) {
+      num_audio_mlines += 1;
+    } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
+      num_video_mlines += 1;
+    } else if (media_type == cricket::MEDIA_TYPE_DATA) {
+      num_data_mlines += 1;
+    }
+  }
+  bool simple = num_audio_mlines <= 1 && num_video_mlines <= 1;
+  BundleUsage usage = kBundleUsageMax;
+  if (num_audio_mlines == 0 && num_video_mlines == 0) {
+    if (num_data_mlines > 0) {
+      usage = using_bundle ? kBundleUsageBundleDatachannelOnly
+                           : kBundleUsageNoBundleDatachannelOnly;
+    } else {
+      usage = kBundleUsageEmpty;
+    }
+  } else if (configuration_.sdp_semantics == SdpSemantics::kPlanB) {
+    // In plan-b, simple/complex usage will not show up in the number of
+    // m-lines or BUNDLE.
+    usage = using_bundle ? kBundleUsageBundlePlanB : kBundleUsageNoBundlePlanB;
+  } else {
+    if (simple) {
+      usage =
+          using_bundle ? kBundleUsageBundleSimple : kBundleUsageNoBundleSimple;
+    } else {
+      usage = using_bundle ? kBundleUsageBundleComplex
+                           : kBundleUsageNoBundleComplex;
+    }
+  }
+  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.BundleUsage", usage,
+                            kBundleUsageMax);
+}
+
 void PeerConnection::ReportIceCandidateCollected(
     const cricket::Candidate& candidate) {
   NoteUsageEvent(UsageEvent::CANDIDATE_COLLECTED);

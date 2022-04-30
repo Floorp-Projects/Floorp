@@ -383,6 +383,10 @@ class PeerConnection : public PeerConnectionInternal,
   void ReportSdpFormatReceived(
       const SessionDescriptionInterface& remote_description);
 
+  // Report the UMA metric BundleUsage for the given remote description.
+  void ReportSdpBundleUsage(
+      const SessionDescriptionInterface& remote_description);
+
   // Returns true if the PeerConnection is configured to use Unified Plan
   // semantics for creating offers/answers and setting local/remote
   // descriptions. If this is true the RtpTransceiver API will also be available
