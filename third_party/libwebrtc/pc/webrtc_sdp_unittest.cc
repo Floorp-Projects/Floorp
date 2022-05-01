@@ -4760,3 +4760,18 @@ TEST_F(WebRtcSdpTest, MediaTypeProtocolMismatch) {
   ExpectParseFailure(std::string(sdp + "m=application 9 SOMETHING 120\r\n"),
                      "m=application");
 }
+
+// Regression test for:
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1171965
+TEST_F(WebRtcSdpTest, SctpPortInUnsupportedContent) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 18446744069414584320 18446462598732840960 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "m=o 1 DTLS/SCTP 5000\r\n"
+      "a=sctp-port\r\n";
+
+  JsepSessionDescription jdesc_output(kDummyType);
+  EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
+}

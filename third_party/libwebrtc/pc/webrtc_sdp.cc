@@ -3129,7 +3129,8 @@ bool ParseContent(const std::string& message,
       if (!ParseDtlsSetup(line, &(transport->connection_role), error)) {
         return false;
       }
-    } else if (cricket::IsDtlsSctp(protocol)) {
+    } else if (cricket::IsDtlsSctp(protocol) &&
+               media_type == cricket::MEDIA_TYPE_DATA) {
       //
       // SCTP specific attributes
       //
