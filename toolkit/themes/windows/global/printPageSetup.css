@@ -12,11 +12,11 @@ fieldset {
   margin: 3px 3px 6px;
 }
 
-.portrait-page {
+.portrait-page .radio-icon {
   list-style-image: url("chrome://global/skin/icons/Portrait.png");
 }
 
-.landscape-page {
+.landscape-page .radio-icon {
   list-style-image: url("chrome://global/skin/icons/Landscape.png");
 }
 
