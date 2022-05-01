@@ -805,6 +805,8 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Δεν υπάρχει ιστορικό</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Συγχρονισμένα από άλλες συσκευές</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">Από άλλες συσκευές</string>
 
@@ -1192,6 +1194,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Διαγραφή δεδομένων περιήγησης…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Αυτό θα διαγράψει όλα τα στοιχεία.</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Ακύρωση</string>
     <!-- Text for the allow button for the history group dialog -->
@@ -1641,8 +1645,14 @@
     <string name="addresses_manage_addresses">Διαχείριση διευθύνσεων</string>
     <!-- The header for the full name of an address -->
     <string name="addresses_full_name">Πλήρες όνομα</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Διεύθυνση</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Πόλη</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Νομός</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Ταχ. κώδικας</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Τηλέφωνο</string>
     <!-- The header for the email of an address -->

@@ -249,6 +249,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ค้นหาโดยตรงจากแถบที่อยู่</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">ตั้งค่าการค้นหา</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">มีอะไรใหม่ใน Firefox</string>
@@ -794,6 +797,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ไม่มีประวัติที่นี่</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">ซิงค์จากอุปกรณ์อื่น</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">จากอุปกรณ์อื่นๆ</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">การดาวน์โหลดถูกลบ</string>
@@ -1173,6 +1181,13 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">กำลังลบข้อมูลการเรียกดู…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">การดำเนินการนี้จะลบรายการทั้งหมด</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">ยกเลิก</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">ลบ</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">ตอนนี้ Firefox Preview เป็น Firefox Nightly แล้ว</string>
@@ -1524,7 +1539,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">เรียงเมนูเข้าสู่ระบบ</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">การเติมอัตโนมัติ</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">ที่อยู่</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">บัตรเครดิต</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1540,6 +1559,8 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">จัดการบัตรที่บันทึกไว้</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">เพิ่มที่อยู่</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">เพิ่มบัตร</string>
     <!-- Title of the "Edit card" screen -->
@@ -1590,6 +1611,31 @@
     <string name="credit_cards_biometric_prompt_message_pin">ปลดล็อกอุปกรณ์ของคุณ</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">ปลดล็อกเพื่อใช้ข้อมูลบัตรเครดิตที่เก็บไว้</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">เพิ่มที่อยู่</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">จัดการที่อยู่</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">ชื่อเต็ม</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">ที่อยู่ถนน</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">เมือง</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">รัฐ</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">รหัสไปรษณีย์</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">โทรศัพท์</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">อีเมล</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">บันทึก</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">ยกเลิก</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">ลบที่อยู่</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">เพิ่มเครื่องมือค้นหา</string>

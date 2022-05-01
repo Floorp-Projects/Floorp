@@ -251,6 +251,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Cerca directament des de la barra d’adreces</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Paràmetres de cerca</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Novetats del Firefox</string>
@@ -795,6 +798,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No hi ha informació d’historial</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Sincronitzat d’altres dispositius</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">D’altres dispositius</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">S’han eliminat les baixades</string>
@@ -1177,6 +1185,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">S’estan suprimint les dades de navegació…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Això suprimirà tots els elements.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Cancel·la</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Suprimeix</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">S’ha suprimit el grup</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">El Firefox Preview ara és el Firefox Nightly</string>
@@ -1528,7 +1545,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordena el menú d’inicis de sessió</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Emplenament automàtic</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Adreces</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Targetes de crèdit</string>
 
@@ -1544,6 +1565,10 @@
     <string name="preferences_credit_cards_add_credit_card">Afegeix una targeta de crèdit</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Gestiona les targetes desades</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Afegeix una adreça</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Gestiona les adreces</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Afegeix una targeta</string>
     <!-- Title of the "Edit card" screen -->
@@ -1592,6 +1617,31 @@
     <string name="credit_cards_biometric_prompt_message_pin">Desbloqueu el dispositiu</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Desbloqueu per utilitzar la informació emmagatzemada d’una targeta de crèdit</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Afegeix una adreça</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Gestiona les adreces</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Nom complet</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Adreça postal</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Ciutat</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Estat</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Codi postal</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telèfon</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Adreça electrònica</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Desa</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Cancel·la</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Suprimeix l’adreça</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Afegeix un motor de cerca</string>

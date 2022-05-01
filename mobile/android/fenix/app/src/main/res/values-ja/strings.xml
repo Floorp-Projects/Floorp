@@ -257,6 +257,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">アドレスバーから直接検索します</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">検索設定</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox の新機能</string>
@@ -805,6 +808,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">履歴はありません</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">他の端末から同期</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">他の端末から</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ダウンロード履歴を削除しました</string>
@@ -1195,6 +1203,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">閲覧データを削除しています...</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">この操作はすべての項目を削除します。</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">キャンセル</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">削除</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">グループを削除しました</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview が Firefox Nightly になりました</string>
@@ -1545,7 +1562,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ログイン情報メニューの並べ替え</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">自動補完</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">所在地フォーム</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">クレジットカード</string>
 
