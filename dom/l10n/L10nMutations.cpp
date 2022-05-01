@@ -197,8 +197,6 @@ void L10nMutations::FlushPendingTranslations() {
     return;
   }
 
-  ErrorResult rv;
-
   Sequence<OwningNonNull<Element>> elements;
 
   for (auto& elem : mPendingElements) {
@@ -214,8 +212,8 @@ void L10nMutations::FlushPendingTranslations() {
   mPendingElementsHash.Clear();
   mPendingElements.Clear();
 
-  RefPtr<Promise> promise = mDOMLocalization->TranslateElements(elements, rv);
-
+  RefPtr<Promise> promise =
+      mDOMLocalization->TranslateElements(elements, IgnoreErrors());
   if (promise) {
     RefPtr<PromiseNativeHandler> l10nMutationFinalizationHandler =
         new L10nMutationFinalizationHandler(
