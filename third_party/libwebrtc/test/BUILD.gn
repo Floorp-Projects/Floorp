@@ -7,6 +7,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/ui.gni")
+import("//third_party/google_benchmark/buildconfig.gni")
 import("../webrtc.gni")
 if (is_android) {
   import("//build/config/android/rules.gni")
@@ -448,11 +449,13 @@ if (rtc_include_tests) {
     ]
   }
 
-  rtc_library("benchmark_main") {
-    testonly = true
-    sources = [ "benchmark_main.cc" ]
+  if (enable_google_benchmarks) {
+    rtc_library("benchmark_main") {
+      testonly = true
+      sources = [ "benchmark_main.cc" ]
 
-    deps = [ "//third_party/google_benchmark" ]
+      deps = [ "//third_party/google_benchmark" ]
+    }
   }
 
   rtc_library("test_support_test_artifacts") {
