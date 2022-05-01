@@ -34,14 +34,14 @@
     <ViewStub
         android:id="@+id/search_suggestions_hint"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:inflatedId="@id/search_suggestions_hint"
         android:layout="@layout/search_suggestions_hint"
+        app:layout_constrainedHeight="true"
         app:layout_constraintBottom_toTopOf="@id/search_hint_bottom_barrier"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintHeight_default="wrap"/>
+        app:layout_constraintTop_toBottomOf="@id/toolbar"/>
 
     <View
         android:id="@+id/search_suggestions_hint_divider"
