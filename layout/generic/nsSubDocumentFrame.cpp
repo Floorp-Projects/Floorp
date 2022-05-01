@@ -1384,7 +1384,8 @@ bool nsDisplayRemote::CreateWebRenderCommands(
   }
 
   nscoord auPerDevPixel = pc->AppUnitsPerDevPixel();
-  nsPoint layerOffset = aDisplayListBuilder->ToReferenceFrame(mFrame) + destRect.TopLeft();
+  nsPoint layerOffset =
+      aDisplayListBuilder->ToReferenceFrame(mFrame) + destRect.TopLeft();
   mOffset = LayoutDevicePoint::FromAppUnits(layerOffset, auPerDevPixel);
 
   destRect.MoveTo(0, 0);
