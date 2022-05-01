@@ -20,7 +20,7 @@
 #include "transport/runnable_utils.h"
 #include "api/video/video_frame_type.h"
 #include "common_video/include/video_frame_buffer.h"
-#include "rtc_base/bind.h"
+// #include "rtc_base/bind.h"
 
 namespace mozilla {
 
@@ -977,7 +977,7 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
                                  aDecodedFrame->Stride(kGMPYPlane), buffer_u,
                                  aDecodedFrame->Stride(kGMPUPlane), buffer_v,
                                  aDecodedFrame->Stride(kGMPVPlane),
-                                 rtc::Bind(&DeleteBuffer, buffer.release()));
+                                 [&buffer] { DeleteBuffer(buffer.get()); });
 
       GMP_LOG_DEBUG("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp());
       auto videoFrame =
