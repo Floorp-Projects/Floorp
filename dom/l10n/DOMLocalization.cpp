@@ -177,9 +177,10 @@ void DOMLocalization::GetAttributes(Element& aElement, L10nIdArgs& aResult,
 already_AddRefed<Promise> DOMLocalization::TranslateFragment(nsINode& aNode,
                                                              ErrorResult& aRv) {
   Sequence<OwningNonNull<Element>> elements;
-
   GetTranslatables(aNode, elements, aRv);
-
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
   return TranslateElements(elements, aRv);
 }
 
@@ -309,6 +310,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
   domElements.SetCapacity(aElements.Length());
 
   if (!mGlobal) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
@@ -403,6 +405,9 @@ already_AddRefed<Promise> DOMLocalization::TranslateRoots(ErrorResult& aRv) {
 
   for (nsINode* root : mRoots) {
     RefPtr<Promise> promise = TranslateFragment(*root, aRv);
+    if (MOZ_UNLIKELY(aRv.Failed())) {
+      return nullptr;
+    }
 
     // If the root is an element, we'll add a native handler
     // to set root info (language, direction etc.) on it
