@@ -82,7 +82,8 @@ JsepTransportController::JsepTransportController(
       network_thread_(network_thread),
       port_allocator_(port_allocator),
       async_resolver_factory_(async_resolver_factory),
-      config_(config) {
+      config_(config),
+      active_reset_srtp_params_(config.active_reset_srtp_params) {
   // The |transport_observer| is assumed to be non-null.
   RTC_DCHECK(config_.transport_observer);
   RTC_DCHECK(config_.rtcp_handler);
@@ -395,11 +396,11 @@ void JsepTransportController::SetActiveResetSrtpParams(
     });
     return;
   }
-
+  RTC_DCHECK_RUN_ON(network_thread_);
   RTC_LOG(INFO)
       << "Updating the active_reset_srtp_params for JsepTransportController: "
       << active_reset_srtp_params;
-  config_.active_reset_srtp_params = active_reset_srtp_params;
+  active_reset_srtp_params_ = active_reset_srtp_params;
   for (auto& kv : jsep_transports_by_name_) {
     kv.second->SetActiveResetSrtpParams(active_reset_srtp_params);
   }
@@ -525,7 +526,7 @@ JsepTransportController::CreateDtlsSrtpTransport(
     const std::string& transport_name,
     cricket::DtlsTransportInternal* rtp_dtls_transport,
     cricket::DtlsTransportInternal* rtcp_dtls_transport) {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
       rtcp_dtls_transport == nullptr);
   if (config_.enable_external_auth) {
@@ -534,8 +535,7 @@ JsepTransportController::CreateDtlsSrtpTransport(
 
   dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport,
                                          rtcp_dtls_transport);
-  dtls_srtp_transport->SetActiveResetSrtpParams(
-      config_.active_reset_srtp_params);
+  dtls_srtp_transport->SetActiveResetSrtpParams(active_reset_srtp_params_);
   dtls_srtp_transport->SignalDtlsStateChange.connect(
       this, &JsepTransportController::UpdateAggregateStates_n);
   return dtls_srtp_transport;
