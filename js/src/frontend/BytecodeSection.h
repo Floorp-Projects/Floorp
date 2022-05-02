@@ -323,11 +323,10 @@ class BytecodeSection {
 
   // ---- Generator ----
 
-  // Certain ops (yield, await, retsub) have an entry in the script's
-  // resumeOffsets list. This can be used to map from the op's resumeIndex to
-  // the bytecode offset of the next pc. This indirection makes it easy to
-  // resume in the JIT (because BaselineScript stores a resumeIndex => native
-  // code array).
+  // Certain ops (yield, await) have an entry in the script's resumeOffsets
+  // list. This can be used to map from the op's resumeIndex to the bytecode
+  // offset of the next pc. This indirection makes it easy to resume in the JIT
+  // (because BaselineScript stores a resumeIndex => native code array).
   CGResumeOffsetList resumeOffsetList_;
 
   // Number of yield instructions emitted. Does not include JSOp::Await.

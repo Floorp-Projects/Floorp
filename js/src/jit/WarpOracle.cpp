@@ -553,7 +553,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Uint24:
       case JSOp::Int32:
       case JSOp::Double:
-      case JSOp::ResumeIndex:
       case JSOp::BigInt:
       case JSOp::String:
       case JSOp::Symbol:
