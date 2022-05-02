@@ -10,8 +10,6 @@ include protocol PWebrtcTCPSocket;
 include protocol PHttpTransaction;
 include protocol PHttpConnectionMgr;
 include protocol PFileDescriptorSet;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
 include protocol PInputChannelThrottleQueue;
 include protocol PBackgroundStarter;
 include protocol PAltService;
@@ -99,8 +97,6 @@ sync protocol PSocketProcess
   manages PFileDescriptorSet;
   manages PHttpTransaction;
   manages PHttpConnectionMgr;
-  manages PChildToParentStream;
-  manages PParentToChildStream;
   manages PInputChannelThrottleQueue;
   manages PAltService;
   manages PAltSvcTransaction;
@@ -122,7 +118,6 @@ parent:
 
   /* tabId is only required for web-proxy support, which isn't always needed */
   async PWebrtcTCPSocket(TabId? tabId);
-  async PChildToParentStream();
   async ObserveHttpActivity(HttpActivityArgs aActivityArgs,
                             uint32_t aActivityType,
                             uint32_t aActivitySubtype,
@@ -181,7 +176,6 @@ child:
   async SocketProcessTelemetryPing();
 
   async PHttpTransaction();
-  async PParentToChildStream();
   async PHttpConnectionMgr(HttpHandlerInitArgs aArgs);
   async UpdateDeviceModelId(nsCString aModelId);
 

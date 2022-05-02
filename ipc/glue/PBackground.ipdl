@@ -42,8 +42,6 @@ include protocol PLockManager;
 include protocol PMIDIManager;
 include protocol PMIDIPort;
 include protocol PQuota;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
 include protocol PServiceWorker;
 include protocol PServiceWorkerContainer;
 include protocol PServiceWorkerManager;
@@ -124,8 +122,6 @@ sync protocol PBackground
   manages PMIDIManager;
   manages PMIDIPort;
   manages PQuota;
-  manages PChildToParentStream;
-  manages PParentToChildStream;
   manages PServiceWorker;
   manages PServiceWorkerContainer;
   manages PServiceWorkerManager;
@@ -206,8 +202,6 @@ parent:
   async PCacheStorage(Namespace aNamespace, PrincipalInfo aPrincipalInfo);
 
   async PMessagePort(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
-
-  async PChildToParentStream();
 
   async MessagePortForceClose(nsID uuid, nsID destinationUuid, uint32_t sequenceId);
 
@@ -300,8 +294,6 @@ parent:
 child:
   async PCache();
   async PCacheStreamControl();
-
-  async PParentToChildStream();
 
   async PRemoteWorker(RemoteWorkerData data);
 
