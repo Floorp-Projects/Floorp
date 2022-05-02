@@ -1015,7 +1015,6 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
   std::unique_ptr<RtpTransport> unencrypted_rtp_transport;
   std::unique_ptr<SrtpTransport> sdes_transport;
   std::unique_ptr<DtlsSrtpTransport> dtls_srtp_transport;
-  std::unique_ptr<RtpTransportInternal> datagram_rtp_transport;
 
   rtc::scoped_refptr<webrtc::IceTransportInterface> rtcp_ice;
   if (config_.rtcp_mux_policy !=
@@ -1051,9 +1050,8 @@ RTCError JsepTransportController::MaybeCreateJsepTransport(
       std::make_unique<cricket::JsepTransport>(
           content_info.name, certificate_, std::move(ice), std::move(rtcp_ice),
           std::move(unencrypted_rtp_transport), std::move(sdes_transport),
-          std::move(dtls_srtp_transport), std::move(datagram_rtp_transport),
-          std::move(rtp_dtls_transport), std::move(rtcp_dtls_transport),
-          std::move(sctp_transport));
+          std::move(dtls_srtp_transport), std::move(rtp_dtls_transport),
+          std::move(rtcp_dtls_transport), std::move(sctp_transport));
 
   jsep_transport->rtp_transport()->SignalRtcpPacketReceived.connect(
       this, &JsepTransportController::OnRtcpPacketReceived_n);
