@@ -2248,6 +2248,14 @@ class EditorBase : public nsIEditor,
       // NS_SUCCESS_DOM_NO_OPERATION instead.
       case NS_ERROR_EDITOR_NO_EDITABLE_RANGE:
         return NS_SUCCESS_DOM_NO_OPERATION;
+      // If CreateNodeResultBase::SuggestCaretPointTo etc is called with
+      // SuggestCaret::AndIgnoreTrivialErrors and CollapseSelectionTo returns
+      // non-critical error e.g., not NS_ERROR_EDITOR_DESTROYED, it returns
+      // this success code instead of actual error code for making the caller
+      // handle the case easier.  Therefore, this should be mapped to NS_OK
+      // for the users of editor.
+      case NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR:
+        return NS_OK;
       default:
         return aRv;
     }
@@ -2814,26 +2822,41 @@ class EditorBase : public nsIEditor,
   // Whether we are an HTML editor class.
   bool mIsHTMLEditorClass;
 
-  friend class AlignStateAtSelection;
-  friend class AutoRangeArray;
-  friend class CompositionTransaction;
-  friend class CSSEditUtils;
-  friend class DeleteNodeTransaction;
-  friend class DeleteRangeTransaction;
-  friend class DeleteTextTransaction;
-  friend class HTMLEditUtils;
-  friend class InsertNodeTransaction;
-  friend class InsertTextTransaction;
-  friend class JoinNodesTransaction;
-  friend class ListElementSelectionState;
-  friend class ListItemElementSelectionState;
-  friend class ParagraphStateAtSelection;
-  friend class ReplaceTextTransaction;
-  friend class SplitNodeTransaction;
-  friend class TypeInState;
-  friend class WhiteSpaceVisibilityKeeper;
-  friend class WSRunScanner;
-  friend class nsIEditor;
+  friend class AlignStateAtSelection;  // AutoEditActionDataSetter,
+                                       // ToGenericNSResult
+  friend class AutoRangeArray;  // IsSEditActionDataAvailable, SelectionRef
+  friend class CompositionTransaction;  // CollapseSelectionTo, DoDeleteText,
+                                        // DoInsertText, DoReplaceText,
+                                        // HideCaret, RangeupdaterRef
+  friend class DeleteNodeTransaction;   // RangeUpdaterRef
+  friend class DeleteRangeTransaction;  // AllowsTransactionsToChangeSelection,
+                                        // CollapseSelectionTo
+  friend class DeleteTextTransaction;   // AllowsTransactionsToChangeSelection,
+                                        // DoDeleteText, DoInsertText,
+                                        // RangeUpdaterRef
+  friend class InsertNodeTransaction;   // AllowsTransactionsToChangeSelection,
+                                        // CollapseSelectionTo,
+                                        //  MarkElementDirty, ToGenericNSResult
+  friend class InsertTextTransaction;   // AllowsTransactionsToChangeSelection,
+                                        // CollapseSelectionTo, DoDeleteText,
+                                        // DoInsertText, RangeUpdaterRef
+  friend class ListElementSelectionState;      // AutoEditActionDataSetter,
+                                               // ToGenericNSResult
+  friend class ListItemElementSelectionState;  // AutoEditActionDataSetter,
+                                               // ToGenericNSResult
+  friend class ParagraphStateAtSelection;      // AutoEditActionDataSetter,
+                                               // ToGenericNSResult
+  friend class ReplaceTextTransaction;  // AllowsTransactionsToChangeSelection,
+                                        // CollapseSelectionTo, DoReplaceText,
+                                        // RangeUpdaterRef
+  friend class SplitNodeTransaction;    // ToGenericNSResult
+  friend class TypeInState;  // GetEditAction, GetFirstSelectionStartPoint,
+                             // SelectionRef
+  friend class WhiteSpaceVisibilityKeeper;  // AutoTransactionsConserveSelection
+  friend class nsIEditor;                   // mIsHTMLEditorClass
+
+  template <typename NodeType>
+  friend class CreateNodeResultBase;  // CollapseSelectionTo
 };
 
 }  // namespace mozilla

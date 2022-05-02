@@ -3394,10 +3394,10 @@ nsresult EditorBase::EnsurePaddingBRElementInMultilineEditor() {
         InsertPaddingBRElementForEmptyLastLineWithTransaction(
             endOfAnonymousDiv);
     NS_WARNING_ASSERTION(
-        createPaddingBRResult.Succeeded(),
+        createPaddingBRResult.isOk(),
         "EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
         "failed");
-    return createPaddingBRResult.Rv();
+    return createPaddingBRResult.unwrapErr();
   }
 
   // Check to see if the trailing BR is a former padding <br> element for empty
