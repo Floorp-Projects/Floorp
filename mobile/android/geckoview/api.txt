@@ -2256,6 +2256,7 @@ package org.mozilla.geckoview {
 
   @UiThread public static interface WebExtensionController.PromptDelegate {
     method @Nullable default public GeckoResult<AllowOrDeny> onInstallPrompt(@NonNull WebExtension);
+    method @Nullable default public GeckoResult<AllowOrDeny> onOptionalPrompt(@NonNull WebExtension, @NonNull String[], @NonNull String[]);
     method @Nullable default public GeckoResult<AllowOrDeny> onUpdatePrompt(@NonNull WebExtension, @NonNull WebExtension, @NonNull String[], @NonNull String[]);
   }
 

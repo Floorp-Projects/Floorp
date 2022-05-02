@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+  "name": "permissions",
+  "browser_specific_settings": {
+    "gecko": {
+        "id": "permissions@example.com"
+    }
+  },
+  "version": "1.0",
+  "description": "Request optional extension permissions.",
+  "permissions": ["nativeMessaging", "geckoViewAddons"],
+  "optional_permissions": ["geolocation", "*://example.com/*"]
+}
