@@ -10,9 +10,6 @@ const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const Services = require("Services");
-const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
-const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
-const { OS } = require("resource://gre/modules/osfile.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getString,
@@ -28,10 +25,34 @@ const {
 } = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { PrefObserver } = require("devtools/client/shared/prefs");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
-const {
-  OriginalSource,
-} = require("devtools/client/styleeditor/original-source");
+
+loader.lazyRequireGetter(
+  this,
+  "KeyCodes",
+  "devtools/client/shared/keycodes",
+  true
+);
+
+loader.lazyRequireGetter(
+  this,
+  "OriginalSource",
+  "devtools/client/styleeditor/original-source",
+  true
+);
+
+loader.lazyRequireGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm",
+  true
+);
+loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
 
 loader.lazyRequireGetter(
   this,
