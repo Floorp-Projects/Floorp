@@ -165,6 +165,43 @@ inline bool NestableControl::is<TryFinallyControl>() const {
   return kind_ == StatementKind::Try || kind_ == StatementKind::Finally;
 }
 
+class NonLocalExitControl {
+ public:
+  enum Kind {
+    // A 'continue' statement does not call IteratorClose for the loop it
+    // is continuing, i.e. excluding the target loop.
+    Continue,
+
+    // A 'break' or 'return' statement does call IteratorClose for the
+    // loop it is breaking out of or returning from, i.e. including the
+    // target loop.
+    Break,
+    Return
+  };
+
+ private:
+  BytecodeEmitter* bce_;
+  const uint32_t savedScopeNoteIndex_;
+  const int savedDepth_;
+  uint32_t openScopeNoteIndex_;
+  Kind kind_;
+
+  // The offset of a `JSOp::SetRval` that can be rewritten as a
+  // `JSOp::Return` if we don't generate any code for this
+  // NonLocalExitControl.
+  BytecodeOffset setRvalOffset_ = BytecodeOffset::invalidOffset();
+
+  [[nodiscard]] bool leaveScope(EmitterScope* es);
+
+ public:
+  NonLocalExitControl(const NonLocalExitControl&) = delete;
+  NonLocalExitControl(BytecodeEmitter* bce, Kind kind);
+  ~NonLocalExitControl();
+
+  [[nodiscard]] bool emitNonLocalJump(NestableControl* target);
+  [[nodiscard]] bool emitReturn(BytecodeOffset setRvalOffset);
+};
+
 } /* namespace frontend */
 } /* namespace js */
 
