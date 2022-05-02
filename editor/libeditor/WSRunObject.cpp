@@ -642,7 +642,7 @@ EditActionResult WhiteSpaceVisibilityKeeper::
         return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
       }
       NS_WARNING_ASSERTION(
-          convertListTypeResult.Succeeded(),
+          convertListTypeResult.isOk(),
           "HTMLEditor::ChangeListElementType() failed, but ignored");
     }
     ret.MarkAsHandled();
