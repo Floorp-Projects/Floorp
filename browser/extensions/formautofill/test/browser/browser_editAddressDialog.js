@@ -168,7 +168,7 @@ add_task(
   async function test_editAddressFrenchCanadianChangedToEnglishRepresentation() {
     let addressClone = Object.assign({}, TEST_ADDRESS_CA_1);
     addressClone["address-level1"] = "Colombie-Britannique";
-    await saveAddress(addressClone);
+    await setStorage(addressClone);
 
     let addresses = await getAddresses();
     await testDialog(
