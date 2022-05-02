@@ -97,8 +97,7 @@ ScenarioIceConnectionImpl::ScenarioIceConnectionImpl(
       port_allocator_(
           new cricket::BasicPortAllocator(manager_->network_manager())),
       jsep_controller_(
-          new JsepTransportController(signaling_thread_,
-                                      network_thread_,
+          new JsepTransportController(network_thread_,
                                       port_allocator_.get(),
                                       /*async_resolver_factory*/ nullptr,
                                       CreateJsepConfig())) {

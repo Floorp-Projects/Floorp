@@ -84,13 +84,11 @@ webrtc::RTCError VerifyCandidates(const cricket::Candidates& candidates) {
 namespace webrtc {
 
 JsepTransportController::JsepTransportController(
-    rtc::Thread* signaling_thread,
     rtc::Thread* network_thread,
     cricket::PortAllocator* port_allocator,
     AsyncResolverFactory* async_resolver_factory,
     Config config)
-    : signaling_thread_(signaling_thread),
-      network_thread_(network_thread),
+    : network_thread_(network_thread),
       port_allocator_(port_allocator),
       async_resolver_factory_(async_resolver_factory),
       config_(config),
@@ -222,12 +220,6 @@ void JsepTransportController::SetNeedsIceRestartFlag() {
 
 bool JsepTransportController::NeedsIceRestart(
     const std::string& transport_name) const {
-  if (!network_thread_->IsCurrent()) {
-    RTC_DCHECK_RUN_ON(signaling_thread_);
-    return network_thread_->Invoke<bool>(
-        RTC_FROM_HERE, [&] { return NeedsIceRestart(transport_name); });
-  }
-
   RTC_DCHECK_RUN_ON(network_thread_);
 
   const cricket::JsepTransport* transport =
@@ -414,11 +406,6 @@ RTCError JsepTransportController::RemoveRemoteCandidates(
 
 bool JsepTransportController::GetStats(const std::string& transport_name,
                                        cricket::TransportStats* stats) {
-  if (!network_thread_->IsCurrent()) {
-    return network_thread_->Invoke<bool>(
-        RTC_FROM_HERE, [=] { return GetStats(transport_name, stats); });
-  }
-
   RTC_DCHECK_RUN_ON(network_thread_);
 
   cricket::JsepTransport* transport = GetJsepTransportByName(transport_name);
@@ -1194,35 +1181,24 @@ void JsepTransportController::OnTransportCandidateGathered_n(
     RTC_NOTREACHED();
     return;
   }
-  std::string transport_name = transport->transport_name();
-  // TODO(bugs.webrtc.org/12427): See if we can get rid of this. We should be
-  // able to just call this directly here.
-  invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread_, [this, transport_name, candidate] {
-        signal_ice_candidates_gathered_.Send(
-            transport_name, std::vector<cricket::Candidate>{candidate});
-      });
+
+  signal_ice_candidates_gathered_.Send(
+      transport->transport_name(), std::vector<cricket::Candidate>{candidate});
 }
 
 void JsepTransportController::OnTransportCandidateError_n(
     cricket::IceTransportInternal* transport,
     const cricket::IceCandidateErrorEvent& event) {
-  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_, [this, event] {
-    signal_ice_candidate_error_.Send(event);
-  });
+  signal_ice_candidate_error_.Send(event);
 }
 void JsepTransportController::OnTransportCandidatesRemoved_n(
     cricket::IceTransportInternal* transport,
     const cricket::Candidates& candidates) {
-  invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread_,
-      [this, candidates] { signal_ice_candidates_removed_.Send(candidates); });
+  signal_ice_candidates_removed_.Send(candidates);
 }
 void JsepTransportController::OnTransportCandidatePairChanged_n(
     const cricket::CandidatePairChangeEvent& event) {
-  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_, [this, event] {
-    signal_ice_candidate_pair_changed_.Send(event);
-  });
+  signal_ice_candidate_pair_changed_.Send(event);
 }
 
 void JsepTransportController::OnTransportRoleConflict_n(
@@ -1298,10 +1274,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
   if (ice_connection_state_ != new_connection_state) {
     ice_connection_state_ = new_connection_state;
 
-    invoker_.AsyncInvoke<void>(
-        RTC_FROM_HERE, signaling_thread_, [this, new_connection_state] {
-          signal_ice_connection_state_.Send(new_connection_state);
-        });
+    signal_ice_connection_state_.Send(new_connection_state);
   }
 
   // Compute the current RTCIceConnectionState as described in
@@ -1357,17 +1330,11 @@ void JsepTransportController::UpdateAggregateStates_n() {
         new_ice_connection_state ==
             PeerConnectionInterface::kIceConnectionCompleted) {
       // Ensure that we never skip over the "connected" state.
-      invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_, [this] {
-        signal_standardized_ice_connection_state_.Send(
-            PeerConnectionInterface::kIceConnectionConnected);
-      });
+      signal_standardized_ice_connection_state_.Send(
+          PeerConnectionInterface::kIceConnectionConnected);
     }
     standardized_ice_connection_state_ = new_ice_connection_state;
-    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, signaling_thread_,
-                               [this, new_ice_connection_state] {
-                                 signal_standardized_ice_connection_state_.Send(
-                                     new_ice_connection_state);
-                               });
+    signal_standardized_ice_connection_state_.Send(new_ice_connection_state);
   }
 
   // Compute the current RTCPeerConnectionState as described in
@@ -1418,10 +1385,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
 
   if (combined_connection_state_ != new_combined_state) {
     combined_connection_state_ = new_combined_state;
-    invoker_.AsyncInvoke<void>(
-        RTC_FROM_HERE, signaling_thread_, [this, new_combined_state] {
-          signal_connection_state_.Send(new_combined_state);
-        });
+    signal_connection_state_.Send(new_combined_state);
   }
 
   // Compute the gathering state.
@@ -1434,10 +1398,7 @@ void JsepTransportController::UpdateAggregateStates_n() {
   }
   if (ice_gathering_state_ != new_gathering_state) {
     ice_gathering_state_ = new_gathering_state;
-    invoker_.AsyncInvoke<void>(
-        RTC_FROM_HERE, signaling_thread_, [this, new_gathering_state] {
-          signal_ice_gathering_state_.Send(new_gathering_state);
-        });
+    signal_ice_gathering_state_.Send(new_gathering_state);
   }
 }
 
