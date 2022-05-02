@@ -23,4 +23,5 @@ mod string;
 mod string_list;
 mod timespan;
 mod timing_distribution;
+mod url;
 mod uuid;
