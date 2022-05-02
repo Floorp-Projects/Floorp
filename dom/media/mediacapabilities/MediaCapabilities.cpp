@@ -237,8 +237,8 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
   nsTArray<RefPtr<CapabilitiesPromise>> promises;
 
   RefPtr<TaskQueue> taskQueue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "MediaCapabilities::TaskQueue");
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "MediaCapabilities::TaskQueue");
   for (auto&& config : tracks) {
     TrackInfo::TrackType type =
         config->IsVideo() ? TrackInfo::kVideoTrack : TrackInfo::kAudioTrack;

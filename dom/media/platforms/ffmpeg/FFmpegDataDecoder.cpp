@@ -27,9 +27,9 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
       mFrame(NULL),
       mExtraData(nullptr),
       mCodecID(aCodecID),
-      mTaskQueue(
-          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                        "FFmpegDataDecoder")),
+      mTaskQueue(TaskQueue::Create(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+          "FFmpegDataDecoder")),
       mLastInputDts(media::TimeUnit::FromNegativeInfinity()) {
   MOZ_ASSERT(aLib);
   MOZ_COUNT_CTOR(FFmpegDataDecoder);

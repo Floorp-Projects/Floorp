@@ -45,9 +45,9 @@ ogg_packet InitTheoraPacket(const unsigned char* aData, size_t aLength,
 TheoraDecoder::TheoraDecoder(const CreateDecoderParams& aParams)
     : mImageAllocator(aParams.mKnowsCompositor),
       mImageContainer(aParams.mImageContainer),
-      mTaskQueue(
-          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                        "TheoraDecoder")),
+      mTaskQueue(TaskQueue::Create(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+          "TheoraDecoder")),
       mTheoraInfo{},
       mTheoraComment{},
       mTheoraSetupInfo(nullptr),

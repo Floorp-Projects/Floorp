@@ -2060,7 +2060,7 @@ MediaManager* MediaManager::Get() {
     timesCreated++;
     MOZ_RELEASE_ASSERT(timesCreated == 1);
 
-    RefPtr<TaskQueue> mediaThread = new TaskQueue(
+    RefPtr<TaskQueue> mediaThread = TaskQueue::Create(
         GetMediaThreadPool(MediaThreadType::SUPERVISOR), "MediaManager");
     LOG("New Media thread for gum");
 

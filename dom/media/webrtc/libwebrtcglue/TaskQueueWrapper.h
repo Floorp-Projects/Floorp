@@ -152,8 +152,8 @@ class SharedThreadPoolWebRtcTaskQueueFactory : public webrtc::TaskQueueFactory {
       MediaThreadType aThreadType = MediaThreadType::WEBRTC_WORKER) const {
     // XXX Do something with aPriority
     nsCString name(aName.data(), aName.size());
-    auto taskQueue = MakeRefPtr<TaskQueue>(GetMediaThreadPool(aThreadType),
-                                           name.get(), aSupportTailDispatch);
+    auto taskQueue = TaskQueue::Create(GetMediaThreadPool(aThreadType),
+                                       name.get(), aSupportTailDispatch);
     return MakeUnique<TaskQueueWrapper<Deletion>>(std::move(taskQueue),
                                                   std::move(name));
   }
