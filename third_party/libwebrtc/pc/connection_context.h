@@ -62,6 +62,7 @@ class ConnectionContext : public rtc::RefCountInterface {
 
   // Functions called from PeerConnection and friends
   SctpTransportFactoryInterface* sctp_transport_factory() const {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
     return sctp_factory_.get();
   }
 
@@ -122,7 +123,8 @@ class ConnectionContext : public rtc::RefCountInterface {
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<cricket::MediaEngineInterface> media_engine_
       RTC_GUARDED_BY(signaling_thread_);
-  std::unique_ptr<SctpTransportFactoryInterface> const sctp_factory_;
+  std::unique_ptr<SctpTransportFactoryInterface> const sctp_factory_
+      RTC_GUARDED_BY(signaling_thread_);
   // Accessed both on signaling thread and worker thread.
   std::unique_ptr<WebRtcKeyValueConfig> const trials_;
 };
