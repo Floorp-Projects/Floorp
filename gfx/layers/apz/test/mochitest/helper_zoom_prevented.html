@@ -34,7 +34,7 @@ async function testPreventDefault(aTouchStartToCancel) {
   // Ensure that APZ gets updated hit-test info
   await promiseAllPaintsDone();
 
-  pinchZoomInTouchSequence(150, 300);
+  await pinchZoomInTouchSequence(150, 300);
   await touchEndPromise; // wait for the touchend listener to fire
 
   // Flush state and get the resolution we're at now

@@ -19,7 +19,7 @@ async function test() {
 
   // drag the page up to scroll down by 50px
   let touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
+  ok(await synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
       "Synthesized native vertical drag (1), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();
@@ -33,7 +33,7 @@ async function test() {
 
   // drag the page up to scroll down by 50px, but it won't happen because pan-x
   touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
+  ok(await synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
      "Synthesized native vertical drag (2), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();
@@ -41,7 +41,7 @@ async function test() {
 
   // drag the page left to scroll right by 50px
   touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 100, 10, -50, 0),
+  ok(await synthesizeNativeTouchDrag(target, 100, 10, -50, 0),
      "Synthesized horizontal drag (1), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();
@@ -50,7 +50,7 @@ async function test() {
   // drag the page diagonally right/down to scroll up/left by 40px each axis;
   // only the x-axis will actually scroll because pan-x
   touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 10, 10, 40, 40),
+  ok(await synthesizeNativeTouchDrag(target, 10, 10, 40, 40),
      "Synthesized diagonal drag (1), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();
@@ -65,7 +65,7 @@ async function test() {
   // drag the page diagonally right/down to scroll up/left by 40px each axis;
   // only the y-axis will actually scroll because pan-y
   touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 10, 10, 40, 40),
+  ok(await synthesizeNativeTouchDrag(target, 10, 10, 40, 40),
      "Synthesized diagonal drag (2), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();
@@ -80,7 +80,7 @@ async function test() {
   // drag the page diagonally up/left to scroll down/right by 40px each axis;
   // neither will scroll because of touch-action
   touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 100, 100, -40, -40),
+  ok(await synthesizeNativeTouchDrag(target, 100, 100, -40, -40),
       "Synthesized diagonal drag (3), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();
@@ -94,7 +94,7 @@ async function test() {
   // drag the page diagonally up/left to scroll down/right by 40px each axis;
   // both will scroll because of touch-action
   touchEndPromise = promiseTouchEnd(document.body);
-  ok(synthesizeNativeTouchDrag(target, 100, 100, -40, -40),
+  ok(await synthesizeNativeTouchDrag(target, 100, 100, -40, -40),
       "Synthesized diagonal drag (4), waiting for touch-end event...");
   await touchEndPromise;
   await promiseOnlyApzControllerFlushed();

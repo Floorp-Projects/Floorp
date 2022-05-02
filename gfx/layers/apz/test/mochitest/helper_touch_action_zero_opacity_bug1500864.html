@@ -14,7 +14,7 @@ async function test() {
   let touchEndPromise = promiseTouchEnd(document.body);
 
   // drag the page up to scroll down by 50px
-  ok(synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
+  ok(await synthesizeNativeTouchDrag(target, 10, 100, 0, -50),
       "Synthesized native vertical drag, waiting for touch-end event...");
   await touchEndPromise;
 

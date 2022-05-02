@@ -11,8 +11,8 @@
 
 var touchdownTime;
 
-function longPressLink() {
-  synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+async function longPressLink() {
+  await synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
     dump("Finished synthesizing touch-start, waiting for events...\n");
   });
 }
@@ -40,10 +40,12 @@ function recordEvent(e) {
   }
   e.preventDefault();
 
-  synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
-    dump("Finished synthesizing touch-end to clear state; finishing test...\n");
-    subtestDone();
-  });
+  setTimeout(async () => {
+    await synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+      dump("Finished synthesizing touch-end to clear state; finishing test...\n");
+      subtestDone();
+    });
+  }, 0);
 }
 
 window.addEventListener("touchstart", recordEvent, { passive: true, capture: true });

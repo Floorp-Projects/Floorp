@@ -26,7 +26,7 @@ async function test() {
 
   let iframe = document.getElementById("testframe");
 
-  synthesizeNativeWheel(iframe, 100, 100, 0, -50);
+  await synthesizeNativeWheel(iframe, 100, 100, 0, -50);
   await scrollEventPromise;
 
   ok(window.scrollY > 0,
