@@ -12,6 +12,7 @@
 interface RTCRtpReceiver {
   readonly attribute MediaStreamTrack   track;
   readonly attribute RTCDtlsTransport?  transport;
+  [NewObject]
   Promise<RTCStatsReport>               getStats();
   sequence<RTCRtpContributingSource>    getContributingSources();
   sequence<RTCRtpSynchronizationSource> getSynchronizationSources();

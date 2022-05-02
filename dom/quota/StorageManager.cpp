@@ -752,11 +752,9 @@ already_AddRefed<Promise> StorageManager::Estimate(ErrorResult& aRv) {
                                        aRv);
 }
 
-already_AddRefed<Promise> StorageManager::GetDirectory() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> StorageManager::GetDirectory(ErrorResult& aRv) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
