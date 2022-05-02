@@ -6,6 +6,8 @@
 #ifndef mozilla_EditorHelperForwards_h
 #define mozilla_EditorHelperForwards_h
 
+#include "mozilla/EnumSet.h"
+
 #include <cstdint>
 
 /******************************************************************************
@@ -39,9 +41,16 @@ enum class EditorCommandParamType : uint16_t;  // mozilla/EditorCommands.h
 enum class EditSubAction : int32_t;            // mozilla/EditAction.h
 enum class ParagraphSeparator;                 // mozilla/HTMLEditor.h
 enum class SpecifiedStyle : uint8_t;           // mozilla/TypeInState.h
+enum class SuggestCaret;                       // mozilla/EditorUtils.h
 
 enum class JoinNodesDirection;  // HTMLEditHelper.h
 enum class SplitNodeDirection;  // HTMLEditHelper.h
+
+/******************************************************************************
+ * enum sets
+ ******************************************************************************/
+
+using SuggestCaretOptions = EnumSet<SuggestCaret>;
 
 /******************************************************************************
  * classes or structs which are required for template classes/structs
