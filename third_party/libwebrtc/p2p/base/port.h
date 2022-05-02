@@ -33,6 +33,7 @@
 #include "p2p/base/port_interface.h"
 #include "p2p/base/stun_request.h"
 #include "rtc_base/async_packet_socket.h"
+#include "rtc_base/callback_list.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/network.h"
@@ -269,6 +270,9 @@ class Port : public PortInterface,
   // connection.
   sigslot::signal1<Port*> SignalPortError;
 
+  void SubscribePortDestroyed(
+      std::function<void(PortInterface*)> callback) override;
+  void SendPortDestroyed(Port* port);
   // Returns a map containing all of the connections of this port, keyed by the
   // remote address.
   typedef std::map<rtc::SocketAddress, Connection*> AddressMap;
@@ -487,6 +491,7 @@ class Port : public PortInterface,
                              bool is_final);
 
   friend class Connection;
+  webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;
 };
 
 }  // namespace cricket
