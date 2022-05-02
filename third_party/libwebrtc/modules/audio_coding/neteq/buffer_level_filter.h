@@ -12,6 +12,7 @@
 #define MODULES_AUDIO_CODING_NETEQ_BUFFER_LEVEL_FILTER_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "rtc_base/constructor_magic.h"
 
@@ -39,7 +40,7 @@ class BufferLevelFilter {
   // Returns filtered current level in number of samples.
   virtual int filtered_current_level() const {
     // Round to nearest whole sample.
-    return (filtered_current_level_ + (1 << 7)) >> 8;
+    return (int64_t{filtered_current_level_} + (1 << 7)) >> 8;
   }
 
  private:
