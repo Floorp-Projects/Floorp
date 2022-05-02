@@ -904,9 +904,6 @@ TEST_F(JsepTransportControllerTest, IceSignalingOccursOnSignalingThread) {
   EXPECT_EQ(2, candidates_signal_count_);
 
   EXPECT_TRUE(!signaled_on_non_signaling_thread_);
-
-  network_thread_->Invoke<void>(RTC_FROM_HERE,
-                                [&] { transport_controller_.reset(); });
 }
 
 // Test that if the TransportController was created with the

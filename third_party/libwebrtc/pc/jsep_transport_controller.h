@@ -363,9 +363,8 @@ class JsepTransportController : public sigslot::has_slots<> {
   // transports are bundled on (In current implementation, it is the first
   // content in the BUNDLE group).
   const cricket::JsepTransport* GetJsepTransportForMid(
-      const std::string& mid) const RTC_RUN_ON(network_thread_);
-  cricket::JsepTransport* GetJsepTransportForMid(const std::string& mid)
-      RTC_RUN_ON(network_thread_);
+      const std::string& mid) const;
+  cricket::JsepTransport* GetJsepTransportForMid(const std::string& mid);
 
   // Get the JsepTransport without considering the BUNDLE group. Return nullptr
   // if the JsepTransport is destroyed.
@@ -461,8 +460,7 @@ class JsepTransportController : public sigslot::has_slots<> {
       jsep_transports_by_name_ RTC_GUARDED_BY(network_thread_);
   // This keeps track of the mapping between media section
   // (BaseChannel/SctpTransport) and the JsepTransport underneath.
-  std::map<std::string, cricket::JsepTransport*> mid_to_transport_
-      RTC_GUARDED_BY(network_thread_);
+  std::map<std::string, cricket::JsepTransport*> mid_to_transport_;
   // Keep track of mids that have been mapped to transports. Used for rollback.
   std::vector<std::string> pending_mids_ RTC_GUARDED_BY(network_thread_);
   // Aggregate states for Transports.
