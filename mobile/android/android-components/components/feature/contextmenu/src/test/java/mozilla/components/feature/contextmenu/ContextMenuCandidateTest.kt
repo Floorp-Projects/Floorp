@@ -15,6 +15,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.EngineState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.state.createTab
@@ -104,6 +105,30 @@ class ContextMenuCandidateTest {
             openInNewTab.showFor(
                 createTab("https://www.mozilla.org"),
                 HitResult.VIDEO("https://www.mozilla.org")
+            )
+        )
+    }
+
+    @Test
+    fun `Candidate 'Open Link in New Tab' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
+            testContext, mock(), mock(), snackbarDelegate, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            openInNewTab.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            openInNewTab.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
             )
         )
     }
@@ -276,6 +301,37 @@ class ContextMenuCandidateTest {
             openInPrivateTab.showFor(
                 createTab("https://www.mozilla.org"),
                 HitResult.VIDEO("https://www.mozilla.org")
+            )
+        )
+    }
+
+    @Test
+    fun `Candidate 'Open Link in Private Tab' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
+            testContext, mock(), mock(), snackbarDelegate, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            openInPrivateTab.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            openInPrivateTab.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            openInPrivateTab.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
             )
         )
     }
@@ -459,6 +515,30 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Open Image in New Tab' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val openImageInTab = ContextMenuCandidate.createOpenImageInNewTabCandidate(
+            testContext, mock(), mock(), snackbarDelegate, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            openImageInTab.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            openImageInTab.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Open Image in New Tab' opens in private tab if session is private`() {
         val store = BrowserStore(
             initialState = BrowserState(
@@ -602,6 +682,30 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Save image' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val saveImage = ContextMenuCandidate.createSaveImageCandidate(
+            testContext, mock(), additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            saveImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            saveImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Save video and audio'`() {
         val store = BrowserStore(
             initialState = BrowserState(
@@ -683,6 +787,30 @@ class ContextMenuCandidateTest {
 
         assertTrue(
             store.state.tabs.first().content.download!!.private
+        )
+    }
+
+    @Test
+    fun `Candidate 'Save video and audio' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val saveVideoAudio = ContextMenuCandidate.createSaveVideoAudioCandidate(
+            testContext, mock(), additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            saveVideoAudio.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.VIDEO("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            saveVideoAudio.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.AUDIO("https://www.mozilla.org")
+            )
         )
     }
 
@@ -798,6 +926,37 @@ class ContextMenuCandidateTest {
         )
 
         assertTrue(store.state.tabs.first().content.download!!.private)
+    }
+
+    @Test
+    fun `Candidate 'download link' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val downloadLink = ContextMenuCandidate.createDownloadLinkCandidate(
+            testContext, mock(), additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            downloadLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            downloadLink.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            downloadLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
     }
 
     @Test
@@ -944,6 +1103,58 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Share Link' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val shareLink = ContextMenuCandidate.createShareLinkCandidate(
+            testContext, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            shareLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            shareLink.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            shareLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            shareLink.showFor(
+                createTab("test://www.mozilla.org"),
+                HitResult.UNKNOWN("test://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            shareLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            shareLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.VIDEO("https://www.mozilla.org")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Share image'`() {
         val store = BrowserStore(
             initialState = BrowserState(
@@ -990,6 +1201,30 @@ class ContextMenuCandidateTest {
         verify(shareUsecase).invoke(eq("123"), shareStateCaptor.capture())
         assertEquals("https://firefox.com", shareStateCaptor.value.url)
         assertEquals(store.state.tabs.first().content.private, shareStateCaptor.value.private)
+    }
+
+    @Test
+    fun `Candidate 'Share image' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val shareImage = ContextMenuCandidate.createShareImageCandidate(
+            testContext, mock(), additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            shareImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            shareImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
     }
 
     @Test
@@ -1070,6 +1305,58 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Copy Link' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val copyLink = ContextMenuCandidate.createCopyLinkCandidate(
+            testContext, mock(), snackbarDelegate, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            copyLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            copyLink.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            copyLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            copyLink.showFor(
+                createTab("test://www.mozilla.org"),
+                HitResult.UNKNOWN("test://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            copyLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            copyLink.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.VIDEO("https://www.mozilla.org")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Copy Image Location'`() {
         val parentView = CoordinatorLayout(testContext)
 
@@ -1136,6 +1423,30 @@ class ContextMenuCandidateTest {
         assertEquals(
             "https://firefox.com",
             clipboardManager.primaryClip!!.getItemAt(0).text
+        )
+    }
+
+    @Test
+    fun `Candidate 'Copy Image Location' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val copyImageLocation = ContextMenuCandidate.createCopyImageLocationCandidate(
+            testContext, mock(), snackbarDelegate, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            copyImageLocation.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org")
+            )
+        )
+
+        assertFalse(
+            copyImageLocation.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org")
+            )
         )
     }
 
@@ -1239,6 +1550,56 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Open in external app' allows for an additional validation for it to be shown`() {
+        val tab = createTab("https://www.mozilla.org")
+        val getAppLinkRedirectMock: AppLinksUseCases.GetAppLinkRedirect = mock()
+        doReturn(
+            AppLinkRedirect(mock(), null, null)
+        ).`when`(getAppLinkRedirectMock).invoke(eq("https://www.example.com"))
+        doReturn(
+            AppLinkRedirect(null, null, mock())
+        ).`when`(getAppLinkRedirectMock).invoke(eq("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"))
+        val openAppLinkRedirectMock: AppLinksUseCases.OpenAppLinkRedirect = mock()
+        val appLinksUseCasesMock: AppLinksUseCases = mock()
+        doReturn(getAppLinkRedirectMock).`when`(appLinksUseCasesMock).appLinkRedirectIncludeInstall
+        doReturn(openAppLinkRedirectMock).`when`(appLinksUseCasesMock).openAppLink
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val openLinkInExternalApp = ContextMenuCandidate.createOpenInExternalAppCandidate(
+            testContext, appLinksUseCasesMock, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            openLinkInExternalApp.showFor(
+                tab,
+                HitResult.UNKNOWN("https://www.example.com")
+            )
+        )
+
+        assertFalse(
+            openLinkInExternalApp.showFor(
+                tab,
+                HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
+            )
+        )
+
+        assertFalse(
+            openLinkInExternalApp.showFor(
+                tab,
+                HitResult.VIDEO("https://www.example.com")
+            )
+        )
+
+        assertFalse(
+            openLinkInExternalApp.showFor(
+                tab,
+                HitResult.AUDIO("https://www.example.com")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Copy email address'`() {
         val parentView = CoordinatorLayout(testContext)
 
@@ -1302,6 +1663,30 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Copy email address' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val copyEmailAddress = ContextMenuCandidate.createCopyEmailAddressCandidate(
+            testContext, mock(), snackbarDelegate, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            copyEmailAddress.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("mailto:example@example.com")
+            )
+        )
+
+        assertFalse(
+            copyEmailAddress.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("mailto:example.com")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Share email address'`() {
         val context = spy(testContext)
 
@@ -1357,6 +1742,30 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Share email address' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val shareEmailAddress = ContextMenuCandidate.createShareEmailAddressCandidate(
+            testContext, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            shareEmailAddress.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("mailto:example@example.com")
+            )
+        )
+
+        assertFalse(
+            shareEmailAddress.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("mailto:example.com")
+            )
+        )
+    }
+
+    @Test
     fun `Candidate 'Add to contacts'`() {
         val context = spy(testContext)
 
@@ -1409,6 +1818,30 @@ class ContextMenuCandidateTest {
         )
 
         verify(context).startActivity(any())
+    }
+
+    @Test
+    fun `Candidate 'Add to contacts' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val addToContacts = ContextMenuCandidate.createAddContactCandidate(
+            testContext, additionalValidation
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            addToContacts.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.UNKNOWN("mailto:example@example.com")
+            )
+        )
+
+        assertFalse(
+            addToContacts.showFor(
+                createTab("https://www.mozilla.org", private = true),
+                HitResult.UNKNOWN("mailto:example.com")
+            )
+        )
     }
 
     @Test

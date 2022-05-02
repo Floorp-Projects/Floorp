@@ -92,19 +92,28 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Open Link in New Tab".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param tabsUseCases [TabsUseCases] used for adding new tabs.
+         * @param snackBarParentView The view in which to find a suitable parent for displaying the `Snackbar`.
+         * @param snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createOpenInNewTabCandidate(
             context: Context,
             tabsUseCases: TabsUseCases,
             snackBarParentView: View,
-            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_new_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_new_tab),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
                     hitResult.isHttpLink() &&
-                    !tab.content.private
+                    !tab.content.private &&
+                    additionalValidation(tab, hitResult)
             },
             action = { parent, hitResult ->
                 val tab = tabsUseCases.addTab(
@@ -128,18 +137,26 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Open Link in Private Tab".
-         */
+         *
+         * @param context [Context] used for various system interactions.
+         * @param tabsUseCases [TabsUseCases] used for adding new tabs.
+         * @param snackBarParentView The view in which to find a suitable parent for displaying the `Snackbar`.
+         * @param snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.         */
         fun createOpenInPrivateTabCandidate(
             context: Context,
             tabsUseCases: TabsUseCases,
             snackBarParentView: View,
-            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_private_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_private_tab),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isHttpLink()
+                    hitResult.isHttpLink() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { parent, hitResult ->
                 val tab = tabsUseCases.addTab(
@@ -163,16 +180,23 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Open Link in external App".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param appLinksUseCases [AppLinksUseCases] used to interact with urls that can be opened in 3rd party apps.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createOpenInExternalAppCandidate(
             context: Context,
-            appLinksUseCases: AppLinksUseCases
+            appLinksUseCases: AppLinksUseCases,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_in_external_app",
             label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_external_app),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.canOpenInExternalApp(appLinksUseCases)
+                    hitResult.canOpenInExternalApp(appLinksUseCases) &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
                 val link = hitResult.getLink()
@@ -189,47 +213,67 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Add to contact".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createAddContactCandidate(
-            context: Context
+            context: Context,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.add_to_contact",
             label = context.getString(R.string.mozac_feature_contextmenu_add_to_contact),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isMailto()
+                    hitResult.isMailto() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult -> context.addContact(hitResult.getLink().stripMailToProtocol()) }
         )
 
         /**
          * Context Menu item: "Share email address".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createShareEmailAddressCandidate(
-            context: Context
+            context: Context,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.share_email",
             label = context.getString(R.string.mozac_feature_contextmenu_share_email_address),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isMailto()
+                    hitResult.isMailto() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult -> context.share(hitResult.getLink().stripMailToProtocol()) }
         )
 
         /**
          * Context Menu item: "Copy email address".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param snackBarParentView The view in which to find a suitable parent for displaying the `Snackbar`.
+         * @param snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createCopyEmailAddressCandidate(
             context: Context,
             snackBarParentView: View,
-            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_email_address",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_email_address),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isMailto()
+                    hitResult.isMailto() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
                 val email = hitResult.getLink().stripMailToProtocol()
@@ -243,18 +287,27 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Open Image in New Tab".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param tabsUseCases [TabsUseCases] used for adding new tabs.
+         * @param snackBarParentView The view in which to find a suitable parent for displaying the `Snackbar`.
+         * @param snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createOpenImageInNewTabCandidate(
             context: Context,
             tabsUseCases: TabsUseCases,
             snackBarParentView: View,
-            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.open_image_in_new_tab",
             label = context.getString(R.string.mozac_feature_contextmenu_open_image_in_new_tab),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isImage()
+                    hitResult.isImage() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { parent, hitResult ->
                 val tab = tabsUseCases.addTab(
@@ -279,16 +332,23 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Save image".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param contextMenuUseCases [ContextMenuUseCases] used to integrate other features.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createSaveImageCandidate(
             context: Context,
-            contextMenuUseCases: ContextMenuUseCases
+            contextMenuUseCases: ContextMenuUseCases,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.save_image",
             label = context.getString(R.string.mozac_feature_contextmenu_save_image),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isImage()
+                    hitResult.isImage() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
@@ -300,16 +360,23 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Save video".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param contextMenuUseCases [ContextMenuUseCases] used to integrate other features.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createSaveVideoAudioCandidate(
             context: Context,
-            contextMenuUseCases: ContextMenuUseCases
+            contextMenuUseCases: ContextMenuUseCases,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.save_video",
             label = context.getString(R.string.mozac_feature_contextmenu_save_file_to_device),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isVideoAudio()
+                    hitResult.isVideoAudio() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
@@ -321,16 +388,23 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Save link".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param contextMenuUseCases [ContextMenuUseCases] used to integrate other features.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createDownloadLinkCandidate(
             context: Context,
-            contextMenuUseCases: ContextMenuUseCases
+            contextMenuUseCases: ContextMenuUseCases,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.download_link",
             label = context.getString(R.string.mozac_feature_contextmenu_download_link),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isLinkForOtherThanWebpage()
+                    hitResult.isLinkForOtherThanWebpage() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
@@ -342,15 +416,21 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Share Link".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createShareLinkCandidate(
-            context: Context
+            context: Context,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.share_link",
             label = context.getString(R.string.mozac_feature_contextmenu_share_link),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    (hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio())
+                    (hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio()) &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
                 val intent = Intent(Intent.ACTION_SEND).apply {
@@ -428,16 +508,23 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Share image"
+         *
+         * @param context [Context] used for various system interactions.
+         * @param contextMenuUseCases [ContextMenuUseCases] used to integrate other features.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createShareImageCandidate(
             context: Context,
-            contextMenuUseCases: ContextMenuUseCases
+            contextMenuUseCases: ContextMenuUseCases,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.share_image",
             label = context.getString(R.string.mozac_feature_contextmenu_share_image),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isImage()
+                    hitResult.isImage() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { tab, hitResult ->
                 contextMenuUseCases.injectShareFromInternet(
@@ -452,17 +539,25 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Copy Link".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param snackBarParentView The view in which to find a suitable parent for displaying the `Snackbar`.
+         * @param snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createCopyLinkCandidate(
             context: Context,
             snackBarParentView: View,
-            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_link",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_link),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    (hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio())
+                    (hitResult.isUri() || hitResult.isImage() || hitResult.isVideoAudio()) &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
                 clipPlaintText(
@@ -475,17 +570,25 @@ data class ContextMenuCandidate(
 
         /**
          * Context Menu item: "Copy Image Location".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param snackBarParentView The view in which to find a suitable parent for displaying the `Snackbar`.
+         * @param snackbarDelegate [SnackbarDelegate] used to actually show a `Snackbar`.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
          */
         fun createCopyImageLocationCandidate(
             context: Context,
             snackBarParentView: View,
-            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate()
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
         ) = ContextMenuCandidate(
             id = "mozac.feature.contextmenu.copy_image_location",
             label = context.getString(R.string.mozac_feature_contextmenu_copy_image_location),
             showFor = { tab, hitResult ->
                 tab.isUrlSchemeAllowed(hitResult.getLink()) &&
-                    hitResult.isImage()
+                    hitResult.isImage() &&
+                    additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
                 clipPlaintText(
