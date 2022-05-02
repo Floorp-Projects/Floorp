@@ -28,6 +28,7 @@
 #include "modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "modules/video_coding/utility/framerate_controller.h"
+#include "rtc_base/experiments/encoder_info_settings.h"
 #include "vpx/vp8cx.h"
 
 namespace webrtc {
@@ -234,6 +235,8 @@ class LibvpxVp9Encoder : public VP9Encoder {
   int num_steady_state_frames_;
   // Only set config when this flag is set.
   bool config_changed_;
+
+  const LibvpxVp9EncoderInfoSettings encoder_info_override_;
 };
 
 }  // namespace webrtc

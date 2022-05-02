@@ -75,4 +75,7 @@ SimulcastEncoderAdapterEncoderInfoSettings::
     : EncoderInfoSettings(
           "WebRTC-SimulcastEncoderAdapter-GetEncoderInfoOverride") {}
 
+LibvpxVp9EncoderInfoSettings::LibvpxVp9EncoderInfoSettings()
+    : EncoderInfoSettings("WebRTC-LibvpxVp9Encoder-GetEncoderInfoOverride") {}
+
 }  // namespace webrtc

@@ -19,23 +19,6 @@
 
 namespace webrtc {
 
-namespace {
-bool IsSimulcast(const VideoEncoderConfig& encoder_config) {
-  const std::vector<VideoStream>& simulcast_layers =
-      encoder_config.simulcast_layers;
-
-  bool is_simulcast = simulcast_layers.size() > 1;
-  bool is_lowest_layer_active = simulcast_layers[0].active;
-  int num_active_layers =
-      std::count_if(simulcast_layers.begin(), simulcast_layers.end(),
-                    [](const VideoStream& layer) { return layer.active; });
-
-  // We can't distinguish between simulcast and singlecast when only the
-  // lowest spatial layer is active. Treat this case as simulcast.
-  return is_simulcast && (num_active_layers > 1 || is_lowest_layer_active);
-}
-}  // namespace
-
 BitrateConstraint::BitrateConstraint()
     : encoder_settings_(absl::nullopt),
       encoder_target_bitrate_bps_(absl::nullopt) {
@@ -70,7 +53,8 @@ bool BitrateConstraint::IsAdaptationUpAllowed(
       return true;
     }
 
-    if (IsSimulcast(encoder_settings_->encoder_config())) {
+    if (VideoStreamEncoderResourceManager::IsSimulcast(
+            encoder_settings_->encoder_config())) {
       // Resolution bitrate limits usage is restricted to singlecast.
       return true;
     }

@@ -148,6 +148,7 @@ class VideoStreamEncoderResourceManager
 
   static absl::optional<uint32_t> GetSingleActiveLayerPixels(
       const VideoCodec& codec);
+  static bool IsSimulcast(const VideoEncoderConfig& encoder_config);
 
  private:
   class InitialFrameDropper;
