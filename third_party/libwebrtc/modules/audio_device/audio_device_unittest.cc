@@ -30,8 +30,8 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "rtc_base/time_utils.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -317,8 +317,8 @@ class LatencyAudioStream : public AudioStream {
 
   Mutex lock_;
   rtc::RaceChecker race_checker_;
-  rtc::ThreadChecker read_thread_checker_;
-  rtc::ThreadChecker write_thread_checker_;
+  SequenceChecker read_thread_checker_;
+  SequenceChecker write_thread_checker_;
 
   absl::optional<int64_t> pulse_time_ RTC_GUARDED_BY(lock_);
   std::vector<int> latencies_ RTC_GUARDED_BY(race_checker_);

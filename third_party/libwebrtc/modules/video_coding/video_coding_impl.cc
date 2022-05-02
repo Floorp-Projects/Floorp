@@ -16,7 +16,7 @@
 #include "api/video/encoded_image.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/timing.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -105,7 +105,7 @@ class VideoCodingModuleImpl : public VideoCodingModule {
   }
 
  private:
-  rtc::ThreadChecker construction_thread_;
+  SequenceChecker construction_thread_;
   const std::unique_ptr<VCMTiming> timing_;
   vcm::VideoReceiver receiver_;
 };

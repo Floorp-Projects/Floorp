@@ -24,8 +24,8 @@
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 
@@ -321,7 +321,7 @@ class EventLogger final {
   std::vector<TraceEvent> trace_events_ RTC_GUARDED_BY(mutex_);
   rtc::PlatformThread logging_thread_;
   rtc::Event shutdown_event_;
-  rtc::ThreadChecker thread_checker_;
+  webrtc::SequenceChecker thread_checker_;
   FILE* output_file_ = nullptr;
   bool output_file_owned_ = false;
 };

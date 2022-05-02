@@ -28,7 +28,6 @@
 #include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "rtc_tools/network_tester/packet_logger.h"
 #include "rtc_tools/network_tester/packet_sender.h"
 
@@ -69,7 +68,7 @@ class TestController : public sigslot::has_slots<> {
                     size_t len,
                     const rtc::SocketAddress& remote_addr,
                     const int64_t& packet_time_us);
-  rtc::ThreadChecker test_controller_thread_checker_;
+  SequenceChecker test_controller_thread_checker_;
   SequenceChecker packet_sender_checker_;
   rtc::BasicPacketSocketFactory socket_factory_;
   const std::string config_file_path_;

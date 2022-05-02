@@ -19,7 +19,7 @@
 #include "absl/types/optional.h"
 #include "modules/audio_device/win/core_audio_utility_win.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 
@@ -128,8 +128,8 @@ class CoreAudioBase : public IAudioSessionEvents {
   // level here. In addition, calls to Init(), Start() and Stop() are not
   // included to allow for support of internal restart (where these methods are
   // called on the audio thread).
-  rtc::ThreadChecker thread_checker_;
-  rtc::ThreadChecker thread_checker_audio_;
+  SequenceChecker thread_checker_;
+  SequenceChecker thread_checker_audio_;
   AudioDeviceBuffer* audio_device_buffer_ = nullptr;
   bool initialized_ = false;
   WAVEFORMATEXTENSIBLE format_ = {};

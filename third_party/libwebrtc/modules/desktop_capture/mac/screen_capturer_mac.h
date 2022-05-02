@@ -27,7 +27,7 @@
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/screen_capturer_helper.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 
@@ -110,7 +110,7 @@ class ScreenCapturerMac final : public DesktopCapturer {
   DesktopFrameProvider desktop_frame_provider_;
 
   // Start, CaptureFrame and destructor have to called in the same thread.
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 
   // Used to force CaptureFrame to update it's screen configuration
   // and reregister event handlers. This ensure that this

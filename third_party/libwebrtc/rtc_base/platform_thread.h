@@ -19,7 +19,7 @@
 #include "absl/strings/string_view.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/platform_thread_types.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 #include "rtc_base/deprecated/recursive_critical_section.h"
 
@@ -89,8 +89,8 @@ class PlatformThread {
   // TODO(pbos): Make sure call sites use string literals and update to a const
   // char* instead of a std::string.
   const std::string name_;
-  rtc::ThreadChecker thread_checker_;
-  rtc::ThreadChecker spawned_thread_checker_;
+  webrtc::SequenceChecker thread_checker_;
+  webrtc::SequenceChecker spawned_thread_checker_;
 #if defined(WEBRTC_WIN)
   static DWORD WINAPI StartThread(void* param);
 

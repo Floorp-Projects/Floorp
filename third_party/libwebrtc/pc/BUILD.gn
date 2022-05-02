@@ -584,6 +584,7 @@ rtc_library("audio_track") {
     "../rtc_base:checks",
     "../rtc_base:refcount",
     "../rtc_base:thread_checker",
+    "../rtc_base/synchronization:sequence_checker",
   ]
 }
 

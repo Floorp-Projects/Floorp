@@ -33,7 +33,6 @@
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -525,7 +524,7 @@ class EmulatedEndpointImpl : public EmulatedEndpoint {
   uint16_t NextPort() RTC_EXCLUSIVE_LOCKS_REQUIRED(receiver_lock_);
 
   rtc::RecursiveCriticalSection receiver_lock_;
-  rtc::ThreadChecker enabled_state_checker_;
+  SequenceChecker enabled_state_checker_;
 
   const uint64_t id_;
   const std::string log_name_;

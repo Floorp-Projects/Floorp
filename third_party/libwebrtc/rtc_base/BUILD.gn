@@ -238,6 +238,7 @@ rtc_library("platform_thread") {
     ":rtc_event",
     ":thread_checker",
     ":timeutils",
+    "synchronization:sequence_checker",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }

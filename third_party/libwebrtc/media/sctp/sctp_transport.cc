@@ -47,9 +47,9 @@ constexpr int kSctpSuccessReturn = 1;
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 #include "rtc_base/trace_event.h"
 
 namespace {

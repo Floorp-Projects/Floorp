@@ -103,7 +103,7 @@ class StunProber::Requester : public sigslot::has_slots<> {
   int16_t num_request_sent_ = 0;
   int16_t num_response_received_ = 0;
 
-  rtc::ThreadChecker& thread_checker_;
+  webrtc::SequenceChecker& thread_checker_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Requester);
 };
