@@ -145,8 +145,8 @@ BlockReflowState::BlockReflowState(const ReflowInput& aReflowInput,
   mCurrentLine = aFrame->LinesEnd();
 }
 
-void BlockReflowState::ComputeReplacedBlockOffsetsForFloats(
-    nsIFrame* aFrame, const LogicalRect& aFloatAvailableSpace,
+void BlockReflowState::ComputeFloatAvoidingOffsets(
+    nsIFrame* aFloatAvoidingBlock, const LogicalRect& aFloatAvailableSpace,
     nscoord& aIStartResult, nscoord& aIEndResult) const {
   WritingMode wm = mReflowInput.GetWritingMode();
   // The frame is clueless about the float manager and therefore we
@@ -166,8 +166,8 @@ void BlockReflowState::ComputeReplacedBlockOffsetsForFloats(
     iEndOffset = 0;
   } else {
     LogicalMargin frameMargin(wm);
-    SizeComputationInput os(aFrame, mReflowInput.mRenderingContext, wm,
-                            mContentArea.ISize(wm));
+    SizeComputationInput os(aFloatAvoidingBlock, mReflowInput.mRenderingContext,
+                            wm, mContentArea.ISize(wm));
     frameMargin = os.ComputedLogicalMargin(wm);
 
     nscoord iStartFloatIOffset =
@@ -250,8 +250,8 @@ LogicalRect BlockReflowState::ComputeBlockAvailSpace(
     }
   } else {
     nscoord iStartOffset, iEndOffset;
-    ComputeReplacedBlockOffsetsForFloats(aFrame, aFloatAvailableSpace.mRect,
-                                         iStartOffset, iEndOffset);
+    ComputeFloatAvoidingOffsets(aFrame, aFloatAvailableSpace.mRect,
+                                iStartOffset, iEndOffset);
     result.IStart(wm) = mContentArea.IStart(wm) + iStartOffset;
     result.ISize(wm) = mContentArea.ISize(wm) - iStartOffset - iEndOffset;
   }
@@ -264,8 +264,8 @@ LogicalRect BlockReflowState::ComputeBlockAvailSpace(
   return result;
 }
 
-bool BlockReflowState::ReplacedBlockFitsInAvailSpace(
-    nsIFrame* aReplacedBlock,
+bool BlockReflowState::FloatAvoidingBlockFitsInAvailSpace(
+    nsIFrame* aFloatAvoidingBlock,
     const nsFlowAreaRect& aFloatAvailableSpace) const {
   if (!aFloatAvailableSpace.HasFloats()) {
     // If there aren't any floats here, then we always fit.
@@ -274,9 +274,9 @@ bool BlockReflowState::ReplacedBlockFitsInAvailSpace(
     return true;
   }
   WritingMode wm = mReflowInput.GetWritingMode();
-  nsBlockFrame::ReplacedElementISizeToClear replacedISize =
+  nsBlockFrame::FloatAvoidingISizeToClear replacedISize =
       nsBlockFrame::ISizeToClearPastFloats(*this, aFloatAvailableSpace.mRect,
-                                           aReplacedBlock);
+                                           aFloatAvoidingBlock);
   // The inline-start side of the replaced element should be offset by
   // the larger of the float intrusion or the replaced element's own
   // start margin.  The inline-end side is similar, except for Web
@@ -1000,7 +1000,7 @@ void BlockReflowState::PlaceBelowCurrentLineFloats(nsLineBox* aLine) {
 
 std::tuple<nscoord, BlockReflowState::ClearFloatsResult>
 BlockReflowState::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
-                              nsIFrame* aReplacedBlock) {
+                              nsIFrame* aFloatAvoidingBlock) {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsIFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
@@ -1028,10 +1028,11 @@ BlockReflowState::ClearFloats(nscoord aBCoord, StyleClear aBreakType,
     }
   }
 
-  if (aReplacedBlock) {
+  if (aFloatAvoidingBlock) {
     for (;;) {
       nsFlowAreaRect floatAvailableSpace = GetFloatAvailableSpace(newBCoord);
-      if (ReplacedBlockFitsInAvailSpace(aReplacedBlock, floatAvailableSpace)) {
+      if (FloatAvoidingBlockFitsInAvailSpace(aFloatAvoidingBlock,
+                                             floatAvailableSpace)) {
         break;
       }
       // See the analogous code for inlines in

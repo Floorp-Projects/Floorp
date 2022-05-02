@@ -2596,16 +2596,16 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       line->MarkDirty();
     }
 
-    nsIFrame* replacedBlock = nullptr;
+    nsIFrame* floatAvoidingBlock = nullptr;
     if (line->IsBlock() &&
         !nsBlockFrame::BlockCanIntersectFloats(line->mFirstChild)) {
-      replacedBlock = line->mFirstChild;
+      floatAvoidingBlock = line->mFirstChild;
     }
 
     // We have to reflow the line if it's a block whose clearance
     // might have changed, so detect that.
-    if (!line->IsDirty() &&
-        (line->GetBreakTypeBefore() != StyleClear::None || replacedBlock)) {
+    if (!line->IsDirty() && (line->GetBreakTypeBefore() != StyleClear::None ||
+                             floatAvoidingBlock)) {
       nscoord curBCoord = aState.mBCoord;
       // See where we would be after applying any clearance due to
       // BRs.
@@ -2615,7 +2615,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
       }
 
       auto [newBCoord, result] = aState.ClearFloats(
-          curBCoord, line->GetBreakTypeBefore(), replacedBlock);
+          curBCoord, line->GetBreakTypeBefore(), floatAvoidingBlock);
 
       if (line->HasClearance()) {
         // Reflow the line if it might not have clearance anymore.
@@ -3601,10 +3601,10 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
   bool treatWithClearance = aLine->HasClearance();
 
   bool mightClearFloats = breakType != StyleClear::None;
-  nsIFrame* replacedBlock = nullptr;
+  nsIFrame* floatAvoidingBlock = nullptr;
   if (!nsBlockFrame::BlockCanIntersectFloats(frame)) {
     mightClearFloats = true;
-    replacedBlock = frame;
+    floatAvoidingBlock = frame;
   }
 
   // If our block-start margin was counted as part of some parent's block-start
@@ -3615,7 +3615,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
       aState.mReflowInput.mDiscoveredClearance) {
     nscoord curBCoord = aState.mBCoord + aState.mPrevBEndMargin.get();
     if (auto [clearBCoord, result] =
-            aState.ClearFloats(curBCoord, breakType, replacedBlock);
+            aState.ClearFloats(curBCoord, breakType, floatAvoidingBlock);
         result != ClearFloatsResult::BCoordNoChange) {
       Unused << clearBCoord;
 
@@ -3695,7 +3695,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
         // first pass.
         nscoord curBCoord = aState.mBCoord + aState.mPrevBEndMargin.get();
         if (auto [clearBCoord, result] =
-                aState.ClearFloats(curBCoord, breakType, replacedBlock);
+                aState.ClearFloats(curBCoord, breakType, floatAvoidingBlock);
             result != ClearFloatsResult::BCoordNoChange) {
           Unused << clearBCoord;
 
@@ -3726,7 +3726,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
         nscoord currentBCoord = aState.mBCoord;
         // advance mBCoord to the clear position.
         auto [clearBCoord, result] =
-            aState.ClearFloats(aState.mBCoord, breakType, replacedBlock);
+            aState.ClearFloats(aState.mBCoord, breakType, floatAvoidingBlock);
         aState.mBCoord = clearBCoord;
 
         clearedFloats = result != ClearFloatsResult::BCoordNoChange;
@@ -3761,7 +3761,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
     nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
     WritingMode wm = aState.mReflowInput.GetWritingMode();
     LogicalRect availSpace = aState.ComputeBlockAvailSpace(
-        frame, floatAvailableSpace, (replacedBlock));
+        frame, floatAvailableSpace, (floatAvoidingBlock));
 
     // The check for
     //   (!aState.mReflowInput.mFlags.mIsTopOfPage || clearedFloats)
@@ -3886,7 +3886,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
           !*aState.mReflowInput.mDiscoveredClearance;
 
       // Reflow the block into the available space
-      if (mayNeedRetry || replacedBlock) {
+      if (mayNeedRetry || floatAvoidingBlock) {
         aState.FloatManager()->PushState(&floatManagerState);
       }
 
@@ -3906,7 +3906,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
       // available space again and call ComputeBlockAvailSpace again.
       // If ComputeBlockAvailSpace gives a different result, we need to
       // reflow again.
-      if (!replacedBlock) {
+      if (!floatAvoidingBlock) {
         break;
       }
 
@@ -3936,8 +3936,8 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
       }
 
       bool advanced = false;
-      if (!aState.ReplacedBlockFitsInAvailSpace(replacedBlock,
-                                                floatAvailableSpace)) {
+      if (!aState.FloatAvoidingBlockFitsInAvailSpace(floatAvoidingBlock,
+                                                     floatAvailableSpace)) {
         // Advance to the next band.
         nscoord newBCoord = aState.mBCoord;
         if (aState.AdvanceToNextBand(floatAvailableSpace.mRect, &newBCoord)) {
@@ -3945,7 +3945,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
         }
         // ClearFloats might be able to advance us further once we're there.
         std::tie(aState.mBCoord, std::ignore) =
-            aState.ClearFloats(newBCoord, StyleClear::None, replacedBlock);
+            aState.ClearFloats(newBCoord, StyleClear::None, floatAvoidingBlock);
 
         // Start over with a new available space rect at the new height.
         floatAvailableSpace = aState.GetFloatAvailableSpaceWithState(
@@ -3954,7 +3954,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowState& aState,
 
       const LogicalRect oldAvailSpace = availSpace;
       availSpace = aState.ComputeBlockAvailSpace(frame, floatAvailableSpace,
-                                                 (replacedBlock));
+                                                 (floatAvoidingBlock));
 
       if (!advanced && availSpace.IsEqualEdges(oldAvailSpace)) {
         break;
@@ -7697,18 +7697,18 @@ bool nsBlockFrame::BlockCanIntersectFloats(nsIFrame* aFrame) {
 // in the available space given, which means that variation shouldn't
 // matter.
 /* static */
-nsBlockFrame::ReplacedElementISizeToClear nsBlockFrame::ISizeToClearPastFloats(
+nsBlockFrame::FloatAvoidingISizeToClear nsBlockFrame::ISizeToClearPastFloats(
     const BlockReflowState& aState, const LogicalRect& aFloatAvailableSpace,
-    nsIFrame* aFrame) {
+    nsIFrame* aFloatAvoidingBlock) {
   nscoord inlineStartOffset, inlineEndOffset;
   WritingMode wm = aState.mReflowInput.GetWritingMode();
-  SizeComputationInput offsetState(aFrame,
+  SizeComputationInput offsetState(aFloatAvoidingBlock,
                                    aState.mReflowInput.mRenderingContext, wm,
                                    aState.mContentArea.ISize(wm));
 
-  ReplacedElementISizeToClear result;
-  aState.ComputeReplacedBlockOffsetsForFloats(
-      aFrame, aFloatAvailableSpace, inlineStartOffset, inlineEndOffset);
+  FloatAvoidingISizeToClear result;
+  aState.ComputeFloatAvoidingOffsets(aFloatAvoidingBlock, aFloatAvailableSpace,
+                                     inlineStartOffset, inlineEndOffset);
   nscoord availISize =
       aState.mContentArea.ISize(wm) - inlineStartOffset - inlineEndOffset;
 
@@ -7718,11 +7718,11 @@ nsBlockFrame::ReplacedElementISizeToClear nsBlockFrame::ISizeToClearPastFloats(
   // All we really need here is the result of ComputeSize, and we
   // could *almost* get that from an SizeComputationInput, except for the
   // last argument.
-  WritingMode frWM = aFrame->GetWritingMode();
+  WritingMode frWM = aFloatAvoidingBlock->GetWritingMode();
   LogicalSize availSpace =
       LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE).ConvertTo(frWM, wm);
-  ReflowInput reflowInput(aState.mPresContext, aState.mReflowInput, aFrame,
-                          availSpace);
+  ReflowInput reflowInput(aState.mPresContext, aState.mReflowInput,
+                          aFloatAvoidingBlock, availSpace);
   result.borderBoxISize =
       reflowInput.ComputedSizeWithBorderPadding(wm).ISize(wm);
   // Use the margins from offsetState rather than reflowInput so that

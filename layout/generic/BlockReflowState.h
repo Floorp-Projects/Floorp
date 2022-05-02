@@ -143,7 +143,7 @@ class BlockReflowState {
 
   // Returns the first coordinate >= aBCoord that clears the
   // floats indicated by aBreakType and has enough inline size between floats
-  // (or no floats remaining) to accomodate aReplacedBlock.
+  // (or no floats remaining) to accomodate aFloatAvoidingBlock.
   enum class ClearFloatsResult : uint8_t {
     BCoordNoChange,
     BCoordAdvanced,
@@ -151,7 +151,7 @@ class BlockReflowState {
   };
   std::tuple<nscoord, ClearFloatsResult> ClearFloats(
       nscoord aBCoord, mozilla::StyleClear aBreakType,
-      nsIFrame* aReplacedBlock = nullptr);
+      nsIFrame* aFloatAvoidingBlock = nullptr);
 
   nsFloatManager* FloatManager() const {
     MOZ_ASSERT(mReflowInput.mFloatManager,
@@ -183,8 +183,8 @@ class BlockReflowState {
     return true;
   }
 
-  bool ReplacedBlockFitsInAvailSpace(
-      nsIFrame* aReplacedBlock,
+  bool FloatAvoidingBlockFitsInAvailSpace(
+      nsIFrame* aFloatAvoidingBlock,
       const nsFlowAreaRect& aFloatAvailableSpace) const;
 
   bool IsAdjacentWithTop() const {
@@ -201,9 +201,10 @@ class BlockReflowState {
 
   // Caller must have called GetFloatAvailableSpace for the correct position
   // (which need not be the current mBCoord).
-  void ComputeReplacedBlockOffsetsForFloats(
-      nsIFrame* aFrame, const mozilla::LogicalRect& aFloatAvailableSpace,
-      nscoord& aIStartResult, nscoord& aIEndResult) const;
+  void ComputeFloatAvoidingOffsets(
+      nsIFrame* aFloatAvoidingBlock,
+      const mozilla::LogicalRect& aFloatAvailableSpace, nscoord& aIStartResult,
+      nscoord& aIEndResult) const;
 
   // Compute the amount of available space for reflowing a block frame at the
   // current block-direction coordinate mBCoord. Caller must have called
