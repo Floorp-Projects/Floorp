@@ -49,13 +49,20 @@
       return make_weak_ref(b);
     }
 
-    addLoadEvent(function() {
-      let ref1 = setupTarget1();
-      let ref2 = setupTarget2();
+    var ref1;
+    var ref2;
+    var maxCounter = 10;
+
+    function GCCCUntilCollected() {
       SpecialPowers.exactGC(function () {
         SpecialPowers.forceCC();
         SpecialPowers.forceGC();
         SpecialPowers.forceGC();
+
+        if ((!weak_ref_dead(ref1) || !weak_ref_dead(ref2)) && --maxCounter > 0) {
+          requestIdleCallback(GCCCUntilCollected, {timeout: 250});
+          return;
+        }
 
         ok(weak_ref_dead(ref1),
            "Should collect cycle through callback global");
@@ -64,6 +71,12 @@
 
         SimpleTest.finish();
       });
+    }
+
+    addLoadEvent(function() {
+      ref1 = setupTarget1();
+      ref2 = setupTarget2();
+      GCCCUntilCollected();
     });
   </script>
 </head>
