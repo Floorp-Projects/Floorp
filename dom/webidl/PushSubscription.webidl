@@ -52,7 +52,7 @@ interface PushSubscription
   readonly attribute EpochTimeStamp? expirationTime;
   [Throws]
   ArrayBuffer? getKey(PushEncryptionKeyName name);
-  [Throws, UseCounter]
+  [NewObject, UseCounter]
   Promise<boolean> unsubscribe();
 
   // Implements the custom serializer specified in Push API, section 9.

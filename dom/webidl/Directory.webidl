@@ -47,9 +47,9 @@ partial interface Directory {
   /*
    * Getter for the immediate children of this directory.
    */
-  [Throws]
+  [NewObject]
   Promise<sequence<(File or Directory)>> getFilesAndDirectories();
 
-  [Throws]
+  [NewObject]
   Promise<sequence<File>> getFiles(optional boolean recursiveFlag = false);
 };

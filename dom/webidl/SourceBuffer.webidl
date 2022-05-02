@@ -53,11 +53,11 @@ interface SourceBuffer : EventTarget {
 partial interface SourceBuffer {
   // Experimental function as proposed in:
   // https://github.com/w3c/media-source/issues/100 for promise proposal.
-  [Throws, Pref="media.mediasource.experimental.enabled"]
+  [NewObject, Pref="media.mediasource.experimental.enabled"]
   Promise<void> appendBufferAsync(ArrayBuffer data);
-  [Throws, Pref="media.mediasource.experimental.enabled"]
+  [NewObject, Pref="media.mediasource.experimental.enabled"]
   Promise<void> appendBufferAsync(ArrayBufferView data);
-  [Throws, Pref="media.mediasource.experimental.enabled"]
+  [NewObject, Pref="media.mediasource.experimental.enabled"]
   Promise<void> removeAsync(double start, unrestricted double end);
 
   // Experimental function as proposed in:

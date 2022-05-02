@@ -215,7 +215,7 @@ partial interface Navigator {
 
 // https://immersive-web.github.io/webvr/spec/1.1/#interface-navigator
 partial interface Navigator {
-  [Throws, SecureContext, Pref="dom.vr.enabled"]
+  [NewObject, SecureContext, Pref="dom.vr.enabled"]
   Promise<sequence<VRDisplay>> getVRDisplays();
   // TODO: Use FrozenArray once available. (Bug 1236777)
   [SecureContext, Frozen, Cached, Pure, Pref="dom.vr.enabled"]
@@ -240,7 +240,7 @@ partial interface Navigator {
 
 // http://webaudio.github.io/web-midi-api/#requestmidiaccess
 partial interface Navigator {
-  [SecureContext, Throws, Pref="dom.webmidi.enabled"]
+  [SecureContext, NewObject, Pref="dom.webmidi.enabled"]
   Promise<MIDIAccess> requestMIDIAccess(optional MIDIOptions options = {});
 };
 
@@ -315,7 +315,7 @@ partial interface Navigator {
 
 // https://wicg.github.io/web-share/#navigator-interface
 partial interface Navigator {
-  [SecureContext, Throws, Func="Navigator::HasShareSupport"]
+  [SecureContext, NewObject, Func="Navigator::HasShareSupport"]
   Promise<void> share(optional ShareData data = {});
   [SecureContext, Func="Navigator::HasShareSupport"]
   boolean canShare(optional ShareData data = {});
