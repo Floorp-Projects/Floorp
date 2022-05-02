@@ -716,6 +716,16 @@ rtc_source_set("function_view") {
   deps = [ "../rtc_base:checks" ]
 }
 
+rtc_source_set("sequence_checker") {
+  visibility = [ "*" ]
+  sources = [ "sequence_checker.h" ]
+  deps = [
+    "../rtc_base:checks",
+    "../rtc_base:macromagic",
+    "../rtc_base/synchronization:sequence_checker_internal",
+  ]
+}
+
 if (rtc_include_tests) {
   if (rtc_enable_protobuf && !build_with_chromium) {
     rtc_library("audioproc_f_api") {
@@ -1049,6 +1059,7 @@ if (rtc_include_tests) {
       "rtp_packet_infos_unittest.cc",
       "rtp_parameters_unittest.cc",
       "scoped_refptr_unittest.cc",
+      "sequence_checker_unittest.cc",
       "test/create_time_controller_unittest.cc",
     ]
 
@@ -1062,11 +1073,13 @@ if (rtc_include_tests) {
       ":rtp_packet_info",
       ":rtp_parameters",
       ":scoped_refptr",
+      ":sequence_checker",
       ":time_controller",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:rtc_base_approved",
       "../rtc_base:rtc_task_queue",
+      "../rtc_base:task_queue_for_test",
       "../rtc_base/task_utils:repeating_task",
       "../test:fileutils",
       "../test:test_support",

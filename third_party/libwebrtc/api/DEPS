@@ -277,6 +277,11 @@ specific_include_rules = {
     "+rtc_base/ref_count.h",
   ],
 
+  "sequence_checker\.h": [
+    "+rtc_base/synchronization/sequence_checker_internal.h",
+    "+rtc_base/thread_annotations.h",
+  ],
+
   # .cc files in api/ should not be restricted in what they can #include,
   # so we re-add all the top-level directories here. (That's because .h
   # files leak their #includes to whoever's #including them, but .cc files
