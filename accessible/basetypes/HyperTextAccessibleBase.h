@@ -45,7 +45,7 @@ class HyperTextAccessibleBase {
    *
    * @param  aOffset  [in] the given text offset
    */
-  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const;
+  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const = 0;
 
   /**
    * Return child accessible at the given text offset.
@@ -69,7 +69,7 @@ class HyperTextAccessibleBase {
    * Return text offset for the child accessible index.
    */
   virtual int32_t GetChildOffset(uint32_t aChildIndex,
-                                 bool aInvalidateAfter = false) const;
+                                 bool aInvalidateAfter = false) const = 0;
 
   /**
    * Return character count within the hypertext accessible.
