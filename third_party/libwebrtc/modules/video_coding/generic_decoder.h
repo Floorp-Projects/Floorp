@@ -21,7 +21,7 @@
 #include "modules/video_coding/timing.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 
@@ -61,7 +61,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
   int32_t Pop(uint32_t timestamp);
 
  private:
-  rtc::ThreadChecker construction_thread_;
+  SequenceChecker construction_thread_;
   // Protect |_timestampMap|.
   Clock* const _clock;
   // This callback must be set before the decoder thread starts running

@@ -13,9 +13,9 @@
 
 #include "api/ice_transport_interface.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 

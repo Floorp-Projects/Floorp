@@ -17,7 +17,7 @@
 #include "absl/types/optional.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device_defines.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "sdk/android/src/jni/audio_device/audio_common.h"
 #include "sdk/android/src/jni/audio_device/audio_device_module.h"
 
@@ -84,11 +84,11 @@ class AudioTrackJni : public AudioOutput {
 
  private:
   // Stores thread ID in constructor.
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 
   // Stores thread ID in first call to OnGetPlayoutData() from high-priority
   // thread in Java. Detached during construction of this object.
-  rtc::ThreadChecker thread_checker_java_;
+  SequenceChecker thread_checker_java_;
 
   // Wraps the Java specific parts of the AudioTrackJni class.
   JNIEnv* env_ = nullptr;

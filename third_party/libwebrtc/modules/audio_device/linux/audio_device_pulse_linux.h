@@ -22,8 +22,8 @@
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 
 #if defined(WEBRTC_USE_X11)
 #include <X11/Xlib.h>
@@ -284,10 +284,10 @@ class AudioDeviceLinuxPulse : public AudioDeviceGeneric {
   uint8_t _playChannels;
 
   // Stores thread ID in constructor.
-  // We can then use ThreadChecker::IsCurrent() to ensure that
+  // We can then use RTC_DCHECK_RUN_ON(&worker_thread_checker_) to ensure that
   // other methods are called from the same thread.
   // Currently only does RTC_DCHECK(thread_checker_.IsCurrent()).
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 
   bool _initialized;
   bool _recording;

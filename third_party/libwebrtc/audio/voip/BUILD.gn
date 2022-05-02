@@ -100,6 +100,7 @@ rtc_library("audio_egress") {
     "../../rtc_base:thread_checker",
     "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
+    "../../rtc_base/synchronization:sequence_checker",
     "../../rtc_base/system:no_unique_address",
     "../utility:audio_frame_operations",
   ]

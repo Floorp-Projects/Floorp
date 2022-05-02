@@ -16,8 +16,8 @@
 #include "api/video/video_source_interface.h"
 #include "media/base/video_source_base.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 
 namespace rtc {
 

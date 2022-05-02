@@ -28,9 +28,9 @@
 #include "modules/async_audio_processing/async_audio_processing.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/network_route.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 class AudioFrameProcessor;
@@ -113,8 +113,8 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   std::vector<AudioCodec> CollectCodecs(
       const std::vector<webrtc::AudioCodecSpec>& specs) const;
 
-  rtc::ThreadChecker signal_thread_checker_;
-  rtc::ThreadChecker worker_thread_checker_;
+  webrtc::SequenceChecker signal_thread_checker_;
+  webrtc::SequenceChecker worker_thread_checker_;
 
   // The audio device module.
   rtc::scoped_refptr<webrtc::AudioDeviceModule> adm_;
@@ -287,7 +287,7 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
-  rtc::ThreadChecker network_thread_checker_;
+  webrtc::SequenceChecker network_thread_checker_;
 
   WebRtcVoiceEngine* const engine_ = nullptr;
   std::vector<AudioCodec> send_codecs_;

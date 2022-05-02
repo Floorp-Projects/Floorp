@@ -17,7 +17,7 @@
 #include "api/ref_counted_base.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 
@@ -75,7 +75,7 @@ class OpenSLEngineManager : public rtc::RefCountedBase {
   SLObjectItf GetOpenSLEngine();
 
  private:
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
   // This object is the global entry point of the OpenSL ES API.
   // After creating the engine object, the application can obtain this object‘s
   // SLEngineItf interface. This interface contains creation methods for all

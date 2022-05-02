@@ -20,8 +20,8 @@
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/ssl_adapter.h"
 #include "rtc_base/ssl_identity.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
-#include "rtc_base/thread_checker.h"
 
 namespace cricket {
 
@@ -147,7 +147,7 @@ class TestTurnServer : public TurnAuthInterface {
 
   TurnServer server_;
   rtc::Thread* thread_;
-  rtc::ThreadChecker thread_checker_;
+  webrtc::SequenceChecker thread_checker_;
 };
 
 }  // namespace cricket

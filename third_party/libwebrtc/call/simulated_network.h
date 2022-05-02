@@ -23,8 +23,8 @@
 #include "rtc_base/race_checker.h"
 #include "rtc_base/random.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 // Implementation of the CoDel active queue management algorithm. Loosely based

@@ -24,8 +24,8 @@
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/synchronization/yield_policy.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 namespace sim_time_impl {

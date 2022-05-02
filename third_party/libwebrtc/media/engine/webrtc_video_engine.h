@@ -34,9 +34,9 @@
 #include "media/engine/unhandled_packets_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/thread_checker.h"
 
 namespace webrtc {
 class VideoDecoderFactory;
@@ -398,7 +398,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     webrtc::DegradationPreference GetDegradationPreference() const
         RTC_EXCLUSIVE_LOCKS_REQUIRED(&thread_checker_);
 
-    rtc::ThreadChecker thread_checker_;
+    webrtc::SequenceChecker thread_checker_;
     rtc::Thread* worker_thread_;
     const std::vector<uint32_t> ssrcs_ RTC_GUARDED_BY(&thread_checker_);
     const std::vector<SsrcGroup> ssrc_groups_ RTC_GUARDED_BY(&thread_checker_);
@@ -556,8 +556,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
 
   rtc::Thread* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
-  rtc::ThreadChecker network_thread_checker_;
-  rtc::ThreadChecker thread_checker_;
+  webrtc::SequenceChecker network_thread_checker_;
+  webrtc::SequenceChecker thread_checker_;
 
   uint32_t rtcp_receiver_report_ssrc_ RTC_GUARDED_BY(thread_checker_);
   bool sending_ RTC_GUARDED_BY(thread_checker_);

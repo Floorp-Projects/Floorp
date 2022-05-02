@@ -43,7 +43,7 @@ class RTCStatsObtainer : public RTCStatsCollectorCallback {
       : report_ptr_(report_ptr) {}
 
  private:
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
   rtc::scoped_refptr<const RTCStatsReport> report_;
   rtc::scoped_refptr<const RTCStatsReport>* report_ptr_;
 };

@@ -19,7 +19,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/string_utils.h"
-#include "rtc_base/thread_checker.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 namespace webrtc_win {
@@ -487,7 +487,7 @@ class WindowsAudioDeviceModule : public AudioDeviceModuleForTest {
  private:
   // Ensures that the class is used on the same thread as it is constructed
   // and destroyed on.
-  rtc::ThreadChecker thread_checker_;
+  SequenceChecker thread_checker_;
 
   // Implements the AudioInput interface and deals with audio capturing parts.
   const std::unique_ptr<AudioInput> input_;
