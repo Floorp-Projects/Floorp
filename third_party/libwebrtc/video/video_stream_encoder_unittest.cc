@@ -5252,6 +5252,10 @@ TEST_F(VideoStreamEncoderTest, InitialFrameDropActivatesWhenLayersChange) {
   VideoEncoderConfig video_encoder_config;
   test::FillEncoderConfiguration(PayloadStringToCodecType("VP8"), 3,
                                  &video_encoder_config);
+  video_encoder_config.video_stream_factory =
+      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false);
   for (auto& layer : video_encoder_config.simulcast_layers) {
     layer.num_temporal_layers = 1;
     layer.max_framerate = kDefaultFramerate;
@@ -5561,6 +5565,59 @@ TEST_F(VideoStreamEncoderTest, InitialFrameDropIsNotReactivatedWhenAdaptingUp) {
   source.IncomingCapturedFrame(CreateFrame(timestamp, kWidth, kHeight));
   // Frame should not be dropped, as initial framedropper is off.
   WaitForEncodedFrame(timestamp);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       FrameDroppedWhenResolutionIncreasesAndLinkAllocationIsLow) {
+  const int kMinStartBps360p = 222000;
+  fake_encoder_.SetResolutionBitrateLimits(
+      {VideoEncoder::ResolutionBitrateLimits(320 * 180, 0, 30000, 400000),
+       VideoEncoder::ResolutionBitrateLimits(640 * 360, kMinStartBps360p, 30000,
+                                             800000)});
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kMinStartBps360p - 1),  // target_bitrate
+      DataRate::BitsPerSec(kMinStartBps360p - 1),  // stable_target_bitrate
+      DataRate::BitsPerSec(kMinStartBps360p - 1),  // link_allocation
+      0, 0, 0);
+  // Frame should not be dropped, bitrate not too low for frame.
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 320, 180));
+  WaitForEncodedFrame(1);
+
+  // Incoming resolution increases, initial frame drop activates.
+  // Frame should be dropped, link allocation too low for frame.
+  video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
+  ExpectDroppedFrame();
+
+  // Expect sink_wants to specify a scaled frame.
+  EXPECT_TRUE_WAIT(video_source_.sink_wants().max_pixel_count < 640 * 360,
+                   5000);
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest,
+       FrameNotDroppedWhenResolutionIncreasesAndLinkAllocationIsHigh) {
+  const int kMinStartBps360p = 222000;
+  fake_encoder_.SetResolutionBitrateLimits(
+      {VideoEncoder::ResolutionBitrateLimits(320 * 180, 0, 30000, 400000),
+       VideoEncoder::ResolutionBitrateLimits(640 * 360, kMinStartBps360p, 30000,
+                                             800000)});
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kMinStartBps360p - 1),  // target_bitrate
+      DataRate::BitsPerSec(kMinStartBps360p - 1),  // stable_target_bitrate
+      DataRate::BitsPerSec(kMinStartBps360p),      // link_allocation
+      0, 0, 0);
+  // Frame should not be dropped, bitrate not too low for frame.
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 320, 180));
+  WaitForEncodedFrame(1);
+
+  // Incoming resolution increases, initial frame drop activates.
+  // Frame should be dropped, link allocation not too low for frame.
+  video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
+  WaitForEncodedFrame(2);
 
   video_stream_encoder_->Stop();
 }
