@@ -51,8 +51,6 @@ class AbstractThread : public nsISerialEventTarget {
   AbstractThread(bool aSupportsTailDispatch)
       : mSupportsTailDispatch(aSupportsTailDispatch) {}
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   // We don't use NS_DECL_NSIEVENTTARGET so that we can remove the default
   // |flags| parameter from Dispatch. Otherwise, a single-argument Dispatch call
   // would be ambiguous.
