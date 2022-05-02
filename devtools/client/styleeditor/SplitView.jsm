@@ -4,11 +4,16 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import(
+const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const EventEmitter = require("devtools/shared/event-emitter");
-const { KeyCodes } = require("devtools/client/shared/keycodes");
+loader.lazyRequireGetter(
+  this,
+  "KeyCodes",
+  "devtools/client/shared/keycodes",
+  true
+);
 
 const EXPORTED_SYMBOLS = ["SplitView"];
 
