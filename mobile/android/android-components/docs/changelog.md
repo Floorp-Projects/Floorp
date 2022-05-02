@@ -4,12 +4,19 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 101.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v100.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/148?closed=1)
+# 102.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v101.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/149?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+# 101.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v100.0.0...v101.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/148?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v101.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v101.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v101.0.0/.config.yml)
 
 * **feature-media**
   * Support reverse landscape orientation for fullscreen videos
